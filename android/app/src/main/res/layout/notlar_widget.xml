@@ -26,8 +26,17 @@
             android:id="@+id/widget_count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:textSize="12sp"
             android:textColor="#9A9AA5" />
+
+        <ImageView
+            android:id="@+id/widget_mic"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/shortcut_voice_short"
+            android:src="@android:drawable/ic_btn_speak_now" />
     </LinearLayout>
 
     <TextView

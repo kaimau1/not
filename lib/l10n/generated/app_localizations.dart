@@ -1065,6 +1065,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'PDF hakkında bir soru yaz...'**
   String get pdfChatInputHint;
+
+  /// No description provided for @voiceNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli Not'**
+  String get voiceNoteTitle;
+
+  /// No description provided for @voiceCaptureHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuş: \"süt ve ekmek al\" ya da \"yarın 9\'da toplantı, hatırlat\" — bitince notunu yapay zeka oluşturur.'**
+  String get voiceCaptureHint;
+
+  /// No description provided for @voiceFinish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitir'**
+  String get voiceFinish;
+
+  /// No description provided for @voiceProcessing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinlediklerim nota dönüştürülüyor...'**
+  String get voiceProcessing;
+
+  /// No description provided for @voiceNothingHeard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtta konuşma algılanamadı'**
+  String get voiceNothingHeard;
+
+  /// No description provided for @voiceNoteSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli notun kaydedildi'**
+  String get voiceNoteSaved;
 }
 
 class _AppLocalizationsDelegate

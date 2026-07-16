@@ -528,4 +528,23 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pdfChatInputHint => 'PDF hakkında bir soru yaz...';
+
+  @override
+  String get voiceNoteTitle => 'Sesli Not';
+
+  @override
+  String get voiceCaptureHint =>
+      'Konuş: \"süt ve ekmek al\" ya da \"yarın 9\'da toplantı, hatırlat\" — bitince notunu yapay zeka oluşturur.';
+
+  @override
+  String get voiceFinish => 'Bitir';
+
+  @override
+  String get voiceProcessing => 'Dinlediklerim nota dönüştürülüyor...';
+
+  @override
+  String get voiceNothingHeard => 'Kayıtta konuşma algılanamadı';
+
+  @override
+  String get voiceNoteSaved => 'Sesli notun kaydedildi';
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
+import '../features/notes/presentation/voice_capture_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/translate/presentation/translator_screen.dart';
 
@@ -66,12 +68,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const BriefingScreen(),
       ),
       GoRoute(
+        path: '/voice',
+        builder: (context, state) => const VoiceCaptureScreen(),
+      ),
+      GoRoute(
         path: '/archive',
         builder: (context, state) => const ArchiveScreen(),
       ),
       GoRoute(path: '/trash', builder: (context, state) => const TrashScreen()),
     ],
   );
+});
+
+/// notlar:// derin bağlantılarını dinler (widget'taki mikrofon, uygulama
+/// kısayolu, "Hey Google" ile açılış). Dashboard bunu ayakta tutar.
+final deepLinkHandlerProvider = Provider<void>((ref) {
+  final router = ref.watch(routerProvider);
+  final appLinks = AppLinks();
+
+  void handle(Uri uri) {
+    if (uri.host == 'voice' || uri.path.contains('voice')) {
+      router.push('/voice');
+    }
+  }
+
+  appLinks.getInitialLink().then((uri) {
+    if (uri != null) handle(uri);
+  }).catchError((_) {});
+  final sub = appLinks.uriLinkStream.listen(handle, onError: (_) {});
+  ref.onDispose(sub.cancel);
 });
 
 class _RefreshNotifier extends ChangeNotifier {

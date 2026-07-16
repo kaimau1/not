@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
+
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../ai/data/semantic_search.dart';
@@ -42,10 +44,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
-    // bildirimleri ve ana ekran widget'ı.
+    // bildirimleri, ana ekran widget'ı ve derin bağlantı dinleyicisi.
     ref.watch(uploadQueueProvider);
     ref.watch(reminderServiceProvider);
     ref.watch(widgetServiceProvider);
+    ref.watch(deepLinkHandlerProvider);
 
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
@@ -180,10 +183,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            tooltip: l10n.newTextNote,
-            onPressed: () => _createNote(NoteType.text),
-            child: const Icon(Icons.add),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FloatingActionButton.small(
+                heroTag: 'voice-fab',
+                tooltip: l10n.voiceNoteTitle,
+                onPressed: () => context.push('/voice'),
+                child: const Icon(Icons.mic_none),
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                heroTag: 'add-fab',
+                tooltip: l10n.newTextNote,
+                onPressed: () => _createNote(NoteType.text),
+                child: const Icon(Icons.add),
+              ),
+            ],
           ),
         ),
       ),

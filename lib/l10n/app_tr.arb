@@ -221,5 +221,11 @@
     }
   },
   "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
-  "pdfChatInputHint": "PDF hakkında bir soru yaz..."
+  "pdfChatInputHint": "PDF hakkında bir soru yaz...",
+  "voiceNoteTitle": "Sesli Not",
+  "voiceCaptureHint": "Konuş: \"süt ve ekmek al\" ya da \"yarın 9'da toplantı, hatırlat\" — bitince notunu yapay zeka oluşturur.",
+  "voiceFinish": "Bitir",
+  "voiceProcessing": "Dinlediklerim nota dönüştürülüyor...",
+  "voiceNothingHeard": "Kayıtta konuşma algılanamadı",
+  "voiceNoteSaved": "Sesli notun kaydedildi"
 }
