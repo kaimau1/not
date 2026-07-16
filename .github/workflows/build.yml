@@ -34,6 +34,8 @@ jobs:
     name: Android APK
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -83,6 +85,27 @@ jobs:
           name: notlar-android-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+      # main'e push'ta APK kalıcı bir Release olarak yayınlanır. Artifact'ten
+      # farkı: doğrudan .apk linki (zip yok), süresi dolmaz, telefondan tıkla-kur.
+      # GitHub yeni release için bildirim maili gönderir.
+      - name: APK'yı sürüm numarasıyla adlandır
+        if: github.ref == 'refs/heads/main'
+        run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v1.0.${{ github.run_number }}.apk
+
+      - name: Release yayınla
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Notlar v1.0.${{ github.run_number }}
+          body: |
+            Aşağıdaki **notlar-v1.0.${{ github.run_number }}.apk** dosyasına telefonundan
+            tıkla, indir ve mevcut uygulamanın üzerine kur. Verilerin Firebase'de
+            olduğu için hiçbir şey kaybolmaz.
+
+            Windows sürümü için: [derleme sayfası](https://github.com/kaimau1/not/actions/runs/${{ github.run_id }}) → Artifacts → notlar-windows
+          files: notlar-v1.0.${{ github.run_number }}.apk
 
   windows:
     name: Windows
