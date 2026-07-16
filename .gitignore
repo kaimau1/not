@@ -46,3 +46,5 @@ app.*.map.json
 
 # Yerel gizli değerler
 env.json
+
+graphify-out/
