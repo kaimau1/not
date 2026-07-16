@@ -118,6 +118,17 @@ class GeminiService {
     return key;
   }
 
+  static GeminiException _mapDioError(DioException e) =>
+      switch (e.response?.statusCode) {
+        400 || 401 || 403 =>
+          const GeminiException('API anahtarı geçersiz', isAuthError: true),
+        404 => const GeminiException(
+            'AI modeli bulunamadı. Uygulamanın güncel sürümünü kurun; '
+            'sorun sürerse geliştiriciye bildirin.'),
+        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
+        _ => GeminiException('Bağlantı hatası: ${e.message}'),
+      };
+
   Future<String> _generate(
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
@@ -161,13 +172,7 @@ class GeminiService {
       }
       return text;
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      throw switch (status) {
-        400 || 401 || 403 =>
-          const GeminiException('API anahtarı geçersiz', isAuthError: true),
-        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
-        _ => GeminiException('Bağlantı hatası: ${e.message}'),
-      };
+      throw _mapDioError(e);
     }
   }
 
@@ -372,13 +377,7 @@ class GeminiService {
       }
       throw const GeminiException('Ses üretilemedi');
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      throw switch (status) {
-        400 || 401 || 403 =>
-          const GeminiException('API anahtarı geçersiz', isAuthError: true),
-        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
-        _ => GeminiException('Bağlantı hatası: ${e.message}'),
-      };
+      throw _mapDioError(e);
     }
   }
 
@@ -506,13 +505,7 @@ class GeminiService {
           ],
       ];
     } on DioException catch (e) {
-      final status = e.response?.statusCode;
-      throw switch (status) {
-        400 || 401 || 403 =>
-          const GeminiException('API anahtarı geçersiz', isAuthError: true),
-        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
-        _ => GeminiException('Bağlantı hatası: ${e.message}'),
-      };
+      throw _mapDioError(e);
     }
   }
 
@@ -574,13 +567,7 @@ class GeminiService {
         );
         data = response.data;
       } on DioException catch (e) {
-        final status = e.response?.statusCode;
-        throw switch (status) {
-          400 || 401 || 403 =>
-            const GeminiException('API anahtarı geçersiz', isAuthError: true),
-          429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
-          _ => GeminiException('Bağlantı hatası: ${e.message}'),
-        };
+        throw _mapDioError(e);
       }
 
       final candidates = data?['candidates'] as List<dynamic>?;

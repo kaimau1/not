@@ -30,6 +30,11 @@ enum _Phase { recording, processing, done, error }
 class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
   final _recorder = AudioRecorder();
   Timer? _ticker;
+  StreamSubscription<Amplitude>? _ampSub;
+
+  /// Anlık ses seviyesi, 0 (sessiz) – 1 (yüksek). Mikrofon halkasını büyütür;
+  /// kullanıcı sesinin algılandığını buradan görür.
+  double _level = 0;
   Duration _elapsed = Duration.zero;
   String? _path;
   _Phase _phase = _Phase.recording;
@@ -61,6 +66,13 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
         if (mounted) setState(() => _elapsed += const Duration(seconds: 1));
       });
+      _ampSub = _recorder
+          .onAmplitudeChanged(const Duration(milliseconds: 200))
+          .listen((a) {
+        // dBFS: 0 en yüksek, -50 ve altı sessizlik sayılır.
+        final level = ((a.current + 50) / 50).clamp(0.0, 1.0);
+        if (mounted) setState(() => _level = level);
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -74,6 +86,7 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
   Future<void> _finish() async {
     final l10n = context.l10n;
     _ticker?.cancel();
+    _ampSub?.cancel();
     setState(() => _phase = _Phase.processing);
     try {
       final path = await _recorder.stop();
@@ -138,6 +151,7 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
 
   Future<void> _cancel() async {
     _ticker?.cancel();
+    _ampSub?.cancel();
     try {
       final path = await _recorder.stop();
       if (path != null) File(path).delete().ignore();
@@ -148,6 +162,7 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _ampSub?.cancel();
     _recorder.dispose();
     super.dispose();
   }
@@ -169,14 +184,22 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
             _Phase.recording => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    decoration: BoxDecoration(
-                      color: scheme.errorContainer,
-                      shape: BoxShape.circle,
+                  // Halka ses seviyesiyle büyür: konuşma algılanıyor demektir.
+                  SizedBox(
+                    width: 144,
+                    height: 144,
+                    child: Center(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 96 + 48 * _level,
+                        height: 96 + 48 * _level,
+                        decoration: BoxDecoration(
+                          color: scheme.errorContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.mic, size: 44, color: scheme.error),
+                      ),
                     ),
-                    child: Icon(Icons.mic, size: 44, color: scheme.error),
                   ),
                   const SizedBox(height: 16),
                   Text(

@@ -9,7 +9,7 @@ abstract final class AppConstants {
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
-  static const String defaultGeminiModel = 'gemini-2.5-flash';
+  static const String defaultGeminiModel = 'gemini-3.5-flash';
   static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';
