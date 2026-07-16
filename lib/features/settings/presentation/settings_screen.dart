@@ -30,6 +30,9 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsAi),
               const _GeminiKeyEditor(),
+              const SizedBox(height: 12),
+              const _BriefingEditor(),
+              const _AutoTagSwitch(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsGmail),
               const _GmailSection(),
@@ -289,6 +292,66 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
           label: Text(l10n.validateAndSave),
         ),
       ],
+    );
+  }
+}
+
+class _BriefingEditor extends ConsumerWidget {
+  const _BriefingEditor();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final settings = ref.watch(briefingSettingsProvider);
+    final time =
+        '${(settings.minutes ~/ 60).toString().padLeft(2, '0')}:${(settings.minutes % 60).toString().padLeft(2, '0')}';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.briefingSetting),
+          subtitle: Text(l10n.briefingSettingInfo),
+          value: settings.enabled,
+          onChanged: (value) =>
+              ref.read(briefingSettingsProvider.notifier).update(enabled: value),
+        ),
+        if (settings.enabled)
+          ActionChip(
+            avatar: const Icon(Icons.schedule, size: 16),
+            label: Text(time),
+            onPressed: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay(
+                  hour: settings.minutes ~/ 60,
+                  minute: settings.minutes % 60,
+                ),
+              );
+              if (picked != null) {
+                ref.read(briefingSettingsProvider.notifier).update(
+                      minutes: picked.hour * 60 + picked.minute,
+                    );
+              }
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _AutoTagSwitch extends ConsumerWidget {
+  const _AutoTagSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.autoTagSetting),
+      subtitle: Text(l10n.autoTagSettingInfo),
+      value: ref.watch(autoTagProvider),
+      onChanged: (value) => ref.read(autoTagProvider.notifier).set(value),
     );
   }
 }

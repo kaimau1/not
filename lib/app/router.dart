@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/ai/presentation/briefing_screen.dart';
 import '../features/ai/presentation/chat_screen.dart';
 import '../features/ai/presentation/suggestions_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
@@ -59,6 +60,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/translate',
         builder: (context, state) => const TranslatorScreen(),
+      ),
+      GoRoute(
+        path: '/briefing',
+        builder: (context, state) => const BriefingScreen(),
       ),
       GoRoute(
         path: '/archive',

@@ -104,6 +104,63 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
   }
 }
 
+/// Notlar kaydedilirken AI otomatik etiket atasın mı?
+final autoTagProvider = NotifierProvider<AutoTagNotifier, bool>(
+  AutoTagNotifier.new,
+);
+
+class AutoTagNotifier extends Notifier<bool> {
+  static const _key = 'auto_tag';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// Günlük brifing bildirimi ayarları.
+class BriefingSettings {
+  const BriefingSettings({required this.enabled, required this.minutes});
+
+  final bool enabled;
+
+  /// Gün içi dakika (ör. 08:30 → 510).
+  final int minutes;
+}
+
+final briefingSettingsProvider =
+    NotifierProvider<BriefingSettingsNotifier, BriefingSettings>(
+  BriefingSettingsNotifier.new,
+);
+
+class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
+  static const _enabledKey = 'briefing_enabled';
+  static const _minutesKey = 'briefing_minutes';
+
+  @override
+  BriefingSettings build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return BriefingSettings(
+      enabled: prefs.getBool(_enabledKey) ?? false,
+      minutes: prefs.getInt(_minutesKey) ?? 8 * 60 + 30,
+    );
+  }
+
+  void update({bool? enabled, int? minutes}) {
+    final next = BriefingSettings(
+      enabled: enabled ?? state.enabled,
+      minutes: minutes ?? state.minutes,
+    );
+    state = next;
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setBool(_enabledKey, next.enabled);
+    prefs.setInt(_minutesKey, next.minutes);
+  }
+}
+
 /// Dakikada bir güncellenen saat (zamanlamalı tema geçişi için).
 final _clockProvider = StreamProvider<DateTime>(
   (ref) => Stream.periodic(const Duration(minutes: 1), (_) => DateTime.now()),

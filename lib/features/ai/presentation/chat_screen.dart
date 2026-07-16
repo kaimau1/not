@@ -1,13 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/notes_repository.dart';
+import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/api_key_store.dart';
+import '../data/assistant_service.dart';
 import '../data/gemini_service.dart';
 
-/// Notlar üzerinde yapay zeka ile sohbet: "geçen ay yazdığım tarif neydi?"
+/// Notlar üzerinde yapay zeka asistanı: soru sorabilir ("geçen ay yazdığım
+/// tarif neydi?") veya iş yaptırabilirsin ("yarın 9'a diş randevusu notu
+/// ekle, hatırlatıcılı"). Mikrofonla sesli komut da verilebilir.
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
 
@@ -28,8 +34,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _send() async {
-    final text = _controller.text.trim();
+  Future<void> _send([String? spokenText]) async {
+    final text = (spokenText ?? _controller.text).trim();
     if (text.isEmpty || _busy) return;
     final l10n = context.l10n;
     setState(() {
@@ -40,9 +46,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _scrollToEnd();
     try {
       final notes = ref.read(notesStreamProvider).value ?? const [];
-      final reply = await ref
-          .read(geminiServiceProvider)
-          .chatWithNotes(notes: notes, history: List.of(_history));
+      final assistant = ref.read(assistantServiceProvider);
+      final reply = await ref.read(geminiServiceProvider).assistantChat(
+            notesContext: assistant.buildNotesContext(notes),
+            history: List.of(_history),
+            onToolCall: assistant.execute,
+          );
       if (mounted) {
         setState(() => _history.add(ChatTurn(isUser: false, text: reply)));
       }
@@ -62,6 +71,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (mounted) {
         setState(() => _busy = false);
         _scrollToEnd();
+      }
+    }
+  }
+
+  /// Sesli komut: kaydet → yazıya dök → doğrudan gönder.
+  Future<void> _voiceInput() async {
+    final l10n = context.l10n;
+    final result = await showAudioRecorderSheet(context);
+    if (result == null) return;
+    setState(() => _busy = true);
+    try {
+      final bytes = await File(result.path).readAsBytes();
+      File(result.path).delete().ignore();
+      final text = await ref
+          .read(geminiServiceProvider)
+          .transcribeAudio(bytes, 'audio/mp4');
+      if (!mounted) return;
+      setState(() => _busy = false);
+      if (text.trim().isNotEmpty) await _send(text);
+    } on GeminiException catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _busy = false);
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.aiError('$e'))));
       }
     }
   }
@@ -164,6 +207,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
                     child: Row(
                       children: [
+                        IconButton.filledTonal(
+                          tooltip: l10n.voiceCommand,
+                          onPressed: _busy ? null : _voiceInput,
+                          icon: const Icon(Icons.mic_none),
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
                             controller: _controller,

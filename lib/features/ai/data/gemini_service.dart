@@ -382,6 +382,333 @@ class GeminiService {
     }
   }
 
+  /// Ham brifing verisini (hatırlatıcılar, notlar, e-postalar) samimi ve
+  /// kısa bir günlük brifinge dönüştürür.
+  Future<String> composeBriefing(String rawData) => _generate([
+        {
+          'text': 'Aşağıdaki ham verilerden kısa, samimi bir Türkçe "günlük '
+              'brifing" yaz. Yapı: 1-2 cümlelik selamlama ve günün özeti; '
+              '"Bugün" başlığı altında hatırlatıcılar ve yapılacaklar; varsa '
+              '"E-postalar" başlığı altında önemli e-postalar; kapanışta tek '
+              'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla.'
+              '\n\n$rawData',
+        },
+      ]);
+
+  /// Nota uygun 1-3 kısa etiket önerir.
+  Future<List<String>> suggestTags(Note note) async {
+    final raw = await _generate(
+      [
+        {
+          'text': 'Aşağıdaki not için 1-3 kısa Türkçe etiket öner (tek '
+              'kelime, küçük harf, Türkçe karakter yerine ASCII tercih et; '
+              'ör. "is", "ev", "saglik", "alisveris", "okul", "finans"). '
+              'Yanıtı YALNIZCA JSON dizisi olarak ver: ["etiket1", "etiket2"]'
+              '\n\n---\n${note.toPlainText()}',
+        },
+      ],
+      jsonOutput: true,
+    );
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const [];
+    return [
+      for (final tag in decoded.take(3))
+        tag
+            .toString()
+            .trim()
+            .toLowerCase()
+            .replaceAll('#', '')
+            .replaceAll(' ', '-'),
+    ];
+  }
+
+  /// Metni verilen yönergeye göre yeniden yazar (düzelt/resmîleştir/kısalt...).
+  Future<String> rewriteText(String text, String instruction) => _generate([
+        {
+          'text': 'Aşağıdaki metni şu yönergeye göre yeniden yaz: '
+              '"$instruction". Metnin dilini koru. Yalnızca yeniden yazılmış '
+              'metni ver, açıklama ekleme.\n\n---\n$text',
+        },
+      ]);
+
+  /// Ekli PDF üzerinde çok turlu soru-cevap.
+  Future<String> chatWithPdf({
+    required Uint8List bytes,
+    required String fileName,
+    required List<ChatTurn> history,
+  }) {
+    final contents = <Map<String, dynamic>>[
+      {
+        'role': 'user',
+        'parts': [
+          {
+            'inline_data': {
+              'mime_type': 'application/pdf',
+              'data': base64Encode(bytes),
+            },
+          },
+          {
+            'text': '"$fileName" adlı bu PDF hakkında sorulara Türkçe, kısa '
+                've net yanıt ver. Yanıtları yalnızca belgeye dayandır; '
+                'belgede olmayanı uydurma, bulamazsan söyle.',
+          },
+        ],
+      },
+      {
+        'role': 'model',
+        'parts': [
+          {'text': 'Belgeyi inceledim. Sorularını yanıtlamaya hazırım.'},
+        ],
+      },
+      for (final turn in history)
+        {
+          'role': turn.isUser ? 'user' : 'model',
+          'parts': [
+            {'text': turn.text},
+          ],
+        },
+    ];
+    return _generateFromContents(contents);
+  }
+
+  /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
+  Future<List<List<double>>> embedTexts(List<String> texts) async {
+    if (texts.isEmpty) return const [];
+    final key = await _apiKey();
+    const embedModel = 'models/gemini-embedding-001';
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/$embedModel:batchEmbedContents',
+        options: Options(headers: {'x-goog-api-key': key}),
+        data: {
+          'requests': [
+            for (final text in texts)
+              {
+                'model': embedModel,
+                'content': {
+                  'parts': [
+                    {'text': text},
+                  ],
+                },
+                'outputDimensionality': 256,
+              },
+          ],
+        },
+      );
+      final embeddings = response.data?['embeddings'] as List<dynamic>? ?? [];
+      return [
+        for (final e in embeddings)
+          [
+            for (final v in ((e as Map<String, dynamic>)['values']
+                    as List<dynamic>? ??
+                const []))
+              (v as num).toDouble(),
+          ],
+      ];
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      throw switch (status) {
+        400 || 401 || 403 =>
+          const GeminiException('API anahtarı geçersiz', isAuthError: true),
+        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
+        _ => GeminiException('Bağlantı hatası: ${e.message}'),
+      };
+    }
+  }
+
+  /// Asistan modu: model gerektiğinde not oluşturma/düzenleme araçlarını
+  /// çağırır; araç sonuçları geri beslenir ve nihai metin yanıtı döner.
+  Future<String> assistantChat({
+    required String notesContext,
+    required List<ChatTurn> history,
+    required Future<Map<String, dynamic>> Function(
+      String name,
+      Map<String, dynamic> args,
+    ) onToolCall,
+  }) async {
+    final key = await _apiKey();
+    final now = DateTime.now();
+    final contents = <Map<String, dynamic>>[
+      {
+        'role': 'user',
+        'parts': [
+          {
+            'text': 'Sen "Notlar" uygulamasının asistanısın. Türkçe, kısa ve '
+                'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
+                'veya silmeni isteyebilir; bunun için sana verilen araçları '
+                'kullan. Tarihler için ISO 8601 kullan; şu an: '
+                '${now.toIso8601String()}. Alışveriş/yapılacak listeleri için '
+                '"checklist" tipini kullan. Bir aracı çağırdıktan sonra '
+                'kullanıcıya ne yaptığını tek cümleyle özetle.\n\n'
+                'KULLANICININ NOT DEFTERİ:\n$notesContext',
+          },
+        ],
+      },
+      {
+        'role': 'model',
+        'parts': [
+          {'text': 'Anladım. Notların üzerinde çalışmaya hazırım.'},
+        ],
+      },
+      for (final turn in history)
+        {
+          'role': turn.isUser ? 'user' : 'model',
+          'parts': [
+            {'text': turn.text},
+          ],
+        },
+    ];
+
+    for (var round = 0; round < 6; round++) {
+      final Map<String, dynamic>? data;
+      try {
+        final response = await _dio.post<Map<String, dynamic>>(
+          '/models/$_model:generateContent',
+          options: Options(headers: {'x-goog-api-key': key}),
+          data: {
+            'contents': contents,
+            'tools': [
+              {'functionDeclarations': _assistantTools},
+            ],
+          },
+        );
+        data = response.data;
+      } on DioException catch (e) {
+        final status = e.response?.statusCode;
+        throw switch (status) {
+          400 || 401 || 403 =>
+            const GeminiException('API anahtarı geçersiz', isAuthError: true),
+          429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
+          _ => GeminiException('Bağlantı hatası: ${e.message}'),
+        };
+      }
+
+      final candidates = data?['candidates'] as List<dynamic>?;
+      if (candidates == null || candidates.isEmpty) {
+        throw const GeminiException('Modelden yanıt alınamadı');
+      }
+      final content = (candidates.first as Map<String, dynamic>)['content']
+              as Map<String, dynamic>? ??
+          const {};
+      final parts = content['parts'] as List<dynamic>? ?? const [];
+
+      final functionCalls = <Map<String, dynamic>>[];
+      final textBuffer = StringBuffer();
+      for (final part in parts) {
+        final map = part as Map<String, dynamic>;
+        if (map['functionCall'] is Map) {
+          functionCalls.add(Map<String, dynamic>.from(map['functionCall'] as Map));
+        }
+        if (map['text'] is String) textBuffer.write(map['text'] as String);
+      }
+
+      if (functionCalls.isEmpty) {
+        final text = textBuffer.toString();
+        if (text.isEmpty) {
+          throw const GeminiException('Modelden boş yanıt döndü');
+        }
+        return text;
+      }
+
+      contents.add({
+        'role': 'model',
+        'parts': [for (final part in parts) part as Map<String, dynamic>],
+      });
+      final responseParts = <Map<String, dynamic>>[];
+      for (final call in functionCalls) {
+        final name = call['name'] as String? ?? '';
+        final args = call['args'] is Map
+            ? Map<String, dynamic>.from(call['args'] as Map)
+            : <String, dynamic>{};
+        Map<String, dynamic> result;
+        try {
+          result = await onToolCall(name, args);
+        } catch (e) {
+          result = {'status': 'error', 'message': e.toString()};
+        }
+        responseParts.add({
+          'functionResponse': {
+            'name': name,
+            'response': result,
+          },
+        });
+      }
+      contents.add({'role': 'user', 'parts': responseParts});
+    }
+    throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
+  }
+
+  static const _assistantTools = <Map<String, dynamic>>[
+    {
+      'name': 'create_note',
+      'description': 'Yeni bir not oluşturur. Alışveriş/yapılacaklar için '
+          'checklist, numaralı adımlar için ordered, diğerleri için text tipi.',
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'type': {
+            'type': 'STRING',
+            'enum': ['text', 'checklist', 'ordered'],
+          },
+          'title': {'type': 'STRING'},
+          'body': {'type': 'STRING', 'description': 'Yalnızca text tipinde'},
+          'items': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+            'description': 'Liste tiplerinde madde metinleri',
+          },
+          'tags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+          'reminderAt': {
+            'type': 'STRING',
+            'description': 'ISO 8601 hatırlatıcı zamanı (isteğe bağlı)',
+          },
+        },
+        'required': ['type', 'title'],
+      },
+    },
+    {
+      'name': 'update_note',
+      'description': 'Var olan bir notu günceller. noteId not defteri '
+          'listesindeki id değeridir.',
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'noteId': {'type': 'STRING'},
+          'title': {'type': 'STRING'},
+          'body': {'type': 'STRING'},
+          'addItems': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+            'description': 'Liste notuna eklenecek yeni maddeler',
+          },
+          'setTags': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+          },
+          'reminderAt': {'type': 'STRING', 'description': 'ISO 8601'},
+          'clearReminder': {'type': 'BOOLEAN'},
+          'pinned': {'type': 'BOOLEAN'},
+          'archived': {'type': 'BOOLEAN'},
+        },
+        'required': ['noteId'],
+      },
+    },
+    {
+      'name': 'delete_note',
+      'description': 'Bir notu çöp kutusuna taşır (geri alınabilir).',
+      'parameters': {
+        'type': 'OBJECT',
+        'properties': {
+          'noteId': {'type': 'STRING'},
+        },
+        'required': ['noteId'],
+      },
+    },
+  ];
+
   /// Kullanıcının notları üzerinde çok turlu sohbet.
   Future<String> chatWithNotes({
     required List<Note> notes,

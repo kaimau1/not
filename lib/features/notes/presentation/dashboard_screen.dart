@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../ai/data/semantic_search.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/upload_queue.dart';
@@ -47,8 +48,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.watch(widgetServiceProvider);
 
     final l10n = context.l10n;
-    final notesAsync = ref.watch(filteredNotesProvider);
     final query = ref.watch(searchQueryProvider);
+    final semanticActive = ref.watch(semanticSearchEnabledProvider) &&
+        query.trim().length > 2;
+    final notesAsync = semanticActive
+        ? ref.watch(semanticSearchProvider(query.trim()))
+        : ref.watch(filteredNotesProvider);
 
     return CallbackShortcuts(
       bindings: {
@@ -93,12 +98,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         PopupMenuButton<String>(
                           onSelected: (action) => switch (action) {
+                            'briefing' => context.push('/briefing'),
                             'archive' => context.push('/archive'),
                             'trash' => context.push('/trash'),
                             'settings' => context.push('/settings'),
                             _ => null,
                           },
                           itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'briefing',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.wb_sunny_outlined),
+                                title: Text(l10n.briefingTitle),
+                              ),
+                            ),
                             PopupMenuItem(
                               value: 'archive',
                               child: ListTile(
@@ -251,22 +266,39 @@ class _SearchField extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = ref.watch(searchQueryProvider);
+    final semantic = ref.watch(semanticSearchEnabledProvider);
+    final scheme = Theme.of(context).colorScheme;
     return TextField(
       controller: controller,
       onChanged: (value) => ref.read(searchQueryProvider.notifier).set(value),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText: context.l10n.searchHint,
+        hintText:
+            semantic ? context.l10n.semanticSearchHint : context.l10n.searchHint,
         prefixIcon: const Icon(Icons.search, size: 20),
-        suffixIcon: query.isEmpty
-            ? null
-            : IconButton(
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: context.l10n.semanticSearchToggle,
+              icon: Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: semantic ? scheme.primary : scheme.onSurfaceVariant,
+              ),
+              onPressed: () =>
+                  ref.read(semanticSearchEnabledProvider.notifier).toggle(),
+            ),
+            if (query.isNotEmpty)
+              IconButton(
                 icon: const Icon(Icons.close, size: 18),
                 onPressed: () {
                   controller.clear();
                   ref.read(searchQueryProvider.notifier).set('');
                 },
               ),
+          ],
+        ),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 10),
       ),

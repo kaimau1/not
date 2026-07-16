@@ -945,6 +945,126 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli oku'**
   String get speakTranslation;
+
+  /// No description provided for @voiceCommand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli komut'**
+  String get voiceCommand;
+
+  /// No description provided for @semanticSearchToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile anlamsal arama'**
+  String get semanticSearchToggle;
+
+  /// No description provided for @semanticSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlamıyla ara: \"araba masrafları\"...'**
+  String get semanticSearchHint;
+
+  /// No description provided for @briefingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük Brifing'**
+  String get briefingTitle;
+
+  /// No description provided for @briefingLoading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Brifing hazırlanıyor...'**
+  String get briefingLoading;
+
+  /// No description provided for @briefingEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün için içerik yok'**
+  String get briefingEmpty;
+
+  /// No description provided for @briefingSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük brifing bildirimi'**
+  String get briefingSetting;
+
+  /// No description provided for @briefingSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her sabah seçtiğin saatte günün özeti için bildirim al'**
+  String get briefingSettingInfo;
+
+  /// No description provided for @autoTagSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik etiketle'**
+  String get autoTagSetting;
+
+  /// No description provided for @autoTagSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler'**
+  String get autoTagSettingInfo;
+
+  /// No description provided for @suggestTags.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket öner'**
+  String get suggestTags;
+
+  /// No description provided for @aiImprove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu geliştir'**
+  String get aiImprove;
+
+  /// No description provided for @improveFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazımı ve dilbilgisini düzelt'**
+  String get improveFix;
+
+  /// No description provided for @improveFormal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha resmî yap'**
+  String get improveFormal;
+
+  /// No description provided for @improveShorten.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısalt'**
+  String get improveShorten;
+
+  /// No description provided for @improveBullets.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde listesine çevir'**
+  String get improveBullets;
+
+  /// No description provided for @replaceNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu değiştir'**
+  String get replaceNote;
+
+  /// No description provided for @aiAskPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'e soru sor: {name}'**
+  String aiAskPdf(String name);
+
+  /// No description provided for @pdfChatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"'**
+  String get pdfChatHint;
+
+  /// No description provided for @pdfChatInputHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF hakkında bir soru yaz...'**
+  String get pdfChatInputHint;
 }
 
 class _AppLocalizationsDelegate

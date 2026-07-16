@@ -14,7 +14,9 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
+import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
+import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/attachment.dart';
@@ -82,6 +84,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (!_deleted && note != null && note.isEmpty) {
       // İçi boş kalan not çıkarken sessizce silinir.
       ref.read(notesRepositoryProvider)?.hardDelete(note.id);
+    } else if (!_deleted && note != null && note.tags.isEmpty) {
+      _autoTagInBackground(note);
     }
     _debouncer.dispose();
     _sub?.close();
@@ -297,6 +301,72 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void _clearReminder() =>
       _mutate((n) => n.copyWith(clearReminderAt: true), immediate: true);
 
+  /// Ayarlarda açıksa, editör kapanırken etiketsiz notu arka planda
+  /// AI ile etiketler.
+  void _autoTagInBackground(Note note) {
+    if (note.toPlainText().length < 20) return;
+    final enabled = ref.read(autoTagProvider);
+    if (!enabled) return;
+    final service = ref.read(geminiServiceProvider);
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    Future(() async {
+      try {
+        final tags = await service.suggestTags(note);
+        if (tags.isNotEmpty) repo.updateFields(note.id, {'tags': tags});
+      } catch (_) {
+        // Anahtar yoksa veya istek başarısızsa sessizce geç.
+      }
+    });
+  }
+
+  /// AI'dan etiket önerisi al ve seçtir.
+  Future<void> _suggestTags() async {
+    final note = _note;
+    if (note == null || note.isEmpty) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    List<String> suggestions;
+    try {
+      suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
+    } on GeminiException catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
+      ));
+      return;
+    }
+    suggestions = [
+      for (final tag in suggestions)
+        if (!note.tags.contains(tag)) tag,
+    ];
+    if (suggestions.isEmpty || !mounted) return;
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Wrap(
+            spacing: 8,
+            children: [
+              for (final tag in suggestions)
+                ActionChip(
+                  label: Text('#$tag'),
+                  onPressed: () => Navigator.pop(sheetContext, tag),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (selected != null) {
+      _mutate(
+        (n) => n.copyWith(tags: {...n.tags, selected}.toList()),
+        immediate: true,
+      );
+    }
+  }
+
   Future<void> _addTag() async {
     final controller = TextEditingController();
     final l10n = context.l10n;
@@ -361,6 +431,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       immediate: true,
     );
     if (!archived) Navigator.of(context).pop();
+  }
+
+  /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).
+  void _replaceText(String text) {
+    final note = _note;
+    if (note == null || text.trim().isEmpty) return;
+    if (note.type == NoteType.text) {
+      _bodyController.text = text.trim();
+      _mutate((n) => n.copyWith(body: text.trim()), immediate: true);
+    } else {
+      const uuid = Uuid();
+      final lines = [
+        for (final line in text.split('\n'))
+          if (line.trim().isNotEmpty)
+            line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
+      ];
+      _mutate(
+        (n) => n.copyWith(
+          items: [for (final line in lines) NoteItem(id: uuid.v4(), text: line)],
+        ),
+        immediate: true,
+      );
+    }
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
@@ -512,6 +605,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             label: Text(l10n.addTag),
             onPressed: _addTag,
           ),
+          if (!note.isEmpty)
+            ActionChip(
+              avatar: const Icon(Icons.auto_awesome, size: 16),
+              label: Text(l10n.suggestTags),
+              onPressed: _suggestTags,
+            ),
           if (note.reminderAt == null)
             ActionChip(
               avatar: const Icon(Icons.alarm_add_outlined, size: 16),
@@ -668,8 +767,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
               const Spacer(),
               FilledButton.tonalIcon(
-                onPressed: () =>
-                    showAiSheet(context, note, onAppendText: _appendText),
+                onPressed: () => showAiSheet(
+                  context,
+                  note,
+                  onAppendText: _appendText,
+                  onReplaceText: _replaceText,
+                ),
                 icon: const Icon(Icons.auto_awesome, size: 18),
                 label: Text(l10n.aiTitle),
               ),

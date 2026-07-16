@@ -10,27 +10,41 @@ import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../data/api_key_store.dart';
 import '../data/gemini_service.dart';
+import 'pdf_chat_screen.dart';
 
 /// Editördeki "Yapay Zeka" düğmesinin açtığı alt sayfa.
 Future<void> showAiSheet(
   BuildContext context,
   Note note, {
   ValueChanged<String>? onAppendText,
+  ValueChanged<String>? onReplaceText,
 }) =>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => AiSheet(note: note, onAppendText: onAppendText),
+      builder: (_) => AiSheet(
+        note: note,
+        onAppendText: onAppendText,
+        onReplaceText: onReplaceText,
+      ),
     );
 
 class AiSheet extends ConsumerStatefulWidget {
-  const AiSheet({super.key, required this.note, this.onAppendText});
+  const AiSheet({
+    super.key,
+    required this.note,
+    this.onAppendText,
+    this.onReplaceText,
+  });
 
   final Note note;
 
   /// Sonucu (OCR, ses dökümü vb.) nota ekleyen geri çağırma.
   final ValueChanged<String>? onAppendText;
+
+  /// Sonucu notun içeriğiyle değiştiren geri çağırma ("Geliştir" için).
+  final ValueChanged<String>? onReplaceText;
 
   @override
   ConsumerState<AiSheet> createState() => _AiSheetState();
@@ -41,12 +55,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   String? _result;
   String? _error;
 
-  Future<void> _run(Future<String> Function(GeminiService) action,
-      {bool cacheAsSummary = false}) async {
+  Future<void> _run(
+    Future<String> Function(GeminiService) action, {
+    bool cacheAsSummary = false,
+    bool improvement = false,
+  }) async {
     setState(() {
       _loading = true;
       _result = null;
       _error = null;
+      _lastWasImprovement = improvement;
     });
     try {
       final service = ref.read(geminiServiceProvider);
@@ -94,6 +112,39 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     'Arapça',
     'Rusça',
   ];
+
+  bool _lastWasImprovement = false;
+
+  Future<void> _pickImprovement() async {
+    final l10n = context.l10n;
+    final options = <(String, String)>[
+      (l10n.improveFix, 'Yazım ve dilbilgisi hatalarını düzelt, anlamı koru'),
+      (l10n.improveFormal, 'Daha resmî ve profesyonel bir dille yeniden yaz'),
+      (l10n.improveShorten, 'Anlamı koruyarak yarı uzunluğa kısalt'),
+      (
+        l10n.improveBullets,
+        'Düzenli, madde işaretli bir listeye dönüştür (her satır bir madde)'
+      ),
+    ];
+    final instruction = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.aiImprove),
+        children: [
+          for (final (label, prompt) in options)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, prompt),
+              child: Text(label),
+            ),
+        ],
+      ),
+    );
+    if (instruction == null) return;
+    await _run(
+      (s) => s.rewriteText(widget.note.toPlainText(), instruction),
+      improvement: true,
+    );
+  }
 
   Future<void> _pickLanguageAndTranslate() async {
     final language = await showDialog<String>(
@@ -231,6 +282,13 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             widget.onAppendText!(_result!);
                             Navigator.pop(context);
                           },
+                    onReplace:
+                        widget.onReplaceText == null || !_lastWasImprovement
+                            ? null
+                            : () {
+                                widget.onReplaceText!(_result!);
+                                Navigator.pop(context);
+                              },
                   )
                 else ...[
                   if (_error != null)
@@ -264,7 +322,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     enabled: !widget.note.isEmpty,
                     onTap: _pickLanguageAndTranslate,
                   ),
-                  for (final pdf in pdfs)
+                  if (widget.onReplaceText != null)
+                    ListTile(
+                      leading: const Icon(Icons.auto_fix_high_outlined),
+                      title: Text(l10n.aiImprove),
+                      enabled: !widget.note.isEmpty,
+                      onTap: _pickImprovement,
+                    ),
+                  for (final pdf in pdfs) ...[
                     ListTile(
                       leading: const Icon(Icons.picture_as_pdf_outlined),
                       title: Text(
@@ -274,6 +339,23 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       ),
                       onTap: () => _run((s) => _summarizePdf(s, pdf)),
                     ),
+                    ListTile(
+                      leading: const Icon(Icons.question_answer_outlined),
+                      title: Text(
+                        l10n.aiAskPdf(pdf.fileName),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => PdfChatScreen(attachment: pdf),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                   for (final image in images)
                     ListTile(
                       leading: const Icon(Icons.document_scanner_outlined),
@@ -323,11 +405,17 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 }
 
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.text, required this.onCopy, this.onAppend});
+  const _ResultView({
+    required this.text,
+    required this.onCopy,
+    this.onAppend,
+    this.onReplace,
+  });
 
   final String text;
   final VoidCallback onCopy;
   final VoidCallback? onAppend;
+  final VoidCallback? onReplace;
 
   @override
   Widget build(BuildContext context) {
@@ -356,6 +444,15 @@ class _ResultView extends StatelessWidget {
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(context.l10n.copy),
               ),
+              if (onReplace != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilledButton.icon(
+                    onPressed: onReplace,
+                    icon: const Icon(Icons.published_with_changes, size: 18),
+                    label: Text(context.l10n.replaceNote),
+                  ),
+                ),
               if (onAppend != null)
                 FilledButton.tonalIcon(
                   onPressed: onAppend,

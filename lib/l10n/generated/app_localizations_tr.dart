@@ -463,4 +463,69 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get speakTranslation => 'Sesli oku';
+
+  @override
+  String get voiceCommand => 'Sesli komut';
+
+  @override
+  String get semanticSearchToggle => 'AI ile anlamsal arama';
+
+  @override
+  String get semanticSearchHint => 'Anlamıyla ara: \"araba masrafları\"...';
+
+  @override
+  String get briefingTitle => 'Günlük Brifing';
+
+  @override
+  String get briefingLoading => 'Brifing hazırlanıyor...';
+
+  @override
+  String get briefingEmpty => 'Bugün için içerik yok';
+
+  @override
+  String get briefingSetting => 'Günlük brifing bildirimi';
+
+  @override
+  String get briefingSettingInfo =>
+      'Her sabah seçtiğin saatte günün özeti için bildirim al';
+
+  @override
+  String get autoTagSetting => 'Otomatik etiketle';
+
+  @override
+  String get autoTagSettingInfo =>
+      'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler';
+
+  @override
+  String get suggestTags => 'Etiket öner';
+
+  @override
+  String get aiImprove => 'Notu geliştir';
+
+  @override
+  String get improveFix => 'Yazımı ve dilbilgisini düzelt';
+
+  @override
+  String get improveFormal => 'Daha resmî yap';
+
+  @override
+  String get improveShorten => 'Kısalt';
+
+  @override
+  String get improveBullets => 'Madde listesine çevir';
+
+  @override
+  String get replaceNote => 'Notu değiştir';
+
+  @override
+  String aiAskPdf(String name) {
+    return 'PDF\'e soru sor: $name';
+  }
+
+  @override
+  String get pdfChatHint =>
+      'Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"';
+
+  @override
+  String get pdfChatInputHint => 'PDF hakkında bir soru yaz...';
 }

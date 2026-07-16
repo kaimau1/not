@@ -28,6 +28,19 @@ class NoteFilterNotifier extends Notifier<NoteFilter> {
   void set(NoteFilter value) => state = value;
 }
 
+/// Anlamsal (AI) arama modu açık mı?
+final semanticSearchEnabledProvider =
+    NotifierProvider<SemanticSearchEnabledNotifier, bool>(
+  SemanticSearchEnabledNotifier.new,
+);
+
+class SemanticSearchEnabledNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
 /// Seçili etiket (null = etiket filtresi yok).
 final selectedTagProvider = NotifierProvider<SelectedTagNotifier, String?>(
   SelectedTagNotifier.new,

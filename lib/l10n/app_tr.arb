@@ -196,5 +196,30 @@
   "pushToTalk": "Konuşmak için dokun",
   "pushToTalkHint": "Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.",
   "autoSpeak": "Çeviriyi sesli oku",
-  "speakTranslation": "Sesli oku"
+  "speakTranslation": "Sesli oku",
+  "voiceCommand": "Sesli komut",
+  "semanticSearchToggle": "AI ile anlamsal arama",
+  "semanticSearchHint": "Anlamıyla ara: \"araba masrafları\"...",
+  "briefingTitle": "Günlük Brifing",
+  "briefingLoading": "Brifing hazırlanıyor...",
+  "briefingEmpty": "Bugün için içerik yok",
+  "briefingSetting": "Günlük brifing bildirimi",
+  "briefingSettingInfo": "Her sabah seçtiğin saatte günün özeti için bildirim al",
+  "autoTagSetting": "Otomatik etiketle",
+  "autoTagSettingInfo": "Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler",
+  "suggestTags": "Etiket öner",
+  "aiImprove": "Notu geliştir",
+  "improveFix": "Yazımı ve dilbilgisini düzelt",
+  "improveFormal": "Daha resmî yap",
+  "improveShorten": "Kısalt",
+  "improveBullets": "Madde listesine çevir",
+  "replaceNote": "Notu değiştir",
+  "aiAskPdf": "PDF'e soru sor: {name}",
+  "@aiAskPdf": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
+  "pdfChatInputHint": "PDF hakkında bir soru yaz..."
 }
