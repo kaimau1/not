@@ -99,3 +99,19 @@ lib/
 flutter analyze
 flutter test
 ```
+
+## CI: Otomatik derleme (GitHub Actions)
+
+Her push'ta `.github/workflows/build.yml` çalışır: önce analiz + testler, ardından **Android APK** ve **Windows** sürümleri derlenip Actions sekmesinde *artifact* olarak yüklenir (`notlar-android-apk` ve `notlar-windows`). İndirmek için: GitHub → **Actions** → ilgili çalıştırma → **Artifacts**.
+
+Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları tanımlayabilirsin (Settings → Secrets and variables → Actions):
+
+| Secret | Açıklama |
+|---|---|
+| `GOOGLE_SERVER_CLIENT_ID` | Web client ID (Android girişi) |
+| `GOOGLE_DESKTOP_CLIENT_ID` | Desktop OAuth client ID (Windows girişi) |
+| `GOOGLE_DESKTOP_CLIENT_SECRET` | Desktop OAuth client secret |
+
+Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır; bu durumda Google girişi için değerleri yerel derlemede `--dart-define` ile vermen gerekir.
+
+> Not: `lib/firebase_options.dart` yer tutucu değerlerle derlenirse uygulama açılışta kurulum ekranı gösterir. Gerçek yapılandırmayı (`flutterfire configure` çıktısını) commit'lersen CI'daki APK doğrudan kullanılabilir olur.
