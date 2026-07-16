@@ -60,7 +60,8 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
       final dir = await getTemporaryDirectory();
       _path = p.join(dir.path, 'sesli_${DateTime.now().millisecondsSinceEpoch}.m4a');
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 96000),
+        // 64 kbps konuşma için yeterli; küçük dosya = hızlı yükleme = az bekleme.
+        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 64000),
         path: _path!,
       );
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -95,30 +96,23 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
       File(path).delete().ignore();
 
       final service = ref.read(geminiServiceProvider);
-      final transcript = await service.transcribeAudio(bytes, 'audio/mp4');
-      if (transcript.trim().isEmpty) {
-        throw StateError(l10n.voiceNothingHeard);
-      }
-
-      // Asistan konuşmadan uygun notu kendisi oluşturur.
       final assistant = ref.read(assistantServiceProvider);
       final notes = ref.read(notesStreamProvider).value ?? const [];
       String reply;
       try {
-        reply = await service.assistantChat(
+        // Tek çağrı: ses doğrudan asistana gider (ayrı transkripsiyon yok).
+        reply = await service.assistantVoiceNote(
           notesContext: assistant.buildNotesContext(notes),
-          history: [
-            ChatTurn(
-              isUser: true,
-              text: 'Şu sesli nottan uygun bir not oluştur (alışveriş/'
-                  'yapılacaklar sayılıyorsa checklist, aksi hâlde metin; '
-                  'tarih/saat geçiyorsa hatırlatıcı ekle): "$transcript"',
-            ),
-          ],
+          audioBytes: bytes,
+          mimeType: 'audio/mp4',
           onToolCall: assistant.execute,
         );
       } on GeminiException {
-        // Asistan başarısız olursa düz metin not olarak kaydet.
+        // Asistan başarısız olursa eski yol: yazıya dök, düz not kaydet.
+        final transcript = await service.transcribeAudio(bytes, 'audio/mp4');
+        if (transcript.trim().isEmpty) {
+          throw StateError(l10n.voiceNothingHeard);
+        }
         final repo = ref.read(notesRepositoryProvider);
         if (repo == null) rethrow;
         final id = await repo.createNote(NoteType.text);

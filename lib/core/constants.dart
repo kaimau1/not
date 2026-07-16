@@ -17,6 +17,9 @@ abstract final class AppConstants {
     'gemini-3.1-flash-lite',
     'gemini-2.5-flash',
   ];
+
+  /// Gecikmeye duyarlı akışlarda (sesli not) ilk denenecek hızlı model.
+  static const String fastGeminiModel = 'gemini-3.1-flash-lite';
   static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';

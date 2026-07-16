@@ -74,6 +74,9 @@ dependencies:
   flutter_timezone: ^5.1.0
   record: ^7.1.1
   just_audio: ^0.10.6
+  # Windows'ta just_audio'nun ses motoru; olmadan masaüstünde hiç ses çalmaz
+  # (canlı çeviri sesi, TTS ve ses ekleri dahil).
+  just_audio_windows: ^0.2.2
   share_plus: ^13.2.1
   home_widget: ^0.9.3
   web_socket_channel: ^3.0.3

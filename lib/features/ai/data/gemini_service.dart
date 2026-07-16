@@ -179,22 +179,26 @@ class GeminiService {
 
   /// [run]'ı modellerle sırayla dener: 404 ve 429'da sıradaki modele geçer,
   /// diğer hatalar aynen fırlatılır. Çalışan model hatırlanır; sonraki
-  /// çağrılar doğrudan onunla başlar.
+  /// çağrılar doğrudan onunla başlar. [prefer] verilirse o çağrı için ilk
+  /// sıraya alınır (hız tercihi) ama genel sıralamayı değiştirmez.
   Future<T> _withModel<T>(
     String key,
-    Future<T> Function(String model) run,
-  ) async {
+    Future<T> Function(String model) run, {
+    String? prefer,
+  }) async {
     final candidates = _candidates ??= await _fetchCandidates(key);
-    final active = _activeModel;
+    final first = prefer != null && candidates.contains(prefer)
+        ? prefer
+        : _activeModel;
     final ordered = [
-      ?active,
-      ...candidates.where((m) => m != active),
+      ?first,
+      ...candidates.where((m) => m != first),
     ];
     DioException? lastSkipped;
     for (final model in ordered) {
       try {
         final result = await run(model);
-        _activeModel = model;
+        if (prefer == null) _activeModel = model;
         return result;
       } on DioException catch (e) {
         final status = e.response?.statusCode;
@@ -588,6 +592,72 @@ class GeminiService {
     }
   }
 
+  /// Asistan konuşmalarının ortak giriş turları (kimlik + not bağlamı).
+  static List<Map<String, dynamic>> _assistantPreamble(String notesContext) => [
+        {
+          'role': 'user',
+          'parts': [
+            {
+              'text': 'Sen "Notlar" uygulamasının asistanısın. Türkçe, kısa ve '
+                  'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
+                  'veya silmeni isteyebilir; bunun için sana verilen araçları '
+                  'kullan. Tarihler için ISO 8601 kullan; şu an: '
+                  '${DateTime.now().toIso8601String()}. Alışveriş/yapılacak '
+                  'listeleri için "checklist" tipini kullan. Bir aracı '
+                  'çağırdıktan sonra kullanıcıya ne yaptığını tek cümleyle '
+                  'özetle.\n\nKULLANICININ NOT DEFTERİ:\n$notesContext',
+            },
+          ],
+        },
+        {
+          'role': 'model',
+          'parts': [
+            {'text': 'Anladım. Notların üzerinde çalışmaya hazırım.'},
+          ],
+        },
+      ];
+
+  /// Sesli hızlı not: ses kaydı TEK çağrıda yazıya dökülür ve asistan uygun
+  /// notu araçlarıyla oluşturur (eski akış: ayrı transkripsiyon + asistan =
+  /// iki kat gecikme). Hız için küçük model ilk sırada denenir.
+  Future<String> assistantVoiceNote({
+    required String notesContext,
+    required Uint8List audioBytes,
+    required String mimeType,
+    required Future<Map<String, dynamic>> Function(
+      String name,
+      Map<String, dynamic> args,
+    ) onToolCall,
+  }) async {
+    final key = await _apiKey();
+    final contents = [
+      ..._assistantPreamble(notesContext),
+      {
+        'role': 'user',
+        'parts': [
+          {
+            'inline_data': {
+              'mime_type': mimeType,
+              'data': base64Encode(audioBytes),
+            },
+          },
+          {
+            'text': 'Bu ses kaydındaki konuşmadan uygun bir not oluştur: '
+                'alışveriş/yapılacaklar sayılıyorsa checklist, aksi hâlde '
+                'metin; tarih/saat geçiyorsa hatırlatıcı ekle. Kayıtta '
+                'anlaşılır konuşma yoksa not oluşturma ve bunu belirt.',
+          },
+        ],
+      },
+    ];
+    return _runToolLoop(
+      key,
+      contents,
+      onToolCall,
+      prefer: AppConstants.fastGeminiModel,
+    );
+  }
+
   /// Asistan modu: model gerektiğinde not oluşturma/düzenleme araçlarını
   /// çağırır; araç sonuçları geri beslenir ve nihai metin yanıtı döner.
   Future<String> assistantChat({
@@ -599,29 +669,8 @@ class GeminiService {
     ) onToolCall,
   }) async {
     final key = await _apiKey();
-    final now = DateTime.now();
-    final contents = <Map<String, dynamic>>[
-      {
-        'role': 'user',
-        'parts': [
-          {
-            'text': 'Sen "Notlar" uygulamasının asistanısın. Türkçe, kısa ve '
-                'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
-                'veya silmeni isteyebilir; bunun için sana verilen araçları '
-                'kullan. Tarihler için ISO 8601 kullan; şu an: '
-                '${now.toIso8601String()}. Alışveriş/yapılacak listeleri için '
-                '"checklist" tipini kullan. Bir aracı çağırdıktan sonra '
-                'kullanıcıya ne yaptığını tek cümleyle özetle.\n\n'
-                'KULLANICININ NOT DEFTERİ:\n$notesContext',
-          },
-        ],
-      },
-      {
-        'role': 'model',
-        'parts': [
-          {'text': 'Anladım. Notların üzerinde çalışmaya hazırım.'},
-        ],
-      },
+    final contents = [
+      ..._assistantPreamble(notesContext),
       for (final turn in history)
         {
           'role': turn.isUser ? 'user' : 'model',
@@ -630,6 +679,20 @@ class GeminiService {
           ],
         },
     ];
+    return _runToolLoop(key, contents, onToolCall);
+  }
+
+  /// Araç çağrısı döngüsü: model araç isterse çalıştırılır, sonuç geri
+  /// beslenir; metin yanıtı gelince döner.
+  Future<String> _runToolLoop(
+    String key,
+    List<Map<String, dynamic>> contents,
+    Future<Map<String, dynamic>> Function(
+      String name,
+      Map<String, dynamic> args,
+    ) onToolCall, {
+    String? prefer,
+  }) async {
 
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(
@@ -644,6 +707,7 @@ class GeminiService {
             ],
           },
         ),
+        prefer: prefer,
       );
       final data = response.data;
 
