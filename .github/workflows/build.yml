@@ -51,11 +51,27 @@ jobs:
       - name: Bağımlılıkları indir
         run: flutter pub get
 
+      # Kalıcı imza: keystore GitHub Secrets'tan geri oluşturulur. Secrets
+      # tanımlı değilse bu adım atlanır ve APK debug anahtarıyla imzalanır.
+      - name: İmza anahtarını hazırla
+        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/notlar-release.jks
+          {
+            echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            echo "keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            echo "keyAlias=notlar"
+            echo "storeFile=notlar-release.jks"
+          } > android/key.properties
+
       # GOOGLE_SERVER_CLIENT_ID reposunun Settings → Secrets kısmında tanımlıysa
       # Google girişi gömülü gelir; tanımlı değilse uygulama yine derlenir.
+      # --build-number her derlemede artar; böylece yeni APK telefonda mevcut
+      # sürümün üzerine sorunsuz kurulur.
       - name: APK derle
         run: >
           flutter build apk --release
+          --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: APK'yı yükle
@@ -84,6 +100,7 @@ jobs:
       - name: Windows derle
         run: >
           flutter build windows --release
+          --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_DESKTOP_CLIENT_ID=${{ secrets.GOOGLE_DESKTOP_CLIENT_ID }}
           --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}
 
