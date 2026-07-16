@@ -1,0 +1,327 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../data/notes_repository.dart';
+import '../data/upload_queue.dart';
+import '../domain/note.dart';
+import '../domain/note_type.dart';
+import 'note_card.dart';
+import 'notes_providers.dart';
+
+class DashboardScreen extends ConsumerStatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _createNote(NoteType type) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(type);
+    if (mounted) await context.push('/note/$id');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Ek yükleme kuyruğunu ayakta tut.
+    ref.watch(uploadQueueProvider);
+
+    final l10n = context.l10n;
+    final notesAsync = ref.watch(filteredNotesProvider);
+    final query = ref.watch(searchQueryProvider);
+
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
+            _createNote(NoteType.text),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          body: SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final columns =
+                    (constraints.maxWidth / 220).floor().clamp(2, 6);
+                return CustomScrollView(
+                  slivers: [
+                    SliverAppBar(
+                      floating: true,
+                      snap: true,
+                      titleSpacing: 12,
+                      title: _SearchField(controller: _searchController),
+                      actions: [
+                        IconButton(
+                          tooltip: l10n.aiSuggestions,
+                          icon: const Icon(Icons.auto_awesome_outlined),
+                          onPressed: () => context.push('/suggestions'),
+                        ),
+                        IconButton(
+                          tooltip: l10n.importantEmails,
+                          icon: const Icon(Icons.mark_email_unread_outlined),
+                          onPressed: () => context.push('/mail'),
+                        ),
+                        IconButton(
+                          tooltip: l10n.settings,
+                          icon: const Icon(Icons.settings_outlined),
+                          onPressed: () => context.push('/settings'),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                    ),
+                    SliverToBoxAdapter(
+                      child: _QuickAddBar(onCreate: _createNote),
+                    ),
+                    const SliverToBoxAdapter(child: _FilterChips()),
+                    ...notesAsync.when(
+                      data: (notes) => _buildNoteSlivers(
+                        context,
+                        notes,
+                        columns,
+                        searchActive: query.trim().isNotEmpty,
+                      ),
+                      loading: () => [
+                        const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                      ],
+                      error: (e, _) => [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: EmptyState(
+                            icon: Icons.error_outline,
+                            title: l10n.genericError(e.toString()),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 88)),
+                  ],
+                );
+              },
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            tooltip: l10n.newTextNote,
+            onPressed: () => _createNote(NoteType.text),
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildNoteSlivers(
+    BuildContext context,
+    List<Note> notes,
+    int columns, {
+    required bool searchActive,
+  }) {
+    final l10n = context.l10n;
+    if (notes.isEmpty) {
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: searchActive
+              ? EmptyState(icon: Icons.search_off, title: l10n.emptySearch)
+              : EmptyState(
+                  icon: Icons.sticky_note_2_outlined,
+                  title: l10n.emptyNotes,
+                  subtitle: l10n.emptyNotesHint,
+                ),
+        ),
+      ];
+    }
+
+    final pinned = [for (final n in notes) if (n.pinned) n];
+    final others = [for (final n in notes) if (!n.pinned) n];
+
+    Widget grid(List<Note> items) => SliverMasonryGrid.count(
+          crossAxisCount: columns,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childCount: items.length,
+          itemBuilder: (context, index) =>
+              NoteCard(key: ValueKey(items[index].id), note: items[index]),
+        );
+
+    Widget header(String text) => SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Text(
+              text.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    letterSpacing: 1.1,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
+        );
+
+    const gridPadding = EdgeInsets.symmetric(horizontal: 12);
+
+    if (pinned.isEmpty || others.isEmpty) {
+      return [
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
+        SliverPadding(padding: gridPadding, sliver: grid(notes)),
+      ];
+    }
+    return [
+      header(l10n.sectionPinned),
+      SliverPadding(padding: gridPadding, sliver: grid(pinned)),
+      header(l10n.sectionOthers),
+      SliverPadding(padding: gridPadding, sliver: grid(others)),
+    ];
+  }
+}
+
+class _SearchField extends ConsumerWidget {
+  const _SearchField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final query = ref.watch(searchQueryProvider);
+    return TextField(
+      controller: controller,
+      onChanged: (value) => ref.read(searchQueryProvider.notifier).set(value),
+      textInputAction: TextInputAction.search,
+      decoration: InputDecoration(
+        hintText: context.l10n.searchHint,
+        prefixIcon: const Icon(Icons.search, size: 20),
+        suffixIcon: query.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () {
+                  controller.clear();
+                  ref.read(searchQueryProvider.notifier).set('');
+                },
+              ),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+      ),
+    );
+  }
+}
+
+/// Keep tarzı hızlı ekleme çubuğu: tıkla → metin notu; sağdaki ikonlar
+/// diğer tipleri tek dokunuşla oluşturur.
+class _QuickAddBar extends StatelessWidget {
+  const _QuickAddBar({required this.onCreate});
+
+  final Future<void> Function(NoteType) onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Material(
+            color: scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => onCreate(NoteType.text),
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: scheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.quickAddHint,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: l10n.newChecklist,
+                        icon: const Icon(Icons.check_box_outlined, size: 20),
+                        onPressed: () => onCreate(NoteType.checklist),
+                      ),
+                      IconButton(
+                        tooltip: l10n.newOrderedList,
+                        icon: const Icon(
+                          Icons.format_list_numbered_rounded,
+                          size: 20,
+                        ),
+                        onPressed: () => onCreate(NoteType.ordered),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChips extends ConsumerWidget {
+  const _FilterChips();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final selected = ref.watch(noteFilterProvider);
+
+    final entries = <(NoteFilter, String)>[
+      (NoteFilter.all, l10n.filterAll),
+      (NoteFilter.text, l10n.filterText),
+      (NoteFilter.checklist, l10n.filterChecklist),
+      (NoteFilter.ordered, l10n.filterOrdered),
+      (NoteFilter.pinned, l10n.filterPinned),
+    ];
+
+    return SizedBox(
+      height: 46,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        scrollDirection: Axis.horizontal,
+        itemCount: entries.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (context, index) {
+          final (filter, label) = entries[index];
+          return FilterChip(
+            label: Text(label),
+            selected: selected == filter,
+            onSelected: (_) =>
+                ref.read(noteFilterProvider.notifier).set(filter),
+          );
+        },
+      ),
+    );
+  }
+}

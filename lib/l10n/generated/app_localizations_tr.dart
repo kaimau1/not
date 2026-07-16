@@ -1,0 +1,296 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Turkish (`tr`).
+class AppLocalizationsTr extends AppLocalizations {
+  AppLocalizationsTr([String locale = 'tr']) : super(locale);
+
+  @override
+  String get appName => 'Notlar';
+
+  @override
+  String get loginTagline => 'Notların her cihazda seninle';
+
+  @override
+  String get signInWithGoogle => 'Google ile giriş yap';
+
+  @override
+  String loginError(String error) {
+    return 'Giriş başarısız: $error';
+  }
+
+  @override
+  String get searchHint => 'Notlarda ara...';
+
+  @override
+  String get quickAddHint => 'Not al...';
+
+  @override
+  String get filterAll => 'Tümü';
+
+  @override
+  String get filterText => 'Metin';
+
+  @override
+  String get filterChecklist => 'Liste';
+
+  @override
+  String get filterOrdered => 'Sıralı';
+
+  @override
+  String get filterPinned => 'Sabitlenmiş';
+
+  @override
+  String get sectionPinned => 'Sabitlenmiş';
+
+  @override
+  String get sectionOthers => 'Diğerleri';
+
+  @override
+  String get emptyNotes => 'Henüz not yok';
+
+  @override
+  String get emptyNotesHint => 'İlk notunu eklemek için + düğmesine dokun';
+
+  @override
+  String get emptySearch => 'Sonuç bulunamadı';
+
+  @override
+  String get newTextNote => 'Metin notu';
+
+  @override
+  String get newChecklist => 'Alışveriş listesi';
+
+  @override
+  String get newOrderedList => 'Sıralı liste';
+
+  @override
+  String get noteDeleted => 'Not silindi';
+
+  @override
+  String get undo => 'Geri Al';
+
+  @override
+  String get titleHint => 'Başlık';
+
+  @override
+  String get bodyHint => 'Not...';
+
+  @override
+  String get newItemHint => 'Yeni öğe';
+
+  @override
+  String checkedItemsCount(int count) {
+    return 'İşaretlenenler ($count)';
+  }
+
+  @override
+  String moreItemsCount(int count) {
+    return '+$count öğe daha';
+  }
+
+  @override
+  String get addAttachment => 'Ekle';
+
+  @override
+  String get addImage => 'Görsel ekle';
+
+  @override
+  String get addPdf => 'PDF ekle';
+
+  @override
+  String get pasteImage => 'Panodan görsel yapıştır';
+
+  @override
+  String get clipboardEmpty => 'Panoda görsel yok';
+
+  @override
+  String get attachmentUploading => 'Yükleniyor...';
+
+  @override
+  String get attachmentNotSynced => 'Dosya bu cihaza henüz senkronlanmadı';
+
+  @override
+  String get attachmentTooLarge => 'Dosya çok büyük (en fazla 25 MB)';
+
+  @override
+  String get removeAttachment => 'Eki kaldır';
+
+  @override
+  String get pin => 'Sabitle';
+
+  @override
+  String get unpin => 'Sabitlemeyi kaldır';
+
+  @override
+  String get delete => 'Sil';
+
+  @override
+  String get color => 'Renk';
+
+  @override
+  String get colorDefault => 'Varsayılan';
+
+  @override
+  String get aiTitle => 'Yapay Zeka';
+
+  @override
+  String get aiSummarize => 'Notu özetle';
+
+  @override
+  String get aiAnalyze => 'Analiz et';
+
+  @override
+  String aiSummarizePdf(String name) {
+    return 'PDF\'i özetle: $name';
+  }
+
+  @override
+  String get aiSuggestions => 'Öneriler';
+
+  @override
+  String get aiNoApiKey => 'Önce Ayarlar\'dan Gemini API anahtarını gir';
+
+  @override
+  String aiError(String error) {
+    return 'Yapay zeka isteği başarısız: $error';
+  }
+
+  @override
+  String get aiSummaryTitle => 'AI Özeti';
+
+  @override
+  String get aiThinking => 'Düşünüyor...';
+
+  @override
+  String get copy => 'Kopyala';
+
+  @override
+  String get copied => 'Kopyalandı';
+
+  @override
+  String get settings => 'Ayarlar';
+
+  @override
+  String get settingsAppearance => 'Görünüm';
+
+  @override
+  String get themeSystem => 'Sistem';
+
+  @override
+  String get themeLight => 'Açık';
+
+  @override
+  String get themeDark => 'Koyu';
+
+  @override
+  String get settingsAi => 'Yapay Zeka';
+
+  @override
+  String get geminiApiKey => 'Gemini API Anahtarı';
+
+  @override
+  String get geminiApiKeyHint => 'AIza... ile başlayan anahtarı yapıştır';
+
+  @override
+  String get geminiApiKeyInfo =>
+      'Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.';
+
+  @override
+  String get validateAndSave => 'Doğrula ve Kaydet';
+
+  @override
+  String get apiKeyValid => 'API anahtarı doğrulandı ve kaydedildi';
+
+  @override
+  String get apiKeyInvalid => 'API anahtarı geçersiz';
+
+  @override
+  String get apiKeySavedBadge => 'Kayıtlı';
+
+  @override
+  String get removeApiKey => 'Anahtarı sil';
+
+  @override
+  String get settingsGmail => 'Gmail';
+
+  @override
+  String get connectGmail => 'Gmail\'i Bağla';
+
+  @override
+  String get gmailConnected => 'Gmail bağlı';
+
+  @override
+  String get gmailInfo =>
+      'Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.';
+
+  @override
+  String get disconnectGmail => 'Bağlantıyı kes';
+
+  @override
+  String get importantEmails => 'Önemli E-postalar';
+
+  @override
+  String get refresh => 'Yenile';
+
+  @override
+  String get account => 'Hesap';
+
+  @override
+  String get signOut => 'Çıkış yap';
+
+  @override
+  String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
+
+  @override
+  String get mailEmpty => 'Önemli e-posta bulunamadı';
+
+  @override
+  String get mailScanning => 'E-postalar taranıyor...';
+
+  @override
+  String mailWhyImportant(String reason) {
+    return 'Neden önemli: $reason';
+  }
+
+  @override
+  String get suggestionsTitle => 'Öneriler';
+
+  @override
+  String get suggestionsEmpty => 'Öneri üretebilmek için birkaç not ekle';
+
+  @override
+  String get suggestionsIntro => 'Notlarına göre öneriler';
+
+  @override
+  String get generating => 'Üretiliyor...';
+
+  @override
+  String get retry => 'Tekrar dene';
+
+  @override
+  String get cancel => 'İptal';
+
+  @override
+  String get close => 'Kapat';
+
+  @override
+  String get ok => 'Tamam';
+
+  @override
+  String get syncPending => 'Senkron bekleniyor';
+
+  @override
+  String get synced => 'Senkronize';
+
+  @override
+  String get noteNotFound => 'Not bulunamadı';
+
+  @override
+  String genericError(String error) {
+    return 'Bir şeyler ters gitti: $error';
+  }
+}

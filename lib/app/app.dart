@@ -1,0 +1,29 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../core/l10n_ext.dart';
+import '../features/settings/settings_providers.dart';
+import 'router.dart';
+import 'theme/app_theme.dart';
+
+class NotlarApp extends ConsumerWidget {
+  const NotlarApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
+
+    return MaterialApp.router(
+      title: 'Notlar',
+      debugShowCheckedModeBanner: false,
+      routerConfig: router,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: themeMode,
+      locale: const Locale('tr'),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+    );
+  }
+}

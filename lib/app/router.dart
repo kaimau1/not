@@ -1,0 +1,70 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../features/ai/presentation/suggestions_screen.dart';
+import '../features/auth/presentation/auth_providers.dart';
+import '../features/auth/presentation/login_screen.dart';
+import '../features/gmail/presentation/mail_summary_screen.dart';
+import '../features/notes/presentation/dashboard_screen.dart';
+import '../features/notes/presentation/editor/note_editor_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final refresh = _RefreshNotifier(
+    ref.watch(authRepositoryProvider).authStateChanges(),
+  );
+  ref.onDispose(refresh.dispose);
+
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
+      // İlk emisyon gelene kadar yönlendirme yapma (login ekranı flaşlamasın).
+      if (authState.isLoading && !authState.hasValue) return null;
+      final loggedIn = authState.value != null;
+      final loggingIn = state.matchedLocation == '/login';
+      if (!loggedIn && !loggingIn) return '/login';
+      if (loggedIn && loggingIn) return '/';
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+      GoRoute(
+        path: '/note/:id',
+        builder: (context, state) =>
+            NoteEditorScreen(noteId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/mail',
+        builder: (context, state) => const MailSummaryScreen(),
+      ),
+      GoRoute(
+        path: '/suggestions',
+        builder: (context, state) => const SuggestionsScreen(),
+      ),
+    ],
+  );
+});
+
+class _RefreshNotifier extends ChangeNotifier {
+  _RefreshNotifier(Stream<dynamic> stream) {
+    _sub = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _sub;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}

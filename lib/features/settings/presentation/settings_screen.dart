@@ -1,0 +1,337 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/l10n_ext.dart';
+import '../../ai/data/api_key_store.dart';
+import '../../ai/data/gemini_service.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../gmail/data/gmail_auth.dart';
+import '../settings_providers.dart';
+
+class SettingsScreen extends ConsumerWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.settings)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _SectionTitle(l10n.settingsAppearance),
+              const _ThemeSelector(),
+              const SizedBox(height: 24),
+              _SectionTitle(l10n.settingsAi),
+              const _GeminiKeyEditor(),
+              const SizedBox(height: 24),
+              _SectionTitle(l10n.settingsGmail),
+              const _GmailSection(),
+              const SizedBox(height: 24),
+              _SectionTitle(l10n.account),
+              const _AccountSection(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              letterSpacing: 1.1,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+      ),
+    );
+  }
+}
+
+class _ThemeSelector extends ConsumerWidget {
+  const _ThemeSelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final mode = ref.watch(themeModeProvider);
+    return SegmentedButton<ThemeMode>(
+      segments: [
+        ButtonSegment(
+          value: ThemeMode.system,
+          label: Text(l10n.themeSystem),
+          icon: const Icon(Icons.brightness_auto_outlined),
+        ),
+        ButtonSegment(
+          value: ThemeMode.light,
+          label: Text(l10n.themeLight),
+          icon: const Icon(Icons.light_mode_outlined),
+        ),
+        ButtonSegment(
+          value: ThemeMode.dark,
+          label: Text(l10n.themeDark),
+          icon: const Icon(Icons.dark_mode_outlined),
+        ),
+      ],
+      selected: {mode},
+      onSelectionChanged: (selection) =>
+          ref.read(themeModeProvider.notifier).set(selection.first),
+    );
+  }
+}
+
+class _GeminiKeyEditor extends ConsumerStatefulWidget {
+  const _GeminiKeyEditor();
+
+  @override
+  ConsumerState<_GeminiKeyEditor> createState() => _GeminiKeyEditorState();
+}
+
+class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
+  final _controller = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _validateAndSave() async {
+    final key = _controller.text.trim();
+    if (key.isEmpty) return;
+    setState(() => _busy = true);
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final valid = await ref.read(geminiServiceProvider).validateKey(key);
+      if (!valid) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyInvalid)));
+        return;
+      }
+      await ref.read(apiKeyStoreProvider).save(key);
+      ref.invalidate(geminiApiKeyProvider);
+      _controller.clear();
+      messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyValid)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _removeKey() async {
+    await ref.read(apiKeyStoreProvider).clear();
+    ref.invalidate(geminiApiKeyProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final storedKey = ref.watch(geminiApiKeyProvider).value;
+    final hasKey = storedKey != null && storedKey.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (hasKey)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Chip(
+                  avatar: const Icon(Icons.key, size: 16),
+                  label: Text(
+                    '${l10n.geminiApiKey}: ${l10n.apiKeySavedBadge}',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: _removeKey,
+                  child: Text(l10n.removeApiKey),
+                ),
+              ],
+            ),
+          ),
+        TextField(
+          controller: _controller,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: l10n.geminiApiKey,
+            hintText: l10n.geminiApiKeyHint,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.geminiApiKeyInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 10),
+        FilledButton.tonalIcon(
+          onPressed: _busy ? null : _validateAndSave,
+          icon: _busy
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.check_circle_outline),
+          label: Text(l10n.validateAndSave),
+        ),
+      ],
+    );
+  }
+}
+
+class _GmailSection extends ConsumerStatefulWidget {
+  const _GmailSection();
+
+  @override
+  ConsumerState<_GmailSection> createState() => _GmailSectionState();
+}
+
+class _GmailSectionState extends ConsumerState<_GmailSection> {
+  bool _busy = false;
+
+  Future<void> _toggle(bool connected) async {
+    setState(() => _busy = true);
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final auth = ref.read(gmailAuthProvider);
+      if (connected) {
+        await auth.disconnect();
+      } else {
+        await auth.connect();
+      }
+      ref.invalidate(gmailConnectedProvider);
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final connected = ref.watch(gmailConnectedProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.gmailInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            if (connected) ...[
+              Chip(
+                avatar: Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(l10n.gmailConnected),
+              ),
+              const SizedBox(width: 8),
+              TextButton(
+                onPressed: _busy ? null : () => _toggle(true),
+                child: Text(l10n.disconnectGmail),
+              ),
+            ] else
+              FilledButton.tonalIcon(
+                onPressed: _busy ? null : () => _toggle(false),
+                icon: _busy
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.link),
+                label: Text(l10n.connectGmail),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _AccountSection extends ConsumerWidget {
+  const _AccountSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final user = ref.watch(authStateProvider).value;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (user != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              backgroundImage: user.photoURL != null
+                  ? NetworkImage(user.photoURL!)
+                  : null,
+              child: user.photoURL == null
+                  ? const Icon(Icons.person_outline)
+                  : null,
+            ),
+            title: Text(user.displayName ?? ''),
+            subtitle: Text(user.email ?? ''),
+          ),
+        TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
+          icon: const Icon(Icons.logout),
+          label: Text(l10n.signOut),
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: Text(l10n.signOut),
+                content: Text(l10n.signOutConfirm),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text(l10n.cancel),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text(l10n.signOut),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed ?? false) {
+              await ref.read(authRepositoryProvider).signOut();
+            }
+          },
+        ),
+      ],
+    );
+  }
+}

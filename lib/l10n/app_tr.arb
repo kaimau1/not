@@ -1,0 +1,128 @@
+{
+  "@@locale": "tr",
+  "appName": "Notlar",
+  "loginTagline": "Notların her cihazda seninle",
+  "signInWithGoogle": "Google ile giriş yap",
+  "loginError": "Giriş başarısız: {error}",
+  "@loginError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "searchHint": "Notlarda ara...",
+  "quickAddHint": "Not al...",
+  "filterAll": "Tümü",
+  "filterText": "Metin",
+  "filterChecklist": "Liste",
+  "filterOrdered": "Sıralı",
+  "filterPinned": "Sabitlenmiş",
+  "sectionPinned": "Sabitlenmiş",
+  "sectionOthers": "Diğerleri",
+  "emptyNotes": "Henüz not yok",
+  "emptyNotesHint": "İlk notunu eklemek için + düğmesine dokun",
+  "emptySearch": "Sonuç bulunamadı",
+  "newTextNote": "Metin notu",
+  "newChecklist": "Alışveriş listesi",
+  "newOrderedList": "Sıralı liste",
+  "noteDeleted": "Not silindi",
+  "undo": "Geri Al",
+  "titleHint": "Başlık",
+  "bodyHint": "Not...",
+  "newItemHint": "Yeni öğe",
+  "checkedItemsCount": "İşaretlenenler ({count})",
+  "@checkedItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "moreItemsCount": "+{count} öğe daha",
+  "@moreItemsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "addAttachment": "Ekle",
+  "addImage": "Görsel ekle",
+  "addPdf": "PDF ekle",
+  "pasteImage": "Panodan görsel yapıştır",
+  "clipboardEmpty": "Panoda görsel yok",
+  "attachmentUploading": "Yükleniyor...",
+  "attachmentNotSynced": "Dosya bu cihaza henüz senkronlanmadı",
+  "attachmentTooLarge": "Dosya çok büyük (en fazla 25 MB)",
+  "removeAttachment": "Eki kaldır",
+  "pin": "Sabitle",
+  "unpin": "Sabitlemeyi kaldır",
+  "delete": "Sil",
+  "color": "Renk",
+  "colorDefault": "Varsayılan",
+  "aiTitle": "Yapay Zeka",
+  "aiSummarize": "Notu özetle",
+  "aiAnalyze": "Analiz et",
+  "aiSummarizePdf": "PDF'i özetle: {name}",
+  "@aiSummarizePdf": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "aiSuggestions": "Öneriler",
+  "aiNoApiKey": "Önce Ayarlar'dan Gemini API anahtarını gir",
+  "aiError": "Yapay zeka isteği başarısız: {error}",
+  "@aiError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "aiSummaryTitle": "AI Özeti",
+  "aiThinking": "Düşünüyor...",
+  "copy": "Kopyala",
+  "copied": "Kopyalandı",
+  "settings": "Ayarlar",
+  "settingsAppearance": "Görünüm",
+  "themeSystem": "Sistem",
+  "themeLight": "Açık",
+  "themeDark": "Koyu",
+  "settingsAi": "Yapay Zeka",
+  "geminiApiKey": "Gemini API Anahtarı",
+  "geminiApiKeyHint": "AIza... ile başlayan anahtarı yapıştır",
+  "geminiApiKeyInfo": "Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.",
+  "validateAndSave": "Doğrula ve Kaydet",
+  "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
+  "apiKeyInvalid": "API anahtarı geçersiz",
+  "apiKeySavedBadge": "Kayıtlı",
+  "removeApiKey": "Anahtarı sil",
+  "settingsGmail": "Gmail",
+  "connectGmail": "Gmail'i Bağla",
+  "gmailConnected": "Gmail bağlı",
+  "gmailInfo": "Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.",
+  "disconnectGmail": "Bağlantıyı kes",
+  "importantEmails": "Önemli E-postalar",
+  "refresh": "Yenile",
+  "account": "Hesap",
+  "signOut": "Çıkış yap",
+  "signOutConfirm": "Çıkış yapmak istediğine emin misin?",
+  "mailEmpty": "Önemli e-posta bulunamadı",
+  "mailScanning": "E-postalar taranıyor...",
+  "mailWhyImportant": "Neden önemli: {reason}",
+  "@mailWhyImportant": {
+    "placeholders": {
+      "reason": {"type": "String"}
+    }
+  },
+  "suggestionsTitle": "Öneriler",
+  "suggestionsEmpty": "Öneri üretebilmek için birkaç not ekle",
+  "suggestionsIntro": "Notlarına göre öneriler",
+  "generating": "Üretiliyor...",
+  "retry": "Tekrar dene",
+  "cancel": "İptal",
+  "close": "Kapat",
+  "ok": "Tamam",
+  "syncPending": "Senkron bekleniyor",
+  "synced": "Senkronize",
+  "noteNotFound": "Not bulunamadı",
+  "genericError": "Bir şeyler ters gitti: {error}",
+  "@genericError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  }
+}

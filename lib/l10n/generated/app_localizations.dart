@@ -1,0 +1,668 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_tr.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'generated/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[Locale('tr')];
+
+  /// No description provided for @appName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar'**
+  String get appName;
+
+  /// No description provided for @loginTagline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların her cihazda seninle'**
+  String get loginTagline;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google ile giriş yap'**
+  String get signInWithGoogle;
+
+  /// No description provided for @loginError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş başarısız: {error}'**
+  String loginError(String error);
+
+  /// No description provided for @searchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarda ara...'**
+  String get searchHint;
+
+  /// No description provided for @quickAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not al...'**
+  String get quickAddHint;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get filterAll;
+
+  /// No description provided for @filterText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin'**
+  String get filterText;
+
+  /// No description provided for @filterChecklist.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get filterChecklist;
+
+  /// No description provided for @filterOrdered.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıralı'**
+  String get filterOrdered;
+
+  /// No description provided for @filterPinned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabitlenmiş'**
+  String get filterPinned;
+
+  /// No description provided for @sectionPinned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabitlenmiş'**
+  String get sectionPinned;
+
+  /// No description provided for @sectionOthers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğerleri'**
+  String get sectionOthers;
+
+  /// No description provided for @emptyNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz not yok'**
+  String get emptyNotes;
+
+  /// No description provided for @emptyNotesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk notunu eklemek için + düğmesine dokun'**
+  String get emptyNotesHint;
+
+  /// No description provided for @emptySearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonuç bulunamadı'**
+  String get emptySearch;
+
+  /// No description provided for @newTextNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin notu'**
+  String get newTextNote;
+
+  /// No description provided for @newChecklist.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş listesi'**
+  String get newChecklist;
+
+  /// No description provided for @newOrderedList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıralı liste'**
+  String get newOrderedList;
+
+  /// No description provided for @noteDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not silindi'**
+  String get noteDeleted;
+
+  /// No description provided for @undo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri Al'**
+  String get undo;
+
+  /// No description provided for @titleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get titleHint;
+
+  /// No description provided for @bodyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not...'**
+  String get bodyHint;
+
+  /// No description provided for @newItemHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni öğe'**
+  String get newItemHint;
+
+  /// No description provided for @checkedItemsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretlenenler ({count})'**
+  String checkedItemsCount(int count);
+
+  /// No description provided for @moreItemsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} öğe daha'**
+  String moreItemsCount(int count);
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get addAttachment;
+
+  /// No description provided for @addImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel ekle'**
+  String get addImage;
+
+  /// No description provided for @addPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF ekle'**
+  String get addPdf;
+
+  /// No description provided for @pasteImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Panodan görsel yapıştır'**
+  String get pasteImage;
+
+  /// No description provided for @clipboardEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Panoda görsel yok'**
+  String get clipboardEmpty;
+
+  /// No description provided for @attachmentUploading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yükleniyor...'**
+  String get attachmentUploading;
+
+  /// No description provided for @attachmentNotSynced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya bu cihaza henüz senkronlanmadı'**
+  String get attachmentNotSynced;
+
+  /// No description provided for @attachmentTooLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya çok büyük (en fazla 25 MB)'**
+  String get attachmentTooLarge;
+
+  /// No description provided for @removeAttachment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eki kaldır'**
+  String get removeAttachment;
+
+  /// No description provided for @pin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabitle'**
+  String get pin;
+
+  /// No description provided for @unpin.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabitlemeyi kaldır'**
+  String get unpin;
+
+  /// No description provided for @delete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sil'**
+  String get delete;
+
+  /// No description provided for @color.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk'**
+  String get color;
+
+  /// No description provided for @colorDefault.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan'**
+  String get colorDefault;
+
+  /// No description provided for @aiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay Zeka'**
+  String get aiTitle;
+
+  /// No description provided for @aiSummarize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu özetle'**
+  String get aiSummarize;
+
+  /// No description provided for @aiAnalyze.
+  ///
+  /// In tr, this message translates to:
+  /// **'Analiz et'**
+  String get aiAnalyze;
+
+  /// No description provided for @aiSummarizePdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'i özetle: {name}'**
+  String aiSummarizePdf(String name);
+
+  /// No description provided for @aiSuggestions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneriler'**
+  String get aiSuggestions;
+
+  /// No description provided for @aiNoApiKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce Ayarlar\'dan Gemini API anahtarını gir'**
+  String get aiNoApiKey;
+
+  /// No description provided for @aiError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zeka isteği başarısız: {error}'**
+  String aiError(String error);
+
+  /// No description provided for @aiSummaryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI Özeti'**
+  String get aiSummaryTitle;
+
+  /// No description provided for @aiThinking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düşünüyor...'**
+  String get aiThinking;
+
+  /// No description provided for @copy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala'**
+  String get copy;
+
+  /// No description provided for @copied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalandı'**
+  String get copied;
+
+  /// No description provided for @settings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarlar'**
+  String get settings;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get settingsAppearance;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu'**
+  String get themeDark;
+
+  /// No description provided for @settingsAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay Zeka'**
+  String get settingsAi;
+
+  /// No description provided for @geminiApiKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gemini API Anahtarı'**
+  String get geminiApiKey;
+
+  /// No description provided for @geminiApiKeyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'AIza... ile başlayan anahtarı yapıştır'**
+  String get geminiApiKeyHint;
+
+  /// No description provided for @geminiApiKeyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.'**
+  String get geminiApiKeyInfo;
+
+  /// No description provided for @validateAndSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Doğrula ve Kaydet'**
+  String get validateAndSave;
+
+  /// No description provided for @apiKeyValid.
+  ///
+  /// In tr, this message translates to:
+  /// **'API anahtarı doğrulandı ve kaydedildi'**
+  String get apiKeyValid;
+
+  /// No description provided for @apiKeyInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'API anahtarı geçersiz'**
+  String get apiKeyInvalid;
+
+  /// No description provided for @apiKeySavedBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı'**
+  String get apiKeySavedBadge;
+
+  /// No description provided for @removeApiKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anahtarı sil'**
+  String get removeApiKey;
+
+  /// No description provided for @settingsGmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail'**
+  String get settingsGmail;
+
+  /// No description provided for @connectGmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail\'i Bağla'**
+  String get connectGmail;
+
+  /// No description provided for @gmailConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gmail bağlı'**
+  String get gmailConnected;
+
+  /// No description provided for @gmailInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.'**
+  String get gmailInfo;
+
+  /// No description provided for @disconnectGmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kes'**
+  String get disconnectGmail;
+
+  /// No description provided for @importantEmails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önemli E-postalar'**
+  String get importantEmails;
+
+  /// No description provided for @refresh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yenile'**
+  String get refresh;
+
+  /// No description provided for @account.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap'**
+  String get account;
+
+  /// No description provided for @signOut.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış yap'**
+  String get signOut;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çıkış yapmak istediğine emin misin?'**
+  String get signOutConfirm;
+
+  /// No description provided for @mailEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önemli e-posta bulunamadı'**
+  String get mailEmpty;
+
+  /// No description provided for @mailScanning.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postalar taranıyor...'**
+  String get mailScanning;
+
+  /// No description provided for @mailWhyImportant.
+  ///
+  /// In tr, this message translates to:
+  /// **'Neden önemli: {reason}'**
+  String mailWhyImportant(String reason);
+
+  /// No description provided for @suggestionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneriler'**
+  String get suggestionsTitle;
+
+  /// No description provided for @suggestionsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneri üretebilmek için birkaç not ekle'**
+  String get suggestionsEmpty;
+
+  /// No description provided for @suggestionsIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarına göre öneriler'**
+  String get suggestionsIntro;
+
+  /// No description provided for @generating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üretiliyor...'**
+  String get generating;
+
+  /// No description provided for @retry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrar dene'**
+  String get retry;
+
+  /// No description provided for @cancel.
+  ///
+  /// In tr, this message translates to:
+  /// **'İptal'**
+  String get cancel;
+
+  /// No description provided for @close.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapat'**
+  String get close;
+
+  /// No description provided for @ok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamam'**
+  String get ok;
+
+  /// No description provided for @syncPending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkron bekleniyor'**
+  String get syncPending;
+
+  /// No description provided for @synced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkronize'**
+  String get synced;
+
+  /// No description provided for @noteNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not bulunamadı'**
+  String get noteNotFound;
+
+  /// No description provided for @genericError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir şeyler ters gitti: {error}'**
+  String genericError(String error);
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['tr'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'tr':
+      return AppLocalizationsTr();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

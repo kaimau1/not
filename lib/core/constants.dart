@@ -1,0 +1,33 @@
+/// Uygulama genelinde kullanılan sabitler.
+abstract final class AppConstants {
+  static const String appName = 'Notlar';
+
+  // Firestore koleksiyon adları
+  static const String usersCollection = 'users';
+  static const String notesCollection = 'notes';
+
+  // Gemini
+  static const String geminiBaseUrl =
+      'https://generativelanguage.googleapis.com/v1beta';
+  static const String defaultGeminiModel = 'gemini-2.5-flash';
+
+  // Ek sınırları
+  static const int maxAttachmentBytes = 25 * 1024 * 1024; // 25 MB
+  static const int maxImageDimension = 2048;
+
+  // Google OAuth (masaüstü) — derleme sırasında --dart-define ile verilir:
+  //   flutter run --dart-define=GOOGLE_DESKTOP_CLIENT_ID=... \
+  //               --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=...
+  static const String desktopClientId =
+      String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_ID');
+  static const String desktopClientSecret =
+      String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_SECRET');
+
+  // Android'de google_sign_in için sunucu (web) client ID.
+  // Boş bırakılırsa eklenti google-services.json içinden okur.
+  static const String serverClientId =
+      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+
+  static const String gmailReadonlyScope =
+      'https://www.googleapis.com/auth/gmail.readonly';
+}
