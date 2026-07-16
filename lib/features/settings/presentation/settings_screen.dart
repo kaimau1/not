@@ -24,6 +24,9 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _SectionTitle(l10n.settingsAppearance),
               const _ThemeSelector(),
+              const SizedBox(height: 12),
+              const _FontScaleSlider(),
+              const _DarkScheduleEditor(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsAi),
               const _GeminiKeyEditor(),
@@ -89,6 +92,100 @@ class _ThemeSelector extends ConsumerWidget {
       selected: {mode},
       onSelectionChanged: (selection) =>
           ref.read(themeModeProvider.notifier).set(selection.first),
+    );
+  }
+}
+
+class _FontScaleSlider extends ConsumerWidget {
+  const _FontScaleSlider();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scale = ref.watch(fontScaleProvider);
+    return Row(
+      children: [
+        const Icon(Icons.format_size, size: 18),
+        const SizedBox(width: 8),
+        Text(l10n.fontSize),
+        Expanded(
+          child: Slider(
+            value: scale,
+            min: 0.85,
+            max: 1.4,
+            divisions: 11,
+            label: '${(scale * 100).round()}%',
+            onChanged: (value) =>
+                ref.read(fontScaleProvider.notifier).set(value),
+          ),
+        ),
+        Text('${(scale * 100).round()}%'),
+      ],
+    );
+  }
+}
+
+class _DarkScheduleEditor extends ConsumerWidget {
+  const _DarkScheduleEditor();
+
+  String _format(int minutes) =>
+      '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
+
+  Future<void> _pick(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool isStart,
+  }) async {
+    final schedule = ref.read(darkScheduleProvider);
+    final current = isStart ? schedule.startMinutes : schedule.endMinutes;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: current ~/ 60, minute: current % 60),
+    );
+    if (time == null) return;
+    final minutes = time.hour * 60 + time.minute;
+    ref.read(darkScheduleProvider.notifier).update(
+          startMinutes: isStart ? minutes : null,
+          endMinutes: isStart ? null : minutes,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final schedule = ref.watch(darkScheduleProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.darkSchedule),
+          subtitle: Text(l10n.darkScheduleInfo),
+          value: schedule.enabled,
+          onChanged: (value) =>
+              ref.read(darkScheduleProvider.notifier).update(enabled: value),
+        ),
+        if (schedule.enabled)
+          Row(
+            children: [
+              const SizedBox(width: 4),
+              ActionChip(
+                avatar: const Icon(Icons.dark_mode_outlined, size: 16),
+                label: Text(_format(schedule.startMinutes)),
+                onPressed: () => _pick(context, ref, isStart: true),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.arrow_forward, size: 14),
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.light_mode_outlined, size: 16),
+                label: Text(_format(schedule.endMinutes)),
+                onPressed: () => _pick(context, ref, isStart: false),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

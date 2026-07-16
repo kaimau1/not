@@ -28,14 +28,49 @@ class NoteFilterNotifier extends Notifier<NoteFilter> {
   void set(NoteFilter value) => state = value;
 }
 
-/// Arama + filtre uygulanmış not listesi.
+/// Seçili etiket (null = etiket filtresi yok).
+final selectedTagProvider = NotifierProvider<SelectedTagNotifier, String?>(
+  SelectedTagNotifier.new,
+);
+
+class SelectedTagNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? value) => state = value;
+}
+
+/// Aktif (arşivlenmemiş) notlarda geçen tüm etiketler, alfabetik.
+final allTagsProvider = Provider<List<String>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final tags = <String>{
+    for (final note in notes)
+      if (note.archivedAt == null) ...note.tags,
+  };
+  final sorted = tags.toList()..sort();
+  return sorted;
+});
+
+/// Arşivlenmiş notlar (arşiv ekranı için).
+final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
+  final notes = ref.watch(notesStreamProvider);
+  return notes.whenData(
+    (list) => [for (final n in list) if (n.archivedAt != null) n],
+  );
+});
+
+/// Arama + filtre + etiket uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
   final query = ref.watch(searchQueryProvider).trim().toLowerCase();
   final filter = ref.watch(noteFilterProvider);
+  final tag = ref.watch(selectedTagProvider);
 
   return notes.whenData((list) {
-    var result = list;
+    var result = [for (final n in list) if (n.archivedAt == null) n];
+    if (tag != null) {
+      result = [for (final n in result) if (n.tags.contains(tag)) n];
+    }
     result = switch (filter) {
       NoteFilter.all => result,
       NoteFilter.text =>
@@ -61,6 +96,9 @@ bool _matches(Note note, String query) {
   }
   for (final attachment in note.attachments) {
     if (attachment.fileName.toLowerCase().contains(query)) return true;
+  }
+  for (final tag in note.tags) {
+    if (tag.toLowerCase().contains(query)) return true;
   }
   return false;
 }

@@ -124,5 +124,56 @@
     "placeholders": {
       "error": {"type": "String"}
     }
+  },
+  "addTag": "Etiket",
+  "tagHint": "ör. iş, ev, okul",
+  "addReminder": "Hatırlat",
+  "share": "Paylaş",
+  "archive": "Arşivle",
+  "unarchive": "Arşivden çıkar",
+  "archiveTitle": "Arşiv",
+  "archiveEmpty": "Arşivde not yok",
+  "trashTitle": "Çöp Kutusu",
+  "trashEmpty": "Çöp kutusu boş",
+  "trashInfo": "Silinen notlar burada durur; geri alabilir veya kalıcı olarak silebilirsin.",
+  "restore": "Geri al",
+  "deleteForever": "Kalıcı olarak sil",
+  "deleteForeverConfirm": "Bu not kalıcı olarak silinecek. Emin misin?",
+  "recordAudio": "Ses kaydı",
+  "recording": "Kaydediliyor...",
+  "stopAndSave": "Bitir ve ekle",
+  "micPermissionDenied": "Mikrofon izni verilmedi",
+  "addDrawing": "Çizim ekle",
+  "drawingTitle": "Çizim",
+  "addToNote": "Nota ekle",
+  "aiExtractImageText": "Görseldeki metni çıkar: {name}",
+  "@aiExtractImageText": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "aiTranscribeAudio": "Yazıya dök: {name}",
+  "@aiTranscribeAudio": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "chatTitle": "Notlarla Sohbet",
+  "chatHint": "Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"",
+  "chatInputHint": "Bir soru yaz...",
+  "weeklySummary": "Haftalık Özet",
+  "weeklySummaryEmpty": "Son 7 günde not eklenmemiş",
+  "weeklySummaryIntro": "Son 7 günün özeti",
+  "fontSize": "Yazı boyutu",
+  "darkSchedule": "Koyu tema zamanlaması",
+  "darkScheduleInfo": "Belirlediğin saatler arasında koyu temaya geçilir",
+  "convertToNote": "Nota çevir",
+  "convertToReminderNote": "Hatırlatıcılı not",
+  "noteCreatedFromEmail": "E-postadan not oluşturuldu",
+  "mailDueDate": "Son tarih: {date}",
+  "@mailDueDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
   }
 }

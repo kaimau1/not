@@ -1,10 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../notes/data/notes_repository.dart';
+import '../../notes/domain/note_type.dart';
 import '../data/gmail_auth.dart';
 import '../data/gmail_service.dart';
 
@@ -114,6 +118,30 @@ class _ConnectPromptState extends ConsumerState<_ConnectPrompt> {
 class _EmailList extends ConsumerWidget {
   const _EmailList();
 
+  /// Önemli e-postayı (istenirse son tarihli hatırlatıcıyla) nota çevirir.
+  Future<void> _createNote(
+    BuildContext context,
+    WidgetRef ref,
+    ImportantEmail email, {
+    required bool withReminder,
+  }) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    repo.updateFields(id, {
+      'title': email.subject,
+      'body': '${email.summary}\n\nKimden: ${email.from}',
+      'tags': ['e-posta'],
+      if (withReminder && email.dueDate != null)
+        'reminderAt': Timestamp.fromDate(email.dueDate!),
+    });
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.noteCreatedFromEmail)));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -215,23 +243,77 @@ class _EmailList extends ConsumerWidget {
                     email.summary,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  if (email.reason.isNotEmpty) ...[
+                  if (email.reason.isNotEmpty || email.dueDate != null) ...[
                     const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.secondaryContainer.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        email.reason,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: [
+                        if (email.reason.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.secondaryContainer
+                                  .withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              email.reason,
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        if (email.dueDate != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  scheme.errorContainer.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              l10n.mailDueDate(
+                                DateFormat('d MMM HH:mm', 'tr')
+                                    .format(email.dueDate!),
+                              ),
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                      ],
                     ),
                   ],
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _createNote(
+                          context,
+                          ref,
+                          email,
+                          withReminder: false,
+                        ),
+                        icon: const Icon(Icons.note_add_outlined, size: 16),
+                        label: Text(l10n.convertToNote),
+                      ),
+                      if (email.dueDate != null)
+                        TextButton.icon(
+                          onPressed: () => _createNote(
+                            context,
+                            ref,
+                            email,
+                            withReminder: true,
+                          ),
+                          icon: const Icon(Icons.alarm_add_outlined, size: 16),
+                          label: Text(l10n.convertToReminderNote),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             );

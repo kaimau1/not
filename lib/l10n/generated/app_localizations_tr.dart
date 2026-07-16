@@ -293,4 +293,122 @@ class AppLocalizationsTr extends AppLocalizations {
   String genericError(String error) {
     return 'Bir şeyler ters gitti: $error';
   }
+
+  @override
+  String get addTag => 'Etiket';
+
+  @override
+  String get tagHint => 'ör. iş, ev, okul';
+
+  @override
+  String get addReminder => 'Hatırlat';
+
+  @override
+  String get share => 'Paylaş';
+
+  @override
+  String get archive => 'Arşivle';
+
+  @override
+  String get unarchive => 'Arşivden çıkar';
+
+  @override
+  String get archiveTitle => 'Arşiv';
+
+  @override
+  String get archiveEmpty => 'Arşivde not yok';
+
+  @override
+  String get trashTitle => 'Çöp Kutusu';
+
+  @override
+  String get trashEmpty => 'Çöp kutusu boş';
+
+  @override
+  String get trashInfo =>
+      'Silinen notlar burada durur; geri alabilir veya kalıcı olarak silebilirsin.';
+
+  @override
+  String get restore => 'Geri al';
+
+  @override
+  String get deleteForever => 'Kalıcı olarak sil';
+
+  @override
+  String get deleteForeverConfirm =>
+      'Bu not kalıcı olarak silinecek. Emin misin?';
+
+  @override
+  String get recordAudio => 'Ses kaydı';
+
+  @override
+  String get recording => 'Kaydediliyor...';
+
+  @override
+  String get stopAndSave => 'Bitir ve ekle';
+
+  @override
+  String get micPermissionDenied => 'Mikrofon izni verilmedi';
+
+  @override
+  String get addDrawing => 'Çizim ekle';
+
+  @override
+  String get drawingTitle => 'Çizim';
+
+  @override
+  String get addToNote => 'Nota ekle';
+
+  @override
+  String aiExtractImageText(String name) {
+    return 'Görseldeki metni çıkar: $name';
+  }
+
+  @override
+  String aiTranscribeAudio(String name) {
+    return 'Yazıya dök: $name';
+  }
+
+  @override
+  String get chatTitle => 'Notlarla Sohbet';
+
+  @override
+  String get chatHint =>
+      'Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"';
+
+  @override
+  String get chatInputHint => 'Bir soru yaz...';
+
+  @override
+  String get weeklySummary => 'Haftalık Özet';
+
+  @override
+  String get weeklySummaryEmpty => 'Son 7 günde not eklenmemiş';
+
+  @override
+  String get weeklySummaryIntro => 'Son 7 günün özeti';
+
+  @override
+  String get fontSize => 'Yazı boyutu';
+
+  @override
+  String get darkSchedule => 'Koyu tema zamanlaması';
+
+  @override
+  String get darkScheduleInfo =>
+      'Belirlediğin saatler arasında koyu temaya geçilir';
+
+  @override
+  String get convertToNote => 'Nota çevir';
+
+  @override
+  String get convertToReminderNote => 'Hatırlatıcılı not';
+
+  @override
+  String get noteCreatedFromEmail => 'E-postadan not oluşturuldu';
+
+  @override
+  String mailDueDate(String date) {
+    return 'Son tarih: $date';
+  }
 }

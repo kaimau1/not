@@ -62,6 +62,29 @@ void main() {
       );
       expect(note.copyWith(clearDeletedAt: true).deletedAt, isNull);
     });
+
+    test('copyWith hatırlatıcı ve arşiv alanlarını temizleyebilir', () {
+      final note = Note(
+        id: '1',
+        type: NoteType.text,
+        reminderAt: DateTime(2026, 5, 1, 9),
+        archivedAt: DateTime(2026, 4, 1),
+      );
+      final cleared =
+          note.copyWith(clearReminderAt: true, clearArchivedAt: true);
+      expect(cleared.reminderAt, isNull);
+      expect(cleared.archivedAt, isNull);
+      expect(note.copyWith().reminderAt, isNotNull);
+    });
+
+    test('etiketler toMap çıktısına yazılır', () {
+      const note = Note(
+        id: '1',
+        type: NoteType.text,
+        tags: ['is', 'ev'],
+      );
+      expect(note.toMap()['tags'], ['is', 'ev']);
+    });
   });
 
   group('NoteType', () {

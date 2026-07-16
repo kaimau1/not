@@ -17,13 +17,21 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
   return NotesRepository(FirebaseFirestore.instance, uid);
 });
 
-/// Silinmemiş tüm notların canlı akışı (sabitlenmişler önce, sonra manuel
-/// sıra, sonra en son güncellenen). Sıralama istemci tarafında yapılır ki
-/// bileşik Firestore indeksi gerekmesin.
+/// Silinmemiş tüm notların canlı akışı — arşivlenenler DAHİL (yükleme
+/// kuyruğu ve arşiv ekranı da bunu kullanır). Dashboard, arşivlenenleri
+/// [filteredNotesProvider] içinde ayıklar. Sıralama istemci tarafında
+/// yapılır ki bileşik Firestore indeksi gerekmesin.
 final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchNotes();
+});
+
+/// Çöp kutusundaki (soft-delete edilmiş) notlar.
+final trashStreamProvider = StreamProvider<List<Note>>((ref) {
+  final repo = ref.watch(notesRepositoryProvider);
+  if (repo == null) return const Stream.empty();
+  return repo.watchTrash();
 });
 
 /// Tek bir notun canlı akışı (editör bunu izler).
@@ -62,6 +70,21 @@ class NotesRepository {
       _notes.where('deletedAt', isNull: true).snapshots().map((snapshot) {
         final notes = [for (final doc in snapshot.docs) Note.fromDoc(doc)];
         notes.sort(_compare);
+        return notes;
+      });
+
+  /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
+  /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).
+  Stream<List<Note>> watchTrash() => _notes.snapshots().map((snapshot) {
+        final notes = [
+          for (final doc in snapshot.docs)
+            if (doc.data()['deletedAt'] != null) Note.fromDoc(doc),
+        ];
+        notes.sort((a, b) {
+          final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
         return notes;
       });
 
@@ -127,6 +150,19 @@ class NotesRepository {
       updateFields(noteId, {'deletedAt': Timestamp.now()});
 
   void restore(String noteId) => updateFields(noteId, {'deletedAt': null});
+
+  void setArchived(String noteId, bool archived) => updateFields(
+        noteId,
+        {'archivedAt': archived ? Timestamp.now() : null},
+      );
+
+  void setReminder(String noteId, DateTime? reminderAt) => updateFields(
+        noteId,
+        {
+          'reminderAt':
+              reminderAt != null ? Timestamp.fromDate(reminderAt) : null,
+        },
+      );
 
   /// Boş notlar editörden çıkarken tamamen silinir.
   void hardDelete(String noteId) {

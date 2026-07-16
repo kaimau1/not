@@ -135,6 +135,34 @@ class AttachmentRepository {
     );
   }
 
+  /// Ses kaydını yerel eke dönüştürür (kayıt dosyası zaten diskte).
+  Future<Attachment> prepareAudio({
+    required String noteId,
+    required String sourcePath,
+    required Duration duration,
+  }) async {
+    final source = File(sourcePath);
+    final sizeBytes = await source.length();
+    if (sizeBytes > AppConstants.maxAttachmentBytes) {
+      throw const FileTooLargeException();
+    }
+    final id = _uuid.v4();
+    final fileName = 'kayit_${duration.inSeconds}s.m4a';
+    final dir = await _attachmentsDir(noteId);
+    final file = await source.copy(p.join(dir.path, '${id}_$fileName'));
+    await source.delete();
+
+    return Attachment(
+      id: id,
+      kind: AttachmentKind.audio,
+      fileName: fileName,
+      mimeType: 'audio/mp4',
+      localPath: file.path,
+      sizeBytes: sizeBytes,
+      createdAt: DateTime.now(),
+    );
+  }
+
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
   /// indirme adresiyle birlikte güncellenmiş metadata'yı döner.
   Future<Attachment?> upload(String noteId, Attachment attachment) async {

@@ -12,7 +12,8 @@ class NotlarApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final themeMode = ref.watch(themeModeProvider);
+    final themeMode = ref.watch(effectiveThemeModeProvider);
+    final fontScale = ref.watch(fontScaleProvider);
 
     return MaterialApp.router(
       title: 'Notlar',
@@ -24,6 +25,12 @@ class NotlarApp extends ConsumerWidget {
       locale: const Locale('tr'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(fontScale),
+        ),
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

@@ -28,3 +28,91 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
     ref.read(sharedPreferencesProvider).setString(_key, mode.name);
   }
 }
+
+/// Yazı boyutu çarpanı (0.85–1.4).
+final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
+  FontScaleNotifier.new,
+);
+
+class FontScaleNotifier extends Notifier<double> {
+  static const _key = 'font_scale';
+
+  @override
+  double build() =>
+      ref.watch(sharedPreferencesProvider).getDouble(_key) ?? 1.0;
+
+  void set(double value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setDouble(_key, value);
+  }
+}
+
+/// Koyu tema zamanlaması: etkinse [startMinutes]–[endMinutes] (gün içi
+/// dakika) aralığında koyu, dışında açık tema kullanılır.
+class DarkSchedule {
+  const DarkSchedule({
+    required this.enabled,
+    required this.startMinutes,
+    required this.endMinutes,
+  });
+
+  final bool enabled;
+  final int startMinutes;
+  final int endMinutes;
+
+  bool isDarkAt(DateTime time) {
+    final minutes = time.hour * 60 + time.minute;
+    if (startMinutes <= endMinutes) {
+      return minutes >= startMinutes && minutes < endMinutes;
+    }
+    // Gece yarısını aşan aralık (ör. 21:00 → 07:00).
+    return minutes >= startMinutes || minutes < endMinutes;
+  }
+}
+
+final darkScheduleProvider =
+    NotifierProvider<DarkScheduleNotifier, DarkSchedule>(
+  DarkScheduleNotifier.new,
+);
+
+class DarkScheduleNotifier extends Notifier<DarkSchedule> {
+  static const _enabledKey = 'dark_schedule_enabled';
+  static const _startKey = 'dark_schedule_start';
+  static const _endKey = 'dark_schedule_end';
+
+  @override
+  DarkSchedule build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return DarkSchedule(
+      enabled: prefs.getBool(_enabledKey) ?? false,
+      startMinutes: prefs.getInt(_startKey) ?? 21 * 60,
+      endMinutes: prefs.getInt(_endKey) ?? 7 * 60,
+    );
+  }
+
+  void update({bool? enabled, int? startMinutes, int? endMinutes}) {
+    final next = DarkSchedule(
+      enabled: enabled ?? state.enabled,
+      startMinutes: startMinutes ?? state.startMinutes,
+      endMinutes: endMinutes ?? state.endMinutes,
+    );
+    state = next;
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setBool(_enabledKey, next.enabled);
+    prefs.setInt(_startKey, next.startMinutes);
+    prefs.setInt(_endKey, next.endMinutes);
+  }
+}
+
+/// Dakikada bir güncellenen saat (zamanlamalı tema geçişi için).
+final _clockProvider = StreamProvider<DateTime>(
+  (ref) => Stream.periodic(const Duration(minutes: 1), (_) => DateTime.now()),
+);
+
+/// Kullanıcı seçimi + zamanlama birleşimiyle geçerli tema modu.
+final effectiveThemeModeProvider = Provider<ThemeMode>((ref) {
+  final schedule = ref.watch(darkScheduleProvider);
+  if (!schedule.enabled) return ref.watch(themeModeProvider);
+  final now = ref.watch(_clockProvider).value ?? DateTime.now();
+  return schedule.isDarkAt(now) ? ThemeMode.dark : ThemeMode.light;
+});

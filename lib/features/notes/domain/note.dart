@@ -55,12 +55,15 @@ class Note {
     this.body = '',
     this.items = const [],
     this.attachments = const [],
+    this.tags = const [],
     this.color = NoteColor.none,
     this.pinned = false,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
     this.deletedAt,
+    this.archivedAt,
+    this.reminderAt,
     this.aiSummary,
   });
 
@@ -74,12 +77,21 @@ class Note {
   /// Yalnızca liste tiplerinde kullanılır; sıra = dizi indeksi.
   final List<NoteItem> items;
   final List<Attachment> attachments;
+
+  /// Serbest etiketler ("iş", "ev"...). '#' işareti olmadan saklanır.
+  final List<String> tags;
   final NoteColor color;
   final bool pinned;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
+
+  /// Arşivlenen notlar dashboard'da görünmez; Arşiv ekranından erişilir.
+  final DateTime? archivedAt;
+
+  /// Doluysa bu tarihte yerel bildirim planlanır.
+  final DateTime? reminderAt;
   final AiSummary? aiSummary;
 
   bool get isEmpty =>
@@ -112,11 +124,16 @@ class Note {
     String? body,
     List<NoteItem>? items,
     List<Attachment>? attachments,
+    List<String>? tags,
     NoteColor? color,
     bool? pinned,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
+    DateTime? archivedAt,
+    bool clearArchivedAt = false,
+    DateTime? reminderAt,
+    bool clearReminderAt = false,
     AiSummary? aiSummary,
   }) =>
       Note(
@@ -126,12 +143,15 @@ class Note {
         body: body ?? this.body,
         items: items ?? this.items,
         attachments: attachments ?? this.attachments,
+        tags: tags ?? this.tags,
         color: color ?? this.color,
         pinned: pinned ?? this.pinned,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt,
         updatedAt: updatedAt,
         deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+        archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
+        reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
         aiSummary: aiSummary ?? this.aiSummary,
       );
 
@@ -150,12 +170,18 @@ class Note {
         for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
           Attachment.fromMap(Map<String, dynamic>.from(raw as Map)),
       ],
+      tags: [
+        for (final tag in (map['tags'] as List<dynamic>? ?? const []))
+          tag.toString(),
+      ],
       color: NoteColor.fromId(map['color'] as String?),
       pinned: map['pinned'] as bool? ?? false,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
       deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
+      archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
+      reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       aiSummary: map['aiSummary'] is Map
           ? AiSummary.fromMap(Map<String, dynamic>.from(map['aiSummary'] as Map))
           : null,
@@ -168,6 +194,7 @@ class Note {
         'body': body,
         'items': [for (final i in items) i.toMap()],
         'attachments': [for (final a in attachments) a.toMap()],
+        'tags': tags,
         'color': color.id,
         'pinned': pinned,
         'orderIndex': orderIndex,
@@ -176,6 +203,10 @@ class Note {
             : FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
         'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
+        'archivedAt':
+            archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
+        'reminderAt':
+            reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
         'aiSummary': aiSummary?.toMap(),
       };
 }

@@ -633,6 +633,222 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bir şeyler ters gitti: {error}'**
   String genericError(String error);
+
+  /// No description provided for @addTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket'**
+  String get addTag;
+
+  /// No description provided for @tagHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'ör. iş, ev, okul'**
+  String get tagHint;
+
+  /// No description provided for @addReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlat'**
+  String get addReminder;
+
+  /// No description provided for @share.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaş'**
+  String get share;
+
+  /// No description provided for @archive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivle'**
+  String get archive;
+
+  /// No description provided for @unarchive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivden çıkar'**
+  String get unarchive;
+
+  /// No description provided for @archiveTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşiv'**
+  String get archiveTitle;
+
+  /// No description provided for @archiveEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşivde not yok'**
+  String get archiveEmpty;
+
+  /// No description provided for @trashTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöp Kutusu'**
+  String get trashTitle;
+
+  /// No description provided for @trashEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöp kutusu boş'**
+  String get trashEmpty;
+
+  /// No description provided for @trashInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silinen notlar burada durur; geri alabilir veya kalıcı olarak silebilirsin.'**
+  String get trashInfo;
+
+  /// No description provided for @restore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri al'**
+  String get restore;
+
+  /// No description provided for @deleteForever.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalıcı olarak sil'**
+  String get deleteForever;
+
+  /// No description provided for @deleteForeverConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not kalıcı olarak silinecek. Emin misin?'**
+  String get deleteForeverConfirm;
+
+  /// No description provided for @recordAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses kaydı'**
+  String get recordAudio;
+
+  /// No description provided for @recording.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydediliyor...'**
+  String get recording;
+
+  /// No description provided for @stopAndSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitir ve ekle'**
+  String get stopAndSave;
+
+  /// No description provided for @micPermissionDenied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofon izni verilmedi'**
+  String get micPermissionDenied;
+
+  /// No description provided for @addDrawing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizim ekle'**
+  String get addDrawing;
+
+  /// No description provided for @drawingTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizim'**
+  String get drawingTitle;
+
+  /// No description provided for @addToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get addToNote;
+
+  /// No description provided for @aiExtractImageText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseldeki metni çıkar: {name}'**
+  String aiExtractImageText(String name);
+
+  /// No description provided for @aiTranscribeAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıya dök: {name}'**
+  String aiTranscribeAudio(String name);
+
+  /// No description provided for @chatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarla Sohbet'**
+  String get chatTitle;
+
+  /// No description provided for @chatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"'**
+  String get chatHint;
+
+  /// No description provided for @chatInputHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir soru yaz...'**
+  String get chatInputHint;
+
+  /// No description provided for @weeklySummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık Özet'**
+  String get weeklySummary;
+
+  /// No description provided for @weeklySummaryEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 7 günde not eklenmemiş'**
+  String get weeklySummaryEmpty;
+
+  /// No description provided for @weeklySummaryIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 7 günün özeti'**
+  String get weeklySummaryIntro;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı boyutu'**
+  String get fontSize;
+
+  /// No description provided for @darkSchedule.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koyu tema zamanlaması'**
+  String get darkSchedule;
+
+  /// No description provided for @darkScheduleInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belirlediğin saatler arasında koyu temaya geçilir'**
+  String get darkScheduleInfo;
+
+  /// No description provided for @convertToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota çevir'**
+  String get convertToNote;
+
+  /// No description provided for @convertToReminderNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcılı not'**
+  String get convertToReminderNote;
+
+  /// No description provided for @noteCreatedFromEmail.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postadan not oluşturuldu'**
+  String get noteCreatedFromEmail;
+
+  /// No description provided for @mailDueDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son tarih: {date}'**
+  String mailDueDate(String date);
 }
 
 class _AppLocalizationsDelegate

@@ -14,13 +14,33 @@ final suggestionsProvider = FutureProvider.autoDispose<String>((ref) async {
   return ref.watch(geminiServiceProvider).suggestFromNotes(notes);
 });
 
-class SuggestionsScreen extends ConsumerWidget {
+/// Son 7 günün notlarından haftalık özet.
+final weeklySummaryProvider = FutureProvider.autoDispose<String>((ref) async {
+  final notes = await ref.watch(notesStreamProvider.future);
+  if (notes.isEmpty) return '';
+  return ref.watch(geminiServiceProvider).weeklySummary(notes);
+});
+
+enum _SuggestionsTab { suggestions, weekly }
+
+class SuggestionsScreen extends ConsumerStatefulWidget {
   const SuggestionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SuggestionsScreen> createState() => _SuggestionsScreenState();
+}
+
+class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
+  _SuggestionsTab _tab = _SuggestionsTab.suggestions;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final suggestions = ref.watch(suggestionsProvider);
+    final isWeekly = _tab == _SuggestionsTab.weekly;
+    final content =
+        ref.watch(isWeekly ? weeklySummaryProvider : suggestionsProvider);
+    void refresh() => ref.invalidate(
+        isWeekly ? weeklySummaryProvider : suggestionsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -29,11 +49,45 @@ class SuggestionsScreen extends ConsumerWidget {
           IconButton(
             tooltip: l10n.refresh,
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(suggestionsProvider),
+            onPressed: refresh,
           ),
         ],
       ),
-      body: suggestions.when(
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: SegmentedButton<_SuggestionsTab>(
+              segments: [
+                ButtonSegment(
+                  value: _SuggestionsTab.suggestions,
+                  label: Text(l10n.suggestionsTitle),
+                  icon: const Icon(Icons.lightbulb_outline),
+                ),
+                ButtonSegment(
+                  value: _SuggestionsTab.weekly,
+                  label: Text(l10n.weeklySummary),
+                  icon: const Icon(Icons.calendar_view_week_outlined),
+                ),
+              ],
+              selected: {_tab},
+              onSelectionChanged: (selection) =>
+                  setState(() => _tab = selection.first),
+            ),
+          ),
+          Expanded(child: _buildBody(context, content, refresh)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    AsyncValue<String> content,
+    VoidCallback refresh,
+  ) {
+    final l10n = context.l10n;
+    return content.when(
         loading: () => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -58,7 +112,7 @@ class SuggestionsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton.tonal(
-                  onPressed: () => ref.invalidate(suggestionsProvider),
+                  onPressed: refresh,
                   child: Text(l10n.retry),
                 ),
               ],
@@ -69,14 +123,18 @@ class SuggestionsScreen extends ConsumerWidget {
           if (text.isEmpty) {
             return EmptyState(
               icon: Icons.lightbulb_outline,
-              title: l10n.suggestionsEmpty,
+              title: _tab == _SuggestionsTab.weekly
+                  ? l10n.weeklySummaryEmpty
+                  : l10n.suggestionsEmpty,
             );
           }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               Text(
-                l10n.suggestionsIntro,
+                _tab == _SuggestionsTab.weekly
+                    ? l10n.weeklySummaryIntro
+                    : l10n.suggestionsIntro,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -102,7 +160,6 @@ class SuggestionsScreen extends ConsumerWidget {
             ],
           );
         },
-      ),
     );
   }
 }

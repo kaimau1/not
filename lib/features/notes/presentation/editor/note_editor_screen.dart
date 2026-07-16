@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
@@ -16,8 +19,11 @@ import '../../data/attachment_repository.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import 'attachment_strip.dart';
+import 'audio_recorder_sheet.dart';
+import 'drawing_screen.dart';
 import 'items_editor.dart';
 
 bool get _isDesktop =>
@@ -171,6 +177,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     await _addImageBytes(bytes, 'pano.png');
   }
 
+  Future<void> _recordAudio() async {
+    final result = await showAudioRecorderSheet(context);
+    if (result == null) return;
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    try {
+      final attachment = await repo.prepareAudio(
+        noteId: widget.noteId,
+        sourcePath: result.path,
+        duration: result.duration,
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+    } on FileTooLargeException {
+      if (mounted) _showSnack(context.l10n.attachmentTooLarge);
+    }
+  }
+
+  Future<void> _addDrawing() async {
+    final bytes = await Navigator.of(context).push<Uint8List>(
+      MaterialPageRoute(builder: (_) => const DrawingScreen()),
+    );
+    if (bytes == null) return;
+    await _addImageBytes(bytes, 'cizim.png');
+  }
+
   void _removeAttachment(Attachment attachment) {
     _mutate(
       (n) => n.copyWith(
@@ -209,6 +243,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.addPdf),
               onTap: () => Navigator.pop(sheetContext, 'pdf'),
             ),
+            ListTile(
+              leading: const Icon(Icons.brush_outlined),
+              title: Text(l10n.addDrawing),
+              onTap: () => Navigator.pop(sheetContext, 'drawing'),
+            ),
             if (_isDesktop)
               ListTile(
                 leading: const Icon(Icons.content_paste),
@@ -224,12 +263,131 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         await _pickImage();
       case 'pdf':
         await _pickPdf();
+      case 'drawing':
+        await _addDrawing();
       case 'paste':
         await _pasteImage();
     }
   }
 
   // ---- Diğer eylemler -------------------------------------------------
+
+  Future<void> _pickReminder() async {
+    final note = _note;
+    if (note == null) return;
+    final now = DateTime.now();
+    final initial = note.reminderAt ?? now.add(const Duration(hours: 1));
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial.isAfter(now) ? initial : now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 5)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null) return;
+    final reminder =
+        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    _mutate((n) => n.copyWith(reminderAt: reminder), immediate: true);
+  }
+
+  void _clearReminder() =>
+      _mutate((n) => n.copyWith(clearReminderAt: true), immediate: true);
+
+  Future<void> _addTag() async {
+    final controller = TextEditingController();
+    final l10n = context.l10n;
+    final tag = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.addTag),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.tagHint),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final cleaned =
+        tag?.trim().replaceAll('#', '').replaceAll(' ', '-').toLowerCase();
+    if (cleaned == null || cleaned.isEmpty) return;
+    _mutate(
+      (n) => n.copyWith(tags: {...n.tags, cleaned}.toList()),
+      immediate: true,
+    );
+  }
+
+  void _removeTag(String tag) => _mutate(
+        (n) => n.copyWith(tags: [for (final t in n.tags) if (t != tag) t]),
+        immediate: true,
+      );
+
+  Future<void> _share() async {
+    final note = _note;
+    if (note == null) return;
+    final text = note.toPlainText();
+    if (text.isEmpty) return;
+    await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: note.title.trim().isEmpty ? 'Not' : note.title.trim(),
+      ),
+    );
+  }
+
+  void _toggleArchive() {
+    final note = _note;
+    if (note == null) return;
+    final archived = note.archivedAt != null;
+    _mutate(
+      (n) => archived
+          ? n.copyWith(clearArchivedAt: true)
+          : n.copyWith(archivedAt: DateTime.now()),
+      immediate: true,
+    );
+    if (!archived) Navigator.of(context).pop();
+  }
+
+  /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
+  void _appendText(String text) {
+    final note = _note;
+    if (note == null || text.trim().isEmpty) return;
+    if (note.type == NoteType.text) {
+      final combined =
+          note.body.trim().isEmpty ? text.trim() : '${note.body}\n\n${text.trim()}';
+      _bodyController.text = combined;
+      _mutate((n) => n.copyWith(body: combined), immediate: true);
+    } else {
+      const uuid = Uuid();
+      final lines = [
+        for (final line in text.split('\n'))
+          if (line.trim().isNotEmpty)
+            line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
+      ];
+      _mutate(
+        (n) => n.copyWith(items: [
+          ...n.items,
+          for (final line in lines) NoteItem(id: uuid.v4(), text: line),
+        ]),
+        immediate: true,
+      );
+    }
+  }
 
   Future<void> _showColorSheet() async {
     final note = _note;
@@ -328,10 +486,47 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
 
+    final metaChips = Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (note.reminderAt != null)
+            InputChip(
+              avatar: const Icon(Icons.alarm, size: 16),
+              label: Text(
+                DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!),
+              ),
+              onPressed: _pickReminder,
+              onDeleted: _clearReminder,
+            ),
+          for (final tag in note.tags)
+            InputChip(
+              label: Text('#$tag'),
+              onDeleted: () => _removeTag(tag),
+            ),
+          ActionChip(
+            avatar: const Icon(Icons.new_label_outlined, size: 16),
+            label: Text(l10n.addTag),
+            onPressed: _addTag,
+          ),
+          if (note.reminderAt == null)
+            ActionChip(
+              avatar: const Icon(Icons.alarm_add_outlined, size: 16),
+              label: Text(l10n.addReminder),
+              onPressed: _pickReminder,
+            ),
+        ],
+      ),
+    );
+
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         titleField,
+        metaChips,
         AttachmentStrip(
           attachments: note.attachments,
           onRemove: _removeAttachment,
@@ -403,10 +598,50 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               onPressed: () =>
                   _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true),
             ),
-            IconButton(
-              tooltip: l10n.delete,
-              icon: const Icon(Icons.delete_outline),
-              onPressed: _delete,
+            PopupMenuButton<String>(
+              onSelected: (action) {
+                switch (action) {
+                  case 'share':
+                    _share();
+                  case 'archive':
+                    _toggleArchive();
+                  case 'delete':
+                    _delete();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'share',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.share_outlined),
+                    title: Text(l10n.share),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'archive',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(note.archivedAt != null
+                        ? Icons.unarchive_outlined
+                        : Icons.archive_outlined),
+                    title: Text(note.archivedAt != null
+                        ? l10n.unarchive
+                        : l10n.archive),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.delete_outline),
+                    title: Text(l10n.delete),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -426,9 +661,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 icon: const Icon(Icons.attach_file),
                 onPressed: _showAttachMenu,
               ),
+              IconButton(
+                tooltip: l10n.recordAudio,
+                icon: const Icon(Icons.mic_none),
+                onPressed: _recordAudio,
+              ),
               const Spacer(),
               FilledButton.tonalIcon(
-                onPressed: () => showAiSheet(context, note),
+                onPressed: () =>
+                    showAiSheet(context, note, onAppendText: _appendText),
                 icon: const Icon(Icons.auto_awesome, size: 18),
                 label: Text(l10n.aiTitle),
               ),

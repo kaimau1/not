@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
@@ -38,6 +39,99 @@ class AttachmentStrip extends StatelessWidget {
   }
 }
 
+/// Ses eki: oynat/durdur düğmeli kompakt oynatıcı.
+class _AudioTile extends StatefulWidget {
+  const _AudioTile({required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  State<_AudioTile> createState() => _AudioTileState();
+}
+
+class _AudioTileState extends State<_AudioTile> {
+  final _player = AudioPlayer();
+  bool _loaded = false;
+
+  Future<void> _toggle() async {
+    try {
+      if (!_loaded) {
+        final a = widget.attachment;
+        if (a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
+          await _player.setFilePath(a.localPath);
+        } else if (a.isUploaded) {
+          await _player.setUrl(a.downloadUrl);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.attachmentNotSynced)),
+            );
+          }
+          return;
+        }
+        _loaded = true;
+      }
+      if (_player.playing) {
+        await _player.pause();
+      } else {
+        if (_player.processingState == ProcessingState.completed) {
+          await _player.seek(Duration.zero);
+        }
+        await _player.play();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.genericError(e.toString()))),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 140,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          StreamBuilder<PlayerState>(
+            stream: _player.playerStateStream,
+            builder: (context, snapshot) {
+              final playing = snapshot.data?.playing ?? false;
+              final completed = snapshot.data?.processingState ==
+                  ProcessingState.completed;
+              return IconButton.filledTonal(
+                onPressed: _toggle,
+                icon: Icon(
+                  playing && !completed ? Icons.pause : Icons.play_arrow,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 2),
+          Text(
+            widget.attachment.fileName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _AttachmentTile extends StatelessWidget {
   const _AttachmentTile({required this.attachment, required this.onRemove});
 
@@ -49,6 +143,7 @@ class _AttachmentTile extends StatelessWidget {
       File(attachment.localPath).existsSync();
 
   void _open(BuildContext context) {
+    if (attachment.kind == AttachmentKind.audio) return;
     if (!_hasLocal && !attachment.isUploaded) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.attachmentNotSynced)),
@@ -69,7 +164,9 @@ class _AttachmentTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     Widget content;
-    if (attachment.kind == AttachmentKind.pdf) {
+    if (attachment.kind == AttachmentKind.audio) {
+      content = _AudioTile(attachment: attachment);
+    } else if (attachment.kind == AttachmentKind.pdf) {
       content = Container(
         width: 140,
         padding: const EdgeInsets.all(10),

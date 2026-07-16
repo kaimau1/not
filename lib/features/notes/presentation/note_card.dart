@@ -16,11 +16,59 @@ import '../domain/note_type.dart';
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
+/// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.
+Widget highlightedText(
+  BuildContext context,
+  String text,
+  String query, {
+  TextStyle? style,
+  int? maxLines,
+}) {
+  if (query.isEmpty || !text.toLowerCase().contains(query.toLowerCase())) {
+    return Text(
+      text,
+      style: style,
+      maxLines: maxLines,
+      overflow: maxLines != null ? TextOverflow.ellipsis : null,
+    );
+  }
+  final scheme = Theme.of(context).colorScheme;
+  final lower = text.toLowerCase();
+  final lowerQuery = query.toLowerCase();
+  final spans = <TextSpan>[];
+  var start = 0;
+  while (true) {
+    final index = lower.indexOf(lowerQuery, start);
+    if (index < 0) {
+      spans.add(TextSpan(text: text.substring(start)));
+      break;
+    }
+    if (index > start) spans.add(TextSpan(text: text.substring(start, index)));
+    spans.add(TextSpan(
+      text: text.substring(index, index + query.length),
+      style: TextStyle(
+        fontWeight: FontWeight.w700,
+        color: scheme.primary,
+        backgroundColor: scheme.primaryContainer.withValues(alpha: 0.45),
+      ),
+    ));
+    start = index + query.length;
+  }
+  return Text.rich(
+    TextSpan(style: style, children: spans),
+    maxLines: maxLines,
+    overflow: maxLines != null ? TextOverflow.ellipsis : null,
+  );
+}
+
 /// Dashboard'daki kompakt not kartı.
 class NoteCard extends ConsumerWidget {
-  const NoteCard({super.key, required this.note});
+  const NoteCard({super.key, required this.note, this.highlightQuery = ''});
 
   final Note note;
+
+  /// Aktif arama sorgusu; boş değilse eşleşmeler vurgulanır.
+  final String highlightQuery;
 
   void _openNote(BuildContext context) => context.push('/note/${note.id}');
 
@@ -120,10 +168,11 @@ class NoteCard extends ConsumerWidget {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(
+                          child: highlightedText(
+                            context,
                             note.title,
+                            highlightQuery,
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleSmall
@@ -139,10 +188,29 @@ class NoteCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                _NotePreview(note: note),
+                _NotePreview(note: note, highlightQuery: highlightQuery),
                 if (note.attachments.isNotEmpty) ...[
                   const SizedBox(height: 8),
                   _AttachmentPreview(attachments: note.attachments),
+                ],
+                if (note.tags.isNotEmpty || note.reminderAt != null) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      if (note.reminderAt != null)
+                        _MiniBadge(
+                          icon: Icons.alarm,
+                          label:
+                              '${note.reminderAt!.day}.${note.reminderAt!.month} '
+                              '${note.reminderAt!.hour.toString().padLeft(2, '0')}:'
+                              '${note.reminderAt!.minute.toString().padLeft(2, '0')}',
+                        ),
+                      for (final tag in note.tags.take(3))
+                        _MiniBadge(label: '#$tag'),
+                    ],
+                  ),
                 ],
                 if (note.aiSummary != null) ...[
                   const SizedBox(height: 8),
@@ -216,10 +284,46 @@ class NoteCard extends ConsumerWidget {
   }
 }
 
+class _MiniBadge extends StatelessWidget {
+  const _MiniBadge({required this.label, this.icon});
+
+  final String label;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHigh.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: Theme.of(context)
+                .textTheme
+                .labelSmall
+                ?.copyWith(color: scheme.onSurfaceVariant, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _NotePreview extends StatelessWidget {
-  const _NotePreview({required this.note});
+  const _NotePreview({required this.note, this.highlightQuery = ''});
 
   final Note note;
+  final String highlightQuery;
 
   @override
   Widget build(BuildContext context) {
@@ -232,10 +336,11 @@ class _NotePreview extends StatelessWidget {
     switch (note.type) {
       case NoteType.text:
         if (note.body.trim().isEmpty) return const SizedBox.shrink();
-        return Text(
+        return highlightedText(
+          context,
           note.body,
+          highlightQuery,
           maxLines: 8,
-          overflow: TextOverflow.ellipsis,
           style: bodyStyle,
         );
       case NoteType.checklist:

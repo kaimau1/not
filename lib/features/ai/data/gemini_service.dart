@@ -44,12 +44,23 @@ class ImportantEmail {
     required this.subject,
     required this.summary,
     required this.reason,
+    this.dueDate,
   });
 
   final String from;
   final String subject;
   final String summary;
   final String reason;
+
+  /// E-postadan çıkarılan son tarih (fatura/randevu vb.), varsa.
+  final DateTime? dueDate;
+}
+
+class ChatTurn {
+  const ChatTurn({required this.isUser, required this.text});
+
+  final bool isUser;
+  final String text;
 }
 
 /// Gemini REST API istemcisi. Kullanıcının kendi anahtarıyla çalışır;
@@ -92,6 +103,17 @@ class GeminiService {
   Future<String> _generate(
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
+  }) =>
+      _generateFromContents(
+        [
+          {'role': 'user', 'parts': parts},
+        ],
+        jsonOutput: jsonOutput,
+      );
+
+  Future<String> _generateFromContents(
+    List<Map<String, dynamic>> contents, {
+    bool jsonOutput = false,
   }) async {
     final key = await _apiKey();
     try {
@@ -99,9 +121,7 @@ class GeminiService {
         '/models/$_model:generateContent',
         options: Options(headers: {'x-goog-api-key': key}),
         data: {
-          'contents': [
-            {'role': 'user', 'parts': parts},
-          ],
+          'contents': contents,
           'generationConfig': {
             if (jsonOutput) 'responseMimeType': 'application/json',
           },
@@ -168,7 +188,8 @@ class GeminiService {
         },
       ]);
 
-  /// Son notlara bakarak eyleme dönük öneriler üretir.
+  /// Son notlara bakarak eyleme dönük öneriler üretir (birleştirilebilecek
+  /// notlar dahil).
   Future<String> suggestFromNotes(List<Note> notes) {
     final buffer = StringBuffer();
     for (final note in notes.take(30)) {
@@ -181,11 +202,108 @@ class GeminiService {
       {
         'text': 'Aşağıda bir kullanıcının not defterindeki son notlar var. '
             'Bu notlara bakarak Türkçe, kısa ve eyleme dönük 3-6 öneri üret: '
-            'tamamlanmamış işler, unutulmuş alışveriş kalemleri, birleştirilecek '
-            'notlar, takip gerektiren konular gibi. Her öneriyi tek maddede yaz.'
+            'tamamlanmamış işler, unutulmuş alışveriş kalemleri, takip '
+            'gerektiren konular gibi. Ayrıca konusu örtüşen veya tekrar eden '
+            'notlar varsa hangilerinin birleştirilebileceğini ayrı bir maddede '
+            'belirt. Her öneriyi tek maddede yaz.\n\n${buffer.toString()}',
+      },
+    ]);
+  }
+
+  /// Son 7 günün notlarından haftalık özet ve yapılacaklar çıkarır.
+  Future<String> weeklySummary(List<Note> notes) {
+    final cutoff = DateTime.now().subtract(const Duration(days: 7));
+    final recent = [
+      for (final note in notes)
+        if ((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false) note,
+    ];
+    if (recent.isEmpty) return Future.value('');
+    final buffer = StringBuffer();
+    for (final note in recent.take(40)) {
+      final text = note.toPlainText();
+      buffer
+        ..writeln('---')
+        ..writeln(text.length > 400 ? text.substring(0, 400) : text);
+    }
+    return _generate([
+      {
+        'text': 'Aşağıda kullanıcının son 7 günde yazdığı/güncellediği notlar '
+            'var. Türkçe bir haftalık özet çıkar: (1) öne çıkan konular, '
+            '(2) tamamlanmamış işler ve yapılacaklar, (3) önümüzdeki hafta '
+            'için kısa öneriler. Bölüm başlıkları kullan, kısa ve öz yaz.'
             '\n\n${buffer.toString()}',
       },
     ]);
+  }
+
+  /// Görseldeki metni çıkarır (OCR) ve düzenli bir not metnine dönüştürür.
+  Future<String> extractTextFromImage(Uint8List bytes, String mimeType) =>
+      _generate([
+        {
+          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+        },
+        {
+          'text': 'Bu görseldeki tüm metni çıkar ve düzenli, okunaklı bir not '
+              'metnine dönüştür. Görselin dilini koru. Liste görüyorsan madde '
+              'işaretleri kullan. Yalnızca çıkarılan metni yaz, açıklama '
+              'ekleme. Görselde metin yoksa görülen içeriği 1-2 cümleyle '
+              'Türkçe betimle.',
+        },
+      ]);
+
+  /// Ses kaydını yazıya döker.
+  Future<String> transcribeAudio(Uint8List bytes, String mimeType) =>
+      _generate([
+        {
+          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+        },
+        {
+          'text': 'Bu ses kaydını konuşulan dilde yazıya dök. Yalnızca '
+              'konuşmanın metnini yaz; dolgu seslerini (ııı, eee) atla, '
+              'noktalama ekle. Kayıt bir alışveriş listesi veya yapılacaklar '
+              'sayıyorsa madde işaretli liste olarak yaz.',
+        },
+      ]);
+
+  /// Kullanıcının notları üzerinde çok turlu sohbet.
+  Future<String> chatWithNotes({
+    required List<Note> notes,
+    required List<ChatTurn> history,
+  }) {
+    final buffer = StringBuffer();
+    for (final note in notes.take(60)) {
+      final text = note.toPlainText();
+      buffer
+        ..writeln('---')
+        ..writeln(text.length > 500 ? text.substring(0, 500) : text);
+    }
+    final contents = <Map<String, dynamic>>[
+      {
+        'role': 'user',
+        'parts': [
+          {
+            'text': 'Sen "Notlar" uygulamasının asistanısın. Kullanıcının not '
+                'defteri aşağıdadır. Sorulara bu notlara dayanarak Türkçe, '
+                'kısa ve net yanıt ver; notlarda olmayan bilgiyi uydurma, '
+                'bulamazsan söyle.\n\nNOT DEFTERİ:\n${buffer.toString()}',
+          },
+        ],
+      },
+      {
+        'role': 'model',
+        'parts': [
+          {'text': 'Anladım. Notlarına göre sorularını yanıtlamaya hazırım.'},
+        ],
+      },
+      for (final turn in history)
+        {
+          'role': turn.isUser ? 'user' : 'model',
+          'parts': [
+            {'text': turn.text},
+          ],
+        },
+    ];
+    return _generateFromContents(contents);
   }
 
   /// E-posta metadata'larından önemlilerini seçer ve kısa Türkçe özet döner.
@@ -200,17 +318,20 @@ class GeminiService {
           'snippet': email.snippet,
         },
     ];
+    final now = DateTime.now();
     final raw = await _generate(
       [
         {
           'text': 'Aşağıda bir gelen kutusundaki son e-postaların listesi var '
-              '(JSON). Önemli olanları seç (fatura/ödeme, randevu, iş, resmi '
+              '(JSON). Bugünün tarihi: ${now.year}-${now.month}-${now.day}. '
+              'Önemli olanları seç (fatura/ödeme, randevu, iş, resmi '
               'kurum, son tarih içeren, kişisel önemli mesajlar; reklam ve '
               'toplu bültenleri ele). Yanıtı YALNIZCA şu şemada bir JSON '
               'dizisi olarak ver: '
               '[{"from": "...", "subject": "...", "summary": "1-2 cümle Türkçe '
-              'özet", "reason": "neden önemli, birkaç kelime"}]. Önemli e-posta '
-              'yoksa boş dizi döndür.\n\n${jsonEncode(list)}',
+              'özet", "reason": "neden önemli, birkaç kelime", "dueDate": '
+              '"YYYY-MM-DDTHH:MM" veya son tarih/randevu yoksa null}]. '
+              'Önemli e-posta yoksa boş dizi döndür.\n\n${jsonEncode(list)}',
         },
       ],
       jsonOutput: true,
@@ -225,6 +346,9 @@ class GeminiService {
             subject: entry['subject'] as String? ?? '',
             summary: entry['summary'] as String? ?? '',
             reason: entry['reason'] as String? ?? '',
+            dueDate: entry['dueDate'] is String
+                ? DateTime.tryParse(entry['dueDate'] as String)
+                : null,
           ),
     ];
   }

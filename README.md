@@ -10,8 +10,17 @@ Firebase senkronlu, yapay zeka destekli not uygulaması — **Android** ve **Win
 - **Ekler** — fotoğraf/ekran görüntüsü ve PDF; Firebase Storage'da saklanır. Windows'ta panodan görsel yapıştırma (`Ctrl+Shift+V`).
 - **Yapay zeka (Gemini)** — not özeti/analizi, PDF özeti, notlardan öneriler. Kendi API anahtarınla çalışır; anahtar yalnızca cihazda saklanır.
 - **Gmail** — gelen kutundaki son e-postaları yapay zeka tarar, önemli olanları kısa Türkçe özetle listeler (salt-okunur erişim; e-posta içeriği hiçbir yere kaydedilmez).
-- **Premium sade tasarım** — Material 3, açık/koyu tema, yüksek yenileme hızı (120/144/165 Hz) desteği.
+- **Premium sade tasarım** — Material 3, açık/koyu tema (isteğe bağlı saat aralıklı otomatik koyu tema), ayarlanabilir yazı boyutu, yüksek yenileme hızı (120/144/165 Hz) desteği.
 - Hızlı ekleme çubuğu, `Ctrl+N` kısayolu, otomatik kayıt, kaydırarak/sağ tıkla silme + geri alma.
+- **Hatırlatıcılar** — nota tarih/saat ekle, zamanı gelince bildirim al (cihazlar arası senkronlanır).
+- **Etiketler, arşiv ve çöp kutusu** — `#etiket` filtreleri, arşiv ekranı, 30 gün geri alınabilir silme, arama sonuçlarında vurgulama.
+- **Ses kaydı notları** — kaydet, dinle, yapay zekaya yazıya döktür.
+- **Çizim notları** — parmakla/mouse ile çiz, görsel olarak nota ekle.
+- **Fotoğraftan metin (OCR)** — görseldeki metni yapay zeka ile çıkarıp nota ekle.
+- **Notlarla sohbet** — "geçen hafta yazdığım tarif neydi?" gibi soruları AI'a sor.
+- **Haftalık özet** — son 7 günün notlarından otomatik özet ve yapılacaklar.
+- **E-postadan not** — önemli e-postayı tek dokunuşla (son tarih yakalandıysa hatırlatıcılı) nota çevir.
+- **Android ana ekran widget'ı** — son notların bir bakışta.
 
 ## Kurulum
 

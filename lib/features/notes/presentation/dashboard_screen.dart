@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/notes_repository.dart';
+import '../data/reminder_service.dart';
 import '../data/upload_queue.dart';
+import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
@@ -38,8 +40,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Ek yükleme kuyruğunu ayakta tut.
+    // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
+    // bildirimleri ve ana ekran widget'ı.
     ref.watch(uploadQueueProvider);
+    ref.watch(reminderServiceProvider);
+    ref.watch(widgetServiceProvider);
 
     final l10n = context.l10n;
     final notesAsync = ref.watch(filteredNotesProvider);
@@ -67,6 +72,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       title: _SearchField(controller: _searchController),
                       actions: [
                         IconButton(
+                          tooltip: l10n.chatTitle,
+                          icon: const Icon(Icons.forum_outlined),
+                          onPressed: () => context.push('/chat'),
+                        ),
+                        IconButton(
                           tooltip: l10n.aiSuggestions,
                           icon: const Icon(Icons.auto_awesome_outlined),
                           onPressed: () => context.push('/suggestions'),
@@ -76,10 +86,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           icon: const Icon(Icons.mark_email_unread_outlined),
                           onPressed: () => context.push('/mail'),
                         ),
-                        IconButton(
-                          tooltip: l10n.settings,
-                          icon: const Icon(Icons.settings_outlined),
-                          onPressed: () => context.push('/settings'),
+                        PopupMenuButton<String>(
+                          onSelected: (action) => switch (action) {
+                            'archive' => context.push('/archive'),
+                            'trash' => context.push('/trash'),
+                            'settings' => context.push('/settings'),
+                            _ => null,
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'archive',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.archive_outlined),
+                                title: Text(l10n.archiveTitle),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'trash',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.delete_outline),
+                                title: Text(l10n.trashTitle),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'settings',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.settings_outlined),
+                                title: Text(l10n.settings),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(width: 4),
                       ],
@@ -88,6 +130,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       child: _QuickAddBar(onCreate: _createNote),
                     ),
                     const SliverToBoxAdapter(child: _FilterChips()),
+                    const SliverToBoxAdapter(child: _TagChips()),
                     ...notesAsync.when(
                       data: (notes) => _buildNoteSlivers(
                         context,
@@ -152,13 +195,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final pinned = [for (final n in notes) if (n.pinned) n];
     final others = [for (final n in notes) if (!n.pinned) n];
 
+    final query = ref.read(searchQueryProvider).trim();
     Widget grid(List<Note> items) => SliverMasonryGrid.count(
           crossAxisCount: columns,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
           childCount: items.length,
-          itemBuilder: (context, index) =>
-              NoteCard(key: ValueKey(items[index].id), note: items[index]),
+          itemBuilder: (context, index) => NoteCard(
+            key: ValueKey(items[index].id),
+            note: items[index],
+            highlightQuery: query,
+          ),
         );
 
     Widget header(String text) => SliverToBoxAdapter(
@@ -284,6 +331,38 @@ class _QuickAddBar extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Notlarda kullanılan etiketlerin filtre çipleri (etiket yoksa gizli).
+class _TagChips extends ConsumerWidget {
+  const _TagChips();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tags = ref.watch(allTagsProvider);
+    final selected = ref.watch(selectedTagProvider);
+    if (tags.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        scrollDirection: Axis.horizontal,
+        itemCount: tags.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
+        itemBuilder: (context, index) {
+          final tag = tags[index];
+          return FilterChip(
+            label: Text('#$tag'),
+            selected: selected == tag,
+            onSelected: (isSelected) => ref
+                .read(selectedTagProvider.notifier)
+                .set(isSelected ? tag : null),
+          );
+        },
       ),
     );
   }

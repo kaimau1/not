@@ -4,12 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/ai/presentation/chat_screen.dart';
 import '../features/ai/presentation/suggestions_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/gmail/presentation/mail_summary_screen.dart';
+import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
+import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -51,6 +54,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/suggestions',
         builder: (context, state) => const SuggestionsScreen(),
       ),
+      GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
+      GoRoute(
+        path: '/archive',
+        builder: (context, state) => const ArchiveScreen(),
+      ),
+      GoRoute(path: '/trash', builder: (context, state) => const TrashScreen()),
     ],
   );
 });

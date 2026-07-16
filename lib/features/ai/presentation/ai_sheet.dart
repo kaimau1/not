@@ -12,18 +12,25 @@ import '../data/api_key_store.dart';
 import '../data/gemini_service.dart';
 
 /// Editördeki "Yapay Zeka" düğmesinin açtığı alt sayfa.
-Future<void> showAiSheet(BuildContext context, Note note) =>
+Future<void> showAiSheet(
+  BuildContext context,
+  Note note, {
+  ValueChanged<String>? onAppendText,
+}) =>
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (_) => AiSheet(note: note),
+      builder: (_) => AiSheet(note: note, onAppendText: onAppendText),
     );
 
 class AiSheet extends ConsumerStatefulWidget {
-  const AiSheet({super.key, required this.note});
+  const AiSheet({super.key, required this.note, this.onAppendText});
 
   final Note note;
+
+  /// Sonucu (OCR, ses dökümü vb.) nota ekleyen geri çağırma.
+  final ValueChanged<String>? onAppendText;
 
   @override
   ConsumerState<AiSheet> createState() => _AiSheetState();
@@ -78,6 +85,32 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     return service.summarizePdf(bytes, pdf.fileName);
   }
 
+  Future<String> _extractImageText(
+    GeminiService service,
+    Attachment image,
+  ) async {
+    final notSyncedMessage = context.l10n.attachmentNotSynced;
+    final repo = ref.read(attachmentRepositoryProvider);
+    final bytes = repo == null ? null : await repo.readBytes(image);
+    if (bytes == null) {
+      throw GeminiException(notSyncedMessage);
+    }
+    return service.extractTextFromImage(bytes, image.mimeType);
+  }
+
+  Future<String> _transcribeAudio(
+    GeminiService service,
+    Attachment audio,
+  ) async {
+    final notSyncedMessage = context.l10n.attachmentNotSynced;
+    final repo = ref.read(attachmentRepositoryProvider);
+    final bytes = repo == null ? null : await repo.readBytes(audio);
+    if (bytes == null) {
+      throw GeminiException(notSyncedMessage);
+    }
+    return service.transcribeAudio(bytes, audio.mimeType);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -85,6 +118,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     final pdfs = [
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.pdf) a,
+    ];
+    final images = [
+      for (final a in widget.note.attachments)
+        if (a.kind == AttachmentKind.image) a,
+    ];
+    final audios = [
+      for (final a in widget.note.attachments)
+        if (a.kind == AttachmentKind.audio) a,
     ];
 
     return SafeArea(
@@ -154,6 +195,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         );
                       }
                     },
+                    onAppend: widget.onAppendText == null
+                        ? null
+                        : () {
+                            widget.onAppendText!(_result!);
+                            Navigator.pop(context);
+                          },
                   )
                 else ...[
                   if (_error != null)
@@ -191,6 +238,26 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       ),
                       onTap: () => _run((s) => _summarizePdf(s, pdf)),
                     ),
+                  for (final image in images)
+                    ListTile(
+                      leading: const Icon(Icons.document_scanner_outlined),
+                      title: Text(
+                        l10n.aiExtractImageText(image.fileName),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => _run((s) => _extractImageText(s, image)),
+                    ),
+                  for (final audio in audios)
+                    ListTile(
+                      leading: const Icon(Icons.graphic_eq),
+                      title: Text(
+                        l10n.aiTranscribeAudio(audio.fileName),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () => _run((s) => _transcribeAudio(s, audio)),
+                    ),
                   if (widget.note.aiSummary != null) ...[
                     const Divider(indent: 20, endIndent: 20),
                     Padding(
@@ -220,10 +287,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 }
 
 class _ResultView extends StatelessWidget {
-  const _ResultView({required this.text, required this.onCopy});
+  const _ResultView({required this.text, required this.onCopy, this.onAppend});
 
   final String text;
   final VoidCallback onCopy;
+  final VoidCallback? onAppend;
 
   @override
   Widget build(BuildContext context) {
@@ -252,6 +320,12 @@ class _ResultView extends StatelessWidget {
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(context.l10n.copy),
               ),
+              if (onAppend != null)
+                FilledButton.tonalIcon(
+                  onPressed: onAppend,
+                  icon: const Icon(Icons.playlist_add, size: 18),
+                  label: Text(context.l10n.addToNote),
+                ),
             ],
           ),
         ],
