@@ -52,17 +52,20 @@ jobs:
         run: flutter pub get
 
       # Kalıcı imza: keystore GitHub Secrets'tan geri oluşturulur. Secrets
-      # tanımlı değilse bu adım atlanır ve APK debug anahtarıyla imzalanır.
+      # tanımlı değilse APK debug anahtarıyla imzalanır.
       - name: İmza anahtarını hazırla
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/notlar-release.jks
-          {
-            echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
-            echo "keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
-            echo "keyAlias=notlar"
-            echo "storeFile=notlar-release.jks"
-          } > android/key.properties
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 --decode > android/app/notlar-release.jks
+            printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=notlar\nstoreFile=notlar-release.jks\n' \
+              "$KEYSTORE_PASS" "$KEYSTORE_PASS" > android/key.properties
+            echo "Kalıcı imza anahtarı hazırlandı."
+          else
+            echo "ANDROID_KEYSTORE_BASE64 tanımlı değil; debug imzası kullanılacak."
+          fi
 
       # GOOGLE_SERVER_CLIENT_ID reposunun Settings → Secrets kısmında tanımlıysa
       # Google girişi gömülü gelir; tanımlı değilse uygulama yine derlenir.
