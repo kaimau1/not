@@ -1,11 +1,9 @@
 // ============================================================================
-// YER TUTUCU DOSYA — GERÇEK DEĞERLERLE DEĞİŞTİRİLMELİ
+// Firebase projesi: notlar-kaimau
 //
-// Bu dosyayı FlutterFire CLI ile yeniden üretin:
-//   dart pub global activate flutterfire_cli
-//   flutterfire configure --platforms=android,windows
-//
-// Ayrıntılar için README.md içindeki "Kurulum" bölümüne bakın.
+// Buradaki apiKey değerleri gizli bilgi değildir; Firebase istemci anahtarları
+// uygulamanın içine gömülmek üzere tasarlanmıştır. Güvenlik, Firestore/Storage
+// kuralları ve Android SHA parmak izi doğrulamasıyla sağlanır.
 // ============================================================================
 
 import 'dart:io' show Platform;
@@ -28,19 +26,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: _placeholder,
-    appId: _placeholder,
-    messagingSenderId: _placeholder,
-    projectId: _placeholder,
-    storageBucket: _placeholder,
+    apiKey: 'AIzaSyDPO34mCxYxBjnqV2W_WZqvIcUhwhsaEgQ',
+    appId: '1:625134692714:android:bb67b809ec89f732249d13',
+    messagingSenderId: '625134692714',
+    projectId: 'notlar-kaimau',
+    storageBucket: 'notlar-kaimau.firebasestorage.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: _placeholder,
-    appId: _placeholder,
-    messagingSenderId: _placeholder,
-    projectId: _placeholder,
-    storageBucket: _placeholder,
-    authDomain: _placeholder,
+    apiKey: 'AIzaSyCIFTCM2A7uXNoRlqS_9dD95C53EwVlAXs',
+    appId: '1:625134692714:web:baf58fd4b904b2c8249d13',
+    messagingSenderId: '625134692714',
+    projectId: 'notlar-kaimau',
+    storageBucket: 'notlar-kaimau.firebasestorage.app',
+    authDomain: 'notlar-kaimau.firebaseapp.com',
   );
 }

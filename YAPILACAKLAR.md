@@ -64,10 +64,10 @@ service firebase.storage {
 2. İstenen bilgiler (kopyala-yapıştır):
    - **Android package name:** `dev.kaimau.notlar`
    - Takma ad: `Notlar Android`
-   - **Debug signing certificate SHA-1:** `51:F9:4F:7F:27:D2:B9:81:81:28:28:9D:DD:71:D4:FA:D6:CE:D8:41`
+   - **Debug signing certificate SHA-1:** `C0:CE:E3:0C:6A:0A:0E:DB:09:C1:3A:3F:F6:61:C0:02:C2:62:9F:92`
 3. **Register app** → sonraki adımları (google-services.json indirme vs.) **Atla / Next / Continue** diyerek geç — o dosyaya ihtiyacımız yok.
 4. Kayıt bitince aynı sayfada Android uygulamasının kartında **Add fingerprint** → şu **SHA-256**'yı da ekle:
-   `B8:CB:FC:6F:40:A2:8F:57:84:12:E2:E3:29:A5:07:0B:DD:44:16:6F:6C:DF:E5:C1:D3:F6:18:79:66:10:5E:26`
+   `5A:12:FF:D0:24:CA:0A:5A:09:61:2E:E7:4C:59:5D:9F:02:64:AB:2C:E5:6C:36:E4:1F:87:58:CA:32:81:83:D5`
 
 ## 6. Web uygulamasını kaydet — Windows sürümü için (≈2 dk)
 
