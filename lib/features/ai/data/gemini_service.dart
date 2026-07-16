@@ -95,7 +95,9 @@ class GeminiService {
   final ApiKeyStore _keyStore;
   final Dio _dio;
 
-  static const _model = AppConstants.defaultGeminiModel;
+  /// Oturum önbelleği: API'den çekilen aday modeller ve son çalışan model.
+  List<String>? _candidates;
+  String? _activeModel;
 
   /// Anahtarın çalıştığını model listesini çekerek doğrular.
   Future<bool> validateKey(String key) async {
@@ -129,6 +131,84 @@ class GeminiService {
         _ => GeminiException('Bağlantı hatası: ${e.message}'),
       };
 
+  /// Denenecek modeller: tercih listesi ∩ API'deki gerçek liste, ardından
+  /// listede olmayan diğer genel amaçlı flash modelleri (yeniden eskiye).
+  /// Liste çekilemezse tercih listesi olduğu gibi kullanılır.
+  Future<List<String>> _fetchCandidates(String key) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/models',
+        queryParameters: {'pageSize': 1000},
+        options: Options(headers: {'x-goog-api-key': key}),
+      );
+      final models = response.data?['models'] as List<dynamic>? ?? const [];
+      final available = <String>{
+        for (final m in models)
+          if (((m as Map<String, dynamic>)['supportedGenerationMethods']
+                      as List<dynamic>? ??
+                  const [])
+              .contains('generateContent'))
+            (m['name'] as String? ?? '').replaceFirst('models/', ''),
+      };
+      final list = rankModels(available);
+      if (list.isNotEmpty) return list;
+    } on DioException {
+      // Liste çekilemedi; sabit tercih listesiyle devam edilir.
+    }
+    return AppConstants.geminiModelPreference;
+  }
+
+  /// API'deki modellerden deneme sırasını üretir: önce tercih listesi
+  /// (mevcut olanlar), ardından tercihte olmayan genel amaçlı flash
+  /// modelleri yeniden eskiye. TTS/canlı/görüntü/embedding elenir.
+  static List<String> rankModels(Set<String> available) {
+    final preferred = [
+      for (final id in AppConstants.geminiModelPreference)
+        if (available.contains(id)) id,
+    ];
+    final extras = available
+        .where((id) =>
+            id.startsWith('gemini-') &&
+            id.contains('flash') &&
+            !AppConstants.geminiModelPreference.contains(id) &&
+            !RegExp('tts|live|image|audio|embed').hasMatch(id))
+        .toList()
+      ..sort((a, b) => b.compareTo(a));
+    return [...preferred, ...extras];
+  }
+
+  /// [run]'ı modellerle sırayla dener: 404 ve 429'da sıradaki modele geçer,
+  /// diğer hatalar aynen fırlatılır. Çalışan model hatırlanır; sonraki
+  /// çağrılar doğrudan onunla başlar.
+  Future<T> _withModel<T>(
+    String key,
+    Future<T> Function(String model) run,
+  ) async {
+    final candidates = _candidates ??= await _fetchCandidates(key);
+    final active = _activeModel;
+    final ordered = [
+      if (active != null) active,
+      ...candidates.where((m) => m != active),
+    ];
+    DioException? lastSkipped;
+    for (final model in ordered) {
+      try {
+        final result = await run(model);
+        _activeModel = model;
+        return result;
+      } on DioException catch (e) {
+        final status = e.response?.statusCode;
+        if (status == 404 || status == 429) {
+          lastSkipped = e;
+          continue;
+        }
+        throw _mapDioError(e);
+      }
+    }
+    // ordered hiç boş olamaz; buraya düştüysek hepsi 404/429 verdi.
+    throw _mapDioError(lastSkipped!);
+  }
+
   Future<String> _generate(
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
@@ -145,9 +225,10 @@ class GeminiService {
     bool jsonOutput = false,
   }) async {
     final key = await _apiKey();
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '/models/$_model:generateContent',
+    final response = await _withModel(
+      key,
+      (model) => _dio.post<Map<String, dynamic>>(
+        '/models/$model:generateContent',
         options: Options(headers: {'x-goog-api-key': key}),
         data: {
           'contents': contents,
@@ -155,25 +236,23 @@ class GeminiService {
             if (jsonOutput) 'responseMimeType': 'application/json',
           },
         },
-      );
-      final candidates = response.data?['candidates'] as List<dynamic>?;
-      if (candidates == null || candidates.isEmpty) {
-        throw const GeminiException('Modelden yanıt alınamadı');
-      }
-      final content =
-          (candidates.first as Map<String, dynamic>)['content'] as Map<String, dynamic>?;
-      final responseParts = content?['parts'] as List<dynamic>? ?? const [];
-      final text = [
-        for (final part in responseParts)
-          if ((part as Map<String, dynamic>)['text'] != null) part['text'] as String,
-      ].join();
-      if (text.isEmpty) {
-        throw const GeminiException('Modelden boş yanıt döndü');
-      }
-      return text;
-    } on DioException catch (e) {
-      throw _mapDioError(e);
+      ),
+    );
+    final candidates = response.data?['candidates'] as List<dynamic>?;
+    if (candidates == null || candidates.isEmpty) {
+      throw const GeminiException('Modelden yanıt alınamadı');
     }
+    final content =
+        (candidates.first as Map<String, dynamic>)['content'] as Map<String, dynamic>?;
+    final responseParts = content?['parts'] as List<dynamic>? ?? const [];
+    final text = [
+      for (final part in responseParts)
+        if ((part as Map<String, dynamic>)['text'] != null) part['text'] as String,
+    ].join();
+    if (text.isEmpty) {
+      throw const GeminiException('Modelden boş yanıt döndü');
+    }
+    return text;
   }
 
   /// Notu Türkçe, kısa ve madde işaretli özetler.
@@ -553,10 +632,10 @@ class GeminiService {
     ];
 
     for (var round = 0; round < 6; round++) {
-      final Map<String, dynamic>? data;
-      try {
-        final response = await _dio.post<Map<String, dynamic>>(
-          '/models/$_model:generateContent',
+      final response = await _withModel(
+        key,
+        (model) => _dio.post<Map<String, dynamic>>(
+          '/models/$model:generateContent',
           options: Options(headers: {'x-goog-api-key': key}),
           data: {
             'contents': contents,
@@ -564,11 +643,9 @@ class GeminiService {
               {'functionDeclarations': _assistantTools},
             ],
           },
-        );
-        data = response.data;
-      } on DioException catch (e) {
-        throw _mapDioError(e);
-      }
+        ),
+      );
+      final data = response.data;
 
       final candidates = data?['candidates'] as List<dynamic>?;
       if (candidates == null || candidates.isEmpty) {

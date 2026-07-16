@@ -9,7 +9,14 @@ abstract final class AppConstants {
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
-  static const String defaultGeminiModel = 'gemini-3.5-flash';
+  /// Sıralı model tercihi: biri 404 (model yok) veya 429 (kota) verirse
+  /// sıradaki denenir. API'den çekilen gerçek listeyle kesiştirilir ve
+  /// listede olmayan yeni flash modelleri sona eklenir (GeminiService).
+  static const List<String> geminiModelPreference = [
+    'gemini-3.5-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-2.5-flash',
+  ];
   static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';
