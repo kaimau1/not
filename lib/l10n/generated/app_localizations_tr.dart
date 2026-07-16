@@ -547,4 +547,17 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNoteSaved => 'Sesli notun kaydedildi';
+
+  @override
+  String get aiModelChat => 'Sohbet ve AI özellikleri';
+
+  @override
+  String get aiModelVoice => 'Sesli not';
+
+  @override
+  String get aiModelAuto => 'Otomatik (önerilen)';
+
+  @override
+  String get aiModelsInfo =>
+      'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
 }

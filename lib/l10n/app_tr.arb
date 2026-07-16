@@ -227,5 +227,9 @@
   "voiceFinish": "Bitir",
   "voiceProcessing": "Dinlediklerim nota dönüştürülüyor...",
   "voiceNothingHeard": "Kayıtta konuşma algılanamadı",
-  "voiceNoteSaved": "Sesli notun kaydedildi"
+  "voiceNoteSaved": "Sesli notun kaydedildi",
+  "aiModelChat": "Sohbet ve AI özellikleri",
+  "aiModelVoice": "Sesli not",
+  "aiModelAuto": "Otomatik (önerilen)",
+  "aiModelsInfo": "Liste Google'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir."
 }

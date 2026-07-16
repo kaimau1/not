@@ -1101,6 +1101,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli notun kaydedildi'**
   String get voiceNoteSaved;
+
+  /// No description provided for @aiModelChat.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sohbet ve AI özellikleri'**
+  String get aiModelChat;
+
+  /// No description provided for @aiModelVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not'**
+  String get aiModelVoice;
+
+  /// No description provided for @aiModelAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik (önerilen)'**
+  String get aiModelAuto;
+
+  /// No description provided for @aiModelsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.'**
+  String get aiModelsInfo;
 }
 
 class _AppLocalizationsDelegate

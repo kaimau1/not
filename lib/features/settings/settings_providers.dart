@@ -104,6 +104,50 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
   }
 }
 
+/// Kullanıcının seçtiği Gemini modelleri (null = otomatik zincir).
+/// Seçilen model ilgili akışta ilk sırada denenir; 404/429'da zincir sürer.
+final chatModelProvider = NotifierProvider<ChatModelNotifier, String?>(
+  ChatModelNotifier.new,
+);
+
+class ChatModelNotifier extends Notifier<String?> {
+  static const _key = 'model_chat';
+
+  @override
+  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+
+  void set(String? value) {
+    state = value;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (value == null) {
+      prefs.remove(_key);
+    } else {
+      prefs.setString(_key, value);
+    }
+  }
+}
+
+final voiceModelProvider = NotifierProvider<VoiceModelNotifier, String?>(
+  VoiceModelNotifier.new,
+);
+
+class VoiceModelNotifier extends Notifier<String?> {
+  static const _key = 'model_voice';
+
+  @override
+  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+
+  void set(String? value) {
+    state = value;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (value == null) {
+      prefs.remove(_key);
+    } else {
+      prefs.setString(_key, value);
+    }
+  }
+}
+
 /// Notlar kaydedilirken AI otomatik etiket atasın mı?
 final autoTagProvider = NotifierProvider<AutoTagNotifier, bool>(
   AutoTagNotifier.new,

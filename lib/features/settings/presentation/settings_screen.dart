@@ -31,6 +31,8 @@ class SettingsScreen extends ConsumerWidget {
               _SectionTitle(l10n.settingsAi),
               const _GeminiKeyEditor(),
               const SizedBox(height: 12),
+              const _ModelSelectors(),
+              const SizedBox(height: 12),
               const _BriefingEditor(),
               const _AutoTagSwitch(),
               const SizedBox(height: 24),
@@ -292,6 +294,78 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
           label: Text(l10n.validateAndSave),
         ),
       ],
+    );
+  }
+}
+
+/// Kullanım alanı başına Gemini model seçimi. "Otomatik" = uygulamanın
+/// kendi sıralı zinciri; belirli model seçilirse o ilk sırada denenir.
+class _ModelSelectors extends ConsumerWidget {
+  const _ModelSelectors();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
+    if (!hasKey) return const SizedBox.shrink();
+
+    return FutureBuilder<List<String>>(
+      future: ref.read(geminiServiceProvider).availableModels(),
+      builder: (context, snapshot) {
+        final models = snapshot.data ?? const <String>[];
+        if (models.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _modelDropdown(
+              label: l10n.aiModelChat,
+              models: models,
+              value: ref.watch(chatModelProvider),
+              autoLabel: l10n.aiModelAuto,
+              onChanged: (v) => ref.read(chatModelProvider.notifier).set(v),
+            ),
+            const SizedBox(height: 10),
+            _modelDropdown(
+              label: l10n.aiModelVoice,
+              models: models,
+              value: ref.watch(voiceModelProvider),
+              autoLabel: l10n.aiModelAuto,
+              onChanged: (v) => ref.read(voiceModelProvider.notifier).set(v),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l10n.aiModelsInfo,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _modelDropdown({
+    required String label,
+    required List<String> models,
+    required String? value,
+    required String autoLabel,
+    required ValueChanged<String?> onChanged,
+  }) {
+    // Kayıtlı model artık listede yoksa (kaldırılmış olabilir) yine göster;
+    // zincir zaten çalışan bir modele düşer.
+    final items = value != null && !models.contains(value)
+        ? [value, ...models]
+        : models;
+    return DropdownButtonFormField<String?>(
+      initialValue: value,
+      decoration: InputDecoration(labelText: label),
+      items: [
+        DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
+        for (final m in items)
+          DropdownMenuItem<String?>(value: m, child: Text(m)),
+      ],
+      onChanged: onChanged,
     );
   }
 }

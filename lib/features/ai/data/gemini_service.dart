@@ -6,10 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../notes/domain/note.dart';
+import '../../settings/settings_providers.dart';
 import 'api_key_store.dart';
 
 final geminiServiceProvider = Provider<GeminiService>(
-  (ref) => GeminiService(ref.watch(apiKeyStoreProvider)),
+  (ref) => GeminiService(
+    ref.watch(apiKeyStoreProvider),
+    chatModel: () => ref.read(chatModelProvider),
+    voiceModel: () => ref.read(voiceModelProvider),
+  ),
 );
 
 class GeminiException implements Exception {
@@ -84,16 +89,28 @@ class SpeechTranslation {
 /// Gemini REST API istemcisi. Kullanıcının kendi anahtarıyla çalışır;
 /// tüm istekler doğrudan Google'a gider, araya sunucu girmez.
 class GeminiService {
-  GeminiService(this._keyStore, {Dio? dio})
-      : _dio = dio ??
+  GeminiService(
+    this._keyStore, {
+    Dio? dio,
+    String? Function()? chatModel,
+    String? Function()? voiceModel,
+  })  : _chatModel = chatModel ?? _noModel,
+        _voiceModel = voiceModel ?? _noModel,
+        _dio = dio ??
             Dio(BaseOptions(
               baseUrl: AppConstants.geminiBaseUrl,
               connectTimeout: const Duration(seconds: 20),
               receiveTimeout: const Duration(minutes: 3),
             ));
 
+  static String? _noModel() => null;
+
   final ApiKeyStore _keyStore;
   final Dio _dio;
+
+  /// Ayarlardan gelen kullanıcı model seçimleri (null = otomatik).
+  final String? Function() _chatModel;
+  final String? Function() _voiceModel;
 
   /// Oturum önbelleği: API'den çekilen aday modeller ve son çalışan model.
   List<String>? _candidates;
@@ -241,6 +258,7 @@ class GeminiService {
           },
         },
       ),
+      prefer: _chatModel(),
     );
     final candidates = response.data?['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
@@ -654,7 +672,7 @@ class GeminiService {
       key,
       contents,
       onToolCall,
-      prefer: AppConstants.fastGeminiModel,
+      prefer: _voiceModel() ?? AppConstants.fastGeminiModel,
     );
   }
 
@@ -679,7 +697,14 @@ class GeminiService {
           ],
         },
     ];
-    return _runToolLoop(key, contents, onToolCall);
+    return _runToolLoop(key, contents, onToolCall, prefer: _chatModel());
+  }
+
+  /// Ayarlardaki model seçicileri için kullanılabilir model listesi.
+  Future<List<String>> availableModels() async {
+    final key = await _keyStore.read();
+    if (key == null || key.isEmpty) return AppConstants.geminiModelPreference;
+    return _candidates ??= await _fetchCandidates(key);
   }
 
   /// Araç çağrısı döngüsü: model araç isterse çalıştırılır, sonuç geri
