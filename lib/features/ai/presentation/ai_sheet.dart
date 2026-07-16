@@ -85,6 +85,36 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     return service.summarizePdf(bytes, pdf.fileName);
   }
 
+  static const _translateTargets = [
+    'Türkçe',
+    'İngilizce',
+    'Almanca',
+    'Fransızca',
+    'İspanyolca',
+    'Arapça',
+    'Rusça',
+  ];
+
+  Future<void> _pickLanguageAndTranslate() async {
+    final language = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(context.l10n.aiTranslate),
+        children: [
+          for (final target in _translateTargets)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, target),
+              child: Text(target),
+            ),
+        ],
+      ),
+    );
+    if (language == null) return;
+    await _run(
+      (s) => s.translateText(widget.note.toPlainText(), language),
+    );
+  }
+
   Future<String> _extractImageText(
     GeminiService service,
     Attachment image,
@@ -227,6 +257,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     title: Text(l10n.aiAnalyze),
                     enabled: !widget.note.isEmpty,
                     onTap: () => _run((s) => s.analyzeNote(widget.note)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: Text(l10n.aiTranslate),
+                    enabled: !widget.note.isEmpty,
+                    onTap: _pickLanguageAndTranslate,
                   ),
                   for (final pdf in pdfs)
                     ListTile(

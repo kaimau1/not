@@ -175,5 +175,26 @@
     "placeholders": {
       "date": {"type": "String"}
     }
-  }
+  },
+  "translatorTitle": "Çevirmen",
+  "aiTranslate": "Çevir",
+  "swapLanguages": "Dilleri değiştir",
+  "liveMode": "Canlı",
+  "pushToTalkMode": "Bas-Konuş",
+  "liveTranslateInfo": "Gemini 3.5 Live Translate ile kesintisiz çeviri: başlatın ve konuşun; hangi dilde konuşulduğu otomatik algılanır, karşı dile hem sesli hem yazılı çevrilir.",
+  "startLive": "Canlı çeviriyi başlat",
+  "stopLive": "Durdur",
+  "connecting": "Bağlanıyor...",
+  "heardLabel": "Duyulan",
+  "translationLabel": "Çeviri",
+  "liveTranslateError": "Canlı çeviri hatası: {error}",
+  "@liveTranslateError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "pushToTalk": "Konuşmak için dokun",
+  "pushToTalkHint": "Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.",
+  "autoSpeak": "Çeviriyi sesli oku",
+  "speakTranslation": "Sesli oku"
 }

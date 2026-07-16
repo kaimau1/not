@@ -411,4 +411,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String mailDueDate(String date) {
     return 'Son tarih: $date';
   }
+
+  @override
+  String get translatorTitle => 'Çevirmen';
+
+  @override
+  String get aiTranslate => 'Çevir';
+
+  @override
+  String get swapLanguages => 'Dilleri değiştir';
+
+  @override
+  String get liveMode => 'Canlı';
+
+  @override
+  String get pushToTalkMode => 'Bas-Konuş';
+
+  @override
+  String get liveTranslateInfo =>
+      'Gemini 3.5 Live Translate ile kesintisiz çeviri: başlatın ve konuşun; hangi dilde konuşulduğu otomatik algılanır, karşı dile hem sesli hem yazılı çevrilir.';
+
+  @override
+  String get startLive => 'Canlı çeviriyi başlat';
+
+  @override
+  String get stopLive => 'Durdur';
+
+  @override
+  String get connecting => 'Bağlanıyor...';
+
+  @override
+  String get heardLabel => 'Duyulan';
+
+  @override
+  String get translationLabel => 'Çeviri';
+
+  @override
+  String liveTranslateError(String error) {
+    return 'Canlı çeviri hatası: $error';
+  }
+
+  @override
+  String get pushToTalk => 'Konuşmak için dokun';
+
+  @override
+  String get pushToTalkHint =>
+      'Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.';
+
+  @override
+  String get autoSpeak => 'Çeviriyi sesli oku';
+
+  @override
+  String get speakTranslation => 'Sesli oku';
 }

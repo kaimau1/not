@@ -849,6 +849,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son tarih: {date}'**
   String mailDueDate(String date);
+
+  /// No description provided for @translatorTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çevirmen'**
+  String get translatorTitle;
+
+  /// No description provided for @aiTranslate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çevir'**
+  String get aiTranslate;
+
+  /// No description provided for @swapLanguages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dilleri değiştir'**
+  String get swapLanguages;
+
+  /// No description provided for @liveMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı'**
+  String get liveMode;
+
+  /// No description provided for @pushToTalkMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bas-Konuş'**
+  String get pushToTalkMode;
+
+  /// No description provided for @liveTranslateInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gemini 3.5 Live Translate ile kesintisiz çeviri: başlatın ve konuşun; hangi dilde konuşulduğu otomatik algılanır, karşı dile hem sesli hem yazılı çevrilir.'**
+  String get liveTranslateInfo;
+
+  /// No description provided for @startLive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı çeviriyi başlat'**
+  String get startLive;
+
+  /// No description provided for @stopLive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durdur'**
+  String get stopLive;
+
+  /// No description provided for @connecting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlanıyor...'**
+  String get connecting;
+
+  /// No description provided for @heardLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duyulan'**
+  String get heardLabel;
+
+  /// No description provided for @translationLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çeviri'**
+  String get translationLabel;
+
+  /// No description provided for @liveTranslateError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı çeviri hatası: {error}'**
+  String liveTranslateError(String error);
+
+  /// No description provided for @pushToTalk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşmak için dokun'**
+  String get pushToTalk;
+
+  /// No description provided for @pushToTalkHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.'**
+  String get pushToTalkHint;
+
+  /// No description provided for @autoSpeak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çeviriyi sesli oku'**
+  String get autoSpeak;
+
+  /// No description provided for @speakTranslation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli oku'**
+  String get speakTranslation;
 }
 
 class _AppLocalizationsDelegate

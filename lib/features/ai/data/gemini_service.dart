@@ -63,6 +63,24 @@ class ChatTurn {
   final String text;
 }
 
+/// Konuşma çevirmeninin tek bir tur sonucu.
+class SpeechTranslation {
+  const SpeechTranslation({
+    required this.detectedLanguage,
+    required this.transcript,
+    required this.translation,
+  });
+
+  /// Konuşulan dilin adı (ör. "Türkçe").
+  final String detectedLanguage;
+
+  /// Konuşmanın kendi dilindeki dökümü.
+  final String transcript;
+
+  /// Karşı dile çevirisi.
+  final String translation;
+}
+
 /// Gemini REST API istemcisi. Kullanıcının kendi anahtarıyla çalışır;
 /// tüm istekler doğrudan Google'a gider, araya sunucu girmez.
 class GeminiService {
@@ -264,6 +282,105 @@ class GeminiService {
               'sayıyorsa madde işaretli liste olarak yaz.',
         },
       ]);
+
+  /// Metni hedef dile çevirir.
+  Future<String> translateText(String text, String targetLanguage) =>
+      _generate([
+        {
+          'text': 'Aşağıdaki metni $targetLanguage diline çevir. Anlamı ve '
+              'tonu koru; biçimlendirmeyi (madde işaretleri, satırlar) aynen '
+              'aktar. Yalnızca çeviriyi yaz, açıklama ekleme.\n\n---\n$text',
+        },
+      ]);
+
+  /// Konuşma çevirmeni: ses kaydındaki konuşmanın dilini (A veya B) tespit
+  /// eder, dökümünü çıkarır ve karşı dile çevirir.
+  Future<SpeechTranslation> translateSpeech({
+    required Uint8List bytes,
+    required String mimeType,
+    required String languageA,
+    required String languageB,
+  }) async {
+    final raw = await _generate(
+      [
+        {
+          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+        },
+        {
+          'text': 'Bu ses kaydı, $languageA ve $languageB konuşan iki kişi '
+              'arasındaki bir sohbetin tek cümlesidir/turudur. '
+              '1) Konuşulan dili tespit et ($languageA mı $languageB mi). '
+              '2) Konuşmayı kendi dilinde yazıya dök. '
+              '3) Karşı dile doğal biçimde çevir. '
+              'Yanıtı YALNIZCA şu JSON şemasında ver: '
+              '{"detectedLanguage": "dil adı", "transcript": "döküm", '
+              '"translation": "çeviri"}',
+        },
+      ],
+      jsonOutput: true,
+    );
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) {
+      throw const GeminiException('Çeviri yanıtı çözümlenemedi');
+    }
+    return SpeechTranslation(
+      detectedLanguage: decoded['detectedLanguage'] as String? ?? '',
+      transcript: decoded['transcript'] as String? ?? '',
+      translation: decoded['translation'] as String? ?? '',
+    );
+  }
+
+  /// Metni sese çevirir (TTS). Ham PCM (24 kHz, 16-bit, mono) döner.
+  Future<Uint8List> synthesizeSpeech(String text) async {
+    final key = await _apiKey();
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/models/${AppConstants.geminiTtsModel}:generateContent',
+        options: Options(headers: {'x-goog-api-key': key}),
+        data: {
+          'contents': [
+            {
+              'role': 'user',
+              'parts': [
+                {'text': text},
+              ],
+            },
+          ],
+          'generationConfig': {
+            'responseModalities': ['AUDIO'],
+            'speechConfig': {
+              'voiceConfig': {
+                'prebuiltVoiceConfig': {'voiceName': 'Kore'},
+              },
+            },
+          },
+        },
+      );
+      final candidates = response.data?['candidates'] as List<dynamic>?;
+      if (candidates == null || candidates.isEmpty) {
+        throw const GeminiException('Ses üretilemedi');
+      }
+      final content = (candidates.first as Map<String, dynamic>)['content']
+          as Map<String, dynamic>?;
+      final parts = content?['parts'] as List<dynamic>? ?? const [];
+      for (final part in parts) {
+        final inline = (part as Map<String, dynamic>)['inlineData'] ??
+            part['inline_data'];
+        if (inline is Map && inline['data'] is String) {
+          return base64Decode(inline['data'] as String);
+        }
+      }
+      throw const GeminiException('Ses üretilemedi');
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      throw switch (status) {
+        400 || 401 || 403 =>
+          const GeminiException('API anahtarı geçersiz', isAuthError: true),
+        429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
+        _ => GeminiException('Bağlantı hatası: ${e.message}'),
+      };
+    }
+  }
 
   /// Kullanıcının notları üzerinde çok turlu sohbet.
   Future<String> chatWithNotes({

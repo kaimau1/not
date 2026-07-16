@@ -72,6 +72,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       title: _SearchField(controller: _searchController),
                       actions: [
                         IconButton(
+                          tooltip: l10n.translatorTitle,
+                          icon: const Icon(Icons.translate),
+                          onPressed: () => context.push('/translate'),
+                        ),
+                        IconButton(
                           tooltip: l10n.chatTitle,
                           icon: const Icon(Icons.forum_outlined),
                           onPressed: () => context.push('/chat'),

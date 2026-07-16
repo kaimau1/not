@@ -10,6 +10,12 @@ abstract final class AppConstants {
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
   static const String defaultGeminiModel = 'gemini-2.5-flash';
+  static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
+  static const String geminiLiveTranslateModel =
+      'gemini-3.5-live-translate-preview';
+  static const String geminiLiveWsUrl =
+      'wss://generativelanguage.googleapis.com/ws/'
+      'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
   // Ek sınırları
   static const int maxAttachmentBytes = 25 * 1024 * 1024; // 25 MB

@@ -14,6 +14,7 @@ import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/translate/presentation/translator_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _RefreshNotifier(
@@ -55,6 +56,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SuggestionsScreen(),
       ),
       GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
+      GoRoute(
+        path: '/translate',
+        builder: (context, state) => const TranslatorScreen(),
+      ),
       GoRoute(
         path: '/archive',
         builder: (context, state) => const ArchiveScreen(),

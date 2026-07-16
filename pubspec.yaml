@@ -76,6 +76,7 @@ dependencies:
   just_audio: ^0.10.6
   share_plus: ^13.2.1
   home_widget: ^0.9.3
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:
