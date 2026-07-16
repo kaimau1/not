@@ -187,7 +187,7 @@ class GeminiService {
     final candidates = _candidates ??= await _fetchCandidates(key);
     final active = _activeModel;
     final ordered = [
-      if (active != null) active,
+      ?active,
       ...candidates.where((m) => m != active),
     ];
     DioException? lastSkipped;
