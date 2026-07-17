@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
-import '../data/api_key_store.dart';
+import '../data/ai_report.dart';
 import '../data/assistant_service.dart';
 import '../data/gemini_service.dart';
 
@@ -121,29 +120,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  /// Sorunlu asistan yanıtını bildir (Play üretken AI politikası).
+  Future<void> _reportTurn(ChatTurn turn) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    await ref
+        .read(aiReportServiceProvider)
+        .report(content: turn.text, source: 'chat');
+    messenger.showSnackBar(SnackBar(content: Text(l10n.aiReportThanks)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
 
+    // Anahtar zorunluluğu kalktı: anahtarsız kullanıcı dahili AI ile sohbet
+    // eder; kota/hata durumları yanıt balonunda gösterilir.
     return Scaffold(
       appBar: AppBar(title: Text(l10n.chatTitle)),
-      body: !hasKey
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.aiNoApiKey),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    onPressed: () => context.push('/settings'),
-                    child: Text(l10n.settings),
-                  ),
-                ],
-              ),
-            )
-          : Column(
+      body: Column(
               children: [
                 Expanded(
                   child: _history.isEmpty
@@ -175,28 +171,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               );
                             }
                             final turn = _history[index];
+                            final bubble = Container(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              constraints: BoxConstraints(
+                                maxWidth:
+                                    MediaQuery.sizeOf(context).width * 0.8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: turn.isUser
+                                    ? scheme.primaryContainer
+                                    : scheme.surfaceContainerHigh,
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: SelectableText(turn.text),
+                            );
                             return Align(
                               alignment: turn.isUser
                                   ? Alignment.centerRight
                                   : Alignment.centerLeft,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 10,
-                                ),
-                                constraints: BoxConstraints(
-                                  maxWidth:
-                                      MediaQuery.sizeOf(context).width * 0.8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: turn.isUser
-                                      ? scheme.primaryContainer
-                                      : scheme.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: SelectableText(turn.text),
-                              ),
+                              child: turn.isUser
+                                  ? bubble
+                                  : Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Flexible(child: bubble),
+                                        IconButton(
+                                          tooltip: l10n.aiReport,
+                                          visualDensity:
+                                              VisualDensity.compact,
+                                          icon: Icon(
+                                            Icons.flag_outlined,
+                                            size: 16,
+                                            color: scheme.onSurfaceVariant
+                                                .withValues(alpha: 0.6),
+                                          ),
+                                          onPressed: () => _reportTurn(turn),
+                                        ),
+                                      ],
+                                    ),
                             );
                           },
                         ),

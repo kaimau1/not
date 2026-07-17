@@ -93,6 +93,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -105,6 +106,22 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    # Uygulama içi Gizlilik Politikası ekranı bu dosyayı gösterir.
+    - PRIVACY_POLICY.md
+
+# Uygulama ikonu: assets/icon/ altındaki görsellerden üretilir.
+# Yenilemek için: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#4A5CCC"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  windows:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    icon_size: 256
 
   # To add assets to your application, add an assets section, like this:
   # assets:

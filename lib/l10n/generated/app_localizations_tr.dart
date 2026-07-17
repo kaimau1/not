@@ -224,6 +224,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiBuiltInByok => 'Kendi anahtarın kullanılıyor — sınırsız';
 
   @override
+  String get aiReport => 'Yanıtı bildir';
+
+  @override
+  String get aiReportThanks => 'Bildirimin alındı, teşekkürler';
+
+  @override
+  String get privacyPolicyTitle => 'Gizlilik Politikası';
+
+  @override
   String get validateAndSave => 'Doğrula ve Kaydet';
 
   @override

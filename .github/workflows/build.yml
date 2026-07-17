@@ -105,6 +105,25 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
+      # Google Play, APK değil App Bundle (.aab) ister. Yalnızca main'de
+      # derlenir (PR derlemelerini yavaşlatmasın); Play Console'a yüklerken
+      # bu artifact kullanılır. AAB tüm mimarileri içerir — Play cihaza
+      # uygun parçayı kendisi üretir.
+      - name: AAB derle (Play için)
+        if: github.ref == 'refs/heads/main'
+        run: >
+          flutter build appbundle --release
+          --build-number=${{ github.run_number }}
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+
+      - name: AAB'yi yükle
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: notlar-android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
       # main'e push'ta APK kalıcı bir Release olarak yayınlanır. Artifact'ten
       # farkı: doğrudan .apk linki (zip yok), süresi dolmaz, telefondan tıkla-kur.
       # GitHub yeni release için bildirim maili gönderir.
