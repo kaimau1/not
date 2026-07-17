@@ -83,6 +83,20 @@ final allTagsProvider = Provider<List<String>>((ref) {
   return sorted;
 });
 
+/// Etiket → kullanım sayısı (aktif notlarda). Ana sayfadaki çip satırı en
+/// sık kullanılanları öne alıp gerisini "+N" arkasına gizler.
+final tagCountsProvider = Provider<Map<String, int>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final counts = <String, int>{};
+  for (final note in notes) {
+    if (note.archivedAt != null) continue;
+    for (final tag in note.tags) {
+      counts[tag] = (counts[tag] ?? 0) + 1;
+    }
+  }
+  return counts;
+});
+
 /// Arşivlenmiş notlar (arşiv ekranı için).
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);

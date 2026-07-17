@@ -222,8 +222,11 @@ class NoteCard extends ConsumerWidget {
                               '${note.reminderAt!.hour.toString().padLeft(2, '0')}:'
                               '${note.reminderAt!.minute.toString().padLeft(2, '0')}',
                         ),
-                      for (final tag in note.tags.take(3))
+                      // Kart etiketlerle uzamasın: en fazla 2 etiket + "+N".
+                      for (final tag in note.tags.take(2))
                         _MiniBadge(label: '#$tag'),
+                      if (note.tags.length > 2)
+                        _MiniBadge(label: '+${note.tags.length - 2}'),
                     ],
                   ),
                 ],

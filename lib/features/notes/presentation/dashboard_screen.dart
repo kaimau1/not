@@ -482,24 +482,81 @@ class _QuickAddBar extends StatelessWidget {
 }
 
 /// Notlarda kullanılan etiketlerin filtre çipleri (etiket yoksa gizli).
+/// Etiketler çoğaldıkça satır şişmesin diye yalnızca en sık kullanılanlar
+/// gösterilir; kalanlar "+N" çipinin açtığı listeden seçilir.
 class _TagChips extends ConsumerWidget {
   const _TagChips();
 
+  static const _maxVisible = 8;
+
+  Future<void> _showAllTags(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> tags,
+    String? selected,
+  ) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final tag in tags)
+                FilterChip(
+                  label: Text('#$tag'),
+                  selected: selected == tag,
+                  onSelected: (isSelected) =>
+                      Navigator.pop(sheetContext, isSelected ? tag : ''),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    ref.read(selectedTagProvider.notifier).set(picked.isEmpty ? null : picked);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tags = ref.watch(allTagsProvider);
+    final counts = ref.watch(tagCountsProvider);
     final selected = ref.watch(selectedTagProvider);
-    if (tags.isEmpty) return const SizedBox.shrink();
+    if (counts.isEmpty) return const SizedBox.shrink();
+
+    final byUsage = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    final visible = byUsage.take(_maxVisible).toList();
+    // Seçili etiket gizli kalmasın: listede yoksa başa al.
+    if (selected != null && counts.containsKey(selected) &&
+        !visible.contains(selected)) {
+      visible.insert(0, selected);
+    }
+    final hidden = byUsage.length - visible.length;
+    final allSorted = ref.watch(allTagsProvider);
 
     return SizedBox(
       height: 42,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         scrollDirection: Axis.horizontal,
-        itemCount: tags.length,
+        itemCount: visible.length + (hidden > 0 ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
-          final tag = tags[index];
+          if (index == visible.length) {
+            return ActionChip(
+              label: Text('+$hidden'),
+              onPressed: () =>
+                  _showAllTags(context, ref, allSorted, selected),
+            );
+          }
+          final tag = visible[index];
           return FilterChip(
             label: Text('#$tag'),
             selected: selected == tag,

@@ -20,42 +20,55 @@ class GmailService {
     final client = await _auth.getClient();
     try {
       final api = gmail.GmailApi(client);
-      final listResponse = await api.users.messages.list(
+      var listResponse = await api.users.messages.list(
         'me',
         q: 'in:inbox category:primary newer_than:2d',
         maxResults: maxResults,
       );
-      final refs = listResponse.messages ?? const <gmail.Message>[];
-      final result = <EmailMeta>[];
-      for (final ref in refs) {
-        final id = ref.id;
-        if (id == null) continue;
-        final message = await api.users.messages.get(
+      // Sekmesiz gelen kutularında (ör. Workspace) category:primary hiç
+      // sonuç döndürmez; kategorisiz sorguya düş.
+      if (listResponse.messages == null || listResponse.messages!.isEmpty) {
+        listResponse = await api.users.messages.list(
           'me',
-          id,
-          format: 'metadata',
-          metadataHeaders: ['From', 'Subject', 'Date'],
+          q: 'in:inbox newer_than:2d',
+          maxResults: maxResults,
         );
-        final headers = message.payload?.headers ?? const [];
-        String header(String name) =>
-            headers
-                .firstWhere(
-                  (h) => (h.name ?? '').toLowerCase() == name.toLowerCase(),
-                  orElse: gmail.MessagePartHeader.new,
-                )
-                .value ??
-            '';
-        result.add(EmailMeta(
-          id: id,
-          from: header('From'),
-          subject: header('Subject'),
-          date: header('Date'),
-          snippet: message.snippet ?? '',
-        ));
       }
-      return result;
+      final refs = listResponse.messages ?? const <gmail.Message>[];
+      // Metadata'ları tek tek beklemek 25 ardışık ağ turu demekti (en büyük
+      // yavaşlık kaynağı); hepsi paralel çekilir.
+      final messages = await Future.wait([
+        for (final ref in refs)
+          if (ref.id != null)
+            api.users.messages.get(
+              'me',
+              ref.id!,
+              format: 'metadata',
+              metadataHeaders: ['From', 'Subject', 'Date'],
+            ),
+      ]);
+      return [for (final message in messages) _toMeta(message)];
     } finally {
       client.close();
     }
+  }
+
+  static EmailMeta _toMeta(gmail.Message message) {
+    final headers = message.payload?.headers ?? const [];
+    String header(String name) =>
+        headers
+            .firstWhere(
+              (h) => (h.name ?? '').toLowerCase() == name.toLowerCase(),
+              orElse: gmail.MessagePartHeader.new,
+            )
+            .value ??
+        '';
+    return EmailMeta(
+      id: message.id ?? '',
+      from: header('From'),
+      subject: header('Subject'),
+      date: header('Date'),
+      snippet: message.snippet ?? '',
+    );
   }
 }

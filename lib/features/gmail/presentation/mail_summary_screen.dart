@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,14 +14,19 @@ import '../../notes/domain/note_type.dart';
 import '../data/gmail_auth.dart';
 import '../data/gmail_service.dart';
 
-/// E-postaları çekip Gemini ile önemlilerini seçtirir. Sonuç yalnızca
-/// bellekte tutulur; "Yenile" ile tekrar taranır.
+/// E-postaları çekip Gemini ile önemlilerini seçtirir. Sonuç 15 dakika
+/// bellekte tutulur (ekrana her girişte baştan tarama = yavaşlık);
+/// "Yenile" ile istenirse hemen tekrar taranır.
 final importantEmailsProvider =
     FutureProvider.autoDispose<List<ImportantEmail>>((ref) async {
-  final emails =
-      await ref.watch(gmailServiceProvider).fetchRecentEmails();
-  if (emails.isEmpty) return const [];
-  return ref.watch(geminiServiceProvider).triageEmails(emails);
+  final emails = await ref.watch(gmailServiceProvider).fetchRecentEmails();
+  final result = emails.isEmpty
+      ? const <ImportantEmail>[]
+      : await ref.watch(geminiServiceProvider).triageEmails(emails);
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 15), link.close);
+  ref.onDispose(timer.cancel);
+  return result;
 });
 
 class MailSummaryScreen extends ConsumerWidget {
