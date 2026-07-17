@@ -86,11 +86,42 @@ class FirebaseAiClient {
           lastSkipped = e;
           continue;
         }
-        throw GeminiException('Yapay zeka isteği başarısız: ${e.message}');
+        throw _mapError(e);
       }
     }
-    throw GeminiException(
-      'Yapay zeka şu an yanıt veremiyor: ${lastSkipped?.message ?? 'bilinmeyen hata'}',
+    throw _mapError(lastSkipped);
+  }
+
+  /// Firebase AI Logic hatalarını kullanıcının anlayacağı Türkçe mesaja
+  /// çevirir. En sık karşılaşılan iki durum: (1) konsolda AI Logic hiç
+  /// etkinleştirilmemiş, (2) App Check zorunlu ama token geçersiz.
+  static GeminiException _mapError(FirebaseAIException? e) {
+    final message = (e?.message ?? '').toLowerCase();
+    if (message.contains('app check') ||
+        message.contains('app-check') ||
+        message.contains('token') ||
+        message.contains('unauthenticated') ||
+        message.contains('permission') ||
+        message.contains('403')) {
+      return const GeminiException(
+        'Dahili yapay zeka bu sürümde etkinleştirilmemiş. Kendi Gemini '
+        "anahtarını Ayarlar'dan girerek AI özelliklerini hemen "
+        'kullanabilirsin.',
+        isAuthError: true,
+      );
+    }
+    if (message.contains('not enabled') ||
+        message.contains('has not been used') ||
+        message.contains('disabled') ||
+        message.contains('service_disabled')) {
+      return const GeminiException(
+        'Dahili yapay zeka altyapısı henüz hazır değil. Kendi Gemini '
+        "anahtarını Ayarlar'dan girerek AI özelliklerini kullanabilirsin.",
+        isAuthError: true,
+      );
+    }
+    return GeminiException(
+      'Yapay zeka şu an yanıt veremiyor: ${e?.message ?? 'bilinmeyen hata'}',
     );
   }
 
