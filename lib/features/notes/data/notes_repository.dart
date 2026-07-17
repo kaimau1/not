@@ -24,13 +24,20 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
 final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
-  final stream = repo.watchNotes();
-  // Açılışta bir kez: boş kalıp unutulmuş notları temizle (editör açıkken
-  // uygulama kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
-  unawaited(
-    stream.first.then(repo.cleanupEmptyNotes).catchError((Object _) {}),
-  );
-  return stream;
+  // Boş kalıp unutulmuş notları temizle (editör açıkken uygulama
+  // kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
+  // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
+  var lastCleanup = DateTime.fromMillisecondsSinceEpoch(0);
+  return repo.watchNotes().map((notes) {
+    final now = DateTime.now();
+    if (now.difference(lastCleanup) > const Duration(seconds: 30)) {
+      lastCleanup = now;
+      unawaited(
+        Future(() => repo.cleanupEmptyNotes(notes)).catchError((Object _) {}),
+      );
+    }
+    return notes;
+  });
 });
 
 /// Çöp kutusundaki (soft-delete edilmiş) notlar.
@@ -175,11 +182,13 @@ class NotesRepository {
     unawaited(_notes.doc(noteId).delete());
   }
 
-  /// Boş kalıp unutulmuş notları siler. Yeni oluşturulmuş boş notlara
-  /// dokunmaz (editörde yazılıyor olabilir): son düzenleme 1 saatten eskiyse
-  /// silinir. Açılışta ilk not listesiyle bir kez çağrılır.
+  /// Boş kalıp unutulmuş notları siler. Şu an editörde yazılıyor olabilecek
+  /// taze notlara dokunmaz: son düzenleme 2 dakikadan eskiyse silinir.
+  /// (Editörde açık boş bir not yanlışlıkla silinse bile editörün merge'lü
+  /// yazımları dokümanı yeniden oluşturur — veri kaybı olmaz. Boş notlar
+  /// ayrıca dashboard listesinde hiç gösterilmez.)
   Future<void> cleanupEmptyNotes(List<Note> notes) async {
-    final cutoff = DateTime.now().subtract(const Duration(hours: 1));
+    final cutoff = DateTime.now().subtract(const Duration(minutes: 2));
     for (final note in notes) {
       final updated = note.updatedAt;
       if (note.isEmpty && updated != null && updated.isBefore(cutoff)) {
