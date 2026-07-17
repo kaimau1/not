@@ -586,6 +586,30 @@ abstract class AppLocalizations {
   /// **'Çıkış yapmak istediğine emin misin?'**
   String get signOutConfirm;
 
+  /// No description provided for @deleteAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesabımı ve verilerimi sil'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu işlem geri alınamaz: tüm notların, eklerin ve hesabın kalıcı olarak silinir. Devam etmek istediğine emin misin?'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalıcı olarak sil'**
+  String get deleteAccountConfirm;
+
+  /// No description provided for @licensesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık kaynak lisansları'**
+  String get licensesTitle;
+
   /// No description provided for @mailEmpty.
   ///
   /// In tr, this message translates to:

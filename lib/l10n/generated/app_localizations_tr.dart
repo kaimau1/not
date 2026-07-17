@@ -273,6 +273,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
 
   @override
+  String get deleteAccount => 'Hesabımı ve verilerimi sil';
+
+  @override
+  String get deleteAccountWarning =>
+      'Bu işlem geri alınamaz: tüm notların, eklerin ve hesabın kalıcı olarak silinir. Devam etmek istediğine emin misin?';
+
+  @override
+  String get deleteAccountConfirm => 'Kalıcı olarak sil';
+
+  @override
+  String get licensesTitle => 'Açık kaynak lisansları';
+
+  @override
   String get mailEmpty => 'Önemli e-posta bulunamadı';
 
   @override
