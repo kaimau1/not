@@ -81,6 +81,7 @@ dependencies:
   home_widget: ^0.9.3
   web_socket_channel: ^3.0.3
   app_links: ^7.2.1
+  firebase_ai: ^3.14.1
 
 dev_dependencies:
   flutter_test:

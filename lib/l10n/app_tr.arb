@@ -97,7 +97,15 @@
   "settingsAi": "Yapay Zeka",
   "geminiApiKey": "Gemini API Anahtarı",
   "geminiApiKeyHint": "AIza... ile başlayan anahtarı yapıştır",
-  "geminiApiKeyInfo": "Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.",
+  "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
+  "aiBuiltInPremium": "Dahili AI: Premium etkin — sınırsız kullanım",
+  "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz hak {count}",
+  "@aiBuiltInRemaining": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "aiBuiltInByok": "Kendi anahtarın kullanılıyor — sınırsız",
   "validateAndSave": "Doğrula ve Kaydet",
   "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
   "apiKeyInvalid": "API anahtarı geçersiz",

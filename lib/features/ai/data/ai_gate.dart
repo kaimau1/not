@@ -1,0 +1,86 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/constants.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../settings/settings_providers.dart';
+import 'gemini_service.dart' show GeminiException;
+
+/// Premium durumu: `users/{uid}` dokümanındaki `premiumUntil` alanı
+/// gelecekte bir tarihse kullanıcı premium'dur. Şimdilik alan konsoldan
+/// (test için) yazılır; Play Billing entegre olunca satın alma doğrulaması
+/// bu alanı sunucu tarafında güncelleyecek.
+final premiumProvider = StreamProvider<bool>((ref) {
+  final uid = ref.watch(currentUidProvider);
+  if (uid == null) return Stream.value(false);
+  return FirebaseFirestore.instance
+      .collection(AppConstants.usersCollection)
+      .doc(uid)
+      .snapshots()
+      .map((doc) {
+    final until = (doc.data()?['premiumUntil'] as Timestamp?)?.toDate();
+    return until != null && until.isAfter(DateTime.now());
+  });
+});
+
+/// Kota tüketildikçe artan sayaç; Ayarlar'daki "kalan hak" satırını tazeler.
+final aiQuotaVersionProvider = NotifierProvider<AiQuotaVersionNotifier, int>(
+  AiQuotaVersionNotifier.new,
+);
+
+class AiQuotaVersionNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void bump() => state++;
+}
+
+/// Bugün kalan ücretsiz dahili AI hakkı (yalnızca gösterim için).
+final freeAiRemainingProvider = Provider<int>((ref) {
+  ref.watch(aiQuotaVersionProvider);
+  return ref.watch(aiGateProvider).remainingToday();
+});
+
+final aiGateProvider = Provider<AiGate>((ref) => AiGate(ref));
+
+/// Dahili AI kapısı: kendi anahtarını girenler bu kapıdan hiç geçmez
+/// (GeminiService anahtar varken REST yolunu kullanır). Anahtarsız
+/// kullanıcıda premium serbesttir; değilse günlük ücretsiz hak tüketilir.
+///
+/// Not: sayaç cihaz yerelindedir (SharedPreferences). Play sürümünde
+/// sunucu tarafı doğrulama (App Check + Cloud Functions) eklenecek.
+class AiGate {
+  AiGate(this._ref);
+
+  final Ref _ref;
+
+  static String _todayKey() {
+    final now = DateTime.now();
+    return 'ai_free_used_${now.year}-${now.month}-${now.day}';
+  }
+
+  int _usedToday() =>
+      _ref.read(sharedPreferencesProvider).getInt(_todayKey()) ?? 0;
+
+  int remainingToday() {
+    final remaining = AppConstants.freeDailyAiCalls - _usedToday();
+    return remaining < 0 ? 0 : remaining;
+  }
+
+  /// Dahili AI çağrısı öncesi çağrılır; hak yoksa [GeminiException] fırlatır.
+  Future<void> consume() async {
+    final premium = _ref.read(premiumProvider).value ?? false;
+    if (premium) return;
+    final prefs = _ref.read(sharedPreferencesProvider);
+    final used = prefs.getInt(_todayKey()) ?? 0;
+    if (used >= AppConstants.freeDailyAiCalls) {
+      throw const GeminiException(
+        'Bugünlük ücretsiz AI hakkın doldu. Yarın yenilenir; dilersen '
+        "Ayarlar'dan kendi Gemini anahtarını girebilir veya Premium'a "
+        'geçebilirsin.',
+      );
+    }
+    await prefs.setInt(_todayKey(), used + 1);
+    _ref.read(aiQuotaVersionProvider.notifier).bump();
+  }
+}

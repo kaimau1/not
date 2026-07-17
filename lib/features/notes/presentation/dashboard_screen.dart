@@ -8,6 +8,7 @@ import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
@@ -87,6 +88,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.watch(reminderServiceProvider);
     ref.watch(widgetServiceProvider);
     ref.watch(deepLinkHandlerProvider);
+    // Premium akışını canlı tut: AI kapısı (AiGate.consume) senkron okur.
+    ref.watch(premiumProvider);
 
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);

@@ -2,6 +2,14 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Kullanıcının kök dokümanı (premiumUntil gibi hesap alanları).
+    // Not: premiumUntil şimdilik test için konsoldan yazılır; Play Billing
+    // gelince yazımı yalnızca sunucu (Cloud Function) yapacak şekilde
+    // kısıtlanacak.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
     // Her kullanıcı yalnızca kendi verisini okuyup yazabilir.
     match /users/{uid}/{document=**} {
       allow read, write: if request.auth != null && request.auth.uid == uid;

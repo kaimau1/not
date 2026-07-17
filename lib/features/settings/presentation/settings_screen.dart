@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -36,6 +37,7 @@ class SettingsScreen extends ConsumerWidget {
               const _DarkScheduleEditor(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsAi),
+              const _BuiltInAiStatus(),
               const _GeminiKeyEditor(),
               const SizedBox(height: 12),
               const _ModelSelectors(),
@@ -199,6 +201,46 @@ class _DarkScheduleEditor extends ConsumerWidget {
             ],
           ),
       ],
+    );
+  }
+}
+
+/// Dahili AI durumu: kendi anahtarı varsa "sınırsız", premium'sa "premium",
+/// değilse bugünkü kalan ücretsiz hak gösterilir.
+class _BuiltInAiStatus extends ConsumerWidget {
+  const _BuiltInAiStatus();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
+    final premium = ref.watch(premiumProvider).value ?? false;
+    final remaining = ref.watch(freeAiRemainingProvider);
+
+    final (icon, text) = hasKey
+        ? (Icons.key, l10n.aiBuiltInByok)
+        : premium
+            ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium)
+            : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: scheme.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
