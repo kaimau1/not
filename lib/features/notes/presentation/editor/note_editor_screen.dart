@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
+import '../../../../core/utils/note_guard.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
 import '../../../settings/settings_providers.dart';
@@ -439,6 +440,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
+  /// Not kilidi: kilitlemek serbest, kilidi kaldırmak kimlik doğrulaması
+  /// ister (kart zaten açarken doğruluyor ama menüden de korunmalı).
+  Future<void> _toggleLock() async {
+    final note = _note;
+    if (note == null) return;
+    if (note.locked) {
+      final ok = await authenticateForNote(context.l10n.unlockAuthReason);
+      if (!ok) return;
+    }
+    _mutate((n) => n.copyWith(locked: !n.locked), immediate: true);
+  }
+
   void _toggleArchive() {
     final note = _note;
     if (note == null) return;
@@ -721,6 +734,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 switch (action) {
                   case 'share':
                     _share();
+                  case 'lock':
+                    _toggleLock();
                   case 'archive':
                     _toggleArchive();
                   case 'delete':
@@ -735,6 +750,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.share_outlined),
                     title: Text(l10n.share),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'lock',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(note.locked
+                        ? Icons.lock_open_outlined
+                        : Icons.lock_outline),
+                    title:
+                        Text(note.locked ? l10n.unlockNote : l10n.lockNote),
                   ),
                 ),
                 PopupMenuItem(

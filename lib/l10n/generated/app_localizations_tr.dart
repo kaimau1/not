@@ -233,6 +233,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get privacyPolicyTitle => 'Gizlilik Politikası';
 
   @override
+  String get lockNote => 'Kilitle';
+
+  @override
+  String get unlockNote => 'Kilidi kaldır';
+
+  @override
+  String get lockedNote => 'Kilitli not';
+
+  @override
+  String get unlockAuthReason => 'Kilitli notu açmak için kimliğini doğrula';
+
+  @override
+  String get exportBackup => 'Yedeği dışa aktar (JSON)';
+
+  @override
   String get validateAndSave => 'Doğrula ve Kaydet';
 
   @override

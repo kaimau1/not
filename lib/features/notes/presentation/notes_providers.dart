@@ -142,6 +142,8 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
 
 bool _matches(Note note, String query) {
   if (note.title.toLowerCase().contains(query)) return true;
+  // Kilitli notun içeriği aramaya sızmasın; yalnızca başlıktan bulunur.
+  if (note.locked) return false;
   if (note.body.toLowerCase().contains(query)) return true;
   for (final item in note.items) {
     if (item.text.toLowerCase().contains(query)) return true;

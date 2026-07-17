@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -71,7 +72,14 @@ class NoteCard extends ConsumerWidget {
   /// Aktif arama sorgusu; boş değilse eşleşmeler vurgulanır.
   final String highlightQuery;
 
-  void _openNote(BuildContext context) => context.push('/note/${note.id}');
+  Future<void> _openNote(BuildContext context) async {
+    // Kilitli not: önce kimlik doğrulaması (biyometrik/ekran kilidi).
+    if (note.locked) {
+      final ok = await authenticateForNote(context.l10n.unlockAuthReason);
+      if (!ok || !context.mounted) return;
+    }
+    if (context.mounted) await context.push('/note/${note.id}');
+  }
 
   void _delete(BuildContext context, WidgetRef ref) {
     final repo = ref.read(notesRepositoryProvider);
@@ -203,10 +211,29 @@ class NoteCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                _NotePreview(note: note, highlightQuery: highlightQuery),
-                if (note.attachments.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  _AttachmentPreview(attachments: note.attachments),
+                // Kilitli not: içerik kartta gösterilmez; yalnızca kilit
+                // satırı görünür (başlık yukarıda kalabilir).
+                if (note.locked)
+                  Row(
+                    children: [
+                      Icon(Icons.lock_outline,
+                          size: 14, color: scheme.onSurfaceVariant),
+                      const SizedBox(width: 6),
+                      Text(
+                        context.l10n.lockedNote,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                  )
+                else ...[
+                  _NotePreview(note: note, highlightQuery: highlightQuery),
+                  if (note.attachments.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    _AttachmentPreview(attachments: note.attachments),
+                  ],
                 ],
                 if (note.tags.isNotEmpty || note.reminderAt != null) ...[
                   const SizedBox(height: 8),
@@ -230,7 +257,7 @@ class NoteCard extends ConsumerWidget {
                     ],
                   ),
                 ],
-                if (note.aiSummary != null) ...[
+                if (!note.locked && note.aiSummary != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     mainAxisSize: MainAxisSize.min,

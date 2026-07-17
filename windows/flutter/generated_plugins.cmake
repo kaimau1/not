@@ -14,6 +14,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_secure_storage_windows
   flutter_timezone
   just_audio_windows
+  local_auth_windows
   pasteboard
   record_windows
   screen_retriever_windows

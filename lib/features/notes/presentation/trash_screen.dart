@@ -80,7 +80,8 @@ class _TrashTile extends ConsumerWidget {
       ),
     );
     if (confirmed ?? false) {
-      ref.read(notesRepositoryProvider)?.hardDelete(note.id);
+      // Ekler de Storage'dan silinsin; yalnız dokümanı silmek dosya bırakır.
+      await ref.read(notesRepositoryProvider)?.deleteNotePermanently(note);
     }
   }
 

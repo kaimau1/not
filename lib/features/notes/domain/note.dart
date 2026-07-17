@@ -58,6 +58,7 @@ class Note {
     this.tags = const [],
     this.color = NoteColor.none,
     this.pinned = false,
+    this.locked = false,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -82,6 +83,10 @@ class Note {
   final List<String> tags;
   final NoteColor color;
   final bool pinned;
+
+  /// Kilitli not: kart içeriği gizlenir, açmak biyometrik doğrulama ister;
+  /// arama yalnızca başlıkta yapılır ve AI bağlamlarına dahil edilmez.
+  final bool locked;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -127,6 +132,7 @@ class Note {
     List<String>? tags,
     NoteColor? color,
     bool? pinned,
+    bool? locked,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -146,6 +152,7 @@ class Note {
         tags: tags ?? this.tags,
         color: color ?? this.color,
         pinned: pinned ?? this.pinned,
+        locked: locked ?? this.locked,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt,
         updatedAt: updatedAt,
@@ -176,6 +183,7 @@ class Note {
       ],
       color: NoteColor.fromId(map['color'] as String?),
       pinned: map['pinned'] as bool? ?? false,
+      locked: map['locked'] as bool? ?? false,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
@@ -197,6 +205,7 @@ class Note {
         'tags': tags,
         'color': color.id,
         'pinned': pinned,
+        'locked': locked,
         'orderIndex': orderIndex,
         'createdAt': createdAt != null
             ? Timestamp.fromDate(createdAt!)

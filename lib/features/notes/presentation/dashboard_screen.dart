@@ -12,6 +12,7 @@ import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
+import '../data/share_intake.dart';
 import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
@@ -90,6 +91,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.watch(deepLinkHandlerProvider);
     // Premium akışını canlı tut: AI kapısı (AiGate.consume) senkron okur.
     ref.watch(premiumProvider);
+    // Paylaş menüsünden gelen içerikleri dinle (Android).
+    ref.watch(shareIntakeProvider);
 
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);

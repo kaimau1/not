@@ -23,7 +23,9 @@ class AssistantService {
   /// Modele verilecek not defteri bağlamı (id'li kompakt liste).
   String buildNotesContext(List<Note> notes) {
     final buffer = StringBuffer();
-    for (final note in notes.take(80)) {
+    // Kilitli notlar AI bağlamına dahil edilmez (içerik gizli kalmalı).
+    final visible = [for (final n in notes) if (!n.locked) n];
+    for (final note in visible.take(80)) {
       final text = note.toPlainText();
       buffer.writeln(
         '- id: ${note.id} | tip: ${note.type.id}'

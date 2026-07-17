@@ -56,11 +56,32 @@ class ReminderService {
         windows: windowsInit,
       ),
       onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload ?? '';
         // Brifing bildirimine dokununca ilgili ekranı aç.
-        if (response.payload == 'briefing') {
+        if (payload == 'briefing') {
           try {
             _ref.read(routerProvider).push('/briefing');
           } catch (_) {}
+          return;
+        }
+        // Hatırlatıcı bildirimi: aksiyon düğmeleri uygulamayı açmadan
+        // önce burada işlenir; düz dokunuş ilgili notu açar.
+        if (payload.startsWith('note:')) {
+          final noteId = payload.substring('note:'.length);
+          final repo = _ref.read(notesRepositoryProvider);
+          switch (response.actionId) {
+            case 'done':
+              repo?.setReminder(noteId, null);
+            case 'snooze1h':
+              repo?.setReminder(
+                noteId,
+                DateTime.now().add(const Duration(hours: 1)),
+              );
+            default:
+              try {
+                _ref.read(routerProvider).push('/note/$noteId');
+              } catch (_) {}
+          }
         }
       },
     );
@@ -171,10 +192,25 @@ class ReminderService {
               channelDescription: 'Not hatırlatıcı bildirimleri',
               importance: Importance.high,
               priority: Priority.high,
+              // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
+              // öne getirir ki işlem güvenilir biçimde ana izolatta yapılsın.
+              actions: <AndroidNotificationAction>[
+                AndroidNotificationAction(
+                  'done',
+                  'Tamamlandı',
+                  showsUserInterface: true,
+                ),
+                AndroidNotificationAction(
+                  'snooze1h',
+                  '1 saat ertele',
+                  showsUserInterface: true,
+                ),
+              ],
             ),
             windows: WindowsNotificationDetails(),
           ),
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: 'note:${entry.key}',
         );
         _scheduled[entry.key] = note.reminderAt!;
       }

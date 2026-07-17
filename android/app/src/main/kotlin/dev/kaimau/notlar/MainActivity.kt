@@ -1,5 +1,6 @@
 package dev.kaimau.notlar
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// local_auth (biyometrik not kilidi) FragmentActivity gerektirir.
+class MainActivity : FlutterFragmentActivity()

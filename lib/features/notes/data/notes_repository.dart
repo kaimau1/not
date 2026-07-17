@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,6 +25,11 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
 final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
+  // Açılışta bir kez: çöp kutusunda 30 günü doldurmuş notları ekleriyle
+  // birlikte kalıcı sil.
+  unawaited(
+    Future(() => repo.purgeOldTrash()).catchError((Object _) {}),
+  );
   // Boş kalıp unutulmuş notları temizle (editör açıkken uygulama
   // kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
   // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
@@ -180,6 +186,33 @@ class NotesRepository {
   /// Boş notlar editörden çıkarken tamamen silinir.
   void hardDelete(String noteId) {
     unawaited(_notes.doc(noteId).delete());
+  }
+
+  /// Notu Storage'daki ekleriyle birlikte kalıcı siler (çöp ekranındaki
+  /// "kalıcı sil" ve otomatik çöp boşaltma kullanır).
+  Future<void> deleteNotePermanently(Note note) async {
+    for (final attachment in note.attachments) {
+      if (attachment.storagePath.isNotEmpty) {
+        await FirebaseStorage.instance
+            .ref(attachment.storagePath)
+            .delete()
+            .catchError((Object _) {});
+      }
+    }
+    hardDelete(note.id);
+  }
+
+  /// Çöp kutusunda 30 günü doldurmuş notları kalıcı siler. Açılışta bir
+  /// kez çağrılır; çöp böylece sonsuza dek şişmez.
+  Future<void> purgeOldTrash() async {
+    final cutoff = Timestamp.fromDate(
+      DateTime.now().subtract(const Duration(days: 30)),
+    );
+    final snapshot =
+        await _notes.where('deletedAt', isLessThan: cutoff).get();
+    for (final doc in snapshot.docs) {
+      await deleteNotePermanently(Note.fromDoc(doc));
+    }
   }
 
   /// Boş kalıp unutulmuş notları siler. Şu an editörde yazılıyor olabilecek
