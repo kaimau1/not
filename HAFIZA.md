@@ -16,6 +16,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **Android CI derlemesi kronik iptal**: `assembleRelease` art arda 2 kez ~13-16 dk'da "runner shutdown signal" ile kesildi (Windows/Analiz+Test aynı çalışmada sorunsuzdu). Kök neden kota değil hız: (1) Gradle wrapper/bağımlılık önbelleği yoktu → her derleme ~5 dk salt indirme/çözümlemeyle başlıyordu, (2) varsayılan "fat" APK 3 mimari (arm64/armv7/x86_64) için ayrı ayrı Dart AOT derliyordu — en uzun tek adım buydu. Düzeltme: `actions/cache` ile `~/.gradle/{caches,wrapper}` önbellekleniyor, wrapper `-all.zip`→`-bin.zip`, `gradle.properties`'e `org.gradle.parallel`/`caching=true`, ve `flutter build apk`'ya `--target-platform android-arm64` eklendi (kişisel kullanım — tüm güncel telefonlar arm64). TUZAK: GitHub App entegrasyonunun Actions'a yazma izni yok (`rerun_failed_jobs`/`rerun_workflow_run`/`run_workflow` hepsi 403 "Resource not accessible by integration") — yeniden tetiklemek için boş commit push etmek gerekiyor.
 
+- 2026-07-17: **Windows CI'dan çıkarıldı** — kullanıcı isteğiyle her push'ta Windows derlemesi (yavaş, nadiren gerekli) kaldırıldı. Yerine depo kökünde `build-windows.bat` (çift tıkla derle; `--dart-define-from-file=env.json` ile gizli değerleri yerelden okur) + `env.example.json` şablonu. Masaüstü OAuth kimlik bilgileri artık GitHub Secrets'ta değil yalnızca yerel `env.json`'da. Android hâlâ CI'da; `main`'de Release yayınlıyor.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.

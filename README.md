@@ -82,6 +82,10 @@ flutter run -d windows \
 
 > Google'ın masaüstü ("installed app") istemcilerinde client secret gizli sayılmaz; yine de depoya yazmayıp `--dart-define` ile vermek en temiz yoldur. Değerleri her seferinde yazmamak için `--dart-define-from-file=env.json` kullanabilirsin (`env.json` gitignore'dadır).
 
+### Windows sürümünü derlemek (`build-windows.bat`)
+
+Windows sürümü CI'da derlenmiyor (yavaş ve nadiren gerekiyor). Masaüstü paketi için `env.example.json` dosyasını `env.json` olarak kopyalayıp masaüstü kimlik bilgilerini doldur, ardından depo kökündeki **`build-windows.bat`** dosyasına çift tıkla. Çıktı `build\windows\x64\runner\Release\` altında oluşur (`notlar.exe`). Ön koşul: Visual Studio 2022 **"Desktop development with C++"** iş yükü.
+
 ## Mimari
 
 ```
@@ -111,16 +115,16 @@ flutter test
 
 ## CI: Otomatik derleme (GitHub Actions)
 
-Her push'ta `.github/workflows/build.yml` çalışır: önce analiz + testler, ardından **Android APK** ve **Windows** sürümleri derlenip Actions sekmesinde *artifact* olarak yüklenir (`notlar-android-apk` ve `notlar-windows`). İndirmek için: GitHub → **Actions** → ilgili çalıştırma → **Artifacts**.
+Her push'ta `.github/workflows/build.yml` çalışır: önce analiz + testler, ardından **Android APK** derlenip Actions sekmesinde *artifact* olarak yüklenir (`notlar-android-apk`). İndirmek için: GitHub → **Actions** → ilgili çalıştırma → **Artifacts**. `main`'e push'ta APK ayrıca kalıcı bir **Release** olarak yayınlanır. Windows sürümü CI'da derlenmez; yerel `build-windows.bat` ile derlenir (yukarı bak).
 
 Google girişinin derlemeye gömülü gelmesi için depoda şu *secret*'ları tanımlayabilirsin (Settings → Secrets and variables → Actions):
 
 | Secret | Açıklama |
 |---|---|
 | `GOOGLE_SERVER_CLIENT_ID` | Web client ID (Android girişi) |
-| `GOOGLE_DESKTOP_CLIENT_ID` | Desktop OAuth client ID (Windows girişi) |
-| `GOOGLE_DESKTOP_CLIENT_SECRET` | Desktop OAuth client secret |
+| `ANDROID_KEYSTORE_BASE64` | Kalıcı imza anahtarı (base64) |
+| `ANDROID_KEYSTORE_PASSWORD` | İmza anahtarı parolası |
 
-Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır; bu durumda Google girişi için değerleri yerel derlemede `--dart-define` ile vermen gerekir.
+Secret'lar tanımlı olmasa da derleme başarıyla tamamlanır (APK debug anahtarıyla imzalanır). Windows'un masaüstü OAuth kimlik bilgileri artık yalnızca yerel `env.json` dosyasında tutulur.
 
 > Not: `lib/firebase_options.dart` yer tutucu değerlerle derlenirse uygulama açılışta kurulum ekranı gösterir. Gerçek yapılandırmayı (`flutterfire configure` çıktısını) commit'lersen CI'daki APK doğrudan kullanılabilir olur.
