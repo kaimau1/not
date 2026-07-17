@@ -44,6 +44,19 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      # Önbellek olmadan her derleme Gradle dağıtımını ve tüm AGP/Kotlin
+      # bağımlılıklarını sıfırdan indirip çözümlüyordu (~5 dk); bu adım
+      # Gradle görevi başlamadan önceki bu süreyi ortadan kaldırır.
+      - name: Gradle önbelleği
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/**/*.gradle*') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -73,9 +86,15 @@ jobs:
       # Google girişi gömülü gelir; tanımlı değilse uygulama yine derlenir.
       # --build-number her derlemede artar; böylece yeni APK telefonda mevcut
       # sürümün üzerine sorunsuz kurulur.
+      # --target-platform android-arm64: varsayılan "fat" APK üç mimari için
+      # (arm64/armv7/x86_64) ayrı ayrı Dart AOT derlemesi yapıyordu; bu en
+      # uzun tek adımdı ve CI'da zaman aşımına/iptale yol açıyordu. Neredeyse
+      # tüm güncel telefonlar arm64 olduğundan tek mimariye indirmek AOT
+      # derleme süresini ~1/3'e indirir.
       - name: APK derle
         run: >
           flutter build apk --release
+          --target-platform android-arm64
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
