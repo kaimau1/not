@@ -98,9 +98,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final selectedIds = ref.watch(selectedNoteIdsProvider);
     final selectionActive = selectedIds.isNotEmpty;
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
-    // tüm genişliği kullanır.
-    final searchExpanded =
-        _searchFocus.hasFocus && MediaQuery.sizeOf(context).width < 600;
+    // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
+    // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final searchExpanded = _searchFocus.hasFocus &&
+        keyboardOpen &&
+        MediaQuery.sizeOf(context).width < 600;
 
     return CallbackShortcuts(
       bindings: {
@@ -143,7 +146,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       SliverAppBar(
                         floating: true,
                         snap: true,
-                        titleSpacing: 12,
+                        titleSpacing: searchExpanded ? 0 : 12,
+                        // Genişkenken geri oku: odağı bırakır, bar daralır.
+                        leading: searchExpanded
+                            ? IconButton(
+                                tooltip: l10n.close,
+                                icon: const Icon(Icons.arrow_back),
+                                onPressed: _searchFocus.unfocus,
+                              )
+                            : null,
+                        automaticallyImplyLeading: false,
                         title: _SearchField(
                           controller: _searchController,
                           focusNode: _searchFocus,
@@ -379,6 +391,8 @@ class _SearchField extends ConsumerWidget {
       controller: controller,
       focusNode: focusNode,
       onChanged: (value) => ref.read(searchQueryProvider.notifier).set(value),
+      // Alan dışına dokununca odak bırakılır; bar daralır, butonlar döner.
+      onTapOutside: (_) => focusNode?.unfocus(),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText:

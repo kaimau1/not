@@ -113,7 +113,13 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final tag = ref.watch(selectedTagProvider);
 
   return notes.whenData((list) {
-    var result = [for (final n in list) if (n.archivedAt == null) n];
+    // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
+    // editörden çıkışta zaten silinirler, arka plan temizliği de kalıntıyı
+    // toplar. Böylece boş kart dashboard'da hiç belirmez.
+    var result = [
+      for (final n in list)
+        if (n.archivedAt == null && !n.isEmpty) n,
+    ];
     if (tag != null) {
       result = [for (final n in result) if (n.tags.contains(tag)) n];
     }

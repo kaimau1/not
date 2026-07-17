@@ -18,6 +18,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **Windows CI'dan çıkarıldı** — kullanıcı isteğiyle her push'ta Windows derlemesi (yavaş, nadiren gerekli) kaldırıldı. Yerine depo kökünde `build-windows.bat` (çift tıkla derle; `--dart-define-from-file=env.json` ile gizli değerleri yerelden okur) + `env.example.json` şablonu. Masaüstü OAuth kimlik bilgileri artık GitHub Secrets'ta değil yalnızca yerel `env.json`'da. Android hâlâ CI'da; `main`'de Release yayınlıyor.
 
+- 2026-07-17: **Boş not + arama daralması**: (1) Boş notlar artık dashboard listesinde hiç gösterilmez (`filteredNotesProvider` eler); arka plan temizliği 1 saat→2 dk cutoff'a indi ve açılışta bir kez değil her snapshot'ta (30 sn throttle) çalışır. Editörde açık boş not yanlışlıkla silinirse editörün merge'lü yazımı dokümanı yeniden oluşturur — güvenli. (2) Arama barı daralmıyordu çünkü sistem geri tuşu klavyeyi kapatsa da odak düşmüyor; `searchExpanded` koşuluna `viewInsets.bottom > 0` (klavye görünürlüğü) eklendi + `onTapOutside` unfocus + genişkenken geri oku. TUZAK: mobilde TextField odağı klavye kapanınca otomatik düşmez — "odaklı mı" yerine "klavye açık mı"ya bakmak gerekir.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.
