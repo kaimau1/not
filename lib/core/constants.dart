@@ -20,6 +20,10 @@ abstract final class AppConstants {
 
   /// Gecikmeye duyarlı akışlarda (sesli not) ilk denenecek hızlı model.
   static const String fastGeminiModel = 'gemini-3.1-flash-lite';
+
+  /// Dahili AI (Firebase AI Logic) için premium olmayanların günlük
+  /// ücretsiz istek hakkı. Kendi API anahtarını girenlere sınır uygulanmaz.
+  static const int freeDailyAiCalls = 5;
   static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';

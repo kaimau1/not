@@ -210,7 +210,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get geminiApiKeyInfo =>
-      'Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.';
+      'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
+
+  @override
+  String get aiBuiltInPremium => 'Dahili AI: Premium etkin — sınırsız kullanım';
+
+  @override
+  String aiBuiltInRemaining(int count) {
+    return 'Dahili AI: bugün kalan ücretsiz hak $count';
+  }
+
+  @override
+  String get aiBuiltInByok => 'Kendi anahtarın kullanılıyor — sınırsız';
 
   @override
   String get validateAndSave => 'Doğrula ve Kaydet';

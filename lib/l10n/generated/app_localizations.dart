@@ -469,8 +469,26 @@ abstract class AppLocalizations {
   /// No description provided for @geminiApiKeyInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Anahtar yalnızca bu cihazda güvenli depoda saklanır. aistudio.google.com adresinden ücretsiz alabilirsin.'**
+  /// **'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
   String get geminiApiKeyInfo;
+
+  /// No description provided for @aiBuiltInPremium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili AI: Premium etkin — sınırsız kullanım'**
+  String get aiBuiltInPremium;
+
+  /// No description provided for @aiBuiltInRemaining.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dahili AI: bugün kalan ücretsiz hak {count}'**
+  String aiBuiltInRemaining(int count);
+
+  /// No description provided for @aiBuiltInByok.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi anahtarın kullanılıyor — sınırsız'**
+  String get aiBuiltInByok;
 
   /// No description provided for @validateAndSave.
   ///

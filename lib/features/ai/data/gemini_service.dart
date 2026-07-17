@@ -7,13 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../notes/domain/note.dart';
 import '../../settings/settings_providers.dart';
+import 'ai_gate.dart';
 import 'api_key_store.dart';
+import 'firebase_ai_client.dart';
 
 final geminiServiceProvider = Provider<GeminiService>(
   (ref) => GeminiService(
     ref.watch(apiKeyStoreProvider),
     chatModel: () => ref.read(chatModelProvider),
     voiceModel: () => ref.read(voiceModelProvider),
+    // Anahtar girilmemişse istekler dahili (Firebase AI Logic) yoldan
+    // yapılır; her çağrı önce premium/kota kapısından geçer.
+    builtIn: FirebaseAiClient(
+      beforeCall: () => ref.read(aiGateProvider).consume(),
+    ),
   ),
 );
 
@@ -94,6 +101,7 @@ class GeminiService {
     Dio? dio,
     String? Function()? chatModel,
     String? Function()? voiceModel,
+    this._builtIn,
   })  : _chatModel = chatModel ?? _noModel,
         _voiceModel = voiceModel ?? _noModel,
         _dio = dio ??
@@ -107,6 +115,10 @@ class GeminiService {
 
   final ApiKeyStore _keyStore;
   final Dio _dio;
+
+  /// Anahtarsız kullanımda devreye giren dahili yol (Firebase AI Logic).
+  /// null ise (testler) anahtar zorunlu kalır.
+  final FirebaseAiClient? _builtIn;
 
   /// Ayarlardan gelen kullanıcı model seçimleri (null = otomatik).
   final String? Function() _chatModel;
@@ -248,7 +260,20 @@ class GeminiService {
     bool jsonOutput = false,
     String? preferModel,
   }) async {
-    final key = await _apiKey();
+    // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
+    final stored = await _keyStore.read();
+    if (stored == null || stored.isEmpty) {
+      final builtIn = _builtIn;
+      if (builtIn == null) {
+        throw const GeminiException('API anahtarı yok', isAuthError: true);
+      }
+      return builtIn.generate(
+        contents,
+        jsonOutput: jsonOutput,
+        preferModel: preferModel ?? _chatModel(),
+      );
+    }
+    final key = stored;
     final response = await _withModel(
       key,
       (model) => _dio.post<Map<String, dynamic>>(
@@ -671,7 +696,6 @@ class GeminiService {
       Map<String, dynamic> args,
     ) onToolCall,
   }) async {
-    final key = await _apiKey();
     final contents = [
       ..._assistantPreamble(notesContext),
       {
@@ -692,12 +716,16 @@ class GeminiService {
         ],
       },
     ];
-    return _runToolLoop(
-      key,
-      contents,
-      onToolCall,
-      prefer: _voiceModel() ?? AppConstants.fastGeminiModel,
-    );
+    final prefer = _voiceModel() ?? AppConstants.fastGeminiModel;
+    final stored = await _keyStore.read();
+    if (stored == null || stored.isEmpty) {
+      final builtIn = _builtIn;
+      if (builtIn == null) {
+        throw const GeminiException('API anahtarı yok', isAuthError: true);
+      }
+      return builtIn.runToolLoop(contents, onToolCall, prefer: prefer);
+    }
+    return _runToolLoop(stored, contents, onToolCall, prefer: prefer);
   }
 
   /// Asistan modu: model gerektiğinde not oluşturma/düzenleme araçlarını
@@ -710,7 +738,6 @@ class GeminiService {
       Map<String, dynamic> args,
     ) onToolCall,
   }) async {
-    final key = await _apiKey();
     final contents = [
       ..._assistantPreamble(notesContext),
       for (final turn in history)
@@ -721,7 +748,15 @@ class GeminiService {
           ],
         },
     ];
-    return _runToolLoop(key, contents, onToolCall, prefer: _chatModel());
+    final stored = await _keyStore.read();
+    if (stored == null || stored.isEmpty) {
+      final builtIn = _builtIn;
+      if (builtIn == null) {
+        throw const GeminiException('API anahtarı yok', isAuthError: true);
+      }
+      return builtIn.runToolLoop(contents, onToolCall, prefer: _chatModel());
+    }
+    return _runToolLoop(stored, contents, onToolCall, prefer: _chatModel());
   }
 
   /// Ayarlardaki model seçicileri için kullanılabilir model listesi.
