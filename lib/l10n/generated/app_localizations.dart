@@ -490,6 +490,24 @@ abstract class AppLocalizations {
   /// **'Kendi anahtarın kullanılıyor — sınırsız'**
   String get aiBuiltInByok;
 
+  /// No description provided for @aiReport.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanıtı bildir'**
+  String get aiReport;
+
+  /// No description provided for @aiReportThanks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimin alındı, teşekkürler'**
+  String get aiReportThanks;
+
+  /// No description provided for @privacyPolicyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlilik Politikası'**
+  String get privacyPolicyTitle;
+
   /// No description provided for @validateAndSave.
   ///
   /// In tr, this message translates to:

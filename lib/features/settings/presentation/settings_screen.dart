@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../ai/data/ai_gate.dart';
@@ -697,7 +698,12 @@ class _AccountSection extends ConsumerWidget {
           onPressed: () => _deleteAccount(context, ref),
         ),
         const SizedBox(height: 16),
-        // Açık kaynak lisansları (Play/hukuki şeffaflık).
+        // Hukuki şeffaflık: gizlilik politikası + açık kaynak lisansları.
+        TextButton.icon(
+          icon: const Icon(Icons.privacy_tip_outlined),
+          label: Text(l10n.privacyPolicyTitle),
+          onPressed: () => context.push('/privacy'),
+        ),
         TextButton.icon(
           icon: const Icon(Icons.description_outlined),
           label: Text(l10n.licensesTitle),

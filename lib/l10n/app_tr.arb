@@ -106,6 +106,9 @@
     }
   },
   "aiBuiltInByok": "Kendi anahtarın kullanılıyor — sınırsız",
+  "aiReport": "Yanıtı bildir",
+  "aiReportThanks": "Bildirimin alındı, teşekkürler",
+  "privacyPolicyTitle": "Gizlilik Politikası",
   "validateAndSave": "Doğrula ve Kaydet",
   "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
   "apiKeyInvalid": "API anahtarı geçersiz",

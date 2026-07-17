@@ -17,6 +17,7 @@ import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/notes/presentation/voice_capture_screen.dart';
+import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/translate/presentation/translator_screen.dart';
 
@@ -50,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/privacy',
+        builder: (context, state) => const PrivacyScreen(),
       ),
       GoRoute(
         path: '/mail',

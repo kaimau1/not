@@ -24,6 +24,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **Play hazırlığı ②**: Ayarlar'a "Hesabımı ve verilerimi sil" (AccountService: Storage users/{uid} özyinelemeli + Firestore notlar 400'lük batch + kök doküman + Auth delete; `requires-recent-login` gelirse yeniden Google girişi yaptırıp tekrar dener) ve "Açık kaynak lisansları" (showLicensePage) eklendi. Play'in hesap-silme zorunluluğu böylece karşılandı.
 
+- 2026-07-17: **Play hazırlığı ③ (Console hariç)**: (1) PRIVACY_POLICY.md + uygulama içi `/privacy` ekranı (asset olarak yüklenir; tek kaynak). (2) AI çıktısı bildirme: sohbet balonları ve AI sonuç sayfasında bayrak ikonu → `users/{uid}/aiReports` (Play üretken AI politikası). (3) Anahtar zorunluluğu kilitleri kaldırıldı: chat_screen ve ai_sheet artık anahtarsız da açılır (dahili AI). (4) CI: main push'ta `flutter build appbundle` → `notlar-android-aab` artifact'i (Play, APK değil AAB ister). (5) Özgün ikon: PIL ile üretilen not+kıvılcım tasarımı, `flutter_launcher_icons` ile Android adaptive + Windows ico; kaynaklar `assets/icon/`, yenileme `dart run flutter_launcher_icons`.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
-import '../data/api_key_store.dart';
+import '../data/ai_report.dart';
 import '../data/gemini_service.dart';
 import 'pdf_chat_screen.dart';
 
@@ -195,7 +194,6 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final apiKey = ref.watch(geminiApiKeyProvider).value;
     final pdfs = [
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.pdf) a,
@@ -237,24 +235,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     ],
                   ),
                 ),
-                if (apiKey == null || apiKey.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        Text(l10n.aiNoApiKey, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        FilledButton.tonal(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            context.push('/settings');
-                          },
-                          child: Text(l10n.settings),
-                        ),
-                      ],
-                    ),
-                  )
-                else if (_loading)
+                if (_loading)
                   Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(
@@ -275,6 +256,15 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           SnackBar(content: Text(l10n.copied)),
                         );
                       }
+                    },
+                    onReport: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      await ref
+                          .read(aiReportServiceProvider)
+                          .report(content: _result!, source: 'ai_sheet');
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(l10n.aiReportThanks)),
+                      );
                     },
                     onAppend: widget.onAppendText == null
                         ? null
@@ -408,12 +398,16 @@ class _ResultView extends StatelessWidget {
   const _ResultView({
     required this.text,
     required this.onCopy,
+    this.onReport,
     this.onAppend,
     this.onReplace,
   });
 
   final String text;
   final VoidCallback onCopy;
+
+  /// Sorunlu AI çıktısını bildirme (Play üretken AI politikası).
+  final VoidCallback? onReport;
   final VoidCallback? onAppend;
   final VoidCallback? onReplace;
 
@@ -439,6 +433,12 @@ class _ResultView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
+              if (onReport != null)
+                IconButton(
+                  tooltip: context.l10n.aiReport,
+                  onPressed: onReport,
+                  icon: const Icon(Icons.flag_outlined, size: 18),
+                ),
               TextButton.icon(
                 onPressed: onCopy,
                 icon: const Icon(Icons.copy, size: 16),
