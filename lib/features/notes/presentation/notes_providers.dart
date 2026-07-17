@@ -41,6 +41,25 @@ class SemanticSearchEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
+/// Çoklu seçim modu: seçili not id'leri (boş küme = seçim modu kapalı).
+final selectedNoteIdsProvider =
+    NotifierProvider<SelectedNoteIdsNotifier, Set<String>>(
+  SelectedNoteIdsNotifier.new,
+);
+
+class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void toggle(String id) {
+    state = state.contains(id)
+        ? {for (final s in state) if (s != id) s}
+        : {...state, id};
+  }
+
+  void clear() => state = const {};
+}
+
 /// Seçili etiket (null = etiket filtresi yok).
 final selectedTagProvider = NotifierProvider<SelectedTagNotifier, String?>(
   SelectedTagNotifier.new,
@@ -62,6 +81,20 @@ final allTagsProvider = Provider<List<String>>((ref) {
   };
   final sorted = tags.toList()..sort();
   return sorted;
+});
+
+/// Etiket → kullanım sayısı (aktif notlarda). Ana sayfadaki çip satırı en
+/// sık kullanılanları öne alıp gerisini "+N" arkasına gizler.
+final tagCountsProvider = Provider<Map<String, int>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final counts = <String, int>{};
+  for (final note in notes) {
+    if (note.archivedAt != null) continue;
+    for (final tag in note.tags) {
+      counts[tag] = (counts[tag] ?? 0) + 1;
+    }
+  }
+  return counts;
 });
 
 /// Arşivlenmiş notlar (arşiv ekranı için).

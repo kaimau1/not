@@ -20,7 +20,14 @@ class SettingsScreen extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            // Alt boşluk sistem gezinme çubuğunu da içerir; "Çıkış yap"
+            // telefonun gezinme düğmelerinin altında kalmasın.
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.paddingOf(context).bottom + 48,
+            ),
             children: [
               _SectionTitle(l10n.settingsAppearance),
               const _ThemeSelector(),
@@ -35,6 +42,7 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const _BriefingEditor(),
               const _AutoTagSwitch(),
+              const _AutoTitleSwitch(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsGmail),
               const _GmailSection(),
@@ -430,6 +438,22 @@ class _AutoTagSwitch extends ConsumerWidget {
   }
 }
 
+class _AutoTitleSwitch extends ConsumerWidget {
+  const _AutoTitleSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.autoTitleSetting),
+      subtitle: Text(l10n.autoTitleSettingInfo),
+      value: ref.watch(autoTitleProvider),
+      onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
+    );
+  }
+}
+
 class _GmailSection extends ConsumerStatefulWidget {
   const _GmailSection();
 
@@ -452,6 +476,7 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
         await auth.connect();
       }
       ref.invalidate(gmailConnectedProvider);
+      ref.invalidate(gmailAccountEmailProvider);
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -465,6 +490,7 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final connected = ref.watch(gmailConnectedProvider);
+    final accountEmail = ref.watch(gmailAccountEmailProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,7 +502,10 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
               ),
         ),
         const SizedBox(height: 10),
-        Row(
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             if (connected) ...[
               Chip(
@@ -485,9 +514,16 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
                   size: 16,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                label: Text(l10n.gmailConnected),
+                label: Text(
+                  accountEmail == null || accountEmail.isEmpty
+                      ? l10n.gmailConnected
+                      : accountEmail,
+                ),
               ),
-              const SizedBox(width: 8),
+              TextButton(
+                onPressed: _busy ? null : () => _toggle(false),
+                child: Text(l10n.gmailChangeAccount),
+              ),
               TextButton(
                 onPressed: _busy ? null : () => _toggle(true),
                 child: Text(l10n.disconnectGmail),

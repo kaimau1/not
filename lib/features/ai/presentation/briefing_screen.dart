@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -10,9 +12,12 @@ import '../../notes/data/notes_repository.dart';
 import '../data/gemini_service.dart';
 
 /// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar +
-/// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde.
+/// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç 30 dakika
+/// bellekte tutulur; "Yenile" ile hemen tazelenir.
 final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
-  final notes = await ref.watch(notesStreamProvider.future);
+  // read: her not değişikliğinde brifingi (yani iki AI çağrısını) yeniden
+  // üretme; içerik ekrandaki Yenile ile veya süre dolunca tazelenir.
+  final notes = await ref.read(notesStreamProvider.future);
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final tomorrow = today.add(const Duration(days: 1));
@@ -55,10 +60,13 @@ final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
   }
   if (count == 0) buffer.writeln('- (yok)');
 
-  // Gmail bağlıysa önemli e-postalar (hata brifingi engellemesin)
+  // Gmail bağlıysa önemli e-postalar (hata veya yavaşlık brifingi
+  // engellemesin: 20 saniyede yanıt gelmezse e-postasız devam edilir).
   if (ref.read(gmailConnectedProvider)) {
     try {
-      final emails = await ref.watch(importantEmailsProvider.future);
+      final emails = await ref
+          .watch(importantEmailsProvider.future)
+          .timeout(const Duration(seconds: 20));
       buffer.writeln('\nÖNEMLİ E-POSTALAR:');
       if (emails.isEmpty) {
         buffer.writeln('- (yok)');
@@ -71,7 +79,12 @@ final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
     }
   }
 
-  return ref.read(geminiServiceProvider).composeBriefing(buffer.toString());
+  final briefing =
+      await ref.read(geminiServiceProvider).composeBriefing(buffer.toString());
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 30), link.close);
+  ref.onDispose(timer.cancel);
+  return briefing;
 });
 
 class BriefingScreen extends ConsumerWidget {

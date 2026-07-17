@@ -233,17 +233,20 @@ class GeminiService {
   Future<String> _generate(
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
+    String? preferModel,
   }) =>
       _generateFromContents(
         [
           {'role': 'user', 'parts': parts},
         ],
         jsonOutput: jsonOutput,
+        preferModel: preferModel,
       );
 
   Future<String> _generateFromContents(
     List<Map<String, dynamic>> contents, {
     bool jsonOutput = false,
+    String? preferModel,
   }) async {
     final key = await _apiKey();
     final response = await _withModel(
@@ -258,7 +261,7 @@ class GeminiService {
           },
         },
       ),
-      prefer: _chatModel(),
+      prefer: preferModel ?? _chatModel(),
     );
     final candidates = response.data?['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
@@ -494,6 +497,27 @@ class GeminiService {
               '\n\n$rawData',
         },
       ]);
+
+  /// Nota kısa bir Türkçe başlık üretir. Basit bir iş olduğu için hızlı ve
+  /// ucuz lite model ilk sırada denenir.
+  Future<String> generateTitle(Note note) async {
+    final text = note.toPlainText();
+    final raw = await _generate(
+      [
+        {
+          'text': 'Aşağıdaki not için en fazla 5 kelimelik, kısa ve açıklayıcı '
+              'bir Türkçe başlık üret. Yalnızca başlığı yaz; tırnak, nokta '
+              'veya açıklama ekleme.\n\n---\n'
+              '${text.length > 600 ? text.substring(0, 600) : text}',
+        },
+      ],
+      preferModel: AppConstants.fastGeminiModel,
+    );
+    // Model tırnak/yeni satır eklerse temizle, aşırı uzunsa kısalt.
+    var title = raw.trim().split('\n').first.trim();
+    title = title.replaceAll(RegExp('^["\'#*-]+|["\'.]+\$'), '').trim();
+    return title.length > 60 ? title.substring(0, 60).trim() : title;
+  }
 
   /// Nota uygun 1-3 kısa etiket önerir.
   Future<List<String>> suggestTags(Note note) async {

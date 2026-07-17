@@ -27,11 +27,49 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final _searchController = TextEditingController();
+  final _searchFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    // Odak değişince aksiyon butonlarını gizle/göster (dar ekranlarda arama
+    // alanına yer açmak için).
+    _searchFocus.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocus.dispose();
     super.dispose();
+  }
+
+  /// Seçilen notları çöp kutusuna taşır; tek dokunuşla geri alınabilir.
+  void _deleteSelected(Set<String> ids) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    for (final id in ids) {
+      repo.softDelete(id);
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.notesDeletedCount(ids.length)),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () {
+              for (final id in ids) {
+                repo.restore(id);
+              }
+            },
+          ),
+        ),
+      );
   }
 
   Future<void> _createNote(NoteType type) async {
@@ -57,6 +95,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final notesAsync = semanticActive
         ? ref.watch(semanticSearchProvider(query.trim()))
         : ref.watch(filteredNotesProvider);
+    final selectedIds = ref.watch(selectedNoteIdsProvider);
+    final selectionActive = selectedIds.isNotEmpty;
+    // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
+    // tüm genişliği kullanır.
+    final searchExpanded =
+        _searchFocus.hasFocus && MediaQuery.sizeOf(context).width < 600;
 
     return CallbackShortcuts(
       bindings: {
@@ -73,82 +117,128 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     (constraints.maxWidth / 220).floor().clamp(2, 6);
                 return CustomScrollView(
                   slivers: [
-                    SliverAppBar(
-                      floating: true,
-                      snap: true,
-                      titleSpacing: 12,
-                      title: _SearchField(controller: _searchController),
-                      actions: [
-                        IconButton(
-                          tooltip: l10n.translatorTitle,
-                          icon: const Icon(Icons.translate),
-                          onPressed: () => context.push('/translate'),
+                    if (selectionActive)
+                      SliverAppBar(
+                        floating: true,
+                        snap: true,
+                        pinned: true,
+                        leading: IconButton(
+                          tooltip: l10n.cancel,
+                          icon: const Icon(Icons.close),
+                          onPressed: () => ref
+                              .read(selectedNoteIdsProvider.notifier)
+                              .clear(),
                         ),
-                        IconButton(
-                          tooltip: l10n.chatTitle,
-                          icon: const Icon(Icons.forum_outlined),
-                          onPressed: () => context.push('/chat'),
+                        title: Text(l10n.selectedCount(selectedIds.length)),
+                        actions: [
+                          IconButton(
+                            tooltip: l10n.deleteSelected,
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _deleteSelected(selectedIds),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                      )
+                    else
+                      SliverAppBar(
+                        floating: true,
+                        snap: true,
+                        titleSpacing: 12,
+                        title: _SearchField(
+                          controller: _searchController,
+                          focusNode: _searchFocus,
                         ),
-                        IconButton(
-                          tooltip: l10n.aiSuggestions,
-                          icon: const Icon(Icons.auto_awesome_outlined),
-                          onPressed: () => context.push('/suggestions'),
-                        ),
-                        IconButton(
-                          tooltip: l10n.importantEmails,
-                          icon: const Icon(Icons.mark_email_unread_outlined),
-                          onPressed: () => context.push('/mail'),
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (action) => switch (action) {
-                            'briefing' => context.push('/briefing'),
-                            'archive' => context.push('/archive'),
-                            'trash' => context.push('/trash'),
-                            'settings' => context.push('/settings'),
-                            _ => null,
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'briefing',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(Icons.wb_sunny_outlined),
-                                title: Text(l10n.briefingTitle),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'archive',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(Icons.archive_outlined),
-                                title: Text(l10n.archiveTitle),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'trash',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(Icons.delete_outline),
-                                title: Text(l10n.trashTitle),
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'settings',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: const Icon(Icons.settings_outlined),
-                                title: Text(l10n.settings),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 4),
-                      ],
-                    ),
+                        actions: searchExpanded
+                            ? const [SizedBox(width: 4)]
+                            : [
+                                IconButton(
+                                  tooltip: l10n.translatorTitle,
+                                  icon: const Icon(Icons.translate),
+                                  onPressed: () => context.push('/translate'),
+                                ),
+                                IconButton(
+                                  tooltip: l10n.chatTitle,
+                                  icon: const Icon(Icons.forum_outlined),
+                                  onPressed: () => context.push('/chat'),
+                                ),
+                                IconButton(
+                                  tooltip: l10n.aiSuggestions,
+                                  icon:
+                                      const Icon(Icons.auto_awesome_outlined),
+                                  onPressed: () =>
+                                      context.push('/suggestions'),
+                                ),
+                                IconButton(
+                                  tooltip: l10n.importantEmails,
+                                  icon: const Icon(
+                                      Icons.mark_email_unread_outlined),
+                                  onPressed: () => context.push('/mail'),
+                                ),
+                                PopupMenuButton<String>(
+                                  onSelected: (action) => switch (action) {
+                                    'briefing' => context.push('/briefing'),
+                                    'reminders' => context.push('/reminders'),
+                                    'archive' => context.push('/archive'),
+                                    'trash' => context.push('/trash'),
+                                    'settings' => context.push('/settings'),
+                                    _ => null,
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'briefing',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(
+                                            Icons.wb_sunny_outlined),
+                                        title: Text(l10n.briefingTitle),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'reminders',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading:
+                                            const Icon(Icons.alarm_outlined),
+                                        title: Text(l10n.remindersTitle),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'archive',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(
+                                            Icons.archive_outlined),
+                                        title: Text(l10n.archiveTitle),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'trash',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading:
+                                            const Icon(Icons.delete_outline),
+                                        title: Text(l10n.trashTitle),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'settings',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(
+                                            Icons.settings_outlined),
+                                        title: Text(l10n.settings),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 4),
+                              ],
+                      ),
                     SliverToBoxAdapter(
                       child: _QuickAddBar(onCreate: _createNote),
                     ),
@@ -275,9 +365,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 }
 
 class _SearchField extends ConsumerWidget {
-  const _SearchField({required this.controller});
+  const _SearchField({required this.controller, this.focusNode});
 
   final TextEditingController controller;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -286,6 +377,7 @@ class _SearchField extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       onChanged: (value) => ref.read(searchQueryProvider.notifier).set(value),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
@@ -390,24 +482,81 @@ class _QuickAddBar extends StatelessWidget {
 }
 
 /// Notlarda kullanılan etiketlerin filtre çipleri (etiket yoksa gizli).
+/// Etiketler çoğaldıkça satır şişmesin diye yalnızca en sık kullanılanlar
+/// gösterilir; kalanlar "+N" çipinin açtığı listeden seçilir.
 class _TagChips extends ConsumerWidget {
   const _TagChips();
 
+  static const _maxVisible = 8;
+
+  Future<void> _showAllTags(
+    BuildContext context,
+    WidgetRef ref,
+    List<String> tags,
+    String? selected,
+  ) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final tag in tags)
+                FilterChip(
+                  label: Text('#$tag'),
+                  selected: selected == tag,
+                  onSelected: (isSelected) =>
+                      Navigator.pop(sheetContext, isSelected ? tag : ''),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null) return;
+    ref.read(selectedTagProvider.notifier).set(picked.isEmpty ? null : picked);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tags = ref.watch(allTagsProvider);
+    final counts = ref.watch(tagCountsProvider);
     final selected = ref.watch(selectedTagProvider);
-    if (tags.isEmpty) return const SizedBox.shrink();
+    if (counts.isEmpty) return const SizedBox.shrink();
+
+    final byUsage = counts.keys.toList()
+      ..sort((a, b) {
+        final byCount = counts[b]!.compareTo(counts[a]!);
+        return byCount != 0 ? byCount : a.compareTo(b);
+      });
+    final visible = byUsage.take(_maxVisible).toList();
+    // Seçili etiket gizli kalmasın: listede yoksa başa al.
+    if (selected != null && counts.containsKey(selected) &&
+        !visible.contains(selected)) {
+      visible.insert(0, selected);
+    }
+    final hidden = byUsage.length - visible.length;
+    final allSorted = ref.watch(allTagsProvider);
 
     return SizedBox(
       height: 42,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         scrollDirection: Axis.horizontal,
-        itemCount: tags.length,
+        itemCount: visible.length + (hidden > 0 ? 1 : 0),
         separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
-          final tag = tags[index];
+          if (index == visible.length) {
+            return ActionChip(
+              label: Text('+$hidden'),
+              onPressed: () =>
+                  _showAllTags(context, ref, allSorted, selected),
+            );
+          }
+          final tag = visible[index];
           return FilterChip(
             label: Text('#$tag'),
             selected: selected == tag,

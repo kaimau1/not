@@ -214,6 +214,24 @@ abstract class AppLocalizations {
   /// **'Not silindi'**
   String get noteDeleted;
 
+  /// No description provided for @notesDeletedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not silindi'**
+  String notesDeletedCount(int count);
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} seçildi'**
+  String selectedCount(int count);
+
+  /// No description provided for @deleteSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenleri sil'**
+  String get deleteSelected;
+
   /// No description provided for @undo.
   ///
   /// In tr, this message translates to:
@@ -501,6 +519,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gmail bağlı'**
   String get gmailConnected;
+
+  /// No description provided for @gmailChangeAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap değiştir'**
+  String get gmailChangeAccount;
 
   /// No description provided for @gmailInfo.
   ///
@@ -1006,6 +1030,18 @@ abstract class AppLocalizations {
   /// **'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler'**
   String get autoTagSettingInfo;
 
+  /// No description provided for @autoTitleSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik başlık'**
+  String get autoTitleSetting;
+
+  /// No description provided for @autoTitleSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir'**
+  String get autoTitleSettingInfo;
+
   /// No description provided for @suggestTags.
   ///
   /// In tr, this message translates to:
@@ -1101,6 +1137,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli notun kaydedildi'**
   String get voiceNoteSaved;
+
+  /// No description provided for @openNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu aç'**
+  String get openNote;
+
+  /// No description provided for @remindersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcılar'**
+  String get remindersTitle;
+
+  /// No description provided for @remindersEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı yok'**
+  String get remindersEmpty;
+
+  /// No description provided for @remindersEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur'**
+  String get remindersEmptyHint;
+
+  /// No description provided for @remindersUpcoming.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yaklaşan'**
+  String get remindersUpcoming;
+
+  /// No description provided for @remindersPast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmiş'**
+  String get remindersPast;
+
+  /// No description provided for @newReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni hatırlatıcı'**
+  String get newReminder;
+
+  /// No description provided for @remindersUntitled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adsız not'**
+  String get remindersUntitled;
+
+  /// No description provided for @remindersEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zamanı değiştir'**
+  String get remindersEdit;
+
+  /// No description provided for @remindersRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcıyı kaldır'**
+  String get remindersRemove;
 
   /// No description provided for @aiModelChat.
   ///
