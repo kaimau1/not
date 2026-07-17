@@ -18,7 +18,11 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "dev.kaimau.notlar"
-    compileSdk = flutter.compileSdkVersion
+    // receive_sharing_intent 1.9.0 compileSdk 37 istiyor (Google'ın önerdiği
+    // çözüm). AGP 9.0.1 için "önerilen üst 36" yalnızca uyarıdır; 37'ye karşı
+    // sorunsuz derler. targetSdk çalışma davranışını değiştirmediğinden
+    // Flutter varsayılanında bırakılır.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

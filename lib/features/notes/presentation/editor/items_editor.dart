@@ -4,8 +4,8 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_item.dart';
 
-/// Checklist ve sıralı liste düzenleyicisi. Öğeler sürükle-bırak ile
-/// sıralanır, Enter yeni öğe ekler, çöp ikonu siler.
+/// Checklist ve sıralı liste düzenleyicisi. Öğeler tutamaca UZUN BASIP
+/// sürüklenerek sıralanır, Enter yeni öğe ekler, çöp ikonu siler.
 class ItemsEditor extends StatefulWidget {
   const ItemsEditor({
     super.key,
@@ -142,7 +142,10 @@ class _ItemsEditorState extends State<ItemsEditor> {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Row(
             children: [
-              ReorderableDragStartListener(
+              // Uzun basınca sürükleme: anlık sürükleme dinleyicisi, tutamaca
+              // denk gelen parmakta listenin kaydırılmasını engelliyordu
+              // (kullanıcı "kaydıramıyorum" diye görüyordu).
+              ReorderableDelayedDragStartListener(
                 index: index,
                 child: Icon(
                   Icons.drag_indicator,

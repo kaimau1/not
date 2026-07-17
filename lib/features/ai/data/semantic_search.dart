@@ -14,7 +14,11 @@ final semanticIndexProvider = Provider<SemanticIndex>(
 final semanticSearchProvider =
     FutureProvider.autoDispose.family<List<Note>, String>((ref, query) async {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-  final active = [for (final n in notes) if (n.archivedAt == null) n];
+  // Kilitli notların içeriği embedding'e ve sonuçlara girmez.
+  final active = [
+    for (final n in notes)
+      if (n.archivedAt == null && !n.locked) n,
+  ];
   if (active.isEmpty || query.trim().isEmpty) return const [];
   try {
     return await ref.read(semanticIndexProvider).search(query.trim(), active);

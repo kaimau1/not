@@ -344,7 +344,8 @@ class GeminiService {
   /// notlar dahil).
   Future<String> suggestFromNotes(List<Note> notes) {
     final buffer = StringBuffer();
-    for (final note in notes.take(30)) {
+    // Kilitli notlar AI'ya gönderilmez.
+    for (final note in notes.where((n) => !n.locked).take(30)) {
       final text = note.toPlainText();
       buffer
         ..writeln('---')
@@ -367,7 +368,9 @@ class GeminiService {
     final cutoff = DateTime.now().subtract(const Duration(days: 7));
     final recent = [
       for (final note in notes)
-        if ((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false) note,
+        if (!note.locked &&
+            ((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false))
+          note,
     ];
     if (recent.isEmpty) return Future.value('');
     final buffer = StringBuffer();
@@ -927,7 +930,8 @@ class GeminiService {
     required List<ChatTurn> history,
   }) {
     final buffer = StringBuffer();
-    for (final note in notes.take(60)) {
+    // Kilitli notlar AI'ya gönderilmez.
+    for (final note in notes.where((n) => !n.locked).take(60)) {
       final text = note.toPlainText();
       buffer
         ..writeln('---')

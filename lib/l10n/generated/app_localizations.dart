@@ -508,6 +508,36 @@ abstract class AppLocalizations {
   /// **'Gizlilik Politikası'**
   String get privacyPolicyTitle;
 
+  /// No description provided for @lockNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitle'**
+  String get lockNote;
+
+  /// No description provided for @unlockNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilidi kaldır'**
+  String get unlockNote;
+
+  /// No description provided for @lockedNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitli not'**
+  String get lockedNote;
+
+  /// No description provided for @unlockAuthReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitli notu açmak için kimliğini doğrula'**
+  String get unlockAuthReason;
+
+  /// No description provided for @exportBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedeği dışa aktar (JSON)'**
+  String get exportBackup;
+
   /// No description provided for @validateAndSave.
   ///
   /// In tr, this message translates to:

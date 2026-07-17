@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../ai/data/ai_gate.dart';
@@ -9,6 +14,8 @@ import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../gmail/data/gmail_auth.dart';
+import '../../notes/data/notes_repository.dart';
+import '../../notes/domain/note.dart';
 import '../settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -591,6 +598,72 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
   }
 }
 
+/// Tüm notları (arşiv dahil, çöp hariç) tek JSON dosyası olarak dışa
+/// aktarıp paylaşım sayfasını açar. Ek dosyaları bulutta kaldığından
+/// yalnızca adları ve bağlantıları yazılır.
+class _BackupButton extends ConsumerWidget {
+  const _BackupButton();
+
+  Map<String, dynamic> _exportNote(Note n) => {
+        'id': n.id,
+        'type': n.type.id,
+        'title': n.title,
+        'body': n.body,
+        'items': [
+          for (final i in n.items) {'text': i.text, 'checked': i.checked},
+        ],
+        'tags': n.tags,
+        'color': n.color.id,
+        'pinned': n.pinned,
+        'locked': n.locked,
+        'createdAt': n.createdAt?.toIso8601String(),
+        'updatedAt': n.updatedAt?.toIso8601String(),
+        'archivedAt': n.archivedAt?.toIso8601String(),
+        'reminderAt': n.reminderAt?.toIso8601String(),
+        'attachments': [
+          for (final a in n.attachments)
+            {'fileName': a.fileName, 'kind': a.kind.name, 'url': a.downloadUrl},
+        ],
+      };
+
+  Future<void> _export(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final notes = ref.read(notesStreamProvider).value;
+    if (notes == null) return;
+    try {
+      final payload = const JsonEncoder.withIndent('  ').convert({
+        'app': 'notlar',
+        'exportedAt': DateTime.now().toIso8601String(),
+        'noteCount': notes.length,
+        'notes': [for (final n in notes) _exportNote(n)],
+      });
+      final now = DateTime.now();
+      final stamp = '${now.year}-${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/notlar-yedek-$stamp.json');
+      await file.writeAsString(payload);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], subject: 'Notlar yedeği'),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TextButton.icon(
+      icon: const Icon(Icons.file_download_outlined),
+      label: Text(context.l10n.exportBackup),
+      onPressed: () => _export(context, ref),
+    );
+  }
+}
+
 class _AccountSection extends ConsumerWidget {
   const _AccountSection();
 
@@ -698,6 +771,8 @@ class _AccountSection extends ConsumerWidget {
           onPressed: () => _deleteAccount(context, ref),
         ),
         const SizedBox(height: 16),
+        // Verinin sahibi kullanıcı: tüm notlar tek dosyada dışa aktarılır.
+        const _BackupButton(),
         // Hukuki şeffaflık: gizlilik politikası + açık kaynak lisansları.
         TextButton.icon(
           icon: const Icon(Icons.privacy_tip_outlined),

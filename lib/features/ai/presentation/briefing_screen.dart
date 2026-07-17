@@ -35,9 +35,14 @@ final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
       continue;
     }
     hasReminder = true;
+    // Kilitli notun içeriği brifinge sızmasın; başlık yoksa jenerik ad.
+    final label = note.title.trim().isNotEmpty
+        ? note.title
+        : note.locked
+            ? '(kilitli not)'
+            : note.toPlainText().split('\n').first;
     buffer.writeln(
-      '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: '
-      '${note.title.trim().isEmpty ? note.toPlainText().split('\n').first : note.title}',
+      '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: $label',
     );
   }
   if (!hasReminder) buffer.writeln('- (yok)');
@@ -47,7 +52,7 @@ final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
   final cutoff = now.subtract(const Duration(days: 3));
   var count = 0;
   for (final note in notes) {
-    if (note.archivedAt != null) continue;
+    if (note.archivedAt != null || note.locked) continue;
     if (!((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false)) {
       continue;
     }
