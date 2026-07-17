@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../settings_providers.dart';
@@ -592,6 +593,53 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
 class _AccountSection extends ConsumerWidget {
   const _AccountSection();
 
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteAccount),
+        content: Text(l10n.deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.deleteAccountConfirm),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false) || !context.mounted) return;
+
+    // Silme sürerken kapatılamayan bir bekleme göstergesi.
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    final navigator = Navigator.of(context, rootNavigator: true);
+    try {
+      await ref.read(accountServiceProvider).deleteAccountAndData();
+      // Başarıda auth durumu değişir; router login ekranına yönlendirir.
+      navigator.pop();
+    } catch (e) {
+      navigator.pop();
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l10n.genericError(e.toString()))),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -615,9 +663,6 @@ class _AccountSection extends ConsumerWidget {
             subtitle: Text(user.email ?? ''),
           ),
         TextButton.icon(
-          style: TextButton.styleFrom(
-            foregroundColor: Theme.of(context).colorScheme.error,
-          ),
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),
           onPressed: () async {
@@ -642,6 +687,24 @@ class _AccountSection extends ConsumerWidget {
               await ref.read(authRepositoryProvider).signOut();
             }
           },
+        ),
+        TextButton.icon(
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
+          icon: const Icon(Icons.delete_forever_outlined),
+          label: Text(l10n.deleteAccount),
+          onPressed: () => _deleteAccount(context, ref),
+        ),
+        const SizedBox(height: 16),
+        // Açık kaynak lisansları (Play/hukuki şeffaflık).
+        TextButton.icon(
+          icon: const Icon(Icons.description_outlined),
+          label: Text(l10n.licensesTitle),
+          onPressed: () => showLicensePage(
+            context: context,
+            applicationName: l10n.appName,
+          ),
         ),
       ],
     );

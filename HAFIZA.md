@@ -22,6 +22,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **Anahtarsız dahili AI + freemium temeli**: `firebase_ai` (Firebase AI Logic, Gemini Developer API arka ucu) eklendi. Anahtar girilmemişse GeminiService istekleri `FirebaseAiClient`'a yönlendirir (REST map'leri firebase_ai tiplerine çevrilir; istemler tek yerde kalır). `AiGate`: BYOK kapıdan hiç geçmez, premium (`users/{uid}.premiumUntil` Timestamp, şimdilik konsoldan yazılır) serbest, değilse günde `AppConstants.freeDailyAiCalls`(5) yerel hak. Anahtarsız modda desteklenmeyenler: embedding (semantik arama düz aramaya düşer), TTS ve canlı çeviri (anahtar ister, arayüz zaten toleranslı). Kurulum şartı: Firebase konsolunda AI Logic etkinleştirilmeli; App Check enforcement AÇILMAMALI (GitHub APK sideload'da AI kırılır) — Play'e geçerken açılacak. Kota sayacı cihaz-yerel (SharedPreferences) — Play sürümünde sunucu tarafına taşınacak. firestore.rules'a users/{uid} kök doküman kuralı eklendi → `firebase deploy` gerekli.
 
+- 2026-07-17: **Play hazırlığı ②**: Ayarlar'a "Hesabımı ve verilerimi sil" (AccountService: Storage users/{uid} özyinelemeli + Firestore notlar 400'lük batch + kök doküman + Auth delete; `requires-recent-login` gelirse yeniden Google girişi yaptırıp tekrar dener) ve "Açık kaynak lisansları" (showLicensePage) eklendi. Play'in hesap-silme zorunluluğu böylece karşılandı.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.
