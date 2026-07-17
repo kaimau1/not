@@ -25,6 +25,19 @@
   "newChecklist": "Alışveriş listesi",
   "newOrderedList": "Sıralı liste",
   "noteDeleted": "Not silindi",
+  "notesDeletedCount": "{count} not silindi",
+  "@notesDeletedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "selectedCount": "{count} seçildi",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "deleteSelected": "Seçilenleri sil",
   "undo": "Geri Al",
   "titleHint": "Başlık",
   "bodyHint": "Not...",
@@ -93,6 +106,7 @@
   "settingsGmail": "Gmail",
   "connectGmail": "Gmail'i Bağla",
   "gmailConnected": "Gmail bağlı",
+  "gmailChangeAccount": "Hesap değiştir",
   "gmailInfo": "Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.",
   "disconnectGmail": "Bağlantıyı kes",
   "importantEmails": "Önemli E-postalar",
@@ -207,6 +221,8 @@
   "briefingSettingInfo": "Her sabah seçtiğin saatte günün özeti için bildirim al",
   "autoTagSetting": "Otomatik etiketle",
   "autoTagSettingInfo": "Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler",
+  "autoTitleSetting": "Otomatik başlık",
+  "autoTitleSettingInfo": "Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir",
   "suggestTags": "Etiket öner",
   "aiImprove": "Notu geliştir",
   "improveFix": "Yazımı ve dilbilgisini düzelt",
@@ -228,6 +244,16 @@
   "voiceProcessing": "Dinlediklerim nota dönüştürülüyor...",
   "voiceNothingHeard": "Kayıtta konuşma algılanamadı",
   "voiceNoteSaved": "Sesli notun kaydedildi",
+  "openNote": "Notu aç",
+  "remindersTitle": "Hatırlatıcılar",
+  "remindersEmpty": "Hatırlatıcı yok",
+  "remindersEmptyHint": "Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur",
+  "remindersUpcoming": "Yaklaşan",
+  "remindersPast": "Geçmiş",
+  "newReminder": "Yeni hatırlatıcı",
+  "remindersUntitled": "Adsız not",
+  "remindersEdit": "Zamanı değiştir",
+  "remindersRemove": "Hatırlatıcıyı kaldır",
   "aiModelChat": "Sohbet ve AI özellikleri",
   "aiModelVoice": "Sesli not",
   "aiModelAuto": "Otomatik (önerilen)",

@@ -9,6 +9,9 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - 2026-07-16: **CI imzalı APK** GitHub Secrets üzerinden kalıcı imza. TUZAK: workflow'da `secrets` bağlamı step `if:` içinde kullanılamaz → kontrol bash adımına taşındı. (Runner arızası yaşandı, yeniden tetiklemeyle çözüldü.)
 - 2026-07-16: graphify kod grafı + otomatik tazelik hook'ları kuruldu (usta paketi); CLAUDE.md + bu HAFIZA eklendi.
 
+- 2026-07-17: **Mobil kullanılabilirlik paketi** (dal: `claude/mobile-notes-improvements-8ofm7j`): (1) Liste editöründe Enter'da klavyenin kapanıp açılmasının kökü, `TextInputAction.next`'in varsayılan odak geçişinin metin dışı öğeye gitmesiydi → `onEditingComplete` ile bastırıldı. (2) Dar ekranda arama odaklanınca AppBar aksiyonları gizlenir. (3) Uzun basış artık pin/sil sayfası değil çoklu seçim modu açar; toplu silme + tek "Geri Al". Silme snackbar'ları `fixed` + 3 sn (floating olan FAB'ların üstünde/ortada duruyordu). (4) AI otomatik başlık: editör kapanırken başlıksız nota `fastGeminiModel` (flash-lite) ile başlık; ayarı `auto_title`, varsayılan AÇIK. (5) Hatırlatıcılar ekranı `/reminders` (listele/düzenle/kaldır/manuel ekle). (6) Sesli not bitişinde "Notu aç" — asistan araç yanıtındaki `noteId` yakalanır. (7) Gmail bağlarken `authenticate(scopeHint:)` ile hesap seçici açılır (yalnız `authorizeScopes` seçici göstermeden giriş hesabını kullanıyordu); bağlı e-posta prefs'te (`gmail_account_email`) ve Ayarlar'da gösterilir. TUZAK: OAuth "Testing" modunda 2. Gmail hesabı, Cloud Console'da test kullanıcısı olarak eklenmeden çalışmaz.
+- 2026-07-17: pubspec.lock'ta `just_audio_windows` eksikti (pubspec.yaml'a eklenmiş ama lock commit'lenmemiş) → `pub get` ile lock ve Windows plugin registrant dosyaları tazelendi.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.

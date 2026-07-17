@@ -41,6 +41,25 @@ class SemanticSearchEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
+/// Çoklu seçim modu: seçili not id'leri (boş küme = seçim modu kapalı).
+final selectedNoteIdsProvider =
+    NotifierProvider<SelectedNoteIdsNotifier, Set<String>>(
+  SelectedNoteIdsNotifier.new,
+);
+
+class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+
+  void toggle(String id) {
+    state = state.contains(id)
+        ? {for (final s in state) if (s != id) s}
+        : {...state, id};
+  }
+
+  void clear() => state = const {};
+}
+
 /// Seçili etiket (null = etiket filtresi yok).
 final selectedTagProvider = NotifierProvider<SelectedTagNotifier, String?>(
   SelectedTagNotifier.new,

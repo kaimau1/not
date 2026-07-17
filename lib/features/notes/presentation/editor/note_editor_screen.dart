@@ -84,8 +84,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (!_deleted && note != null && note.isEmpty) {
       // İçi boş kalan not çıkarken sessizce silinir.
       ref.read(notesRepositoryProvider)?.hardDelete(note.id);
-    } else if (!_deleted && note != null && note.tags.isEmpty) {
-      _autoTagInBackground(note);
+    } else if (!_deleted && note != null) {
+      if (note.tags.isEmpty) _autoTagInBackground(note);
+      if (note.title.trim().isEmpty) _autoTitleInBackground(note);
     }
     _debouncer.dispose();
     _sub?.close();
@@ -314,6 +315,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       try {
         final tags = await service.suggestTags(note);
         if (tags.isNotEmpty) repo.updateFields(note.id, {'tags': tags});
+      } catch (_) {
+        // Anahtar yoksa veya istek başarısızsa sessizce geç.
+      }
+    });
+  }
+
+  /// Ayarlarda açıksa (varsayılan açık), editör kapanırken başlıksız nota
+  /// arka planda hızlı lite modelle kısa bir başlık üretir.
+  void _autoTitleInBackground(Note note) {
+    if (note.toPlainText().length < 20) return;
+    if (!ref.read(autoTitleProvider)) return;
+    final service = ref.read(geminiServiceProvider);
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    Future(() async {
+      try {
+        final title = await service.generateTitle(note);
+        if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
       } catch (_) {
         // Anahtar yoksa veya istek başarısızsa sessizce geç.
       }

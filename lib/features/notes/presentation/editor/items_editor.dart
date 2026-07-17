@@ -171,7 +171,10 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   controller: _controllerFor(item),
                   focusNode: _focusFor(item),
                   onChanged: (text) => _updateText(index, text),
-                  onSubmitted: (_) => _insertAfter(index),
+                  // Varsayılan "next" davranışı odağı metin dışı bir öğeye
+                  // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
+                  // bastırır, odak doğrudan yeni öğeye geçer.
+                  onEditingComplete: () => _insertAfter(index),
                   textInputAction: TextInputAction.next,
                   style: checked
                       ? TextStyle(

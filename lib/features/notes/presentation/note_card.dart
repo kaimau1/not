@@ -12,6 +12,7 @@ import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import 'notes_providers.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -82,6 +83,9 @@ class NoteCard extends ConsumerWidget {
       ..showSnackBar(
         SnackBar(
           content: Text(l10n.noteDeleted),
+          // Ekranın ortasında süzülmesin, en altta kısa süre dursun.
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: l10n.undo,
             onPressed: () => repo.restore(note.id),
@@ -141,19 +145,30 @@ class NoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    final selectedIds = ref.watch(selectedNoteIdsProvider);
+    final selectionActive = selectedIds.isNotEmpty;
+    final selected = selectedIds.contains(note.id);
+
+    void toggleSelection() =>
+        ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
 
     final card = Material(
       color: NoteColors.surface(context, note.color),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _openNote(context),
-        onLongPress: _isDesktop ? null : () => _openMobileActions(context, ref),
+        // Seçim modunda dokunuş seçimi değiştirir; uzun basış seçim modunu
+        // başlatır (toplu silme için).
+        onTap: selectionActive ? toggleSelection : () => _openNote(context),
+        onLongPress: _isDesktop ? null : toggleSelection,
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.5),
+              color: selected
+                  ? scheme.primary
+                  : scheme.outlineVariant.withValues(alpha: 0.5),
+              width: selected ? 2 : 1,
             ),
           ),
           child: Padding(
@@ -244,43 +259,26 @@ class NoteCard extends ConsumerWidget {
         onSecondaryTapUp: _isDesktop
             ? (details) => _showContextMenu(context, ref, details.globalPosition)
             : null,
-        child: card,
-      ),
-    );
-  }
-
-  Future<void> _openMobileActions(BuildContext context, WidgetRef ref) async {
-    final l10n = context.l10n;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            ListTile(
-              leading: Icon(
-                note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+            card,
+            if (selected)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(Icons.check, size: 14, color: scheme.onPrimary),
+                ),
               ),
-              title: Text(note.pinned ? l10n.unpin : l10n.pin),
-              onTap: () => Navigator.pop(sheetContext, 'pin'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: Text(l10n.delete),
-              onTap: () => Navigator.pop(sheetContext, 'delete'),
-            ),
           ],
         ),
       ),
     );
-    if (!context.mounted) return;
-    switch (action) {
-      case 'pin':
-        ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
-      case 'delete':
-        _delete(context, ref);
-    }
   }
 }
 

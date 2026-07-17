@@ -23,6 +23,12 @@ final gmailConnectedProvider = Provider<bool>(
       false,
 );
 
+/// Bağlı Gmail hesabının e-postası (varsa) — Ayarlar'da gösterilir.
+final gmailAccountEmailProvider = Provider<String?>(
+  (ref) =>
+      ref.watch(sharedPreferencesProvider).getString(GmailAuth.accountKey),
+);
+
 /// Gmail için platforma göre yetkili HTTP istemcisi üretir.
 /// - Android: google_sign_in artımlı kapsam yetkilendirmesi.
 /// - Windows: masaüstü loopback OAuth akışı + refresh token.
@@ -34,23 +40,33 @@ class GmailAuth {
   final TokenStore _tokenStore;
 
   static const prefKey = 'gmail_connected';
+  static const accountKey = 'gmail_account_email';
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
 
   /// Kullanıcı Ayarlar'dan "Gmail'i Bağla"ya bastığında çağrılır.
-  /// Gerekli izni alır ve bağlantı bayrağını kaydeder.
+  /// Hesap seçici gösterir (giriş hesabından farklı bir Gmail de
+  /// seçilebilir), gerekli izni alır ve bağlantı bayrağını kaydeder.
   Future<void> connect() async {
     if (_isWindows) {
       await _ensureDesktopScope(forcePrompt: true);
     } else {
-      await GoogleSignIn.instance.authorizationClient
+      // authenticate() hesap seçiciyi açar; kullanıcı ikinci bir Gmail
+      // hesabını da burada seçebilir. authorizeScopes tek başına seçici
+      // göstermeden mevcut hesabı kullanıyordu.
+      final account = await GoogleSignIn.instance.authenticate(
+        scopeHint: const [AppConstants.gmailReadonlyScope],
+      );
+      await account.authorizationClient
           .authorizeScopes(const [AppConstants.gmailReadonlyScope]);
+      await _prefs.setString(accountKey, account.email);
     }
     await _prefs.setBool(prefKey, true);
   }
 
   Future<void> disconnect() async {
     await _prefs.setBool(prefKey, false);
+    await _prefs.remove(accountKey);
     if (_isWindows) {
       // Gmail kapsamı düşsün diye kayıtlı token'ı bırak; yalnızca kapsam
       // kaydını temizle.

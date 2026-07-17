@@ -40,6 +40,10 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
   _Phase _phase = _Phase.recording;
   String _message = '';
 
+  /// Asistanın oluşturduğu/güncellediği son notun id'si — bitiş ekranındaki
+  /// "Notu aç" düğmesi kullanıcıyı doğrudan o nota götürür.
+  String? _resultNoteId;
+
   @override
   void initState() {
     super.initState();
@@ -105,7 +109,15 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
           notesContext: assistant.buildNotesContext(notes),
           audioBytes: bytes,
           mimeType: 'audio/mp4',
-          onToolCall: assistant.execute,
+          onToolCall: (name, args) async {
+            final result = await assistant.execute(name, args);
+            // Oluşan/güncellenen notun id'sini yakala ki kullanıcı sonucu
+            // tek dokunuşla açabilsin.
+            if (name != 'delete_note' && result['noteId'] is String) {
+              _resultNoteId = result['noteId'] as String;
+            }
+            return result;
+          },
         );
       } on GeminiException {
         // Asistan başarısız olursa eski yol: yazıya dök, düz not kaydet.
@@ -117,6 +129,7 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
         if (repo == null) rethrow;
         final id = await repo.createNote(NoteType.text);
         repo.updateFields(id, {'body': transcript.trim()});
+        _resultNoteId = id;
         reply = l10n.voiceNoteSaved;
       }
 
@@ -243,9 +256,27 @@ class _VoiceCaptureScreenState extends ConsumerState<VoiceCaptureScreen> {
                   const SizedBox(height: 16),
                   Text(_message, textAlign: TextAlign.center),
                   const SizedBox(height: 20),
-                  FilledButton.tonal(
-                    onPressed: () => context.go('/'),
-                    child: Text(l10n.ok),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FilledButton.tonal(
+                        onPressed: () => context.go('/'),
+                        child: Text(l10n.ok),
+                      ),
+                      if (_resultNoteId != null) ...[
+                        const SizedBox(width: 12),
+                        FilledButton.icon(
+                          onPressed: () {
+                            // Önce ana ekrana dön ki geri tuşu editörden
+                            // dashboard'a çıksın.
+                            context.go('/');
+                            context.push('/note/$_resultNoteId');
+                          },
+                          icon: const Icon(Icons.open_in_new, size: 18),
+                          label: Text(l10n.openNote),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

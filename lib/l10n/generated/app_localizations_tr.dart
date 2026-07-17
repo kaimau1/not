@@ -71,6 +71,19 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteDeleted => 'Not silindi';
 
   @override
+  String notesDeletedCount(int count) {
+    return '$count not silindi';
+  }
+
+  @override
+  String selectedCount(int count) {
+    return '$count seçildi';
+  }
+
+  @override
+  String get deleteSelected => 'Seçilenleri sil';
+
+  @override
   String get undo => 'Geri Al';
 
   @override
@@ -222,6 +235,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get gmailConnected => 'Gmail bağlı';
+
+  @override
+  String get gmailChangeAccount => 'Hesap değiştir';
 
   @override
   String get gmailInfo =>
@@ -497,6 +513,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler';
 
   @override
+  String get autoTitleSetting => 'Otomatik başlık';
+
+  @override
+  String get autoTitleSettingInfo =>
+      'Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir';
+
+  @override
   String get suggestTags => 'Etiket öner';
 
   @override
@@ -547,6 +570,37 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceNoteSaved => 'Sesli notun kaydedildi';
+
+  @override
+  String get openNote => 'Notu aç';
+
+  @override
+  String get remindersTitle => 'Hatırlatıcılar';
+
+  @override
+  String get remindersEmpty => 'Hatırlatıcı yok';
+
+  @override
+  String get remindersEmptyHint =>
+      'Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur';
+
+  @override
+  String get remindersUpcoming => 'Yaklaşan';
+
+  @override
+  String get remindersPast => 'Geçmiş';
+
+  @override
+  String get newReminder => 'Yeni hatırlatıcı';
+
+  @override
+  String get remindersUntitled => 'Adsız not';
+
+  @override
+  String get remindersEdit => 'Zamanı değiştir';
+
+  @override
+  String get remindersRemove => 'Hatırlatıcıyı kaldır';
 
   @override
   String get aiModelChat => 'Sohbet ve AI özellikleri';
