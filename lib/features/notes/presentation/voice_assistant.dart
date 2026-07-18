@@ -120,22 +120,11 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
 
       final apiKey = await ref.read(apiKeyStoreProvider).read();
       if (apiKey != null && apiKey.isNotEmpty) {
-        // Canlı yol: dikte oturumu kurulamazsa sessizce canlı döküm olmadan
-        // devam edilir (akış yine biriktirilir, not yine oluşur).
         _liveMode = true;
-        try {
-          final dictation = LiveDictationSession(
-            onTranscript: (text) {
-              _live.write(text);
-              state = state.copyWith(liveTranscript: _live.toString());
-            },
-            onError: (_) {},
-          );
-          await dictation.connect(apiKey);
-          _dictation = dictation;
-        } catch (_) {
-          _dictation = null;
-        }
+        // Mikrofonu HEMEN başlat: dikte oturumu kurulurken (birkaç yüz ms)
+        // konuşulan ilk kelimeler kaçmasın diye ses anında _pcm'de birikir.
+        // Bağlantı beklemeden akış açıldığından döküm de daha erken başlar
+        // (madde 11 — "ilk kelimeyi kaçırıyor, geç gösteriyor").
         final micStream = await recorder.startStream(
           const RecordConfig(
             encoder: AudioEncoder.pcm16bits,
@@ -147,6 +136,29 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           _pcm.add(chunk);
           _dictation?.sendAudio(chunk);
         });
+        // Dikte oturumunu arka planda bağla; kayıt zaten akıyor. Bağlanınca o
+        // ana dek biriken sesi topluca gönder ki ilk kelimeler de dökülsün.
+        // Oturum kurulamazsa sessizce canlı döküm olmadan devam edilir.
+        final dictation = LiveDictationSession(
+          onTranscript: (text) {
+            _live.write(text);
+            state = state.copyWith(liveTranscript: _live.toString());
+          },
+          onError: (_) {},
+        );
+        unawaited(
+          dictation.connect(apiKey).then((_) {
+            // Kayıt bu arada bittiyse (teardown) oturumu boşuna tutma.
+            if (_recorder == null) {
+              dictation.close();
+              return;
+            }
+            dictation.sendAudio(_pcm.toBytes());
+            _dictation = dictation;
+          }).catchError((Object _) {
+            dictation.close();
+          }),
+        );
       } else {
         final dir = await getTemporaryDirectory();
         _filePath = p.join(

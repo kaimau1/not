@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +57,15 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
   _Phase _phase = _Phase.starting;
   String _errorMessage = '';
 
+  // Oturum bağlanana dek biriken ses; bağlanınca topluca gönderilir ki ilk
+  // kelimeler kaçmasın (madde 9/11).
+  final _pending = BytesBuilder();
+  bool _connected = false;
+
+  // "Bekle" (duraklat) durumu: konuşma geçici durur, oturum açık kalır;
+  // "Konuş" ile kaldığı yerden devam eder (madde 9 — bas konuş / bas bekle).
+  bool _paused = false;
+
   @override
   void initState() {
     super.initState();
@@ -99,8 +109,9 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
         if (mounted) setState(() => _errorMessage = e.toString());
       },
     );
-    await session.connect(apiKey);
     _session = session;
+    // Mikrofonu HEMEN aç: oturum bağlanana dek konuşulan ilk kelimeler
+    // _pending'de birikir, bağlanınca topluca gönderilir (madde 9/11).
     final micStream = await _recorder.startStream(
       const RecordConfig(
         encoder: AudioEncoder.pcm16bits,
@@ -108,8 +119,24 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
         numChannels: 1,
       ),
     );
-    _micSub = micStream.listen(session.sendAudio);
+    _micSub = micStream.listen((chunk) {
+      // "Bekle" durumunda ses yok sayılır (transkripsiyon duraklar).
+      if (_paused) return;
+      if (_connected) {
+        session.sendAudio(chunk);
+      } else {
+        _pending.add(chunk);
+      }
+    });
     if (mounted) setState(() => _phase = _Phase.live);
+    // Arka planda bağlan; kayıt zaten akıyor.
+    session.connect(apiKey).then((_) {
+      _connected = true;
+      final buffered = _pending.takeBytes();
+      if (buffered.isNotEmpty) session.sendAudio(buffered);
+    }).catchError((Object e) {
+      if (mounted) setState(() => _errorMessage = e.toString());
+    });
   }
 
   /// Anahtarsız yol: dosyaya kaydet, bitince toplu transkripsiyon.
@@ -159,6 +186,10 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
     } catch (e) {
       _fail(e.toString());
     }
+  }
+
+  void _togglePause() {
+    setState(() => _paused = !_paused);
   }
 
   Future<void> _cancel() async {
@@ -238,7 +269,10 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.mic, color: scheme.error),
+                    Icon(
+                      _paused ? Icons.pause_circle_outline : Icons.mic,
+                      color: _paused ? scheme.onSurfaceVariant : scheme.error,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       _format(_elapsed),
@@ -248,9 +282,11 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  _phase == _Phase.live
-                      ? l10n.dictationListening
-                      : l10n.dictationNoKeyInfo,
+                  _phase != _Phase.live
+                      ? l10n.dictationNoKeyInfo
+                      : _paused
+                          ? l10n.dictationPaused
+                          : l10n.dictationListening,
                   textAlign: TextAlign.center,
                   style: Theme.of(context)
                       .textTheme
@@ -298,7 +334,21 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
                       onPressed: _cancel,
                       child: Text(l10n.cancel),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    // "Bekle"/"Konuş": canlı dökümü duraklatıp sürdürür
+                    // (yalnızca canlı yolda; anahtarsız kayıtta duraklatma yok).
+                    if (_phase == _Phase.live)
+                      OutlinedButton.icon(
+                        onPressed: _togglePause,
+                        icon: Icon(
+                          _paused ? Icons.mic : Icons.pause,
+                          size: 18,
+                        ),
+                        label: Text(
+                          _paused ? l10n.dictationResume : l10n.dictationPause,
+                        ),
+                      ),
+                    if (_phase == _Phase.live) const SizedBox(width: 8),
                     FilledButton.icon(
                       onPressed: _finish,
                       icon: const Icon(Icons.stop),

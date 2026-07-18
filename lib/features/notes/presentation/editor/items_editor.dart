@@ -124,6 +124,21 @@ class _ItemsEditorState extends State<ItemsEditor> {
     });
   }
 
+  /// "Yeni öğe" düğmesiyle öğe ekler. Checklist'te yeni öğe İŞARETSİZLERİN
+  /// sonuna (işaretli bloğun ÜSTÜne) girer — böylece düğme listenin başında
+  /// dursa da öğe doğru yere düşer ve altta biriken işaretlilerin arasına
+  /// karışmaz (madde 4).
+  void _addItem() {
+    final item = NoteItem(id: _uuid.v4(), text: '');
+    final firstChecked = _items.indexWhere((i) => i.checked);
+    final pos = firstChecked < 0 ? _items.length : firstChecked;
+    setState(() => _items.insert(pos, item));
+    _commit();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusFor(item).requestFocus();
+    });
+  }
+
   void _remove(int index) {
     final removed = _items[index];
     setState(() => _items.removeAt(index));
@@ -173,32 +188,21 @@ class _ItemsEditorState extends State<ItemsEditor> {
     }
   }
 
-  /// Öğe metni seçim araç çubuğuna iki net seçenek ekler: "Satırı seç"
-  /// (yalnız bu satır) ve "Tümünü seç" (tüm not — panoya kopyalar).
+  /// Öğe metni seçim araç çubuğu. Varsayılan araçlar (kes/kopyala/yapıştır ve
+  /// "Tümünü seç") olduğu gibi korunur — böylece bir satırın metninin TAMAMI
+  /// seçilebilir (madde 8; eskiden "Tümünü seç" seçim yerine panoya kopyalıyor,
+  /// gerçek seçim ise kaldırılmıştı). Ayrıca ayrı bir "Tüm notu kopyala"
+  /// seçeneği eklenir (alanlar arası gerçek seçim mümkün olmadığından tüm
+  /// notu panoya almak için pratik karşılık).
   Widget _contextMenu(
     BuildContext context,
     EditableTextState editableState,
-    NoteItem item,
   ) {
     final l10n = context.l10n;
-    final controller = _controllerFor(item);
     final buttonItems = <ContextMenuButtonItem>[
-      // Varsayılan kes/kopyala/yapıştır'ı koru; alandaki "tümünü seç"i
-      // (yalnız o satır) kendi "Satırı seç" düğmemizle değiştiriyoruz.
-      for (final button in editableState.contextMenuButtonItems)
-        if (button.type != ContextMenuButtonType.selectAll) button,
+      ...editableState.contextMenuButtonItems,
       ContextMenuButtonItem(
-        label: l10n.selectRow,
-        onPressed: () {
-          editableState.hideToolbar();
-          controller.selection = TextSelection(
-            baseOffset: 0,
-            extentOffset: controller.text.length,
-          );
-        },
-      ),
-      ContextMenuButtonItem(
-        label: l10n.selectAll,
+        label: l10n.copyWholeNote,
         onPressed: () {
           editableState.hideToolbar();
           _copyAll();
@@ -215,15 +219,37 @@ class _ItemsEditorState extends State<ItemsEditor> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final showChecks = widget.showCheckboxes;
     final checkedCount =
-        widget.showCheckboxes ? _items.where((i) => i.checked).length : 0;
+        showChecks ? _items.where((i) => i.checked).length : 0;
 
-    // Başlık bölgesi = editörün kendi başlığı + (checklist'te işaretli varsa)
-    // "İşaretlileri sil" araç çubuğu.
+    final addButton = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: TextButton.icon(
+        onPressed: _addItem,
+        icon: const Icon(Icons.add, size: 20),
+        label: Text(l10n.newItemHint),
+      ),
+    );
+
+    // Başlık bölgesi = editörün kendi başlığı. Checklist'te "Yeni öğe" düğmesi
+    // burada, en ÜSTte durur (Keep gibi): işaretli öğeler listenin en altına
+    // indiğinden düğme onların altında kalmaz (madde 4).
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.header != null) widget.header!,
+        if (showChecks) addButton,
+      ],
+    );
+
+    // Alt bölge: sıralı listede (işaretsiz) "Yeni öğe" sona eklendiğinden düğme
+    // altta kalır. "İşaretlileri sil" ise en üst yerine işaretli öğelerin
+    // hemen altında, listenin sonunda durur — çok yukarıda değil (madde 5).
+    final footer = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!showChecks) addButton,
         if (checkedCount > 0)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
@@ -237,6 +263,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
               ),
             ),
           ),
+        if (widget.footer != null) widget.footer!,
       ],
     );
 
@@ -244,20 +271,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       padding: const EdgeInsets.only(bottom: 96),
       buildDefaultDragHandles: false,
       header: header,
-      footer: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: TextButton.icon(
-              onPressed: () => _insertAfter(_items.length - 1),
-              icon: const Icon(Icons.add, size: 20),
-              label: Text(l10n.newItemHint),
-            ),
-          ),
-          if (widget.footer != null) widget.footer!,
-        ],
-      ),
+      footer: footer,
       itemCount: _items.length,
       onReorderItem: _reorder,
       itemBuilder: (context, index) {
@@ -302,7 +316,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   focusNode: _focusFor(item),
                   onChanged: (text) => _updateText(index, text),
                   contextMenuBuilder: (context, editableState) =>
-                      _contextMenu(context, editableState, item),
+                      _contextMenu(context, editableState),
                   // Varsayılan "next" davranışı odağı metin dışı bir öğeye
                   // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
                   // bastırır, odak doğrudan yeni öğeye geçer.

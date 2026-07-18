@@ -5,7 +5,13 @@ import '../domain/note_type.dart';
 
 /// Keep tarzı açılan "+" düğmesi: dokununca metin / madde listesi /
 /// sıralı liste / el yazısı seçenekleri etiketli mini düğmeler olarak
-/// üstte belirir; tekrar dokununca kapanır.
+/// üstte belirir.
+///
+/// Seçenekler bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
+/// - Böylece açılınca yerinde büyüyüp üstteki sesli asistan düğmesini
+///   ittirmez, konum kaymaz (madde 3).
+/// - Tam ekran görünmez bir bariyer, sayfanın herhangi bir yerine dokununca
+///   menüyü kapatır — tekrar "+" basmaya gerek kalmaz (madde 12).
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
@@ -21,12 +27,76 @@ class QuickAddFab extends StatefulWidget {
 }
 
 class _QuickAddFabState extends State<QuickAddFab> {
-  bool _open = false;
+  final _link = LayerLink();
+  OverlayEntry? _entry;
 
-  void _toggle() => setState(() => _open = !_open);
+  bool get _open => _entry != null;
+
+  void _toggle() => _open ? _close() : _openMenu();
+
+  void _close() {
+    _entry?.remove();
+    _entry = null;
+    if (mounted) setState(() {});
+  }
+
+  void _openMenu() {
+    _entry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Dışarı dokununca kapanan tam ekran (görünmez) bariyer.
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _close,
+            ),
+          ),
+          // Seçenekler "+" düğmesinin hemen üstüne demirlenir (layout'u
+          // değiştirmez, sesli asistan düğmesi yerinden oynamaz).
+          CompositedTransformFollower(
+            link: _link,
+            targetAnchor: Alignment.topRight,
+            followerAnchor: Alignment.bottomRight,
+            offset: const Offset(0, -12),
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _option(
+                    icon: Icons.draw_outlined,
+                    label: context.l10n.newHandwriting,
+                    onTap: widget.onHandwriting,
+                  ),
+                  _option(
+                    icon: Icons.format_list_numbered_rounded,
+                    label: context.l10n.newOrderedList,
+                    onTap: () => widget.onCreate(NoteType.ordered),
+                  ),
+                  _option(
+                    icon: Icons.check_box_outlined,
+                    label: context.l10n.newChecklist,
+                    onTap: () => widget.onCreate(NoteType.checklist),
+                  ),
+                  _option(
+                    icon: Icons.notes,
+                    label: context.l10n.newTextNote,
+                    onTap: () => widget.onCreate(NoteType.text),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    Overlay.of(context).insert(_entry!);
+    setState(() {});
+  }
 
   void _select(VoidCallback action) {
-    setState(() => _open = false);
+    _close();
     action();
   }
 
@@ -67,57 +137,27 @@ class _QuickAddFabState extends State<QuickAddFab> {
   }
 
   @override
+  void dispose() {
+    _entry?.remove();
+    _entry = null;
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // Seçenekler yalnız açıkken; AnimatedSize ile yumuşak açılır.
-        AnimatedSize(
+    return CompositedTransformTarget(
+      link: _link,
+      child: FloatingActionButton(
+        heroTag: 'add-fab',
+        tooltip: l10n.newTextNote,
+        onPressed: _toggle,
+        child: AnimatedRotation(
+          turns: _open ? 0.125 : 0, // + → × dönüşü
           duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.bottomRight,
-          child: !_open
-              ? const SizedBox.shrink()
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _option(
-                      icon: Icons.draw_outlined,
-                      label: l10n.newHandwriting,
-                      onTap: widget.onHandwriting,
-                    ),
-                    _option(
-                      icon: Icons.format_list_numbered_rounded,
-                      label: l10n.newOrderedList,
-                      onTap: () => widget.onCreate(NoteType.ordered),
-                    ),
-                    _option(
-                      icon: Icons.check_box_outlined,
-                      label: l10n.newChecklist,
-                      onTap: () => widget.onCreate(NoteType.checklist),
-                    ),
-                    _option(
-                      icon: Icons.notes,
-                      label: l10n.newTextNote,
-                      onTap: () => widget.onCreate(NoteType.text),
-                    ),
-                  ],
-                ),
+          child: const Icon(Icons.add),
         ),
-        FloatingActionButton(
-          heroTag: 'add-fab',
-          tooltip: l10n.newTextNote,
-          onPressed: _toggle,
-          child: AnimatedRotation(
-            turns: _open ? 0.125 : 0, // + → × dönüşü
-            duration: const Duration(milliseconds: 160),
-            child: const Icon(Icons.add),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

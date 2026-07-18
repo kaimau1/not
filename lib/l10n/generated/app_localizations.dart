@@ -223,7 +223,7 @@ abstract class AppLocalizations {
   /// No description provided for @newChecklist.
   ///
   /// In tr, this message translates to:
-  /// **'Alışveriş listesi'**
+  /// **'Liste'**
   String get newChecklist;
 
   /// No description provided for @newOrderedList.
@@ -1267,7 +1267,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceProcessing.
   ///
   /// In tr, this message translates to:
-  /// **'Dinlediklerim nota dönüştürülüyor...'**
+  /// **'Söyledikleriniz uygulanıyor...'**
   String get voiceProcessing;
 
   /// No description provided for @voiceNothingHeard.
@@ -1413,6 +1413,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dinleniyor... konuştukça metin yazılır'**
   String get dictationListening;
+
+  /// No description provided for @dictationPaused.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklatıldı — devam etmek için Konuş\'a bas'**
+  String get dictationPaused;
+
+  /// No description provided for @dictationPause.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bekle'**
+  String get dictationPause;
+
+  /// No description provided for @dictationResume.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuş'**
+  String get dictationResume;
 
   /// No description provided for @dictationNoKeyInfo.
   ///
@@ -1588,6 +1606,12 @@ abstract class AppLocalizations {
   /// **'Başlık öner'**
   String get suggestTitle;
 
+  /// No description provided for @noteMetaMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle / Öner'**
+  String get noteMetaMenu;
+
   /// No description provided for @folder.
   ///
   /// In tr, this message translates to:
@@ -1683,6 +1707,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tümünü seç'**
   String get selectAll;
+
+  /// No description provided for @copyWholeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm notu kopyala'**
+  String get copyWholeNote;
 
   /// No description provided for @allCopied.
   ///

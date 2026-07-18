@@ -76,7 +76,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get newTextNote => 'Metin notu';
 
   @override
-  String get newChecklist => 'Alışveriş listesi';
+  String get newChecklist => 'Liste';
 
   @override
   String get newOrderedList => 'Sıralı liste';
@@ -642,7 +642,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceFinish => 'Bitir';
 
   @override
-  String get voiceProcessing => 'Dinlediklerim nota dönüştürülüyor...';
+  String get voiceProcessing => 'Söyledikleriniz uygulanıyor...';
 
   @override
   String get voiceNothingHeard => 'Kayıtta konuşma algılanamadı';
@@ -718,6 +718,15 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
+
+  @override
+  String get dictationPaused => 'Duraklatıldı — devam etmek için Konuş\'a bas';
+
+  @override
+  String get dictationPause => 'Bekle';
+
+  @override
+  String get dictationResume => 'Konuş';
 
   @override
   String get dictationNoKeyInfo =>
@@ -813,6 +822,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get suggestTitle => 'Başlık öner';
 
   @override
+  String get noteMetaMenu => 'Ekle / Öner';
+
+  @override
   String get folder => 'Klasör';
 
   @override
@@ -861,6 +873,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get selectAll => 'Tümünü seç';
+
+  @override
+  String get copyWholeNote => 'Tüm notu kopyala';
 
   @override
   String get allCopied => 'Tüm not panoya kopyalandı';
