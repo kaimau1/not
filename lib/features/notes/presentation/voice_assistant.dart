@@ -155,7 +155,9 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             }
             dictation.sendAudio(_pcm.toBytes());
             _dictation = dictation;
-          }).catchError((_) => dictation.close()),
+          }).catchError((Object _) {
+            dictation.close();
+          }),
         );
       } else {
         final dir = await getTemporaryDirectory();
