@@ -208,6 +208,34 @@ class AutoTitleNotifier extends Notifier<bool> {
   }
 }
 
+/// Sesli Not Asistanı düğmesinin kullanım şekli.
+/// hold (varsayılan): basılı tutarak konuş, bırakınca not oluşur.
+/// tap: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.
+enum VoiceButtonMode { hold, tap }
+
+final voiceButtonModeProvider =
+    NotifierProvider<VoiceButtonModeNotifier, VoiceButtonMode>(
+  VoiceButtonModeNotifier.new,
+);
+
+class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
+  static const _key = 'voice_button_mode';
+
+  @override
+  VoiceButtonMode build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    return VoiceButtonMode.values.firstWhere(
+      (m) => m.name == stored,
+      orElse: () => VoiceButtonMode.hold,
+    );
+  }
+
+  void set(VoiceButtonMode mode) {
+    state = mode;
+    ref.read(sharedPreferencesProvider).setString(_key, mode.name);
+  }
+}
+
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
   const BriefingSettings({required this.enabled, required this.minutes});

@@ -46,6 +46,9 @@ class SettingsScreen extends ConsumerWidget {
               const _ExpandListItemsSwitch(),
               const _DarkScheduleEditor(),
               const SizedBox(height: 24),
+              _SectionTitle(l10n.voiceAssistantTitle),
+              const _VoiceModeSelector(),
+              const SizedBox(height: 24),
               _SectionTitle(l10n.settingsAi),
               const _BuiltInAiStatus(),
               const _GeminiKeyEditor(),
@@ -126,6 +129,49 @@ class _ThemeSelector extends ConsumerWidget {
         onSelectionChanged: (selection) =>
             ref.read(themeChoiceProvider.notifier).set(selection.first),
       ),
+    );
+  }
+}
+
+/// Sesli Not Asistanı düğmesinin kullanım şekli: basılı tut (varsayılan)
+/// veya bas-başlat / bas-bitir.
+class _VoiceModeSelector extends ConsumerWidget {
+  const _VoiceModeSelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final mode = ref.watch(voiceButtonModeProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.voiceModeSetting),
+        const SizedBox(height: 8),
+        SegmentedButton<VoiceButtonMode>(
+          segments: [
+            ButtonSegment(
+              value: VoiceButtonMode.hold,
+              label: Text(l10n.voiceModeHold),
+              icon: const Icon(Icons.touch_app_outlined),
+            ),
+            ButtonSegment(
+              value: VoiceButtonMode.tap,
+              label: Text(l10n.voiceModeTap),
+              icon: const Icon(Icons.play_circle_outline),
+            ),
+          ],
+          selected: {mode},
+          onSelectionChanged: (selection) =>
+              ref.read(voiceButtonModeProvider.notifier).set(selection.first),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          l10n.voiceModeInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+      ],
     );
   }
 }
