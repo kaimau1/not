@@ -4,22 +4,55 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../notes/data/notes_repository.dart';
+import '../data/daily_cache.dart';
 import '../data/gemini_service.dart';
 
-/// Notların tamamına bakarak üretilen öneriler. Her açılışta taze üretilir;
-/// "Yenile" ile tekrar istenebilir.
-final suggestionsProvider = FutureProvider.autoDispose<String>((ref) async {
-  final notes = await ref.watch(notesStreamProvider.future);
-  if (notes.isEmpty) return '';
-  return ref.watch(geminiServiceProvider).suggestFromNotes(notes);
-});
+/// Notların tamamına bakarak üretilen öneriler. Sonuç günde bir üretilip
+/// diske yazılır; ekranlar arası gezinmede ve uygulama yeniden açılışında
+/// korunur, "Yenile" ile zorlanır.
+final suggestionsProvider =
+    AsyncNotifierProvider<SuggestionsNotifier, String>(SuggestionsNotifier.new);
 
-/// Son 7 günün notlarından haftalık özet.
-final weeklySummaryProvider = FutureProvider.autoDispose<String>((ref) async {
-  final notes = await ref.watch(notesStreamProvider.future);
-  if (notes.isEmpty) return '';
-  return ref.watch(geminiServiceProvider).weeklySummary(notes);
-});
+class SuggestionsNotifier extends DailyCacheNotifier<String> {
+  @override
+  String get cacheKey => 'cache_suggestions';
+
+  @override
+  String encode(String value) => value;
+
+  @override
+  String decode(String raw) => raw;
+
+  @override
+  Future<String> compute() async {
+    // read: not değişiminde otomatik yeniden üretme; günlük/Yenile ile tazelenir.
+    final notes = await ref.read(notesStreamProvider.future);
+    if (notes.isEmpty) return '';
+    return ref.read(geminiServiceProvider).suggestFromNotes(notes);
+  }
+}
+
+/// Son 7 günün notlarından haftalık özet (günlük kalıcı önbellek).
+final weeklySummaryProvider = AsyncNotifierProvider<WeeklySummaryNotifier,
+    String>(WeeklySummaryNotifier.new);
+
+class WeeklySummaryNotifier extends DailyCacheNotifier<String> {
+  @override
+  String get cacheKey => 'cache_weekly';
+
+  @override
+  String encode(String value) => value;
+
+  @override
+  String decode(String raw) => raw;
+
+  @override
+  Future<String> compute() async {
+    final notes = await ref.read(notesStreamProvider.future);
+    if (notes.isEmpty) return '';
+    return ref.read(geminiServiceProvider).weeklySummary(notes);
+  }
+}
 
 enum _SuggestionsTab { suggestions, weekly }
 
@@ -39,8 +72,9 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
     final isWeekly = _tab == _SuggestionsTab.weekly;
     final content =
         ref.watch(isWeekly ? weeklySummaryProvider : suggestionsProvider);
-    void refresh() => ref.invalidate(
-        isWeekly ? weeklySummaryProvider : suggestionsProvider);
+    void refresh() => isWeekly
+        ? ref.read(weeklySummaryProvider.notifier).refresh()
+        : ref.read(suggestionsProvider.notifier).refresh();
 
     return Scaffold(
       appBar: AppBar(

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -9,88 +7,100 @@ import '../../../core/widgets/empty_state.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../gmail/presentation/mail_summary_screen.dart';
 import '../../notes/data/notes_repository.dart';
+import '../data/daily_cache.dart';
 import '../data/gemini_service.dart';
 
 /// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar +
-/// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç 30 dakika
-/// bellekte tutulur; "Yenile" ile hemen tazelenir.
-final briefingProvider = FutureProvider.autoDispose<String>((ref) async {
-  // read: her not değişikliğinde brifingi (yani iki AI çağrısını) yeniden
-  // üretme; içerik ekrandaki Yenile ile veya süre dolunca tazelenir.
-  final notes = await ref.read(notesStreamProvider.future);
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final tomorrow = today.add(const Duration(days: 1));
+/// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç günde bir kez
+/// üretilip diske yazılır; ekranlar arası ve uygulama yeniden açılışında
+/// korunur, "Yenile" ile hemen tazelenir.
+final briefingProvider =
+    AsyncNotifierProvider<BriefingNotifier, String>(BriefingNotifier.new);
 
-  final buffer = StringBuffer();
+class BriefingNotifier extends DailyCacheNotifier<String> {
+  @override
+  String get cacheKey => 'cache_briefing';
 
-  // Bugünün ve yarının hatırlatıcıları
-  buffer.writeln('HATIRLATICILAR:');
-  var hasReminder = false;
-  for (final note in notes) {
-    final reminder = note.reminderAt;
-    if (reminder == null || note.deletedAt != null) continue;
-    if (reminder.isBefore(today) ||
-        reminder.isAfter(tomorrow.add(const Duration(days: 1)))) {
-      continue;
-    }
-    hasReminder = true;
-    // Kilitli notun içeriği brifinge sızmasın; başlık yoksa jenerik ad.
-    final label = note.title.trim().isNotEmpty
-        ? note.title
-        : note.locked
-            ? '(kilitli not)'
-            : note.toPlainText().split('\n').first;
-    buffer.writeln(
-      '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: $label',
-    );
-  }
-  if (!hasReminder) buffer.writeln('- (yok)');
+  @override
+  String encode(String value) => value;
 
-  // Son 3 günün notları
-  buffer.writeln('\nSON NOTLAR:');
-  final cutoff = now.subtract(const Duration(days: 3));
-  var count = 0;
-  for (final note in notes) {
-    if (note.archivedAt != null || note.locked) continue;
-    if (!((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false)) {
-      continue;
-    }
-    final text = note.toPlainText();
-    buffer.writeln(
-      '- ${text.length > 200 ? '${text.substring(0, 200)}…' : text}'
-          .replaceAll('\n', ' / '),
-    );
-    if (++count >= 15) break;
-  }
-  if (count == 0) buffer.writeln('- (yok)');
+  @override
+  String decode(String raw) => raw;
 
-  // Gmail bağlıysa önemli e-postalar (hata veya yavaşlık brifingi
-  // engellemesin: 20 saniyede yanıt gelmezse e-postasız devam edilir).
-  if (ref.read(gmailConnectedProvider)) {
-    try {
-      final emails = await ref
-          .watch(importantEmailsProvider.future)
-          .timeout(const Duration(seconds: 20));
-      buffer.writeln('\nÖNEMLİ E-POSTALAR:');
-      if (emails.isEmpty) {
-        buffer.writeln('- (yok)');
+  @override
+  Future<String> compute() async {
+    // read: her not değişikliğinde brifingi yeniden üretme; günlük/Yenile ile.
+    final notes = await ref.read(notesStreamProvider.future);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+
+    final buffer = StringBuffer();
+
+    // Bugünün ve yarının hatırlatıcıları
+    buffer.writeln('HATIRLATICILAR:');
+    var hasReminder = false;
+    for (final note in notes) {
+      final reminder = note.reminderAt;
+      if (reminder == null || note.deletedAt != null) continue;
+      if (reminder.isBefore(today) ||
+          reminder.isAfter(tomorrow.add(const Duration(days: 1)))) {
+        continue;
       }
-      for (final email in emails.take(8)) {
-        buffer.writeln('- ${email.from}: ${email.subject} — ${email.summary}');
-      }
-    } catch (_) {
-      // E-posta alınamazsa brifing notlarla devam eder.
+      hasReminder = true;
+      // Kilitli notun içeriği brifinge sızmasın; başlık yoksa jenerik ad.
+      final label = note.title.trim().isNotEmpty
+          ? note.title
+          : note.locked
+              ? '(kilitli not)'
+              : note.toPlainText().split('\n').first;
+      buffer.writeln(
+        '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: $label',
+      );
     }
-  }
+    if (!hasReminder) buffer.writeln('- (yok)');
 
-  final briefing =
-      await ref.read(geminiServiceProvider).composeBriefing(buffer.toString());
-  final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 30), link.close);
-  ref.onDispose(timer.cancel);
-  return briefing;
-});
+    // Son 3 günün notları
+    buffer.writeln('\nSON NOTLAR:');
+    final cutoff = now.subtract(const Duration(days: 3));
+    var count = 0;
+    for (final note in notes) {
+      if (note.archivedAt != null || note.locked) continue;
+      if (!((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false)) {
+        continue;
+      }
+      final text = note.toPlainText();
+      buffer.writeln(
+        '- ${text.length > 200 ? '${text.substring(0, 200)}…' : text}'
+            .replaceAll('\n', ' / '),
+      );
+      if (++count >= 15) break;
+    }
+    if (count == 0) buffer.writeln('- (yok)');
+
+    // Gmail bağlıysa önemli e-postalar (hata veya yavaşlık brifingi
+    // engellemesin: 20 saniyede yanıt gelmezse e-postasız devam edilir).
+    if (ref.read(gmailConnectedProvider)) {
+      try {
+        final emails = await ref
+            .read(importantEmailsProvider.future)
+            .timeout(const Duration(seconds: 20));
+        buffer.writeln('\nÖNEMLİ E-POSTALAR:');
+        if (emails.isEmpty) {
+          buffer.writeln('- (yok)');
+        }
+        for (final email in emails.take(8)) {
+          buffer
+              .writeln('- ${email.from}: ${email.subject} — ${email.summary}');
+        }
+      } catch (_) {
+        // E-posta alınamazsa brifing notlarla devam eder.
+      }
+    }
+
+    return ref.read(geminiServiceProvider).composeBriefing(buffer.toString());
+  }
+}
 
 class BriefingScreen extends ConsumerWidget {
   const BriefingScreen({super.key});
@@ -107,7 +117,7 @@ class BriefingScreen extends ConsumerWidget {
           IconButton(
             tooltip: l10n.refresh,
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(briefingProvider),
+            onPressed: () => ref.read(briefingProvider.notifier).refresh(),
           ),
         ],
       ),
@@ -136,7 +146,7 @@ class BriefingScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 FilledButton.tonal(
-                  onPressed: () => ref.invalidate(briefingProvider),
+                  onPressed: () => ref.read(briefingProvider.notifier).refresh(),
                   child: Text(l10n.retry),
                 ),
               ],
