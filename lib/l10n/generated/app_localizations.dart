@@ -1407,6 +1407,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazıya dökülüyor...'**
   String get dictationProcessing;
+
+  /// No description provided for @aiDailyManualInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.'**
+  String get aiDailyManualInfo;
+
+  /// No description provided for @aiGenerate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluştur'**
+  String get aiGenerate;
+
+  /// No description provided for @aiScanEmails.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-postaları tara'**
+  String get aiScanEmails;
+
+  /// No description provided for @aiGeneratedTodayInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.'**
+  String get aiGeneratedTodayInfo;
 }
 
 class _AppLocalizationsDelegate

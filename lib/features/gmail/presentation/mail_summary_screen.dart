@@ -8,8 +8,10 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../ai/data/ai_gate.dart';
 import '../../ai/data/daily_cache.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../ai/presentation/ai_generate_prompt.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note_type.dart';
 import '../data/gmail_auth.dart';
@@ -27,6 +29,9 @@ final importantEmailsProvider =
 class ImportantEmailsNotifier extends DailyCacheNotifier<List<ImportantEmail>> {
   @override
   String get cacheKey => 'cache_important_emails';
+
+  @override
+  List<ImportantEmail> get emptyValue => const [];
 
   @override
   Future<List<ImportantEmail>> compute() async {
@@ -70,6 +75,18 @@ class MailSummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final connected = ref.watch(gmailConnectedProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final notifier = ref.read(importantEmailsProvider.notifier);
+
+    void onRefresh() {
+      if (!unlimited && notifier.generatedToday) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.aiGeneratedTodayInfo)));
+        return;
+      }
+      notifier.refresh();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -79,8 +96,7 @@ class MailSummaryScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.refresh,
               icon: const Icon(Icons.refresh),
-              onPressed: () =>
-                  ref.read(importantEmailsProvider.notifier).refresh(),
+              onPressed: onRefresh,
             ),
         ],
       ),
@@ -188,6 +204,20 @@ class _EmailList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final emails = ref.watch(importantEmailsProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final notifier = ref.read(importantEmailsProvider.notifier);
+
+    // Ücretsiz kullanıcıda tarama otomatik başlamaz (kota); düğmeyle başlar.
+    if (!unlimited &&
+        !notifier.generatedToday &&
+        !emails.isLoading &&
+        !emails.hasError) {
+      return AiGeneratePrompt(
+        icon: Icons.mark_email_unread_outlined,
+        buttonLabel: l10n.aiScanEmails,
+        onGenerate: notifier.refresh,
+      );
+    }
 
     return emails.when(
       loading: () => Center(

@@ -715,4 +715,18 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dictationProcessing => 'Yazıya dökülüyor...';
+
+  @override
+  String get aiDailyManualInfo =>
+      'Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.';
+
+  @override
+  String get aiGenerate => 'Oluştur';
+
+  @override
+  String get aiScanEmails => 'E-postaları tara';
+
+  @override
+  String get aiGeneratedTodayInfo =>
+      'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
 }

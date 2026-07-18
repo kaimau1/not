@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
+import 'api_key_store.dart';
 import 'gemini_service.dart' show GeminiException;
 
 /// Premium durumu: `users/{uid}` dokümanındaki `premiumUntil` alanı
@@ -21,6 +22,17 @@ final premiumProvider = StreamProvider<bool>((ref) {
     final until = (doc.data()?['premiumUntil'] as Timestamp?)?.toDate();
     return until != null && until.isAfter(DateTime.now());
   });
+});
+
+/// AI kullanımının "sınırsız" olup olmadığı: kendi Gemini anahtarını girenler
+/// (BYOK, dahili kapıdan hiç geçmez) veya premium kullanıcılar sınırsızdır.
+/// Ücretsiz kullanıcıda günlük hak sınırlıdır — bu yüzden otomatik üretilen AI
+/// içerikleri (e-posta taraması, öneriler, brifing) onlarda kotayı boşa
+/// harcamamak için otomatik değil yalnızca düğmeyle çalışır (bkz. DailyCache).
+final aiUnlimitedProvider = Provider<bool>((ref) {
+  final hasKey = (ref.watch(geminiApiKeyProvider).valueOrNull ?? '').isNotEmpty;
+  final premium = ref.watch(premiumProvider).valueOrNull ?? false;
+  return hasKey || premium;
 });
 
 /// Kota tüketildikçe artan sayaç; Ayarlar'daki "kalan hak" satırını tazeler.

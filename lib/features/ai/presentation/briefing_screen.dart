@@ -7,8 +7,10 @@ import '../../../core/widgets/empty_state.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../gmail/presentation/mail_summary_screen.dart';
 import '../../notes/data/notes_repository.dart';
+import '../data/ai_gate.dart';
 import '../data/daily_cache.dart';
 import '../data/gemini_service.dart';
+import 'ai_generate_prompt.dart';
 
 /// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar +
 /// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç günde bir kez
@@ -20,6 +22,9 @@ final briefingProvider =
 class BriefingNotifier extends DailyCacheNotifier<String> {
   @override
   String get cacheKey => 'cache_briefing';
+
+  @override
+  String get emptyValue => '';
 
   @override
   String encode(String value) => value;
@@ -109,6 +114,34 @@ class BriefingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final briefing = ref.watch(briefingProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final notifier = ref.read(briefingProvider.notifier);
+    final generatedToday = notifier.generatedToday;
+
+    void onRefresh() {
+      if (!unlimited && generatedToday) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.aiGeneratedTodayInfo)));
+        return;
+      }
+      notifier.refresh();
+    }
+
+    // Ücretsiz kullanıcıda brifing otomatik üretilmez (kota); düğmeyle üretilir.
+    if (!unlimited &&
+        !generatedToday &&
+        !briefing.isLoading &&
+        !briefing.hasError) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.briefingTitle)),
+        body: AiGeneratePrompt(
+          icon: Icons.wb_sunny_outlined,
+          buttonLabel: l10n.aiGenerate,
+          onGenerate: notifier.refresh,
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -117,7 +150,7 @@ class BriefingScreen extends ConsumerWidget {
           IconButton(
             tooltip: l10n.refresh,
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(briefingProvider.notifier).refresh(),
+            onPressed: onRefresh,
           ),
         ],
       ),
