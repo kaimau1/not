@@ -30,10 +30,14 @@ jobs:
       - name: Testler
         run: flutter test
 
+  # Her push'ta APK derlemek CI dakikalarını boşa yakıyordu (~15 dk/derleme).
+  # Artık yalnızca elle tetiklenince (Actions → Run workflow) veya commit
+  # mesajında [apk] geçince derlenir. Analiz+Test her push'ta çalışmaya devam eder.
   android:
     name: Android APK
     runs-on: ubuntu-latest
     needs: test
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
     permissions:
       contents: write
     steps:

@@ -34,6 +34,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **Liste satır sarma + çöp boşaltma**: (1) ItemsEditor TextField varsayılan maxLines:1 idi → uzun satır yatay kayıyordu. `expandItems` param + `expandListItemsProvider` (varsayılan true): true→maxLines null (sarılır), false→odaklıysa null yoksa 1 ("dokununca aç"; FocusNode listener setState). Ayarlar>Görünüm'de anahtar. (2) Çöp ekranına AppBar "Çöpü boşalt" (delete_sweep) → onay → hepsini `deleteNotePermanently` (ekler dahil).
 
+- 2026-07-18: **CI APK derlemesi isteğe bağlı**: Her branch'e her push'ta `android` job'ı (~15 dk) çalışıp GitHub Actions kotasını boşa yakıyordu. `android` job'ına `if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')` eklendi — APK/AAB/Release yalnız elle tetiklemede veya commit mesajında `[apk]` geçince üretilir. `test` (analiz+test, ~3 dk) her push'ta kalmaya devam eder. Sonuç: main'e merge artık kendiliğinden yeni sürüm YAYINLAMAZ; sürüm istendiğinde Actions → Run workflow (main'de) ya da `[apk]` etiketli commit gerekir.
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.
