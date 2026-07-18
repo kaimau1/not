@@ -1527,6 +1527,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Algılanan konuşma'**
   String get voiceHeardLive;
+
+  /// No description provided for @permissionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzinler'**
+  String get permissionsTitle;
+
+  /// No description provided for @permMic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofon'**
+  String get permMic;
+
+  /// No description provided for @permMicInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not, dikte ve canlı çeviri için gerekli'**
+  String get permMicInfo;
+
+  /// No description provided for @permNotifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bildirimler'**
+  String get permNotifications;
+
+  /// No description provided for @permNotificationsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcılar ve günlük brifing için gerekli'**
+  String get permNotificationsInfo;
+
+  /// No description provided for @permBattery.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pil optimizasyonu'**
+  String get permBattery;
+
+  /// No description provided for @permBatteryInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
+  String get permBatteryInfo;
+
+  /// No description provided for @permGranted.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin verildi'**
+  String get permGranted;
+
+  /// No description provided for @permGrant.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin ver'**
+  String get permGrant;
+
+  /// No description provided for @permOpenSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayarları aç'**
+  String get permOpenSettings;
 }
 
 class _AppLocalizationsDelegate

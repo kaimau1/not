@@ -16,6 +16,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -49,6 +50,11 @@ class SettingsScreen extends ConsumerWidget {
               _SectionTitle(l10n.voiceAssistantTitle),
               const _VoiceModeSelector(),
               const SizedBox(height: 24),
+              if (const PermissionsService().isSupported) ...[
+                _SectionTitle(l10n.permissionsTitle),
+                const _PermissionsSection(),
+                const SizedBox(height: 24),
+              ],
               _SectionTitle(l10n.settingsAi),
               const _BuiltInAiStatus(),
               const _GeminiKeyEditor(),
@@ -87,6 +93,175 @@ class _SectionTitle extends StatelessWidget {
               letterSpacing: 1.1,
               color: Theme.of(context).colorScheme.primary,
             ),
+      ),
+    );
+  }
+}
+
+/// Uygulamanın düzgün çalışması için gereken izinleri gösterir ve ister.
+/// Sistem ayarından dönüldüğünde (resume) durum kendiliğinden tazelenir.
+class _PermissionsSection extends ConsumerStatefulWidget {
+  const _PermissionsSection();
+
+  @override
+  ConsumerState<_PermissionsSection> createState() =>
+      _PermissionsSectionState();
+}
+
+class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
+    with WidgetsBindingObserver {
+  bool? _mic;
+  bool? _notifications;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Kullanıcı sistem izin ekranından dönünce yeni durumu göster.
+    if (state == AppLifecycleState.resumed) _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final service = ref.read(permissionsServiceProvider);
+    final mic = await service.micGranted();
+    final notifications = await service.notificationsGranted();
+    if (mounted) {
+      setState(() {
+        _mic = mic;
+        _notifications = notifications;
+      });
+    }
+  }
+
+  Future<void> _requestMic() async {
+    final service = ref.read(permissionsServiceProvider);
+    final ok = await service.requestMic();
+    // İstek dönüşü false ise izin kalıcı reddedilmiş olabilir; kullanıcının
+    // elle açabilmesi için sistem ayarına yönlendir.
+    if (!ok) await service.openAppSettings();
+    await _refresh();
+  }
+
+  Future<void> _requestNotifications() async {
+    final service = ref.read(permissionsServiceProvider);
+    final ok = await service.requestNotifications();
+    if (!ok) await service.openAppSettings();
+    await _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final service = ref.read(permissionsServiceProvider);
+    return Column(
+      children: [
+        _PermissionTile(
+          icon: Icons.mic_none,
+          title: l10n.permMic,
+          subtitle: l10n.permMicInfo,
+          granted: _mic,
+          onAction: _requestMic,
+        ),
+        _PermissionTile(
+          icon: Icons.notifications_none,
+          title: l10n.permNotifications,
+          subtitle: l10n.permNotificationsInfo,
+          granted: _notifications,
+          onAction: _requestNotifications,
+        ),
+        // Pil muafiyeti durumu güvenilir okunamadığından her zaman "Ayarları
+        // aç" gösterir; kullanıcı uygulamayı pil kısıtlamasından muaf tutar.
+        _PermissionTile(
+          icon: Icons.battery_saver_outlined,
+          title: l10n.permBattery,
+          subtitle: l10n.permBatteryInfo,
+          granted: null,
+          actionLabel: l10n.permOpenSettings,
+          onAction: service.openBatterySettings,
+        ),
+      ],
+    );
+  }
+}
+
+class _PermissionTile extends StatelessWidget {
+  const _PermissionTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.granted,
+    required this.onAction,
+    this.actionLabel,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  /// true = verildi, false = reddedildi, null = durum okunamıyor (muafiyet).
+  final bool? granted;
+  final Future<void> Function() onAction;
+  final String? actionLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isGranted = granted == true;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icon, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.bodyLarge),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          if (isGranted)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, size: 18, color: Colors.green.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  context.l10n.permGranted,
+                  style: TextStyle(
+                    color: Colors.green.shade600,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            )
+          else
+            FilledButton.tonal(
+              onPressed: onAction,
+              child: Text(actionLabel ?? context.l10n.permGrant),
+            ),
+        ],
       ),
     );
   }

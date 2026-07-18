@@ -780,4 +780,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Algılanan konuşma';
+
+  @override
+  String get permissionsTitle => 'İzinler';
+
+  @override
+  String get permMic => 'Mikrofon';
+
+  @override
+  String get permMicInfo => 'Sesli not, dikte ve canlı çeviri için gerekli';
+
+  @override
+  String get permNotifications => 'Bildirimler';
+
+  @override
+  String get permNotificationsInfo =>
+      'Hatırlatıcılar ve günlük brifing için gerekli';
+
+  @override
+  String get permBattery => 'Pil optimizasyonu';
+
+  @override
+  String get permBatteryInfo =>
+      'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
+
+  @override
+  String get permGranted => 'İzin verildi';
+
+  @override
+  String get permGrant => 'İzin ver';
+
+  @override
+  String get permOpenSettings => 'Ayarları aç';
 }
