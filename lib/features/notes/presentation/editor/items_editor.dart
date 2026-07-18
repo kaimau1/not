@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_item.dart';
 
 /// Checklist ve sıralı liste düzenleyicisi. Öğeler tutamaca UZUN BASIP
-/// sürüklenerek sıralanır, Enter yeni öğe ekler, çöp ikonu siler.
+/// sürüklenerek sıralanır, Enter yeni öğe ekler. Silme "x" düğmesi yalnızca
+/// satır odaklıyken görünür (kaydırma/yazma sırasında yanlışlıkla basılmasın).
+/// Checklist modunda işaretlenen öğeler otomatik listenin en altına düşer ve
+/// "İşaretlileri sil" ile toplu silinebilir.
 class ItemsEditor extends StatefulWidget {
   const ItemsEditor({
     super.key,
@@ -76,10 +80,10 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
         final node = FocusNode();
-        // "Dokununca aç" modunda odak değişince satırın kaç satır
-        // göstereceği değişir; yeniden çiz.
+        // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
+        // silme "x" düğmesinin görünürlüğü değişir; her iki durumda çiz.
         node.addListener(() {
-          if (mounted && !widget.expandItems) setState(() {});
+          if (mounted) setState(() {});
         });
         return node;
       });
@@ -91,9 +95,22 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _commit();
   }
 
+  /// Checklist'te işaretlenen öğe otomatik listenin en altına düşer;
+  /// işareti kalkan öğe işaretsizlerin sonuna geri çıkar (Keep davranışı).
   void _toggle(int index, bool? value) {
+    final checked = value ?? false;
     setState(() {
-      _items[index] = _items[index].copyWith(checked: value ?? false);
+      final item = _items.removeAt(index).copyWith(checked: checked);
+      if (checked) {
+        _items.add(item);
+      } else {
+        final firstChecked = _items.indexWhere((i) => i.checked);
+        if (firstChecked < 0) {
+          _items.add(item);
+        } else {
+          _items.insert(firstChecked, item);
+        }
+      }
     });
     _commit();
   }
@@ -115,6 +132,19 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _commit();
   }
 
+  /// İşaretli tüm öğeleri tek seferde siler (madde 18 — Keep'teki gibi
+  /// tek tek silmeye gerek kalmaz).
+  void _deleteChecked() {
+    final removed = [for (final i in _items) if (i.checked) i];
+    if (removed.isEmpty) return;
+    setState(() => _items = [for (final i in _items) if (!i.checked) i]);
+    for (final item in removed) {
+      _controllers.remove(item.id)?.dispose();
+      _focusNodes.remove(item.id)?.dispose();
+    }
+    _commit();
+  }
+
   void _reorder(int oldIndex, int newIndex) {
     setState(() {
       final item = _items.removeAt(oldIndex);
@@ -123,14 +153,97 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _commit();
   }
 
+  /// Tüm not içeriğini panoya kopyalar ("Tümünü seç" seçeneği — ayrı
+  /// TextField'lar arası gerçek seçim mümkün olmadığından pratik karşılığı).
+  Future<void> _copyAll() async {
+    final buffer = StringBuffer();
+    for (var i = 0; i < _items.length; i++) {
+      final text = _items[i].text;
+      if (widget.showCheckboxes) {
+        buffer.writeln('${_items[i].checked ? '[x]' : '[ ]'} $text');
+      } else {
+        buffer.writeln('${i + 1}. $text');
+      }
+    }
+    await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(context.l10n.allCopied)));
+    }
+  }
+
+  /// Öğe metni seçim araç çubuğuna iki net seçenek ekler: "Satırı seç"
+  /// (yalnız bu satır) ve "Tümünü seç" (tüm not — panoya kopyalar).
+  Widget _contextMenu(
+    BuildContext context,
+    EditableTextState editableState,
+    NoteItem item,
+  ) {
+    final l10n = context.l10n;
+    final controller = _controllerFor(item);
+    final buttonItems = <ContextMenuButtonItem>[
+      // Varsayılan kes/kopyala/yapıştır'ı koru; alandaki "tümünü seç"i
+      // (yalnız o satır) kendi "Satırı seç" düğmemizle değiştiriyoruz.
+      for (final button in editableState.contextMenuButtonItems)
+        if (button.type != ContextMenuButtonType.selectAll) button,
+      ContextMenuButtonItem(
+        label: l10n.selectRow,
+        onPressed: () {
+          editableState.hideToolbar();
+          controller.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: controller.text.length,
+          );
+        },
+      ),
+      ContextMenuButtonItem(
+        label: l10n.selectAll,
+        onPressed: () {
+          editableState.hideToolbar();
+          _copyAll();
+        },
+      ),
+    ];
+    return AdaptiveTextSelectionToolbar.buttonItems(
+      anchors: editableState.contextMenuAnchors,
+      buttonItems: buttonItems,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final checkedCount =
+        widget.showCheckboxes ? _items.where((i) => i.checked).length : 0;
+
+    // Başlık bölgesi = editörün kendi başlığı + (checklist'te işaretli varsa)
+    // "İşaretlileri sil" araç çubuğu.
+    final header = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.header != null) widget.header!,
+        if (checkedCount > 0)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _deleteChecked,
+                icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                label: Text(l10n.deleteChecked(checkedCount)),
+                style: TextButton.styleFrom(foregroundColor: scheme.error),
+              ),
+            ),
+          ),
+      ],
+    );
 
     return ReorderableListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
       buildDefaultDragHandles: false,
-      header: widget.header,
+      header: header,
       footer: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -139,7 +252,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
             child: TextButton.icon(
               onPressed: () => _insertAfter(_items.length - 1),
               icon: const Icon(Icons.add, size: 20),
-              label: Text(context.l10n.newItemHint),
+              label: Text(l10n.newItemHint),
             ),
           ),
           if (widget.footer != null) widget.footer!,
@@ -150,6 +263,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       itemBuilder: (context, index) {
         final item = _items[index];
         final checked = widget.showCheckboxes && item.checked;
+        final focused = _focusFor(item).hasFocus;
         return Padding(
           key: ValueKey(item.id),
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -187,6 +301,8 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   controller: _controllerFor(item),
                   focusNode: _focusFor(item),
                   onChanged: (text) => _updateText(index, text),
+                  contextMenuBuilder: (context, editableState) =>
+                      _contextMenu(context, editableState, item),
                   // Varsayılan "next" davranışı odağı metin dışı bir öğeye
                   // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
                   // bastırır, odak doğrudan yeni öğeye geçer.
@@ -194,9 +310,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   textInputAction: TextInputAction.next,
                   // Tam göster modunda satır sarılıp büyür; "dokununca aç"
                   // modunda odaklanınca açılır, aksi hâlde tek satır.
-                  maxLines: widget.expandItems || _focusFor(item).hasFocus
-                      ? null
-                      : 1,
+                  maxLines: widget.expandItems || focused ? null : 1,
                   style: checked
                       ? TextStyle(
                           decoration: TextDecoration.lineThrough,
@@ -204,7 +318,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                         )
                       : null,
                   decoration: InputDecoration(
-                    hintText: context.l10n.newItemHint,
+                    hintText: l10n.newItemHint,
                     filled: false,
                     border: InputBorder.none,
                     isDense: true,
@@ -212,11 +326,18 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                onPressed: () => _remove(index),
-              ),
+              // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
+              // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
+              // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
+              if (focused)
+                IconButton(
+                  tooltip: l10n.removeItem,
+                  icon: const Icon(Icons.close, size: 18),
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  onPressed: () => _remove(index),
+                )
+              else
+                const SizedBox(width: 48),
             ],
           ),
         );

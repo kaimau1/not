@@ -1,10 +1,65 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 
 enum NoteFilter { all, text, checklist, ordered, pinned, starred }
+
+/// Ana ekranda görünen filtre çipleri. "Tümü" her zaman görünür; gerisi
+/// kullanıcı isteğine bağlıdır. Varsayılanda tip filtreleri (metin/liste/
+/// sıralı) gizlidir — sayfa sade kalır, isteyen filtre menüsünden ekler.
+final visibleNoteFiltersProvider =
+    NotifierProvider<VisibleNoteFiltersNotifier, Set<NoteFilter>>(
+  VisibleNoteFiltersNotifier.new,
+);
+
+class VisibleNoteFiltersNotifier extends Notifier<Set<NoteFilter>> {
+  static const _key = 'visible_filters';
+  static const _defaults = {NoteFilter.pinned, NoteFilter.starred};
+
+  @override
+  Set<NoteFilter> build() {
+    final stored = ref.watch(sharedPreferencesProvider).getStringList(_key);
+    if (stored == null) return _defaults;
+    return {
+      for (final name in stored)
+        for (final filter in NoteFilter.values)
+          if (filter.name == name && filter != NoteFilter.all) filter,
+    };
+  }
+
+  void toggle(NoteFilter filter) {
+    if (filter == NoteFilter.all) return;
+    final next = state.contains(filter)
+        ? {for (final f in state) if (f != filter) f}
+        : {...state, filter};
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(
+          _key,
+          [for (final f in next) f.name],
+        );
+    // Gizlenen filtre o an seçiliyse listeyi kilitlemesin.
+    if (!next.contains(ref.read(noteFilterProvider)) &&
+        ref.read(noteFilterProvider) != NoteFilter.all) {
+      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    }
+  }
+}
+
+/// Seçili klasör (null = klasör filtresi yok).
+final selectedFolderProvider =
+    NotifierProvider<SelectedFolderNotifier, String?>(
+  SelectedFolderNotifier.new,
+);
+
+class SelectedFolderNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? value) => state = value;
+}
 
 /// Ana ekran mikrofon widget'ı (notlar://voice) dokunulunca ayarlanan
 /// tüketilebilir bayrak; dashboard bunu görüp Sesli Not Asistanı'nı bas-başlat
@@ -128,12 +183,13 @@ final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   );
 });
 
-/// Arama + filtre + etiket uygulanmış, arşiv dışı not listesi.
+/// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
   final query = ref.watch(searchQueryProvider).trim().toLowerCase();
   final filter = ref.watch(noteFilterProvider);
   final tag = ref.watch(selectedTagProvider);
+  final folderId = ref.watch(selectedFolderProvider);
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
@@ -143,6 +199,9 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       for (final n in list)
         if (n.archivedAt == null && !n.isEmpty) n,
     ];
+    if (folderId != null) {
+      result = [for (final n in result) if (n.folderId == folderId) n];
+    }
     if (tag != null) {
       result = [for (final n in result) if (n.tags.contains(tag)) n];
     }

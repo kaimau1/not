@@ -56,6 +56,7 @@ class Note {
     this.items = const [],
     this.attachments = const [],
     this.tags = const [],
+    this.folderId,
     this.color = NoteColor.none,
     this.pinned = false,
     this.starred = false,
@@ -82,6 +83,10 @@ class Note {
 
   /// Serbest etiketler ("iş", "ev"...). '#' işareti olmadan saklanır.
   final List<String> tags;
+
+  /// Notun bağlı olduğu klasörün id'si (null = klasörsüz). Klasörler
+  /// users/{uid}/folders koleksiyonunda tutulur.
+  final String? folderId;
   final NoteColor color;
   final bool pinned;
 
@@ -130,11 +135,14 @@ class Note {
   }
 
   Note copyWith({
+    NoteType? type,
     String? title,
     String? body,
     List<NoteItem>? items,
     List<Attachment>? attachments,
     List<String>? tags,
+    String? folderId,
+    bool clearFolderId = false,
     NoteColor? color,
     bool? pinned,
     bool? starred,
@@ -150,12 +158,13 @@ class Note {
   }) =>
       Note(
         id: id,
-        type: type,
+        type: type ?? this.type,
         title: title ?? this.title,
         body: body ?? this.body,
         items: items ?? this.items,
         attachments: attachments ?? this.attachments,
         tags: tags ?? this.tags,
+        folderId: clearFolderId ? null : (folderId ?? this.folderId),
         color: color ?? this.color,
         pinned: pinned ?? this.pinned,
         starred: starred ?? this.starred,
@@ -188,6 +197,7 @@ class Note {
         for (final tag in (map['tags'] as List<dynamic>? ?? const []))
           tag.toString(),
       ],
+      folderId: map['folderId'] as String?,
       color: NoteColor.fromId(map['color'] as String?),
       pinned: map['pinned'] as bool? ?? false,
       starred: map['starred'] as bool? ?? false,
@@ -211,6 +221,7 @@ class Note {
         'items': [for (final i in items) i.toMap()],
         'attachments': [for (final a in attachments) a.toMap()],
         'tags': tags,
+        'folderId': folderId,
         'color': color.id,
         'pinned': pinned,
         'starred': starred,

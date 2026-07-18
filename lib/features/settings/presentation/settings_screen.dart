@@ -63,7 +63,6 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               const _BriefingEditor(),
               const _AutoTagSwitch(),
-              const _AutoTitleSwitch(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsGmail),
               const _GmailSection(),
@@ -733,22 +732,6 @@ class _AutoTagSwitch extends ConsumerWidget {
       subtitle: Text(l10n.autoTagSettingInfo),
       value: ref.watch(autoTagProvider),
       onChanged: (value) => ref.read(autoTagProvider.notifier).set(value),
-    );
-  }
-}
-
-class _AutoTitleSwitch extends ConsumerWidget {
-  const _AutoTitleSwitch();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.autoTitleSetting),
-      subtitle: Text(l10n.autoTitleSettingInfo),
-      value: ref.watch(autoTitleProvider),
-      onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
     );
   }
 }

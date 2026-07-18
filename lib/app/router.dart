@@ -48,8 +48,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
       GoRoute(
         path: '/note/:id',
-        builder: (context, state) =>
-            NoteEditorScreen(noteId: state.pathParameters['id']!),
+        builder: (context, state) => NoteEditorScreen(
+          noteId: state.pathParameters['id']!,
+          // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
+          startDrawing: state.uri.queryParameters['draw'] == '1',
+        ),
       ),
       GoRoute(
         path: '/settings',

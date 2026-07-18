@@ -15,6 +15,7 @@ import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import 'note_actions_sheet.dart';
 import 'notes_providers.dart';
 
 bool get _isDesktop =>
@@ -181,10 +182,15 @@ class NoteCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        // Seçim modunda dokunuş seçimi değiştirir; uzun basış seçim modunu
-        // başlatır (toplu silme için).
+        // Seçim modunda dokunuş seçimi değiştirir. Uzun basış hızlı işlem
+        // menüsünü açar (paylaş/arşivle/kilitle/kopyala/seç/sil); seçim
+        // modu aktifken ise seçimi değiştirir.
         onTap: selectionActive ? toggleSelection : () => _openNote(context),
-        onLongPress: _isDesktop ? null : toggleSelection,
+        onLongPress: _isDesktop
+            ? null
+            : selectionActive
+                ? toggleSelection
+                : () => showNoteActionsSheet(context, ref, note),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),

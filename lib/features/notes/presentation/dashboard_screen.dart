@@ -18,8 +18,10 @@ import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import 'dashboard_chips.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import 'quick_add_fab.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 
@@ -90,7 +92,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     final id = await repo.createNote(type);
+    // Aktif bir klasör filtresi varsa yeni not o klasöre doğar.
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
     if (mounted) await context.push('/note/$id');
+  }
+
+  /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
+  /// açarak başlar; çizim nota görsel eki olarak kaydedilir.
+  Future<void> _createHandwritingNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (mounted) await context.push('/note/$id?draw=1');
   }
 
   @override
@@ -285,8 +301,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     SliverToBoxAdapter(
                       child: _QuickAddBar(onCreate: _createNote),
                     ),
-                    const SliverToBoxAdapter(child: _FilterChips()),
-                    const SliverToBoxAdapter(child: _TagChips()),
+                    // Filtre + klasör + etiket çipleri tek kompakt satırda.
+                    const SliverToBoxAdapter(child: DashboardChipsRow()),
                     ...notesAsync.when(
                       data: (notes) => _buildNoteSlivers(
                         context,
@@ -330,15 +346,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
               const VoiceAssistantButton(),
               const SizedBox(height: 6),
-              FloatingActionButton(
-                heroTag: 'add-fab',
-                tooltip: l10n.newTextNote,
-                onPressed: () => _createNote(NoteType.text),
-                child: const Icon(Icons.add),
+              // Keep tarzı açılan "+": metin / madde / sıralı / el yazısı.
+              QuickAddFab(
+                onCreate: _createNote,
+                onHandwriting: _createHandwritingNote,
               ),
             ],
           ),
@@ -529,133 +545,6 @@ class _QuickAddBar extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Notlarda kullanılan etiketlerin filtre çipleri (etiket yoksa gizli).
-/// Etiketler çoğaldıkça satır şişmesin diye yalnızca en sık kullanılanlar
-/// gösterilir; kalanlar "+N" çipinin açtığı listeden seçilir.
-class _TagChips extends ConsumerWidget {
-  const _TagChips();
-
-  static const _maxVisible = 8;
-
-  Future<void> _showAllTags(
-    BuildContext context,
-    WidgetRef ref,
-    List<String> tags,
-    String? selected,
-  ) async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final tag in tags)
-                FilterChip(
-                  label: Text('#$tag'),
-                  selected: selected == tag,
-                  onSelected: (isSelected) =>
-                      Navigator.pop(sheetContext, isSelected ? tag : ''),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (picked == null) return;
-    ref.read(selectedTagProvider.notifier).set(picked.isEmpty ? null : picked);
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final counts = ref.watch(tagCountsProvider);
-    final selected = ref.watch(selectedTagProvider);
-    if (counts.isEmpty) return const SizedBox.shrink();
-
-    final byUsage = counts.keys.toList()
-      ..sort((a, b) {
-        final byCount = counts[b]!.compareTo(counts[a]!);
-        return byCount != 0 ? byCount : a.compareTo(b);
-      });
-    final visible = byUsage.take(_maxVisible).toList();
-    // Seçili etiket gizli kalmasın: listede yoksa başa al.
-    if (selected != null && counts.containsKey(selected) &&
-        !visible.contains(selected)) {
-      visible.insert(0, selected);
-    }
-    final hidden = byUsage.length - visible.length;
-    final allSorted = ref.watch(allTagsProvider);
-
-    return SizedBox(
-      height: 42,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        scrollDirection: Axis.horizontal,
-        itemCount: visible.length + (hidden > 0 ? 1 : 0),
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          if (index == visible.length) {
-            return ActionChip(
-              label: Text('+$hidden'),
-              onPressed: () =>
-                  _showAllTags(context, ref, allSorted, selected),
-            );
-          }
-          final tag = visible[index];
-          return FilterChip(
-            label: Text('#$tag'),
-            selected: selected == tag,
-            onSelected: (isSelected) => ref
-                .read(selectedTagProvider.notifier)
-                .set(isSelected ? tag : null),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FilterChips extends ConsumerWidget {
-  const _FilterChips();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final selected = ref.watch(noteFilterProvider);
-
-    final entries = <(NoteFilter, String)>[
-      (NoteFilter.all, l10n.filterAll),
-      (NoteFilter.text, l10n.filterText),
-      (NoteFilter.checklist, l10n.filterChecklist),
-      (NoteFilter.ordered, l10n.filterOrdered),
-      (NoteFilter.pinned, l10n.filterPinned),
-      (NoteFilter.starred, l10n.filterStarred),
-    ];
-
-    return SizedBox(
-      height: 46,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        scrollDirection: Axis.horizontal,
-        itemCount: entries.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final (filter, label) = entries[index];
-          return FilterChip(
-            label: Text(label),
-            selected: selected == filter,
-            onSelected: (_) =>
-                ref.read(noteFilterProvider.notifier).set(filter),
-          );
-        },
       ),
     );
   }
