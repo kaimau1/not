@@ -158,6 +158,9 @@ class NotesRepository {
   void setPinned(String noteId, bool pinned) =>
       updateFields(noteId, {'pinned': pinned});
 
+  void setStarred(String noteId, bool starred) =>
+      updateFields(noteId, {'starred': starred});
+
   void setColor(String noteId, NoteColor color) =>
       updateFields(noteId, {'color': color.id});
 

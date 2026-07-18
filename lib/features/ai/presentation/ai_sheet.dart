@@ -142,6 +142,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
         l10n.improveBullets,
         'Düzenli, madde işaretli bir listeye dönüştür (her satır bir madde)'
       ),
+      (
+        l10n.improveNumbered,
+        'Sıralı (numaralı) bir listeye dönüştür: içeriği mantıklı bir sıraya '
+            'koy ve her satırı "1." gibi numarayla başlat (her satır bir adım)'
+      ),
     ];
     final instruction = await showDialog<String>(
       context: context,

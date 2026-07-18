@@ -77,6 +77,16 @@ void main() {
       expect(note.copyWith().reminderAt, isNotNull);
     });
 
+    test('yıldız copyWith ile değişir ve toMap/fromMap yazılır', () {
+      const note = Note(id: '1', type: NoteType.text);
+      expect(note.starred, isFalse);
+      final starred = note.copyWith(starred: true);
+      expect(starred.starred, isTrue);
+      expect(starred.toMap()['starred'], isTrue);
+      // copyWith başka alan değişince yıldız korunur.
+      expect(starred.copyWith(title: 'x').starred, isTrue);
+    });
+
     test('etiketler toMap çıktısına yazılır', () {
       const note = Note(
         id: '1',

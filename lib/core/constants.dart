@@ -12,9 +12,11 @@ abstract final class AppConstants {
   /// Sıralı model tercihi: biri 404 (model yok) veya 429 (kota) verirse
   /// sıradaki denenir. API'den çekilen gerçek listeyle kesiştirilir ve
   /// listede olmayan yeni flash modelleri sona eklenir (GeminiService).
+  /// Varsayılan model 3.1 flash lite'tır (hızlı + ucuz); canlı çeviri
+  /// [geminiLiveTranslateModel] ile ayrı modelde kalır.
   static const List<String> geminiModelPreference = [
-    'gemini-3.5-flash',
     'gemini-3.1-flash-lite',
+    'gemini-3.5-flash',
     'gemini-2.5-flash',
   ];
 

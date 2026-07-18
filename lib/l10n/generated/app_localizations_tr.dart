@@ -44,6 +44,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterPinned => 'Sabitlenmiş';
 
   @override
+  String get filterStarred => 'Yıldızlı';
+
+  @override
+  String get star => 'Yıldızla';
+
+  @override
+  String get unstar => 'Yıldızı kaldır';
+
+  @override
+  String editedAt(String date) {
+    return 'Düzenlendi: $date';
+  }
+
+  @override
   String get sectionPinned => 'Sabitlenmiş';
 
   @override
@@ -605,6 +619,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get improveBullets => 'Madde listesine çevir';
+
+  @override
+  String get improveNumbered => 'Sıralı (numaralı) listeye çevir';
 
   @override
   String get replaceNote => 'Notu değiştir';

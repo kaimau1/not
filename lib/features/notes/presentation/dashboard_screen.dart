@@ -604,6 +604,7 @@ class _FilterChips extends ConsumerWidget {
       (NoteFilter.checklist, l10n.filterChecklist),
       (NoteFilter.ordered, l10n.filterOrdered),
       (NoteFilter.pinned, l10n.filterPinned),
+      (NoteFilter.starred, l10n.filterStarred),
     ];
 
     return SizedBox(

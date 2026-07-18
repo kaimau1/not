@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hızlı Eylemler widget'ı: yeni not, liste, sıralı liste ve sesli not
+     kısayolları. Her ikon kendi derin bağlantısıyla uygulamayı açar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/qa_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="6dp"
+    android:background="@drawable/widget_background">
+
+    <ImageView
+        android:id="@+id/qa_new_note"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_edit"
+        android:tint="#E8E8ED"
+        android:contentDescription="@string/widget_qa_new_note" />
+
+    <ImageView
+        android:id="@+id/qa_checklist"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_agenda"
+        android:tint="#E8E8ED"
+        android:contentDescription="@string/widget_qa_checklist" />
+
+    <ImageView
+        android:id="@+id/qa_ordered"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        android:tint="#E8E8ED"
+        android:contentDescription="@string/widget_qa_ordered" />
+
+    <ImageView
+        android:id="@+id/qa_mic"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="12dp"
+        android:scaleType="fitCenter"
+        android:src="@android:drawable/ic_btn_speak_now"
+        android:tint="#9BB0FF"
+        android:contentDescription="@string/widget_voice_label" />
+</LinearLayout>

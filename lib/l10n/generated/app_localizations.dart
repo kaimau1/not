@@ -160,6 +160,30 @@ abstract class AppLocalizations {
   /// **'Sabitlenmiş'**
   String get filterPinned;
 
+  /// No description provided for @filterStarred.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızlı'**
+  String get filterStarred;
+
+  /// No description provided for @star.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızla'**
+  String get star;
+
+  /// No description provided for @unstar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızı kaldır'**
+  String get unstar;
+
+  /// No description provided for @editedAt.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenlendi: {date}'**
+  String editedAt(String date);
+
   /// No description provided for @sectionPinned.
   ///
   /// In tr, this message translates to:
@@ -1203,6 +1227,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Madde listesine çevir'**
   String get improveBullets;
+
+  /// No description provided for @improveNumbered.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıralı (numaralı) listeye çevir'**
+  String get improveNumbered;
 
   /// No description provided for @replaceNote.
   ///

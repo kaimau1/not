@@ -16,6 +16,15 @@
   "filterChecklist": "Liste",
   "filterOrdered": "Sıralı",
   "filterPinned": "Sabitlenmiş",
+  "filterStarred": "Yıldızlı",
+  "star": "Yıldızla",
+  "unstar": "Yıldızı kaldır",
+  "editedAt": "Düzenlendi: {date}",
+  "@editedAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
   "sectionPinned": "Sabitlenmiş",
   "sectionOthers": "Diğerleri",
   "emptyNotes": "Henüz not yok",
@@ -260,6 +269,7 @@
   "improveFormal": "Daha resmî yap",
   "improveShorten": "Kısalt",
   "improveBullets": "Madde listesine çevir",
+  "improveNumbered": "Sıralı (numaralı) listeye çevir",
   "replaceNote": "Notu değiştir",
   "aiAskPdf": "PDF'e soru sor: {name}",
   "@aiAskPdf": {
