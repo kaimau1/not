@@ -719,7 +719,10 @@ class GeminiService {
         ],
       },
     ];
-    final prefer = _voiceModel() ?? AppConstants.fastGeminiModel;
+    // Kullanıcı bir model seçmediyse hızlı "lite" yerine daha güvenilir
+    // standart flash tercih edilir: lite, araç çağrılı not oluşturmada
+    // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
+    final prefer = _voiceModel() ?? AppConstants.voiceAssistantModel;
     final stored = await _keyStore.read();
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;

@@ -95,6 +95,20 @@ void main() {
       );
       expect(note.toMap()['tags'], ['is', 'ev']);
     });
+
+    test('copyWith tipi değiştirebilir (AI listeye çevir)', () {
+      const note = Note(id: '1', type: NoteType.text, body: 'a\nb');
+      final asList = note.copyWith(type: NoteType.checklist, body: '');
+      expect(asList.type, NoteType.checklist);
+      expect(note.copyWith().type, NoteType.text);
+    });
+
+    test('klasör alanı copyWith ve toMap/fromMap ile korunur', () {
+      const note = Note(id: '1', type: NoteType.text, folderId: 'f1');
+      expect(note.toMap()['folderId'], 'f1');
+      expect(note.copyWith(title: 'x').folderId, 'f1');
+      expect(note.copyWith(clearFolderId: true).folderId, isNull);
+    });
   });
 
   group('NoteType', () {

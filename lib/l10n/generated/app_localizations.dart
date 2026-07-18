@@ -1174,18 +1174,6 @@ abstract class AppLocalizations {
   /// **'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler'**
   String get autoTagSettingInfo;
 
-  /// No description provided for @autoTitleSetting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Otomatik başlık'**
-  String get autoTitleSetting;
-
-  /// No description provided for @autoTitleSettingInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir'**
-  String get autoTitleSettingInfo;
-
   /// No description provided for @suggestTags.
   ///
   /// In tr, this message translates to:
@@ -1587,6 +1575,120 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ayarları aç'**
   String get permOpenSettings;
+
+  /// No description provided for @newHandwriting.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı'**
+  String get newHandwriting;
+
+  /// No description provided for @suggestTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık öner'**
+  String get suggestTitle;
+
+  /// No description provided for @folder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör'**
+  String get folder;
+
+  /// No description provided for @noFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörsüz'**
+  String get noFolder;
+
+  /// No description provided for @newFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni klasör'**
+  String get newFolder;
+
+  /// No description provided for @editFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörü düzenle'**
+  String get editFolder;
+
+  /// No description provided for @deleteFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörü sil'**
+  String get deleteFolder;
+
+  /// No description provided for @deleteFolderConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.'**
+  String deleteFolderConfirm(String name);
+
+  /// No description provided for @folderNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör adı'**
+  String get folderNameHint;
+
+  /// No description provided for @folderIcon.
+  ///
+  /// In tr, this message translates to:
+  /// **'Simge'**
+  String get folderIcon;
+
+  /// No description provided for @editFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri düzenle'**
+  String get editFilters;
+
+  /// No description provided for @editFiltersInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.'**
+  String get editFiltersInfo;
+
+  /// No description provided for @select.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seç'**
+  String get select;
+
+  /// No description provided for @noteArchived.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not arşivlendi'**
+  String get noteArchived;
+
+  /// No description provided for @deleteChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretlileri sil ({count})'**
+  String deleteChecked(int count);
+
+  /// No description provided for @removeItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öğeyi sil'**
+  String get removeItem;
+
+  /// No description provided for @selectRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satırı seç'**
+  String get selectRow;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü seç'**
+  String get selectAll;
+
+  /// No description provided for @allCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm not panoya kopyalandı'**
+  String get allCopied;
 }
 
 class _AppLocalizationsDelegate

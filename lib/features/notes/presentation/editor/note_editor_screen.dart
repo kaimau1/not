@@ -18,6 +18,9 @@ import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
+import '../../../folders/data/folders_repository.dart';
+import '../../../folders/domain/note_folder.dart';
+import '../../../folders/presentation/folder_sheets.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/notes_repository.dart';
@@ -36,9 +39,17 @@ bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
-  const NoteEditorScreen({super.key, required this.noteId});
+  const NoteEditorScreen({
+    super.key,
+    required this.noteId,
+    this.startDrawing = false,
+  });
 
   final String noteId;
+
+  /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
+  /// kaydedilen çizim nota görsel eki olarak girer.
+  final bool startDrawing;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -56,6 +67,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.startDrawing) {
+      // El yazısı modu: ilk kareden sonra doğrudan çizim tuvalini aç.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _addDrawing();
+      });
+    }
     _sub = ref.listenManual(
       noteStreamProvider(widget.noteId),
       (previous, next) {
@@ -91,7 +108,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ref.read(notesRepositoryProvider)?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
       if (note.tags.isEmpty) _autoTagInBackground(note);
-      if (note.title.trim().isEmpty) _autoTitleInBackground(note);
     }
     _debouncer.dispose();
     _sub?.close();
@@ -334,22 +350,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     });
   }
 
-  /// Ayarlarda açıksa (varsayılan açık), editör kapanırken başlıksız nota
-  /// arka planda hızlı lite modelle kısa bir başlık üretir.
-  void _autoTitleInBackground(Note note) {
-    if (note.toPlainText().length < 20) return;
-    if (!ref.read(autoTitleProvider)) return;
-    final service = ref.read(geminiServiceProvider);
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    Future(() async {
-      try {
-        final title = await service.generateTitle(note);
-        if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
-      } catch (_) {
-        // Anahtar yoksa veya istek başarısızsa sessizce geç.
-      }
-    });
+  bool _titleGenerating = false;
+
+  /// "Başlık öner" çipi: nota AI ile kısa bir başlık üretir ve doğrudan
+  /// başlık alanına yazar (etiket önerisi gibi bağımsız, isteğe bağlı buton;
+  /// eski "kapanırken otomatik başlık" genel ayarının yerini aldı).
+  Future<void> _suggestTitle() async {
+    final note = _note;
+    if (note == null || note.isEmpty || _titleGenerating) return;
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _titleGenerating = true);
+    try {
+      final title = await ref.read(geminiServiceProvider).generateTitle(note);
+      if (!mounted || title.isEmpty) return;
+      _titleController.text = title;
+      _mutate((n) => n.copyWith(title: title), immediate: true);
+    } on GeminiException catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content:
+            Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
+      ));
+    } finally {
+      if (mounted) setState(() => _titleGenerating = false);
+    }
   }
 
   /// AI'dan etiket önerisi al ve seçtir.
@@ -439,6 +463,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         immediate: true,
       );
 
+  /// Notu bir klasöre taşır (ya da klasörden çıkarır).
+  Future<void> _pickFolder() async {
+    final note = _note;
+    if (note == null) return;
+    final picked = await showFolderPickSheet(
+      context,
+      ref,
+      currentFolderId: note.folderId,
+    );
+    if (picked == null) return;
+    _mutate(
+      (n) => picked.isEmpty
+          ? n.copyWith(clearFolderId: true)
+          : n.copyWith(folderId: picked),
+      immediate: true,
+    );
+  }
+
   Future<void> _share() async {
     final note = _note;
     if (note == null) return;
@@ -478,15 +520,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).
-  void _replaceText(String raw) {
+  /// [asType] verilirse not o çalışma moduna da geçirilir: "maddelere çevir"
+  /// sonucu yalnızca metni değil notun tipini de checklist/sıralı yapar.
+  void _replaceText(String raw, {NoteType? asType}) {
     final note = _note;
     // Model istenmese de ** / * / # üretebiliyor; not düz metin tuttuğundan
     // temizle.
     final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
-    if (note.type == NoteType.text) {
+    final targetType = asType ?? note.type;
+    if (targetType == NoteType.text) {
       _bodyController.text = text.trim();
-      _mutate((n) => n.copyWith(body: text.trim()), immediate: true);
+      _mutate(
+        (n) => n.copyWith(type: targetType, body: text.trim()),
+        immediate: true,
+      );
     } else {
       const uuid = Uuid();
       final lines = [
@@ -496,10 +544,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ];
       _mutate(
         (n) => n.copyWith(
+          type: targetType,
+          // Tip değişiyorsa eski gövde temizlenir; içerik artık öğelerde.
+          body: targetType == note.type ? null : '',
           items: [for (final line in lines) NoteItem(id: uuid.v4(), text: line)],
         ),
         immediate: true,
       );
+      if (targetType != note.type) _bodyController.clear();
     }
   }
 
@@ -614,9 +666,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
-  /// Sesli yazdırma: konuşma (anahtar varsa anlık) yazıya döner ve
-  /// notun sonuna eklenir.
+  /// Sesli yazdırma: konuşma yazıya döner. Metin notunda (anahtar varsa)
+  /// konuşuldukça ANINDA nota yansır; liste tiplerinde bitişte öğe eklenir.
   Future<void> _dictate() async {
+    final note = _note;
+    if (note == null) return;
+    if (note.type == NoteType.text) {
+      // Diktenin ekleneceği taban: mevcut gövde + ayraç. Canlı döküm bunun
+      // üstüne yazılır, böylece kullanıcı yazının notta belirdiğini görür.
+      final base = _bodyController.text;
+      final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
+      void writeLive(String full) {
+        final combined = baseWithSep + full;
+        _bodyController.value = TextEditingValue(
+          text: combined,
+          selection: TextSelection.collapsed(offset: combined.length),
+        );
+        _mutate((n) => n.copyWith(body: combined), immediate: true);
+      }
+
+      final text = await showDictationSheet(context, onPartial: writeLive);
+      // Anahtarsız yolda canlı akış olmaz; dönen son metni burada yaz.
+      if (text != null && text.trim().isNotEmpty) writeLive(text.trim());
+      return;
+    }
     final text = await showDictationSheet(context);
     if (text == null || text.trim().isEmpty) return;
     _appendText(text);
@@ -700,6 +773,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
 
+    // Notun bağlı olduğu klasör (varsa) çipte gösterilir.
+    final folders =
+        ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[];
+    NoteFolder? noteFolder;
+    if (note.folderId != null) {
+      for (final f in folders) {
+        if (f.id == note.folderId) {
+          noteFolder = f;
+          break;
+        }
+      }
+    }
+
     final metaChips = Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
       child: Wrap(
@@ -716,6 +802,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               onPressed: _pickReminder,
               onDeleted: _clearReminder,
             ),
+          // Klasör çipi: doluysa klasör adı+simge, boşsa "Klasör" ekleme.
+          ActionChip(
+            avatar: Icon(
+              noteFolder?.iconData ?? Icons.create_new_folder_outlined,
+              size: 16,
+            ),
+            label: Text(noteFolder?.name ?? l10n.folder),
+            onPressed: _pickFolder,
+          ),
           for (final tag in note.tags)
             InputChip(
               label: Text('#$tag'),
@@ -731,6 +826,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               avatar: const Icon(Icons.auto_awesome, size: 16),
               label: Text(l10n.suggestTags),
               onPressed: _suggestTags,
+            ),
+          // Otomatik başlık artık genel ayar değil, etiket gibi bağımsız
+          // buton (madde 7): yalnızca içerikli ve başlıksız notta önerilir.
+          if (!note.isEmpty && note.title.trim().isEmpty)
+            ActionChip(
+              avatar: _titleGenerating
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.title, size: 16),
+              label: Text(l10n.suggestTitle),
+              onPressed: _titleGenerating ? null : _suggestTitle,
             ),
           if (note.reminderAt == null)
             ActionChip(

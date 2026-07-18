@@ -17,19 +17,29 @@ import '../../../ai/data/live_dictation_session.dart';
 /// Live üzerinden ANLIK olarak yazıya dökülür ve ekranda akar; anahtar
 /// yoksa kayıt bitince tek seferde dökülür. "Bitir ve ekle" dökümü döner,
 /// iptalde null.
-Future<String?> showDictationSheet(BuildContext context) =>
+///
+/// [onPartial] verilirse canlı yolda döküm biriktikçe o ana kadarki TAM
+/// metinle çağrılır; editör bunu nota anında yansıtır (kullanıcı konuştukça
+/// yazının notta belirmesi — "dashboard'a dönünce ekleniyor" sorununun kökü).
+Future<String?> showDictationSheet(
+  BuildContext context, {
+  ValueChanged<String>? onPartial,
+}) =>
     showModalBottomSheet<String>(
       context: context,
       isDismissible: false,
       enableDrag: false,
       isScrollControlled: true,
-      builder: (_) => const _DictationSheet(),
+      builder: (_) => _DictationSheet(onPartial: onPartial),
     );
 
 enum _Phase { starting, live, recording, processing, error }
 
 class _DictationSheet extends ConsumerStatefulWidget {
-  const _DictationSheet();
+  const _DictationSheet({this.onPartial});
+
+  /// Canlı döküm biriktikçe o ana kadarki tam metinle çağrılır.
+  final ValueChanged<String>? onPartial;
 
   @override
   ConsumerState<_DictationSheet> createState() => _DictationSheetState();
@@ -79,6 +89,8 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
     final session = LiveDictationSession(
       onTranscript: (text) {
         _transcript.write(text);
+        // Notu anında güncelle: kullanıcı konuştukça yazı editörde belirir.
+        widget.onPartial?.call(_transcript.toString());
         if (mounted) setState(() {});
       },
       onError: (e) {

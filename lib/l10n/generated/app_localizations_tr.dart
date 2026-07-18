@@ -593,13 +593,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler';
 
   @override
-  String get autoTitleSetting => 'Otomatik başlık';
-
-  @override
-  String get autoTitleSettingInfo =>
-      'Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir';
-
-  @override
   String get suggestTags => 'Etiket öner';
 
   @override
@@ -812,4 +805,63 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get permOpenSettings => 'Ayarları aç';
+
+  @override
+  String get newHandwriting => 'El yazısı';
+
+  @override
+  String get suggestTitle => 'Başlık öner';
+
+  @override
+  String get folder => 'Klasör';
+
+  @override
+  String get noFolder => 'Klasörsüz';
+
+  @override
+  String get newFolder => 'Yeni klasör';
+
+  @override
+  String get editFolder => 'Klasörü düzenle';
+
+  @override
+  String get deleteFolder => 'Klasörü sil';
+
+  @override
+  String deleteFolderConfirm(String name) =>
+      '"$name" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.';
+
+  @override
+  String get folderNameHint => 'Klasör adı';
+
+  @override
+  String get folderIcon => 'Simge';
+
+  @override
+  String get editFilters => 'Filtreleri düzenle';
+
+  @override
+  String get editFiltersInfo =>
+      'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.';
+
+  @override
+  String get select => 'Seç';
+
+  @override
+  String get noteArchived => 'Not arşivlendi';
+
+  @override
+  String deleteChecked(int count) => 'İşaretlileri sil ($count)';
+
+  @override
+  String get removeItem => 'Öğeyi sil';
+
+  @override
+  String get selectRow => 'Satırı seç';
+
+  @override
+  String get selectAll => 'Tümünü seç';
+
+  @override
+  String get allCopied => 'Tüm not panoya kopyalandı';
 }

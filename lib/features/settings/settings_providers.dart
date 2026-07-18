@@ -191,23 +191,6 @@ class ExpandListItemsNotifier extends Notifier<bool> {
   }
 }
 
-/// Başlıksız notlara kaydedilirken AI otomatik başlık üretsin mi?
-final autoTitleProvider = NotifierProvider<AutoTitleNotifier, bool>(
-  AutoTitleNotifier.new,
-);
-
-class AutoTitleNotifier extends Notifier<bool> {
-  static const _key = 'auto_title';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
-
 /// Sesli Not Asistanı düğmesinin kullanım şekli.
 /// hold (varsayılan): basılı tutarak konuş, bırakınca not oluşur.
 /// tap: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.

@@ -260,8 +260,6 @@
   "briefingSettingInfo": "Her sabah seçtiğin saatte günün özeti için bildirim al",
   "autoTagSetting": "Otomatik etiketle",
   "autoTagSettingInfo": "Not kapanırken etiketi yoksa yapay zeka uygun etiketi kendisi ekler",
-  "autoTitleSetting": "Otomatik başlık",
-  "autoTitleSettingInfo": "Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir",
   "suggestTags": "Etiket öner",
   "aiFixNote": "Notu düzelt (yazım + düzen)",
   "aiImprove": "Notu geliştir",
@@ -333,5 +331,34 @@
   "permBatteryInfo": "Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut",
   "permGranted": "İzin verildi",
   "permGrant": "İzin ver",
-  "permOpenSettings": "Ayarları aç"
+  "permOpenSettings": "Ayarları aç",
+  "newHandwriting": "El yazısı",
+  "suggestTitle": "Başlık öner",
+  "folder": "Klasör",
+  "noFolder": "Klasörsüz",
+  "newFolder": "Yeni klasör",
+  "editFolder": "Klasörü düzenle",
+  "deleteFolder": "Klasörü sil",
+  "deleteFolderConfirm": "\"{name}\" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.",
+  "@deleteFolderConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "folderNameHint": "Klasör adı",
+  "folderIcon": "Simge",
+  "editFilters": "Filtreleri düzenle",
+  "editFiltersInfo": "Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.",
+  "select": "Seç",
+  "noteArchived": "Not arşivlendi",
+  "deleteChecked": "İşaretlileri sil ({count})",
+  "@deleteChecked": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "removeItem": "Öğeyi sil",
+  "selectRow": "Satırı seç",
+  "selectAll": "Tümünü seç",
+  "allCopied": "Tüm not panoya kopyalandı"
 }

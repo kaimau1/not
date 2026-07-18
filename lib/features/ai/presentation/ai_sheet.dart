@@ -8,16 +8,21 @@ import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../data/ai_report.dart';
 import '../data/gemini_service.dart';
 import 'pdf_chat_screen.dart';
+
+/// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
+/// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
+typedef ReplaceTextCallback = void Function(String text, {NoteType? asType});
 
 /// Editördeki "Yapay Zeka" düğmesinin açtığı alt sayfa.
 Future<void> showAiSheet(
   BuildContext context,
   Note note, {
   ValueChanged<String>? onAppendText,
-  ValueChanged<String>? onReplaceText,
+  ReplaceTextCallback? onReplaceText,
 }) =>
     showModalBottomSheet<void>(
       context: context,
@@ -44,7 +49,7 @@ class AiSheet extends ConsumerStatefulWidget {
   final ValueChanged<String>? onAppendText;
 
   /// Sonucu notun içeriğiyle değiştiren geri çağırma ("Geliştir" için).
-  final ValueChanged<String>? onReplaceText;
+  final ReplaceTextCallback? onReplaceText;
 
   @override
   ConsumerState<AiSheet> createState() => _AiSheetState();
@@ -59,12 +64,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     Future<String> Function(GeminiService) action, {
     bool cacheAsSummary = false,
     bool improvement = false,
+    NoteType? replaceAsType,
   }) async {
     setState(() {
       _loading = true;
       _result = null;
       _error = null;
       _lastWasImprovement = improvement;
+      _replaceAsType = replaceAsType;
     });
     try {
       final service = ref.read(geminiServiceProvider);
@@ -118,6 +125,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 
   bool _lastWasImprovement = false;
 
+  /// "Notu değiştir" uygulanınca notun geçeceği tip (madde/sıralı liste
+  /// çevirileri için); null ise tip korunur.
+  NoteType? _replaceAsType;
+
   /// Tek dokunuşla "notu düzelt": yazım/imla/noktalama düzeltilir, çok hafif
   /// düzenlemeyle okunaklı hale getirilir; içerik ve madde sayısı korunur.
   Future<void> _fixNote() => _run(
@@ -134,37 +145,50 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 
   Future<void> _pickImprovement() async {
     final l10n = context.l10n;
-    final options = <(String, String)>[
-      (l10n.improveFix, 'Yazım ve dilbilgisi hatalarını düzelt, anlamı koru'),
-      (l10n.improveFormal, 'Daha resmî ve profesyonel bir dille yeniden yaz'),
-      (l10n.improveShorten, 'Anlamı koruyarak yarı uzunluğa kısalt'),
+    // (etiket, istem, "notu değiştir" uygulanınca geçilecek tip)
+    final options = <(String, String, NoteType?)>[
+      (
+        l10n.improveFix,
+        'Yazım ve dilbilgisi hatalarını düzelt, anlamı koru',
+        null
+      ),
+      (
+        l10n.improveFormal,
+        'Daha resmî ve profesyonel bir dille yeniden yaz',
+        null
+      ),
+      (l10n.improveShorten, 'Anlamı koruyarak yarı uzunluğa kısalt', null),
       (
         l10n.improveBullets,
-        'Düzenli, madde işaretli bir listeye dönüştür (her satır bir madde)'
+        'Düzenli bir maddeler listesine dönüştür: her satır tek bir madde '
+            'olsun, başına işaret/numara koyma',
+        NoteType.checklist,
       ),
       (
         l10n.improveNumbered,
-        'Sıralı (numaralı) bir listeye dönüştür: içeriği mantıklı bir sıraya '
-            'koy ve her satırı "1." gibi numarayla başlat (her satır bir adım)'
+        'Sıralı bir listeye dönüştür: içeriği mantıklı bir sıraya koy, '
+            'her satır tek bir adım olsun, başına numara koyma',
+        NoteType.ordered,
       ),
     ];
-    final instruction = await showDialog<String>(
+    final chosen = await showDialog<(String, NoteType?)>(
       context: context,
       builder: (dialogContext) => SimpleDialog(
         title: Text(l10n.aiImprove),
         children: [
-          for (final (label, prompt) in options)
+          for (final (label, prompt, type) in options)
             SimpleDialogOption(
-              onPressed: () => Navigator.pop(dialogContext, prompt),
+              onPressed: () => Navigator.pop(dialogContext, (prompt, type)),
               child: Text(label),
             ),
         ],
       ),
     );
-    if (instruction == null) return;
+    if (chosen == null) return;
     await _run(
-      (s) => s.rewriteText(widget.note.toPlainText(), instruction),
+      (s) => s.rewriteText(widget.note.toPlainText(), chosen.$1),
       improvement: true,
+      replaceAsType: chosen.$2,
     );
   }
 
@@ -299,7 +323,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         widget.onReplaceText == null || !_lastWasImprovement
                             ? null
                             : () {
-                                widget.onReplaceText!(_result!);
+                                widget.onReplaceText!(
+                                  _result!,
+                                  asType: _replaceAsType,
+                                );
                                 Navigator.pop(context);
                               },
                   )

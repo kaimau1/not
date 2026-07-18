@@ -5,6 +5,7 @@ abstract final class AppConstants {
   // Firestore koleksiyon adları
   static const String usersCollection = 'users';
   static const String notesCollection = 'notes';
+  static const String foldersCollection = 'folders';
 
   // Gemini
   static const String geminiBaseUrl =
@@ -20,8 +21,16 @@ abstract final class AppConstants {
     'gemini-2.5-flash',
   ];
 
-  /// Gecikmeye duyarlı akışlarda (sesli not) ilk denenecek hızlı model.
+  /// Gecikmeye duyarlı akışlarda (otomatik başlık, dikte) ilk denenecek
+  /// hızlı model.
   static const String fastGeminiModel = 'gemini-3.1-flash-lite';
+
+  /// Sesli not asistanı (araç çağrılı not oluşturma) için ilk denenecek
+  /// model. Bu görev yapısal (tool-call) olduğundan hızlı "lite" model
+  /// tipi/içeriği tutarsız verip BOŞ not üretebiliyordu; daha yetenekli
+  /// standart flash modeli önce denenir, lite yalnızca yedek olarak zincirde
+  /// kalır (model geçişleri böyle optimize edilir).
+  static const String voiceAssistantModel = 'gemini-3.5-flash';
 
   /// Dahili AI (Firebase AI Logic) için premium olmayanların günlük
   /// ücretsiz istek hakkı. Kendi API anahtarını girenlere sınır uygulanmaz.
