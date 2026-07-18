@@ -5,9 +5,13 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Not kilidi (parmak izi/yüz) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- allowBackup=false: kota sayacı gibi yerel veriler ve Keystore'a bağlı
+         şifreli kayıtlar cihaz yedeğine girmez; geri yüklemede çözülemeyen
+         (bozuk) secure-storage verisi ve veri sızıntısı riski kapanır. -->
     <application
         android:label="Notlar"
         android:name="${applicationName}"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -75,7 +79,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Ana ekran widget'ı -->
+        <!-- Ana ekran widget'ı: son notlar -->
         <receiver android:name=".NotlarWidgetProvider"
             android:exported="true"
             android:label="Notlar">
@@ -84,6 +88,28 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/notlar_widget_info" />
+        </receiver>
+
+        <!-- Sesli Not Asistanı widget'ı: tek mikrofon düğmesi -->
+        <receiver android:name=".VoiceWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_voice_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/voice_widget_info" />
+        </receiver>
+
+        <!-- Hızlı Eylemler widget'ı: yeni not / liste / sıralı liste / sesli not -->
+        <receiver android:name=".QuickActionsWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_quick_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/quick_actions_widget_info" />
         </receiver>
     </application>
     <!-- Required to query activities that can process text, see:

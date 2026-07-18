@@ -58,6 +58,7 @@ class Note {
     this.tags = const [],
     this.color = NoteColor.none,
     this.pinned = false,
+    this.starred = false,
     this.locked = false,
     this.orderIndex = 0,
     this.createdAt,
@@ -83,6 +84,10 @@ class Note {
   final List<String> tags;
   final NoteColor color;
   final bool pinned;
+
+  /// Yıldızlı (favori) not: filtre çubuğundaki "Yıldızlı" süzgeciyle
+  /// kolayca bulunur.
+  final bool starred;
 
   /// Kilitli not: kart içeriği gizlenir, açmak biyometrik doğrulama ister;
   /// arama yalnızca başlıkta yapılır ve AI bağlamlarına dahil edilmez.
@@ -132,6 +137,7 @@ class Note {
     List<String>? tags,
     NoteColor? color,
     bool? pinned,
+    bool? starred,
     bool? locked,
     double? orderIndex,
     DateTime? deletedAt,
@@ -152,6 +158,7 @@ class Note {
         tags: tags ?? this.tags,
         color: color ?? this.color,
         pinned: pinned ?? this.pinned,
+        starred: starred ?? this.starred,
         locked: locked ?? this.locked,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt,
@@ -183,6 +190,7 @@ class Note {
       ],
       color: NoteColor.fromId(map['color'] as String?),
       pinned: map['pinned'] as bool? ?? false,
+      starred: map['starred'] as bool? ?? false,
       locked: map['locked'] as bool? ?? false,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
@@ -205,6 +213,7 @@ class Note {
         'tags': tags,
         'color': color.id,
         'pinned': pinned,
+        'starred': starred,
         'locked': locked,
         'orderIndex': orderIndex,
         'createdAt': createdAt != null

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
@@ -17,6 +18,17 @@ import 'notes_providers.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+/// Not tarihini kısa gösterir: bugünse saat, aynı yılsa "5 Tem",
+/// eski yıllarsa "5 Tem 2025".
+String formatNoteDate(DateTime date) {
+  final now = DateTime.now();
+  if (date.year == now.year && date.month == now.month && date.day == now.day) {
+    return DateFormat('HH:mm').format(date);
+  }
+  if (date.year == now.year) return DateFormat('d MMM', 'tr').format(date);
+  return DateFormat('d MMM y', 'tr').format(date);
+}
 
 /// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.
 Widget highlightedText(
@@ -131,6 +143,15 @@ class NoteCard extends ConsumerWidget {
           ),
         ),
         PopupMenuItem(
+          value: 'star',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(note.starred ? Icons.star : Icons.star_outline),
+            title: Text(note.starred ? l10n.unstar : l10n.star),
+          ),
+        ),
+        PopupMenuItem(
           value: 'delete',
           child: ListTile(
             dense: true,
@@ -145,6 +166,8 @@ class NoteCard extends ConsumerWidget {
     switch (action) {
       case 'pin':
         ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
+      case 'star':
+        ref.read(notesRepositoryProvider)?.setStarred(note.id, !note.starred);
       case 'delete':
         _delete(context, ref);
     }
@@ -185,7 +208,7 @@ class NoteCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (note.title.trim().isNotEmpty || note.pinned)
+                if (note.title.trim().isNotEmpty || note.pinned || note.starred)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
@@ -202,6 +225,12 @@ class NoteCard extends ConsumerWidget {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
+                        if (note.starred)
+                          Icon(
+                            Icons.star,
+                            size: 14,
+                            color: Colors.amber.shade600,
+                          ),
                         if (note.pinned)
                           Icon(
                             Icons.push_pin,
@@ -275,6 +304,21 @@ class NoteCard extends ConsumerWidget {
                             ),
                       ),
                     ],
+                  ),
+                ],
+                if (note.updatedAt != null) ...[
+                  const SizedBox(height: 6),
+                  // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      formatNoteDate(note.updatedAt!),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontSize: 10,
+                            color:
+                                scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          ),
+                    ),
                   ),
                 ],
               ],

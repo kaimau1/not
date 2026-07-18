@@ -11,6 +11,8 @@ import '../features/ai/presentation/suggestions_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/gmail/presentation/mail_summary_screen.dart';
+import '../features/notes/data/notes_repository.dart';
+import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
@@ -99,6 +101,18 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
   void handle(Uri uri) {
     if (uri.host == 'voice' || uri.path.contains('voice')) {
       router.push('/voice');
+      return;
+    }
+    // notlar://new?type=text|checklist|ordered — Hızlı Eylemler widget'ı
+    // ana ekrandan doğrudan yeni not editörü açar.
+    if (uri.host == 'new') {
+      final repo = ref.read(notesRepositoryProvider);
+      if (repo == null) return; // Oturum yoksa sessizce geç.
+      Future(() async {
+        final id =
+            await repo.createNote(NoteType.fromId(uri.queryParameters['type']));
+        router.push('/note/$id');
+      });
     }
   }
 

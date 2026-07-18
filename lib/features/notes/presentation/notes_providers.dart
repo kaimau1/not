@@ -4,7 +4,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 
-enum NoteFilter { all, text, checklist, ordered, pinned }
+enum NoteFilter { all, text, checklist, ordered, pinned, starred }
 
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
   SearchQueryNotifier.new,
@@ -132,6 +132,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       NoteFilter.ordered =>
         [for (final n in result) if (n.type == NoteType.ordered) n],
       NoteFilter.pinned => [for (final n in result) if (n.pinned) n],
+      NoteFilter.starred => [for (final n in result) if (n.starred) n],
     };
     if (query.isNotEmpty) {
       result = [for (final n in result) if (_matches(n, query)) n];

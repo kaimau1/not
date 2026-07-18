@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mikrofon widget'ı zemini: marka rengi, yuvarlatılmış köşeler.
+     1x1'de daireye yakın, 2x1/2x2'ye büyütülünce hap biçimi alır. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#EE4A5CCC" />
+    <corners android:radius="28dp" />
+</shape>

@@ -747,6 +747,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       children: [
         titleField,
         metaChips,
+        // Son güncelleme zamanı — kullanıcı en son ne zaman dokunduğunu görür.
+        if (note.updatedAt != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            child: Text(
+              l10n.editedAt(
+                DateFormat('d MMM y HH:mm', 'tr').format(note.updatedAt!),
+              ),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ),
         AttachmentStrip(
           attachments: note.attachments,
           onRemove: _removeAttachment,
@@ -832,6 +845,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       .onSurfaceVariant
                       .withValues(alpha: pending ? 0.9 : 0.5),
                 ),
+              ),
+            ),
+            IconButton(
+              tooltip: note.starred ? l10n.unstar : l10n.star,
+              icon: Icon(
+                note.starred ? Icons.star : Icons.star_outline,
+                color: note.starred ? Colors.amber.shade600 : null,
+              ),
+              onPressed: () => _mutate(
+                (n) => n.copyWith(starred: !n.starred),
+                immediate: true,
               ),
             ),
             IconButton(

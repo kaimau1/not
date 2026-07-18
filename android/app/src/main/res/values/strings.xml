@@ -2,4 +2,12 @@
 <resources>
     <string name="shortcut_voice_short">Sesli not</string>
     <string name="shortcut_voice_long">Sesli not al</string>
+    <string name="widget_voice_label">Sesli Not</string>
+    <string name="widget_voice_desc">Tek dokunuşla sesli not: konuş, yapay zeka notunu oluştursun</string>
+    <string name="widget_quick_label">Hızlı Eylemler</string>
+    <string name="widget_quick_desc">Yeni not, liste, sıralı liste ve sesli not kısayolları</string>
+    <string name="widget_notes_desc">Son notların; mikrofonla hızlı sesli not</string>
+    <string name="widget_qa_new_note">Yeni not</string>
+    <string name="widget_qa_checklist">Yeni liste</string>
+    <string name="widget_qa_ordered">Yeni sıralı liste</string>
 </resources>

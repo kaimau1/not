@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
+import '../../../core/utils/debouncer.dart';
 import '../domain/note.dart';
 import 'notes_repository.dart';
 
@@ -21,11 +22,19 @@ class WidgetService {
   final Ref _ref;
   ProviderSubscription<AsyncValue<List<Note>>>? _sub;
 
+  /// Yazarken her tuş vuruşu bir snapshot üretir; widget'ı her seferinde
+  /// yenilemek boşuna işlem (ve pil) harcar. Art arda değişiklikler
+  /// toplanıp tek güncellemeye iner.
+  final _debouncer = Debouncer(delay: const Duration(seconds: 2));
+
+  /// Son yazılan içerik; aynıysa widget hiç uyandırılmaz (pil tasarrufu).
+  String? _lastPayload;
+
   void start() {
     if (kIsWeb || !Platform.isAndroid) return;
     _sub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
-      if (notes != null) _update(notes);
+      if (notes != null) _debouncer(() => _update(notes));
     }, fireImmediately: true);
   }
 
@@ -40,14 +49,13 @@ class WidgetService {
         if (title.trim().isEmpty) continue;
         lines.add('• ${title.length > 40 ? '${title.substring(0, 40)}…' : title}');
       }
-      await HomeWidget.saveWidgetData<String>(
-        'widget_notes',
-        lines.isEmpty ? 'Henüz not yok' : lines.join('\n'),
-      );
-      await HomeWidget.saveWidgetData<String>(
-        'widget_count',
-        '${active.length} not',
-      );
+      final text = lines.isEmpty ? 'Henüz not yok' : lines.join('\n');
+      final count = '${active.length} not';
+      final payload = '$count\n$text';
+      if (payload == _lastPayload) return;
+      _lastPayload = payload;
+      await HomeWidget.saveWidgetData<String>('widget_notes', text);
+      await HomeWidget.saveWidgetData<String>('widget_count', count);
       await HomeWidget.updateWidget(androidName: 'NotlarWidgetProvider');
     } catch (e) {
       debugPrint('Widget güncellenemedi: $e');
@@ -55,6 +63,7 @@ class WidgetService {
   }
 
   void dispose() {
+    _debouncer.dispose();
     _sub?.close();
   }
 }
