@@ -251,7 +251,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  /// Alt bardaki bir düğme (görünüm/renk, ek, hesap makinesi) alt sayfa/menü
+  /// açmadan önce klavyeyi kesin kapatır. Klavye elle kapatılmış olsa bile bir
+  /// metin alanı odakta kalabiliyor; alt sayfa kapanınca odak geri gelip
+  /// klavye kendiliğinden açılıyordu (madde 10). Odağı düşürüp sonraki karede
+  /// tekrar düşürerek bu geri açılmayı engelliyoruz.
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    });
+  }
+
   Future<void> _showAttachMenu() async {
+    _dismissKeyboard();
     final l10n = context.l10n;
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -585,6 +598,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _showColorSheet() async {
     final note = _note;
     if (note == null) return;
+    _dismissKeyboard();
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -700,8 +714,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _openCalculator() async {
     // Gövde odağını bırak: alt sayfa kapanınca klavye kendiliğinden geri
     // açılmasın (odaklı alan kalırsa Flutter klavyeyi yeniden gösterir).
-    FocusScope.of(context).unfocus();
+    _dismissKeyboard();
     final result = await showCalculatorSheet(context);
+    // Sonuç metne/öğeye programatik eklenir; kullanıcı yazmıyordu, klavye
+    // kapalı kalsın (sonuç eklendikten sonra alan odaklanmaz).
+    _dismissKeyboard();
     if (result == null || result.isEmpty) return;
     final note = _note;
     if (note == null) return;
@@ -786,68 +803,119 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       }
     }
 
+    // Etiket/öneri EYLEMLERİ tek bir menüde toplanır: hatırlatıcı, klasör ve
+    // etiket çipleriyle birlikte tek satırda kalır (madde 7). Menüden kullanıcı
+    // hangi ekleme/öneri işlemini uygulayacağını seçer — çipler satırı taşırıp
+    // dikeyde yer kaplamaz. Uzun etiket dizileri yatayda kaydırılır.
+    final actionEntries = <PopupMenuEntry<String>>[
+      PopupMenuItem(
+        value: 'add-tag',
+        child: ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.new_label_outlined),
+          title: Text(l10n.addTag),
+        ),
+      ),
+      if (!note.isEmpty)
+        PopupMenuItem(
+          value: 'suggest-tags',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.auto_awesome),
+            title: Text(l10n.suggestTags),
+          ),
+        ),
+      if (!note.isEmpty && note.title.trim().isEmpty)
+        PopupMenuItem(
+          value: 'suggest-title',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.title),
+            title: Text(l10n.suggestTitle),
+          ),
+        ),
+      if (note.reminderAt == null)
+        PopupMenuItem(
+          value: 'add-reminder',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.alarm_add_outlined),
+            title: Text(l10n.addReminder),
+          ),
+        ),
+    ];
+
+    final actionsMenu = PopupMenuButton<String>(
+      tooltip: l10n.noteMetaMenu,
+      onSelected: (action) {
+        switch (action) {
+          case 'add-tag':
+            _addTag();
+          case 'suggest-tags':
+            _suggestTags();
+          case 'suggest-title':
+            _suggestTitle();
+          case 'add-reminder':
+            _pickReminder();
+        }
+      },
+      itemBuilder: (context) => actionEntries,
+      child: Chip(
+        avatar: _titleGenerating
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.auto_awesome, size: 16),
+        label: Text(l10n.noteMetaMenu),
+      ),
+    );
+
+    final metaChildren = <Widget>[
+      if (note.reminderAt != null)
+        InputChip(
+          avatar: const Icon(Icons.alarm, size: 16),
+          label: Text(
+            DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!),
+          ),
+          onPressed: _pickReminder,
+          onDeleted: _clearReminder,
+        ),
+      // Klasör çipi: doluysa klasör adı+simge, boşsa "Klasör" ekleme.
+      ActionChip(
+        avatar: Icon(
+          noteFolder?.iconData ?? Icons.create_new_folder_outlined,
+          size: 16,
+        ),
+        label: Text(noteFolder?.name ?? l10n.folder),
+        onPressed: _pickFolder,
+      ),
+      for (final tag in note.tags)
+        InputChip(
+          label: Text('#$tag'),
+          onDeleted: () => _removeTag(tag),
+        ),
+      actionsMenu,
+    ];
+
     final metaChips = Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 4,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          if (note.reminderAt != null)
-            InputChip(
-              avatar: const Icon(Icons.alarm, size: 16),
-              label: Text(
-                DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!),
-              ),
-              onPressed: _pickReminder,
-              onDeleted: _clearReminder,
-            ),
-          // Klasör çipi: doluysa klasör adı+simge, boşsa "Klasör" ekleme.
-          ActionChip(
-            avatar: Icon(
-              noteFolder?.iconData ?? Icons.create_new_folder_outlined,
-              size: 16,
-            ),
-            label: Text(noteFolder?.name ?? l10n.folder),
-            onPressed: _pickFolder,
-          ),
-          for (final tag in note.tags)
-            InputChip(
-              label: Text('#$tag'),
-              onDeleted: () => _removeTag(tag),
-            ),
-          ActionChip(
-            avatar: const Icon(Icons.new_label_outlined, size: 16),
-            label: Text(l10n.addTag),
-            onPressed: _addTag,
-          ),
-          if (!note.isEmpty)
-            ActionChip(
-              avatar: const Icon(Icons.auto_awesome, size: 16),
-              label: Text(l10n.suggestTags),
-              onPressed: _suggestTags,
-            ),
-          // Otomatik başlık artık genel ayar değil, etiket gibi bağımsız
-          // buton (madde 7): yalnızca içerikli ve başlıksız notta önerilir.
-          if (!note.isEmpty && note.title.trim().isEmpty)
-            ActionChip(
-              avatar: _titleGenerating
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.title, size: 16),
-              label: Text(l10n.suggestTitle),
-              onPressed: _titleGenerating ? null : _suggestTitle,
-            ),
-          if (note.reminderAt == null)
-            ActionChip(
-              avatar: const Icon(Icons.alarm_add_outlined, size: 16),
-              label: Text(l10n.addReminder),
-              onPressed: _pickReminder,
-            ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < metaChildren.length; i++) ...[
+              if (i > 0) const SizedBox(width: 6),
+              metaChildren[i],
+            ],
+          ],
+        ),
       ),
     );
 

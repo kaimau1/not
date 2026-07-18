@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/l10n_ext.dart';
+import '../core/widgets/undo_snackbar.dart';
 import '../features/settings/settings_providers.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -19,6 +20,7 @@ class NotlarApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Notlar',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: router,
       theme: paper ? AppTheme.paper() : AppTheme.light(),
       darkTheme: AppTheme.dark(),

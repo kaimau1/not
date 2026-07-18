@@ -44,6 +44,30 @@ class GmailAuth {
 
   bool get _isWindows => !kIsWeb && Platform.isWindows;
 
+  // google_sign_in 7.x'te authenticate()/authorizeScopes() öncesi initialize()
+  // ŞART. Firebase oturumu kalıcı olduğundan kullanıcı uygulamayı tekrar
+  // açtığında Google girişinden geçmeyebilir; bu durumda GoogleSignIn.instance
+  // hiç başlatılmamış olur ve Gmail'i bağlarken "bir sorun oluştu" hatası
+  // verirdi. Tek seferlik, tembel başlatma ile bunu garanti altına alıyoruz.
+  Future<void>? _initFuture;
+
+  Future<void> _ensureInitialized() => _initFuture ??= _initialize();
+
+  Future<void> _initialize() async {
+    try {
+      await GoogleSignIn.instance.initialize(
+        serverClientId: AppConstants.serverClientId.isEmpty
+            ? null
+            : AppConstants.serverClientId,
+      );
+    } catch (_) {
+      // Uygulamanın başka yerinde (Android Google girişi) GoogleSignIn zaten
+      // başlatılmış olabilir; ikinci initialize çağrısının hatasını yut.
+      // Gerçekten başlatılamadıysa sonraki authenticate() zaten anlamlı bir
+      // hata fırlatır ve çağıran onu gösterir.
+    }
+  }
+
   /// Kullanıcı Ayarlar'dan "Gmail'i Bağla"ya bastığında çağrılır.
   /// Hesap seçici gösterir (giriş hesabından farklı bir Gmail de
   /// seçilebilir), gerekli izni alır ve bağlantı bayrağını kaydeder.
@@ -51,6 +75,7 @@ class GmailAuth {
     if (_isWindows) {
       await _ensureDesktopScope(forcePrompt: true);
     } else {
+      await _ensureInitialized();
       // authenticate() hesap seçiciyi açar; kullanıcı ikinci bir Gmail
       // hesabını da burada seçebilir. authorizeScopes tek başına seçici
       // göstermeden mevcut hesabı kullanıyordu.
@@ -77,6 +102,7 @@ class GmailAuth {
   /// Gmail API çağrıları için yetkili istemci döner.
   Future<http.Client> getClient() async {
     if (_isWindows) return _desktopClient();
+    await _ensureInitialized();
     final authorization = await GoogleSignIn.instance.authorizationClient
         .authorizeScopes(const [AppConstants.gmailReadonlyScope]);
     return authorization.authClient(
