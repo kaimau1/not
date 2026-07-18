@@ -221,6 +221,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   onPressed: () => context.push('/chat'),
                                 ),
                                 PopupMenuButton<String>(
+                                  // Menü ekranın altına taşıp sistem gezinme
+                                  // çubuğunun arkasında kalıyordu; yükseklik
+                                  // sınırlanınca içerik kaydırılabilir olur ve
+                                  // son maddeler çubuğun altında kalmaz.
+                                  constraints: BoxConstraints(
+                                    maxHeight:
+                                        MediaQuery.sizeOf(context).height * 0.55,
+                                    minWidth: 200,
+                                  ),
                                   onSelected: (action) => switch (action) {
                                     'suggestions' =>
                                       context.push('/suggestions'),
@@ -347,10 +356,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 // Düğmeler floatingActionButton'da kaldığından panel açılıp
                 // kapanırken yerinden oynamaz (stabil); yalnız kayıt/işleme/
                 // sonuç sırasında görünür, ana sayfanın ortasına yakın.
+                // Asistan paneli, "not silindi" bildirimiyle aynı yerleşimi
+                // kullanır: düğmelerin ÜSTÜnde değil SOLUNDA, ekranın dibinde.
+                // Sağda düğme sütunu kadar boşluk bırakılır.
                 const Positioned(
                   left: 8,
-                  right: 8,
-                  bottom: 168,
+                  right: 88,
+                  bottom: 16,
                   child: VoiceAssistantPanel(),
                 ),
                 // Düğmeler Scaffold.floatingActionButton yerine BURADA durur:

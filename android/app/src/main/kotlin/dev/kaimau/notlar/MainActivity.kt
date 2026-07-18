@@ -39,6 +39,11 @@ class MainActivity : FlutterFragmentActivity() {
     // sessizlikte kendiliğinden kapandığında yeniden başlatılır.
     private var listening = false
 
+    // Son DOLU ara sonuç. Tanıyıcı final sonucu boş döndürebiliyor ya da
+    // sessizlikte NO_MATCH ile kapanabiliyor; o durumda konuşulan metin
+    // yalnızca burada kalır. Biriktirilmezse "Bitir"de metin kaybolur.
+    private var lastPartial = ""
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         configureSpeechChannel(flutterEngine)
@@ -107,6 +112,7 @@ class MainActivity : FlutterFragmentActivity() {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                     speechSink = events
                     accumulated.setLength(0)
+                    lastPartial = ""
                     listening = true
                     startRecognizer(arguments as? String ?: "tr-TR")
                 }
@@ -152,6 +158,9 @@ class MainActivity : FlutterFragmentActivity() {
     private fun speechListener(locale: String) = object : RecognitionListener {
         override fun onPartialResults(results: Bundle?) {
             val text = firstResult(results) ?: return
+            // Ara sonucu SAKLA: final sonuç null gelirse konuşulan metin
+            // yalnızca burada kalır (aşağıya bak).
+            if (text.isNotBlank()) lastPartial = text
             speechSink?.success(mapOf("text" to joined(text)))
         }
 
@@ -164,10 +173,16 @@ class MainActivity : FlutterFragmentActivity() {
 
         override fun onResults(results: Bundle?) {
             val text = firstResult(results)
-            if (!text.isNullOrBlank()) {
+            // Google tanıyıcısı stopListening() sonrası final sonucu NULL
+            // döndürebiliyor (SODA'da olağan) — ölçümle doğrulandı. O durumda
+            // son dolu ara sonuç kullanılmazsa konuşulan cümle tamamen
+            // kaybolur ve Flutter'a boş metin gidip ekrandakini de siler.
+            val finalText = if (!text.isNullOrBlank()) text else lastPartial
+            if (finalText.isNotBlank()) {
                 if (accumulated.isNotEmpty()) accumulated.append(' ')
-                accumulated.append(text)
+                accumulated.append(finalText)
             }
+            lastPartial = ""
             speechSink?.success(mapOf("text" to accumulated.toString()))
             // Tanıyıcı her sessizlikte kendini kapatır; kullanıcı hâlâ
             // konuşuyorsa kaldığı yerden devam etsin diye yeniden başlatılır.
@@ -181,6 +196,14 @@ class MainActivity : FlutterFragmentActivity() {
             val benign = error == SpeechRecognizer.ERROR_NO_MATCH ||
                 error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
             if (benign && listening) {
+                // Yeniden başlatmadan ÖNCE ara sonucu kalıcı hale getir;
+                // aksi hâlde sessizlikte kapanan her turda söylenen kaybolur.
+                if (lastPartial.isNotBlank()) {
+                    if (accumulated.isNotEmpty()) accumulated.append(' ')
+                    accumulated.append(lastPartial)
+                    lastPartial = ""
+                    speechSink?.success(mapOf("text" to accumulated.toString()))
+                }
                 startRecognizer(locale)
                 return
             }

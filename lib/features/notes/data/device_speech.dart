@@ -37,8 +37,13 @@ class DeviceSpeech {
   }) =>
       _events.receiveBroadcastStream(locale).map((event) {
         final map = event as Map<Object?, Object?>;
+        final text = map['text'] as String?;
         return (
-          text: map['text'] as String?,
+          // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
+          // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
+          // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
+          // mevcut metni korur.
+          text: (text == null || text.isEmpty) ? null : text,
           level: (map['level'] as num?)?.toDouble(),
         );
       });

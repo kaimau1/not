@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
@@ -23,6 +24,7 @@ import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
+import '../../data/device_speech.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
@@ -63,6 +65,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   final _debouncer = Debouncer();
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
+
+  /// Doğrudan (alt sayfasız) dikte durumu.
+  StreamSubscription<({String? text, double? level})>? _speechSub;
+  bool _dictating = false;
+  String _dictatedText = '';
 
   @override
   void initState() {
@@ -109,6 +116,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     } else if (!_deleted && note != null) {
       if (note.tags.isEmpty) _autoTagInBackground(note);
     }
+    _speechSub?.cancel();
     _debouncer.dispose();
     _sub?.close();
     _titleController.dispose();
@@ -680,33 +688,81 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
-  /// Sesli yazdırma: konuşma yazıya döner. Metin notunda (anahtar varsa)
-  /// konuşuldukça ANINDA nota yansır; liste tiplerinde bitişte öğe eklenir.
+  /// Sesli yazdırma. Cihazın yerleşik tanıması varsa düğme DOĞRUDAN dikteyi
+  /// başlatır (alt sayfa açılmaz): konuşma anında nota akar, düğmeye tekrar
+  /// basınca durur. Yerleşik tanıma yoksa (Windows) eski alt sayfa açılır.
   Future<void> _dictate() async {
     final note = _note;
     if (note == null) return;
+    if (_dictating) {
+      await _stopInlineDictation();
+      return;
+    }
+    if (await DeviceSpeech.isAvailable()) {
+      await _startInlineDictation(note);
+      return;
+    }
+    // Yerleşik tanıma yok: eski alt sayfa yolu.
+    if (!mounted) return;
     if (note.type == NoteType.text) {
-      // Diktenin ekleneceği taban: mevcut gövde + ayraç. Canlı döküm bunun
-      // üstüne yazılır, böylece kullanıcı yazının notta belirdiğini görür.
       final base = _bodyController.text;
       final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
-      void writeLive(String full) {
-        final combined = baseWithSep + full;
-        _bodyController.value = TextEditingValue(
-          text: combined,
-          selection: TextSelection.collapsed(offset: combined.length),
-        );
-        _mutate((n) => n.copyWith(body: combined), immediate: true);
-      }
-
+      void writeLive(String full) => _writeDictated(baseWithSep, full);
       final text = await showDictationSheet(context, onPartial: writeLive);
-      // Anahtarsız yolda canlı akış olmaz; dönen son metni burada yaz.
       if (text != null && text.trim().isNotEmpty) writeLive(text.trim());
       return;
     }
     final text = await showDictationSheet(context);
     if (text == null || text.trim().isEmpty) return;
     _appendText(text);
+  }
+
+  /// Dikte metnini gövdeye yazar: taban (mevcut gövde + ayraç) sabit kalır,
+  /// üstüne o ana kadarki tam döküm gelir.
+  void _writeDictated(String base, String full) {
+    final combined = base + full;
+    _bodyController.value = TextEditingValue(
+      text: combined,
+      selection: TextSelection.collapsed(offset: combined.length),
+    );
+    _mutate((n) => n.copyWith(body: combined), immediate: true);
+  }
+
+  Future<void> _startInlineDictation(Note note) async {
+    final base = _bodyController.text;
+    final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
+    _dictatedText = '';
+    setState(() => _dictating = true);
+    _speechSub = DeviceSpeech.listen().listen(
+      (event) {
+        final text = event.text;
+        if (text == null) return;
+        _dictatedText = text;
+        // Metin notunda anlık gövdeye; liste tiplerinde bitişte öğe olur.
+        if (note.type == NoteType.text) _writeDictated(baseWithSep, text);
+      },
+      onError: (Object e) {
+        _stopInlineDictation();
+        if (mounted) _showSnack(context.l10n.aiError(e.toString()));
+      },
+    );
+  }
+
+  Future<void> _stopInlineDictation() async {
+    await DeviceSpeech.stop();
+    // Son sonucun gelmesi için kısa bekleme (tanıyıcı stop sonrası yazar).
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    await _speechSub?.cancel();
+    _speechSub = null;
+    if (!mounted) return;
+    setState(() => _dictating = false);
+    final note = _note;
+    final text = _dictatedText.trim();
+    // Liste tiplerinde döküm bitişte tek öğe olarak eklenir.
+    if (note != null && note.type != NoteType.text && text.isNotEmpty) {
+      _appendText(text);
+    }
+    _dictatedText = '';
   }
 
   /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
@@ -1140,10 +1196,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
               // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
               // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
-              IconButton.filledTonal(
-                tooltip: l10n.liveDictation,
-                icon: const Icon(Icons.mic_none),
-                onPressed: _dictate,
+              // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
+              // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
+              SizedBox(
+                width: 52,
+                height: 52,
+                child: _dictating
+                    ? IconButton.filled(
+                        tooltip: l10n.stopAndSave,
+                        iconSize: 28,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.onError,
+                        ),
+                        icon: const Icon(Icons.stop),
+                        onPressed: _dictate,
+                      )
+                    : IconButton.filledTonal(
+                        tooltip: l10n.liveDictation,
+                        iconSize: 28,
+                        icon: const Icon(Icons.mic_none),
+                        onPressed: _dictate,
+                      ),
               ),
               const SizedBox(width: 4),
               FilledButton.tonalIcon(
