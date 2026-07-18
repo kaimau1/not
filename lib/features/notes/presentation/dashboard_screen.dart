@@ -8,6 +8,7 @@ import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../data/notes_repository.dart';
@@ -56,23 +57,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       repo.softDelete(id);
     }
     ref.read(selectedNoteIdsProvider.notifier).clear();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.notesDeletedCount(ids.length)),
-          behavior: SnackBarBehavior.fixed,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () {
-              for (final id in ids) {
-                repo.restore(id);
-              }
-            },
-          ),
-        ),
-      );
+    showUndoSnackBar(
+      context,
+      message: l10n.notesDeletedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () {
+        for (final id in ids) {
+          repo.restore(id);
+        }
+      },
+    );
   }
 
   Future<void> _createNote(NoteType type) async {
@@ -292,22 +286,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
           ),
-          // Asistanın durumu (kayıt + canlı döküm, işleme, sonuç, hata)
-          // ana sayfanın altında panel olarak görünür; boştayken gizlidir.
-          bottomNavigationBar: const VoiceAssistantPanel(),
-          floatingActionButton: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
-              const VoiceAssistantButton(),
-              const SizedBox(height: 6),
-              FloatingActionButton(
-                heroTag: 'add-fab',
-                tooltip: l10n.newTextNote,
-                onPressed: () => _createNote(NoteType.text),
-                child: const Icon(Icons.add),
-              ),
-            ],
+          // Asistanın durumu (kayıt + canlı döküm, işleme, sonuç, hata) artık
+          // en dipte değil, FAB sütununda düğmelerin ÜSTÜnde yüzer — daha
+          // ortada ve okunaklı; boştayken gizli. Genişlik ekranı doldurur
+          // ama sağdaki düğmeler yerinde kalır (crossAxisAlignment.end).
+          floatingActionButton: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth:
+                  (MediaQuery.sizeOf(context).width - 24).clamp(0.0, 460.0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const VoiceAssistantPanel(),
+                // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
+                const VoiceAssistantButton(),
+                const SizedBox(height: 6),
+                FloatingActionButton(
+                  heroTag: 'add-fab',
+                  tooltip: l10n.newTextNote,
+                  onPressed: () => _createNote(NoteType.text),
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            ),
           ),
         ),
       ),
