@@ -737,6 +737,21 @@ class AppLocalizationsTr extends AppLocalizations {
       'Mikrofonu basılı tutup konuşun, bırakınca yazılır';
 
   @override
+  String itemsSelected(int count) {
+    return '$count madde seçildi';
+  }
+
+  @override
+  String get noteChatTitle => 'Bu notla sohbet et';
+
+  @override
+  String get noteChatHint => 'Bu not hakkında bir şey sor';
+
+  @override
+  String get noteChatIntro =>
+      'Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.';
+
+  @override
   String get dictationProcessing => 'Yazıya dökülüyor...';
 
   @override

@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
@@ -354,13 +355,17 @@ class GeminiService {
     return _generate([
       {
         'text': 'Aşağıda bir kullanıcının not defterindeki son notlar var. '
-            'Bu notlara bakarak Türkçe, kısa ve eyleme dönük 3-6 öneri üret: '
-            'tamamlanmamış işler, unutulmuş alışveriş kalemleri, takip '
-            'gerektiren konular gibi. Ayrıca konusu örtüşen veya tekrar eden '
-            'notlar varsa hangilerinin birleştirilebileceğini ayrı bir maddede '
-            'belirt. Her öneriyi tek maddede yaz.\n\n${buffer.toString()}',
+            'Bu notlara bakarak Türkçe, EYLEME DÖNÜK 3-6 öneri üret. '
+            'Kurallar: her öneri "- " ile başlayan TEK satır olsun ve en '
+            'fazla 12 kelime; hangi nottan geldiği anlaşılsın; genel hayat '
+            'tavsiyesi VERME, yalnızca bu notlardan çıkan somut iş yaz '
+            '(tamamlanmamış işler, eksik alışveriş kalemi, takip gereken '
+            'konu, yaklaşan tarih). Konusu örtüşen notlar varsa son maddede '
+            'hangilerinin birleştirilebileceğini yaz. Markdown kullanma: '
+            'yıldız, kalın işareti veya başlık koyma, düz metin yaz.'
+            '\n\n${buffer.toString()}',
       },
-    ]);
+    ]).then(stripMarkdown);
   }
 
   /// Son 7 günün notlarından haftalık özet ve yapılacaklar çıkarır.
@@ -383,12 +388,15 @@ class GeminiService {
     return _generate([
       {
         'text': 'Aşağıda kullanıcının son 7 günde yazdığı/güncellediği notlar '
-            'var. Türkçe bir haftalık özet çıkar: (1) öne çıkan konular, '
-            '(2) tamamlanmamış işler ve yapılacaklar, (3) önümüzdeki hafta '
-            'için kısa öneriler. Bölüm başlıkları kullan, kısa ve öz yaz.'
-            '\n\n${buffer.toString()}',
+            'var. Türkçe haftalık özet çıkar. Yapı (her başlık kendi '
+            'satırında, düz metin): "Bu hafta ne birikti" — en çok yazdığı '
+            '2-4 konu, her biri tek satır; "Bekleyenler" — tamamlanmamış '
+            'işler ve yaklaşan tarihler, "- " ile madde madde; "Öneri" — '
+            'önümüzdeki hafta için tek cümle. Her madde en fazla 12 kelime, '
+            'notlarda geçmeyen şey uydurma. Markdown kullanma: yıldız, '
+            'kalın işareti veya # koyma.\n\n${buffer.toString()}',
       },
-    ]);
+    ]).then(stripMarkdown);
   }
 
   /// Görseldeki metni çıkarır (OCR) ve düzenli bir not metnine dönüştürür.
@@ -521,10 +529,11 @@ class GeminiService {
               'brifing" yaz. Yapı: 1-2 cümlelik selamlama ve günün özeti; '
               '"Bugün" başlığı altında hatırlatıcılar ve yapılacaklar; varsa '
               '"E-postalar" başlığı altında önemli e-postalar; kapanışta tek '
-              'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla.'
+              'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla. Markdown '
+              'kullanma: yıldız, kalın işareti veya # koyma, düz metin yaz.'
               '\n\n$rawData',
         },
-      ]);
+      ]).then(stripMarkdown);
 
   /// Nota kısa bir Türkçe başlık üretir. Basit bir iş olduğu için hızlı ve
   /// ucuz lite model ilk sırada denenir.
@@ -621,6 +630,54 @@ class GeminiService {
         },
     ];
     return _generateFromContents(contents);
+  }
+
+  /// Tek bir not üzerinde çok turlu soru-cevap: notun metni ve ekleri
+  /// (PDF/görsel) bağlam olarak verilir, yanıtlar yalnızca buna dayanır.
+  Future<String> chatAboutNote({
+    required Note note,
+    required List<({Uint8List bytes, String mimeType, String fileName})>
+        attachments,
+    required List<ChatTurn> history,
+  }) {
+    final title = note.title.trim();
+    final contents = <Map<String, dynamic>>[
+      {
+        'role': 'user',
+        'parts': [
+          for (final a in attachments)
+            {
+              'inline_data': {
+                'mime_type': a.mimeType,
+                'data': base64Encode(a.bytes),
+              },
+            },
+          {
+            'text': 'Aşağıda bir notun içeriği'
+                '${attachments.isEmpty ? '' : ' ve ekleri'} var'
+                '${title.isEmpty ? '' : ' (not başlığı: "$title")'}. '
+                'Bu not hakkındaki sorulara Türkçe, kısa ve net yanıt ver. '
+                'Yanıtları yalnızca notun içeriğine ve eklerine dayandır; '
+                'olmayanı uydurma, bulamazsan bulamadığını söyle. Markdown '
+                'kullanma, düz metin yaz.\n\n---\n${note.toPlainText()}',
+          },
+        ],
+      },
+      {
+        'role': 'model',
+        'parts': [
+          {'text': 'Notu ve eklerini inceledim. Sorularını yanıtlayabilirim.'},
+        ],
+      },
+      for (final turn in history)
+        {
+          'role': turn.isUser ? 'user' : 'model',
+          'parts': [
+            {'text': turn.text},
+          ],
+        },
+    ];
+    return _generateFromContents(contents).then(stripMarkdown);
   }
 
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).

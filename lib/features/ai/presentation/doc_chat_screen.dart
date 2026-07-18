@@ -5,40 +5,73 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/domain/attachment.dart';
+import '../../notes/domain/note.dart';
 import '../data/gemini_service.dart';
 
-/// Ekli PDF'e soru sorma ekranı ("bu sözleşmede cezai şart var mı?").
-class PdfChatScreen extends ConsumerStatefulWidget {
-  const PdfChatScreen({super.key, required this.attachment});
+/// Belge sohbeti: ya tek bir ekli PDF'e ([attachment]) ya da bir notun
+/// tamamına ([note] — gövdesi + PDF/görsel ekleri) soru sorulur.
+/// İkisinden yalnız biri verilir.
+class DocChatScreen extends ConsumerStatefulWidget {
+  const DocChatScreen({super.key, this.attachment, this.note})
+      : assert(attachment != null || note != null,
+            'Sohbet için ek ya da not gerekir');
 
-  final Attachment attachment;
+  final Attachment? attachment;
+  final Note? note;
 
   @override
-  ConsumerState<PdfChatScreen> createState() => _PdfChatScreenState();
+  ConsumerState<DocChatScreen> createState() => _DocChatScreenState();
 }
 
-class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
+class _DocChatScreenState extends ConsumerState<DocChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final _history = <ChatTurn>[];
+
+  /// PDF modunda tek belge; not modunda notun okunabilen ekleri.
   Uint8List? _bytes;
+  final _noteAttachments =
+      <({Uint8List bytes, String mimeType, String fileName})>[];
   bool _busy = false;
+  bool _ready = false;
   String? _loadError;
+
+  bool get _noteMode => widget.note != null;
 
   @override
   void initState() {
     super.initState();
-    _loadPdf();
+    _load();
   }
 
-  Future<void> _loadPdf() async {
+  Future<void> _load() async {
     final repo = ref.read(attachmentRepositoryProvider);
+    final notSynced = context.l10n.attachmentNotSynced;
     try {
-      final bytes = repo == null ? null : await repo.readBytes(widget.attachment);
+      if (_noteMode) {
+        // Notun ekleri bağlama katılır; okunamayan ek sessizce atlanır —
+        // notun metniyle sohbet yine de çalışır.
+        for (final a in widget.note!.attachments) {
+          if (a.kind == AttachmentKind.audio) continue;
+          final bytes = repo == null ? null : await repo.readBytes(a);
+          if (bytes != null) {
+            _noteAttachments.add((
+              bytes: bytes,
+              mimeType: a.mimeType,
+              fileName: a.fileName,
+            ));
+          }
+        }
+        if (mounted) setState(() => _ready = true);
+        return;
+      }
+      final bytes =
+          repo == null ? null : await repo.readBytes(widget.attachment!);
       if (mounted) {
         setState(() {
           _bytes = bytes;
-          if (bytes == null) _loadError = context.l10n.attachmentNotSynced;
+          _ready = true;
+          if (bytes == null) _loadError = notSynced;
         });
       }
     } catch (e) {
@@ -56,7 +89,7 @@ class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
   Future<void> _send() async {
     final text = _controller.text.trim();
     final bytes = _bytes;
-    if (text.isEmpty || _busy || bytes == null) return;
+    if (text.isEmpty || _busy || (!_noteMode && bytes == null)) return;
     final l10n = context.l10n;
     setState(() {
       _history.add(ChatTurn(isUser: true, text: text));
@@ -65,11 +98,18 @@ class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
     _controller.clear();
     _scrollToEnd();
     try {
-      final reply = await ref.read(geminiServiceProvider).chatWithPdf(
-            bytes: bytes,
-            fileName: widget.attachment.fileName,
-            history: List.of(_history),
-          );
+      final service = ref.read(geminiServiceProvider);
+      final reply = _noteMode
+          ? await service.chatAboutNote(
+              note: widget.note!,
+              attachments: _noteAttachments,
+              history: List.of(_history),
+            )
+          : await service.chatWithPdf(
+              bytes: bytes!,
+              fileName: widget.attachment!.fileName,
+              history: List.of(_history),
+            );
       if (mounted) {
         setState(() => _history.add(ChatTurn(isUser: false, text: reply)));
       }
@@ -110,16 +150,19 @@ class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
 
+    final title = _noteMode
+        ? (widget.note!.title.trim().isEmpty
+            ? l10n.noteChatTitle
+            : widget.note!.title.trim())
+        : widget.attachment!.fileName;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.attachment.fileName,
-          style: const TextStyle(fontSize: 15),
-        ),
+        title: Text(title, style: const TextStyle(fontSize: 15)),
       ),
       body: _loadError != null
           ? Center(child: Text(_loadError!))
-          : _bytes == null
+          : !_ready
               ? const Center(child: CircularProgressIndicator())
               : Column(
                   children: [
@@ -129,7 +172,9 @@ class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
                               child: Padding(
                                 padding: const EdgeInsets.all(24),
                                 child: Text(
-                                  l10n.pdfChatHint,
+                                  _noteMode
+                                      ? l10n.noteChatIntro
+                                      : l10n.pdfChatHint,
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context)
                                       .textTheme
@@ -194,7 +239,9 @@ class _PdfChatScreenState extends ConsumerState<PdfChatScreen> {
                                 onSubmitted: (_) => _send(),
                                 textInputAction: TextInputAction.send,
                                 decoration: InputDecoration(
-                                  hintText: l10n.pdfChatInputHint,
+                                  hintText: _noteMode
+                                      ? l10n.noteChatHint
+                                      : l10n.pdfChatInputHint,
                                   isDense: true,
                                 ),
                               ),

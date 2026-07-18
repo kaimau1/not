@@ -1444,6 +1444,30 @@ abstract class AppLocalizations {
   /// **'Mikrofonu basılı tutup konuşun, bırakınca yazılır'**
   String get dictationHoldHint;
 
+  /// No description provided for @itemsSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} madde seçildi'**
+  String itemsSelected(int count);
+
+  /// No description provided for @noteChatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notla sohbet et'**
+  String get noteChatTitle;
+
+  /// No description provided for @noteChatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not hakkında bir şey sor'**
+  String get noteChatHint;
+
+  /// No description provided for @noteChatIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.'**
+  String get noteChatIntro;
+
   /// No description provided for @dictationProcessing.
   ///
   /// In tr, this message translates to:

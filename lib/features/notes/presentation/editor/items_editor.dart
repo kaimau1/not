@@ -43,6 +43,13 @@ class _ItemsEditorState extends State<ItemsEditor> {
   final _controllers = <String, TextEditingController>{};
   final _focusNodes = <String, FocusNode>{};
 
+  /// Toplu işlem için seçilen öğeler. Boşken seçim modu kapalıdır.
+  /// Metin alanları ayrı TextField olduğundan sistemin metin seçimi
+  /// satırlar arasına geçemez; toplu kopyalama/silme bu modla yapılır.
+  final _selected = <String>{};
+
+  bool get _selectionMode => _selected.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
@@ -174,6 +181,46 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _commit();
   }
 
+  void _toggleSelection(NoteItem item) {
+    setState(() {
+      if (!_selected.remove(item.id)) _selected.add(item.id);
+    });
+  }
+
+  /// Seçili maddeleri liste sırasıyla panoya kopyalar.
+  Future<void> _copySelected() async {
+    final buffer = StringBuffer();
+    var order = 1;
+    for (final item in _items) {
+      if (!_selected.contains(item.id)) continue;
+      if (widget.showCheckboxes) {
+        buffer.writeln('${item.checked ? '[x]' : '[ ]'} ${item.text}');
+      } else {
+        buffer.writeln('${order++}. ${item.text}');
+      }
+    }
+    await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+    if (!mounted) return;
+    setState(_selected.clear);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(context.l10n.copied)));
+  }
+
+  void _deleteSelected() {
+    final removed = [for (final i in _items) if (_selected.contains(i.id)) i];
+    if (removed.isEmpty) return;
+    setState(() {
+      _items = [for (final i in _items) if (!_selected.contains(i.id)) i];
+      _selected.clear();
+    });
+    for (final item in removed) {
+      _controllers.remove(item.id)?.dispose();
+      _focusNodes.remove(item.id)?.dispose();
+    }
+    _commit();
+  }
+
   void _reorder(int oldIndex, int newIndex) {
     setState(() {
       final item = _items.removeAt(oldIndex);
@@ -241,16 +288,20 @@ class _ItemsEditorState extends State<ItemsEditor> {
     final l10n = context.l10n;
     final checked = widget.showCheckboxes && item.checked;
     final focused = _focusFor(item).hasFocus;
+    final selected = _selected.contains(item.id);
 
-    return Padding(
-      key: ValueKey(item.id),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    // Sol bölge (tutamak + kutucuk/numara). Uzun basış seçim modunu açar:
+    // metin alanına uzun basmak Android'in kendi metin seçimini açtığı için
+    // madde seçimi buraya bağlandı, ikisi çakışmaz.
+    final leading = GestureDetector(
+      onLongPress: () => _toggleSelection(item),
+      onTap: _selectionMode ? () => _toggleSelection(item) : null,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Uzun basınca sürükleme: anlık sürükleme dinleyicisi, tutamaca
-          // denk gelen parmakta listenin kaydırılmasını engelliyordu
-          // (kullanıcı "kaydıramıyorum" diye görüyordu).
-          if (reorderIndex != null)
+          // Seçim modunda sürükleme kapalı: iki uzun basış davranışı
+          // birbirine karışmasın.
+          if (reorderIndex != null && !_selectionMode)
             ReorderableDelayedDragStartListener(
               index: reorderIndex,
               child: Icon(
@@ -261,7 +312,16 @@ class _ItemsEditorState extends State<ItemsEditor> {
             )
           else
             const SizedBox(width: 18),
-          if (widget.showCheckboxes)
+          if (_selectionMode)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Icon(
+                selected ? Icons.check_circle : Icons.circle_outlined,
+                size: 22,
+                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+              ),
+            )
+          else if (widget.showCheckboxes)
             Checkbox(
               value: item.checked,
               onChanged: (value) => _toggleItem(item, value),
@@ -277,8 +337,24 @@ class _ItemsEditorState extends State<ItemsEditor> {
                     ?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
+        ],
+      ),
+    );
+
+    return Container(
+      key: ValueKey(item.id),
+      color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          leading,
           Expanded(
-            child: TextField(
+            // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
+            child: GestureDetector(
+              onTap: _selectionMode ? () => _toggleSelection(item) : null,
+              child: AbsorbPointer(
+                absorbing: _selectionMode,
+                child: TextField(
               controller: _controllerFor(item),
               focusNode: _focusFor(item),
               onChanged: (text) => _updateText(item, text),
@@ -305,12 +381,14 @@ class _ItemsEditorState extends State<ItemsEditor> {
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
+                ),
+              ),
             ),
           ),
           // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
           // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
           // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
-          if (focused)
+          if (focused && !_selectionMode)
             IconButton(
               tooltip: l10n.removeItem,
               icon: const Icon(Icons.close, size: 18),
@@ -370,7 +448,48 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return ReorderableListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
       buildDefaultDragHandles: false,
-      header: widget.header,
+      // ponytail: seçim çubuğu listeyle birlikte kayar; sabitlemek Scaffold
+      // seviyesinde bir katman gerektirir, seçim genelde kısa listelerde
+      // yapıldığından şimdilik gerekmiyor.
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_selectionMode)
+            Material(
+              color: scheme.primaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: l10n.cancel,
+                      icon: const Icon(Icons.close, size: 20),
+                      onPressed: () => setState(_selected.clear),
+                    ),
+                    Expanded(
+                      child: Text(
+                        l10n.itemsSelected(_selected.length),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.copy,
+                      icon: const Icon(Icons.copy_outlined, size: 20),
+                      onPressed: _copySelected,
+                    ),
+                    IconButton(
+                      tooltip: l10n.delete,
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      color: scheme.error,
+                      onPressed: _deleteSelected,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (widget.header != null) widget.header!,
+        ],
+      ),
       footer: footer,
       itemCount: listItems.length,
       // İşaretsizler _items'ın başında tutulduğundan (bkz. _checkedStart)

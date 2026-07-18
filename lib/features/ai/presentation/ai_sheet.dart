@@ -11,7 +11,7 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../data/ai_report.dart';
 import '../data/gemini_service.dart';
-import 'pdf_chat_screen.dart';
+import 'doc_chat_screen.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
@@ -351,6 +351,27 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         label: Text(l10n.aiFixNote),
                       ),
                     ),
+                  // Notun tamamıyla (gövde + PDF/görsel ekleri) sohbet.
+                  ListTile(
+                    leading: const Icon(Icons.forum_outlined),
+                    title: Text(l10n.noteChatTitle),
+                    subtitle: Text(
+                      l10n.noteChatIntro,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    enabled: !widget.note.isEmpty ||
+                        widget.note.attachments.isNotEmpty,
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => DocChatScreen(note: widget.note),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 8),
                   ListTile(
                     leading: const Icon(Icons.summarize_outlined),
                     title: Text(l10n.aiSummarize),
@@ -400,7 +421,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         Navigator.pop(context);
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => PdfChatScreen(attachment: pdf),
+                            builder: (_) => DocChatScreen(attachment: pdf),
                           ),
                         );
                       },

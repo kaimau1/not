@@ -220,21 +220,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   icon: const Icon(Icons.forum_outlined),
                                   onPressed: () => context.push('/chat'),
                                 ),
-                                IconButton(
-                                  tooltip: l10n.aiSuggestions,
-                                  icon:
-                                      const Icon(Icons.auto_awesome_outlined),
-                                  onPressed: () =>
-                                      context.push('/suggestions'),
-                                ),
-                                IconButton(
-                                  tooltip: l10n.importantEmails,
-                                  icon: const Icon(
-                                      Icons.mark_email_unread_outlined),
-                                  onPressed: () => context.push('/mail'),
-                                ),
                                 PopupMenuButton<String>(
                                   onSelected: (action) => switch (action) {
+                                    'suggestions' =>
+                                      context.push('/suggestions'),
+                                    'mail' => context.push('/mail'),
                                     'briefing' => context.push('/briefing'),
                                     'reminders' => context.push('/reminders'),
                                     'archive' => context.push('/archive'),
@@ -243,6 +233,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     _ => null,
                                   },
                                   itemBuilder: (context) => [
+                                    // Öneriler ve posta analizi üst bardan
+                                    // buraya taşındı: bar sadeleşti.
+                                    PopupMenuItem(
+                                      value: 'suggestions',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(
+                                            Icons.auto_awesome_outlined),
+                                        title: Text(l10n.aiSuggestions),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'mail',
+                                      child: ListTile(
+                                        dense: true,
+                                        contentPadding: EdgeInsets.zero,
+                                        leading: const Icon(Icons
+                                            .mark_email_unread_outlined),
+                                        title: Text(l10n.importantEmails),
+                                      ),
+                                    ),
                                     PopupMenuItem(
                                       value: 'briefing',
                                       child: ListTile(

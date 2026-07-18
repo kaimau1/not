@@ -310,6 +310,17 @@
   "dictationResume": "Konuş",
   "dictationNoKeyInfo": "Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.",
   "dictationHoldHint": "Mikrofonu basılı tutup konuşun, bırakınca yazılır",
+  "itemsSelected": "{count} madde seçildi",
+  "@itemsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteChatTitle": "Bu notla sohbet et",
+  "noteChatHint": "Bu not hakkında bir şey sor",
+  "noteChatIntro": "Notun içeriği ve ekleri (PDF/görsel) okunur, sorunu ona göre yanıtlar.",
   "dictationProcessing": "Yazıya dökülüyor...",
   "aiDailyManualInfo": "Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.",
   "aiGenerate": "Oluştur",

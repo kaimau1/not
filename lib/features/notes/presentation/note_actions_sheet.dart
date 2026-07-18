@@ -40,6 +40,16 @@ Future<void> showNoteActionsSheet(
               ),
             ),
           ListTile(
+            leading: Icon(note.pinned ? Icons.push_pin : Icons.push_pin_outlined),
+            title: Text(note.pinned ? l10n.unpin : l10n.pin),
+            onTap: () => Navigator.pop(sheetContext, 'pin'),
+          ),
+          ListTile(
+            leading: Icon(note.starred ? Icons.star : Icons.star_outline),
+            title: Text(note.starred ? l10n.unstar : l10n.star),
+            onTap: () => Navigator.pop(sheetContext, 'star'),
+          ),
+          ListTile(
             leading: const Icon(Icons.share_outlined),
             title: Text(l10n.share),
             onTap: () => Navigator.pop(sheetContext, 'share'),
@@ -87,6 +97,10 @@ Future<void> showNoteActionsSheet(
   }
 
   switch (action) {
+    case 'pin':
+      repo.setPinned(note.id, !note.pinned);
+    case 'star':
+      repo.setStarred(note.id, !note.starred);
     case 'share':
       if (!await unlockIfNeeded()) return;
       final text = note.toPlainText();

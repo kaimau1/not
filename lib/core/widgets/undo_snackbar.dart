@@ -40,9 +40,13 @@ void showUndoSnackBar(
             Expanded(child: Text(message)),
             const SizedBox(width: 12),
             // Kalan süre: "Geri al"ın hemen yanında küçük dairesel gösterge.
+            // Kapatmayı da BU gösterge yapar: ScaffoldMessenger'ın kendi
+            // zamanlayıcısı bazı durumlarda (ör. erişilebilirlik modu)
+            // hiç başlamıyor ve bildirim ekranda kalıyordu.
             TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 1, end: 0),
               duration: duration,
+              onEnd: messenger.hideCurrentSnackBar,
               builder: (context, value, _) => SizedBox(
                 width: 18,
                 height: 18,
