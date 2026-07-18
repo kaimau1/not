@@ -8,6 +8,7 @@ import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../data/notes_repository.dart';
@@ -19,6 +20,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -38,6 +40,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Odak değişince aksiyon butonlarını gizle/göster (dar ekranlarda arama
     // alanına yer açmak için).
     _searchFocus.addListener(() => setState(() {}));
+    // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
+    // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
+    // sonra kontrol et; take() varsa asistanı başlatır.
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _maybeAutostartVoice());
+  }
+
+  /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
+  /// Asistanı'nı başlatır (tek seferlik — bayrak take ile tüketilir).
+  void _maybeAutostartVoice() {
+    if (!mounted) return;
+    if (ref.read(voiceAutostartProvider.notifier).take()) {
+      ref.read(voiceAssistantProvider.notifier).start(
+            micPermissionDeniedText: context.l10n.micPermissionDenied,
+          );
+    }
   }
 
   @override
@@ -56,23 +74,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       repo.softDelete(id);
     }
     ref.read(selectedNoteIdsProvider.notifier).clear();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.notesDeletedCount(ids.length)),
-          behavior: SnackBarBehavior.fixed,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () {
-              for (final id in ids) {
-                repo.restore(id);
-              }
-            },
-          ),
-        ),
-      );
+    showUndoSnackBar(
+      context,
+      message: l10n.notesDeletedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () {
+        for (final id in ids) {
+          repo.restore(id);
+        }
+      },
+    );
   }
 
   Future<void> _createNote(NoteType type) async {
@@ -94,6 +105,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.watch(premiumProvider);
     // Paylaş menüsünden gelen içerikleri dinle (Android).
     ref.watch(shareIntakeProvider);
+
+    // Ana ekran mikrofon widget'ından (notlar://voice) gelen bas-başlat
+    // isteği: uygulama zaten ana sayfadayken gelirse burada yakalanır.
+    // (Uygulama başka ekrandayken/soğuk açılışta gelen istek initState'teki
+    // kontrolle okunur; take() çift başlatmayı önler.)
+    ref.listen(voiceAutostartProvider, (previous, next) {
+      if (next) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _maybeAutostartVoice());
+      }
+    });
 
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
@@ -121,7 +143,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         autofocus: true,
         child: Scaffold(
           body: SafeArea(
-            child: LayoutBuilder(
+            child: Stack(
+              children: [
+                LayoutBuilder(
               builder: (context, constraints) {
                 final columns =
                     (constraints.maxWidth / 220).floor().clamp(2, 6);
@@ -291,10 +315,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 );
               },
             ),
+                // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
+                // Düğmeler floatingActionButton'da kaldığından panel açılıp
+                // kapanırken yerinden oynamaz (stabil); yalnız kayıt/işleme/
+                // sonuç sırasında görünür, ana sayfanın ortasına yakın.
+                const Positioned(
+                  left: 8,
+                  right: 8,
+                  bottom: 168,
+                  child: VoiceAssistantPanel(),
+                ),
+              ],
+            ),
           ),
-          // Asistanın durumu (kayıt + canlı döküm, işleme, sonuç, hata)
-          // ana sayfanın altında panel olarak görünür; boştayken gizlidir.
-          bottomNavigationBar: const VoiceAssistantPanel(),
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

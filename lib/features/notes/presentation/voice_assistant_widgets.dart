@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/countdown_bar.dart';
 import '../../settings/settings_providers.dart';
 import 'voice_assistant.dart';
 
@@ -86,13 +87,13 @@ class VoiceAssistantButton extends ConsumerWidget {
         // düz dokunuş yalnızca ipucu gösterir (kayıt uzun basışla).
         onTap: processing
             ? null
-            : () {
-                if (!hold) {
-                  recording ? _finish(context, ref) : _start(context, ref);
-                } else if (!recording) {
-                  _showSnack(context, l10n.voiceHoldHint);
-                }
-              },
+            : recording
+                // Kayıt sürerken (widget'tan da başlamış olabilir) dokunuş her
+                // modda bitirir — durdurmak sezgisel kalsın.
+                ? () => _finish(context, ref)
+                : hold
+                    ? () => _showSnack(context, l10n.voiceHoldHint)
+                    : () => _start(context, ref),
         onLongPressStart:
             hold && !processing ? (_) => _start(context, ref) : null,
         onLongPressEnd:
@@ -171,11 +172,21 @@ class VoiceAssistantPanel extends ConsumerWidget {
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                IconButton(
-                  tooltip: l10n.cancel,
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.close, size: 20),
+                // Bas-başlat akışı: kaydı bu "Bitir" ile durdur (widget'tan
+                // başlamış olsa da mikrofon düğmesine gitmeye gerek yok).
+                TextButton(
                   onPressed: notifier.cancel,
+                  child: Text(l10n.cancel),
+                ),
+                const SizedBox(width: 4),
+                FilledButton.tonalIcon(
+                  onPressed: () => notifier.finish(
+                    nothingHeardText: l10n.voiceNothingHeard,
+                    savedText: l10n.voiceNoteSaved,
+                    noApiKeyText: l10n.aiNoApiKey,
+                  ),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(l10n.voiceFinish),
                 ),
               ],
             ),
@@ -269,27 +280,55 @@ class VoiceAssistantPanel extends ConsumerWidget {
       VoiceAssistantPhase.idle => const SizedBox.shrink(),
     };
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-        child: Material(
-          color: assistant.phase == VoiceAssistantPhase.recording
-              ? scheme.errorContainer.withValues(alpha: 0.25)
-              : scheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: assistant.phase == VoiceAssistantPhase.recording
-                    ? scheme.error.withValues(alpha: 0.4)
-                    : scheme.outlineVariant.withValues(alpha: 0.5),
-              ),
+    // done/error panelleri kendiliğinden kapansın: kalan süre geri sayım
+    // çubuğuyla görünür (kullanıcı "çok uzun kalıyor" dedi). Kayıt/işleme
+    // sürerken çubuk yok — o durumlar kullanıcı eylemiyle biter.
+    final autoDismiss = switch (assistant.phase) {
+      VoiceAssistantPhase.done => const Duration(seconds: 6),
+      VoiceAssistantPhase.error => const Duration(seconds: 8),
+      _ => null,
+    };
+
+    // Panel artık FAB sütununda, butonların ÜSTÜnde yüzer (en dipte değil);
+    // Scaffold FAB'ı güvenli alanı kendisi hesaba katar. Alttaki 8 px, panel
+    // ile mikrofon düğmesi arasını açar.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: assistant.phase == VoiceAssistantPhase.recording
+            ? scheme.errorContainer.withValues(alpha: 0.95)
+            : scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+        elevation: 3,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: assistant.phase == VoiceAssistantPhase.recording
+                  ? scheme.error.withValues(alpha: 0.4)
+                  : scheme.outlineVariant.withValues(alpha: 0.5),
             ),
-            child: content,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              content,
+              if (autoDismiss != null) ...[
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: CountdownBar(
+                    duration: autoDismiss,
+                    onEnd: notifier.dismiss,
+                    color: assistant.phase == VoiceAssistantPhase.error
+                        ? scheme.error
+                        : scheme.primary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ),

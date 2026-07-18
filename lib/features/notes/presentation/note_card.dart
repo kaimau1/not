@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -98,20 +99,12 @@ class NoteCard extends ConsumerWidget {
     if (repo == null) return;
     repo.softDelete(note.id);
     final l10n = context.l10n;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.noteDeleted),
-          // Ekranın ortasında süzülmesin, en altta kısa süre dursun.
-          behavior: SnackBarBehavior.fixed,
-          duration: const Duration(seconds: 3),
-          action: SnackBarAction(
-            label: l10n.undo,
-            onPressed: () => repo.restore(note.id),
-          ),
-        ),
-      );
+    showUndoSnackBar(
+      context,
+      message: l10n.noteDeleted,
+      undoLabel: l10n.undo,
+      onUndo: () => repo.restore(note.id),
+    );
   }
 
   Future<void> _showContextMenu(

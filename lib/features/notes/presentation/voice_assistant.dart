@@ -219,6 +219,18 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             return result;
           },
         );
+
+        // Güvenlik ağı: model notu oluşturduğunu söyleyip içeriği eksik
+        // bırakabiliyor. Elde canlı döküm varsa ve oluşan not boşsa, notu
+        // konuşma metniyle doldur (ekstra API çağrısı yok).
+        final createdId = resultNoteId;
+        if (createdId != null && liveTranscript.trim().isNotEmpty) {
+          final repo = ref.read(notesRepositoryProvider);
+          final created = await repo?.watchNote(createdId).first;
+          if (repo != null && created != null && created.isEmpty) {
+            repo.updateFields(createdId, {'body': liveTranscript.trim()});
+          }
+        }
       } on GeminiException catch (e) {
         // Asistan başarısız olursa eski yol: canlı döküm zaten varsa onu,
         // yoksa toplu transkripsiyonu düz not olarak kaydet.

@@ -6,6 +6,29 @@ import '../domain/note_type.dart';
 
 enum NoteFilter { all, text, checklist, ordered, pinned, starred }
 
+/// Ana ekran mikrofon widget'ı (notlar://voice) dokunulunca ayarlanan
+/// tüketilebilir bayrak; dashboard bunu görüp Sesli Not Asistanı'nı bas-başlat
+/// modunda başlatır (ayrı /voice ekranı yerine tek tutarlı sistem).
+/// [take] tam bir kez tüketir: uygulama başka ekrandayken gelen istek de
+/// (dashboard henüz dinlemiyorken) kaybolmaz — dashboard mount olunca okur;
+/// dashboard'a her dönüşte yeniden tetiklenmez (bayrak tüketilmiştir).
+final voiceAutostartProvider =
+    NotifierProvider<VoiceAutostartNotifier, bool>(VoiceAutostartNotifier.new);
+
+class VoiceAutostartNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void request() => state = true;
+
+  /// İstek varsa true döner ve bayrağı düşürür (tek seferlik).
+  bool take() {
+    if (!state) return false;
+    state = false;
+    return true;
+  }
+}
+
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
   SearchQueryNotifier.new,
 );
