@@ -323,5 +323,15 @@
   "voiceModeHold": "Basılı tut",
   "voiceModeTap": "Bas-başlat / bas-bitir",
   "voiceModeInfo": "Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.",
-  "voiceHeardLive": "Algılanan konuşma"
+  "voiceHeardLive": "Algılanan konuşma",
+  "permissionsTitle": "İzinler",
+  "permMic": "Mikrofon",
+  "permMicInfo": "Sesli not, dikte ve canlı çeviri için gerekli",
+  "permNotifications": "Bildirimler",
+  "permNotificationsInfo": "Hatırlatıcılar ve günlük brifing için gerekli",
+  "permBattery": "Pil optimizasyonu",
+  "permBatteryInfo": "Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut",
+  "permGranted": "İzin verildi",
+  "permGrant": "İzin ver",
+  "permOpenSettings": "Ayarları aç"
 }
