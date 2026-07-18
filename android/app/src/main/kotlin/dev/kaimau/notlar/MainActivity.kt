@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -43,6 +44,15 @@ class MainActivity : FlutterFragmentActivity() {
     // sessizlikte NO_MATCH ile kapanabiliyor; o durumda konuşulan metin
     // yalnızca burada kalır. Biriktirilmezse "Bitir"de metin kaybolur.
     private var lastPartial = ""
+
+    // Tanıyıcı "konuşma bitti" dedi mi. Kısa duraklamada oturum kapanmadan
+    // segment değişebiliyor; bu bayrak, gelen yeni ara sonucun öncekinin
+    // devamı değil YENİ bir parça olduğunu söyler.
+    private var segmentEnded = false
+
+    // Tanı için: yalnızca uzunluk ve olay tipi yazılır, konuşma METNİ asla
+    // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
+    private val logTag = "NotlarSpeech"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -113,6 +123,7 @@ class MainActivity : FlutterFragmentActivity() {
                     speechSink = events
                     accumulated.setLength(0)
                     lastPartial = ""
+                    segmentEnded = false
                     listening = true
                     startRecognizer(arguments as? String ?: "tr-TR")
                 }
@@ -158,9 +169,21 @@ class MainActivity : FlutterFragmentActivity() {
     private fun speechListener(locale: String) = object : RecognitionListener {
         override fun onPartialResults(results: Bundle?) {
             val text = firstResult(results) ?: return
-            // Ara sonucu SAKLA: final sonuç null gelirse konuşulan metin
-            // yalnızca burada kalır (aşağıya bak).
-            if (text.isNotBlank()) lastPartial = text
+            if (text.isBlank()) return
+            // KISA DURAKLAMA SORUNU: tanıyıcı, oturumu kapatmadan ve
+            // onResults GÖNDERMEDEN segmenti bitirip ara sonucu sıfırdan
+            // başlatabiliyor. Eskiden birikim yalnızca onResults'ta dolduğu
+            // için duraklamadan öncesi hiç kalıcı olmuyor, sonraki ara sonuç
+            // ekrandakini tümüyle siliyordu. Devam değilse önce kalıcı yap.
+            val continues = isContinuation(text, lastPartial)
+            Log.d(
+                logTag,
+                "partial len=${text.length} last=${lastPartial.length} " +
+                    "cont=$continues ended=$segmentEnded acc=${accumulated.length}"
+            )
+            if (!continues) commitPartial()
+            segmentEnded = false
+            lastPartial = text
             speechSink?.success(mapOf("text" to joined(text)))
         }
 
@@ -173,16 +196,19 @@ class MainActivity : FlutterFragmentActivity() {
 
         override fun onResults(results: Bundle?) {
             val text = firstResult(results)
+            Log.d(
+                logTag,
+                "results len=${text?.length ?: -1} last=${lastPartial.length} " +
+                    "acc=${accumulated.length} listening=$listening"
+            )
             // Google tanıyıcısı stopListening() sonrası final sonucu NULL
             // döndürebiliyor (SODA'da olağan) — ölçümle doğrulandı. O durumda
             // son dolu ara sonuç kullanılmazsa konuşulan cümle tamamen
             // kaybolur ve Flutter'a boş metin gidip ekrandakini de siler.
-            val finalText = if (!text.isNullOrBlank()) text else lastPartial
-            if (finalText.isNotBlank()) {
-                if (accumulated.isNotEmpty()) accumulated.append(' ')
-                accumulated.append(finalText)
-            }
-            lastPartial = ""
+            // Final sonuç varsa aynı segmentin ara sonucunun yerini alır.
+            if (!text.isNullOrBlank()) lastPartial = text
+            commitPartial()
+            segmentEnded = false
             speechSink?.success(mapOf("text" to accumulated.toString()))
             // Tanıyıcı her sessizlikte kendini kapatır; kullanıcı hâlâ
             // konuşuyorsa kaldığı yerden devam etsin diye yeniden başlatılır.
@@ -195,15 +221,19 @@ class MainActivity : FlutterFragmentActivity() {
             // Sessizlik/eşleşmeme hata değildir: dinlemeye devam et.
             val benign = error == SpeechRecognizer.ERROR_NO_MATCH ||
                 error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+            Log.d(
+                logTag,
+                "error=$error benign=$benign last=${lastPartial.length} " +
+                    "acc=${accumulated.length}"
+            )
             if (benign && listening) {
                 // Yeniden başlatmadan ÖNCE ara sonucu kalıcı hale getir;
                 // aksi hâlde sessizlikte kapanan her turda söylenen kaybolur.
                 if (lastPartial.isNotBlank()) {
-                    if (accumulated.isNotEmpty()) accumulated.append(' ')
-                    accumulated.append(lastPartial)
-                    lastPartial = ""
+                    commitPartial()
                     speechSink?.success(mapOf("text" to accumulated.toString()))
                 }
+                segmentEnded = false
                 startRecognizer(locale)
                 return
             }
@@ -215,8 +245,52 @@ class MainActivity : FlutterFragmentActivity() {
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
         override fun onBufferReceived(buffer: ByteArray?) {}
-        override fun onEndOfSpeech() {}
+
+        // Tanıyıcı konuşmanın bittiğini algıladı. Oturum kapanmadan yeni bir
+        // parça başlayabilir; bayrak sayesinde sonraki ara sonuç öncekinin
+        // üzerine yazmaz.
+        override fun onEndOfSpeech() {
+            Log.d(logTag, "endOfSpeech last=${lastPartial.length}")
+            segmentEnded = true
+        }
+
         override fun onEvent(eventType: Int, params: Bundle?) {}
+    }
+
+    // Son ara sonucu kalıcı yapar. Parçalar SATIR SONU ile ayrılır: liste
+    // notlarında her duraklama ayrı madde olur (Dart '\n'den böler), metin
+    // notlarında boşluğa çevrilir.
+    private fun commitPartial() {
+        val part = lastPartial.trim()
+        lastPartial = ""
+        if (part.isEmpty()) return
+        if (accumulated.isEmpty()) {
+            accumulated.append(part)
+            return
+        }
+        // Tanıyıcı, ara sonucu sıfırladıktan sonra final sonuçta ÖNCEKİ
+        // parçayı da kapsayabiliyor. O parçayı iki kez yazmamak için önceki
+        // satır geri alınır (yoksa "abc" + "abc def" = "abc abc def").
+        val lastLine = accumulated.substring(accumulated.lastIndexOf('\n') + 1)
+        if (lastLine.isNotEmpty() && part.startsWith(lastLine)) {
+            accumulated.setLength(accumulated.length - lastLine.length)
+        } else {
+            accumulated.append('\n')
+        }
+        accumulated.append(part)
+    }
+
+    // Yeni ara sonuç, öncekinin AYNI segmentteki hali mi? Tanıyıcı aynı
+    // segmentte metni uzatır ya da kuyruğunu düzeltir; yeni segmentte baştan
+    // başlar. Kararsızlıkta "aynı segment DEĞİL" denir: kötü ihtimalde bir
+    // kelime tekrarlanır, iyi ihtimalde konuşma korunur — kullanıcının
+    // söylediğini kaybetmektense tekrar etmek yeğdir.
+    private fun isContinuation(new: String, old: String): Boolean {
+        if (old.isEmpty()) return true
+        if (segmentEnded) return false
+        if (new.startsWith(old) || old.startsWith(new)) return true
+        // Kuyruk düzeltmesi baştaki kelimeyi korur; yeni segment korumaz.
+        return new.substringBefore(' ') == old.substringBefore(' ')
     }
 
     private fun firstResult(results: Bundle?): String? =
@@ -225,5 +299,5 @@ class MainActivity : FlutterFragmentActivity() {
 
     // Biriken tamamlanmış metin + o anki kısmi metin.
     private fun joined(partial: String): String =
-        if (accumulated.isEmpty()) partial else "$accumulated $partial"
+        if (accumulated.isEmpty()) partial else "$accumulated\n$partial"
 }

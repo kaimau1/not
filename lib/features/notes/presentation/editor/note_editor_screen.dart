@@ -80,30 +80,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         if (mounted) _addDrawing();
       });
     }
-    _sub = ref.listenManual(
-      noteStreamProvider(widget.noteId),
-      (previous, next) {
-        final incoming = next.value;
-        if (incoming == null) return;
-        if (_note == null) {
-          setState(() {
-            _note = incoming;
-            _titleController.text = incoming.title;
-            _bodyController.text = incoming.body;
-          });
-        } else {
-          // Editör açıkken yerel metin esastır; yalnızca arka planda değişen
-          // alanları (ek yüklemeleri, AI özeti) benimse.
-          setState(() {
-            _note = _note!.copyWith(
-              attachments: incoming.attachments,
-              aiSummary: incoming.aiSummary,
-            );
-          });
-        }
-      },
-      fireImmediately: true,
-    );
+    _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
+      previous,
+      next,
+    ) {
+      final incoming = next.value;
+      if (incoming == null) return;
+      if (_note == null) {
+        setState(() {
+          _note = incoming;
+          _titleController.text = incoming.title;
+          _bodyController.text = incoming.body;
+        });
+      } else {
+        // Editör açıkken yerel metin esastır; yalnızca arka planda değişen
+        // alanları (ek yüklemeleri, AI özeti) benimse.
+        setState(() {
+          _note = _note!.copyWith(
+            attachments: incoming.attachments,
+            aiSummary: incoming.aiSummary,
+          );
+        });
+      }
+    }, fireImmediately: true);
   }
 
   @override
@@ -233,9 +232,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _addDrawing() async {
-    final bytes = await Navigator.of(context).push<Uint8List>(
-      MaterialPageRoute(builder: (_) => const DrawingScreen()),
-    );
+    final bytes = await Navigator.of(
+      context,
+    ).push<Uint8List>(MaterialPageRoute(builder: (_) => const DrawingScreen()));
     if (bytes == null) return;
     await _addImageBytes(bytes, 'cizim.png');
   }
@@ -344,8 +343,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time == null) return;
-    final reminder =
-        DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final reminder = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
     _mutate((n) => n.copyWith(reminderAt: reminder), immediate: true);
   }
 
@@ -388,10 +392,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _titleController.text = title;
       _mutate((n) => n.copyWith(title: title), immediate: true);
     } on GeminiException catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content:
-            Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _titleGenerating = false);
     }
@@ -407,9 +414,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     try {
       suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
     } on GeminiException catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content: Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
-      ));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+          ),
+        ),
+      );
       return;
     }
     suggestions = [
@@ -470,8 +481,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
     controller.dispose();
-    final cleaned =
-        tag?.trim().replaceAll('#', '').replaceAll(' ', '-').toLowerCase();
+    final cleaned = tag
+        ?.trim()
+        .replaceAll('#', '')
+        .replaceAll(' ', '-')
+        .toLowerCase();
     if (cleaned == null || cleaned.isEmpty) return;
     _mutate(
       (n) => n.copyWith(tags: {...n.tags, cleaned}.toList()),
@@ -480,9 +494,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   void _removeTag(String tag) => _mutate(
-        (n) => n.copyWith(tags: [for (final t in n.tags) if (t != tag) t]),
-        immediate: true,
-      );
+    (n) => n.copyWith(
+      tags: [
+        for (final t in n.tags)
+          if (t != tag) t,
+      ],
+    ),
+    immediate: true,
+  );
 
   /// Notu bir klasöre taşır (ya da klasörden çıkarır).
   Future<void> _pickFolder() async {
@@ -568,7 +587,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           type: targetType,
           // Tip değişiyorsa eski gövde temizlenir; içerik artık öğelerde.
           body: targetType == note.type ? null : '',
-          items: [for (final line in lines) NoteItem(id: uuid.v4(), text: line)],
+          items: [
+            for (final line in lines) NoteItem(id: uuid.v4(), text: line),
+          ],
         ),
         immediate: true,
       );
@@ -582,8 +603,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
     if (note.type == NoteType.text) {
-      final combined =
-          note.body.trim().isEmpty ? text.trim() : '${note.body}\n\n${text.trim()}';
+      final combined = note.body.trim().isEmpty
+          ? text.trim()
+          : '${note.body}\n\n${text.trim()}';
       _bodyController.text = combined;
       _mutate((n) => n.copyWith(body: combined), immediate: true);
     } else {
@@ -594,10 +616,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
       ];
       _mutate(
-        (n) => n.copyWith(items: [
-          ...n.items,
-          for (final line in lines) NoteItem(id: uuid.v4(), text: line),
-        ]),
+        (n) => n.copyWith(
+          items: [
+            ...n.items,
+            for (final line in lines) NoteItem(id: uuid.v4(), text: line),
+          ],
+        ),
         immediate: true,
       );
     }
@@ -637,7 +661,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       ),
                     ),
                     child: color == NoteColor.none
-                        ? const Icon(Icons.format_color_reset_outlined, size: 20)
+                        ? const Icon(
+                            Icons.format_color_reset_outlined,
+                            size: 20,
+                          )
                         : null,
                   ),
                 ),
@@ -682,10 +709,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
     if (!(confirmed ?? false)) return;
     _bodyController.clear();
-    _mutate(
-      (n) => n.copyWith(body: '', items: const []),
-      immediate: true,
-    );
+    _mutate((n) => n.copyWith(body: '', items: const []), immediate: true);
   }
 
   /// Sesli yazdırma. Cihazın yerleşik tanıması varsa düğme DOĞRUDAN dikteyi
@@ -720,7 +744,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// Dikte metnini gövdeye yazar: taban (mevcut gövde + ayraç) sabit kalır,
   /// üstüne o ana kadarki tam döküm gelir.
   void _writeDictated(String base, String full) {
-    final combined = base + full;
+    // Dikte parçaları artık satır sonuyla ayrılıyor (liste notunda her
+    // duraklama ayrı madde olsun diye). Metin notunda paragraf bölünmesin:
+    // ayraçlar boşluğa çevrilir. Taban metnin kendi satırları korunur.
+    final combined = base + full.replaceAll('\n', ' ');
     _bodyController.value = TextEditingValue(
       text: combined,
       selection: TextSelection.collapsed(offset: combined.length),
@@ -795,7 +822,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       const uuid = Uuid();
       _mutate(
         (n) => n.copyWith(
-          items: [...n.items, NoteItem(id: uuid.v4(), text: result)],
+          items: [
+            ...n.items,
+            NoteItem(id: uuid.v4(), text: result),
+          ],
         ),
         immediate: true,
       );
@@ -832,10 +862,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       child: TextField(
         controller: _titleController,
         onChanged: (value) => _mutate((n) => n.copyWith(title: value)),
-        style: Theme.of(context)
-            .textTheme
-            .headlineSmall
-            ?.copyWith(fontWeight: FontWeight.w600),
+        style: Theme.of(
+          context,
+        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
         maxLines: null,
         textInputAction: TextInputAction.next,
         decoration: InputDecoration(
@@ -936,9 +965,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (note.reminderAt != null)
         InputChip(
           avatar: const Icon(Icons.alarm, size: 16),
-          label: Text(
-            DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!),
-          ),
+          label: Text(DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!)),
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
         ),
@@ -952,10 +979,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         onPressed: _pickFolder,
       ),
       for (final tag in note.tags)
-        InputChip(
-          label: Text('#$tag'),
-          onDeleted: () => _removeTag(tag),
-        ),
+        InputChip(label: Text('#$tag'), onDeleted: () => _removeTag(tag)),
       actionsMenu,
     ];
 
@@ -989,8 +1013,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 DateFormat('d MMM y HH:mm', 'tr').format(note.updatedAt!),
               ),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         AttachmentStrip(
@@ -1006,60 +1030,63 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // odaklanır — böylece yazmaya başlamak için sadece üst kısma değil,
       // aşağıya doğru her yere dokunmak yeterlidir.
       NoteType.text => LayoutBuilder(
-          builder: (context, constraints) => ListView(
-            padding: const EdgeInsets.only(bottom: 96),
-            children: [
-              header,
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-                },
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        TextField(
-                          controller: _bodyController,
-                          focusNode: _bodyFocus,
-                          onChanged: (value) =>
-                              _mutate((n) => n.copyWith(body: value)),
-                          maxLines: null,
-                          minLines: 8,
-                          keyboardType: TextInputType.multiline,
-                          decoration: InputDecoration(
-                            hintText: l10n.bodyHint,
-                            filled: false,
-                            border: InputBorder.none,
-                          ),
+        builder: (context, constraints) => ListView(
+          padding: const EdgeInsets.only(bottom: 96),
+          children: [
+            header,
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+              },
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: _bodyController,
+                        focusNode: _bodyFocus,
+                        onChanged: (value) =>
+                            _mutate((n) => n.copyWith(body: value)),
+                        maxLines: null,
+                        minLines: 8,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          hintText: l10n.bodyHint,
+                          filled: false,
+                          border: InputBorder.none,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
       NoteType.checklist || NoteType.ordered => ItemsEditor(
-          key: ValueKey('items-${note.id}'),
-          items: note.items,
-          showCheckboxes: note.type == NoteType.checklist,
-          expandItems: ref.watch(expandListItemsProvider),
-          onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
-          header: header,
-        ),
+        key: ValueKey('items-${note.id}'),
+        items: note.items,
+        showCheckboxes: note.type == NoteType.checklist,
+        expandItems: ref.watch(expandListItemsProvider),
+        onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
+        header: header,
+      ),
     };
 
     return CallbackShortcuts(
       bindings: {
         if (_isDesktop)
-          const SingleActivator(LogicalKeyboardKey.keyV, control: true, shift: true):
-              _pasteImage,
+          const SingleActivator(
+            LogicalKeyboardKey.keyV,
+            control: true,
+            shift: true,
+          ): _pasteImage,
       },
       child: Scaffold(
         backgroundColor: background,
@@ -1071,11 +1098,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               child: Tooltip(
                 message: pending ? l10n.syncPending : l10n.synced,
                 child: Icon(
-                  pending ? Icons.cloud_upload_outlined : Icons.cloud_done_outlined,
+                  pending
+                      ? Icons.cloud_upload_outlined
+                      : Icons.cloud_done_outlined,
                   size: 18,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurfaceVariant
+                  color: Theme.of(context).colorScheme.onSurfaceVariant
                       .withValues(alpha: pending ? 0.9 : 0.5),
                 ),
               ),
@@ -1096,8 +1123,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               icon: Icon(
                 note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
               ),
-              onPressed: () =>
-                  _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true),
+              onPressed: () => _mutate(
+                (n) => n.copyWith(pinned: !n.pinned),
+                immediate: true,
+              ),
             ),
             PopupMenuButton<String>(
               onSelected: (action) {
@@ -1129,11 +1158,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   child: ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(note.locked
-                        ? Icons.lock_open_outlined
-                        : Icons.lock_outline),
-                    title:
-                        Text(note.locked ? l10n.unlockNote : l10n.lockNote),
+                    leading: Icon(
+                      note.locked
+                          ? Icons.lock_open_outlined
+                          : Icons.lock_outline,
+                    ),
+                    title: Text(note.locked ? l10n.unlockNote : l10n.lockNote),
                   ),
                 ),
                 PopupMenuItem(
@@ -1141,12 +1171,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   child: ListTile(
                     dense: true,
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(note.archivedAt != null
-                        ? Icons.unarchive_outlined
-                        : Icons.archive_outlined),
-                    title: Text(note.archivedAt != null
-                        ? l10n.unarchive
-                        : l10n.archive),
+                    leading: Icon(
+                      note.archivedAt != null
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined,
+                    ),
+                    title: Text(
+                      note.archivedAt != null ? l10n.unarchive : l10n.archive,
+                    ),
                   ),
                 ),
                 PopupMenuItem(
@@ -1172,63 +1204,120 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ],
         ),
         body: SafeArea(child: body),
-        bottomNavigationBar: BottomAppBar(
-          color: background,
-          height: 56,
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
+            // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
+            // açık kalabiliyordu.
+            if (_dictating) _DictationBanner(onStop: _dictate),
+            BottomAppBar(
+              color: background,
+              height: 56,
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: l10n.color,
+                    icon: const Icon(Icons.palette_outlined),
+                    onPressed: _showColorSheet,
+                  ),
+                  IconButton(
+                    tooltip: l10n.addAttachment,
+                    icon: const Icon(Icons.attach_file),
+                    onPressed: _showAttachMenu,
+                  ),
+                  IconButton(
+                    tooltip: l10n.calculatorTitle,
+                    icon: const Icon(Icons.calculate_outlined),
+                    onPressed: _openCalculator,
+                  ),
+                  const Spacer(),
+                  // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
+                  // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
+                  // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
+                  // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
+                  // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
+                  SizedBox(
+                    width: 52,
+                    height: 52,
+                    child: _dictating
+                        ? IconButton.filled(
+                            tooltip: l10n.stopAndSave,
+                            iconSize: 28,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onError,
+                            ),
+                            icon: const Icon(Icons.stop),
+                            onPressed: _dictate,
+                          )
+                        : IconButton.filledTonal(
+                            tooltip: l10n.liveDictation,
+                            iconSize: 28,
+                            icon: const Icon(Icons.mic_none),
+                            onPressed: _dictate,
+                          ),
+                  ),
+                  const SizedBox(width: 4),
+                  FilledButton.tonalIcon(
+                    onPressed: () => showAiSheet(
+                      context,
+                      note,
+                      onAppendText: _appendText,
+                      onReplaceText: _replaceText,
+                    ),
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: Text(l10n.aiTitle),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Dikte sürerken alt çubuğun üstünde duran uyarı şeridi. Amacı tek:
+/// mikrofonun açık olduğu gözden kaçmasın.
+class _DictationBanner extends StatelessWidget {
+  const _DictationBanner({required this.onStop});
+
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.errorContainer,
+      child: InkWell(
+        onTap: onStop,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              IconButton(
-                tooltip: l10n.color,
-                icon: const Icon(Icons.palette_outlined),
-                onPressed: _showColorSheet,
-              ),
-              IconButton(
-                tooltip: l10n.addAttachment,
-                icon: const Icon(Icons.attach_file),
-                onPressed: _showAttachMenu,
-              ),
-              IconButton(
-                tooltip: l10n.calculatorTitle,
-                icon: const Icon(Icons.calculate_outlined),
-                onPressed: _openCalculator,
-              ),
-              const Spacer(),
-              // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
-              // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
-              // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
-              // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
-              // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
-              SizedBox(
-                width: 52,
-                height: 52,
-                child: _dictating
-                    ? IconButton.filled(
-                        tooltip: l10n.stopAndSave,
-                        iconSize: 28,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                          foregroundColor: Theme.of(context).colorScheme.onError,
-                        ),
-                        icon: const Icon(Icons.stop),
-                        onPressed: _dictate,
-                      )
-                    : IconButton.filledTonal(
-                        tooltip: l10n.liveDictation,
-                        iconSize: 28,
-                        icon: const Icon(Icons.mic_none),
-                        onPressed: _dictate,
-                      ),
-              ),
-              const SizedBox(width: 4),
-              FilledButton.tonalIcon(
-                onPressed: () => showAiSheet(
-                  context,
-                  note,
-                  onAppendText: _appendText,
-                  onReplaceText: _replaceText,
+              Icon(Icons.mic, size: 18, color: scheme.onErrorContainer),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  context.l10n.dictationListening,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onErrorContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                label: Text(l10n.aiTitle),
+              ),
+              Text(
+                context.l10n.stopAndSave,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onErrorContainer,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),

@@ -22,67 +22,81 @@ Future<void> showNoteActionsSheet(
   final action = await showModalBottomSheet<String>(
     context: context,
     showDragHandle: true,
+    // Sekiz satır varsayılan yükseklik sınırını (ekranın 9/16'sı) aşıyordu;
+    // taşan son satır ("Sil") sayfanın dışına, gezinme çubuğunun üstüne
+    // düşüyordu. isScrollControlled sınırı kaldırır, kaydırma da kısa
+    // ekranlarda güvenlik ağı olur.
+    isScrollControlled: true,
     builder: (sheetContext) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (note.title.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  note.title.trim(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(sheetContext).textTheme.titleSmall,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (note.title.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    note.title.trim(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(sheetContext).textTheme.titleSmall,
+                  ),
                 ),
               ),
+            ListTile(
+              leading: Icon(
+                note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+              ),
+              title: Text(note.pinned ? l10n.unpin : l10n.pin),
+              onTap: () => Navigator.pop(sheetContext, 'pin'),
             ),
-          ListTile(
-            leading: Icon(note.pinned ? Icons.push_pin : Icons.push_pin_outlined),
-            title: Text(note.pinned ? l10n.unpin : l10n.pin),
-            onTap: () => Navigator.pop(sheetContext, 'pin'),
-          ),
-          ListTile(
-            leading: Icon(note.starred ? Icons.star : Icons.star_outline),
-            title: Text(note.starred ? l10n.unstar : l10n.star),
-            onTap: () => Navigator.pop(sheetContext, 'star'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.share_outlined),
-            title: Text(l10n.share),
-            onTap: () => Navigator.pop(sheetContext, 'share'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.copy_outlined),
-            title: Text(l10n.copy),
-            onTap: () => Navigator.pop(sheetContext, 'copy'),
-          ),
-          ListTile(
-            leading: Icon(note.archivedAt != null
-                ? Icons.unarchive_outlined
-                : Icons.archive_outlined),
-            title: Text(note.archivedAt != null ? l10n.unarchive : l10n.archive),
-            onTap: () => Navigator.pop(sheetContext, 'archive'),
-          ),
-          ListTile(
-            leading: Icon(
-                note.locked ? Icons.lock_open_outlined : Icons.lock_outline),
-            title: Text(note.locked ? l10n.unlockNote : l10n.lockNote),
-            onTap: () => Navigator.pop(sheetContext, 'lock'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.check_circle_outline),
-            title: Text(l10n.select),
-            onTap: () => Navigator.pop(sheetContext, 'select'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline),
-            title: Text(l10n.delete),
-            onTap: () => Navigator.pop(sheetContext, 'delete'),
-          ),
-        ],
+            ListTile(
+              leading: Icon(note.starred ? Icons.star : Icons.star_outline),
+              title: Text(note.starred ? l10n.unstar : l10n.star),
+              onTap: () => Navigator.pop(sheetContext, 'star'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: Text(l10n.share),
+              onTap: () => Navigator.pop(sheetContext, 'share'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: Text(l10n.copy),
+              onTap: () => Navigator.pop(sheetContext, 'copy'),
+            ),
+            ListTile(
+              leading: Icon(
+                note.archivedAt != null
+                    ? Icons.unarchive_outlined
+                    : Icons.archive_outlined,
+              ),
+              title: Text(
+                note.archivedAt != null ? l10n.unarchive : l10n.archive,
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'archive'),
+            ),
+            ListTile(
+              leading: Icon(
+                note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
+              ),
+              title: Text(note.locked ? l10n.unlockNote : l10n.lockNote),
+              onTap: () => Navigator.pop(sheetContext, 'lock'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.check_circle_outline),
+              title: Text(l10n.select),
+              onTap: () => Navigator.pop(sheetContext, 'select'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline),
+              title: Text(l10n.delete),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+          ],
+        ),
       ),
     ),
   );
