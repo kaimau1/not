@@ -1435,8 +1435,14 @@ abstract class AppLocalizations {
   /// No description provided for @dictationNoKeyInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Canlı döküm için Ayarlar\'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.'**
+  /// **'Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.'**
   String get dictationNoKeyInfo;
+
+  /// No description provided for @dictationHoldHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mikrofonu basılı tutup konuşun, bırakınca yazılır'**
+  String get dictationHoldHint;
 
   /// No description provided for @dictationProcessing.
   ///

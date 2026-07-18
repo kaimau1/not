@@ -182,15 +182,11 @@ class NoteCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        // Seçim modunda dokunuş seçimi değiştirir. Uzun basış hızlı işlem
-        // menüsünü açar (paylaş/arşivle/kilitle/kopyala/seç/sil); seçim
-        // modu aktifken ise seçimi değiştirir.
+        // Seçim modunda dokunuş seçimi değiştirir. Uzun basış HER ZAMAN
+        // seçim yapar; hızlı işlemler (paylaş/arşivle/kilitle/kopyala/sil)
+        // kartın sağ üstündeki üç nokta düğmesinden açılır.
         onTap: selectionActive ? toggleSelection : () => _openNote(context),
-        onLongPress: _isDesktop
-            ? null
-            : selectionActive
-                ? toggleSelection
-                : () => showNoteActionsSheet(context, ref, note),
+        onLongPress: _isDesktop ? null : toggleSelection,
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -207,38 +203,52 @@ class NoteCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (note.title.trim().isNotEmpty || note.pinned || note.starred)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: highlightedText(
-                            context,
-                            note.title,
-                            highlightQuery,
-                            maxLines: 1,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                // Üst satır her kartta durur: başlık (varsa), rozetler ve
+                // sağ üstte hızlı işlem menüsü.
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: note.title.trim().isEmpty
+                            ? const SizedBox.shrink()
+                            : highlightedText(
+                                context,
+                                note.title,
+                                highlightQuery,
+                                maxLines: 1,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                      ),
+                      if (note.starred)
+                        Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+                      if (note.pinned)
+                        Icon(
+                          Icons.push_pin,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      // Seçim modunda yerini seçim tiki alır.
+                      if (!selectionActive)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => showNoteActionsSheet(context, ref, note),
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Icon(
+                              Icons.more_vert,
+                              size: 18,
+                              color: scheme.onSurfaceVariant
+                                  .withValues(alpha: 0.8),
+                            ),
                           ),
                         ),
-                        if (note.starred)
-                          Icon(
-                            Icons.star,
-                            size: 14,
-                            color: Colors.amber.shade600,
-                          ),
-                        if (note.pinned)
-                          Icon(
-                            Icons.push_pin,
-                            size: 14,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
+                ),
                 // Kilitli not: içerik kartta gösterilmez; yalnızca kilit
                 // satırı görünür (başlık yukarıda kalabilir).
                 if (note.locked)

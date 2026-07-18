@@ -730,7 +730,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get dictationNoKeyInfo =>
-      'Canlı döküm için Ayarlar\'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.';
+      'Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.';
+
+  @override
+  String get dictationHoldHint =>
+      'Mikrofonu basılı tutup konuşun, bırakınca yazılır';
 
   @override
   String get dictationProcessing => 'Yazıya dökülüyor...';

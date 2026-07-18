@@ -341,22 +341,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   bottom: 168,
                   child: VoiceAssistantPanel(),
                 ),
+                // Düğmeler Scaffold.floatingActionButton yerine BURADA durur:
+                // Scaffold bir FAB tanıdığında yüzen bildirimleri ("not
+                // silindi") onun ÜSTÜne iter. Düğmeler Stack'te olunca
+                // bildirim ekranın dibinde, düğmelerin solunda kalır.
+                Positioned(
+                  right: 16,
+                  bottom: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
+                      const VoiceAssistantButton(),
+                      const SizedBox(height: 6),
+                      // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
+                      QuickAddFab(
+                        onCreate: _createNote,
+                        onHandwriting: _createHandwritingNote,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          floatingActionButton: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
-              const VoiceAssistantButton(),
-              const SizedBox(height: 6),
-              // Keep tarzı açılan "+": metin / madde / sıralı / el yazısı.
-              QuickAddFab(
-                onCreate: _createNote,
-                onHandwriting: _createHandwritingNote,
-              ),
-            ],
           ),
         ),
       ),

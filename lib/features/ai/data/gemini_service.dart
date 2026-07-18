@@ -687,35 +687,47 @@ class GeminiService {
         },
       ];
 
-  /// Sesli hızlı not: ses kaydı TEK çağrıda yazıya dökülür ve asistan uygun
-  /// notu araçlarıyla oluşturur (eski akış: ayrı transkripsiyon + asistan =
-  /// iki kat gecikme). Hız için küçük model ilk sırada denenir.
+  /// Sesli hızlı not: konuşmadan uygun notu asistan araçlarıyla oluşturur.
+  ///
+  /// [transcript] verilirse (cihazın yerleşik tanıması) modele yalnızca kısa
+  /// METİN gider — ses göndermeye göre çok daha az token harcar ve model
+  /// sesi yorumlamak yerine hazır metni yapılandırdığı için tip/içerik
+  /// tutarsızlığı (boş not) sorunu ortadan kalkar. Yerleşik tanıma yoksa
+  /// [audioBytes] ile eski ses yolu kullanılır.
   Future<String> assistantVoiceNote({
     required String notesContext,
-    required Uint8List audioBytes,
-    required String mimeType,
+    Uint8List? audioBytes,
+    String? mimeType,
+    String? transcript,
     required Future<Map<String, dynamic>> Function(
       String name,
       Map<String, dynamic> args,
     ) onToolCall,
   }) async {
+    const task = 'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
+        'checklist, aksi hâlde metin; tarih/saat geçiyorsa hatırlatıcı ekle. '
+        'Anlaşılır bir istek yoksa not oluşturma ve bunu belirt.';
+    final hasTranscript = transcript != null && transcript.trim().isNotEmpty;
+    if (!hasTranscript && audioBytes == null) {
+      throw const GeminiException('Sesli not için içerik yok');
+    }
     final contents = [
       ..._assistantPreamble(notesContext),
       {
         'role': 'user',
         'parts': [
-          {
-            'inline_data': {
-              'mime_type': mimeType,
-              'data': base64Encode(audioBytes),
+          if (hasTranscript)
+            {'text': 'Kullanıcının sesli notu: "${transcript.trim()}"\n\n'
+                'Bu konuşmadan $task'}
+          else ...[
+            {
+              'inline_data': {
+                'mime_type': mimeType ?? 'audio/mp4',
+                'data': base64Encode(audioBytes!),
+              },
             },
-          },
-          {
-            'text': 'Bu ses kaydındaki konuşmadan uygun bir not oluştur: '
-                'alışveriş/yapılacaklar sayılıyorsa checklist, aksi hâlde '
-                'metin; tarih/saat geçiyorsa hatırlatıcı ekle. Kayıtta '
-                'anlaşılır konuşma yoksa not oluşturma ve bunu belirt.',
-          },
+            {'text': 'Bu ses kaydındaki konuşmadan $task'},
+          ],
         ],
       },
     ];

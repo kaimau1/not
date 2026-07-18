@@ -52,13 +52,30 @@ class _ItemsEditorState extends State<ItemsEditor> {
   @override
   void didUpdateWidget(covariant ItemsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Editör açıkken yerel durum esastır; yalnızca öğe kimliklerinin
-    // tamamen değiştiği (ör. başka cihazdan gelen) durumda yenile.
-    final localIds = {for (final i in _items) i.id};
-    final incomingIds = {for (final i in widget.items) i.id};
-    if (localIds.intersection(incomingIds).isEmpty && incomingIds.isNotEmpty) {
+    // Gelen liste yerelden farklıysa benimse. ESKİDEN yalnızca kimliklerin
+    // TAMAMEN değiştiği durumda yenileniyordu; dikte/hesap makinesi/AI bir
+    // öğe eklediğinde eski kimlikler durduğundan koşul tutmuyor ve eklenen
+    // öğe ekranda HİÇ görünmüyordu (editörden çıkıp girince beliriyordu).
+    //
+    // Yerel yazımda döngü riski yok: onChanged çağıran taraf durumu aynı
+    // karede günceller, dönen liste yerelle birebir aynı olur ve buradaki
+    // karşılaştırma false kalır.
+    if (!_sameItems(_items, widget.items)) {
       setState(() => _items = List.of(widget.items));
     }
+  }
+
+  /// İki liste görünür olarak aynı mı (sıra + kimlik + metin + işaret).
+  static bool _sameItems(List<NoteItem> a, List<NoteItem> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id ||
+          a[i].text != b[i].text ||
+          a[i].checked != b[i].checked) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @override
@@ -90,32 +107,35 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   void _commit() => widget.onChanged(List.of(_items));
 
-  void _updateText(int index, String text) {
+  void _updateText(NoteItem target, String text) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
     _items[index] = _items[index].copyWith(text: text);
     _commit();
   }
 
-  /// Checklist'te işaretlenen öğe otomatik listenin en altına düşer;
-  /// işareti kalkan öğe işaretsizlerin sonuna geri çıkar (Keep davranışı).
-  void _toggle(int index, bool? value) {
-    final checked = value ?? false;
+  /// İşaretsizlerin bittiği (= ilk işaretlinin başladığı) konum. Hem yeni
+  /// öğe hem de işareti değişen öğe buraya girer:
+  /// - işaretlenen öğe → işaretli bloğun EN ÜSTÜne (en son işaretlenen üstte)
+  /// - işareti kalkan öğe → işaretsizlerin sonuna
+  int get _checkedStart {
+    final first = _items.indexWhere((i) => i.checked);
+    return first < 0 ? _items.length : first;
+  }
+
+  void _toggleItem(NoteItem target, bool? value) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
     setState(() {
-      final item = _items.removeAt(index).copyWith(checked: checked);
-      if (checked) {
-        _items.add(item);
-      } else {
-        final firstChecked = _items.indexWhere((i) => i.checked);
-        if (firstChecked < 0) {
-          _items.add(item);
-        } else {
-          _items.insert(firstChecked, item);
-        }
-      }
+      final item = _items.removeAt(index).copyWith(checked: value ?? false);
+      _items.insert(_checkedStart, item);
     });
     _commit();
   }
 
-  void _insertAfter(int index) {
+  void _insertAfter(NoteItem after) {
+    final index = _items.indexWhere((i) => i.id == after.id);
+    if (index < 0) return;
     final item = NoteItem(id: _uuid.v4(), text: '');
     setState(() => _items.insert(index + 1, item));
     _commit();
@@ -124,26 +144,20 @@ class _ItemsEditorState extends State<ItemsEditor> {
     });
   }
 
-  /// "Yeni öğe" düğmesiyle öğe ekler. Checklist'te yeni öğe İŞARETSİZLERİN
-  /// sonuna (işaretli bloğun ÜSTÜne) girer — böylece düğme listenin başında
-  /// dursa da öğe doğru yere düşer ve altta biriken işaretlilerin arasına
-  /// karışmaz (madde 4).
+  /// "Yeni öğe" düğmesiyle öğe ekler; işaretsizlerin sonuna girer.
   void _addItem() {
     final item = NoteItem(id: _uuid.v4(), text: '');
-    final firstChecked = _items.indexWhere((i) => i.checked);
-    final pos = firstChecked < 0 ? _items.length : firstChecked;
-    setState(() => _items.insert(pos, item));
+    setState(() => _items.insert(_checkedStart, item));
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
     });
   }
 
-  void _remove(int index) {
-    final removed = _items[index];
-    setState(() => _items.removeAt(index));
-    _controllers.remove(removed.id)?.dispose();
-    _focusNodes.remove(removed.id)?.dispose();
+  void _removeItem(NoteItem target) {
+    setState(() => _items.removeWhere((i) => i.id == target.id));
+    _controllers.remove(target.id)?.dispose();
+    _focusNodes.remove(target.id)?.dispose();
     _commit();
   }
 
@@ -215,13 +229,115 @@ class _ItemsEditorState extends State<ItemsEditor> {
     );
   }
 
+  /// Tek öğe satırı. [reorderIndex] verilirse satır sürüklenebilir;
+  /// footer'daki işaretli öğelerde tutamak yoktur (sıraları zaten sabit).
+  /// [orderNumber] sıralı listede gösterilen numaradır.
+  Widget _itemRow(
+    NoteItem item, {
+    int? reorderIndex,
+    int? orderNumber,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final checked = widget.showCheckboxes && item.checked;
+    final focused = _focusFor(item).hasFocus;
+
+    return Padding(
+      key: ValueKey(item.id),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          // Uzun basınca sürükleme: anlık sürükleme dinleyicisi, tutamaca
+          // denk gelen parmakta listenin kaydırılmasını engelliyordu
+          // (kullanıcı "kaydıramıyorum" diye görüyordu).
+          if (reorderIndex != null)
+            ReorderableDelayedDragStartListener(
+              index: reorderIndex,
+              child: Icon(
+                Icons.drag_indicator,
+                size: 18,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+              ),
+            )
+          else
+            const SizedBox(width: 18),
+          if (widget.showCheckboxes)
+            Checkbox(
+              value: item.checked,
+              onChanged: (value) => _toggleItem(item, value),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                '${orderNumber ?? 0}.',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ),
+          Expanded(
+            child: TextField(
+              controller: _controllerFor(item),
+              focusNode: _focusFor(item),
+              onChanged: (text) => _updateText(item, text),
+              contextMenuBuilder: (context, editableState) =>
+                  _contextMenu(context, editableState),
+              // Varsayılan "next" davranışı odağı metin dışı bir öğeye
+              // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
+              // bastırır, odak doğrudan yeni öğeye geçer.
+              onEditingComplete: () => _insertAfter(item),
+              textInputAction: TextInputAction.next,
+              // Tam göster modunda satır sarılıp büyür; "dokununca aç"
+              // modunda odaklanınca açılır, aksi hâlde tek satır.
+              maxLines: widget.expandItems || focused ? null : 1,
+              style: checked
+                  ? TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    )
+                  : null,
+              decoration: InputDecoration(
+                hintText: l10n.newItemHint,
+                filled: false,
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
+          // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
+          // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
+          if (focused)
+            IconButton(
+              tooltip: l10n.removeItem,
+              icon: const Icon(Icons.close, size: 18),
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+              onPressed: () => _removeItem(item),
+            )
+          else
+            const SizedBox(width: 48),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final showChecks = widget.showCheckboxes;
-    final checkedCount =
-        showChecks ? _items.where((i) => i.checked).length : 0;
+
+    // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da
+    // ayrı bir blok olarak durur (Keep'in "tamamlananlar" bölümü gibi).
+    // Böylece "Yeni öğe" düğmesi tam istenen yere — işaretsizlerin altına,
+    // işaretlilerin üstüne — doğal olarak düşer.
+    final checkedItems =
+        showChecks ? [for (final i in _items) if (i.checked) i] : const <NoteItem>[];
+    final listItems =
+        showChecks ? [for (final i in _items) if (!i.checked) i] : _items;
 
     final addButton = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -232,35 +348,19 @@ class _ItemsEditorState extends State<ItemsEditor> {
       ),
     );
 
-    // Başlık bölgesi = editörün kendi başlığı. Checklist'te "Yeni öğe" düğmesi
-    // burada, en ÜSTte durur (Keep gibi): işaretli öğeler listenin en altına
-    // indiğinden düğme onların altında kalmaz (madde 4).
-    final header = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (widget.header != null) widget.header!,
-        if (showChecks) addButton,
-      ],
-    );
-
-    // Alt bölge: sıralı listede (işaretsiz) "Yeni öğe" sona eklendiğinden düğme
-    // altta kalır. "İşaretlileri sil" ise en üst yerine işaretli öğelerin
-    // hemen altında, listenin sonunda durur — çok yukarıda değil (madde 5).
     final footer = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (!showChecks) addButton,
-        if (checkedCount > 0)
+        addButton,
+        for (final item in checkedItems) _itemRow(item),
+        if (checkedItems.isNotEmpty)
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _deleteChecked,
-                icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-                label: Text(l10n.deleteChecked(checkedCount)),
-                style: TextButton.styleFrom(foregroundColor: scheme.error),
-              ),
+            child: TextButton.icon(
+              onPressed: _deleteChecked,
+              icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+              label: Text(l10n.deleteChecked(checkedItems.length)),
+              style: TextButton.styleFrom(foregroundColor: scheme.error),
             ),
           ),
         if (widget.footer != null) widget.footer!,
@@ -270,92 +370,17 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return ReorderableListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
       buildDefaultDragHandles: false,
-      header: header,
+      header: widget.header,
       footer: footer,
-      itemCount: _items.length,
+      itemCount: listItems.length,
+      // İşaretsizler _items'ın başında tutulduğundan (bkz. _checkedStart)
+      // buradaki index'ler _items index'leriyle birebir örtüşür.
       onReorderItem: _reorder,
-      itemBuilder: (context, index) {
-        final item = _items[index];
-        final checked = widget.showCheckboxes && item.checked;
-        final focused = _focusFor(item).hasFocus;
-        return Padding(
-          key: ValueKey(item.id),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            children: [
-              // Uzun basınca sürükleme: anlık sürükleme dinleyicisi, tutamaca
-              // denk gelen parmakta listenin kaydırılmasını engelliyordu
-              // (kullanıcı "kaydıramıyorum" diye görüyordu).
-              ReorderableDelayedDragStartListener(
-                index: index,
-                child: Icon(
-                  Icons.drag_indicator,
-                  size: 18,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-                ),
-              ),
-              if (widget.showCheckboxes)
-                Checkbox(
-                  value: item.checked,
-                  onChanged: (value) => _toggle(index, value),
-                )
-              else
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    '${index + 1}.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyLarge
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ),
-              Expanded(
-                child: TextField(
-                  controller: _controllerFor(item),
-                  focusNode: _focusFor(item),
-                  onChanged: (text) => _updateText(index, text),
-                  contextMenuBuilder: (context, editableState) =>
-                      _contextMenu(context, editableState),
-                  // Varsayılan "next" davranışı odağı metin dışı bir öğeye
-                  // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
-                  // bastırır, odak doğrudan yeni öğeye geçer.
-                  onEditingComplete: () => _insertAfter(index),
-                  textInputAction: TextInputAction.next,
-                  // Tam göster modunda satır sarılıp büyür; "dokununca aç"
-                  // modunda odaklanınca açılır, aksi hâlde tek satır.
-                  maxLines: widget.expandItems || focused ? null : 1,
-                  style: checked
-                      ? TextStyle(
-                          decoration: TextDecoration.lineThrough,
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-                        )
-                      : null,
-                  decoration: InputDecoration(
-                    hintText: l10n.newItemHint,
-                    filled: false,
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                ),
-              ),
-              // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
-              // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
-              // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
-              if (focused)
-                IconButton(
-                  tooltip: l10n.removeItem,
-                  icon: const Icon(Icons.close, size: 18),
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  onPressed: () => _remove(index),
-                )
-              else
-                const SizedBox(width: 48),
-            ],
-          ),
-        );
-      },
+      itemBuilder: (context, index) => _itemRow(
+        listItems[index],
+        reorderIndex: index,
+        orderNumber: index + 1,
+      ),
     );
   }
 }

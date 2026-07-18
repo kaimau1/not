@@ -122,5 +122,11 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Cihazın konuşma tanıma servisini görebilmek için (Android 11+
+             paket görünürlüğü). Bu olmadan isRecognitionAvailable() servis
+             kurulu olsa bile false döner ve dikte eski ses yoluna düşer. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
     </queries>
 </manifest>
