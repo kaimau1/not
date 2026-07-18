@@ -30,8 +30,8 @@ final premiumProvider = StreamProvider<bool>((ref) {
 /// içerikleri (e-posta taraması, öneriler, brifing) onlarda kotayı boşa
 /// harcamamak için otomatik değil yalnızca düğmeyle çalışır (bkz. DailyCache).
 final aiUnlimitedProvider = Provider<bool>((ref) {
-  final hasKey = (ref.watch(geminiApiKeyProvider).valueOrNull ?? '').isNotEmpty;
-  final premium = ref.watch(premiumProvider).valueOrNull ?? false;
+  final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
+  final premium = ref.watch(premiumProvider).value ?? false;
   return hasKey || premium;
 });
 
