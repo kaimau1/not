@@ -298,5 +298,9 @@
   "liveDictation": "Sesli yazdır",
   "dictationListening": "Dinleniyor... konuştukça metin yazılır",
   "dictationNoKeyInfo": "Canlı döküm için Ayarlar'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.",
-  "dictationProcessing": "Yazıya dökülüyor..."
+  "dictationProcessing": "Yazıya dökülüyor...",
+  "aiDailyManualInfo": "Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.",
+  "aiGenerate": "Oluştur",
+  "aiScanEmails": "E-postaları tara",
+  "aiGeneratedTodayInfo": "Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin."
 }

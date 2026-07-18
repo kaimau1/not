@@ -4,22 +4,63 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../notes/data/notes_repository.dart';
+import '../data/ai_gate.dart';
+import '../data/daily_cache.dart';
 import '../data/gemini_service.dart';
+import 'ai_generate_prompt.dart';
 
-/// Notların tamamına bakarak üretilen öneriler. Her açılışta taze üretilir;
-/// "Yenile" ile tekrar istenebilir.
-final suggestionsProvider = FutureProvider.autoDispose<String>((ref) async {
-  final notes = await ref.watch(notesStreamProvider.future);
-  if (notes.isEmpty) return '';
-  return ref.watch(geminiServiceProvider).suggestFromNotes(notes);
-});
+/// Notların tamamına bakarak üretilen öneriler. Sonuç günde bir üretilip
+/// diske yazılır; ekranlar arası gezinmede ve uygulama yeniden açılışında
+/// korunur, "Yenile" ile zorlanır.
+final suggestionsProvider =
+    AsyncNotifierProvider<SuggestionsNotifier, String>(SuggestionsNotifier.new);
 
-/// Son 7 günün notlarından haftalık özet.
-final weeklySummaryProvider = FutureProvider.autoDispose<String>((ref) async {
-  final notes = await ref.watch(notesStreamProvider.future);
-  if (notes.isEmpty) return '';
-  return ref.watch(geminiServiceProvider).weeklySummary(notes);
-});
+class SuggestionsNotifier extends DailyCacheNotifier<String> {
+  @override
+  String get cacheKey => 'cache_suggestions';
+
+  @override
+  String get emptyValue => '';
+
+  @override
+  String encode(String value) => value;
+
+  @override
+  String decode(String raw) => raw;
+
+  @override
+  Future<String> compute() async {
+    // read: not değişiminde otomatik yeniden üretme; günlük/Yenile ile tazelenir.
+    final notes = await ref.read(notesStreamProvider.future);
+    if (notes.isEmpty) return '';
+    return ref.read(geminiServiceProvider).suggestFromNotes(notes);
+  }
+}
+
+/// Son 7 günün notlarından haftalık özet (günlük kalıcı önbellek).
+final weeklySummaryProvider = AsyncNotifierProvider<WeeklySummaryNotifier,
+    String>(WeeklySummaryNotifier.new);
+
+class WeeklySummaryNotifier extends DailyCacheNotifier<String> {
+  @override
+  String get cacheKey => 'cache_weekly';
+
+  @override
+  String get emptyValue => '';
+
+  @override
+  String encode(String value) => value;
+
+  @override
+  String decode(String raw) => raw;
+
+  @override
+  Future<String> compute() async {
+    final notes = await ref.read(notesStreamProvider.future);
+    if (notes.isEmpty) return '';
+    return ref.read(geminiServiceProvider).weeklySummary(notes);
+  }
+}
 
 enum _SuggestionsTab { suggestions, weekly }
 
@@ -33,14 +74,40 @@ class SuggestionsScreen extends ConsumerStatefulWidget {
 class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
   _SuggestionsTab _tab = _SuggestionsTab.suggestions;
 
+  void _showSnack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isWeekly = _tab == _SuggestionsTab.weekly;
     final content =
         ref.watch(isWeekly ? weeklySummaryProvider : suggestionsProvider);
-    void refresh() => ref.invalidate(
-        isWeekly ? weeklySummaryProvider : suggestionsProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final DailyCacheNotifier<String> notifier = isWeekly
+        ? ref.read(weeklySummaryProvider.notifier)
+        : ref.read(suggestionsProvider.notifier);
+    final generatedToday = notifier.generatedToday;
+
+    // Ücretsiz kullanıcı bugün zaten ürettiyse yenileme kotayı boşa harcamaz.
+    void onRefresh() {
+      if (!unlimited && generatedToday) {
+        _showSnack(l10n.aiGeneratedTodayInfo);
+        return;
+      }
+      notifier.refresh();
+    }
+
+    // Ücretsiz kullanıcıda içerik otomatik üretilmez: henüz üretilmemişse
+    // (yükleme/hata dışında) elle "Oluştur" istemi gösterilir.
+    final showPrompt = !unlimited &&
+        !generatedToday &&
+        !content.isLoading &&
+        !content.hasError;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,7 +116,7 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
           IconButton(
             tooltip: l10n.refresh,
             icon: const Icon(Icons.refresh),
-            onPressed: refresh,
+            onPressed: onRefresh,
           ),
         ],
       ),
@@ -75,7 +142,15 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
                   setState(() => _tab = selection.first),
             ),
           ),
-          Expanded(child: _buildBody(context, content, refresh)),
+          Expanded(
+            child: showPrompt
+                ? AiGeneratePrompt(
+                    icon: Icons.lightbulb_outline,
+                    buttonLabel: l10n.aiGenerate,
+                    onGenerate: notifier.refresh,
+                  )
+                : _buildBody(context, content, onRefresh),
+          ),
         ],
       ),
     );

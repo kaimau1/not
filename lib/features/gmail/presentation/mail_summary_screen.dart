@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,26 +8,65 @@ import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../ai/data/ai_gate.dart';
+import '../../ai/data/daily_cache.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../ai/presentation/ai_generate_prompt.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note_type.dart';
 import '../data/gmail_auth.dart';
 import '../data/gmail_service.dart';
 
-/// E-postaları çekip Gemini ile önemlilerini seçtirir. Sonuç 15 dakika
-/// bellekte tutulur (ekrana her girişte baştan tarama = yavaşlık);
-/// "Yenile" ile istenirse hemen tekrar taranır.
+/// E-postaları çekip Gemini ile önemlilerini seçtirir. Sonuç günde bir kez
+/// üretilip diske yazılır: bir kez tarandıktan sonra aynı gün tekrar
+/// taranmaz (başka sekmeye geçilse de arka planda biter ve saklanır),
+/// gün değişince otomatik tazelenir, "Yenile" ile her an zorlanır.
 final importantEmailsProvider =
-    FutureProvider.autoDispose<List<ImportantEmail>>((ref) async {
-  final emails = await ref.watch(gmailServiceProvider).fetchRecentEmails();
-  final result = emails.isEmpty
-      ? const <ImportantEmail>[]
-      : await ref.watch(geminiServiceProvider).triageEmails(emails);
-  final link = ref.keepAlive();
-  final timer = Timer(const Duration(minutes: 15), link.close);
-  ref.onDispose(timer.cancel);
-  return result;
-});
+    AsyncNotifierProvider<ImportantEmailsNotifier, List<ImportantEmail>>(
+  ImportantEmailsNotifier.new,
+);
+
+class ImportantEmailsNotifier extends DailyCacheNotifier<List<ImportantEmail>> {
+  @override
+  String get cacheKey => 'cache_important_emails';
+
+  @override
+  List<ImportantEmail> get emptyValue => const [];
+
+  @override
+  Future<List<ImportantEmail>> compute() async {
+    if (!ref.read(gmailConnectedProvider)) return const [];
+    final emails = await ref.read(gmailServiceProvider).fetchRecentEmails();
+    if (emails.isEmpty) return const [];
+    return ref.read(geminiServiceProvider).triageEmails(emails);
+  }
+
+  @override
+  String encode(List<ImportantEmail> value) => jsonEncode([
+        for (final e in value)
+          {
+            'from': e.from,
+            'subject': e.subject,
+            'summary': e.summary,
+            'reason': e.reason,
+            'dueDate': e.dueDate?.toIso8601String(),
+          },
+      ]);
+
+  @override
+  List<ImportantEmail> decode(String raw) => [
+        for (final m in jsonDecode(raw) as List)
+          ImportantEmail(
+            from: m['from'] as String,
+            subject: m['subject'] as String,
+            summary: m['summary'] as String,
+            reason: m['reason'] as String,
+            dueDate: m['dueDate'] == null
+                ? null
+                : DateTime.parse(m['dueDate'] as String),
+          ),
+      ];
+}
 
 class MailSummaryScreen extends ConsumerWidget {
   const MailSummaryScreen({super.key});
@@ -36,6 +75,18 @@ class MailSummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final connected = ref.watch(gmailConnectedProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final notifier = ref.read(importantEmailsProvider.notifier);
+
+    void onRefresh() {
+      if (!unlimited && notifier.generatedToday) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.aiGeneratedTodayInfo)));
+        return;
+      }
+      notifier.refresh();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +96,7 @@ class MailSummaryScreen extends ConsumerWidget {
             IconButton(
               tooltip: l10n.refresh,
               icon: const Icon(Icons.refresh),
-              onPressed: () => ref.invalidate(importantEmailsProvider),
+              onPressed: onRefresh,
             ),
         ],
       ),
@@ -153,6 +204,20 @@ class _EmailList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final emails = ref.watch(importantEmailsProvider);
+    final unlimited = ref.watch(aiUnlimitedProvider);
+    final notifier = ref.read(importantEmailsProvider.notifier);
+
+    // Ücretsiz kullanıcıda tarama otomatik başlamaz (kota); düğmeyle başlar.
+    if (!unlimited &&
+        !notifier.generatedToday &&
+        !emails.isLoading &&
+        !emails.hasError) {
+      return AiGeneratePrompt(
+        icon: Icons.mark_email_unread_outlined,
+        buttonLabel: l10n.aiScanEmails,
+        onGenerate: notifier.refresh,
+      );
+    }
 
     return emails.when(
       loading: () => Center(
@@ -182,7 +247,8 @@ class _EmailList extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   FilledButton.tonal(
-                    onPressed: () => ref.invalidate(importantEmailsProvider),
+                    onPressed: () =>
+                        ref.read(importantEmailsProvider.notifier).refresh(),
                     child: Text(l10n.retry),
                   ),
                   const SizedBox(width: 8),

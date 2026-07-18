@@ -48,6 +48,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _note;
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
+  final _bodyFocus = FocusNode();
   final _debouncer = Debouncer();
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
@@ -96,6 +97,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _sub?.close();
     _titleController.dispose();
     _bodyController.dispose();
+    _bodyFocus.dispose();
     super.dispose();
   }
 
@@ -623,6 +625,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
   /// listelerde yeni öğe olarak ekler.
   Future<void> _openCalculator() async {
+    // Gövde odağını bırak: alt sayfa kapanınca klavye kendiliğinden geri
+    // açılmasın (odaklı alan kalırsa Flutter klavyeyi yeniden gösterir).
+    FocusScope.of(context).unfocus();
     final result = await showCalculatorSheet(context);
     if (result == null || result.isEmpty) return;
     final note = _note;
@@ -750,26 +755,49 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
 
     final Widget body = switch (note.type) {
-      NoteType.text => ListView(
-          padding: const EdgeInsets.only(bottom: 96),
-          children: [
-            header,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                controller: _bodyController,
-                onChanged: (value) => _mutate((n) => n.copyWith(body: value)),
-                maxLines: null,
-                minLines: 10,
-                keyboardType: TextInputType.multiline,
-                decoration: InputDecoration(
-                  hintText: l10n.bodyHint,
-                  filled: false,
-                  border: InputBorder.none,
+      // Gövde alanı en az bir ekran boyu yüksekliğe zorlanır ve tüm bu alan
+      // (metnin bittiği yerin altındaki boşluk dahil) dokunuşla gövdeye
+      // odaklanır — böylece yazmaya başlamak için sadece üst kısma değil,
+      // aşağıya doğru her yere dokunmak yeterlidir.
+      NoteType.text => LayoutBuilder(
+          builder: (context, constraints) => ListView(
+            padding: const EdgeInsets.only(bottom: 96),
+            children: [
+              header,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+                },
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _bodyController,
+                          focusNode: _bodyFocus,
+                          onChanged: (value) =>
+                              _mutate((n) => n.copyWith(body: value)),
+                          maxLines: null,
+                          minLines: 8,
+                          keyboardType: TextInputType.multiline,
+                          decoration: InputDecoration(
+                            hintText: l10n.bodyHint,
+                            filled: false,
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       NoteType.checklist || NoteType.ordered => ItemsEditor(
           key: ValueKey('items-${note.id}'),
