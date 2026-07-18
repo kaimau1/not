@@ -9,13 +9,33 @@ import 'package:google_fonts/google_fonts.dart';
 abstract final class AppTheme {
   static const Color seed = Color(0xFF4A5CCC);
 
+  /// Kağıt temasının tohum rengi: sıcak sepya; saman kağıdı yüzeylerle uyumlu.
+  static const Color paperSeed = Color(0xFF8A6C3C);
+
   static ThemeData light() => _base(Brightness.light);
 
   static ThemeData dark() => _base(Brightness.dark);
 
-  static ThemeData _base(Brightness brightness) {
+  /// "Kağıt" teması: açık temanın hafif saman kağıdı renkli sürümü.
+  static ThemeData paper() => _base(Brightness.light, paper: true);
+
+  static ThemeData _base(Brightness brightness, {bool paper = false}) {
     final isDark = brightness == Brightness.dark;
-    var scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness);
+    var scheme = ColorScheme.fromSeed(
+      seedColor: paper ? paperSeed : seed,
+      brightness: brightness,
+    );
+    if (paper) {
+      // Hafif saman kağıdı tonları: sıcak, sarımsı krem yüzeyler.
+      scheme = scheme.copyWith(
+        surface: const Color(0xFFF5EDD8),
+        surfaceContainerLowest: const Color(0xFFFBF5E6),
+        surfaceContainerLow: const Color(0xFFF0E6CC),
+        surfaceContainer: const Color(0xFFEBDFC2),
+        surfaceContainerHigh: const Color(0xFFE4D6B4),
+        surfaceContainerHighest: const Color(0xFFDCCDA7),
+      );
+    }
     if (isDark) {
       scheme = scheme.copyWith(
         surface: const Color(0xFF0E0E11),

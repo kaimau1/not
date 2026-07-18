@@ -288,5 +288,15 @@
   "aiModelChat": "Sohbet ve AI özellikleri",
   "aiModelVoice": "Sesli not",
   "aiModelAuto": "Otomatik (önerilen)",
-  "aiModelsInfo": "Liste Google'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir."
+  "aiModelsInfo": "Liste Google'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.",
+  "clearNote": "Temizle",
+  "clearNoteConfirm": "Notun içeriği (metin ve liste öğeleri) silinecek. Emin misin?",
+  "themePaper": "Kağıt",
+  "calculatorTitle": "Hesap Makinesi",
+  "calcExpressionHint": "ör. 12,5×3+40",
+  "calcInvalid": "Geçersiz ifade",
+  "liveDictation": "Sesli yazdır",
+  "dictationListening": "Dinleniyor... konuştukça metin yazılır",
+  "dictationNoKeyInfo": "Canlı döküm için Ayarlar'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.",
+  "dictationProcessing": "Yazıya dökülüyor..."
 }

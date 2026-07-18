@@ -27,6 +27,8 @@ import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
+import 'calculator_sheet.dart';
+import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
 import 'items_editor.dart';
 
@@ -255,6 +257,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.addDrawing),
               onTap: () => Navigator.pop(sheetContext, 'drawing'),
             ),
+            ListTile(
+              leading: const Icon(Icons.mic_none),
+              title: Text(l10n.recordAudio),
+              onTap: () => Navigator.pop(sheetContext, 'audio'),
+            ),
             if (_isDesktop)
               ListTile(
                 leading: const Icon(Icons.content_paste),
@@ -272,6 +279,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         await _pickPdf();
       case 'drawing':
         await _addDrawing();
+      case 'audio':
+        await _recordAudio();
       case 'paste':
         await _pasteImage();
     }
@@ -572,6 +581,76 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     Navigator.of(context).pop();
   }
 
+  /// Notun içeriğini (gövde + liste öğeleri) onay alarak temizler;
+  /// başlık, etiketler ve ekler yerinde kalır.
+  Future<void> _clearContent() async {
+    final note = _note;
+    if (note == null) return;
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.clearNote),
+        content: Text(l10n.clearNoteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.clearNote),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) return;
+    _bodyController.clear();
+    _mutate(
+      (n) => n.copyWith(body: '', items: const []),
+      immediate: true,
+    );
+  }
+
+  /// Sesli yazdırma: konuşma (anahtar varsa anlık) yazıya döner ve
+  /// notun sonuna eklenir.
+  Future<void> _dictate() async {
+    final text = await showDictationSheet(context);
+    if (text == null || text.trim().isEmpty) return;
+    _appendText(text);
+  }
+
+  /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
+  /// listelerde yeni öğe olarak ekler.
+  Future<void> _openCalculator() async {
+    final result = await showCalculatorSheet(context);
+    if (result == null || result.isEmpty) return;
+    final note = _note;
+    if (note == null) return;
+    if (note.type == NoteType.text) {
+      final body = _bodyController.text;
+      final selection = _bodyController.selection;
+      final start = selection.isValid ? selection.start : body.length;
+      final end = selection.isValid ? selection.end : body.length;
+      final updated = body.replaceRange(start, end, result);
+      _bodyController.value = TextEditingValue(
+        text: updated,
+        selection: TextSelection.collapsed(offset: start + result.length),
+      );
+      _mutate((n) => n.copyWith(body: updated), immediate: true);
+    } else {
+      // _appendText liste öğelerinde satır başındaki rakamları madde
+      // numarası sanıp kırpar; sonuç sayı içerdiğinden öğe doğrudan eklenir.
+      const uuid = Uuid();
+      _mutate(
+        (n) => n.copyWith(
+          items: [...n.items, NoteItem(id: uuid.v4(), text: result)],
+        ),
+        immediate: true,
+      );
+    }
+  }
+
   void _showSnack(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -744,6 +823,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     _toggleLock();
                   case 'archive':
                     _toggleArchive();
+                  case 'clear':
+                    _clearContent();
                   case 'delete':
                     _delete();
                 }
@@ -784,6 +865,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   ),
                 ),
                 PopupMenuItem(
+                  value: 'clear',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.backspace_outlined),
+                    title: Text(l10n.clearNote),
+                  ),
+                ),
+                PopupMenuItem(
                   value: 'delete',
                   child: ListTile(
                     dense: true,
@@ -813,11 +903,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 onPressed: _showAttachMenu,
               ),
               IconButton(
-                tooltip: l10n.recordAudio,
-                icon: const Icon(Icons.mic_none),
-                onPressed: _recordAudio,
+                tooltip: l10n.calculatorTitle,
+                icon: const Icon(Icons.calculate_outlined),
+                onPressed: _openCalculator,
               ),
               const Spacer(),
+              // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
+              // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
+              // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
+              IconButton.filledTonal(
+                tooltip: l10n.liveDictation,
+                icon: const Icon(Icons.mic_none),
+                onPressed: _dictate,
+              ),
+              const SizedBox(width: 4),
               FilledButton.tonalIcon(
                 onPressed: () => showAiSheet(
                   context,

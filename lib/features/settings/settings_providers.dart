@@ -7,25 +7,31 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('main() içinde override edilmeli'),
 );
 
-final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
-  ThemeModeNotifier.new,
+/// Tema seçimi: sistem/açık/koyu artı "kağıt" (hafif saman kağıdı renkli
+/// açık tema). ThemeMode'da karşılığı olmadığından kendi enum'ımız var;
+/// aynı prefs anahtarını kullandığı için eski kayıtlar geriye uyumludur.
+enum AppThemeChoice { system, light, dark, paper }
+
+final themeChoiceProvider =
+    NotifierProvider<ThemeChoiceNotifier, AppThemeChoice>(
+  ThemeChoiceNotifier.new,
 );
 
-class ThemeModeNotifier extends Notifier<ThemeMode> {
+class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
   static const _key = 'theme_mode';
 
   @override
-  ThemeMode build() {
+  AppThemeChoice build() {
     final stored = ref.watch(sharedPreferencesProvider).getString(_key);
-    return ThemeMode.values.firstWhere(
+    return AppThemeChoice.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => ThemeMode.system,
+      orElse: () => AppThemeChoice.system,
     );
   }
 
-  void set(ThemeMode mode) {
-    state = mode;
-    ref.read(sharedPreferencesProvider).setString(_key, mode.name);
+  void set(AppThemeChoice choice) {
+    state = choice;
+    ref.read(sharedPreferencesProvider).setString(_key, choice.name);
   }
 }
 
@@ -248,9 +254,17 @@ final _clockProvider = StreamProvider<DateTime>(
 );
 
 /// Kullanıcı seçimi + zamanlama birleşimiyle geçerli tema modu.
+/// "Kağıt" açık tema gibi davranır; hangi açık temanın kullanılacağına
+/// app.dart, themeChoiceProvider'a bakarak karar verir.
 final effectiveThemeModeProvider = Provider<ThemeMode>((ref) {
   final schedule = ref.watch(darkScheduleProvider);
-  if (!schedule.enabled) return ref.watch(themeModeProvider);
-  final now = ref.watch(_clockProvider).value ?? DateTime.now();
-  return schedule.isDarkAt(now) ? ThemeMode.dark : ThemeMode.light;
+  if (schedule.enabled) {
+    final now = ref.watch(_clockProvider).value ?? DateTime.now();
+    return schedule.isDarkAt(now) ? ThemeMode.dark : ThemeMode.light;
+  }
+  return switch (ref.watch(themeChoiceProvider)) {
+    AppThemeChoice.system => ThemeMode.system,
+    AppThemeChoice.light || AppThemeChoice.paper => ThemeMode.light,
+    AppThemeChoice.dark => ThemeMode.dark,
+  };
 });
