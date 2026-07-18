@@ -77,12 +77,19 @@ class FirebaseAiClient {
     Future<T> Function(String model) run, {
     String? prefer,
   }) async {
+    final models = _candidates(prefer);
     FirebaseAIException? lastSkipped;
-    for (final model in _candidates(prefer)) {
+    for (var i = 0; i < models.length; i++) {
       try {
-        return await run(model);
+        return await run(models[i]);
       } on FirebaseAIException catch (e) {
-        if (_shouldTryNext(e)) {
+        // İlk sıradaki [prefer] yalnızca bir HIZ tercihidir (ör. otomatik
+        // başlıkta hızlı "lite" modeli). O model bu arka uçta yoksa dönen
+        // hata her zaman "not found" kalıbına uymayabilir; bu durumda istek
+        // tümden başarısız olmasın diye tercih denemesinin HER hatasında
+        // sıradaki (standart) modele düşülür.
+        final isPreferHint = prefer != null && i == 0;
+        if (isPreferHint || _shouldTryNext(e)) {
           lastSkipped = e;
           continue;
         }
