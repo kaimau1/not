@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../../core/l10n_ext.dart';
-import '../../../../l10n/generated/app_localizations.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/device_speech.dart';
