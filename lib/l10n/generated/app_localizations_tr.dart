@@ -589,6 +589,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get suggestTags => 'Etiket öner';
 
   @override
+  String get aiFixNote => 'Notu düzelt (yazım + düzen)';
+
+  @override
   String get aiImprove => 'Notu geliştir';
 
   @override

@@ -1168,6 +1168,12 @@ abstract class AppLocalizations {
   /// **'Etiket öner'**
   String get suggestTags;
 
+  /// No description provided for @aiFixNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu düzelt (yazım + düzen)'**
+  String get aiFixNote;
+
   /// No description provided for @aiImprove.
   ///
   /// In tr, this message translates to:

@@ -38,3 +38,5 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.
 - Firestore/Storage kural değişikliği deploy edilmeden canlıya yansımaz (`firebase deploy`).
+
+- 2026-07-17: **AI sonuç sayfası düzeltmeleri**: (1) "Nota ekle" çalışmıyordu — kök neden sonuç butonları `Row(end)` içinde taşıyordu (RenderFlex overflow), en sağdaki buton ekran dışında kalıp dokunulamıyordu → `Wrap` (dar ekranda alt satıra sarılır). (2) AI çıktısındaki markdown (`**`, `*`, `#`, `` ` ``) notlara ham giriyordu → `core/utils/markdown.dart` `stripMarkdown`; `_run`'da tek noktada temizlenir (gösterim+kopya+ekle+değiştir hepsi temiz metin), ayrıca note_editor `_replaceText`/`_appendText` güvenlik ağı olarak da temizler. (3) Hızlı "Notu düzelt (yazım + düzen)" — AI sayfasının en üstünde belirgin buton; yazım/imla/noktalama düzeltir, çok hafif düzenler, içerik+madde sayısını korur, düz metin ister.

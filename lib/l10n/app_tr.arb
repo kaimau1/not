@@ -254,6 +254,7 @@
   "autoTitleSetting": "Otomatik başlık",
   "autoTitleSettingInfo": "Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir",
   "suggestTags": "Etiket öner",
+  "aiFixNote": "Notu düzelt (yazım + düzen)",
   "aiImprove": "Notu geliştir",
   "improveFix": "Yazımı ve dilbilgisini düzelt",
   "improveFormal": "Daha resmî yap",
