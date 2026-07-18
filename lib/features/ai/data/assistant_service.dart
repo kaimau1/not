@@ -74,15 +74,42 @@ class AssistantService {
     NotesRepository repo,
     Map<String, dynamic> args,
   ) async {
-    final type = NoteType.fromId(args['type'] as String?);
+    final title = (args['title'] as String?)?.trim() ?? '';
+    var body = (args['body'] as String?)?.trim() ?? '';
+    var items = _stringList(args['items']);
+
+    // Model (özellikle hızlı "lite") not tipi ile içeriği bazen tutarsız
+    // verir: tipi atlayıp içeriği items'a koyar ya da liste deyip metni
+    // body'ye yazar. İçeriğe göre tipi düzelt, yoksa içerik yanlış alana
+    // yazılıp not BOŞ görünür (kullanıcının bildirdiği hata buydu).
+    var type = NoteType.fromId(args['type'] as String?);
+    if (type == NoteType.text && body.isEmpty && items.isNotEmpty) {
+      type = NoteType.checklist;
+    } else if (type != NoteType.text && items.isEmpty && body.isNotEmpty) {
+      items = [
+        for (final line in body.split('\n'))
+          if (line.trim().isNotEmpty) line.trim(),
+      ];
+      body = '';
+    }
+
+    // Tamamen boş not oluşturma: modele geri bildir ki içerikle tekrar
+    // denesin; aksi halde dashboard'da gizlenen boş bir kalıntı kalırdı.
+    if (title.isEmpty && body.isEmpty && items.isEmpty) {
+      return {
+        'status': 'error',
+        'message': 'Not içeriği boş. Konuşmadan bir başlık ve içerik '
+            '(metin ya da liste öğeleri) çıkarıp tekrar dene.',
+      };
+    }
+
     final id = await repo.createNote(type);
-    final items = _stringList(args['items']);
     final reminder = args['reminderAt'] is String
         ? DateTime.tryParse(args['reminderAt'] as String)
         : null;
     repo.updateFields(id, {
-      'title': args['title'] as String? ?? '',
-      if (type == NoteType.text) 'body': args['body'] as String? ?? '',
+      'title': title,
+      if (type == NoteType.text) 'body': body,
       if (type != NoteType.text)
         'items': [
           for (final item in items)
