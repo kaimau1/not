@@ -10,13 +10,61 @@ import '../domain/note.dart';
 class TrashScreen extends ConsumerWidget {
   const TrashScreen({super.key});
 
+  Future<void> _emptyTrash(
+    BuildContext context,
+    WidgetRef ref,
+    List<Note> notes,
+  ) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.emptyTrash),
+        content: Text(l10n.emptyTrashConfirm(notes.length)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.deleteForever),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    for (final note in notes) {
+      await repo.deleteNotePermanently(note);
+    }
+    messenger.showSnackBar(SnackBar(content: Text(l10n.trashEmptied)));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final trash = ref.watch(trashStreamProvider);
+    final notes = trash.value ?? const <Note>[];
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.trashTitle)),
+      appBar: AppBar(
+        title: Text(l10n.trashTitle),
+        actions: [
+          if (notes.isNotEmpty)
+            IconButton(
+              tooltip: l10n.emptyTrash,
+              icon: const Icon(Icons.delete_sweep_outlined),
+              onPressed: () => _emptyTrash(context, ref, notes),
+            ),
+        ],
+      ),
       body: trash.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyState(

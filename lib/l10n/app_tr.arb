@@ -114,6 +114,16 @@
   "lockedNote": "Kilitli not",
   "unlockAuthReason": "Kilitli notu açmak için kimliğini doğrula",
   "exportBackup": "Yedeği dışa aktar (JSON)",
+  "expandListItems": "Liste satırlarını tam göster",
+  "expandListItemsInfo": "Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.",
+  "emptyTrash": "Çöpü boşalt",
+  "emptyTrashConfirm": "{count} not kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?",
+  "@emptyTrashConfirm": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "trashEmptied": "Çöp kutusu boşaltıldı",
   "validateAndSave": "Doğrula ve Kaydet",
   "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
   "apiKeyInvalid": "API anahtarı geçersiz",
@@ -244,6 +254,7 @@
   "autoTitleSetting": "Otomatik başlık",
   "autoTitleSettingInfo": "Not kapanırken başlığı yoksa yapay zeka hızlı bir modelle kısa bir başlık üretir",
   "suggestTags": "Etiket öner",
+  "aiFixNote": "Notu düzelt (yazım + düzen)",
   "aiImprove": "Notu geliştir",
   "improveFix": "Yazımı ve dilbilgisini düzelt",
   "improveFormal": "Daha resmî yap",

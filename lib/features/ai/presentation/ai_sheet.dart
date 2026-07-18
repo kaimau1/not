@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/markdown.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
@@ -67,7 +68,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     });
     try {
       final service = ref.read(geminiServiceProvider);
-      final text = await action(service);
+      // Notlar düz metin tuttuğundan AI çıktısındaki markdown işaretlerini
+      // (**, *, #, `) tek noktada temizle: gösterim, kopyalama ve nota
+      // ekleme/değiştirmenin tümü temiz metni kullanır.
+      final text = stripMarkdown(await action(service)).trim();
       if (cacheAsSummary) {
         ref.read(notesRepositoryProvider)?.setAiSummary(
               widget.note.id,
@@ -113,6 +117,20 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   ];
 
   bool _lastWasImprovement = false;
+
+  /// Tek dokunuşla "notu düzelt": yazım/imla/noktalama düzeltilir, çok hafif
+  /// düzenlemeyle okunaklı hale getirilir; içerik ve madde sayısı korunur.
+  Future<void> _fixNote() => _run(
+        (s) => s.rewriteText(
+          widget.note.toPlainText(),
+          'Yazım, imla, noktalama ve büyük/küçük harf hatalarını düzelt. '
+          'Çok hafif düzenlemelerle notu düzenli ve okunaklı hale getir. '
+          'Anlamı, içeriği ve madde/satır sayısını KORU; yeni bilgi ekleme, '
+          'madde silme. Düz metin ver; hiçbir biçimlendirme işareti '
+          '(yıldız, kare, alt çizgi) kullanma.',
+        ),
+        improvement: true,
+      );
 
   Future<void> _pickImprovement() async {
     final l10n = context.l10n;
@@ -291,6 +309,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ),
                       ),
                     ),
+                  // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
+                  if (widget.onReplaceText != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                      child: FilledButton.tonalIcon(
+                        onPressed: widget.note.isEmpty ? null : _fixNote,
+                        icon: const Icon(Icons.auto_fix_high, size: 18),
+                        label: Text(l10n.aiFixNote),
+                      ),
+                    ),
                   ListTile(
                     leading: const Icon(Icons.summarize_outlined),
                     title: Text(l10n.aiSummarize),
@@ -430,8 +458,13 @@ class _ResultView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          // Wrap: dar ekranda butonlar taşmaz, gerekirse alt satıra sarılır
+          // ("Nota ekle" ekranın dışında kalıp dokunulamıyordu).
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               if (onReport != null)
                 IconButton(
@@ -445,13 +478,10 @@ class _ResultView extends StatelessWidget {
                 label: Text(context.l10n.copy),
               ),
               if (onReplace != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilledButton.icon(
-                    onPressed: onReplace,
-                    icon: const Icon(Icons.published_with_changes, size: 18),
-                    label: Text(context.l10n.replaceNote),
-                  ),
+                FilledButton.icon(
+                  onPressed: onReplace,
+                  icon: const Icon(Icons.published_with_changes, size: 18),
+                  label: Text(context.l10n.replaceNote),
                 ),
               if (onAppend != null)
                 FilledButton.tonalIcon(

@@ -248,6 +248,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get exportBackup => 'Yedeği dışa aktar (JSON)';
 
   @override
+  String get expandListItems => 'Liste satırlarını tam göster';
+
+  @override
+  String get expandListItemsInfo =>
+      'Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.';
+
+  @override
+  String get emptyTrash => 'Çöpü boşalt';
+
+  @override
+  String emptyTrashConfirm(int count) {
+    return '$count not kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?';
+  }
+
+  @override
+  String get trashEmptied => 'Çöp kutusu boşaltıldı';
+
+  @override
   String get validateAndSave => 'Doğrula ve Kaydet';
 
   @override
@@ -569,6 +587,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get suggestTags => 'Etiket öner';
+
+  @override
+  String get aiFixNote => 'Notu düzelt (yazım + düzen)';
 
   @override
   String get aiImprove => 'Notu geliştir';

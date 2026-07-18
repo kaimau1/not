@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
+import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
@@ -466,8 +467,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).
-  void _replaceText(String text) {
+  void _replaceText(String raw) {
     final note = _note;
+    // Model istenmese de ** / * / # üretebiliyor; not düz metin tuttuğundan
+    // temizle.
+    final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
     if (note.type == NoteType.text) {
       _bodyController.text = text.trim();
@@ -489,8 +493,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
-  void _appendText(String text) {
+  void _appendText(String raw) {
     final note = _note;
+    final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
     if (note.type == NoteType.text) {
       final combined =
@@ -691,6 +696,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           key: ValueKey('items-${note.id}'),
           items: note.items,
           showCheckboxes: note.type == NoteType.checklist,
+          expandItems: ref.watch(expandListItemsProvider),
           onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
           header: header,
         ),

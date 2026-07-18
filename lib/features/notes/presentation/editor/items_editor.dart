@@ -12,6 +12,7 @@ class ItemsEditor extends StatefulWidget {
     required this.items,
     required this.onChanged,
     required this.showCheckboxes,
+    this.expandItems = true,
     this.header,
     this.footer,
   });
@@ -19,6 +20,11 @@ class ItemsEditor extends StatefulWidget {
   final List<NoteItem> items;
   final ValueChanged<List<NoteItem>> onChanged;
   final bool showCheckboxes;
+
+  /// true: uzun satırlar tamamen sarılıp görünür. false: satır tek satırda
+  /// kalır, yalnızca odaklanınca (dokununca) açılır.
+  final bool expandItems;
+
   final Widget? header;
   final Widget? footer;
 
@@ -68,8 +74,15 @@ class _ItemsEditorState extends State<ItemsEditor> {
         () => TextEditingController(text: item.text),
       );
 
-  FocusNode _focusFor(NoteItem item) =>
-      _focusNodes.putIfAbsent(item.id, FocusNode.new);
+  FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
+        final node = FocusNode();
+        // "Dokununca aç" modunda odak değişince satırın kaç satır
+        // göstereceği değişir; yeniden çiz.
+        node.addListener(() {
+          if (mounted && !widget.expandItems) setState(() {});
+        });
+        return node;
+      });
 
   void _commit() => widget.onChanged(List.of(_items));
 
@@ -179,6 +192,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
                   // bastırır, odak doğrudan yeni öğeye geçer.
                   onEditingComplete: () => _insertAfter(index),
                   textInputAction: TextInputAction.next,
+                  // Tam göster modunda satır sarılıp büyür; "dokununca aç"
+                  // modunda odaklanınca açılır, aksi hâlde tek satır.
+                  maxLines: widget.expandItems || _focusFor(item).hasFocus
+                      ? null
+                      : 1,
                   style: checked
                       ? TextStyle(
                           decoration: TextDecoration.lineThrough,
