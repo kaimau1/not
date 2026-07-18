@@ -370,12 +370,6 @@ abstract class AppLocalizations {
   /// **'Renk'**
   String get color;
 
-  /// No description provided for @colorDefault.
-  ///
-  /// In tr, this message translates to:
-  /// **'Varsayılan'**
-  String get colorDefault;
-
   /// No description provided for @aiTitle.
   ///
   /// In tr, this message translates to:
@@ -789,12 +783,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Senkronize'**
   String get synced;
-
-  /// No description provided for @noteNotFound.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not bulunamadı'**
-  String get noteNotFound;
 
   /// No description provided for @genericError.
   ///
@@ -1414,24 +1402,6 @@ abstract class AppLocalizations {
   /// **'Dinleniyor... konuştukça metin yazılır'**
   String get dictationListening;
 
-  /// No description provided for @dictationPaused.
-  ///
-  /// In tr, this message translates to:
-  /// **'Duraklatıldı — devam etmek için Konuş\'a bas'**
-  String get dictationPaused;
-
-  /// No description provided for @dictationPause.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bekle'**
-  String get dictationPause;
-
-  /// No description provided for @dictationResume.
-  ///
-  /// In tr, this message translates to:
-  /// **'Konuş'**
-  String get dictationResume;
-
   /// No description provided for @dictationNoKeyInfo.
   ///
   /// In tr, this message translates to:
@@ -1521,12 +1491,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Dokun ve konuş; bitirmek için tekrar dokun'**
   String get voiceTapHint;
-
-  /// No description provided for @voiceTapToFinish.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bitirmek için dokun'**
-  String get voiceTapToFinish;
 
   /// No description provided for @voiceTooShort.
   ///
@@ -1725,18 +1689,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Öğeyi sil'**
   String get removeItem;
-
-  /// No description provided for @selectRow.
-  ///
-  /// In tr, this message translates to:
-  /// **'Satırı seç'**
-  String get selectRow;
-
-  /// No description provided for @selectAll.
-  ///
-  /// In tr, this message translates to:
-  /// **'Tümünü seç'**
-  String get selectAll;
 
   /// No description provided for @copyWholeNote.
   ///

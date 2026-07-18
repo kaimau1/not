@@ -996,48 +996,6 @@ class GeminiService {
     },
   ];
 
-  /// Kullanıcının notları üzerinde çok turlu sohbet.
-  Future<String> chatWithNotes({
-    required List<Note> notes,
-    required List<ChatTurn> history,
-  }) {
-    final buffer = StringBuffer();
-    // Kilitli notlar AI'ya gönderilmez.
-    for (final note in notes.where((n) => !n.locked).take(60)) {
-      final text = note.toPlainText();
-      buffer
-        ..writeln('---')
-        ..writeln(text.length > 500 ? text.substring(0, 500) : text);
-    }
-    final contents = <Map<String, dynamic>>[
-      {
-        'role': 'user',
-        'parts': [
-          {
-            'text': 'Sen "Notlar" uygulamasının asistanısın. Kullanıcının not '
-                'defteri aşağıdadır. Sorulara bu notlara dayanarak Türkçe, '
-                'kısa ve net yanıt ver; notlarda olmayan bilgiyi uydurma, '
-                'bulamazsan söyle.\n\nNOT DEFTERİ:\n${buffer.toString()}',
-          },
-        ],
-      },
-      {
-        'role': 'model',
-        'parts': [
-          {'text': 'Anladım. Notlarına göre sorularını yanıtlamaya hazırım.'},
-        ],
-      },
-      for (final turn in history)
-        {
-          'role': turn.isUser ? 'user' : 'model',
-          'parts': [
-            {'text': turn.text},
-          ],
-        },
-    ];
-    return _generateFromContents(contents);
-  }
-
   /// E-posta metadata'larından önemlilerini seçer ve kısa Türkçe özet döner.
   Future<List<ImportantEmail>> triageEmails(List<EmailMeta> emails) async {
     final list = [

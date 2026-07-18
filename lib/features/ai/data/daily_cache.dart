@@ -80,6 +80,19 @@ abstract class DailyCacheNotifier<T> extends AsyncNotifier<T> {
   }
 }
 
+/// Sonucu düz metin olan günlük önbellekler (öneriler, haftalık özet,
+/// brifing) için hazır taban: dönüşüm kimlik, boş değer ''.
+abstract class StringDailyCache extends DailyCacheNotifier<String> {
+  @override
+  String get emptyValue => '';
+
+  @override
+  String encode(String value) => value;
+
+  @override
+  String decode(String raw) => raw;
+}
+
 /// Yerel gün damgası (YYYY-M-D) — aynı gün karşılaştırması için.
 String _todayStamp() {
   final now = DateTime.now();

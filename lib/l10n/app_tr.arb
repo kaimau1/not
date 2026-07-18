@@ -76,7 +76,6 @@
   "unpin": "Sabitlemeyi kaldır",
   "delete": "Sil",
   "color": "Renk",
-  "colorDefault": "Varsayılan",
   "aiTitle": "Yapay Zeka",
   "aiSummarize": "Notu özetle",
   "aiAnalyze": "Analiz et",
@@ -171,7 +170,6 @@
   "ok": "Tamam",
   "syncPending": "Senkron bekleniyor",
   "synced": "Senkronize",
-  "noteNotFound": "Not bulunamadı",
   "genericError": "Bir şeyler ters gitti: {error}",
   "@genericError": {
     "placeholders": {
@@ -305,9 +303,6 @@
   "calcInvalid": "Geçersiz ifade",
   "liveDictation": "Sesli yazdır",
   "dictationListening": "Dinleniyor... konuştukça metin yazılır",
-  "dictationPaused": "Duraklatıldı — devam etmek için Konuş'a bas",
-  "dictationPause": "Bekle",
-  "dictationResume": "Konuş",
   "dictationNoKeyInfo": "Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.",
   "dictationHoldHint": "Mikrofonu basılı tutup konuşun, bırakınca yazılır",
   "itemsSelected": "{count} madde seçildi",
@@ -330,7 +325,6 @@
   "voiceListening": "Dinliyorum...",
   "voiceHoldHint": "Basılı tutarak konuş; bırakınca notun oluşturulur",
   "voiceTapHint": "Dokun ve konuş; bitirmek için tekrar dokun",
-  "voiceTapToFinish": "Bitirmek için dokun",
   "voiceTooShort": "Kayıt çok kısaydı, tekrar dene",
   "voiceModeSetting": "Kullanım şekli",
   "voiceModeHold": "Basılı tut",
@@ -374,8 +368,6 @@
     }
   },
   "removeItem": "Öğeyi sil",
-  "selectRow": "Satırı seç",
-  "selectAll": "Tümünü seç",
   "copyWholeNote": "Tüm notu kopyala",
   "allCopied": "Tüm not panoya kopyalandı"
 }

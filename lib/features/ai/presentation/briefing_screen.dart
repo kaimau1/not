@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/widgets/empty_state.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../gmail/presentation/mail_summary_screen.dart';
 import '../../notes/data/notes_repository.dart';
@@ -11,6 +10,7 @@ import '../data/ai_gate.dart';
 import '../data/daily_cache.dart';
 import '../data/gemini_service.dart';
 import 'ai_generate_prompt.dart';
+import 'ai_text_result.dart';
 
 /// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar +
 /// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç günde bir kez
@@ -19,18 +19,9 @@ import 'ai_generate_prompt.dart';
 final briefingProvider =
     AsyncNotifierProvider<BriefingNotifier, String>(BriefingNotifier.new);
 
-class BriefingNotifier extends DailyCacheNotifier<String> {
+class BriefingNotifier extends StringDailyCache {
   @override
   String get cacheKey => 'cache_briefing';
-
-  @override
-  String get emptyValue => '';
-
-  @override
-  String encode(String value) => value;
-
-  @override
-  String decode(String raw) => raw;
 
   @override
   Future<String> compute() async {
@@ -154,75 +145,13 @@ class BriefingScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: briefing.when(
-        loading: () => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 12),
-              Text(l10n.briefingLoading),
-            ],
-          ),
-        ),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  e is GeminiException && e.isAuthError
-                      ? l10n.aiNoApiKey
-                      : l10n.aiError(e.toString()),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                FilledButton.tonal(
-                  onPressed: () => ref.read(briefingProvider.notifier).refresh(),
-                  child: Text(l10n.retry),
-                ),
-              ],
-            ),
-          ),
-        ),
-        data: (text) {
-          if (text.isEmpty) {
-            return EmptyState(
-              icon: Icons.wb_sunny_outlined,
-              title: l10n.briefingEmpty,
-            );
-          }
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                DateFormat('d MMMM EEEE', 'tr').format(DateTime.now()),
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outlineVariant
-                        .withValues(alpha: 0.5),
-                  ),
-                ),
-                child: SelectableText(
-                  text,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ),
-            ],
-          );
-        },
+      body: AiTextResult(
+        value: briefing,
+        loadingText: l10n.briefingLoading,
+        emptyIcon: Icons.wb_sunny_outlined,
+        emptyTitle: l10n.briefingEmpty,
+        header: DateFormat('d MMMM EEEE', 'tr').format(DateTime.now()),
+        onRetry: onRefresh,
       ),
     );
   }

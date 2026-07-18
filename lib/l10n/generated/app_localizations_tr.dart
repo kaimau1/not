@@ -159,9 +159,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get color => 'Renk';
 
   @override
-  String get colorDefault => 'Varsayılan';
-
-  @override
   String get aiTitle => 'Yapay Zeka';
 
   @override
@@ -381,9 +378,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get synced => 'Senkronize';
-
-  @override
-  String get noteNotFound => 'Not bulunamadı';
 
   @override
   String genericError(String error) {
@@ -720,15 +714,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
 
   @override
-  String get dictationPaused => 'Duraklatıldı — devam etmek için Konuş\'a bas';
-
-  @override
-  String get dictationPause => 'Bekle';
-
-  @override
-  String get dictationResume => 'Konuş';
-
-  @override
   String get dictationNoKeyInfo =>
       'Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.';
 
@@ -775,13 +760,11 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceListening => 'Dinliyorum...';
 
   @override
-  String get voiceHoldHint => 'Basılı tutarak konuş; bırakınca notun oluşturulur';
+  String get voiceHoldHint =>
+      'Basılı tutarak konuş; bırakınca notun oluşturulur';
 
   @override
   String get voiceTapHint => 'Dokun ve konuş; bitirmek için tekrar dokun';
-
-  @override
-  String get voiceTapToFinish => 'Bitirmek için dokun';
 
   @override
   String get voiceTooShort => 'Kayıt çok kısaydı, tekrar dene';
@@ -859,8 +842,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get deleteFolder => 'Klasörü sil';
 
   @override
-  String deleteFolderConfirm(String name) =>
-      '"$name" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.';
+  String deleteFolderConfirm(String name) {
+    return '\"$name\" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.';
+  }
 
   @override
   String get folderNameHint => 'Klasör adı';
@@ -882,16 +866,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get noteArchived => 'Not arşivlendi';
 
   @override
-  String deleteChecked(int count) => 'İşaretlileri sil ($count)';
+  String deleteChecked(int count) {
+    return 'İşaretlileri sil ($count)';
+  }
 
   @override
   String get removeItem => 'Öğeyi sil';
-
-  @override
-  String get selectRow => 'Satırı seç';
-
-  @override
-  String get selectAll => 'Tümünü seç';
 
   @override
   String get copyWholeNote => 'Tüm notu kopyala';
