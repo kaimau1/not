@@ -43,6 +43,7 @@ class SettingsScreen extends ConsumerWidget {
               const _ThemeSelector(),
               const SizedBox(height: 12),
               const _FontScaleSlider(),
+              const _ExpandListItemsSwitch(),
               const _DarkScheduleEditor(),
               const SizedBox(height: 24),
               _SectionTitle(l10n.settingsAi),
@@ -145,6 +146,23 @@ class _FontScaleSlider extends ConsumerWidget {
         ),
         Text('${(scale * 100).round()}%'),
       ],
+    );
+  }
+}
+
+class _ExpandListItemsSwitch extends ConsumerWidget {
+  const _ExpandListItemsSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.expandListItems),
+      subtitle: Text(l10n.expandListItemsInfo),
+      value: ref.watch(expandListItemsProvider),
+      onChanged: (value) =>
+          ref.read(expandListItemsProvider.notifier).set(value),
     );
   }
 }

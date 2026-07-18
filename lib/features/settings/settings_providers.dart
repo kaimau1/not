@@ -165,6 +165,26 @@ class AutoTagNotifier extends Notifier<bool> {
   }
 }
 
+/// Liste/checklist öğelerindeki uzun satırlar tam mı gösterilsin?
+/// true (varsayılan): satır kaç satıra gerekirse sarılır, hepsi görünür.
+/// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
+final expandListItemsProvider =
+    NotifierProvider<ExpandListItemsNotifier, bool>(
+  ExpandListItemsNotifier.new,
+);
+
+class ExpandListItemsNotifier extends Notifier<bool> {
+  static const _key = 'expand_list_items';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Başlıksız notlara kaydedilirken AI otomatik başlık üretsin mi?
 final autoTitleProvider = NotifierProvider<AutoTitleNotifier, bool>(
   AutoTitleNotifier.new,

@@ -32,6 +32,8 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 
 - 2026-07-17: **CI TUZAK 2 → nihai çözüm** (receive_sharing_intent): 1.8.1 Java 11/Kotlin 17 uyuşmazlığı veriyordu; kök `build.gradle.kts`'e eklenen `subprojects { JavaCompile → 17 }` AGP'nin compileOptions'ı tarafından geçersiz kılındı, İŞE YARAMADI (iki tur denendi). NİHAİ: 1.9.0'a dönüldü (Java+Kotlin ikisi de 17, uyuşmazlık yok) + `app/build.gradle.kts` `compileSdk = 37` (1.9.0'ın şartı; Google logda bunu öneriyor; AGP 9.0.1 "önerilen üst 36" yalnız uyarı). Java hack'i kaldırıldı. DERS: modern eklenti + gerekli compileSdk, eski eklenti + JVM hack'inden daha temiz.
 
+- 2026-07-17: **Liste satır sarma + çöp boşaltma**: (1) ItemsEditor TextField varsayılan maxLines:1 idi → uzun satır yatay kayıyordu. `expandItems` param + `expandListItemsProvider` (varsayılan true): true→maxLines null (sarılır), false→odaklıysa null yoksa 1 ("dokununca aç"; FocusNode listener setState). Ayarlar>Görünüm'de anahtar. (2) Çöp ekranına AppBar "Çöpü boşalt" (delete_sweep) → onay → hepsini `deleteNotePermanently` (ekler dahil).
+
 ## Bilinen Riskler / Tuzaklar
 
 - **Keystore repo dışında** (`Desktop\notlar-keystore\`): kaybolursa aynı imzayla güncelleme yayınlanamaz — ayrı yere yedekle.

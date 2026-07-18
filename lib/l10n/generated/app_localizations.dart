@@ -538,6 +538,36 @@ abstract class AppLocalizations {
   /// **'Yedeği dışa aktar (JSON)'**
   String get exportBackup;
 
+  /// No description provided for @expandListItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste satırlarını tam göster'**
+  String get expandListItems;
+
+  /// No description provided for @expandListItemsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.'**
+  String get expandListItemsInfo;
+
+  /// No description provided for @emptyTrash.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöpü boşalt'**
+  String get emptyTrash;
+
+  /// No description provided for @emptyTrashConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?'**
+  String emptyTrashConfirm(int count);
+
+  /// No description provided for @trashEmptied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöp kutusu boşaltıldı'**
+  String get trashEmptied;
+
   /// No description provided for @validateAndSave.
   ///
   /// In tr, this message translates to:

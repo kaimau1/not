@@ -691,6 +691,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           key: ValueKey('items-${note.id}'),
           items: note.items,
           showCheckboxes: note.type == NoteType.checklist,
+          expandItems: ref.watch(expandListItemsProvider),
           onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
           header: header,
         ),
