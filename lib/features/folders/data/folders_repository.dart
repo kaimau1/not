@@ -60,10 +60,11 @@ class FoldersRepository {
   }
 
   void updateFolder(String folderId, {String? name, String? icon}) {
-    unawaited(_folders.doc(folderId).set({
-      if (name != null) 'name': name.trim(),
-      if (icon != null) 'icon': icon,
-    }, SetOptions(merge: true)));
+    final data = <String, dynamic>{};
+    if (name != null) data['name'] = name.trim();
+    if (icon != null) data['icon'] = icon;
+    if (data.isEmpty) return;
+    unawaited(_folders.doc(folderId).set(data, SetOptions(merge: true)));
   }
 
   /// Klasörü siler; içindeki notlar SİLİNMEZ, klasörsüz kalır
