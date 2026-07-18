@@ -1431,6 +1431,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.'**
   String get aiGeneratedTodayInfo;
+
+  /// No description provided for @voiceAssistantTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli Not Asistanı'**
+  String get voiceAssistantTitle;
+
+  /// No description provided for @voiceListening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinliyorum...'**
+  String get voiceListening;
+
+  /// No description provided for @voiceHoldHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tutarak konuş; bırakınca notun oluşturulur'**
+  String get voiceHoldHint;
+
+  /// No description provided for @voiceTapHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun ve konuş; bitirmek için tekrar dokun'**
+  String get voiceTapHint;
+
+  /// No description provided for @voiceTapToFinish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitirmek için dokun'**
+  String get voiceTapToFinish;
+
+  /// No description provided for @voiceTooShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıt çok kısaydı, tekrar dene'**
+  String get voiceTooShort;
+
+  /// No description provided for @voiceModeSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanım şekli'**
+  String get voiceModeSetting;
+
+  /// No description provided for @voiceModeHold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tut'**
+  String get voiceModeHold;
+
+  /// No description provided for @voiceModeTap.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bas-başlat / bas-bitir'**
+  String get voiceModeTap;
+
+  /// No description provided for @voiceModeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.'**
+  String get voiceModeInfo;
+
+  /// No description provided for @voiceHeardLive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Algılanan konuşma'**
+  String get voiceHeardLive;
 }
 
 class _AppLocalizationsDelegate

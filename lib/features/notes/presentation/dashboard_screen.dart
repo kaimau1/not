@@ -19,6 +19,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import 'voice_assistant_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -291,16 +292,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
           ),
+          // Asistanın durumu (kayıt + canlı döküm, işleme, sonuç, hata)
+          // ana sayfanın altında panel olarak görünür; boştayken gizlidir.
+          bottomNavigationBar: const VoiceAssistantPanel(),
           floatingActionButton: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              FloatingActionButton.small(
-                heroTag: 'voice-fab',
-                tooltip: l10n.voiceNoteTitle,
-                onPressed: () => context.push('/voice'),
-                child: const Icon(Icons.mic_none),
-              ),
-              const SizedBox(height: 10),
+              // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
+              const VoiceAssistantButton(),
+              const SizedBox(height: 6),
               FloatingActionButton(
                 heroTag: 'add-fab',
                 tooltip: l10n.newTextNote,

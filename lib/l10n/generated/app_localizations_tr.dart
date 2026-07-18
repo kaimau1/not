@@ -729,4 +729,38 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiGeneratedTodayInfo =>
       'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
+
+  @override
+  String get voiceAssistantTitle => 'Sesli Not Asistanı';
+
+  @override
+  String get voiceListening => 'Dinliyorum...';
+
+  @override
+  String get voiceHoldHint => 'Basılı tutarak konuş; bırakınca notun oluşturulur';
+
+  @override
+  String get voiceTapHint => 'Dokun ve konuş; bitirmek için tekrar dokun';
+
+  @override
+  String get voiceTapToFinish => 'Bitirmek için dokun';
+
+  @override
+  String get voiceTooShort => 'Kayıt çok kısaydı, tekrar dene';
+
+  @override
+  String get voiceModeSetting => 'Kullanım şekli';
+
+  @override
+  String get voiceModeHold => 'Basılı tut';
+
+  @override
+  String get voiceModeTap => 'Bas-başlat / bas-bitir';
+
+  @override
+  String get voiceModeInfo =>
+      'Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.';
+
+  @override
+  String get voiceHeardLive => 'Algılanan konuşma';
 }

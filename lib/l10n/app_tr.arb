@@ -302,5 +302,16 @@
   "aiDailyManualInfo": "Ücretsiz planda bu içerik günlük hakkını boşa harcamamak için otomatik oluşturulmaz. Günde bir kez, aşağıdaki düğmeyle oluşturabilirsin.",
   "aiGenerate": "Oluştur",
   "aiScanEmails": "E-postaları tara",
-  "aiGeneratedTodayInfo": "Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin."
+  "aiGeneratedTodayInfo": "Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.",
+  "voiceAssistantTitle": "Sesli Not Asistanı",
+  "voiceListening": "Dinliyorum...",
+  "voiceHoldHint": "Basılı tutarak konuş; bırakınca notun oluşturulur",
+  "voiceTapHint": "Dokun ve konuş; bitirmek için tekrar dokun",
+  "voiceTapToFinish": "Bitirmek için dokun",
+  "voiceTooShort": "Kayıt çok kısaydı, tekrar dene",
+  "voiceModeSetting": "Kullanım şekli",
+  "voiceModeHold": "Basılı tut",
+  "voiceModeTap": "Bas-başlat / bas-bitir",
+  "voiceModeInfo": "Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.",
+  "voiceHeardLive": "Algılanan konuşma"
 }
