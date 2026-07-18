@@ -87,13 +87,13 @@ class VoiceAssistantButton extends ConsumerWidget {
         // düz dokunuş yalnızca ipucu gösterir (kayıt uzun basışla).
         onTap: processing
             ? null
-            : () {
-                if (!hold) {
-                  recording ? _finish(context, ref) : _start(context, ref);
-                } else if (!recording) {
-                  _showSnack(context, l10n.voiceHoldHint);
-                }
-              },
+            : recording
+                // Kayıt sürerken (widget'tan da başlamış olabilir) dokunuş her
+                // modda bitirir — durdurmak sezgisel kalsın.
+                ? () => _finish(context, ref)
+                : hold
+                    ? () => _showSnack(context, l10n.voiceHoldHint)
+                    : () => _start(context, ref),
         onLongPressStart:
             hold && !processing ? (_) => _start(context, ref) : null,
         onLongPressEnd:
@@ -172,11 +172,21 @@ class VoiceAssistantPanel extends ConsumerWidget {
                         ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                IconButton(
-                  tooltip: l10n.cancel,
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.close, size: 20),
+                // Bas-başlat akışı: kaydı bu "Bitir" ile durdur (widget'tan
+                // başlamış olsa da mikrofon düğmesine gitmeye gerek yok).
+                TextButton(
                   onPressed: notifier.cancel,
+                  child: Text(l10n.cancel),
+                ),
+                const SizedBox(width: 4),
+                FilledButton.tonalIcon(
+                  onPressed: () => notifier.finish(
+                    nothingHeardText: l10n.voiceNothingHeard,
+                    savedText: l10n.voiceNoteSaved,
+                    noApiKeyText: l10n.aiNoApiKey,
+                  ),
+                  icon: const Icon(Icons.check, size: 18),
+                  label: Text(l10n.voiceFinish),
                 ),
               ],
             ),

@@ -15,6 +15,7 @@ import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
+import '../features/notes/presentation/notes_providers.dart';
 import '../features/notes/presentation/editor/note_editor_screen.dart';
 import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
@@ -100,7 +101,11 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
 
   void handle(Uri uri) {
     if (uri.host == 'voice' || uri.path.contains('voice')) {
-      router.push('/voice');
+      // Ayrı /voice ekranını açmak yerine ana sayfadaki YENİ Sesli Not
+      // Asistanı'nı (canlı dökümlü panel) bas-başlat modunda tetikle — tek,
+      // tutarlı sistem. Dashboard voiceAutostartProvider'ı dinleyip başlatır.
+      router.go('/');
+      ref.read(voiceAutostartProvider.notifier).request();
       return;
     }
     // notlar://new?type=text|checklist|ordered — Hızlı Eylemler widget'ı

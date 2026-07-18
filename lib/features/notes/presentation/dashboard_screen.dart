@@ -20,6 +20,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -39,6 +40,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Odak değişince aksiyon butonlarını gizle/göster (dar ekranlarda arama
     // alanına yer açmak için).
     _searchFocus.addListener(() => setState(() {}));
+    // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
+    // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
+    // sonra kontrol et; take() varsa asistanı başlatır.
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _maybeAutostartVoice());
+  }
+
+  /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
+  /// Asistanı'nı başlatır (tek seferlik — bayrak take ile tüketilir).
+  void _maybeAutostartVoice() {
+    if (!mounted) return;
+    if (ref.read(voiceAutostartProvider.notifier).take()) {
+      ref.read(voiceAssistantProvider.notifier).start(
+            micPermissionDeniedText: context.l10n.micPermissionDenied,
+          );
+    }
   }
 
   @override
@@ -89,6 +106,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Paylaş menüsünden gelen içerikleri dinle (Android).
     ref.watch(shareIntakeProvider);
 
+    // Ana ekran mikrofon widget'ından (notlar://voice) gelen bas-başlat
+    // isteği: uygulama zaten ana sayfadayken gelirse burada yakalanır.
+    // (Uygulama başka ekrandayken/soğuk açılışta gelen istek initState'teki
+    // kontrolle okunur; take() çift başlatmayı önler.)
+    ref.listen(voiceAutostartProvider, (previous, next) {
+      if (next) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _maybeAutostartVoice());
+      }
+    });
+
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
     final semanticActive = ref.watch(semanticSearchEnabledProvider) &&
@@ -115,7 +143,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         autofocus: true,
         child: Scaffold(
           body: SafeArea(
-            child: LayoutBuilder(
+            child: Stack(
+              children: [
+                LayoutBuilder(
               builder: (context, constraints) {
                 final columns =
                     (constraints.maxWidth / 220).floor().clamp(2, 6);
@@ -285,32 +315,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 );
               },
             ),
-          ),
-          // Asistanın durumu (kayıt + canlı döküm, işleme, sonuç, hata) artık
-          // en dipte değil, FAB sütununda düğmelerin ÜSTÜnde yüzer — daha
-          // ortada ve okunaklı; boştayken gizli. Genişlik ekranı doldurur
-          // ama sağdaki düğmeler yerinde kalır (crossAxisAlignment.end).
-          floatingActionButton: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth:
-                  (MediaQuery.sizeOf(context).width - 24).clamp(0.0, 460.0),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const VoiceAssistantPanel(),
-                // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
-                const VoiceAssistantButton(),
-                const SizedBox(height: 6),
-                FloatingActionButton(
-                  heroTag: 'add-fab',
-                  tooltip: l10n.newTextNote,
-                  onPressed: () => _createNote(NoteType.text),
-                  child: const Icon(Icons.add),
+                // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
+                // Düğmeler floatingActionButton'da kaldığından panel açılıp
+                // kapanırken yerinden oynamaz (stabil); yalnız kayıt/işleme/
+                // sonuç sırasında görünür, ana sayfanın ortasına yakın.
+                const Positioned(
+                  left: 8,
+                  right: 8,
+                  bottom: 168,
+                  child: VoiceAssistantPanel(),
                 ),
               ],
             ),
+          ),
+          floatingActionButton: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
+              const VoiceAssistantButton(),
+              const SizedBox(height: 6),
+              FloatingActionButton(
+                heroTag: 'add-fab',
+                tooltip: l10n.newTextNote,
+                onPressed: () => _createNote(NoteType.text),
+                child: const Icon(Icons.add),
+              ),
+            ],
           ),
         ),
       ),
