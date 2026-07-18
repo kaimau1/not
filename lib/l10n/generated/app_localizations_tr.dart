@@ -683,4 +683,36 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get aiModelsInfo =>
       'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
+
+  @override
+  String get clearNote => 'Temizle';
+
+  @override
+  String get clearNoteConfirm =>
+      'Notun içeriği (metin ve liste öğeleri) silinecek. Emin misin?';
+
+  @override
+  String get themePaper => 'Kağıt';
+
+  @override
+  String get calculatorTitle => 'Hesap Makinesi';
+
+  @override
+  String get calcExpressionHint => 'ör. 12,5×3+40';
+
+  @override
+  String get calcInvalid => 'Geçersiz ifade';
+
+  @override
+  String get liveDictation => 'Sesli yazdır';
+
+  @override
+  String get dictationListening => 'Dinleniyor... konuştukça metin yazılır';
+
+  @override
+  String get dictationNoKeyInfo =>
+      'Canlı döküm için Ayarlar\'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.';
+
+  @override
+  String get dictationProcessing => 'Yazıya dökülüyor...';
 }

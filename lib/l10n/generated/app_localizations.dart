@@ -1347,6 +1347,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.'**
   String get aiModelsInfo;
+
+  /// No description provided for @clearNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizle'**
+  String get clearNote;
+
+  /// No description provided for @clearNoteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun içeriği (metin ve liste öğeleri) silinecek. Emin misin?'**
+  String get clearNoteConfirm;
+
+  /// No description provided for @themePaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kağıt'**
+  String get themePaper;
+
+  /// No description provided for @calculatorTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap Makinesi'**
+  String get calculatorTitle;
+
+  /// No description provided for @calcExpressionHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'ör. 12,5×3+40'**
+  String get calcExpressionHint;
+
+  /// No description provided for @calcInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçersiz ifade'**
+  String get calcInvalid;
+
+  /// No description provided for @liveDictation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli yazdır'**
+  String get liveDictation;
+
+  /// No description provided for @dictationListening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinleniyor... konuştukça metin yazılır'**
+  String get dictationListening;
+
+  /// No description provided for @dictationNoKeyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Canlı döküm için Ayarlar\'dan Gemini API anahtarı girebilirsin; şimdilik kayıt bitince tek seferde yazıya dökülecek.'**
+  String get dictationNoKeyInfo;
+
+  /// No description provided for @dictationProcessing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıya dökülüyor...'**
+  String get dictationProcessing;
 }
 
 class _AppLocalizationsDelegate

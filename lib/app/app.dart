@@ -14,12 +14,13 @@ class NotlarApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(effectiveThemeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
+    final paper = ref.watch(themeChoiceProvider) == AppThemeChoice.paper;
 
     return MaterialApp.router(
       title: 'Notlar',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: AppTheme.light(),
+      theme: paper ? AppTheme.paper() : AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
       locale: const Locale('tr'),
