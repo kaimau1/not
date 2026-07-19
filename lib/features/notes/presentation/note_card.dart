@@ -251,13 +251,21 @@ class NoteCard extends ConsumerWidget {
                           size: 14,
                           color: scheme.primary,
                         ),
-                      // Seçim modunda yerini seçim tiki alır.
                       // Dokunma alanı 36dp: görsel ikon 18px kalıyor ama
                       // hedef büyüyor. Önceden yalnız ikon kadardı (~18x22)
                       // ve ıskalanıyordu. Kart 2 sütunlu ızgarada dar
                       // olduğundan 48dp yerine 36dp — sıkışık ızgarada
                       // kabul edilebilir orta yol.
-                      if (!selectionActive)
+                      //
+                      // Seçim modunda ⋮ gizlenir ama YERİ (36x36) KORUNUR.
+                      // Aksi hâlde başlık satırı bu düğme kadar kısalıp kart
+                      // yüksekliği değişiyor; masonry ızgara sütun dengesini
+                      // yeniden hesaplayınca notlar seçim sırasında yer
+                      // değiştiriyor, seçim bitince eski sıraya dönüyordu.
+                      // (Seçili olduğu göstergesi sağ üstteki tik rozetidir.)
+                      if (selectionActive)
+                        const SizedBox(width: 36, height: 36)
+                      else
                         InkWell(
                           borderRadius: BorderRadius.circular(18),
                           onTap: () => showNoteActionsSheet(context, ref, note),
