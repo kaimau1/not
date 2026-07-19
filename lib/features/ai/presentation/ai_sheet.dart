@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
+import '../../../core/widgets/speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/attachment.dart';
@@ -23,17 +24,16 @@ Future<void> showAiSheet(
   Note note, {
   ValueChanged<String>? onAppendText,
   ReplaceTextCallback? onReplaceText,
-}) =>
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (_) => AiSheet(
-        note: note,
-        onAppendText: onAppendText,
-        onReplaceText: onReplaceText,
-      ),
-    );
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  showDragHandle: true,
+  builder: (_) => AiSheet(
+    note: note,
+    onAppendText: onAppendText,
+    onReplaceText: onReplaceText,
+  ),
+);
 
 class AiSheet extends ConsumerStatefulWidget {
   const AiSheet({
@@ -80,21 +80,21 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       // ekleme/değiştirmenin tümü temiz metni kullanır.
       final text = stripMarkdown(await action(service)).trim();
       if (cacheAsSummary) {
-        ref.read(notesRepositoryProvider)?.setAiSummary(
+        ref
+            .read(notesRepositoryProvider)
+            ?.setAiSummary(
               widget.note.id,
-              AiSummary(
-                text: text,
-                model: 'gemini',
-                createdAt: DateTime.now(),
-              ),
+              AiSummary(text: text, model: 'gemini', createdAt: DateTime.now()),
             );
       }
       if (mounted) setState(() => _result = text);
     } on GeminiException catch (e) {
       if (mounted) {
-        setState(() => _error = e.isAuthError
-            ? context.l10n.aiNoApiKey
-            : context.l10n.aiError(e.message));
+        setState(
+          () => _error = e.isAuthError
+              ? context.l10n.aiNoApiKey
+              : context.l10n.aiError(e.message),
+        );
       }
     } catch (e) {
       if (mounted) setState(() => _error = context.l10n.aiError(e.toString()));
@@ -132,16 +132,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// Tek dokunuşla "notu düzelt": yazım/imla/noktalama düzeltilir, çok hafif
   /// düzenlemeyle okunaklı hale getirilir; içerik ve madde sayısı korunur.
   Future<void> _fixNote() => _run(
-        (s) => s.rewriteText(
-          widget.note.toPlainText(),
-          'Yazım, imla, noktalama ve büyük/küçük harf hatalarını düzelt. '
-          'Çok hafif düzenlemelerle notu düzenli ve okunaklı hale getir. '
-          'Anlamı, içeriği ve madde/satır sayısını KORU; yeni bilgi ekleme, '
-          'madde silme. Düz metin ver; hiçbir biçimlendirme işareti '
-          '(yıldız, kare, alt çizgi) kullanma.',
-        ),
-        improvement: true,
-      );
+    (s) => s.rewriteText(
+      widget.note.toPlainText(),
+      'Yazım, imla, noktalama ve büyük/küçük harf hatalarını düzelt. '
+      'Çok hafif düzenlemelerle notu düzenli ve okunaklı hale getir. '
+      'Anlamı, içeriği ve madde/satır sayısını KORU; yeni bilgi ekleme, '
+      'madde silme. Düz metin ver; hiçbir biçimlendirme işareti '
+      '(yıldız, kare, alt çizgi) kullanma.',
+    ),
+    improvement: true,
+  );
 
   Future<void> _pickImprovement() async {
     final l10n = context.l10n;
@@ -150,12 +150,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       (
         l10n.improveFix,
         'Yazım ve dilbilgisi hatalarını düzelt, anlamı koru',
-        null
+        null,
       ),
       (
         l10n.improveFormal,
         'Daha resmî ve profesyonel bir dille yeniden yaz',
-        null
+        null,
       ),
       (l10n.improveShorten, 'Anlamı koruyarak yarı uzunluğa kısalt', null),
       (
@@ -207,9 +207,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       ),
     );
     if (language == null) return;
-    await _run(
-      (s) => s.translateText(widget.note.toPlainText(), language),
-    );
+    await _run((s) => s.translateText(widget.note.toPlainText(), language));
   }
 
   Future<String> _extractImageText(
@@ -256,8 +254,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
 
     return SafeArea(
       child: Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(context).bottom,
+        ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.sizeOf(context).height * 0.75,
@@ -271,9 +270,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
                   child: Row(
                     children: [
-                      Icon(Icons.auto_awesome,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         l10n.aiTitle,
@@ -299,9 +300,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     onCopy: () async {
                       await Clipboard.setData(ClipboardData(text: _result!));
                       if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(l10n.copied)),
-                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(l10n.copied)));
                       }
                     },
                     onReport: () async {
@@ -321,14 +322,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                           },
                     onReplace:
                         widget.onReplaceText == null || !_lastWasImprovement
-                            ? null
-                            : () {
-                                widget.onReplaceText!(
-                                  _result!,
-                                  asType: _replaceAsType,
-                                );
-                                Navigator.pop(context);
-                              },
+                        ? null
+                        : () {
+                            widget.onReplaceText!(
+                              _result!,
+                              asType: _replaceAsType,
+                            );
+                            Navigator.pop(context);
+                          },
                   )
                 else ...[
                   if (_error != null)
@@ -360,7 +361,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    enabled: !widget.note.isEmpty ||
+                    enabled:
+                        !widget.note.isEmpty ||
                         widget.note.attachments.isNotEmpty,
                     onTap: () {
                       Navigator.pop(context);
@@ -450,10 +452,19 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   if (widget.note.aiSummary != null) ...[
                     const Divider(indent: 20, endIndent: 20),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-                      child: Text(
-                        l10n.aiSummaryTitle,
-                        style: Theme.of(context).textTheme.labelMedium,
+                      padding: const EdgeInsets.fromLTRB(20, 4, 8, 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.aiSummaryTitle,
+                              style: Theme.of(context).textTheme.labelMedium,
+                            ),
+                          ),
+                          // Sesli özet: özet zaten üretilmiş durumda,
+                          // seslendirme cihazda yapılıyor — ek API çağrısı yok.
+                          SpeakButton(text: widget.note.aiSummary!.text),
+                        ],
                       ),
                     ),
                     Padding(

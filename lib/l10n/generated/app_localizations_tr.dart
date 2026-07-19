@@ -26,9 +26,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get searchHint => 'Notlarda ara...';
 
   @override
-  String get quickAddHint => 'Not al...';
-
-  @override
   String get filterAll => 'Tümü';
 
   @override
@@ -878,4 +875,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get allCopied => 'Tüm not panoya kopyalandı';
+
+  @override
+  String get speechPlay => 'Sesli oku';
+
+  @override
+  String get speechPause => 'Duraklat';
+
+  @override
+  String get speechResume => 'Devam et';
+
+  @override
+  String get speechStop => 'Durdur';
+
+  @override
+  String get speechVoice => 'Ses tipi';
+
+  @override
+  String get speechVoiceSubtitle => 'Sesli okumada kullanilacak ses';
+
+  @override
+  String get speechRate => 'Okuma hizi';
+
+  @override
+  String get speechSystemDefault => 'Sistem varsayilani';
+
+  @override
+  String get speechNoVoices => 'Bu cihazda yuklu ses bulunamadi';
+
+  @override
+  String get aiSummarySpeak => 'Ozeti sesli oku';
+
+  @override
+  String get speechVoiceTurkish => 'Türkçe ses';
+
+  @override
+  String get speechVoiceEnglish => 'İngilizce ses';
+
+  @override
+  String get speechVoiceAutoInfo =>
+      'Diğer diller otomatik olarak erkek sesiyle okunur';
 }

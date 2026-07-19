@@ -368,5 +368,18 @@
   },
   "removeItem": "Öğeyi sil",
   "copyWholeNote": "Tüm notu kopyala",
-  "allCopied": "Tüm not panoya kopyalandı"
+  "allCopied": "Tüm not panoya kopyalandı",
+  "speechPlay": "Sesli oku",
+  "speechPause": "Duraklat",
+  "speechResume": "Devam et",
+  "speechStop": "Durdur",
+  "speechVoice": "Ses tipi",
+  "speechVoiceSubtitle": "Sesli okumada kullanilacak ses",
+  "speechRate": "Okuma hizi",
+  "speechSystemDefault": "Sistem varsayilani",
+  "speechNoVoices": "Bu cihazda yuklu ses bulunamadi",
+  "aiSummarySpeak": "Ozeti sesli oku",
+  "speechVoiceTurkish": "Türkçe ses",
+  "speechVoiceEnglish": "İngilizce ses",
+  "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur"
 }

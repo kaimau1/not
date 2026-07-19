@@ -10,6 +10,7 @@ abstract final class AppConstants {
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
+
   /// Sıralı model tercihi: biri 404 (model yok) veya 429 (kota) verirse
   /// sıradaki denenir. API'den çekilen gerçek listeyle kesiştirilir ve
   /// listede olmayan yeni flash modelleri sona eklenir (GeminiService).
@@ -35,7 +36,6 @@ abstract final class AppConstants {
   /// Dahili AI (Firebase AI Logic) için premium olmayanların günlük
   /// ücretsiz istek hakkı. Kendi API anahtarını girenlere sınır uygulanmaz.
   static const int freeDailyAiCalls = 5;
-  static const String geminiTtsModel = 'gemini-2.5-flash-preview-tts';
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';
   static const String geminiLiveWsUrl =
@@ -49,15 +49,18 @@ abstract final class AppConstants {
   // Google OAuth (masaüstü) — derleme sırasında --dart-define ile verilir:
   //   flutter run --dart-define=GOOGLE_DESKTOP_CLIENT_ID=... \
   //               --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=...
-  static const String desktopClientId =
-      String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_ID');
-  static const String desktopClientSecret =
-      String.fromEnvironment('GOOGLE_DESKTOP_CLIENT_SECRET');
+  static const String desktopClientId = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_ID',
+  );
+  static const String desktopClientSecret = String.fromEnvironment(
+    'GOOGLE_DESKTOP_CLIENT_SECRET',
+  );
 
   // Android'de google_sign_in için sunucu (web) client ID.
   // Boş bırakılırsa eklenti google-services.json içinden okur.
-  static const String serverClientId =
-      String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
+  static const String serverClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+  );
 
   static const String gmailReadonlyScope =
       'https://www.googleapis.com/auth/gmail.readonly';

@@ -124,12 +124,6 @@ abstract class AppLocalizations {
   /// **'Notlarda ara...'**
   String get searchHint;
 
-  /// No description provided for @quickAddHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Not al...'**
-  String get quickAddHint;
-
   /// No description provided for @filterAll.
   ///
   /// In tr, this message translates to:
@@ -1701,6 +1695,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tüm not panoya kopyalandı'**
   String get allCopied;
+
+  /// No description provided for @speechPlay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli oku'**
+  String get speechPlay;
+
+  /// No description provided for @speechPause.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklat'**
+  String get speechPause;
+
+  /// No description provided for @speechResume.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam et'**
+  String get speechResume;
+
+  /// No description provided for @speechStop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Durdur'**
+  String get speechStop;
+
+  /// No description provided for @speechVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses tipi'**
+  String get speechVoice;
+
+  /// No description provided for @speechVoiceSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli okumada kullanilacak ses'**
+  String get speechVoiceSubtitle;
+
+  /// No description provided for @speechRate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okuma hizi'**
+  String get speechRate;
+
+  /// No description provided for @speechSystemDefault.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem varsayilani'**
+  String get speechSystemDefault;
+
+  /// No description provided for @speechNoVoices.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda yuklu ses bulunamadi'**
+  String get speechNoVoices;
+
+  /// No description provided for @aiSummarySpeak.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ozeti sesli oku'**
+  String get aiSummarySpeak;
+
+  /// No description provided for @speechVoiceTurkish.
+  ///
+  /// In tr, this message translates to:
+  /// **'Türkçe ses'**
+  String get speechVoiceTurkish;
+
+  /// No description provided for @speechVoiceEnglish.
+  ///
+  /// In tr, this message translates to:
+  /// **'İngilizce ses'**
+  String get speechVoiceEnglish;
+
+  /// No description provided for @speechVoiceAutoInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer diller otomatik olarak erkek sesiyle okunur'**
+  String get speechVoiceAutoInfo;
 }
 
 class _AppLocalizationsDelegate

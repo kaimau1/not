@@ -103,14 +103,17 @@ class GeminiService {
     String? Function()? chatModel,
     String? Function()? voiceModel,
     this._builtIn,
-  })  : _chatModel = chatModel ?? _noModel,
-        _voiceModel = voiceModel ?? _noModel,
-        _dio = dio ??
-            Dio(BaseOptions(
-              baseUrl: AppConstants.geminiBaseUrl,
-              connectTimeout: const Duration(seconds: 20),
-              receiveTimeout: const Duration(minutes: 3),
-            ));
+  }) : _chatModel = chatModel ?? _noModel,
+       _voiceModel = voiceModel ?? _noModel,
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: AppConstants.geminiBaseUrl,
+               connectTimeout: const Duration(seconds: 20),
+               receiveTimeout: const Duration(minutes: 3),
+             ),
+           );
 
   static String? _noModel() => null;
 
@@ -152,11 +155,14 @@ class GeminiService {
 
   static GeminiException _mapDioError(DioException e) =>
       switch (e.response?.statusCode) {
-        400 || 401 || 403 =>
-          const GeminiException('API anahtarı geçersiz', isAuthError: true),
+        400 || 401 || 403 => const GeminiException(
+          'API anahtarı geçersiz',
+          isAuthError: true,
+        ),
         404 => const GeminiException(
-            'AI modeli bulunamadı. Uygulamanın güncel sürümünü kurun; '
-            'sorun sürerse geliştiriciye bildirin.'),
+          'AI modeli bulunamadı. Uygulamanın güncel sürümünü kurun; '
+          'sorun sürerse geliştiriciye bildirin.',
+        ),
         429 => const GeminiException('Kota aşıldı, sonra tekrar deneyin'),
         _ => GeminiException('Bağlantı hatası: ${e.message}'),
       };
@@ -196,14 +202,17 @@ class GeminiService {
       for (final id in AppConstants.geminiModelPreference)
         if (available.contains(id)) id,
     ];
-    final extras = available
-        .where((id) =>
-            id.startsWith('gemini-') &&
-            id.contains('flash') &&
-            !AppConstants.geminiModelPreference.contains(id) &&
-            !RegExp('tts|live|image|audio|embed').hasMatch(id))
-        .toList()
-      ..sort((a, b) => b.compareTo(a));
+    final extras =
+        available
+            .where(
+              (id) =>
+                  id.startsWith('gemini-') &&
+                  id.contains('flash') &&
+                  !AppConstants.geminiModelPreference.contains(id) &&
+                  !RegExp('tts|live|image|audio|embed').hasMatch(id),
+            )
+            .toList()
+          ..sort((a, b) => b.compareTo(a));
     return [...preferred, ...extras];
   }
 
@@ -220,10 +229,7 @@ class GeminiService {
     final first = prefer != null && candidates.contains(prefer)
         ? prefer
         : _activeModel;
-    final ordered = [
-      ?first,
-      ...candidates.where((m) => m != first),
-    ];
+    final ordered = [?first, ...candidates.where((m) => m != first)];
     DioException? lastSkipped;
     for (final model in ordered) {
       try {
@@ -247,14 +253,13 @@ class GeminiService {
     List<Map<String, dynamic>> parts, {
     bool jsonOutput = false,
     String? preferModel,
-  }) =>
-      _generateFromContents(
-        [
-          {'role': 'user', 'parts': parts},
-        ],
-        jsonOutput: jsonOutput,
-        preferModel: preferModel,
-      );
+  }) => _generateFromContents(
+    [
+      {'role': 'user', 'parts': parts},
+    ],
+    jsonOutput: jsonOutput,
+    preferModel: preferModel,
+  );
 
   Future<String> _generateFromContents(
     List<Map<String, dynamic>> contents, {
@@ -294,11 +299,13 @@ class GeminiService {
       throw const GeminiException('Modelden yanıt alınamadı');
     }
     final content =
-        (candidates.first as Map<String, dynamic>)['content'] as Map<String, dynamic>?;
+        (candidates.first as Map<String, dynamic>)['content']
+            as Map<String, dynamic>?;
     final responseParts = content?['parts'] as List<dynamic>? ?? const [];
     final text = [
       for (final part in responseParts)
-        if ((part as Map<String, dynamic>)['text'] != null) part['text'] as String,
+        if ((part as Map<String, dynamic>)['text'] != null)
+          part['text'] as String,
     ].join();
     if (text.isEmpty) {
       throw const GeminiException('Modelden boş yanıt döndü');
@@ -308,38 +315,41 @@ class GeminiService {
 
   /// Notu Türkçe, kısa ve madde işaretli özetler.
   Future<String> summarizeNote(Note note) => _generate([
-        {
-          'text': 'Aşağıdaki notu Türkçe olarak kısa ve öz biçimde özetle. '
-              'Uygunsa madde işaretleri kullan. Yalnızca özeti yaz, başka '
-              'açıklama ekleme.\n\n---\n${note.toPlainText()}',
-        },
-      ]);
+    {
+      'text':
+          'Aşağıdaki notu Türkçe olarak kısa ve öz biçimde özetle. '
+          'Uygunsa madde işaretleri kullan. Yalnızca özeti yaz, başka '
+          'açıklama ekleme.\n\n---\n${note.toPlainText()}',
+    },
+  ]);
 
   /// Notu analiz eder: ana temalar, eksikler, yapılacaklar.
   Future<String> analyzeNote(Note note) => _generate([
-        {
-          'text': 'Aşağıdaki notu Türkçe analiz et: ana temaları çıkar, varsa '
-              'eksik veya belirsiz noktaları belirt ve nottan doğan yapılacak '
-              'işleri listele. Kısa ve eyleme dönük yaz.\n\n---\n'
-              '${note.toPlainText()}',
-        },
-      ]);
+    {
+      'text':
+          'Aşağıdaki notu Türkçe analiz et: ana temaları çıkar, varsa '
+          'eksik veya belirsiz noktaları belirt ve nottan doğan yapılacak '
+          'işleri listele. Kısa ve eyleme dönük yaz.\n\n---\n'
+          '${note.toPlainText()}',
+    },
+  ]);
 
   /// PDF'i doğrudan Gemini'ye gönderip Türkçe özet alır (inline base64,
   /// ~20 MB istek sınırına kadar).
   Future<String> summarizePdf(Uint8List bytes, String fileName) => _generate([
-        {
-          'inline_data': {
-            'mime_type': 'application/pdf',
-            'data': base64Encode(bytes),
-          },
-        },
-        {
-          'text': '"$fileName" adlı bu PDF belgesini Türkçe olarak özetle: '
-              'önce 2-3 cümlelik genel özet, ardından önemli noktaları madde '
-              'madde ver.',
-        },
-      ]);
+    {
+      'inline_data': {
+        'mime_type': 'application/pdf',
+        'data': base64Encode(bytes),
+      },
+    },
+    {
+      'text':
+          '"$fileName" adlı bu PDF belgesini Türkçe olarak özetle: '
+          'önce 2-3 cümlelik genel özet, ardından önemli noktaları madde '
+          'madde ver.',
+    },
+  ]);
 
   /// Son notlara bakarak eyleme dönük öneriler üretir (birleştirilebilecek
   /// notlar dahil).
@@ -354,7 +364,8 @@ class GeminiService {
     }
     return _generate([
       {
-        'text': 'Aşağıda bir kullanıcının not defterindeki son notlar var. '
+        'text':
+            'Aşağıda bir kullanıcının not defterindeki son notlar var. '
             'Bu notlara bakarak Türkçe, EYLEME DÖNÜK 3-6 öneri üret. '
             'Kurallar: her öneri "- " ile başlayan TEK satır olsun ve en '
             'fazla 12 kelime; hangi nottan geldiği anlaşılsın; genel hayat '
@@ -387,7 +398,8 @@ class GeminiService {
     }
     return _generate([
       {
-        'text': 'Aşağıda kullanıcının son 7 günde yazdığı/güncellediği notlar '
+        'text':
+            'Aşağıda kullanıcının son 7 günde yazdığı/güncellediği notlar '
             'var. Türkçe haftalık özet çıkar. Yapı (her başlık kendi '
             'satırında, düz metin): "Bu hafta ne birikti" — en çok yazdığı '
             '2-4 konu, her biri tek satır; "Bekleyenler" — tamamlanmamış '
@@ -406,7 +418,8 @@ class GeminiService {
           'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
         },
         {
-          'text': 'Bu görseldeki tüm metni çıkar ve düzenli, okunaklı bir not '
+          'text':
+              'Bu görseldeki tüm metni çıkar ve düzenli, okunaklı bir not '
               'metnine dönüştür. Görselin dilini koru. Liste görüyorsan madde '
               'işaretleri kullan. Yalnızca çıkarılan metni yaz, açıklama '
               'ekleme. Görselde metin yoksa görülen içeriği 1-2 cümleyle '
@@ -421,7 +434,8 @@ class GeminiService {
           'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
         },
         {
-          'text': 'Bu ses kaydını konuşulan dilde yazıya dök. Yalnızca '
+          'text':
+              'Bu ses kaydını konuşulan dilde yazıya dök. Yalnızca '
               'konuşmanın metnini yaz; dolgu seslerini (ııı, eee) atla, '
               'noktalama ekle. Kayıt bir alışveriş listesi veya yapılacaklar '
               'sayıyorsa madde işaretli liste olarak yaz.',
@@ -432,7 +446,8 @@ class GeminiService {
   Future<String> translateText(String text, String targetLanguage) =>
       _generate([
         {
-          'text': 'Aşağıdaki metni $targetLanguage diline çevir. Anlamı ve '
+          'text':
+              'Aşağıdaki metni $targetLanguage diline çevir. Anlamı ve '
               'tonu koru; biçimlendirmeyi (madde işaretleri, satırlar) aynen '
               'aktar. Yalnızca çeviriyi yaz, açıklama ekleme.\n\n---\n$text',
         },
@@ -446,24 +461,22 @@ class GeminiService {
     required String languageA,
     required String languageB,
   }) async {
-    final raw = await _generate(
-      [
-        {
-          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
-        },
-        {
-          'text': 'Bu ses kaydı, $languageA ve $languageB konuşan iki kişi '
-              'arasındaki bir sohbetin tek cümlesidir/turudur. '
-              '1) Konuşulan dili tespit et ($languageA mı $languageB mi). '
-              '2) Konuşmayı kendi dilinde yazıya dök. '
-              '3) Karşı dile doğal biçimde çevir. '
-              'Yanıtı YALNIZCA şu JSON şemasında ver: '
-              '{"detectedLanguage": "dil adı", "transcript": "döküm", '
-              '"translation": "çeviri"}',
-        },
-      ],
-      jsonOutput: true,
-    );
+    final raw = await _generate([
+      {
+        'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+      },
+      {
+        'text':
+            'Bu ses kaydı, $languageA ve $languageB konuşan iki kişi '
+            'arasındaki bir sohbetin tek cümlesidir/turudur. '
+            '1) Konuşulan dili tespit et ($languageA mı $languageB mi). '
+            '2) Konuşmayı kendi dilinde yazıya dök. '
+            '3) Karşı dile doğal biçimde çevir. '
+            'Yanıtı YALNIZCA şu JSON şemasında ver: '
+            '{"detectedLanguage": "dil adı", "transcript": "döküm", '
+            '"translation": "çeviri"}',
+      },
+    ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! Map) {
       throw const GeminiException('Çeviri yanıtı çözümlenemedi');
@@ -475,81 +488,34 @@ class GeminiService {
     );
   }
 
-  /// Metni sese çevirir (TTS). Ham PCM (24 kHz, 16-bit, mono) döner.
-  Future<Uint8List> synthesizeSpeech(String text) async {
-    final key = await _apiKey();
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        '/models/${AppConstants.geminiTtsModel}:generateContent',
-        options: Options(headers: {'x-goog-api-key': key}),
-        data: {
-          'contents': [
-            {
-              'role': 'user',
-              'parts': [
-                {'text': text},
-              ],
-            },
-          ],
-          'generationConfig': {
-            'responseModalities': ['AUDIO'],
-            'speechConfig': {
-              'voiceConfig': {
-                'prebuiltVoiceConfig': {'voiceName': 'Kore'},
-              },
-            },
-          },
-        },
-      );
-      final candidates = response.data?['candidates'] as List<dynamic>?;
-      if (candidates == null || candidates.isEmpty) {
-        throw const GeminiException('Ses üretilemedi');
-      }
-      final content = (candidates.first as Map<String, dynamic>)['content']
-          as Map<String, dynamic>?;
-      final parts = content?['parts'] as List<dynamic>? ?? const [];
-      for (final part in parts) {
-        final inline = (part as Map<String, dynamic>)['inlineData'] ??
-            part['inline_data'];
-        if (inline is Map && inline['data'] is String) {
-          return base64Decode(inline['data'] as String);
-        }
-      }
-      throw const GeminiException('Ses üretilemedi');
-    } on DioException catch (e) {
-      throw _mapDioError(e);
-    }
-  }
-
   /// Ham brifing verisini (hatırlatıcılar, notlar, e-postalar) samimi ve
   /// kısa bir günlük brifinge dönüştürür.
   Future<String> composeBriefing(String rawData) => _generate([
-        {
-          'text': 'Aşağıdaki ham verilerden kısa, samimi bir Türkçe "günlük '
-              'brifing" yaz. Yapı: 1-2 cümlelik selamlama ve günün özeti; '
-              '"Bugün" başlığı altında hatırlatıcılar ve yapılacaklar; varsa '
-              '"E-postalar" başlığı altında önemli e-postalar; kapanışta tek '
-              'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla. Markdown '
-              'kullanma: yıldız, kalın işareti veya # koyma, düz metin yaz.'
-              '\n\n$rawData',
-        },
-      ]).then(stripMarkdown);
+    {
+      'text':
+          'Aşağıdaki ham verilerden kısa, samimi bir Türkçe "günlük '
+          'brifing" yaz. Yapı: 1-2 cümlelik selamlama ve günün özeti; '
+          '"Bugün" başlığı altında hatırlatıcılar ve yapılacaklar; varsa '
+          '"E-postalar" başlığı altında önemli e-postalar; kapanışta tek '
+          'cümlelik öneri. Kısa tut; veri yoksa o bölümü atla. Markdown '
+          'kullanma: yıldız, kalın işareti veya # koyma, düz metin yaz.'
+          '\n\n$rawData',
+    },
+  ]).then(stripMarkdown);
 
   /// Nota kısa bir Türkçe başlık üretir. Basit bir iş olduğu için hızlı ve
   /// ucuz lite model ilk sırada denenir.
   Future<String> generateTitle(Note note) async {
     final text = note.toPlainText();
-    final raw = await _generate(
-      [
-        {
-          'text': 'Aşağıdaki not için en fazla 5 kelimelik, kısa ve açıklayıcı '
-              'bir Türkçe başlık üret. Yalnızca başlığı yaz; tırnak, nokta '
-              'veya açıklama ekleme.\n\n---\n'
-              '${text.length > 600 ? text.substring(0, 600) : text}',
-        },
-      ],
-      preferModel: AppConstants.fastGeminiModel,
-    );
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki not için en fazla 5 kelimelik, kısa ve açıklayıcı '
+            'bir Türkçe başlık üret. Yalnızca başlığı yaz; tırnak, nokta '
+            'veya açıklama ekleme.\n\n---\n'
+            '${text.length > 600 ? text.substring(0, 600) : text}',
+      },
+    ], preferModel: AppConstants.fastGeminiModel);
     // Model tırnak/yeni satır eklerse temizle, aşırı uzunsa kısalt.
     var title = raw.trim().split('\n').first.trim();
     title = title.replaceAll(RegExp('^["\'#*-]+|["\'.]+\$'), '').trim();
@@ -558,18 +524,16 @@ class GeminiService {
 
   /// Nota uygun 1-3 kısa etiket önerir.
   Future<List<String>> suggestTags(Note note) async {
-    final raw = await _generate(
-      [
-        {
-          'text': 'Aşağıdaki not için 1-3 kısa Türkçe etiket öner (tek '
-              'kelime, küçük harf, Türkçe karakter yerine ASCII tercih et; '
-              'ör. "is", "ev", "saglik", "alisveris", "okul", "finans"). '
-              'Yanıtı YALNIZCA JSON dizisi olarak ver: ["etiket1", "etiket2"]'
-              '\n\n---\n${note.toPlainText()}',
-        },
-      ],
-      jsonOutput: true,
-    );
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki not için 1-3 kısa Türkçe etiket öner (tek '
+            'kelime, küçük harf, Türkçe karakter yerine ASCII tercih et; '
+            'ör. "is", "ev", "saglik", "alisveris", "okul", "finans"). '
+            'Yanıtı YALNIZCA JSON dizisi olarak ver: ["etiket1", "etiket2"]'
+            '\n\n---\n${note.toPlainText()}',
+      },
+    ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
     return [
@@ -585,12 +549,13 @@ class GeminiService {
 
   /// Metni verilen yönergeye göre yeniden yazar (düzelt/resmîleştir/kısalt...).
   Future<String> rewriteText(String text, String instruction) => _generate([
-        {
-          'text': 'Aşağıdaki metni şu yönergeye göre yeniden yaz: '
-              '"$instruction". Metnin dilini koru. Yalnızca yeniden yazılmış '
-              'metni ver, açıklama ekleme.\n\n---\n$text',
-        },
-      ]);
+    {
+      'text':
+          'Aşağıdaki metni şu yönergeye göre yeniden yaz: '
+          '"$instruction". Metnin dilini koru. Yalnızca yeniden yazılmış '
+          'metni ver, açıklama ekleme.\n\n---\n$text',
+    },
+  ]);
 
   /// Ekli PDF üzerinde çok turlu soru-cevap.
   Future<String> chatWithPdf({
@@ -609,7 +574,8 @@ class GeminiService {
             },
           },
           {
-            'text': '"$fileName" adlı bu PDF hakkında sorulara Türkçe, kısa '
+            'text':
+                '"$fileName" adlı bu PDF hakkında sorulara Türkçe, kısa '
                 've net yanıt ver. Yanıtları yalnızca belgeye dayandır; '
                 'belgede olmayanı uydurma, bulamazsan söyle.',
           },
@@ -637,7 +603,7 @@ class GeminiService {
   Future<String> chatAboutNote({
     required Note note,
     required List<({Uint8List bytes, String mimeType, String fileName})>
-        attachments,
+    attachments,
     required List<ChatTurn> history,
   }) {
     final title = note.title.trim();
@@ -653,7 +619,8 @@ class GeminiService {
               },
             },
           {
-            'text': 'Aşağıda bir notun içeriği'
+            'text':
+                'Aşağıda bir notun içeriği'
                 '${attachments.isEmpty ? '' : ' ve ekleri'} var'
                 '${title.isEmpty ? '' : ' (not başlığı: "$title")'}. '
                 'Bu not hakkındaki sorulara Türkçe, kısa ve net yanıt ver. '
@@ -708,9 +675,9 @@ class GeminiService {
       return [
         for (final e in embeddings)
           [
-            for (final v in ((e as Map<String, dynamic>)['values']
-                    as List<dynamic>? ??
-                const []))
+            for (final v
+                in ((e as Map<String, dynamic>)['values'] as List<dynamic>? ??
+                    const []))
               (v as num).toDouble(),
           ],
       ];
@@ -721,28 +688,29 @@ class GeminiService {
 
   /// Asistan konuşmalarının ortak giriş turları (kimlik + not bağlamı).
   static List<Map<String, dynamic>> _assistantPreamble(String notesContext) => [
+    {
+      'role': 'user',
+      'parts': [
         {
-          'role': 'user',
-          'parts': [
-            {
-              'text': 'Sen "Notlar" uygulamasının asistanısın. Türkçe, kısa ve '
-                  'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
-                  'veya silmeni isteyebilir; bunun için sana verilen araçları '
-                  'kullan. Tarihler için ISO 8601 kullan; şu an: '
-                  '${DateTime.now().toIso8601String()}. Alışveriş/yapılacak '
-                  'listeleri için "checklist" tipini kullan. Bir aracı '
-                  'çağırdıktan sonra kullanıcıya ne yaptığını tek cümleyle '
-                  'özetle.\n\nKULLANICININ NOT DEFTERİ:\n$notesContext',
-            },
-          ],
+          'text':
+              'Sen "Notlar" uygulamasının asistanısın. Türkçe, kısa ve '
+              'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
+              'veya silmeni isteyebilir; bunun için sana verilen araçları '
+              'kullan. Tarihler için ISO 8601 kullan; şu an: '
+              '${DateTime.now().toIso8601String()}. Alışveriş/yapılacak '
+              'listeleri için "checklist" tipini kullan. Bir aracı '
+              'çağırdıktan sonra kullanıcıya ne yaptığını tek cümleyle '
+              'özetle.\n\nKULLANICININ NOT DEFTERİ:\n$notesContext',
         },
-        {
-          'role': 'model',
-          'parts': [
-            {'text': 'Anladım. Notların üzerinde çalışmaya hazırım.'},
-          ],
-        },
-      ];
+      ],
+    },
+    {
+      'role': 'model',
+      'parts': [
+        {'text': 'Anladım. Notların üzerinde çalışmaya hazırım.'},
+      ],
+    },
+  ];
 
   /// Sesli hızlı not: konuşmadan uygun notu asistan araçlarıyla oluşturur.
   ///
@@ -759,9 +727,11 @@ class GeminiService {
     required Future<Map<String, dynamic>> Function(
       String name,
       Map<String, dynamic> args,
-    ) onToolCall,
+    )
+    onToolCall,
   }) async {
-    const task = 'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
+    const task =
+        'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
         'checklist, aksi hâlde metin; tarih/saat geçiyorsa hatırlatıcı ekle. '
         'Anlaşılır bir istek yoksa not oluşturma ve bunu belirt.';
     final hasTranscript = transcript != null && transcript.trim().isNotEmpty;
@@ -774,8 +744,11 @@ class GeminiService {
         'role': 'user',
         'parts': [
           if (hasTranscript)
-            {'text': 'Kullanıcının sesli notu: "${transcript.trim()}"\n\n'
-                'Bu konuşmadan $task'}
+            {
+              'text':
+                  'Kullanıcının sesli notu: "${transcript.trim()}"\n\n'
+                  'Bu konuşmadan $task',
+            }
           else ...[
             {
               'inline_data': {
@@ -811,7 +784,8 @@ class GeminiService {
     required Future<Map<String, dynamic>> Function(
       String name,
       Map<String, dynamic> args,
-    ) onToolCall,
+    )
+    onToolCall,
   }) async {
     final contents = [
       ..._assistantPreamble(notesContext),
@@ -849,10 +823,10 @@ class GeminiService {
     Future<Map<String, dynamic>> Function(
       String name,
       Map<String, dynamic> args,
-    ) onToolCall, {
+    )
+    onToolCall, {
     String? prefer,
   }) async {
-
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(
         key,
@@ -874,7 +848,8 @@ class GeminiService {
       if (candidates == null || candidates.isEmpty) {
         throw const GeminiException('Modelden yanıt alınamadı');
       }
-      final content = (candidates.first as Map<String, dynamic>)['content']
+      final content =
+          (candidates.first as Map<String, dynamic>)['content']
               as Map<String, dynamic>? ??
           const {};
       final parts = content['parts'] as List<dynamic>? ?? const [];
@@ -884,7 +859,9 @@ class GeminiService {
       for (final part in parts) {
         final map = part as Map<String, dynamic>;
         if (map['functionCall'] is Map) {
-          functionCalls.add(Map<String, dynamic>.from(map['functionCall'] as Map));
+          functionCalls.add(
+            Map<String, dynamic>.from(map['functionCall'] as Map),
+          );
         }
         if (map['text'] is String) textBuffer.write(map['text'] as String);
       }
@@ -914,10 +891,7 @@ class GeminiService {
           result = {'status': 'error', 'message': e.toString()};
         }
         responseParts.add({
-          'functionResponse': {
-            'name': name,
-            'response': result,
-          },
+          'functionResponse': {'name': name, 'response': result},
         });
       }
       contents.add({'role': 'user', 'parts': responseParts});
@@ -928,7 +902,8 @@ class GeminiService {
   static const _assistantTools = <Map<String, dynamic>>[
     {
       'name': 'create_note',
-      'description': 'Yeni bir not oluşturur. Alışveriş/yapılacaklar için '
+      'description':
+          'Yeni bir not oluşturur. Alışveriş/yapılacaklar için '
           'checklist, numaralı adımlar için ordered, diğerleri için text tipi.',
       'parameters': {
         'type': 'OBJECT',
@@ -958,7 +933,8 @@ class GeminiService {
     },
     {
       'name': 'update_note',
-      'description': 'Var olan bir notu günceller. noteId not defteri '
+      'description':
+          'Var olan bir notu günceller. noteId not defteri '
           'listesindeki id değeridir.',
       'parameters': {
         'type': 'OBJECT',
@@ -1009,23 +985,21 @@ class GeminiService {
         },
     ];
     final now = DateTime.now();
-    final raw = await _generate(
-      [
-        {
-          'text': 'Aşağıda bir gelen kutusundaki son e-postaların listesi var '
-              '(JSON). Bugünün tarihi: ${now.year}-${now.month}-${now.day}. '
-              'Önemli olanları seç (fatura/ödeme, randevu, iş, resmi '
-              'kurum, son tarih içeren, kişisel önemli mesajlar; reklam ve '
-              'toplu bültenleri ele). Yanıtı YALNIZCA şu şemada bir JSON '
-              'dizisi olarak ver: '
-              '[{"from": "...", "subject": "...", "summary": "1-2 cümle Türkçe '
-              'özet", "reason": "neden önemli, birkaç kelime", "dueDate": '
-              '"YYYY-MM-DDTHH:MM" veya son tarih/randevu yoksa null}]. '
-              'Önemli e-posta yoksa boş dizi döndür.\n\n${jsonEncode(list)}',
-        },
-      ],
-      jsonOutput: true,
-    );
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıda bir gelen kutusundaki son e-postaların listesi var '
+            '(JSON). Bugünün tarihi: ${now.year}-${now.month}-${now.day}. '
+            'Önemli olanları seç (fatura/ödeme, randevu, iş, resmi '
+            'kurum, son tarih içeren, kişisel önemli mesajlar; reklam ve '
+            'toplu bültenleri ele). Yanıtı YALNIZCA şu şemada bir JSON '
+            'dizisi olarak ver: '
+            '[{"from": "...", "subject": "...", "summary": "1-2 cümle Türkçe '
+            'özet", "reason": "neden önemli, birkaç kelime", "dueDate": '
+            '"YYYY-MM-DDTHH:MM" veya son tarih/randevu yoksa null}]. '
+            'Önemli e-posta yoksa boş dizi döndür.\n\n${jsonEncode(list)}',
+      },
+    ], jsonOutput: true);
     final decoded = jsonDecode(raw);
     if (decoded is! List) return const [];
     return [

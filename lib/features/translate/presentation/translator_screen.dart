@@ -9,6 +9,7 @@ import 'package:record/record.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/pcm_player.dart';
+import '../../../core/utils/speech_output.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
@@ -77,7 +78,6 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
   final _entries = <_TalkEntry>[];
   bool _processing = false;
   bool _autoSpeak = true;
-  final _ttsPlayer = PcmSegmentPlayer();
 
   String _langName(String code) =>
       _languages.firstWhere((l) => l.$2 == code, orElse: () => ('?', code)).$1;
@@ -86,7 +86,6 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
   void dispose() {
     _stopLive(updateState: false);
     _pcmPlayer.dispose();
-    _ttsPlayer.dispose();
     super.dispose();
   }
 
@@ -111,8 +110,7 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
       _sessionToB = LiveTranslateSession(
         targetLanguageCode: _langB,
         onAudio: _pcmPlayer.addPcm,
-        onInputTranscript: (text) =>
-            setState(() => _heardBuffer.write(text)),
+        onInputTranscript: (text) => setState(() => _heardBuffer.write(text)),
         onOutputTranscript: (text) =>
             setState(() => _translatedBuffer.write(text)),
         onError: _onLiveError,
@@ -205,14 +203,24 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
       );
       if (!mounted) return;
       setState(() {
-        _entries.add(_TalkEntry(
-          transcript: translation.transcript,
-          translation: translation.translation,
-          language: translation.detectedLanguage,
-        ));
+        _entries.add(
+          _TalkEntry(
+            transcript: translation.transcript,
+            translation: translation.translation,
+            language: translation.detectedLanguage,
+          ),
+        );
       });
       if (_autoSpeak && translation.translation.isNotEmpty) {
-        await _speak(translation.translation);
+        // Çeviri, konuşulan dilin KARŞISINDAKİ dildedir. Hedef dil
+        // söylenmezse metin Türkçe sesle, Türkçe okunuşuyla okunuyordu.
+        final spokenA = translation.detectedLanguage.toLowerCase().contains(
+          _langName(_langA).toLowerCase(),
+        );
+        await _speak(
+          translation.translation,
+          languageCode: spokenA ? _langB : _langA,
+        );
       }
     } on GeminiException catch (e) {
       _showSnack(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
@@ -223,11 +231,16 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
     }
   }
 
-  Future<void> _speak(String text) async {
+  /// Çeviriyi seslendirir. Eskiden Gemini TTS'e gidiyordu ve ham API
+  /// ANAHTARI istiyordu — anahtarı olmayanda sessizce hiç ses çıkmıyordu
+  /// ("seslendirme yapılmıyor" sorununun kökü buydu). Artık cihazın kendi
+  /// seslendirmesi: bedava, anında, çevrimdışı ve ses tipi Ayarlar'dan
+  /// seçilebiliyor.
+  Future<void> _speak(String text, {String? languageCode}) async {
     try {
-      final pcm = await ref.read(geminiServiceProvider).synthesizeSpeech(text);
-      _ttsPlayer.addPcm(pcm);
-      _ttsPlayer.flush();
+      await ref
+          .read(speechOutputProvider.notifier)
+          .speak(text, languageCode: languageCode);
     } catch (e) {
       debugPrint('TTS başarısız: $e');
     }
@@ -276,10 +289,10 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                         onPressed: _liveActive
                             ? null
                             : () => setState(() {
-                                  final tmp = _langA;
-                                  _langA = _langB;
-                                  _langB = tmp;
-                                }),
+                                final tmp = _langA;
+                                _langA = _langB;
+                                _langB = tmp;
+                              }),
                       ),
                       Expanded(child: _languageDropdown(isA: false)),
                     ],
@@ -304,7 +317,7 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                     onSelectionChanged: _liveActive
                         ? null
                         : (selection) =>
-                            setState(() => _mode = selection.first),
+                              setState(() => _mode = selection.first),
                   ),
                 ),
                 Expanded(
@@ -353,10 +366,9 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
           Text(
             l10n.liveTranslateInfo,
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           Expanded(
@@ -392,8 +404,8 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
               onPressed: _connecting
                   ? null
                   : _liveActive
-                      ? () => _stopLive()
-                      : _startLive,
+                  ? () => _stopLive()
+                  : _startLive,
               icon: _connecting
                   ? const SizedBox(
                       width: 18,
@@ -405,8 +417,8 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                 _connecting
                     ? l10n.connecting
                     : _liveActive
-                        ? l10n.stopLive
-                        : l10n.startLive,
+                    ? l10n.stopLive
+                    : l10n.startLive,
               ),
             ),
           ),
@@ -468,10 +480,9 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                     child: Text(
                       l10n.pushToTalkHint,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: scheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 )
@@ -495,9 +506,7 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                         children: [
                           Text(
                             entry.language,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
+                            style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                           const SizedBox(height: 2),
@@ -518,8 +527,10 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
                               IconButton(
                                 visualDensity: VisualDensity.compact,
                                 tooltip: l10n.speakTranslation,
-                                icon: const Icon(Icons.volume_up_outlined,
-                                    size: 18),
+                                icon: const Icon(
+                                  Icons.volume_up_outlined,
+                                  size: 18,
+                                ),
                                 onPressed: () => _speak(entry.translation),
                               ),
                             ],

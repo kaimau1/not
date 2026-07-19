@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/gemini_service.dart';
@@ -49,6 +50,24 @@ class SettingsScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               _SectionTitle(l10n.voiceAssistantTitle),
               const _VoiceModeSelector(),
+              _SpeechVoiceSelector(
+                language: 'tr',
+                title: l10n.speechVoiceTurkish,
+              ),
+              _SpeechVoiceSelector(
+                language: 'en',
+                title: l10n.speechVoiceEnglish,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  l10n.speechVoiceAutoInfo,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const _SpeechRateSlider(),
               const SizedBox(height: 24),
               if (const PermissionsService().isSupported) ...[
                 _SectionTitle(l10n.permissionsTitle),
@@ -89,9 +108,9 @@ class _SectionTitle extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              letterSpacing: 1.1,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+          letterSpacing: 1.1,
+          color: Theme.of(context).colorScheme.primary,
+        ),
       ),
     );
   }
@@ -231,10 +250,9 @@ class _PermissionTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -244,14 +262,15 @@ class _PermissionTile extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, size: 18, color: Colors.green.shade600),
+                Icon(
+                  Icons.check_circle,
+                  size: 18,
+                  color: Colors.green.shade600,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   context.l10n.permGranted,
-                  style: TextStyle(
-                    color: Colors.green.shade600,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.green.shade600, fontSize: 12),
                 ),
               ],
             )
@@ -342,8 +361,8 @@ class _VoiceModeSelector extends ConsumerWidget {
         Text(
           l10n.voiceModeInfo,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -396,6 +415,152 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
   }
 }
 
+/// Bir dilin sesli okuma sesi. Yalnız Türkçe ve İngilizce kullanıcıya
+/// sorulur; kalan diller otomatik erkek sesiyle okunur. Liste cihazdan gelir
+/// (kurulu TTS motoruna göre değişir), bu yüzden sabit katalog tutulmuyor.
+class _SpeechVoiceSelector extends ConsumerStatefulWidget {
+  const _SpeechVoiceSelector({required this.language, required this.title});
+
+  final String language;
+  final String title;
+
+  @override
+  ConsumerState<_SpeechVoiceSelector> createState() =>
+      _SpeechVoiceSelectorState();
+}
+
+class _SpeechVoiceSelectorState extends ConsumerState<_SpeechVoiceSelector> {
+  List<SpeechVoice>? _voices;
+  SpeechVoice? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final controller = ref.read(speechOutputProvider.notifier);
+    final voices = await controller.voices(language: widget.language);
+    final selected = await controller.selectedVoice(widget.language);
+    if (!mounted) return;
+    setState(() {
+      _voices = voices;
+      _selected = selected;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final voices = _voices;
+    if (voices == null) {
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(widget.title),
+        trailing: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    if (voices.isEmpty) {
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(widget.title),
+        subtitle: Text(l10n.speechNoVoices),
+      );
+    }
+    final current = _selected;
+    final value = current != null && voices.any((v) => v.id == current.id)
+        ? current.id
+        : null;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(widget.title),
+      trailing: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 190),
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: value,
+          hint: Text(l10n.speechSystemDefault),
+          items: [
+            for (final voice in voices)
+              DropdownMenuItem(
+                value: voice.id,
+                child: Text(
+                  voice.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+          ],
+          onChanged: (id) async {
+            final picked = voices.firstWhere((v) => v.id == id);
+            final controller = ref.read(speechOutputProvider.notifier);
+            await controller.setVoice(widget.language, picked);
+            if (!mounted) return;
+            setState(() => _selected = picked);
+            // Seçilen ses hemen duyulsun: adından anlaşılmıyor.
+            await controller.speak(
+              widget.language == 'en'
+                  ? 'This is the selected voice.'
+                  : 'Seçilen ses bu.',
+              languageCode: widget.language,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SpeechRateSlider extends ConsumerStatefulWidget {
+  const _SpeechRateSlider();
+
+  @override
+  ConsumerState<_SpeechRateSlider> createState() => _SpeechRateSliderState();
+}
+
+class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
+  double? _rate;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(speechOutputProvider.notifier).rate().then((value) {
+      if (mounted) setState(() => _rate = value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rate = _rate;
+    if (rate == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(context.l10n.speechRate),
+          Expanded(
+            child: Slider(
+              value: rate,
+              min: 0.2,
+              max: 1,
+              divisions: 8,
+              label: '${(rate * 2).toStringAsFixed(1)}x',
+              onChanged: (value) => setState(() => _rate = value),
+              onChangeEnd: (value) =>
+                  ref.read(speechOutputProvider.notifier).setRate(value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DarkScheduleEditor extends ConsumerWidget {
   const _DarkScheduleEditor();
 
@@ -415,7 +580,9 @@ class _DarkScheduleEditor extends ConsumerWidget {
     );
     if (time == null) return;
     final minutes = time.hour * 60 + time.minute;
-    ref.read(darkScheduleProvider.notifier).update(
+    ref
+        .read(darkScheduleProvider.notifier)
+        .update(
           startMinutes: isStart ? minutes : null,
           endMinutes: isStart ? null : minutes,
         );
@@ -477,8 +644,8 @@ class _BuiltInAiStatus extends ConsumerWidget {
     final (icon, text) = hasKey
         ? (Icons.key, l10n.aiBuiltInByok)
         : premium
-            ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium)
-            : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
+        ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium)
+        : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -489,10 +656,9 @@ class _BuiltInAiStatus extends ConsumerWidget {
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -560,9 +726,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               children: [
                 Chip(
                   avatar: const Icon(Icons.key, size: 16),
-                  label: Text(
-                    '${l10n.geminiApiKey}: ${l10n.apiKeySavedBadge}',
-                  ),
+                  label: Text('${l10n.geminiApiKey}: ${l10n.apiKeySavedBadge}'),
                 ),
                 const SizedBox(width: 8),
                 TextButton(
@@ -584,8 +748,8 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
         Text(
           l10n.geminiApiKeyInfo,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 10),
         FilledButton.tonalIcon(
@@ -642,8 +806,8 @@ class _ModelSelectors extends ConsumerWidget {
             Text(
               l10n.aiModelsInfo,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         );
@@ -693,8 +857,9 @@ class _BriefingEditor extends ConsumerWidget {
           title: Text(l10n.briefingSetting),
           subtitle: Text(l10n.briefingSettingInfo),
           value: settings.enabled,
-          onChanged: (value) =>
-              ref.read(briefingSettingsProvider.notifier).update(enabled: value),
+          onChanged: (value) => ref
+              .read(briefingSettingsProvider.notifier)
+              .update(enabled: value),
         ),
         if (settings.enabled)
           ActionChip(
@@ -709,9 +874,9 @@ class _BriefingEditor extends ConsumerWidget {
                 ),
               );
               if (picked != null) {
-                ref.read(briefingSettingsProvider.notifier).update(
-                      minutes: picked.hour * 60 + picked.minute,
-                    );
+                ref
+                    .read(briefingSettingsProvider.notifier)
+                    .update(minutes: picked.hour * 60 + picked.minute);
               }
             },
           ),
@@ -780,8 +945,8 @@ class _GmailSectionState extends ConsumerState<_GmailSection> {
         Text(
           l10n.gmailInfo,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -836,26 +1001,26 @@ class _BackupButton extends ConsumerWidget {
   const _BackupButton();
 
   Map<String, dynamic> _exportNote(Note n) => {
-        'id': n.id,
-        'type': n.type.id,
-        'title': n.title,
-        'body': n.body,
-        'items': [
-          for (final i in n.items) {'text': i.text, 'checked': i.checked},
-        ],
-        'tags': n.tags,
-        'color': n.color.id,
-        'pinned': n.pinned,
-        'locked': n.locked,
-        'createdAt': n.createdAt?.toIso8601String(),
-        'updatedAt': n.updatedAt?.toIso8601String(),
-        'archivedAt': n.archivedAt?.toIso8601String(),
-        'reminderAt': n.reminderAt?.toIso8601String(),
-        'attachments': [
-          for (final a in n.attachments)
-            {'fileName': a.fileName, 'kind': a.kind.name, 'url': a.downloadUrl},
-        ],
-      };
+    'id': n.id,
+    'type': n.type.id,
+    'title': n.title,
+    'body': n.body,
+    'items': [
+      for (final i in n.items) {'text': i.text, 'checked': i.checked},
+    ],
+    'tags': n.tags,
+    'color': n.color.id,
+    'pinned': n.pinned,
+    'locked': n.locked,
+    'createdAt': n.createdAt?.toIso8601String(),
+    'updatedAt': n.updatedAt?.toIso8601String(),
+    'archivedAt': n.archivedAt?.toIso8601String(),
+    'reminderAt': n.reminderAt?.toIso8601String(),
+    'attachments': [
+      for (final a in n.attachments)
+        {'fileName': a.fileName, 'kind': a.kind.name, 'url': a.downloadUrl},
+    ],
+  };
 
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
@@ -870,7 +1035,8 @@ class _BackupButton extends ConsumerWidget {
         'notes': [for (final n in notes) _exportNote(n)],
       });
       final now = DateTime.now();
-      final stamp = '${now.year}-${now.month.toString().padLeft(2, '0')}-'
+      final stamp =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-'
           '${now.day.toString().padLeft(2, '0')}';
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/notlar-yedek-$stamp.json');
@@ -1013,10 +1179,8 @@ class _AccountSection extends ConsumerWidget {
         TextButton.icon(
           icon: const Icon(Icons.description_outlined),
           label: Text(l10n.licensesTitle),
-          onPressed: () => showLicensePage(
-            context: context,
-            applicationName: l10n.appName,
-          ),
+          onPressed: () =>
+              showLicensePage(context: context, applicationName: l10n.appName),
         ),
       ],
     );
