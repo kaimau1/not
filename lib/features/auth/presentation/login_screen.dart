@@ -44,24 +44,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.sticky_note_2_rounded, size: 64, color: scheme.primary),
+                Icon(
+                  Icons.sticky_note_2_rounded,
+                  size: 64,
+                  color: scheme.primary,
+                ),
                 const SizedBox(height: 20),
                 Text(
                   l10n.appName,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .displaySmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.loginTagline,
                   textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 FilledButton.icon(

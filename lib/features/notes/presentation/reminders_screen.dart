@@ -18,7 +18,10 @@ class RemindersScreen extends ConsumerWidget {
 
   static final _format = DateFormat('d MMMM y, EEEE HH:mm', 'tr');
 
-  Future<DateTime?> _pickDateTime(BuildContext context, DateTime initial) async {
+  Future<DateTime?> _pickDateTime(
+    BuildContext context,
+    DateTime initial,
+  ) async {
     final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
@@ -148,9 +151,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         text.toUpperCase(),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              letterSpacing: 1.1,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          letterSpacing: 1.1,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

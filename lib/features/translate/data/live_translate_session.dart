@@ -44,26 +44,29 @@ class LiveTranslateSession {
       },
       onDone: () {
         if (!_setupCompleted.isCompleted) {
-          _setupCompleted
-              .completeError(StateError('Bağlantı beklenmedik şekilde kapandı'));
+          _setupCompleted.completeError(
+            StateError('Bağlantı beklenmedik şekilde kapandı'),
+          );
         }
       },
     );
 
-    _channel!.sink.add(jsonEncode({
-      'setup': {
-        'model': 'models/${AppConstants.geminiLiveTranslateModel}',
-        'generationConfig': {
-          'responseModalities': ['AUDIO'],
-          'translationConfig': {
-            'targetLanguageCode': targetLanguageCode,
-            'echoTargetLanguage': false,
+    _channel!.sink.add(
+      jsonEncode({
+        'setup': {
+          'model': 'models/${AppConstants.geminiLiveTranslateModel}',
+          'generationConfig': {
+            'responseModalities': ['AUDIO'],
+            'translationConfig': {
+              'targetLanguageCode': targetLanguageCode,
+              'echoTargetLanguage': false,
+            },
           },
+          'inputAudioTranscription': <String, dynamic>{},
+          'outputAudioTranscription': <String, dynamic>{},
         },
-        'inputAudioTranscription': <String, dynamic>{},
-        'outputAudioTranscription': <String, dynamic>{},
-      },
-    }));
+      }),
+    );
 
     await _setupCompleted.future.timeout(const Duration(seconds: 15));
   }
@@ -98,8 +101,9 @@ class LiveTranslateSession {
       final modelTurn = serverContent['modelTurn'] as Map<String, dynamic>?;
       final parts = modelTurn?['parts'] as List<dynamic>? ?? const [];
       for (final part in parts) {
-        final inline = (part as Map<String, dynamic>)['inlineData']
-            as Map<String, dynamic>?;
+        final inline =
+            (part as Map<String, dynamic>)['inlineData']
+                as Map<String, dynamic>?;
         final data = inline?['data'] as String?;
         if (data != null) onAudio(base64Decode(data));
       }
@@ -112,14 +116,16 @@ class LiveTranslateSession {
   void sendAudio(Uint8List pcm16k) {
     final channel = _channel;
     if (channel == null || _closed) return;
-    channel.sink.add(jsonEncode({
-      'realtimeInput': {
-        'audio': {
-          'data': base64Encode(pcm16k),
-          'mimeType': 'audio/pcm;rate=16000',
+    channel.sink.add(
+      jsonEncode({
+        'realtimeInput': {
+          'audio': {
+            'data': base64Encode(pcm16k),
+            'mimeType': 'audio/pcm;rate=16000',
+          },
         },
-      },
-    }));
+      }),
+    );
   }
 
   Future<void> close() async {

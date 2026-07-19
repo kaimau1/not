@@ -54,7 +54,8 @@ class PermissionsService {
     try {
       final android = FlutterLocalNotificationsPlugin()
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       return await android?.areNotificationsEnabled() ?? false;
     } catch (_) {
       return false;
@@ -67,7 +68,8 @@ class PermissionsService {
     try {
       final android = FlutterLocalNotificationsPlugin()
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       return await android?.requestNotificationsPermission() ?? false;
     } catch (_) {
       return false;

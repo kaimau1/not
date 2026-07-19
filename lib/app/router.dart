@@ -112,16 +112,20 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
       final repo = ref.read(notesRepositoryProvider);
       if (repo == null) return; // Oturum yoksa sessizce geç.
       Future(() async {
-        final id =
-            await repo.createNote(NoteType.fromId(uri.queryParameters['type']));
+        final id = await repo.createNote(
+          NoteType.fromId(uri.queryParameters['type']),
+        );
         router.push('/note/$id');
       });
     }
   }
 
-  appLinks.getInitialLink().then((uri) {
-    if (uri != null) handle(uri);
-  }).catchError((_) {});
+  appLinks
+      .getInitialLink()
+      .then((uri) {
+        if (uri != null) handle(uri);
+      })
+      .catchError((_) {});
   final sub = appLinks.uriLinkStream.listen(handle, onError: (_) {});
   ref.onDispose(sub.cancel);
 });

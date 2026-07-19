@@ -21,25 +21,27 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 56, color: scheme.onSurfaceVariant.withValues(alpha: 0.4)),
+            Icon(
+              icon,
+              size: 56,
+              color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: scheme.onSurfaceVariant),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 6),
               Text(
                 subtitle!,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
               ),
             ],
           ],

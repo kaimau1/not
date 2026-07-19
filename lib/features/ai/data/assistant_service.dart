@@ -24,7 +24,10 @@ class AssistantService {
   String buildNotesContext(List<Note> notes) {
     final buffer = StringBuffer();
     // Kilitli notlar AI bağlamına dahil edilmez (içerik gizli kalmalı).
-    final visible = [for (final n in notes) if (!n.locked) n];
+    final visible = [
+      for (final n in notes)
+        if (!n.locked) n,
+    ];
     for (final note in visible.take(80)) {
       final text = note.toPlainText();
       buffer.writeln(
@@ -66,9 +69,8 @@ class AssistantService {
   }
 
   List<String> _stringList(dynamic value) => [
-        for (final entry in (value as List<dynamic>? ?? const []))
-          entry.toString(),
-      ];
+    for (final entry in (value as List<dynamic>? ?? const [])) entry.toString(),
+  ];
 
   Future<Map<String, dynamic>> _createNote(
     NotesRepository repo,
@@ -98,7 +100,8 @@ class AssistantService {
     if (title.isEmpty && body.isEmpty && items.isEmpty) {
       return {
         'status': 'error',
-        'message': 'Not içeriği boş. Konuşmadan bir başlık ve içerik '
+        'message':
+            'Not içeriği boş. Konuşmadan bir başlık ve içerik '
             '(metin ya da liste öğeleri) çıkarıp tekrar dene.',
       };
     }
@@ -135,8 +138,9 @@ class AssistantService {
     if (args['setTags'] is List) fields['tags'] = _stringList(args['setTags']);
     if (args['pinned'] is bool) fields['pinned'] = args['pinned'];
     if (args['archived'] is bool) {
-      fields['archivedAt'] =
-          (args['archived'] as bool) ? Timestamp.now() : null;
+      fields['archivedAt'] = (args['archived'] as bool)
+          ? Timestamp.now()
+          : null;
     }
     if (args['clearReminder'] == true) {
       fields['reminderAt'] = null;

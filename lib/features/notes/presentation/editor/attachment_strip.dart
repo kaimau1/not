@@ -106,8 +106,8 @@ class _AudioTileState extends State<_AudioTile> {
             stream: _player.playerStateStream,
             builder: (context, snapshot) {
               final playing = snapshot.data?.playing ?? false;
-              final completed = snapshot.data?.processingState ==
-                  ProcessingState.completed;
+              final completed =
+                  snapshot.data?.processingState == ProcessingState.completed;
               return IconButton.filledTonal(
                 onPressed: _toggle,
                 icon: Icon(
@@ -121,10 +121,9 @@ class _AudioTileState extends State<_AudioTile> {
             widget.attachment.fileName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -145,9 +144,9 @@ class _AttachmentTile extends StatelessWidget {
   void _open(BuildContext context) {
     if (attachment.kind == AttachmentKind.audio) return;
     if (!_hasLocal && !attachment.isUploaded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.attachmentNotSynced)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
       return;
     }
     Navigator.of(context).push(
@@ -204,8 +203,11 @@ class _AttachmentTile extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.cloud_off_outlined,
-                size: 22, color: scheme.onSurfaceVariant),
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 22,
+              color: scheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 4),
             Text(
               context.l10n.attachmentNotSynced,

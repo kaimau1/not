@@ -23,8 +23,8 @@ import '../data/gmail_service.dart';
 /// gün değişince otomatik tazelenir, "Yenile" ile her an zorlanır.
 final importantEmailsProvider =
     AsyncNotifierProvider<ImportantEmailsNotifier, List<ImportantEmail>>(
-  ImportantEmailsNotifier.new,
-);
+      ImportantEmailsNotifier.new,
+    );
 
 class ImportantEmailsNotifier extends DailyCacheNotifier<List<ImportantEmail>> {
   @override
@@ -43,29 +43,29 @@ class ImportantEmailsNotifier extends DailyCacheNotifier<List<ImportantEmail>> {
 
   @override
   String encode(List<ImportantEmail> value) => jsonEncode([
-        for (final e in value)
-          {
-            'from': e.from,
-            'subject': e.subject,
-            'summary': e.summary,
-            'reason': e.reason,
-            'dueDate': e.dueDate?.toIso8601String(),
-          },
-      ]);
+    for (final e in value)
+      {
+        'from': e.from,
+        'subject': e.subject,
+        'summary': e.summary,
+        'reason': e.reason,
+        'dueDate': e.dueDate?.toIso8601String(),
+      },
+  ]);
 
   @override
   List<ImportantEmail> decode(String raw) => [
-        for (final m in jsonDecode(raw) as List)
-          ImportantEmail(
-            from: m['from'] as String,
-            subject: m['subject'] as String,
-            summary: m['summary'] as String,
-            reason: m['reason'] as String,
-            dueDate: m['dueDate'] == null
-                ? null
-                : DateTime.parse(m['dueDate'] as String),
-          ),
-      ];
+    for (final m in jsonDecode(raw) as List)
+      ImportantEmail(
+        from: m['from'] as String,
+        subject: m['subject'] as String,
+        summary: m['summary'] as String,
+        reason: m['reason'] as String,
+        dueDate: m['dueDate'] == null
+            ? null
+            : DateTime.parse(m['dueDate'] as String),
+      ),
+  ];
 }
 
 class MailSummaryScreen extends ConsumerWidget {
@@ -295,9 +295,7 @@ class _EmailList extends ConsumerWidget {
                           email.from,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelMedium
+                          style: Theme.of(context).textTheme.labelMedium
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ),
@@ -306,10 +304,9 @@ class _EmailList extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     email.subject,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -329,8 +326,9 @@ class _EmailList extends ConsumerWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: scheme.secondaryContainer
-                                  .withValues(alpha: 0.6),
+                              color: scheme.secondaryContainer.withValues(
+                                alpha: 0.6,
+                              ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -345,14 +343,17 @@ class _EmailList extends ConsumerWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  scheme.errorContainer.withValues(alpha: 0.6),
+                              color: scheme.errorContainer.withValues(
+                                alpha: 0.6,
+                              ),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
                               l10n.mailDueDate(
-                                DateFormat('d MMM HH:mm', 'tr')
-                                    .format(email.dueDate!),
+                                DateFormat(
+                                  'd MMM HH:mm',
+                                  'tr',
+                                ).format(email.dueDate!),
                               ),
                               style: Theme.of(context).textTheme.labelSmall,
                             ),

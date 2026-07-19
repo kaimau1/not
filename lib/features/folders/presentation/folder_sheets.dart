@@ -54,21 +54,21 @@ Future<String?> showFolderEditorDialog(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
                           color: icon == entry.key
-                              ? Theme.of(dialogContext)
-                                  .colorScheme
-                                  .primaryContainer
+                              ? Theme.of(
+                                  dialogContext,
+                                ).colorScheme.primaryContainer
                               : null,
                         ),
                         child: Icon(
                           entry.value,
                           size: 22,
                           color: icon == entry.key
-                              ? Theme.of(dialogContext)
-                                  .colorScheme
-                                  .onPrimaryContainer
-                              : Theme.of(dialogContext)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              ? Theme.of(
+                                  dialogContext,
+                                ).colorScheme.onPrimaryContainer
+                              : Theme.of(
+                                  dialogContext,
+                                ).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),

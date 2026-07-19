@@ -18,12 +18,12 @@ class DashboardChipsRow extends ConsumerWidget {
 
   /// Kompakt çip görünümü: yükseklik ve iç dolgu küçültülür.
   static Widget _compact(Widget chip) => ChipTheme(
-        data: const ChipThemeData(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          labelPadding: EdgeInsets.symmetric(horizontal: 2),
-        ),
-        child: chip,
-      );
+    data: const ChipThemeData(
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      labelPadding: EdgeInsets.symmetric(horizontal: 2),
+    ),
+    child: chip,
+  );
 
   Future<void> _showFilterMenu(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
@@ -41,12 +41,12 @@ class DashboardChipsRow extends ConsumerWidget {
               (
                 NoteFilter.checklist,
                 l10n.filterChecklist,
-                Icons.check_box_outlined
+                Icons.check_box_outlined,
               ),
               (
                 NoteFilter.ordered,
                 l10n.filterOrdered,
-                Icons.format_list_numbered_rounded
+                Icons.format_list_numbered_rounded,
               ),
             ];
             return Column(
@@ -68,8 +68,8 @@ class DashboardChipsRow extends ConsumerWidget {
                   child: Text(
                     l10n.editFiltersInfo,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -149,7 +149,7 @@ class DashboardChipsRow extends ConsumerWidget {
               NoteFilter.pinned => l10n.filterPinned,
               NoteFilter.starred => l10n.filterStarred,
               NoteFilter.all => l10n.filterAll,
-            }
+            },
           ),
     ];
 
@@ -169,62 +169,78 @@ class DashboardChipsRow extends ConsumerWidget {
 
     final children = <Widget>[
       // Filtre menüsü: hangi çiplerin görüneceğini kullanıcı seçer.
-      _compact(ActionChip(
-        tooltip: l10n.editFilters,
-        label: Icon(Icons.tune, size: 16, color: scheme.onSurfaceVariant),
-        onPressed: () => _showFilterMenu(context, ref),
-      )),
+      _compact(
+        ActionChip(
+          tooltip: l10n.editFilters,
+          label: Icon(Icons.tune, size: 16, color: scheme.onSurfaceVariant),
+          onPressed: () => _showFilterMenu(context, ref),
+        ),
+      ),
       for (final (f, label) in filterEntries)
-        _compact(FilterChip(
-          label: Text(label),
-          selected: filter == f,
-          showCheckmark: false,
-          onSelected: (_) => ref.read(noteFilterProvider.notifier).set(f),
-        )),
+        _compact(
+          FilterChip(
+            label: Text(label),
+            selected: filter == f,
+            showCheckmark: false,
+            onSelected: (_) => ref.read(noteFilterProvider.notifier).set(f),
+          ),
+        ),
       // Klasörler: simgeli çipler; uzun basış düzenleme/silme menüsü açar.
       for (final folder in folders)
         GestureDetector(
           onLongPress: () => showFolderActionsSheet(context, ref, folder),
-          child: _compact(FilterChip(
-            avatar: Icon(
-              folder.iconData,
-              size: 16,
-              color: selectedFolder == folder.id
-                  ? scheme.onSecondaryContainer
-                  : scheme.onSurfaceVariant,
+          child: _compact(
+            FilterChip(
+              avatar: Icon(
+                folder.iconData,
+                size: 16,
+                color: selectedFolder == folder.id
+                    ? scheme.onSecondaryContainer
+                    : scheme.onSurfaceVariant,
+              ),
+              label: Text(folder.name),
+              selected: selectedFolder == folder.id,
+              showCheckmark: false,
+              onSelected: (isSelected) => ref
+                  .read(selectedFolderProvider.notifier)
+                  .set(isSelected ? folder.id : null),
             ),
-            label: Text(folder.name),
-            selected: selectedFolder == folder.id,
+          ),
+        ),
+      _compact(
+        ActionChip(
+          tooltip: l10n.newFolder,
+          label: Icon(
+            Icons.create_new_folder_outlined,
+            size: 16,
+            color: scheme.onSurfaceVariant,
+          ),
+          onPressed: () => showFolderEditorDialog(context, ref),
+        ),
+      ),
+      for (final tag in visibleTags)
+        _compact(
+          FilterChip(
+            label: Text('#$tag'),
+            selected: selectedTag == tag,
             showCheckmark: false,
             onSelected: (isSelected) => ref
-                .read(selectedFolderProvider.notifier)
-                .set(isSelected ? folder.id : null),
-          )),
+                .read(selectedTagProvider.notifier)
+                .set(isSelected ? tag : null),
+          ),
         ),
-      _compact(ActionChip(
-        tooltip: l10n.newFolder,
-        label: Icon(
-          Icons.create_new_folder_outlined,
-          size: 16,
-          color: scheme.onSurfaceVariant,
-        ),
-        onPressed: () => showFolderEditorDialog(context, ref),
-      )),
-      for (final tag in visibleTags)
-        _compact(FilterChip(
-          label: Text('#$tag'),
-          selected: selectedTag == tag,
-          showCheckmark: false,
-          onSelected: (isSelected) => ref
-              .read(selectedTagProvider.notifier)
-              .set(isSelected ? tag : null),
-        )),
       if (hiddenTagCount > 0)
-        _compact(ActionChip(
-          label: Text('+$hiddenTagCount'),
-          onPressed: () =>
-              _showAllTags(context, ref, ref.read(allTagsProvider), selectedTag),
-        )),
+        _compact(
+          ActionChip(
+            label: Text('+$hiddenTagCount'),
+            onPressed: () => _showAllTags(
+              context,
+              ref,
+              ref.read(allTagsProvider),
+              selectedTag,
+            ),
+          ),
+        ),
     ];
 
     return SizedBox(

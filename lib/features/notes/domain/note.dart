@@ -18,9 +18,9 @@ enum NoteColor {
   final String id;
 
   static NoteColor fromId(String? id) => NoteColor.values.firstWhere(
-        (c) => c.id == id,
-        orElse: () => NoteColor.none,
-      );
+    (c) => c.id == id,
+    orElse: () => NoteColor.none,
+  );
 }
 
 class AiSummary {
@@ -31,18 +31,18 @@ class AiSummary {
   final DateTime? createdAt;
 
   factory AiSummary.fromMap(Map<String, dynamic> map) => AiSummary(
-        text: map['text'] as String? ?? '',
-        model: map['model'] as String? ?? '',
-        createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
-      );
+    text: map['text'] as String? ?? '',
+    model: map['model'] as String? ?? '',
+    createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+  );
 
   Map<String, dynamic> toMap() => {
-        'text': text,
-        'model': model,
-        'createdAt': createdAt != null
-            ? Timestamp.fromDate(createdAt!)
-            : FieldValue.serverTimestamp(),
-      };
+    'text': text,
+    'model': model,
+    'createdAt': createdAt != null
+        ? Timestamp.fromDate(createdAt!)
+        : FieldValue.serverTimestamp(),
+  };
 }
 
 /// Bir not — tüm içerik tek Firestore dokümanında tutulur (atomik ve
@@ -155,28 +155,27 @@ class Note {
     DateTime? reminderAt,
     bool clearReminderAt = false,
     AiSummary? aiSummary,
-  }) =>
-      Note(
-        id: id,
-        type: type ?? this.type,
-        title: title ?? this.title,
-        body: body ?? this.body,
-        items: items ?? this.items,
-        attachments: attachments ?? this.attachments,
-        tags: tags ?? this.tags,
-        folderId: clearFolderId ? null : (folderId ?? this.folderId),
-        color: color ?? this.color,
-        pinned: pinned ?? this.pinned,
-        starred: starred ?? this.starred,
-        locked: locked ?? this.locked,
-        orderIndex: orderIndex ?? this.orderIndex,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-        deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
-        archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
-        reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
-        aiSummary: aiSummary ?? this.aiSummary,
-      );
+  }) => Note(
+    id: id,
+    type: type ?? this.type,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    items: items ?? this.items,
+    attachments: attachments ?? this.attachments,
+    tags: tags ?? this.tags,
+    folderId: clearFolderId ? null : (folderId ?? this.folderId),
+    color: color ?? this.color,
+    pinned: pinned ?? this.pinned,
+    starred: starred ?? this.starred,
+    locked: locked ?? this.locked,
+    orderIndex: orderIndex ?? this.orderIndex,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: clearDeletedAt ? null : (deletedAt ?? this.deletedAt),
+    archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
+    reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
+    aiSummary: aiSummary ?? this.aiSummary,
+  );
 
   factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final map = doc.data() ?? const <String, dynamic>{};
@@ -209,33 +208,33 @@ class Note {
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
       aiSummary: map['aiSummary'] is Map
-          ? AiSummary.fromMap(Map<String, dynamic>.from(map['aiSummary'] as Map))
+          ? AiSummary.fromMap(
+              Map<String, dynamic>.from(map['aiSummary'] as Map),
+            )
           : null,
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'type': type.id,
-        'title': title,
-        'body': body,
-        'items': [for (final i in items) i.toMap()],
-        'attachments': [for (final a in attachments) a.toMap()],
-        'tags': tags,
-        'folderId': folderId,
-        'color': color.id,
-        'pinned': pinned,
-        'starred': starred,
-        'locked': locked,
-        'orderIndex': orderIndex,
-        'createdAt': createdAt != null
-            ? Timestamp.fromDate(createdAt!)
-            : FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
-        'archivedAt':
-            archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
-        'reminderAt':
-            reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
-        'aiSummary': aiSummary?.toMap(),
-      };
+    'type': type.id,
+    'title': title,
+    'body': body,
+    'items': [for (final i in items) i.toMap()],
+    'attachments': [for (final a in attachments) a.toMap()],
+    'tags': tags,
+    'folderId': folderId,
+    'color': color.id,
+    'pinned': pinned,
+    'starred': starred,
+    'locked': locked,
+    'orderIndex': orderIndex,
+    'createdAt': createdAt != null
+        ? Timestamp.fromDate(createdAt!)
+        : FieldValue.serverTimestamp(),
+    'updatedAt': FieldValue.serverTimestamp(),
+    'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
+    'archivedAt': archivedAt != null ? Timestamp.fromDate(archivedAt!) : null,
+    'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt!) : null,
+    'aiSummary': aiSummary?.toMap(),
+  };
 }

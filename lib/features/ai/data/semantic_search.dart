@@ -11,27 +11,29 @@ final semanticIndexProvider = Provider<SemanticIndex>(
 );
 
 /// Sorguyla anlamca en alakalı notlar (skor eşiği uygulanmış, sıralı).
-final semanticSearchProvider =
-    FutureProvider.autoDispose.family<List<Note>, String>((ref, query) async {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-  // Kilitli notların içeriği embedding'e ve sonuçlara girmez.
-  final active = [
-    for (final n in notes)
-      if (n.archivedAt == null && !n.locked) n,
-  ];
-  if (active.isEmpty || query.trim().isEmpty) return const [];
-  try {
-    return await ref.read(semanticIndexProvider).search(query.trim(), active);
-  } on GeminiException {
-    // Embedding dahili (anahtarsız) modda desteklenmiyor; arama hata ekranına
-    // düşmesin, düz metin aramasıyla devam edilsin.
-    final q = query.trim().toLowerCase();
-    return [
-      for (final n in active)
-        if (n.toPlainText().toLowerCase().contains(q)) n,
-    ];
-  }
-});
+final semanticSearchProvider = FutureProvider.autoDispose
+    .family<List<Note>, String>((ref, query) async {
+      final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+      // Kilitli notların içeriği embedding'e ve sonuçlara girmez.
+      final active = [
+        for (final n in notes)
+          if (n.archivedAt == null && !n.locked) n,
+      ];
+      if (active.isEmpty || query.trim().isEmpty) return const [];
+      try {
+        return await ref
+            .read(semanticIndexProvider)
+            .search(query.trim(), active);
+      } on GeminiException {
+        // Embedding dahili (anahtarsız) modda desteklenmiyor; arama hata ekranına
+        // düşmesin, düz metin aramasıyla devam edilsin.
+        final q = query.trim().toLowerCase();
+        return [
+          for (final n in active)
+            if (n.toPlainText().toLowerCase().contains(q)) n,
+        ];
+      }
+    });
 
 /// Bellek içi embedding indeksi: her notun vektörü not değiştikçe yenilenir,
 /// arama kosinüs benzerliğiyle yapılır. Vektörler yalnızca bellekte tutulur.

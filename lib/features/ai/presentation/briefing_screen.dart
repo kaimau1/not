@@ -16,8 +16,9 @@ import 'ai_text_result.dart';
 /// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç günde bir kez
 /// üretilip diske yazılır; ekranlar arası ve uygulama yeniden açılışında
 /// korunur, "Yenile" ile hemen tazelenir.
-final briefingProvider =
-    AsyncNotifierProvider<BriefingNotifier, String>(BriefingNotifier.new);
+final briefingProvider = AsyncNotifierProvider<BriefingNotifier, String>(
+  BriefingNotifier.new,
+);
 
 class BriefingNotifier extends StringDailyCache {
   @override
@@ -48,8 +49,8 @@ class BriefingNotifier extends StringDailyCache {
       final label = note.title.trim().isNotEmpty
           ? note.title
           : note.locked
-              ? '(kilitli not)'
-              : note.toPlainText().split('\n').first;
+          ? '(kilitli not)'
+          : note.toPlainText().split('\n').first;
       buffer.writeln(
         '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: $label',
       );
@@ -86,8 +87,9 @@ class BriefingNotifier extends StringDailyCache {
           buffer.writeln('- (yok)');
         }
         for (final email in emails.take(8)) {
-          buffer
-              .writeln('- ${email.from}: ${email.subject} — ${email.summary}');
+          buffer.writeln(
+            '- ${email.from}: ${email.subject} — ${email.summary}',
+          );
         }
       } catch (_) {
         // E-posta alınamazsa brifing notlarla devam eder.

@@ -15,7 +15,7 @@ import 'gemini_service.dart' show GeminiException;
 /// yerde (GeminiService) kalır.
 class FirebaseAiClient {
   FirebaseAiClient({Future<void> Function()? beforeCall})
-      : _beforeCall = beforeCall ?? _noop;
+    : _beforeCall = beforeCall ?? _noop;
 
   static Future<void> _noop() async {}
 
@@ -24,23 +24,22 @@ class FirebaseAiClient {
   final Future<void> Function() _beforeCall;
 
   static List<String> _candidates(String? prefer) => [
-        ?prefer,
-        for (final model in AppConstants.geminiModelPreference)
-          if (model != prefer) model,
-      ];
+    ?prefer,
+    for (final model in AppConstants.geminiModelPreference)
+      if (model != prefer) model,
+  ];
 
   GenerativeModel _model(
     String modelId, {
     bool jsonOutput = false,
     List<Tool>? tools,
-  }) =>
-      FirebaseAI.googleAI().generativeModel(
-        model: modelId,
-        generationConfig: GenerationConfig(
-          responseMimeType: jsonOutput ? 'application/json' : null,
-        ),
-        tools: tools,
-      );
+  }) => FirebaseAI.googleAI().generativeModel(
+    model: modelId,
+    generationConfig: GenerationConfig(
+      responseMimeType: jsonOutput ? 'application/json' : null,
+    ),
+    tools: tools,
+  );
 
   /// REST biçimindeki content map'ini firebase_ai [Content] nesnesine çevirir.
   static Content _toContent(Map<String, dynamic> raw) {
@@ -50,12 +49,14 @@ class FirebaseAiClient {
       if (map['text'] is String) parts.add(TextPart(map['text'] as String));
       final inline = map['inline_data'] ?? map['inlineData'];
       if (inline is Map) {
-        parts.add(InlineDataPart(
-          inline['mime_type'] as String? ??
-              inline['mimeType'] as String? ??
-              'application/octet-stream',
-          base64Decode(inline['data'] as String),
-        ));
+        parts.add(
+          InlineDataPart(
+            inline['mime_type'] as String? ??
+                inline['mimeType'] as String? ??
+                'application/octet-stream',
+            base64Decode(inline['data'] as String),
+          ),
+        );
       }
     }
     return Content(raw['role'] as String? ?? 'user', parts);
@@ -157,7 +158,8 @@ class FirebaseAiClient {
     Future<Map<String, dynamic>> Function(
       String name,
       Map<String, dynamic> args,
-    ) onToolCall, {
+    )
+    onToolCall, {
     String? prefer,
   }) async {
     await _beforeCall();
@@ -205,7 +207,9 @@ class FirebaseAiClient {
         'Yeni bir not oluşturur. Alışveriş/yapılacaklar için checklist, '
             'numaralı adımlar için ordered, diğerleri için text tipi.',
         parameters: {
-          'type': Schema.enumString(enumValues: ['text', 'checklist', 'ordered']),
+          'type': Schema.enumString(
+            enumValues: ['text', 'checklist', 'ordered'],
+          ),
           'title': Schema.string(),
           'body': Schema.string(description: 'Yalnızca text tipinde'),
           'items': Schema.array(

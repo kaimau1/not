@@ -6,13 +6,15 @@ import 'auth_repository.dart';
 
 /// Android: google_sign_in eklentisi ile yerel Google girişi.
 class AndroidGoogleAuth implements AuthRepository {
-  AndroidGoogleAuth({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+  AndroidGoogleAuth({FirebaseAuth? auth})
+    : _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseAuth _auth;
 
   Future<void>? _initFuture;
 
-  Future<void> _ensureInitialized() => _initFuture ??= GoogleSignIn.instance.initialize(
+  Future<void> _ensureInitialized() =>
+      _initFuture ??= GoogleSignIn.instance.initialize(
         serverClientId: AppConstants.serverClientId.isEmpty
             ? null
             : AppConstants.serverClientId,

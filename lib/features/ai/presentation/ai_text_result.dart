@@ -61,10 +61,7 @@ class AiTextResult extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              FilledButton.tonal(
-                onPressed: onRetry,
-                child: Text(l10n.retry),
-              ),
+              FilledButton.tonal(onPressed: onRetry, child: Text(l10n.retry)),
             ],
           ),
         ),
@@ -79,8 +76,9 @@ class AiTextResult extends StatelessWidget {
           children: [
             Text(
               header,
-              style: theme.textTheme.labelMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -89,8 +87,9 @@ class AiTextResult extends StatelessWidget {
                 color: theme.colorScheme.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: theme.colorScheme.outlineVariant
-                      .withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
               ),
               child: SelectableText(text, style: theme.textTheme.bodyMedium),

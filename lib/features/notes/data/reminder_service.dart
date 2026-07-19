@@ -89,7 +89,8 @@ class ReminderService {
     if (!kIsWeb && Platform.isAndroid) {
       await _plugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestNotificationsPermission();
     }
     _initialized = true;
@@ -131,7 +132,8 @@ class ReminderService {
       await _plugin.zonedSchedule(
         id: _briefingNotificationId,
         title: 'Günaydın! ☀️',
-        body: 'Bugünün brifingi hazır — hatırlatıcıların, notların ve '
+        body:
+            'Bugünün brifingi hazır — hatırlatıcıların, notların ve '
             'önemli e-postaların özeti için dokun.',
         scheduledDate: next,
         notificationDetails: const NotificationDetails(
@@ -177,13 +179,16 @@ class ReminderService {
       for (final entry in wanted.entries) {
         final note = entry.value;
         if (_scheduled[entry.key] == note.reminderAt) continue;
-        final title =
-            note.title.trim().isEmpty ? 'Not hatırlatıcısı' : note.title.trim();
+        final title = note.title.trim().isEmpty
+            ? 'Not hatırlatıcısı'
+            : note.title.trim();
         final preview = note.toPlainText();
         await _plugin.zonedSchedule(
           id: _notificationId(entry.key),
           title: title,
-          body: preview.length > 120 ? '${preview.substring(0, 120)}…' : preview,
+          body: preview.length > 120
+              ? '${preview.substring(0, 120)}…'
+              : preview,
           scheduledDate: tz.TZDateTime.from(note.reminderAt!, tz.local),
           notificationDetails: const NotificationDetails(
             android: AndroidNotificationDetails(

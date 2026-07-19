@@ -19,9 +19,9 @@ final premiumProvider = StreamProvider<bool>((ref) {
       .doc(uid)
       .snapshots()
       .map((doc) {
-    final until = (doc.data()?['premiumUntil'] as Timestamp?)?.toDate();
-    return until != null && until.isAfter(DateTime.now());
-  });
+        final until = (doc.data()?['premiumUntil'] as Timestamp?)?.toDate();
+        return until != null && until.isAfter(DateTime.now());
+      });
 });
 
 /// AI kullanımının "sınırsız" olup olmadığı: kendi Gemini anahtarını girenler

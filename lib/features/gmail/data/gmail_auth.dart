@@ -19,14 +19,13 @@ final gmailAuthProvider = Provider<GmailAuth>(
 
 /// Gmail bağlantı durumu (Ayarlar'daki anahtara göre).
 final gmailConnectedProvider = Provider<bool>(
-  (ref) => ref.watch(sharedPreferencesProvider).getBool(GmailAuth.prefKey) ??
-      false,
+  (ref) =>
+      ref.watch(sharedPreferencesProvider).getBool(GmailAuth.prefKey) ?? false,
 );
 
 /// Bağlı Gmail hesabının e-postası (varsa) — Ayarlar'da gösterilir.
 final gmailAccountEmailProvider = Provider<String?>(
-  (ref) =>
-      ref.watch(sharedPreferencesProvider).getString(GmailAuth.accountKey),
+  (ref) => ref.watch(sharedPreferencesProvider).getString(GmailAuth.accountKey),
 );
 
 /// Gmail için platforma göre yetkili HTTP istemcisi üretir.
@@ -34,7 +33,7 @@ final gmailAccountEmailProvider = Provider<String?>(
 /// - Windows: masaüstü loopback OAuth akışı + refresh token.
 class GmailAuth {
   GmailAuth(this._prefs, {TokenStore? tokenStore})
-      : _tokenStore = tokenStore ?? const TokenStore();
+    : _tokenStore = tokenStore ?? const TokenStore();
 
   final SharedPreferences _prefs;
   final TokenStore _tokenStore;
@@ -82,8 +81,9 @@ class GmailAuth {
       final account = await GoogleSignIn.instance.authenticate(
         scopeHint: const [AppConstants.gmailReadonlyScope],
       );
-      await account.authorizationClient
-          .authorizeScopes(const [AppConstants.gmailReadonlyScope]);
+      await account.authorizationClient.authorizeScopes(const [
+        AppConstants.gmailReadonlyScope,
+      ]);
       await _prefs.setString(accountKey, account.email);
     }
     await _prefs.setBool(prefKey, true);

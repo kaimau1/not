@@ -50,21 +50,20 @@ class VoiceAssistantState {
     String? liveTranscript,
     String? message,
     String? noteId,
-  }) =>
-      VoiceAssistantState(
-        phase: phase ?? this.phase,
-        elapsed: elapsed ?? this.elapsed,
-        level: level ?? this.level,
-        liveTranscript: liveTranscript ?? this.liveTranscript,
-        message: message ?? this.message,
-        noteId: noteId ?? this.noteId,
-      );
+  }) => VoiceAssistantState(
+    phase: phase ?? this.phase,
+    elapsed: elapsed ?? this.elapsed,
+    level: level ?? this.level,
+    liveTranscript: liveTranscript ?? this.liveTranscript,
+    message: message ?? this.message,
+    noteId: noteId ?? this.noteId,
+  );
 }
 
 final voiceAssistantProvider =
     NotifierProvider<VoiceAssistantController, VoiceAssistantState>(
-  VoiceAssistantController.new,
-);
+      VoiceAssistantController.new,
+    );
 
 /// Sesli hızlı not, ekran değiştirmeden ana sayfada çalışır.
 ///
@@ -121,8 +120,9 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         if (state.phase == VoiceAssistantPhase.error) return;
       }
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        state =
-            state.copyWith(elapsed: state.elapsed + const Duration(seconds: 1));
+        state = state.copyWith(
+          elapsed: state.elapsed + const Duration(seconds: 1),
+        );
       });
     } catch (e) {
       await _teardownMic();
@@ -154,13 +154,14 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
       const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 64000),
       path: _filePath!,
     );
-    _ampSub =
-        recorder.onAmplitudeChanged(const Duration(milliseconds: 200)).listen(
-      (a) {
-        // dBFS: 0 en yüksek, -50 ve altı sessizlik sayılır.
-        state = state.copyWith(level: ((a.current + 50) / 50).clamp(0.0, 1.0));
-      },
-    );
+    _ampSub = recorder
+        .onAmplitudeChanged(const Duration(milliseconds: 200))
+        .listen((a) {
+          // dBFS: 0 en yüksek, -50 ve altı sessizlik sayılır.
+          state = state.copyWith(
+            level: ((a.current + 50) / 50).clamp(0.0, 1.0),
+          );
+        });
   }
 
   /// Kaydı bitirir ve asistana gönderir. Çok kısa kayıtlar (yanlışlıkla
@@ -237,11 +238,11 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         final fallbackText = transcript.isNotEmpty
             ? transcript
             : localAudio == null
-                ? ''
-                : (await service.transcribeAudio(
-                    localAudio,
-                    mimeType ?? 'audio/mp4',
-                  )).trim();
+            ? ''
+            : (await service.transcribeAudio(
+                localAudio,
+                mimeType ?? 'audio/mp4',
+              )).trim();
         if (fallbackText.isEmpty) throw StateError(nothingHeardText);
         final repo = ref.read(notesRepositoryProvider);
         if (repo == null) {

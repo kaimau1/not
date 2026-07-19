@@ -24,14 +24,13 @@ import '../../data/device_speech.dart';
 Future<String?> showDictationSheet(
   BuildContext context, {
   ValueChanged<String>? onPartial,
-}) =>
-    showModalBottomSheet<String>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      builder: (_) => _DictationSheet(onPartial: onPartial),
-    );
+}) => showModalBottomSheet<String>(
+  context: context,
+  isDismissible: false,
+  enableDrag: false,
+  isScrollControlled: true,
+  builder: (_) => _DictationSheet(onPartial: onPartial),
+);
 
 /// idle yalnızca "basılı tut" modunda görülür: kullanıcı düğmeyi tutana dek
 /// dinleme başlamaz.
@@ -121,8 +120,10 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
       return;
     }
     final dir = await getTemporaryDirectory();
-    _recordPath =
-        p.join(dir.path, 'dikte_${DateTime.now().millisecondsSinceEpoch}.m4a');
+    _recordPath = p.join(
+      dir.path,
+      'dikte_${DateTime.now().millisecondsSinceEpoch}.m4a',
+    );
     await recorder.start(
       const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 64000),
       path: _recordPath!,
@@ -211,122 +212,116 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final holdMode =
-        ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold;
+    final holdMode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
         child: switch (_phase) {
           _ when !_ready => const Padding(
-              padding: EdgeInsets.all(24),
-              child: Center(child: CircularProgressIndicator()),
-            ),
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
           _Phase.processing => Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(l10n.dictationProcessing),
-                ],
-              ),
-            ),
-          _Phase.error => Column(
+            padding: const EdgeInsets.all(24),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline, size: 40, color: scheme.error),
-                const SizedBox(height: 12),
-                Text(_errorMessage, textAlign: TextAlign.center),
+                const CircularProgressIndicator(),
                 const SizedBox(height: 16),
-                FilledButton.tonal(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(l10n.close),
-                ),
+                Text(l10n.dictationProcessing),
               ],
             ),
+          ),
+          _Phase.error => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 40, color: scheme.error),
+              const SizedBox(height: 12),
+              Text(_errorMessage, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.close),
+              ),
+            ],
+          ),
           // Basılı-tut modu: mikrofon düğmesi idle ve listening evrelerinde
           // AYNI ağaçta kalmalı — aksi hâlde parmak basılıyken düğme
           // ağaçtan kalkar ve bırakma olayı (onLongPressEnd) hiç gelmez.
           _ when holdMode => _holdView(l10n, scheme),
           _Phase.idle => const SizedBox.shrink(),
           _Phase.listening => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.mic, color: scheme.error),
-                    const SizedBox(width: 8),
-                    Text(
-                      _format(_elapsed),
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _useSpeech
-                      ? l10n.dictationListening
-                      : l10n.dictationNoKeyInfo,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
-                ),
-                if (_useSpeech) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    constraints:
-                        const BoxConstraints(minHeight: 96, maxHeight: 200),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    child: SingleChildScrollView(
-                      reverse: true,
-                      child: Text(_text.isEmpty ? '…' : _text),
-                    ),
-                  ),
-                ],
-                if (_errorMessage.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.mic, color: scheme.error),
+                  const SizedBox(width: 8),
                   Text(
-                    _errorMessage,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: scheme.error),
+                    _format(_elapsed),
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ],
-                const SizedBox(height: 16),
-                // Basılı-tut modunda kullanıcı düğmeyi bırakınca zaten biter;
-                // yine de elle bitirme/iptal düğmeleri durur.
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    OutlinedButton(
-                      onPressed: _cancel,
-                      child: Text(l10n.cancel),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                _useSpeech ? l10n.dictationListening : l10n.dictationNoKeyInfo,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              if (_useSpeech) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(
+                    minHeight: 96,
+                    maxHeight: 200,
+                  ),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton.icon(
-                      onPressed: _finish,
-                      icon: const Icon(Icons.stop),
-                      label: Text(l10n.stopAndSave),
-                    ),
-                  ],
+                  ),
+                  child: SingleChildScrollView(
+                    reverse: true,
+                    child: Text(_text.isEmpty ? '…' : _text),
+                  ),
                 ),
               ],
-            ),
+              if (_errorMessage.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _errorMessage,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                ),
+              ],
+              const SizedBox(height: 16),
+              // Basılı-tut modunda kullanıcı düğmeyi bırakınca zaten biter;
+              // yine de elle bitirme/iptal düğmeleri durur.
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton(onPressed: _cancel, child: Text(l10n.cancel)),
+                  const SizedBox(width: 8),
+                  FilledButton.icon(
+                    onPressed: _finish,
+                    icon: const Icon(Icons.stop),
+                    label: Text(l10n.stopAndSave),
+                  ),
+                ],
+              ),
+            ],
+          ),
         },
       ),
     );
@@ -344,8 +339,7 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
           onLongPressEnd: (_) => _finish(),
           child: CircleAvatar(
             radius: 42,
-            backgroundColor:
-                listening ? scheme.error : scheme.primaryContainer,
+            backgroundColor: listening ? scheme.error : scheme.primaryContainer,
             child: Icon(
               Icons.mic,
               size: 36,
@@ -379,10 +373,7 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
           ),
         ],
         const SizedBox(height: 16),
-        OutlinedButton(
-          onPressed: _cancel,
-          child: Text(l10n.cancel),
-        ),
+        OutlinedButton(onPressed: _cancel, child: Text(l10n.cancel)),
       ],
     );
   }

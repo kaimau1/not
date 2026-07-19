@@ -26,10 +26,12 @@ Future<void> main() async {
       minimumSize: Size(400, 500),
       center: true,
     );
-    unawaited(windowManager.waitUntilReadyToShow(options, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    }));
+    unawaited(
+      windowManager.waitUntilReadyToShow(options, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      }),
+    );
   }
 
   if (!kIsWeb && Platform.isAndroid) {

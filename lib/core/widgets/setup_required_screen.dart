@@ -36,7 +36,11 @@ class _SetupRequiredScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.build_circle_outlined, size: 48, color: scheme.primary),
+                Icon(
+                  Icons.build_circle_outlined,
+                  size: 48,
+                  color: scheme.primary,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Firebase yapılandırması gerekli',

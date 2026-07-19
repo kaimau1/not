@@ -24,17 +24,19 @@ abstract final class NoteColors {
   static Color surface(BuildContext context, NoteColor color) {
     final scheme = Theme.of(context).colorScheme;
     if (color == NoteColor.none) return scheme.surfaceContainerLow;
-    final map = Theme.of(context).brightness == Brightness.dark ? _dark : _light;
+    final map = Theme.of(context).brightness == Brightness.dark
+        ? _dark
+        : _light;
     return map[color] ?? scheme.surfaceContainerLow;
   }
 
   /// Renk seçicideki nokta rengi (daha doygun ton).
   static Color swatch(NoteColor color) => switch (color) {
-        NoteColor.none => const Color(0xFF9E9E9E),
-        NoteColor.red => const Color(0xFFE57373),
-        NoteColor.amber => const Color(0xFFFFC94D),
-        NoteColor.green => const Color(0xFF81C784),
-        NoteColor.blue => const Color(0xFF64A5F5),
-        NoteColor.purple => const Color(0xFFB39DDB),
-      };
+    NoteColor.none => const Color(0xFF9E9E9E),
+    NoteColor.red => const Color(0xFFE57373),
+    NoteColor.amber => const Color(0xFFFFC94D),
+    NoteColor.green => const Color(0xFF81C784),
+    NoteColor.blue => const Color(0xFF64A5F5),
+    NoteColor.purple => const Color(0xFFB39DDB),
+  };
 }

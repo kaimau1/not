@@ -46,7 +46,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final notes = ref.read(notesStreamProvider).value ?? const [];
       final assistant = ref.read(assistantServiceProvider);
-      final reply = await ref.read(geminiServiceProvider).assistantChat(
+      final reply = await ref
+          .read(geminiServiceProvider)
+          .assistantChat(
             notesContext: assistant.buildNotesContext(notes),
             history: List.of(_history),
             onToolCall: assistant.execute,
@@ -56,15 +58,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     } on GeminiException catch (e) {
       if (mounted) {
-        setState(() => _history.add(ChatTurn(
+        setState(
+          () => _history.add(
+            ChatTurn(
               isUser: false,
               text: e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
-            )));
+            ),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        setState(() =>
-            _history.add(ChatTurn(isUser: false, text: l10n.aiError('$e'))));
+        setState(
+          () => _history.add(ChatTurn(isUser: false, text: l10n.aiError('$e'))),
+        );
       }
     } finally {
       if (mounted) {
@@ -94,16 +101,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         setState(() => _busy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message)),
+            content: Text(
+              e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.aiError('$e'))));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.aiError('$e'))));
       }
     }
   }
@@ -140,119 +149,116 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.chatTitle)),
       body: Column(
-              children: [
-                Expanded(
-                  child: _history.isEmpty
-                      ? Center(
+        children: [
+          Expanded(
+            child: _history.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        l10n.chatHint,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _history.length + (_busy ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == _history.length) {
+                        return Align(
+                          alignment: Alignment.centerLeft,
                           child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              l10n.chatHint,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Text(l10n.aiThinking),
                           ),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(12),
-                          itemCount: _history.length + (_busy ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == _history.length) {
-                              return Align(
-                                alignment: Alignment.centerLeft,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Text(l10n.aiThinking),
-                                ),
-                              );
-                            }
-                            final turn = _history[index];
-                            final bubble = Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.sizeOf(context).width * 0.8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: turn.isUser
-                                    ? scheme.primaryContainer
-                                    : scheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: SelectableText(turn.text),
-                            );
-                            return Align(
-                              alignment: turn.isUser
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: turn.isUser
-                                  ? bubble
-                                  : Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Flexible(child: bubble),
-                                        IconButton(
-                                          tooltip: l10n.aiReport,
-                                          visualDensity:
-                                              VisualDensity.compact,
-                                          icon: Icon(
-                                            Icons.flag_outlined,
-                                            size: 16,
-                                            color: scheme.onSurfaceVariant
-                                                .withValues(alpha: 0.6),
-                                          ),
-                                          onPressed: () => _reportTurn(turn),
-                                        ),
-                                      ],
+                        );
+                      }
+                      final turn = _history[index];
+                      final bubble = Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.sizeOf(context).width * 0.8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: turn.isUser
+                              ? scheme.primaryContainer
+                              : scheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: SelectableText(turn.text),
+                      );
+                      return Align(
+                        alignment: turn.isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: turn.isUser
+                            ? bubble
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Flexible(child: bubble),
+                                  IconButton(
+                                    tooltip: l10n.aiReport,
+                                    visualDensity: VisualDensity.compact,
+                                    icon: Icon(
+                                      Icons.flag_outlined,
+                                      size: 16,
+                                      color: scheme.onSurfaceVariant.withValues(
+                                        alpha: 0.6,
+                                      ),
                                     ),
-                            );
-                          },
-                        ),
-                ),
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-                    child: Row(
-                      children: [
-                        IconButton.filledTonal(
-                          tooltip: l10n.voiceCommand,
-                          onPressed: _busy ? null : _voiceInput,
-                          icon: const Icon(Icons.mic_none),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextField(
-                            controller: _controller,
-                            onSubmitted: (_) => _send(),
-                            textInputAction: TextInputAction.send,
-                            decoration: InputDecoration(
-                              hintText: l10n.chatInputHint,
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        IconButton.filled(
-                          onPressed: _busy ? null : _send,
-                          icon: const Icon(Icons.arrow_upward),
-                        ),
-                      ],
+                                    onPressed: () => _reportTurn(turn),
+                                  ),
+                                ],
+                              ),
+                      );
+                    },
+                  ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: Row(
+                children: [
+                  IconButton.filledTonal(
+                    tooltip: l10n.voiceCommand,
+                    onPressed: _busy ? null : _voiceInput,
+                    icon: const Icon(Icons.mic_none),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      onSubmitted: (_) => _send(),
+                      textInputAction: TextInputAction.send,
+                      decoration: InputDecoration(
+                        hintText: l10n.chatInputHint,
+                        isDense: true,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    onPressed: _busy ? null : _send,
+                    icon: const Icon(Icons.arrow_upward),
+                  ),
+                ],
+              ),
             ),
+          ),
+        ],
+      ),
     );
   }
 }

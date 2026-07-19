@@ -37,8 +37,7 @@ class ArchiveScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(12),
             itemCount: notes.length,
             separatorBuilder: (_, _) => const SizedBox(height: 6),
-            itemBuilder: (context, index) =>
-                _ArchivedTile(note: notes[index]),
+            itemBuilder: (context, index) => _ArchivedTile(note: notes[index]),
           );
         },
       ),
@@ -59,9 +58,7 @@ class _ArchivedTile extends ConsumerWidget {
     return ListTile(
       tileColor: scheme.surfaceContainerLow,
       title: Text(
-        note.title.trim().isNotEmpty
-            ? note.title
-            : preview.split('\n').first,
+        note.title.trim().isNotEmpty ? note.title : preview.split('\n').first,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),

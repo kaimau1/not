@@ -29,9 +29,9 @@ class NotlarApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(fontScale),
-        ),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(fontScale)),
         child: child ?? const SizedBox.shrink(),
       ),
     );

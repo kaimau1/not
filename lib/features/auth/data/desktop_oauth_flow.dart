@@ -55,21 +55,24 @@ class DesktopOAuthFlow {
     final state = _randomString(32);
 
     final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-    final redirectUri = 'http://${InternetAddress.loopbackIPv4.address}:${server.port}';
+    final redirectUri =
+        'http://${InternetAddress.loopbackIPv4.address}:${server.port}';
 
-    final authUri = Uri.parse(_authEndpoint).replace(queryParameters: {
-      'client_id': AppConstants.desktopClientId,
-      'redirect_uri': redirectUri,
-      'response_type': 'code',
-      'scope': scopes.join(' '),
-      'code_challenge': challenge,
-      'code_challenge_method': 'S256',
-      'state': state,
-      'access_type': 'offline',
-      // Refresh token'ın her seferinde dönmesini garanti eder.
-      'prompt': 'consent',
-      'include_granted_scopes': 'true',
-    });
+    final authUri = Uri.parse(_authEndpoint).replace(
+      queryParameters: {
+        'client_id': AppConstants.desktopClientId,
+        'redirect_uri': redirectUri,
+        'response_type': 'code',
+        'scope': scopes.join(' '),
+        'code_challenge': challenge,
+        'code_challenge_method': 'S256',
+        'state': state,
+        'access_type': 'offline',
+        // Refresh token'ın her seferinde dönmesini garanti eder.
+        'prompt': 'consent',
+        'include_granted_scopes': 'true',
+      },
+    );
 
     try {
       if (!await launchUrl(authUri, mode: LaunchMode.externalApplication)) {
@@ -96,7 +99,11 @@ class DesktopOAuthFlow {
         throw StateError('Google yetkilendirme kodu alınamadı.');
       }
 
-      return await _exchangeCode(code: code, verifier: verifier, redirectUri: redirectUri);
+      return await _exchangeCode(
+        code: code,
+        verifier: verifier,
+        redirectUri: redirectUri,
+      );
     } finally {
       await server.close(force: true);
     }
@@ -107,16 +114,21 @@ class DesktopOAuthFlow {
     required String verifier,
     required String redirectUri,
   }) async {
-    final response = await http.post(Uri.parse(_tokenEndpoint), body: {
-      'client_id': AppConstants.desktopClientId,
-      'client_secret': AppConstants.desktopClientSecret,
-      'code': code,
-      'code_verifier': verifier,
-      'grant_type': 'authorization_code',
-      'redirect_uri': redirectUri,
-    });
+    final response = await http.post(
+      Uri.parse(_tokenEndpoint),
+      body: {
+        'client_id': AppConstants.desktopClientId,
+        'client_secret': AppConstants.desktopClientSecret,
+        'code': code,
+        'code_verifier': verifier,
+        'grant_type': 'authorization_code',
+        'redirect_uri': redirectUri,
+      },
+    );
     if (response.statusCode != 200) {
-      throw StateError('Token değişimi başarısız (${response.statusCode}): ${response.body}');
+      throw StateError(
+        'Token değişimi başarısız (${response.statusCode}): ${response.body}',
+      );
     }
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return OAuthTokens(
@@ -130,14 +142,19 @@ class DesktopOAuthFlow {
 
   /// Kayıtlı refresh token ile yeni bir access token alır.
   static Future<OAuthTokens> refresh(String refreshToken) async {
-    final response = await http.post(Uri.parse(_tokenEndpoint), body: {
-      'client_id': AppConstants.desktopClientId,
-      'client_secret': AppConstants.desktopClientSecret,
-      'refresh_token': refreshToken,
-      'grant_type': 'refresh_token',
-    });
+    final response = await http.post(
+      Uri.parse(_tokenEndpoint),
+      body: {
+        'client_id': AppConstants.desktopClientId,
+        'client_secret': AppConstants.desktopClientSecret,
+        'refresh_token': refreshToken,
+        'grant_type': 'refresh_token',
+      },
+    );
     if (response.statusCode != 200) {
-      throw StateError('Token yenileme başarısız (${response.statusCode}): ${response.body}');
+      throw StateError(
+        'Token yenileme başarısız (${response.statusCode}): ${response.body}',
+      );
     }
     final json = jsonDecode(response.body) as Map<String, dynamic>;
     return OAuthTokens(
@@ -153,11 +170,14 @@ class DesktopOAuthFlow {
     const charset =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
     final random = Random.secure();
-    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
-        .join();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
   }
 
-  static String _resultPage({required bool success}) => '''
+  static String _resultPage({required bool success}) =>
+      '''
 <!DOCTYPE html>
 <html lang="tr"><head><meta charset="utf-8"><title>Notlar</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0e0e11;color:#eee}div{text-align:center}h1{font-weight:600}</style>

@@ -34,19 +34,18 @@ class DeviceSpeech {
   /// ölçülemez, bu yüzden aynı akıştan gelir.
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
-  }) =>
-      _events.receiveBroadcastStream(locale).map((event) {
-        final map = event as Map<Object?, Object?>;
-        final text = map['text'] as String?;
-        return (
-          // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
-          // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
-          // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
-          // mevcut metni korur.
-          text: (text == null || text.isEmpty) ? null : text,
-          level: (map['level'] as num?)?.toDouble(),
-        );
-      });
+  }) => _events.receiveBroadcastStream(locale).map((event) {
+    final map = event as Map<Object?, Object?>;
+    final text = map['text'] as String?;
+    return (
+      // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
+      // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp
+      // siliyordu (ölçümle doğrulandı). Boşsa null döner, çağıran da
+      // mevcut metni korur.
+      text: (text == null || text.isEmpty) ? null : text,
+      level: (map['level'] as num?)?.toDouble(),
+    );
+  });
 
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {

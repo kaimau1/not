@@ -8,8 +8,8 @@ import 'token_store.dart';
 /// Windows: loopback PKCE akışı ile Google girişi.
 class DesktopGoogleAuth implements AuthRepository {
   DesktopGoogleAuth({FirebaseAuth? auth, TokenStore? tokenStore})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _tokenStore = tokenStore ?? const TokenStore();
+    : _auth = auth ?? FirebaseAuth.instance,
+      _tokenStore = tokenStore ?? const TokenStore();
 
   final FirebaseAuth _auth;
   final TokenStore _tokenStore;

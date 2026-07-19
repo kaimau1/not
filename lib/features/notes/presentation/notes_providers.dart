@@ -12,8 +12,8 @@ enum NoteFilter { all, text, checklist, ordered, pinned, starred }
 /// sıralı) gizlidir — sayfa sade kalır, isteyen filtre menüsünden ekler.
 final visibleNoteFiltersProvider =
     NotifierProvider<VisibleNoteFiltersNotifier, Set<NoteFilter>>(
-  VisibleNoteFiltersNotifier.new,
-);
+      VisibleNoteFiltersNotifier.new,
+    );
 
 class VisibleNoteFiltersNotifier extends Notifier<Set<NoteFilter>> {
   static const _key = 'visible_filters';
@@ -33,13 +33,15 @@ class VisibleNoteFiltersNotifier extends Notifier<Set<NoteFilter>> {
   void toggle(NoteFilter filter) {
     if (filter == NoteFilter.all) return;
     final next = state.contains(filter)
-        ? {for (final f in state) if (f != filter) f}
+        ? {
+            for (final f in state)
+              if (f != filter) f,
+          }
         : {...state, filter};
     state = next;
-    ref.read(sharedPreferencesProvider).setStringList(
-          _key,
-          [for (final f in next) f.name],
-        );
+    ref.read(sharedPreferencesProvider).setStringList(_key, [
+      for (final f in next) f.name,
+    ]);
     // Gizlenen filtre o an seçiliyse listeyi kilitlemesin.
     if (!next.contains(ref.read(noteFilterProvider)) &&
         ref.read(noteFilterProvider) != NoteFilter.all) {
@@ -51,8 +53,8 @@ class VisibleNoteFiltersNotifier extends Notifier<Set<NoteFilter>> {
 /// Seçili klasör (null = klasör filtresi yok).
 final selectedFolderProvider =
     NotifierProvider<SelectedFolderNotifier, String?>(
-  SelectedFolderNotifier.new,
-);
+      SelectedFolderNotifier.new,
+    );
 
 class SelectedFolderNotifier extends Notifier<String?> {
   @override
@@ -67,8 +69,9 @@ class SelectedFolderNotifier extends Notifier<String?> {
 /// [take] tam bir kez tüketir: uygulama başka ekrandayken gelen istek de
 /// (dashboard henüz dinlemiyorken) kaybolmaz — dashboard mount olunca okur;
 /// dashboard'a her dönüşte yeniden tetiklenmez (bayrak tüketilmiştir).
-final voiceAutostartProvider =
-    NotifierProvider<VoiceAutostartNotifier, bool>(VoiceAutostartNotifier.new);
+final voiceAutostartProvider = NotifierProvider<VoiceAutostartNotifier, bool>(
+  VoiceAutostartNotifier.new,
+);
 
 class VoiceAutostartNotifier extends Notifier<bool> {
   @override
@@ -109,8 +112,8 @@ class NoteFilterNotifier extends Notifier<NoteFilter> {
 /// Anlamsal (AI) arama modu açık mı?
 final semanticSearchEnabledProvider =
     NotifierProvider<SemanticSearchEnabledNotifier, bool>(
-  SemanticSearchEnabledNotifier.new,
-);
+      SemanticSearchEnabledNotifier.new,
+    );
 
 class SemanticSearchEnabledNotifier extends Notifier<bool> {
   @override
@@ -122,8 +125,8 @@ class SemanticSearchEnabledNotifier extends Notifier<bool> {
 /// Çoklu seçim modu: seçili not id'leri (boş küme = seçim modu kapalı).
 final selectedNoteIdsProvider =
     NotifierProvider<SelectedNoteIdsNotifier, Set<String>>(
-  SelectedNoteIdsNotifier.new,
-);
+      SelectedNoteIdsNotifier.new,
+    );
 
 class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
   @override
@@ -131,7 +134,10 @@ class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
 
   void toggle(String id) {
     state = state.contains(id)
-        ? {for (final s in state) if (s != id) s}
+        ? {
+            for (final s in state)
+              if (s != id) s,
+          }
         : {...state, id};
   }
 
@@ -179,7 +185,10 @@ final tagCountsProvider = Provider<Map<String, int>>((ref) {
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
   return notes.whenData(
-    (list) => [for (final n in list) if (n.archivedAt != null) n],
+    (list) => [
+      for (final n in list)
+        if (n.archivedAt != null) n,
+    ],
   );
 });
 
@@ -200,24 +209,45 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
         if (n.archivedAt == null && !n.isEmpty) n,
     ];
     if (folderId != null) {
-      result = [for (final n in result) if (n.folderId == folderId) n];
+      result = [
+        for (final n in result)
+          if (n.folderId == folderId) n,
+      ];
     }
     if (tag != null) {
-      result = [for (final n in result) if (n.tags.contains(tag)) n];
+      result = [
+        for (final n in result)
+          if (n.tags.contains(tag)) n,
+      ];
     }
     result = switch (filter) {
       NoteFilter.all => result,
-      NoteFilter.text =>
-        [for (final n in result) if (n.type == NoteType.text) n],
-      NoteFilter.checklist =>
-        [for (final n in result) if (n.type == NoteType.checklist) n],
-      NoteFilter.ordered =>
-        [for (final n in result) if (n.type == NoteType.ordered) n],
-      NoteFilter.pinned => [for (final n in result) if (n.pinned) n],
-      NoteFilter.starred => [for (final n in result) if (n.starred) n],
+      NoteFilter.text => [
+        for (final n in result)
+          if (n.type == NoteType.text) n,
+      ],
+      NoteFilter.checklist => [
+        for (final n in result)
+          if (n.type == NoteType.checklist) n,
+      ],
+      NoteFilter.ordered => [
+        for (final n in result)
+          if (n.type == NoteType.ordered) n,
+      ],
+      NoteFilter.pinned => [
+        for (final n in result)
+          if (n.pinned) n,
+      ],
+      NoteFilter.starred => [
+        for (final n in result)
+          if (n.starred) n,
+      ],
     };
     if (query.isNotEmpty) {
-      result = [for (final n in result) if (_matches(n, query)) n];
+      result = [
+        for (final n in result)
+          if (_matches(n, query)) n,
+      ];
     }
     return result;
   });

@@ -21,9 +21,8 @@ class ImageViewerScreen extends StatelessWidget {
       image = CachedNetworkImage(
         imageUrl: attachment.downloadUrl,
         fit: BoxFit.contain,
-        progressIndicatorBuilder: (context, url, progress) => Center(
-          child: CircularProgressIndicator(value: progress.progress),
-        ),
+        progressIndicatorBuilder: (context, url, progress) =>
+            Center(child: CircularProgressIndicator(value: progress.progress)),
       );
     } else {
       image = const Icon(Icons.broken_image_outlined, size: 64);
@@ -36,10 +35,7 @@ class ImageViewerScreen extends StatelessWidget {
         foregroundColor: Colors.white,
         title: Text(attachment.fileName, style: const TextStyle(fontSize: 14)),
       ),
-      body: InteractiveViewer(
-        maxScale: 8,
-        child: Center(child: image),
-      ),
+      body: InteractiveViewer(maxScale: 8, child: Center(child: image)),
     );
   }
 }

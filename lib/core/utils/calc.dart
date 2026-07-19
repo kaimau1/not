@@ -26,9 +26,7 @@ String formatCalcResult(double value) {
     return value.toInt().toString();
   }
   var text = value.toStringAsFixed(8);
-  text = text
-      .replaceFirst(RegExp(r'0+$'), '')
-      .replaceFirst(RegExp(r'\.$'), '');
+  text = text.replaceFirst(RegExp(r'0+$'), '').replaceFirst(RegExp(r'\.$'), '');
   return text.replaceAll('.', ',');
 }
 

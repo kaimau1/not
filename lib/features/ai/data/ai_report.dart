@@ -24,9 +24,11 @@ class AiReportService {
         .doc(uid)
         .collection('aiReports')
         .add({
-      'content': content.length > 2000 ? content.substring(0, 2000) : content,
-      'source': source,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
+          'content': content.length > 2000
+              ? content.substring(0, 2000)
+              : content,
+          'source': source,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
   }
 }

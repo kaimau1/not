@@ -12,8 +12,9 @@ import 'ai_text_result.dart';
 /// Notların tamamına bakarak üretilen öneriler. Sonuç günde bir üretilip
 /// diske yazılır; ekranlar arası gezinmede ve uygulama yeniden açılışında
 /// korunur, "Yenile" ile zorlanır.
-final suggestionsProvider =
-    AsyncNotifierProvider<SuggestionsNotifier, String>(SuggestionsNotifier.new);
+final suggestionsProvider = AsyncNotifierProvider<SuggestionsNotifier, String>(
+  SuggestionsNotifier.new,
+);
 
 class SuggestionsNotifier extends StringDailyCache {
   @override
@@ -29,8 +30,10 @@ class SuggestionsNotifier extends StringDailyCache {
 }
 
 /// Son 7 günün notlarından haftalık özet (günlük kalıcı önbellek).
-final weeklySummaryProvider = AsyncNotifierProvider<WeeklySummaryNotifier,
-    String>(WeeklySummaryNotifier.new);
+final weeklySummaryProvider =
+    AsyncNotifierProvider<WeeklySummaryNotifier, String>(
+      WeeklySummaryNotifier.new,
+    );
 
 class WeeklySummaryNotifier extends StringDailyCache {
   @override
@@ -67,8 +70,9 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final isWeekly = _tab == _SuggestionsTab.weekly;
-    final content =
-        ref.watch(isWeekly ? weeklySummaryProvider : suggestionsProvider);
+    final content = ref.watch(
+      isWeekly ? weeklySummaryProvider : suggestionsProvider,
+    );
     final unlimited = ref.watch(aiUnlimitedProvider);
     final DailyCacheNotifier<String> notifier = isWeekly
         ? ref.read(weeklySummaryProvider.notifier)
@@ -86,7 +90,8 @@ class _SuggestionsScreenState extends ConsumerState<SuggestionsScreen> {
 
     // Ücretsiz kullanıcıda içerik otomatik üretilmez: henüz üretilmemişse
     // (yükleme/hata dışında) elle "Oluştur" istemi gösterilir.
-    final showPrompt = !unlimited &&
+    final showPrompt =
+        !unlimited &&
         !generatedToday &&
         !content.isLoading &&
         !content.hasError;

@@ -51,7 +51,8 @@ abstract final class AppTheme {
       ThemeData(brightness: brightness).textTheme,
     );
 
-    final desktop = !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+    final desktop =
+        !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
     return ThemeData(
       useMaterial3: true,

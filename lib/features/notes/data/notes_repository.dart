@@ -27,9 +27,7 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   if (repo == null) return const Stream.empty();
   // Açılışta bir kez: çöp kutusunda 30 günü doldurmuş notları ekleriyle
   // birlikte kalıcı sil.
-  unawaited(
-    Future(() => repo.purgeOldTrash()).catchError((Object _) {}),
-  );
+  unawaited(Future(() => repo.purgeOldTrash()).catchError((Object _) {}));
   // Boş kalıp unutulmuş notları temizle (editör açıkken uygulama
   // kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
   // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
@@ -62,7 +60,10 @@ final noteStreamProvider = StreamProvider.family<Note?, String>((ref, noteId) {
 
 /// Editördeki senkron göstergesi: true = yerel değişiklik sunucuya yazılmayı
 /// bekliyor.
-final pendingWritesProvider = StreamProvider.family<bool, String>((ref, noteId) {
+final pendingWritesProvider = StreamProvider.family<bool, String>((
+  ref,
+  noteId,
+) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchPendingWrites(noteId);
@@ -95,17 +96,17 @@ class NotesRepository {
   /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
   /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).
   Stream<List<Note>> watchTrash() => _notes.snapshots().map((snapshot) {
-        final notes = [
-          for (final doc in snapshot.docs)
-            if (doc.data()['deletedAt'] != null) Note.fromDoc(doc),
-        ];
-        notes.sort((a, b) {
-          final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bTime = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          return bTime.compareTo(aTime);
-        });
-        return notes;
-      });
+    final notes = [
+      for (final doc in snapshot.docs)
+        if (doc.data()['deletedAt'] != null) Note.fromDoc(doc),
+    ];
+    notes.sort((a, b) {
+      final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final bTime = b.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return bTime.compareTo(aTime);
+    });
+    return notes;
+  });
 
   Stream<Note?> watchNote(String noteId) => _notes
       .doc(noteId)
@@ -137,7 +138,8 @@ class NotesRepository {
       items: type == NoteType.text
           ? const []
           : [NoteItem(id: _uuid.v4(), text: '')],
-      orderIndex: orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
+      orderIndex:
+          orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
     // Bekletmeden yaz: çevrimdışıyken de anında açılabilsin.
     unawaited(doc.set(note.toMap()));
@@ -149,10 +151,12 @@ class NotesRepository {
   }
 
   void updateFields(String noteId, Map<String, dynamic> fields) {
-    unawaited(_notes.doc(noteId).set(
-      {...fields, 'updatedAt': FieldValue.serverTimestamp()},
-      SetOptions(merge: true),
-    ));
+    unawaited(
+      _notes.doc(noteId).set({
+        ...fields,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)),
+    );
   }
 
   void setPinned(String noteId, bool pinned) =>
@@ -173,18 +177,13 @@ class NotesRepository {
 
   void restore(String noteId) => updateFields(noteId, {'deletedAt': null});
 
-  void setArchived(String noteId, bool archived) => updateFields(
-        noteId,
-        {'archivedAt': archived ? Timestamp.now() : null},
-      );
+  void setArchived(String noteId, bool archived) =>
+      updateFields(noteId, {'archivedAt': archived ? Timestamp.now() : null});
 
   void setReminder(String noteId, DateTime? reminderAt) => updateFields(
-        noteId,
-        {
-          'reminderAt':
-              reminderAt != null ? Timestamp.fromDate(reminderAt) : null,
-        },
-      );
+    noteId,
+    {'reminderAt': reminderAt != null ? Timestamp.fromDate(reminderAt) : null},
+  );
 
   /// Boş notlar editörden çıkarken tamamen silinir.
   void hardDelete(String noteId) {
@@ -211,8 +210,7 @@ class NotesRepository {
     final cutoff = Timestamp.fromDate(
       DateTime.now().subtract(const Duration(days: 30)),
     );
-    final snapshot =
-        await _notes.where('deletedAt', isLessThan: cutoff).get();
+    final snapshot = await _notes.where('deletedAt', isLessThan: cutoff).get();
     for (final doc in snapshot.docs) {
       await deleteNotePermanently(Note.fromDoc(doc));
     }

@@ -14,7 +14,8 @@ class PdfViewerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasLocal = attachment.localPath.isNotEmpty &&
+    final hasLocal =
+        attachment.localPath.isNotEmpty &&
         File(attachment.localPath).existsSync();
 
     Widget viewer;
@@ -23,7 +24,9 @@ class PdfViewerScreen extends StatelessWidget {
     } else if (attachment.isUploaded) {
       viewer = PdfViewer.uri(Uri.parse(attachment.downloadUrl));
     } else {
-      viewer = const Center(child: Icon(Icons.picture_as_pdf_outlined, size: 64));
+      viewer = const Center(
+        child: Icon(Icons.picture_as_pdf_outlined, size: 64),
+      );
     }
 
     return Scaffold(

@@ -55,8 +55,12 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
         setState(_controller.clear);
       case '⌫':
         if (_expression.isNotEmpty) {
-          setState(() => _controller.text =
-              _expression.substring(0, _expression.length - 1));
+          setState(
+            () => _controller.text = _expression.substring(
+              0,
+              _expression.length - 1,
+            ),
+          );
         }
       case '( )':
         _appendParen();
@@ -76,9 +80,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
     final open = '('.allMatches(expr).length;
     final close = ')'.allMatches(expr).length;
     final last = expr.isEmpty ? '' : expr[expr.length - 1];
-    final canClose = open > close &&
-        last != '(' &&
-        !'+−×÷'.contains(last);
+    final canClose = open > close && last != '(' && !'+−×÷'.contains(last);
     _append(canClose ? ')' : '(');
   }
 
@@ -124,17 +126,23 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                     ? Padding(
                         padding: const EdgeInsets.only(right: 12),
                         child: Text(
-                          value == null ? l10n.calcInvalid : '= ${formatCalcResult(value)}',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color:
-                                    value == null ? scheme.error : scheme.primary,
+                          value == null
+                              ? l10n.calcInvalid
+                              : '= ${formatCalcResult(value)}',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: value == null
+                                    ? scheme.error
+                                    : scheme.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
                       )
                     : null,
-                suffixIconConstraints:
-                    const BoxConstraints(minWidth: 0, minHeight: 0),
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 0,
+                  minHeight: 0,
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -199,10 +207,9 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
 
     final Widget child = Text(
       key,
-      style: Theme.of(context)
-          .textTheme
-          .titleMedium
-          ?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
     );
     final style = ButtonStyle(
       minimumSize: const WidgetStatePropertyAll(Size.fromHeight(48)),

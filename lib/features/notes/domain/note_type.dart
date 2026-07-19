@@ -9,7 +9,7 @@ enum NoteType {
   final String id;
 
   static NoteType fromId(String? id) => NoteType.values.firstWhere(
-        (t) => t.id == id,
-        orElse: () => NoteType.text,
-      );
+    (t) => t.id == id,
+    orElse: () => NoteType.text,
+  );
 }

@@ -54,8 +54,9 @@ void showUndoSnackBar(
                   value: value,
                   strokeWidth: 2,
                   color: scheme.inversePrimary,
-                  backgroundColor:
-                      scheme.inversePrimary.withValues(alpha: 0.25),
+                  backgroundColor: scheme.inversePrimary.withValues(
+                    alpha: 0.25,
+                  ),
                 ),
               ),
             ),

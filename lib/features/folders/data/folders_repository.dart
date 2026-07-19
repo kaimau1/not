@@ -38,20 +38,20 @@ class FoldersRepository {
       .doc(uid)
       .collection(AppConstants.notesCollection);
 
-  Stream<List<NoteFolder>> watchFolders() => _folders.snapshots().map(
-        (snapshot) {
-          final folders = [
-            for (final doc in snapshot.docs) NoteFolder.fromDoc(doc),
-          ];
-          folders.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          );
-          return folders;
-        },
-      );
+  Stream<List<NoteFolder>> watchFolders() => _folders.snapshots().map((
+    snapshot,
+  ) {
+    final folders = [for (final doc in snapshot.docs) NoteFolder.fromDoc(doc)];
+    folders.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    return folders;
+  });
 
-  Future<String> createFolder(String name,
-      {String icon = NoteFolder.defaultIcon}) async {
+  Future<String> createFolder(
+    String name, {
+    String icon = NoteFolder.defaultIcon,
+  }) async {
     final doc = _folders.doc();
     unawaited(
       doc.set(NoteFolder(id: doc.id, name: name.trim(), icon: icon).toMap()),
@@ -72,10 +72,7 @@ class FoldersRepository {
   Future<void> deleteFolder(String folderId) async {
     final notes = await _notes.where('folderId', isEqualTo: folderId).get();
     for (final doc in notes.docs) {
-      unawaited(doc.reference.set(
-        {'folderId': null},
-        SetOptions(merge: true),
-      ));
+      unawaited(doc.reference.set({'folderId': null}, SetOptions(merge: true)));
     }
     unawaited(_folders.doc(folderId).delete());
   }

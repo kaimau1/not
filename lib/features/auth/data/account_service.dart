@@ -70,8 +70,7 @@ class AccountService {
       return; // Klasör hiç oluşmamış olabilir.
     }
     await Future.wait([
-      for (final item in listing.items)
-        item.delete().catchError((Object _) {}),
+      for (final item in listing.items) item.delete().catchError((Object _) {}),
     ]);
     for (final prefix in listing.prefixes) {
       await _deleteStorageFolder(prefix);

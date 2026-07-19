@@ -47,11 +47,11 @@ class NoteFolder {
   IconData get iconData => iconChoices[icon] ?? Icons.folder_outlined;
 
   NoteFolder copyWith({String? name, String? icon}) => NoteFolder(
-        id: id,
-        name: name ?? this.name,
-        icon: icon ?? this.icon,
-        createdAt: createdAt,
-      );
+    id: id,
+    name: name ?? this.name,
+    icon: icon ?? this.icon,
+    createdAt: createdAt,
+  );
 
   factory NoteFolder.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final map = doc.data() ?? const <String, dynamic>{};
@@ -64,10 +64,10 @@ class NoteFolder {
   }
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'icon': icon,
-        'createdAt': createdAt != null
-            ? Timestamp.fromDate(createdAt!)
-            : FieldValue.serverTimestamp(),
-      };
+    'name': name,
+    'icon': icon,
+    'createdAt': createdAt != null
+        ? Timestamp.fromDate(createdAt!)
+        : FieldValue.serverTimestamp(),
+  };
 }

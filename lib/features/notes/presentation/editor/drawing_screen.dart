@@ -44,8 +44,9 @@ class _DrawingScreenState extends State<DrawingScreen> {
     }
     setState(() => _saving = true);
     try {
-      final boundary = _canvasKey.currentContext!.findRenderObject()!
-          as RenderRepaintBoundary;
+      final boundary =
+          _canvasKey.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       if (!mounted) return;
@@ -89,8 +90,10 @@ class _DrawingScreenState extends State<DrawingScreen> {
                 width: double.infinity,
                 child: GestureDetector(
                   onPanStart: (details) => setState(() {
-                    _strokes.add(_Stroke(_color, _width)
-                      ..points.add(details.localPosition));
+                    _strokes.add(
+                      _Stroke(_color, _width)
+                        ..points.add(details.localPosition),
+                    );
                   }),
                   onPanUpdate: (details) => setState(
                     () => _strokes.last.points.add(details.localPosition),
@@ -132,9 +135,11 @@ class _DrawingScreenState extends State<DrawingScreen> {
                       ),
                     ),
                   const Spacer(),
-                  Icon(Icons.line_weight,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.line_weight,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   Slider(
                     value: _width,
                     min: 1,
@@ -166,10 +171,15 @@ class _DrawingPainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round
         ..style = PaintingStyle.stroke;
       if (stroke.points.length == 1) {
-        canvas.drawCircle(stroke.points.first, stroke.width / 2, paint..style = PaintingStyle.fill);
+        canvas.drawCircle(
+          stroke.points.first,
+          stroke.width / 2,
+          paint..style = PaintingStyle.fill,
+        );
         continue;
       }
-      final path = Path()..moveTo(stroke.points.first.dx, stroke.points.first.dy);
+      final path = Path()
+        ..moveTo(stroke.points.first.dx, stroke.points.first.dy);
       for (final point in stroke.points.skip(1)) {
         path.lineTo(point.dx, point.dy);
       }

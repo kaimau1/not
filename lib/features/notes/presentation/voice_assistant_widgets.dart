@@ -33,7 +33,9 @@ class VoiceAssistantButton extends ConsumerWidget {
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     HapticFeedback.mediumImpact();
-    final ok = await ref.read(voiceAssistantProvider.notifier).finish(
+    final ok = await ref
+        .read(voiceAssistantProvider.notifier)
+        .finish(
           nothingHeardText: l10n.voiceNothingHeard,
           savedText: l10n.voiceNoteSaved,
           noApiKeyText: l10n.aiNoApiKey,
@@ -55,8 +57,9 @@ class VoiceAssistantButton extends ConsumerWidget {
     final size = recording ? 68.0 + 16.0 * assistant.level : 68.0;
 
     final String minutes = (assistant.elapsed.inMinutes).toString();
-    final String seconds =
-        (assistant.elapsed.inSeconds % 60).toString().padLeft(2, '0');
+    final String seconds = (assistant.elapsed.inSeconds % 60)
+        .toString()
+        .padLeft(2, '0');
 
     final Widget inner = processing
         ? const Padding(
@@ -64,20 +67,20 @@ class VoiceAssistantButton extends ConsumerWidget {
             child: CircularProgressIndicator(strokeWidth: 3),
           )
         : recording
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.mic, size: 26, color: scheme.onErrorContainer),
-                  Text(
-                    '$minutes:$seconds',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onErrorContainer,
-                          fontWeight: FontWeight.w700,
-                        ),
-                  ),
-                ],
-              )
-            : Icon(Icons.mic_none, size: 30, color: scheme.onPrimaryContainer);
+        ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mic, size: 26, color: scheme.onErrorContainer),
+              Text(
+                '$minutes:$seconds',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onErrorContainer,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          )
+        : Icon(Icons.mic_none, size: 30, color: scheme.onPrimaryContainer);
 
     final button = Semantics(
       button: true,
@@ -88,16 +91,18 @@ class VoiceAssistantButton extends ConsumerWidget {
         onTap: processing
             ? null
             : recording
-                // Kayıt sürerken (widget'tan da başlamış olabilir) dokunuş her
-                // modda bitirir — durdurmak sezgisel kalsın.
-                ? () => _finish(context, ref)
-                : hold
-                    ? () => _showSnack(context, l10n.voiceHoldHint)
-                    : () => _start(context, ref),
-        onLongPressStart:
-            hold && !processing ? (_) => _start(context, ref) : null,
-        onLongPressEnd:
-            hold && !processing ? (_) => _finish(context, ref) : null,
+            // Kayıt sürerken (widget'tan da başlamış olabilir) dokunuş her
+            // modda bitirir — durdurmak sezgisel kalsın.
+            ? () => _finish(context, ref)
+            : hold
+            ? () => _showSnack(context, l10n.voiceHoldHint)
+            : () => _start(context, ref),
+        onLongPressStart: hold && !processing
+            ? (_) => _start(context, ref)
+            : null,
+        onLongPressEnd: hold && !processing
+            ? (_) => _finish(context, ref)
+            : null,
         onLongPressCancel: hold && !processing
             ? () => ref.read(voiceAssistantProvider.notifier).cancel()
             : null,
@@ -117,8 +122,9 @@ class VoiceAssistantButton extends ConsumerWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: (recording ? scheme.error : scheme.primary)
-                    .withValues(alpha: recording ? 0.35 : 0.2),
+                color: (recording ? scheme.error : scheme.primary).withValues(
+                  alpha: recording ? 0.35 : 0.2,
+                ),
                 blurRadius: recording ? 18 : 8,
                 spreadRadius: recording ? 2 : 0,
               ),
@@ -156,127 +162,122 @@ class VoiceAssistantPanel extends ConsumerWidget {
 
     final Widget content = switch (assistant.phase) {
       VoiceAssistantPhase.recording => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.graphic_eq, size: 18, color: scheme.error),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.voiceListening,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                  ),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.graphic_eq, size: 18, color: scheme.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.voiceListening,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                // Bas-başlat akışı: kaydı bu "Bitir" ile durdur (widget'tan
-                // başlamış olsa da mikrofon düğmesine gitmeye gerek yok).
-                TextButton(
-                  onPressed: notifier.cancel,
-                  child: Text(l10n.cancel),
-                ),
-                const SizedBox(width: 4),
-                FilledButton.tonalIcon(
-                  onPressed: () => notifier.finish(
-                    nothingHeardText: l10n.voiceNothingHeard,
-                    savedText: l10n.voiceNoteSaved,
-                    noApiKeyText: l10n.aiNoApiKey,
-                  ),
-                  icon: const Icon(Icons.check, size: 18),
-                  label: Text(l10n.voiceFinish),
-                ),
-              ],
-            ),
-            Text(
-              l10n.voiceCaptureHint,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            if (assistant.liveTranscript.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                l10n.voiceHeardLive,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
               ),
-              const SizedBox(height: 4),
-              // Canlı döküm: son satırlar görünür kalsın diye ters kaydırma.
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 96),
-                child: SingleChildScrollView(
-                  reverse: true,
-                  child: Text(
-                    assistant.liveTranscript,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
+              // Bas-başlat akışı: kaydı bu "Bitir" ile durdur (widget'tan
+              // başlamış olsa da mikrofon düğmesine gitmeye gerek yok).
+              TextButton(onPressed: notifier.cancel, child: Text(l10n.cancel)),
+              const SizedBox(width: 4),
+              FilledButton.tonalIcon(
+                onPressed: () => notifier.finish(
+                  nothingHeardText: l10n.voiceNothingHeard,
+                  savedText: l10n.voiceNoteSaved,
+                  noApiKeyText: l10n.aiNoApiKey,
                 ),
+                icon: const Icon(Icons.check, size: 18),
+                label: Text(l10n.voiceFinish),
               ),
             ],
+          ),
+          Text(
+            l10n.voiceCaptureHint,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          if (assistant.liveTranscript.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              l10n.voiceHeardLive,
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 4),
+            // Canlı döküm: son satırlar görünür kalsın diye ters kaydırma.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 96),
+              child: SingleChildScrollView(
+                reverse: true,
+                child: Text(
+                  assistant.liveTranscript,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
+      ),
       VoiceAssistantPhase.processing => Row(
-          children: [
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Expanded(child: Text(l10n.voiceProcessing)),
-          ],
-        ),
+        children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(l10n.voiceProcessing)),
+        ],
+      ),
       VoiceAssistantPhase.done => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.check_circle_outline, size: 20, color: scheme.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                assistant.message,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.check_circle_outline, size: 20, color: scheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              assistant.message,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            if (assistant.noteId != null)
-              TextButton(
-                onPressed: () {
-                  notifier.dismiss();
-                  context.push('/note/${assistant.noteId}');
-                },
-                child: Text(l10n.openNote),
-              ),
-            IconButton(
-              tooltip: l10n.close,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: notifier.dismiss,
+          ),
+          if (assistant.noteId != null)
+            TextButton(
+              onPressed: () {
+                notifier.dismiss();
+                context.push('/note/${assistant.noteId}');
+              },
+              child: Text(l10n.openNote),
             ),
-          ],
-        ),
+          IconButton(
+            tooltip: l10n.close,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: notifier.dismiss,
+          ),
+        ],
+      ),
       VoiceAssistantPhase.error => Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.error_outline, size: 20, color: scheme.error),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                assistant.message,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline, size: 20, color: scheme.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              assistant.message,
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            IconButton(
-              tooltip: l10n.close,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 20),
-              onPressed: notifier.dismiss,
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            tooltip: l10n.close,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: notifier.dismiss,
+          ),
+        ],
+      ),
       VoiceAssistantPhase.idle => const SizedBox.shrink(),
     };
 

@@ -34,10 +34,9 @@ class AiGeneratePrompt extends StatelessWidget {
               Text(
                 l10n.aiDailyManualInfo,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
