@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Notlar — adaptive zemin katmani</title>
+<desc>Android adaptive icon arka plani. Kose yuvarlatmasi YOK: launcher kendi maskesini uyguluyor, burada yuvarlatilirsa maskeyle ust uste binip kenarda bosluk birakir. Tuvalin tamamini doldurmasi sart, cunku parallax etkisi katmani kaydiriyor.</desc>
+<defs>
+<linearGradient id="zemin" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="#5F6EE8"/>
+<stop offset="1" stop-color="#3B2FA6"/>
+</linearGradient>
+</defs>
+<rect width="1024" height="1024" fill="url(#zemin)"/>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<title>Notlar — adaptive on plan katmani</title>
+<desc>Android adaptive icon on plani. Zemin saydam. Olcek 0.845 DENEYEREK bulundu, hesapla degil: uc aday (0.845 / 1.0 / 1.19) daire ve squircle maskeyle simule edildi, 1.19'da sayfa soldan ve alttan kesiliyordu. Iki kirpma ust uste biniyor: launcher 108dp tuvalin yalnizca merkezdeki 72dp'sini gosteriyor, ustune flutter_launcher_icons uretilen XML'e android:inset="16%" ekliyor. 0.845'te cizimin kosegeni 66dp guvenli daireye tam oturuyor. XML'i elle duzeltmeye kalkma, arac her calismada yeniden yaziyor. Kaynak kutu 726x808, merkezi (539,522).</desc>
+<g transform="translate(512,512) scale(0.845) translate(-539,-522)">
+<path d="M232 176 H792 A56 56 0 0 1 848 232 V778 L748 926 H232 A56 56 0 0 1 176 870 V232 A56 56 0 0 1 232 176 Z" fill="#1E1B62" opacity=".22"/>
+<path d="M232 150 H792 A56 56 0 0 1 848 206 V752 L748 900 H232 A56 56 0 0 1 176 844 V206 A56 56 0 0 1 232 150 Z" fill="#ffffff"/>
+<path d="M848 752 L748 900 L748 752 Z" fill="#C5CCEE"/>
+<rect x="256" y="336" width="464" height="26" rx="13" fill="#B7C0E8"/>
+<rect x="256" y="406" width="464" height="26" rx="13" fill="#B7C0E8"/>
+<rect x="256" y="476" width="464" height="26" rx="13" fill="#B7C0E8"/>
+<rect x="256" y="546" width="384" height="26" rx="13" fill="#B7C0E8"/>
+<rect x="256" y="616" width="296" height="26" rx="13" fill="#B7C0E8"/>
+<path d="M806 118 Q823 197 902 214 Q823 231 806 310 Q789 231 710 214 Q789 197 806 118 Z" fill="#FFC24A"/>
+</g>
+</svg>
