@@ -60,14 +60,16 @@ Widget highlightedText(
       break;
     }
     if (index > start) spans.add(TextSpan(text: text.substring(start, index)));
-    spans.add(TextSpan(
-      text: text.substring(index, index + query.length),
-      style: TextStyle(
-        fontWeight: FontWeight.w700,
-        color: scheme.primary,
-        backgroundColor: scheme.primaryContainer.withValues(alpha: 0.45),
+    spans.add(
+      TextSpan(
+        text: text.substring(index, index + query.length),
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          color: scheme.primary,
+          backgroundColor: scheme.primaryContainer.withValues(alpha: 0.45),
+        ),
       ),
-    ));
+    );
     start = index + query.length;
   }
   return Text.rich(
@@ -217,32 +219,48 @@ class NoteCard extends ConsumerWidget {
                                 note.title,
                                 highlightQuery,
                                 maxLines: 1,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
+                                style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                       ),
                       if (note.starred)
-                        Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+                        Icon(
+                          Icons.star,
+                          size: 14,
+                          color: Colors.amber.shade600,
+                        ),
                       if (note.pinned)
                         Icon(
                           Icons.push_pin,
                           size: 14,
                           color: scheme.onSurfaceVariant,
                         ),
+                      // AI özeti göstergesi: eskiden kartın altında ayrı bir
+                      // ikon+etiket satırıydı. Rozet olarak buraya taşındı —
+                      // kart bir katman kaybetti, bilgi kaybolmadı.
+                      if (!note.locked && note.aiSummary != null)
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 14,
+                          color: scheme.primary,
+                        ),
                       // Seçim modunda yerini seçim tiki alır.
+                      // Dokunma alanı 36dp: görsel ikon 18px kalıyor ama
+                      // hedef büyüyor. Önceden yalnız ikon kadardı (~18x22)
+                      // ve ıskalanıyordu. Kart 2 sütunlu ızgarada dar
+                      // olduğundan 48dp yerine 36dp — sıkışık ızgarada
+                      // kabul edilebilir orta yol.
                       if (!selectionActive)
                         InkWell(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(18),
                           onTap: () => showNoteActionsSheet(context, ref, note),
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 4),
+                          child: SizedBox(
+                            width: 36,
+                            height: 36,
                             child: Icon(
                               Icons.more_vert,
                               size: 18,
-                              color: scheme.onSurfaceVariant
-                                  .withValues(alpha: 0.8),
+                              color: scheme.onSurfaceVariant,
                             ),
                           ),
                         ),
@@ -254,15 +272,17 @@ class NoteCard extends ConsumerWidget {
                 if (note.locked)
                   Row(
                     children: [
-                      Icon(Icons.lock_outline,
-                          size: 14, color: scheme.onSurfaceVariant),
+                      Icon(
+                        Icons.lock_outline,
+                        size: 14,
+                        color: scheme.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         context.l10n.lockedNote,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: scheme.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   )
@@ -295,38 +315,20 @@ class NoteCard extends ConsumerWidget {
                     ],
                   ),
                 ],
-                if (!note.locked && note.aiSummary != null) ...[
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        size: 12,
-                        color: scheme.primary.withValues(alpha: 0.8),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        context.l10n.aiSummaryTitle,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.primary.withValues(alpha: 0.8),
-                            ),
-                      ),
-                    ],
-                  ),
-                ],
                 if (note.updatedAt != null) ...[
                   const SizedBox(height: 6),
                   // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
+                  // fontSize 10 + %70 alfa kaldırıldı: 10px hem Material'in en
+                  // küçük rolünün (labelSmall 11sp) hem erişilebilirlik
+                  // tabanının altındaydı, alfa da renkli kart zeminlerinde
+                  // kontrastı düşürüyordu.
                   Align(
                     alignment: Alignment.centerRight,
                     child: Text(
                       formatNoteDate(note.updatedAt!),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 10,
-                            color:
-                                scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -340,7 +342,8 @@ class NoteCard extends ConsumerWidget {
     return RepaintBoundary(
       child: GestureDetector(
         onSecondaryTapUp: _isDesktop
-            ? (details) => _showContextMenu(context, ref, details.globalPosition)
+            ? (details) =>
+                  _showContextMenu(context, ref, details.globalPosition)
             : null,
         child: Stack(
           children: [
@@ -387,12 +390,13 @@ class _MiniBadge extends StatelessWidget {
             Icon(icon, size: 11, color: scheme.onSurfaceVariant),
             const SizedBox(width: 3),
           ],
+          // fontSize 10 kaldırıldı: tip ölçeğinin dışında keyfi bir değerdi.
+          // labelSmall (11sp) Material'in kendi en küçük rolü.
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: scheme.onSurfaceVariant, fontSize: 10),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -409,19 +413,21 @@ class _NotePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bodyStyle = Theme.of(context)
-        .textTheme
-        .bodySmall
-        ?.copyWith(color: scheme.onSurface.withValues(alpha: 0.85));
+    final bodyStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: scheme.onSurface.withValues(alpha: 0.85),
+    );
 
     switch (note.type) {
       case NoteType.text:
         if (note.body.trim().isEmpty) return const SizedBox.shrink();
+        // 8 satırdan 4'e: 2 sütunlu ızgarada kart ~170dp genişliğinde, 8
+        // satır önizleme metin duvarına dönüşüyor ve alttaki rozetler/tarih
+        // için göz sırası kalmıyordu.
         return highlightedText(
           context,
           note.body,
           highlightQuery,
-          maxLines: 8,
+          maxLines: 4,
           style: bodyStyle,
         );
       case NoteType.checklist:
@@ -464,12 +470,13 @@ class _NotePreview extends StatelessWidget {
                         shown[i].text,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: shown[i].checked &&
-                                note.type == NoteType.checklist
+                        style:
+                            shown[i].checked && note.type == NoteType.checklist
                             ? bodyStyle?.copyWith(
                                 decoration: TextDecoration.lineThrough,
-                                color: scheme.onSurfaceVariant
-                                    .withValues(alpha: 0.6),
+                                color: scheme.onSurfaceVariant.withValues(
+                                  alpha: 0.6,
+                                ),
                               )
                             : bodyStyle,
                       ),
@@ -482,10 +489,9 @@ class _NotePreview extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   context.l10n.moreItemsCount(remaining),
-                  style: Theme.of(context)
-                      .textTheme
-                      .labelSmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ),
           ],
@@ -536,18 +542,20 @@ class _AttachmentPreview extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.picture_as_pdf_outlined,
-                    size: 14, color: scheme.error),
+                Icon(
+                  Icons.picture_as_pdf_outlined,
+                  size: 14,
+                  color: scheme.error,
+                ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     pdf.fileName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],

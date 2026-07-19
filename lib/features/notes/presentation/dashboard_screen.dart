@@ -252,9 +252,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         'settings' => context.push('/settings'),
                                         _ => null,
                                       },
+                                      // Menü üç ayrı cinsten madde taşıyor:
+                                      // AI araçları, içerik yerleri (arşiv/
+                                      // çöp/hatırlatıcı) ve ayarlar. Ayraçsız
+                                      // tek liste karma çekmece gibi
+                                      // okunuyordu; gruplar ayrıldı.
                                       itemBuilder: (context) => [
-                                        // Öneriler ve posta analizi üst bardan
-                                        // buraya taşındı: bar sadeleşti.
+                                        // --- AI araçları ---
                                         PopupMenuItem(
                                           value: 'suggestions',
                                           child: ListTile(
@@ -288,6 +292,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             title: Text(l10n.briefingTitle),
                                           ),
                                         ),
+                                        const PopupMenuDivider(),
+                                        // --- İçerik yerleri ---
                                         PopupMenuItem(
                                           value: 'reminders',
                                           child: ListTile(
@@ -321,6 +327,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             title: Text(l10n.trashTitle),
                                           ),
                                         ),
+                                        const PopupMenuDivider(),
                                         PopupMenuItem(
                                           value: 'settings',
                                           child: ListTile(
@@ -337,9 +344,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     const SizedBox(width: 4),
                                   ],
                           ),
-                        SliverToBoxAdapter(
-                          child: _QuickAddBar(onCreate: _createNote),
-                        ),
+                        // Hızlı ekleme barı kaldırıldı: sunduğu üç tipin
+                        // tamamını sağ alttaki "+" düğmesi zaten veriyordu
+                        // (üstelik el yazısı da). Her ekranda 52dp prime alan
+                        // yiyen ikinci bir oluşturma yolu için sebep yoktu.
                         // Filtre + klasör + etiket çipleri tek kompakt satırda.
                         const SliverToBoxAdapter(child: DashboardChipsRow()),
                         ...notesAsync.when(
@@ -543,74 +551,6 @@ class _SearchField extends ConsumerWidget {
         ),
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 10),
-      ),
-    );
-  }
-}
-
-/// Keep tarzı hızlı ekleme çubuğu: tıkla → metin notu; sağdaki ikonlar
-/// diğer tipleri tek dokunuşla oluşturur.
-class _QuickAddBar extends StatelessWidget {
-  const _QuickAddBar({required this.onCreate});
-
-  final Future<void> Function(NoteType) onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
-    // Yükseklik 68dp → 52dp. Boyu belirleyen şey ikonların 48dp'lik DOKUNMA
-    // alanıydı; o Android'in tabanı ve kırılmıyor. Kısalma tümüyle boşluktan
-    // geldi: dış 4+4 → 2+2, iç 6+6 → 0.
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 2),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: Material(
-            color: scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(14),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () => onCreate(NoteType.text),
-              child: Ink(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: scheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.quickAddHint,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: l10n.newChecklist,
-                        icon: const Icon(Icons.check_box_outlined, size: 20),
-                        onPressed: () => onCreate(NoteType.checklist),
-                      ),
-                      IconButton(
-                        tooltip: l10n.newOrderedList,
-                        icon: const Icon(
-                          Icons.format_list_numbered_rounded,
-                          size: 20,
-                        ),
-                        onPressed: () => onCreate(NoteType.ordered),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
