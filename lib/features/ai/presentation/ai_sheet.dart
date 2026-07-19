@@ -153,11 +153,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// düzenlemeyle okunaklı hale getirilir; içerik ve madde sayısı korunur.
   Future<void> _fixNote() => _run(
     (s) => s.rewriteText(
-      widget.note.toPlainText(),
+      // İçerik metni: başlık ve `- [ ]` / numara işaretleri OLMADAN gönderilir;
+      // aksi hâlde model bunları aynen geri döndürüp not yapısına sızdırıyordu
+      // (başlık madde oluyor, `[ ]`/`[x]` öğe metnine giriyordu).
+      widget.note.toContentText(),
       'Yazım, imla, noktalama ve büyük/küçük harf hatalarını düzelt. '
       'Çok hafif düzenlemelerle notu düzenli ve okunaklı hale getir. '
-      'Anlamı, içeriği ve madde/satır sayısını KORU; yeni bilgi ekleme, '
-      'madde silme. Düz metin ver; hiçbir biçimlendirme işareti '
+      'Her satırı olduğu gibi ayrı tut; satır/madde sayısını KORU, '
+      'satırları birleştirme veya bölme. Anlamı ve içeriği KORU; yeni bilgi '
+      'ekleme, madde silme. Düz metin ver; başına madde imi, numara ya da '
+      'onay kutusu ([ ], [x]) KOYMA; hiçbir biçimlendirme işareti '
       '(yıldız, kare, alt çizgi) kullanma.',
     ),
     improvement: true,
@@ -206,7 +211,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     );
     if (chosen == null) return;
     await _run(
-      (s) => s.rewriteText(widget.note.toPlainText(), chosen.$1),
+      // İçerik metni (başlık/işaret yok): geliştirme sonucu nota geri
+      // uygulanırken başlık öğeye, `[ ]`/numara işaretleri metne sızmasın.
+      (s) => s.rewriteText(widget.note.toContentText(), chosen.$1),
       improvement: true,
       replaceAsType: chosen.$2,
     );

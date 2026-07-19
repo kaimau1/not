@@ -68,6 +68,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const _SpeechRateSlider(),
+              const _ForeignSpeechRateSlider(),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.translateQuality),
@@ -561,6 +562,57 @@ class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
               onChanged: (value) => setState(() => _rate = value),
               onChangeEnd: (value) =>
                   ref.read(speechOutputProvider.notifier).setRate(value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Yabancı diller (Türkçe dışı) için ayrı okuma hızı: çeviri seslendirmesi,
+/// İngilizce/Almanca vb. sesli okuma bu hızı kullanır. Motorlar yabancı dili
+/// Türkçe'ye göre hızlı okuyabildiğinden ayrı, genelde daha düşük tutulur.
+class _ForeignSpeechRateSlider extends ConsumerStatefulWidget {
+  const _ForeignSpeechRateSlider();
+
+  @override
+  ConsumerState<_ForeignSpeechRateSlider> createState() =>
+      _ForeignSpeechRateSliderState();
+}
+
+class _ForeignSpeechRateSliderState
+    extends ConsumerState<_ForeignSpeechRateSlider> {
+  double? _rate;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(speechOutputProvider.notifier).foreignRate().then((value) {
+      if (mounted) setState(() => _rate = value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rate = _rate;
+    if (rate == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(context.l10n.speechRateForeign)),
+          Expanded(
+            flex: 2,
+            child: Slider(
+              value: rate,
+              min: 0.2,
+              max: 1,
+              divisions: 8,
+              label: '${(rate * 2).toStringAsFixed(1)}x',
+              onChanged: (value) => setState(() => _rate = value),
+              onChangeEnd: (value) =>
+                  ref.read(speechOutputProvider.notifier).setForeignRate(value),
             ),
           ),
         ],

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hızlı Not widget'ı zemini. Mikrofon widget'ıyla aynı iki katmanlı yapı
+     (köşegen gradyan + ince camsı kenar) ama yeşil ton: iki widget ana
+     ekranda yan yanayken karışmasın diye ayrı renkte. Koyu tema karşılığı
+     drawable-night/ altında. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:endColor="#2E9E63"
+                android:startColor="#41C77D"
+                android:type="linear" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#00000000" />
+            <stroke
+                android:width="1dp"
+                android:color="#38FFFFFF" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+</layer-list>

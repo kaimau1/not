@@ -31,6 +31,7 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
+import '../color_picker_sheet.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
@@ -40,6 +41,24 @@ import 'items_editor.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+/// Bir liste satırının başındaki işaretleri ayıklar: madde imi (-, •, *),
+/// numara (1. / 1)) ve onay kutusu ([ ], [x]). Onay kutusu doluysa
+/// [checked] true döner. AI çıktısı / yapıştırılan metin nota geri
+/// uygulanırken bu işaretlerin öğe metnine sızmasını engeller (madde 1:
+/// "notların başına çift parantez ve çarpılı durum ekliyor").
+({String text, bool checked}) _parseListLine(String line) {
+  var s = line.trim();
+  s = s.replaceFirst(RegExp(r'^[-•*]\s+'), '');
+  s = s.replaceFirst(RegExp(r'^\d+[.)]\s+'), '');
+  var checked = false;
+  final box = RegExp(r'^\[\s*([xX])?\s*\]\s*').firstMatch(s);
+  if (box != null) {
+    checked = box.group(1) != null;
+    s = s.substring(box.end);
+  }
+  return (text: s.trim(), checked: checked);
+}
 
 class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
@@ -603,18 +622,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
     } else {
       const uuid = Uuid();
-      final lines = [
+      final parsed = [
         for (final line in text.split('\n'))
-          if (line.trim().isNotEmpty)
-            line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
+          if (line.trim().isNotEmpty) _parseListLine(line),
       ];
+      // Tip korunuyor ve öğe sayısı birebir aynıysa (düzeltme sırayı bozmaz)
+      // mevcut kimlikler ve işaretli/işaretsiz durum korunur — kullanıcının
+      // işaretlediği maddeler düzeltme sonrası işaretli kalır.
+      final keepState =
+          targetType == note.type && parsed.length == note.items.length;
       _mutate(
         (n) => n.copyWith(
           type: targetType,
           // Tip değişiyorsa eski gövde temizlenir; içerik artık öğelerde.
           body: targetType == note.type ? null : '',
           items: [
-            for (final line in lines) NoteItem(id: uuid.v4(), text: line),
+            for (var i = 0; i < parsed.length; i++)
+              NoteItem(
+                id: keepState ? n.items[i].id : uuid.v4(),
+                text: parsed[i].text,
+                // Sıralı listede işaret anlamsız; checklist'te korunur/okunur.
+                checked: targetType != NoteType.checklist
+                    ? false
+                    : (keepState ? n.items[i].checked : parsed[i].checked),
+              ),
           ],
         ),
         immediate: true,
@@ -638,8 +669,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       const uuid = Uuid();
       final lines = [
         for (final line in text.split('\n'))
-          if (line.trim().isNotEmpty)
-            line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
+          if (line.trim().isNotEmpty) _parseListLine(line).text,
       ];
       _mutate((n) {
         // Listede sonda hep boş bir "yeni öğe" satırı bekler. Yeni maddeler
@@ -660,51 +690,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  /// Palet düğmesi: zemin rengi ve renkli çerçeve seçimi. İkisi ayrı alanlar —
+  /// renkli zeminli bir nota farklı renkte çerçeve verilebilir (madde 4).
   Future<void> _showColorSheet() async {
     final note = _note;
     if (note == null) return;
     _dismissKeyboard();
-    await showModalBottomSheet<void>(
+    final l10n = context.l10n;
+    final target = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          child: Wrap(
-            spacing: 12,
-            children: [
-              for (final color in NoteColor.values)
-                InkWell(
-                  borderRadius: BorderRadius.circular(24),
-                  onTap: () {
-                    _mutate((n) => n.copyWith(color: color), immediate: true);
-                    Navigator.pop(sheetContext);
-                  },
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: NoteColors.swatch(color),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: note.color == color
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        width: 3,
-                      ),
-                    ),
-                    child: color == NoteColor.none
-                        ? const Icon(
-                            Icons.format_color_reset_outlined,
-                            size: 20,
-                          )
-                        : null,
-                  ),
-                ),
-            ],
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: _colorLeading(note.color, frame: false),
+              title: Text(l10n.backgroundColor),
+              onTap: () => Navigator.pop(sheetContext, 'bg'),
+            ),
+            ListTile(
+              leading: _colorLeading(note.frameColor, frame: true),
+              title: Text(l10n.frameColor),
+              onTap: () => Navigator.pop(sheetContext, 'frame'),
+            ),
+          ],
         ),
       ),
+    );
+    if (target == null || !mounted) return;
+    final frame = target == 'frame';
+    final picked = await showNoteColorPicker(
+      context,
+      frame: frame,
+      current: frame ? note.frameColor : note.color,
+    );
+    if (picked == null || !mounted) return;
+    _mutate(
+      (n) => frame ? n.copyWith(frameColor: picked) : n.copyWith(color: picked),
+      immediate: true,
+    );
+  }
+
+  Widget _colorLeading(NoteColor color, {required bool frame}) {
+    final swatch = NoteColors.swatch(color);
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: frame && color != NoteColor.none
+          ? BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: swatch, width: 4),
+            )
+          : BoxDecoration(color: swatch, shape: BoxShape.circle),
+      child: color == NoteColor.none
+          ? const Icon(Icons.format_color_reset_outlined, size: 16)
+          : null,
     );
   }
 
@@ -1236,7 +1277,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             ),
           ],
         ),
-        body: SafeArea(child: body),
+        // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
+        body: SafeArea(
+          child: note.frameColor == NoteColor.none
+              ? body
+              : Container(
+                  margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: NoteColors.swatch(note.frameColor),
+                      width: 2.5,
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: body,
+                  ),
+                ),
+        ),
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

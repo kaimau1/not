@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hızlı Not widget'ı: kalem simgesi + "Hızlı Not" etiketi. Dokununca
+     uygulama doğrudan yeni bir metin notu editörüyle açılır
+     (notlar://new?type=text). Küçük boyutta (1x1) etiket gizlenir, yalnız
+     simge kalır. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/quick_note_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="8dp"
+    android:background="@drawable/widget_note_background">
+
+    <ImageView
+        android:id="@+id/quick_note_icon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_widget_note"
+        android:contentDescription="@string/widget_quicknote_label" />
+
+    <TextView
+        android:id="@+id/quick_note_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="@string/widget_quicknote_label"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+</LinearLayout>

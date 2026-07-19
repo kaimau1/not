@@ -1006,4 +1006,40 @@ class AppLocalizationsTr extends AppLocalizations {
   String largeAttachmentBody(String size) {
     return 'Bu dosya $size MB. PDF\'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?';
   }
+
+  @override
+  String get speechRateForeign => 'Yabancı dil hızı';
+
+  @override
+  String notesArchivedCount(int count) {
+    return '$count not arşivlendi';
+  }
+
+  @override
+  String get backgroundColor => 'Zemin rengi';
+
+  @override
+  String get backgroundColorInfo => 'Notun arka plan rengi';
+
+  @override
+  String get frameColor => 'Çerçeve';
+
+  @override
+  String get frameColorInfo =>
+      'Notun çevresine seçtiğin renkte bir çerçeve çizilir';
+
+  @override
+  String get sortBy => 'Sıralama';
+
+  @override
+  String get sortManual => 'Elle (sürükleme sırası)';
+
+  @override
+  String get sortUpdated => 'Son güncellenen';
+
+  @override
+  String get sortCreated => 'Oluşturulma tarihi';
+
+  @override
+  String get sortTitle => 'Başlığa göre (A-Z)';
 }

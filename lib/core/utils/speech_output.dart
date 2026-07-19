@@ -68,6 +68,15 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
 
   static const _rateKey = 'tts_rate';
 
+  /// Yabancı diller için AYRI okuma hızı. Cihaz TTS motorları yabancı dil
+  /// seslerini Türkçe'ye göre belirgin daha hızlı okuyabiliyor ("çok hızlı
+  /// konuşuyor" — madde 2). Türkçe dışı her dil bu değerle okunur; varsayılan
+  /// 0.4 (normal Türkçe hızı 0.5'ten yavaş).
+  static const _foreignRateKey = 'tts_rate_foreign';
+
+  static const _defaultRate = 0.5;
+  static const _defaultForeignRate = 0.4;
+
   /// Kullanıcının kendi seçtiği diller. Kalanlar otomatiktir.
   static const userChosenLanguages = ['tr', 'en'];
 
@@ -124,9 +133,19 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     tts.setCancelHandler(() => _sentenceDone?.complete());
     tts.setErrorHandler((dynamic _) => _sentenceDone?.complete());
     final prefs = await SharedPreferences.getInstance();
-    await tts.setSpeechRate(prefs.getDouble(_rateKey) ?? 0.5);
+    await tts.setSpeechRate(prefs.getDouble(_rateKey) ?? _defaultRate);
     _tts = tts;
     return tts;
+  }
+
+  /// O anki okuma diline göre hız. Türkçe kendi hızıyla, yabancı diller ayrı
+  /// (genelde daha yavaş) hızla okunur — [speak]/[resume] her okumada uygular.
+  Future<double> _rateFor(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (language.toLowerCase() == 'tr') {
+      return prefs.getDouble(_rateKey) ?? _defaultRate;
+    }
+    return prefs.getDouble(_foreignRateKey) ?? _defaultForeignRate;
   }
 
   /// Verilen dil için sesi ayarlar. Sıra:
@@ -215,7 +234,7 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
 
   Future<double> rate() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_rateKey) ?? 0.5;
+    return prefs.getDouble(_rateKey) ?? _defaultRate;
   }
 
   /// 0.0–1.0 arası; 0.5 cihazın normal hızı.
@@ -223,6 +242,17 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_rateKey, value);
     await (await _engine()).setSpeechRate(value);
+  }
+
+  /// Yabancı dillerin (Türkçe dışı) okuma hızı.
+  Future<double> foreignRate() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_foreignRateKey) ?? _defaultForeignRate;
+  }
+
+  Future<void> setForeignRate(double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_foreignRateKey, value);
   }
 
   /// Metni cümlelere bölüp sırayla okur. Zaten okuyorsa önce durdurur.
@@ -244,6 +274,8 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     // Dil söylenmezse uygulama dili varsayılır: notlar Türkçe.
     _language = languageCode ?? 'tr';
     await _applyVoiceFor(tts, _language!);
+    // Hız dile göre: yabancı diller ayrı (genelde daha yavaş) hızla okunur.
+    await tts.setSpeechRate(await _rateFor(_language!));
     while (_index < _queue.length && state.state == SpeechState.speaking) {
       final done = Completer<void>();
       _sentenceDone = done;
@@ -288,6 +320,7 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     final tts = await _engine();
     // Duraklatma motorun dilini sıfırlayabiliyor; kaldığımız dille sürsün.
     await _applyVoiceFor(tts, _language ?? 'tr');
+    await tts.setSpeechRate(await _rateFor(_language ?? 'tr'));
     while (_index < _queue.length && state.state == SpeechState.speaking) {
       final done = Completer<void>();
       _sentenceDone = done;

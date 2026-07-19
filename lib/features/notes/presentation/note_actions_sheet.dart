@@ -8,6 +8,7 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import 'color_picker_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
 
@@ -92,6 +93,16 @@ Future<void> showNoteActionsSheet(
               onTap: () => Navigator.pop(sheetContext, 'lock'),
             ),
             ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: Text(l10n.backgroundColor),
+              onTap: () => Navigator.pop(sheetContext, 'color'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.border_color_outlined),
+              title: Text(l10n.frameColor),
+              onTap: () => Navigator.pop(sheetContext, 'frame'),
+            ),
+            ListTile(
               leading: const Icon(Icons.check_circle_outline),
               title: Text(l10n.select),
               onTap: () => Navigator.pop(sheetContext, 'select'),
@@ -163,6 +174,20 @@ Future<void> showNoteActionsSheet(
         return;
       }
       repo.updateFields(note.id, {'locked': !note.locked});
+    case 'color':
+      final picked = await showNoteColorPicker(
+        context,
+        frame: false,
+        current: note.color,
+      );
+      if (picked != null) repo.setColor(note.id, picked);
+    case 'frame':
+      final picked = await showNoteColorPicker(
+        context,
+        frame: true,
+        current: note.frameColor,
+      );
+      if (picked != null) repo.setFrameColor(note.id, picked);
     case 'select':
       ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
     case 'delete':
