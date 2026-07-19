@@ -960,6 +960,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listenPodcastReady => 'Podcast anlatımı hazır';
 
   @override
+  String get listenPodcastCached => 'Daha önce üretilmişti — token harcanmadı';
+
+  @override
+  String get listenRegenerate => 'Yeniden üret';
+
+  @override
   String get listenNoText =>
       'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.';
 

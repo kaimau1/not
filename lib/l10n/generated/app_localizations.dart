@@ -1858,6 +1858,18 @@ abstract class AppLocalizations {
   /// **'Podcast anlatımı hazır'**
   String get listenPodcastReady;
 
+  /// No description provided for @listenPodcastCached.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha önce üretilmişti — token harcanmadı'**
+  String get listenPodcastCached;
+
+  /// No description provided for @listenRegenerate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden üret'**
+  String get listenRegenerate;
+
   /// No description provided for @listenNoText.
   ///
   /// In tr, this message translates to:

@@ -11,6 +11,7 @@ import '../../notes/data/pdf_text.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../data/ai_cache.dart';
 import '../data/ai_report.dart';
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
@@ -62,9 +63,13 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   String? _result;
   String? _error;
 
+  /// [cacheKey] verilirse çıktı cihazda saklanır ve aynı girdi ikinci kez
+  /// model çağırmaz. Anahtar içerikten türetildiği için not/PDF değişince
+  /// kendiliğinden tazelenir — saat karşılaştırmasına gerek yok.
   Future<void> _run(
     Future<String> Function(GeminiService) action, {
     bool cacheAsSummary = false,
+    String? cacheKey,
     bool improvement = false,
     NoteType? replaceAsType,
   }) async {
@@ -75,12 +80,25 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       _lastWasImprovement = improvement;
       _replaceAsType = replaceAsType;
     });
+    if (cacheKey != null) {
+      final cached = await AiCache.read(cacheKey);
+      if (cached != null && cached.trim().isNotEmpty) {
+        if (mounted) {
+          setState(() {
+            _result = cached;
+            _loading = false;
+          });
+        }
+        return;
+      }
+    }
     try {
       final service = ref.read(geminiServiceProvider);
       // Notlar düz metin tuttuğundan AI çıktısındaki markdown işaretlerini
       // (**, *, #, `) tek noktada temizle: gösterim, kopyalama ve nota
       // ekleme/değiştirmenin tümü temiz metni kullanır.
       final text = stripMarkdown(await action(service)).trim();
+      if (cacheKey != null) await AiCache.write(cacheKey, text);
       if (cacheAsSummary) {
         ref
             .read(notesRepositoryProvider)
@@ -383,13 +401,23 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     onTap: () => _run(
                       (s) => s.summarizeNote(widget.note),
                       cacheAsSummary: true,
+                      cacheKey: AiCache.keyFor(
+                        'note_summary',
+                        widget.note.toPlainText(),
+                      ),
                     ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.insights_outlined),
                     title: Text(l10n.aiAnalyze),
                     enabled: !widget.note.isEmpty,
-                    onTap: () => _run((s) => s.analyzeNote(widget.note)),
+                    onTap: () => _run(
+                      (s) => s.analyzeNote(widget.note),
+                      cacheKey: AiCache.keyFor(
+                        'note_analyze',
+                        widget.note.toPlainText(),
+                      ),
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.translate),
@@ -412,7 +440,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      onTap: () => _run((s) => _summarizePdf(s, pdf)),
+                      onTap: () => _run(
+                        (s) => _summarizePdf(s, pdf),
+                        cacheKey: AiCache.keyFor('pdf_summary', pdf.id),
+                      ),
                     ),
                     // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
                     // model yalnız "podcast'e dönüştür" denirse çağrılır.

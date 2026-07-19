@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
+import '../data/ai_cache.dart';
 import '../data/gemini_service.dart';
 
 /// Bir belgeyi sesli dinleme ekranı. Üç mod var:
@@ -37,6 +38,10 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   bool _busy = true;
   bool _generating = false;
   bool _isPodcast = false;
+
+  /// Gosterilen metin onbellekten mi geldi (yeniden uret secenegi icin).
+  bool _fromCache = false;
+  bool _lastSummarize = false;
 
   @override
   void initState() {
@@ -83,10 +88,35 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     }
   }
 
-  Future<void> _makePodcast({required bool summarize}) async {
+  /// [force] true ise önbellek atlanır ve yeni metin üretilir.
+  Future<void> _makePodcast({
+    required bool summarize,
+    bool force = false,
+  }) async {
     final source = _original;
     if (source == null) return;
     await ref.read(speechOutputProvider.notifier).stop();
+
+    // Aynı belgeyi ikinci kez açmak binlerce token'a mal olmasın: üretilen
+    // metin içerik özetine göre saklanıyor, belge değişirse anahtar da değişir.
+    final key = AiCache.keyFor(
+      summarize ? 'podcast_summary' : 'podcast_full',
+      source,
+    );
+    if (!force) {
+      final cached = await AiCache.read(key);
+      if (cached != null && cached.trim().isNotEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _text = cached;
+          _isPodcast = true;
+          _fromCache = true;
+          _lastSummarize = summarize;
+        });
+        return;
+      }
+    }
+
     setState(() {
       _generating = true;
       _error = null;
@@ -95,10 +125,13 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       final script = await ref
           .read(geminiServiceProvider)
           .podcastScript(source, title: widget.title, summarize: summarize);
+      await AiCache.write(key, script);
       if (!mounted) return;
       setState(() {
         _text = script;
         _isPodcast = true;
+        _fromCache = false;
+        _lastSummarize = summarize;
         _generating = false;
       });
     } on GeminiException catch (e) {
@@ -116,6 +149,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     setState(() {
       _text = _original;
       _isPodcast = false;
+      _fromCache = false;
     });
   }
 
@@ -166,9 +200,25 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                       horizontal: 16,
                       vertical: 8,
                     ),
-                    child: Text(
-                      l10n.listenPodcastReady,
-                      style: TextStyle(color: scheme.onPrimaryContainer),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _fromCache
+                                ? l10n.listenPodcastCached
+                                : l10n.listenPodcastReady,
+                            style: TextStyle(color: scheme.onPrimaryContainer),
+                          ),
+                        ),
+                        if (_fromCache)
+                          TextButton(
+                            onPressed: () => _makePodcast(
+                              summarize: _lastSummarize,
+                              force: true,
+                            ),
+                            child: Text(l10n.listenRegenerate),
+                          ),
+                      ],
                     ),
                   ),
                 Expanded(

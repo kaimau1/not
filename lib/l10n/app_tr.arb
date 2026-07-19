@@ -396,6 +396,8 @@
   "listenMakePodcastSummary": "Özet podcast",
   "listenOriginalText": "Özgün metin",
   "listenPodcastReady": "Podcast anlatımı hazır",
+  "listenPodcastCached": "Daha önce üretilmişti — token harcanmadı",
+  "listenRegenerate": "Yeniden üret",
   "listenNoText": "Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.",
   "listenToPdf": "Sesli dinle: {name}",
   "readDocument": "Belge oku (Word, PDF, sunum)",
