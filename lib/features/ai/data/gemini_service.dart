@@ -453,6 +453,34 @@ class GeminiService {
         },
       ]);
 
+  /// Belgeyi SESLİ DİNLENEBİLİR bir anlatıya çevirir.
+  ///
+  /// Ham belge metnini olduğu gibi okutmak dinlenmez: tablo parçaları,
+  /// "bkz. dipnot 3", madde işaretleri ve başlık kırıntıları sesli okunur.
+  /// Bu istem metni tek seferde akıcı bir anlatıma dönüştürür — asıl işi
+  /// yapan adım budur, seslendirme değil.
+  Future<String> podcastScript(
+    String documentText, {
+    String? title,
+  }) => _generate([
+    {
+      'text':
+          'Aşağıdaki belgeyi, SESLİ DİNLENMEK üzere akıcı bir Türkçe '
+          'anlatıya dönüştür.${title == null ? '' : ' Belgenin adı: $title.'}\n'
+          'Kurallar:\n'
+          '- Kısa bir giriş cümlesiyle başla (konu ne).\n'
+          '- Düz konuşma metni yaz: madde işareti, numara, başlık, '
+          'yıldız, tire KULLANMA. Hepsi sesli okunduğunda saçma durur.\n'
+          '- Tablo ve şekilleri cümleye çevir; okunamayanları atla.\n'
+          '- Dipnot, sayfa numarası, kaynakça atıflarını çıkar.\n'
+          '- Belgenin kendi sırasını ve TÜM ana fikirlerini koru; '
+          'özet değil, dinlenebilir tam anlatım istiyorum.\n'
+          '- Kısa cümleler kur; uzun cümle sesli dinlemede takip edilemiyor.\n'
+          '- Sonunda tek cümlelik kapanış yap.\n'
+          'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
+    },
+  ]);
+
   /// Konuşma çevirmeni: ses kaydındaki konuşmanın dilini (A veya B) tespit
   /// eder, dökümünü çıkarır ve karşı dile çevirir.
   Future<SpeechTranslation> translateSpeech({

@@ -14,8 +14,8 @@ enum AppThemeChoice { system, light, dark, paper }
 
 final themeChoiceProvider =
     NotifierProvider<ThemeChoiceNotifier, AppThemeChoice>(
-  ThemeChoiceNotifier.new,
-);
+      ThemeChoiceNotifier.new,
+    );
 
 class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
   static const _key = 'theme_mode';
@@ -44,8 +44,7 @@ class FontScaleNotifier extends Notifier<double> {
   static const _key = 'font_scale';
 
   @override
-  double build() =>
-      ref.watch(sharedPreferencesProvider).getDouble(_key) ?? 1.0;
+  double build() => ref.watch(sharedPreferencesProvider).getDouble(_key) ?? 1.0;
 
   void set(double value) {
     state = value;
@@ -78,8 +77,8 @@ class DarkSchedule {
 
 final darkScheduleProvider =
     NotifierProvider<DarkScheduleNotifier, DarkSchedule>(
-  DarkScheduleNotifier.new,
-);
+      DarkScheduleNotifier.new,
+    );
 
 class DarkScheduleNotifier extends Notifier<DarkSchedule> {
   static const _enabledKey = 'dark_schedule_enabled';
@@ -174,8 +173,7 @@ class AutoTagNotifier extends Notifier<bool> {
 /// Liste/checklist öğelerindeki uzun satırlar tam mı gösterilsin?
 /// true (varsayılan): satır kaç satıra gerekirse sarılır, hepsi görünür.
 /// false: satır tek satırda kalır, dokununca (odaklanınca) açılır.
-final expandListItemsProvider =
-    NotifierProvider<ExpandListItemsNotifier, bool>(
+final expandListItemsProvider = NotifierProvider<ExpandListItemsNotifier, bool>(
   ExpandListItemsNotifier.new,
 );
 
@@ -198,8 +196,8 @@ enum VoiceButtonMode { hold, tap }
 
 final voiceButtonModeProvider =
     NotifierProvider<VoiceButtonModeNotifier, VoiceButtonMode>(
-  VoiceButtonModeNotifier.new,
-);
+      VoiceButtonModeNotifier.new,
+    );
 
 class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
   static const _key = 'voice_button_mode';
@@ -219,6 +217,27 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
   }
 }
 
+/// Çeviri nerede yapılsın: cihazda (ML Kit, bedava/çevrimdışı) mi, Gemini'de
+/// (daha iyi kalite, kota harcar) mi. Varsayılan cihaz — bas-konuş modu böylece
+/// hiçbir kota yakmaz. ML Kit'in desteklemediği dillerde (ör. Azerbaycanca)
+/// bu ayar ne olursa olsun Gemini'ye düşülür.
+final preferGeminiTranslateProvider =
+    NotifierProvider<PreferGeminiTranslateNotifier, bool>(
+      PreferGeminiTranslateNotifier.new,
+    );
+
+class PreferGeminiTranslateNotifier extends Notifier<bool> {
+  static const _key = 'prefer_gemini_translate';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
   const BriefingSettings({required this.enabled, required this.minutes});
@@ -231,8 +250,8 @@ class BriefingSettings {
 
 final briefingSettingsProvider =
     NotifierProvider<BriefingSettingsNotifier, BriefingSettings>(
-  BriefingSettingsNotifier.new,
-);
+      BriefingSettingsNotifier.new,
+    );
 
 class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
   static const _enabledKey = 'briefing_enabled';

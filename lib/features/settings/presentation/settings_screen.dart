@@ -68,6 +68,14 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const _SpeechRateSlider(),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.translateQuality),
+                subtitle: Text(l10n.translateQualityInfo),
+                value: ref.watch(preferGeminiTranslateProvider),
+                onChanged: (value) =>
+                    ref.read(preferGeminiTranslateProvider.notifier).set(value),
+              ),
               const SizedBox(height: 24),
               if (const PermissionsService().isSupported) ...[
                 _SectionTitle(l10n.permissionsTitle),

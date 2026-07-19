@@ -108,6 +108,11 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     'az': 'az-AZ',
   };
 
+  /// Kısa dil kodunun tam yerel ayarı. Konuşma TANIMA da aynı biçimi ister
+  /// (SpeechRecognizer 'tr' değil 'tr-TR' bekler), bu yüzden dışarı açık.
+  static String localeFor(String code) =>
+      _ttsLocales[code.toLowerCase()] ?? code;
+
   Future<FlutterTts> _engine() async {
     final existing = _tts;
     if (existing != null) return existing;

@@ -11,6 +11,7 @@ import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../data/ai_report.dart';
+import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'doc_chat_screen.dart';
 
@@ -411,6 +412,24 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       onTap: () => _run((s) => _summarizePdf(s, pdf)),
+                    ),
+                    // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
+                    // model yalnız "podcast'e dönüştür" denirse çağrılır.
+                    ListTile(
+                      leading: const Icon(Icons.headphones_outlined),
+                      title: Text(
+                        l10n.listenToPdf(pdf.fileName),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => ListenScreen(attachment: pdf),
+                          ),
+                        );
+                      },
                     ),
                     ListTile(
                       leading: const Icon(Icons.question_answer_outlined),

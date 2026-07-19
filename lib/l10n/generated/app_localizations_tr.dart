@@ -915,4 +915,49 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get speechVoiceAutoInfo =>
       'Diğer diller otomatik olarak erkek sesiyle okunur';
+
+  @override
+  String get nothingHeard => 'Konuşma algılanmadı';
+
+  @override
+  String get listening => 'Dinleniyor...';
+
+  @override
+  String get translateDownloadingModel => 'Dil modeli indiriliyor (bir kez)...';
+
+  @override
+  String get translateQuality => 'Gemini ile çevir (daha iyi kalite)';
+
+  @override
+  String get translateQualityInfo =>
+      'Kapalıyken çeviri cihazda yapılır: bedava, çevrimdışı ve kota harcamaz. Açıkken Gemini kullanılır — deyim ve uzun cümlede daha iyi, ama kota harcar. ML Kit\'in desteklemediği dillerde (ör. Azerbaycanca) bu ayar ne olursa olsun Gemini kullanılır.';
+
+  @override
+  String get listenPlay => 'Sesli dinle';
+
+  @override
+  String get listenReadingPdf => 'PDF okunuyor...';
+
+  @override
+  String get listenMakePodcast => 'Podcast\'e dönüştür (akıcı anlatım)';
+
+  @override
+  String get listenPodcastReady => 'Podcast anlatımı hazır';
+
+  @override
+  String get listenNoTextLayer =>
+      'Bu PDF taranmış görüntülerden oluşuyor, metin katmanı yok. Sesli okuma için metin gerekiyor.';
+
+  @override
+  String listenToPdf(String name) {
+    return 'Sesli dinle: $name';
+  }
+
+  @override
+  String get largeAttachmentTitle => 'Büyük dosya';
+
+  @override
+  String largeAttachmentBody(String size) {
+    return 'Bu dosya $size MB. PDF\'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?';
+  }
 }

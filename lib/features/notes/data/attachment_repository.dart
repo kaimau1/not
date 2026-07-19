@@ -40,8 +40,9 @@ _CompressResult _compressImage(_CompressRequest request) {
     return _CompressResult(request.bytes, 0, 0, false);
   }
   var picture = decoded;
-  final longest =
-      picture.width > picture.height ? picture.width : picture.height;
+  final longest = picture.width > picture.height
+      ? picture.width
+      : picture.height;
   if (longest > request.maxDimension) {
     picture = img.copyResize(
       picture,
@@ -50,7 +51,10 @@ _CompressResult _compressImage(_CompressRequest request) {
       interpolation: img.Interpolation.linear,
     );
   }
-  final encoded = Uint8List.fromList(img.encodeJpg(picture, quality: 85));
+  // q85 → q80: gözle ayırt edilmesi güç, dosya ~%25 küçük. 2048 px korundu
+  // çünkü OCR ve "PDF'i özetle" akışları bu görsellerden metin okuyor;
+  // çözünürlüğü düşürmek onları bozardı.
+  final encoded = Uint8List.fromList(img.encodeJpg(picture, quality: 80));
   // Yeniden kodlama dosyayı büyüttüyse orijinali koru.
   if (encoded.length >= request.bytes.length) {
     return _CompressResult(request.bytes, decoded.width, decoded.height, false);
@@ -173,10 +177,7 @@ class AttachmentRepository {
     final storagePath =
         'users/$uid/notes/$noteId/${attachment.id}_${attachment.fileName}';
     final ref = _storage.ref(storagePath);
-    await ref.putFile(
-      file,
-      SettableMetadata(contentType: attachment.mimeType),
-    );
+    await ref.putFile(file, SettableMetadata(contentType: attachment.mimeType));
     final url = await ref.getDownloadURL();
     return attachment.copyWith(storagePath: storagePath, downloadUrl: url);
   }

@@ -381,5 +381,20 @@
   "aiSummarySpeak": "Ozeti sesli oku",
   "speechVoiceTurkish": "Türkçe ses",
   "speechVoiceEnglish": "İngilizce ses",
-  "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur"
+  "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur",
+  "nothingHeard": "Konuşma algılanmadı",
+  "listening": "Dinleniyor...",
+  "translateDownloadingModel": "Dil modeli indiriliyor (bir kez)...",
+  "translateQuality": "Gemini ile çevir (daha iyi kalite)",
+  "translateQualityInfo": "Kapalıyken çeviri cihazda yapılır: bedava, çevrimdışı ve kota harcamaz. Açıkken Gemini kullanılır — deyim ve uzun cümlede daha iyi, ama kota harcar. ML Kit'in desteklemediği dillerde (ör. Azerbaycanca) bu ayar ne olursa olsun Gemini kullanılır.",
+  "listenPlay": "Sesli dinle",
+  "listenReadingPdf": "PDF okunuyor...",
+  "listenMakePodcast": "Podcast'e dönüştür (akıcı anlatım)",
+  "listenPodcastReady": "Podcast anlatımı hazır",
+  "listenNoTextLayer": "Bu PDF taranmış görüntülerden oluşuyor, metin katmanı yok. Sesli okuma için metin gerekiyor.",
+  "listenToPdf": "Sesli dinle: {name}",
+  "largeAttachmentTitle": "Büyük dosya",
+  "largeAttachmentBody": "Bu dosya {size} MB. PDF'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?",
+  "@listenToPdf": {"placeholders": {"name": {"type": "String"}}},
+  "@largeAttachmentBody": {"placeholders": {"size": {"type": "String"}}}
 }

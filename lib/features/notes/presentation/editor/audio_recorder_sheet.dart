@@ -11,13 +11,12 @@ import '../../../../core/l10n_ext.dart';
 /// Ses kaydı alt sayfası. Kayıt biterse (path, süre) döner; iptalde null.
 Future<({String path, Duration duration})?> showAudioRecorderSheet(
   BuildContext context,
-) =>
-    showModalBottomSheet<({String path, Duration duration})>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      builder: (_) => const _AudioRecorderSheet(),
-    );
+) => showModalBottomSheet<({String path, Duration duration})>(
+  context: context,
+  isDismissible: false,
+  enableDrag: false,
+  builder: (_) => const _AudioRecorderSheet(),
+);
 
 class _AudioRecorderSheet extends StatefulWidget {
   const _AudioRecorderSheet();
@@ -46,9 +45,19 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
         return;
       }
       final dir = await getTemporaryDirectory();
-      _path = p.join(dir.path, 'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a');
+      _path = p.join(
+        dir.path,
+        'kayit_${DateTime.now().millisecondsSinceEpoch}.m4a',
+      );
       await _recorder.start(
-        const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 96000),
+        // Konuşma için 96 kbps stereo israftı (dakikada ~720 KB). Tek kanal
+        // 48 kbps ses notunda duyulur fark yaratmaz ama dosyayı ~4 katı
+        // küçültür — Firebase Storage kotası ve mobil veri buna gidiyordu.
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 48000,
+          numChannels: 1,
+        ),
         path: _path!,
       );
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -110,20 +119,18 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
                   const SizedBox(width: 8),
                   Text(
                     _format(_elapsed),
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontFeatures: const []),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.copyWith(fontFeatures: const []),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.recording,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: 16),
               Row(

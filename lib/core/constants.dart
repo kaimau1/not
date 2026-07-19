@@ -46,6 +46,10 @@ abstract final class AppConstants {
   static const int maxAttachmentBytes = 25 * 1024 * 1024; // 25 MB
   static const int maxImageDimension = 2048;
 
+  /// Ek bu boyutu aşarsa kullanıcıya sorulur (engellenmez). Firebase Storage
+  /// ücretsiz katmanı 5 GB; sıkıştırılamayan PDF'ler kotayı sessizce yiyordu.
+  static const int largeAttachmentWarnBytes = 5 * 1024 * 1024; // 5 MB
+
   // Google OAuth (masaüstü) — derleme sırasında --dart-define ile verilir:
   //   flutter run --dart-define=GOOGLE_DESKTOP_CLIENT_ID=... \
   //               --dart-define=GOOGLE_DESKTOP_CLIENT_SECRET=...

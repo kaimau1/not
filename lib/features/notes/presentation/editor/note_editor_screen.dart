@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/note_colors.dart';
+import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/markdown.dart';
@@ -185,6 +186,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final file = await openFile(acceptedTypeGroups: const [group]);
     if (file == null) return;
     final bytes = await file.readAsBytes();
+    // PDF sıkıştırılamaz (görsel ve ses küçültülüyor, bu küçültülemiyor) —
+    // büyük dosya Firebase Storage kotasına doğrudan gider. Engellemek yerine
+    // boyutu söyleyip kullanıcıya soruyoruz.
+    if (bytes.length > AppConstants.largeAttachmentWarnBytes && mounted) {
+      final mb = (bytes.length / (1024 * 1024)).toStringAsFixed(1);
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.l10n.largeAttachmentTitle),
+          content: Text(context.l10n.largeAttachmentBody(mb)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.ok),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true) return;
+    }
+    if (!mounted) return;
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {

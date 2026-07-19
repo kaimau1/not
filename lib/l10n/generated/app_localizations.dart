@@ -1773,6 +1773,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğer diller otomatik olarak erkek sesiyle okunur'**
   String get speechVoiceAutoInfo;
+
+  /// No description provided for @nothingHeard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşma algılanmadı'**
+  String get nothingHeard;
+
+  /// No description provided for @listening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dinleniyor...'**
+  String get listening;
+
+  /// No description provided for @translateDownloadingModel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dil modeli indiriliyor (bir kez)...'**
+  String get translateDownloadingModel;
+
+  /// No description provided for @translateQuality.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gemini ile çevir (daha iyi kalite)'**
+  String get translateQuality;
+
+  /// No description provided for @translateQualityInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalıyken çeviri cihazda yapılır: bedava, çevrimdışı ve kota harcamaz. Açıkken Gemini kullanılır — deyim ve uzun cümlede daha iyi, ama kota harcar. ML Kit\'in desteklemediği dillerde (ör. Azerbaycanca) bu ayar ne olursa olsun Gemini kullanılır.'**
+  String get translateQualityInfo;
+
+  /// No description provided for @listenPlay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli dinle'**
+  String get listenPlay;
+
+  /// No description provided for @listenReadingPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF okunuyor...'**
+  String get listenReadingPdf;
+
+  /// No description provided for @listenMakePodcast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast\'e dönüştür (akıcı anlatım)'**
+  String get listenMakePodcast;
+
+  /// No description provided for @listenPodcastReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast anlatımı hazır'**
+  String get listenPodcastReady;
+
+  /// No description provided for @listenNoTextLayer.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu PDF taranmış görüntülerden oluşuyor, metin katmanı yok. Sesli okuma için metin gerekiyor.'**
+  String get listenNoTextLayer;
+
+  /// No description provided for @listenToPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli dinle: {name}'**
+  String listenToPdf(String name);
+
+  /// No description provided for @largeAttachmentTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyük dosya'**
+  String get largeAttachmentTitle;
+
+  /// No description provided for @largeAttachmentBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosya {size} MB. PDF\'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?'**
+  String largeAttachmentBody(String size);
 }
 
 class _AppLocalizationsDelegate
