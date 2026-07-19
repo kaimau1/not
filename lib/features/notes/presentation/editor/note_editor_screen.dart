@@ -906,6 +906,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  /// Metin notuna boş bir checklist maddesi ekler (karışık içerik). İlk madde
+  /// eklenince gövde otomatik ItemsEditor'a geçer; sonrakiler onun "Yeni öğe"
+  /// düğmesinden eklenir. Tüm maddeler silinince gövde saf metne döner.
+  void _addChecklistItem() {
+    const uuid = Uuid();
+    _mutate(
+      (n) => n.copyWith(items: [...n.items, NoteItem(id: uuid.v4(), text: '')]),
+      immediate: true,
+    );
+  }
+
   void _showSnack(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -1098,12 +1109,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ],
     );
 
-    final Widget body = switch (note.type) {
-      // Gövde alanı en az bir ekran boyu yüksekliğe zorlanır ve tüm bu alan
-      // (metnin bittiği yerin altındaki boşluk dahil) dokunuşla gövdeye
-      // odaklanır — böylece yazmaya başlamak için sadece üst kısma değil,
-      // aşağıya doğru her yere dokunmak yeterlidir.
-      NoteType.text => LayoutBuilder(
+    // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
+    // aynı controller/focus'u paylaşır. Madde varken kısalır (2 satır tabanı).
+    final bodyField = TextField(
+      controller: _bodyController,
+      focusNode: _bodyFocus,
+      onChanged: (value) => _mutate((n) => n.copyWith(body: value)),
+      maxLines: null,
+      minLines: note.items.isEmpty ? 8 : 2,
+      keyboardType: TextInputType.multiline,
+      decoration: InputDecoration(
+        hintText: l10n.bodyHint,
+        filled: false,
+        border: InputBorder.none,
+      ),
+    );
+
+    final Widget body;
+    if (note.type == NoteType.text && note.items.isEmpty) {
+      // Saf metin: gövde alanı en az bir ekran boyu yüksekliğe zorlanır ve tüm
+      // bu alan (metnin altındaki boşluk dahil) dokunuşla gövdeye odaklanır —
+      // yazmaya başlamak için aşağıya doğru her yere dokunmak yeterli.
+      body = LayoutBuilder(
         builder: (context, constraints) => ListView(
           padding: const EdgeInsets.only(bottom: 96),
           children: [
@@ -1120,38 +1147,46 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: _bodyController,
-                        focusNode: _bodyFocus,
-                        onChanged: (value) =>
-                            _mutate((n) => n.copyWith(body: value)),
-                        maxLines: null,
-                        minLines: 8,
-                        keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: l10n.bodyHint,
-                          filled: false,
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ],
+                    children: [bodyField],
                   ),
                 ),
               ),
             ),
           ],
         ),
-      ),
-      NoteType.checklist || NoteType.ordered => ItemsEditor(
+      );
+    } else if (note.type == NoteType.text) {
+      // Karışık içerik: serbest metin + checklist maddeleri. Gövde metni, madde
+      // editörünün (ItemsEditor) header'ında durur; tüm ekle/işaretle/sırala/
+      // sil mantığı olduğu gibi yeniden kullanılır. Madde kalmayınca (hepsi
+      // silinince) note.items boşalır ve editör kendiliğinden saf metne döner.
+      body = ItemsEditor(
+        key: ValueKey('mixed-${note.id}'),
+        items: note.items,
+        showCheckboxes: true,
+        expandItems: ref.watch(expandListItemsProvider),
+        onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
+        header: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: bodyField,
+            ),
+          ],
+        ),
+      );
+    } else {
+      body = ItemsEditor(
         key: ValueKey('items-${note.id}'),
         items: note.items,
         showCheckboxes: note.type == NoteType.checklist,
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
         header: header,
-      ),
-    };
+      );
+    }
 
     return CallbackShortcuts(
       bindings: {
@@ -1323,6 +1358,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     icon: const Icon(Icons.calculate_outlined),
                     onPressed: _openCalculator,
                   ),
+                  // Karışık içerik: metin notunun altına checklist maddesi
+                  // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
+                  // maddeden oluşur).
+                  if (note.type == NoteType.text)
+                    IconButton(
+                      tooltip: l10n.newItemHint,
+                      icon: const Icon(Icons.checklist),
+                      onPressed: _addChecklistItem,
+                    ),
                   const Spacer(),
                   // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
                   // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
