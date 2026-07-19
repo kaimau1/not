@@ -24,19 +24,24 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/translate/presentation/translator_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final refresh = _RefreshNotifier(
-    ref.watch(authRepositoryProvider).authStateChanges(),
-  );
+  final repo = ref.watch(authRepositoryProvider);
+  final refresh = _RefreshNotifier(repo.authStateChanges());
   ref.onDispose(refresh.dispose);
 
   return GoRouter(
     initialLocation: '/',
     refreshListenable: refresh,
     redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
-      // İlk emisyon gelene kadar yönlendirme yapma (login ekranı flaşlamasın).
-      if (authState.isLoading && !authState.hasValue) return null;
-      final loggedIn = authState.value != null;
+      // Oturum durumunu, yönlendirmeyi TETİKLEYEN aynı stream üzerinden
+      // (repo.currentUser) oku. Eskiden redirect ayrı bir StreamProvider'ı
+      // (authStateProvider) okuyordu; o Riverpod tarafından ASENKRON
+      // güncellendiğinden, ilk girişte senkron çalışan refresh olayı redirect'i
+      // henüz null olan değerle tetikliyordu → yönlendirme olmuyor, kullanıcı
+      // uygulamayı yeniden başlatana dek login ekranında kalıyordu.
+      // currentUser, authStateChanges emit'inden ÖNCE güncellendiği için
+      // burada her zaman tazedir; yarış ortadan kalkar.
+      if (!refresh.ready) return null; // İlk emisyon (oturum geri yükleme) beklenir.
+      final loggedIn = repo.currentUser != null;
       final loggingIn = state.matchedLocation == '/login';
       if (!loggedIn && !loggingIn) return '/login';
       if (loggedIn && loggingIn) return '/';
@@ -132,8 +137,19 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
 
 class _RefreshNotifier extends ChangeNotifier {
   _RefreshNotifier(Stream<dynamic> stream) {
-    _sub = stream.listen((_) => notifyListeners());
+    _sub = stream.listen((_) {
+      // İlk emisyon geldiğinde oturum durumu artık bellidir (oturum geri
+      // yüklendi ya da oturum yok). Bundan önce redirect bekletilir ki
+      // login ekranı flaşlamasın.
+      _ready = true;
+      notifyListeners();
+    });
   }
+
+  bool _ready = false;
+
+  /// authStateChanges en az bir kez emit etti mi? (başlangıç guard'ı)
+  bool get ready => _ready;
 
   late final StreamSubscription<dynamic> _sub;
 
