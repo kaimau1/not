@@ -10,4 +10,6 @@
     <string name="widget_qa_new_note">Yeni not</string>
     <string name="widget_qa_checklist">Yeni liste</string>
     <string name="widget_qa_ordered">Yeni sıralı liste</string>
+    <string name="widget_quicknote_label">Hızlı Not</string>
+    <string name="widget_quicknote_desc">Tek dokunuşla yeni not: ana ekrandan doğrudan yazmaya başla</string>
 </resources>

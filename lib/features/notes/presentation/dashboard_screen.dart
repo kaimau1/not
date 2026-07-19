@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router.dart';
 
@@ -19,6 +20,7 @@ import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import 'color_picker_sheet.dart';
 import 'dashboard_chips.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
@@ -89,6 +91,138 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         }
       },
     );
+  }
+
+  List<Note> _selectedNotes(Set<String> ids) {
+    final all = ref.read(notesStreamProvider).value ?? const <Note>[];
+    return [
+      for (final n in all)
+        if (ids.contains(n.id)) n,
+    ];
+  }
+
+  void _archiveSelected(Set<String> ids) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    for (final id in ids) {
+      repo.setArchived(id, true);
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    showUndoSnackBar(
+      context,
+      message: l10n.notesArchivedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () {
+        for (final id in ids) {
+          repo.setArchived(id, false);
+        }
+      },
+    );
+  }
+
+  void _setPinnedSelected(Set<String> ids, bool pinned) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    for (final id in ids) {
+      repo.setPinned(id, pinned);
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+  }
+
+  void _setStarredSelected(Set<String> ids, bool starred) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    for (final id in ids) {
+      repo.setStarred(id, starred);
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+  }
+
+  /// Seçili notların metnini birleştirir. Kilitli notlardan yalnız başlık
+  /// alınır (içerik kimlik doğrulaması olmadan sızmasın).
+  String _joinSelected(Set<String> ids) {
+    final parts = [
+      for (final n in _selectedNotes(ids))
+        if (n.locked) n.title.trim() else n.toPlainText(),
+    ];
+    return parts.where((t) => t.trim().isNotEmpty).join('\n\n———\n\n');
+  }
+
+  Future<void> _copySelected(Set<String> ids) async {
+    final l10n = context.l10n;
+    await Clipboard.setData(ClipboardData(text: _joinSelected(ids)));
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.copied)));
+  }
+
+  Future<void> _shareSelected(Set<String> ids) async {
+    final text = _joinSelected(ids);
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    if (text.trim().isEmpty) return;
+    await SharePlus.instance.share(ShareParams(text: text));
+  }
+
+  Future<void> _colorSelected(Set<String> ids, {required bool frame}) async {
+    final picked = await showNoteColorPicker(context, frame: frame);
+    if (picked == null) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    for (final id in ids) {
+      if (frame) {
+        repo.setFrameColor(id, picked);
+      } else {
+        repo.setColor(id, picked);
+      }
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+  }
+
+  /// Dashboard sıralama ölçütünü seçtiren alt sayfa.
+  Future<void> _pickSort() async {
+    final l10n = context.l10n;
+    final current = ref.read(noteSortProvider);
+    final options = <(NoteSort, String, IconData)>[
+      (NoteSort.manual, l10n.sortManual, Icons.drag_indicator),
+      (NoteSort.updated, l10n.sortUpdated, Icons.update),
+      (NoteSort.created, l10n.sortCreated, Icons.schedule_outlined),
+      (NoteSort.title, l10n.sortTitle, Icons.sort_by_alpha),
+    ];
+    final picked = await showModalBottomSheet<NoteSort>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                l10n.sortBy,
+                style: Theme.of(sheetContext).textTheme.titleSmall,
+              ),
+            ),
+            for (final (sort, label, icon) in options)
+              ListTile(
+                leading: Icon(icon),
+                title: Text(label),
+                trailing: current == sort
+                    ? Icon(
+                        Icons.check,
+                        color: Theme.of(sheetContext).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, sort),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) ref.read(noteSortProvider.notifier).set(picked);
   }
 
   Future<void> _createNote(NoteType type) async {
@@ -187,11 +321,71 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   .clear(),
                             ),
                             title: Text(l10n.selectedCount(selectedIds.length)),
+                            // Kopyala/arşivle/sil ve diğer tüm not işlemleri
+                            // seçim yapılınca BURADA toplanır (madde 3): sık
+                            // kullanılanlar simge, gerisi taşma menüsünde.
                             actions: [
+                              IconButton(
+                                tooltip: l10n.archive,
+                                icon: const Icon(Icons.archive_outlined),
+                                onPressed: () => _archiveSelected(selectedIds),
+                              ),
+                              IconButton(
+                                tooltip: l10n.copy,
+                                icon: const Icon(Icons.copy_outlined),
+                                onPressed: () => _copySelected(selectedIds),
+                              ),
                               IconButton(
                                 tooltip: l10n.deleteSelected,
                                 icon: const Icon(Icons.delete_outline),
                                 onPressed: () => _deleteSelected(selectedIds),
+                              ),
+                              PopupMenuButton<String>(
+                                tooltip: l10n.noteMetaMenu,
+                                onSelected: (action) {
+                                  switch (action) {
+                                    case 'pin':
+                                      _setPinnedSelected(selectedIds, true);
+                                    case 'unpin':
+                                      _setPinnedSelected(selectedIds, false);
+                                    case 'star':
+                                      _setStarredSelected(selectedIds, true);
+                                    case 'unstar':
+                                      _setStarredSelected(selectedIds, false);
+                                    case 'share':
+                                      _shareSelected(selectedIds);
+                                    case 'color':
+                                      _colorSelected(selectedIds, frame: false);
+                                    case 'frame':
+                                      _colorSelected(selectedIds, frame: true);
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  _selMenuItem('pin', Icons.push_pin_outlined, l10n.pin),
+                                  _selMenuItem(
+                                    'unpin',
+                                    Icons.push_pin,
+                                    l10n.unpin,
+                                  ),
+                                  _selMenuItem('star', Icons.star_outline, l10n.star),
+                                  _selMenuItem('unstar', Icons.star, l10n.unstar),
+                                  const PopupMenuDivider(),
+                                  _selMenuItem(
+                                    'color',
+                                    Icons.palette_outlined,
+                                    l10n.backgroundColor,
+                                  ),
+                                  _selMenuItem(
+                                    'frame',
+                                    Icons.border_color_outlined,
+                                    l10n.frameColor,
+                                  ),
+                                  _selMenuItem(
+                                    'share',
+                                    Icons.share_outlined,
+                                    l10n.share,
+                                  ),
+                                ],
                               ),
                               const SizedBox(width: 4),
                             ],
@@ -240,6 +434,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         minWidth: 200,
                                       ),
                                       onSelected: (action) => switch (action) {
+                                        'sort' => _pickSort(),
                                         'suggestions' => context.push(
                                           '/suggestions',
                                         ),
@@ -262,6 +457,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       // tek liste karma çekmece gibi
                                       // okunuyordu; gruplar ayrıldı.
                                       itemBuilder: (context) => [
+                                        // --- Sıralama ---
+                                        PopupMenuItem(
+                                          value: 'sort',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.sort,
+                                            ),
+                                            title: Text(l10n.sortBy),
+                                          ),
+                                        ),
+                                        const PopupMenuDivider(),
                                         // --- AI araçları ---
                                         PopupMenuItem(
                                           value: 'suggestions',
@@ -443,6 +651,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
     );
   }
+
+  PopupMenuItem<String> _selMenuItem(
+    String value,
+    IconData icon,
+    String label,
+  ) => PopupMenuItem<String>(
+    value: value,
+    child: ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(label),
+    ),
+  );
 
   List<Widget> _buildNoteSlivers(
     BuildContext context,

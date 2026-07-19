@@ -1941,6 +1941,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu dosya {size} MB. PDF\'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?'**
   String largeAttachmentBody(String size);
+
+  /// No description provided for @speechRateForeign.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yabancı dil hızı'**
+  String get speechRateForeign;
+
+  /// No description provided for @notesArchivedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not arşivlendi'**
+  String notesArchivedCount(int count);
+
+  /// No description provided for @backgroundColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin rengi'**
+  String get backgroundColor;
+
+  /// No description provided for @backgroundColorInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun arka plan rengi'**
+  String get backgroundColorInfo;
+
+  /// No description provided for @frameColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çerçeve'**
+  String get frameColor;
+
+  /// No description provided for @frameColorInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun çevresine seçtiğin renkte bir çerçeve çizilir'**
+  String get frameColorInfo;
+
+  /// No description provided for @sortBy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıralama'**
+  String get sortBy;
+
+  /// No description provided for @sortManual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle (sürükleme sırası)'**
+  String get sortManual;
+
+  /// No description provided for @sortUpdated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son güncellenen'**
+  String get sortUpdated;
+
+  /// No description provided for @sortCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluşturulma tarihi'**
+  String get sortCreated;
+
+  /// No description provided for @sortTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlığa göre (A-Z)'**
+  String get sortTitle;
 }
 
 class _AppLocalizationsDelegate

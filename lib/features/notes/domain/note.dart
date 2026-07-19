@@ -58,6 +58,7 @@ class Note {
     this.tags = const [],
     this.folderId,
     this.color = NoteColor.none,
+    this.frameColor = NoteColor.none,
     this.pinned = false,
     this.starred = false,
     this.locked = false,
@@ -88,6 +89,11 @@ class Note {
   /// users/{uid}/folders koleksiyonunda tutulur.
   final String? folderId;
   final NoteColor color;
+
+  /// Kartın/edit ekranının çevresine çizilen renkli çerçeve. [NoteColor.none]
+  /// = çerçeve yok (yalnız ince varsayılan kenarlık). Zemin renginden
+  /// ([color]) bağımsızdır: renkli zemin + farklı renkli çerçeve olabilir.
+  final NoteColor frameColor;
   final bool pinned;
 
   /// Yıldızlı (favori) not: filtre çubuğundaki "Yıldızlı" süzgeciyle
@@ -134,6 +140,19 @@ class Note {
     return buffer.toString().trim();
   }
 
+  /// AI ile "geliştir/düzelt" için notun İÇERİĞİ — başlık ve liste işaretleri
+  /// (`- [ ]`, `[x]`, numara) OLMADAN, her satır bir öğe/paragraf. Round-trip'te
+  /// (not → metin → AI → not) başlığın öğeye, onay kutusu/numara işaretlerinin
+  /// öğe metnine sızmasını engeller — bu yüzden başlık+işaret taşıyan
+  /// [toPlainText]'ten ayrı tutulur.
+  String toContentText() => switch (type) {
+    NoteType.text => body.trim(),
+    NoteType.checklist || NoteType.ordered => [
+      for (final item in items)
+        if (item.text.trim().isNotEmpty) item.text.trim(),
+    ].join('\n'),
+  };
+
   Note copyWith({
     NoteType? type,
     String? title,
@@ -144,6 +163,7 @@ class Note {
     String? folderId,
     bool clearFolderId = false,
     NoteColor? color,
+    NoteColor? frameColor,
     bool? pinned,
     bool? starred,
     bool? locked,
@@ -165,6 +185,7 @@ class Note {
     tags: tags ?? this.tags,
     folderId: clearFolderId ? null : (folderId ?? this.folderId),
     color: color ?? this.color,
+    frameColor: frameColor ?? this.frameColor,
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
     locked: locked ?? this.locked,
@@ -198,6 +219,7 @@ class Note {
       ],
       folderId: map['folderId'] as String?,
       color: NoteColor.fromId(map['color'] as String?),
+      frameColor: NoteColor.fromId(map['frameColor'] as String?),
       pinned: map['pinned'] as bool? ?? false,
       starred: map['starred'] as bool? ?? false,
       locked: map['locked'] as bool? ?? false,
@@ -224,6 +246,7 @@ class Note {
     'tags': tags,
     'folderId': folderId,
     'color': color.id,
+    'frameColor': frameColor.id,
     'pinned': pinned,
     'starred': starred,
     'locked': locked,

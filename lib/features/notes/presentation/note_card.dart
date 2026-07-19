@@ -192,11 +192,18 @@ class NoteCard extends ConsumerWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
+            // Öncelik: seçim > renkli çerçeve > ince varsayılan kenarlık.
             border: Border.all(
               color: selected
                   ? scheme.primary
+                  : note.frameColor != NoteColor.none
+                  ? NoteColors.swatch(note.frameColor)
                   : scheme.outlineVariant.withValues(alpha: 0.5),
-              width: selected ? 2 : 1,
+              width: selected
+                  ? 2
+                  : note.frameColor != NoteColor.none
+                  ? 2.5
+                  : 1,
             ),
           ),
           child: Padding(

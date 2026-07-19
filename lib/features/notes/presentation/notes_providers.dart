@@ -7,6 +7,34 @@ import '../domain/note_type.dart';
 
 enum NoteFilter { all, text, checklist, ordered, pinned, starred }
 
+/// Dashboard sıralama ölçütü. [manual] = akışın varsayılanı (elle sürükleme /
+/// oluşturma sırası); diğerleri istemci tarafında yeniden sıralar.
+enum NoteSort { manual, updated, created, title }
+
+/// Seçili sıralama ölçütü (kalıcı). Sabitlenmiş notlar dashboard'da yine ayrı
+/// bir bölümde toplanır; sıralama her bölümün kendi içinde uygulanır.
+final noteSortProvider = NotifierProvider<NoteSortNotifier, NoteSort>(
+  NoteSortNotifier.new,
+);
+
+class NoteSortNotifier extends Notifier<NoteSort> {
+  static const _key = 'note_sort';
+
+  @override
+  NoteSort build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    return NoteSort.values.firstWhere(
+      (s) => s.name == stored,
+      orElse: () => NoteSort.manual,
+    );
+  }
+
+  void set(NoteSort value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(_key, value.name);
+  }
+}
+
 /// Ana ekranda görünen filtre çipleri. "Tümü" her zaman görünür; gerisi
 /// kullanıcı isteğine bağlıdır. Varsayılanda tip filtreleri (metin/liste/
 /// sıralı) gizlidir — sayfa sade kalır, isteyen filtre menüsünden ekler.
@@ -199,6 +227,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final filter = ref.watch(noteFilterProvider);
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);
+  final sort = ref.watch(noteSortProvider);
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
@@ -249,9 +278,41 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
           if (_matches(n, query)) n,
       ];
     }
-    return result;
+    return _sortedNotes(result, sort);
   });
 });
+
+/// Seçili ölçüte göre notları sıralar. [NoteSort.manual] akıştan gelen sırayı
+/// (orderIndex → updatedAt) korur; başlığa göre sıralamada başlıksız notlar
+/// sona düşer.
+List<Note> _sortedNotes(List<Note> notes, NoteSort sort) {
+  if (sort == NoteSort.manual) return notes;
+  final list = [...notes];
+  int dateDesc(DateTime? a, DateTime? b) {
+    final at = a ?? DateTime.fromMillisecondsSinceEpoch(0);
+    final bt = b ?? DateTime.fromMillisecondsSinceEpoch(0);
+    return bt.compareTo(at);
+  }
+
+  switch (sort) {
+    case NoteSort.manual:
+      break;
+    case NoteSort.updated:
+      list.sort((a, b) => dateDesc(a.updatedAt, b.updatedAt));
+    case NoteSort.created:
+      list.sort((a, b) => dateDesc(a.createdAt, b.createdAt));
+    case NoteSort.title:
+      list.sort((a, b) {
+        final at = a.title.trim().toLowerCase();
+        final bt = b.title.trim().toLowerCase();
+        if (at.isEmpty && bt.isEmpty) return dateDesc(a.updatedAt, b.updatedAt);
+        if (at.isEmpty) return 1;
+        if (bt.isEmpty) return -1;
+        return at.compareTo(bt);
+      });
+  }
+  return list;
+}
 
 bool _matches(Note note, String query) {
   if (note.title.toLowerCase().contains(query)) return true;

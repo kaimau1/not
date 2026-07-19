@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 2x1 varsayılan; her iki yönde boyutlandırılabilir. Veri göstermediği
+     için periyodik güncelleme kapalı (pil tasarrufu). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="80dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/quick_note_widget"
+    android:previewLayout="@layout/quick_note_widget"
+    android:description="@string/widget_quicknote_desc"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

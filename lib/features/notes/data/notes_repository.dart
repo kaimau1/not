@@ -168,6 +168,9 @@ class NotesRepository {
   void setColor(String noteId, NoteColor color) =>
       updateFields(noteId, {'color': color.id});
 
+  void setFrameColor(String noteId, NoteColor color) =>
+      updateFields(noteId, {'frameColor': color.id});
+
   void setAiSummary(String noteId, AiSummary summary) =>
       updateFields(noteId, {'aiSummary': summary.toMap()});
 

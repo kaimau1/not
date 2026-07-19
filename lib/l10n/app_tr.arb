@@ -410,6 +410,22 @@
   "pdfPreview": "Önizle",
   "largeAttachmentTitle": "Büyük dosya",
   "largeAttachmentBody": "Bu dosya {size} MB. PDF'ler sıkıştırılamıyor; olduğu gibi buluta yüklenecek ve depolama alanından düşecek. Devam edilsin mi?",
+  "speechRateForeign": "Yabancı dil hızı",
+  "notesArchivedCount": "{count} not arşivlendi",
+  "@notesArchivedCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "backgroundColor": "Zemin rengi",
+  "backgroundColorInfo": "Notun arka plan rengi",
+  "frameColor": "Çerçeve",
+  "frameColorInfo": "Notun çevresine seçtiğin renkte bir çerçeve çizilir",
+  "sortBy": "Sıralama",
+  "sortManual": "Elle (sürükleme sırası)",
+  "sortUpdated": "Son güncellenen",
+  "sortCreated": "Oluşturulma tarihi",
+  "sortTitle": "Başlığa göre (A-Z)",
   "@listenToPdf": {"placeholders": {"name": {"type": "String"}}},
   "@largeAttachmentBody": {"placeholders": {"size": {"type": "String"}}}
 }
