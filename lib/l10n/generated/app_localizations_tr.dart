@@ -673,7 +673,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get remindersRemove => 'Hatırlatıcıyı kaldır';
 
   @override
-  String get aiModelChat => 'Sohbet ve AI özellikleri';
+  String get aiModelChat => 'Özet, başlık, etiket ve sohbet';
+
+  @override
+  String get aiModelDocument => 'Podcast ve belge sohbeti';
+
+  @override
+  String get aiModelTranslate => 'Çeviri';
 
   @override
   String get aiModelVoice => 'Sesli not';
@@ -683,7 +689,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiModelsInfo =>
-      'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
+      'Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.';
 
   @override
   String get clearNote => 'Temizle';
@@ -936,22 +942,56 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listenPlay => 'Sesli dinle';
 
   @override
-  String get listenReadingPdf => 'PDF okunuyor...';
+  String get listenReadingPdf => 'Belge okunuyor...';
 
   @override
-  String get listenMakePodcast => 'Podcast\'e dönüştür (akıcı anlatım)';
+  String get listenConvertWithAi => 'Yapay zekâ ile dönüştür';
+
+  @override
+  String get listenMakePodcast => 'Tam podcast';
+
+  @override
+  String get listenMakePodcastSummary => 'Özet podcast';
+
+  @override
+  String get listenOriginalText => 'Özgün metin';
 
   @override
   String get listenPodcastReady => 'Podcast anlatımı hazır';
 
   @override
-  String get listenNoTextLayer =>
-      'Bu PDF taranmış görüntülerden oluşuyor, metin katmanı yok. Sesli okuma için metin gerekiyor.';
+  String get listenNoText =>
+      'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.';
 
   @override
   String listenToPdf(String name) {
     return 'Sesli dinle: $name';
   }
+
+  @override
+  String get readDocument => 'Belge oku (Word, PDF, sunum)';
+
+  @override
+  String get readDocUnsupported => 'Bu dosya türü okunamıyor.';
+
+  @override
+  String get exportPdf => 'PDF olarak dışa aktar';
+
+  @override
+  String get pdfTitleField => 'Başlık';
+
+  @override
+  String get pdfContentField => 'İçerik';
+
+  @override
+  String get pdfMarkupHint =>
+      'Satır başındaki işaretler biçime dönüşür: [x] ve [ ] onay kutusu, 1. numaralı liste, - madde imi.';
+
+  @override
+  String get pdfIncludeDate => 'Tarihi ekle';
+
+  @override
+  String get pdfPreview => 'Önizle';
 
   @override
   String get largeAttachmentTitle => 'Büyük dosya';

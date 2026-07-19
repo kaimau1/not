@@ -1,8 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/constants.dart';
 import 'package:notlar/features/ai/data/gemini_service.dart';
+import 'package:notlar/features/settings/settings_providers.dart';
 
 void main() {
+  group('AiTask ayar anahtarları', () {
+    test('her görev ayrı anahtar kullanır', () {
+      final keys = AiTask.values.map((t) => t.prefsKey).toList();
+      expect(keys.toSet().length, keys.length);
+    });
+
+    test('eski tekil ayarların anahtarları korunur', () {
+      // Bu iki anahtar tek dropdown'lu sürümde kullanılıyordu; değişirse
+      // güncelleyen kullanıcının kayıtlı model seçimi sessizce kaybolur.
+      expect(AiTask.general.prefsKey, 'model_chat');
+      expect(AiTask.voice.prefsKey, 'model_voice');
+    });
+  });
+
   group('GeminiService.rankModels', () {
     test('tercih sırası korunur, API listesinde olmayan atlanır', () {
       final order = GeminiService.rankModels({

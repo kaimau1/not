@@ -15,8 +15,7 @@ import 'firebase_ai_client.dart';
 final geminiServiceProvider = Provider<GeminiService>(
   (ref) => GeminiService(
     ref.watch(apiKeyStoreProvider),
-    chatModel: () => ref.read(chatModelProvider),
-    voiceModel: () => ref.read(voiceModelProvider),
+    taskModel: (task) => ref.read(aiTaskModelsProvider)[task],
     // Anahtar girilmemişse istekler dahili (Firebase AI Logic) yoldan
     // yapılır; her çağrı önce premium/kota kapısından geçer.
     builtIn: FirebaseAiClient(
@@ -100,11 +99,9 @@ class GeminiService {
   GeminiService(
     this._keyStore, {
     Dio? dio,
-    String? Function()? chatModel,
-    String? Function()? voiceModel,
+    String? Function(AiTask)? taskModel,
     this._builtIn,
-  }) : _chatModel = chatModel ?? _noModel,
-       _voiceModel = voiceModel ?? _noModel,
+  }) : _taskModel = taskModel ?? _noModel,
        _dio =
            dio ??
            Dio(
@@ -115,7 +112,7 @@ class GeminiService {
              ),
            );
 
-  static String? _noModel() => null;
+  static String? _noModel(AiTask task) => null;
 
   final ApiKeyStore _keyStore;
   final Dio _dio;
@@ -125,8 +122,7 @@ class GeminiService {
   final FirebaseAiClient? _builtIn;
 
   /// Ayarlardan gelen kullanıcı model seçimleri (null = otomatik).
-  final String? Function() _chatModel;
-  final String? Function() _voiceModel;
+  final String? Function(AiTask) _taskModel;
 
   /// Oturum önbelleği: API'den çekilen aday modeller ve son çalışan model.
   List<String>? _candidates;
@@ -276,7 +272,7 @@ class GeminiService {
       return builtIn.generate(
         contents,
         jsonOutput: jsonOutput,
-        preferModel: preferModel ?? _chatModel(),
+        preferModel: preferModel ?? _taskModel(AiTask.general),
       );
     }
     final key = stored;
@@ -292,7 +288,7 @@ class GeminiService {
           },
         },
       ),
-      prefer: preferModel ?? _chatModel(),
+      prefer: preferModel ?? _taskModel(AiTask.general),
     );
     final candidates = response.data?['candidates'] as List<dynamic>?;
     if (candidates == null || candidates.isEmpty) {
@@ -451,7 +447,7 @@ class GeminiService {
               'tonu koru; biçimlendirmeyi (madde işaretleri, satırlar) aynen '
               'aktar. Yalnızca çeviriyi yaz, açıklama ekleme.\n\n---\n$text',
         },
-      ]);
+      ], preferModel: _taskModel(AiTask.translate));
 
   /// Belgeyi SESLİ DİNLENEBİLİR bir anlatıya çevirir.
   ///
@@ -459,9 +455,13 @@ class GeminiService {
   /// "bkz. dipnot 3", madde işaretleri ve başlık kırıntıları sesli okunur.
   /// Bu istem metni tek seferde akıcı bir anlatıma dönüştürür — asıl işi
   /// yapan adım budur, seslendirme değil.
+  /// [summarize] true ise belgeyi kısaltarak anlatır — uzun bir PDF'i baştan
+  /// sona dinleyecek vakti olmayan için. Yapılan iş aynı model çağrısı,
+  /// değişen yalnız "hepsini koru" ile "en önemlisini seç" talimatı.
   Future<String> podcastScript(
     String documentText, {
     String? title,
+    bool summarize = false,
   }) => _generate([
     {
       'text':
@@ -473,13 +473,16 @@ class GeminiService {
           'yıldız, tire KULLANMA. Hepsi sesli okunduğunda saçma durur.\n'
           '- Tablo ve şekilleri cümleye çevir; okunamayanları atla.\n'
           '- Dipnot, sayfa numarası, kaynakça atıflarını çıkar.\n'
-          '- Belgenin kendi sırasını ve TÜM ana fikirlerini koru; '
-          'özet değil, dinlenebilir tam anlatım istiyorum.\n'
+          '${summarize ? '- ÖZET anlat: yalnızca ana fikirleri ve sonuçları '
+                'al, ayrıntıyı, örnekleri ve tekrarları at. Hedef uzunluk '
+                'belgenin beşte biri kadar olsun.\n' : '- Belgenin kendi '
+                'sırasını ve TÜM ana fikirlerini koru; özet değil, '
+                'dinlenebilir tam anlatım istiyorum.\n'}'
           '- Kısa cümleler kur; uzun cümle sesli dinlemede takip edilemiyor.\n'
           '- Sonunda tek cümlelik kapanış yap.\n'
           'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
     },
-  ]);
+  ], preferModel: _taskModel(AiTask.document));
 
   /// Konuşma çevirmeni: ses kaydındaki konuşmanın dilini (A veya B) tespit
   /// eder, dökümünü çıkarır ve karşı dile çevirir.
@@ -504,7 +507,7 @@ class GeminiService {
             '{"detectedLanguage": "dil adı", "transcript": "döküm", '
             '"translation": "çeviri"}',
       },
-    ], jsonOutput: true);
+    ], jsonOutput: true, preferModel: _taskModel(AiTask.translate));
     final decoded = jsonDecode(raw);
     if (decoded is! Map) {
       throw const GeminiException('Çeviri yanıtı çözümlenemedi');
@@ -543,7 +546,7 @@ class GeminiService {
             'veya açıklama ekleme.\n\n---\n'
             '${text.length > 600 ? text.substring(0, 600) : text}',
       },
-    ], preferModel: AppConstants.fastGeminiModel);
+    ], preferModel: _taskModel(AiTask.general) ?? AppConstants.fastGeminiModel);
     // Model tırnak/yeni satır eklerse temizle, aşırı uzunsa kısalt.
     var title = raw.trim().split('\n').first.trim();
     title = title.replaceAll(RegExp('^["\'#*-]+|["\'.]+\$'), '').trim();
@@ -623,7 +626,10 @@ class GeminiService {
           ],
         },
     ];
-    return _generateFromContents(contents);
+    return _generateFromContents(
+      contents,
+      preferModel: _taskModel(AiTask.document),
+    );
   }
 
   /// Tek bir not üzerinde çok turlu soru-cevap: notun metni ve ekleri
@@ -672,7 +678,10 @@ class GeminiService {
           ],
         },
     ];
-    return _generateFromContents(contents).then(stripMarkdown);
+    return _generateFromContents(
+      contents,
+      preferModel: _taskModel(AiTask.document),
+    ).then(stripMarkdown);
   }
 
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
@@ -792,7 +801,7 @@ class GeminiService {
     // Kullanıcı bir model seçmediyse hızlı "lite" yerine daha güvenilir
     // standart flash tercih edilir: lite, araç çağrılı not oluşturmada
     // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
-    final prefer = _voiceModel() ?? AppConstants.voiceAssistantModel;
+    final prefer = _taskModel(AiTask.voice) ?? AppConstants.voiceAssistantModel;
     final stored = await _keyStore.read();
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
@@ -831,9 +840,18 @@ class GeminiService {
       if (builtIn == null) {
         throw const GeminiException('API anahtarı yok', isAuthError: true);
       }
-      return builtIn.runToolLoop(contents, onToolCall, prefer: _chatModel());
+      return builtIn.runToolLoop(
+        contents,
+        onToolCall,
+        prefer: _taskModel(AiTask.general),
+      );
     }
-    return _runToolLoop(stored, contents, onToolCall, prefer: _chatModel());
+    return _runToolLoop(
+      stored,
+      contents,
+      onToolCall,
+      prefer: _taskModel(AiTask.general),
+    );
   }
 
   /// Ayarlardaki model seçicileri için kullanılabilir model listesi.

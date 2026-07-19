@@ -109,46 +109,54 @@ class DarkScheduleNotifier extends Notifier<DarkSchedule> {
   }
 }
 
-/// Kullanıcının seçtiği Gemini modelleri (null = otomatik zincir).
-/// Seçilen model ilgili akışta ilk sırada denenir; 404/429'da zincir sürer.
-final chatModelProvider = NotifierProvider<ChatModelNotifier, String?>(
-  ChatModelNotifier.new,
-);
+/// Ayarlarda ayrı model seçilebilen iş grupları.
+///
+/// Hepsi tek dropdown'a bağlıyken "özetleme hızlı model, podcast güçlü model"
+/// gibi bir tercih kurulamıyordu. Gruplar görev tipine göre ayrıldı: kısa
+/// metin işleri ucuz modelle yeter, uzun belge işi yetenekli model ister.
+enum AiTask {
+  /// Özet, başlık, etiket, iyileştirme, brifing, sohbet.
+  general('model_chat'),
 
-class ChatModelNotifier extends Notifier<String?> {
-  static const _key = 'model_chat';
+  /// Podcast metni, PDF/not sohbeti — uzun bağlam.
+  document('model_document'),
 
-  @override
-  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+  /// Metin ve konuşma çevirisi.
+  translate('model_translate'),
 
-  void set(String? value) {
-    state = value;
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (value == null) {
-      prefs.remove(_key);
-    } else {
-      prefs.setString(_key, value);
-    }
-  }
+  /// Sesli not asistanı (araç çağrılı).
+  voice('model_voice');
+
+  const AiTask(this.prefsKey);
+
+  /// SharedPreferences anahtarı. `general` ve `voice` eski tekil ayarların
+  /// anahtarlarını KORUYOR — güncelleyen kullanıcının seçimi kaybolmasın.
+  final String prefsKey;
 }
 
-final voiceModelProvider = NotifierProvider<VoiceModelNotifier, String?>(
-  VoiceModelNotifier.new,
-);
+/// Kullanıcının seçtiği Gemini modelleri (null = otomatik zincir).
+/// Seçilen model ilgili akışta ilk sırada denenir; 404/429'da zincir sürer.
+final aiTaskModelsProvider =
+    NotifierProvider<AiTaskModelsNotifier, Map<AiTask, String?>>(
+      AiTaskModelsNotifier.new,
+    );
 
-class VoiceModelNotifier extends Notifier<String?> {
-  static const _key = 'model_voice';
-
+class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
   @override
-  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+  Map<AiTask, String?> build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return {
+      for (final task in AiTask.values) task: prefs.getString(task.prefsKey),
+    };
+  }
 
-  void set(String? value) {
-    state = value;
+  void set(AiTask task, String? value) {
+    state = {...state, task: value};
     final prefs = ref.read(sharedPreferencesProvider);
     if (value == null) {
-      prefs.remove(_key);
+      prefs.remove(task.prefsKey);
     } else {
-      prefs.setString(_key, value);
+      prefs.setString(task.prefsKey, value);
     }
   }
 }

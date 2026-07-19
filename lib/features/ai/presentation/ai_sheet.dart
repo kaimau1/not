@@ -7,6 +7,7 @@ import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/notes_repository.dart';
+import '../../notes/data/pdf_text.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -426,7 +427,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         Navigator.pop(context);
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => ListenScreen(attachment: pdf),
+                            builder: (_) => ListenScreen(
+                              title: pdf.fileName,
+                              loadText: () async => PdfText.cleanForSpeech(
+                                await PdfText.extract(pdf.localPath),
+                              ),
+                            ),
                           ),
                         );
                       },

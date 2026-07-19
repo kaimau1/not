@@ -784,33 +784,30 @@ class _ModelSelectors extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
-    if (!hasKey) return const SizedBox.shrink();
-
+    // Anahtarı olmayanlarda da gösterilir: `availableModels()` anahtar yoksa
+    // uygulamanın yerleşik tercih listesini döndürüyor ve dahili (Firebase)
+    // yol da seçilen modeli uyguluyor. Eskiden buradaki anahtar koşulu
+    // seçiciyi anahtarsız kullanıcıdan tamamen gizliyordu.
     return FutureBuilder<List<String>>(
       future: ref.read(geminiServiceProvider).availableModels(),
       builder: (context, snapshot) {
         final models = snapshot.data ?? const <String>[];
         if (models.isEmpty) return const SizedBox.shrink();
+        final selected = ref.watch(aiTaskModelsProvider);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _modelDropdown(
-              label: l10n.aiModelChat,
-              models: models,
-              value: ref.watch(chatModelProvider),
-              autoLabel: l10n.aiModelAuto,
-              onChanged: (v) => ref.read(chatModelProvider.notifier).set(v),
-            ),
-            const SizedBox(height: 10),
-            _modelDropdown(
-              label: l10n.aiModelVoice,
-              models: models,
-              value: ref.watch(voiceModelProvider),
-              autoLabel: l10n.aiModelAuto,
-              onChanged: (v) => ref.read(voiceModelProvider.notifier).set(v),
-            ),
-            const SizedBox(height: 6),
+            for (final task in AiTask.values) ...[
+              _modelDropdown(
+                label: _taskLabel(l10n, task),
+                models: models,
+                value: selected[task],
+                autoLabel: l10n.aiModelAuto,
+                onChanged: (v) =>
+                    ref.read(aiTaskModelsProvider.notifier).set(task, v),
+              ),
+              const SizedBox(height: 10),
+            ],
             Text(
               l10n.aiModelsInfo,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -822,6 +819,14 @@ class _ModelSelectors extends ConsumerWidget {
       },
     );
   }
+
+  static String _taskLabel(AppLocalizations l10n, AiTask task) =>
+      switch (task) {
+        AiTask.general => l10n.aiModelChat,
+        AiTask.document => l10n.aiModelDocument,
+        AiTask.translate => l10n.aiModelTranslate,
+        AiTask.voice => l10n.aiModelVoice,
+      };
 
   Widget _modelDropdown({
     required String label,

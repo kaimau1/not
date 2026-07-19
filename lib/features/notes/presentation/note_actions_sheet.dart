@@ -9,6 +9,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
+import 'pdf_export_screen.dart';
 
 /// Nota basılı tutunca açılan hızlı işlem menüsü: paylaş, kopyala,
 /// arşivle, kilitle, seç, sil. Kilitli notun içeriği kimlik doğrulaması
@@ -68,6 +69,11 @@ Future<void> showNoteActionsSheet(
               onTap: () => Navigator.pop(sheetContext, 'copy'),
             ),
             ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: Text(l10n.exportPdf),
+              onTap: () => Navigator.pop(sheetContext, 'pdf'),
+            ),
+            ListTile(
               leading: Icon(
                 note.archivedAt != null
                     ? Icons.unarchive_outlined
@@ -124,6 +130,13 @@ Future<void> showNoteActionsSheet(
           text: text,
           subject: note.title.trim().isEmpty ? l10n.appName : note.title.trim(),
         ),
+      );
+    case 'pdf':
+      // Kilitli notun içeriği PDF'e de kimlik doğrulaması olmadan çıkmasın.
+      if (!await unlockIfNeeded()) return;
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => PdfExportScreen(note: note)),
       );
     case 'copy':
       if (!await unlockIfNeeded()) return;

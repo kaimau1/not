@@ -11,6 +11,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
+import '../../ai/presentation/read_document.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -244,6 +245,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         ),
                                         'mail' => context.push('/mail'),
                                         'briefing' => context.push('/briefing'),
+                                        'listen' => pickAndReadDocument(
+                                          context,
+                                        ),
                                         'reminders' => context.push(
                                           '/reminders',
                                         ),
@@ -290,6 +294,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               Icons.wb_sunny_outlined,
                                             ),
                                             title: Text(l10n.briefingTitle),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'listen',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.headphones_outlined,
+                                            ),
+                                            title: Text(l10n.readDocument),
                                           ),
                                         ),
                                         const PopupMenuDivider(),

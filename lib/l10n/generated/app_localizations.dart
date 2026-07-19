@@ -1327,8 +1327,20 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelChat.
   ///
   /// In tr, this message translates to:
-  /// **'Sohbet ve AI özellikleri'**
+  /// **'Özet, başlık, etiket ve sohbet'**
   String get aiModelChat;
+
+  /// No description provided for @aiModelDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast ve belge sohbeti'**
+  String get aiModelDocument;
+
+  /// No description provided for @aiModelTranslate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çeviri'**
+  String get aiModelTranslate;
 
   /// No description provided for @aiModelVoice.
   ///
@@ -1345,7 +1357,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelsInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Liste Google\'dan canlı çekilir. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.'**
+  /// **'Her iş için ayrı model seçebilirsin: kısa metin işleri hızlı modelle yeter, uzun belge işi yetenekli model ister. Seçtiğin model kota doldurur veya kaldırılırsa sıradaki otomatik denenir.'**
   String get aiModelsInfo;
 
   /// No description provided for @clearNote.
@@ -1813,14 +1825,32 @@ abstract class AppLocalizations {
   /// No description provided for @listenReadingPdf.
   ///
   /// In tr, this message translates to:
-  /// **'PDF okunuyor...'**
+  /// **'Belge okunuyor...'**
   String get listenReadingPdf;
+
+  /// No description provided for @listenConvertWithAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ ile dönüştür'**
+  String get listenConvertWithAi;
 
   /// No description provided for @listenMakePodcast.
   ///
   /// In tr, this message translates to:
-  /// **'Podcast\'e dönüştür (akıcı anlatım)'**
+  /// **'Tam podcast'**
   String get listenMakePodcast;
+
+  /// No description provided for @listenMakePodcastSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet podcast'**
+  String get listenMakePodcastSummary;
+
+  /// No description provided for @listenOriginalText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özgün metin'**
+  String get listenOriginalText;
 
   /// No description provided for @listenPodcastReady.
   ///
@@ -1828,17 +1858,65 @@ abstract class AppLocalizations {
   /// **'Podcast anlatımı hazır'**
   String get listenPodcastReady;
 
-  /// No description provided for @listenNoTextLayer.
+  /// No description provided for @listenNoText.
   ///
   /// In tr, this message translates to:
-  /// **'Bu PDF taranmış görüntülerden oluşuyor, metin katmanı yok. Sesli okuma için metin gerekiyor.'**
-  String get listenNoTextLayer;
+  /// **'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.'**
+  String get listenNoText;
 
   /// No description provided for @listenToPdf.
   ///
   /// In tr, this message translates to:
   /// **'Sesli dinle: {name}'**
   String listenToPdf(String name);
+
+  /// No description provided for @readDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge oku (Word, PDF, sunum)'**
+  String get readDocument;
+
+  /// No description provided for @readDocUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu dosya türü okunamıyor.'**
+  String get readDocUnsupported;
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF olarak dışa aktar'**
+  String get exportPdf;
+
+  /// No description provided for @pdfTitleField.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get pdfTitleField;
+
+  /// No description provided for @pdfContentField.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçerik'**
+  String get pdfContentField;
+
+  /// No description provided for @pdfMarkupHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satır başındaki işaretler biçime dönüşür: [x] ve [ ] onay kutusu, 1. numaralı liste, - madde imi.'**
+  String get pdfMarkupHint;
+
+  /// No description provided for @pdfIncludeDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarihi ekle'**
+  String get pdfIncludeDate;
+
+  /// No description provided for @pdfPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önizle'**
+  String get pdfPreview;
 
   /// No description provided for @largeAttachmentTitle.
   ///

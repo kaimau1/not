@@ -3,22 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
-import '../../notes/data/pdf_text.dart';
-import '../../notes/domain/attachment.dart';
 import '../data/gemini_service.dart';
 
-/// Bir PDF'i sesli dinleme ekranı. İki mod var:
+/// Bir belgeyi sesli dinleme ekranı. Üç mod var:
 ///
-/// - **Belgeyi oku**: metin çıkarılır, temizlenir ve cihaz sesiyle okunur.
-///   Bedava, çevrimdışı, anında.
-/// - **Podcast**: metin önce Gemini'ye verilip akıcı bir anlatıya çevrilir,
-///   sonra okunur. Bir model çağrısı harcar ama dinlenebilirliği asıl bu
-///   sağlar — ham PDF metni sesli okunduğunda tablo kırıntıları ve dipnotlar
-///   da okunur.
+/// - **Belgeyi oku**: metin çıkarılır ve cihaz sesiyle okunur. Bedava,
+///   çevrimdışı, anında.
+/// - **Tam podcast**: metin Gemini'ye verilip akıcı bir anlatıya çevrilir.
+///   Bir model çağrısı harcar ama dinlenebilirliği asıl bu sağlar — ham belge
+///   metni sesli okunduğunda tablo kırıntıları ve dipnotlar da okunur.
+/// - **Özet podcast**: aynı çağrı, "kısalt" talimatıyla.
+///
+/// Ekran metnin nereden geldiğini bilmez; [loadText] ne verirse onu okur.
+/// PDF, Word, PowerPoint ve düz metin aynı ekranı kullanıyor.
 class ListenScreen extends ConsumerStatefulWidget {
-  const ListenScreen({super.key, required this.attachment});
+  const ListenScreen({
+    super.key,
+    required this.title,
+    required this.loadText,
+  });
 
-  final Attachment attachment;
+  final String title;
+  final Future<String> Function() loadText;
 
   @override
   ConsumerState<ListenScreen> createState() => _ListenScreenState();
@@ -26,8 +32,10 @@ class ListenScreen extends ConsumerStatefulWidget {
 
 class _ListenScreenState extends ConsumerState<ListenScreen> {
   String? _text;
+  String? _original;
   String? _error;
   bool _busy = true;
+  bool _generating = false;
   bool _isPodcast = false;
 
   @override
@@ -49,20 +57,20 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       _error = null;
     });
     try {
-      final raw = await PdfText.extract(widget.attachment.localPath);
-      final cleaned = PdfText.cleanForSpeech(raw);
+      final text = await widget.loadText();
       if (!mounted) return;
-      if (cleaned.trim().length < 40) {
-        // Taranmış PDF: metin katmanı yok. OCR ayrı bir iş, sessizce boş
-        // ekran göstermektense sebebini söylüyoruz.
+      if (text.trim().length < 40) {
+        // Taranmış PDF ya da yalnız görsel içeren sunum: okunacak metin yok.
+        // OCR ayrı bir iş; sessizce boş ekran göstermektense sebebini söyle.
         setState(() {
-          _error = context.l10n.listenNoTextLayer;
+          _error = context.l10n.listenNoText;
           _busy = false;
         });
         return;
       }
       setState(() {
-        _text = cleaned;
+        _text = text;
+        _original = text;
         _isPodcast = false;
         _busy = false;
       });
@@ -75,31 +83,40 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     }
   }
 
-  Future<void> _makePodcast() async {
-    final source = _text;
+  Future<void> _makePodcast({required bool summarize}) async {
+    final source = _original;
     if (source == null) return;
     await ref.read(speechOutputProvider.notifier).stop();
     setState(() {
-      _busy = true;
+      _generating = true;
       _error = null;
     });
     try {
       final script = await ref
           .read(geminiServiceProvider)
-          .podcastScript(source, title: widget.attachment.fileName);
+          .podcastScript(source, title: widget.title, summarize: summarize);
       if (!mounted) return;
       setState(() {
         _text = script;
         _isPodcast = true;
-        _busy = false;
+        _generating = false;
       });
     } on GeminiException catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.message;
-        _busy = false;
+        _generating = false;
       });
     }
+  }
+
+  Future<void> _showOriginal() async {
+    await ref.read(speechOutputProvider.notifier).stop();
+    if (!mounted) return;
+    setState(() {
+      _text = _original;
+      _isPodcast = false;
+    });
   }
 
   @override
@@ -112,19 +129,23 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.attachment.fileName,
-          overflow: TextOverflow.ellipsis,
-        ),
+        title: Text(widget.title, overflow: TextOverflow.ellipsis),
+        actions: [
+          if (_isPodcast)
+            TextButton(
+              onPressed: _generating ? null : _showOriginal,
+              child: Text(l10n.listenOriginalText),
+            ),
+        ],
       ),
-      body: _busy
+      body: _busy || _generating
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 12),
-                  Text(_isPodcast ? l10n.generating : l10n.listenReadingPdf),
+                  Text(_generating ? l10n.generating : l10n.listenReadingPdf),
                 ],
               ),
             )
@@ -212,15 +233,34 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                             ],
                           ],
                         ),
-                        if (!_isPodcast)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: TextButton.icon(
-                              onPressed: _makePodcast,
-                              icon: const Icon(Icons.podcasts, size: 18),
-                              label: Text(l10n.listenMakePodcast),
-                            ),
+                        if (!_isPodcast) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            l10n.listenConvertWithAi,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton.icon(
+                                  onPressed: () =>
+                                      _makePodcast(summarize: false),
+                                  icon: const Icon(Icons.podcasts, size: 18),
+                                  label: Text(l10n.listenMakePodcast),
+                                ),
+                              ),
+                              Expanded(
+                                child: TextButton.icon(
+                                  onPressed: () => _makePodcast(summarize: true),
+                                  icon: const Icon(Icons.compress, size: 18),
+                                  label: Text(l10n.listenMakePodcastSummary),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
