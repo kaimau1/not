@@ -103,11 +103,25 @@ class GmailAuth {
   Future<http.Client> getClient() async {
     if (_isWindows) return _desktopClient();
     await _ensureInitialized();
-    final authorization = await GoogleSignIn.instance.authorizationClient
-        .authorizeScopes(const [AppConstants.gmailReadonlyScope]);
-    return authorization.authClient(
-      scopes: const [AppConstants.gmailReadonlyScope],
-    );
+    const scopes = [AppConstants.gmailReadonlyScope];
+    // Google oturumu Firebase oturumundan BAĞIMSIZDIR: uygulama yeniden
+    // açıldığında Firebase girişi durur ama google_sign_in'in oturumu düşer.
+    // Eskiden getClient() doğrudan authorizeScopes çağırıyordu; yeniden
+    // açılıştan sonra yetkilendirilecek bir Google kullanıcısı olmadığından
+    // Gmail "bir sorun oluştu" hatası veriyordu (madde: Gmail çalışmıyor).
+    // Önce SESSİZ yetki denenir; yoksa kullanıcı yeniden doğrulanıp kapsam
+    // istenir.
+    var authorization = await GoogleSignIn.instance.authorizationClient
+        .authorizationForScopes(scopes);
+    if (authorization == null) {
+      final account = await GoogleSignIn.instance.authenticate(
+        scopeHint: scopes,
+      );
+      authorization = await account.authorizationClient.authorizeScopes(scopes);
+      // Hesap değişmiş olabilir; Ayarlar'daki e-postayı güncel tut.
+      await _prefs.setString(accountKey, account.email);
+    }
+    return authorization.authClient(scopes: scopes);
   }
 
   Future<String> _ensureDesktopScope({bool forcePrompt = false}) async {
