@@ -30,6 +30,8 @@ class Attachment {
     this.sizeBytes = 0,
     this.width,
     this.height,
+    this.displayWidth,
+    this.align = 'center',
     this.createdAt,
   });
 
@@ -47,6 +49,14 @@ class Attachment {
   final int sizeBytes;
   final int? width;
   final int? height;
+
+  /// Görselin notta gösterileceği genişlik: içerik genişliğinin oranı (0–1).
+  /// null = varsayılan (tam genişlik). Kullanıcı elle küçültüp büyütür.
+  final double? displayWidth;
+
+  /// Görselin nottaki yatay hizası: 'left' | 'center' | 'right'. Konumu elle
+  /// değiştirmenin (satır içi bloklarda) karşılığı.
+  final String align;
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
@@ -55,6 +65,8 @@ class Attachment {
     String? storagePath,
     String? downloadUrl,
     String? localPath,
+    double? displayWidth,
+    String? align,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -66,6 +78,8 @@ class Attachment {
     sizeBytes: sizeBytes,
     width: width,
     height: height,
+    displayWidth: displayWidth ?? this.displayWidth,
+    align: align ?? this.align,
     createdAt: createdAt,
   );
 
@@ -80,6 +94,8 @@ class Attachment {
     sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
     width: (map['width'] as num?)?.toInt(),
     height: (map['height'] as num?)?.toInt(),
+    displayWidth: (map['displayWidth'] as num?)?.toDouble(),
+    align: map['align'] as String? ?? 'center',
     createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
   );
 
@@ -94,6 +110,8 @@ class Attachment {
     'sizeBytes': sizeBytes,
     if (width != null) 'width': width,
     if (height != null) 'height': height,
+    if (displayWidth != null) 'displayWidth': displayWidth,
+    'align': align,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),
