@@ -32,8 +32,26 @@ Inter tipografi, gölgesiz/ince kenarlıklı premium yüzeyler, 12–18px yuvarl
 - **Ayarlar:** Profil/senkron kartı, tema seçici (Sistem/Açık/Koyu/Kağıt),
   gruplu satırlar ve anahtarlar.
 
+## Revizyon (geri bildirim sonrası)
+
+- **Logo düzeltildi:** Giriş ekranındaki yanlış "N" harfi yerine uygulamanın gerçek
+  kimliğine uygun **yapışkan not** logosu (indigo squircle + beyaz not).
+- **Klasik simgeler:** Emoji/yapmacık simgeler kaldırıldı; tümü uygulamanın mevcut
+  Material "outlined" diline sadık **tek renk vektör** simgelerle değiştirildi
+  (bkz. `00-icon-set.png`).
+- **Renkler sadeleştirildi:** İndigo dolgu ağırlığı azaltıldı; beyaz/nötr yüzeyler
+  öne alındı, indigo yalnızca vurgu (buton, FAB, seçili çip, küçük simge) olarak.
+- **Ayarlar:** Yeni gruplu düzen ve tema seçici korundu.
+
+## Kaynak
+
+- `mockups.html` — 6 ekranın tamamı (tek dosya, `#login` … `#settings` hash'leriyle).
+- `icons.html` — klasik simge seti.
+- Render: headless Chromium ile 390×844 @2x PNG.
+
 ## Notlar
 
-- Tipografi: Uygulama **Inter Tight** kullanıyor; Figma ortamında yalnızca **Inter**
-  mevcut olduğundan mockup'larda Inter kullanıldı (görsel olarak neredeyse aynı).
-- Bu klasör yalnızca tasarım referansıdır; Flutter koduna henüz uygulanmadı.
+- Tipografi: Uygulama **Inter Tight** kullanıyor; mockup'lar sistem sans-serif ile
+  render edildi (görsel olarak çok yakın).
+- Bu klasör tasarım referansıdır; Flutter koduna henüz uygulanmadı. Figma dosyasının
+  (v1) simge/logo güncellemesi, Figma Starter kotası açılınca senkronlanacak.

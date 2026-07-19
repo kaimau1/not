@@ -1,0 +1,359 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+:root{
+ --surface:#FCFBFF;--card:#F3F1F9;--card2:#ECEAF3;--line:rgba(198,197,208,.55);
+ --ink:#1B1B20;--sub:#484851;--faint:#8A8A93;
+ --indigo:#4A5CCC;--ic:#E3E4F6;--onic:#1E2668;
+ --red:#FFF1F0;--amber:#FFF7E0;--green:#EFF8EE;--blue:#EDF4FE;--purple:#F6F0FC;
+}
+body{background:#5b5e6b}
+.screen{display:none}
+.phone{width:390px;height:844px;background:var(--surface);color:var(--ink);position:relative;overflow:hidden}
+svg{display:block;fill:currentColor}
+.ico{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--sub)}
+.ico svg{width:100%;height:100%}
+/* status bar */
+.status{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.status .t{font-size:14px;font-weight:600}
+.status .r{display:flex;align-items:center;gap:6px;color:var(--ink)}
+.btn-i{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+/* generic */
+.row{display:flex;align-items:center}
+.fill{flex:1}
+.hd{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--sub);padding:6px 16px}
+/* dashboard */
+.appbar{display:flex;align-items:center;gap:2px;padding:4px 8px 4px 12px}
+.search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border-radius:12px;padding:10px 12px 10px 14px}
+.search .ph{flex:1;color:var(--faint);font-size:14px}
+.chips{display:flex;gap:8px;padding:4px 12px 10px;align-items:center;overflow:hidden}
+.chip{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500;color:var(--sub);white-space:nowrap}
+.chip.sel{background:var(--ic);border-color:transparent;color:var(--onic);font-weight:600}
+.cols{column-count:2;column-gap:8px;padding:4px 12px}
+.card{break-inside:avoid;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;padding:11px 12px 12px;background:#fff}
+.card .ct{display:flex;align-items:flex-start;gap:6px;margin-bottom:7px}
+.card .ct .tt{flex:1;font-size:15px;font-weight:600;line-height:19px}
+.card .ct .pin{width:15px;height:15px;color:var(--sub);flex:none;margin-top:1px}
+.card .bd{font-size:13px;color:var(--sub);line-height:19px}
+.chk{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}
+.box{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center}
+.box.on{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.box.on svg{width:11px;height:11px}
+.chk .done{color:#9a9aa2}
+.mono{font-family:'SF Mono',ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink);line-height:18px}
+.tag{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.55);border:1px solid var(--line);font-size:11px;font-weight:500;color:var(--sub)}
+.tag .ico{width:13px;height:13px;color:var(--sub)}
+.fabs{position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.fab-mic{width:48px;height:48px;border-radius:50%;background:var(--card2);color:var(--sub);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.10)}
+.fab-add{width:56px;height:56px;border-radius:18px;background:#DDE0FF;color:var(--onic);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(74,92,204,.22)}
+.fab-add .ico{width:30px;height:30px;color:var(--onic)}
+.fab-mic .ico{color:var(--sub)}
+/* editor */
+.eb{display:flex;align-items:center;gap:2px;padding:2px 8px 2px 6px}
+.saved{display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:12px;color:var(--sub);font-weight:500}
+.saved .d{width:7px;height:7px;border-radius:50%;background:#3FA85B}
+.content{padding:8px 20px}
+.title{font-size:26px;font-weight:700;letter-spacing:-.4px}
+.meta{font-size:12px;color:var(--faint);margin-top:6px}
+.body{font-size:15px;color:var(--ink);line-height:23px;margin-top:12px}
+.ck2{display:flex;align-items:center;gap:10px;margin-top:11px;font-size:15px}
+.box2{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center}
+.box2.on{background:var(--indigo);border-color:var(--indigo);color:#fff}.box2.on svg{width:12px;height:12px}
+.imgph{width:210px;height:120px;border-radius:12px;margin-top:16px;background:linear-gradient(135deg,#8A93DE,#4A5CCC);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.9)}
+.toolbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:2px;padding:10px 14px 16px;border-top:1px solid var(--line);background:var(--surface)}
+#editor .toolbar{position:static;margin-top:20px;background:#F3F1F9;border:1px solid var(--line);border-radius:16px}
+#editor .content{padding-bottom:0}
+.toolbar .btn-i{width:44px;height:44px}
+.aibtn{margin-left:auto;display:flex;align-items:center;gap:6px;padding:9px 15px;border-radius:12px;background:var(--ic);color:var(--onic);font-size:13px;font-weight:600}
+.aibtn .ico{width:16px;height:16px;color:var(--indigo)}
+/* chat */
+.cbar{display:flex;align-items:center;gap:10px;padding:2px 12px 8px 6px}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center}
+.avatar .ico{width:18px;height:18px;color:#fff}
+.ctitle{font-size:16px;font-weight:600;line-height:18px}
+.csub{font-size:11px;color:var(--sub);margin-top:1px}
+.msgs{padding:8px 14px;display:flex;flex-direction:column;gap:10px}
+.bub{max-width:270px;padding:10px 14px;border-radius:16px;font-size:14.5px;line-height:21px}
+.me{align-self:flex-end;background:#DFE1FF;color:#1c2260}
+.ai{align-self:flex-start;background:#EDECF3;color:var(--ink)}
+.rchip{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:7px 11px;border-radius:10px;background:rgba(255,255,255,.75);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink)}
+.rchip .ico{width:14px;height:14px;color:var(--indigo)}
+.inbar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:8px 12px 16px;background:var(--surface)}
+.mic-t{width:44px;height:44px;border-radius:50%;background:var(--card2);color:var(--sub);display:flex;align-items:center;justify-content:center}
+.field{flex:1;background:var(--card);border-radius:22px;padding:12px 16px;color:var(--faint);font-size:14px}
+.send{width:44px;height:44px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center}
+.send .ico,.mic-t .ico{color:inherit}
+/* translator */
+.tbar{display:flex;align-items:center;gap:8px;padding:2px 12px 6px 6px}
+.ttitle{flex:1;font-size:18px;font-weight:600}
+.lang{display:flex;align-items:center;gap:10px;padding:2px 16px 10px}
+.pill{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--card);border-radius:12px;padding:11px;font-size:14px;font-weight:600}
+.pill .ico{width:14px;height:14px;color:var(--sub)}
+.swap{width:38px;height:38px;border-radius:50%;background:var(--ic);color:var(--onic);display:flex;align-items:center;justify-content:center;flex:none}
+.swap .ico{width:18px;height:18px;color:var(--onic)}
+.panels{padding:2px 16px;display:flex;flex-direction:column;gap:12px}
+.panel{border-radius:18px;padding:16px 18px}
+.panel.src{background:var(--card)}
+.panel.dst{background:#EEEFFA;border:1px solid #d7d9f2}
+.panel .ph{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--sub)}
+.panel.dst .ph{color:var(--indigo)}
+.panel .ph .ico{width:15px;height:15px;color:inherit;margin-left:auto}
+.panel .txt{font-size:20px;line-height:28px;margin-top:10px;font-weight:500}
+.panel.dst .txt{color:#282f6b;font-weight:600}
+.livedot{width:8px;height:8px;border-radius:50%;background:#E5484D;display:inline-block}
+.micwrap{display:flex;flex-direction:column;align-items:center;gap:10px;position:absolute;left:0;right:0;bottom:26px}
+.ring{width:84px;height:84px;border-radius:50%;background:var(--ic);display:flex;align-items:center;justify-content:center}
+.micbig{width:64px;height:64px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(74,92,204,.4)}
+.micbig .ico{width:26px;height:26px;color:#fff}
+.mhint{font-size:13px;color:var(--sub);font-weight:500}
+/* settings */
+.sbar{display:flex;align-items:center;gap:8px;padding:2px 12px 6px 6px}
+.stitle{font-size:20px;font-weight:700}
+.scroll{padding:6px 16px;display:flex;flex-direction:column;gap:18px}
+.prof{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.pav{width:48px;height:48px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700}
+.pn{font-size:16px;font-weight:600}
+.pe{font-size:12.5px;color:var(--sub);margin-top:2px}
+.psy{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--sub);margin-top:4px;font-weight:500}
+.psy .d{width:7px;height:7px;border-radius:50%;background:#3FA85B}
+.grp .glb{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--sub);margin-bottom:8px}
+.seg{display:flex;gap:8px}
+.tc{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 4px 10px;border-radius:12px;background:var(--card);border:1.5px solid transparent;font-size:12px;color:var(--sub);font-weight:500}
+.tc.sel{background:var(--ic);border-color:rgba(74,92,204,.45);color:var(--onic);font-weight:600}
+.tc .ico{width:22px;height:22px;color:var(--sub)}
+.tc.sel .ico{color:var(--indigo)}
+.tc .sw{width:22px;height:22px;border-radius:50%;border:1px solid var(--line)}
+.gcard{border-radius:16px;background:var(--card);overflow:hidden}
+.set{display:flex;align-items:center;gap:14px;padding:14px 16px}
+.set+.set{border-top:1px solid rgba(198,197,208,.4)}
+.sic{width:32px;height:32px;border-radius:9px;background:var(--ic);color:var(--onic);display:flex;align-items:center;justify-content:center;flex:none}
+.sic .ico{width:17px;height:17px;color:var(--indigo)}
+.st{font-size:15px;font-weight:500}
+.ss{font-size:12px;color:var(--sub);margin-top:2px}
+.val{font-size:13px;color:var(--sub);font-weight:500}
+.chev{width:20px;height:20px;color:var(--line)}
+.tgl{width:44px;height:26px;border-radius:13px;background:var(--indigo);position:relative;flex:none}
+.tgl.off{background:#C4C4CE}
+.tgl .k{position:absolute;top:3px;left:21px;width:20px;height:20px;border-radius:50%;background:#fff}
+.tgl.off .k{left:3px}
+</style></head><body>
+
+<!-- ================= LOGIN ================= -->
+<div class="screen" id="login"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 32px">
+  <div style="width:92px;height:92px;background:var(--indigo);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(74,92,204,.28)">
+   <svg width="50" height="56" viewBox="0 0 48 54">
+     <path d="M6 1 H33 L47 15 V47 C47 50.3 44.3 53 41 53 H7 C3.7 53 1 50.3 1 47 V7 C1 3.7 3.7 1 6 1 Z" fill="#FFFFFF"/>
+     <path d="M33 1 L47 15 H38 C35.2 15 33 12.8 33 10 Z" fill="#BCC2EC"/>
+     <rect x="9" y="25" width="30" height="3.4" rx="1.7" fill="#4A5CCC"/>
+     <rect x="9" y="33" width="24" height="3.4" rx="1.7" fill="#4A5CCC"/>
+     <rect x="9" y="41" width="17" height="3.4" rx="1.7" fill="#939BE0"/>
+   </svg>
+  </div>
+  <div style="font-size:40px;font-weight:800;letter-spacing:-1px;margin-top:22px">Not</div>
+  <div style="font-size:15px;color:var(--sub);text-align:center;line-height:22px;margin-top:8px;max-width:300px">Notların, hatırlatıcıların ve yapay zekâ<br>asistanın tek yerde — her cihazda senkron.</div>
+  <div style="margin-top:44px;width:100%;background:var(--indigo);color:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:16px;font-weight:600;box-shadow:0 6px 18px rgba(74,92,204,.25)">
+   <span style="width:24px;height:24px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center">
+    <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.8-2 5.1-4.4 6.7v5.6h7.1c4.2-3.8 6.6-9.5 6.6-16.3z"/><path fill="#34A853" d="M24 46c6 0 11-2 14.6-5.4l-7.1-5.6c-2 1.3-4.5 2.1-7.5 2.1-5.8 0-10.6-3.9-12.4-9.1H4.3v5.7C7.9 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.6 27.9c-.5-1.3-.7-2.8-.7-4.4s.3-3 .7-4.4v-5.7H4.3C2.8 16.5 2 20.1 2 23.5s.8 7 2.3 10.1l7.3-5.7z"/><path fill="#EA4335" d="M24 9.9c3.3 0 6.2 1.1 8.5 3.3l6.3-6.3C34.9 3.3 30 1 24 1 15.4 1 7.9 5.9 4.3 13.4l7.3 5.7C13.4 13.8 18.2 9.9 24 9.9z"/></svg>
+   </span>Google ile giriş yap
+  </div>
+  <div style="margin-top:16px;font-size:12px;color:var(--faint);text-align:center">Devam ederek Gizlilik Politikası’nı kabul edersin.</div>
+ </div>
+</div></div>
+
+<!-- ================= DASHBOARD ================= -->
+<div class="screen" id="dashboard"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div class="appbar">
+  <div class="search"><span class="ico" data-ic="search"></span><span class="ph">Notlarda ara</span><span class="ico" data-ic="sparkle" style="color:var(--indigo)"></span></div>
+  <div class="btn-i" data-ic="translate"></div>
+  <div class="btn-i" data-ic="chat"></div>
+  <div class="btn-i" data-ic="more"></div>
+ </div>
+ <div class="chips">
+  <div class="chip sel">Tümü</div>
+  <div class="chip"><span class="ico" data-ic="star" style="width:14px;height:14px"></span>Yıldızlı</div>
+  <div class="chip"><span class="ico" data-ic="lock" style="width:14px;height:14px"></span>Kilitli</div>
+  <div class="chip">İş</div>
+ </div>
+ <div class="hd">SABİTLENENLER</div>
+ <div class="cols">
+  <div class="card">
+   <div class="ct"><div class="tt">Market listesi</div><span class="ico pin" data-ic="pin"></span></div>
+   <div class="chk"><span class="box on"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span><span class="done">Süt</span></div>
+   <div class="chk"><span class="box"></span>Yumurta</div>
+   <div class="chk"><span class="box on"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span><span class="done">Ekmek</span></div>
+   <div class="chk"><span class="box"></span>Filtre kahve</div>
+  </div>
+  <div class="card" style="background:var(--amber)">
+   <div class="ct"><div class="tt">Doğum günü fikirleri</div><span class="ico pin" data-ic="pin"></span></div>
+   <div class="bd">• Sürpriz akşam yemeği<br>• Fotoğraf albümü<br>• Hafta sonu kaçamağı</div>
+  </div>
+ </div>
+ <div class="hd">DİĞERLERİ</div>
+ <div class="cols">
+  <div class="card" style="background:var(--blue)"><div class="ct"><div class="tt">Toplantı notları</div></div><div class="bd">Q3 hedefleri gözden geçirildi. Tasarım ekibi yeni akışı cuma sunacak.</div><span class="tag">İş</span></div>
+  <div class="card"><div class="ct"><div class="tt">Kod parçacığı</div></div><div class="mono">flutter pub get<br>flutter run</div></div>
+  <div class="card" style="background:var(--purple)"><div class="ct"><div class="tt">Kitap önerileri</div></div><div class="bd">Sapiens · Atomik Alışkanlıklar · Hayvan Çiftliği</div></div>
+  <div class="card" style="background:var(--green)"><div class="ct"><div class="tt">Tarif — Mercimek çorbası</div></div><div class="bd">Kırmızı mercimek, soğan, havuç, patates. 25 dk kaynat, blenderdan geçir, üzerine nane.</div><span class="tag">Yemek</span></div>
+  <div class="card"><div class="ct"><div class="tt">Fikirler</div></div><div class="bd">Uygulamaya haftalık brifing sesi eklenebilir.</div></div>
+  <div class="card" style="background:var(--red)"><div class="ct"><div class="tt">Acil</div></div><div class="bd">Salı 14:00 diş randevusu — hatırlatıcı kuruldu.</div><span class="tag"><span class="ico" data-ic="alarm"></span>Hatırlatıcı</span></div>
+ </div>
+ <div class="fabs"><div class="fab-mic"><span class="ico" data-ic="mic"></span></div><div class="fab-add"><span class="ico" data-ic="add"></span></div></div>
+</div></div>
+
+<!-- ================= EDITOR ================= -->
+<div class="screen" id="editor"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div class="eb">
+  <div class="btn-i" data-ic="back" style="color:var(--ink)"></div>
+  <div class="fill"></div>
+  <div class="saved"><span class="d"></span>Kaydedildi</div>
+  <div class="btn-i" data-ic="star"></div>
+  <div class="btn-i" data-ic="palette"></div>
+  <div class="btn-i" data-ic="more"></div>
+ </div>
+ <div class="content">
+  <div class="title">Hafta sonu planı</div>
+  <div class="meta">19 Temmuz 2026  ·  48 kelime</div>
+  <div class="body">Cumartesi sabahı erken çık, kahvaltıyı sahilde yap. Öğleden sonra müze; akşam arkadaşlarla buluşma.</div>
+  <div class="ck2"><span class="box2 on"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span><span style="color:#9a9aa2">Otel rezervasyonu</span></div>
+  <div class="ck2"><span class="box2 on"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></span><span style="color:#9a9aa2">Tren biletleri</span></div>
+  <div class="ck2"><span class="box2"></span><span>Bavul hazırlığı</span></div>
+  <div class="imgph"><span class="ico" data-ic="image" style="width:34px;height:34px;color:#fff"></span></div>
+ </div>
+ <div class="toolbar">
+  <div class="btn-i" data-ic="checklist"></div>
+  <div class="btn-i" data-ic="camera"></div>
+  <div class="btn-i" data-ic="mic"></div>
+  <div class="btn-i" data-ic="edit"></div>
+  <div class="btn-i" data-ic="attach"></div>
+  <div class="aibtn"><span class="ico" data-ic="sparkle"></span>Yapay zekâ</div>
+ </div>
+</div></div>
+
+<!-- ================= CHAT ================= -->
+<div class="screen" id="chat"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div class="cbar">
+  <div class="btn-i" data-ic="back" style="color:var(--ink)"></div>
+  <div class="avatar"><span class="ico" data-ic="sparkle"></span></div>
+  <div class="fill"><div class="ctitle">Asistan</div><div class="csub">Notların üzerinde çalışır</div></div>
+ </div>
+ <div class="msgs">
+  <div class="bub me">Geçen ay yazdığım mercimek çorbası tarifini bul.</div>
+  <div class="bub ai">Buldum 👍 “Tarif — Mercimek çorbası” notun: kırmızı mercimek, soğan, havuç, patates; 25 dk kaynatıp blenderdan geçir.</div>
+  <div class="bub me">Yarın 9’a diş randevusu notu ekle, hatırlatıcılı.</div>
+  <div class="bub ai">Tamamdır. “Diş randevusu” notunu oluşturdum ve yarın 09:00 için hatırlatıcı kurdum.<br><span class="rchip"><span class="ico" data-ic="alarm"></span>Yarın 09:00 · Hatırlatıcı</span></div>
+ </div>
+ <div class="inbar">
+  <div class="mic-t"><span class="ico" data-ic="mic"></span></div>
+  <div class="field">Bir şey sor ya da yaptır…</div>
+  <div class="send"><span class="ico" data-ic="send"></span></div>
+ </div>
+</div></div>
+
+<!-- ================= TRANSLATOR ================= -->
+<div class="screen" id="translator"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div class="tbar">
+  <div class="btn-i" data-ic="back" style="color:var(--ink)"></div>
+  <div class="ttitle">Canlı Çeviri</div>
+  <div class="btn-i" data-ic="history"></div>
+ </div>
+ <div class="lang">
+  <div class="pill">Türkçe <span class="ico" data-ic="down"></span></div>
+  <div class="swap"><span class="ico" data-ic="swap"></span></div>
+  <div class="pill">İngilizce <span class="ico" data-ic="down"></span></div>
+ </div>
+ <div class="panels">
+  <div class="panel src">
+   <div class="ph"><span class="livedot"></span> TÜRKÇE — dinleniyor <span class="ico" data-ic="volume"></span></div>
+   <div class="txt">Toplantı yarın saat üçe ertelendi, herkese haber verir misin?</div>
+  </div>
+  <div class="panel dst">
+   <div class="ph">İNGİLİZCE <span class="ico" data-ic="volume"></span></div>
+   <div class="txt">The meeting is postponed to three tomorrow — could you let everyone know?</div>
+  </div>
+ </div>
+ <div class="micwrap">
+  <div class="ring"><div class="micbig"><span class="ico" data-ic="mic"></span></div></div>
+  <div class="mhint">Dinlemeyi durdurmak için dokun</div>
+ </div>
+</div></div>
+
+<!-- ================= SETTINGS ================= -->
+<div class="screen" id="settings"><div class="phone">
+ <div class="status"><div class="t">9:41</div><div class="r" data-status></div></div>
+ <div class="sbar"><div class="btn-i" data-ic="back" style="color:var(--ink)"></div><div class="stitle">Ayarlar</div></div>
+ <div class="scroll">
+  <div class="prof">
+   <div class="pav">F</div>
+   <div class="fill"><div class="pn">Fatih Şenel</div><div class="pe">hekimasistanitr@gmail.com</div><div class="psy"><span class="d"></span>Senkron açık · az önce</div></div>
+  </div>
+  <div class="grp"><div class="glb">GÖRÜNÜM</div>
+   <div class="seg">
+    <div class="tc"><span class="sw" style="background:#B7B9CC"></span>Sistem</div>
+    <div class="tc sel"><span class="sw" style="background:#fff"></span>Açık</div>
+    <div class="tc"><span class="sw" style="background:#0E0E11"></span>Koyu</div>
+    <div class="tc"><span class="sw" style="background:#F0E6CC"></span>Kağıt</div>
+   </div>
+  </div>
+  <div class="grp"><div class="glb">YAPAY ZEKÂ</div>
+   <div class="gcard">
+    <div class="set"><div class="sic"><span class="ico" data-ic="sparkle"></span></div><div class="fill"><div class="st">Gemini API anahtarı</div><div class="ss">Kendi anahtarınla sınırsız</div></div><div class="val">Ayarlı</div><span class="ico chev" data-ic="chev"></span></div>
+    <div class="set"><div class="sic"><span class="ico" data-ic="search"></span></div><div class="fill"><div class="st">Semantik arama</div><div class="ss">Anlamca en yakın notlar</div></div><div class="tgl"><div class="k"></div></div></div>
+    <div class="set"><div class="sic"><span class="ico" data-ic="sun"></span></div><div class="fill"><div class="st">Günlük brifing</div><div class="ss">Her sabah 08:00</div></div><div class="tgl"><div class="k"></div></div></div>
+   </div>
+  </div>
+  <div class="grp"><div class="glb">SENKRON & GİZLİLİK</div>
+   <div class="gcard">
+    <div class="set"><div class="sic"><span class="ico" data-ic="cloud"></span></div><div class="fill"><div class="st">Firebase senkron</div><div class="ss">Firestore + Storage</div></div><div class="tgl"><div class="k"></div></div></div>
+    <div class="set"><div class="sic"><span class="ico" data-ic="lock"></span></div><div class="fill"><div class="st">Gizlilik</div></div><span class="ico chev" data-ic="chev"></span></div>
+    <div class="set"><div class="sic"><span class="ico" data-ic="info"></span></div><div class="fill"><div class="st">Hakkında</div></div><div class="val">v2.4.0</div><span class="ico chev" data-ic="chev"></span></div>
+   </div>
+  </div>
+ </div>
+</div></div>
+
+<script>
+const P={
+ search:'M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z',
+ add:'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+ mic:'M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z',
+ star:'M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z',
+ sparkle:'M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z',
+ translate:'M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 5l1.62-4.33L19.12 15h-3.24z',
+ chat:'M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z',
+ more:'M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+ back:'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
+ send:'M2.01 21L23 12 2.01 3 2 10l15 2-15 2z',
+ camera:'M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zM9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z',
+ edit:'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+ attach:'M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5S13.5 3.62 13.5 5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S9 2.79 9 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z',
+ checklist:'M22 7l-1.41-1.42L14 12.17l-2.59-2.58L10 11l4 4 8-8zM2 8h8V6H2v2zm0 8h8v-2H2v2zm0-4h8v-2H2v2z',
+ palette:'M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z',
+ swap:'M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z',
+ volume:'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z',
+ cloud:'M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4s1.79-4 4-4h.71C7.37 7.69 9.48 6 12 6c3.04 0 5.5 2.46 5.5 5.5v.5H19c1.66 0 3 1.34 3 3s-1.34 3-3 3z',
+ lock:'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z',
+ info:'M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
+ sun:'M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm-1 4.95h2V17.5h-2v2.95z',
+ alarm:'M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.62V8zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z',
+ pin:'M16 9V4l1 0c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1l1 0v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z',
+ chev:'M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+ down:'M7 10l5 5 5-5z',
+ history:'M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z',
+ image:'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'
+};
+function svg(p){return '<svg viewBox="0 0 24 24"><path d="'+p+'"/></svg>';}
+const STATUS='<svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4.5" width="3" height="7.5" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1" opacity=".35"/></svg>'
+ +'<svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 3.5C3.2 1.6 5.7 .6 8.5 .6S13.8 1.6 16 3.5"/><path d="M3.4 6.2C4.9 5 6.6 4.3 8.5 4.3s3.6.7 5.1 1.9"/><path d="M5.9 8.8C6.6 8.2 7.5 7.9 8.5 7.9s1.9.3 2.6.9"/><circle cx="8.5" cy="11" r=".6" fill="currentColor" stroke="none"/></svg>'
+ +'<svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.6" y="0.6" width="22" height="11.8" rx="3" fill="none" stroke="currentColor" stroke-opacity=".5"/><rect x="2.4" y="2.4" width="15" height="8.2" rx="1.6"/><rect x="23.4" y="4.2" width="2" height="4.6" rx="1" fill-opacity=".5"/></svg>';
+document.querySelectorAll('[data-ic]').forEach(e=>{const n=e.getAttribute('data-ic');if(P[n]){e.classList.add('ico');e.innerHTML=svg(P[n]);}});
+document.querySelectorAll('[data-status]').forEach(e=>e.innerHTML=STATUS);
+const id=(location.hash||'#login').slice(1);
+const el=document.getElementById(id);if(el)el.style.display='block';
+document.body.style.background=getComputedStyle(document.documentElement).getPropertyValue('--surface');
+</script>
+</body></html>
