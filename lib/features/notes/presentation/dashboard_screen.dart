@@ -36,6 +36,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
 
+  /// "+" menüsünün demirlendiği nokta: mikrofon + "+" sütununun tamamı.
+  final _fabColumnLink = LayerLink();
+
   @override
   void initState() {
     super.initState();
@@ -45,8 +48,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
     // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
     // sonra kontrol et; take() varsa asistanı başlatır.
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _maybeAutostartVoice());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutostartVoice());
   }
 
   /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
@@ -54,9 +56,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void _maybeAutostartVoice() {
     if (!mounted) return;
     if (ref.read(voiceAutostartProvider.notifier).take()) {
-      ref.read(voiceAssistantProvider.notifier).start(
-            micPermissionDeniedText: context.l10n.micPermissionDenied,
-          );
+      ref
+          .read(voiceAssistantProvider.notifier)
+          .start(micPermissionDeniedText: context.l10n.micPermissionDenied);
     }
   }
 
@@ -128,15 +130,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // kontrolle okunur; take() çift başlatmayı önler.)
     ref.listen(voiceAutostartProvider, (previous, next) {
       if (next) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _maybeAutostartVoice());
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _maybeAutostartVoice(),
+        );
       }
     });
 
     final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
-    final semanticActive = ref.watch(semanticSearchEnabledProvider) &&
-        query.trim().length > 2;
+    final semanticActive =
+        ref.watch(semanticSearchEnabledProvider) && query.trim().length > 2;
     final notesAsync = semanticActive
         ? ref.watch(semanticSearchProvider(query.trim()))
         : ref.watch(filteredNotesProvider);
@@ -146,7 +149,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final searchExpanded = _searchFocus.hasFocus &&
+    final searchExpanded =
+        _searchFocus.hasFocus &&
         keyboardOpen &&
         MediaQuery.sizeOf(context).width < 600;
 
@@ -162,196 +166,210 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             child: Stack(
               children: [
                 LayoutBuilder(
-              builder: (context, constraints) {
-                final columns =
-                    (constraints.maxWidth / 220).floor().clamp(2, 6);
-                return CustomScrollView(
-                  slivers: [
-                    if (selectionActive)
-                      SliverAppBar(
-                        floating: true,
-                        snap: true,
-                        pinned: true,
-                        leading: IconButton(
-                          tooltip: l10n.cancel,
-                          icon: const Icon(Icons.close),
-                          onPressed: () => ref
-                              .read(selectedNoteIdsProvider.notifier)
-                              .clear(),
-                        ),
-                        title: Text(l10n.selectedCount(selectedIds.length)),
-                        actions: [
-                          IconButton(
-                            tooltip: l10n.deleteSelected,
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () => _deleteSelected(selectedIds),
-                          ),
-                          const SizedBox(width: 4),
-                        ],
-                      )
-                    else
-                      SliverAppBar(
-                        floating: true,
-                        snap: true,
-                        titleSpacing: searchExpanded ? 0 : 12,
-                        // Genişkenken geri oku: odağı bırakır, bar daralır.
-                        leading: searchExpanded
-                            ? IconButton(
-                                tooltip: l10n.close,
-                                icon: const Icon(Icons.arrow_back),
-                                onPressed: _searchFocus.unfocus,
-                              )
-                            : null,
-                        automaticallyImplyLeading: false,
-                        title: _SearchField(
-                          controller: _searchController,
-                          focusNode: _searchFocus,
-                        ),
-                        actions: searchExpanded
-                            ? const [SizedBox(width: 4)]
-                            : [
-                                IconButton(
-                                  tooltip: l10n.translatorTitle,
-                                  icon: const Icon(Icons.translate),
-                                  onPressed: () => context.push('/translate'),
-                                ),
-                                IconButton(
-                                  tooltip: l10n.chatTitle,
-                                  icon: const Icon(Icons.forum_outlined),
-                                  onPressed: () => context.push('/chat'),
-                                ),
-                                PopupMenuButton<String>(
-                                  // Menü ekranın altına taşıp sistem gezinme
-                                  // çubuğunun arkasında kalıyordu; yükseklik
-                                  // sınırlanınca içerik kaydırılabilir olur ve
-                                  // son maddeler çubuğun altında kalmaz.
-                                  constraints: BoxConstraints(
-                                    maxHeight:
-                                        MediaQuery.sizeOf(context).height * 0.55,
-                                    minWidth: 200,
-                                  ),
-                                  onSelected: (action) => switch (action) {
-                                    'suggestions' =>
-                                      context.push('/suggestions'),
-                                    'mail' => context.push('/mail'),
-                                    'briefing' => context.push('/briefing'),
-                                    'reminders' => context.push('/reminders'),
-                                    'archive' => context.push('/archive'),
-                                    'trash' => context.push('/trash'),
-                                    'settings' => context.push('/settings'),
-                                    _ => null,
-                                  },
-                                  itemBuilder: (context) => [
-                                    // Öneriler ve posta analizi üst bardan
-                                    // buraya taşındı: bar sadeleşti.
-                                    PopupMenuItem(
-                                      value: 'suggestions',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: const Icon(
-                                            Icons.auto_awesome_outlined),
-                                        title: Text(l10n.aiSuggestions),
-                                      ),
+                  builder: (context, constraints) {
+                    final columns = (constraints.maxWidth / 220).floor().clamp(
+                      2,
+                      6,
+                    );
+                    return CustomScrollView(
+                      slivers: [
+                        if (selectionActive)
+                          SliverAppBar(
+                            floating: true,
+                            snap: true,
+                            pinned: true,
+                            leading: IconButton(
+                              tooltip: l10n.cancel,
+                              icon: const Icon(Icons.close),
+                              onPressed: () => ref
+                                  .read(selectedNoteIdsProvider.notifier)
+                                  .clear(),
+                            ),
+                            title: Text(l10n.selectedCount(selectedIds.length)),
+                            actions: [
+                              IconButton(
+                                tooltip: l10n.deleteSelected,
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () => _deleteSelected(selectedIds),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                          )
+                        else
+                          SliverAppBar(
+                            floating: true,
+                            snap: true,
+                            titleSpacing: searchExpanded ? 0 : 12,
+                            // Genişkenken geri oku: odağı bırakır, bar daralır.
+                            leading: searchExpanded
+                                ? IconButton(
+                                    tooltip: l10n.close,
+                                    icon: const Icon(Icons.arrow_back),
+                                    onPressed: _searchFocus.unfocus,
+                                  )
+                                : null,
+                            automaticallyImplyLeading: false,
+                            title: _SearchField(
+                              controller: _searchController,
+                              focusNode: _searchFocus,
+                            ),
+                            actions: searchExpanded
+                                ? const [SizedBox(width: 4)]
+                                : [
+                                    IconButton(
+                                      tooltip: l10n.translatorTitle,
+                                      icon: const Icon(Icons.translate),
+                                      onPressed: () =>
+                                          context.push('/translate'),
                                     ),
-                                    PopupMenuItem(
-                                      value: 'mail',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: const Icon(Icons
-                                            .mark_email_unread_outlined),
-                                        title: Text(l10n.importantEmails),
-                                      ),
+                                    IconButton(
+                                      tooltip: l10n.chatTitle,
+                                      icon: const Icon(Icons.forum_outlined),
+                                      onPressed: () => context.push('/chat'),
                                     ),
-                                    PopupMenuItem(
-                                      value: 'briefing',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: const Icon(
-                                            Icons.wb_sunny_outlined),
-                                        title: Text(l10n.briefingTitle),
+                                    PopupMenuButton<String>(
+                                      // Menü ekranın altına taşıp sistem gezinme
+                                      // çubuğunun arkasında kalıyordu; yükseklik
+                                      // sınırlanınca içerik kaydırılabilir olur ve
+                                      // son maddeler çubuğun altında kalmaz.
+                                      constraints: BoxConstraints(
+                                        maxHeight:
+                                            MediaQuery.sizeOf(context).height *
+                                            0.55,
+                                        minWidth: 200,
                                       ),
+                                      onSelected: (action) => switch (action) {
+                                        'suggestions' => context.push(
+                                          '/suggestions',
+                                        ),
+                                        'mail' => context.push('/mail'),
+                                        'briefing' => context.push('/briefing'),
+                                        'reminders' => context.push(
+                                          '/reminders',
+                                        ),
+                                        'archive' => context.push('/archive'),
+                                        'trash' => context.push('/trash'),
+                                        'settings' => context.push('/settings'),
+                                        _ => null,
+                                      },
+                                      itemBuilder: (context) => [
+                                        // Öneriler ve posta analizi üst bardan
+                                        // buraya taşındı: bar sadeleşti.
+                                        PopupMenuItem(
+                                          value: 'suggestions',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.auto_awesome_outlined,
+                                            ),
+                                            title: Text(l10n.aiSuggestions),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'mail',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.mark_email_unread_outlined,
+                                            ),
+                                            title: Text(l10n.importantEmails),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'briefing',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.wb_sunny_outlined,
+                                            ),
+                                            title: Text(l10n.briefingTitle),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'reminders',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.alarm_outlined,
+                                            ),
+                                            title: Text(l10n.remindersTitle),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'archive',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.archive_outlined,
+                                            ),
+                                            title: Text(l10n.archiveTitle),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'trash',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.delete_outline,
+                                            ),
+                                            title: Text(l10n.trashTitle),
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'settings',
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding: EdgeInsets.zero,
+                                            leading: const Icon(
+                                              Icons.settings_outlined,
+                                            ),
+                                            title: Text(l10n.settings),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    PopupMenuItem(
-                                      value: 'reminders',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading:
-                                            const Icon(Icons.alarm_outlined),
-                                        title: Text(l10n.remindersTitle),
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'archive',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: const Icon(
-                                            Icons.archive_outlined),
-                                        title: Text(l10n.archiveTitle),
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'trash',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading:
-                                            const Icon(Icons.delete_outline),
-                                        title: Text(l10n.trashTitle),
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'settings',
-                                      child: ListTile(
-                                        dense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        leading: const Icon(
-                                            Icons.settings_outlined),
-                                        title: Text(l10n.settings),
-                                      ),
-                                    ),
+                                    const SizedBox(width: 4),
                                   ],
-                                ),
-                                const SizedBox(width: 4),
-                              ],
-                      ),
-                    SliverToBoxAdapter(
-                      child: _QuickAddBar(onCreate: _createNote),
-                    ),
-                    // Filtre + klasör + etiket çipleri tek kompakt satırda.
-                    const SliverToBoxAdapter(child: DashboardChipsRow()),
-                    ...notesAsync.when(
-                      data: (notes) => _buildNoteSlivers(
-                        context,
-                        notes,
-                        columns,
-                        searchActive: query.trim().isNotEmpty,
-                      ),
-                      loading: () => [
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                      ],
-                      error: (e, _) => [
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: EmptyState(
-                            icon: Icons.error_outline,
-                            title: l10n.genericError(e.toString()),
                           ),
+                        SliverToBoxAdapter(
+                          child: _QuickAddBar(onCreate: _createNote),
                         ),
+                        // Filtre + klasör + etiket çipleri tek kompakt satırda.
+                        const SliverToBoxAdapter(child: DashboardChipsRow()),
+                        ...notesAsync.when(
+                          data: (notes) => _buildNoteSlivers(
+                            context,
+                            notes,
+                            columns,
+                            searchActive: query.trim().isNotEmpty,
+                          ),
+                          loading: () => [
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Center(child: CircularProgressIndicator()),
+                            ),
+                          ],
+                          error: (e, _) => [
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: EmptyState(
+                                icon: Icons.error_outline,
+                                title: l10n.genericError(e.toString()),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 88)),
                       ],
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 88)),
-                  ],
-                );
-              },
-            ),
+                    );
+                  },
+                ),
                 // Sesli asistan paneli düğmelerin ÜSTÜnde sabit konumda yüzer.
                 // Düğmeler floatingActionButton'da kaldığından panel açılıp
                 // kapanırken yerinden oynamaz (stabil); yalnız kayıt/işleme/
@@ -372,19 +390,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 Positioned(
                   right: 16,
                   bottom: 16,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
-                      const VoiceAssistantButton(),
-                      const SizedBox(height: 6),
-                      // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
-                      QuickAddFab(
-                        onCreate: _createNote,
-                        onHandwriting: _createHandwritingNote,
-                      ),
-                    ],
+                  // Bağlantı noktası TÜM sütunu sarar: "+" menüsü kendi
+                  // düğmesine değil sütunun tepesine demirlenir, böylece
+                  // açılınca mikrofonun üstünü örtmez. Mikrofon yüksekliğini
+                  // sabit sayı olarak yazmaya gerek kalmaz.
+                  child: CompositedTransformTarget(
+                    link: _fabColumnLink,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
+                        const VoiceAssistantButton(),
+                        const SizedBox(height: 6),
+                        // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
+                        QuickAddFab(
+                          anchor: _fabColumnLink,
+                          onCreate: _createNote,
+                          onHandwriting: _createHandwritingNote,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -417,34 +443,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ];
     }
 
-    final pinned = [for (final n in notes) if (n.pinned) n];
-    final others = [for (final n in notes) if (!n.pinned) n];
+    final pinned = [
+      for (final n in notes)
+        if (n.pinned) n,
+    ];
+    final others = [
+      for (final n in notes)
+        if (!n.pinned) n,
+    ];
 
     final query = ref.read(searchQueryProvider).trim();
     Widget grid(List<Note> items) => SliverMasonryGrid.count(
-          crossAxisCount: columns,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childCount: items.length,
-          itemBuilder: (context, index) => NoteCard(
-            key: ValueKey(items[index].id),
-            note: items[index],
-            highlightQuery: query,
-          ),
-        );
+      crossAxisCount: columns,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childCount: items.length,
+      itemBuilder: (context, index) => NoteCard(
+        key: ValueKey(items[index].id),
+        note: items[index],
+        highlightQuery: query,
+      ),
+    );
 
     Widget header(String text) => SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Text(
-              text.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    letterSpacing: 1.1,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: Text(
+          text.toUpperCase(),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            letterSpacing: 1.1,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-        );
+        ),
+      ),
+    );
 
     const gridPadding = EdgeInsets.symmetric(horizontal: 12);
 
@@ -482,8 +514,9 @@ class _SearchField extends ConsumerWidget {
       onTapOutside: (_) => focusNode?.unfocus(),
       textInputAction: TextInputAction.search,
       decoration: InputDecoration(
-        hintText:
-            semantic ? context.l10n.semanticSearchHint : context.l10n.searchHint,
+        hintText: semantic
+            ? context.l10n.semanticSearchHint
+            : context.l10n.searchHint,
         prefixIcon: const Icon(Icons.search, size: 20),
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
@@ -526,8 +559,11 @@ class _QuickAddBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    // Yükseklik 68dp → 52dp. Boyu belirleyen şey ikonların 48dp'lik DOKUNMA
+    // alanıydı; o Android'in tabanı ve kırılmıyor. Kısalma tümüyle boşluktan
+    // geldi: dış 4+4 → 2+2, iç 6+6 → 0.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 2),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
@@ -545,15 +581,13 @@ class _QuickAddBar extends StatelessWidget {
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
                       Expanded(
                         child: Text(
                           l10n.quickAddHint,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ),

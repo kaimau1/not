@@ -15,9 +15,15 @@ import '../domain/note_type.dart';
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
+    required this.anchor,
     required this.onCreate,
     required this.onHandwriting,
   });
+
+  /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
+  /// TAMAMINI saracak şekilde verir; menü sütunun tepesinden açılır ve
+  /// mikrofon düğmesinin üstünü örtmez.
+  final LayerLink anchor;
 
   final void Function(NoteType type) onCreate;
   final VoidCallback onHandwriting;
@@ -27,7 +33,6 @@ class QuickAddFab extends StatefulWidget {
 }
 
 class _QuickAddFabState extends State<QuickAddFab> {
-  final _link = LayerLink();
   OverlayEntry? _entry;
 
   bool get _open => _entry != null;
@@ -54,15 +59,13 @@ class _QuickAddFabState extends State<QuickAddFab> {
           // Seçenekler "+" düğmesinin hemen üstüne demirlenir (layout'u
           // değiştirmez, sesli asistan düğmesi yerinden oynamaz).
           CompositedTransformFollower(
-            link: _link,
+            link: widget.anchor,
             targetAnchor: Alignment.topRight,
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
             child: Material(
               color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: _StaggeredMenu(
                 children: [
                   _option(
                     icon: Icons.draw_outlined,
@@ -118,10 +121,9 @@ class _QuickAddFabState extends State<QuickAddFab> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               child: Text(
                 label,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelMedium
-                    ?.copyWith(color: scheme.onInverseSurface),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onInverseSurface,
+                ),
               ),
             ),
           ),
@@ -146,16 +148,91 @@ class _QuickAddFabState extends State<QuickAddFab> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return CompositedTransformTarget(
-      link: _link,
-      child: FloatingActionButton(
-        heroTag: 'add-fab',
-        tooltip: l10n.newTextNote,
-        onPressed: _toggle,
-        child: AnimatedRotation(
-          turns: _open ? 0.125 : 0, // + → × dönüşü
-          duration: const Duration(milliseconds: 160),
-          child: const Icon(Icons.add),
+    return FloatingActionButton(
+      heroTag: 'add-fab',
+      tooltip: l10n.newTextNote,
+      onPressed: _toggle,
+      child: AnimatedRotation(
+        turns: _open ? 0.125 : 0, // + → × dönüşü
+        duration: const Duration(milliseconds: 160),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+/// Seçenekleri "+" düğmesinden çıkıyormuş gibi sırayla açar: her biri
+/// aşağıdan hafifçe yükselerek belirir, düğmeye en yakın olan önce.
+///
+/// Süreler Material hareket ölçütlerine göre: öğe başına ~155 ms, aralarında
+/// ~31 ms gecikme (30-50 ms bandı), girişte easeOut. Yalnız opacity/transform
+/// canlandırılır — layout hesabı yapılmaz.
+class _StaggeredMenu extends StatefulWidget {
+  const _StaggeredMenu({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  State<_StaggeredMenu> createState() => _StaggeredMenuState();
+}
+
+class _StaggeredMenuState extends State<_StaggeredMenu>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final children = widget.children;
+    // Erişilebilirlik: sistemde "hareketi azalt" açıksa animasyon yok,
+    // menü anında görünür.
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (var i = 0; i < children.length; i++)
+          if (animate)
+            _staggered(i, children.length, children[i])
+          else
+            children[i],
+      ],
+    );
+  }
+
+  Widget _staggered(int index, int count, Widget child) {
+    // Liste yukarıdan aşağı dizili; düğmeye en yakın olan SON eleman, bu
+    // yüzden gecikme tersten hesaplanır.
+    const step = 0.12;
+    final start = (count - 1 - index) * step;
+    final animation = CurvedAnimation(
+      parent: _controller,
+      curve: Interval(
+        start,
+        (start + 0.6).clamp(0.0, 1.0),
+        curve: Curves.easeOutCubic,
+      ),
+    );
+    return FadeTransition(
+      opacity: animation,
+      child: AnimatedBuilder(
+        animation: animation,
+        child: child,
+        builder: (context, inner) => Transform.translate(
+          offset: Offset(0, 16 * (1 - animation.value)),
+          child: Transform.scale(
+            scale: 0.9 + 0.1 * animation.value,
+            alignment: Alignment.centerRight,
+            child: inner,
+          ),
         ),
       ),
     );

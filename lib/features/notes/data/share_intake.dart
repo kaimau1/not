@@ -23,9 +23,15 @@ final shareIntakeProvider = Provider<void>((ref) {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
 
+    // receive_sharing_intent yalnız SEND'i değil ACTION_VIEW'ı da yakalıyor:
+    // widget/kısayol "notlar://voice" ile uygulamayı açtığında bu bağlantı
+    // paylaşılan bir URL sanılıp gövdesi "notlar://voice" olan çöp not
+    // oluşturuluyordu. Kendi şemamız paylaşım değil, derin bağlantıdır —
+    // router zaten işliyor (notlar://new kısayolları da bu yüzden korunur).
     final texts = [
       for (final f in files)
-        if (f.type == SharedMediaType.text || f.type == SharedMediaType.url)
+        if ((f.type == SharedMediaType.text || f.type == SharedMediaType.url) &&
+            !f.path.trimLeft().startsWith('notlar://'))
           f.path,
     ];
     final images = [
@@ -70,8 +76,9 @@ final shareIntakeProvider = Provider<void>((ref) {
       .getInitialMedia()
       .then(handle)
       .catchError((Object _) {});
-  final sub = ReceiveSharingIntent.instance
-      .getMediaStream()
-      .listen(handle, onError: (Object _) {});
+  final sub = ReceiveSharingIntent.instance.getMediaStream().listen(
+    handle,
+    onError: (Object _) {},
+  );
   ref.onDispose(sub.cancel);
 });

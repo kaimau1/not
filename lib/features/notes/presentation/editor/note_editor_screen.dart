@@ -615,15 +615,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           if (line.trim().isNotEmpty)
             line.trim().replaceFirst(RegExp(r'^[-•*\d.]+\s*'), ''),
       ];
-      _mutate(
-        (n) => n.copyWith(
+      _mutate((n) {
+        // Listede sonda hep boş bir "yeni öğe" satırı bekler. Yeni maddeler
+        // onun ARKASINA eklenince o boş satır ortada kalıyordu; eklemeden
+        // önce sondaki boşlar atılır. Dikte ve AI ekleme aynı yoldan
+        // geçtiğinden ikisi de düzelir.
+        final kept = [...n.items];
+        while (kept.isNotEmpty && kept.last.text.trim().isEmpty) {
+          kept.removeLast();
+        }
+        return n.copyWith(
           items: [
-            ...n.items,
+            ...kept,
             for (final line in lines) NoteItem(id: uuid.v4(), text: line),
           ],
-        ),
-        immediate: true,
-      );
+        );
+      }, immediate: true);
     }
   }
 
