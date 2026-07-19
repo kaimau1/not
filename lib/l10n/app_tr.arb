@@ -69,7 +69,12 @@
   "clipboardEmpty": "Panoda görsel yok",
   "attachmentUploading": "Yükleniyor...",
   "attachmentNotSynced": "Dosya bu cihaza henüz senkronlanmadı",
-  "attachmentTooLarge": "Dosya çok büyük (en fazla 25 MB)",
+  "attachmentTooLarge": "Dosya çok büyük (en fazla {limit} MB)",
+  "@attachmentTooLarge": {
+    "placeholders": {
+      "limit": {"type": "int"}
+    }
+  },
   "removeAttachment": "Eki kaldır",
   "pin": "Sabitle",
   "unpin": "Sabitlemeyi kaldır",
@@ -104,8 +109,13 @@
   "settingsAi": "Yapay Zeka",
   "geminiApiKey": "Gemini API Anahtarı",
   "geminiApiKeyHint": "AIza... ile başlayan anahtarı yapıştır",
-  "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
-  "aiBuiltInPremium": "Dahili AI: Premium etkin — sınırsız kullanım",
+  "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
+  "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan hak {count}",
+  "@aiBuiltInPremium": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
   "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz hak {count}",
   "@aiBuiltInRemaining": {
     "placeholders": {

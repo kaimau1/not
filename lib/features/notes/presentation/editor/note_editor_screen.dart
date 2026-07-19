@@ -18,6 +18,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
+import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
 import '../../../folders/data/folders_repository.dart';
@@ -166,8 +167,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   // ---- Ekler ----------------------------------------------------------
 
+  /// "Dosya çok büyük" mesajı — sınır premium'a göre (50 MB) / ücretsiz (10 MB).
+  String _tooLargeMessage() {
+    final premium = ref.read(premiumProvider).value ?? false;
+    final limitMb =
+        (premium
+            ? AppConstants.maxPremiumAttachmentBytes
+            : AppConstants.maxFreeAttachmentBytes) ~/
+        (1024 * 1024);
+    return context.l10n.attachmentTooLarge(limitMb);
+  }
+
   Future<void> _addImageBytes(Uint8List bytes, String fileName) async {
-    final tooLargeMessage = context.l10n.attachmentTooLarge;
+    final tooLargeMessage = _tooLargeMessage();
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {
@@ -244,7 +256,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         immediate: true,
       );
     } on FileTooLargeException {
-      if (mounted) _showSnack(context.l10n.attachmentTooLarge);
+      if (mounted) _showSnack(_tooLargeMessage());
     }
   }
 
@@ -273,7 +285,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         immediate: true,
       );
     } on FileTooLargeException {
-      if (mounted) _showSnack(context.l10n.attachmentTooLarge);
+      if (mounted) _showSnack(_tooLargeMessage());
     }
   }
 
@@ -927,7 +939,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void _addChecklistItem() {
     const uuid = Uuid();
     _mutate(
-      (n) => n.copyWith(items: [...n.items, NoteItem(id: uuid.v4(), text: '')]),
+      (n) => n.copyWith(
+        items: [
+          ...n.items,
+          NoteItem(id: uuid.v4(), text: ''),
+        ],
+      ),
       immediate: true,
     );
   }

@@ -74,22 +74,37 @@ class AiGate {
   int _usedToday() =>
       _ref.read(sharedPreferencesProvider).getInt(_todayKey()) ?? 0;
 
+  /// Bugünkü günlük hak: premium'da [AppConstants.premiumDailyAiCalls],
+  /// değilse [AppConstants.freeDailyAiCalls].
+  int _dailyLimit() => (_ref.read(premiumProvider).value ?? false)
+      ? AppConstants.premiumDailyAiCalls
+      : AppConstants.freeDailyAiCalls;
+
   int remainingToday() {
-    final remaining = AppConstants.freeDailyAiCalls - _usedToday();
+    final remaining = _dailyLimit() - _usedToday();
     return remaining < 0 ? 0 : remaining;
   }
 
   /// Dahili AI çağrısı öncesi çağrılır; hak yoksa [GeminiException] fırlatır.
+  /// Premium de "sınırsız" değil — dahili AI projenin faturasından ödendiği
+  /// için premium'a da günlük tavan uygulanır (kendi anahtarını girenler muaf,
+  /// çünkü GeminiService anahtar varken bu kapıya hiç gelmez).
   Future<void> consume() async {
     final premium = _ref.read(premiumProvider).value ?? false;
-    if (premium) return;
     final prefs = _ref.read(sharedPreferencesProvider);
     final used = prefs.getInt(_todayKey()) ?? 0;
-    if (used >= AppConstants.freeDailyAiCalls) {
-      throw const GeminiException(
-        'Bugünlük ücretsiz AI hakkın doldu. Yarın yenilenir; dilersen '
-        "Ayarlar'dan kendi Gemini anahtarını girebilir veya Premium'a "
-        'geçebilirsin.',
+    final limit = premium
+        ? AppConstants.premiumDailyAiCalls
+        : AppConstants.freeDailyAiCalls;
+    if (used >= limit) {
+      throw GeminiException(
+        premium
+            ? 'Bugünlük premium AI hakkın ($limit) doldu. Yarın yenilenir; '
+                  "dilersen Ayarlar'dan kendi Gemini anahtarını girerek "
+                  'sınırsız kullanabilirsin.'
+            : 'Bugünlük ücretsiz AI hakkın doldu. Yarın yenilenir; dilersen '
+                  "Ayarlar'dan kendi Gemini anahtarını girebilir veya "
+                  "Premium'a geçebilirsin.",
       );
     }
     await prefs.setInt(_todayKey(), used + 1);

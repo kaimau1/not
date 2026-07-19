@@ -138,7 +138,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get attachmentNotSynced => 'Dosya bu cihaza henüz senkronlanmadı';
 
   @override
-  String get attachmentTooLarge => 'Dosya çok büyük (en fazla 25 MB)';
+  String attachmentTooLarge(int limit) {
+    return 'Dosya çok büyük (en fazla $limit MB)';
+  }
 
   @override
   String get removeAttachment => 'Eki kaldır';
@@ -218,10 +220,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get geminiApiKeyInfo =>
-      'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
+      'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.';
 
   @override
-  String get aiBuiltInPremium => 'Dahili AI: Premium etkin — sınırsız kullanım';
+  String aiBuiltInPremium(int count) {
+    return 'Dahili AI: Premium — bugün kalan hak $count';
+  }
 
   @override
   String aiBuiltInRemaining(int count) {

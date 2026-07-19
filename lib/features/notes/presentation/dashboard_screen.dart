@@ -361,26 +361,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  _selMenuItem('pin', Icons.push_pin_outlined, l10n.pin),
-                                  _selMenuItem(
+                                  _menuItem(
+                                    'pin',
+                                    Icons.push_pin_outlined,
+                                    l10n.pin,
+                                  ),
+                                  _menuItem(
                                     'unpin',
                                     Icons.push_pin,
                                     l10n.unpin,
                                   ),
-                                  _selMenuItem('star', Icons.star_outline, l10n.star),
-                                  _selMenuItem('unstar', Icons.star, l10n.unstar),
+                                  _menuItem(
+                                    'star',
+                                    Icons.star_outline,
+                                    l10n.star,
+                                  ),
+                                  _menuItem('unstar', Icons.star, l10n.unstar),
                                   const PopupMenuDivider(),
-                                  _selMenuItem(
+                                  _menuItem(
                                     'color',
                                     Icons.palette_outlined,
                                     l10n.backgroundColor,
                                   ),
-                                  _selMenuItem(
+                                  _menuItem(
                                     'frame',
                                     Icons.border_color_outlined,
                                     l10n.frameColor,
                                   ),
-                                  _selMenuItem(
+                                  _menuItem(
                                     'share',
                                     Icons.share_outlined,
                                     l10n.share,
@@ -427,11 +435,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       // çubuğunun arkasında kalıyordu; yükseklik
                                       // sınırlanınca içerik kaydırılabilir olur ve
                                       // son maddeler çubuğun altında kalmaz.
+                                      // minWidth kaldırıldı: menüyü 200 px'e
+                                      // zorlamak dar ekranda gereksiz yer
+                                      // kaplıyordu, artık içeriğe göre daralır.
                                       constraints: BoxConstraints(
                                         maxHeight:
                                             MediaQuery.sizeOf(context).height *
                                             0.55,
-                                        minWidth: 200,
                                       ),
                                       onSelected: (action) => switch (action) {
                                         'sort' => _pickSort(),
@@ -458,109 +468,55 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       // okunuyordu; gruplar ayrıldı.
                                       itemBuilder: (context) => [
                                         // --- Sıralama ---
-                                        PopupMenuItem(
-                                          value: 'sort',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.sort,
-                                            ),
-                                            title: Text(l10n.sortBy),
-                                          ),
+                                        _menuItem(
+                                          'sort',
+                                          Icons.sort,
+                                          l10n.sortBy,
                                         ),
                                         const PopupMenuDivider(),
                                         // --- AI araçları ---
-                                        PopupMenuItem(
-                                          value: 'suggestions',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.auto_awesome_outlined,
-                                            ),
-                                            title: Text(l10n.aiSuggestions),
-                                          ),
+                                        _menuItem(
+                                          'suggestions',
+                                          Icons.auto_awesome_outlined,
+                                          l10n.aiSuggestions,
                                         ),
-                                        PopupMenuItem(
-                                          value: 'mail',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.mark_email_unread_outlined,
-                                            ),
-                                            title: Text(l10n.importantEmails),
-                                          ),
+                                        _menuItem(
+                                          'mail',
+                                          Icons.mark_email_unread_outlined,
+                                          l10n.importantEmails,
                                         ),
-                                        PopupMenuItem(
-                                          value: 'briefing',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.wb_sunny_outlined,
-                                            ),
-                                            title: Text(l10n.briefingTitle),
-                                          ),
+                                        _menuItem(
+                                          'briefing',
+                                          Icons.wb_sunny_outlined,
+                                          l10n.briefingTitle,
                                         ),
-                                        PopupMenuItem(
-                                          value: 'listen',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.headphones_outlined,
-                                            ),
-                                            title: Text(l10n.readDocument),
-                                          ),
+                                        _menuItem(
+                                          'listen',
+                                          Icons.headphones_outlined,
+                                          l10n.readDocument,
                                         ),
                                         const PopupMenuDivider(),
                                         // --- İçerik yerleri ---
-                                        PopupMenuItem(
-                                          value: 'reminders',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.alarm_outlined,
-                                            ),
-                                            title: Text(l10n.remindersTitle),
-                                          ),
+                                        _menuItem(
+                                          'reminders',
+                                          Icons.alarm_outlined,
+                                          l10n.remindersTitle,
                                         ),
-                                        PopupMenuItem(
-                                          value: 'archive',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.archive_outlined,
-                                            ),
-                                            title: Text(l10n.archiveTitle),
-                                          ),
+                                        _menuItem(
+                                          'archive',
+                                          Icons.archive_outlined,
+                                          l10n.archiveTitle,
                                         ),
-                                        PopupMenuItem(
-                                          value: 'trash',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.delete_outline,
-                                            ),
-                                            title: Text(l10n.trashTitle),
-                                          ),
+                                        _menuItem(
+                                          'trash',
+                                          Icons.delete_outline,
+                                          l10n.trashTitle,
                                         ),
                                         const PopupMenuDivider(),
-                                        PopupMenuItem(
-                                          value: 'settings',
-                                          child: ListTile(
-                                            dense: true,
-                                            contentPadding: EdgeInsets.zero,
-                                            leading: const Icon(
-                                              Icons.settings_outlined,
-                                            ),
-                                            title: Text(l10n.settings),
-                                          ),
+                                        _menuItem(
+                                          'settings',
+                                          Icons.settings_outlined,
+                                          l10n.settings,
                                         ),
                                       ],
                                     ),
@@ -652,19 +608,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  PopupMenuItem<String> _selMenuItem(
-    String value,
-    IconData icon,
-    String label,
-  ) => PopupMenuItem<String>(
-    value: value,
-    child: ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(label),
-    ),
-  );
+  PopupMenuItem<String> _menuItem(String value, IconData icon, String label) =>
+      PopupMenuItem<String>(
+        value: value,
+        // Compact: ikon-metin boşluğu ve satır yüksekliği daraltıldı; menü
+        // ekranı kaplamak yerine içeriğe göre dar kalsın.
+        child: ListTile(
+          dense: true,
+          visualDensity: VisualDensity.compact,
+          contentPadding: EdgeInsets.zero,
+          horizontalTitleGap: 8,
+          minLeadingWidth: 0,
+          leading: Icon(icon, size: 20),
+          title: Text(label),
+        ),
+      );
 
   List<Widget> _buildNoteSlivers(
     BuildContext context,

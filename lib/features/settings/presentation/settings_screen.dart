@@ -134,7 +134,11 @@ class SettingsScreen extends ConsumerWidget {
 /// köşeli hafif zeminli çerçevede çocuk widget'lar. Uzun düz liste yerine
 /// görsel olarak ayrık gruplar (redesign'daki organizasyon).
 class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.title, required this.children, this.icon});
+  const _SettingsGroup({
+    required this.title,
+    required this.children,
+    this.icon,
+  });
 
   final String title;
   final IconData? icon;
@@ -848,7 +852,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
     final (icon, text) = hasKey
         ? (Icons.key, l10n.aiBuiltInByok)
         : premium
-        ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium)
+        ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium(remaining))
         : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
 
     return Padding(

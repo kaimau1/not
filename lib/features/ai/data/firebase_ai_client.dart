@@ -128,6 +128,21 @@ class FirebaseAiClient {
         isAuthError: true,
       );
     }
+    // Projenin Gemini faturası/ön ödemeli kredisi bittiğinde tüm modeller bu
+    // hatayı verir (İngilizce "prepayment credits are depleted / billing").
+    // Kullanıcıya ham İngilizce metin yerine kendi anahtarını girme yolunu
+    // gösteririz — dahili AI parası bitmiştir, kendi anahtarı sınırsızdır.
+    if (message.contains('prepay') ||
+        message.contains('billing') ||
+        message.contains('credit') ||
+        message.contains('depleted') ||
+        message.contains('resource_exhausted')) {
+      return const GeminiException(
+        'Dahili yapay zeka şu an kullanılamıyor. Kendi Gemini anahtarını '
+        "Ayarlar'dan girerek AI özelliklerini hemen kullanabilirsin.",
+        isAuthError: true,
+      );
+    }
     return GeminiException(
       'Yapay zeka şu an yanıt veremiyor: ${e?.message ?? 'bilinmeyen hata'}',
     );

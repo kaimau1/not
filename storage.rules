@@ -3,8 +3,9 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     // Her kullanıcı yalnızca kendi dosyalarına erişebilir.
-    // create/update: en fazla 25 MB ve yalnızca uygulamanın yüklediği
-    // türler (görsel/PDF/ses) — keyfi dosya barındırma kapalı.
+    // create/update: en fazla 50 MB (premium tavanı) ve yalnızca uygulamanın
+    // yüklediği türler (görsel/PDF/ses) — keyfi dosya barındırma kapalı.
+    // Ücretsiz 10 MB sınırı uygulama tarafında; sunucu tek tavan (50 MB) tutar.
     // delete AYRI tutulur: request.resource silmede null olduğundan boyut
     // koşulu delete'e de uygulanırsa kullanıcı kendi ekini SİLEMEZ
     // (eski kuralın yetim dosya bırakan açığı buydu).
@@ -12,7 +13,7 @@ service firebase.storage {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null
         && request.auth.uid == uid
-        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.size < 50 * 1024 * 1024
         && request.resource.contentType.matches('image/.*|application/pdf|audio/.*');
     }
   }

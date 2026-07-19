@@ -9,13 +9,19 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
+import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return null;
-  return AttachmentRepository(FirebaseStorage.instance, uid);
+  // Premium 50 MB, ücretsiz 10 MB'a kadar ek yükleyebilir.
+  final premium = ref.watch(premiumProvider).value ?? false;
+  final maxBytes = premium
+      ? AppConstants.maxPremiumAttachmentBytes
+      : AppConstants.maxFreeAttachmentBytes;
+  return AttachmentRepository(FirebaseStorage.instance, uid, maxBytes);
 });
 
 class _CompressRequest {
@@ -66,10 +72,13 @@ _CompressResult _compressImage(_CompressRequest request) {
 /// sonra Firebase Storage'a yükler. Yükleme kuyruğu [uploadPending] üzerinden
 /// çalışır.
 class AttachmentRepository {
-  AttachmentRepository(this._storage, this.uid);
+  AttachmentRepository(this._storage, this.uid, this.maxBytes);
 
   final FirebaseStorage _storage;
   final String uid;
+
+  /// Bu kullanıcı için izin verilen en büyük ek boyutu (premium'a göre).
+  final int maxBytes;
 
   static const _uuid = Uuid();
 
@@ -90,7 +99,7 @@ class AttachmentRepository {
       _compressImage,
       _CompressRequest(bytes, AppConstants.maxImageDimension),
     );
-    if (result.bytes.length > AppConstants.maxAttachmentBytes) {
+    if (result.bytes.length > maxBytes) {
       throw const FileTooLargeException();
     }
     final id = _uuid.v4();
@@ -119,7 +128,7 @@ class AttachmentRepository {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    if (bytes.length > AppConstants.maxAttachmentBytes) {
+    if (bytes.length > maxBytes) {
       throw const FileTooLargeException();
     }
     final id = _uuid.v4();
@@ -147,7 +156,7 @@ class AttachmentRepository {
   }) async {
     final source = File(sourcePath);
     final sizeBytes = await source.length();
-    if (sizeBytes > AppConstants.maxAttachmentBytes) {
+    if (sizeBytes > maxBytes) {
       throw const FileTooLargeException();
     }
     final id = _uuid.v4();
@@ -200,7 +209,9 @@ class AttachmentRepository {
     if (attachment.storagePath.isNotEmpty) {
       return _storage
           .ref(attachment.storagePath)
-          .getData(AppConstants.maxAttachmentBytes);
+          // Premium tavanı: premium'un yüklediği dosya, sonradan premium
+          // olmasa bile indirilebilmeli.
+          .getData(AppConstants.maxPremiumAttachmentBytes);
     }
     return null;
   }

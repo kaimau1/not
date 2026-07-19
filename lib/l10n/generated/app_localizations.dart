@@ -331,8 +331,8 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentTooLarge.
   ///
   /// In tr, this message translates to:
-  /// **'Dosya çok büyük (en fazla 25 MB)'**
-  String get attachmentTooLarge;
+  /// **'Dosya çok büyük (en fazla {limit} MB)'**
+  String attachmentTooLarge(int limit);
 
   /// No description provided for @removeAttachment.
   ///
@@ -481,14 +481,14 @@ abstract class AppLocalizations {
   /// No description provided for @geminiApiKeyInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile sınırsız). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
+  /// **'Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.'**
   String get geminiApiKeyInfo;
 
   /// No description provided for @aiBuiltInPremium.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili AI: Premium etkin — sınırsız kullanım'**
-  String get aiBuiltInPremium;
+  /// **'Dahili AI: Premium — bugün kalan hak {count}'**
+  String aiBuiltInPremium(int count);
 
   /// No description provided for @aiBuiltInRemaining.
   ///

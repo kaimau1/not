@@ -36,14 +36,26 @@ abstract final class AppConstants {
   /// Dahili AI (Firebase AI Logic) için premium olmayanların günlük
   /// ücretsiz istek hakkı. Kendi API anahtarını girenlere sınır uygulanmaz.
   static const int freeDailyAiCalls = 5;
+
+  /// Premium kullanıcıların günlük dahili AI hakkı. Premium "sınırsız" değil:
+  /// dahili AI çağrıları projenin Gemini faturasından karşılandığı için
+  /// (kredi tükenince herkes hata alır) premium'a da bir tavan konur. Kendi
+  /// API anahtarını girenler bu sınırdan muaftır (kendi kotaları).
+  static const int premiumDailyAiCalls = 100;
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';
   static const String geminiLiveWsUrl =
       'wss://generativelanguage.googleapis.com/ws/'
       'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
-  // Ek sınırları
-  static const int maxAttachmentBytes = 25 * 1024 * 1024; // 25 MB
+  // Ek sınırları — dosya boyutu premium'a göre değişir. Sunucu (storage.rules)
+  // 50 MB tavanı zorlar; ücretsiz 10 MB sınırı uygulama tarafında (yükleme
+  // öncesi) uygulanır — kişisel not uygulaması, katı sunucu zorlaması için
+  // her yüklemede Firestore okuması gerekirdi, gereksiz.
+  // ponytail: free 10 MB app-side, server 50 MB tavan; katı server zorlaması
+  // istenirse storage.rules'da firestore.get(premiumUntil) eklenir.
+  static const int maxFreeAttachmentBytes = 10 * 1024 * 1024; // 10 MB
+  static const int maxPremiumAttachmentBytes = 50 * 1024 * 1024; // 50 MB
   static const int maxImageDimension = 2048;
 
   /// Ek bu boyutu aşarsa kullanıcıya sorulur (engellenmez). Firebase Storage
