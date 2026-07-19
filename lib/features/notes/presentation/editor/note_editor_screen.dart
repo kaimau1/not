@@ -38,6 +38,7 @@ import 'calculator_sheet.dart';
 import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
 import 'items_editor.dart';
+import 'note_images.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -301,6 +302,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (attachment.localPath.isNotEmpty) {
       File(attachment.localPath).delete().ignore();
     }
+  }
+
+  /// Bir eki (görsel) yeni değerleriyle (genişlik/hiza) değiştirir — kullanıcı
+  /// görseli notta elle boyutlandırıp hizalayınca çağrılır.
+  void _updateAttachment(Attachment updated) {
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == updated.id) updated else a,
+        ],
+      ),
+      immediate: true,
+    );
   }
 
   /// Alt bardaki bir düğme (görünüm/renk, ek, hesap makinesi) alt sayfa/menü
@@ -1102,9 +1117,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
             ),
           ),
+        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır; görseller ise
+        // satır içi, genişliği ve hizası elle ayarlanabilir bloklar olarak
+        // gösterilir (dokun → düzenleme çubuğu).
         AttachmentStrip(
-          attachments: note.attachments,
+          attachments: [
+            for (final a in note.attachments)
+              if (a.kind != AttachmentKind.image) a,
+          ],
           onRemove: _removeAttachment,
+        ),
+        NoteImages(
+          images: [
+            for (final a in note.attachments)
+              if (a.kind == AttachmentKind.image) a,
+          ],
+          onRemove: _removeAttachment,
+          onChanged: _updateAttachment,
         ),
       ],
     );
