@@ -341,21 +341,29 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         SnackBar(content: Text(l10n.aiReportThanks)),
                       );
                     },
+                    // Önce alt sayfayı kapat, SONRA uygula: değerler önceden
+                    // yakalanır. Eskiden callback önce, pop sonra çağrılıyordu;
+                    // callback (editörde setState) bir istisna fırlatırsa pop'a
+                    // ulaşılamıyor, alt sayfa açık kalıyor ve "Notu değiştir"
+                    // tepkisiz görünüyordu. Sıra çevrildi: sayfa her hâlükârda
+                    // kapanır, uygulama editörde çalışır.
                     onAppend: widget.onAppendText == null
                         ? null
                         : () {
-                            widget.onAppendText!(_result!);
+                            final append = widget.onAppendText!;
+                            final text = _result!;
                             Navigator.pop(context);
+                            append(text);
                           },
                     onReplace:
                         widget.onReplaceText == null || !_lastWasImprovement
                         ? null
                         : () {
-                            widget.onReplaceText!(
-                              _result!,
-                              asType: _replaceAsType,
-                            );
+                            final replace = widget.onReplaceText!;
+                            final text = _result!;
+                            final type = _replaceAsType;
                             Navigator.pop(context);
+                            replace(text, asType: type);
                           },
                   )
                 else ...[

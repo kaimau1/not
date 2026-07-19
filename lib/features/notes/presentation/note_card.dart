@@ -251,13 +251,21 @@ class NoteCard extends ConsumerWidget {
                           size: 14,
                           color: scheme.primary,
                         ),
-                      // Seçim modunda yerini seçim tiki alır.
                       // Dokunma alanı 36dp: görsel ikon 18px kalıyor ama
                       // hedef büyüyor. Önceden yalnız ikon kadardı (~18x22)
                       // ve ıskalanıyordu. Kart 2 sütunlu ızgarada dar
                       // olduğundan 48dp yerine 36dp — sıkışık ızgarada
                       // kabul edilebilir orta yol.
-                      if (!selectionActive)
+                      //
+                      // Seçim modunda ⋮ gizlenir ama YERİ (36x36) KORUNUR.
+                      // Aksi hâlde başlık satırı bu düğme kadar kısalıp kart
+                      // yüksekliği değişiyor; masonry ızgara sütun dengesini
+                      // yeniden hesaplayınca notlar seçim sırasında yer
+                      // değiştiriyor, seçim bitince eski sıraya dönüyordu.
+                      // (Seçili olduğu göstergesi sağ üstteki tik rozetidir.)
+                      if (selectionActive)
+                        const SizedBox(width: 36, height: 36)
+                      else
                         InkWell(
                           borderRadius: BorderRadius.circular(18),
                           onTap: () => showNoteActionsSheet(context, ref, note),
@@ -426,16 +434,76 @@ class _NotePreview extends StatelessWidget {
 
     switch (note.type) {
       case NoteType.text:
-        if (note.body.trim().isEmpty) return const SizedBox.shrink();
-        // 8 satırdan 4'e: 2 sütunlu ızgarada kart ~170dp genişliğinde, 8
-        // satır önizleme metin duvarına dönüşüyor ve alttaki rozetler/tarih
-        // için göz sırası kalmıyordu.
-        return highlightedText(
-          context,
-          note.body,
-          highlightQuery,
-          maxLines: 4,
-          style: bodyStyle,
+        // Karışık içerik: metin notu hem gövde hem checklist maddesi taşıyabilir.
+        final hasBody = note.body.trim().isNotEmpty;
+        final items = [
+          for (final i in note.items)
+            if (i.text.trim().isNotEmpty) i,
+        ];
+        if (!hasBody && items.isEmpty) return const SizedBox.shrink();
+        // Madde varsa metin 2 satıra kısalır ki maddelere yer kalsın; yoksa
+        // 4 satır (8 satır 2 sütunlu ızgarada metin duvarına dönüşüyordu).
+        final maxItems = hasBody ? 3 : 5;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasBody)
+              highlightedText(
+                context,
+                note.body,
+                highlightQuery,
+                maxLines: items.isEmpty ? 4 : 2,
+                style: bodyStyle,
+              ),
+            if (items.isNotEmpty) ...[
+              if (hasBody) const SizedBox(height: 6),
+              for (final item in items.take(maxItems))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6, top: 1),
+                        child: Icon(
+                          item.checked
+                              ? Icons.check_box
+                              : Icons.check_box_outline_blank,
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.text,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: item.checked
+                              ? bodyStyle?.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: scheme.onSurfaceVariant.withValues(
+                                    alpha: 0.6,
+                                  ),
+                                )
+                              : bodyStyle,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (items.length > maxItems)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    context.l10n.moreItemsCount(items.length - maxItems),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ],
         );
       case NoteType.checklist:
       case NoteType.ordered:

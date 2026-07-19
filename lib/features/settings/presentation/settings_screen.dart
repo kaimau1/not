@@ -41,62 +41,87 @@ class SettingsScreen extends ConsumerWidget {
               16 + MediaQuery.paddingOf(context).bottom + 48,
             ),
             children: [
-              _SectionTitle(l10n.settingsAppearance),
-              const _ThemeSelector(),
-              const SizedBox(height: 12),
-              const _FontScaleSlider(),
-              const _ExpandListItemsSwitch(),
-              const _DarkScheduleEditor(),
-              const SizedBox(height: 24),
-              _SectionTitle(l10n.voiceAssistantTitle),
-              const _VoiceModeSelector(),
-              _SpeechVoiceSelector(
-                language: 'tr',
-                title: l10n.speechVoiceTurkish,
+              // Üstte kimlik/hesap kartı: kim olduğun ve senkron durumu ilk
+              // bakışta görünür (redesign'daki profil kartı düzeni).
+              const _ProfileCard(),
+              const SizedBox(height: 18),
+              // Yapay zekâ ayarları tek grupta: dahili AI durumu, kendi API
+              // anahtarı, model seçimleri, günlük brifing ve otomatik etiket.
+              _SettingsGroup(
+                title: l10n.settingsAi,
+                icon: Icons.auto_awesome,
+                children: const [
+                  _BuiltInAiStatus(),
+                  _GeminiKeyEditor(),
+                  SizedBox(height: 14),
+                  _ModelSelectors(),
+                  SizedBox(height: 14),
+                  _BriefingEditor(),
+                  _AutoTagSwitch(),
+                ],
               ),
-              _SpeechVoiceSelector(
-                language: 'en',
-                title: l10n.speechVoiceEnglish,
+              _SettingsGroup(
+                title: l10n.settingsAppearance,
+                icon: Icons.palette_outlined,
+                children: const [
+                  _ThemeSelector(),
+                  SizedBox(height: 12),
+                  _FontScaleSlider(),
+                  _ExpandListItemsSwitch(),
+                  _DarkScheduleEditor(),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  l10n.speechVoiceAutoInfo,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+              _SettingsGroup(
+                title: l10n.voiceAssistantTitle,
+                icon: Icons.record_voice_over_outlined,
+                children: [
+                  const _VoiceModeSelector(),
+                  _SpeechVoiceSelector(
+                    language: 'tr',
+                    title: l10n.speechVoiceTurkish,
                   ),
+                  _SpeechVoiceSelector(
+                    language: 'en',
+                    title: l10n.speechVoiceEnglish,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      l10n.speechVoiceAutoInfo,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const _SpeechRateSlider(),
+                  const _ForeignSpeechRateSlider(),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(l10n.translateQuality),
+                    subtitle: Text(l10n.translateQualityInfo),
+                    value: ref.watch(preferGeminiTranslateProvider),
+                    onChanged: (value) => ref
+                        .read(preferGeminiTranslateProvider.notifier)
+                        .set(value),
+                  ),
+                ],
+              ),
+              if (const PermissionsService().isSupported)
+                _SettingsGroup(
+                  title: l10n.permissionsTitle,
+                  icon: Icons.verified_user_outlined,
+                  children: const [_PermissionsSection()],
                 ),
+              _SettingsGroup(
+                title: l10n.settingsGmail,
+                icon: Icons.mail_outline,
+                children: const [_GmailSection()],
               ),
-              const _SpeechRateSlider(),
-              const _ForeignSpeechRateSlider(),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.translateQuality),
-                subtitle: Text(l10n.translateQualityInfo),
-                value: ref.watch(preferGeminiTranslateProvider),
-                onChanged: (value) =>
-                    ref.read(preferGeminiTranslateProvider.notifier).set(value),
+              _SettingsGroup(
+                title: l10n.account,
+                icon: Icons.manage_accounts_outlined,
+                children: const [_AccountSection()],
               ),
-              const SizedBox(height: 24),
-              if (const PermissionsService().isSupported) ...[
-                _SectionTitle(l10n.permissionsTitle),
-                const _PermissionsSection(),
-                const SizedBox(height: 24),
-              ],
-              _SectionTitle(l10n.settingsAi),
-              const _BuiltInAiStatus(),
-              const _GeminiKeyEditor(),
-              const SizedBox(height: 12),
-              const _ModelSelectors(),
-              const SizedBox(height: 12),
-              const _BriefingEditor(),
-              const _AutoTagSwitch(),
-              const SizedBox(height: 24),
-              _SectionTitle(l10n.settingsGmail),
-              const _GmailSection(),
-              const SizedBox(height: 24),
-              _SectionTitle(l10n.account),
-              const _AccountSection(),
             ],
           ),
         ),
@@ -105,21 +130,140 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
+/// Ayarlarda bir bölümü gruplayan kart: üstte simge + başlık, altında yuvarlak
+/// köşeli hafif zeminli çerçevede çocuk widget'lar. Uzun düz liste yerine
+/// görsel olarak ayrık gruplar (redesign'daki organizasyon).
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.title, required this.children, this.icon});
 
-  final String text;
+  final String title;
+  final IconData? icon;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          letterSpacing: 1.1,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+      padding: const EdgeInsets.only(bottom: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Row(
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: scheme.primary),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  title.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    letterSpacing: 1.1,
+                    color: scheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: scheme.outlineVariant.withValues(alpha: 0.5),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Ayarların en üstündeki kimlik kartı: avatar, ad, e-posta ve senkron durumu.
+class _ProfileCard extends ConsumerWidget {
+  const _ProfileCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final user = ref.watch(authStateProvider).value;
+    final name = (user?.displayName?.trim().isNotEmpty ?? false)
+        ? user!.displayName!
+        : (user?.email ?? '');
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
+            backgroundImage: user?.photoURL != null
+                ? NetworkImage(user!.photoURL!)
+                : null,
+            child: user?.photoURL == null
+                ? const Icon(Icons.person_outline)
+                : null,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (name.isNotEmpty)
+                  Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if ((user?.email ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    user!.email!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.cloud_done_outlined,
+                      size: 14,
+                      color: scheme.primary,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      l10n.synced,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1179,25 +1323,11 @@ class _AccountSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final user = ref.watch(authStateProvider).value;
-
+    // Kimlik (avatar/ad/e-posta) artık ayarların en üstündeki profil kartında;
+    // burada yalnızca hesap EYLEMLERİ kalır.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (user != null)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              backgroundImage: user.photoURL != null
-                  ? NetworkImage(user.photoURL!)
-                  : null,
-              child: user.photoURL == null
-                  ? const Icon(Icons.person_outline)
-                  : null,
-            ),
-            title: Text(user.displayName ?? ''),
-            subtitle: Text(user.email ?? ''),
-          ),
         TextButton.icon(
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),

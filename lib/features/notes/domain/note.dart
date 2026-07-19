@@ -127,7 +127,12 @@ class Note {
     if (title.trim().isNotEmpty) buffer.writeln(title.trim());
     switch (type) {
       case NoteType.text:
-        buffer.writeln(body);
+        if (body.trim().isNotEmpty) buffer.writeln(body);
+        // Karışık içerik: metin notuna eklenen checklist maddeleri de dahil.
+        for (final item in items) {
+          if (item.text.trim().isEmpty) continue;
+          buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
+        }
       case NoteType.checklist:
         for (final item in items) {
           buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
@@ -146,7 +151,12 @@ class Note {
   /// öğe metnine sızmasını engeller — bu yüzden başlık+işaret taşıyan
   /// [toPlainText]'ten ayrı tutulur.
   String toContentText() => switch (type) {
-    NoteType.text => body.trim(),
+    NoteType.text => [
+      if (body.trim().isNotEmpty) body.trim(),
+      // Karışık içerik: metin notundaki checklist maddeleri de içeriğe girer.
+      for (final item in items)
+        if (item.text.trim().isNotEmpty) item.text.trim(),
+    ].join('\n'),
     NoteType.checklist || NoteType.ordered => [
       for (final item in items)
         if (item.text.trim().isNotEmpty) item.text.trim(),
