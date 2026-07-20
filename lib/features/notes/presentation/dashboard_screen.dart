@@ -13,6 +13,8 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../ai/presentation/read_document.dart';
+import '../../folders/data/folders_repository.dart';
+import '../../folders/domain/note_folder.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -225,6 +227,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (picked != null) ref.read(noteSortProvider.notifier).set(picked);
   }
 
+  /// Ana ekranı yatay çekince (madde 1) aktif görünümü sonraki/önceki
+  /// segmente taşır. Gezinme sırası: Tümü → görünür filtreler (kullanıcı
+  /// sırası) → klasörler. [direction] +1 sola çekiş (sonraki), -1 sağa çekiş.
+  void _cycleFilterFolder(int direction) {
+    final visibleFilters = ref.read(visibleNoteFiltersProvider);
+    final folders =
+        ref.read(foldersStreamProvider).value ?? const <NoteFolder>[];
+    final segments = <(NoteFilter, String?)>[
+      (NoteFilter.all, null),
+      for (final f in visibleFilters) (f, null),
+      for (final folder in folders) (NoteFilter.all, folder.id),
+    ];
+    if (segments.length < 2) return;
+    final curFilter = ref.read(noteFilterProvider);
+    final curFolder = ref.read(selectedFolderProvider);
+    var index = segments.indexWhere(
+      (s) => s.$1 == curFilter && s.$2 == curFolder,
+    );
+    if (index < 0) index = 0;
+    var next = (index + direction) % segments.length;
+    if (next < 0) next += segments.length;
+    final (filter, folderId) = segments[next];
+    ref.read(noteFilterProvider.notifier).set(filter);
+    ref.read(selectedFolderProvider.notifier).set(folderId);
+    HapticFeedback.selectionClick();
+  }
+
   Future<void> _createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -306,8 +335,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       2,
                       6,
                     );
-                    return CustomScrollView(
-                      slivers: [
+                    return GestureDetector(
+                      // Yatay çekişle filtreler/klasörler arasında gezin
+                      // (madde 1). Dikey kaydırma CustomScrollView'de kalır;
+                      // eksenler farklı olduğundan çakışmaz.
+                      onHorizontalDragEnd: (details) {
+                        final velocity = details.primaryVelocity ?? 0;
+                        if (velocity.abs() < 200) return;
+                        _cycleFilterFolder(velocity < 0 ? 1 : -1);
+                      },
+                      child: CustomScrollView(
+                        slivers: [
                         if (selectionActive)
                           SliverAppBar(
                             floating: true,
@@ -554,6 +592,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 88)),
                       ],
+                      ),
                     );
                   },
                 ),
@@ -611,16 +650,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   PopupMenuItem<String> _menuItem(String value, IconData icon, String label) =>
       PopupMenuItem<String>(
         value: value,
-        // Compact: ikon-metin boşluğu ve satır yüksekliği daraltıldı; menü
-        // ekranı kaplamak yerine içeriğe göre dar kalsın.
-        child: ListTile(
-          dense: true,
-          visualDensity: VisualDensity.compact,
-          contentPadding: EdgeInsets.zero,
-          horizontalTitleGap: 8,
-          minLeadingWidth: 0,
-          leading: Icon(icon, size: 20),
-          title: Text(label),
+        height: 40,
+        // ListTile satırı daima erişilebilir tüm genişliği kaplıyordu; menü de
+        // bu yüzden sağ-sol ekseninde gereksiz genişliyordu (madde 5). İçeriğe
+        // göre daralan Row ile menü yalnız ikon + etiket kadar yer kaplar.
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 12),
+            Text(label),
+          ],
         ),
       );
 

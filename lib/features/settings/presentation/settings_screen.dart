@@ -988,35 +988,34 @@ class _ModelSelectors extends ConsumerWidget {
     // uygulamanın yerleşik tercih listesini döndürüyor ve dahili (Firebase)
     // yol da seçilen modeli uyguluyor. Eskiden buradaki anahtar koşulu
     // seçiciyi anahtarsız kullanıcıdan tamamen gizliyordu.
-    return FutureBuilder<List<String>>(
-      future: ref.read(geminiServiceProvider).availableModels(),
-      builder: (context, snapshot) {
-        final models = snapshot.data ?? const <String>[];
-        if (models.isEmpty) return const SizedBox.shrink();
-        final selected = ref.watch(aiTaskModelsProvider);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final task in AiTask.values) ...[
-              _modelDropdown(
-                label: _taskLabel(l10n, task),
-                models: models,
-                value: selected[task],
-                autoLabel: l10n.aiModelAuto,
-                onChanged: (v) =>
-                    ref.read(aiTaskModelsProvider.notifier).set(task, v),
-              ),
-              const SizedBox(height: 10),
-            ],
-            Text(
-              l10n.aiModelsInfo,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        );
-      },
+    //
+    // Liste önbellekli sağlayıcıdan (availableModelsProvider) izlenir; inline
+    // FutureBuilder her rebuild'de yeni bir future kurup bölümü boşaltıp
+    // yeniden doldurduğu için ayarlar sayfası zıplıyordu (madde 3).
+    final models = ref.watch(availableModelsProvider).value ?? const <String>[];
+    if (models.isEmpty) return const SizedBox.shrink();
+    final selected = ref.watch(aiTaskModelsProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final task in AiTask.values) ...[
+          _modelDropdown(
+            label: _taskLabel(l10n, task),
+            models: models,
+            value: selected[task],
+            autoLabel: l10n.aiModelAuto,
+            onChanged: (v) =>
+                ref.read(aiTaskModelsProvider.notifier).set(task, v),
+          ),
+          const SizedBox(height: 10),
+        ],
+        Text(
+          l10n.aiModelsInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 

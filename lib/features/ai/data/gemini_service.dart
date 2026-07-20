@@ -24,6 +24,15 @@ final geminiServiceProvider = Provider<GeminiService>(
   ),
 );
 
+/// Kullanılabilir model listesi — bir kez çözülüp önbelleklenir. Ayarlardaki
+/// model seçicileri bunu izler; her yeniden çizimde `availableModels()`
+/// yeniden çağrılıp FutureBuilder'ı sıfırlamaz. Eskiden bölüm her rebuild'de
+/// önce boşalıp (yükseklik 0) sonra dolduğu için ayarlar sayfası anlık
+/// zıplıyordu (madde 3).
+final availableModelsProvider = FutureProvider<List<String>>(
+  (ref) => ref.watch(geminiServiceProvider).availableModels(),
+);
+
 class GeminiException implements Exception {
   const GeminiException(this.message, {this.isAuthError = false});
 
