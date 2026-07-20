@@ -44,6 +44,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// "+" menüsünün demirlendiği nokta: mikrofon + "+" sütununun tamamı.
   final _fabColumnLink = LayerLink();
 
+  /// Filtreler arası geçiş yönü (madde 2): sola çekiş → sonraki (sağdan girer),
+  /// sağa çekiş → önceki (soldan girer). Geçiş animasyonu bu yönü kullanır.
+  bool _swipeForward = true;
+
   @override
   void initState() {
     super.initState();
@@ -249,9 +253,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     var next = (index + direction) % segments.length;
     if (next < 0) next += segments.length;
     final (filter, folderId) = segments[next];
+    // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
+    _swipeForward = direction > 0;
     ref.read(noteFilterProvider.notifier).set(filter);
     ref.read(selectedFolderProvider.notifier).set(folderId);
     HapticFeedback.selectionClick();
+  }
+
+  /// Bir bölümde (sabitliler / diğerleri) notu basılı tutup sürükleyince
+  /// (madde 1) çağrılır: [draggedId] notunu [toIndex] konumuna taşır ve yeni
+  /// sırayı kalıcılaştırır. Elle sıra görünsün diye sıralama ölçütü manuel'e
+  /// alınır.
+  void _reorderSection(List<Note> section, String draggedId, int toIndex) {
+    final from = section.indexWhere((n) => n.id == draggedId);
+    if (from < 0 || from == toIndex) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final list = [...section];
+    final item = list.removeAt(from);
+    var target = toIndex;
+    if (from < target) target -= 1;
+    list.insert(target, item);
+    if (ref.read(noteSortProvider) != NoteSort.manual) {
+      ref.read(noteSortProvider.notifier).set(NoteSort.manual);
+    }
+    repo.reorderNotes(list);
+    HapticFeedback.mediumImpact();
   }
 
   Future<void> _createNote(NoteType type) async {
@@ -335,6 +362,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       2,
                       6,
                     );
+                    // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
+                    // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
+                    // gridPadding yatayda 12+12, crossAxisSpacing 8.
+                    final cellWidth =
+                        (constraints.maxWidth - 24 - 8 * (columns - 1)) /
+                        columns;
+                    // Aktif segment (filtre|klasör|etiket) anahtarı: değişince
+                    // AnimatedSwitcher yeni görünümü kaydırarak getirir (madde 2).
+                    // Arama sorgusu anahtara DAHİL DEĞİL — her tuşta yeniden
+                    // animasyon tetiklenmez.
+                    final segmentKey =
+                        '${ref.watch(noteFilterProvider)}'
+                        '|${ref.watch(selectedFolderProvider) ?? ''}'
+                        '|${ref.watch(selectedTagProvider) ?? ''}';
                     return GestureDetector(
                       // Yatay çekişle filtreler/klasörler arasında gezin
                       // (madde 1). Dikey kaydırma CustomScrollView'de kalır;
@@ -344,7 +385,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         if (velocity.abs() < 200) return;
                         _cycleFilterFolder(velocity < 0 ? 1 : -1);
                       },
-                      child: CustomScrollView(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 260),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          // Çekiş yönüne göre yumuşak kaydır + soldur.
+                          final begin = Offset(_swipeForward ? 0.12 : -0.12, 0);
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SlideTransition(
+                              position: Tween(
+                                begin: begin,
+                                end: Offset.zero,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          );
+                        },
+                        layoutBuilder: (currentChild, previousChildren) => Stack(
+                          alignment: Alignment.topCenter,
+                          children: [...previousChildren, ?currentChild],
+                        ),
+                        child: CustomScrollView(
+                        key: ValueKey(segmentKey),
                         slivers: [
                         if (selectionActive)
                           SliverAppBar(
@@ -572,6 +636,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             context,
                             notes,
                             columns,
+                            cellWidth: cellWidth,
+                            selectionActive: selectionActive,
                             searchActive: query.trim().isNotEmpty,
                           ),
                           loading: () => [
@@ -592,6 +658,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         const SliverToBoxAdapter(child: SizedBox(height: 88)),
                       ],
+                      ),
                       ),
                     );
                   },
@@ -668,6 +735,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     BuildContext context,
     List<Note> notes,
     int columns, {
+    required double cellWidth,
+    required bool selectionActive,
     required bool searchActive,
   }) {
     final l10n = context.l10n;
@@ -696,16 +765,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ];
 
     final query = ref.read(searchQueryProvider).trim();
+    // Sürükle-sırala (madde 1) yalnızca süzgeçsiz görünümde açıktır: arama,
+    // etiket, klasör ya da tip filtresi bir alt küme gösterdiğinde elle sıra
+    // anlamsızdır (yalnız görünen notların orderIndex'i değişir). Seçim
+    // modunda da kapalıdır.
+    final reorderEnabled =
+        !selectionActive &&
+        !searchActive &&
+        ref.read(noteFilterProvider) == NoteFilter.all &&
+        ref.read(selectedFolderProvider) == null &&
+        ref.read(selectedTagProvider) == null;
+
     Widget grid(List<Note> items) => SliverMasonryGrid.count(
       crossAxisCount: columns,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       childCount: items.length,
-      itemBuilder: (context, index) => NoteCard(
-        key: ValueKey(items[index].id),
-        note: items[index],
-        highlightQuery: query,
-      ),
+      itemBuilder: (context, index) {
+        final note = items[index];
+        final card = NoteCard(note: note, highlightQuery: query);
+        if (!reorderEnabled) {
+          return KeyedSubtree(key: ValueKey(note.id), child: card);
+        }
+        return _ReorderableNoteCell(
+          key: ValueKey(note.id),
+          noteId: note.id,
+          index: index,
+          cellWidth: cellWidth,
+          inSection: (id) => items.any((n) => n.id == id),
+          onReorder: (draggedId, to) => _reorderSection(items, draggedId, to),
+          feedback: SizedBox(
+            width: cellWidth,
+            child: NoteCard(note: note, highlightQuery: query),
+          ),
+          child: card,
+        );
+      },
     );
 
     Widget header(String text) => SliverToBoxAdapter(
@@ -735,6 +830,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       header(l10n.sectionOthers),
       SliverPadding(padding: gridPadding, sliver: grid(others)),
     ];
+  }
+}
+
+/// Bir not kartını basılı tutup sürükleyerek yeniden sıralamayı sağlayan
+/// sarmalayıcı (madde 1). Uzun basış sürüklemeyi başlatır; başka bir kartın
+/// üzerine bırakılınca [onReorder] çağrılır. Sürükleme aynı bölümle
+/// sınırlıdır ([inSection]) — sabitliler ile diğerleri karışmaz.
+class _ReorderableNoteCell extends StatelessWidget {
+  const _ReorderableNoteCell({
+    super.key,
+    required this.noteId,
+    required this.index,
+    required this.cellWidth,
+    required this.inSection,
+    required this.onReorder,
+    required this.feedback,
+    required this.child,
+  });
+
+  final String noteId;
+  final int index;
+  final double cellWidth;
+  final bool Function(String draggedId) inSection;
+  final void Function(String draggedId, int toIndex) onReorder;
+  final Widget feedback;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return DragTarget<String>(
+      onWillAcceptWithDetails: (details) =>
+          details.data != noteId && inSection(details.data),
+      onAcceptWithDetails: (details) => onReorder(details.data, index),
+      builder: (context, candidate, rejected) {
+        final hovering = candidate.isNotEmpty;
+        return LongPressDraggable<String>(
+          data: noteId,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(width: cellWidth, child: feedback),
+          ),
+          childWhenDragging: Opacity(opacity: 0.3, child: child),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: hovering ? scheme.primary : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
   }
 }
 

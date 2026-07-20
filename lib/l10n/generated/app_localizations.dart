@@ -1672,6 +1672,30 @@ abstract class AppLocalizations {
   /// **'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.'**
   String get editFiltersInfo;
 
+  /// No description provided for @foldersSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler'**
+  String get foldersSection;
+
+  /// No description provided for @tagsSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketler'**
+  String get tagsSection;
+
+  /// No description provided for @expandFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri genişlet'**
+  String get expandFilters;
+
+  /// No description provided for @collapseFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri daralt'**
+  String get collapseFilters;
+
   /// No description provided for @select.
   ///
   /// In tr, this message translates to:

@@ -96,6 +96,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void initState() {
     super.initState();
+    // İlk açılış kasması (madde 3): editör başlangıçta _note null olduğu için
+    // bir kare boyunca CircularProgressIndicator gösterip ardından tüm editörü
+    // kuruyordu; bu geçiş, sayfa animasyonuyla aynı anda büyük bir yerleşim
+    // sıçraması yaratıyordu. Not zaten dashboard akışında yüklü olduğundan
+    // (kullanıcı oradan geldi) onu SENKRON okuyup ilk kareyi dolu kur —
+    // spinner→editör takası ve onunla gelen kasma ortadan kalkar.
+    final cached = _cachedNote();
+    if (cached != null) {
+      _note = cached;
+      _titleController.text = cached.title;
+      _bodyController.text = cached.body;
+    }
     if (widget.startDrawing) {
       // El yazısı modu: ilk kareden sonra doğrudan çizim tuvalini aç.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -144,6 +156,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _bodyController.dispose();
     _bodyFocus.dispose();
     super.dispose();
+  }
+
+  /// Dashboard akışında zaten yüklü olan notu senkron döndürür (varsa).
+  /// İlk kareyi dolu kurup açılış kasmasını önlemek için kullanılır.
+  Note? _cachedNote() {
+    final notes = ref.read(notesStreamProvider).value;
+    if (notes == null) return null;
+    for (final n in notes) {
+      if (n.id == widget.noteId) return n;
+    }
+    return null;
   }
 
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {

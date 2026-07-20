@@ -179,16 +179,128 @@ class NoteCard extends ConsumerWidget {
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
 
+    final hasTitle = note.title.trim().isNotEmpty;
+    // Durum rozetleri (yıldız/sabit/AI) başlık satırının sağında akar.
+    final badges = <Widget>[
+      if (note.starred) Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+      if (note.pinned)
+        Icon(Icons.push_pin, size: 14, color: scheme.onSurfaceVariant),
+      // AI özeti göstergesi rozet olarak sağ üstte durur.
+      if (!note.locked && note.aiSummary != null)
+        Icon(Icons.auto_awesome, size: 14, color: scheme.primary),
+    ];
+    // Üst satır yalnızca başlık ya da rozet varsa çizilir. Başlıksız notta
+    // (madde 5) boş bir üst bant bırakılmaz; içerik doğrudan tepeden başlar,
+    // "yazılar ortaya kayıyor" izlenimi ortadan kalkar.
+    final showTopRow = hasTitle || badges.isNotEmpty;
+
+    final content = Padding(
+      // Başlıksız kartta sağdan biraz içerik payı bırakılır ki ilk satır
+      // köşedeki üç nokta düğmesinin altına girmesin.
+      padding: EdgeInsets.fromLTRB(12, 10, showTopRow ? 12 : 20, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showTopRow)
+            Padding(
+              // Sağdaki 30px köşedeki üç nokta düğmesine yer açar; uzun başlık
+              // düğmenin altına girmeden kısalır (…).
+              padding: const EdgeInsets.only(bottom: 6, right: 30),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: hasTitle
+                        ? highlightedText(
+                            context,
+                            note.title,
+                            highlightQuery,
+                            maxLines: 2,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  for (final badge in badges)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: badge,
+                    ),
+                ],
+              ),
+            ),
+          // Kilitli not: içerik kartta gösterilmez; yalnızca kilit satırı.
+          if (note.locked)
+            Row(
+              children: [
+                Icon(
+                  Icons.lock_outline,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  context.l10n.lockedNote,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            _NotePreview(note: note, highlightQuery: highlightQuery),
+            if (note.attachments.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              _AttachmentPreview(attachments: note.attachments),
+            ],
+          ],
+          if (note.tags.isNotEmpty || note.reminderAt != null) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                if (note.reminderAt != null)
+                  _MiniBadge(
+                    icon: Icons.alarm,
+                    label:
+                        '${note.reminderAt!.day}.${note.reminderAt!.month} '
+                        '${note.reminderAt!.hour.toString().padLeft(2, '0')}:'
+                        '${note.reminderAt!.minute.toString().padLeft(2, '0')}',
+                  ),
+                // Kart etiketlerle uzamasın: en fazla 2 etiket + "+N".
+                for (final tag in note.tags.take(2)) _MiniBadge(label: '#$tag'),
+                if (note.tags.length > 2)
+                  _MiniBadge(label: '+${note.tags.length - 2}'),
+              ],
+            ),
+          ],
+          if (note.updatedAt != null) ...[
+            const SizedBox(height: 6),
+            // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                formatNoteDate(note.updatedAt!),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+
     final card = Material(
       color: NoteColors.surface(context, note.color),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        // Seçim modunda dokunuş seçimi değiştirir. Uzun basış HER ZAMAN
-        // seçim yapar; hızlı işlemler (paylaş/arşivle/kilitle/kopyala/sil)
-        // kartın sağ üstündeki üç nokta düğmesinden açılır.
+        // Seçim modunda dokunuş seçimi değiştirir; normalde notu açar. Uzun
+        // basış artık sürükle-sırala içindir (dashboard sarmalayıcısı yönetir);
+        // çoklu seçime giriş üç nokta menüsündeki "Seç" ile yapılır.
         onTap: selectionActive ? toggleSelection : () => _openNote(context),
-        onLongPress: _isDesktop ? null : toggleSelection,
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -206,150 +318,7 @@ class NoteCard extends ConsumerWidget {
                   : 1,
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Üst satır her kartta durur: başlık (varsa), rozetler ve
-                // sağ üstte hızlı işlem menüsü.
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: note.title.trim().isEmpty
-                            ? const SizedBox.shrink()
-                            : highlightedText(
-                                context,
-                                note.title,
-                                highlightQuery,
-                                maxLines: 1,
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                      ),
-                      if (note.starred)
-                        Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Colors.amber.shade600,
-                        ),
-                      if (note.pinned)
-                        Icon(
-                          Icons.push_pin,
-                          size: 14,
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      // AI özeti göstergesi: eskiden kartın altında ayrı bir
-                      // ikon+etiket satırıydı. Rozet olarak buraya taşındı —
-                      // kart bir katman kaybetti, bilgi kaybolmadı.
-                      if (!note.locked && note.aiSummary != null)
-                        Icon(
-                          Icons.auto_awesome,
-                          size: 14,
-                          color: scheme.primary,
-                        ),
-                      // Dokunma alanı 36dp: görsel ikon 18px kalıyor ama
-                      // hedef büyüyor. Önceden yalnız ikon kadardı (~18x22)
-                      // ve ıskalanıyordu. Kart 2 sütunlu ızgarada dar
-                      // olduğundan 48dp yerine 36dp — sıkışık ızgarada
-                      // kabul edilebilir orta yol.
-                      //
-                      // Seçim modunda ⋮ gizlenir ama YERİ (36x36) KORUNUR.
-                      // Aksi hâlde başlık satırı bu düğme kadar kısalıp kart
-                      // yüksekliği değişiyor; masonry ızgara sütun dengesini
-                      // yeniden hesaplayınca notlar seçim sırasında yer
-                      // değiştiriyor, seçim bitince eski sıraya dönüyordu.
-                      // (Seçili olduğu göstergesi sağ üstteki tik rozetidir.)
-                      if (selectionActive)
-                        const SizedBox(width: 36, height: 36)
-                      else
-                        InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () => showNoteActionsSheet(context, ref, note),
-                          child: SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: Icon(
-                              Icons.more_vert,
-                              size: 18,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                // Kilitli not: içerik kartta gösterilmez; yalnızca kilit
-                // satırı görünür (başlık yukarıda kalabilir).
-                if (note.locked)
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.lock_outline,
-                        size: 14,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.l10n.lockedNote,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  )
-                else ...[
-                  _NotePreview(note: note, highlightQuery: highlightQuery),
-                  if (note.attachments.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    _AttachmentPreview(attachments: note.attachments),
-                  ],
-                ],
-                if (note.tags.isNotEmpty || note.reminderAt != null) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      if (note.reminderAt != null)
-                        _MiniBadge(
-                          icon: Icons.alarm,
-                          label:
-                              '${note.reminderAt!.day}.${note.reminderAt!.month} '
-                              '${note.reminderAt!.hour.toString().padLeft(2, '0')}:'
-                              '${note.reminderAt!.minute.toString().padLeft(2, '0')}',
-                        ),
-                      // Kart etiketlerle uzamasın: en fazla 2 etiket + "+N".
-                      for (final tag in note.tags.take(2))
-                        _MiniBadge(label: '#$tag'),
-                      if (note.tags.length > 2)
-                        _MiniBadge(label: '+${note.tags.length - 2}'),
-                    ],
-                  ),
-                ],
-                if (note.updatedAt != null) ...[
-                  const SizedBox(height: 6),
-                  // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
-                  // fontSize 10 + %70 alfa kaldırıldı: 10px hem Material'in en
-                  // küçük rolünün (labelSmall 11sp) hem erişilebilirlik
-                  // tabanının altındaydı, alfa da renkli kart zeminlerinde
-                  // kontrastı düşürüyordu.
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      formatNoteDate(note.updatedAt!),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          child: content,
         ),
       ),
     );
@@ -363,6 +332,38 @@ class NoteCard extends ConsumerWidget {
         child: Stack(
           children: [
             card,
+            // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
+            // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
+            // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
+            // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
+            // seçim sırasında sabit kalır).
+            if (!selectionActive)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () => showNoteActionsSheet(context, ref, note),
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: Padding(
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(
+                            Icons.more_vert,
+                            size: 18,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             if (selected)
               Positioned(
                 top: 6,

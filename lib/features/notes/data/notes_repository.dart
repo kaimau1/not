@@ -159,6 +159,20 @@ class NotesRepository {
     );
   }
 
+  /// Notların elle sıralamasını (madde 1: basılı tutup sürükle) kalıcılaştırır.
+  /// Verilen liste yeni görünüm sırasıdır; her nota eşit aralıklı bir
+  /// [Note.orderIndex] atanır. Yalnız değeri değişen notlar yazılır — sürükleme
+  /// başına gereksiz Firestore yazımı olmaz. Sıralama, akıştaki `_compare`
+  /// tarafından (sabitliler önce, sonra orderIndex artan) uygulanır.
+  void reorderNotes(List<Note> ordered) {
+    for (var i = 0; i < ordered.length; i++) {
+      final want = i * 1000.0;
+      if (ordered[i].orderIndex != want) {
+        updateFields(ordered[i].id, {'orderIndex': want});
+      }
+    }
+  }
+
   void setPinned(String noteId, bool pinned) =>
       updateFields(noteId, {'pinned': pinned});
 

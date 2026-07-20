@@ -436,6 +436,10 @@
   "sortUpdated": "Son güncellenen",
   "sortCreated": "Oluşturulma tarihi",
   "sortTitle": "Başlığa göre (A-Z)",
+  "foldersSection": "Klasörler",
+  "tagsSection": "Etiketler",
+  "expandFilters": "Filtreleri genişlet",
+  "collapseFilters": "Filtreleri daralt",
   "@listenToPdf": {"placeholders": {"name": {"type": "String"}}},
   "@largeAttachmentBody": {"placeholders": {"size": {"type": "String"}}}
 }
