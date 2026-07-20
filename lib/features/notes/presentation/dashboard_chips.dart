@@ -176,6 +176,7 @@ class DashboardChipsRow extends ConsumerWidget {
     final selectedFolder = ref.watch(selectedFolderProvider);
     final counts = ref.watch(tagCountsProvider);
     final selectedTag = ref.watch(selectedTagProvider);
+    final expanded = ref.watch(filtersExpandedProvider);
 
     // "Tümü" başta sabit; gerisi kullanıcının menüde belirlediği SIRAYLA
     // gelir (madde 1).
@@ -198,91 +199,181 @@ class DashboardChipsRow extends ConsumerWidget {
     }
     final hiddenTagCount = byUsage.length - visibleTags.length;
 
-    final children = <Widget>[
-      // Filtre menüsü: hangi çiplerin görüneceğini kullanıcı seçer.
-      _compact(
-        ActionChip(
-          tooltip: l10n.editFilters,
-          label: Icon(Icons.tune, size: 16, color: scheme.onSurfaceVariant),
-          onPressed: () => _showFilterMenu(context, ref),
+    // --- Çip üreticileri: hem kompakt satır hem genişletilmiş panel kullanır.
+    Widget expandChip() => _compact(
+      ActionChip(
+        tooltip: expanded ? l10n.collapseFilters : l10n.expandFilters,
+        label: Icon(
+          expanded ? Icons.expand_less : Icons.expand_more,
+          size: 18,
+          color: scheme.onSurfaceVariant,
         ),
+        onPressed: () => ref.read(filtersExpandedProvider.notifier).toggle(),
       ),
-      for (final (f, label) in filterEntries)
-        _compact(
-          FilterChip(
-            label: Text(label),
-            selected: filter == f,
-            showCheckmark: false,
-            onSelected: (_) => ref.read(noteFilterProvider.notifier).set(f),
-          ),
-        ),
-      // Klasörler: simgeli çipler; uzun basış düzenleme/silme menüsü açar.
-      for (final folder in folders)
-        GestureDetector(
-          onLongPress: () => showFolderActionsSheet(context, ref, folder),
-          child: _compact(
-            FilterChip(
-              avatar: Icon(
-                folder.iconData,
-                size: 16,
-                color: selectedFolder == folder.id
-                    ? scheme.onSecondaryContainer
-                    : scheme.onSurfaceVariant,
-              ),
-              label: Text(folder.name),
-              selected: selectedFolder == folder.id,
-              showCheckmark: false,
-              onSelected: (isSelected) => ref
-                  .read(selectedFolderProvider.notifier)
-                  .set(isSelected ? folder.id : null),
-            ),
-          ),
-        ),
-      _compact(
-        ActionChip(
-          tooltip: l10n.newFolder,
-          label: Icon(
-            Icons.create_new_folder_outlined,
-            size: 16,
-            color: scheme.onSurfaceVariant,
-          ),
-          onPressed: () => showFolderEditorDialog(context, ref),
-        ),
-      ),
-      for (final tag in visibleTags)
-        _compact(
-          FilterChip(
-            label: Text('#$tag'),
-            selected: selectedTag == tag,
-            showCheckmark: false,
-            onSelected: (isSelected) => ref
-                .read(selectedTagProvider.notifier)
-                .set(isSelected ? tag : null),
-          ),
-        ),
-      if (hiddenTagCount > 0)
-        _compact(
-          ActionChip(
-            label: Text('+$hiddenTagCount'),
-            onPressed: () => _showAllTags(
-              context,
-              ref,
-              ref.read(allTagsProvider),
-              selectedTag,
-            ),
-          ),
-        ),
-    ];
+    );
 
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        scrollDirection: Axis.horizontal,
-        itemCount: children.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, index) => Center(child: children[index]),
+    Widget filterMenuChip() => _compact(
+      ActionChip(
+        tooltip: l10n.editFilters,
+        label: Icon(Icons.tune, size: 16, color: scheme.onSurfaceVariant),
+        onPressed: () => _showFilterMenu(context, ref),
       ),
+    );
+
+    Widget filterChip(NoteFilter f, String label) => _compact(
+      FilterChip(
+        label: Text(label),
+        selected: filter == f,
+        showCheckmark: false,
+        onSelected: (_) => ref.read(noteFilterProvider.notifier).set(f),
+      ),
+    );
+
+    // Klasör çipi: simgeli; uzun basış düzenleme/silme menüsü açar.
+    Widget folderChip(NoteFolder folder) => GestureDetector(
+      onLongPress: () => showFolderActionsSheet(context, ref, folder),
+      child: _compact(
+        FilterChip(
+          avatar: Icon(
+            folder.iconData,
+            size: 16,
+            color: selectedFolder == folder.id
+                ? scheme.onSecondaryContainer
+                : scheme.onSurfaceVariant,
+          ),
+          label: Text(folder.name),
+          selected: selectedFolder == folder.id,
+          showCheckmark: false,
+          onSelected: (isSelected) => ref
+              .read(selectedFolderProvider.notifier)
+              .set(isSelected ? folder.id : null),
+        ),
+      ),
+    );
+
+    Widget newFolderChip() => _compact(
+      ActionChip(
+        tooltip: l10n.newFolder,
+        label: Icon(
+          Icons.create_new_folder_outlined,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
+        onPressed: () => showFolderEditorDialog(context, ref),
+      ),
+    );
+
+    Widget tagChip(String tag) => _compact(
+      FilterChip(
+        label: Text('#$tag'),
+        selected: selectedTag == tag,
+        showCheckmark: false,
+        onSelected: (isSelected) =>
+            ref.read(selectedTagProvider.notifier).set(isSelected ? tag : null),
+      ),
+    );
+
+    Widget moreTagsChip() => _compact(
+      ActionChip(
+        label: Text('+$hiddenTagCount'),
+        onPressed: () =>
+            _showAllTags(context, ref, ref.read(allTagsProvider), selectedTag),
+      ),
+    );
+
+    Widget sectionLabel(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          letterSpacing: 1.1,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+
+    // Kompakt (kapalı) görünüm: tek satırda yatay kayan tüm çipler + genişlet
+    // düğmesi.
+    Widget collapsed() {
+      final children = <Widget>[
+        expandChip(),
+        filterMenuChip(),
+        for (final (f, label) in filterEntries) filterChip(f, label),
+        for (final folder in folders) folderChip(folder),
+        newFolderChip(),
+        for (final tag in visibleTags) tagChip(tag),
+        if (hiddenTagCount > 0) moreTagsChip(),
+      ];
+      return SizedBox(
+        height: 40,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+          scrollDirection: Axis.horizontal,
+          itemCount: children.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 6),
+          itemBuilder: (context, index) => Center(child: children[index]),
+        ),
+      );
+    }
+
+    // Genişletilmiş görünüm (madde 4): filtreler tek satırda kalır; klasörler
+    // ve etiketler bölümler hâlinde Wrap ile TAM görünür (yatay kaydırma
+    // gerektirmeden), açılıp kapatılabilir.
+    Widget expandedPanel() {
+      final allTags = ref.watch(allTagsProvider);
+      final filterRow = <Widget>[
+        expandChip(),
+        filterMenuChip(),
+        for (final (f, label) in filterEntries) filterChip(f, label),
+      ];
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+              scrollDirection: Axis.horizontal,
+              itemCount: filterRow.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, index) => Center(child: filterRow[index]),
+            ),
+          ),
+          sectionLabel(l10n.foldersSection),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final folder in folders) folderChip(folder),
+                newFolderChip(),
+              ],
+            ),
+          ),
+          if (allTags.isNotEmpty) ...[
+            sectionLabel(l10n.tagsSection),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [for (final tag in allTags) tagChip(tag)],
+              ),
+            ),
+          ] else
+            const SizedBox(height: 10),
+        ],
+      );
+    }
+
+    // Aç/kapa geçişini yumuşat: yükseklik değişimi ani sıçramaz.
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: expanded ? expandedPanel() : collapsed(),
     );
   }
 }

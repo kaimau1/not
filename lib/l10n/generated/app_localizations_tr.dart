@@ -863,6 +863,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get editFilters => 'Filtreleri düzenle';
 
   @override
+  String get foldersSection => 'Klasörler';
+
+  @override
+  String get tagsSection => 'Etiketler';
+
+  @override
+  String get expandFilters => 'Filtreleri genişlet';
+
+  @override
+  String get collapseFilters => 'Filtreleri daralt';
+
+  @override
   String get editFiltersInfo =>
       'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.';
 

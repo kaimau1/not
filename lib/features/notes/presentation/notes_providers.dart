@@ -103,6 +103,20 @@ class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
   }
 }
 
+/// Ana ekran filtre barı genişletildi mi? (madde 4) Kapalıyken tek satır
+/// kompakt çip; açıkken klasör ve etiketler bölümler hâlinde tam görünür.
+final filtersExpandedProvider =
+    NotifierProvider<FiltersExpandedNotifier, bool>(
+      FiltersExpandedNotifier.new,
+    );
+
+class FiltersExpandedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
 /// Seçili klasör (null = klasör filtresi yok).
 final selectedFolderProvider =
     NotifierProvider<SelectedFolderNotifier, String?>(
