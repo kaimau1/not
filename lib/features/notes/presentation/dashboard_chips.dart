@@ -33,34 +33,24 @@ class DashboardChipsRow extends ConsumerWidget {
       builder: (sheetContext) => SafeArea(
         child: Consumer(
           builder: (context, sheetRef, _) {
+            final scheme = Theme.of(context).colorScheme;
             final visible = sheetRef.watch(visibleNoteFiltersProvider);
-            final entries = <(NoteFilter, String, IconData)>[
-              (NoteFilter.pinned, l10n.filterPinned, Icons.push_pin_outlined),
-              (NoteFilter.starred, l10n.filterStarred, Icons.star_outline),
-              (NoteFilter.text, l10n.filterText, Icons.notes),
-              (
-                NoteFilter.checklist,
-                l10n.filterChecklist,
-                Icons.check_box_outlined,
-              ),
-              (
-                NoteFilter.ordered,
-                l10n.filterOrdered,
-                Icons.format_list_numbered_rounded,
-              ),
+            final hidden = [
+              for (final f in NoteFilter.values)
+                if (f != NoteFilter.all && !visible.contains(f)) f,
             ];
+            final notifier = sheetRef.read(
+              visibleNoteFiltersProvider.notifier,
+            );
             return Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-                  child: Row(
-                    children: [
-                      Text(
-                        l10n.editFilters,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ],
+                  child: Text(
+                    l10n.editFilters,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 Padding(
@@ -68,20 +58,66 @@ class DashboardChipsRow extends ConsumerWidget {
                   child: Text(
                     l10n.editFiltersInfo,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: scheme.onSurfaceVariant,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                for (final (filter, label, icon) in entries)
-                  SwitchListTile(
+                const SizedBox(height: 8),
+                // Görünür filtreler: sürükleme tutamacıyla yeri değiştirilir
+                // (madde 1 — "filtrelerin yeri ayarlanabilir olsun"), eksi
+                // düğmesiyle gizlenir.
+                if (visible.isNotEmpty)
+                  ReorderableListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    buildDefaultDragHandles: false,
+                    padding: EdgeInsets.zero,
+                    itemCount: visible.length,
+                    onReorder: notifier.reorder,
+                    itemBuilder: (context, index) {
+                        final filter = visible[index];
+                        return ListTile(
+                          key: ValueKey(filter),
+                          dense: true,
+                          leading: Icon(_filterIcon(filter)),
+                          title: Text(_filterLabel(l10n, filter)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                tooltip: l10n.editFilters,
+                                icon: Icon(
+                                  Icons.remove_circle_outline,
+                                  color: scheme.error,
+                                ),
+                                onPressed: () => notifier.toggle(filter),
+                              ),
+                              ReorderableDragStartListener(
+                                index: index,
+                                child: Icon(
+                                  Icons.drag_handle,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                  ),
+                // Gizli filtreler: artı düğmesiyle eklenir.
+                for (final filter in hidden)
+                  ListTile(
                     dense: true,
-                    secondary: Icon(icon),
-                    title: Text(label),
-                    value: visible.contains(filter),
-                    onChanged: (_) => sheetRef
-                        .read(visibleNoteFiltersProvider.notifier)
-                        .toggle(filter),
+                    leading: Icon(
+                      _filterIcon(filter),
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    title: Text(_filterLabel(l10n, filter)),
+                    trailing: IconButton(
+                      tooltip: l10n.editFilters,
+                      icon: Icon(Icons.add_circle_outline, color: scheme.primary),
+                      onPressed: () => notifier.toggle(filter),
+                    ),
                   ),
                 const SizedBox(height: 8),
               ],
@@ -136,21 +172,11 @@ class DashboardChipsRow extends ConsumerWidget {
     final counts = ref.watch(tagCountsProvider);
     final selectedTag = ref.watch(selectedTagProvider);
 
+    // "Tümü" başta sabit; gerisi kullanıcının menüde belirlediği SIRAYLA
+    // gelir (madde 1).
     final filterEntries = <(NoteFilter, String)>[
       (NoteFilter.all, l10n.filterAll),
-      for (final f in NoteFilter.values)
-        if (f != NoteFilter.all && visibleFilters.contains(f))
-          (
-            f,
-            switch (f) {
-              NoteFilter.text => l10n.filterText,
-              NoteFilter.checklist => l10n.filterChecklist,
-              NoteFilter.ordered => l10n.filterOrdered,
-              NoteFilter.pinned => l10n.filterPinned,
-              NoteFilter.starred => l10n.filterStarred,
-              NoteFilter.all => l10n.filterAll,
-            },
-          ),
+      for (final f in visibleFilters) (f, _filterLabel(l10n, f)),
     ];
 
     // Etiketler: en sık kullanılanlar öne, kalanı "+N" arkasında.
@@ -255,3 +281,23 @@ class DashboardChipsRow extends ConsumerWidget {
     );
   }
 }
+
+/// Filtre türünün simgesi — hem çip barında hem filtre menüsünde kullanılır.
+IconData _filterIcon(NoteFilter filter) => switch (filter) {
+  NoteFilter.all => Icons.all_inclusive,
+  NoteFilter.text => Icons.notes,
+  NoteFilter.checklist => Icons.check_box_outlined,
+  NoteFilter.ordered => Icons.format_list_numbered_rounded,
+  NoteFilter.pinned => Icons.push_pin_outlined,
+  NoteFilter.starred => Icons.star_outline,
+};
+
+/// Filtre türünün yerelleştirilmiş etiketi.
+String _filterLabel(AppLocalizations l10n, NoteFilter filter) => switch (filter) {
+  NoteFilter.all => l10n.filterAll,
+  NoteFilter.text => l10n.filterText,
+  NoteFilter.checklist => l10n.filterChecklist,
+  NoteFilter.ordered => l10n.filterOrdered,
+  NoteFilter.pinned => l10n.filterPinned,
+  NoteFilter.starred => l10n.filterStarred,
+};

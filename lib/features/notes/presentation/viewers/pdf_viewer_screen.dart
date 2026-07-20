@@ -18,11 +18,15 @@ class PdfViewerScreen extends StatelessWidget {
         attachment.localPath.isNotEmpty &&
         File(attachment.localPath).existsSync();
 
+    // Metin seçimi açık: kullanıcı PDF içindeki yazıyı seçip kopyalayabilsin
+    // (madde 2 — önceden PDF salt görüntüydü, içeriğe erişilemiyordu).
+    const params = PdfViewerParams(enableTextSelection: true);
+
     Widget viewer;
     if (hasLocal) {
-      viewer = PdfViewer.file(attachment.localPath);
+      viewer = PdfViewer.file(attachment.localPath, params: params);
     } else if (attachment.isUploaded) {
-      viewer = PdfViewer.uri(Uri.parse(attachment.downloadUrl));
+      viewer = PdfViewer.uri(Uri.parse(attachment.downloadUrl), params: params);
     } else {
       viewer = const Center(
         child: Icon(Icons.picture_as_pdf_outlined, size: 64),

@@ -38,43 +38,68 @@ class NoteSortNotifier extends Notifier<NoteSort> {
 /// Ana ekranda görünen filtre çipleri. "Tümü" her zaman görünür; gerisi
 /// kullanıcı isteğine bağlıdır. Varsayılanda tip filtreleri (metin/liste/
 /// sıralı) gizlidir — sayfa sade kalır, isteyen filtre menüsünden ekler.
+///
+/// Sıralı liste (Set değil): kullanıcı filtre menüsünden çipleri sürükleyip
+/// yeniden dizebilir; sıra kalıcıdır ve çip barında aynen uygulanır.
 final visibleNoteFiltersProvider =
-    NotifierProvider<VisibleNoteFiltersNotifier, Set<NoteFilter>>(
+    NotifierProvider<VisibleNoteFiltersNotifier, List<NoteFilter>>(
       VisibleNoteFiltersNotifier.new,
     );
 
-class VisibleNoteFiltersNotifier extends Notifier<Set<NoteFilter>> {
+class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
   static const _key = 'visible_filters';
-  static const _defaults = {NoteFilter.pinned, NoteFilter.starred};
+  static const _defaults = [NoteFilter.pinned, NoteFilter.starred];
 
   @override
-  Set<NoteFilter> build() {
+  List<NoteFilter> build() {
     final stored = ref.watch(sharedPreferencesProvider).getStringList(_key);
     if (stored == null) return _defaults;
-    return {
-      for (final name in stored)
-        for (final filter in NoteFilter.values)
-          if (filter.name == name && filter != NoteFilter.all) filter,
-    };
+    // Kayıtlı sırayı koru; geçersiz/yinelenen adları ve "Tümü"yü ele.
+    final result = <NoteFilter>[];
+    for (final name in stored) {
+      for (final filter in NoteFilter.values) {
+        if (filter.name == name &&
+            filter != NoteFilter.all &&
+            !result.contains(filter)) {
+          result.add(filter);
+        }
+      }
+    }
+    return result;
+  }
+
+  void _persist(List<NoteFilter> next) {
+    ref.read(sharedPreferencesProvider).setStringList(_key, [
+      for (final f in next) f.name,
+    ]);
   }
 
   void toggle(NoteFilter filter) {
     if (filter == NoteFilter.all) return;
     final next = state.contains(filter)
-        ? {
+        ? [
             for (final f in state)
               if (f != filter) f,
-          }
-        : {...state, filter};
+          ]
+        : [...state, filter];
     state = next;
-    ref.read(sharedPreferencesProvider).setStringList(_key, [
-      for (final f in next) f.name,
-    ]);
+    _persist(next);
     // Gizlenen filtre o an seçiliyse listeyi kilitlemesin.
     if (!next.contains(ref.read(noteFilterProvider)) &&
         ref.read(noteFilterProvider) != NoteFilter.all) {
       ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
     }
+  }
+
+  /// Görünür filtrelerin sırasını değiştirir (filtre menüsünde sürükle-bırak).
+  void reorder(int oldIndex, int newIndex) {
+    final next = [...state];
+    var target = newIndex;
+    if (target > oldIndex) target -= 1;
+    final item = next.removeAt(oldIndex);
+    next.insert(target, item);
+    state = next;
+    _persist(next);
   }
 }
 

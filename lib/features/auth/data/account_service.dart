@@ -29,21 +29,29 @@ class AccountService {
     // 1) Storage: kullanıcının tüm ekleri (users/{uid} altı, özyinelemeli).
     await _deleteStorageFolder(FirebaseStorage.instance.ref('users/$uid'));
 
-    // 2) Firestore: tüm notlar (çöp/arşiv dahil) + kök doküman.
-    final notes = await firestore
+    // 2) Firestore: tüm alt koleksiyonlar (notlar/klasörler/AI bildirimleri)
+    // + kök doküman. Firestore'da bir dokümanı silmek alt koleksiyonlarını
+    // SİLMEZ; bu yüzden her alt koleksiyon tek tek boşaltılır — aksi hâlde
+    // hesap silindikten sonra Firebase'de yetim veri kalırdı.
+    final userDoc = firestore
         .collection(AppConstants.usersCollection)
-        .doc(uid)
-        .collection(AppConstants.notesCollection)
-        .get();
-    // Batch sınırı 500; 400'erlik güvenli gruplar.
-    for (var i = 0; i < notes.docs.length; i += 400) {
-      final batch = firestore.batch();
-      for (final doc in notes.docs.skip(i).take(400)) {
-        batch.delete(doc.reference);
+        .doc(uid);
+    for (final name in const [
+      AppConstants.notesCollection,
+      AppConstants.foldersCollection,
+      'aiReports',
+    ]) {
+      final snapshot = await userDoc.collection(name).get();
+      // Batch sınırı 500; 400'erlik güvenli gruplar.
+      for (var i = 0; i < snapshot.docs.length; i += 400) {
+        final batch = firestore.batch();
+        for (final doc in snapshot.docs.skip(i).take(400)) {
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
       }
-      await batch.commit();
     }
-    await firestore.collection(AppConstants.usersCollection).doc(uid).delete();
+    await userDoc.delete();
 
     // 3) Auth hesabı. Firebase güvenlik gereği taze oturum ister; oturum
     // eskiyse yeniden Google girişi yaptırılıp tekrar denenir.
