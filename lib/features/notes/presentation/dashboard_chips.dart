@@ -73,6 +73,11 @@ class DashboardChipsRow extends ConsumerWidget {
                     buildDefaultDragHandles: false,
                     padding: EdgeInsets.zero,
                     itemCount: visible.length,
+                    // Yeni API `onReorderItem` newIndex'i kendi içinde
+                    // düzeltiyor; buradaki reorder klasik `onReorder`
+                    // semantiğine göre (newIndex ham) yazıldığından onu koruyup
+                    // deprecation uyarısını bu satırda bastırıyoruz.
+                    // ignore: deprecated_member_use
                     onReorder: notifier.reorder,
                     itemBuilder: (context, index) {
                         final filter = visible[index];
