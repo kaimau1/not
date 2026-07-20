@@ -47,4 +47,6 @@ app.*.map.json
 # Yerel gizli değerler
 env.json
 
-graphify-out/
+# graphify-out/ artık commit'leniyor — kod grafı bulut oturumları ve CI
+# tarafından okunabilsin diye. Grafı üretmek/tazelemek için ana makinede:
+#   graphify update .
