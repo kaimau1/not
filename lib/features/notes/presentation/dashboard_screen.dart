@@ -405,10 +405,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         },
                         layoutBuilder: (currentChild, previousChildren) => Stack(
                           alignment: Alignment.topCenter,
-                          children: [
-                            ...previousChildren,
-                            if (currentChild != null) currentChild,
-                          ],
+                          children: [...previousChildren, ?currentChild],
                         ),
                         child: CustomScrollView(
                         key: ValueKey(segmentKey),
