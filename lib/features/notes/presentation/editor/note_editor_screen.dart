@@ -21,6 +21,7 @@ import '../../../../core/utils/note_guard.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
+import '../../../ai/presentation/listen_screen.dart';
 import '../../../folders/data/folders_repository.dart';
 import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
@@ -625,6 +626,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ShareParams(
         text: text,
         subject: note.title.trim().isEmpty ? 'Not' : note.title.trim(),
+      ),
+    );
+  }
+
+  /// Notu cihazın TTS'iyle sesli okur (model çağrısı yok). Kilitli notta
+  /// ayrıca doğrulama yok — editör zaten açılırken doğruluyor.
+  Future<void> _listen() async {
+    final note = _note;
+    if (note == null) return;
+    final title = note.title.trim();
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ListenScreen(
+          title: title.isEmpty ? context.l10n.appName : title,
+          // toPlainText değil: başlık ve `- [x]` işaretleri okunmasın.
+          loadText: () async => note.toContentText(),
+        ),
       ),
     );
   }
@@ -1311,6 +1329,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 switch (action) {
                   case 'share':
                     _share();
+                  case 'listen':
+                    _listen();
                   case 'lock':
                     _toggleLock();
                   case 'archive':
@@ -1329,6 +1349,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.share_outlined),
                     title: Text(l10n.share),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'listen',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.headphones_outlined),
+                    title: Text(l10n.listenToNote),
                   ),
                 ),
                 PopupMenuItem(

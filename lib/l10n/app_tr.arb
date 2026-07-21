@@ -83,12 +83,14 @@
   "aiTitle": "Yapay Zeka",
   "aiSummarize": "Notu özetle",
   "aiAnalyze": "Analiz et",
-  "aiSummarizePdf": "PDF'i özetle: {name}",
-  "@aiSummarizePdf": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
+  "aiSectionNote": "Bu not",
+  "aiSectionAttachments": "Ekler",
+  "summarize": "Özetle",
+  "listen": "Sesli dinle",
+  "ask": "Soru sor",
+  "extractText": "Metni çıkar",
+  "transcribe": "Yazıya dök",
+  "listenToNote": "Sesli oku",
   "aiSuggestions": "Öneriler",
   "aiNoApiKey": "Önce Ayarlar'dan Gemini API anahtarını gir",
   "aiError": "Yapay zeka isteği başarısız: {error}",
@@ -206,18 +208,6 @@
   "addDrawing": "Çizim ekle",
   "drawingTitle": "Çizim",
   "addToNote": "Nota ekle",
-  "aiExtractImageText": "Görseldeki metni çıkar: {name}",
-  "@aiExtractImageText": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
-  "aiTranscribeAudio": "Yazıya dök: {name}",
-  "@aiTranscribeAudio": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
   "chatTitle": "Notlarla Sohbet",
   "chatHint": "Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"",
   "chatInputHint": "Bir soru yaz...",
@@ -276,12 +266,6 @@
   "improveBullets": "Madde listesine çevir",
   "improveNumbered": "Sıralı (numaralı) listeye çevir",
   "replaceNote": "Notu değiştir",
-  "aiAskPdf": "PDF'e soru sor: {name}",
-  "@aiAskPdf": {
-    "placeholders": {
-      "name": {"type": "String"}
-    }
-  },
   "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
   "pdfChatInputHint": "PDF hakkında bir soru yaz...",
   "voiceNoteTitle": "Sesli Not",
@@ -409,7 +393,6 @@
   "listenPodcastCached": "Daha önce üretilmişti — token harcanmadı",
   "listenRegenerate": "Yeniden üret",
   "listenNoText": "Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.",
-  "listenToPdf": "Sesli dinle: {name}",
   "readDocument": "Belge oku (Word, PDF, sunum)",
   "readDocUnsupported": "Bu dosya türü okunamıyor.",
   "exportPdf": "PDF olarak dışa aktar",
@@ -440,6 +423,5 @@
   "tagsSection": "Etiketler",
   "expandFilters": "Filtreleri genişlet",
   "collapseFilters": "Filtreleri daralt",
-  "@listenToPdf": {"placeholders": {"name": {"type": "String"}}},
   "@largeAttachmentBody": {"placeholders": {"size": {"type": "String"}}}
 }

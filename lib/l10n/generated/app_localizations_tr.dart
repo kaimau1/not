@@ -167,9 +167,28 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiAnalyze => 'Analiz et';
 
   @override
-  String aiSummarizePdf(String name) {
-    return 'PDF\'i özetle: $name';
-  }
+  String get aiSectionNote => 'Bu not';
+
+  @override
+  String get aiSectionAttachments => 'Ekler';
+
+  @override
+  String get summarize => 'Özetle';
+
+  @override
+  String get listen => 'Sesli dinle';
+
+  @override
+  String get ask => 'Soru sor';
+
+  @override
+  String get extractText => 'Metni çıkar';
+
+  @override
+  String get transcribe => 'Yazıya dök';
+
+  @override
+  String get listenToNote => 'Sesli oku';
 
   @override
   String get aiSuggestions => 'Öneriler';
@@ -451,16 +470,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addToNote => 'Nota ekle';
 
   @override
-  String aiExtractImageText(String name) {
-    return 'Görseldeki metni çıkar: $name';
-  }
-
-  @override
-  String aiTranscribeAudio(String name) {
-    return 'Yazıya dök: $name';
-  }
-
-  @override
   String get chatTitle => 'Notlarla Sohbet';
 
   @override
@@ -613,11 +622,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get replaceNote => 'Notu değiştir';
-
-  @override
-  String aiAskPdf(String name) {
-    return 'PDF\'e soru sor: $name';
-  }
 
   @override
   String get pdfChatHint =>
@@ -863,18 +867,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get editFilters => 'Filtreleri düzenle';
 
   @override
-  String get foldersSection => 'Klasörler';
-
-  @override
-  String get tagsSection => 'Etiketler';
-
-  @override
-  String get expandFilters => 'Filtreleri genişlet';
-
-  @override
-  String get collapseFilters => 'Filtreleri daralt';
-
-  @override
   String get editFiltersInfo =>
       'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.';
 
@@ -986,11 +978,6 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.';
 
   @override
-  String listenToPdf(String name) {
-    return 'Sesli dinle: $name';
-  }
-
-  @override
   String get readDocument => 'Belge oku (Word, PDF, sunum)';
 
   @override
@@ -1058,4 +1045,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get sortTitle => 'Başlığa göre (A-Z)';
+
+  @override
+  String get foldersSection => 'Klasörler';
+
+  @override
+  String get tagsSection => 'Etiketler';
+
+  @override
+  String get expandFilters => 'Filtreleri genişlet';
+
+  @override
+  String get collapseFilters => 'Filtreleri daralt';
 }

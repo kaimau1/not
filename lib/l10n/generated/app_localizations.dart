@@ -382,11 +382,53 @@ abstract class AppLocalizations {
   /// **'Analiz et'**
   String get aiAnalyze;
 
-  /// No description provided for @aiSummarizePdf.
+  /// No description provided for @aiSectionNote.
   ///
   /// In tr, this message translates to:
-  /// **'PDF\'i özetle: {name}'**
-  String aiSummarizePdf(String name);
+  /// **'Bu not'**
+  String get aiSectionNote;
+
+  /// No description provided for @aiSectionAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler'**
+  String get aiSectionAttachments;
+
+  /// No description provided for @summarize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetle'**
+  String get summarize;
+
+  /// No description provided for @listen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli dinle'**
+  String get listen;
+
+  /// No description provided for @ask.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soru sor'**
+  String get ask;
+
+  /// No description provided for @extractText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni çıkar'**
+  String get extractText;
+
+  /// No description provided for @transcribe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıya dök'**
+  String get transcribe;
+
+  /// No description provided for @listenToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli oku'**
+  String get listenToNote;
 
   /// No description provided for @aiSuggestions.
   ///
@@ -910,18 +952,6 @@ abstract class AppLocalizations {
   /// **'Nota ekle'**
   String get addToNote;
 
-  /// No description provided for @aiExtractImageText.
-  ///
-  /// In tr, this message translates to:
-  /// **'Görseldeki metni çıkar: {name}'**
-  String aiExtractImageText(String name);
-
-  /// No description provided for @aiTranscribeAudio.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazıya dök: {name}'**
-  String aiTranscribeAudio(String name);
-
   /// No description provided for @chatTitle.
   ///
   /// In tr, this message translates to:
@@ -1209,12 +1239,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Notu değiştir'**
   String get replaceNote;
-
-  /// No description provided for @aiAskPdf.
-  ///
-  /// In tr, this message translates to:
-  /// **'PDF\'e soru sor: {name}'**
-  String aiAskPdf(String name);
 
   /// No description provided for @pdfChatHint.
   ///
@@ -1672,30 +1696,6 @@ abstract class AppLocalizations {
   /// **'Ana ekranda görünmesini istediğin filtreleri seç. Kapalı filtreler sayfayı sade tutar.'**
   String get editFiltersInfo;
 
-  /// No description provided for @foldersSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Klasörler'**
-  String get foldersSection;
-
-  /// No description provided for @tagsSection.
-  ///
-  /// In tr, this message translates to:
-  /// **'Etiketler'**
-  String get tagsSection;
-
-  /// No description provided for @expandFilters.
-  ///
-  /// In tr, this message translates to:
-  /// **'Filtreleri genişlet'**
-  String get expandFilters;
-
-  /// No description provided for @collapseFilters.
-  ///
-  /// In tr, this message translates to:
-  /// **'Filtreleri daralt'**
-  String get collapseFilters;
-
   /// No description provided for @select.
   ///
   /// In tr, this message translates to:
@@ -1900,12 +1900,6 @@ abstract class AppLocalizations {
   /// **'Bu belgeden okunabilir metin çıkmadı. Taranmış bir PDF ise metin katmanı yoktur, sunumsa yalnızca görsel içeriyor olabilir.'**
   String get listenNoText;
 
-  /// No description provided for @listenToPdf.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli dinle: {name}'**
-  String listenToPdf(String name);
-
   /// No description provided for @readDocument.
   ///
   /// In tr, this message translates to:
@@ -2031,6 +2025,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Başlığa göre (A-Z)'**
   String get sortTitle;
+
+  /// No description provided for @foldersSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler'**
+  String get foldersSection;
+
+  /// No description provided for @tagsSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketler'**
+  String get tagsSection;
+
+  /// No description provided for @expandFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri genişlet'**
+  String get expandFilters;
+
+  /// No description provided for @collapseFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Filtreleri daralt'**
+  String get collapseFilters;
 }
 
 class _AppLocalizationsDelegate

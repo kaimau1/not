@@ -43,12 +43,23 @@ class _ItemsEditorState extends State<ItemsEditor> {
   final _controllers = <String, TextEditingController>{};
   final _focusNodes = <String, FocusNode>{};
 
-  /// Toplu işlem için seçilen öğeler. Boşken seçim modu kapalıdır.
+  /// Toplu işlem için seçilen öğeler.
   /// Metin alanları ayrı TextField olduğundan sistemin metin seçimi
   /// satırlar arasına geçemez; toplu kopyalama/silme bu modla yapılır.
   final _selected = <String>{};
 
-  bool get _selectionMode => _selected.isNotEmpty;
+  /// "Seç" düğmesiyle açılan mod. Seçim satırın sol kenarına uzun basışla da
+  /// açılıyordu ama o bölge dar ve görünmez — hiçbir yerde yazmadığı için
+  /// bulunamıyordu; düğme aynı modu görünür kılar (henüz hiçbir öğe
+  /// seçilmemişken de açık kalması gerektiğinden ayrı bayrak şart).
+  bool _selectMode = false;
+
+  bool get _selectionMode => _selectMode || _selected.isNotEmpty;
+
+  void _exitSelection() => setState(() {
+    _selected.clear();
+    _selectMode = false;
+  });
 
   @override
   void initState() {
@@ -232,7 +243,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     }
     await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
     if (!mounted) return;
-    setState(_selected.clear);
+    _exitSelection();
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(context.l10n.copied)));
@@ -250,6 +261,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
           if (!_selected.contains(i.id)) i,
       ];
       _selected.clear();
+      _selectMode = false;
     });
     for (final item in removed) {
       _controllers.remove(item.id)?.dispose();
@@ -469,10 +481,23 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
     final addButton = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: TextButton.icon(
-        onPressed: _addItem,
-        icon: const Icon(Icons.add, size: 20),
-        label: Text(l10n.newItemHint),
+      child: Row(
+        children: [
+          TextButton.icon(
+            onPressed: _addItem,
+            icon: const Icon(Icons.add, size: 20),
+            label: Text(l10n.newItemHint),
+          ),
+          const Spacer(),
+          // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor ama
+          // görünmez olduğundan bulunamıyordu.
+          if (!_selectionMode && _items.isNotEmpty)
+            TextButton.icon(
+              onPressed: () => setState(() => _selectMode = true),
+              icon: const Icon(Icons.checklist, size: 20),
+              label: Text(l10n.select),
+            ),
+        ],
       ),
     );
 
@@ -514,7 +539,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                     IconButton(
                       tooltip: l10n.cancel,
                       icon: const Icon(Icons.close, size: 20),
-                      onPressed: () => setState(_selected.clear),
+                      onPressed: _exitSelection,
                     ),
                     Expanded(
                       child: Text(

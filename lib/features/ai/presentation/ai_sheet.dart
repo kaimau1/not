@@ -387,6 +387,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         label: Text(l10n.aiFixNote),
                       ),
                     ),
+                  _sectionLabel(context, l10n.aiSectionNote),
                   // Notun tamamıyla (gövde + PDF/görsel ekleri) sohbet.
                   ListTile(
                     leading: const Icon(Icons.forum_outlined),
@@ -408,7 +409,6 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       );
                     },
                   ),
-                  const Divider(height: 8),
                   ListTile(
                     leading: const Icon(Icons.summarize_outlined),
                     title: Text(l10n.aiSummarize),
@@ -447,77 +447,85 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       enabled: !widget.note.isEmpty,
                       onTap: _pickImprovement,
                     ),
-                  for (final pdf in pdfs) ...[
-                    ListTile(
+                  // Ekler: dosya adı satır başlığında BİR kez geçer, işlemler
+                  // altında açılır. Eskiden her ek için adı tekrarlayan ayrı
+                  // satırlar vardı (bir PDF = üç uzun satır).
+                  if (pdfs.isNotEmpty ||
+                      images.isNotEmpty ||
+                      audios.isNotEmpty)
+                    _sectionLabel(context, l10n.aiSectionAttachments),
+                  for (final pdf in pdfs)
+                    ExpansionTile(
                       leading: const Icon(Icons.picture_as_pdf_outlined),
                       title: Text(
-                        l10n.aiSummarizePdf(pdf.fileName),
+                        pdf.fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      onTap: () => _run(
-                        (s) => _summarizePdf(s, pdf),
-                        cacheKey: AiCache.keyFor('pdf_summary', pdf.id),
-                      ),
-                    ),
-                    // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
-                    // model yalnız "podcast'e dönüştür" denirse çağrılır.
-                    ListTile(
-                      leading: const Icon(Icons.headphones_outlined),
-                      title: Text(
-                        l10n.listenToPdf(pdf.fileName),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => ListenScreen(
-                              title: pdf.fileName,
-                              loadText: () async => PdfText.cleanForSpeech(
-                                await PdfText.extract(pdf.localPath),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.summarize_outlined),
+                          title: Text(l10n.summarize),
+                          onTap: () => _run(
+                            (s) => _summarizePdf(s, pdf),
+                            cacheKey: AiCache.keyFor('pdf_summary', pdf.id),
+                          ),
+                        ),
+                        // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
+                        // model yalnız "podcast'e dönüştür" denirse çağrılır.
+                        ListTile(
+                          leading: const Icon(Icons.headphones_outlined),
+                          title: Text(l10n.listen),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ListenScreen(
+                                  title: pdf.fileName,
+                                  loadText: () async => PdfText.cleanForSpeech(
+                                    await PdfText.extract(pdf.localPath),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.question_answer_outlined),
+                          title: Text(l10n.ask),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => DocChatScreen(attachment: pdf),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.question_answer_outlined),
-                      title: Text(
-                        l10n.aiAskPdf(pdf.fileName),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => DocChatScreen(attachment: pdf),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                  // Görsel ve seste tek işlem var: açılır satır gereksiz,
+                  // işlem alt yazıda duruyor.
                   for (final image in images)
                     ListTile(
                       leading: const Icon(Icons.document_scanner_outlined),
                       title: Text(
-                        l10n.aiExtractImageText(image.fileName),
+                        image.fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      subtitle: Text(l10n.extractText),
                       onTap: () => _run((s) => _extractImageText(s, image)),
                     ),
                   for (final audio in audios)
                     ListTile(
                       leading: const Icon(Icons.graphic_eq),
                       title: Text(
-                        l10n.aiTranscribeAudio(audio.fileName),
+                        audio.fileName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      subtitle: Text(l10n.transcribe),
                       onTap: () => _run((s) => _transcribeAudio(s, audio)),
                     ),
                   if (widget.note.aiSummary != null) ...[
@@ -556,6 +564,18 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     );
   }
 }
+
+/// Sayfa içi bölüm başlığı ("Bu not" / "Ekler"). Düz liste hangi işlemin
+/// nota, hangisinin eke ait olduğunu göstermiyordu.
+Widget _sectionLabel(BuildContext context, String text) => Padding(
+  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+  child: Text(
+    text,
+    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  ),
+);
 
 class _ResultView extends StatelessWidget {
   const _ResultView({

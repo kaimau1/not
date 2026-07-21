@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
@@ -101,5 +102,48 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ekmek'), findsOneWidget);
+  });
+
+  testWidgets('"Seç" düğmesi seçim modunu açar, seçilen madde kopyalanır',
+      (tester) async {
+    // Seçim modu yalnız satırın sol kenarına uzun basışla açılıyordu ve
+    // görünür bir girişi olmadığı için bulunamıyordu.
+    final copied = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied.add((call.arguments as Map)['text'] as String);
+        }
+        return null;
+      },
+    );
+
+    await tester.pumpWidget(_wrap(ItemsEditor(
+      items: [
+        NoteItem(id: 'a', text: 'Süt'),
+        NoteItem(id: 'b', text: 'Ekmek'),
+      ],
+      onChanged: (_) {},
+      showCheckboxes: true,
+    )));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Seç'));
+    await tester.pumpAndSettle();
+
+    // Seçim modunda satıra dokunmak düzenlemeye değil seçime gider: dokunuş
+    // AbsorbPointer yüzünden TextField'a DEĞİL üstündeki GestureDetector'a
+    // düşer, bu yüzden "ıskaladı" uyarısı beklenen davranış.
+    await tester.tap(find.text('Süt'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(find.text('1 madde seçildi'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Kopyala'));
+    await tester.pumpAndSettle();
+
+    expect(copied.single, '[ ] Süt');
+    // Kopyaladıktan sonra mod kapanır.
+    expect(find.text('Seç'), findsOneWidget);
   });
 }

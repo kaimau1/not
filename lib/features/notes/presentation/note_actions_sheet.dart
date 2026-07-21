@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
@@ -68,6 +69,11 @@ Future<void> showNoteActionsSheet(
               leading: const Icon(Icons.copy_outlined),
               title: Text(l10n.copy),
               onTap: () => Navigator.pop(sheetContext, 'copy'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.headphones_outlined),
+              title: Text(l10n.listenToNote),
+              onTap: () => Navigator.pop(sheetContext, 'listen'),
             ),
             ListTile(
               leading: const Icon(Icons.picture_as_pdf_outlined),
@@ -140,6 +146,21 @@ Future<void> showNoteActionsSheet(
         ShareParams(
           text: text,
           subject: note.title.trim().isEmpty ? l10n.appName : note.title.trim(),
+        ),
+      );
+    case 'listen':
+      // Okuma cihazın TTS'i ile yapılır (model çağrısı yok). Kilitli notun
+      // içeriği sesli de okunmasın.
+      if (!await unlockIfNeeded()) return;
+      if (!context.mounted) return;
+      final title = note.title.trim();
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ListenScreen(
+            title: title.isEmpty ? l10n.appName : title,
+            // toPlainText değil: başlık ve `- [x]` işaretleri sesli okunmasın.
+            loadText: () async => note.toContentText(),
+          ),
         ),
       );
     case 'pdf':
