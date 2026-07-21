@@ -316,6 +316,18 @@ abstract class AppLocalizations {
   /// **'Panoda görsel yok'**
   String get clipboardEmpty;
 
+  /// No description provided for @noNoteSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soldan bir not seç'**
+  String get noNoteSelected;
+
+  /// No description provided for @attachmentFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek eklenemedi: {error}'**
+  String attachmentFailed(String error);
+
   /// No description provided for @attachmentUploading.
   ///
   /// In tr, this message translates to:

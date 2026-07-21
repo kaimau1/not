@@ -9,6 +9,7 @@
 import 'dart:io' show Platform;
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class DefaultFirebaseOptions {
   static const String _placeholder = 'PLACEHOLDER';
@@ -18,10 +19,13 @@ class DefaultFirebaseOptions {
   static bool get isConfigured => !android.apiKey.contains(_placeholder);
 
   static FirebaseOptions get currentPlatform {
+    // kIsWeb kontrolü Platform'dan ÖNCE gelmeli: dart:io tarayıcıda yok,
+    // Platform.isAndroid'e dokunmak orada çalışma anında patlar.
+    if (kIsWeb) return web;
     if (Platform.isAndroid) return android;
     if (Platform.isWindows) return windows;
     throw UnsupportedError(
-      'DefaultFirebaseOptions yalnızca Android ve Windows için yapılandırıldı.',
+      'DefaultFirebaseOptions bu platform için yapılandırılmadı.',
     );
   }
 
@@ -41,4 +45,10 @@ class DefaultFirebaseOptions {
     storageBucket: 'notlar-kaimau.firebasestorage.app',
     authDomain: 'notlar-kaimau.firebaseapp.com',
   );
+
+  /// Tarayıcı ve Windows AYNI Firebase kaydını kullanır — ayrı kayıt açmaya
+  /// gerek yok. Konsolda "Notlar Windows" adıyla duran uygulama zaten WEB
+  /// platformunda kayıtlı (appId `...:web:...`); Flutter Windows da web SDK
+  /// yapılandırmasıyla çalıştığı için ikisi tek kayıttan beslenir.
+  static const FirebaseOptions web = windows;
 }

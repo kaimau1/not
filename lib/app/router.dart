@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +22,7 @@ import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/translate/presentation/translator_screen.dart';
+import 'split_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
@@ -49,14 +50,30 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-      GoRoute(
-        path: '/note/:id',
-        builder: (context, state) => NoteEditorScreen(
-          noteId: state.pathParameters['id']!,
-          // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
-          startDrawing: state.uri.queryParameters['draw'] == '1',
-        ),
+      // Liste ve not tek kabuk altında: geniş ekranda yan yana (SplitShell),
+      // dar ekranda eskisi gibi ayrı ayrı. ShellRoute, rota değişirken sol
+      // paneli yeniden kurmadığından listenin kaydırma konumu korunur.
+      ShellRoute(
+        builder: (context, state, child) => SplitShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/',
+            // Geniş ekranda liste zaten SOL panelde; burada onu bir daha
+            // çizmek yerine sağ panele yer tutucu koyulur.
+            builder: (context, state) =>
+                MediaQuery.sizeOf(context).width < kSplitBreakpoint
+                ? const DashboardScreen()
+                : const NoNoteSelected(),
+          ),
+          GoRoute(
+            path: '/note/:id',
+            builder: (context, state) => NoteEditorScreen(
+              noteId: state.pathParameters['id']!,
+              // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
+              startDrawing: state.uri.queryParameters['draw'] == '1',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/settings',

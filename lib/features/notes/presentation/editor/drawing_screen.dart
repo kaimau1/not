@@ -1,7 +1,6 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../../../core/l10n_ext.dart';
 
@@ -13,8 +12,8 @@ class DrawingScreen extends StatefulWidget {
   State<DrawingScreen> createState() => _DrawingScreenState();
 }
 
-class _Stroke {
-  _Stroke(this.color, this.width) : points = [];
+class Stroke {
+  Stroke(this.color, this.width) : points = [];
 
   final Color color;
   final double width;
@@ -22,7 +21,7 @@ class _Stroke {
 }
 
 class _DrawingScreenState extends State<DrawingScreen> {
-  final _strokes = <_Stroke>[];
+  final _strokes = <Stroke>[];
   final _canvasKey = GlobalKey();
   Color _color = Colors.black;
   double _width = 3;
@@ -44,15 +43,47 @@ class _DrawingScreenState extends State<DrawingScreen> {
     }
     setState(() => _saving = true);
     try {
-      final boundary =
-          _canvasKey.currentContext!.findRenderObject()!
-              as RenderRepaintBoundary;
-      final image = await boundary.toImage(pixelRatio: 2);
+      // Çizim, ekrandaki katmanı yakalayarak (RepaintBoundary.toImage) değil
+      // AYNI painter'la yeni bir tuvale yeniden çizilerek üretilir.
+      // Katman yakalama CanvasKit'te (web) ekranda görüneni birebir vermiyordu:
+      // beyaz zemin geliyor, çizgiler gelmiyordu. Yeniden çizim platformdan ve
+      // kare zamanlamasından bağımsız, sonuç her yerde aynı.
+      final box = _canvasKey.currentContext!.findRenderObject()! as RenderBox;
+      final size = box.size;
+      const scale = 2.0; // Retina/yüksek DPI ekranlarda bulanık çıkmasın.
+
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder)..scale(scale);
+      // Zemin: ekrandaki tuval de beyaz. Şeffaf bırakılırsa JPEG'e
+      // dönüştürülürken siyaha döner.
+      canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+      DrawingPainter(_strokes).paint(canvas, size);
+
+      final image = await recorder.endRecording().toImage(
+        (size.width * scale).round(),
+        (size.height * scale).round(),
+      );
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
       if (!mounted) return;
-      Navigator.pop(context, data?.buffer.asUint8List());
-    } catch (_) {
-      if (mounted) setState(() => _saving = false);
+      // `data.buffer.asUint8List()` (offset/uzunluk vermeden) TÜM arabelleği
+      // döndürür — ByteData bir DİLİM ise PNG'nin sonuna çöp bayt eklenir.
+      // Android'de toByteData tam arabellek verdiğinden fark edilmiyordu;
+      // CanvasKit'te dilim geldiği için tarayıcı çizimi çözemiyor ve
+      // "EncodingError: The source image cannot be decoded" hatası veriyordu.
+      Navigator.pop(
+        context,
+        data?.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    } catch (e) {
+      // Sessizce yutulursa kullanıcı "Nota ekle"ye basar, ekran kapanmaz ve
+      // neden olduğunu anlamaz.
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.attachmentFailed('$e'))),
+        );
     }
   }
 
@@ -91,7 +122,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
                 child: GestureDetector(
                   onPanStart: (details) => setState(() {
                     _strokes.add(
-                      _Stroke(_color, _width)
+                      Stroke(_color, _width)
                         ..points.add(details.localPosition),
                     );
                   }),
@@ -99,7 +130,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
                     () => _strokes.last.points.add(details.localPosition),
                   ),
                   child: CustomPaint(
-                    painter: _DrawingPainter(_strokes),
+                    painter: DrawingPainter(_strokes),
                     size: Size.infinite,
                   ),
                 ),
@@ -156,10 +187,10 @@ class _DrawingScreenState extends State<DrawingScreen> {
   }
 }
 
-class _DrawingPainter extends CustomPainter {
-  _DrawingPainter(this.strokes);
+class DrawingPainter extends CustomPainter {
+  DrawingPainter(this.strokes);
 
-  final List<_Stroke> strokes;
+  final List<Stroke> strokes;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -188,5 +219,5 @@ class _DrawingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DrawingPainter oldDelegate) => true;
+  bool shouldRepaint(covariant DrawingPainter oldDelegate) => true;
 }

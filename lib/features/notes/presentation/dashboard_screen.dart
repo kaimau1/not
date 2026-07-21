@@ -504,6 +504,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           SliverAppBar(
                             floating: true,
                             snap: true,
+                            // Arama ve üst eylemler kaydırırken yukarıda
+                            // kalır; aşağı inince aramaya dönmek için başa
+                            // sarmak gerekiyordu.
+                            pinned: true,
                             titleSpacing: searchExpanded ? 0 : 12,
                             // Genişkenken geri oku: odağı bırakır, bar daralır.
                             leading: searchExpanded
@@ -691,7 +695,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     link: _fabColumnLink,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      // Merkezden hizalı: mikrofon 84 px'lik sabit kutuda,
+                      // "+" ise 56 px'lik FAB. Sağa dayalıyken merkezleri
+                      // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
                         const VoiceAssistantButton(),

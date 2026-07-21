@@ -89,6 +89,35 @@ class AttachmentRepository {
     return dir;
   }
 
+  /// Eki kalıcı hâle getirir. Cihazda önce YEREL kopya yazılır (çevrimdışıyken
+  /// de ek eklenebilsin; yükleme sonra [upload] ile yapılır). Tarayıcıda dosya
+  /// sistemi yok — `path_provider`'ın web karşılığı olmadığından baytlar
+  /// doğrudan Storage'a gider, yani web'de çevrimdışı-önce yoktur.
+  ///
+  /// Tüm ek türleri buradan geçer: bu ayrım her `prepare*` içinde ayrı ayrı
+  /// yazılsaydı biri unutulduğunda yalnız o tür sessizce kırılırdı.
+  Future<Attachment> _store(
+    String noteId,
+    Attachment meta,
+    Uint8List bytes,
+  ) async {
+    final objectName = '${meta.id}_${meta.fileName}';
+    if (!kIsWeb) {
+      final dir = await _attachmentsDir(noteId);
+      final file = File(p.join(dir.path, objectName));
+      await file.writeAsBytes(bytes, flush: true);
+      return meta.copyWith(localPath: file.path);
+    }
+    final storagePath = 'users/$uid/notes/$noteId/$objectName';
+    final ref = _storage.ref(storagePath);
+    // putFile'ın bayt karşılığı; web'de dosya tutamacı olmadığından tek yol.
+    await ref.putData(bytes, SettableMetadata(contentType: meta.mimeType));
+    return meta.copyWith(
+      storagePath: storagePath,
+      downloadUrl: await ref.getDownloadURL(),
+    );
+  }
+
   /// Görseli küçültüp yerel kopyasını oluşturur; yükleme sonradan yapılır.
   Future<Attachment> prepareImage({
     required String noteId,
@@ -106,20 +135,19 @@ class AttachmentRepository {
     final safeName = result.isJpg
         ? '${p.basenameWithoutExtension(fileName)}.jpg'
         : p.basename(fileName);
-    final dir = await _attachmentsDir(noteId);
-    final file = File(p.join(dir.path, '${id}_$safeName'));
-    await file.writeAsBytes(result.bytes, flush: true);
-
-    return Attachment(
-      id: id,
-      kind: AttachmentKind.image,
-      fileName: safeName,
-      mimeType: result.isJpg ? 'image/jpeg' : _mimeFromName(safeName),
-      localPath: file.path,
-      sizeBytes: result.bytes.length,
-      width: result.width == 0 ? null : result.width,
-      height: result.height == 0 ? null : result.height,
-      createdAt: DateTime.now(),
+    return _store(
+      noteId,
+      Attachment(
+        id: id,
+        kind: AttachmentKind.image,
+        fileName: safeName,
+        mimeType: result.isJpg ? 'image/jpeg' : _mimeFromName(safeName),
+        sizeBytes: result.bytes.length,
+        width: result.width == 0 ? null : result.width,
+        height: result.height == 0 ? null : result.height,
+        createdAt: DateTime.now(),
+      ),
+      result.bytes,
     );
   }
 
@@ -133,27 +161,35 @@ class AttachmentRepository {
     }
     final id = _uuid.v4();
     final safeName = p.basename(fileName);
-    final dir = await _attachmentsDir(noteId);
-    final file = File(p.join(dir.path, '${id}_$safeName'));
-    await file.writeAsBytes(bytes, flush: true);
-
-    return Attachment(
-      id: id,
-      kind: AttachmentKind.pdf,
-      fileName: safeName,
-      mimeType: 'application/pdf',
-      localPath: file.path,
-      sizeBytes: bytes.length,
-      createdAt: DateTime.now(),
+    return _store(
+      noteId,
+      Attachment(
+        id: id,
+        kind: AttachmentKind.pdf,
+        fileName: safeName,
+        mimeType: 'application/pdf',
+        sizeBytes: bytes.length,
+        createdAt: DateTime.now(),
+      ),
+      bytes,
     );
   }
 
   /// Ses kaydını yerel eke dönüştürür (kayıt dosyası zaten diskte).
+  ///
+  /// ponytail: diğer `prepare*`'ların aksine [_store]'a girmez — kaynak zaten
+  /// diskte olduğundan `copy` kullanmak baytları belleğe almaktan iyi (ek 50 MB
+  /// olabiliyor). Tarayıcıda `record` dosya yolu değil blob adresi döndürdüğü
+  /// için bu akış cihaza özel; web'de kayıt düğmesi gizli, yine de buraya
+  /// düşerse sessiz donma yerine net hata versin.
   Future<Attachment> prepareAudio({
     required String noteId,
     required String sourcePath,
     required Duration duration,
   }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Tarayıcıda ses kaydı eki desteklenmiyor.');
+    }
     final source = File(sourcePath);
     final sizeBytes = await source.length();
     if (sizeBytes > maxBytes) {

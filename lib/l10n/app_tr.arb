@@ -67,6 +67,13 @@
   "addPdf": "PDF ekle",
   "pasteImage": "Panodan görsel yapıştır",
   "clipboardEmpty": "Panoda görsel yok",
+  "noNoteSelected": "Soldan bir not seç",
+  "attachmentFailed": "Ek eklenemedi: {error}",
+  "@attachmentFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
   "attachmentUploading": "Yükleniyor...",
   "attachmentNotSynced": "Dosya bu cihaza henüz senkronlanmadı",
   "attachmentTooLarge": "Dosya çok büyük (en fazla {limit} MB)",

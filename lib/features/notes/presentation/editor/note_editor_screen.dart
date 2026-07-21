@@ -218,6 +218,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
     } on FileTooLargeException {
       _showSnack(tooLargeMessage);
+    } catch (e) {
+      // Yalnız FileTooLargeException yakalanıyordu; başka her hata (web'de
+      // dosya sistemi yok, disk dolu, izin reddi) yukarı kaçıp await'i
+      // tamamlanmadan bırakıyordu → ekran donmuş görünüyor, mesaj çıkmıyordu.
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
   }
 
@@ -281,6 +286,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
     } on FileTooLargeException {
       if (mounted) _showSnack(_tooLargeMessage());
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
   }
 
@@ -310,6 +317,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
     } on FileTooLargeException {
       if (mounted) _showSnack(_tooLargeMessage());
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
   }
 
@@ -391,11 +400,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.addDrawing),
               onTap: () => Navigator.pop(sheetContext, 'drawing'),
             ),
-            ListTile(
-              leading: const Icon(Icons.mic_none),
-              title: Text(l10n.recordAudio),
-              onTap: () => Navigator.pop(sheetContext, 'audio'),
-            ),
+            // Tarayıcıda gizli: `record` web'de dosya yolu değil blob adresi
+            // döndürüyor, ek akışı ise yol bekliyor (bkz. prepareAudio).
+            if (!kIsWeb)
+              ListTile(
+                leading: const Icon(Icons.mic_none),
+                title: Text(l10n.recordAudio),
+                onTap: () => Navigator.pop(sheetContext, 'audio'),
+              ),
             if (_isDesktop)
               ListTile(
                 leading: const Icon(Icons.content_paste),

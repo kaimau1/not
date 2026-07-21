@@ -132,6 +132,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get clipboardEmpty => 'Panoda görsel yok';
 
   @override
+  String get noNoteSelected => 'Soldan bir not seç';
+
+  @override
+  String attachmentFailed(String error) {
+    return 'Ek eklenemedi: $error';
+  }
+
+  @override
   String get attachmentUploading => 'Yükleniyor...';
 
   @override

@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-/// Platformdan bağımsız kimlik doğrulama arayüzü.
-/// Android'de [AndroidGoogleAuth], Windows'ta [DesktopGoogleAuth] uygular.
+/// Platformdan bağımsız kimlik doğrulama arayüzü. Android'de
+/// [AndroidGoogleAuth], Windows'ta [DesktopGoogleAuth], tarayıcıda
+/// [WebGoogleAuth] uygular.
 abstract interface class AuthRepository {
   Stream<User?> authStateChanges();
 
