@@ -1252,6 +1252,12 @@ abstract class AppLocalizations {
   /// **'Notu değiştir'**
   String get replaceNote;
 
+  /// No description provided for @openAsNewNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not olarak'**
+  String get openAsNewNote;
+
   /// No description provided for @pdfChatHint.
   ///
   /// In tr, this message translates to:

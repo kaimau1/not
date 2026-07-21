@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
@@ -734,6 +735,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  /// AI çıktısını ORİJİNAL notu değiştirmeden YENİ bir notta açar (madde 1-2).
+  /// Böylece kullanıcıda hem "değiştirmeden" orijinal hem de "düzeltilmiş"
+  /// sürüm ayrı notlar olarak kalır. Başlık ve klasör yeni nota taşınır;
+  /// [asType] verilirse (liste dönüşümü) yeni not o tipte oluşturulur.
+  Future<void> _createNoteFromText(String raw, {NoteType? asType}) async {
+    final note = _note;
+    final text = stripMarkdown(raw);
+    if (note == null || text.trim().isEmpty) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final type = asType ?? note.type;
+    final id = await repo.createNote(type);
+    final fields = <String, dynamic>{};
+    if (note.title.trim().isNotEmpty) fields['title'] = note.title;
+    if (note.folderId != null) fields['folderId'] = note.folderId;
+    if (type == NoteType.text) {
+      fields['body'] = text.trim();
+    } else {
+      const uuid = Uuid();
+      final items = <NoteItem>[];
+      for (final line in text.split('\n')) {
+        if (line.trim().isEmpty) continue;
+        final parsed = _parseListLine(line);
+        items.add(
+          NoteItem(
+            id: uuid.v4(),
+            text: parsed.text,
+            checked: type == NoteType.checklist ? parsed.checked : false,
+          ),
+        );
+      }
+      fields['items'] = [for (final it in items) it.toMap()];
+      // createNote liste tipini bir boş öğeyle tohumlar; gövde artık öğelerde.
+      fields['body'] = '';
+    }
+    repo.updateFields(id, fields);
+    if (mounted) context.push('/note/$id');
+  }
+
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
   void _appendText(String raw) {
     final note = _note;
@@ -767,6 +807,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ],
         );
       }, immediate: true);
+    }
+  }
+
+  /// Resmin araç çubuğundaki "Metni al" düğmesi: görseldeki metni çıkarır
+  /// (OCR) ve nota ekler (madde 3). AI sayfasına girmeden doğrudan resimden
+  /// erişilir; sonuç [_appendText] ile gövdeye/öğelere eklenir.
+  Future<void> _ocrImage(Attachment image) async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    final bytes = await repo.readBytes(image);
+    if (!mounted) return;
+    if (bytes == null) {
+      _showSnack(l10n.attachmentNotSynced);
+      return;
+    }
+    _showSnack(l10n.aiThinking);
+    try {
+      final service = ref.read(geminiServiceProvider);
+      final text = stripMarkdown(
+        await service.extractTextFromImage(bytes, image.mimeType),
+      ).trim();
+      if (!mounted || text.isEmpty) return;
+      _appendText(text);
+    } on GeminiException catch (e) {
+      if (mounted) {
+        _showSnack(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
+      }
+    } catch (e) {
+      if (mounted) _showSnack(l10n.aiError('$e'));
     }
   }
 
@@ -1188,8 +1258,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             ),
           ),
         // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır; görseller ise
-        // satır içi, genişliği ve hizası elle ayarlanabilir bloklar olarak
-        // gösterilir (dokun → düzenleme çubuğu).
+        // serbest tuvalde (dokun → seç → sürükle/boyutlandır) istenen yere
+        // konumlandırılabilir (madde 5).
         AttachmentStrip(
           attachments: [
             for (final a in note.attachments)
@@ -1204,6 +1274,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ],
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
+          onExtractText: _ocrImage,
         ),
       ],
     );
@@ -1515,6 +1586,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       note,
                       onAppendText: _appendText,
                       onReplaceText: _replaceText,
+                      onCreateNote: _createNoteFromText,
                     ),
                     icon: const Icon(Icons.auto_awesome, size: 18),
                     label: Text(l10n.aiTitle),

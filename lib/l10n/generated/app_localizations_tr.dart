@@ -632,6 +632,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get replaceNote => 'Notu değiştir';
 
   @override
+  String get openAsNewNote => 'Yeni not olarak';
+
+  @override
   String get pdfChatHint =>
       'Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"';
 

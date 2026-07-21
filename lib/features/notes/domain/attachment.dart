@@ -32,6 +32,8 @@ class Attachment {
     this.height,
     this.displayWidth,
     this.align = 'center',
+    this.x,
+    this.y,
     this.createdAt,
   });
 
@@ -54,9 +56,16 @@ class Attachment {
   /// null = varsayılan (tam genişlik). Kullanıcı elle küçültüp büyütür.
   final double? displayWidth;
 
-  /// Görselin nottaki yatay hizası: 'left' | 'center' | 'right'. Konumu elle
-  /// değiştirmenin (satır içi bloklarda) karşılığı.
+  /// Görselin nottaki yatay hizası: 'left' | 'center' | 'right'. Satır içi
+  /// (eski) diziliş için; serbest tuval modunda [x]/[y] kullanılır.
   final String align;
+
+  /// Serbest tuvalde görselin sol-üst köşesinin konumu: tuval genişlik/
+  /// yüksekliğinin oranı (0–1). null = konum atanmamış (eski/yeni görsel);
+  /// bu durumda otomatik sıralı yerleşim uygulanır. Kullanıcı sürükleyince
+  /// yazılır. [displayWidth] ile birlikte "boyut ve yer serbest" (madde 5).
+  final double? x;
+  final double? y;
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
@@ -67,6 +76,8 @@ class Attachment {
     String? localPath,
     double? displayWidth,
     String? align,
+    double? x,
+    double? y,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -80,6 +91,8 @@ class Attachment {
     height: height,
     displayWidth: displayWidth ?? this.displayWidth,
     align: align ?? this.align,
+    x: x ?? this.x,
+    y: y ?? this.y,
     createdAt: createdAt,
   );
 
@@ -96,6 +109,8 @@ class Attachment {
     height: (map['height'] as num?)?.toInt(),
     displayWidth: (map['displayWidth'] as num?)?.toDouble(),
     align: map['align'] as String? ?? 'center',
+    x: (map['x'] as num?)?.toDouble(),
+    y: (map['y'] as num?)?.toDouble(),
     createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
   );
 
@@ -112,6 +127,8 @@ class Attachment {
     if (height != null) 'height': height,
     if (displayWidth != null) 'displayWidth': displayWidth,
     'align': align,
+    if (x != null) 'x': x,
+    if (y != null) 'y': y,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

@@ -273,6 +273,7 @@
   "improveBullets": "Madde listesine çevir",
   "improveNumbered": "Sıralı (numaralı) listeye çevir",
   "replaceNote": "Notu değiştir",
+  "openAsNewNote": "Yeni not olarak",
   "pdfChatHint": "Bu PDF hakkında soru sor: \"özetle\", \"cezai şart var mı?\", \"son teslim tarihi ne?\"",
   "pdfChatInputHint": "PDF hakkında bir soru yaz...",
   "voiceNoteTitle": "Sesli Not",
