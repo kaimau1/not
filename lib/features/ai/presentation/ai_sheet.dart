@@ -27,6 +27,7 @@ Future<void> showAiSheet(
   Note note, {
   ValueChanged<String>? onAppendText,
   ReplaceTextCallback? onReplaceText,
+  ReplaceTextCallback? onCreateNote,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -35,6 +36,7 @@ Future<void> showAiSheet(
     note: note,
     onAppendText: onAppendText,
     onReplaceText: onReplaceText,
+    onCreateNote: onCreateNote,
   ),
 );
 
@@ -44,6 +46,7 @@ class AiSheet extends ConsumerStatefulWidget {
     required this.note,
     this.onAppendText,
     this.onReplaceText,
+    this.onCreateNote,
   });
 
   final Note note;
@@ -53,6 +56,12 @@ class AiSheet extends ConsumerStatefulWidget {
 
   /// Sonucu notun içeriğiyle değiştiren geri çağırma ("Geliştir" için).
   final ReplaceTextCallback? onReplaceText;
+
+  /// Sonucu ORİJİNAL notu değiştirmeden YENİ bir notta açan geri çağırma
+  /// (madde 1-2): kullanıcı hem "değiştirmeden" (orijinal kalır) hem
+  /// "düzeltilmiş" (yeni notta) sürüme sahip olur. [asType] verilirse yeni
+  /// not o tipte (madde/sıralı liste) oluşturulur.
+  final ReplaceTextCallback? onCreateNote;
 
   @override
   ConsumerState<AiSheet> createState() => _AiSheetState();
@@ -365,6 +374,21 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             Navigator.pop(context);
                             replace(text, asType: type);
                           },
+                    // "Yeni not olarak aç": orijinal not değişmez, sonuç ayrı
+                    // bir notta açılır. Her sonuç türünde (düzeltme/çeviri/
+                    // özet/OCR) sunulur. Liste dönüşümü tipini yalnız düzeltme
+                    // sonucunda taşı; diğerlerinde notun tipi editörde belirlenir.
+                    onCreateNote: widget.onCreateNote == null
+                        ? null
+                        : () {
+                            final create = widget.onCreateNote!;
+                            final text = _result!;
+                            final type = _lastWasImprovement
+                                ? _replaceAsType
+                                : null;
+                            Navigator.pop(context);
+                            create(text, asType: type);
+                          },
                   )
                 else ...[
                   if (_error != null)
@@ -584,6 +608,7 @@ class _ResultView extends StatelessWidget {
     this.onReport,
     this.onAppend,
     this.onReplace,
+    this.onCreateNote,
   });
 
   final String text;
@@ -593,6 +618,9 @@ class _ResultView extends StatelessWidget {
   final VoidCallback? onReport;
   final VoidCallback? onAppend;
   final VoidCallback? onReplace;
+
+  /// Sonucu yeni bir notta açar (orijinal değişmeden kalır).
+  final VoidCallback? onCreateNote;
 
   @override
   Widget build(BuildContext context) {
@@ -632,6 +660,12 @@ class _ResultView extends StatelessWidget {
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(context.l10n.copy),
               ),
+              if (onCreateNote != null)
+                FilledButton.tonalIcon(
+                  onPressed: onCreateNote,
+                  icon: const Icon(Icons.note_add_outlined, size: 18),
+                  label: Text(context.l10n.openAsNewNote),
+                ),
               if (onReplace != null)
                 FilledButton.icon(
                   onPressed: onReplace,

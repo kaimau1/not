@@ -412,8 +412,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         slivers: [
                         if (selectionActive)
                           SliverAppBar(
-                            floating: true,
-                            snap: true,
+                            // Seçim barı kaydırırken tepede tam sabit kalır.
                             pinned: true,
                             leading: IconButton(
                               tooltip: l10n.cancel,
@@ -502,11 +501,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           )
                         else
                           SliverAppBar(
-                            floating: true,
-                            snap: true,
-                            // Arama ve üst eylemler kaydırırken yukarıda
-                            // kalır; aşağı inince aramaya dönmek için başa
-                            // sarmak gerekiyordu.
+                            // Arama + üst eylemler kaydırırken tepede TAM
+                            // sabit kalır. Eskiden floating+snap vardı; aşağı
+                            // inince bar kayıp gidiyor, aramaya dönmek için
+                            // başa sarmak gerekiyordu. Yalnız pinned bırakıldı.
                             pinned: true,
                             titleSpacing: searchExpanded ? 0 : 12,
                             // Genişkenken geri oku: odağı bırakır, bar daralır.

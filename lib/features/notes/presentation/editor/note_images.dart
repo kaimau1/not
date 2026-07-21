@@ -7,16 +7,24 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 
-/// Notta gövdenin üstünde görselleri SATIR İÇİ gösterir; her görselin
-/// genişliği ve yatay hizası elle ayarlanabilir. Bir görsele dokununca
-/// düzenleme çubuğu açılır: sol/orta/sağ hiza, genişlik kaydırıcısı, tam
-/// ekran ve kaldır. Tekrar dokununca kapanır.
+/// Notta gövdenin üstünde görselleri SERBEST TUVAL (canvas) olarak gösterir:
+/// her görsel istenen yere sürüklenip serbest boyutlandırılabilir (madde 5 —
+/// "boyut ve yer serbest olmalı"). Bir görsele dokununca seçilir; seçili
+/// görsel sürüklenerek taşınır, sağ-alt tutamağından boyutlandırılır ve alttaki
+/// araç çubuğundan genişlik/tam ekran/metni al (OCR)/sil işlemleri yapılır.
+/// Boş bir alana dokununca seçim kalkar.
+///
+/// Konum [Attachment.x]/[Attachment.y] (tuval oranı 0–1), boyut ise
+/// [Attachment.displayWidth] (tuval genişliğinin oranı) ile saklanır. Konumu
+/// olmayan (eski) görseller otomatik sıralı yerleştirilir; kullanıcı taşıyınca
+/// kalıcılaşır.
 class NoteImages extends StatefulWidget {
   const NoteImages({
     super.key,
     required this.images,
     required this.onRemove,
     required this.onChanged,
+    this.onExtractText,
   });
 
   final List<Attachment> images;
@@ -24,35 +32,87 @@ class NoteImages extends StatefulWidget {
   /// Görseli nottan kaldırır.
   final ValueChanged<Attachment> onRemove;
 
-  /// Genişlik/hiza değişince güncellenmiş eki bildirir.
+  /// Konum/boyut değişince güncellenmiş eki bildirir.
   final ValueChanged<Attachment> onChanged;
+
+  /// Görseldeki metni çıkarıp (OCR) nota ekler. null ise "Metni al" düğmesi
+  /// gösterilmez.
+  final Future<void> Function(Attachment)? onExtractText;
 
   @override
   State<NoteImages> createState() => _NoteImagesState();
 }
 
 class _NoteImagesState extends State<NoteImages> {
-  /// Düzenleme çubuğu açık olan görselin id'si (null = hiçbiri).
-  String? _editingId;
+  /// Seçili (araç çubuğu açık) görselin id'si; null = seçim yok.
+  String? _selectedId;
 
-  /// Kaydırma sırasındaki canlı genişlik (akıcı önizleme); bırakınca kaydedilir.
-  double? _liveWidth;
+  /// Taşıma sırasındaki canlı sol/üst (piksel); bırakınca kaydedilir.
+  String? _moveId;
+  double? _moveLeft;
+  double? _moveTop;
 
-  Alignment _alignment(String a) => switch (a) {
-    'left' => Alignment.centerLeft,
-    'right' => Alignment.centerRight,
-    _ => Alignment.center,
-  };
+  /// Boyutlandırma sırasındaki canlı genişlik oranı; bırakınca kaydedilir.
+  String? _resizeId;
+  double? _resizeWFrac;
 
-  void _toggle(String id) {
-    setState(() {
-      if (_editingId == id) {
-        _editingId = null;
-      } else {
-        _editingId = id;
+  static const double _minWidthFrac = 0.15;
+
+  void _select(String id) {
+    setState(() => _selectedId = _selectedId == id ? null : id);
+  }
+
+  void _deselect() {
+    if (_selectedId != null) setState(() => _selectedId = null);
+  }
+
+  /// Konumu atanmamış görseller için otomatik başlangıç yerleşimi (sol-üst
+  /// oranı). Üst üste binmesin diye indekse göre kaydırılır.
+  double _defaultX(int index) => 0.06 + (index % 2) * 0.30;
+  double _defaultY(int index) => 0.06 + (index ~/ 2) * 0.30;
+
+  /// Bir görselin tuvaldeki nihai (sınırlar içine alınmış) yerleşimini çözer.
+  /// Canlı taşıma/boyutlandırma değerleri varsa onları kullanır. Yükseklik
+  /// tuvale sığmıyorsa oran korunarak küçültülür; kutu her zaman tuval içinde
+  /// kalır.
+  ({double left, double top, double w, double h}) _resolve(
+    Attachment img,
+    int index,
+    double cw,
+    double ch,
+  ) {
+    final wFrac =
+        ((_resizeId == img.id && _resizeWFrac != null)
+                ? _resizeWFrac!
+                : (img.displayWidth ?? 0.6))
+            .clamp(_minWidthFrac, 1.0)
+            .toDouble();
+    var w = cw * wFrac;
+    final aspect =
+        (img.width != null &&
+            img.height != null &&
+            img.width! > 0 &&
+            img.height! > 0)
+        ? img.width! / img.height!
+        : 1.0;
+    var h = w / aspect;
+    if (h > ch) {
+      h = ch;
+      w = h * aspect;
+      if (w > cw) {
+        w = cw;
+        h = w / aspect;
       }
-      _liveWidth = null;
-    });
+    }
+    final xFrac = img.x ?? _defaultX(index);
+    final yFrac = img.y ?? _defaultY(index);
+    var left = (_moveId == img.id && _moveLeft != null)
+        ? _moveLeft!
+        : xFrac * cw;
+    var top = (_moveId == img.id && _moveTop != null) ? _moveTop! : yFrac * ch;
+    left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
+    top = top.clamp(0.0, (ch - h).clamp(0.0, ch)).toDouble();
+    return (left: left, top: top, w: w, h: h);
   }
 
   void _openViewer(Attachment img) {
@@ -74,142 +134,265 @@ class _NoteImagesState extends State<NoteImages> {
   @override
   Widget build(BuildContext context) {
     if (widget.images.isEmpty) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [for (final img in widget.images) _block(context, img)],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cw = constraints.maxWidth;
+          // Tuval yüksekliği genişliğe bağlı ama sınırlı: dar ekranda kare-msi
+          // bir çalışma alanı, geniş ekranda aşırı uzamaz.
+          final ch = cw.clamp(220.0, 460.0).toDouble();
+          final selected = _selectedId;
+          Attachment? selectedImg;
+          for (final img in widget.images) {
+            if (img.id == selected) selectedImg = img;
+          }
+          return SizedBox(
+            width: cw,
+            height: ch,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Zemin: boş alana dokununca seçim kalkar; hafif çerçeveli
+                // "tuval" görünümü verir.
+                Positioned.fill(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onTap: _deselect,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerLow.withValues(
+                          alpha: 0.4,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                for (final (index, img) in widget.images.indexed)
+                  _positioned(context, img, index, cw, ch),
+                if (selectedImg != null) _toolbar(context, selectedImg),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _block(BuildContext context, Attachment img) {
+  Widget _positioned(
+    BuildContext context,
+    Attachment img,
+    int index,
+    double cw,
+    double ch,
+  ) {
     final scheme = Theme.of(context).colorScheme;
-    final editing = _editingId == img.id;
-    final double factor =
-        (editing && _liveWidth != null
-                ? _liveWidth!
-                : (img.displayWidth ?? 1.0))
-            .clamp(0.3, 1.0)
-            .toDouble();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final w = constraints.maxWidth * factor;
-              return Align(
-                alignment: _alignment(img.align),
+    final editing = _selectedId == img.id;
+    final r = _resolve(img, index, cw, ch);
+    return Positioned(
+      left: r.left,
+      top: r.top,
+      width: r.w,
+      height: r.h,
+      child: GestureDetector(
+        onTap: () => _select(img.id),
+        // Taşıma yalnız seçiliyken; aksi hâlde dikey kaydırma nota kalır.
+        onPanStart: editing
+            ? (_) => setState(() {
+                _moveId = img.id;
+                _moveLeft = r.left;
+                _moveTop = r.top;
+              })
+            : null,
+        onPanUpdate: editing
+            ? (d) => setState(() {
+                _moveLeft = ((_moveLeft ?? r.left) + d.delta.dx)
+                    .clamp(0.0, (cw - r.w).clamp(0.0, cw))
+                    .toDouble();
+                _moveTop = ((_moveTop ?? r.top) + d.delta.dy)
+                    .clamp(0.0, (ch - r.h).clamp(0.0, ch))
+                    .toDouble();
+              })
+            : null,
+        onPanEnd: editing
+            ? (_) {
+                final nl = _moveLeft ?? r.left;
+                final nt = _moveTop ?? r.top;
+                widget.onChanged(img.copyWith(x: nl / cw, y: nt / ch));
+                setState(() {
+                  _moveId = null;
+                  _moveLeft = null;
+                  _moveTop = null;
+                });
+              }
+            : null,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  border: editing
+                      ? Border.all(color: scheme.primary, width: 2)
+                      : Border.all(
+                          color: scheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: _image(context, img),
+                ),
+              ),
+            ),
+            // Sağ-alt köşe tutamağı: serbest boyutlandırma (yalnız seçiliyken).
+            // Görsel sınırları İÇİNDE tutulur ki her yerde dokunulabilsin.
+            if (editing)
+              Positioned(
+                right: 2,
+                bottom: 2,
                 child: GestureDetector(
-                  onTap: () => _toggle(img.id),
+                  onPanStart: (_) => setState(() {
+                    _resizeId = img.id;
+                    _resizeWFrac = (img.displayWidth ?? 0.6)
+                        .clamp(_minWidthFrac, 1.0)
+                        .toDouble();
+                  }),
+                  onPanUpdate: (d) => setState(() {
+                    final base = (_resizeWFrac ?? (img.displayWidth ?? 0.6));
+                    _resizeWFrac = (base + d.delta.dx / cw)
+                        .clamp(_minWidthFrac, 1.0)
+                        .toDouble();
+                  }),
+                  onPanEnd: (_) {
+                    final f = _resizeWFrac;
+                    if (f != null) {
+                      widget.onChanged(img.copyWith(displayWidth: f));
+                    }
+                    setState(() {
+                      _resizeId = null;
+                      _resizeWFrac = null;
+                    });
+                  },
                   child: Container(
-                    width: w,
+                    width: 26,
+                    height: 26,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: editing
-                          ? Border.all(color: scheme.primary, width: 2)
-                          : Border.all(
-                              color: scheme.outlineVariant.withValues(
-                                alpha: 0.5,
-                              ),
-                            ),
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.onPrimary, width: 2),
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: _image(context, img),
+                    child: Icon(
+                      Icons.open_in_full,
+                      size: 13,
+                      color: scheme.onPrimary,
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-          if (editing) _controls(context, img, factor),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _image(BuildContext context, Attachment img) {
     final scheme = Theme.of(context).colorScheme;
-    final aspect =
-        (img.width != null &&
-            img.height != null &&
-            img.width! > 0 &&
-            img.height! > 0)
-        ? img.width! / img.height!
-        : null;
     final hasLocal =
         img.localPath.isNotEmpty && File(img.localPath).existsSync();
-    Widget raw;
     if (hasLocal) {
-      raw = Image.file(File(img.localPath), fit: BoxFit.cover);
+      return Image.file(
+        File(img.localPath),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+      );
     } else if (img.isUploaded) {
-      raw = CachedNetworkImage(imageUrl: img.downloadUrl, fit: BoxFit.cover);
-    } else {
-      raw = Container(
-        height: 120,
-        color: scheme.surfaceContainerHigh,
-        alignment: Alignment.center,
-        child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
+      return CachedNetworkImage(
+        imageUrl: img.downloadUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
       );
     }
-    if (aspect != null) return AspectRatio(aspectRatio: aspect, child: raw);
-    return raw;
-  }
-
-  Widget _controls(BuildContext context, Attachment img, double factor) {
-    final scheme = Theme.of(context).colorScheme;
-    final l10n = context.l10n;
     return Container(
-      margin: const EdgeInsets.only(top: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          _alignBtn(img, 'left', Icons.format_align_left),
-          _alignBtn(img, 'center', Icons.format_align_center),
-          _alignBtn(img, 'right', Icons.format_align_right),
-          Expanded(
-            child: Slider(
-              value: factor,
-              min: 0.3,
-              max: 1,
-              onChanged: (v) => setState(() => _liveWidth = v),
-              onChangeEnd: (v) {
-                widget.onChanged(img.copyWith(displayWidth: v));
-                setState(() => _liveWidth = null);
-              },
-            ),
-          ),
-          IconButton(
-            tooltip: 'Tam ekran',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.fullscreen, size: 20),
-            onPressed: () => _openViewer(img),
-          ),
-          IconButton(
-            tooltip: l10n.removeAttachment,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.delete_outline, size: 20),
-            color: scheme.error,
-            onPressed: () => widget.onRemove(img),
-          ),
-        ],
-      ),
+      color: scheme.surfaceContainerHigh,
+      alignment: Alignment.center,
+      child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
     );
   }
 
-  Widget _alignBtn(Attachment img, String value, IconData icon) {
+  /// Seçili görselin işlem çubuğu: genişlik kaydırıcısı + tam ekran + metni al
+  /// (OCR) + sil. Tuvalin altına sabitlenir.
+  Widget _toolbar(BuildContext context, Attachment img) {
     final scheme = Theme.of(context).colorScheme;
-    final selected = img.align == value;
-    return IconButton(
-      visualDensity: VisualDensity.compact,
-      icon: Icon(icon, size: 20),
-      color: selected ? scheme.primary : scheme.onSurfaceVariant,
-      onPressed: () => widget.onChanged(img.copyWith(align: value)),
+    final l10n = context.l10n;
+    final wFrac =
+        ((_resizeId == img.id && _resizeWFrac != null)
+                ? _resizeWFrac!
+                : (img.displayWidth ?? 0.6))
+            .clamp(_minWidthFrac, 1.0)
+            .toDouble();
+    return Positioned(
+      left: 8,
+      right: 8,
+      bottom: 8,
+      child: Material(
+        color: scheme.surfaceContainerHighest,
+        elevation: 3,
+        borderRadius: BorderRadius.circular(14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(
+            children: [
+              Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
+              Expanded(
+                child: Slider(
+                  value: wFrac,
+                  min: _minWidthFrac,
+                  max: 1,
+                  onChanged: (v) => setState(() {
+                    _resizeId = img.id;
+                    _resizeWFrac = v;
+                  }),
+                  onChangeEnd: (v) {
+                    widget.onChanged(img.copyWith(displayWidth: v));
+                    setState(() {
+                      _resizeId = null;
+                      _resizeWFrac = null;
+                    });
+                  },
+                ),
+              ),
+              if (widget.onExtractText != null)
+                IconButton(
+                  tooltip: l10n.extractText,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.document_scanner_outlined, size: 20),
+                  onPressed: () => widget.onExtractText!(img),
+                ),
+              IconButton(
+                tooltip: 'Tam ekran',
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.fullscreen, size: 20),
+                onPressed: () => _openViewer(img),
+              ),
+              IconButton(
+                tooltip: l10n.removeAttachment,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: scheme.error,
+                onPressed: () => widget.onRemove(img),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
