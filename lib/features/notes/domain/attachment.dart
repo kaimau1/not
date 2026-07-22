@@ -3,6 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum AttachmentKind {
   image('image'),
   pdf('pdf'),
+
+  /// Sunum dosyası (PowerPoint .pptx). PDF gibi Storage'da tutulur; metni
+  /// [DocText] ile çıkarılır (Gemini pptx baytlarını doğrudan okuyamaz).
+  slide('slide'),
   audio('audio');
 
   const AttachmentKind(this.id);

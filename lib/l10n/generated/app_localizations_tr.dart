@@ -126,6 +126,34 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addPdf => 'PDF ekle';
 
   @override
+  String get addSlide => 'Slayt ekle';
+
+  @override
+  String get summaryShort => 'Kısa özet';
+
+  @override
+  String get summaryDetailed => 'Detaylı özet';
+
+  @override
+  String get summaryShortInfo => 'Ana fikir ve en önemli noktalar.';
+
+  @override
+  String get summaryDetailedInfo =>
+      'Belgeyi okumana gerek kalmayacak kapsamlı özet.';
+
+  @override
+  String get summaryKeyPoints => 'Önemli noktalar';
+
+  @override
+  String get summaryToNoteInfo => 'Kısa/detaylı özetle, nota dönüştür';
+
+  @override
+  String get summaryNoteCreated => 'Özetten not oluşturuldu';
+
+  @override
+  String get summaryNoText => 'Slayttan metin çıkarılamadı';
+
+  @override
   String get pasteImage => 'Panodan görsel yapıştır';
 
   @override

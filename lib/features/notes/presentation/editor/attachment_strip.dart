@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../ai/presentation/listen_screen.dart';
+import '../../data/doc_text.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -149,6 +151,25 @@ class _AttachmentTile extends StatelessWidget {
       ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
       return;
     }
+    // Slaytın metin çıkarımı dosyanın diskte olmasını gerektirir (yolla
+    // çalışır); yalnız buluttaysa henüz açılamaz.
+    if (attachment.kind == AttachmentKind.slide) {
+      if (!_hasLocal) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.attachmentNotSynced)),
+        );
+        return;
+      }
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ListenScreen(
+            title: attachment.fileName,
+            loadText: () => DocText.extract(attachment.localPath),
+          ),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => attachment.kind == AttachmentKind.pdf
@@ -165,14 +186,22 @@ class _AttachmentTile extends StatelessWidget {
     Widget content;
     if (attachment.kind == AttachmentKind.audio) {
       content = _AudioTile(attachment: attachment);
-    } else if (attachment.kind == AttachmentKind.pdf) {
+    } else if (attachment.kind == AttachmentKind.pdf ||
+        attachment.kind == AttachmentKind.slide) {
+      final isSlide = attachment.kind == AttachmentKind.slide;
       content = Container(
         width: 140,
         padding: const EdgeInsets.all(10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.picture_as_pdf_outlined, color: scheme.error, size: 28),
+            Icon(
+              isSlide
+                  ? Icons.slideshow_outlined
+                  : Icons.picture_as_pdf_outlined,
+              color: isSlide ? scheme.tertiary : scheme.error,
+              size: 28,
+            ),
             const SizedBox(height: 6),
             Text(
               attachment.fileName,
