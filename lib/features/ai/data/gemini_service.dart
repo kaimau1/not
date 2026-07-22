@@ -84,6 +84,40 @@ class ChatTurn {
   final String text;
 }
 
+/// Bir belgenin (PDF/slayt) yapılandırılmış özeti: hem okunabilir bir
+/// anlatı ([overview]) hem de madde madde önemli noktalar ([points]) içerir.
+/// Böylece aynı sonuç hem ekranda gösterilir hem de "hem metin hem liste"
+/// olan gerçek bir nota dönüştürülebilir.
+class DocSummary {
+  const DocSummary({
+    required this.title,
+    required this.overview,
+    required this.points,
+  });
+
+  final String title;
+  final String overview;
+  final List<String> points;
+
+  bool get isEmpty => overview.trim().isEmpty && points.isEmpty;
+
+  factory DocSummary.fromMap(Map<String, dynamic> map) => DocSummary(
+    title: (map['title'] as String? ?? '').trim(),
+    overview: (map['overview'] as String? ?? '').trim(),
+    points: [
+      for (final p in (map['points'] as List<dynamic>? ?? const []))
+        if (p.toString().trim().isNotEmpty)
+          p.toString().trim().replaceFirst(RegExp(r'^[\-\*•\d\.\)\s]+'), ''),
+    ],
+  );
+
+  Map<String, dynamic> toMap() => {
+    'title': title,
+    'overview': overview,
+    'points': points,
+  };
+}
+
 /// Konuşma çevirmeninin tek bir tur sonucu.
 class SpeechTranslation {
   const SpeechTranslation({
@@ -355,6 +389,73 @@ class GeminiService {
           'madde ver.',
     },
   ]);
+
+  /// Bir belgeyi (PDF veya slayt) yapılandırılmış biçimde özetler: hem
+  /// okunabilir bir anlatı hem de madde madde önemli noktalar döner.
+  ///
+  /// PDF için [pdfBytes] doğrudan modele gönderilir (inline base64). Slayt
+  /// (.pptx) için Gemini baytları okuyamaz; çağıran metni [DocText] ile
+  /// çıkarıp [sourceText] olarak verir.
+  ///
+  /// [detailed] false ise kısa özet (ana fikir + birkaç madde); true ise
+  /// belgeyi okumaya gerek bırakmayan kapsamlı bir özet üretir.
+  Future<DocSummary> summarizeDocument({
+    Uint8List? pdfBytes,
+    String? sourceText,
+    required String fileName,
+    required bool detailed,
+  }) async {
+    if (pdfBytes == null &&
+        (sourceText == null || sourceText.trim().isEmpty)) {
+      throw const GeminiException('Özetlenecek belge içeriği yok');
+    }
+    final level = detailed
+        ? 'DETAYLI bir özet çıkar: belgenin tüm önemli bilgilerini, '
+              'argümanlarını, verilerini, örneklerini ve sonuçlarını kapsa. '
+              'Okuyucu ORİJİNAL belgeyi açmak zorunda kalmasın; özet tek başına '
+              'yeterli olsun. "overview" birden çok paragraf olabilir; "points" '
+              'kapsamlı olsun (konu gerektirdiği kadar madde, en az 6).'
+        : 'KISA bir özet çıkar: yalnızca ana fikir ve en önemli noktalar. '
+              '"overview" 2-4 cümle; "points" 3-6 madde.';
+    final source = pdfBytes != null
+        ? '"$fileName" adlı ekteki PDF belgesini'
+        : '"$fileName" adlı belgeyi (tam metni aşağıda verilmiştir)';
+    final parts = <Map<String, dynamic>>[
+      if (pdfBytes != null)
+        {
+          'inline_data': {
+            'mime_type': 'application/pdf',
+            'data': base64Encode(pdfBytes),
+          },
+        },
+      {
+        'text':
+            '$source Türkçe olarak özetle. $level\n'
+            'Yanıtı YALNIZCA şu JSON şemasında ver: '
+            '{"title": "en fazla 6 kelimelik başlık", '
+            '"overview": "akıcı düz paragraf metni", '
+            '"points": ["önemli nokta 1", "önemli nokta 2", ...]}. '
+            '"overview" düz cümlelerden oluşsun; "points" her biri kısa ve '
+            'net, başına madde imi/numara KOYMA. Belgede olmayanı uydurma. '
+            'Markdown kullanma.'
+            '${sourceText == null ? '' : '\n\n---\n${sourceText.trim()}'}',
+      },
+    ];
+    final raw = await _generate(
+      parts,
+      jsonOutput: true,
+      preferModel: _taskModel(AiTask.document),
+    );
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) {
+      throw const GeminiException('Özet yanıtı çözümlenemedi');
+    }
+    final summary = DocSummary.fromMap(Map<String, dynamic>.from(decoded));
+    if (summary.isEmpty) {
+      throw const GeminiException('Modelden boş özet döndü');
+    }
+    return summary;
+  }
 
   /// Son notlara bakarak eyleme dönük öneriler üretir (birleştirilebilecek
   /// notlar dahil).

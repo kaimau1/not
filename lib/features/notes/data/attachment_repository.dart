@@ -175,6 +175,34 @@ class AttachmentRepository {
     );
   }
 
+  /// Sunum (slayt) dosyasını yerel eke dönüştürür. PDF gibi sıkıştırılamaz;
+  /// büyük dosya doğrudan Storage kotasına gider. Metni sonradan [DocText] ile
+  /// çıkarılır, o yüzden desteklenen tek biçim .pptx.
+  Future<Attachment> prepareSlide({
+    required String noteId,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (bytes.length > maxBytes) {
+      throw const FileTooLargeException();
+    }
+    final id = _uuid.v4();
+    final safeName = p.basename(fileName);
+    return _store(
+      noteId,
+      Attachment(
+        id: id,
+        kind: AttachmentKind.slide,
+        fileName: safeName,
+        mimeType:
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        sizeBytes: bytes.length,
+        createdAt: DateTime.now(),
+      ),
+      bytes,
+    );
+  }
+
   /// Ses kaydını yerel eke dönüştürür (kayıt dosyası zaten diskte).
   ///
   /// ponytail: diğer `prepare*`'ların aksine [_store]'a girmez — kaynak zaten

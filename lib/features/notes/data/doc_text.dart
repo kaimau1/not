@@ -32,6 +32,14 @@ abstract final class DocText {
     final bytes = await File(path).readAsBytes();
     return compute(_extract, (ext, bytes));
   }
+
+  /// Bayt tabanlı çıkarma: dosya diskte olmayabilir (Storage'dan indirilmiş
+  /// bir slayt eki gibi). [ext] uzantı ("pptx", "docx"...); yol yok.
+  static Future<String> extractBytes(String ext, Uint8List bytes) {
+    final normalized = ext.toLowerCase().replaceFirst('.', '');
+    if (!extensions.contains(normalized)) throw DocTextException(normalized);
+    return compute(_extract, (normalized, bytes));
+  }
 }
 
 @visibleForTesting

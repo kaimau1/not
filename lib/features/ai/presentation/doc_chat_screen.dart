@@ -54,7 +54,13 @@ class _DocChatScreenState extends ConsumerState<DocChatScreen> {
         // Notun ekleri bağlama katılır; okunamayan ek sessizce atlanır —
         // notun metniyle sohbet yine de çalışır.
         for (final a in widget.note!.attachments) {
-          if (a.kind == AttachmentKind.audio) continue;
+          // Ses ve slayt eklerinin baytları modele gönderilmez: sesin dökümü
+          // ayrı yapılır, slaytı (.pptx) Gemini doğrudan okuyamaz. Notun metni
+          // ve okunabilir ekleri (PDF/görsel) yine bağlama katılır.
+          if (a.kind == AttachmentKind.audio ||
+              a.kind == AttachmentKind.slide) {
+            continue;
+          }
           final bytes = repo == null ? null : await repo.readBytes(a);
           if (bytes != null) {
             _noteAttachments.add((

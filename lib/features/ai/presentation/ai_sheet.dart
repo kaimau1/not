@@ -6,6 +6,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
+import '../../notes/data/doc_text.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/data/pdf_text.dart';
 import '../../notes/domain/attachment.dart';
@@ -17,6 +18,7 @@ import '../data/ai_report.dart';
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'doc_chat_screen.dart';
+import 'doc_summary_screen.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
@@ -151,14 +153,15 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     }
   }
 
-  Future<String> _summarizePdf(GeminiService service, Attachment pdf) async {
-    final notSyncedMessage = context.l10n.attachmentNotSynced;
-    final repo = ref.read(attachmentRepositoryProvider);
-    final bytes = repo == null ? null : await repo.readBytes(pdf);
-    if (bytes == null) {
-      throw GeminiException(notSyncedMessage);
-    }
-    return service.summarizePdf(bytes, pdf.fileName);
+  /// PDF/slayt eki için özet ekranını açar: kısa/detaylı seçimi ve "Nota
+  /// dönüştür" orada. Önce alt sayfa kapanır, sonra ekran açılır.
+  void _openSummary(Attachment attachment) {
+    Navigator.pop(context);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DocSummaryScreen(attachment: attachment),
+      ),
+    );
   }
 
   static const _translateTargets = [
@@ -396,6 +399,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.pdf) a,
     ];
+    final slides = [
+      for (final a in widget.note.attachments)
+        if (a.kind == AttachmentKind.slide) a,
+    ];
     final images = [
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.image) a,
@@ -610,6 +617,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // altında açılır. Eskiden her ek için adı tekrarlayan ayrı
                   // satırlar vardı (bir PDF = üç uzun satır).
                   if (pdfs.isNotEmpty ||
+                      slides.isNotEmpty ||
                       images.isNotEmpty ||
                       audios.isNotEmpty)
                     _sectionLabel(context, l10n.aiSectionAttachments),
@@ -625,10 +633,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ListTile(
                           leading: const Icon(Icons.summarize_outlined),
                           title: Text(l10n.summarize),
-                          onTap: () => _run(
-                            (s) => _summarizePdf(s, pdf),
-                            cacheKey: AiCache.keyFor('pdf_summary', pdf.id),
-                          ),
+                          subtitle: Text(l10n.summaryToNoteInfo),
+                          onTap: () => _openSummary(pdf),
                         ),
                         // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
                         // model yalnız "podcast'e dönüştür" denirse çağrılır.
@@ -657,6 +663,42 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => DocChatScreen(attachment: pdf),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  // Slaytlar (.pptx): Gemini baytları okuyamaz; özet ekranı
+                  // metni cihazda çıkarıp modele verir. "Sesli dinle" de aynı
+                  // metni okur.
+                  for (final slide in slides)
+                    ExpansionTile(
+                      leading: const Icon(Icons.slideshow_outlined),
+                      title: Text(
+                        slide.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.summarize_outlined),
+                          title: Text(l10n.summarize),
+                          subtitle: Text(l10n.summaryToNoteInfo),
+                          onTap: () => _openSummary(slide),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.headphones_outlined),
+                          title: Text(l10n.listen),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ListenScreen(
+                                  title: slide.fileName,
+                                  loadText: () =>
+                                      DocText.extract(slide.localPath),
+                                ),
                               ),
                             );
                           },

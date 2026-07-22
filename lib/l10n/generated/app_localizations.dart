@@ -304,6 +304,60 @@ abstract class AppLocalizations {
   /// **'PDF ekle'**
   String get addPdf;
 
+  /// No description provided for @addSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt ekle'**
+  String get addSlide;
+
+  /// No description provided for @summaryShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısa özet'**
+  String get summaryShort;
+
+  /// No description provided for @summaryDetailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detaylı özet'**
+  String get summaryDetailed;
+
+  /// No description provided for @summaryShortInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana fikir ve en önemli noktalar.'**
+  String get summaryShortInfo;
+
+  /// No description provided for @summaryDetailedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belgeyi okumana gerek kalmayacak kapsamlı özet.'**
+  String get summaryDetailedInfo;
+
+  /// No description provided for @summaryKeyPoints.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önemli noktalar'**
+  String get summaryKeyPoints;
+
+  /// No description provided for @summaryToNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısa/detaylı özetle, nota dönüştür'**
+  String get summaryToNoteInfo;
+
+  /// No description provided for @summaryNoteCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetten not oluşturuldu'**
+  String get summaryNoteCreated;
+
+  /// No description provided for @summaryNoText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayttan metin çıkarılamadı'**
+  String get summaryNoText;
+
   /// No description provided for @pasteImage.
   ///
   /// In tr, this message translates to:
