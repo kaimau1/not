@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
@@ -17,6 +20,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../gmail/data/gmail_auth.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 
@@ -45,19 +49,19 @@ class SettingsScreen extends ConsumerWidget {
               // bakışta görünür (redesign'daki profil kartı düzeni).
               const _ProfileCard(),
               const SizedBox(height: 18),
-              // Yapay zekâ ayarları tek grupta: dahili AI durumu, kendi API
-              // anahtarı, model seçimleri, günlük brifing ve otomatik etiket.
+              // Yapay zekâ: günlük kullanım ayarları üstte; model seçimi ve
+              // API anahtarı çoğu kullanıcıyı ilgilendirmediğinden "Gelişmiş"
+              // başlığı altına katlandı (progressive disclosure).
               _SettingsGroup(
                 title: l10n.settingsAi,
                 icon: Icons.auto_awesome,
                 children: const [
                   _BuiltInAiStatus(),
-                  _GeminiKeyEditor(),
-                  SizedBox(height: 14),
-                  _ModelSelectors(),
-                  SizedBox(height: 14),
                   _BriefingEditor(),
                   _AutoTagSwitch(),
+                  _AutoTitleSwitch(),
+                  _AiSkipCheckedSwitch(),
+                  _AdvancedAiSection(),
                 ],
               ),
               _SettingsGroup(
@@ -71,11 +75,17 @@ class SettingsScreen extends ConsumerWidget {
                   _DarkScheduleEditor(),
                 ],
               ),
+              // Sesli Not Asistanı: yalnız asistan düğmesinin davranışı.
               _SettingsGroup(
                 title: l10n.voiceAssistantTitle,
                 icon: Icons.record_voice_over_outlined,
+                children: const [_VoiceModeSelector()],
+              ),
+              // Sesli okuma (TTS): ses seçimi + okuma hızları tek yerde.
+              _SettingsGroup(
+                title: l10n.settingsSpeech,
+                icon: Icons.headphones_outlined,
                 children: [
-                  const _VoiceModeSelector(),
                   _SpeechVoiceSelector(
                     language: 'tr',
                     title: l10n.speechVoiceTurkish,
@@ -95,6 +105,12 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const _SpeechRateSlider(),
                   const _ForeignSpeechRateSlider(),
+                ],
+              ),
+              _SettingsGroup(
+                title: l10n.settingsTranslate,
+                icon: Icons.translate,
+                children: [
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(l10n.translateQuality),
@@ -116,6 +132,13 @@ class SettingsScreen extends ConsumerWidget {
                 title: l10n.settingsGmail,
                 icon: Icons.mail_outline,
                 children: const [_GmailSection()],
+              ),
+              // Yedek: dışa aktarma ve geri yükleme tek görünür grupta —
+              // eskiden "Hesap" içinde gömülüydü, bulunamıyordu.
+              _SettingsGroup(
+                title: l10n.backupTitle,
+                icon: Icons.save_alt,
+                children: const [_BackupButton(), _RestoreButton()],
               ),
               _SettingsGroup(
                 title: l10n.account,
@@ -659,11 +682,14 @@ class _SpeechVoiceSelectorState extends ConsumerState<_SpeechVoiceSelector> {
             await controller.setVoice(widget.language, picked);
             if (!mounted) return;
             setState(() => _selected = picked);
-            // Seçilen ses hemen duyulsun: adından anlaşılmıyor.
+            // Seçilen ses hemen duyulsun: adından anlaşılmıyor. Cümle,
+            // tını ve hız farkı duyulacak kadar uzun tutulur.
             await controller.speak(
               widget.language == 'en'
-                  ? 'This is the selected voice.'
-                  : 'Seçilen ses bu.',
+                  ? 'This is the selected voice. Your notes will be read '
+                        'aloud like this.'
+                  : 'Seçtiğin ses bu. Notların bundan sonra bu sesle, '
+                        'bu hızda okunacak.',
               languageCode: widget.language,
             );
           },
@@ -1027,6 +1053,28 @@ class _ModelSelectors extends ConsumerWidget {
         AiTask.voice => l10n.aiModelVoice,
       };
 
+  /// Ham model kimliği yerine okunur ad: "gemini-3.5-flash" → "3.5 Flash —
+  /// hızlı". Bilinmeyen adlar olduğu gibi kalır (liste API'den geliyor).
+  static String _friendlyModel(String id) {
+    var name = id.replaceFirst('gemini-', '').replaceAll('-preview', '');
+    final lower = name.toLowerCase();
+    final hint = lower.contains('flash-lite')
+        ? 'en hızlı'
+        : lower.contains('flash')
+        ? 'hızlı'
+        : lower.contains('pro')
+        ? 'en güçlü'
+        : lower.contains('live')
+        ? 'canlı ses'
+        : null;
+    // "3.5-flash" → "3.5 Flash": tire boşluk olur, parçalar büyük harfle başlar.
+    name = name
+        .split('-')
+        .map((p) => p.isEmpty ? p : '${p[0].toUpperCase()}${p.substring(1)}')
+        .join(' ');
+    return hint == null ? name : '$name — $hint';
+  }
+
   Widget _modelDropdown({
     required String label,
     required List<String> models,
@@ -1045,7 +1093,7 @@ class _ModelSelectors extends ConsumerWidget {
       items: [
         DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
         for (final m in items)
-          DropdownMenuItem<String?>(value: m, child: Text(m)),
+          DropdownMenuItem<String?>(value: m, child: Text(_friendlyModel(m))),
       ],
       onChanged: onChanged,
     );
@@ -1074,23 +1122,34 @@ class _BriefingEditor extends ConsumerWidget {
               .update(enabled: value),
         ),
         if (settings.enabled)
-          ActionChip(
-            avatar: const Icon(Icons.schedule, size: 16),
-            label: Text(time),
-            onPressed: () async {
-              final picked = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay(
-                  hour: settings.minutes ~/ 60,
-                  minute: settings.minutes % 60,
-                ),
-              );
-              if (picked != null) {
-                ref
-                    .read(briefingSettingsProvider.notifier)
-                    .update(minutes: picked.hour * 60 + picked.minute);
-              }
-            },
+          Wrap(
+            spacing: 8,
+            children: [
+              ActionChip(
+                avatar: const Icon(Icons.schedule, size: 16),
+                label: Text(time),
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(
+                      hour: settings.minutes ~/ 60,
+                      minute: settings.minutes % 60,
+                    ),
+                  );
+                  if (picked != null) {
+                    ref
+                        .read(briefingSettingsProvider.notifier)
+                        .update(minutes: picked.hour * 60 + picked.minute);
+                  }
+                },
+              ),
+              // Ayar ile ekran birbirine bağlansın: brifing buradan da açılır.
+              ActionChip(
+                avatar: const Icon(Icons.wb_sunny_outlined, size: 16),
+                label: Text(context.l10n.openBriefing),
+                onPressed: () => context.push('/briefing'),
+              ),
+            ],
           ),
       ],
     );
@@ -1109,6 +1168,71 @@ class _AutoTagSwitch extends ConsumerWidget {
       subtitle: Text(l10n.autoTagSettingInfo),
       value: ref.watch(autoTagProvider),
       onChanged: (value) => ref.read(autoTagProvider.notifier).set(value),
+    );
+  }
+}
+
+class _AutoTitleSwitch extends ConsumerWidget {
+  const _AutoTitleSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.autoTitleSetting),
+      subtitle: Text(l10n.autoTitleSettingInfo),
+      value: ref.watch(autoTitleProvider),
+      onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
+    );
+  }
+}
+
+class _AiSkipCheckedSwitch extends ConsumerWidget {
+  const _AiSkipCheckedSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.aiSkipCheckedSetting),
+      subtitle: Text(l10n.aiSkipCheckedInfo),
+      value: ref.watch(aiSkipCheckedProvider),
+      onChanged: (value) => ref.read(aiSkipCheckedProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Model seçimi ve API anahtarı, katlanır "Gelişmiş" bölümünde: çoğu
+/// kullanıcının hiç dokunmayacağı teknik ayarlar günlük ayarları boğmasın.
+class _AdvancedAiSection extends ConsumerWidget {
+  const _AdvancedAiSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return Theme(
+      // ExpansionTile'ın kendi üst/alt ayraç çizgileri grup kartında kirli
+      // duruyor; kaldır.
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        childrenPadding: const EdgeInsets.only(bottom: 8),
+        leading: const Icon(Icons.tune),
+        title: Text(l10n.aiAdvanced),
+        subtitle: Text(
+          l10n.aiAdvancedInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        children: const [
+          _GeminiKeyEditor(),
+          SizedBox(height: 14),
+          _ModelSelectors(),
+        ],
+      ),
     );
   }
 }
@@ -1250,12 +1374,29 @@ class _BackupButton extends ConsumerWidget {
       final stamp =
           '${now.year}-${now.month.toString().padLeft(2, '0')}-'
           '${now.day.toString().padLeft(2, '0')}';
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/notlar-yedek-$stamp.json');
-      await file.writeAsString(payload);
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], subject: 'Notlar yedeği'),
-      );
+      final fileName = 'notlar-yedek-$stamp.json';
+      if (kIsWeb) {
+        // Web'de dosya sistemi/path_provider yok: baytlar bellekten paylaşılır.
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [
+              XFile.fromData(
+                utf8.encode(payload),
+                name: fileName,
+                mimeType: 'application/json',
+              ),
+            ],
+            subject: 'Notlar yedeği',
+          ),
+        );
+      } else {
+        final dir = await getTemporaryDirectory();
+        final file = File('${dir.path}/$fileName');
+        await file.writeAsString(payload);
+        await SharePlus.instance.share(
+          ShareParams(files: [XFile(file.path)], subject: 'Notlar yedeği'),
+        );
+      }
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),
@@ -1269,6 +1410,84 @@ class _BackupButton extends ConsumerWidget {
       icon: const Icon(Icons.file_download_outlined),
       label: Text(context.l10n.exportBackup),
       onPressed: () => _export(context, ref),
+    );
+  }
+}
+
+/// Dışa aktarılan JSON yedeği geri okur: her kayıt YENİ not olarak oluşturulur
+/// (mevcut notlara dokunulmaz — id çakışması/veri ezme riski yok). Ekler
+/// bulut bağlantısı olarak dışa aktarıldığından geri yüklemede atlanır.
+class _RestoreButton extends ConsumerWidget {
+  const _RestoreButton();
+
+  Future<void> _import(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'JSON', extensions: ['json']),
+      ],
+    );
+    if (file == null) return;
+    try {
+      final decoded = jsonDecode(await file.readAsString());
+      final rawNotes = (decoded as Map<String, dynamic>)['notes'];
+      if (rawNotes is! List) throw const FormatException();
+      const uuid = Uuid();
+      var count = 0;
+      for (final raw in rawNotes) {
+        if (raw is! Map) continue;
+        final map = raw.cast<String, dynamic>();
+        final type = NoteType.fromId(map['type'] as String?);
+        final title = map['title'] as String? ?? '';
+        final body = map['body'] as String? ?? '';
+        final items = [
+          for (final i in (map['items'] as List<dynamic>? ?? const []))
+            if (i is Map)
+              {
+                'id': uuid.v4(),
+                'text': i['text'] as String? ?? '',
+                'checked': i['checked'] as bool? ?? false,
+              },
+        ];
+        if (title.trim().isEmpty && body.trim().isEmpty && items.isEmpty) {
+          continue;
+        }
+        final id = await repo.createNote(type);
+        repo.updateFields(id, {
+          'title': title,
+          'body': body,
+          'items': items,
+          'tags': [
+            for (final t in (map['tags'] as List<dynamic>? ?? const []))
+              t.toString(),
+          ],
+          'pinned': map['pinned'] as bool? ?? false,
+        });
+        count++;
+      }
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.importBackupDone(count))),
+      );
+    } on FormatException {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.importBackupInvalid)),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.genericError(e.toString()))),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return TextButton.icon(
+      icon: const Icon(Icons.file_upload_outlined),
+      label: Text(context.l10n.importBackup),
+      onPressed: () => _import(context, ref),
     );
   }
 }
@@ -1366,8 +1585,6 @@ class _AccountSection extends ConsumerWidget {
           onPressed: () => _deleteAccount(context, ref),
         ),
         const SizedBox(height: 16),
-        // Verinin sahibi kullanıcı: tüm notlar tek dosyada dışa aktarılır.
-        const _BackupButton(),
         // Hukuki şeffaflık: gizlilik politikası + açık kaynak lisansları.
         TextButton.icon(
           icon: const Icon(Icons.privacy_tip_outlined),

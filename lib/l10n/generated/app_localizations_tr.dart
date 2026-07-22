@@ -608,13 +608,44 @@ class AppLocalizationsTr extends AppLocalizations {
   String get suggestTags => 'Etiket öner';
 
   @override
-  String get aiFixNote => 'Notu düzelt (yazım + düzen)';
+  String get aiFixNote => 'Notu düzelt';
+
+  @override
+  String get fixLevelTitle => 'Ne kadar düzeltilsin?';
+
+  @override
+  String get fixSimple => 'Basit';
+
+  @override
+  String get fixSimpleInfo => 'Yalnız imla ve yazım hataları';
+
+  @override
+  String get fixBalanced => 'Dengeli';
+
+  @override
+  String get fixBalancedInfo => 'Cümle yapısı da düzeltilir, daha düzgün yazı';
+
+  @override
+  String get fixDetailed => 'Detaylı';
+
+  @override
+  String get fixDetailedInfo => 'Yazıyı baştan aşağı yeniden düzenler';
+
+  @override
+  String get existingTagsLabel => 'Önceki etiketler';
+
+  @override
+  String get aiSkipCheckedSetting => 'İşaretlileri AI düzenlemesi dışında tut';
+
+  @override
+  String get aiSkipCheckedInfo =>
+      'Checklist notunu AI ile düzeltir/çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.';
+
+  @override
+  String get noteUpdatedUndo => 'Not güncellendi';
 
   @override
   String get aiImprove => 'Notu geliştir';
-
-  @override
-  String get improveFix => 'Yazımı ve dilbilgisini düzelt';
 
   @override
   String get improveFormal => 'Daha resmî yap';
@@ -846,7 +877,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get suggestTitle => 'Başlık öner';
 
   @override
-  String get noteMetaMenu => 'Ekle / Öner';
+  String get noteMetaMenu => 'Etiket · Başlık · Alarm';
 
   @override
   String get folder => 'Klasör';
@@ -1068,4 +1099,80 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get collapseFilters => 'Filtreleri daralt';
+
+  @override
+  String get settingsSpeech => 'Sesli okuma';
+
+  @override
+  String get settingsTranslate => 'Çeviri';
+
+  @override
+  String get aiAdvanced => 'Gelişmiş: model ve API anahtarı';
+
+  @override
+  String get aiAdvancedInfo =>
+      'Model seçimi ve kendi Gemini anahtarın. Çoğu kullanıcı için gerekli değildir.';
+
+  @override
+  String get openBriefing => 'Brifingi aç';
+
+  @override
+  String get backupTitle => 'Yedek';
+
+  @override
+  String get importBackup => 'Yedekten geri yükle (JSON)';
+
+  @override
+  String importBackupDone(int count) {
+    return '$count not geri yüklendi';
+  }
+
+  @override
+  String get importBackupInvalid => 'Geçersiz yedek dosyası';
+
+  @override
+  String get aiHubTitle => 'Yapay Zeka';
+
+  @override
+  String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
+
+  @override
+  String get aiAnalyzeInfo => 'Ana noktaları ve yapılacakları listeler';
+
+  @override
+  String get moveToFolder => 'Klasöre taşı';
+
+  @override
+  String get voiceAssistantBadge => 'Asistan';
+
+  @override
+  String get assistantGenericError => 'Bir sorun oluştu, tekrar dener misin?';
+
+  @override
+  String get quickAddTooltip => 'Yeni not — basılı tut: liste, el yazısı';
+
+  @override
+  String get autoTitleSetting => 'Kapatırken başlık öner';
+
+  @override
+  String get autoTitleSettingInfo =>
+      'Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.';
+
+  @override
+  String get hubChatInfo => 'Notlarına dayanarak soru-cevap';
+
+  @override
+  String get hubTranslateInfo => 'Metin ve konuşma çevirisi';
+
+  @override
+  String get hubSuggestionsInfo => 'Notlarından çıkarılmış somut öneriler';
+
+  @override
+  String get hubMailInfo => 'Gelen kutundaki önemli e-postalar';
+
+  @override
+  String get hubBriefingInfo => 'Güne bakış: notlar ve e-postalar';
+
+  @override
+  String get hubReadInfo => 'PDF/Word belgesini sesli dinle';
 }

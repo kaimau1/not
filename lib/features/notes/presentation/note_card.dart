@@ -298,8 +298,9 @@ class NoteCard extends ConsumerWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         // Seçim modunda dokunuş seçimi değiştirir; normalde notu açar. Uzun
-        // basış artık sürükle-sırala içindir (dashboard sarmalayıcısı yönetir);
-        // çoklu seçime giriş üç nokta menüsündeki "Seç" ile yapılır.
+        // basış dashboard sarmalayıcısında yönetilir: yerinde bırakınca çoklu
+        // seçim, sürükleyince yeniden sıralama (üç nokta menüsündeki "Seç" de
+        // durur).
         onTap: selectionActive ? toggleSelection : () => _openNote(context),
         child: Ink(
           decoration: BoxDecoration(

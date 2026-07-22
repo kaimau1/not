@@ -161,6 +161,25 @@ class AiTaskModelsNotifier extends Notifier<Map<AiTask, String?>> {
   }
 }
 
+/// Editör kapanırken başlıksız kalan nota AI otomatik başlık yazsın mı?
+/// Eski 'auto_title' anahtarı korunur — önceki sürümde açık bırakan
+/// kullanıcının tercihi geri gelir.
+final autoTitleProvider = NotifierProvider<AutoTitleNotifier, bool>(
+  AutoTitleNotifier.new,
+);
+
+class AutoTitleNotifier extends Notifier<bool> {
+  static const _key = 'auto_title';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Notlar kaydedilirken AI otomatik etiket atasın mı?
 final autoTagProvider = NotifierProvider<AutoTagNotifier, bool>(
   AutoTagNotifier.new,
@@ -171,6 +190,26 @@ class AutoTagNotifier extends Notifier<bool> {
 
   @override
   bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// Checklist notu AI ile düzeltilirken/çevrilirken işaretli (tamamlanmış)
+/// maddeler düzenleme dışında mı tutulsun? Varsayılan AÇIK: tamamlanan
+/// maddeler AI'a hiç gönderilmez, olduğu gibi korunur — hem işaretleri
+/// kaybolmaz hem de kapsamı yalnız yapılacaklar (işaretsizler) olur.
+final aiSkipCheckedProvider = NotifierProvider<AiSkipCheckedNotifier, bool>(
+  AiSkipCheckedNotifier.new,
+);
+
+class AiSkipCheckedNotifier extends Notifier<bool> {
+  static const _key = 'ai_skip_checked';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
 
   void set(bool value) {
     state = value;

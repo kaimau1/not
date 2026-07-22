@@ -12,7 +12,6 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
-import '../../ai/presentation/read_document.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../data/notes_repository.dart';
@@ -67,7 +66,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (ref.read(voiceAutostartProvider.notifier).take()) {
       ref
           .read(voiceAssistantProvider.notifier)
-          .start(micPermissionDeniedText: context.l10n.micPermissionDenied);
+          .start(
+            micPermissionDeniedText: context.l10n.micPermissionDenied,
+            genericErrorText: context.l10n.assistantGenericError,
+          );
     }
   }
 
@@ -376,44 +378,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         '${ref.watch(noteFilterProvider)}'
                         '|${ref.watch(selectedFolderProvider) ?? ''}'
                         '|${ref.watch(selectedTagProvider) ?? ''}';
-                    return GestureDetector(
-                      // Yatay çekişle filtreler/klasörler arasında gezin
-                      // (madde 1). Dikey kaydırma CustomScrollView'de kalır;
-                      // eksenler farklı olduğundan çakışmaz.
-                      onHorizontalDragEnd: (details) {
-                        final velocity = details.primaryVelocity ?? 0;
-                        if (velocity.abs() < 200) return;
-                        _cycleFilterFolder(velocity < 0 ? 1 : -1);
-                      },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 260),
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        transitionBuilder: (child, animation) {
-                          // Çekiş yönüne göre yumuşak kaydır + soldur.
-                          final begin = Offset(_swipeForward ? 0.12 : -0.12, 0);
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                              position: Tween(
-                                begin: begin,
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            ),
-                          );
-                        },
-                        layoutBuilder: (currentChild, previousChildren) => Stack(
-                          alignment: Alignment.topCenter,
-                          children: [...previousChildren, ?currentChild],
-                        ),
-                        child: CustomScrollView(
-                        key: ValueKey(segmentKey),
-                        slivers: [
+                    // Başlık (arama/seçim barı + filtre çipleri) kaydırma
+                    // görünümünün DIŞINDA sabit durur: liste kayarken çipler
+                    // yerinde kalır; filtre değişim animasyonu yalnız not
+                    // listesine uygulanır (arama barı artık birlikte kaymaz).
+                    return Column(
+                      children: [
                         if (selectionActive)
-                          SliverAppBar(
-                            // Seçim barı kaydırırken tepede tam sabit kalır.
-                            pinned: true,
+                          AppBar(
                             leading: IconButton(
                               tooltip: l10n.cancel,
                               icon: const Icon(Icons.close),
@@ -500,12 +472,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           )
                         else
-                          SliverAppBar(
-                            // Arama + üst eylemler kaydırırken tepede TAM
-                            // sabit kalır. Eskiden floating+snap vardı; aşağı
-                            // inince bar kayıp gidiyor, aramaya dönmek için
-                            // başa sarmak gerekiyordu. Yalnız pinned bırakıldı.
-                            pinned: true,
+                          AppBar(
                             titleSpacing: searchExpanded ? 0 : 12,
                             // Genişkenken geri oku: odağı bırakır, bar daralır.
                             leading: searchExpanded
@@ -523,25 +490,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             actions: searchExpanded
                                 ? const [SizedBox(width: 4)]
                                 : [
+                                    // Tüm AI özellikleri tek kapıda: eskiden
+                                    // çeviri+sohbet ikonları ve ⋮ içindeki dört
+                                    // AI maddesi dağınıktı; hepsi AI merkezine
+                                    // (/ai) taşındı.
                                     IconButton(
-                                      tooltip: l10n.translatorTitle,
-                                      icon: const Icon(Icons.translate),
-                                      onPressed: () =>
-                                          context.push('/translate'),
-                                    ),
-                                    IconButton(
-                                      tooltip: l10n.chatTitle,
-                                      icon: const Icon(Icons.forum_outlined),
-                                      onPressed: () => context.push('/chat'),
+                                      tooltip: l10n.aiHubTitle,
+                                      icon: const Icon(Icons.auto_awesome),
+                                      onPressed: () => context.push('/ai'),
                                     ),
                                     PopupMenuButton<String>(
                                       // Menü ekranın altına taşıp sistem gezinme
                                       // çubuğunun arkasında kalıyordu; yükseklik
-                                      // sınırlanınca içerik kaydırılabilir olur ve
-                                      // son maddeler çubuğun altında kalmaz.
-                                      // minWidth kaldırıldı: menüyü 200 px'e
-                                      // zorlamak dar ekranda gereksiz yer
-                                      // kaplıyordu, artık içeriğe göre daralır.
+                                      // sınırlanınca içerik kaydırılabilir olur.
                                       constraints: BoxConstraints(
                                         maxHeight:
                                             MediaQuery.sizeOf(context).height *
@@ -549,14 +510,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       ),
                                       onSelected: (action) => switch (action) {
                                         'sort' => _pickSort(),
-                                        'suggestions' => context.push(
-                                          '/suggestions',
-                                        ),
-                                        'mail' => context.push('/mail'),
-                                        'briefing' => context.push('/briefing'),
-                                        'listen' => pickAndReadDocument(
-                                          context,
-                                        ),
                                         'reminders' => context.push(
                                           '/reminders',
                                         ),
@@ -565,42 +518,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         'settings' => context.push('/settings'),
                                         _ => null,
                                       },
-                                      // Menü üç ayrı cinsten madde taşıyor:
-                                      // AI araçları, içerik yerleri (arşiv/
-                                      // çöp/hatırlatıcı) ve ayarlar. Ayraçsız
-                                      // tek liste karma çekmece gibi
-                                      // okunuyordu; gruplar ayrıldı.
+                                      // Yalnız sıralama + içerik yerleri +
+                                      // ayarlar kaldı; AI maddeleri /ai'de.
                                       itemBuilder: (context) => [
-                                        // --- Sıralama ---
                                         _menuItem(
                                           'sort',
                                           Icons.sort,
                                           l10n.sortBy,
                                         ),
                                         const PopupMenuDivider(),
-                                        // --- AI araçları ---
-                                        _menuItem(
-                                          'suggestions',
-                                          Icons.auto_awesome_outlined,
-                                          l10n.aiSuggestions,
-                                        ),
-                                        _menuItem(
-                                          'mail',
-                                          Icons.mark_email_unread_outlined,
-                                          l10n.importantEmails,
-                                        ),
-                                        _menuItem(
-                                          'briefing',
-                                          Icons.wb_sunny_outlined,
-                                          l10n.briefingTitle,
-                                        ),
-                                        _menuItem(
-                                          'listen',
-                                          Icons.headphones_outlined,
-                                          l10n.readDocument,
-                                        ),
-                                        const PopupMenuDivider(),
-                                        // --- İçerik yerleri ---
                                         _menuItem(
                                           'reminders',
                                           Icons.alarm_outlined,
@@ -627,41 +553,89 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     const SizedBox(width: 4),
                                   ],
                           ),
-                        // Hızlı ekleme barı kaldırıldı: sunduğu üç tipin
-                        // tamamını sağ alttaki "+" düğmesi zaten veriyordu
-                        // (üstelik el yazısı da). Her ekranda 52dp prime alan
-                        // yiyen ikinci bir oluşturma yolu için sebep yoktu.
-                        // Filtre + klasör + etiket çipleri tek kompakt satırda.
-                        const SliverToBoxAdapter(child: DashboardChipsRow()),
-                        ...notesAsync.when(
-                          data: (notes) => _buildNoteSlivers(
-                            context,
-                            notes,
-                            columns,
-                            cellWidth: cellWidth,
-                            selectionActive: selectionActive,
-                            searchActive: query.trim().isNotEmpty,
-                          ),
-                          loading: () => [
-                            const SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: Center(child: CircularProgressIndicator()),
-                            ),
-                          ],
-                          error: (e, _) => [
-                            SliverFillRemaining(
-                              hasScrollBody: false,
-                              child: EmptyState(
-                                icon: Icons.error_outline,
-                                title: l10n.genericError(e.toString()),
+                        // Filtre + klasör + etiket çipleri tek kompakt satırda,
+                        // kaydırma görünümünün dışında sabit.
+                        const DashboardChipsRow(),
+                        Expanded(
+                          child: GestureDetector(
+                            // Yatay çekişle filtreler/klasörler arasında gezin.
+                            // Dikey kaydırma CustomScrollView'de kalır;
+                            // eksenler farklı olduğundan çakışmaz.
+                            onHorizontalDragEnd: (details) {
+                              final velocity = details.primaryVelocity ?? 0;
+                              if (velocity.abs() < 200) return;
+                              _cycleFilterFolder(velocity < 0 ? 1 : -1);
+                            },
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 260),
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              transitionBuilder: (child, animation) {
+                                // Çekiş yönüne göre yumuşak kaydır + soldur.
+                                final begin = Offset(
+                                  _swipeForward ? 0.12 : -0.12,
+                                  0,
+                                );
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: SlideTransition(
+                                    position: Tween(
+                                      begin: begin,
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              layoutBuilder: (currentChild, previousChildren) =>
+                                  Stack(
+                                    alignment: Alignment.topCenter,
+                                    children: [
+                                      ...previousChildren,
+                                      ?currentChild,
+                                    ],
+                                  ),
+                              child: CustomScrollView(
+                                key: ValueKey(segmentKey),
+                                slivers: [
+                                  ...notesAsync.when(
+                                    data: (notes) => _buildNoteSlivers(
+                                      context,
+                                      notes,
+                                      columns,
+                                      cellWidth: cellWidth,
+                                      selectionActive: selectionActive,
+                                      searchActive: query.trim().isNotEmpty,
+                                    ),
+                                    loading: () => [
+                                      const SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                    ],
+                                    error: (e, _) => [
+                                      SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: EmptyState(
+                                          icon: Icons.error_outline,
+                                          title: l10n.genericError(
+                                            e.toString(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SliverToBoxAdapter(
+                                    child: SizedBox(height: 88),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 88)),
                       ],
-                      ),
-                      ),
                     );
                   },
                 ),
@@ -789,8 +763,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       itemBuilder: (context, index) {
         final note = items[index];
         final card = NoteCard(note: note, highlightQuery: query);
+        void select() =>
+            ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
+        // Sürükleme kapalı görünümlerde (filtre/arama/seçim modu) uzun basış
+        // yine de toplu seçime girer — kullanıcı her yerden çoklu seçim
+        // yapabilsin (madde 2).
         if (!reorderEnabled) {
-          return KeyedSubtree(key: ValueKey(note.id), child: card);
+          return KeyedSubtree(
+            key: ValueKey(note.id),
+            child: GestureDetector(onLongPress: select, child: card),
+          );
         }
         return _ReorderableNoteCell(
           key: ValueKey(note.id),
@@ -799,6 +781,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           cellWidth: cellWidth,
           inSection: (id) => items.any((n) => n.id == id),
           onReorder: (draggedId, to) => _reorderSection(items, draggedId, to),
+          onSelect: select,
           feedback: SizedBox(
             width: cellWidth,
             child: NoteCard(note: note, highlightQuery: query),
@@ -842,7 +825,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 /// sarmalayıcı (madde 1). Uzun basış sürüklemeyi başlatır; başka bir kartın
 /// üzerine bırakılınca [onReorder] çağrılır. Sürükleme aynı bölümle
 /// sınırlıdır ([inSection]) — sabitliler ile diğerleri karışmaz.
-class _ReorderableNoteCell extends StatelessWidget {
+///
+/// Uzun basıp YERİNDE bırakılırsa (kayda değer bir hareket olmadıysa)
+/// sürükleme değil TOPLU SEÇİM sayılır ve [onSelect] çağrılır (madde 2): tek
+/// jest hem sıralama hem çoklu seçime hizmet eder (Keep davranışı).
+class _ReorderableNoteCell extends StatefulWidget {
   const _ReorderableNoteCell({
     super.key,
     required this.noteId,
@@ -850,6 +837,7 @@ class _ReorderableNoteCell extends StatelessWidget {
     required this.cellWidth,
     required this.inSection,
     required this.onReorder,
+    required this.onSelect,
     required this.feedback,
     required this.child,
   });
@@ -859,35 +847,59 @@ class _ReorderableNoteCell extends StatelessWidget {
   final double cellWidth;
   final bool Function(String draggedId) inSection;
   final void Function(String draggedId, int toIndex) onReorder;
+  final VoidCallback onSelect;
   final Widget feedback;
   final Widget child;
+
+  @override
+  State<_ReorderableNoteCell> createState() => _ReorderableNoteCellState();
+}
+
+class _ReorderableNoteCellState extends State<_ReorderableNoteCell> {
+  /// Parmağın bastığı ilk konum; sürükleme iptalinde ne kadar hareket
+  /// edildiğini ölçmek için tutulur.
+  Offset? _pressStart;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return DragTarget<String>(
       onWillAcceptWithDetails: (details) =>
-          details.data != noteId && inSection(details.data),
-      onAcceptWithDetails: (details) => onReorder(details.data, index),
+          details.data != widget.noteId && widget.inSection(details.data),
+      onAcceptWithDetails: (details) =>
+          widget.onReorder(details.data, widget.index),
       builder: (context, candidate, rejected) {
         final hovering = candidate.isNotEmpty;
-        return LongPressDraggable<String>(
-          data: noteId,
-          feedback: Material(
-            color: Colors.transparent,
-            child: SizedBox(width: cellWidth, child: feedback),
-          ),
-          childWhenDragging: Opacity(opacity: 0.3, child: child),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: hovering ? scheme.primary : Colors.transparent,
-                width: 2,
-              ),
+        return Listener(
+          // Sürükleme iptalinde başlangıçla karşılaştırmak için ilk temas
+          // konumunu kaydet (Listener olayı yutmaz; InkWell dokunuşu çalışır).
+          onPointerDown: (event) => _pressStart = event.position,
+          child: LongPressDraggable<String>(
+            data: widget.noteId,
+            feedback: Material(
+              color: Colors.transparent,
+              child: SizedBox(width: widget.cellWidth, child: widget.feedback),
             ),
-            child: child,
+            childWhenDragging: Opacity(opacity: 0.3, child: widget.child),
+            // Başka bir karta bırakılmadıysa (onReorder gelmez): parmak yerinde
+            // kaldıysa seçim, kaydıysa (boş alana bırakma) hiçbir şey.
+            onDraggableCanceled: (velocity, offset) {
+              final start = _pressStart;
+              if (start != null && (offset - start).distance < 24) {
+                widget.onSelect();
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: hovering ? scheme.primary : Colors.transparent,
+                  width: 2,
+                ),
+              ),
+              child: widget.child,
+            ),
           ),
         );
       },

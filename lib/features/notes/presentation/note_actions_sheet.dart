@@ -7,6 +7,7 @@ import '../../../core/l10n_ext.dart';
 import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../folders/presentation/folder_sheets.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
@@ -97,6 +98,11 @@ Future<void> showNoteActionsSheet(
               ),
               title: Text(note.locked ? l10n.unlockNote : l10n.lockNote),
               onTap: () => Navigator.pop(sheetContext, 'lock'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_outlined),
+              title: Text(l10n.moveToFolder),
+              onTap: () => Navigator.pop(sheetContext, 'folder'),
             ),
             ListTile(
               leading: const Icon(Icons.palette_outlined),
@@ -195,6 +201,17 @@ Future<void> showNoteActionsSheet(
         return;
       }
       repo.updateFields(note.id, {'locked': !note.locked});
+    case 'folder':
+      final picked = await showFolderPickSheet(
+        context,
+        ref,
+        currentFolderId: note.folderId,
+      );
+      if (picked != null) {
+        repo.updateFields(note.id, {
+          'folderId': picked.isEmpty ? null : picked,
+        });
+      }
     case 'color':
       final picked = await showNoteColorPicker(
         context,

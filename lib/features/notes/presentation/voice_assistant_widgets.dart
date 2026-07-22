@@ -27,7 +27,10 @@ class VoiceAssistantButton extends ConsumerWidget {
     HapticFeedback.mediumImpact();
     await ref
         .read(voiceAssistantProvider.notifier)
-        .start(micPermissionDeniedText: l10n.micPermissionDenied);
+        .start(
+          micPermissionDeniedText: l10n.micPermissionDenied,
+          genericErrorText: l10n.assistantGenericError,
+        );
   }
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
@@ -39,6 +42,7 @@ class VoiceAssistantButton extends ConsumerWidget {
           nothingHeardText: l10n.voiceNothingHeard,
           savedText: l10n.voiceNoteSaved,
           noApiKeyText: l10n.aiNoApiKey,
+          genericErrorText: l10n.assistantGenericError,
         );
     if (!ok && context.mounted) _showSnack(context, l10n.voiceTooShort);
   }
@@ -80,7 +84,22 @@ class VoiceAssistantButton extends ConsumerWidget {
               ),
             ],
           )
-        : Icon(Icons.mic_none, size: 30, color: scheme.onPrimaryContainer);
+        // Boşta ikonun altında "Asistan" yazar: editördeki dikte mikrofonuyla
+        // karışmasın — bu düğme not YARATAN yapay zekâ asistanıdır.
+        : Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.mic_none, size: 24, color: scheme.onPrimaryContainer),
+              Text(
+                l10n.voiceAssistantBadge,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onPrimaryContainer,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          );
 
     final button = Semantics(
       button: true,
@@ -186,6 +205,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                   nothingHeardText: l10n.voiceNothingHeard,
                   savedText: l10n.voiceNoteSaved,
                   noApiKeyText: l10n.aiNoApiKey,
+                  genericErrorText: l10n.assistantGenericError,
                 ),
                 icon: const Icon(Icons.check, size: 18),
                 label: Text(l10n.voiceFinish),

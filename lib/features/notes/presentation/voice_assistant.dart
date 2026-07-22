@@ -93,7 +93,10 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
 
   /// Kaydı başlatır. [micPermissionDeniedText] izin yoksa hata panelinde
   /// gösterilir (l10n çağırandan gelir; controller context taşımaz).
-  Future<void> start({required String micPermissionDeniedText}) async {
+  Future<void> start({
+    required String micPermissionDeniedText,
+    required String genericErrorText,
+  }) async {
     if (_busy) return;
     _transcript = '';
     _filePath = null;
@@ -124,11 +127,11 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           elapsed: state.elapsed + const Duration(seconds: 1),
         );
       });
-    } catch (e) {
+    } catch (_) {
       await _teardownMic();
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.error,
-        message: e.toString(),
+        message: genericErrorText,
       );
     }
   }
@@ -166,10 +169,13 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
 
   /// Kaydı bitirir ve asistana gönderir. Çok kısa kayıtlar (yanlışlıkla
   /// dokunma) sessizce iptal edilir; false döner ki arayüz ipucu gösterebilsin.
+  /// [genericErrorText] beklenmeyen hatalarda ham istisna metni yerine
+  /// gösterilir (kullanıcıya "Exception: ..." dökülmesin).
   Future<bool> finish({
     required String nothingHeardText,
     required String savedText,
     required String noApiKeyText,
+    required String genericErrorText,
   }) async {
     if (state.phase != VoiceAssistantPhase.recording) return true;
     if (state.elapsed < const Duration(seconds: 1) && _transcript.isEmpty) {
@@ -264,10 +270,16 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         phase: VoiceAssistantPhase.error,
         message: e.isAuthError ? noApiKeyText : e.message,
       );
-    } catch (e) {
+    } on StateError catch (e) {
+      // Bilinçli fırlatılan Türkçe mesajlar ("konuşma algılanmadı" vb.).
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.error,
-        message: e.toString(),
+        message: e.message.toString(),
+      );
+    } catch (_) {
+      state = VoiceAssistantState(
+        phase: VoiceAssistantPhase.error,
+        message: genericErrorText,
       );
     }
     return true;

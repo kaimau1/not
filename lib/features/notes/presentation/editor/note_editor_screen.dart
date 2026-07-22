@@ -19,6 +19,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
+import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
@@ -35,6 +36,8 @@ import '../../domain/note.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../color_picker_sheet.dart';
+import '../notes_providers.dart';
+import '../pdf_export_screen.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
@@ -93,7 +96,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// Doğrudan (alt sayfasız) dikte durumu.
   StreamSubscription<({String? text, double? level})>? _speechSub;
   bool _dictating = false;
-  String _dictatedText = '';
 
   @override
   void initState() {
@@ -150,6 +152,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ref.read(notesRepositoryProvider)?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
       if (note.tags.isEmpty) _autoTagInBackground(note);
+      if (note.title.trim().isEmpty) _autoTitleInBackground(note);
     }
     _speechSub?.cancel();
     _debouncer.dispose();
@@ -484,6 +487,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     });
   }
 
+  /// Editör kapanırken başlıksız kalan nota arka planda AI başlık yazar
+  /// (Ayarlar > Yapay Zeka > "Kapatırken başlık öner", varsayılan açık).
+  /// "Başlık öner" çipiyle aynı üreticiyi kullanır; akışı kesmez.
+  void _autoTitleInBackground(Note note) {
+    if (note.isEmpty || !ref.read(autoTitleProvider)) return;
+    final service = ref.read(geminiServiceProvider);
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    Future(() async {
+      try {
+        final title = await service.generateTitle(note);
+        if (title.isNotEmpty) repo.updateFields(note.id, {'title': title});
+      } catch (_) {
+        // Kota/anahtar hatasında sessizce geç — başlıksız kalması sorun değil.
+      }
+    });
+  }
+
   bool _titleGenerating = false;
 
   /// "Başlık öner" çipi: nota AI ile kısa bir başlık üretir ve doğrudan
@@ -564,18 +585,74 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  String _cleanTag(String raw) =>
+      raw.trim().replaceAll('#', '').replaceAll(' ', '-').toLowerCase();
+
+  void _applyTag(String cleaned) {
+    if (cleaned.isEmpty) return;
+    _mutate(
+      (n) => n.copyWith(tags: {...n.tags, cleaned}.toList()),
+      immediate: true,
+    );
+  }
+
   Future<void> _addTag() async {
     final controller = TextEditingController();
     final l10n = context.l10n;
+    // Daha önce kullanılmış, bu notta OLMAYAN etiketler diyalogda çip olarak
+    // sunulur — kullanıcı yeniden yazmak yerine dokunup ekler.
+    final note = _note;
+    final existing = [
+      for (final t in ref.read(allTagsProvider))
+        if (note == null || !note.tags.contains(t)) t,
+    ];
     final tag = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.addTag),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(hintText: l10n.tagHint),
-          onSubmitted: (value) => Navigator.pop(dialogContext, value),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(hintText: l10n.tagHint),
+              onSubmitted: (value) => Navigator.pop(dialogContext, value),
+            ),
+            if (existing.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(
+                l10n.existingTagsLabel,
+                style: Theme.of(dialogContext).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Çok etiket varsa diyalog taşmasın: sınırlı yükseklikte kaydırılır.
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 180),
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final t in existing)
+                        ActionChip(
+                          label: Text('#$t'),
+                          onPressed: () {
+                            // Çipe dokununca doğrudan eklenir (metin kutusuna
+                            // yazmaya gerek yok), diyalog kapanır.
+                            Navigator.pop(dialogContext);
+                            _applyTag(t);
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(
@@ -590,16 +667,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
     controller.dispose();
-    final cleaned = tag
-        ?.trim()
-        .replaceAll('#', '')
-        .replaceAll(' ', '-')
-        .toLowerCase();
-    if (cleaned == null || cleaned.isEmpty) return;
-    _mutate(
-      (n) => n.copyWith(tags: {...n.tags, cleaned}.toList()),
-      immediate: true,
-    );
+    if (tag != null) _applyTag(_cleanTag(tag));
   }
 
   void _removeTag(String tag) => _mutate(
@@ -688,13 +756,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// AI çıktısıyla notun içeriğini değiştirir ("Geliştir" sonuçları için).
   /// [asType] verilirse not o çalışma moduna da geçirilir: "maddelere çevir"
   /// sonucu yalnızca metni değil notun tipini de checklist/sıralı yapar.
-  void _replaceText(String raw, {NoteType? asType}) {
+  void _replaceText(String raw, {NoteType? asType, bool keepChecked = false}) {
     final note = _note;
     // Model istenmese de ** / * / # üretebiliyor; not düz metin tuttuğundan
     // temizle.
     final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
+    // Değişiklik öncesi anlık görüntü: "Geri al" bununla eski hâle döner.
+    final before = note;
     final targetType = asType ?? note.type;
+    // İşaretli maddeler AI'a hiç gönderilmemişti (ayar açık): sonuç yalnız
+    // işaretsizlerin yerine geçer, işaretli (tamamlanmış) maddeler metni ve
+    // işaretiyle AYNEN korunur — sonlarına eklenir (uygulamanın "işaretliler
+    // altta" düzeni). Kullanıcının "işaretlilere karışma" isteği.
+    if (keepChecked && targetType == NoteType.checklist) {
+      const uuid = Uuid();
+      final newUnchecked = [
+        for (final line in text.split('\n'))
+          if (line.trim().isNotEmpty)
+            NoteItem(id: uuid.v4(), text: _parseListLine(line).text),
+      ];
+      final preservedChecked = [
+        for (final item in note.items)
+          if (item.checked) item,
+      ];
+      _mutate(
+        (n) => n.copyWith(items: [...newUnchecked, ...preservedChecked]),
+        immediate: true,
+      );
+      _offerReplaceUndo(before);
+      return;
+    }
     if (targetType == NoteType.text) {
       _bodyController.text = text.trim();
       _mutate(
@@ -712,6 +804,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // işaretlediği maddeler düzeltme sonrası işaretli kalır.
       final keepState =
           targetType == note.type && parsed.length == note.items.length;
+      // Sayı/sıra değişse de (kısaltma, yeniden sıralama) işaret durumu
+      // kaybolmasın: eski öğelerin normalize metni → işaret eşlemesi kurulur,
+      // yeni satır eskisiyle (yazım düzeltilmiş de olsa birebir eşleşen)
+      // bulunursa işareti devralır.
+      String norm(String s) => s.trim().toLowerCase();
+      final oldChecked = {
+        for (final item in note.items) norm(item.text): item.checked,
+      };
       _mutate(
         (n) => n.copyWith(
           type: targetType,
@@ -725,7 +825,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 // Sıralı listede işaret anlamsız; checklist'te korunur/okunur.
                 checked: targetType != NoteType.checklist
                     ? false
-                    : (keepState ? n.items[i].checked : parsed[i].checked),
+                    : keepState
+                    ? n.items[i].checked
+                    : (oldChecked[norm(parsed[i].text)] ?? parsed[i].checked),
               ),
           ],
         ),
@@ -733,13 +835,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
       if (targetType != note.type) _bodyController.clear();
     }
+    _offerReplaceUndo(before);
+  }
+
+  /// "Notu değiştir" sonrası geri alma: eski not anlık görüntüsüne (metin,
+  /// öğeler, tip, başlık) tek dokunuşla döner.
+  void _offerReplaceUndo(Note before) {
+    if (!mounted) return;
+    showUndoSnackBar(
+      context,
+      message: context.l10n.noteUpdatedUndo,
+      undoLabel: context.l10n.undo,
+      onUndo: () {
+        _titleController.text = before.title;
+        _bodyController.text = before.body;
+        setState(() => _note = before);
+        ref.read(notesRepositoryProvider)?.updateNote(before);
+      },
+    );
   }
 
   /// AI çıktısını ORİJİNAL notu değiştirmeden YENİ bir notta açar (madde 1-2).
   /// Böylece kullanıcıda hem "değiştirmeden" orijinal hem de "düzeltilmiş"
   /// sürüm ayrı notlar olarak kalır. Başlık ve klasör yeni nota taşınır;
   /// [asType] verilirse (liste dönüşümü) yeni not o tipte oluşturulur.
-  Future<void> _createNoteFromText(String raw, {NoteType? asType}) async {
+  Future<void> _createNoteFromText(
+    String raw, {
+    NoteType? asType,
+    bool keepChecked = false,
+  }) async {
     final note = _note;
     final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
@@ -765,6 +889,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             checked: type == NoteType.checklist ? parsed.checked : false,
           ),
         );
+      }
+      // İşaretliler kapsam dışıydı: korunan (tamamlanmış) maddeler yeni notta
+      // da işaretli olarak sona eklenir (işaretsiz düzeltilmişlerin ardına).
+      if (keepChecked && type == NoteType.checklist) {
+        for (final item in note.items) {
+          if (item.checked) {
+            items.add(NoteItem(id: uuid.v4(), text: item.text, checked: true));
+          }
+        }
       }
       fields['items'] = [for (final it in items) it.toMap()];
       // createNote liste tipini bir boş öğeyle tohumlar; gövde artık öğelerde.
@@ -982,21 +1115,59 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _startInlineDictation(Note note) async {
     final base = _bodyController.text;
     final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
-    _dictatedText = '';
+    _dictationItemIds.clear();
     setState(() => _dictating = true);
     _speechSub = DeviceSpeech.listen().listen(
       (event) {
         final text = event.text;
         if (text == null) return;
-        _dictatedText = text;
-        // Metin notunda anlık gövdeye; liste tiplerinde bitişte öğe olur.
-        if (note.type == NoteType.text) _writeDictated(baseWithSep, text);
+        // Metin notunda anlık gövdeye; liste tiplerinde her duraklama
+        // (satır sonu) anında ayrı madde olarak eklenir — eskiden döküm
+        // yalnız "Bitir"de tek öğe olarak düşüyordu.
+        if (note.type == NoteType.text) {
+          _writeDictated(baseWithSep, text);
+        } else {
+          _syncDictatedItems(text);
+        }
       },
       onError: (Object e) {
         _stopInlineDictation();
         if (mounted) _showSnack(context.l10n.aiError(e.toString()));
       },
     );
+  }
+
+  /// Bu dikte oturumunun eklediği öğelerin kimlikleri: her olayda dökümün
+  /// tamamı yeniden gelir; önceki dikte öğeleri yenileriyle değiştirilir,
+  /// kullanıcının elle yazdığı öğelere dokunulmaz.
+  final List<String> _dictationItemIds = [];
+
+  void _syncDictatedItems(String full) {
+    const uuid = Uuid();
+    final lines = [
+      for (final line in full.split('\n'))
+        if (line.trim().isNotEmpty) line.trim(),
+    ];
+    _mutate((n) {
+      // Sondaki boş "yeni öğe" satırları ve önceki dikte öğeleri çıkarılır.
+      final kept = [
+        for (final item in n.items)
+          if (!_dictationItemIds.contains(item.id)) item,
+      ];
+      while (kept.isNotEmpty && kept.last.text.trim().isEmpty) {
+        kept.removeLast();
+      }
+      _dictationItemIds
+        ..clear()
+        ..addAll([for (final _ in lines) uuid.v4()]);
+      return n.copyWith(
+        items: [
+          ...kept,
+          for (var i = 0; i < lines.length; i++)
+            NoteItem(id: _dictationItemIds[i], text: lines[i]),
+        ],
+      );
+    }, immediate: true);
   }
 
   Future<void> _stopInlineDictation() async {
@@ -1007,13 +1178,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _speechSub = null;
     if (!mounted) return;
     setState(() => _dictating = false);
-    final note = _note;
-    final text = _dictatedText.trim();
-    // Liste tiplerinde döküm bitişte tek öğe olarak eklenir.
-    if (note != null && note.type != NoteType.text && text.isNotEmpty) {
-      _appendText(text);
-    }
-    _dictatedText = '';
+    // Liste tiplerinde öğeler dikte sırasında anlık eklendi (_syncDictatedItems);
+    // burada yalnız oturum durumu temizlenir — sonraki dikte bu öğeleri
+    // "kendi öğesi" sanıp değiştirmesin.
+    _dictationItemIds.clear();
   }
 
   /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
@@ -1412,6 +1580,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 switch (action) {
                   case 'share':
                     _share();
+                  case 'pdf':
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => PdfExportScreen(note: note),
+                      ),
+                    );
                   case 'listen':
                     _listen();
                   case 'lock':
@@ -1420,6 +1594,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     _toggleArchive();
                   case 'clear':
                     _clearContent();
+                  case 'settings':
+                    context.push('/settings');
                   case 'delete':
                     _delete();
                 }
@@ -1432,6 +1608,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.share_outlined),
                     title: Text(l10n.share),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'pdf',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.picture_as_pdf_outlined),
+                    title: Text(l10n.exportPdf),
                   ),
                 ),
                 PopupMenuItem(
@@ -1478,6 +1663,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.backspace_outlined),
                     title: Text(l10n.clearNote),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.settings_outlined),
+                    title: Text(l10n.settings),
                   ),
                 ),
                 PopupMenuItem(

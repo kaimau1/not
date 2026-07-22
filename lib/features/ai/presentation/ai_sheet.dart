@@ -11,6 +11,7 @@ import '../../notes/data/pdf_text.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_report.dart';
 import 'listen_screen.dart';
@@ -19,7 +20,11 @@ import 'doc_chat_screen.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
 /// [asType] verilirse notun çalışma modu da o tipe geçer (madde/sıralı liste).
-typedef ReplaceTextCallback = void Function(String text, {NoteType? asType});
+/// [keepChecked] true ise AI'a yalnız işaretsiz maddeler gönderilmiştir;
+/// işaretli (tamamlanmış) maddeler değiştirilmeden korunmalı, sonuç yalnız
+/// işaretsizlerin yerine geçer.
+typedef ReplaceTextCallback =
+    void Function(String text, {NoteType? asType, bool keepChecked});
 
 /// Editördeki "Yapay Zeka" düğmesinin açtığı alt sayfa.
 Future<void> showAiSheet(
@@ -75,19 +80,33 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// [cacheKey] verilirse çıktı cihazda saklanır ve aynı girdi ikinci kez
   /// model çağırmaz. Anahtar içerikten türetildiği için not/PDF değişince
   /// kendiliğinden tazelenir — saat karşılaştırmasına gerek yok.
+  /// Son başarısız işlemi tekrar deneyebilmek için saklanır (hata görünümünde
+  /// "Tekrar dene").
+  VoidCallback? _retryAction;
+
   Future<void> _run(
     Future<String> Function(GeminiService) action, {
     bool cacheAsSummary = false,
     String? cacheKey,
     bool improvement = false,
     NoteType? replaceAsType,
+    bool keepChecked = false,
   }) async {
+    _retryAction = () => _run(
+      action,
+      cacheAsSummary: cacheAsSummary,
+      cacheKey: cacheKey,
+      improvement: improvement,
+      replaceAsType: replaceAsType,
+      keepChecked: keepChecked,
+    );
     setState(() {
       _loading = true;
       _result = null;
       _error = null;
       _lastWasImprovement = improvement;
       _replaceAsType = replaceAsType;
+      _keepChecked = keepChecked;
     });
     if (cacheKey != null) {
       final cached = await AiCache.read(cacheKey);
@@ -158,34 +177,111 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// çevirileri için); null ise tip korunur.
   NoteType? _replaceAsType;
 
-  /// Tek dokunuşla "notu düzelt": yazım/imla/noktalama düzeltilir, çok hafif
-  /// düzenlemeyle okunaklı hale getirilir; içerik ve madde sayısı korunur.
-  Future<void> _fixNote() => _run(
-    (s) => s.rewriteText(
-      // İçerik metni: başlık ve `- [ ]` / numara işaretleri OLMADAN gönderilir;
-      // aksi hâlde model bunları aynen geri döndürüp not yapısına sızdırıyordu
-      // (başlık madde oluyor, `[ ]`/`[x]` öğe metnine giriyordu).
-      widget.note.toContentText(),
-      'Yazım, imla, noktalama ve büyük/küçük harf hatalarını düzelt. '
-      'Çok hafif düzenlemelerle notu düzenli ve okunaklı hale getir. '
-      'Her satırı olduğu gibi ayrı tut; satır/madde sayısını KORU, '
-      'satırları birleştirme veya bölme. Anlamı ve içeriği KORU; yeni bilgi '
-      'ekleme, madde silme. Düz metin ver; başına madde imi, numara ya da '
-      'onay kutusu ([ ], [x]) KOYMA; hiçbir biçimlendirme işareti '
-      '(yıldız, kare, alt çizgi) kullanma.',
-    ),
-    improvement: true,
-  );
+  /// Son işlemde işaretli maddeler kapsam dışı bırakıldı mı (checklist +
+  /// ayar açık). Sonucu uygularken işaretliler korunmalı.
+  bool _keepChecked = false;
+
+  /// Bu not için işaretli maddeler AI kapsamı dışında mı tutulsun: ayar açık,
+  /// not checklist ve en az bir işaretli VE bir işaretsiz madde varsa. (Hepsi
+  /// işaretliyse dışlanacak bir şey kalmaz; hiç işaretli yoksa fark etmez.)
+  bool get _skipCheckedForNote {
+    if (!ref.read(aiSkipCheckedProvider)) return false;
+    if (widget.note.type != NoteType.checklist) return false;
+    final hasChecked = widget.note.items.any((i) => i.checked);
+    final hasUnchecked = widget.note.items.any(
+      (i) => !i.checked && i.text.trim().isNotEmpty,
+    );
+    return hasChecked && hasUnchecked;
+  }
+
+  /// Üç düzeyde "notu düzelt": kullanıcı ne kadar müdahale istediğini seçer.
+  /// Üçü de içerik metnini (başlık/işaret olmadan) gönderir ve sonucu nota
+  /// geri uygulanabilir kılar (improvement: true).
+  static const _fixCommon =
+      'Düz metin ver; başına madde imi, numara ya da onay kutusu '
+      '([ ], [x]) KOYMA; hiçbir biçimlendirme işareti (yıldız, kare, '
+      'alt çizgi) kullanma.';
+
+  /// Liste notlarında (checklist/sıralı) her satır ayrı bir maddedir. Bu
+  /// kısıt olmadan "dengeli/detaylı" düzeltme maddeleri tek paragrafa
+  /// birleştiriyor ve sıralı liste tek maddeye çöküyordu — çıktı satır sayısı
+  /// girdiyle aynı kalmalı.
+  String get _listStructureConstraint =>
+      widget.note.type == NoteType.text
+      ? ''
+      : ' ÖNEMLİ: Bu bir listedir; girdideki HER SATIR ayrı bir maddedir. '
+            'Çıktı da AYNI sayıda satır içermeli — her maddeyi kendi satırında '
+            'ver, satırları BİRLEŞTİRME, tek paragrafa DÖNÜŞTÜRME, madde '
+            'ekleme veya çıkarma. Her satırı tek tek düzelt.';
+
+  Future<void> _pickFixLevel() async {
+    final l10n = context.l10n;
+    // (etiket, açıklama, istem)
+    final options = <(String, String, String)>[
+      (
+        l10n.fixSimple,
+        l10n.fixSimpleInfo,
+        'Yalnızca yazım, imla, noktalama ve büyük/küçük harf hatalarını '
+            'düzelt. Cümle yapısına, kelime seçimine veya sıralamaya DOKUNMA. '
+            'Her satırı olduğu gibi ayrı tut; satır/madde sayısını KORU, '
+            'satırları birleştirme veya bölme. Anlamı ve içeriği KORU; yeni '
+            'bilgi ekleme, madde silme. $_fixCommon',
+      ),
+      (
+        l10n.fixBalanced,
+        l10n.fixBalancedInfo,
+        'Yazım, imla ve noktalama hatalarını düzelt; ayrıca bozuk veya '
+            'devrik cümleleri düzgün ve akıcı hale getir, gereksiz '
+            'tekrarları sadeleştir. Anlamı ve tüm bilgileri KORU; yeni bilgi '
+            'ekleme. Genel yapıyı ve satır düzenini olabildiğince koru. '
+            '$_fixCommon',
+      ),
+      (
+        l10n.fixDetailed,
+        l10n.fixDetailedInfo,
+        'Metni baştan aşağı yeniden düzenle: yazım ve dilbilgisini düzelt, '
+            'cümleleri akıcı ve profesyonel bir dille yeniden yaz, düşünceleri '
+            'mantıklı bir akışa sok, gerekirse paragraflara ayır. Hiçbir '
+            'bilgiyi ATLAMA veya uydurma; yalnızca var olan içeriği daha iyi '
+            'ifade et. $_fixCommon',
+      ),
+    ];
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.fixLevelTitle),
+        children: [
+          for (final (label, info, prompt) in options)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, prompt),
+              child: ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: Text(label),
+                subtitle: Text(info),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (chosen == null) return;
+    final skip = _skipCheckedForNote;
+    // Liste yapısını koru: sıralı/checklist notunda maddeler tek satıra
+    // çökmesin (kullanıcı: "5 madde tek numaraya dönüşüyor").
+    final prompt = chosen + _listStructureConstraint;
+    await _run(
+      (s) => s.rewriteText(widget.note.toContentText(skipChecked: skip), prompt),
+      improvement: true,
+      keepChecked: skip,
+    );
+  }
 
   Future<void> _pickImprovement() async {
     final l10n = context.l10n;
     // (etiket, istem, "notu değiştir" uygulanınca geçilecek tip)
+    // Yazım düzeltmesi burada YOK: sayfanın üstündeki "Notu düzelt" düğmesi
+    // aynı işi yapıyordu, ikisi bir arada kafa karıştırıyordu.
     final options = <(String, String, NoteType?)>[
-      (
-        l10n.improveFix,
-        'Yazım ve dilbilgisi hatalarını düzelt, anlamı koru',
-        null,
-      ),
       (
         l10n.improveFormal,
         'Daha resmî ve profesyonel bir dille yeniden yaz',
@@ -219,12 +315,24 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       ),
     );
     if (chosen == null) return;
+    // İşaretlileri dışlama yalnız tip DEĞİŞMEDEN düzenlemede anlamlı; liste
+    // tipine dönüştürmede (bullets/numbered) tüm içerik yeniden şekillenir.
+    final skip = chosen.$2 == null && _skipCheckedForNote;
+    // Tip korunuyorsa (Formal/Kısalt) liste yapısını da koru; tip
+    // dönüştürmede (bullets/numbered) içerik zaten yeniden şekillenir.
+    final prompt = chosen.$2 == null
+        ? chosen.$1 + _listStructureConstraint
+        : chosen.$1;
     await _run(
       // İçerik metni (başlık/işaret yok): geliştirme sonucu nota geri
       // uygulanırken başlık öğeye, `[ ]`/numara işaretleri metne sızmasın.
-      (s) => s.rewriteText(widget.note.toContentText(), chosen.$1),
+      (s) => s.rewriteText(
+        widget.note.toContentText(skipChecked: skip),
+        prompt,
+      ),
       improvement: true,
       replaceAsType: chosen.$2,
+      keepChecked: skip,
     );
   }
 
@@ -243,7 +351,16 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       ),
     );
     if (language == null) return;
-    await _run((s) => s.translateText(widget.note.toPlainText(), language));
+    // İçerik metni (başlık ve `- [x]`/numara işaretleri OLMADAN): model
+    // işaretleri de "çevirmeye" çalışıp yapıya sızdırıyordu. improvement:
+    // çeviri sonucu nota geri uygulanabilir ("Notu değiştir" görünür).
+    final skip = _skipCheckedForNote;
+    await _run(
+      (s) =>
+          s.translateText(widget.note.toContentText(skipChecked: skip), language),
+      improvement: true,
+      keepChecked: skip,
+    );
   }
 
   Future<String> _extractImageText(
@@ -371,8 +488,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             final replace = widget.onReplaceText!;
                             final text = _result!;
                             final type = _replaceAsType;
+                            final keep = _keepChecked;
                             Navigator.pop(context);
-                            replace(text, asType: type);
+                            replace(text, asType: type, keepChecked: keep);
                           },
                     // "Yeni not olarak aç": orijinal not değişmez, sonuç ayrı
                     // bir notta açılır. Her sonuç türünde (düzeltme/çeviri/
@@ -386,19 +504,32 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             final type = _lastWasImprovement
                                 ? _replaceAsType
                                 : null;
+                            final keep = _keepChecked;
                             Navigator.pop(context);
-                            create(text, asType: type);
+                            create(text, asType: type, keepChecked: keep);
                           },
                   )
                 else ...[
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _error!,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ),
+                          if (_retryAction != null)
+                            TextButton.icon(
+                              onPressed: _retryAction,
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: Text(l10n.retry),
+                            ),
+                        ],
                       ),
                     ),
                   // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
@@ -406,7 +537,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                       child: FilledButton.tonalIcon(
-                        onPressed: widget.note.isEmpty ? null : _fixNote,
+                        onPressed: widget.note.isEmpty ? null : _pickFixLevel,
                         icon: const Icon(Icons.auto_fix_high, size: 18),
                         label: Text(l10n.aiFixNote),
                       ),
@@ -433,9 +564,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                       );
                     },
                   ),
+                  // Alt yazılar iki benzer işlemin farkını söyler: özet kısa
+                  // metin, analiz yapılacak/ana nokta dökümü.
                   ListTile(
                     leading: const Icon(Icons.summarize_outlined),
                     title: Text(l10n.aiSummarize),
+                    subtitle: Text(l10n.aiSummarizeInfo),
                     enabled: !widget.note.isEmpty,
                     onTap: () => _run(
                       (s) => s.summarizeNote(widget.note),
@@ -449,6 +583,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   ListTile(
                     leading: const Icon(Icons.insights_outlined),
                     title: Text(l10n.aiAnalyze),
+                    subtitle: Text(l10n.aiAnalyzeInfo),
                     enabled: !widget.note.isEmpty,
                     onTap: () => _run(
                       (s) => s.analyzeNote(widget.note),

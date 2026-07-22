@@ -150,18 +150,25 @@ class Note {
   /// (not → metin → AI → not) başlığın öğeye, onay kutusu/numara işaretlerinin
   /// öğe metnine sızmasını engeller — bu yüzden başlık+işaret taşıyan
   /// [toPlainText]'ten ayrı tutulur.
-  String toContentText() => switch (type) {
-    NoteType.text => [
-      if (body.trim().isNotEmpty) body.trim(),
-      // Karışık içerik: metin notundaki checklist maddeleri de içeriğe girer.
-      for (final item in items)
-        if (item.text.trim().isNotEmpty) item.text.trim(),
-    ].join('\n'),
-    NoteType.checklist || NoteType.ordered => [
-      for (final item in items)
-        if (item.text.trim().isNotEmpty) item.text.trim(),
-    ].join('\n'),
-  };
+  /// [skipChecked] true ise işaretli (tamamlanmış) maddeler İÇERİĞE KATILMAZ —
+  /// AI düzeltme/çevirisine yalnız işaretsiz maddeler gider; tamamlananlar
+  /// değiştirilmeden yerinde korunur ("işaretlilere karışma" isteği).
+  String toContentText({bool skipChecked = false}) {
+    bool include(NoteItem item) =>
+        item.text.trim().isNotEmpty && !(skipChecked && item.checked);
+    return switch (type) {
+      NoteType.text => [
+        if (body.trim().isNotEmpty) body.trim(),
+        // Karışık içerik: metin notundaki checklist maddeleri de içeriğe girer.
+        for (final item in items)
+          if (include(item)) item.text.trim(),
+      ].join('\n'),
+      NoteType.checklist || NoteType.ordered => [
+        for (final item in items)
+          if (include(item)) item.text.trim(),
+      ].join('\n'),
+    };
+  }
 
   Note copyWith({
     NoteType? type,

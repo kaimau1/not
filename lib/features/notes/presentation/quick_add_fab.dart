@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../domain/note_type.dart';
 
-/// Keep tarzı açılan "+" düğmesi: dokununca metin / madde listesi /
-/// sıralı liste / el yazısı seçenekleri etiketli mini düğmeler olarak
-/// üstte belirir.
+/// "+" düğmesi: TEK dokunuş doğrudan yeni METİN notu açar (en sık iş tek
+/// harekete indi — Keep davranışı); basılı tutunca madde listesi / sıralı
+/// liste / el yazısı / metin seçenekleri etiketli mini düğmeler olarak belirir.
 ///
 /// Seçenekler bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
 /// - Böylece açılınca yerinde büyüyüp üstteki sesli asistan düğmesini
@@ -36,8 +37,6 @@ class _QuickAddFabState extends State<QuickAddFab> {
   OverlayEntry? _entry;
 
   bool get _open => _entry != null;
-
-  void _toggle() => _open ? _close() : _openMenu();
 
   void _close() {
     _entry?.remove();
@@ -148,14 +147,25 @@ class _QuickAddFabState extends State<QuickAddFab> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return FloatingActionButton(
-      heroTag: 'add-fab',
-      tooltip: l10n.newTextNote,
-      onPressed: _toggle,
-      child: AnimatedRotation(
-        turns: _open ? 0.125 : 0, // + → × dönüşü
-        duration: const Duration(milliseconds: 160),
-        child: const Icon(Icons.add),
+    // FAB'ın onLongPress'i yok: uzun basış dıştaki GestureDetector'a düşer
+    // (InkWell uzun basışı sahiplenmediğinden çakışma olmaz).
+    return GestureDetector(
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        if (!_open) _openMenu();
+      },
+      child: FloatingActionButton(
+        heroTag: 'add-fab',
+        tooltip: l10n.quickAddTooltip,
+        onPressed: _open
+            ? _close
+            // Tek dokunuş = anında metin notu; tip menüsü uzun basışta.
+            : () => widget.onCreate(NoteType.text),
+        child: AnimatedRotation(
+          turns: _open ? 0.125 : 0, // + → × dönüşü
+          duration: const Duration(milliseconds: 160),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

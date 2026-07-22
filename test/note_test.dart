@@ -54,6 +54,36 @@ void main() {
       expect(text, contains('2. İkinci'));
     });
 
+    test('toContentText işaretleri ve başlığı katmaz', () {
+      const note = Note(
+        id: '1',
+        type: NoteType.checklist,
+        title: 'Alışveriş',
+        items: [
+          NoteItem(id: 'a', text: 'Süt', checked: true),
+          NoteItem(id: 'b', text: 'Ekmek'),
+        ],
+      );
+      final text = note.toContentText();
+      expect(text, isNot(contains('Alışveriş')));
+      expect(text, isNot(contains('[x]')));
+      expect(text, 'Süt\nEkmek');
+    });
+
+    test('toContentText(skipChecked: true) işaretli maddeyi dışlar', () {
+      const note = Note(
+        id: '1',
+        type: NoteType.checklist,
+        items: [
+          NoteItem(id: 'a', text: 'Süt', checked: true),
+          NoteItem(id: 'b', text: 'Ekmek'),
+          NoteItem(id: 'c', text: 'Yumurta', checked: true),
+        ],
+      );
+      // İşaretsiz yalnız "Ekmek" kalır; tamamlananlar AI'a gitmez.
+      expect(note.toContentText(skipChecked: true), 'Ekmek');
+    });
+
     test('copyWith clearDeletedAt silinme bilgisini temizler', () {
       final note = Note(
         id: '1',

@@ -1207,20 +1207,80 @@ abstract class AppLocalizations {
   /// No description provided for @aiFixNote.
   ///
   /// In tr, this message translates to:
-  /// **'Notu düzelt (yazım + düzen)'**
+  /// **'Notu düzelt'**
   String get aiFixNote;
+
+  /// No description provided for @fixLevelTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne kadar düzeltilsin?'**
+  String get fixLevelTitle;
+
+  /// No description provided for @fixSimple.
+  ///
+  /// In tr, this message translates to:
+  /// **'Basit'**
+  String get fixSimple;
+
+  /// No description provided for @fixSimpleInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız imla ve yazım hataları'**
+  String get fixSimpleInfo;
+
+  /// No description provided for @fixBalanced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dengeli'**
+  String get fixBalanced;
+
+  /// No description provided for @fixBalancedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cümle yapısı da düzeltilir, daha düzgün yazı'**
+  String get fixBalancedInfo;
+
+  /// No description provided for @fixDetailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detaylı'**
+  String get fixDetailed;
+
+  /// No description provided for @fixDetailedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıyı baştan aşağı yeniden düzenler'**
+  String get fixDetailedInfo;
+
+  /// No description provided for @existingTagsLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki etiketler'**
+  String get existingTagsLabel;
+
+  /// No description provided for @aiSkipCheckedSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'İşaretlileri AI düzenlemesi dışında tut'**
+  String get aiSkipCheckedSetting;
+
+  /// No description provided for @aiSkipCheckedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Checklist notunu AI ile düzeltir/çevirirken tamamlanmış (işaretli) maddeler değiştirilmeden korunur; yalnız işaretsiz maddeler düzenlenir.'**
+  String get aiSkipCheckedInfo;
+
+  /// No description provided for @noteUpdatedUndo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not güncellendi'**
+  String get noteUpdatedUndo;
 
   /// No description provided for @aiImprove.
   ///
   /// In tr, this message translates to:
   /// **'Notu geliştir'**
   String get aiImprove;
-
-  /// No description provided for @improveFix.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yazımı ve dilbilgisini düzelt'**
-  String get improveFix;
 
   /// No description provided for @improveFormal.
   ///
@@ -1651,7 +1711,7 @@ abstract class AppLocalizations {
   /// No description provided for @noteMetaMenu.
   ///
   /// In tr, this message translates to:
-  /// **'Ekle / Öner'**
+  /// **'Etiket · Başlık · Alarm'**
   String get noteMetaMenu;
 
   /// No description provided for @folder.
@@ -2067,6 +2127,150 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Filtreleri daralt'**
   String get collapseFilters;
+
+  /// No description provided for @settingsSpeech.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli okuma'**
+  String get settingsSpeech;
+
+  /// No description provided for @settingsTranslate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çeviri'**
+  String get settingsTranslate;
+
+  /// No description provided for @aiAdvanced.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelişmiş: model ve API anahtarı'**
+  String get aiAdvanced;
+
+  /// No description provided for @aiAdvancedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Model seçimi ve kendi Gemini anahtarın. Çoğu kullanıcı için gerekli değildir.'**
+  String get aiAdvancedInfo;
+
+  /// No description provided for @openBriefing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Brifingi aç'**
+  String get openBriefing;
+
+  /// No description provided for @backupTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedek'**
+  String get backupTitle;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yedekten geri yükle (JSON)'**
+  String get importBackup;
+
+  /// No description provided for @importBackupDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not geri yüklendi'**
+  String importBackupDone(int count);
+
+  /// No description provided for @importBackupInvalid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçersiz yedek dosyası'**
+  String get importBackupInvalid;
+
+  /// No description provided for @aiHubTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay Zeka'**
+  String get aiHubTitle;
+
+  /// No description provided for @aiSummarizeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısa bir özet çıkarır'**
+  String get aiSummarizeInfo;
+
+  /// No description provided for @aiAnalyzeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana noktaları ve yapılacakları listeler'**
+  String get aiAnalyzeInfo;
+
+  /// No description provided for @moveToFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasöre taşı'**
+  String get moveToFolder;
+
+  /// No description provided for @voiceAssistantBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asistan'**
+  String get voiceAssistantBadge;
+
+  /// No description provided for @assistantGenericError.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir sorun oluştu, tekrar dener misin?'**
+  String get assistantGenericError;
+
+  /// No description provided for @quickAddTooltip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not — basılı tut: liste, el yazısı'**
+  String get quickAddTooltip;
+
+  /// No description provided for @autoTitleSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapatırken başlık öner'**
+  String get autoTitleSetting;
+
+  /// No description provided for @autoTitleSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Editörden çıkarken başlıksız kalan nota içeriğinden otomatik kısa bir başlık yazılır.'**
+  String get autoTitleSettingInfo;
+
+  /// No description provided for @hubChatInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarına dayanarak soru-cevap'**
+  String get hubChatInfo;
+
+  /// No description provided for @hubTranslateInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin ve konuşma çevirisi'**
+  String get hubTranslateInfo;
+
+  /// No description provided for @hubSuggestionsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarından çıkarılmış somut öneriler'**
+  String get hubSuggestionsInfo;
+
+  /// No description provided for @hubMailInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen kutundaki önemli e-postalar'**
+  String get hubMailInfo;
+
+  /// No description provided for @hubBriefingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Güne bakış: notlar ve e-postalar'**
+  String get hubBriefingInfo;
+
+  /// No description provided for @hubReadInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF/Word belgesini sesli dinle'**
+  String get hubReadInfo;
 }
 
 class _AppLocalizationsDelegate
