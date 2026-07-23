@@ -10,10 +10,11 @@ import '../editor/drawing_screen.dart' show kInkPalette;
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
 /// tutulur ve [onChanged] ile üst katmana (ek → not → Firestore) verilir.
 ///
-/// TEK parmak çizer, İKİ parmak sayfayı kaydırır/yakınlaştırır: katman jest
-/// arenasına girmeyen [Listener] kullanır (dokunuş alttaki görüntüleyiciye de
-/// ulaşır) ve yalnız tek parmak inince görüntüleyicinin kaydırması dışarıdan
-/// [lockPan] ile kilitlenir.
+/// TEK parmak çizer, İKİ parmak yakınlaştırır: katman jest arenasına girmeyen
+/// [Listener] kullanır (dokunuş alttaki görüntüleyiciye de ulaşır). Çizim
+/// modunda görüntüleyicinin `panEnabled`'ı kapalı, `scaleEnabled`'ı açık
+/// bırakılır — tek parmak çizer, iki parmak yakınlaştırır. İkinci parmak inince
+/// başlamış çizgi iptal edilir ki iki parmak jesti çizime dönüşmesin.
 class InkController extends ChangeNotifier {
   InkController({required List<InkStroke> initial, required this.onChanged})
     : _ink = [...initial];
@@ -39,11 +40,9 @@ class InkController extends ChangeNotifier {
   /// Silginin çizgiye "değmiş" sayıldığı yarıçap (sayfa oranı).
   static const _eraseRadius = 0.02;
 
-  /// Tek parmak çizerken görüntüleyicinin kaydırması kapatılmalı mı?
-  bool get lockPan => editing && _pointers == 1;
-
-  void toggleEditing() {
-    editing = !editing;
+  void setEditing(bool value) {
+    if (editing == value) return;
+    editing = value;
     if (!editing) save();
     notifyListeners();
   }
@@ -201,9 +200,14 @@ class InkPageLayer extends StatelessWidget {
                 controller.pointerMove(page, e.localPosition, size),
             onPointerUp: (_) => controller.pointerUp(),
             onPointerCancel: (_) => controller.pointerUp(),
-            child: CustomPaint(
-              painter: InkPainter(controller.ink, page),
-              size: Size.infinite,
+            // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
+            // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
+            child: ListenableBuilder(
+              listenable: controller,
+              builder: (context, _) => CustomPaint(
+                painter: InkPainter(controller.ink, page),
+                size: Size.infinite,
+              ),
             ),
           );
         },
@@ -221,6 +225,13 @@ class InkToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => _build(context),
+    );
+  }
+
+  Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return SafeArea(

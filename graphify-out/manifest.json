@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/drawing_screen.dart": {
-    "mtime": 1784822198.7095609,
-    "ast_hash": "a22f0195db2e6d7cbadbbee16a5019ab",
+    "mtime": 1784830418.0616598,
+    "ast_hash": "2764ca35e74e973319706bf4234735bb",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/items_editor.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1784829611.4760427,
-    "ast_hash": "3b804d6e53b33b0b8f5085549110767c",
+    "mtime": 1784830641.2112553,
+    "ast_hash": "3c8b190a26e218eff931b2d8d32d0d1a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -900,8 +900,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
-    "mtime": 1784829354.3501966,
-    "ast_hash": "e9c28dd1ba7d6d1b8a441805dd96ff3c",
+    "mtime": 1784830477.5715756,
+    "ast_hash": "cd816882dce3eec2b176d9403d7cbe00",
     "semantic_hash": ""
   },
   "lib/features/notes/data/slide_deck.dart": {
@@ -910,8 +910,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/viewers/ink_layer.dart": {
-    "mtime": 1784829005.939077,
-    "ast_hash": "16d192b31581d4edc1ba51e862eaa4b6",
+    "mtime": 1784830432.5184672,
+    "ast_hash": "9cd9c95dd1bb874c4bfd6d72807d1c49",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/viewers/slide_canvas.dart": {
@@ -920,8 +920,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/viewers/slide_viewer_screen.dart": {
-    "mtime": 1784829102.2701006,
-    "ast_hash": "d3ee630e924cbdf443043d58e238193e",
+    "mtime": 1784830465.127864,
+    "ast_hash": "ae83ed8765ae576f676616a63fde4183",
     "semantic_hash": ""
   },
   "test/slide_deck_test.dart": {

@@ -33,10 +33,23 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
   );
 
+  /// Çizim modu ekran durumu. Görüntüleyici YALNIZ bu değişince yeniden kurulur
+  /// (pdfrx `panEnabled`/`enableTextSelection` değişimi belgeyi yeniden yüklüyor);
+  /// çizgiler `InkPageLayer` içinde bağımsız tazelendiğinden çizim sırasında
+  /// PDF yeniden kurulmaz, iki parmak jesti bozulmaz.
+  bool _editing = false;
+
   @override
   void dispose() {
     _ink.dispose();
     super.dispose();
+  }
+
+  void _toggleEditing() {
+    setState(() {
+      _editing = !_editing;
+      _ink.setEditing(_editing);
+    });
   }
 
   @override
@@ -47,61 +60,51 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         attachment.localPath.isNotEmpty &&
         File(attachment.localPath).existsSync();
 
-    return ListenableBuilder(
-      listenable: _ink,
-      builder: (context, _) {
-        final params = PdfViewerParams(
-          // Metin seçimi açık: kullanıcı PDF içindeki yazıyı seçip
-          // kopyalayabilsin. Çizim modunda kapalı: seçim katmanı parmağı kapıyor.
-          enableTextSelection: !_ink.editing,
-          // Tek parmak çizerken kaydırma kapalı; ikinci parmak inince açılır.
-          panEnabled: !_ink.lockPan,
-          pageOverlaysBuilder: (context, pageRect, page) => [
-            Positioned.fill(
-              child: InkPageLayer(controller: _ink, page: page.pageNumber),
-            ),
-          ],
-        );
+    final params = PdfViewerParams(
+      // Çizim modunda metin seçimi kapalı (seçim katmanı parmağı kapıyor).
+      enableTextSelection: !_editing,
+      // Çizimde tek parmak çizer (pan kapalı), iki parmak yakınlaştırır
+      // (scaleEnabled varsayılan açık). Normalde tam kaydırma+yakınlaştırma.
+      panEnabled: !_editing,
+      pageOverlaysBuilder: (context, pageRect, page) => [
+        Positioned.fill(
+          child: InkPageLayer(controller: _ink, page: page.pageNumber),
+        ),
+      ],
+    );
 
-        Widget viewer;
-        if (hasLocal) {
-          viewer = PdfViewer.file(attachment.localPath, params: params);
-        } else if (attachment.isUploaded) {
-          viewer = PdfViewer.uri(
-            Uri.parse(attachment.downloadUrl),
-            params: params,
-          );
-        } else {
-          viewer = const Center(
-            child: Icon(Icons.picture_as_pdf_outlined, size: 64),
-          );
-        }
+    Widget viewer;
+    if (hasLocal) {
+      viewer = PdfViewer.file(attachment.localPath, params: params);
+    } else if (attachment.isUploaded) {
+      viewer = PdfViewer.uri(Uri.parse(attachment.downloadUrl), params: params);
+    } else {
+      viewer = const Center(
+        child: Icon(Icons.picture_as_pdf_outlined, size: 64),
+      );
+    }
 
-        return PopScope(
-          onPopInvokedWithResult: (_, _) => _ink.save(),
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                attachment.fileName,
-                style: const TextStyle(fontSize: 14),
-              ),
-              actions: [
-                if (widget.onChanged != null)
-                  IconButton(
-                    tooltip: _ink.editing ? l10n.annotateDone : l10n.annotate,
-                    isSelected: _ink.editing,
-                    icon: Icon(_ink.editing ? Icons.check : Icons.edit_outlined),
-                    onPressed: _ink.toggleEditing,
-                  ),
-              ],
-            ),
-            body: viewer,
-            bottomNavigationBar: _ink.editing
-                ? InkToolbar(controller: _ink)
-                : null,
+    return PopScope(
+      onPopInvokedWithResult: (_, _) => _ink.save(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            attachment.fileName,
+            style: const TextStyle(fontSize: 14),
           ),
-        );
-      },
+          actions: [
+            if (widget.onChanged != null)
+              IconButton(
+                tooltip: _editing ? l10n.annotateDone : l10n.annotate,
+                isSelected: _editing,
+                icon: Icon(_editing ? Icons.check : Icons.edit_outlined),
+                onPressed: _toggleEditing,
+              ),
+          ],
+        ),
+        body: viewer,
+        bottomNavigationBar: _editing ? InkToolbar(controller: _ink) : null,
+      ),
     );
   }
 }
