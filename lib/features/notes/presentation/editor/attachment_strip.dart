@@ -142,7 +142,12 @@ class _AttachmentTile extends StatelessWidget {
       File(attachment.localPath).existsSync();
 
   void _open(BuildContext context) {
-    if (attachment.kind == AttachmentKind.audio) return;
+    // Ses ve sunum ekleri için satır içi görüntüleyici yok; sunumun içeriği
+    // "Yapay Zeka" alt sayfasından özetlenir/dinlenir.
+    if (attachment.kind == AttachmentKind.audio ||
+        attachment.kind == AttachmentKind.slide) {
+      return;
+    }
     if (!_hasLocal && !attachment.isUploaded) {
       ScaffoldMessenger.of(
         context,
@@ -173,6 +178,25 @@ class _AttachmentTile extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.picture_as_pdf_outlined, color: scheme.error, size: 28),
+            const SizedBox(height: 6),
+            Text(
+              attachment.fileName,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+          ],
+        ),
+      );
+    } else if (attachment.kind == AttachmentKind.slide) {
+      content = Container(
+        width: 140,
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.slideshow_outlined, color: scheme.tertiary, size: 28),
             const SizedBox(height: 6),
             Text(
               attachment.fileName,

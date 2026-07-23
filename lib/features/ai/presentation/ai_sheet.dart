@@ -6,6 +6,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/markdown.dart';
 import '../../../core/widgets/speak_button.dart';
 import '../../notes/data/attachment_repository.dart';
+import '../../notes/data/doc_text.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/data/pdf_text.dart';
 import '../../notes/domain/attachment.dart';
@@ -151,14 +152,67 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     }
   }
 
-  Future<String> _summarizePdf(GeminiService service, Attachment pdf) async {
+  Future<String> _summarizePdf(
+    GeminiService service,
+    Attachment pdf, {
+    required bool detailed,
+  }) async {
     final notSyncedMessage = context.l10n.attachmentNotSynced;
     final repo = ref.read(attachmentRepositoryProvider);
     final bytes = repo == null ? null : await repo.readBytes(pdf);
     if (bytes == null) {
       throw GeminiException(notSyncedMessage);
     }
-    return service.summarizePdf(bytes, pdf.fileName);
+    return service.summarizePdf(bytes, pdf.fileName, detailed: detailed);
+  }
+
+  Future<String> _summarizeSlide(
+    GeminiService service,
+    Attachment slide, {
+    required bool detailed,
+  }) async {
+    final notSyncedMessage = context.l10n.attachmentNotSynced;
+    final repo = ref.read(attachmentRepositoryProvider);
+    final bytes = repo == null ? null : await repo.readBytes(slide);
+    if (bytes == null) {
+      throw GeminiException(notSyncedMessage);
+    }
+    final text = await DocText.extractFromBytes('pptx', bytes);
+    return service.summarizeDocumentText(text, slide.fileName, detailed: detailed);
+  }
+
+  /// Özet ayrıntı düzeyini sorar: kısa mı, kaynağa bakmayı gereksiz kılan
+  /// detaylı mı. null = kullanıcı vazgeçti.
+  Future<bool?> _pickSummaryDetail() {
+    final l10n = context.l10n;
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.summaryDetailTitle),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.short_text),
+              title: Text(l10n.summaryShort),
+              subtitle: Text(l10n.summaryShortInfo),
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.subject),
+              title: Text(l10n.summaryDetailed),
+              subtitle: Text(l10n.summaryDetailedInfo),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   static const _translateTargets = [
@@ -430,6 +484,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       for (final a in widget.note.attachments)
         if (a.kind == AttachmentKind.audio) a,
     ];
+    final slides = [
+      for (final a in widget.note.attachments)
+        if (a.kind == AttachmentKind.slide) a,
+    ];
 
     return SafeArea(
       child: Padding(
@@ -636,6 +694,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // altında açılır. Eskiden her ek için adı tekrarlayan ayrı
                   // satırlar vardı (bir PDF = üç uzun satır).
                   if (pdfs.isNotEmpty ||
+                      slides.isNotEmpty ||
                       images.isNotEmpty ||
                       audios.isNotEmpty)
                     _sectionLabel(context, l10n.aiSectionAttachments),
@@ -651,10 +710,17 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ListTile(
                           leading: const Icon(Icons.summarize_outlined),
                           title: Text(l10n.summarize),
-                          onTap: () => _run(
-                            (s) => _summarizePdf(s, pdf),
-                            cacheKey: AiCache.keyFor('pdf_summary', pdf.id),
-                          ),
+                          onTap: () async {
+                            final detailed = await _pickSummaryDetail();
+                            if (detailed == null) return;
+                            await _run(
+                              (s) => _summarizePdf(s, pdf, detailed: detailed),
+                              cacheKey: AiCache.keyFor(
+                                detailed ? 'pdf_summary_detailed' : 'pdf_summary',
+                                pdf.id,
+                              ),
+                            );
+                          },
                         ),
                         // Sesli dinleme: metin çıkarma ve okuma cihazda yapılır,
                         // model yalnız "podcast'e dönüştür" denirse çağrılır.
@@ -683,6 +749,53 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             Navigator.of(context).push(
                               MaterialPageRoute<void>(
                                 builder: (_) => DocChatScreen(attachment: pdf),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  // Sunum ekleri: PDF gibi özetlenir (kısa/detaylı) ve sesli
+                  // dinlenir. Metin cihazda PPTX'ten çıkarılıp modele gider.
+                  for (final slide in slides)
+                    ExpansionTile(
+                      leading: const Icon(Icons.slideshow_outlined),
+                      title: Text(
+                        slide.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.summarize_outlined),
+                          title: Text(l10n.summarize),
+                          onTap: () async {
+                            final detailed = await _pickSummaryDetail();
+                            if (detailed == null) return;
+                            await _run(
+                              (s) =>
+                                  _summarizeSlide(s, slide, detailed: detailed),
+                              cacheKey: AiCache.keyFor(
+                                detailed
+                                    ? 'slide_summary_detailed'
+                                    : 'slide_summary',
+                                slide.id,
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.headphones_outlined),
+                          title: Text(l10n.listen),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => ListenScreen(
+                                  title: slide.fileName,
+                                  loadText: () async =>
+                                      DocText.extract(slide.localPath),
+                                ),
                               ),
                             );
                           },

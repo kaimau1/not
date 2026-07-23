@@ -3,7 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 enum AttachmentKind {
   image('image'),
   pdf('pdf'),
-  audio('audio');
+  audio('audio'),
+  slide('slide');
 
   const AttachmentKind(this.id);
 

@@ -339,9 +339,29 @@ class GeminiService {
     },
   ]);
 
+  /// Kısa özet istemi: birkaç cümlelik genel bakış + önemli maddeler.
+  static const _shortSummaryPrompt =
+      'Türkçe olarak KISA ve öz biçimde özetle: önce 2-3 cümlelik genel '
+      'özet, ardından önemli noktaları madde madde ver.';
+
+  /// Detaylı özet istemi: kaynağa dönmeyi gereksiz kılan kapsamlı özet.
+  static const _detailedSummaryPrompt =
+      'Türkçe olarak KAPSAMLI ve DETAYLI bir özet çıkar. Amaç: okuyucunun '
+      'kaynağı (PDF/sunum) hiç açmadan içeriği tam olarak anlayabilmesi. '
+      'Belgeyi baştan sona işle; tüm ana bölümleri, önemli fikirleri, '
+      'tanımları, verileri, örnekleri ve sonuçları kapsa. Önemli ayrıntıları '
+      'ATLAMA, uydurma da EKLEME. Konu başlıklarına ayırıp her başlığın '
+      'altında açıklayıcı ama akıcı paragraflar ve gerekli yerlerde maddeler '
+      'kullan. Sonunda kısa bir "Özetin özeti" (ana çıkarımlar) bölümü ekle.';
+
   /// PDF'i doğrudan Gemini'ye gönderip Türkçe özet alır (inline base64,
-  /// ~20 MB istek sınırına kadar).
-  Future<String> summarizePdf(Uint8List bytes, String fileName) => _generate([
+  /// ~20 MB istek sınırına kadar). [detailed] true ise kaynağa bakmayı
+  /// gereksiz kılan kapsamlı özet, değilse kısa özet üretilir.
+  Future<String> summarizePdf(
+    Uint8List bytes,
+    String fileName, {
+    bool detailed = false,
+  }) => _generate([
     {
       'inline_data': {
         'mime_type': 'application/pdf',
@@ -350,9 +370,23 @@ class GeminiService {
     },
     {
       'text':
-          '"$fileName" adlı bu PDF belgesini Türkçe olarak özetle: '
-          'önce 2-3 cümlelik genel özet, ardından önemli noktaları madde '
-          'madde ver.',
+          '"$fileName" adlı bu PDF belgesini özetle. '
+          '${detailed ? _detailedSummaryPrompt : _shortSummaryPrompt}',
+    },
+  ]);
+
+  /// Sunum/belge metninden (PPTX'ten yerelde çıkarılan) Türkçe özet üretir.
+  /// PPTX Gemini'ye doğrudan gönderilemediğinden metin çıkarılıp gönderilir.
+  Future<String> summarizeDocumentText(
+    String text,
+    String fileName, {
+    bool detailed = false,
+  }) => _generate([
+    {
+      'text':
+          '"$fileName" adlı sunum/belgenin metni aşağıdadır. '
+          '${detailed ? _detailedSummaryPrompt : _shortSummaryPrompt}'
+          '\n\n---\n$text',
     },
   ]);
 

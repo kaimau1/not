@@ -126,6 +126,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addPdf => 'PDF ekle';
 
   @override
+  String get addSlide => 'Slayt ekle';
+
+  @override
   String get pasteImage => 'Panodan görsel yapıştır';
 
   @override
@@ -182,6 +185,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get summarize => 'Özetle';
+
+  @override
+  String get summaryDetailTitle => 'Özet türü';
+
+  @override
+  String get summaryShort => 'Kısa özet';
+
+  @override
+  String get summaryShortInfo => 'Birkaç cümlelik genel bakış ve ana maddeler';
+
+  @override
+  String get summaryDetailed => 'Detaylı özet';
+
+  @override
+  String get summaryDetailedInfo =>
+      'Kaynağa bakmayı gereksiz kılan kapsamlı özet';
 
   @override
   String get listen => 'Sesli dinle';

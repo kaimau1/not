@@ -304,6 +304,12 @@ abstract class AppLocalizations {
   /// **'PDF ekle'**
   String get addPdf;
 
+  /// No description provided for @addSlide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Slayt ekle'**
+  String get addSlide;
+
   /// No description provided for @pasteImage.
   ///
   /// In tr, this message translates to:
@@ -411,6 +417,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Özetle'**
   String get summarize;
+
+  /// No description provided for @summaryDetailTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet türü'**
+  String get summaryDetailTitle;
+
+  /// No description provided for @summaryShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısa özet'**
+  String get summaryShort;
+
+  /// No description provided for @summaryShortInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birkaç cümlelik genel bakış ve ana maddeler'**
+  String get summaryShortInfo;
+
+  /// No description provided for @summaryDetailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Detaylı özet'**
+  String get summaryDetailed;
+
+  /// No description provided for @summaryDetailedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaynağa bakmayı gereksiz kılan kapsamlı özet'**
+  String get summaryDetailedInfo;
 
   /// No description provided for @listen.
   ///
