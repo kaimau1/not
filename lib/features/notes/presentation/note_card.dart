@@ -438,9 +438,19 @@ class _NotePreview extends StatelessWidget {
       case NoteType.text:
         // Karışık içerik: metin notu hem gövde hem checklist maddesi taşıyabilir.
         final hasBody = note.body.trim().isNotEmpty;
-        final items = [
+        // Editörle aynı düzen: işaretsiz (aktif) maddeler üstte, işaretliler
+        // altta. Depodaki ham sıra işaretlileri araya serpiştirebiliyor; kart
+        // bunları sıralamadan gösterince aktif maddelerin bir kısmı önizlemede
+        // görünmüyordu (kullanıcı: "notta 4 madde var, kartta 2 görünüyor").
+        final rawItems = [
           for (final i in note.items)
             if (i.text.trim().isNotEmpty) i,
+        ];
+        final items = [
+          for (final i in rawItems)
+            if (!i.checked) i,
+          for (final i in rawItems)
+            if (i.checked) i,
         ];
         if (!hasBody && items.isEmpty) return const SizedBox.shrink();
         // Madde varsa metin 2 satıra kısalır ki maddelere yer kalsın; yoksa
@@ -509,10 +519,20 @@ class _NotePreview extends StatelessWidget {
         );
       case NoteType.checklist:
       case NoteType.ordered:
-        final visible = [
+        final raw = [
           for (final item in note.items)
             if (item.text.trim().isNotEmpty) item,
         ];
+        // Checklist'te işaretsizler önce (editördeki düzen); sıralı listede
+        // numara sırası korunmalı, dokunma.
+        final visible = note.type == NoteType.checklist
+            ? [
+                for (final i in raw)
+                  if (!i.checked) i,
+                for (final i in raw)
+                  if (i.checked) i,
+              ]
+            : raw;
         if (visible.isEmpty) return const SizedBox.shrink();
         final shown = visible.take(6).toList();
         final remaining = visible.length - shown.length;

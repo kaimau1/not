@@ -876,6 +876,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (note.folderId != null) fields['folderId'] = note.folderId;
     if (type == NoteType.text) {
       fields['body'] = text.trim();
+      // Karışık not (metin + checklist): AI yalnız gövdeyi düzeltti; maddeler
+      // yeni notta da olduğu gibi korunur (düz metne dönüşmez).
+      final items = [
+        for (final i in note.items)
+          if (i.text.trim().isNotEmpty) i,
+      ];
+      if (items.isNotEmpty) {
+        fields['items'] = [for (final i in items) i.toMap()];
+      }
     } else {
       const uuid = Uuid();
       final items = <NoteItem>[];
