@@ -51,3 +51,8 @@ env.json
 # graphify-out/ artık commit'leniyor — kod grafı bulut oturumları ve CI
 # tarafından okunabilsin diye. Grafı üretmek/tazelemek için ana makinede:
 #   graphify update .
+
+# graphify: yerel önbellek ve tarihli anlık kopyalar depoya girmez;
+# güncel graf (GRAPH_REPORT.md + graph.json + manifest) commit'lenir.
+graphify-out/cache/
+graphify-out/20*/
