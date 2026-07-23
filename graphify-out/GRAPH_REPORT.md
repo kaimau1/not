@@ -1,16 +1,16 @@
 # Graph Report - not  (2026-07-23)
 
 ## Corpus Check
-- 151 files · ~137,356 words
+- 151 files · ~137,840 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3124 nodes · 4314 edges · 132 communities (124 shown, 8 thin omitted)
+- 3128 nodes · 4317 edges · 140 communities (131 shown, 9 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `aa65ce6b`
+- Built from commit: `797cca2a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -131,17 +131,25 @@
 - [[_COMMUNITY_packageflutterfoundation.dart|package:flutter/foundation.dart]]
 - [[_COMMUNITY_AuthRepository|AuthRepository]]
 - [[_COMMUNITY_Exception|Exception]]
+- [[_COMMUNITY_web_google_auth.dart|web_google_auth.dart]]
 - [[_COMMUNITY_static const|static const]]
 - [[_COMMUNITY_....domainattachment.dart|../../domain/attachment.dart]]
+- [[_COMMUNITY_undo_snackbar.dart|undo_snackbar.dart]]
 - [[_COMMUNITY_Exception|Exception]]
 - [[_COMMUNITY_read_document.dart|read_document.dart]]
+- [[_COMMUNITY_auth_providers.dart|auth_providers.dart]]
 - [[_COMMUNITY_note_pdf_lines_test.dart|note_pdf_lines_test.dart]]
 - [[_COMMUNITY_note_test.dart|note_test.dart]]
 - [[_COMMUNITY_CustomPainter|CustomPainter]]
+- [[_COMMUNITY_ai_cache_test.dart|ai_cache_test.dart]]
+- [[_COMMUNITY_auth_repository.dart|auth_repository.dart]]
 - [[_COMMUNITY_@visibleForTesting|@visibleForTesting]]
 - [[_COMMUNITY_List|List]]
 - [[_COMMUNITY_SpeechVoice|SpeechVoice]]
 - [[_COMMUNITY__ensureInitialized|_ensureInitialized]]
+- [[_COMMUNITY_pdf_ink_test.dart|pdf_ink_test.dart]]
+- [[_COMMUNITY_SpeechVoice|SpeechVoice]]
+- [[_COMMUNITY_SpeechOutputController|SpeechOutputController]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `notesRepositoryProvider` - 37 edges
@@ -158,19 +166,19 @@
 ## Surprising Connections (you probably didn't know these)
 - `_computeAndStore` --references--> `sharedPreferencesProvider`  [EXTRACTED]
   lib/features/ai/data/daily_cache.dart → lib/features/settings/settings_providers.dart
+- `_showAllTags` --references--> `selectedTagProvider`  [EXTRACTED]
+  lib/features/notes/presentation/dashboard_chips.dart → lib/features/notes/presentation/notes_providers.dart
 - `OnCreate` --calls--> `RegisterPlugins()`  [INFERRED]
   windows/runner/flutter_window.h → windows/flutter/generated_plugin_registrant.cc
 - `wWinMain()` --calls--> `CreateAndAttachConsole()`  [INFERRED]
   windows/runner/main.cpp → windows/runner/utils.cpp
 - `Win32Window::Win32Window()` --calls--> `Destroy`  [INFERRED]
   windows/runner/win32_window.cpp → windows/runner/win32_window.h
-- `AppLocalizationsTr` --inherits--> `AppLocalizations`  [EXTRACTED]
-  lib/l10n/generated/app_localizations_tr.dart → lib/l10n/generated/app_localizations.dart
 
 ## Import Cycles
 - None detected.
 
-## Communities (132 total, 8 thin omitted)
+## Communities (140 total, 9 thin omitted)
 
 ### Community 0 - "app_localizations.dart"
 Cohesion: 0.01
@@ -190,7 +198,7 @@ Nodes (64): Dio, firebase_ai_client.dart, _activeModel, analyzeNote, _apiKey, as
 
 ### Community 4 - "note_editor_screen.dart"
 Cohesion: 0.03
-Nodes (69): ../../../ai/presentation/ai_sheet.dart, attachment_strip.dart, audio_recorder_sheet.dart, calculator_sheet.dart, dictation_sheet.dart, drawing_screen.dart, items_editor.dart, _extractImageText (+61 more)
+Nodes (60): ../../../ai/presentation/ai_sheet.dart, attachment_strip.dart, audio_recorder_sheet.dart, calculator_sheet.dart, dictation_sheet.dart, drawing_screen.dart, items_editor.dart, _addChecklistItem (+52 more)
 
 ### Community 5 - "pcm_player.dart"
 Cohesion: 0.09
@@ -209,12 +217,12 @@ Cohesion: 0.06
 Nodes (33): attachment.dart, AiSummary, archivedAt, attachments, body, color, copyWith, createdAt (+25 more)
 
 ### Community 9 - "ai_sheet.dart"
-Cohesion: 0.05
-Nodes (37): ../../../../core/utils/markdown.dart, ../../../core/widgets/speak_button.dart, doc_chat_screen.dart, AiSheet, _AiSheetState, _contentForTextOp, createState, _error (+29 more)
+Cohesion: 0.06
+Nodes (35): ../../../../core/utils/markdown.dart, ../../../core/widgets/speak_button.dart, doc_chat_screen.dart, _contentForTextOp, createState, _error, _fixCommon, _keepChecked (+27 more)
 
 ### Community 10 - "settings_providers.dart"
 Cohesion: 0.12
-Nodes (18): ../../ai/data/ai_gate.dart, ../../ai/data/daily_cache.dart, ../../ai/presentation/ai_generate_prompt.dart, ../data/gmail_auth.dart, ../data/gmail_service.dart, build, _busy, cacheKey (+10 more)
+Nodes (17): ../../ai/data/ai_gate.dart, ../../ai/data/daily_cache.dart, ../../ai/presentation/ai_generate_prompt.dart, ../data/gmail_auth.dart, ../data/gmail_service.dart, gmailAuthProvider, _busy, cacheKey (+9 more)
 
 ### Community 11 - "notes_repository.dart"
 Cohesion: 0.06
@@ -238,7 +246,7 @@ Nodes (35): AppLocalizations get, BuildContext, ../features/ai/presentation/ai_h
 
 ### Community 16 - "attachment.dart"
 Cohesion: 0.09
-Nodes (23): build, createState, _defaultX, _defaultY, _deselect, _image, images, _minWidthFrac (+15 more)
+Nodes (21): build, createState, _defaultX, _defaultY, _deselect, _image, images, _minWidthFrac (+13 more)
 
 ### Community 17 - "drawing_screen.dart"
 Cohesion: 0.13
@@ -273,52 +281,52 @@ Cohesion: 0.08
 Nodes (27): clear, counts, dateDesc, _defaults, false, filter, folderId, _key (+19 more)
 
 ### Community 25 - "notesRepositoryProvider"
-Cohesion: 0.20
-Nodes (9): AppTheme, _base, dark, light, paper, paperSeed, seed, package:google_fonts/google_fonts.dart (+1 more)
+Cohesion: 0.14
+Nodes (12): dart:io, AppTheme, _base, dark, light, paper, paperSeed, seed (+4 more)
 
 ### Community 26 - "voice_capture_screen.dart"
-Cohesion: 0.11
-Nodes (19): ai_gate.dart, AsyncNotifier, aiUnlimitedProvider, build, cacheKey, compute, _computeAndStore, DailyCacheNotifier (+11 more)
+Cohesion: 0.10
+Nodes (22): ai_gate.dart, AsyncNotifier, aiUnlimitedProvider, build, cacheKey, compute, _computeAndStore, DailyCacheNotifier (+14 more)
 
 ### Community 27 - "gmail_auth.dart"
 Cohesion: 0.11
 Nodes (18): ../../auth/data/desktop_oauth_flow.dart, ../../auth/data/token_store.dart, accountKey, connect, _desktopClient, disconnect, _ensureDesktopScope, _ensureInitialized (+10 more)
 
 ### Community 28 - "build"
-Cohesion: 0.14
-Nodes (22): deepLinkHandlerProvider, premiumProvider, semanticSearchProvider, reminderServiceProvider, shareIntakeProvider, uploadQueueProvider, widgetServiceProvider, _showAllTags (+14 more)
+Cohesion: 0.12
+Nodes (31): deepLinkHandlerProvider, premiumProvider, semanticSearchProvider, foldersStreamProvider, reminderServiceProvider, uploadQueueProvider, build, DashboardChipsRow (+23 more)
 
 ### Community 29 - "briefing_screen.dart"
-Cohesion: 0.10
-Nodes (18): dart:io, Directory, File, AiCache, _dir, keyFor, maxEntries, overrideDir (+10 more)
+Cohesion: 0.18
+Nodes (10): AiCache, _dir, keyFor, maxEntries, overrideDir, read, write, package:crypto/crypto.dart (+2 more)
 
 ### Community 30 - "pdf_chat_screen.dart"
-Cohesion: 0.15
-Nodes (12): ../../../../core/utils/debouncer.dart, _debouncer, dispose, _lastPayload, _ref, service, start, _sub (+4 more)
+Cohesion: 0.14
+Nodes (13): ../../../../core/utils/debouncer.dart, _debouncer, dispose, _lastPayload, _ref, service, start, _sub (+5 more)
 
 ### Community 31 - "live_translate_session.dart"
-Cohesion: 0.06
-Nodes (30): ../editor/drawing_screen.dart, InkStroke?, _active, build, clear, color, controller, _dirty (+22 more)
+Cohesion: 0.07
+Nodes (29): ../editor/drawing_screen.dart, InkStroke?, _active, build, clear, color, controller, _dirty (+21 more)
 
 ### Community 32 - "attachment_strip.dart"
 Cohesion: 0.11
-Nodes (19): attachment, attachments, AttachmentStrip, _AttachmentTile, _AudioTile, _AudioTileState, build, createState (+11 more)
+Nodes (18): attachment, attachments, AttachmentStrip, build, createState, dispose, _hasLocal, _loaded (+10 more)
 
 ### Community 33 - "audio_recorder_sheet.dart"
-Cohesion: 0.10
-Nodes (19): ../../../app/router.dart, dart:async, ../domain/note_type.dart, sub, build, createState, dispose, _elapsed (+11 more)
+Cohesion: 0.14
+Nodes (13): build, createState, dispose, _elapsed, _error, _format, initState, _path (+5 more)
 
 ### Community 34 - "upload_queue.dart"
-Cohesion: 0.15
-Nodes (12): attachment_repository.dart, _connectivitySub, dispose, _inFlight, _notesSub, _process, queue, _ref (+4 more)
+Cohesion: 0.12
+Nodes (15): attachment_repository.dart, stripMarkdown, text, _connectivitySub, dispose, _inFlight, _notesSub, _process (+7 more)
 
 ### Community 35 - "suggestions_screen.dart"
-Cohesion: 0.12
-Nodes (24): ai_generate_prompt.dart, ai_text_result.dart, ../data/ai_gate.dart, ../data/daily_cache.dart, ../data/gemini_service.dart, ../../gmail/data/gmail_auth.dart, ../../gmail/presentation/mail_summary_screen.dart, isWeekly (+16 more)
+Cohesion: 0.19
+Nodes (14): ai_text_result.dart, ../data/ai_gate.dart, ../data/daily_cache.dart, isWeekly, build, cacheKey, createState, _showSnack (+6 more)
 
 ### Community 36 - "package:flutter_riverpod/flutter_riverpod.dart"
-Cohesion: 0.15
-Nodes (12): Attachment, ChangeNotifier, ink_layer.dart, _RefreshNotifier, InkController, attachment, build, createState (+4 more)
+Cohesion: 0.13
+Nodes (14): Attachment, ChangeNotifier, ink_layer.dart, _RefreshNotifier, InkController, attachment, build, createState (+6 more)
 
 ### Community 37 - "dart:io"
 Cohesion: 0.09
@@ -329,8 +337,8 @@ Cohesion: 0.25
 Nodes (7): ../../../core/constants.dart, AccountService, _auth, deleteAccountAndData, _deleteStorageFolder, package:firebase_storage/firebase_storage.dart, ../presentation/auth_providers.dart
 
 ### Community 39 - "assistant_service.dart"
-Cohesion: 0.05
-Nodes (41): auth_repository.dart, ../data/android_google_auth.dart, ../data/auth_repository.dart, ../data/desktop_google_auth.dart, ../data/web_google_auth.dart, desktop_oauth_flow.dart, FirebaseAuth, Future (+33 more)
+Cohesion: 0.18
+Nodes (10): desktop_oauth_flow.dart, _auth, authStateChanges, currentUser, signInWithGoogle, signOut, _tokenStore, package:window_manager/window_manager.dart (+2 more)
 
 ### Community 40 - "android_google_auth.dart"
 Cohesion: 0.08
@@ -341,32 +349,32 @@ Cohesion: 0.12
 Nodes (17): ../data/ai_report.dart, ../data/assistant_service.dart, assistantServiceProvider, build, _busy, ChatScreen, _ChatScreenState, _controller (+9 more)
 
 ### Community 42 - "desktop_google_auth.dart"
-Cohesion: 0.09
-Nodes (22): ../../data/attachment_repository.dart, ../../data/slide_deck.dart, attachment, _body, build, createState, dispose, _error (+14 more)
+Cohesion: 0.08
+Nodes (25): ../../data/attachment_repository.dart, ../../data/slide_deck.dart, attachment, _body, build, createState, dispose, _editing (+17 more)
 
 ### Community 43 - "debouncer.dart"
 Cohesion: 0.18
-Nodes (19): foldersStreamProvider, pendingWritesProvider, build, DashboardChipsRow, _createHandwritingNote, _createNote, _cycleFilterFolder, _addTag (+11 more)
+Nodes (10): ../../../app/theme/note_colors.dart, ../domain/note.dart, NoteColor, build, color, _ColorDot, frame, onTap (+2 more)
 
 ### Community 44 - "wWinMain"
 Cohesion: 0.24
 Nodes (9): _In_, _In_opt_, vector, wWinMain(), string, wchar_t, CreateAndAttachConsole(), GetCommandLineArguments() (+1 more)
 
 ### Community 45 - "widget_service.dart"
-Cohesion: 0.10
-Nodes (20): AnimationController, LayerLink, anchor, build, children, _close, _controller, createState (+12 more)
+Cohesion: 0.09
+Nodes (22): AnimationController, LayerLink, anchor, build, children, _close, _controller, createState (+14 more)
 
 ### Community 46 - "main.dart"
-Cohesion: 0.18
-Nodes (10): app/app.dart, core/widgets/setup_required_screen.dart, features/settings/settings_providers.dart, firebase_options.dart, initializeApp, main, prefs, package:firebase_core/firebase_core.dart (+2 more)
+Cohesion: 0.20
+Nodes (9): app/app.dart, core/widgets/setup_required_screen.dart, features/settings/settings_providers.dart, firebase_options.dart, initializeApp, main, prefs, package:flutter_displaymode/flutter_displaymode.dart (+1 more)
 
 ### Community 47 - "State"
 Cohesion: 0.17
-Nodes (16): _PaneDivider, _PaneDividerState, _ReorderableNoteCell, _ReorderableNoteCellState, _AudioRecorderSheet, _AudioRecorderSheetState, _CalculatorSheet, _CalculatorSheetState (+8 more)
+Nodes (16): _ReorderableNoteCell, _ReorderableNoteCellState, _AudioTile, _AudioTileState, _AudioRecorderSheet, _AudioRecorderSheetState, _CalculatorSheet, _CalculatorSheetState (+8 more)
 
 ### Community 48 - "gmail_service.dart"
 Cohesion: 0.06
-Nodes (43): ../data/notes_repository.dart, ../domain/note.dart, notesRepositoryProvider, trashStreamProvider, Note, _ArchivedTile, ArchiveScreen, build (+35 more)
+Nodes (43): ../../../core/widgets/empty_state.dart, ../data/notes_repository.dart, notesRepositoryProvider, trashStreamProvider, Note, _ArchivedTile, ArchiveScreen, build (+35 more)
 
 ### Community 49 - "auth_providers.dart"
 Cohesion: 0.10
@@ -374,7 +382,7 @@ Nodes (20): attachment, build, _busy, _bytes, _controller, createState, dispose,
 
 ### Community 50 - "api_key_store.dart"
 Cohesion: 0.08
-Nodes (25): ../data/device_speech.dart, _cancel, createState, _DictationSheet, _DictationSheetState, dispose, _elapsed, _errorMessage (+17 more)
+Nodes (25): AudioRecorder?, _cancel, createState, _DictationSheet, _DictationSheetState, dispose, _elapsed, _errorMessage (+17 more)
 
 ### Community 51 - "package:flutter/foundation.dart"
 Cohesion: 0.07
@@ -385,8 +393,8 @@ Cohesion: 0.15
 Nodes (12): dart:ui, package:notlar/features/notes/presentation/editor/drawing_screen.dart, bytes, canvas, count, data, endRecording, main (+4 more)
 
 ### Community 53 - "static const"
-Cohesion: 0.06
-Nodes (35): ../../auth/data/account_service.dart, bool?, class, ../data/permissions_service.dart, permissionsServiceProvider, actionLabel, _busy, children (+27 more)
+Cohesion: 0.05
+Nodes (59): ../../auth/data/account_service.dart, bool?, class, ConsumerState, ConsumerStatefulWidget, ../data/permissions_service.dart, apiKeyStoreProvider, accountServiceProvider (+51 more)
 
 ### Community 54 - "note_item.dart"
 Cohesion: 0.25
@@ -418,15 +426,15 @@ Nodes (18): _consume, evaluateExpression, _expression, _ExprParser, formatCalcRe
 
 ### Community 61 - "build"
 Cohesion: 0.08
-Nodes (22): AsyncValue, ../../../core/widgets/empty_state.dart, IconData?, build, EmptyState, icon, subtitle, title (+14 more)
+Nodes (22): AsyncValue, ../data/gemini_service.dart, IconData?, build, EmptyState, icon, subtitle, title (+14 more)
 
 ### Community 62 - "build"
-Cohesion: 0.11
-Nodes (20): freeAiRemainingProvider, geminiApiKeyProvider, availableModelsProvider, _autoTagInBackground, _autoTitleInBackground, _AiSkipCheckedSwitch, _AutoTagSwitch, _AutoTitleSwitch (+12 more)
+Cohesion: 0.15
+Nodes (14): build, pendingWritesProvider, _autoTagInBackground, _autoTitleInBackground, build, _NoteEditorScreenState, _AutoTagSwitch, _AutoTitleSwitch (+6 more)
 
 ### Community 63 - "package:flutter/material.dart"
-Cohesion: 0.10
-Nodes (26): ConsumerState, ConsumerStatefulWidget, apiKeyStoreProvider, gmailAccountEmailProvider, gmailAuthProvider, _connect, _ConnectPrompt, _ConnectPromptState (+18 more)
+Cohesion: 0.18
+Nodes (11): AiSheet, _AiSheetState, _extractImageText, _transcribeAudio, _load, attachmentRepositoryProvider, _addImageBytes, _pickPdf (+3 more)
 
 ### Community 64 - "package:flutter/material.dart"
 Cohesion: 0.22
@@ -434,7 +442,7 @@ Nodes (8): İletişim, Notlar — Gizlilik Politikası, Toplanan veriler, Toplan
 
 ### Community 65 - "note_test.dart"
 Cohesion: 0.15
-Nodes (9): package:flutter_test/flutter_test.dart, package:notlar/core/utils/calc.dart, package:notlar/features/notes/data/pdf_text.dart, package:notlar/features/notes/domain/attachment.dart, package:notlar/features/translate/data/offline_translator.dart, main, main, main (+1 more)
+Nodes (9): package:flutter_test/flutter_test.dart, package:notlar/core/utils/calc.dart, package:notlar/core/utils/speech_output.dart, package:notlar/features/notes/data/pdf_text.dart, package:notlar/features/translate/data/offline_translator.dart, main, main, main (+1 more)
 
 ### Community 66 - "AppLocalizations"
 Cohesion: 0.50
@@ -449,8 +457,8 @@ Cohesion: 0.06
 Nodes (30): FlutterEngine, String, MainActivity, AppWidgetManager, Context, IntArray, NotlarWidgetProvider, AppWidgetManager (+22 more)
 
 ### Community 69 - "_FilterChips"
-Cohesion: 0.12
-Nodes (19): double?, ../features/notes/presentation/dashboard_screen.dart, build, child, createState, _defaultListPaneWidth, _dividerWidth, _dragging (+11 more)
+Cohesion: 0.11
+Nodes (21): double?, ../features/notes/presentation/dashboard_screen.dart, build, child, createState, _defaultListPaneWidth, _dividerWidth, _dragging (+13 more)
 
 ### Community 72 - "win32_window.cpp"
 Cohesion: 0.21
@@ -469,16 +477,16 @@ Cohesion: 0.50
 Nodes (3): Bilinen Riskler / Tuzaklar, Kararlar (tarihli, append-only), Not Uygulaması — Hafızası
 
 ### Community 80 - "empty_state.dart"
-Cohesion: 0.04
-Nodes (47): @immutable, Completer, double get, FlutterTts?, _applyVoiceFor, build, _defaultForeignRate, _defaultRate (+39 more)
+Cohesion: 0.05
+Nodes (43): Completer, double get, FlutterTts?, _applyVoiceFor, build, _defaultForeignRate, _defaultRate, _engine (+35 more)
 
 ### Community 82 - "offline_translator.dart"
-Cohesion: 0.11
-Nodes (18): ../../ai/presentation/listen_screen.dart, color_picker_sheet.dart, ../../../core/utils/note_guard.dart, ../../../folders/data/folders_repository.dart, ../../../folders/domain/note_folder.dart, ../../folders/presentation/folder_sheets.dart, _compact, _filterIcon (+10 more)
+Cohesion: 0.10
+Nodes (19): ../../ai/presentation/listen_screen.dart, color_picker_sheet.dart, ../../../core/utils/note_guard.dart, ../../../folders/data/folders_repository.dart, ../../../folders/domain/note_folder.dart, ../../folders/presentation/folder_sheets.dart, _compact, _filterIcon (+11 more)
 
 ### Community 84 - "notesStreamProvider"
 Cohesion: 0.08
-Nodes (24): ../../ai/data/assistant_service.dart, AudioRecorder?, _ampSub, build, _busy, cancel, copyWith, dismiss (+16 more)
+Nodes (24): ../../ai/data/assistant_service.dart, ../data/device_speech.dart, _ampSub, build, _busy, cancel, copyWith, dismiss (+16 more)
 
 ### Community 85 - "../features/notes/presentation/voice_capture_screen.dart"
 Cohesion: 0.25
@@ -486,15 +494,15 @@ Nodes (7): Color, Duration, build, color, CountdownBar, duration, onEnd
 
 ### Community 86 - "_NoteEditorScreenState"
 Cohesion: 0.12
-Nodes (17): ../../app/theme/app_theme.dart, build, SetupRequiredApp, _SetupRequiredScreen, _ResultView, _DictationBanner, _AttachmentPreview, _MiniBadge (+9 more)
+Nodes (17): ../../app/theme/app_theme.dart, NoNoteSelected, build, SetupRequiredApp, _SetupRequiredScreen, _ResultView, _AttachmentTile, _DictationBanner (+9 more)
 
 ### Community 87 - "Route /voice"
 Cohesion: 0.25
 Nodes (7): 1. Uygulamayı indir ve kur, 2. Gemini API anahtarı, Durum: kurulum tamamlandı ✅, Güncellemeler nasıl çalışacak?, Kurulmuş yapılandırma (referans), YAPILACAKLAR, Önemli notlar
 
 ### Community 88 - "package:flutter/foundation.dart"
-Cohesion: 0.20
-Nodes (11): auth_providers.dart, accountServiceProvider, authRepositoryProvider, build, _busy, createState, LoginScreen, _LoginScreenState (+3 more)
+Cohesion: 0.28
+Nodes (8): auth_providers.dart, authRepositoryProvider, build, _busy, createState, LoginScreen, _LoginScreenState, _signIn
 
 ### Community 89 - "settings_providers.dart"
 Cohesion: 0.07
@@ -521,8 +529,8 @@ Cohesion: 0.32
 Nodes (6): package:notlar/features/notes/domain/note_item.dart, package:notlar/features/notes/presentation/editor/items_editor.dart, package:notlar/l10n/generated/app_localizations.dart, main, _wrap, main
 
 ### Community 96 - "MaterialPageRoute"
-Cohesion: 0.10
-Nodes (20): ../../data/pptx_render.dart, int?, ShapeVM, SlideVM, build, child, editControllers, _editCtrl (+12 more)
+Cohesion: 0.09
+Nodes (21): ../../data/pptx_render.dart, int?, ShapeVM, SlideVM, build, child, editControllers, _editCtrl (+13 more)
 
 ### Community 97 - "speak_button.dart"
 Cohesion: 0.33
@@ -537,8 +545,8 @@ Cohesion: 0.36
 Nodes (10): HWND, LPARAM, LRESULT, UINT, WPARAM, EnableFullDpiSupportIfAvailable(), GetHandle, GetThisFromHandle (+2 more)
 
 ### Community 100 - "SpeechVoice"
-Cohesion: 0.11
-Nodes (21): ConsumerWidget, ../../../core/widgets/countdown_bar.dart, authStateProvider, build, _prepare, voiceAssistantProvider, build, _finish (+13 more)
+Cohesion: 0.08
+Nodes (39): ConsumerWidget, build, NotlarApp, routerProvider, freeAiRemainingProvider, geminiApiKeyProvider, availableModelsProvider, authStateProvider (+31 more)
 
 ### Community 101 - "_RefreshNotifier"
 Cohesion: 0.11
@@ -549,20 +557,24 @@ Cohesion: 0.17
 Nodes (11): deleteModel, downloadModel, isModelReady, isPlatformSupported, languageFor, _models, OfflineTranslator, supportsPair (+3 more)
 
 ### Community 103 - "SpeechOutputController"
-Cohesion: 0.15
-Nodes (12): ../../../../core/utils/calc.dart, _append, _appendParen, build, _buildKey, _controller, createState, dispose (+4 more)
+Cohesion: 0.14
+Nodes (13): ../../../../core/utils/calc.dart, _append, _appendParen, build, _buildKey, _controller, createState, dispose (+5 more)
 
 ### Community 104 - "briefing_screen.dart"
-Cohesion: 0.50
-Nodes (3): stripMarkdown, text, return
+Cohesion: 0.20
+Nodes (9): Future, _auth, authStateChanges, currentUser, _ensureInitialized, _initFuture, signInWithGoogle, signOut (+1 more)
 
 ### Community 105 - "gmail_service.dart"
 Cohesion: 0.22
 Nodes (8): ../../ai/data/gemini_service.dart, gmail_auth.dart, GmailAuth, _auth, fetchRecentEmails, GmailService, _toMeta, package:googleapis/gmail/v1.dart
 
+### Community 106 - "voiceModelProvider"
+Cohesion: 0.28
+Nodes (8): ai_generate_prompt.dart, ../../gmail/data/gmail_auth.dart, ../../gmail/presentation/mail_summary_screen.dart, briefingProvider, BriefingScreen, build, cacheKey, package:intl/intl.dart
+
 ### Community 107 - "firebase_options.dart"
-Cohesion: 0.20
-Nodes (9): android, DefaultFirebaseOptions, isConfigured, _placeholder, web, windows, static bool get, static const FirebaseOptions (+1 more)
+Cohesion: 0.18
+Nodes (10): android, DefaultFirebaseOptions, isConfigured, _placeholder, web, windows, package:firebase_core/firebase_core.dart, static bool get (+2 more)
 
 ### Community 108 - "note_folder.dart"
 Cohesion: 0.13
@@ -573,8 +585,8 @@ Cohesion: 0.14
 Nodes (13): CollectionReference, ../domain/note_folder.dart, FirebaseFirestore, createFolder, deleteFolder, _firestore, _folders, FoldersRepository (+5 more)
 
 ### Community 110 - "pcm_wav.dart"
-Cohesion: 0.07
-Nodes (25): ../../../app/theme/note_colors.dart, ../../../../core/l10n_ext.dart, ../../../core/widgets/undo_snackbar.dart, duration, messenger, rootScaffoldMessengerKey, scheme, showUndoSnackBar (+17 more)
+Cohesion: 0.10
+Nodes (20): ../../../../core/l10n_ext.dart, ../../../core/widgets/countdown_bar.dart, ../../../core/widgets/undo_snackbar.dart, auth, authenticateForNote, AiHubScreen, _finish, _showSnack (+12 more)
 
 ### Community 111 - "permissions_service.dart"
 Cohesion: 0.15
@@ -585,8 +597,8 @@ Cohesion: 0.14
 Nodes (13): _channel, close, _closed, connect, _handleMessage, LiveTranslateSession, sendAudio, _setupCompleted (+5 more)
 
 ### Community 114 - "NotlarApp"
-Cohesion: 0.31
-Nodes (9): build, NotlarApp, routerProvider, handle, _FontScaleSlider, _ThemeSelector, effectiveThemeModeProvider, fontScaleProvider (+1 more)
+Cohesion: 0.25
+Nodes (7): ../../../app/router.dart, dart:async, ../domain/note_type.dart, shareIntakeProvider, sub, package:path/path.dart, package:receive_sharing_intent/receive_sharing_intent.dart
 
 ### Community 115 - "ai_generate_prompt.dart"
 Cohesion: 0.09
@@ -601,8 +613,8 @@ Cohesion: 0.12
 Nodes (16): ../data/note_pdf.dart, build, _busy, _content, _contentOf, createState, dispose, _generate (+8 more)
 
 ### Community 118 - "package:flutter/foundation.dart"
-Cohesion: 0.15
-Nodes (11): _, auth, authenticateForNote, DeviceSpeech, _events, isAvailable, _method, stop (+3 more)
+Cohesion: 0.25
+Nodes (7): _, DeviceSpeech, _events, isAvailable, _method, stop, package:flutter/foundation.dart
 
 ### Community 119 - "AuthRepository"
 Cohesion: 0.15
@@ -612,6 +624,10 @@ Nodes (12): _assistantTools, _candidates, FirebaseAiClient, generate, _mapError,
 Cohesion: 0.16
 Nodes (12): dart:convert, dart:typed_data, package:archive/archive.dart, package:notlar/features/notes/data/doc_text.dart, package:notlar/features/notes/data/pptx_render.dart, package:notlar/features/notes/data/slide_deck.dart, archive, _docx (+4 more)
 
+### Community 121 - "web_google_auth.dart"
+Cohesion: 0.25
+Nodes (7): auth_repository.dart, FirebaseAuth, _auth, authStateChanges, currentUser, signInWithGoogle, signOut
+
 ### Community 122 - "static const"
 Cohesion: 0.25
 Nodes (7): ../../features/notes/domain/note.dart, _dark, _light, NoteColors, surface, swatch, static const
@@ -620,6 +636,11 @@ Nodes (7): ../../features/notes/domain/note.dart, _dark, _light, NoteColors, sur
 Cohesion: 0.29
 Nodes (6): ../../domain/attachment.dart, Attachment, attachment, build, ImageViewerScreen, package:cached_network_image/cached_network_image.dart
 
+### Community 124 - "undo_snackbar.dart"
+Cohesion: 0.25
+Nodes (7): duration, messenger, rootScaffoldMessengerKey, scheme, showUndoSnackBar, required VoidCallback onUndo,
+  Duration, ScaffoldMessengerState
+
 ### Community 125 - "Exception"
 Cohesion: 0.50
 Nodes (4): Exception, GeminiException, FileTooLargeException, DocTextException
@@ -627,6 +648,10 @@ Nodes (4): Exception, GeminiException, FileTooLargeException, DocTextException
 ### Community 126 - "read_document.dart"
 Cohesion: 0.20
 Nodes (9): file, group, isPdf, of, path, listen_screen.dart, ../../notes/data/doc_text.dart, ../../notes/data/pdf_text.dart (+1 more)
+
+### Community 127 - "auth_providers.dart"
+Cohesion: 0.29
+Nodes (6): ../data/android_google_auth.dart, ../data/auth_repository.dart, ../data/desktop_google_auth.dart, ../data/web_google_auth.dart, currentUidProvider, package:firebase_auth/firebase_auth.dart
 
 ### Community 128 - "note_pdf_lines_test.dart"
 Cohesion: 0.50
@@ -640,30 +665,42 @@ Nodes (3): package:notlar/features/notes/domain/note.dart, package:notlar/featur
 Cohesion: 0.67
 Nodes (3): CustomPainter, DrawingPainter, InkPainter
 
+### Community 131 - "ai_cache_test.dart"
+Cohesion: 0.33
+Nodes (5): Directory, File, package:notlar/features/ai/data/ai_cache.dart, dir, main
+
+### Community 132 - "auth_repository.dart"
+Cohesion: 0.33
+Nodes (5): authStateChanges, currentUser, signInWithGoogle, signOut, User? get
+
 ### Community 133 - "@visibleForTesting"
 Cohesion: 0.29
 Nodes (7): @visibleForTesting, pickAutoVoice, splitSentences, prune, decodeDocText, extractDocSync, parseLines
+
+### Community 134 - "List"
+Cohesion: 0.50
+Nodes (4): AndroidGoogleAuth, AuthRepository, DesktopGoogleAuth, WebGoogleAuth
 
 ### Community 136 - "_ensureInitialized"
 Cohesion: 0.29
 Nodes (6): _, cleanForSpeech, extract, hasTextLayer, PdfText, package:pdfrx/pdfrx.dart
 
 ## Knowledge Gaps
-- **2153 isolated node(s):** `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `AnimTarget`, `ParaVM`, `RunVM` (+2148 more)
+- **2157 isolated node(s):** `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `onChanged`, `_ink`, `editing` (+2152 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **8 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **9 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
+- **Why does `build` connect `build` to `dashboard_screen.dart`, `gmail_service.dart`, `NotlarApp`, `pdf_chat_screen.dart`, `build`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
 - **Why does `Note` connect `gmail_service.dart` to `note_editor_screen.dart`, `note.dart`, `ai_sheet.dart`, `auth_providers.dart`, `package:flutter/material.dart`, `note_card.dart`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `notesRepositoryProvider` connect `gmail_service.dart` to `settings_providers.dart`, `debouncer.dart`, `notes_repository.dart`, `dashboard_screen.dart`, `router.dart`, `NotlarApp`, `geminiServiceProvider`, `.onUpdate`, `build`, `build`?**
-  _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **Why does `VisibleNoteFiltersNotifier` connect `List` to `notes_providers.dart`, `settings_providers.dart`, `debouncer.dart`?**
-  _High betweenness centrality (0.002) - this node is a cross-community bridge._
-- **What connects `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `AnimTarget` to the rest of the system?**
-  _2153 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `notesRepositoryProvider` connect `gmail_service.dart` to `SpeechVoice`, `notes_repository.dart`, `dashboard_screen.dart`, `router.dart`, `geminiServiceProvider`, `.onUpdate`, `voice_capture_screen.dart`, `build`, `build`?**
+  _High betweenness centrality (0.006) - this node is a cross-community bridge._
+- **What connects `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `onChanged` to the rest of the system?**
+  _2157 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `app_localizations.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.005154639175257732 - nodes in this community are weakly interconnected._
 - **Should `app_localizations_tr.dart` be split into smaller, more focused modules?**
