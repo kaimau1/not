@@ -295,6 +295,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
+  Future<void> _pickSlide() async {
+    const group = XTypeGroup(
+      label: 'Sunum',
+      extensions: ['pptx'],
+      // Android dosya seçici uzantı yerine MIME'a bakar; yalnız `extensions`
+      // verilirse PowerPoint dosyaları soluk (seçilemez) görünür.
+      mimeTypes: [
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      ],
+    );
+    final file = await openFile(acceptedTypeGroups: const [group]);
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    // Sunum sıkıştırılamaz; PDF gibi büyük dosya doğrudan Storage kotasına
+    // gider. Engellemek yerine boyutu söyleyip kullanıcıya soruyoruz.
+    if (bytes.length > AppConstants.largeAttachmentWarnBytes && mounted) {
+      final mb = (bytes.length / (1024 * 1024)).toStringAsFixed(1);
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(context.l10n.largeAttachmentTitle),
+          content: Text(context.l10n.largeAttachmentBody(mb)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(context.l10n.ok),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true) return;
+    }
+    if (!mounted) return;
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    try {
+      final attachment = await repo.prepareSlide(
+        noteId: widget.noteId,
+        bytes: bytes,
+        fileName: file.name,
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+    } on FileTooLargeException {
+      if (mounted) _showSnack(_tooLargeMessage());
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
   Future<void> _pasteImage() async {
     final bytes = await Pasteboard.image;
     if (bytes == null) {
@@ -400,6 +456,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               onTap: () => Navigator.pop(sheetContext, 'pdf'),
             ),
             ListTile(
+              leading: const Icon(Icons.slideshow_outlined),
+              title: Text(l10n.addSlide),
+              onTap: () => Navigator.pop(sheetContext, 'slide'),
+            ),
+            ListTile(
               leading: const Icon(Icons.brush_outlined),
               title: Text(l10n.addDrawing),
               onTap: () => Navigator.pop(sheetContext, 'drawing'),
@@ -427,6 +488,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         await _pickImage();
       case 'pdf':
         await _pickPdf();
+      case 'slide':
+        await _pickSlide();
       case 'drawing':
         await _addDrawing();
       case 'audio':

@@ -613,6 +613,10 @@ class _AttachmentPreview extends StatelessWidget {
       for (final a in attachments)
         if (a.kind == AttachmentKind.pdf) a,
     ];
+    final slides = [
+      for (final a in attachments)
+        if (a.kind == AttachmentKind.slide) a,
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,6 +652,31 @@ class _AttachmentPreview extends StatelessWidget {
                 Flexible(
                   child: Text(
                     pdf.fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        for (final slide in slides.take(2))
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.slideshow_outlined,
+                  size: 14,
+                  color: scheme.tertiary,
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    slide.fileName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(

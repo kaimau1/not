@@ -32,6 +32,15 @@ abstract final class DocText {
     final bytes = await File(path).readAsBytes();
     return compute(_extract, (ext, bytes));
   }
+
+  /// Baytlardan metin çıkarır. Ek olarak eklenmiş sunum/belgeler cihazlar arası
+  /// senkronda yerel dosya olmadan (yalnız Storage baytlarıyla) da özetlenebilsin
+  /// diye yol yerine baytla çalışır.
+  static Future<String> extractFromBytes(String ext, Uint8List bytes) async {
+    final normalized = ext.toLowerCase().replaceFirst('.', '');
+    if (!extensions.contains(normalized)) throw DocTextException(normalized);
+    return compute(_extract, (normalized, bytes));
+  }
 }
 
 @visibleForTesting

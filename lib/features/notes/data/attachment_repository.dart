@@ -175,6 +175,33 @@ class AttachmentRepository {
     );
   }
 
+  /// Sunum (PPTX) dosyasını eke dönüştürür. PDF gibi sıkıştırılmaz; metni
+  /// yerelde çıkarılıp özetleneceği için baytlar olduğu gibi saklanır.
+  Future<Attachment> prepareSlide({
+    required String noteId,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (bytes.length > maxBytes) {
+      throw const FileTooLargeException();
+    }
+    final id = _uuid.v4();
+    final safeName = p.basename(fileName);
+    return _store(
+      noteId,
+      Attachment(
+        id: id,
+        kind: AttachmentKind.slide,
+        fileName: safeName,
+        mimeType:
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        sizeBytes: bytes.length,
+        createdAt: DateTime.now(),
+      ),
+      bytes,
+    );
+  }
+
   /// Ses kaydını yerel eke dönüştürür (kayıt dosyası zaten diskte).
   ///
   /// ponytail: diğer `prepare*`'ların aksine [_store]'a girmez — kaynak zaten
