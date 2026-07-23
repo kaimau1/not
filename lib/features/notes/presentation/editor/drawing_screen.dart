@@ -8,6 +8,7 @@ import '../../../../core/l10n_ext.dart';
 /// renkleri.
 const kInkPalette = <Color>[
   Colors.black,
+  Colors.white, // Koyu PDF/slayt üzerine yazmak için (beyaz zeminde görünmez).
   Color(0xFFE53935),
   Color(0xFFFB8C00),
   Color(0xFF43A047),

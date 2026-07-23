@@ -273,11 +273,15 @@ class InkToolbar extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: color,
                             shape: BoxShape.circle,
+                            // Seçili renk vurgulu; diğerleri (özellikle beyaz açık
+                            // zeminde) ince çerçeveyle görünür kalır.
                             border: Border.all(
                               color: !controller.eraser && controller.color == color
                                   ? scheme.primary
-                                  : Colors.transparent,
-                              width: 3,
+                                  : scheme.outlineVariant,
+                              width: !controller.eraser && controller.color == color
+                                  ? 3
+                                  : 1,
                             ),
                           ),
                         ),

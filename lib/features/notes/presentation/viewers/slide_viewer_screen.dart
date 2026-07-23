@@ -35,6 +35,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   );
   final _pages = PageController();
 
+  /// Geçerli slaydın yakınlaştırma dönüşümü. Yalnız görünen slayda bağlanır;
+  /// yakınken (ölçek > 1) slayt geçişi kilitlenir, slayt değişince sıfırlanır.
+  final _zoom = TransformationController();
+  bool _zoomed = false;
+
   List<SlideVM>? _slides;
   Object? _error;
   int _index = 0;
@@ -42,7 +47,13 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   @override
   void initState() {
     super.initState();
+    _zoom.addListener(_onZoomChanged);
     _load();
+  }
+
+  void _onZoomChanged() {
+    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.02;
+    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
   }
 
   Future<void> _load() async {
@@ -65,6 +76,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   void dispose() {
     _ink.dispose();
     _pages.dispose();
+    _zoom.dispose();
     super.dispose();
   }
 
@@ -129,32 +141,51 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         Expanded(
           child: PageView.builder(
             controller: _pages,
-            // Çizim + tek parmak varken slayt geçişi kilitli (o parmak çiziyor).
-            physics: _ink.lockPan
+            // Slayt geçişi kilitli: tek parmak çizerken (o parmak çiziyor) ya da
+            // yakınlaştırılmışken (o parmak kaydırıyor).
+            physics: _ink.lockPan || _zoomed
                 ? const NeverScrollableScrollPhysics()
                 : const PageScrollPhysics(),
             itemCount: slides.length,
-            onPageChanged: (i) => setState(() => _index = i),
-            itemBuilder: (context, i) => Padding(
-              padding: const EdgeInsets.all(8),
-              child: Center(
-                // Slaytın kendi en-boy oranıyla çizilmesi için AspectRatio;
-                // çizim katmanı da aynı kutuyu kaplar → oranlar hizalı kalır.
-                child: AspectRatio(
-                  aspectRatio: slides[i].heightPt == 0
-                      ? 16 / 9
-                      : slides[i].widthPt / slides[i].heightPt,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(child: SlideCanvas(slide: slides[i])),
-                      Positioned.fill(
-                        child: InkPageLayer(controller: _ink, page: i + 1),
+            onPageChanged: (i) => setState(() {
+              _index = i;
+              _zoom.value = Matrix4.identity(); // yeni slayt tam ekrandan başlar
+            }),
+            itemBuilder: (context, i) {
+              final isCurrent = i == _index;
+              return Padding(
+                padding: const EdgeInsets.all(8),
+                child: Center(
+                  // Slaytın kendi en-boy oranıyla çizilir; çizim katmanı da aynı
+                  // kutuyu kaplar → oranlar zoom'da bile hizalı kalır (katman
+                  // InteractiveViewer'ın İÇİNDE, birlikte ölçeklenir).
+                  child: AspectRatio(
+                    aspectRatio: slides[i].heightPt == 0
+                        ? 16 / 9
+                        : slides[i].widthPt / slides[i].heightPt,
+                    child: InteractiveViewer(
+                      transformationController: isCurrent ? _zoom : null,
+                      minScale: 1,
+                      maxScale: 5,
+                      // Çizimde: tek parmak çizer (pan kapalı), iki parmak
+                      // yakınlaştırır. Normalde: yakınken kaydır, uzakken slayt
+                      // geçişi için pan kapalı (PageView kaysın).
+                      panEnabled: _ink.editing
+                          ? !_ink.lockPan
+                          : (isCurrent && _zoomed),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: SlideCanvas(slide: slides[i])),
+                          Positioned.fill(
+                            child: InkPageLayer(controller: _ink, page: i + 1),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
         Padding(

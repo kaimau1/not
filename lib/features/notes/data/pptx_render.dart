@@ -11,11 +11,10 @@ import 'package:xml/xml.dart';
 ///
 /// Ölçü birimi: **punto (pt)**. EMU -> pt = /12700.
 /// Kapsam: arka plan, düzen/asıl slayt (master) grafikleri, dikdörtgen/elips
-/// şekiller, dolgu + çerçeve, görseller, gruplar, metin (boyut/kalın/italik/
-/// renk/hizalama/madde işareti).
-// ponytail: SmartArt, tablo, grafik, animasyon, gradient dolgu ve gömülü yazı
-// tipleri çizilmez — düz renk/görsel/metin ile %80 sadakat hedefi. Gerekirse
-// gradient ve a:tbl bir sonraki turda eklenir.
+/// şekiller, düz + gradient dolgu, çerçeve, görseller, gruplar, TABLO (a:tbl),
+/// metin (boyut/kalın/italik/renk/hizalama/madde işareti).
+// ponytail: SmartArt, grafik (chart) ve gömülü yazı tipleri çizilmez — düz
+// renk/görsel/tablo/metin ile ~%80 sadakat hedefi.
 
 const double _emuPerPt = 12700;
 
