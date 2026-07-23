@@ -1213,4 +1213,7 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get inkTwoFingerHint =>
       'Tek parmak çizer · iki parmakla kaydır ve yakınlaştır';
+
+  @override
+  String get slideOpenFailed => 'Sunum açılamadı';
 }

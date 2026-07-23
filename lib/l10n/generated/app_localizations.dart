@@ -2343,6 +2343,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Tek parmak çizer · iki parmakla kaydır ve yakınlaştır'**
   String get inkTwoFingerHint;
+
+  /// No description provided for @slideOpenFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum açılamadı'**
+  String get slideOpenFailed;
 }
 
 class _AppLocalizationsDelegate

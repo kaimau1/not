@@ -8,6 +8,7 @@ import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
+import '../viewers/slide_viewer_screen.dart';
 
 /// Editörde gövdenin üstünde duran yatay ek şeridi.
 class AttachmentStrip extends StatelessWidget {
@@ -153,12 +154,8 @@ class _AttachmentTile extends StatelessWidget {
       File(attachment.localPath).existsSync();
 
   void _open(BuildContext context) {
-    // Ses ve sunum ekleri için satır içi görüntüleyici yok; sunumun içeriği
-    // "Yapay Zeka" alt sayfasından özetlenir/dinlenir.
-    if (attachment.kind == AttachmentKind.audio ||
-        attachment.kind == AttachmentKind.slide) {
-      return;
-    }
+    // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
+    if (attachment.kind == AttachmentKind.audio) return;
     if (!_hasLocal && !attachment.isUploaded) {
       ScaffoldMessenger.of(
         context,
@@ -167,9 +164,17 @@ class _AttachmentTile extends StatelessWidget {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => attachment.kind == AttachmentKind.pdf
-            ? PdfViewerScreen(attachment: attachment, onChanged: onChanged)
-            : ImageViewerScreen(attachment: attachment),
+        builder: (_) => switch (attachment.kind) {
+          AttachmentKind.pdf => PdfViewerScreen(
+            attachment: attachment,
+            onChanged: onChanged,
+          ),
+          AttachmentKind.slide => SlideViewerScreen(
+            attachment: attachment,
+            onChanged: onChanged,
+          ),
+          _ => ImageViewerScreen(attachment: attachment),
+        },
       ),
     );
   }

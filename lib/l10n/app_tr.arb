@@ -482,5 +482,6 @@
   "pen": "Kalem",
   "eraser": "Silgi",
   "clearInk": "Çizimleri temizle",
-  "inkTwoFingerHint": "Tek parmak çizer · iki parmakla kaydır ve yakınlaştır"
+  "inkTwoFingerHint": "Tek parmak çizer · iki parmakla kaydır ve yakınlaştır",
+  "slideOpenFailed": "Sunum açılamadı"
 }
