@@ -1209,4 +1209,8 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get clearInk => 'Çizimleri temizle';
+
+  @override
+  String get inkTwoFingerHint =>
+      'Tek parmak çizer · iki parmakla kaydır ve yakınlaştır';
 }

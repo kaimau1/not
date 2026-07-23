@@ -481,5 +481,6 @@
   "annotateDone": "Yazmayı bitir",
   "pen": "Kalem",
   "eraser": "Silgi",
-  "clearInk": "Çizimleri temizle"
+  "clearInk": "Çizimleri temizle",
+  "inkTwoFingerHint": "Tek parmak çizer · iki parmakla kaydır ve yakınlaştır"
 }

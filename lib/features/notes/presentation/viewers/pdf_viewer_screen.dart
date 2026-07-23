@@ -41,50 +41,79 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   /// Silginin çizgiye "değmiş" sayıldığı yarıçap (sayfa genişliğinin oranı).
   static const _eraseRadius = 0.02;
 
+  /// Sayfaya değen parmak sayısı. TEK parmak çizer, İKİ parmak sayfayı
+  /// kaydırır/yakınlaştırır: çizim katmanı jestleri kapmıyor (`Listener` arena'ya
+  /// girmez), bunun yerine yalnız tek parmak varken görüntüleyicinin kaydırması
+  /// kapatılıyor — yoksa çizerken sayfa da kayıyordu.
+  int _pointers = 0;
+
+  /// Parmağın altında büyümekte olan çizgi; ikinci parmak inince iptal edilir.
+  InkStroke? _active;
+
   void _save() {
     if (!_dirty) return;
     _dirty = false;
     widget.onChanged?.call(widget.attachment.copyWith(ink: _ink));
   }
 
-  void _startStroke(int page, Offset local, Size pageSize) {
+  void _onPointerDown(int page, Offset local, Size pageSize) {
+    _pointers++;
+    // Parmak sayısı `panEnabled`'ı belirliyor: her değişimde yeniden çiz.
+    setState(() {});
+    if (_pointers > 1) {
+      // İkinci parmak = yakınlaştırma/kaydırma niyeti: yeni başlamış çizgiyi
+      // geri al ki ekranda kırıntı kalmasın.
+      setState(() {
+        if (_active != null) _ink = [..._ink]..remove(_active);
+        _active = null;
+      });
+      return;
+    }
     if (_eraser) {
       _eraseAt(page, local, pageSize);
       return;
     }
+    final stroke = InkStroke(
+      page: page,
+      color: _color.toARGB32(),
+      width: _widthPx / pageSize.width,
+      points: [local.dx / pageSize.width, local.dy / pageSize.height],
+    );
     setState(() {
       _dirty = true;
-      _ink = [
-        ..._ink,
-        InkStroke(
-          page: page,
-          color: _color.toARGB32(),
-          width: _widthPx / pageSize.width,
-          points: [local.dx / pageSize.width, local.dy / pageSize.height],
-        ),
-      ];
+      _active = stroke;
+      _ink = [..._ink, stroke];
     });
   }
 
-  void _extendStroke(int page, Offset local, Size pageSize) {
+  void _onPointerMove(int page, Offset local, Size pageSize) {
+    if (_pointers != 1) return;
     if (_eraser) {
       _eraseAt(page, local, pageSize);
       return;
     }
-    final last = _ink.last;
+    final active = _active;
+    if (active == null) return;
     final x = local.dx / pageSize.width;
     final y = local.dy / pageSize.height;
     // Çok yakın noktalar atlanır: hem çizim yumuşar hem de Firestore'a giden
     // nokta listesi (dolayısıyla not dokümanı) şişmez.
-    final n = last.points.length;
+    final n = active.points.length;
     if (math.max(
-          (last.points[n - 2] - x).abs(),
-          (last.points[n - 1] - y).abs(),
+          (active.points[n - 2] - x).abs(),
+          (active.points[n - 1] - y).abs(),
         ) <
         0.002) {
       return;
     }
-    setState(() => last.points.addAll([x, y]));
+    setState(() => active.points.addAll([x, y]));
+  }
+
+  void _onPointerUp() {
+    _pointers = math.max(0, _pointers - 1);
+    if (_pointers > 0) return;
+    setState(() => _active = null);
+    _save();
   }
 
   void _eraseAt(int page, Offset local, Size pageSize) {
@@ -124,22 +153,30 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       // (madde 2 — önceden PDF salt görüntüydü, içeriğe erişilemiyordu).
       // Çizim modunda kapalı: seçim katmanı parmak hareketini kapıyor.
       enableTextSelection: !_editing,
+      // Yalnız TEK parmak sayfadayken kaydırma kapalı (o parmak çiziyor);
+      // ikinci parmak inince geri açılıyor → iki parmakla kaydır/yakınlaştır.
+      panEnabled: !_editing || _pointers != 1,
       pageOverlaysBuilder: (context, pageRect, page) => [
         Positioned.fill(
           child: IgnorePointer(
-            // Çizim kapalıyken katman dokunmayı geçirir: PDF normal kayar,
-            // yakınlaşır. Açıkken parmağı bu katman yakalar.
+            // Çizim kapalıyken katman dokunmayı hiç görmez.
             ignoring: !_editing,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onPanStart: (d) =>
-                  _startStroke(page.pageNumber, d.localPosition, pageRect.size),
-              onPanUpdate: (d) => _extendStroke(
+            child: Listener(
+              // Listener jest arenasına GİRMEZ: dokunuşlar alttaki
+              // görüntüleyiciye de ulaşır, böylece iki parmak jesti yaşar.
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (e) => _onPointerDown(
                 page.pageNumber,
-                d.localPosition,
+                e.localPosition,
                 pageRect.size,
               ),
-              onPanEnd: (_) => _save(),
+              onPointerMove: (e) => _onPointerMove(
+                page.pageNumber,
+                e.localPosition,
+                pageRect.size,
+              ),
+              onPointerUp: (_) => _onPointerUp(),
+              onPointerCancel: (_) => _onPointerUp(),
               child: CustomPaint(
                 painter: _InkPainter(_ink, page.pageNumber),
                 size: Size.infinite,
@@ -273,6 +310,12 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                     ),
                   ),
                 ],
+              ),
+              Text(
+                l10n.inkTwoFingerHint,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),

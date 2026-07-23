@@ -2337,6 +2337,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çizimleri temizle'**
   String get clearInk;
+
+  /// No description provided for @inkTwoFingerHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek parmak çizer · iki parmakla kaydır ve yakınlaştır'**
+  String get inkTwoFingerHint;
 }
 
 class _AppLocalizationsDelegate
