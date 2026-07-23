@@ -2257,7 +2257,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddTooltip.
   ///
   /// In tr, this message translates to:
-  /// **'Yeni not — basılı tut: liste, el yazısı'**
+  /// **'Yeni not — tip seç'**
   String get quickAddTooltip;
 
   /// No description provided for @autoTitleSetting.
@@ -2307,6 +2307,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'PDF/Word belgesini sesli dinle'**
   String get hubReadInfo;
+
+  /// No description provided for @annotate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üzerine yaz'**
+  String get annotate;
+
+  /// No description provided for @annotateDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmayı bitir'**
+  String get annotateDone;
+
+  /// No description provided for @pen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem'**
+  String get pen;
+
+  /// No description provided for @eraser.
+  ///
+  /// In tr, this message translates to:
+  /// **'Silgi'**
+  String get eraser;
+
+  /// No description provided for @clearInk.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizimleri temizle'**
+  String get clearInk;
 }
 
 class _AppLocalizationsDelegate

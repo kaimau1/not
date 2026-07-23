@@ -16,6 +16,47 @@ enum AttachmentKind {
   );
 }
 
+/// PDF sayfasının üzerine elle çizilen tek bir çizgi. Koordinatlar sayfa
+/// boyutunun oranı (0–1) olarak tutulur: yakınlaştırma, ekran boyutu ya da
+/// cihaz değişse de çizim aynı yere düşer. PDF dosyasına dokunulmaz; çizim
+/// ayrı katman olduğu için sonradan tekrar düzenlenip silinebilir.
+class InkStroke {
+  const InkStroke({
+    required this.page,
+    required this.color,
+    required this.width,
+    required this.points,
+  });
+
+  /// 1 tabanlı sayfa numarası.
+  final int page;
+
+  /// ARGB değeri.
+  final int color;
+
+  /// Sayfa genişliğinin oranı olarak çizgi kalınlığı.
+  final double width;
+
+  /// Düzleştirilmiş nokta listesi: [x1, y1, x2, y2, ...], her biri 0–1.
+  final List<double> points;
+
+  factory InkStroke.fromMap(Map<String, dynamic> map) => InkStroke(
+    page: (map['p'] as num?)?.toInt() ?? 1,
+    color: (map['c'] as num?)?.toInt() ?? 0xFF000000,
+    width: (map['w'] as num?)?.toDouble() ?? 0.004,
+    points: [
+      for (final v in (map['d'] as List?) ?? const []) (v as num).toDouble(),
+    ],
+  );
+
+  Map<String, dynamic> toMap() => {
+    'p': page,
+    'c': color,
+    'w': width,
+    'd': points,
+  };
+}
+
 /// Bir nota bağlı dosyanın (görsel/PDF) metadata'sı.
 /// Dosyanın kendisi Firebase Storage'da tutulur; yükleme tamamlanana kadar
 /// [downloadUrl] boş kalır ve [localPath] üzerinden gösterilir.
@@ -35,6 +76,7 @@ class Attachment {
     this.align = 'center',
     this.x,
     this.y,
+    this.ink = const [],
     this.createdAt,
   });
 
@@ -67,6 +109,9 @@ class Attachment {
   /// yazılır. [displayWidth] ile birlikte "boyut ve yer serbest" (madde 5).
   final double? x;
   final double? y;
+
+  /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
+  final List<InkStroke> ink;
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
@@ -79,6 +124,7 @@ class Attachment {
     String? align,
     double? x,
     double? y,
+    List<InkStroke>? ink,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -94,6 +140,7 @@ class Attachment {
     align: align ?? this.align,
     x: x ?? this.x,
     y: y ?? this.y,
+    ink: ink ?? this.ink,
     createdAt: createdAt,
   );
 
@@ -112,6 +159,10 @@ class Attachment {
     align: map['align'] as String? ?? 'center',
     x: (map['x'] as num?)?.toDouble(),
     y: (map['y'] as num?)?.toDouble(),
+    ink: [
+      for (final e in (map['ink'] as List?) ?? const [])
+        InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+    ],
     createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
   );
 
@@ -130,6 +181,7 @@ class Attachment {
     'align': align,
     if (x != null) 'x': x,
     if (y != null) 'y': y,
+    if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

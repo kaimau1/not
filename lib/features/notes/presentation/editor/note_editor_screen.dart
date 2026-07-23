@@ -1506,6 +1506,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               if (a.kind != AttachmentKind.image) a,
           ],
           onRemove: _removeAttachment,
+          onChanged: _updateAttachment,
         ),
         NoteImages(
           images: [

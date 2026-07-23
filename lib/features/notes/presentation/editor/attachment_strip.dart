@@ -15,10 +15,15 @@ class AttachmentStrip extends StatelessWidget {
     super.key,
     required this.attachments,
     required this.onRemove,
+    this.onChanged,
   });
 
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
+
+  /// PDF üzerine yapılan çizim kaydedilirken çağrılır; verilmezse PDF salt
+  /// görüntülenir.
+  final ValueChanged<Attachment>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +38,7 @@ class AttachmentStrip extends StatelessWidget {
         itemBuilder: (context, index) => _AttachmentTile(
           attachment: attachments[index],
           onRemove: () => onRemove(attachments[index]),
+          onChanged: onChanged,
         ),
       ),
     );
@@ -132,10 +138,15 @@ class _AudioTileState extends State<_AudioTile> {
 }
 
 class _AttachmentTile extends StatelessWidget {
-  const _AttachmentTile({required this.attachment, required this.onRemove});
+  const _AttachmentTile({
+    required this.attachment,
+    required this.onRemove,
+    this.onChanged,
+  });
 
   final Attachment attachment;
   final VoidCallback onRemove;
+  final ValueChanged<Attachment>? onChanged;
 
   bool get _hasLocal =>
       attachment.localPath.isNotEmpty &&
@@ -157,7 +168,7 @@ class _AttachmentTile extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => attachment.kind == AttachmentKind.pdf
-            ? PdfViewerScreen(attachment: attachment)
+            ? PdfViewerScreen(attachment: attachment, onChanged: onChanged)
             : ImageViewerScreen(attachment: attachment),
       ),
     );

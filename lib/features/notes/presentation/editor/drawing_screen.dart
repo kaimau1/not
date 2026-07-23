@@ -4,6 +4,17 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 
+/// Elle çizim yapılan her yerde (çizim ekranı, PDF üstü not) ortak kalem
+/// renkleri.
+const kInkPalette = <Color>[
+  Colors.black,
+  Color(0xFFE53935),
+  Color(0xFFFB8C00),
+  Color(0xFF43A047),
+  Color(0xFF1E88E5),
+  Color(0xFF8E24AA),
+];
+
 /// Basit çizim ekranı. Kaydedilirse PNG baytlarını döner.
 class DrawingScreen extends StatefulWidget {
   const DrawingScreen({super.key});
@@ -26,15 +37,6 @@ class _DrawingScreenState extends State<DrawingScreen> {
   Color _color = Colors.black;
   double _width = 3;
   bool _saving = false;
-
-  static const _palette = <Color>[
-    Colors.black,
-    Color(0xFFE53935),
-    Color(0xFFFB8C00),
-    Color(0xFF43A047),
-    Color(0xFF1E88E5),
-    Color(0xFF8E24AA),
-  ];
 
   Future<void> _save() async {
     if (_strokes.isEmpty) {
@@ -143,7 +145,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Row(
                 children: [
-                  for (final color in _palette)
+                  for (final color in kInkPalette)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: InkWell(
