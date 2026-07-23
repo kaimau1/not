@@ -1194,4 +1194,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hubReadInfo => 'PDF/Word belgesini sesli dinle';
+
+  @override
+  String get annotate => 'Üzerine yaz';
+
+  @override
+  String get annotateDone => 'Yazmayı bitir';
+
+  @override
+  String get pen => 'Kalem';
+
+  @override
+  String get eraser => 'Silgi';
+
+  @override
+  String get clearInk => 'Çizimleri temizle';
 }

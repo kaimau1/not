@@ -476,5 +476,10 @@
   "hubSuggestionsInfo": "Notlarından çıkarılmış somut öneriler",
   "hubMailInfo": "Gelen kutundaki önemli e-postalar",
   "hubBriefingInfo": "Güne bakış: notlar ve e-postalar",
-  "hubReadInfo": "PDF/Word belgesini sesli dinle"
+  "hubReadInfo": "PDF/Word belgesini sesli dinle",
+  "annotate": "Üzerine yaz",
+  "annotateDone": "Yazmayı bitir",
+  "pen": "Kalem",
+  "eraser": "Silgi",
+  "clearInk": "Çizimleri temizle"
 }
