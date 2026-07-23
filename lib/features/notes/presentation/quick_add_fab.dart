@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import '../../../core/l10n_ext.dart';
 import '../domain/note_type.dart';
 
-/// "+" düğmesi: TEK dokunuş doğrudan yeni METİN notu açar (en sık iş tek
-/// harekete indi — Keep davranışı); basılı tutunca madde listesi / sıralı
-/// liste / el yazısı / metin seçenekleri etiketli mini düğmeler olarak belirir.
+/// "+" düğmesi: dokununca metin / madde listesi / sıralı liste / el yazısı
+/// seçenekleri etiketli mini düğmeler olarak belirir. (Eskiden tek dokunuş
+/// doğrudan metin notu açıyor, liste ve sıralı liste yalnız basılı tutunca
+/// çıkıyordu; kullanıcı diğer tipleri bulamıyordu. Artık her tip tek dokunuşta
+/// görünür.) Basılı tutmak da aynı menüyü açar.
 ///
 /// Seçenekler bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
 /// - Böylece açılınca yerinde büyüyüp üstteki sesli asistan düğmesini
@@ -157,10 +159,9 @@ class _QuickAddFabState extends State<QuickAddFab> {
       child: FloatingActionButton(
         heroTag: 'add-fab',
         tooltip: l10n.quickAddTooltip,
-        onPressed: _open
-            ? _close
-            // Tek dokunuş = anında metin notu; tip menüsü uzun basışta.
-            : () => widget.onCreate(NoteType.text),
+        // Dokunmak tip menüsünü açar (metin/madde/sıralı/el yazısı); açıkken
+        // tekrar dokunmak kapatır.
+        onPressed: _open ? _close : _openMenu,
         child: AnimatedRotation(
           turns: _open ? 0.125 : 0, // + → × dönüşü
           duration: const Duration(milliseconds: 160),

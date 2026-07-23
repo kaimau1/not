@@ -1149,7 +1149,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get assistantGenericError => 'Bir sorun oluştu, tekrar dener misin?';
 
   @override
-  String get quickAddTooltip => 'Yeni not — basılı tut: liste, el yazısı';
+  String get quickAddTooltip => 'Yeni not — tip seç';
 
   @override
   String get autoTitleSetting => 'Kapatırken başlık öner';

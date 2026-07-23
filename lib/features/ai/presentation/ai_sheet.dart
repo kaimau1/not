@@ -181,6 +181,21 @@ class _AiSheetState extends ConsumerState<AiSheet> {
   /// ayar açık). Sonucu uygularken işaretliler korunmalı.
   bool _keepChecked = false;
 
+  /// Karışık not (metin tipi + checklist maddeleri): düzeltme/geliştirme/çeviri
+  /// gibi TİPİ KORUYAN işlemlerde yalnız gövde metni AI'a gider; maddeler olduğu
+  /// gibi kalır. Aksi hâlde gövde + maddeler tek metne birleşip sonuç gövdeye
+  /// yazılıyor, maddeler düz metne dönüşüyordu (kullanıcı: "madde karışık notu
+  /// düzeltince maddeler düz metine dönüşüyor"). Tipi DEĞİŞTİREN dönüşümlerde
+  /// (maddeye/sıralıya çevir) tüm içerik bilerek birleştirilir.
+  String _contentForTextOp({required bool skipChecked, required bool converting}) {
+    final note = widget.note;
+    final mixed =
+        note.type == NoteType.text &&
+        note.items.any((i) => i.text.trim().isNotEmpty);
+    if (mixed && !converting) return note.body.trim();
+    return note.toContentText(skipChecked: skipChecked);
+  }
+
   /// Bu not için işaretli maddeler AI kapsamı dışında mı tutulsun: ayar açık,
   /// not checklist ve en az bir işaretli VE bir işaretsiz madde varsa. (Hepsi
   /// işaretliyse dışlanacak bir şey kalmaz; hiç işaretli yoksa fark etmez.)
@@ -269,8 +284,13 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     // Liste yapısını koru: sıralı/checklist notunda maddeler tek satıra
     // çökmesin (kullanıcı: "5 madde tek numaraya dönüşüyor").
     final prompt = chosen + _listStructureConstraint;
+    // "Notu düzelt" tipi korur: karışık notta yalnız gövde düzeltilir, maddeler
+    // korunur (bkz. _contentForTextOp).
     await _run(
-      (s) => s.rewriteText(widget.note.toContentText(skipChecked: skip), prompt),
+      (s) => s.rewriteText(
+        _contentForTextOp(skipChecked: skip, converting: false),
+        prompt,
+      ),
       improvement: true,
       keepChecked: skip,
     );
@@ -323,11 +343,14 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     final prompt = chosen.$2 == null
         ? chosen.$1 + _listStructureConstraint
         : chosen.$1;
+    final converting = chosen.$2 != null;
     await _run(
       // İçerik metni (başlık/işaret yok): geliştirme sonucu nota geri
       // uygulanırken başlık öğeye, `[ ]`/numara işaretleri metne sızmasın.
+      // Tipi koruyan geliştirmede (Resmî/Kısalt) karışık notun maddeleri
+      // korunur; liste tipine dönüştürmede tüm içerik birleştirilir.
       (s) => s.rewriteText(
-        widget.note.toContentText(skipChecked: skip),
+        _contentForTextOp(skipChecked: skip, converting: converting),
         prompt,
       ),
       improvement: true,
@@ -355,9 +378,12 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     // işaretleri de "çevirmeye" çalışıp yapıya sızdırıyordu. improvement:
     // çeviri sonucu nota geri uygulanabilir ("Notu değiştir" görünür).
     final skip = _skipCheckedForNote;
+    // Çeviri tipi korur: karışık notta yalnız gövde çevrilir, maddeler korunur.
     await _run(
-      (s) =>
-          s.translateText(widget.note.toContentText(skipChecked: skip), language),
+      (s) => s.translateText(
+        _contentForTextOp(skipChecked: skip, converting: false),
+        language,
+      ),
       improvement: true,
       keepChecked: skip,
     );
