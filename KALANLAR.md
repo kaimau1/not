@@ -14,6 +14,10 @@
 - [ ] **Sağ sarmada tek uzun kelime**: satırda kırılacak boşluk yoksa (tek
   uzun kelime) sağ kenar dolgusu konamaz, o satır görselin altına girebilir.
   Tavanı kaldırmak kendi satır kırıcımızı yazmayı gerektirir (2026-07-24).
+- [ ] **Sütunun dörtte üçünden fazlasını kaplayan görselin altında liste
+  satırı kalıyor** — satır yana kaydırılamıyor (yer yok), altına itmek listenin
+  dikey akışını değiştirmeyi gerektirir; kullanıcı görseli daraltarak çözüyor
+  (2026-07-24).
 - [ ] **Liste modunda sürükleyerek sıralarken kenarda otomatik kaydırma yok**
   — liste artık serbest görsel tuvalinin içinde `shrinkWrap` ile duruyor, dış
   kaydırıcıyı sürükleme sırasında elle sürmek gerekir (2026-07-24).
