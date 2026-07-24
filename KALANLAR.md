@@ -11,6 +11,13 @@
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
 
 ## Bilinen eksik / risk
+- [ ] **Word (.docx) dışa aktarımında görseller hâlâ metnin sonunda** — PDF
+  nottaki yerleşimi izliyor, docx henüz izlemiyor (2026-07-24).
+- [ ] **Görüntülü not yalnız cihazda** — bilinçli karar (buluta yüklenmez):
+  uygulama silinirse ya da başka cihaza geçilirse video kaybolur; metadata
+  senkronlandığı için diğer cihazda "senkronlanmadı" görünür (2026-07-24).
+- [ ] **AI videoyu 60 sn ile sınırlı alıyor** — satır içi gönderim boyutu
+  sınırı; daha uzun video için Files API / parçalama gerekir (2026-07-24).
 - [ ] **Sağ sarmada tek uzun kelime**: satırda kırılacak boşluk yoksa (tek
   uzun kelime) sağ kenar dolgusu konamaz, o satır görselin altına girebilir.
   Tavanı kaldırmak kendi satır kırıcımızı yazmayı gerektirir (2026-07-24).
