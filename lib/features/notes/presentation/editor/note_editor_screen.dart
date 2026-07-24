@@ -48,6 +48,7 @@ import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
+import 'text_wrap.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -95,8 +96,53 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _note;
   final _titleController = TextEditingController();
-  final _bodyController = TextEditingController();
+
+  /// Gövde: kayan görsellerin etrafından akan metin için özel denetleyici.
+  /// `.text` çapa karakterleri içerebilir — nota giden gövde her zaman
+  /// `.logicalText` üzerinden okunur (bkz. text_wrap.dart).
+  final _bodyController = WrapTextController();
   final _bodyFocus = FocusNode();
+
+  /// Gövde metninin sayfa tepesinden uzaklığı (başlık + çip satırının altı).
+  /// Görseller bunun üzerine çıkamaz; sarma hesabı da buna göre yapılır.
+  double _bodyTop = 0;
+  final _bodyTopKey = GlobalKey();
+
+  /// Gövde metninin sayfa kenarlarından boşluğu.
+  static const double _kGutter = 16;
+
+  /// Başlık bloğunun yüksekliğini ölçüp [_bodyTop]'u tazeler. Yükseklik
+  /// yalnız başlık/çipler değişince oynar (sarma onu etkilemez), bu yüzden
+  /// ölçüm yakınsar ve tek setState'te durur.
+  void _measureBodyTop() {
+    final box = _bodyTopKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final h = box.size.height;
+    if ((h - _bodyTop).abs() < 0.5) return;
+    setState(() => _bodyTop = h);
+  }
+
+  /// Tuvalin bildirdiği görsel bantlarını gövde denetleyicisine aktarır:
+  /// konumlar sayfa uzayından metin sütunu uzayına çevrilir.
+  void _applyFloats(List<FloatBox> floats, double pageWidth) {
+    final columnWidth = pageWidth - _kGutter * 2;
+    final style = Theme.of(context).textTheme.bodyLarge;
+    if (columnWidth <= 0 || style == null) return;
+    _bodyController.updateLayout(
+      floats: [
+        for (final f in floats)
+          FloatBox(
+            top: f.top,
+            width: (f.width - _kGutter).clamp(0.0, columnWidth).toDouble(),
+            height: f.height,
+            blocking: f.blocking,
+          ),
+      ],
+      style: style,
+      columnWidth: columnWidth,
+      textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+    );
+  }
   final _debouncer = Debouncer();
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
@@ -201,7 +247,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
-    setState(() => _note = transform(note));
+    // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
+    // asla yazılmaz. Gövde hangi yoldan gelirse gelsin burada temizlenir —
+    // her çağrı yerine ayrı koruma koymak yerine tek yerde.
+    setState(() {
+      final next = transform(note);
+      final clean = stripWrapAnchors(next.body);
+      _note = clean == next.body ? next : next.copyWith(body: clean);
+    });
     void save() {
       final current = _note;
       if (current != null && !_deleted) {
@@ -1193,7 +1246,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // Yerleşik tanıma yok: eski alt sayfa yolu.
     if (!mounted) return;
     if (note.type == NoteType.text) {
-      final base = _bodyController.text;
+      final base = _bodyController.logicalText;
       final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
       void writeLive(String full) => _writeDictated(baseWithSep, full);
       final text = await showDictationSheet(context, onPartial: writeLive);
@@ -1220,7 +1273,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _startInlineDictation(Note note) async {
-    final base = _bodyController.text;
+    final base = _bodyController.logicalText;
     final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
     _dictationItemIds.clear();
     setState(() => _dictating = true);
@@ -1382,7 +1435,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             : DateTime.now().difference(started),
       );
       await notesRepo.appendAttachment(widget.noteId, attachment);
-    }).catchError((Object e) => debugPrint('Sesli not kaydı bağlanamadı: $e'));
+    }).catchError((Object e) {
+      debugPrint('Sesli not kaydı bağlanamadı: $e');
+    });
   }
 
   Future<void> _stopInlineDictation() async {
@@ -1671,7 +1726,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final bodyField = TextField(
       controller: _bodyController,
       focusNode: _bodyFocus,
-      onChanged: (value) => _mutate((n) => n.copyWith(body: value)),
+      // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
+      // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
+      style: Theme.of(context).textTheme.bodyLarge,
+      onChanged: (value) =>
+          _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
       maxLines: null,
       minLines: note.items.isEmpty ? 8 : 2,
       keyboardType: TextInputType.multiline,
@@ -1688,6 +1747,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // dahil) TÜM sayfanın üzerinde serbest katmanda — metnin sağına/soluna,
       // istenen yere sürüklenir, sayfayla birlikte kayar. Boş alana dokunmak
       // gövdeye odaklanır — yazmaya başlamak için aşağıya dokunmak yeterli.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
       body = LayoutBuilder(
         builder: (context, constraints) => SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 96),
@@ -1697,6 +1757,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             onRemove: _removeAttachment,
             onChanged: _updateAttachment,
             onExtractText: _ocrImage,
+            topLimit: _bodyTop,
+            onFloats: (floats) => _applyFloats(floats, constraints.maxWidth),
             onTapEmpty: () {
               if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
             },
@@ -1704,9 +1766,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                header,
+                // Başlık + çipler: yüksekliği görsellerin üst sınırıdır.
+                KeyedSubtree(key: _bodyTopKey, child: header),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: _kGutter),
                   child: bodyField,
                 ),
               ],

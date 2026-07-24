@@ -6,6 +6,18 @@ service cloud.firestore {
     // premiumUntil istemciden YAZILAMAZ: kullanıcı kendi dokümanına
     // premiumUntil yazarak ücretsiz premium alamasın. Alan yalnızca
     // konsoldan/sunucudan (ileride Play Billing Cloud Function) yazılır.
+    // AI kota sayacı (aiUsage) istemcide tutulur ama GERİ ALINAMAZ: aynı gün
+    // içinde puan yalnızca ARTABİLİR. Aksi hâlde kullanıcı sayacı sıfırlayıp
+    // dahili AI'ı sınırsız kullanır ve fatura projeye çıkardı. Gün değişince
+    // (aiUsage.day farklıysa) sayaç serbestçe sıfırlanabilir.
+    function aiUsageOk() {
+      let incoming = request.resource.data.get('aiUsage', {});
+      let existing = resource.data.get('aiUsage', {});
+      return !('aiUsage' in request.resource.data)
+        || incoming.get('day', '') != existing.get('day', '')
+        || incoming.get('points', 0) >= existing.get('points', 0);
+    }
+
     match /users/{uid} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create: if request.auth != null
@@ -14,7 +26,8 @@ service cloud.firestore {
       allow update: if request.auth != null
         && request.auth.uid == uid
         && !request.resource.data.diff(resource.data)
-            .affectedKeys().hasAny(['premiumUntil']);
+            .affectedKeys().hasAny(['premiumUntil'])
+        && aiUsageOk();
     }
 
     // Her kullanıcı yalnızca kendi verisini okuyup yazabilir.

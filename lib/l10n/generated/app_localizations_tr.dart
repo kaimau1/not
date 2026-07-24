@@ -327,6 +327,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get validateAndSave => 'Doğrula ve Kaydet';
 
   @override
+  String get clear => 'Temizle';
+
+  @override
+  String get aiDiagnostics => 'AI tanılama';
+
+  @override
+  String get aiDiagnosticsEmpty => 'Kayıtlı hata yok';
+
+  @override
+  String aiDiagnosticsCount(int count) {
+    return 'Son $count hata kaydı';
+  }
+
+  @override
   String get apiKeyValid => 'API anahtarı doğrulandı ve kaydedildi';
 
   @override

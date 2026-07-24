@@ -125,13 +125,13 @@
   "geminiApiKey": "Gemini API Anahtarı",
   "geminiApiKeyHint": "AIza... ile başlayan anahtarı yapıştır",
   "geminiApiKeyInfo": "Anahtar girmek isteğe bağlıdır: girmezsen AI istekleri uygulamanın dahili altyapısından yapılır (günlük ücretsiz hak, Premium ile daha yüksek günlük hak). Kendi anahtarınla sınırsız kullanım için aistudio.google.com adresinden ücretsiz anahtar alabilirsin; anahtar yalnızca bu cihazda güvenli depoda saklanır.",
-  "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan hak {count}",
+  "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan puan {count}",
   "@aiBuiltInPremium": {
     "placeholders": {
       "count": {"type": "int"}
     }
   },
-  "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz hak {count}",
+  "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz puan {count}",
   "@aiBuiltInRemaining": {
     "placeholders": {
       "count": {"type": "int"}
@@ -157,6 +157,17 @@
   },
   "trashEmptied": "Çöp kutusu boşaltıldı",
   "validateAndSave": "Doğrula ve Kaydet",
+  "clear": "Temizle",
+  "aiDiagnostics": "AI tanılama",
+  "aiDiagnosticsEmpty": "Kayıtlı hata yok",
+  "aiDiagnosticsCount": "Son {count} hata kaydı",
+  "@aiDiagnosticsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "apiKeyValid": "API anahtarı doğrulandı ve kaydedildi",
   "apiKeyInvalid": "API anahtarı geçersiz",
   "apiKeySavedBadge": "Kayıtlı",

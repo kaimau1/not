@@ -676,6 +676,30 @@ abstract class AppLocalizations {
   /// **'Doğrula ve Kaydet'**
   String get validateAndSave;
 
+  /// No description provided for @clear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizle'**
+  String get clear;
+
+  /// No description provided for @aiDiagnostics.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI tanılama'**
+  String get aiDiagnostics;
+
+  /// No description provided for @aiDiagnosticsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı hata yok'**
+  String get aiDiagnosticsEmpty;
+
+  /// No description provided for @aiDiagnosticsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son {count} hata kaydı'**
+  String aiDiagnosticsCount(int count);
+
   /// No description provided for @apiKeyValid.
   ///
   /// In tr, this message translates to:
