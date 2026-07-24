@@ -488,6 +488,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get micPermissionDenied => 'Mikrofon izni verilmedi';
 
   @override
+  String get speechRecognitionFailed =>
+      'Konuşma tanıma çalışmadı. Mikrofon izninin verildiğinden ve Google uygulamasının güncel olduğundan emin ol.';
+
+  @override
   String get addDrawing => 'Çizim ekle';
 
   @override
@@ -893,6 +897,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get newHandwriting => 'El yazısı';
 
   @override
+  String get newVoiceCapture => 'Sesli not';
+
+  @override
+  String get voiceCaptureActive => 'Ses kaydediliyor, konuşman nota yazılıyor…';
+
+  @override
   String get suggestTitle => 'Başlık öner';
 
   @override
@@ -1061,6 +1071,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pdfIncludeDate => 'Tarihi ekle';
 
   @override
+  String get exportIncludeImages => 'Görselleri ekle';
+
+  @override
+  String get exportWord => 'Word olarak paylaş (.docx)';
+
+  @override
   String get pdfPreview => 'Önizle';
 
   @override
@@ -1134,6 +1150,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get openBriefing => 'Brifingi aç';
+
+  @override
+  String get syncTitle => 'Senkronizasyon';
+
+  @override
+  String get syncLimitTitle => 'Otomatik yükleme sınırı';
+
+  @override
+  String get syncLimitInfo =>
+      'Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.';
+
+  @override
+  String get syncLimitUnlimited => 'Sınırsız';
 
   @override
   String get backupTitle => 'Yedek';

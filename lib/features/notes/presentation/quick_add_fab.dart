@@ -21,6 +21,7 @@ class QuickAddFab extends StatefulWidget {
     required this.anchor,
     required this.onCreate,
     required this.onHandwriting,
+    required this.onVoiceCapture,
   });
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
@@ -30,6 +31,9 @@ class QuickAddFab extends StatefulWidget {
 
   final void Function(NoteType type) onCreate;
   final VoidCallback onHandwriting;
+
+  /// Keep tarzı sesli not: ses kaydı + canlı döküm birlikte.
+  final VoidCallback onVoiceCapture;
 
   @override
   State<QuickAddFab> createState() => _QuickAddFabState();
@@ -68,6 +72,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
               color: Colors.transparent,
               child: _StaggeredMenu(
                 children: [
+                  _option(
+                    icon: Icons.graphic_eq,
+                    label: context.l10n.newVoiceCapture,
+                    onTap: widget.onVoiceCapture,
+                  ),
                   _option(
                     icon: Icons.draw_outlined,
                     label: context.l10n.newHandwriting,

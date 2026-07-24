@@ -133,6 +133,12 @@ class SettingsScreen extends ConsumerWidget {
                 icon: Icons.mail_outline,
                 children: const [_GmailSection()],
               ),
+              // Senkron: eklerin buluta otomatik yükleme boyut sınırı.
+              _SettingsGroup(
+                title: l10n.syncTitle,
+                icon: Icons.cloud_sync_outlined,
+                children: const [_SyncLimitSelector()],
+              ),
               // Yedek: dışa aktarma ve geri yükleme tek görünür grupta —
               // eskiden "Hesap" içinde gömülüydü, bulunamıyordu.
               _SettingsGroup(
@@ -591,6 +597,36 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
       value: ref.watch(expandListItemsProvider),
       onChanged: (value) =>
           ref.read(expandListItemsProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Eklerin buluta otomatik yüklenmesi için boyut sınırı seçici.
+/// Sınırı aşan dosyalar cihazda kalır (not metni yine senkronlanır).
+class _SyncLimitSelector extends ConsumerWidget {
+  const _SyncLimitSelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final value = ref.watch(syncLimitMbProvider);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.syncLimitTitle),
+      subtitle: Text(l10n.syncLimitInfo),
+      trailing: DropdownButton<int>(
+        value: SyncLimitMbNotifier.options.contains(value) ? value : 25,
+        items: [
+          for (final mb in SyncLimitMbNotifier.options)
+            DropdownMenuItem(
+              value: mb,
+              child: Text(mb == 0 ? l10n.syncLimitUnlimited : '$mb MB'),
+            ),
+        ],
+        onChanged: (v) {
+          if (v != null) ref.read(syncLimitMbProvider.notifier).set(v);
+        },
+      ),
     );
   }
 }

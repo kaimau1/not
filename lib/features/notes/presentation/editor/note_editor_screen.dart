@@ -10,6 +10,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -72,6 +75,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     super.key,
     required this.noteId,
     this.startDrawing = false,
+    this.startVoiceCapture = false,
   });
 
   final String noteId;
@@ -79,6 +83,10 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
   /// kaydedilen çizim nota görsel eki olarak girer.
   final bool startDrawing;
+
+  /// Keep tarzı sesli not modu: editör açılır açılmaz ses kaydı + canlı
+  /// döküm başlar; bitişte ses m4a eki olur, döküm notta kalır.
+  final bool startVoiceCapture;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -96,6 +104,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// Doğrudan (alt sayfasız) dikte durumu.
   StreamSubscription<({String? text, double? level})>? _speechSub;
   bool _dictating = false;
+
+  /// Keep tarzı sesli not modu: dikteyle AYNI ANDA ses de m4a'ya kaydedilir.
+  AudioRecorder? _captureRecorder;
+  DateTime? _captureStart;
+  bool _voiceCapturing = false;
 
   @override
   void initState() {
@@ -116,6 +129,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // El yazısı modu: ilk kareden sonra doğrudan çizim tuvalini aç.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _addDrawing();
+      });
+    }
+    if (widget.startVoiceCapture) {
+      // Sesli not modu: ilk kareden sonra kayıt + canlı dökümü başlat.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _startVoiceCapture();
       });
     }
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
@@ -146,8 +165,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void dispose() {
     _debouncer.flush();
+    // Sesli not kaydı sürerken çıkıldıysa kayıt kaybolmasın: durdur ve nota
+    // arka planda bağla. Bayrak, aşağıdaki boş-not silme adımını da atlatır —
+    // ek henüz yazılmadığından not bir an "boş" görünür.
+    final wasCapturing = _voiceCapturing;
+    if (wasCapturing) _finishVoiceCaptureDetached();
     final note = _note;
-    if (!_deleted && note != null && note.isEmpty) {
+    if (!_deleted && note != null && note.isEmpty && !wasCapturing) {
       // İçi boş kalan not çıkarken sessizce silinir.
       ref.read(notesRepositoryProvider)?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
@@ -1147,11 +1171,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _dictate() async {
     final note = _note;
     if (note == null) return;
+    if (_voiceCapturing) {
+      // Sesli not modunda mikrofon düğmesi TÜM oturumu bitirir (yalnız
+      // dikteyi durdurup kaydı açık bırakmak sessiz pil/depo sızıntısı olur).
+      await _stopVoiceCapture();
+      return;
+    }
     if (_dictating) {
       await _stopInlineDictation();
       return;
     }
     if (await DeviceSpeech.isAvailable()) {
+      // İzin YOKKEN SpeechRecognizer sormadan hata verir; önce iste.
+      if (!await DeviceSpeech.ensureMicPermission()) {
+        if (mounted) _showSnack(context.l10n.micPermissionDenied);
+        return;
+      }
       await _startInlineDictation(note);
       return;
     }
@@ -1204,7 +1239,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       },
       onError: (Object e) {
         _stopInlineDictation();
-        if (mounted) _showSnack(context.l10n.aiError(e.toString()));
+        // Cihaz tanıma hatası — AI ile ilgisi yok; "yapay zeka isteği
+        // başarısız" gibi yanıltıcı bir mesaj gösterme.
+        if (mounted) _showSnack(context.l10n.speechRecognitionFailed);
       },
     );
   }
@@ -1240,6 +1277,112 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         ],
       );
     }, immediate: true);
+  }
+
+  /// Keep tarzı sesli not: cihaz tanıması dökümü nota CANLI yazarken ses de
+  /// m4a olarak kaydedilir; durunca kayıt ses eki olur. (+) menüsündeki
+  /// "Sesli not"tan `?voice=1` ile gelir.
+  Future<void> _startVoiceCapture() async {
+    final note = _note;
+    if (note == null || _voiceCapturing) return;
+    if (!await DeviceSpeech.ensureMicPermission()) {
+      if (mounted) _showSnack(context.l10n.micPermissionDenied);
+      return;
+    }
+    // Önce döküm, sonra kayıt: mikrofonu paylaşamayan cihazda SONRA başlayan
+    // kazanır — kayıt dosyası asla sessiz çıkmaz; en kötü durumda döküm durur
+    // (görünür bir eksik; sessiz bir ses dosyası gizli veri kaybı olurdu).
+    if (await DeviceSpeech.isAvailable()) {
+      await _startInlineDictation(note);
+    }
+    try {
+      final recorder = AudioRecorder();
+      _captureRecorder = recorder;
+      final dir = await getTemporaryDirectory();
+      await recorder.start(
+        // Ses notu kalıbıyla aynı: tek kanal 48 kbps konuşma için yeterli.
+        const RecordConfig(
+          encoder: AudioEncoder.aacLc,
+          bitRate: 48000,
+          numChannels: 1,
+        ),
+        path: p.join(
+          dir.path,
+          'sesnotu_${DateTime.now().millisecondsSinceEpoch}.m4a',
+        ),
+      );
+      _captureStart = DateTime.now();
+      if (mounted) setState(() => _voiceCapturing = true);
+    } catch (e) {
+      // Kayıt açılamadı (ör. mikrofon meşgul): canlı dikte varsa tek başına
+      // sürer, kullanıcı dosya kaydının olmadığını bilsin.
+      _captureRecorder?.dispose();
+      _captureRecorder = null;
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
+  Future<void> _stopVoiceCapture() async {
+    if (!_voiceCapturing) return;
+    setState(() => _voiceCapturing = false);
+    if (_dictating) await _stopInlineDictation();
+    final recorder = _captureRecorder;
+    final started = _captureStart;
+    _captureRecorder = null;
+    _captureStart = null;
+    if (recorder == null) return;
+    try {
+      final path = await recorder.stop();
+      await recorder.dispose();
+      final repo = ref.read(attachmentRepositoryProvider);
+      if (path == null || repo == null) return;
+      final attachment = await repo.prepareAudio(
+        noteId: widget.noteId,
+        sourcePath: path,
+        duration: started == null
+            ? Duration.zero
+            : DateTime.now().difference(started),
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+    } on FileTooLargeException {
+      if (mounted) _showSnack(_tooLargeMessage());
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
+  /// Kayıt sürerken ekrandan çıkıldı: kayıt kaybolmasın — durdur, eke çevir,
+  /// nota transaction'la bağla (editör kapandığından `_mutate` kullanılamaz).
+  void _finishVoiceCaptureDetached() {
+    _voiceCapturing = false;
+    final recorder = _captureRecorder;
+    final started = _captureStart;
+    _captureRecorder = null;
+    _captureStart = null;
+    // Provider'lar dispose İÇİNDE senkron okunur; async gövde ref kullanmaz.
+    final attachmentRepo = ref.read(attachmentRepositoryProvider);
+    final notesRepo = ref.read(notesRepositoryProvider);
+    DeviceSpeech.stop();
+    if (recorder == null || attachmentRepo == null || notesRepo == null) {
+      recorder?.dispose();
+      return;
+    }
+    Future(() async {
+      final path = await recorder.stop();
+      await recorder.dispose();
+      if (path == null) return;
+      final attachment = await attachmentRepo.prepareAudio(
+        noteId: widget.noteId,
+        sourcePath: path,
+        duration: started == null
+            ? Duration.zero
+            : DateTime.now().difference(started),
+      );
+      await notesRepo.appendAttachment(widget.noteId, attachment);
+    }).catchError((Object e) => debugPrint('Sesli not kaydı bağlanamadı: $e'));
   }
 
   Future<void> _stopInlineDictation() async {
@@ -1479,6 +1622,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
 
+    final imageAttachments = [
+      for (final a in note.attachments)
+        if (a.kind == AttachmentKind.image) a,
+    ];
+
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1497,9 +1645,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
             ),
           ),
-        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır; görseller ise
-        // serbest tuvalde (dokun → seç → sürükle/boyutlandır) istenen yere
-        // konumlandırılabilir (madde 5).
+        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır. Görseller saf
+        // metin notunda TAM SAYFA serbest katmanda (NotePageCanvas — aşağıda),
+        // liste tiplerinde ise başlık altındaki serbest tuvalde gösterilir.
         AttachmentStrip(
           attachments: [
             for (final a in note.attachments)
@@ -1508,15 +1656,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
         ),
-        NoteImages(
-          images: [
-            for (final a in note.attachments)
-              if (a.kind == AttachmentKind.image) a,
-          ],
-          onRemove: _removeAttachment,
-          onChanged: _updateAttachment,
-          onExtractText: _ocrImage,
-        ),
+        if (!(note.type == NoteType.text && note.items.isEmpty))
+          NoteImages(
+            images: imageAttachments,
+            onRemove: _removeAttachment,
+            onChanged: _updateAttachment,
+            onExtractText: _ocrImage,
+          ),
       ],
     );
 
@@ -1538,32 +1684,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
     final Widget body;
     if (note.type == NoteType.text && note.items.isEmpty) {
-      // Saf metin: gövde alanı en az bir ekran boyu yüksekliğe zorlanır ve tüm
-      // bu alan (metnin altındaki boşluk dahil) dokunuşla gövdeye odaklanır —
-      // yazmaya başlamak için aşağıya doğru her yere dokunmak yeterli.
+      // Saf metin: sayfa en az bir ekran boyu, görseller (el yazısı çizimleri
+      // dahil) TÜM sayfanın üzerinde serbest katmanda — metnin sağına/soluna,
+      // istenen yere sürüklenir, sayfayla birlikte kayar. Boş alana dokunmak
+      // gövdeye odaklanır — yazmaya başlamak için aşağıya dokunmak yeterli.
       body = LayoutBuilder(
-        builder: (context, constraints) => ListView(
+        builder: (context, constraints) => SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 96),
-          children: [
-            header,
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-              },
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Padding(
+          child: NotePageCanvas(
+            minHeight: constraints.maxHeight,
+            images: imageAttachments,
+            onRemove: _removeAttachment,
+            onChanged: _updateAttachment,
+            onExtractText: _ocrImage,
+            onTapEmpty: () {
+              if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                header,
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [bodyField],
-                  ),
+                  child: bodyField,
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     } else if (note.type == NoteType.text) {
@@ -1785,7 +1933,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
             // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
             // açık kalabiliyordu.
-            if (_dictating) _DictationBanner(onStop: _dictate),
+            if (_voiceCapturing)
+              _DictationBanner(
+                onStop: _stopVoiceCapture,
+                label: l10n.voiceCaptureActive,
+              )
+            else if (_dictating)
+              _DictationBanner(onStop: _dictate),
             BottomAppBar(
               color: background,
               height: 56,
@@ -1824,7 +1978,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   SizedBox(
                     width: 52,
                     height: 52,
-                    child: _dictating
+                    child: _dictating || _voiceCapturing
                         ? IconButton.filled(
                             tooltip: l10n.stopAndSave,
                             iconSize: 28,
@@ -1871,9 +2025,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 /// Dikte sürerken alt çubuğun üstünde duran uyarı şeridi. Amacı tek:
 /// mikrofonun açık olduğu gözden kaçmasın.
 class _DictationBanner extends StatelessWidget {
-  const _DictationBanner({required this.onStop});
+  const _DictationBanner({required this.onStop, this.label});
 
   final VoidCallback onStop;
+
+  /// Şeritte gösterilecek metin; null ise dikte metni kullanılır.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -1890,7 +2047,7 @@ class _DictationBanner extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  context.l10n.dictationListening,
+                  label ?? context.l10n.dictationListening,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onErrorContainer,
                     fontWeight: FontWeight.w600,

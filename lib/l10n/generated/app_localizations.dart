@@ -982,6 +982,12 @@ abstract class AppLocalizations {
   /// **'Mikrofon izni verilmedi'**
   String get micPermissionDenied;
 
+  /// No description provided for @speechRecognitionFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşma tanıma çalışmadı. Mikrofon izninin verildiğinden ve Google uygulamasının güncel olduğundan emin ol.'**
+  String get speechRecognitionFailed;
+
   /// No description provided for @addDrawing.
   ///
   /// In tr, this message translates to:
@@ -1738,6 +1744,18 @@ abstract class AppLocalizations {
   /// **'El yazısı'**
   String get newHandwriting;
 
+  /// No description provided for @newVoiceCapture.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not'**
+  String get newVoiceCapture;
+
+  /// No description provided for @voiceCaptureActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses kaydediliyor, konuşman nota yazılıyor…'**
+  String get voiceCaptureActive;
+
   /// No description provided for @suggestTitle.
   ///
   /// In tr, this message translates to:
@@ -2056,6 +2074,18 @@ abstract class AppLocalizations {
   /// **'Tarihi ekle'**
   String get pdfIncludeDate;
 
+  /// No description provided for @exportIncludeImages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görselleri ekle'**
+  String get exportIncludeImages;
+
+  /// No description provided for @exportWord.
+  ///
+  /// In tr, this message translates to:
+  /// **'Word olarak paylaş (.docx)'**
+  String get exportWord;
+
   /// No description provided for @pdfPreview.
   ///
   /// In tr, this message translates to:
@@ -2193,6 +2223,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Brifingi aç'**
   String get openBriefing;
+
+  /// No description provided for @syncTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkronizasyon'**
+  String get syncTitle;
+
+  /// No description provided for @syncLimitTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik yükleme sınırı'**
+  String get syncLimitTitle;
+
+  /// No description provided for @syncLimitInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu boyuttan büyük ekler cihazda kalır, buluta yüklenmez. Not metni her zaman senkronlanır.'**
+  String get syncLimitInfo;
+
+  /// No description provided for @syncLimitUnlimited.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sınırsız'**
+  String get syncLimitUnlimited;
 
   /// No description provided for @backupTitle.
   ///

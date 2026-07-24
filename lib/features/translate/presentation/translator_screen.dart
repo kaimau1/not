@@ -217,6 +217,12 @@ class _TranslatorScreenState extends ConsumerState<TranslatorScreen> {
   /// düğmeden gelir; tanıyıcı yerel ayarı baştan bilmek zorunda.
   Future<void> _startCapture(String sourceCode) async {
     if (_capturing || _processing) return;
+    final micDenied = context.l10n.micPermissionDenied;
+    // İzin yokken SpeechRecognizer sormadan sessizce düşer; önce iste.
+    if (!await DeviceSpeech.ensureMicPermission()) {
+      _showSnack(micDenied);
+      return;
+    }
     _captureText = '';
     setState(() => _captureLang = sourceCode);
     _captureSub =

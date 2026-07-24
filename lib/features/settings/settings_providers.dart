@@ -236,6 +236,28 @@ class ExpandListItemsNotifier extends Notifier<bool> {
   }
 }
 
+/// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
+/// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
+/// yalnız dosyanın kendisi yüklenmez (kota/veri tasarrufu).
+final syncLimitMbProvider = NotifierProvider<SyncLimitMbNotifier, int>(
+  SyncLimitMbNotifier.new,
+);
+
+class SyncLimitMbNotifier extends Notifier<int> {
+  static const _key = 'sync_limit_mb';
+
+  /// Seçilebilir sınırlar (MB); 0 = sınırsız.
+  static const options = [5, 10, 25, 50, 0];
+
+  @override
+  int build() => ref.watch(sharedPreferencesProvider).getInt(_key) ?? 25;
+
+  void set(int value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setInt(_key, value);
+  }
+}
+
 /// Sesli Not Asistanı düğmesinin kullanım şekli.
 /// hold (varsayılan): basılı tutarak konuş, bırakınca not oluşur.
 /// tap: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.
@@ -326,14 +348,19 @@ class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
 }
 
 /// Dakikada bir güncellenen saat (zamanlamalı tema geçişi için).
-final _clockProvider = StreamProvider<DateTime>(
+/// autoDispose: zamanlama KAPALIYKEN kimse izlemez ve dakikalık zamanlayıcı
+/// tümüyle durur — sürekli çalışan gereksiz bir uyandırma kaynağıydı (pil).
+final _clockProvider = StreamProvider.autoDispose<DateTime>(
   (ref) => Stream.periodic(const Duration(minutes: 1), (_) => DateTime.now()),
 );
 
 /// Kullanıcı seçimi + zamanlama birleşimiyle geçerli tema modu.
 /// "Kağıt" açık tema gibi davranır; hangi açık temanın kullanılacağına
 /// app.dart, themeChoiceProvider'a bakarak karar verir.
-final effectiveThemeModeProvider = Provider<ThemeMode>((ref) {
+/// autoDispose: _clockProvider'ı izleyebilmek için zorunlu (autoDispose
+/// olmayan sağlayıcı autoDispose'u izleyemez); kök widget sürekli izlediği
+/// için pratikte hep canlı kalır.
+final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
   final schedule = ref.watch(darkScheduleProvider);
   if (schedule.enabled) {
     final now = ref.watch(_clockProvider).value ?? DateTime.now();

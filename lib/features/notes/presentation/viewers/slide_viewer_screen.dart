@@ -191,23 +191,38 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                       aspectRatio: slides[i].heightPt == 0
                           ? 16 / 9
                           : slides[i].widthPt / slides[i].heightPt,
-                      child: InteractiveViewer(
-                        transformationController: isCurrent ? _zoom : null,
+                      // Çizimde IV'nin kendi jestleri tamamen kapalı: tek
+                      // parmak çizer, iki parmak yakınlaştırma+kaydırmayı
+                      // InkNavLayer _zoom matrisine uygular (IV iki parmağın
+                      // birlikte hareketini "pan" sayıp panEnabled:false'ta
+                      // yutuyordu). Normalde yakınken kaydır.
+                      child: InkNavLayer(
+                        enabled: _editing && isCurrent,
+                        controller: _ink,
+                        getMatrix: () => _zoom.value,
+                        setMatrix: (m) => _zoom.value = m,
                         minScale: 1,
                         maxScale: 5,
-                        // Çizimde tek parmak çizer (pan kapalı), iki parmak
-                        // yakınlaştırır (scaleEnabled varsayılan açık).
-                        // Normalde yakınken kaydır.
-                        panEnabled: !_editing && isCurrent && _zoomed,
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: SlideCanvas(slide: slides[i]),
-                            ),
-                            Positioned.fill(
-                              child: InkPageLayer(controller: _ink, page: i + 1),
-                            ),
-                          ],
+                        clampToBounds: true,
+                        child: InteractiveViewer(
+                          transformationController: isCurrent ? _zoom : null,
+                          minScale: 1,
+                          maxScale: 5,
+                          panEnabled: !_editing && isCurrent && _zoomed,
+                          scaleEnabled: !_editing,
+                          child: Stack(
+                            children: [
+                              Positioned.fill(
+                                child: SlideCanvas(slide: slides[i]),
+                              ),
+                              Positioned.fill(
+                                child: InkPageLayer(
+                                  controller: _ink,
+                                  page: i + 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

@@ -304,6 +304,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (mounted) await context.push('/note/$id?draw=1');
   }
 
+  /// Sesli not modu (Keep'teki gibi): not oluşturulur, editör açılır açılmaz
+  /// ses kaydı başlar ve konuşma dökümü nota canlı yazılır; bitişte ses
+  /// m4a eki olarak nota bağlanır.
+  Future<void> _createVoiceCaptureNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (mounted) await context.push('/note/$id?voice=1');
+  }
+
   @override
   Widget build(BuildContext context) {
     // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
@@ -677,6 +689,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         const SizedBox(height: 6),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
+                          onVoiceCapture: _createVoiceCaptureNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,
                           onHandwriting: _createHandwritingNote,

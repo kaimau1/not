@@ -692,16 +692,23 @@ class _AttachmentPreview extends StatelessWidget {
   }
 
   Widget _thumb(Attachment attachment) {
+    // Kart küçük resmi için 2048 px'lik eki tam boy çözdürmek boşuna bellek
+    // ve CPU (liste kaydırma takılması); 480 px, 3x ekranda bile yeterli.
     if (attachment.isUploaded) {
       return CachedNetworkImage(
         imageUrl: attachment.downloadUrl,
         fit: BoxFit.cover,
         fadeInDuration: const Duration(milliseconds: 150),
+        memCacheWidth: 480,
       );
     }
     if (attachment.localPath.isNotEmpty &&
         File(attachment.localPath).existsSync()) {
-      return Image.file(File(attachment.localPath), fit: BoxFit.cover);
+      return Image.file(
+        File(attachment.localPath),
+        fit: BoxFit.cover,
+        cacheWidth: 480,
+      );
     }
     return Container(
       color: Colors.black12,

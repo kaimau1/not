@@ -40,6 +40,9 @@ class MainActivity : FlutterFragmentActivity() {
     // sessizlikte kendiliğinden kapandığında yeniden başlatılır.
     private var listening = false
 
+    // Son gönderilen ses seviyesi (RMS olay seli kısılırken karşılaştırılır).
+    private var lastRmsLevel = -1f
+
     // Son DOLU ara sonuç. Tanıyıcı final sonucu boş döndürebiliyor ya da
     // sessizlikte NO_MATCH ile kapanabiliyor; o durumda konuşulan metin
     // yalnızca burada kalır. Biriktirilmezse "Bitir"de metin kaybolur.
@@ -123,6 +126,7 @@ class MainActivity : FlutterFragmentActivity() {
                     speechSink = events
                     accumulated.setLength(0)
                     lastPartial = ""
+                    lastRmsLevel = -1f
                     segmentEnded = false
                     listening = true
                     startRecognizer(arguments as? String ?: "tr-TR")
@@ -191,6 +195,11 @@ class MainActivity : FlutterFragmentActivity() {
         // kayıt açılamaz; düğme animasyonu bu değerle beslenir.
         override fun onRmsChanged(rmsdB: Float) {
             val level = ((rmsdB + 2f) / 12f).coerceIn(0f, 1f)
+            // Tanıyıcı saniyede ~10-20 RMS üretir; görünmez farkları kanala
+            // taşımak Flutter tarafında boşuna rebuild demek (pil). Yalnız
+            // gözle seçilir değişim gönderilir.
+            if (kotlin.math.abs(level - lastRmsLevel) < 0.04f) return
+            lastRmsLevel = level
             speechSink?.success(mapOf("level" to level.toDouble()))
         }
 

@@ -37,6 +37,11 @@ class InkController extends ChangeNotifier {
   InkStroke? _active;
   bool _dirty = false;
 
+  /// [InkNavLayer] iki parmak jestini sürerken true: sayfa katmanı çizim
+  /// girdisini tamamen yok sayar (parmaklardan biri sayfa dışına — kenar
+  /// boşluğuna — düşse bile çizgi başlamaz/uzamaz).
+  bool _nav = false;
+
   /// Silginin çizgiye "değmiş" sayıldığı yarıçap (sayfa oranı).
   static const _eraseRadius = 0.02;
 
@@ -85,8 +90,25 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// İki parmak gezinme başladı: başlamış çizgiyi geri al, çizimi askıya al.
+  void beginNav() {
+    if (_nav) return;
+    _nav = true;
+    if (_active != null) {
+      _ink = [..._ink]..remove(_active);
+      _active = null;
+    }
+    notifyListeners();
+  }
+
+  /// İki parmak gezinme bitti (parmak sayısı 2'nin altına indi).
+  void endNav() {
+    _nav = false;
+  }
+
   void pointerDown(int page, Offset local, Size size) {
     _pointers++;
+    if (_nav) return;
     if (_pointers > 1) {
       // İkinci parmak = yakınlaştırma/kaydırma niyeti: yeni başlamış çizgiyi
       // geri al ki ekranda kırıntı kalmasın.
@@ -113,7 +135,7 @@ class InkController extends ChangeNotifier {
   }
 
   void pointerMove(int page, Offset local, Size size) {
-    if (_pointers != 1) return;
+    if (_nav || _pointers != 1) return;
     if (eraser) {
       _eraseAt(page, local, size);
       notifyListeners();
@@ -318,6 +340,153 @@ class InkToolbar extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Çizim modunda İKİ PARMAK yakınlaştırma + kaydırmayı görüntüleyicinin
+/// dönüşüm matrisine kendisi uygular. Görüntüleyicinin kendi jest tanıyıcısına
+/// güvenilmez: hem Flutter hem pdfrx InteractiveViewer'ı, mesafe değişmeden
+/// birlikte hareket eden iki parmağı "pan" sayar ve `panEnabled:false`'ta
+/// (çizim modu) tamamen yok sayar — "yazarken kaydıramıyorum" hatasının kökü.
+///
+/// Katman jest arenasına girmeyen [Listener] ile TÜM parmakları (sayfa dışı —
+/// kenar boşluğu — dahil) sayar; ikinci parmak iner inmez [InkController.beginNav]
+/// ile çizimi askıya alır ve odak/mesafe farkından matrisi günceller. Çizim
+/// modunda görüntüleyicinin `panEnabled` VE `scaleEnabled`'ı kapatılmalıdır ki
+/// jest çifte işlenmesin.
+class InkNavLayer extends StatefulWidget {
+  const InkNavLayer({
+    super.key,
+    required this.enabled,
+    required this.controller,
+    required this.getMatrix,
+    required this.setMatrix,
+    required this.minScale,
+    required this.maxScale,
+    this.clampToBounds = false,
+    required this.child,
+  });
+
+  /// Yalnız çizim modunda aktif; kapalıyken dokunuşlara hiç karışmaz.
+  final bool enabled;
+
+  final InkController controller;
+
+  /// Görüntüleyicinin güncel dönüşümü (hazır değilse null dönebilir).
+  final Matrix4? Function() getMatrix;
+
+  /// Yeni dönüşümü görüntüleyiciye yazar (görüntüleyici kendi sınırlarını
+  /// ayrıca uygulayabilir — pdfrx `value` setter'ı konumu normalleştirir).
+  final ValueChanged<Matrix4> setMatrix;
+
+  /// Toplam ölçek bu aralıkta tutulur.
+  final double minScale;
+  final double maxScale;
+
+  /// true ise çeviri, içeriğin (bu katmanla aynı boyutta varsayılır) görünür
+  /// alanı örtmesini koruyacak şekilde kırpılır (Flutter InteractiveViewer'lı
+  /// slayt görünümü — doğrudan controller yazımı IV sınır denetiminden geçmez).
+  final bool clampToBounds;
+
+  final Widget child;
+
+  @override
+  State<InkNavLayer> createState() => _InkNavLayerState();
+}
+
+class _InkNavLayerState extends State<InkNavLayer> {
+  /// Basılı parmaklar: pointer id → katman-yerel konum.
+  final Map<int, Offset> _pts = {};
+  Offset? _lastFocal;
+  double? _lastDist;
+
+  void _reset() {
+    _lastFocal = null;
+    _lastDist = null;
+  }
+
+  (Offset, double) _focalAndDist() {
+    final pts = _pts.values.toList();
+    final focal = (pts[0] + pts[1]) / 2;
+    return (focal, (pts[0] - pts[1]).distance);
+  }
+
+  void _down(PointerDownEvent e) {
+    if (!widget.enabled) return;
+    _pts[e.pointer] = e.localPosition;
+    if (_pts.length == 2) {
+      widget.controller.beginNav();
+      final (focal, dist) = _focalAndDist();
+      _lastFocal = focal;
+      _lastDist = dist;
+    } else if (_pts.length > 2) {
+      _reset();
+    }
+  }
+
+  void _move(PointerMoveEvent e) {
+    if (!widget.enabled || !_pts.containsKey(e.pointer)) return;
+    _pts[e.pointer] = e.localPosition;
+    if (_pts.length != 2) return;
+    final matrix = widget.getMatrix();
+    if (matrix == null) return;
+    final (focal, dist) = _focalAndDist();
+    final lastFocal = _lastFocal, lastDist = _lastDist;
+    _lastFocal = focal;
+    _lastDist = dist;
+    if (lastFocal == null || lastDist == null || lastDist <= 0 || dist <= 0) {
+      return;
+    }
+    final scale = matrix.getMaxScaleOnAxis();
+    // Toplam ölçek [minScale, maxScale] dışına çıkmayacak kadar ölçekle.
+    final k = (scale * (dist / lastDist)).clamp(widget.minScale, widget.maxScale) / scale;
+    final pan = focal - lastFocal;
+    var m = Matrix4.translationValues(pan.dx, pan.dy, 0).multiplied(matrix);
+    if (k != 1) {
+      m = Matrix4.translationValues(focal.dx, focal.dy, 0)
+          .multiplied(Matrix4.diagonal3Values(k, k, 1))
+          .multiplied(Matrix4.translationValues(-focal.dx, -focal.dy, 0))
+          .multiplied(m);
+    }
+    if (widget.clampToBounds) m = _clamp(m);
+    widget.setMatrix(m);
+  }
+
+  void _up(int pointer) {
+    if (_pts.remove(pointer) == null) return;
+    if (_pts.length < 2) {
+      widget.controller.endNav();
+      _reset();
+    } else {
+      final (focal, dist) = _focalAndDist();
+      _lastFocal = focal;
+      _lastDist = dist;
+    }
+  }
+
+  /// İçerik bu katmanla aynı boyutta: çeviri, görüntü alanında boşluk
+  /// açılmayacak aralığa kırpılır.
+  Matrix4 _clamp(Matrix4 m) {
+    final box = context.size;
+    if (box == null || box.isEmpty) return m;
+    final s = m.getMaxScaleOnAxis();
+    final t = m.getTranslation();
+    final x = t.x.clamp(box.width * (1 - s), 0.0).toDouble();
+    final y = t.y.clamp(box.height * (1 - s), 0.0).toDouble();
+    return Matrix4.translationValues(x, y, 0)
+        .multiplied(Matrix4.diagonal3Values(s, s, 1));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.translucent,
+      onPointerDown: _down,
+      onPointerMove: _move,
+      onPointerUp: (e) => _up(e.pointer),
+      onPointerCancel: (e) => _up(e.pointer),
+      child: widget.child,
     );
   }
 }
