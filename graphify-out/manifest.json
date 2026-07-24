@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt": {
-    "mtime": 1784913608.9287455,
-    "ast_hash": "31b6c37a4c3b60d16ad3e3b646130342",
+    "mtime": 1784924638.6077316,
+    "ast_hash": "e0d18e28e2c0008bf80d1225f97175d6",
     "semantic_hash": ""
   },
   "android/app/src/main/kotlin/dev/kaimau/notlar/NotlarWidgetProvider.kt": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "lib/app/router.dart": {
-    "mtime": 1784913608.9287455,
-    "ast_hash": "e0fda5bc56ba7f72c701422bc4867ca5",
+    "mtime": 1784925393.0699615,
+    "ast_hash": "cc22464ac6ed14506cf59b7d51062df8",
     "semantic_hash": ""
   },
   "lib/app/theme/app_theme.dart": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/data/gemini_service.dart": {
-    "mtime": 1784918132.7684727,
-    "ast_hash": "545217b74d6f9f7f4d3f65c013fb186b",
+    "mtime": 1784925086.407729,
+    "ast_hash": "5743d2371272f495317a0a6f1e5ba82d",
     "semantic_hash": ""
   },
   "lib/features/ai/data/semantic_search.dart": {
@@ -175,8 +175,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/attachment_repository.dart": {
-    "mtime": 1784821433.0731187,
-    "ast_hash": "fcd4442161be7ed11fe16af326fa8e0e",
+    "mtime": 1784925036.65167,
+    "ast_hash": "cff4bf9645c30034ac6727946c57e943",
     "semantic_hash": ""
   },
   "lib/features/notes/data/notes_repository.dart": {
@@ -190,8 +190,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/upload_queue.dart": {
-    "mtime": 1784913608.932403,
-    "ast_hash": "54f636025684b90ce402e4be3ff7c26e",
+    "mtime": 1784925058.303601,
+    "ast_hash": "29901d7fb322e81be1a5feafd0621d7a",
     "semantic_hash": ""
   },
   "lib/features/notes/data/widget_service.dart": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/domain/attachment.dart": {
-    "mtime": 1784913608.934149,
-    "ast_hash": "30fc137ec27b77905c6f27f690dd4184",
+    "mtime": 1784925017.839509,
+    "ast_hash": "a25da09ddf6accd9a4387699f6570124",
     "semantic_hash": ""
   },
   "lib/features/notes/domain/note.dart": {
@@ -225,13 +225,13 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/dashboard_screen.dart": {
-    "mtime": 1784913608.934149,
-    "ast_hash": "98c7664838efbb63142f72cf46936ce9",
+    "mtime": 1784925382.3329525,
+    "ast_hash": "31822575db56f747c68c739192931137",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/attachment_strip.dart": {
-    "mtime": 1784920275.2938213,
-    "ast_hash": "b0d3909caab76bb684e151766f55407d",
+    "mtime": 1784925340.9696813,
+    "ast_hash": "d1758f12f210968115e1a46dc6f99810",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/audio_recorder_sheet.dart": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
-    "mtime": 1784923930.8141813,
-    "ast_hash": "e84f3d6df8182113b70fdd99c0c02303",
+    "mtime": 1784925602.3079066,
+    "ast_hash": "010174511cff44d380f30603e40f2ce5",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/note_card.dart": {
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "lib/features/settings/presentation/settings_screen.dart": {
-    "mtime": 1784918132.7754798,
-    "ast_hash": "5677ec1e30f2a02003677bbd10b61b58",
+    "mtime": 1784924730.1065238,
+    "ast_hash": "5b7c362ed61c1e62506812389d434348",
     "semantic_hash": ""
   },
   "lib/features/settings/settings_providers.dart": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784921544.631773,
-    "ast_hash": "1b6884bc6c9d5580293e2aa26ee45660",
+    "mtime": 1784925665.065075,
+    "ast_hash": "321ffd88baaeb381bf48de2b040f7f65",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784921544.6198437,
-    "ast_hash": "64cda3aa6312a6b51b8b09d868dc12d0",
+    "mtime": 1784925665.05406,
+    "ast_hash": "1cda7793029825919c6948d797ab5848",
     "semantic_hash": ""
   },
   "lib/main.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1784921384.1793447,
-    "ast_hash": "17f0a0e8f18fd0c6bb0af974c3a0962f",
+    "mtime": 1784925948.9758835,
+    "ast_hash": "70ed70570daf94f1c1524992a969f3e5",
     "semantic_hash": ""
   },
   "README.md": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "pubspec.yaml": {
-    "mtime": 1784457695.9600916,
-    "ast_hash": "1c3180ee986f634fdb3349ad9179ecf3",
+    "mtime": 1784925050.4316986,
+    "ast_hash": "1678953509b4840f074707e7d2d8881c",
     "semantic_hash": ""
   },
   "windows/CMakeLists.txt": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/quick_add_fab.dart": {
-    "mtime": 1784913608.9411604,
-    "ast_hash": "fd71237ee2e88b0b5d9aedf2aececfe8",
+    "mtime": 1784925382.33195,
+    "ast_hash": "542dfd40afb1a4264e404e3a28491907",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/reminders_screen.dart": {
@@ -590,8 +590,8 @@
     "semantic_hash": ""
   },
   "lib/features/settings/data/permissions_service.dart": {
-    "mtime": 1784453816.5107224,
-    "ast_hash": "bb260b8e497d9999c371a0b99e563470",
+    "mtime": 1784924638.635913,
+    "ast_hash": "a91aeba60438841bea58b3be78299fe9",
     "semantic_hash": ""
   },
   "lib/features/settings/presentation/privacy_screen.dart": {
@@ -665,8 +665,8 @@
     "semantic_hash": ""
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1784453563.1118522,
-    "ast_hash": "44c65686ea74b3e2d45c982594a67074",
+    "mtime": 1784925270.512926,
+    "ast_hash": "94b28811be91bbde8f0f2cdb991d39df",
     "semantic_hash": ""
   },
   "android/gradlew": {
@@ -730,13 +730,13 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/note_pdf.dart": {
-    "mtime": 1784913608.9308293,
-    "ast_hash": "2a0e7eba9ec8a5a25658c0feb837c1a0",
+    "mtime": 1784924638.6309133,
+    "ast_hash": "dd0c2fd5d4cd32706829c26929c89a36",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/pdf_export_screen.dart": {
-    "mtime": 1784913608.9411604,
-    "ast_hash": "18b35745972e234fef266ce2dca814b6",
+    "mtime": 1784924638.6349132,
+    "ast_hash": "5ce6aa79bd9c9fd28cf5dcde16c838d8",
     "semantic_hash": ""
   },
   "test/doc_text_test.dart": {
@@ -745,8 +745,8 @@
     "semantic_hash": ""
   },
   "test/note_pdf_build_test.dart": {
-    "mtime": 1784457324.2907398,
-    "ast_hash": "fa7048ea261585801f1ed8fbfd7d47ab",
+    "mtime": 1784924638.635913,
+    "ast_hash": "be31f1af072fb71b4bbe9ebe7cbfee0a",
     "semantic_hash": ""
   },
   "test/note_pdf_lines_test.dart": {
@@ -895,8 +895,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1784922353.1769862,
-    "ast_hash": "07911f8ca80f675f02b52ad194c20d77",
+    "mtime": 1784925964.7434037,
+    "ast_hash": "1297d288e40f7b67793f590ec3f5d49b",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -935,8 +935,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/text_wrap.dart": {
-    "mtime": 1784920646.7804785,
-    "ast_hash": "e1fe7d57150656f72808bf871cc91fca",
+    "mtime": 1784924638.633914,
+    "ast_hash": "817e39b24343f3868108c5e0535f8d8b",
     "semantic_hash": ""
   },
   "test/ai_cost_test.dart": {
@@ -945,8 +945,8 @@
     "semantic_hash": ""
   },
   "test/text_wrap_test.dart": {
-    "mtime": 1784920096.3656301,
-    "ast_hash": "062554df2006017d9fab76a576c9f029",
+    "mtime": 1784924638.6369126,
+    "ast_hash": "51e4fd619a8f36e8219723d2e17d0887",
     "semantic_hash": ""
   },
   "test/image_ink_test.dart": {
@@ -957,6 +957,16 @@
   "test/items_editor_wrap_test.dart": {
     "mtime": 1784923891.8260808,
     "ast_hash": "7e5b84f1f017a113ade92008394f23a4",
+    "semantic_hash": ""
+  },
+  "lib/features/notes/presentation/viewers/video_viewer.dart": {
+    "mtime": 1784925072.8686953,
+    "ast_hash": "d604f455e02cf510139a782dd8d65ddc",
+    "semantic_hash": ""
+  },
+  "lib/features/settings/presentation/permissions_onboarding.dart": {
+    "mtime": 1784924681.619282,
+    "ast_hash": "3e26def25b3a30994a58e10173a96571",
     "semantic_hash": ""
   }
 }

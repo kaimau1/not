@@ -141,5 +141,16 @@
   "139": "SpeechOutputController",
   "140": "pdf_text_clean_test.dart",
   "141": "package:flutter/services.dart",
-  "142": "Exception"
+  "142": "Exception",
+  "143": "handle",
+  "144": "return",
+  "145": "note_type.dart",
+  "146": "List",
+  "147": "_FloatRow",
+  "148": "ItemsEditor",
+  "149": "FlutterEngine",
+  "150": "AttachmentRepository?",
+  "151": "attachmentRepositoryProvider",
+  "152": "GeminiService?",
+  "153": "geminiServiceProvider"
 }
