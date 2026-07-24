@@ -899,6 +899,46 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
 
   @override
+  String get permCamera => 'Kamera';
+
+  @override
+  String get permCameraInfo => 'Görüntülü not ve fotoğraf çekimi için gerekli';
+
+  @override
+  String get permOnboardTitle => 'Başlamadan önce';
+
+  @override
+  String get permOnboardInfo =>
+      'Notlar bu izinleri yalnızca sen ilgili özelliği kullanınca ister. Şimdi vermek istersen aşağıdan açabilirsin; sonra Ayarlar > İzinler\'den de değiştirebilirsin.';
+
+  @override
+  String get permOnboardGrantAll => 'İzinleri ver';
+
+  @override
+  String get permOnboardSkip => 'Şimdi değil';
+
+  @override
+  String get newVideoNote => 'Görüntülü not';
+
+  @override
+  String get videoNoteRecording => 'Kamera açılıyor…';
+
+  @override
+  String get videoLocalOnly =>
+      'Bu video yalnızca bu cihazda saklanır (buluta yüklenmez)';
+
+  @override
+  String videoTooLong(int seconds) {
+    return 'Video çok uzun: en fazla $seconds saniye';
+  }
+
+  @override
+  String get videoToNote => 'Videodan not çıkar';
+
+  @override
+  String get videoToNoteRunning => 'Video inceleniyor…';
+
+  @override
   String get permGranted => 'İzin verildi';
 
   @override

@@ -30,6 +30,7 @@ import '../../../ai/presentation/listen_screen.dart';
 import '../../../folders/data/folders_repository.dart';
 import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
+import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
@@ -77,6 +78,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     required this.noteId,
     this.startDrawing = false,
     this.startVoiceCapture = false,
+    this.startVideo = false,
   });
 
   final String noteId;
@@ -88,6 +90,9 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Keep tarzı sesli not modu: editör açılır açılmaz ses kaydı + canlı
   /// döküm başlar; bitişte ses m4a eki olur, döküm notta kalır.
   final bool startVoiceCapture;
+
+  /// (+) menüsündeki "Görüntülü not": açılışta kamera başlatılır.
+  final bool startVideo;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -119,6 +124,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// niyetleri; not gelir gelmez bir kez çalıştırılır.
   bool _pendingDraw = false;
   bool _pendingVoice = false;
+  bool _pendingVideo = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -129,6 +135,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (_pendingVoice) {
       _pendingVoice = false;
       _startVoiceCapture();
+    }
+    if (_pendingVideo) {
+      _pendingVideo = false;
+      _addVideo();
     }
   }
 
@@ -223,6 +233,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // not eline geçtiği anda çalıştırılır.
     _pendingDraw = widget.startDrawing;
     _pendingVoice = widget.startVoiceCapture;
+    _pendingVideo = widget.startVideo;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
@@ -617,6 +628,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 title: Text(l10n.recordAudio),
                 onTap: () => Navigator.pop(sheetContext, 'audio'),
               ),
+            // Görüntülü not da cihaz dosyası ister; web'de kapalı.
+            if (!kIsWeb)
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined),
+                title: Text(l10n.newVideoNote),
+                subtitle: Text(l10n.videoLocalOnly),
+                onTap: () => Navigator.pop(sheetContext, 'video'),
+              ),
             if (_isDesktop)
               ListTile(
                 leading: const Icon(Icons.content_paste),
@@ -638,6 +657,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         await _addDrawing();
       case 'audio':
         await _recordAudio();
+      case 'video':
+        await _addVideo();
       case 'paste':
         await _pasteImage();
     }
@@ -1176,6 +1197,76 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       final service = ref.read(geminiServiceProvider);
       final text = stripMarkdown(
         await service.extractTextFromImage(bytes, image.mimeType),
+      ).trim();
+      if (!mounted || text.isEmpty) return;
+      _appendText(text);
+    } on GeminiException catch (e) {
+      if (mounted) {
+        _showSnack(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
+      }
+    } catch (e) {
+      if (mounted) _showSnack(l10n.aiError('$e'));
+    }
+  }
+
+  /// Görüntülü not: kamerayla video çeker ve nota ek yapar. Video buluta
+  /// GİTMEZ, yalnızca cihazda kalır (kullanıcı isteği). Süre sınırı, videonun
+  /// AI'a satır içi gönderilebilmesi için gerekir — uzun kayıt modelin boyut
+  /// sınırına takılır.
+  static const _maxVideoSeconds = 60;
+
+  Future<void> _addVideo() async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
+    // olmadan REDDEDER (image_picker'ın kendisi istemez). İlk açılış
+    // tanıtımını atlayan kullanıcıda burada sorulur.
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) _showSnack(l10n.permCameraInfo);
+      return;
+    }
+    if (!mounted) return;
+    try {
+      final picked = await ImagePicker().pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(seconds: _maxVideoSeconds),
+      );
+      if (picked == null || !mounted) return;
+      final attachment = await repo.prepareVideo(
+        noteId: widget.noteId,
+        sourcePath: picked.path,
+        duration: Duration.zero,
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+      if (mounted) _showSnack(l10n.videoLocalOnly);
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+    }
+  }
+
+  /// Videodan (görüntü + ses) detaylı not çıkarır ve gövdeye ekler.
+  Future<void> _videoToNote(Attachment video) async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    final bytes = await repo.readBytes(video);
+    if (!mounted) return;
+    if (bytes == null) {
+      _showSnack(l10n.attachmentNotSynced);
+      return;
+    }
+    _showSnack(l10n.videoToNoteRunning);
+    try {
+      final text = stripMarkdown(
+        await ref.read(geminiServiceProvider).noteFromVideo(
+          bytes,
+          video.mimeType,
+        ),
       ).trim();
       if (!mounted || text.isEmpty) return;
       _appendText(text);
@@ -1778,6 +1869,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ],
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
+          onVideoToNote: _videoToNote,
         ),
       ],
     );
@@ -1942,7 +2034,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   case 'pdf':
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => PdfExportScreen(note: note),
+                        builder: (_) => PdfExportScreen(
+                          note: note,
+                          // Sayfa ölçüleri: görseller dışa aktarmada da
+                          // nottaki yerlerinde çıksın.
+                          layout: () {
+                            final box = _pageBox();
+                            if (box == null) return null;
+                            return (
+                              bodyTop: _bodyTop,
+                              pageWidth: box.size.width,
+                              pageHeight: box.size.height,
+                            );
+                          }(),
+                        ),
                       ),
                     );
                   case 'listen':

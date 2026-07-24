@@ -239,9 +239,45 @@ class AttachmentRepository {
     );
   }
 
+  /// Görüntülü not: kamerayla çekilen videoyu YALNIZCA cihaza kopyalar.
+  /// Buluta hiç gitmez (kullanıcı isteği) — bu yüzden boyut sınırı da
+  /// uygulanmaz, dosya zaten cihazdan çıkmıyor. Uygulama silinirse ya da
+  /// başka cihaza geçilirse video kaybolur; bu bilinçli bir takas.
+  Future<Attachment> prepareVideo({
+    required String noteId,
+    required String sourcePath,
+    required Duration duration,
+  }) async {
+    if (kIsWeb) {
+      throw UnsupportedError('Tarayıcıda görüntülü not desteklenmiyor.');
+    }
+    final source = File(sourcePath);
+    final sizeBytes = await source.length();
+    final id = _uuid.v4();
+    final ext = p.extension(sourcePath).isEmpty
+        ? '.mp4'
+        : p.extension(sourcePath);
+    final fileName = 'goruntu_${duration.inSeconds}s$ext';
+    final dir = await _attachmentsDir(noteId);
+    final file = await source.copy(p.join(dir.path, '${id}_$fileName'));
+
+    return Attachment(
+      id: id,
+      kind: AttachmentKind.video,
+      fileName: fileName,
+      mimeType: ext == '.mov' ? 'video/quicktime' : 'video/mp4',
+      localPath: file.path,
+      sizeBytes: sizeBytes,
+      createdAt: DateTime.now(),
+    );
+  }
+
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
   /// indirme adresiyle birlikte güncellenmiş metadata'yı döner.
   Future<Attachment?> upload(String noteId, Attachment attachment) async {
+    // Görüntülü not cihazda kalır: kuyruk atlasa da burada ikinci bir kapı
+    // var — yeni bir çağrı yeri eklenirse video yine yüklenmesin.
+    if (attachment.kind == AttachmentKind.video) return null;
     if (attachment.isUploaded || attachment.localPath.isEmpty) return null;
     final file = File(attachment.localPath);
     if (!await file.exists()) return null;

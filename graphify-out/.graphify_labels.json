@@ -139,5 +139,7 @@
   "137": "WrapFieldMeasure",
   "138": "SpeechVoice",
   "139": "SpeechOutputController",
-  "140": "pdf_text_clean_test.dart"
+  "140": "pdf_text_clean_test.dart",
+  "141": "package:flutter/services.dart",
+  "142": "Exception"
 }

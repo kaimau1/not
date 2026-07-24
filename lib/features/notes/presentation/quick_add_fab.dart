@@ -22,6 +22,7 @@ class QuickAddFab extends StatefulWidget {
     required this.onCreate,
     required this.onHandwriting,
     required this.onVoiceCapture,
+    required this.onVideoNote,
   });
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
@@ -34,6 +35,9 @@ class QuickAddFab extends StatefulWidget {
 
   /// Keep tarzı sesli not: ses kaydı + canlı döküm birlikte.
   final VoidCallback onVoiceCapture;
+
+  /// Görüntülü not: kamera açılır, video yalnızca cihazda saklanır.
+  final VoidCallback onVideoNote;
 
   @override
   State<QuickAddFab> createState() => _QuickAddFabState();
@@ -76,6 +80,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
                     icon: Icons.graphic_eq,
                     label: context.l10n.newVoiceCapture,
                     onTap: widget.onVoiceCapture,
+                  ),
+                  _option(
+                    icon: Icons.videocam_outlined,
+                    label: context.l10n.newVideoNote,
+                    onTap: widget.onVideoNote,
                   ),
                   _option(
                     icon: Icons.draw_outlined,

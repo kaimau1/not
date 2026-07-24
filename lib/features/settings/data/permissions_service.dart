@@ -48,6 +48,27 @@ class PermissionsService {
     }
   }
 
+  /// Kamera izni verilmiş mi? (sistem iletişim kutusu AÇMADAN okur)
+  Future<bool> cameraGranted() async {
+    if (!_isAndroid) return true;
+    try {
+      return await _channel.invokeMethod<bool>('cameraPermissionGranted') ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Kamera iznini ister (görüntülü/fotoğraflı not için).
+  Future<bool> requestCamera() async {
+    if (!_isAndroid) return true;
+    try {
+      return await _channel.invokeMethod<bool>('requestCamera') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Bildirim izni açık mı? (sistem iletişim kutusu AÇMADAN okur)
   Future<bool> notificationsGranted() async {
     if (!_isAndroid) return true;

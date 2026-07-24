@@ -69,32 +69,68 @@ abstract final class NotePdf {
               padding: const pw.EdgeInsets.only(top: 12, bottom: 6),
               child: pw.Divider(height: 1, color: PdfColors.grey400),
             ),
-          for (final line in lines) _lineWidget(line),
-          // Görseller (el yazısı çizimleri dahil) metnin ardından, sayfa
-          // genişliğine sığdırılarak eklenir (madde: "resimler dahil").
-          for (final image in images) _imageWidget(image, format),
+          // Görseller (el yazısı çizimleri dahil) NOTTAKİ YERLERİNE girer:
+          // hangi satırdan önce durduğu, genişliği ve hizası nottan gelir.
+          // Düzen bilgisi olmayan görsel (ör. paylaş menüsünden dışa aktarma)
+          // eskisi gibi metnin sonuna eklenir.
+          ..._withImages(lines, images, format),
         ],
       ),
     );
     return doc.save();
   }
 
-  /// Görseli içerik genişliğine ölçekler; sayfadan taşmasın diye yükseklik
-  /// da sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
+  /// Satırları ve görselleri nottaki sıraya göre birleştirir: her görsel,
+  /// [ExportImage.line] ile verilen satırdan ÖNCE gelir.
+  static List<pw.Widget> _withImages(
+    List<PdfLine> lines,
+    List<ExportImage> images,
+    PdfPageFormat format,
+  ) {
+    final placed = [
+      for (final i in images)
+        if (i.line != null) i,
+    ]..sort((a, b) => a.line!.compareTo(b.line!));
+    final trailing = [
+      for (final i in images)
+        if (i.line == null) i,
+    ];
+    final out = <pw.Widget>[];
+    var next = 0;
+    for (var index = 0; index < lines.length; index++) {
+      while (next < placed.length && placed[next].line! <= index) {
+        out.add(_imageWidget(placed[next++], format));
+      }
+      out.add(_lineWidget(lines[index]));
+    }
+    for (; next < placed.length; next++) {
+      out.add(_imageWidget(placed[next], format));
+    }
+    out.addAll([for (final i in trailing) _imageWidget(i, format)]);
+    return out;
+  }
+
+  /// Görseli nottaki oranıyla ölçekler; sayfadan taşmasın diye yükseklik de
+  /// sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
   static pw.Widget _imageWidget(ExportImage image, PdfPageFormat format) {
     final contentWidth = format.width - 52 - 52;
     final maxHeight = format.height - 56 - 44 - 24;
     final iw = image.width <= 0 ? 480.0 : image.width.toDouble();
     final ih = image.height <= 0 ? 360.0 : image.height.toDouble();
-    var w = contentWidth;
+    var w = contentWidth * (image.widthFraction ?? 1).clamp(0.1, 1.0);
     var h = w * ih / iw;
     if (h > maxHeight) {
       h = maxHeight;
       w = h * iw / ih;
     }
     return pw.Padding(
-      padding: const pw.EdgeInsets.only(top: 10),
-      child: pw.Center(
+      padding: const pw.EdgeInsets.symmetric(vertical: 6),
+      child: pw.Align(
+        alignment: switch (image.align) {
+          ExportAlign.left => pw.Alignment.centerLeft,
+          ExportAlign.right => pw.Alignment.centerRight,
+          ExportAlign.center => pw.Alignment.center,
+        },
         child: pw.Image(
           pw.MemoryImage(image.bytes),
           width: w,
@@ -271,12 +307,25 @@ class ExportImage {
     required this.width,
     required this.height,
     this.mimeType = 'image/jpeg',
+    this.line,
+    this.widthFraction,
+    this.align = ExportAlign.center,
   });
 
   final Uint8List bytes;
   final int width;
   final int height;
   final String mimeType;
+
+  /// Görselin nota göre yeri: metnin KAÇINCI satırından önce gelmeli.
+  /// null ise (düzen bilgisi yok) metnin sonuna eklenir.
+  final int? line;
+
+  /// Sayfa genişliğine oranı (nottaki boyutu). null ise tam genişlik.
+  final double? widthFraction;
+
+  /// Yatay hizası — nottaki x konumundan gelir.
+  final ExportAlign align;
 
   String get extension => switch (mimeType) {
     'image/png' => 'png',
@@ -285,6 +334,9 @@ class ExportImage {
     _ => 'jpg',
   };
 }
+
+/// Dışa aktarılan görselin yatay hizası (nottaki x konumundan türetilir).
+enum ExportAlign { left, center, right }
 
 enum PdfLineKind { blank, paragraph, checked, unchecked, bullet, numbered }
 

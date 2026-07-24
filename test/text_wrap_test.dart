@@ -157,6 +157,30 @@ void main() {
     expect(wrapToDisplayOffset('${kWrapAnchorChar}abc', 0), 1);
   });
 
+  test('satir basinda geri silme ust satira gecer (dolguyu yemez)', () {
+    final c = WrapTextController()
+      ..updateLayout(
+        floats: const [FloatBox(top: 0, left: 0, right: 120, height: 400)],
+        style: style,
+        columnWidth: 300,
+      );
+    c.text = 'birinci\nikinci';
+    // Imleci ikinci satirin basina koy (mantiksal 8 = '\n' sonrasi).
+    final caret = wrapToDisplayOffset(c.text, 8);
+    c.selection = TextSelection.collapsed(offset: caret);
+    expect(c.logicalText, 'birinci\nikinci');
+
+    // Geri silme: duzenleyici, imlecin SOLUNDAKI karakteri (satir basi
+    // dolgusunu) silen bir deger gonderir.
+    final display = c.text;
+    c.value = TextEditingValue(
+      text: display.replaceRange(caret - 1, caret, ''),
+      selection: TextSelection.collapsed(offset: caret - 1),
+    );
+    // Beklenen: satir sonu silinir, iki satir birlesir.
+    expect(c.logicalText, 'birinciikinci');
+  });
+
   test('capa temizleme nota giden govdeyi bozmadan birakir', () {
     const withAnchors =
         'a${kWrapAnchorChar}bc$kWrapGlueChar${kWrapAnchorChar}d';

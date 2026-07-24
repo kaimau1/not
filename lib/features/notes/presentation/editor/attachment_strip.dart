@@ -9,6 +9,7 @@ import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
+import '../viewers/video_viewer.dart';
 
 /// Editörde gövdenin üstünde duran yatay ek şeridi.
 class AttachmentStrip extends StatelessWidget {
@@ -17,10 +18,14 @@ class AttachmentStrip extends StatelessWidget {
     required this.attachments,
     required this.onRemove,
     this.onChanged,
+    this.onVideoToNote,
   });
 
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
+
+  /// Görüntülü nottan AI ile detaylı not çıkarır. null ise düğme gizlenir.
+  final Future<void> Function(Attachment)? onVideoToNote;
 
   /// PDF üzerine yapılan çizim kaydedilirken çağrılır; verilmezse PDF salt
   /// görüntülenir.
@@ -40,6 +45,7 @@ class AttachmentStrip extends StatelessWidget {
           attachment: attachments[index],
           onRemove: () => onRemove(attachments[index]),
           onChanged: onChanged,
+          onVideoToNote: onVideoToNote,
         ),
       ),
     );
@@ -143,11 +149,13 @@ class _AttachmentTile extends StatelessWidget {
     required this.attachment,
     required this.onRemove,
     this.onChanged,
+    this.onVideoToNote,
   });
 
   final Attachment attachment;
   final VoidCallback onRemove;
   final ValueChanged<Attachment>? onChanged;
+  final Future<void> Function(Attachment)? onVideoToNote;
 
   bool get _hasLocal =>
       attachment.localPath.isNotEmpty &&
@@ -173,6 +181,7 @@ class _AttachmentTile extends StatelessWidget {
             attachment: attachment,
             onChanged: onChanged,
           ),
+          AttachmentKind.video => VideoViewerScreen(attachment: attachment),
           _ => ImageViewerScreen(attachment: attachment, onChanged: onChanged),
         },
       ),
@@ -202,6 +211,51 @@ class _AttachmentTile extends StatelessWidget {
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall,
             ),
+          ],
+        ),
+      );
+    } else if (attachment.kind == AttachmentKind.video) {
+      // Görüntülü not: yalnız cihazda saklandığı için bulut simgesi yerine
+      // "cihazda" bilgisi verilir; dokununca uygulama içinde oynatılır.
+      content = Container(
+        width: 140,
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.play_circle_outline, color: scheme.primary, size: 28),
+            const SizedBox(height: 6),
+            Text(
+              attachment.fileName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            Text(
+              context.l10n.videoLocalOnly,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontSize: 9,
+              ),
+            ),
+            if (onVideoToNote != null)
+              TextButton.icon(
+                onPressed: () => onVideoToNote!(attachment),
+                icon: const Icon(Icons.auto_awesome, size: 14),
+                label: Text(
+                  context.l10n.videoToNote,
+                  style: const TextStyle(fontSize: 10),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  minimumSize: const Size(0, 28),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
           ],
         ),
       );

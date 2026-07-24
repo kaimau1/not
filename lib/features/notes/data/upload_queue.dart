@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../settings/settings_providers.dart';
+import '../domain/attachment.dart';
 import '../domain/note.dart';
 import 'attachment_repository.dart';
 import 'notes_repository.dart';
@@ -69,6 +70,8 @@ class UploadQueue {
 
     for (final note in notes) {
       for (final attachment in note.attachments) {
+        // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
+        if (attachment.kind == AttachmentKind.video) continue;
         if (attachment.isUploaded || attachment.localPath.isEmpty) continue;
         if (limitBytes != null && attachment.sizeBytes > limitBytes) continue;
         final key = '${note.id}/${attachment.id}';

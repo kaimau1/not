@@ -316,6 +316,7 @@ class _PermissionsSection extends ConsumerStatefulWidget {
 class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
     with WidgetsBindingObserver {
   bool? _mic;
+  bool? _camera;
   bool? _notifications;
 
   @override
@@ -340,13 +341,22 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
   Future<void> _refresh() async {
     final service = ref.read(permissionsServiceProvider);
     final mic = await service.micGranted();
+    final camera = await service.cameraGranted();
     final notifications = await service.notificationsGranted();
     if (mounted) {
       setState(() {
         _mic = mic;
+        _camera = camera;
         _notifications = notifications;
       });
     }
+  }
+
+  Future<void> _requestCamera() async {
+    final service = ref.read(permissionsServiceProvider);
+    final ok = await service.requestCamera();
+    if (!ok) await service.openAppSettings();
+    await _refresh();
   }
 
   Future<void> _requestMic() async {
@@ -377,6 +387,13 @@ class _PermissionsSectionState extends ConsumerState<_PermissionsSection>
           subtitle: l10n.permMicInfo,
           granted: _mic,
           onAction: _requestMic,
+        ),
+        _PermissionTile(
+          icon: Icons.videocam_outlined,
+          title: l10n.permCamera,
+          subtitle: l10n.permCameraInfo,
+          granted: _camera,
+          onAction: _requestCamera,
         ),
         _PermissionTile(
           icon: Icons.notifications_none,

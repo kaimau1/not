@@ -20,9 +20,15 @@ import 'viewers/pdf_viewer_screen.dart';
 /// yazmaya gerek kalmadı. Notun görselleri (el yazısı çizimleri dahil)
 /// istenirse iki biçime de gömülür.
 class PdfExportScreen extends ConsumerStatefulWidget {
-  const PdfExportScreen({super.key, required this.note});
+  const PdfExportScreen({super.key, required this.note, this.layout});
 
   final Note note;
+
+  /// Notun EKRANDAKİ sayfa ölçüleri (editörden gelir): görsellerin metnin
+  /// neresinde durduğunu bulmak için gerekir. Eskiden tüm görseller metnin
+  /// SONUNA ekleniyordu — dışa aktarılan belge nottaki düzene benzemiyordu.
+  /// null ise (paylaş menüsünden çağrı) eski davranış sürer.
+  final ({double bodyTop, double pageWidth, double pageHeight})? layout;
 
   @override
   ConsumerState<PdfExportScreen> createState() => _PdfExportScreenState();
@@ -78,6 +84,9 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             width: a.width ?? 0,
             height: a.height ?? 0,
             mimeType: a.mimeType,
+            line: _lineFor(a),
+            widthFraction: widget.layout == null ? null : a.displayWidth,
+            align: _alignFor(a),
           ),
         );
       } catch (_) {
@@ -85,6 +94,48 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       }
     }
     return out;
+  }
+
+  /// Görselin nottaki dikey yerini, dışa aktarılan metnin satır sırasına
+  /// çevirir. Metin notunda konum BİREBİR hesaplanır: ekrandaki sütun
+  /// genişliği ve yazı stiliyle dizilen metinde, görselin üst kenarının
+  /// düştüğü satır bulunur. Liste notlarında satırlar ayrı alanlar olduğundan
+  /// oranla (görselin sayfadaki yeri / sayfa yüksekliği) yaklaşılır.
+  int? _lineFor(Attachment a) {
+    final layout = widget.layout;
+    if (layout == null || a.pageY == null) return null;
+    final content = _content.text;
+    if (content.isEmpty) return 0;
+    final bandTop = a.pageY! - layout.bodyTop;
+    if (bandTop <= 0) return 0;
+    if (widget.note.type == NoteType.text) {
+      final style = Theme.of(context).textTheme.bodyLarge;
+      final painter = TextPainter(
+        text: TextSpan(text: content, style: style),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: (layout.pageWidth - 32).clamp(1.0, double.infinity));
+      final offset = painter
+          .getPositionForOffset(Offset(0, bandTop))
+          .offset
+          .clamp(0, content.length);
+      painter.dispose();
+      return '\n'.allMatches(content.substring(0, offset)).length;
+    }
+    final body = (layout.pageHeight - layout.bodyTop).clamp(
+      1.0,
+      double.infinity,
+    );
+    final lineCount = '\n'.allMatches(content).length + 1;
+    return ((bandTop / body) * lineCount).round().clamp(0, lineCount);
+  }
+
+  /// Nottaki yatay konumdan hiza: sol çeyrekte sola, sağ çeyrekte sağa yaslı.
+  ExportAlign _alignFor(Attachment a) {
+    if (widget.layout == null || a.x == null) return ExportAlign.center;
+    final center = a.x! + (a.displayWidth ?? 0.5) / 2;
+    if (center < 0.4) return ExportAlign.left;
+    if (center > 0.6) return ExportAlign.right;
+    return ExportAlign.center;
   }
 
   DateTime? get _date => _includeDate

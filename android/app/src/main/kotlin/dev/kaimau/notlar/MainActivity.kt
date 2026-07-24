@@ -84,6 +84,31 @@ class MainActivity : FlutterFragmentActivity() {
                         ) == PackageManager.PERMISSION_GRANTED
                         result.success(granted)
                     }
+                    // Kamera izni: yalnızca OKUR (görüntülü not için gerekir).
+                    "cameraPermissionGranted" -> {
+                        val granted = ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        result.success(granted)
+                    }
+                    // Kamera iznini İSTER: sistem kutusu açılır, sonuç
+                    // onRequestPermissionsResult ile aynı çağrıya döner.
+                    "requestCamera" -> {
+                        val granted = ContextCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+                        if (granted) {
+                            result.success(true)
+                        } else {
+                            cameraResult = result
+                            requestPermissions(
+                                arrayOf(Manifest.permission.CAMERA),
+                                cameraRequestCode
+                            )
+                        }
+                    }
                     // Uygulama detay ayarları: kullanıcı kalıcı reddettiği bir
                     // izni buradan elle açabilir.
                     "openAppSettings" -> {
@@ -108,6 +133,24 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    // Kamera izin isteğinin bekleyen yanıtı (aynı anda tek istek olur).
+    private var cameraResult: MethodChannel.Result? = null
+    private val cameraRequestCode = 4711
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == cameraRequestCode) {
+            val granted = grantResults.isNotEmpty() &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED
+            cameraResult?.success(granted)
+            cameraResult = null
+        }
     }
 
     private fun appDetailsIntent(): Intent =

@@ -74,6 +74,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               startDrawing: state.uri.queryParameters['draw'] == '1',
               // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
               startVoiceCapture: state.uri.queryParameters['voice'] == '1',
+              // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
+              startVideo: state.uri.queryParameters['video'] == '1',
             ),
           ),
         ],

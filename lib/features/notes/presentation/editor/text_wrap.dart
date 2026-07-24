@@ -456,13 +456,25 @@ class WrapTextController extends TextEditingController {
       super.value = newValue;
       return;
     }
-    final logical = stripWrapAnchors(newValue.text);
-    final caret = wrapToLogicalOffset(
+    var logical = stripWrapAnchors(newValue.text);
+    var caret = wrapToLogicalOffset(
       newValue.text,
       newValue.selection.baseOffset < 0
           ? newValue.text.length
           : newValue.selection.baseOffset,
     );
+    // SATIR BAŞINDA GERİ SİLME: imleç satır başı dolgusunun hemen ardındadır,
+    // dolayısıyla geri silme gerçek metni değil DOLGUYU siler. Eski hâlinde
+    // dolgu bir sonraki dizgide yeniden konuyor, kullanıcıya "silme satır
+    // başında duruyor, üst satıra geçmiyor" gibi görünüyordu. Mantıksal metin
+    // hiç değişmeden tampon kısaldıysa niyet açıktır: ÖNCEKİ karakteri sil
+    // (satır başındaki karakter satır sonu ise satırlar birleşir).
+    if (logical == logicalText &&
+        newValue.text.length < text.length &&
+        caret > 0) {
+      logical = logical.replaceRange(caret - 1, caret, '');
+      caret--;
+    }
     _reflow(logical, caret);
   }
 

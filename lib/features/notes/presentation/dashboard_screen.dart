@@ -14,6 +14,7 @@ import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -56,7 +57,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
     // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
     // sonra kontrol et; take() varsa asistanı başlatır.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutostartVoice());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeAutostartVoice();
+      // İlk açılışta izin tanıtımı (bir kez).
+      if (mounted) PermissionsOnboarding.maybeShow(context, ref);
+    });
   }
 
   /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
@@ -314,6 +319,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
     if (mounted) await context.push('/note/$id?voice=1');
+  }
+
+  /// Görüntülü not: not oluşturulur ve editör açılır açılmaz kamera açılır;
+  /// çekilen video YALNIZCA cihazda saklanır (buluta yüklenmez).
+  Future<void> _createVideoNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (mounted) await context.push('/note/$id?video=1');
   }
 
   @override
@@ -690,6 +706,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
                           onVoiceCapture: _createVoiceCaptureNote,
+                          onVideoNote: _createVideoNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,
                           onHandwriting: _createHandwritingNote,

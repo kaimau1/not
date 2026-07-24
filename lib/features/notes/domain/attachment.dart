@@ -4,7 +4,10 @@ enum AttachmentKind {
   image('image'),
   pdf('pdf'),
   audio('audio'),
-  slide('slide');
+  slide('slide'),
+  /// Görüntülü not. YALNIZCA CİHAZDA kalır — Storage'a hiç yüklenmez
+  /// (bkz. UploadQueue), bu yüzden cihazlar arasında senkronlanmaz.
+  video('video');
 
   const AttachmentKind(this.id);
 

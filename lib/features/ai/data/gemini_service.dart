@@ -469,6 +469,26 @@ class GeminiService {
         },
       ]);
 
+  /// Görüntülü nottan (video: görüntü + ses birlikte) detaylı bir not çıkarır.
+  /// Modele videonun tamamı gider; süre sınırı çağıran tarafta uygulanır
+  /// (satır içi gönderim boyutu sınırlıdır).
+  Future<String> noteFromVideo(Uint8List bytes, String mimeType) => _generate([
+    {
+      'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+    },
+    {
+      'text':
+          'Bu videoyu (hem görüntü hem ses) incele ve Türkçe, detaylı bir '
+          'nota dönüştür. Yapı (her başlık kendi satırında, düz metin): '
+          '"Özet" — 1-3 cümle; "Görülenler" — görüntüdeki önemli ayrıntılar '
+          '(yazı, tahta, ekran, belge, ortam) "- " ile madde madde; '
+          '"Konuşulanlar" — söylenenlerin özeti ya da varsa dökümü; '
+          '"Yapılacaklar" — videodan çıkan iş/hatırlatma varsa madde madde, '
+          'yoksa bu başlığı hiç yazma. Videoda olmayan şeyi uydurma. '
+          'Markdown kullanma: yıldız, kalın işareti veya # koyma.',
+    },
+  ]).then(stripMarkdown);
+
   /// Ses kaydını yazıya döker.
   Future<String> transcribeAudio(Uint8List bytes, String mimeType) =>
       _generate([

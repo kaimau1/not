@@ -1744,6 +1744,78 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
   String get permBatteryInfo;
 
+  /// No description provided for @permCamera.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera'**
+  String get permCamera;
+
+  /// No description provided for @permCameraInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntülü not ve fotoğraf çekimi için gerekli'**
+  String get permCameraInfo;
+
+  /// No description provided for @permOnboardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlamadan önce'**
+  String get permOnboardTitle;
+
+  /// No description provided for @permOnboardInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar bu izinleri yalnızca sen ilgili özelliği kullanınca ister. Şimdi vermek istersen aşağıdan açabilirsin; sonra Ayarlar > İzinler\'den de değiştirebilirsin.'**
+  String get permOnboardInfo;
+
+  /// No description provided for @permOnboardGrantAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzinleri ver'**
+  String get permOnboardGrantAll;
+
+  /// No description provided for @permOnboardSkip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi değil'**
+  String get permOnboardSkip;
+
+  /// No description provided for @newVideoNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntülü not'**
+  String get newVideoNote;
+
+  /// No description provided for @videoNoteRecording.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamera açılıyor…'**
+  String get videoNoteRecording;
+
+  /// No description provided for @videoLocalOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu video yalnızca bu cihazda saklanır (buluta yüklenmez)'**
+  String get videoLocalOnly;
+
+  /// No description provided for @videoTooLong.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video çok uzun: en fazla {seconds} saniye'**
+  String videoTooLong(int seconds);
+
+  /// No description provided for @videoToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videodan not çıkar'**
+  String get videoToNote;
+
+  /// No description provided for @videoToNoteRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video inceleniyor…'**
+  String get videoToNoteRunning;
+
   /// No description provided for @permGranted.
   ///
   /// In tr, this message translates to:

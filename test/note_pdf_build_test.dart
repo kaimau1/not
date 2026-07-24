@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -42,5 +43,40 @@ void main() {
   test('boş içerik de geçerli PDF verir', () async {
     final bytes = await NotePdf.build(title: '', content: '');
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
+  });
+
+  test('görsel nottaki satırına girer, metnin sonuna atılmaz', () async {
+    // 1x1 saydam PNG — içeriği önemsiz, yerleşimi ölçülüyor.
+    final png = base64Decode(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmM'
+      'IQAAAABJRU5ErkJggg==',
+    );
+    const content = 'birinci satir\nikinci satir\nucuncu satir\ndorduncu satir';
+    final ortada = await NotePdf.build(
+      title: 'Yerlesim',
+      content: content,
+      images: [
+        ExportImage(
+          bytes: png,
+          width: 100,
+          height: 100,
+          mimeType: 'image/png',
+          line: 2,
+          widthFraction: 0.3,
+          align: ExportAlign.right,
+        ),
+      ],
+    );
+    final sonda = await NotePdf.build(
+      title: 'Yerlesim',
+      content: content,
+      images: [
+        ExportImage(bytes: png, width: 100, height: 100, mimeType: 'image/png'),
+      ],
+    );
+    expect(String.fromCharCodes(ortada.take(5)), '%PDF-');
+    // Aynı içerik + aynı görsel farklı YERE konduğunda belge de farklı olur;
+    // birebir aynıysa satır bilgisi yok sayılmış demektir.
+    expect(ortada.length == sonda.length && ortada[900] == sonda[900], isFalse);
   });
 }
