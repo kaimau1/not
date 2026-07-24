@@ -76,6 +76,7 @@ class Attachment {
     this.align = 'center',
     this.x,
     this.y,
+    this.pageY,
     this.ink = const [],
     this.createdAt,
   });
@@ -110,6 +111,13 @@ class Attachment {
   final double? x;
   final double? y;
 
+  /// Metin notunda TAM SAYFA serbest yerleşim: görselin üst kenarının sayfa
+  /// içeriğinin tepesinden uzaklığı (dp). Sabit oranlı küçük tuvalin aksine
+  /// sayfa yüksekliği metinle değişir; oran yerine mutlak dp saklanır ki metin
+  /// uzayınca görsel yerinden oynamasın. null = eski görsel — [y] oranından
+  /// bir kez çevrilir. Yatay konum [x] (genişlik oranı) ile ortak.
+  final double? pageY;
+
   /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
   final List<InkStroke> ink;
   final DateTime? createdAt;
@@ -124,6 +132,7 @@ class Attachment {
     String? align,
     double? x,
     double? y,
+    double? pageY,
     List<InkStroke>? ink,
   }) => Attachment(
     id: id,
@@ -140,6 +149,7 @@ class Attachment {
     align: align ?? this.align,
     x: x ?? this.x,
     y: y ?? this.y,
+    pageY: pageY ?? this.pageY,
     ink: ink ?? this.ink,
     createdAt: createdAt,
   );
@@ -159,6 +169,7 @@ class Attachment {
     align: map['align'] as String? ?? 'center',
     x: (map['x'] as num?)?.toDouble(),
     y: (map['y'] as num?)?.toDouble(),
+    pageY: (map['pageY'] as num?)?.toDouble(),
     ink: [
       for (final e in (map['ink'] as List?) ?? const [])
         InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
@@ -181,6 +192,7 @@ class Attachment {
     'align': align,
     if (x != null) 'x': x,
     if (y != null) 'y': y,
+    if (pageY != null) 'pageY': pageY,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

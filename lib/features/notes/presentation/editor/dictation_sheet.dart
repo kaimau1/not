@@ -82,8 +82,14 @@ class _DictationSheetState extends ConsumerState<_DictationSheet> {
       _phase = _Phase.listening;
       _errorMessage = '';
     });
+    final micDenied = context.l10n.micPermissionDenied;
     try {
       if (_useSpeech) {
+        // İzin yokken SpeechRecognizer sormadan hata verir; önce iste.
+        if (!await DeviceSpeech.ensureMicPermission()) {
+          _fail(micDenied);
+          return;
+        }
         _speechSub = DeviceSpeech.listen().listen(
           (event) {
             // Dikte sayfasında ses seviyesi kullanılmaz; yalnız metin akar.

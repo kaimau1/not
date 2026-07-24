@@ -32,6 +32,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     onChanged: (strokes) =>
         widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
   );
+  final _pdf = PdfViewerController();
 
   /// Çizim modu ekran durumu. Görüntüleyici YALNIZ bu değişince yeniden kurulur
   /// (pdfrx `panEnabled`/`enableTextSelection` değişimi belgeyi yeniden yüklüyor);
@@ -63,9 +64,12 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     final params = PdfViewerParams(
       // Çizim modunda metin seçimi kapalı (seçim katmanı parmağı kapıyor).
       enableTextSelection: !_editing,
-      // Çizimde tek parmak çizer (pan kapalı), iki parmak yakınlaştırır
-      // (scaleEnabled varsayılan açık). Normalde tam kaydırma+yakınlaştırma.
+      // Çizimde görüntüleyicinin KENDİ jestleri tamamen kapalı: tek parmak
+      // çizer, iki parmak yakınlaştırma+kaydırmayı InkNavLayer matrise uygular
+      // (görüntüleyicinin tanıyıcısı iki parmağın birlikte hareketini "pan"
+      // sayıp panEnabled:false'ta yutuyordu). Normalde tam kaydırma+yakınlaştırma.
       panEnabled: !_editing,
+      scaleEnabled: !_editing,
       pageOverlaysBuilder: (context, pageRect, page) => [
         Positioned.fill(
           child: InkPageLayer(controller: _ink, page: page.pageNumber),
@@ -75,14 +79,33 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
     Widget viewer;
     if (hasLocal) {
-      viewer = PdfViewer.file(attachment.localPath, params: params);
+      viewer = PdfViewer.file(
+        attachment.localPath,
+        controller: _pdf,
+        params: params,
+      );
     } else if (attachment.isUploaded) {
-      viewer = PdfViewer.uri(Uri.parse(attachment.downloadUrl), params: params);
+      viewer = PdfViewer.uri(
+        Uri.parse(attachment.downloadUrl),
+        controller: _pdf,
+        params: params,
+      );
     } else {
       viewer = const Center(
         child: Icon(Icons.picture_as_pdf_outlined, size: 64),
       );
     }
+    viewer = InkNavLayer(
+      enabled: _editing,
+      controller: _ink,
+      getMatrix: () => _pdf.isReady ? _pdf.value : null,
+      // pdfrx value setter'ı matrisi kendisi normalleştirir (konum + min ölçek);
+      // üst sınırı InkNavLayer maxScale ile tutar.
+      setMatrix: (m) => _pdf.value = m,
+      minScale: 0.1,
+      maxScale: 8,
+      child: viewer,
+    );
 
     return PopScope(
       onPopInvokedWithResult: (_, _) => _ink.save(),

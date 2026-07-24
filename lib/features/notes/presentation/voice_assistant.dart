@@ -104,6 +104,15 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     try {
       _useSpeech = await DeviceSpeech.isAvailable();
       if (_useSpeech) {
+        // İzin yokken SpeechRecognizer sormadan sessizce düşer; önce iste.
+        if (!await DeviceSpeech.ensureMicPermission()) {
+          await _teardownMic();
+          state = VoiceAssistantState(
+            phase: VoiceAssistantPhase.error,
+            message: micPermissionDeniedText,
+          );
+          return;
+        }
         _speechSub = DeviceSpeech.listen().listen(
           (event) {
             final text = event.text;

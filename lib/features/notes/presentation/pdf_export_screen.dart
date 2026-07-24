@@ -1,30 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../data/attachment_repository.dart';
+import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'viewers/pdf_viewer_screen.dart';
 
-/// Notu PDF'e aktarmadan önce düzenleme ekranı.
+/// Notu PDF'e ya da Word'e (.docx) aktarmadan önce düzenleme ekranı.
 ///
 /// Başlık ve içerik ayrı ayrı düzenlenebilir; içerik tek bir düz metin
 /// kutusudur ve yapı satır başlarındaki işaretlerden okunur (`[x]`, `1.`,
 /// `-`). Böylece kullanıcı madde ekleyip silebiliyor, işaretli/işaretsiz
 /// durumu da metinle birlikte taşınıyor — ayrı bir liste düzenleyicisi
-/// yazmaya gerek kalmadı.
-class PdfExportScreen extends StatefulWidget {
+/// yazmaya gerek kalmadı. Notun görselleri (el yazısı çizimleri dahil)
+/// istenirse iki biçime de gömülür.
+class PdfExportScreen extends ConsumerStatefulWidget {
   const PdfExportScreen({super.key, required this.note});
 
   final Note note;
 
   @override
-  State<PdfExportScreen> createState() => _PdfExportScreenState();
+  ConsumerState<PdfExportScreen> createState() => _PdfExportScreenState();
 }
 
-class _PdfExportScreenState extends State<PdfExportScreen> {
+class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   late final TextEditingController _title = TextEditingController(
     text: widget.note.title.trim(),
   );
@@ -32,7 +36,11 @@ class _PdfExportScreenState extends State<PdfExportScreen> {
     text: _contentOf(widget.note),
   );
   bool _includeDate = true;
+  bool _includeImages = true;
   bool _busy = false;
+
+  bool get _hasImages =>
+      widget.note.attachments.any((a) => a.kind == AttachmentKind.image);
 
   static String _contentOf(Note note) => switch (note.type) {
     NoteType.text => note.body.trimRight(),
@@ -51,6 +59,46 @@ class _PdfExportScreenState extends State<PdfExportScreen> {
     super.dispose();
   }
 
+  /// Nota bağlı görsellerin baytlarını toplar (yerel → yoksa Storage).
+  /// Erişilemeyen görsel (henüz senkronlanmamış, dosyası silinmiş) atlanır —
+  /// dışa aktarma tek görsel yüzünden tümden başarısız olmasın.
+  Future<List<ExportImage>> _loadImages() async {
+    if (!_includeImages) return const [];
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return const [];
+    final out = <ExportImage>[];
+    for (final a in widget.note.attachments) {
+      if (a.kind != AttachmentKind.image) continue;
+      try {
+        final bytes = await repo.readBytes(a);
+        if (bytes == null) continue;
+        out.add(
+          ExportImage(
+            bytes: bytes,
+            width: a.width ?? 0,
+            height: a.height ?? 0,
+            mimeType: a.mimeType,
+          ),
+        );
+      } catch (_) {
+        // Erişilemeyen görsel dışa aktarmayı düşürmez.
+      }
+    }
+    return out;
+  }
+
+  DateTime? get _date => _includeDate
+      ? (widget.note.updatedAt ?? widget.note.createdAt ?? DateTime.now())
+      : null;
+
+  void _showError(Object e) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(context.l10n.aiError(e.toString()))),
+      );
+  }
+
   Future<String?> _generate() async {
     setState(() => _busy = true);
     try {
@@ -58,23 +106,55 @@ class _PdfExportScreenState extends State<PdfExportScreen> {
       final bytes = await NotePdf.build(
         title: title,
         content: _content.text,
-        date: _includeDate
-            ? (widget.note.updatedAt ?? widget.note.createdAt ?? DateTime.now())
-            : null,
+        date: _date,
+        images: await _loadImages(),
       );
       return await NotePdf.writeTemp(bytes, title);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text(context.l10n.aiError(e.toString()))),
-          );
-      }
+      if (mounted) _showError(e);
       return null;
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  /// Word (.docx) üretip geçici dosya yolunu döner.
+  Future<String?> _generateDocx() async {
+    setState(() => _busy = true);
+    try {
+      final title = _title.text.trim();
+      final bytes = NoteDocx.build(
+        title: title,
+        content: _content.text,
+        date: _date,
+        images: await _loadImages(),
+      );
+      return await NoteDocx.writeTemp(bytes, title);
+    } catch (e) {
+      if (mounted) _showError(e);
+      return null;
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _shareWord() async {
+    final path = await _generateDocx();
+    if (path == null || !mounted) return;
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [
+          XFile(
+            path,
+            mimeType:
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          ),
+        ],
+        subject: _title.text.trim().isEmpty
+            ? context.l10n.appName
+            : _title.text.trim(),
+      ),
+    );
   }
 
   Future<void> _preview() async {
@@ -150,6 +230,13 @@ class _PdfExportScreenState extends State<PdfExportScreen> {
               value: _includeDate,
               onChanged: (v) => setState(() => _includeDate = v),
             ),
+            if (_hasImages)
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.exportIncludeImages),
+                value: _includeImages,
+                onChanged: (v) => setState(() => _includeImages = v),
+              ),
           ],
         ),
       ),
@@ -189,6 +276,17 @@ class _PdfExportScreenState extends State<PdfExportScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 10),
+              // Word: aynı içerik .docx olarak paylaşılır (Word'de açıp
+              // düzenlemeye devam etmek isteyenler için).
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                onPressed: _busy ? null : _shareWord,
+                icon: const Icon(Icons.description_outlined),
+                label: Text(l10n.exportWord),
               ),
             ],
           ),

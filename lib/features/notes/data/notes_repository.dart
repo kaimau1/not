@@ -250,6 +250,23 @@ class NotesRepository {
     }
   }
 
+  /// Nota yeni bir ek ekler — dokümandaki GÜNCEL listeye (transaction).
+  /// Editör kapanmış olsa bile güvenli; sesli not modu ekrandan çıkarken
+  /// kaydı bununla bağlar.
+  Future<void> appendAttachment(String noteId, Attachment attachment) =>
+      _firestore.runTransaction((tx) async {
+        final ref = _notes.doc(noteId);
+        final snapshot = await tx.get(ref);
+        if (!snapshot.exists) return;
+        final note = Note.fromDoc(snapshot);
+        tx.update(ref, {
+          'attachments': [
+            for (final a in note.attachments) a.toMap(),
+            attachment.toMap(),
+          ],
+        });
+      });
+
   /// Ek metadata'sındaki tek bir girişi günceller (yükleme kuyruğu kullanır).
   Future<void> patchAttachment(String noteId, Attachment updated) =>
       _firestore.runTransaction((tx) async {

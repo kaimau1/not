@@ -229,12 +229,15 @@ class _AttachmentTile extends StatelessWidget {
         File(attachment.localPath),
         width: 140,
         fit: BoxFit.cover,
+        // 140 dp'lik önizleme için tam boy çözdürme (bellek/CPU).
+        cacheWidth: 420,
       );
     } else if (attachment.isUploaded) {
       content = CachedNetworkImage(
         imageUrl: attachment.downloadUrl,
         width: 140,
         fit: BoxFit.cover,
+        memCacheWidth: 420,
       );
     } else {
       content = Container(

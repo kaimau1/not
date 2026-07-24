@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:record/record.dart';
 
 /// Cihazın YERLEŞİK konuşma tanıması (Android SpeechRecognizer) için ince
 /// köprü. Dikte ve Sesli Not Asistanı bunu kullanır: ücretsiz, anlık ve
@@ -25,6 +26,24 @@ class DeviceSpeech {
       return await _method.invokeMethod<bool>('speechAvailable') ?? false;
     } on PlatformException {
       return false;
+    }
+  }
+
+  /// Mikrofon iznini denetler, yoksa sistem iletişim kutusuyla İSTER.
+  /// SpeechRecognizer izin eksikken kendi kutusunu AÇMAZ, sessizce
+  /// ERROR_INSUFFICIENT_PERMISSIONS ile düşer — kullanıcı bunu "sesle yazma
+  /// çalışmıyor" olarak görür. [listen] çağrılmadan önce bu çağrılmalı.
+  /// (record eklentisinin hasPermission'ı hem denetler hem ister; yeni
+  /// bağımlılık gerektirmez.)
+  static Future<bool> ensureMicPermission() async {
+    if (kIsWeb || !Platform.isAndroid) return true;
+    final recorder = AudioRecorder();
+    try {
+      return await recorder.hasPermission();
+    } catch (_) {
+      return false;
+    } finally {
+      await recorder.dispose();
     }
   }
 

@@ -28,6 +28,7 @@ abstract final class NotePdf {
     required String title,
     required String content,
     DateTime? date,
+    List<ExportImage> images = const [],
     PdfPageFormat format = PdfPageFormat.a4,
   }) async {
     final font = await _loadFont();
@@ -69,10 +70,39 @@ abstract final class NotePdf {
               child: pw.Divider(height: 1, color: PdfColors.grey400),
             ),
           for (final line in lines) _lineWidget(line),
+          // Görseller (el yazısı çizimleri dahil) metnin ardından, sayfa
+          // genişliğine sığdırılarak eklenir (madde: "resimler dahil").
+          for (final image in images) _imageWidget(image, format),
         ],
       ),
     );
     return doc.save();
+  }
+
+  /// Görseli içerik genişliğine ölçekler; sayfadan taşmasın diye yükseklik
+  /// da sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
+  static pw.Widget _imageWidget(ExportImage image, PdfPageFormat format) {
+    final contentWidth = format.width - 52 - 52;
+    final maxHeight = format.height - 56 - 44 - 24;
+    final iw = image.width <= 0 ? 480.0 : image.width.toDouble();
+    final ih = image.height <= 0 ? 360.0 : image.height.toDouble();
+    var w = contentWidth;
+    var h = w * ih / iw;
+    if (h > maxHeight) {
+      h = maxHeight;
+      w = h * iw / ih;
+    }
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(top: 10),
+      child: pw.Center(
+        child: pw.Image(
+          pw.MemoryImage(image.bytes),
+          width: w,
+          height: h,
+          fit: pw.BoxFit.contain,
+        ),
+      ),
+    );
   }
 
   /// PDF'i geçici dosyaya yazar; hem önizleme hem paylaşma bunu kullanır.
@@ -99,7 +129,8 @@ abstract final class NotePdf {
   /// `Note.toPlainText()`'in zaten ürettiği işaretlerden okunuyor. Böylece
   /// kullanıcı dışa aktarmadan önce maddeleri serbestçe ekleyip silebiliyor,
   /// işaretli/işaretsiz durumu da metinle birlikte taşınıyor.
-  @visibleForTesting
+  /// Word dışa aktarma (NoteDocx) da aynı ayrıştırmayı kullanır — iki çıktı
+  /// yapıyı hiçbir zaman farklı yorumlamaz.
   static List<PdfLine> parseLines(String content) {
     final out = <PdfLine>[];
     for (final raw in content.replaceAll('\r\n', '\n').split('\n')) {
@@ -230,6 +261,29 @@ abstract final class NotePdf {
   static final _checkboxPattern = RegExp(r'^\s*\[([ xX])\]\s*(.*)$');
   static final _numberedPattern = RegExp(r'^\s*(\d{1,3})[.)]\s+(.*)$');
   static final _bulletPattern = RegExp(r'^\s*[-•*]\s+(.*)$');
+}
+
+/// Dışa aktarmaya (PDF/Word) girecek bir görsel: baytlar + piksel boyutları
+/// (sayfaya ölçeklemek için) + tür (Word'de dosya uzantısı bundan seçilir).
+class ExportImage {
+  const ExportImage({
+    required this.bytes,
+    required this.width,
+    required this.height,
+    this.mimeType = 'image/jpeg',
+  });
+
+  final Uint8List bytes;
+  final int width;
+  final int height;
+  final String mimeType;
+
+  String get extension => switch (mimeType) {
+    'image/png' => 'png',
+    'image/gif' => 'gif',
+    'image/webp' => 'webp',
+    _ => 'jpg',
+  };
 }
 
 enum PdfLineKind { blank, paragraph, checked, unchecked, bullet, numbered }

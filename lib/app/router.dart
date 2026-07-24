@@ -72,6 +72,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               noteId: state.pathParameters['id']!,
               // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
               startDrawing: state.uri.queryParameters['draw'] == '1',
+              // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
+              startVoiceCapture: state.uri.queryParameters['voice'] == '1',
             ),
           ),
         ],
