@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784917501.552209,
-    "ast_hash": "b6ecaaf261abe7d0f191ff83f5cdcc44",
+    "mtime": 1784917953.53686,
+    "ast_hash": "1b6884bc6c9d5580293e2aa26ee45660",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784917501.5464277,
-    "ast_hash": "5554038dc98fe110ff9135abcb8db83b",
+    "mtime": 1784917953.5083437,
+    "ast_hash": "64cda3aa6312a6b51b8b09d868dc12d0",
     "semantic_hash": ""
   },
   "lib/main.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1784913608.9262602,
-    "ast_hash": "e234ae5ea8d0ac1c711cf18cabc4f2b7",
+    "mtime": 1784918120.0344164,
+    "ast_hash": "64a66f8e1ab905cb0dac86b79fccd542",
     "semantic_hash": ""
   },
   "README.md": {
