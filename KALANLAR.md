@@ -11,11 +11,12 @@
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
 
 ## Bilinen eksik / risk
-- [ ] **Sağ kenardaki görselin YANINDAN metin akmıyor** — sütunun %70'inden
-  fazlasını kaplayan görsel metni altına itiyor. Sağdan daraltma satır sonuna
-  dolgu koymayı gerektiriyor, kırıcı o dolguya sıra gelmeden satırı zaten
-  kırıyor. Tam çözüm kendi satır kırıcımızı yazmak (imleç/seçim/IME elle) —
-  ayrı ve büyük iş (2026-07-24).
+- [ ] **Sağ sarmada tek uzun kelime**: satırda kırılacak boşluk yoksa (tek
+  uzun kelime) sağ kenar dolgusu konamaz, o satır görselin altına girebilir.
+  Tavanı kaldırmak kendi satır kırıcımızı yazmayı gerektirir (2026-07-24).
+- [ ] **Liste modunda sürükleyerek sıralarken kenarda otomatik kaydırma yok**
+  — liste artık serbest görsel tuvalinin içinde `shrinkWrap` ile duruyor, dış
+  kaydırıcıyı sürükleme sırasında elle sürmek gerekir (2026-07-24).
 - [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
   gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
   Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).

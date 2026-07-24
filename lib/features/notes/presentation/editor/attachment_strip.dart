@@ -173,7 +173,7 @@ class _AttachmentTile extends StatelessWidget {
             attachment: attachment,
             onChanged: onChanged,
           ),
-          _ => ImageViewerScreen(attachment: attachment),
+          _ => ImageViewerScreen(attachment: attachment, onChanged: onChanged),
         },
       ),
     );

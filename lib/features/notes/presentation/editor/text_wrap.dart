@@ -16,39 +16,63 @@ import 'package:flutter/material.dart';
 /// imleç ve seçim konumları kayar. Çapalar yalnız düzenleme tamponunda
 /// yaşar; nota yazılan gövde [stripWrapAnchors] ile temizlenir.
 ///
-/// SINIR: dolgu satır BAŞINA eklendiği için sarma yalnız SOL kenardaki
-/// görseller için çalışır. Sağdaki bir görselin satırı sağdan kısaltması,
-/// satır sonuna dolgu koymayı gerektirir; kırıcı o dolguya sıra gelmeden
-/// satırı zaten kırdığı için bu mümkün değildir — sağa bırakılan görsel
-/// [FloatBox.blocking] ile kendi satırını kaplar (metin üstünde/altında akar).
+/// SAĞ kenardaki görsel için dolgu satır SONUNA konur. Kırıcının dolguyu bir
+/// alt satıra kaçırmaması için dolgudan önce bir KELİME BİRLEŞTİRİCİ
+/// (U+2060 WORD JOINER) yazılır: birleştirici kendinden önce ve sonra satır
+/// kırılmasını yasaklar, böylece dolgu satırın son kelimesine yapışır ve
+/// kalan kelimeler bir alt satıra iner — satır sağdan kısalmış olur.
 const String kWrapAnchorChar = '￼';
 const int _kWrapAnchorCode = 0xFFFC;
 
+/// Sağ kenar dolgusunu son kelimeye yapıştıran görünmez birleştirici.
+const String kWrapGlueChar = '⁠';
+const int _kWrapGlueCode = 0x2060;
+
+/// Sarmanın metne bırakacağı en az genişlik (sütun oranı). Bundan darına
+/// sıkıştırılan metin harf harf kırılıp okunmaz hâle gelir; o satırlar
+/// tümüyle boşaltılır ve metin görselin ALTINA iner.
+const double _kMinUsableFraction = 0.25;
+
 /// Gövde metninin üzerinde yüzen bir görselin kapladığı dikey bant.
+///
+/// Yatay sınırlar metin sütununun sol kenarına göredir: [left] görselin
+/// başladığı, [right] bittiği nokta. Metin, görselin GENİŞ olan tarafından
+/// akar (Word'ün dar boşluğa metin sıkıştırmaması gibi); iki yana birden
+/// bölmek tek bir TextField'da mümkün değil.
 @immutable
 class FloatBox {
   const FloatBox({
     required this.top,
-    required this.width,
+    required this.left,
+    required this.right,
     required this.height,
-    this.blocking = false,
   });
 
   /// Gövde metninin ilk satırının tepesinden uzaklık (dp). Negatif olabilir —
   /// görsel metnin başlamasından önce başlıyorsa ilk satırları da keser.
   final double top;
 
-  /// Görselin metin sütununun SOL kenarından itibaren kapladığı genişlik (dp).
-  /// Sarma bu kadar içeriden başlar.
-  final double width;
+  /// Görselin metin sütununun sol kenarına göre sol/sağ sınırı (dp).
+  final double left;
+  final double right;
 
   final double height;
 
-  /// true ise görsel sütunun tamamını kapatır (sağa yaslı ya da sütunun
-  /// çoğunu kaplayan görsel): kestiği satırlar tümüyle boşaltılır.
-  final bool blocking;
-
   double get bottom => top + height;
+}
+
+/// İki bant listesi aynı mı (gereksiz yeniden dizgiyi önlemek için).
+bool sameFloatList(List<FloatBox> a, List<FloatBox> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i].top != b[i].top ||
+        a[i].left != b[i].left ||
+        a[i].right != b[i].right ||
+        a[i].height != b[i].height) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /// [planTextWrap] sonucu: düzenleyiciye verilecek görüntü metni ve içindeki
@@ -66,7 +90,9 @@ class WrapPlan {
 /// Metinden çapa karakterlerini söker. Nota/AI'a/dışa aktarmaya giden her
 /// gövde bu süzgeçten geçer.
 String stripWrapAnchors(String text) =>
-    text.contains(kWrapAnchorChar) ? text.replaceAll(kWrapAnchorChar, '') : text;
+    (text.contains(kWrapAnchorChar) || text.contains(kWrapGlueChar))
+    ? text.replaceAll(kWrapAnchorChar, '').replaceAll(kWrapGlueChar, '')
+    : text;
 
 /// [logical] metni [columnWidth] genişliğinde dizerken, [floats] görsellerinin
 /// kestiği satırların başına ne genişlikte dolgu gerektiğini hesaplar.
@@ -82,7 +108,7 @@ WrapPlan planTextWrap({
   TextDirection direction = TextDirection.ltr,
   double textScaleFactor = 1.0,
 }) {
-  if (floats.isEmpty || logical.isEmpty || columnWidth <= 0) {
+  if (floats.isEmpty || columnWidth <= 0) {
     return WrapPlan(logical, const []);
   }
 
@@ -94,55 +120,117 @@ WrapPlan planTextWrap({
   );
 
   var line = 0;
+  // Sağ dolgusu bir kez denenmiş satırlar. Dolgu, kırıcı onu son kelimeye
+  // yapıştıramazsa (ör. satırda hiç boşluk yok) bir daha denenmez — yoksa
+  // aynı satır sonsuza dek yeniden dolgulanırdı.
+  final rightPadded = <int>{};
   // Görsel sayısı azdır (not başına birkaç ek); tur sayısı satır sayısı +
   // eklenen dolgu kadardır. Tavan, beklenmedik bir kırılımda sonsuz döngüyü
   // engeller — aşılırsa o ana kadarki plan kullanılır (metin yine okunur).
   for (var guard = 0; guard < 512; guard++) {
     _layout(painter, display, widths, style, columnWidth);
     final metrics = painter.computeLineMetrics();
-    if (line >= metrics.length) break;
+    // Boş tamponun ölçülecek satırı yoktur ama imleç ilk satırdadır: soldaki
+    // görsel onu sağa itmezse imleç görselin ÜSTÜNDE yanıp söner.
+    if (line >= metrics.length && !(line == 0 && display.isEmpty)) break;
 
     var top = 0.0;
-    for (var i = 0; i < line; i++) {
+    for (var i = 0; i < line && i < metrics.length; i++) {
       top += metrics[i].height;
     }
-    final bottom = top + metrics[line].height;
+    final lineHeight = line < metrics.length
+        ? metrics[line].height
+        : painter.preferredLineHeight;
+    final bottom = top + lineHeight;
 
-    var indent = 0.0;
-    var blocked = false;
+    // Satırı kesen görseller: her biri metni GENİŞ tarafına iter — soldaki
+    // görsel satır başına, sağdaki satır sonuna dolgu koydurur.
+    var indentStart = 0.0;
+    var indentEnd = 0.0;
     for (final f in floats) {
       if (f.top < bottom && top < f.bottom) {
-        if (f.blocking) blocked = true;
-        if (f.width > indent) indent = f.width;
+        if (columnWidth - f.right >= f.left) {
+          if (f.right > indentStart) indentStart = f.right;
+        } else {
+          final pad = columnWidth - f.left;
+          if (pad > indentEnd) indentEnd = pad;
+        }
       }
     }
-    if (blocked) {
-      // Sütunu kaplayan görsel: dolgu satırın tamamını yer, kırıcı o satıra
-      // hiç kelime sığdıramaz ve metin görselin ALTINA iner. Satır başına
-      // bir satır yüksekliği ilerlendiği için döngü görselin altında biter.
-      indent = columnWidth;
-    } else {
-      // Yan yana akacak metne sütunun en az dörtte biri bırakılır; daha
-      // darında metin harf harf kırılır ve okunmaz.
-      final maxIndent = columnWidth * 0.75;
-      if (indent > maxIndent) indent = maxIndent;
+    if (indentStart < 0) indentStart = 0;
+    if (indentEnd < 0) indentEnd = 0;
+    if (indentStart + indentEnd > 0 &&
+        columnWidth - indentStart - indentEnd <
+            columnWidth * _kMinUsableFraction) {
+      // Kalan yer okunur bir satıra yetmiyor: dolgu satırın TAMAMINI yer,
+      // kırıcı o satıra hiç kelime sığdıramaz ve metin görselin ALTINA iner.
+      // Satır başına bir satır yüksekliği ilerlendiği için döngü görselin
+      // altında biter.
+      indentStart = columnWidth;
+      indentEnd = 0;
     }
 
-    final start = _lineStartOffset(painter, display, top, metrics[line].height);
-    final hasAnchor =
+    final range = _lineRange(painter, display, top, lineHeight);
+    final start = range.start;
+    final hasStartAnchor =
         start < display.length && display.codeUnitAt(start) == _kWrapAnchorCode;
 
-    if (indent > 0 && !hasAnchor) {
-      final anchorIndex = _anchorCountBefore(display, start);
+    if (indentStart > 0 && !hasStartAnchor) {
       display = display.replaceRange(start, start, kWrapAnchorChar);
-      widths.insert(anchorIndex, indent);
+      widths.insert(_anchorCountBefore(display, start), indentStart);
       continue; // aynı satırı yeni genişlikle yeniden ölç
+    }
+
+    if (indentEnd > 0 && rightPadded.add(line)) {
+      final cut = _rightPadOffset(
+        painter,
+        display,
+        start,
+        range.end,
+        columnWidth - indentEnd,
+        top + lineHeight / 2,
+      );
+      // cut == -1: satırda kırılacak boşluk yok (tek uzun kelime ya da boş
+      // satır). ponytail: o satır sağdaki görselin altına girebilir; tavanı
+      // kaldırmak kendi satır kırıcımızı yazmayı gerektirir.
+      if (cut >= 0) {
+        display = display.replaceRange(cut, cut, '$kWrapGlueChar$kWrapAnchorChar');
+        widths.insert(_anchorCountBefore(display, cut), indentEnd);
+        continue;
+      }
     }
     line++;
   }
 
   painter.dispose();
   return WrapPlan(display, widths);
+}
+
+/// Satır sonu dolgusunun gireceği konum: [limitX]'e kadar sığan SON kelimenin
+/// hemen ardı. Kelime bölünmez, dolgudan sonraki boşluk kırılma noktası olur.
+/// Uygun yer yoksa -1.
+int _rightPadOffset(
+  TextPainter painter,
+  String display,
+  int start,
+  int end,
+  double limitX,
+  double midY,
+) {
+  if (end <= start || limitX <= 0) return -1;
+  var cut = painter
+      .getPositionForOffset(Offset(limitX, midY))
+      .offset
+      .clamp(start, end);
+  // Sınırın üstündeki kelimenin başına dön, sonra öndeki boşlukları at:
+  // dolgu son harfin hemen ardına yapışmalı ki kırılma boşlukta olsun.
+  while (cut > start && display.codeUnitAt(cut - 1) != 0x20) {
+    cut--;
+  }
+  while (cut > start && display.codeUnitAt(cut - 1) == 0x20) {
+    cut--;
+  }
+  return cut > start ? cut : -1;
 }
 
 void _layout(
@@ -186,16 +274,18 @@ InlineSpan buildWrapSpan(String display, List<double> widths, TextStyle? style) 
   return TextSpan(style: style, children: children);
 }
 
-/// Dikeyde [top] ile başlayan satırın metindeki başlangıç konumu.
-int _lineStartOffset(
+/// Dikeyde [top] ile başlayan satırın metindeki aralığı.
+({int start, int end}) _lineRange(
   TextPainter painter,
   String display,
   double top,
   double height,
 ) {
+  if (display.isEmpty) return (start: 0, end: 0);
   final pos = painter.getPositionForOffset(Offset(0, top + height / 2));
   final boundary = painter.getLineBoundary(pos);
-  return boundary.start.clamp(0, display.length);
+  final start = boundary.start.clamp(0, display.length);
+  return (start: start, end: boundary.end.clamp(start, display.length));
 }
 
 int _anchorCountBefore(String s, int offset) {
@@ -206,14 +296,18 @@ int _anchorCountBefore(String s, int offset) {
   return n;
 }
 
+bool _isAnchorCode(int c) => c == _kWrapAnchorCode || c == _kWrapGlueCode;
+
 /// Çapasız (mantıksal) metindeki konumu görüntü metnindeki konuma çevirir.
-/// İmleç, görünmez dolgunun ARDINA konur — kullanıcı satır başında yazmaya
-/// başladığında harf dolgunun soluna düşmez.
+/// İmleç SATIR BAŞI dolgusunun ARDINA konur — kullanıcı satır başında yazmaya
+/// başladığında harf (ve imleç) dolgunun soluna, yani görselin üstüne düşmez.
+/// Satır SONU dolgusunun ise ÖNÜNDE kalır: imleç son harfin hemen ardında
+/// durur, sütunun sağ kenarına atlamaz. İkisi birleştiriciyle ayırt edilir.
 int wrapToDisplayOffset(String display, int logicalOffset) {
   var seen = 0;
   var i = 0;
   while (i < display.length && seen < logicalOffset) {
-    if (display.codeUnitAt(i) != _kWrapAnchorCode) seen++;
+    if (!_isAnchorCode(display.codeUnitAt(i))) seen++;
     i++;
   }
   while (i < display.length && display.codeUnitAt(i) == _kWrapAnchorCode) {
@@ -227,9 +321,84 @@ int wrapToLogicalOffset(String display, int displayOffset) {
   final end = displayOffset.clamp(0, display.length);
   var seen = 0;
   for (var i = 0; i < end; i++) {
-    if (display.codeUnitAt(i) != _kWrapAnchorCode) seen++;
+    if (!_isAnchorCode(display.codeUnitAt(i))) seen++;
   }
   return seen;
+}
+
+/// Bir metin alanını sarar, alanın SAYFA üzerindeki yerini ölçer ve sayfa
+/// uzayında verilen görsel bantlarını ([floats]) alanın kendi metin uzayına
+/// çevirip denetleyicisine aktarır.
+///
+/// Gövde metni ve liste maddeleri aynı yolu kullanır: her alan kendi sol
+/// kenarını ve genişliğini bildiğinden çağıranın kenar boşluğu/satır yüksekliği
+/// hesaplaması gerekmez. Ölçüm yerleşimden SONRA yapılır (kare sonu), sonuç
+/// değişmediyse [WrapTextController.updateLayout] hiçbir şey yapmaz — bu yüzden
+/// her build'de çağrılması döngü yaratmaz.
+class WrapFieldMeasure extends StatefulWidget {
+  const WrapFieldMeasure({
+    super.key,
+    required this.controller,
+    required this.style,
+    required this.floats,
+    required this.pageBox,
+    required this.child,
+  });
+
+  final WrapTextController controller;
+  final TextStyle style;
+
+  /// Görsellerin sayfa uzayındaki bantları.
+  final List<FloatBox> floats;
+
+  /// Sayfa (tuval) içeriğinin kök kutusu — konumlar buna göre ölçülür.
+  final RenderBox? Function() pageBox;
+
+  final Widget child;
+
+  @override
+  State<WrapFieldMeasure> createState() => _WrapFieldMeasureState();
+}
+
+class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    return widget.child;
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    // Görsel yok ve tampon zaten temiz: hiçbir şey ölçme. (Görsel silinince
+    // bir kez daha ölçülür ki kalan çapalar temizlensin.)
+    if (widget.floats.isEmpty && widget.controller.isPlain) return;
+    final box = context.findRenderObject();
+    final page = widget.pageBox();
+    if (box is! RenderBox || !box.hasSize || page == null || !page.hasSize) {
+      return;
+    }
+    final origin = box.localToGlobal(Offset.zero, ancestor: page);
+    final width = box.size.width;
+    if (width <= 0) return;
+    final bottom = origin.dy + box.size.height;
+    widget.controller.updateLayout(
+      floats: [
+        for (final f in widget.floats)
+          // Alanı hiç kesmeyen görsel plana girmez: gereksiz yeniden dizgi
+          // (ve uzun listede satır başına ölçüm) olmasın.
+          if (f.bottom > origin.dy && f.top < bottom && f.right > origin.dx)
+            FloatBox(
+              top: f.top - origin.dy,
+              left: (f.left - origin.dx).clamp(0.0, width).toDouble(),
+              right: (f.right - origin.dx).clamp(0.0, width).toDouble(),
+              height: f.height,
+            ),
+      ],
+      style: widget.style,
+      columnWidth: width,
+      textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+    );
+  }
 }
 
 /// Gövde alanının denetleyicisi: kullanıcının yazdığı metni (mantıksal) ve
@@ -250,6 +419,9 @@ class WrapTextController extends TextEditingController {
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
 
+  /// Tamponda hiç dolgu yok (sarma kapalı) — sıradan bir denetleyici gibi.
+  bool get isPlain => _widths.isEmpty;
+
   /// Kullanıcının gördüğü metni değiştirmeden dizgi girdilerini günceller
   /// (görsel taşınınca/boyutlanınca ya da sütun genişliği değişince).
   /// Girdiler aynıysa hiçbir şey yapmaz — her build'de çağrılabilir.
@@ -262,7 +434,7 @@ class WrapTextController extends TextEditingController {
     if (_columnWidth == columnWidth &&
         _textScale == textScaleFactor &&
         _style == style &&
-        _sameFloats(_floats, floats)) {
+        sameFloatList(_floats, floats)) {
       return;
     }
     _floats = floats;
@@ -270,19 +442,6 @@ class WrapTextController extends TextEditingController {
     _columnWidth = columnWidth;
     _textScale = textScaleFactor;
     _reflow(logicalText, wrapToLogicalOffset(text, selection.baseOffset));
-  }
-
-  static bool _sameFloats(List<FloatBox> a, List<FloatBox> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i].top != b[i].top ||
-          a[i].width != b[i].width ||
-          a[i].height != b[i].height ||
-          a[i].blocking != b[i].blocking) {
-        return false;
-      }
-    }
-    return true;
   }
 
   /// Mantıksal metni doğrudan yazar (AI sonucu, geri alma, not yükleme...).

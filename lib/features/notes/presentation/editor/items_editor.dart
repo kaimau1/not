@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/note_item.dart';
+import 'text_wrap.dart';
 
 /// Checklist ve sıralı liste düzenleyicisi. Öğeler tutamaca UZUN BASIP
 /// sürüklenerek sıralanır, Enter yeni öğe ekler. Silme "x" düğmesi yalnızca
@@ -19,11 +20,29 @@ class ItemsEditor extends StatefulWidget {
     this.expandItems = true,
     this.header,
     this.footer,
+    this.floats = const [],
+    this.pageBox,
+    this.shrinkWrap = false,
   });
 
   final List<NoteItem> items;
   final ValueChanged<List<NoteItem>> onChanged;
   final bool showCheckboxes;
+
+  /// Sayfadaki görsellerin kapladığı bantlar (sayfa uzayı): madde metni
+  /// bunların etrafından akar. Boşsa satırlar sıradan davranır.
+  final List<FloatBox> floats;
+
+  /// Sayfa içeriğinin kök kutusu — satırların konumu buna göre ölçülür.
+  /// null ise sarma tümüyle kapalıdır.
+  final RenderBox? Function()? pageBox;
+
+  /// true: liste kendi kaydırmasını yapmaz, dıştaki sayfa kaydırır (serbest
+  /// görsel tuvalinin içindeyken şart — iç içe iki kaydırıcı olamaz).
+  /// ponytail: sürükleyerek sıralarken kenara gelince otomatik kaydırma
+  /// çalışmaz; kısa listelerde sorun değil, gerekirse dış kaydırıcıyı
+  /// sürükleme sırasında elle sürmek gerekir.
+  final bool shrinkWrap;
 
   /// true: uzun satırlar tamamen sarılıp görünür. false: satır tek satırda
   /// kalır, yalnızca odaklanınca (dokununca) açılır.
@@ -40,7 +59,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
   static const _uuid = Uuid();
 
   late List<NoteItem> _items;
-  final _controllers = <String, TextEditingController>{};
+  final _controllers = <String, WrapTextController>{};
   final _focusNodes = <String, FocusNode>{};
 
   /// Toplu işlem için seçilen öğeler.
@@ -107,8 +126,8 @@ class _ItemsEditorState extends State<ItemsEditor> {
     super.dispose();
   }
 
-  TextEditingController _controllerFor(NoteItem item) => _controllers
-      .putIfAbsent(item.id, () => TextEditingController(text: item.text));
+  WrapTextController _controllerFor(NoteItem item) => _controllers
+      .putIfAbsent(item.id, () => WrapTextController(text: item.text));
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();
@@ -121,6 +140,24 @@ class _ItemsEditorState extends State<ItemsEditor> {
   });
 
   void _commit() => widget.onChanged(List.of(_items));
+
+  /// Madde metnini, sayfadaki görsellerin etrafından akacak şekilde ölçüme
+  /// bağlar. Sayfa kutusu yoksa (liste serbest tuvalin dışında) dokunmaz.
+  Widget _wrapped(
+    WrapTextController controller,
+    TextStyle style,
+    Widget field,
+  ) {
+    final pageBox = widget.pageBox;
+    if (pageBox == null) return field;
+    return WrapFieldMeasure(
+      controller: controller,
+      style: style,
+      floats: widget.floats,
+      pageBox: pageBox,
+      child: field,
+    );
+  }
 
   void _updateText(NoteItem target, String text) {
     final index = _items.indexWhere((i) => i.id == target.id);
@@ -326,8 +363,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
   /// footer'daki işaretli öğelerde tutamak yoktur (sıraları zaten sabit).
   /// [orderNumber] sıralı listede gösterilen numaradır.
   Widget _itemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = context.l10n;
+    final controller = _controllerFor(item);
+    final baseStyle = theme.textTheme.bodyLarge ?? const TextStyle();
     final checked = widget.showCheckboxes && item.checked;
     final focused = _focusFor(item).hasFocus;
     final selected = _selected.contains(item.id);
@@ -403,34 +443,41 @@ class _ItemsEditorState extends State<ItemsEditor> {
                 onTap: _selectionMode ? () => _toggleSelection(item) : null,
                 child: AbsorbPointer(
                   absorbing: _selectionMode,
-                  child: TextField(
-                    controller: _controllerFor(item),
-                    focusNode: _focusFor(item),
-                    onChanged: (text) => _updateText(item, text),
-                    contextMenuBuilder: (context, editableState) =>
-                        _contextMenu(context, editableState),
-                    // Varsayılan "next" davranışı odağı metin dışı bir öğeye
-                    // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
-                    // bastırır, odak doğrudan yeni öğeye geçer.
-                    onEditingComplete: () => _insertAfter(item),
-                    textInputAction: TextInputAction.next,
-                    // Tam göster modunda satır sarılıp büyür; "dokununca aç"
-                    // modunda odaklanınca açılır, aksi hâlde tek satır.
-                    maxLines: widget.expandItems || focused ? null : 1,
-                    // Solma AnimatedOpacity'e bırakıldı (aşağıya bak); burada
-                    // alfa verilirse iki kez soluyor.
-                    style: checked
-                        ? TextStyle(
-                            decoration: TextDecoration.lineThrough,
-                            color: scheme.onSurfaceVariant,
-                          )
-                        : null,
-                    decoration: InputDecoration(
-                      hintText: l10n.newItemHint,
-                      filled: false,
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  child: _wrapped(
+                    controller,
+                    baseStyle,
+                    TextField(
+                      controller: controller,
+                      focusNode: _focusFor(item),
+                      onChanged: (_) => _updateText(item, controller.logicalText),
+                      contextMenuBuilder: (context, editableState) =>
+                          _contextMenu(context, editableState),
+                      // Varsayılan "next" davranışı odağı metin dışı bir öğeye
+                      // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
+                      // bastırır, odak doğrudan yeni öğeye geçer.
+                      onEditingComplete: () => _insertAfter(item),
+                      textInputAction: TextInputAction.next,
+                      // Tam göster modunda satır sarılıp büyür; "dokununca aç"
+                      // modunda odaklanınca açılır, aksi hâlde tek satır.
+                      maxLines: widget.expandItems || focused ? null : 1,
+                      // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                      // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                      // satırlar yanlış kırılır (M3 varsayılanı zaten bodyLarge).
+                      // Solma AnimatedOpacity'e bırakıldı (aşağıya bak); burada
+                      // alfa verilirse iki kez soluyor.
+                      style: checked
+                          ? baseStyle.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              color: scheme.onSurfaceVariant,
+                            )
+                          : baseStyle,
+                      decoration: InputDecoration(
+                        hintText: l10n.newItemHint,
+                        filled: false,
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
                     ),
                   ),
                 ),
@@ -523,6 +570,10 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return ReorderableListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
       buildDefaultDragHandles: false,
+      shrinkWrap: widget.shrinkWrap,
+      physics: widget.shrinkWrap
+          ? const NeverScrollableScrollPhysics()
+          : null,
       // ponytail: seçim çubuğu listeyle birlikte kayar; sabitlemek Scaffold
       // seviyesinde bir katman gerektirir, seçim genelde kısa listelerde
       // yapıldığından şimdilik gerekmiyor.

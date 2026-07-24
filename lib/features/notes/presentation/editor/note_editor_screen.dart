@@ -122,25 +122,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     setState(() => _bodyTop = h);
   }
 
-  /// Tuvalin bildirdiği görsel bantlarını gövde denetleyicisine aktarır:
-  /// konumlar sayfa uzayından metin sütunu uzayına çevrilir.
-  void _applyFloats(List<FloatBox> floats, double pageWidth) {
-    final columnWidth = pageWidth - _kGutter * 2;
+  /// Tuvaldeki görsellerin sayfa uzayındaki bantları. Gövde metni ve liste
+  /// maddeleri bunları [WrapFieldMeasure] ile kendi uzaylarına çevirip
+  /// etrafından akar.
+  List<FloatBox> _floats = const [];
+
+  /// Sayfa içeriğinin kökü — alanların konumu buna göre ölçülür.
+  final _pageKey = GlobalKey();
+  RenderBox? _pageBox() {
+    final box = _pageKey.currentContext?.findRenderObject();
+    return box is RenderBox && box.hasSize ? box : null;
+  }
+
+  void _applyFloats(List<FloatBox> floats) {
+    if (sameFloatList(_floats, floats)) return;
+    setState(() => _floats = floats);
+  }
+
+  /// Metin alanını sarma ölçümüne bağlar (görsel yoksa maliyetsiz geçer).
+  Widget _wrapped(WrapTextController controller, Widget field) {
     final style = Theme.of(context).textTheme.bodyLarge;
-    if (columnWidth <= 0 || style == null) return;
-    _bodyController.updateLayout(
-      floats: [
-        for (final f in floats)
-          FloatBox(
-            top: f.top,
-            width: (f.width - _kGutter).clamp(0.0, columnWidth).toDouble(),
-            height: f.height,
-            blocking: f.blocking,
-          ),
-      ],
+    if (style == null) return field;
+    return WrapFieldMeasure(
+      controller: controller,
       style: style,
-      columnWidth: columnWidth,
-      textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+      floats: _floats,
+      pageBox: _pageBox,
+      child: field,
     );
   }
   final _debouncer = Debouncer();
@@ -1700,9 +1708,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
             ),
           ),
-        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır. Görseller saf
-        // metin notunda TAM SAYFA serbest katmanda (NotePageCanvas — aşağıda),
-        // liste tiplerinde ise başlık altındaki serbest tuvalde gösterilir.
+        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır. Görseller her
+        // not tipinde TAM SAYFA serbest katmanda (NotePageCanvas — aşağıda).
         AttachmentStrip(
           attachments: [
             for (final a in note.attachments)
@@ -1711,13 +1718,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
         ),
-        if (!(note.type == NoteType.text && note.items.isEmpty))
-          NoteImages(
-            images: imageAttachments,
-            onRemove: _removeAttachment,
-            onChanged: _updateAttachment,
-            onExtractText: _ocrImage,
-          ),
       ],
     );
 
@@ -1741,74 +1741,88 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
 
-    final Widget body;
+    // Başlık + çipler: yüksekliği görsellerin üst sınırıdır.
+    final keyedHeader = KeyedSubtree(key: _bodyTopKey, child: header);
+
+    // Sayfa içeriği not tipine göre değişir; SARAN KATMAN hepsinde aynıdır:
+    // görseller (el yazısı çizimleri dahil) tüm sayfanın üzerinde serbest
+    // katmanda yüzer, metnin sağına/soluna sürüklenir ve metin etrafından akar.
+    final Widget pageContent;
     if (note.type == NoteType.text && note.items.isEmpty) {
-      // Saf metin: sayfa en az bir ekran boyu, görseller (el yazısı çizimleri
-      // dahil) TÜM sayfanın üzerinde serbest katmanda — metnin sağına/soluna,
-      // istenen yere sürüklenir, sayfayla birlikte kayar. Boş alana dokunmak
-      // gövdeye odaklanır — yazmaya başlamak için aşağıya dokunmak yeterli.
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
-      body = LayoutBuilder(
-        builder: (context, constraints) => SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 96),
-          child: NotePageCanvas(
-            minHeight: constraints.maxHeight,
-            images: imageAttachments,
-            onRemove: _removeAttachment,
-            onChanged: _updateAttachment,
-            onExtractText: _ocrImage,
-            topLimit: _bodyTop,
-            onFloats: (floats) => _applyFloats(floats, constraints.maxWidth),
-            onTapEmpty: () {
-              if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-            },
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Başlık + çipler: yüksekliği görsellerin üst sınırıdır.
-                KeyedSubtree(key: _bodyTopKey, child: header),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: _kGutter),
-                  child: bodyField,
-                ),
-              ],
-            ),
+      pageContent = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          keyedHeader,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _kGutter),
+            child: _wrapped(_bodyController, bodyField),
           ),
-        ),
+        ],
       );
     } else if (note.type == NoteType.text) {
       // Karışık içerik: serbest metin + checklist maddeleri. Gövde metni, madde
       // editörünün (ItemsEditor) header'ında durur; tüm ekle/işaretle/sırala/
       // sil mantığı olduğu gibi yeniden kullanılır. Madde kalmayınca (hepsi
       // silinince) note.items boşalır ve editör kendiliğinden saf metne döner.
-      body = ItemsEditor(
+      pageContent = ItemsEditor(
         key: ValueKey('mixed-${note.id}'),
         items: note.items,
         showCheckboxes: true,
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
+        floats: _floats,
+        pageBox: _pageBox,
+        shrinkWrap: true,
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            header,
+            keyedHeader,
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: bodyField,
+              padding: const EdgeInsets.symmetric(horizontal: _kGutter),
+              child: _wrapped(_bodyController, bodyField),
             ),
           ],
         ),
       );
     } else {
-      body = ItemsEditor(
+      pageContent = ItemsEditor(
         key: ValueKey('items-${note.id}'),
         items: note.items,
         showCheckboxes: note.type == NoteType.checklist,
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
-        header: header,
+        floats: _floats,
+        pageBox: _pageBox,
+        shrinkWrap: true,
+        header: keyedHeader,
       );
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
+    final hasBodyField = note.type == NoteType.text;
+    final body = LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 96),
+        child: NotePageCanvas(
+          minHeight: constraints.maxHeight,
+          images: imageAttachments,
+          onRemove: _removeAttachment,
+          onChanged: _updateAttachment,
+          onExtractText: _ocrImage,
+          topLimit: _bodyTop,
+          onFloats: _applyFloats,
+          // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
+          // aşağıya dokunmak yeterli. Listede gövde alanı yok.
+          onTapEmpty: hasBodyField
+              ? () {
+                  if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+                }
+              : null,
+          child: KeyedSubtree(key: _pageKey, child: pageContent),
+        ),
+      ),
+    );
 
     return CallbackShortcuts(
       bindings: {

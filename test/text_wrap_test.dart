@@ -11,6 +11,21 @@ void main() {
       'ondort onbes onalti onyedi onsekiz ondokuz yirmi yirmibir '
       'yirmiiki yirmiuc yirmidort yirmibes yirmialti yirmiyedi';
 
+  /// Satır BAŞI dolgusu: çapanın önünde birleştirici yoktur.
+  int startAnchors(String display) {
+    var n = 0;
+    for (var i = 0; i < display.length; i++) {
+      if (display[i] == kWrapAnchorChar &&
+          (i == 0 || display[i - 1] != kWrapGlueChar)) {
+        n++;
+      }
+    }
+    return n;
+  }
+
+  /// Satır SONU dolgusu: her zaman birleştiriciyle gelir.
+  int endAnchors(String display) => kWrapGlueChar.allMatches(display).length;
+
   test('gorsel yokken plan kimliktir', () {
     final plan = planTextWrap(
       logical: long,
@@ -22,29 +37,61 @@ void main() {
     expect(plan.widths, isEmpty);
   });
 
-  test('ust satirlar gorselin yanindan akar, alt satirlar tam genislikte', () {
+  test('soldaki gorselin yanindan metin akar, alt satirlar tam genislikte', () {
     final plan = planTextWrap(
       logical: long,
       style: style,
       columnWidth: 300,
-      floats: const [FloatBox(top: 0, width: 120, height: 40)],
+      floats: const [FloatBox(top: 0, left: 0, right: 120, height: 40)],
     );
     // Kesilen satirlarin basina dolgu konur; metnin kendisi degismez.
     expect(plan.widths, isNotEmpty);
     expect(stripWrapAnchors(plan.display), long);
-    // Dolgu yalnizca gorselin bandindaki satirlara girer, her satira degil.
-    expect(plan.widths.length, lessThan('\n'.allMatches(long).length + 12));
     expect(plan.widths.every((w) => w == 120), isTrue);
+    // Dolgu yalnizca gorselin bandindaki satirlara girer, her satira degil.
+    expect(plan.widths.length, lessThanOrEqualTo(4));
+    expect(endAnchors(plan.display), 0);
   });
 
-  test('bloklayan gorsel metni altina iter, yanina sikistirmaz', () {
+  test('sagdaki gorselin yanindan da metin akar (satir sonu dolgusu)', () {
     final plan = planTextWrap(
       logical: long,
       style: style,
       columnWidth: 300,
-      floats: const [
-        FloatBox(top: 0, width: 300, height: 30, blocking: true),
-      ],
+      floats: const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    );
+    expect(stripWrapAnchors(plan.display), long);
+    // Sag kenardaki gorsel satir SONUNA dolgu koydurur, basina degil.
+    expect(endAnchors(plan.display), greaterThan(0));
+    expect(startAnchors(plan.display), 0);
+    expect(plan.widths.every((w) => w == 120), isTrue);
+    // Dolgu son kelimeye yapisir: capadan hemen once birlestirici gelir.
+    expect(plan.display.contains('$kWrapGlueChar$kWrapAnchorChar'), isTrue);
+  });
+
+  test('sagdaki gorselin yani gercekten daralir', () {
+    final plan = planTextWrap(
+      logical: long,
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    );
+    // Dolgulu ilk satirin metni dar sutuna (180 dp) sigmali.
+    final firstLine = plan.display.split(kWrapGlueChar).first;
+    final painter = TextPainter(
+      text: TextSpan(text: firstLine, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    expect(painter.width, lessThanOrEqualTo(180.0));
+    painter.dispose();
+  });
+
+  test('sutunu kaplayan gorsel metni altina iter, yanina sikistirmaz', () {
+    final plan = planTextWrap(
+      logical: long,
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 0, right: 300, height: 30)],
     );
     // Dolgu satirin tamamini yer -> o satirlara kelime sigmaz, metin altta.
     expect(plan.widths, isNotEmpty);
@@ -54,37 +101,65 @@ void main() {
     expect(plan.widths.length, lessThanOrEqualTo(4));
   });
 
-  test('dar gorselin yanina metin akar (gercek sarma)', () {
-    final wrapped = planTextWrap(
-      logical: long,
+  test('bos metinde de soldaki gorsel imleci saga iter', () {
+    // Imlec bug'i: metin bosken hic capa yoksa imlec sutunun solunda,
+    // gorselin ustunde yanip soner.
+    final plan = planTextWrap(
+      logical: '',
       style: style,
       columnWidth: 300,
-      floats: const [FloatBox(top: 0, width: 100, height: 60)],
+      floats: const [FloatBox(top: 0, left: 0, right: 120, height: 40)],
     );
-    // Kesilen satirlar dar, altindakiler tam genislikte -> metin yandan akiyor.
-    expect(wrapped.widths.every((w) => w == 100), isTrue);
-    expect(stripWrapAnchors(wrapped.display), long);
+    expect(plan.display, kWrapAnchorChar);
+    expect(plan.widths, [120]);
+    expect(wrapToDisplayOffset(plan.display, 0), 1);
+    expect(stripWrapAnchors(plan.display), '');
+  });
+
+  test('bos metinde sagdaki gorsel imleci yerinden oynatmaz', () {
+    final plan = planTextWrap(
+      logical: '',
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    );
+    expect(plan.display, '');
+    expect(plan.widths, isEmpty);
   });
 
   test('imlec konumu capalar arasinda gidip gelirken korunur', () {
-    final plan = planTextWrap(
-      logical: long,
-      style: style,
-      columnWidth: 300,
-      floats: const [FloatBox(top: 0, width: 120, height: 40)],
-    );
-    for (final logicalOffset in [0, 1, 25, 60, long.length]) {
-      final d = wrapToDisplayOffset(plan.display, logicalOffset);
-      expect(
-        wrapToLogicalOffset(plan.display, d),
-        logicalOffset,
-        reason: 'offset $logicalOffset gidis-donus bozuldu',
+    for (final floats in [
+      const [FloatBox(top: 0, left: 0, right: 120, height: 40)],
+      const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    ]) {
+      final plan = planTextWrap(
+        logical: long,
+        style: style,
+        columnWidth: 300,
+        floats: floats,
       );
+      for (final logicalOffset in [0, 1, 25, 60, long.length]) {
+        final d = wrapToDisplayOffset(plan.display, logicalOffset);
+        expect(
+          wrapToLogicalOffset(plan.display, d),
+          logicalOffset,
+          reason: 'offset $logicalOffset gidis-donus bozuldu',
+        );
+      }
     }
   });
 
+  test('imlec satir sonu dolgusunun ONUNDE kalir', () {
+    const display = 'abc$kWrapGlueChar${kWrapAnchorChar}def';
+    // 'abc' bitiminde (mantiksal 3) imlec dolguya atlamamali.
+    expect(wrapToDisplayOffset(display, 3), 3);
+    // Satir basi dolgusunda ise imlec dolgunun ARDINA gecer.
+    expect(wrapToDisplayOffset('${kWrapAnchorChar}abc', 0), 1);
+  });
+
   test('capa temizleme nota giden govdeyi bozmadan birakir', () {
-    const withAnchors = 'a${kWrapAnchorChar}bc${kWrapAnchorChar}d';
+    const withAnchors =
+        'a${kWrapAnchorChar}bc$kWrapGlueChar${kWrapAnchorChar}d';
     expect(stripWrapAnchors(withAnchors), 'abcd');
     expect(stripWrapAnchors('temiz metin'), 'temiz metin');
   });

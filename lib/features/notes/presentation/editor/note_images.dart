@@ -7,342 +7,35 @@ import 'package:flutter/services.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
+import '../viewers/ink_layer.dart';
 import 'text_wrap.dart';
 
-/// Notta gövdenin üstünde görselleri SERBEST TUVAL (canvas) olarak gösterir:
-/// her görsel istenen yere sürüklenip serbest boyutlandırılabilir (madde 5 —
-/// "boyut ve yer serbest olmalı"). Bir görsele dokununca seçilir; seçili
-/// görsel sürüklenerek taşınır, sağ-alt tutamağından boyutlandırılır ve alttaki
-/// araç çubuğundan genişlik/tam ekran/metni al (OCR)/sil işlemleri yapılır.
-/// Boş bir alana dokununca seçim kalkar.
-///
-/// Konum [Attachment.x]/[Attachment.y] (tuval oranı 0–1), boyut ise
-/// [Attachment.displayWidth] (tuval genişliğinin oranı) ile saklanır. Konumu
-/// olmayan (eski) görseller otomatik sıralı yerleştirilir; kullanıcı taşıyınca
-/// kalıcılaşır.
-class NoteImages extends StatefulWidget {
-  const NoteImages({
-    super.key,
-    required this.images,
-    required this.onRemove,
-    required this.onChanged,
-    this.onExtractText,
-  });
-
-  final List<Attachment> images;
-
-  /// Görseli nottan kaldırır.
-  final ValueChanged<Attachment> onRemove;
-
-  /// Konum/boyut değişince güncellenmiş eki bildirir.
-  final ValueChanged<Attachment> onChanged;
-
-  /// Görseldeki metni çıkarıp (OCR) nota ekler. null ise "Metni al" düğmesi
-  /// gösterilmez.
-  final Future<void> Function(Attachment)? onExtractText;
-
-  @override
-  State<NoteImages> createState() => _NoteImagesState();
-}
-
-class _NoteImagesState extends State<NoteImages> {
-  /// Seçili (araç çubuğu açık) görselin id'si; null = seçim yok.
-  String? _selectedId;
-
-  /// Taşıma sırasındaki canlı sol/üst (piksel); bırakınca kaydedilir.
-  String? _moveId;
-  double? _moveLeft;
-  double? _moveTop;
-
-  /// Boyutlandırma sırasındaki canlı genişlik oranı; bırakınca kaydedilir.
-  String? _resizeId;
-  double? _resizeWFrac;
-
-  static const double _minWidthFrac = 0.15;
-
-  void _select(String id) {
-    setState(() => _selectedId = _selectedId == id ? null : id);
+/// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
+/// görselin üzerine elle yazılabilir; çizim [onChanged] ile ekin `ink`
+/// alanına döner.
+void openImageViewer(
+  BuildContext context,
+  Attachment img,
+  ValueChanged<Attachment> onChanged,
+) {
+  final hasLocal = img.localPath.isNotEmpty && File(img.localPath).existsSync();
+  if (!hasLocal && !img.isUploaded) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
+    return;
   }
-
-  void _deselect() {
-    if (_selectedId != null) setState(() => _selectedId = null);
-  }
-
-  /// Konumu atanmamış görseller için otomatik başlangıç yerleşimi (sol-üst
-  /// oranı). Üst üste binmesin diye indekse göre kaydırılır.
-  double _defaultX(int index) => 0.06 + (index % 2) * 0.30;
-  double _defaultY(int index) => 0.06 + (index ~/ 2) * 0.30;
-
-  /// Bir görselin tuvaldeki nihai (sınırlar içine alınmış) yerleşimini çözer.
-  /// Canlı taşıma/boyutlandırma değerleri varsa onları kullanır. Yükseklik
-  /// tuvale sığmıyorsa oran korunarak küçültülür; kutu her zaman tuval içinde
-  /// kalır.
-  ({double left, double top, double w, double h}) _resolve(
-    Attachment img,
-    int index,
-    double cw,
-    double ch,
-  ) {
-    final wFrac =
-        ((_resizeId == img.id && _resizeWFrac != null)
-                ? _resizeWFrac!
-                : (img.displayWidth ?? 0.6))
-            .clamp(_minWidthFrac, 1.0)
-            .toDouble();
-    var w = cw * wFrac;
-    final aspect =
-        (img.width != null &&
-            img.height != null &&
-            img.width! > 0 &&
-            img.height! > 0)
-        ? img.width! / img.height!
-        : 1.0;
-    var h = w / aspect;
-    if (h > ch) {
-      h = ch;
-      w = h * aspect;
-      if (w > cw) {
-        w = cw;
-        h = w / aspect;
-      }
-    }
-    final xFrac = img.x ?? _defaultX(index);
-    final yFrac = img.y ?? _defaultY(index);
-    var left = (_moveId == img.id && _moveLeft != null)
-        ? _moveLeft!
-        : xFrac * cw;
-    var top = (_moveId == img.id && _moveTop != null) ? _moveTop! : yFrac * ch;
-    left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
-    top = top.clamp(0.0, (ch - h).clamp(0.0, ch)).toDouble();
-    return (left: left, top: top, w: w, h: h);
-  }
-
-  void _openViewer(Attachment img) {
-    final hasLocal =
-        img.localPath.isNotEmpty && File(img.localPath).existsSync();
-    if (!hasLocal && !img.isUploaded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.attachmentNotSynced)),
-      );
-      return;
-    }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ImageViewerScreen(attachment: img),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.images.isEmpty) return const SizedBox.shrink();
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final cw = constraints.maxWidth;
-          // Tuval yüksekliği genişliğe bağlı ama sınırlı: dar ekranda kare-msi
-          // bir çalışma alanı, geniş ekranda aşırı uzamaz.
-          final ch = cw.clamp(220.0, 460.0).toDouble();
-          final selected = _selectedId;
-          Attachment? selectedImg;
-          for (final img in widget.images) {
-            if (img.id == selected) selectedImg = img;
-          }
-          return SizedBox(
-            width: cw,
-            height: ch,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Zemin: boş alana dokununca seçim kalkar; hafif çerçeveli
-                // "tuval" görünümü verir.
-                Positioned.fill(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.translucent,
-                    onTap: _deselect,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerLow.withValues(
-                          alpha: 0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.4),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                for (final (index, img) in widget.images.indexed)
-                  _positioned(context, img, index, cw, ch),
-                if (selectedImg != null) _toolbar(context, selectedImg),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _positioned(
-    BuildContext context,
-    Attachment img,
-    int index,
-    double cw,
-    double ch,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    final editing = _selectedId == img.id;
-    final r = _resolve(img, index, cw, ch);
-    return Positioned(
-      left: r.left,
-      top: r.top,
-      width: r.w,
-      height: r.h,
-      child: GestureDetector(
-        onTap: () => _select(img.id),
-        // Taşıma yalnız seçiliyken; aksi hâlde dikey kaydırma nota kalır.
-        onPanStart: editing
-            ? (_) => setState(() {
-                _moveId = img.id;
-                _moveLeft = r.left;
-                _moveTop = r.top;
-              })
-            : null,
-        onPanUpdate: editing
-            ? (d) => setState(() {
-                _moveLeft = ((_moveLeft ?? r.left) + d.delta.dx)
-                    .clamp(0.0, (cw - r.w).clamp(0.0, cw))
-                    .toDouble();
-                _moveTop = ((_moveTop ?? r.top) + d.delta.dy)
-                    .clamp(0.0, (ch - r.h).clamp(0.0, ch))
-                    .toDouble();
-              })
-            : null,
-        onPanEnd: editing
-            ? (_) {
-                final nl = _moveLeft ?? r.left;
-                final nt = _moveTop ?? r.top;
-                widget.onChanged(img.copyWith(x: nl / cw, y: nt / ch));
-                setState(() {
-                  _moveId = null;
-                  _moveLeft = null;
-                  _moveTop = null;
-                });
-              }
-            : null,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: editing
-                      ? Border.all(color: scheme.primary, width: 2)
-                      : Border.all(
-                          color: scheme.outlineVariant.withValues(alpha: 0.5),
-                        ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _image(context, img),
-                ),
-              ),
-            ),
-            // Sağ-alt köşe tutamağı: serbest boyutlandırma (yalnız seçiliyken).
-            // Görsel sınırları İÇİNDE tutulur ki her yerde dokunulabilsin.
-            if (editing)
-              Positioned(
-                right: 2,
-                bottom: 2,
-                child: GestureDetector(
-                  onPanStart: (_) => setState(() {
-                    _resizeId = img.id;
-                    _resizeWFrac = (img.displayWidth ?? 0.6)
-                        .clamp(_minWidthFrac, 1.0)
-                        .toDouble();
-                  }),
-                  onPanUpdate: (d) => setState(() {
-                    final base = (_resizeWFrac ?? (img.displayWidth ?? 0.6));
-                    _resizeWFrac = (base + d.delta.dx / cw)
-                        .clamp(_minWidthFrac, 1.0)
-                        .toDouble();
-                  }),
-                  onPanEnd: (_) {
-                    final f = _resizeWFrac;
-                    if (f != null) {
-                      widget.onChanged(img.copyWith(displayWidth: f));
-                    }
-                    setState(() {
-                      _resizeId = null;
-                      _resizeWFrac = null;
-                    });
-                  },
-                  child: Container(
-                    width: 26,
-                    height: 26,
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: scheme.onPrimary, width: 2),
-                    ),
-                    child: Icon(
-                      Icons.open_in_full,
-                      size: 13,
-                      color: scheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _image(BuildContext context, Attachment img) => _ImageBox(img: img);
-
-  /// Seçili görselin işlem çubuğu: genişlik kaydırıcısı + tam ekran + metni al
-  /// (OCR) + sil. Tuvalin altına sabitlenir.
-  Widget _toolbar(BuildContext context, Attachment img) {
-    final wFrac =
-        ((_resizeId == img.id && _resizeWFrac != null)
-                ? _resizeWFrac!
-                : (img.displayWidth ?? 0.6))
-            .clamp(_minWidthFrac, 1.0)
-            .toDouble();
-    return Positioned(
-      left: 8,
-      right: 8,
-      bottom: 8,
-      child: _ImageTools(
-        wFrac: wFrac,
-        minWidthFrac: _minWidthFrac,
-        onWidthChanged: (v) => setState(() {
-          _resizeId = img.id;
-          _resizeWFrac = v;
-        }),
-        onWidthEnd: (v) {
-          widget.onChanged(img.copyWith(displayWidth: v));
-          setState(() {
-            _resizeId = null;
-            _resizeWFrac = null;
-          });
-        },
-        onExtractText: widget.onExtractText == null
-            ? null
-            : () => widget.onExtractText!(img),
-        onFullscreen: () => _openViewer(img),
-        onRemove: () => widget.onRemove(img),
-      ),
-    );
-  }
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => ImageViewerScreen(attachment: img, onChanged: onChanged),
+    ),
+  );
 }
 
 /// Görsel ekin içeriği: yerel dosya → indirme adresi → yer tutucu sırasıyla.
+/// Tam ekranda görselin üzerine yazılan çizim (ekin `ink` alanı) burada da
+/// çizilir — yoksa çizim "kaybolmuş" görünürdü. Kutunun en-boy oranı görselin
+/// oranıyla aynı tutulduğu için oranlı noktalar birebir oturur.
 class _ImageBox extends StatelessWidget {
   const _ImageBox({required this.img});
 
@@ -350,6 +43,20 @@ class _ImageBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (img.ink.isEmpty) return _content(context);
+    return Stack(
+      children: [
+        Positioned.fill(child: _content(context)),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: CustomPaint(painter: InkPainter(img.ink, 1)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _content(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasLocal =
         img.localPath.isNotEmpty && File(img.localPath).existsSync();
@@ -493,9 +200,9 @@ class NotePageCanvas extends StatefulWidget {
   /// altı. Görsel başlığın üzerine hiç çıkamaz.
   final double topLimit;
 
-  /// Görsellerin gövde metni sütununda kapladığı bantları bildirir; metin
-  /// bunların etrafından akar (bkz. text_wrap.dart). Konumlar [topLimit]
-  /// (gövde metninin tepesi) baz alınarak verilir.
+  /// Görsellerin SAYFA üzerinde kapladığı bantları bildirir; metin bunların
+  /// etrafından akar (bkz. text_wrap.dart). Konumlar sayfanın (bu tuvalin
+  /// [child]'ının) sol-üst köşesine göredir.
   final ValueChanged<List<FloatBox>>? onFloats;
 
   /// Sayfanın en az yüksekliği (görünür alan — boş nota da tam sayfa tuval).
@@ -597,24 +304,20 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return (left: left, top: top, w: w, h: h);
   }
 
-  /// Görsellerin gövde metnindeki dışlama bantları. Metin sütunu [topLimit]
-  /// noktasında başladığı için konumlar oraya göre kaydırılır.
-  ///
-  /// Sağ kenardaki dolgu satır sonuna konamadığından (bkz. text_wrap.dart)
-  /// sütunun [_blockingRightEdge] oranından fazlasını kaplayan görsel
-  /// "bloklayan" sayılır: yanına sıkıştırmak yerine metni altına iter.
-  static const double _blockingRightEdge = 0.7;
-
+  /// Görsellerin SAYFA uzayındaki dışlama bantları. Metin alanları kendi
+  /// konumlarını ölçüp bunları kendi uzaylarına çevirir (bkz.
+  /// [WrapFieldMeasure]). Metnin görsele değmemesi için yatayda 12, dikeyde
+  /// 8 dp pay bırakılır.
   List<FloatBox> _floatsFor(double cw) {
     final boxes = <FloatBox>[];
     for (final (index, img) in widget.images.indexed) {
       final r = _resolve(img, index, cw);
       boxes.add(
         FloatBox(
-          top: r.top - widget.topLimit,
-          width: r.left + r.w + 12,
+          top: r.top,
+          left: r.left - 12,
+          right: r.left + r.w + 12,
           height: r.h + 8,
-          blocking: (r.left + r.w) > cw * _blockingRightEdge,
         ),
       );
     }
@@ -625,7 +328,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     final cb = widget.onFloats;
     if (cb == null) return;
     final next = _floatsFor(cw);
-    if (_lastFloats != null && _sameFloats(_lastFloats!, next)) return;
+    if (_lastFloats != null && sameFloatList(_lastFloats!, next)) return;
     _lastFloats = next;
     // Ölçüm build sırasında yapılır; bildirimi kare sonuna erteleriz ki
     // gövde denetleyicisi build içinde setState tetiklemesin.
@@ -636,38 +339,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   List<FloatBox>? _lastFloats;
 
-  static bool _sameFloats(List<FloatBox> a, List<FloatBox> b) {
-    if (a.length != b.length) return false;
-    for (var i = 0; i < a.length; i++) {
-      if (a[i].top != b[i].top ||
-          a[i].width != b[i].width ||
-          a[i].height != b[i].height ||
-          a[i].blocking != b[i].blocking) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  void _openViewer(Attachment img) {
-    final hasLocal =
-        img.localPath.isNotEmpty && File(img.localPath).existsSync();
-    if (!hasLocal && !img.isUploaded) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.attachmentNotSynced)),
-      );
-      return;
-    }
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ImageViewerScreen(attachment: img),
-      ),
-    );
-  }
+  void _openViewer(Attachment img) =>
+      openImageViewer(context, img, widget.onChanged);
 
   @override
   Widget build(BuildContext context) {
     if (widget.images.isEmpty) {
+      // Son görsel silinince bantların BOŞALDIĞI da bildirilmeli — yoksa
+      // metin, artık var olmayan bir görselin etrafından akmaya devam eder.
+      _reportFloats(0);
       // Görsel yokken katmanın görsel maliyeti olmasın; dokun-odaklan kalır.
       return GestureDetector(
         behavior: HitTestBehavior.translucent,
