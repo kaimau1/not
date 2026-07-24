@@ -127,18 +127,12 @@
   "125": "Exception",
   "126": "read_document.dart",
   "127": "build",
-  "128": "note_pdf_lines_test.dart",
   "129": "ai_cache_test.dart",
-  "130": "_GmailSectionState",
   "131": "NotlarApp",
   "132": "auth_repository.dart",
   "133": "@visibleForTesting",
   "134": "List",
   "135": "SpeechVoice",
-  "136": "_ensureInitialized",
-  "137": "_AccountSection",
   "138": "SpeechVoice",
-  "139": "SpeechOutputController",
-  "140": "allTagsProvider",
-  "141": "package:notlar/features/notes/data/pptx_render.dart"
+  "139": "SpeechOutputController"
 }
