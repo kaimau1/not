@@ -141,6 +141,15 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   void _commit() => widget.onChanged(List.of(_items));
 
+  /// Satırın TAMAMINI (tutamaç + kutucuk + metin + sil düğmesi) görselin
+  /// yanına kaydırır. Yalnız metni sarmak yetmiyordu: kutucuk ve tutamaç
+  /// satırın sol başında durduğundan görselin ALTINDA kalıyordu.
+  Widget _floatRow(Widget child) {
+    final pageBox = widget.pageBox;
+    if (pageBox == null || widget.floats.isEmpty) return child;
+    return _FloatRow(floats: widget.floats, pageBox: pageBox, child: child);
+  }
+
   /// Madde metnini, sayfadaki görsellerin etrafından akacak şekilde ölçüme
   /// bağlar. Sayfa kutusu yoksa (liste serbest tuvalin dışında) dokunmaz.
   Widget _wrapped(
@@ -422,10 +431,14 @@ class _ItemsEditorState extends State<ItemsEditor> {
       ),
     );
 
-    return Container(
+    return KeyedSubtree(
       key: ValueKey(item.id),
-      color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: _floatRow(
+        Container(
+          color: selected
+              ? scheme.primaryContainer.withValues(alpha: 0.4)
+              : null,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
       // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
       // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
       // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
@@ -498,6 +511,8 @@ class _ItemsEditorState extends State<ItemsEditor> {
           ],
         ),
       ),
+        ),
+      ),
     );
   }
 
@@ -526,8 +541,9 @@ class _ItemsEditorState extends State<ItemsEditor> {
           ]
         : _items;
 
-    final addButton = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    final addButton = _floatRow(
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           TextButton.icon(
@@ -544,7 +560,8 @@ class _ItemsEditorState extends State<ItemsEditor> {
               icon: const Icon(Icons.checklist, size: 20),
               label: Text(l10n.select),
             ),
-        ],
+          ],
+        ),
       ),
     );
 
@@ -554,13 +571,15 @@ class _ItemsEditorState extends State<ItemsEditor> {
         addButton,
         for (final item in checkedItems) _itemRow(item),
         if (checkedItems.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-            child: TextButton.icon(
-              onPressed: _deleteChecked,
-              icon: const Icon(Icons.delete_sweep_outlined, size: 20),
-              label: Text(l10n.deleteChecked(checkedItems.length)),
-              style: TextButton.styleFrom(foregroundColor: scheme.error),
+          _floatRow(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+              child: TextButton.icon(
+                onPressed: _deleteChecked,
+                icon: const Icon(Icons.delete_sweep_outlined, size: 20),
+                label: Text(l10n.deleteChecked(checkedItems.length)),
+                style: TextButton.styleFrom(foregroundColor: scheme.error),
+              ),
             ),
           ),
         if (widget.footer != null) widget.footer!,
@@ -627,5 +646,79 @@ class _ItemsEditorState extends State<ItemsEditor> {
         orderNumber: index + 1,
       ),
     );
+  }
+}
+
+/// Sayfadaki görsellerin bandına denk gelen liste satırını görselin yanına
+/// kaydırır (soldaki görsel → sağa iter, sağdaki görsel → sola daraltır).
+/// Konum yerleşimden SONRA ölçülür; dolgu satırın DIŞINDAN uygulandığı için
+/// ölçüm kendi kendini beslemez (ölçülen kutu her zaman tam genişliktir).
+///
+/// ponytail: satıra dörtte birden az yer kalıyorsa (görsel sütunu kaplıyor)
+/// satır kaydırılmaz — altına itmek listenin dikey akışını değiştirmeyi
+/// gerektirir; kullanıcı görseli daraltarak/taşıyarak çözer.
+class _FloatRow extends StatefulWidget {
+  const _FloatRow({
+    required this.floats,
+    required this.pageBox,
+    required this.child,
+  });
+
+  final List<FloatBox> floats;
+  final RenderBox? Function() pageBox;
+  final Widget child;
+
+  @override
+  State<_FloatRow> createState() => _FloatRowState();
+}
+
+class _FloatRowState extends State<_FloatRow> {
+  double _start = 0;
+  double _end = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    return Padding(
+      padding: EdgeInsets.only(left: _start, right: _end),
+      child: widget.child,
+    );
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    final box = context.findRenderObject();
+    final page = widget.pageBox();
+    if (box is! RenderBox || !box.hasSize || page == null || !page.hasSize) {
+      return;
+    }
+    final origin = box.localToGlobal(Offset.zero, ancestor: page);
+    final width = box.size.width;
+    final bottom = origin.dy + box.size.height;
+    var start = 0.0;
+    var end = 0.0;
+    for (final f in widget.floats) {
+      if (f.bottom <= origin.dy || f.top >= bottom) continue;
+      final left = f.left - origin.dx;
+      final right = f.right - origin.dx;
+      if (right <= 0 || left >= width) continue;
+      // Satır görselin GENİŞ tarafına geçer (metin sarmasıyla aynı kural).
+      if (width - right >= left) {
+        if (right > start) start = right;
+      } else {
+        final pad = width - left;
+        if (pad > end) end = pad;
+      }
+    }
+    if (width - start - end < width * 0.25) {
+      start = 0;
+      end = 0;
+    }
+    if ((start - _start).abs() > 0.5 || (end - _end).abs() > 0.5) {
+      setState(() {
+        _start = start;
+        _end = end;
+      });
+    }
   }
 }

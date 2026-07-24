@@ -82,4 +82,29 @@ void main() {
     // Gorselin bandinin disindaki madde dokunulmadan kalir.
     expect(second.isPlain, isTrue);
   });
+
+  testWidgets('gorselin bandindaki satirin tutamaci gorselin altinda kalmaz', (
+    tester,
+  ) async {
+    final items = [
+      NoteItem(id: 'a', text: 'Ust madde'),
+      NoteItem(id: 'b', text: 'Alt madde'),
+    ];
+    await pumpList(tester, items, const [
+      FloatBox(top: 0, left: 0, right: 140, height: 40),
+    ]);
+    // Olcum kare sonunda yapilir; kaydirma bir sonraki karede uygulanir.
+    await tester.pumpAndSettle();
+
+    final handles = find.byIcon(Icons.drag_indicator);
+    final firstX = tester.getTopLeft(handles.first).dx;
+    final secondX = tester.getTopLeft(handles.at(1)).dx;
+    expect(
+      firstX,
+      greaterThanOrEqualTo(140.0),
+      reason: 'gorselin bandindaki satir yana kaymadi',
+    );
+    // Gorselin altindaki satir yerinde durur.
+    expect(secondX, lessThan(140.0));
+  });
 }
