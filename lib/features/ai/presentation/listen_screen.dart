@@ -49,10 +49,14 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     _loadDocument();
   }
 
+  /// dispose'da `ref` kullanılamaz (Riverpod "widget unmounted" hatası atar ve
+  /// okuma DURMAZ); denetleyici build'de alana alınır.
+  SpeechOutputController? _speech;
+
   @override
   void dispose() {
     // Ekrandan çıkınca okuma sürmesin.
-    ref.read(speechOutputProvider.notifier).stop();
+    _speech?.stop();
     super.dispose();
   }
 
@@ -159,6 +163,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     final scheme = Theme.of(context).colorScheme;
     final speech = ref.watch(speechOutputProvider);
     final controller = ref.read(speechOutputProvider.notifier);
+    _speech = controller;
     final text = _text;
 
     return Scaffold(

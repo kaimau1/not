@@ -141,13 +141,33 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   void _commit() => widget.onChanged(List.of(_items));
 
+  /// Satırların son ölçülen kaydırma değerleri (id → sol/sağ dolgu). Yeni
+  /// eklenen satır KOMŞUSUNUN değeriyle doğsun diye tutulur: aksi hâlde satır
+  /// bir kare kaymadan çizilip sonraki karede yerine atlıyor ve madde
+  /// eklerken titreme görünüyordu.
+  final _pads = <String, ({double start, double end})>{};
+
   /// Satırın TAMAMINI (tutamaç + kutucuk + metin + sil düğmesi) görselin
   /// yanına kaydırır. Yalnız metni sarmak yetmiyordu: kutucuk ve tutamaç
   /// satırın sol başında durduğundan görselin ALTINDA kalıyordu.
-  Widget _floatRow(Widget child) {
+  Widget _floatRow(Widget child, {String? id}) {
     final pageBox = widget.pageBox;
     if (pageBox == null || widget.floats.isEmpty) return child;
-    return _FloatRow(floats: widget.floats, pageBox: pageBox, child: child);
+    return _FloatRow(
+      floats: widget.floats,
+      pageBox: pageBox,
+      initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
+      onMeasured: id == null ? null : (pad) => _pads[id] = pad,
+      child: child,
+    );
+  }
+
+  /// Yeni satırın başlangıç tahmini: bir üstündeki maddenin kaydırması
+  /// (aynı görselin bandındaysa birebir doğrudur).
+  ({double start, double end})? _padOfNeighbour(String id) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index <= 0) return null;
+    return _pads[_items[index - 1].id];
   }
 
   /// Madde metnini, sayfadaki görsellerin etrafından akacak şekilde ölçüme
@@ -434,6 +454,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return KeyedSubtree(
       key: ValueKey(item.id),
       child: _floatRow(
+        id: item.id,
         Container(
           color: selected
               ? scheme.primaryContainer.withValues(alpha: 0.4)
@@ -662,10 +683,19 @@ class _FloatRow extends StatefulWidget {
     required this.floats,
     required this.pageBox,
     required this.child,
+    this.initial,
+    this.onMeasured,
   });
 
   final List<FloatBox> floats;
   final RenderBox? Function() pageBox;
+
+  /// Ölçüm gelene kadarki başlangıç kaydırması (komşu satırın değeri).
+  final ({double start, double end})? initial;
+
+  /// Ölçüm sonucu — çağıran, sonraki satırlara tahmin olarak verir.
+  final ValueChanged<({double start, double end})>? onMeasured;
+
   final Widget child;
 
   @override
@@ -673,8 +703,8 @@ class _FloatRow extends StatefulWidget {
 }
 
 class _FloatRowState extends State<_FloatRow> {
-  double _start = 0;
-  double _end = 0;
+  late double _start = widget.initial?.start ?? 0;
+  late double _end = widget.initial?.end ?? 0;
 
   @override
   Widget build(BuildContext context) {
@@ -714,6 +744,7 @@ class _FloatRowState extends State<_FloatRow> {
       start = 0;
       end = 0;
     }
+    widget.onMeasured?.call((start: start, end: end));
     if ((start - _start).abs() > 0.5 || (end - _end).abs() > 0.5) {
       setState(() {
         _start = start;

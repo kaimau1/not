@@ -14,34 +14,66 @@ void main() {
   Future<void> pumpList(
     WidgetTester tester,
     List<NoteItem> items,
-    List<FloatBox> floats,
-  ) async {
+    List<FloatBox> floats, {
+    bool settle = true,
+  }) async {
+    // Gerçek editör gibi: değişen liste üst katmandan geri beslenir (aksi
+    // hâlde ItemsEditor didUpdateWidget'ta eski listeye döner).
+    var current = items;
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
-          body: SingleChildScrollView(
-            child: KeyedSubtree(
-              key: pageKey,
-              child: ItemsEditor(
-                items: items,
-                onChanged: (_) {},
-                showCheckboxes: false,
-                shrinkWrap: true,
-                floats: floats,
-                pageBox: () {
-                  final box = pageKey.currentContext?.findRenderObject();
-                  return box is RenderBox && box.hasSize ? box : null;
-                },
+          body: StatefulBuilder(
+            builder: (context, setState) => SingleChildScrollView(
+              child: KeyedSubtree(
+                key: pageKey,
+                child: ItemsEditor(
+                  items: current,
+                  onChanged: (next) => setState(() => current = next),
+                  showCheckboxes: false,
+                  shrinkWrap: true,
+                  floats: floats,
+                  pageBox: () {
+                    final box = pageKey.currentContext?.findRenderObject();
+                    return box is RenderBox && box.hasSize ? box : null;
+                  },
+                ),
               ),
             ),
           ),
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    if (settle) await tester.pumpAndSettle();
   }
+
+  testWidgets('yeni madde ilk karede kaymis dogar (titreme yok)', (
+    tester,
+  ) async {
+    final items = [
+      NoteItem(id: 'a', text: 'Ilk madde'),
+      NoteItem(id: 'b', text: 'Ikinci madde'),
+    ];
+    await pumpList(tester, items, const [
+      FloatBox(top: 0, left: 0, right: 140, height: 300),
+    ]);
+    await tester.pumpAndSettle();
+
+    // "Yeni oge" ile madde ekle: eklenen satir OLCUM BEKLEMEDEN, komsusunun
+    // kaydirmasiyla dogmali. Tek kare pump: olcum sonrasi duzeltmeye kalmadan.
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+
+    final handles = find.byIcon(Icons.drag_indicator);
+    expect(handles, findsNWidgets(3));
+    expect(
+      tester.getTopLeft(handles.at(2)).dx,
+      greaterThanOrEqualTo(140.0),
+      reason: 'yeni satir kaymadan dogdu -> madde eklerken titreme',
+    );
+  });
 
   testWidgets('liste dis kaydiricinin icinde tasmadan kurulur', (tester) async {
     await pumpList(tester, [

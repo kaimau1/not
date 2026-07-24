@@ -103,6 +103,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   final _bodyController = WrapTextController();
   final _bodyFocus = FocusNode();
 
+  /// KÖK NEDEN (ölçüldü): `dispose()` içinde `ref` kullanmak bu Riverpod
+  /// sürümünde "Using ref when a widget is about to or has been unmounted is
+  /// unsafe" hatası atar — atılan istisna yüzünden editörden ÇIKARKEN çalışan
+  /// her şey sessizce ölüyordu: boş notun silinmesi, otomatik etiket/başlık,
+  /// sürmekte olan sesli notun kaydı. Bu yüzden gereken bağımlılıklar her
+  /// build'de alanlara alınır; `dispose` yalnız bu alanları kullanır.
+  NotesRepository? _notesRepo;
+  AttachmentRepository? _attachRepo;
+  GeminiService? _gemini;
+  bool _autoTagEnabled = true;
+  bool _autoTitleEnabled = true;
+
+  /// (+) menüsünden gelen ve not yüklenmeden çalıştırılamayan açılış
+  /// niyetleri; not gelir gelmez bir kez çalıştırılır.
+  bool _pendingDraw = false;
+  bool _pendingVoice = false;
+
+  void _runPendingIntents() {
+    if (!mounted || _note == null) return;
+    if (_pendingDraw) {
+      _pendingDraw = false;
+      _addDrawing();
+    }
+    if (_pendingVoice) {
+      _pendingVoice = false;
+      _startVoiceCapture();
+    }
+  }
+
+  void _cacheDeps() {
+    _notesRepo = ref.read(notesRepositoryProvider);
+    _attachRepo = ref.read(attachmentRepositoryProvider);
+    _gemini = ref.read(geminiServiceProvider);
+    _autoTagEnabled = ref.read(autoTagProvider);
+    _autoTitleEnabled = ref.read(autoTitleProvider);
+  }
+
   /// Gövde metninin sayfa tepesinden uzaklığı (başlık + çip satırının altı).
   /// Görseller bunun üzerine çıkamaz; sarma hesabı da buna göre yapılır.
   double _bodyTop = 0;
@@ -179,18 +216,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _titleController.text = cached.title;
       _bodyController.text = cached.body;
     }
-    if (widget.startDrawing) {
-      // El yazısı modu: ilk kareden sonra doğrudan çizim tuvalini aç.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _addDrawing();
-      });
-    }
-    if (widget.startVoiceCapture) {
-      // Sesli not modu: ilk kareden sonra kayıt + canlı dökümü başlat.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _startVoiceCapture();
-      });
-    }
+    // KÖK NEDEN: (+) menüsünden gelen "Sesli not"/"El yazısı" niyetleri ilk
+    // karede çalıştırılıyordu; yeni oluşturulan not dashboard önbelleğinde
+    // henüz olmadığından `_note` null oluyor ve iki akış da SESSİZCE geri
+    // dönüyordu (kayıt hiç başlamıyordu). Niyet artık beklemede tutulur ve
+    // not eline geçtiği anda çalıştırılır.
+    _pendingDraw = widget.startDrawing;
+    _pendingVoice = widget.startVoiceCapture;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
       next,
@@ -203,6 +236,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           _titleController.text = incoming.title;
           _bodyController.text = incoming.body;
         });
+        // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
+        _runPendingIntents();
       } else {
         // Editör açıkken yerel metin esastır; yalnızca arka planda değişen
         // alanları (ek yüklemeleri, AI özeti) benimse.
@@ -227,7 +262,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final note = _note;
     if (!_deleted && note != null && note.isEmpty && !wasCapturing) {
       // İçi boş kalan not çıkarken sessizce silinir.
-      ref.read(notesRepositoryProvider)?.hardDelete(note.id);
+      _notesRepo?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
       if (note.tags.isEmpty) _autoTagInBackground(note);
       if (note.title.trim().isEmpty) _autoTitleInBackground(note);
@@ -291,6 +326,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     return context.l10n.attachmentTooLarge(limitMb);
   }
 
+  /// Yeni görselin sayfadaki başlangıç yeri ve boyu. Konum/boyut verilmezse
+  /// tuval onu sol üste, sayfanın YARISI genişliğinde koyuyordu — yani doğrudan
+  /// yazılmakta olan metnin üzerine. Bunun yerine küçük (%32) başlar ve
+  /// sayfadaki mevcut içeriğin (son görselin ya da metnin) ALTINA yerleşir.
+  Attachment _placeNewImage(Attachment image, Note note) {
+    const width = 0.32;
+    var top = _bodyTop + 24;
+    for (final a in note.attachments) {
+      if (a.kind != AttachmentKind.image) continue;
+      final aspect = (a.width != null && a.height != null && a.height! > 0)
+          ? a.width! / a.height!
+          : 1.0;
+      final pageWidth = _pageBox()?.size.width ?? 0;
+      final bottom = (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
+      if (bottom + 16 > top) top = bottom + 16;
+    }
+    // Sayfanın altına taşmasın: içerik yüksekliğini aşarsa oraya sabitlenir.
+    final pageHeight = _pageBox()?.size.height;
+    if (pageHeight != null && top > pageHeight) top = pageHeight;
+    return image.copyWith(x: 0.06, pageY: top, displayWidth: width);
+  }
+
   Future<void> _addImageBytes(Uint8List bytes, String fileName) async {
     final tooLargeMessage = _tooLargeMessage();
     final repo = ref.read(attachmentRepositoryProvider);
@@ -302,7 +359,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         fileName: fileName,
       );
       _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        (n) => n.copyWith(
+          attachments: [...n.attachments, _placeNewImage(attachment, n)],
+        ),
         immediate: true,
       );
     } on FileTooLargeException {
@@ -620,11 +679,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// AI ile etiketler.
   void _autoTagInBackground(Note note) {
     if (note.toPlainText().length < 20) return;
-    final enabled = ref.read(autoTagProvider);
-    if (!enabled) return;
-    final service = ref.read(geminiServiceProvider);
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
+    if (!_autoTagEnabled) return;
+    final service = _gemini;
+    final repo = _notesRepo;
+    if (repo == null || service == null) return;
     Future(() async {
       try {
         final tags = await service.suggestTags(note);
@@ -639,10 +697,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// (Ayarlar > Yapay Zeka > "Kapatırken başlık öner", varsayılan açık).
   /// "Başlık öner" çipiyle aynı üreticiyi kullanır; akışı kesmez.
   void _autoTitleInBackground(Note note) {
-    if (note.isEmpty || !ref.read(autoTitleProvider)) return;
-    final service = ref.read(geminiServiceProvider);
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
+    if (note.isEmpty || !_autoTitleEnabled) return;
+    final service = _gemini;
+    final repo = _notesRepo;
+    if (repo == null || service == null) return;
     Future(() async {
       try {
         final title = await service.generateTitle(note);
@@ -1423,9 +1481,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final started = _captureStart;
     _captureRecorder = null;
     _captureStart = null;
-    // Provider'lar dispose İÇİNDE senkron okunur; async gövde ref kullanmaz.
-    final attachmentRepo = ref.read(attachmentRepositoryProvider);
-    final notesRepo = ref.read(notesRepositoryProvider);
+    // dispose içinde ref kullanılamaz (yukarıdaki KÖK NEDEN notu): depolar
+    // build'de alınan alanlardan okunur.
+    final attachmentRepo = _attachRepo;
+    final notesRepo = _notesRepo;
     DeviceSpeech.stop();
     if (recorder == null || attachmentRepo == null || notesRepo == null) {
       recorder?.dispose();
@@ -1529,6 +1588,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
+    _cacheDeps();
     final l10n = context.l10n;
     final note = _note;
 

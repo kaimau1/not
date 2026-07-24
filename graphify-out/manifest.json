@@ -245,8 +245,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/items_editor.dart": {
-    "mtime": 1784920754.8560524,
-    "ast_hash": "c621d90d1788dfa8013dd154563b6b5d",
+    "mtime": 1784922156.6739962,
+    "ast_hash": "620aee9aa826219d82b5cd794fcc20cd",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
@@ -305,12 +305,12 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784918132.7771041,
+    "mtime": 1784921544.631773,
     "ast_hash": "1b6884bc6c9d5580293e2aa26ee45660",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784918132.779111,
+    "mtime": 1784921544.6198437,
     "ast_hash": "64cda3aa6312a6b51b8b09d868dc12d0",
     "semantic_hash": ""
   },
@@ -895,8 +895,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1784921341.2615607,
-    "ast_hash": "04382969903546910e9c1ff0411ea3c1",
+    "mtime": 1784922353.1769862,
+    "ast_hash": "07911f8ca80f675f02b52ad194c20d77",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "test/items_editor_wrap_test.dart": {
-    "mtime": 1784920941.909679,
-    "ast_hash": "ccd9f9e4309797dba0552521074d78f1",
+    "mtime": 1784922169.2947302,
+    "ast_hash": "686e71926af8f20f6edcde034a130629",
     "semantic_hash": ""
   }
 }
