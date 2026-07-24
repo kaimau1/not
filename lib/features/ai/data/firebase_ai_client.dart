@@ -5,6 +5,34 @@ import 'package:firebase_ai/firebase_ai.dart';
 import '../../../core/constants.dart';
 import 'gemini_service.dart' show GeminiException;
 
+/// Dahili AI'ın son ham hatalarını tutar. [FirebaseAiClient._mapError]
+/// kullanıcıya sade Türkçe mesaj döndürdüğü için ham metin (hangi model,
+/// hangi hata) aksi hâlde kayboluyor ve "çalışmıyor" şikâyeti teşhis
+/// edilemiyordu. Ayarlar > AI tanılama bu listeyi gösterir.
+///
+/// Bellekte, en fazla [_max] kayıt; kalıcı değil (uygulama kapanınca silinir)
+/// ve kişisel veri içermez — yalnız model adı, zaman ve hata metni.
+class AiDiagnostics {
+  AiDiagnostics._();
+
+  static const int _max = 10;
+  static final List<String> _entries = [];
+
+  static List<String> get entries => List.unmodifiable(_entries.reversed);
+
+  static void record(String model, Object error) {
+    final now = DateTime.now();
+    final stamp =
+        '${now.hour.toString().padLeft(2, '0')}:'
+        '${now.minute.toString().padLeft(2, '0')}:'
+        '${now.second.toString().padLeft(2, '0')}';
+    _entries.add('[$stamp] $model → $error');
+    if (_entries.length > _max) _entries.removeAt(0);
+  }
+
+  static void clear() => _entries.clear();
+}
+
 /// Anahtarsız "dahili AI": istekler Firebase AI Logic üzerinden (Gemini
 /// Developer API arka ucu) uygulamanın kendi Firebase projesiyle yapılır.
 /// Kullanıcıdan API anahtarı istenmez ve cihazda anahtar bulunmaz; kötüye
@@ -14,14 +42,16 @@ import 'gemini_service.dart' show GeminiException;
 /// burada firebase_ai tiplerine çevrilir; böylece tüm istem metinleri tek
 /// yerde (GeminiService) kalır.
 class FirebaseAiClient {
-  FirebaseAiClient({Future<void> Function()? beforeCall})
-    : _beforeCall = beforeCall ?? _noop;
+  FirebaseAiClient({
+    Future<void> Function(List<Map<String, dynamic>> contents)? beforeCall,
+  }) : _beforeCall = beforeCall ?? _noop;
 
-  static Future<void> _noop() async {}
+  static Future<void> _noop(List<Map<String, dynamic>> _) async {}
 
   /// Kullanıcıya görünür her AI eylemi öncesi çağrılır (premium/kota kapısı).
-  /// Kota bittiyse [GeminiException] fırlatarak isteği durdurur.
-  final Future<void> Function() _beforeCall;
+  /// Gönderilecek içerik verilir ki kota isteğin gerçek maliyetine göre
+  /// düşülebilsin. Kota bittiyse [GeminiException] fırlatarak isteği durdurur.
+  final Future<void> Function(List<Map<String, dynamic>> contents) _beforeCall;
 
   static List<String> _candidates(String? prefer) => [
     ?prefer,
@@ -70,31 +100,74 @@ class FirebaseAiClient {
         message.contains('not_found') ||
         message.contains('quota') ||
         message.contains('exhausted') ||
-        message.contains('overloaded') ||
-        message.contains('unavailable');
+        _isTransient(e);
   }
+
+  /// Modelin kendisiyle değil, o anki YÜKLE ilgili geçici hatalar. Bunlarda
+  /// sıradaki modele atlamak çare değildir (arka uç zaten meşguldür); kısa
+  /// bir bekleyişten sonra AYNI model yeniden denenir. Bu ayrım olmadan üç
+  /// model saniyeler içinde tükeniyor ve istek "bazen çalışıyor bazen
+  /// çalışmıyor" görünümü veriyordu.
+  static bool _isTransient(Object e) {
+    final message = e is FirebaseAIException
+        ? e.message.toLowerCase()
+        : e.toString().toLowerCase();
+    return message.contains('overloaded') ||
+        message.contains('unavailable') ||
+        message.contains('deadline') ||
+        message.contains('timeout') ||
+        message.contains('timed out') ||
+        message.contains('socket') ||
+        message.contains('connection') ||
+        message.contains('503') ||
+        message.contains('429');
+  }
+
+  /// Tek bir modele yapılan istek için üst sınır. Sınırsız bekleyiş, ağ
+  /// koptuğunda kullanıcıyı süresiz dönen çarkla baş başa bırakıyordu.
+  static const Duration _requestTimeout = Duration(seconds: 90);
+
+  /// Geçici hatada aynı modelin yeniden denenme sayısı ve bekleyişleri.
+  static const List<Duration> _backoff = [
+    Duration(milliseconds: 400),
+    Duration(milliseconds: 1200),
+  ];
 
   Future<T> _withModel<T>(
     Future<T> Function(String model) run, {
     String? prefer,
   }) async {
     final models = _candidates(prefer);
-    FirebaseAIException? lastSkipped;
+    Object? lastSkipped;
     for (var i = 0; i < models.length; i++) {
-      try {
-        return await run(models[i]);
-      } on FirebaseAIException catch (e) {
-        // İlk sıradaki [prefer] yalnızca bir HIZ tercihidir (ör. otomatik
-        // başlıkta hızlı "lite" modeli). O model bu arka uçta yoksa dönen
-        // hata her zaman "not found" kalıbına uymayabilir; bu durumda istek
-        // tümden başarısız olmasın diye tercih denemesinin HER hatasında
-        // sıradaki (standart) modele düşülür.
-        final isPreferHint = prefer != null && i == 0;
-        if (isPreferHint || _shouldTryNext(e)) {
-          lastSkipped = e;
-          continue;
+      for (var attempt = 0; attempt <= _backoff.length; attempt++) {
+        try {
+          return await run(models[i]).timeout(_requestTimeout);
+        } on Object catch (e) {
+          AiDiagnostics.record(models[i], e);
+          if (_isTransient(e) && attempt < _backoff.length) {
+            await Future<void>.delayed(_backoff[attempt]);
+            continue; // aynı model, kısa bekleyişten sonra
+          }
+          if (e is! FirebaseAIException) {
+            if (_isTransient(e)) {
+              lastSkipped = e;
+              break; // sıradaki modeli dene
+            }
+            throw _mapError(e);
+          }
+          // İlk sıradaki [prefer] yalnızca bir HIZ tercihidir (ör. otomatik
+          // başlıkta hızlı "lite" modeli). O model bu arka uçta yoksa dönen
+          // hata her zaman "not found" kalıbına uymayabilir; bu durumda istek
+          // tümden başarısız olmasın diye tercih denemesinin HER hatasında
+          // sıradaki (standart) modele düşülür.
+          final isPreferHint = prefer != null && i == 0;
+          if (isPreferHint || _shouldTryNext(e)) {
+            lastSkipped = e;
+            break; // sıradaki modeli dene
+          }
+          throw _mapError(e);
         }
-        throw _mapError(e);
       }
     }
     throw _mapError(lastSkipped);
@@ -103,8 +176,9 @@ class FirebaseAiClient {
   /// Firebase AI Logic hatalarını kullanıcının anlayacağı Türkçe mesaja
   /// çevirir. En sık karşılaşılan iki durum: (1) konsolda AI Logic hiç
   /// etkinleştirilmemiş, (2) App Check zorunlu ama token geçersiz.
-  static GeminiException _mapError(FirebaseAIException? e) {
-    final message = (e?.message ?? '').toLowerCase();
+  static GeminiException _mapError(Object? error) {
+    final e = error is FirebaseAIException ? error : null;
+    final message = (e?.message ?? error?.toString() ?? '').toLowerCase();
     if (message.contains('app check') ||
         message.contains('app-check') ||
         message.contains('token') ||
@@ -144,7 +218,8 @@ class FirebaseAiClient {
       );
     }
     return GeminiException(
-      'Yapay zeka şu an yanıt veremiyor: ${e?.message ?? 'bilinmeyen hata'}',
+      'Yapay zeka şu an yanıt veremiyor: '
+      '${e?.message ?? error?.toString() ?? 'bilinmeyen hata'}',
     );
   }
 
@@ -154,7 +229,7 @@ class FirebaseAiClient {
     bool jsonOutput = false,
     String? preferModel,
   }) async {
-    await _beforeCall();
+    await _beforeCall(contents);
     final converted = [for (final c in contents) _toContent(c)];
     final response = await _withModel(
       (model) =>
@@ -177,7 +252,7 @@ class FirebaseAiClient {
     onToolCall, {
     String? prefer,
   }) async {
-    await _beforeCall();
+    await _beforeCall(contents);
     final history = [for (final c in contents) _toContent(c)];
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(

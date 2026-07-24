@@ -14,6 +14,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/api_key_store.dart';
+import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -1033,6 +1034,57 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               : const Icon(Icons.check_circle_outline),
           label: Text(l10n.validateAndSave),
         ),
+        const _AiDiagnosticsTile(),
+      ],
+    );
+  }
+}
+
+/// Dahili AI'ın son ham hataları. Kullanıcıya gösterilen mesajlar sadeleştirilmiş
+/// olduğundan ("şu an yanıt veremiyor"), gerçek neden yalnız burada görünür.
+class _AiDiagnosticsTile extends StatefulWidget {
+  const _AiDiagnosticsTile();
+
+  @override
+  State<_AiDiagnosticsTile> createState() => _AiDiagnosticsTileState();
+}
+
+class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
+  @override
+  Widget build(BuildContext context) {
+    final entries = AiDiagnostics.entries;
+    final scheme = Theme.of(context).colorScheme;
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: Text(context.l10n.aiDiagnostics),
+      subtitle: Text(
+        entries.isEmpty
+            ? context.l10n.aiDiagnosticsEmpty
+            : context.l10n.aiDiagnosticsCount(entries.length),
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+      onExpansionChanged: (_) => setState(() {}),
+      children: [
+        for (final e in entries)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: SelectableText(
+              e,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontFamily: 'monospace',
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (entries.isNotEmpty)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(AiDiagnostics.clear),
+              icon: const Icon(Icons.delete_outline, size: 18),
+              label: Text(context.l10n.clear),
+            ),
+          ),
       ],
     );
   }

@@ -33,15 +33,28 @@ abstract final class AppConstants {
   /// kalır (model geçişleri böyle optimize edilir).
   static const String voiceAssistantModel = 'gemini-3.5-flash';
 
-  /// Dahili AI (Firebase AI Logic) için premium olmayanların günlük
-  /// ücretsiz istek hakkı. Kendi API anahtarını girenlere sınır uygulanmaz.
-  static const int freeDailyAiCalls = 5;
+  /// Dahili AI günlük bütçesi PUAN olarak sayılır, çağrı olarak değil:
+  /// 100 sayfalık bir PDF özeti ile bir başlık üretiminin maliyeti arasında
+  /// iki mertebe fark var; ikisini "1 hak" saymak faturayı öngörülemez
+  /// kılıyordu. Puanlar isteğin içeriğinden türetilir (bkz. AiCost).
+  ///
+  /// 30 puan ≈ günde 30 küçük metin işlemi VEYA 3 PDF özeti.
+  /// Kendi API anahtarını girenlere sınır uygulanmaz (kendi kotaları).
+  static const int freeDailyAiPoints = 30;
 
-  /// Premium kullanıcıların günlük dahili AI hakkı. Premium "sınırsız" değil:
-  /// dahili AI çağrıları projenin Gemini faturasından karşılandığı için
-  /// (kredi tükenince herkes hata alır) premium'a da bir tavan konur. Kendi
-  /// API anahtarını girenler bu sınırdan muaftır (kendi kotaları).
-  static const int premiumDailyAiCalls = 100;
+  /// Premium günlük puanı. Premium "sınırsız" değil: dahili AI çağrıları
+  /// projenin Gemini faturasından karşılandığı için (kredi tükenince herkes
+  /// hata alır) premium'a da bir tavan konur.
+  static const int premiumDailyAiPoints = 300;
+
+  /// İstek maliyetinin puana çevrilmesi. Taban her istekte 1 puandır;
+  /// ekli dosyalar ve uzun metin üstüne eklenir.
+  static const int aiPointsPerImage = 3;
+  static const int aiPointsPerDocument = 10;
+
+  /// Her bu kadar karakter girdi için +1 puan (token maliyetinin kaba
+  /// karşılığı — uzun sohbet geçmişi de faturaya yazılıyor).
+  static const int aiCharsPerPoint = 4000;
   static const String geminiLiveTranslateModel =
       'gemini-3.5-live-translate-preview';
   static const String geminiLiveWsUrl =

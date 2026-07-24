@@ -270,12 +270,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String aiBuiltInPremium(int count) {
-    return 'Dahili AI: Premium — bugün kalan hak $count';
+    return 'Dahili AI: Premium — bugün kalan puan $count';
   }
 
   @override
   String aiBuiltInRemaining(int count) {
-    return 'Dahili AI: bugün kalan ücretsiz hak $count';
+    return 'Dahili AI: bugün kalan ücretsiz puan $count';
   }
 
   @override
@@ -325,6 +325,20 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get validateAndSave => 'Doğrula ve Kaydet';
+
+  @override
+  String get clear => 'Temizle';
+
+  @override
+  String get aiDiagnostics => 'AI tanılama';
+
+  @override
+  String get aiDiagnosticsEmpty => 'Kayıtlı hata yok';
+
+  @override
+  String aiDiagnosticsCount(int count) {
+    return 'Son $count hata kaydı';
+  }
 
   @override
   String get apiKeyValid => 'API anahtarı doğrulandı ve kaydedildi';

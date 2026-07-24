@@ -9,3 +9,21 @@
   içeren bir commit ya da Actions → Run workflow ile Release tazelenmeli.
 - **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** (bilinçli ertelendi,
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
+
+## Bilinen eksik / risk
+- [ ] **Sağ kenardaki görselin YANINDAN metin akmıyor** — sütunun %70'inden
+  fazlasını kaplayan görsel metni altına itiyor. Sağdan daraltma satır sonuna
+  dolgu koymayı gerektiriyor, kırıcı o dolguya sıra gelmeden satırı zaten
+  kırıyor. Tam çözüm kendi satır kırıcımızı yazmak (imleç/seçim/IME elle) —
+  ayrı ve büyük iş (2026-07-24).
+- [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
+  gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
+  Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).
+- [ ] **AI kota sayacı istemci tarafında** — kural aynı gün puanın azalmasını
+  engelliyor ama gerçek zorlama için sunucu (Cloud Functions + App Check)
+  gerekiyor; App Check hiç aktive edilmemiş durumda (2026-07-24).
+
+## Sonra yapılacak
+- [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
+  1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
+  (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.

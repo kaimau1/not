@@ -577,13 +577,13 @@ abstract class AppLocalizations {
   /// No description provided for @aiBuiltInPremium.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili AI: Premium — bugün kalan hak {count}'**
+  /// **'Dahili AI: Premium — bugün kalan puan {count}'**
   String aiBuiltInPremium(int count);
 
   /// No description provided for @aiBuiltInRemaining.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili AI: bugün kalan ücretsiz hak {count}'**
+  /// **'Dahili AI: bugün kalan ücretsiz puan {count}'**
   String aiBuiltInRemaining(int count);
 
   /// No description provided for @aiBuiltInByok.
@@ -675,6 +675,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Doğrula ve Kaydet'**
   String get validateAndSave;
+
+  /// No description provided for @clear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizle'**
+  String get clear;
+
+  /// No description provided for @aiDiagnostics.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI tanılama'**
+  String get aiDiagnostics;
+
+  /// No description provided for @aiDiagnosticsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kayıtlı hata yok'**
+  String get aiDiagnosticsEmpty;
+
+  /// No description provided for @aiDiagnosticsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son {count} hata kaydı'**
+  String aiDiagnosticsCount(int count);
 
   /// No description provided for @apiKeyValid.
   ///

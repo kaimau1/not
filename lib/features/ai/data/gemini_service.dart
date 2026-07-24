@@ -19,7 +19,10 @@ final geminiServiceProvider = Provider<GeminiService>(
     // Anahtar girilmemişse istekler dahili (Firebase AI Logic) yoldan
     // yapılır; her çağrı önce premium/kota kapısından geçer.
     builtIn: FirebaseAiClient(
-      beforeCall: () => ref.read(aiGateProvider).consume(),
+      // Maliyet isteğin içeriğinden ölçülür (ek dosya türü + metin uzunluğu);
+      // çağrı yerlerinin doğru puanı geçmesi beklenmez.
+      beforeCall: (contents) =>
+          ref.read(aiGateProvider).consume(AiCost.forContents(contents)),
     ),
   ),
 );

@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
+import 'text_wrap.dart';
 
 /// Notta gövdenin üstünde görselleri SERBEST TUVAL (canvas) olarak gösterir:
 /// her görsel istenen yere sürüklenip serbest boyutlandırılabilir (madde 5 —
@@ -478,12 +480,23 @@ class NotePageCanvas extends StatefulWidget {
     required this.onChanged,
     this.onExtractText,
     this.onTapEmpty,
+    this.topLimit = 0,
+    this.onFloats,
   });
 
   final List<Attachment> images;
 
   /// Sayfa içeriği (başlık, çipler, gövde metni). Görseller bunun üstünde.
   final Widget child;
+
+  /// Görsellerin inebileceği en üst nokta (dp) — başlık ve çip satırının
+  /// altı. Görsel başlığın üzerine hiç çıkamaz.
+  final double topLimit;
+
+  /// Görsellerin gövde metni sütununda kapladığı bantları bildirir; metin
+  /// bunların etrafından akar (bkz. text_wrap.dart). Konumlar [topLimit]
+  /// (gövde metninin tepesi) baz alınarak verilir.
+  final ValueChanged<List<FloatBox>>? onFloats;
 
   /// Sayfanın en az yüksekliği (görünür alan — boş nota da tam sayfa tuval).
   final double minHeight;
@@ -507,6 +520,28 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   String? _moveId;
   double? _moveLeft;
   double? _moveTop;
+
+  /// Sürüklemenin başladığı yer — parmağın toplam yer değiştirmesi buna
+  /// eklenir (canlı değere eklemek hareketi katlardı).
+  double? _moveOriginLeft;
+  double? _moveOriginTop;
+
+  /// Sürükleme bitince yeni konumu kaydeder ve canlı değerleri temizler.
+  void _commitMove(Attachment img, double cw) {
+    if (_moveId != img.id) return;
+    final nl = _moveLeft;
+    final nt = _moveTop;
+    if (nl != null && nt != null) {
+      widget.onChanged(img.copyWith(x: nl / cw, pageY: nt));
+    }
+    setState(() {
+      _moveId = null;
+      _moveLeft = null;
+      _moveTop = null;
+      _moveOriginLeft = null;
+      _moveOriginTop = null;
+    });
+  }
 
   /// Boyutlandırma sırasındaki canlı genişlik oranı; bırakınca kaydedilir.
   String? _resizeId;
@@ -557,8 +592,61 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         : img.pageY ??
               (img.y != null ? img.y! * _legacyCanvasHeight : _defaultTop(index));
     left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
-    top = top < 0 ? 0.0 : top;
+    // Başlık/çip bölgesi görsele kapalı: üst sınırın altına inemez.
+    if (top < widget.topLimit) top = widget.topLimit;
     return (left: left, top: top, w: w, h: h);
+  }
+
+  /// Görsellerin gövde metnindeki dışlama bantları. Metin sütunu [topLimit]
+  /// noktasında başladığı için konumlar oraya göre kaydırılır.
+  ///
+  /// Sağ kenardaki dolgu satır sonuna konamadığından (bkz. text_wrap.dart)
+  /// sütunun [_blockingRightEdge] oranından fazlasını kaplayan görsel
+  /// "bloklayan" sayılır: yanına sıkıştırmak yerine metni altına iter.
+  static const double _blockingRightEdge = 0.7;
+
+  List<FloatBox> _floatsFor(double cw) {
+    final boxes = <FloatBox>[];
+    for (final (index, img) in widget.images.indexed) {
+      final r = _resolve(img, index, cw);
+      boxes.add(
+        FloatBox(
+          top: r.top - widget.topLimit,
+          width: r.left + r.w + 12,
+          height: r.h + 8,
+          blocking: (r.left + r.w) > cw * _blockingRightEdge,
+        ),
+      );
+    }
+    return boxes;
+  }
+
+  void _reportFloats(double cw) {
+    final cb = widget.onFloats;
+    if (cb == null) return;
+    final next = _floatsFor(cw);
+    if (_lastFloats != null && _sameFloats(_lastFloats!, next)) return;
+    _lastFloats = next;
+    // Ölçüm build sırasında yapılır; bildirimi kare sonuna erteleriz ki
+    // gövde denetleyicisi build içinde setState tetiklemesin.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) cb(next);
+    });
+  }
+
+  List<FloatBox>? _lastFloats;
+
+  static bool _sameFloats(List<FloatBox> a, List<FloatBox> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].top != b[i].top ||
+          a[i].width != b[i].width ||
+          a[i].height != b[i].height ||
+          a[i].blocking != b[i].blocking) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void _openViewer(Attachment img) {
@@ -593,6 +681,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cw = constraints.maxWidth;
+        _reportFloats(cw);
         // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
         var maxBottom = 0.0;
         for (final (index, img) in widget.images.indexed) {
@@ -658,35 +747,35 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       height: r.h,
       child: GestureDetector(
         onTap: () => _select(img.id),
-        // Taşıma yalnız seçiliyken; aksi hâlde dikey kaydırma sayfaya kalır.
-        onPanStart: editing
-            ? (_) => setState(() {
-                _moveId = img.id;
-                _moveLeft = r.left;
-                _moveTop = r.top;
-              })
-            : null,
-        onPanUpdate: editing
-            ? (d) => setState(() {
-                _moveLeft = ((_moveLeft ?? r.left) + d.delta.dx)
-                    .clamp(0.0, (cw - r.w).clamp(0.0, cw))
-                    .toDouble();
-                final nt = (_moveTop ?? r.top) + d.delta.dy;
-                _moveTop = nt < 0 ? 0.0 : nt;
-              })
-            : null,
-        onPanEnd: editing
-            ? (_) {
-                final nl = _moveLeft ?? r.left;
-                final nt = _moveTop ?? r.top;
-                widget.onChanged(img.copyWith(x: nl / cw, pageY: nt));
-                setState(() {
-                  _moveId = null;
-                  _moveLeft = null;
-                  _moveTop = null;
-                });
-              }
-            : null,
+        // Taşıma TEK jestte: basılı tut, parmağını kaldırmadan sürükle.
+        // (Önce seçip sonra sürüklemek gerekiyordu — kullanımı zordu.)
+        // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık
+        // sürüklemeyle başlar, taşıma ise basılı tutmayı bekler.
+        onLongPressStart: (d) {
+          HapticFeedback.selectionClick();
+          setState(() {
+            _selectedId = img.id;
+            _moveId = img.id;
+            // Sürükleme başlangıcı ayrı tutulur: _resolve taşıma sırasında
+            // canlı değeri döndürdüğü için onu baz almak kaymayı katlardı.
+            _moveOriginLeft = r.left;
+            _moveOriginTop = r.top;
+            _moveLeft = r.left;
+            _moveTop = r.top;
+          });
+        },
+        onLongPressMoveUpdate: (d) {
+          if (_moveId != img.id) return;
+          setState(() {
+            _moveLeft = ((_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx)
+                .clamp(0.0, (cw - r.w).clamp(0.0, cw))
+                .toDouble();
+            final nt = (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy;
+            _moveTop = nt < widget.topLimit ? widget.topLimit : nt;
+          });
+        },
+        onLongPressEnd: (_) => _commitMove(img, cw),
+        onLongPressCancel: () => _commitMove(img, cw),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
