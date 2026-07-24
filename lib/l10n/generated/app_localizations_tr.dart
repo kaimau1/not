@@ -899,6 +899,20 @@ class AppLocalizationsTr extends AppLocalizations {
       'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut';
 
   @override
+  String get showTagChips => 'Etiket çiplerini göster';
+
+  @override
+  String get showFolderChips => 'Klasör çiplerini göster';
+
+  @override
+  String videoTooBigForAi(int mb) {
+    return 'Video AI\'ya göndermek için çok büyük ($mb MB). Daha kısa çek.';
+  }
+
+  @override
+  String get aiRunning => 'Yapay zekâ çalışıyor…';
+
+  @override
   String get permCamera => 'Kamera';
 
   @override

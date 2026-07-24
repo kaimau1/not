@@ -327,8 +327,12 @@ class _AttachmentTile extends StatelessWidget {
             child: SizedBox(height: 98, child: content),
           ),
         ),
-        // Yükleme sürüyor göstergesi
-        if (!attachment.isUploaded && _hasLocal)
+        // Yükleme sürüyor göstergesi. Görüntülü not buluta HİÇ yüklenmediği
+        // için burada asla dönmemeli: sürekli dönen çark "senkron edilmeye
+        // çalışılıyor" izlenimi veriyordu.
+        if (!attachment.isUploaded &&
+            _hasLocal &&
+            attachment.kind != AttachmentKind.video)
           Positioned(
             left: 6,
             bottom: 6,

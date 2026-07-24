@@ -105,6 +105,41 @@ class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
 
 /// Ana ekran filtre barı genişletildi mi? (madde 4) Kapalıyken tek satır
 /// kompakt çip; açıkken klasör ve etiketler bölümler hâlinde tam görünür.
+/// Çip barında etiket çipleri görünsün mü (kullanıcı tercihi, kalıcı).
+/// Filtreler gibi gizlenebilir: çok etiketi olan kullanıcıda satır şişiyordu.
+final showTagChipsProvider = NotifierProvider<ShowTagChipsNotifier, bool>(
+  ShowTagChipsNotifier.new,
+);
+
+class ShowTagChipsNotifier extends Notifier<bool> {
+  static const _key = 'show_tag_chips';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
+/// Çip barında klasör çipleri görünsün mü (kullanıcı tercihi, kalıcı).
+final showFolderChipsProvider = NotifierProvider<ShowFolderChipsNotifier, bool>(
+  ShowFolderChipsNotifier.new,
+);
+
+class ShowFolderChipsNotifier extends Notifier<bool> {
+  static const _key = 'show_folder_chips';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 final filtersExpandedProvider =
     NotifierProvider<FiltersExpandedNotifier, bool>(
       FiltersExpandedNotifier.new,

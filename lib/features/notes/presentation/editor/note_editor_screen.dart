@@ -42,6 +42,7 @@ import '../../domain/note_type.dart';
 import '../color_picker_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
+import 'ai_result_sheet.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
@@ -119,6 +120,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   GeminiService? _gemini;
   bool _autoTagEnabled = true;
   bool _autoTitleEnabled = true;
+
+  /// Süren AI işinin adı (null = çalışan yok). Uzun AI işleri (OCR, videodan
+  /// not) tek bir SnackBar gösterip sessizleşiyordu: kullanıcı çalışıp
+  /// çalışmadığını anlamıyor, dakikalar sonra gelen hatayı da bağlayamıyordu.
+  /// Bu alan, editörün altındaki şeritte iş bitene kadar duran canlı bir
+  /// gösterge sürer ve aynı işin ikinci kez başlatılmasını engeller.
+  String? _aiTask;
+
+  /// Uzun süren AI işlerinin TEK giriş noktası: göstergeyi açar/kapatır,
+  /// hataları tek biçimde bildirir. Yeni bir AI özelliği eklenirken
+  /// göstergeyi ayrıca düşünmek gerekmesin diye burada toplandı.
+  Future<void> _runAi(String label, Future<void> Function() body) async {
+    if (_aiTask != null) return;
+    setState(() => _aiTask = label);
+    try {
+      await body();
+    } on GeminiException catch (e) {
+      if (mounted) {
+        _showSnack(
+          e.isAuthError ? context.l10n.aiNoApiKey : context.l10n.aiError(e.message),
+        );
+      }
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.aiError('$e'));
+    } finally {
+      if (mounted) setState(() => _aiTask = null);
+    }
+  }
 
   /// (+) menüsünden gelen ve not yüklenmeden çalıştırılamayan açılış
   /// niyetleri; not gelir gelmez bir kez çalıştırılır.
@@ -767,19 +796,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (note == null || note.isEmpty) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    List<String> suggestions;
-    try {
-      suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
-    } on GeminiException catch (e) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+    // Etiket önerisi de görünür olsun: eskiden istek boyunca hiçbir belirti
+    // yoktu, kullanıcı düğmeye ikinci kez basıyordu.
+    List<String> suggestions = const [];
+    var failed = false;
+    await _runAi(l10n.aiThinking, () async {
+      try {
+        suggestions = await ref.read(geminiServiceProvider).suggestTags(note);
+      } on GeminiException catch (e) {
+        failed = true;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
+            ),
           ),
-        ),
-      );
-      return;
-    }
+        );
+      }
+    });
+    if (failed || !mounted) return;
     suggestions = [
       for (final tag in suggestions)
         if (!note.tags.contains(tag)) tag,
@@ -1192,21 +1227,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _showSnack(l10n.attachmentNotSynced);
       return;
     }
-    _showSnack(l10n.aiThinking);
-    try {
+    await _runAi(l10n.aiThinking, () async {
       final service = ref.read(geminiServiceProvider);
       final text = stripMarkdown(
         await service.extractTextFromImage(bytes, image.mimeType),
       ).trim();
       if (!mounted || text.isEmpty) return;
       _appendText(text);
-    } on GeminiException catch (e) {
-      if (mounted) {
-        _showSnack(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
-      }
-    } catch (e) {
-      if (mounted) _showSnack(l10n.aiError('$e'));
-    }
+    });
   }
 
   /// Görüntülü not: kamerayla video çeker ve nota ek yapar. Video buluta
@@ -1260,23 +1288,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       _showSnack(l10n.attachmentNotSynced);
       return;
     }
-    _showSnack(l10n.videoToNoteRunning);
-    try {
+    // Satır içi gönderim sınırı: büyük video istekte reddediliyor ve hata
+    // dakikalar sonra geliyordu. Sınır ÖNCEDEN, anlaşılır biçimde söylenir.
+    const maxInlineBytes = 15 * 1024 * 1024;
+    if (bytes.length > maxInlineBytes) {
+      _showSnack(l10n.videoTooBigForAi(bytes.length ~/ (1024 * 1024)));
+      return;
+    }
+    await _runAi(l10n.videoToNoteRunning, () async {
       final text = stripMarkdown(
-        await ref.read(geminiServiceProvider).noteFromVideo(
-          bytes,
-          video.mimeType,
-        ),
+        await ref
+            .read(geminiServiceProvider)
+            .noteFromVideo(bytes, video.mimeType),
       ).trim();
       if (!mounted || text.isEmpty) return;
-      _appendText(text);
-    } on GeminiException catch (e) {
-      if (mounted) {
-        _showSnack(e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message));
-      }
-    } catch (e) {
-      if (mounted) _showSnack(l10n.aiError('$e'));
-    }
+      // Sonuç doğrudan nota YAZILMAZ: önce geniş inceleme sayfasında görülür,
+      // istenirse biçimi (düz metin/madde/sıralı) değiştirilip nota eklenir
+      // ya da yeni not olarak açılır.
+      await showAiResultSheet(
+        context,
+        title: l10n.videoToNote,
+        text: text,
+        onInsert: _appendText,
+        onCreateNote: (t, {NoteType? asType}) =>
+            _createNoteFromText(t, asType: asType),
+      );
+    });
   }
 
   /// Palet düğmesi: zemin rengi ve renkli çerçeve seçimi. İkisi ayrı alanlar —
@@ -2176,6 +2213,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
             // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
             // açık kalabiliyordu.
+            if (_aiTask != null) _AiBanner(label: _aiTask!),
             if (_voiceCapturing)
               _DictationBanner(
                 onStop: _stopVoiceCapture,
@@ -2267,6 +2305,53 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
 /// Dikte sürerken alt çubuğun üstünde duran uyarı şeridi. Amacı tek:
 /// mikrofonun açık olduğu gözden kaçmasın.
+/// Süren AI işini gösteren şerit: iş bitene kadar ekranda durur. Tek bir
+/// SnackBar yeterli değildi — kayboluyor, kullanıcı "çalışıyor mu, dondu mu"
+/// bilemiyordu.
+class _AiBanner extends StatelessWidget {
+  const _AiBanner({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.secondaryContainer,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LinearProgressIndicator(
+            minHeight: 2,
+            backgroundColor: scheme.secondaryContainer,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 18,
+                  color: scheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSecondaryContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _DictationBanner extends StatelessWidget {
   const _DictationBanner({required this.onStop, this.label});
 

@@ -109,6 +109,25 @@ class DashboardChipsRow extends ConsumerWidget {
                         );
                       },
                   ),
+                // Etiket/klasör çipleri de filtreler gibi gizlenebilir:
+                // çok etiketi/klasörü olan kullanıcıda çip satırı şişiyordu.
+                SwitchListTile(
+                  dense: true,
+                  secondary: const Icon(Icons.sell_outlined),
+                  title: Text(l10n.showTagChips),
+                  value: sheetRef.watch(showTagChipsProvider),
+                  onChanged: (v) =>
+                      sheetRef.read(showTagChipsProvider.notifier).set(v),
+                ),
+                SwitchListTile(
+                  dense: true,
+                  secondary: const Icon(Icons.folder_outlined),
+                  title: Text(l10n.showFolderChips),
+                  value: sheetRef.watch(showFolderChipsProvider),
+                  onChanged: (v) =>
+                      sheetRef.read(showFolderChipsProvider.notifier).set(v),
+                ),
+                const Divider(height: 12),
                 // Gizli filtreler: artı düğmesiyle eklenir.
                 for (final filter in hidden)
                   ListTile(
@@ -177,6 +196,8 @@ class DashboardChipsRow extends ConsumerWidget {
     final counts = ref.watch(tagCountsProvider);
     final selectedTag = ref.watch(selectedTagProvider);
     final expanded = ref.watch(filtersExpandedProvider);
+    final showTags = ref.watch(showTagChipsProvider);
+    final showFolders = ref.watch(showFolderChipsProvider);
 
     // "Tümü" başta sabit; gerisi kullanıcının menüde belirlediği SIRAYLA
     // gelir (madde 1).
@@ -299,10 +320,14 @@ class DashboardChipsRow extends ConsumerWidget {
         expandChip(),
         filterMenuChip(),
         for (final (f, label) in filterEntries) filterChip(f, label),
-        for (final folder in folders) folderChip(folder),
-        newFolderChip(),
-        for (final tag in visibleTags) tagChip(tag),
-        if (hiddenTagCount > 0) moreTagsChip(),
+        if (showFolders) ...[
+          for (final folder in folders) folderChip(folder),
+          newFolderChip(),
+        ],
+        if (showTags) ...[
+          for (final tag in visibleTags) tagChip(tag),
+          if (hiddenTagCount > 0) moreTagsChip(),
+        ],
       ];
       return SizedBox(
         height: 40,
@@ -340,19 +365,21 @@ class DashboardChipsRow extends ConsumerWidget {
               itemBuilder: (context, index) => Center(child: filterRow[index]),
             ),
           ),
-          sectionLabel(l10n.foldersSection),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final folder in folders) folderChip(folder),
-                newFolderChip(),
-              ],
+          if (showFolders) ...[
+            sectionLabel(l10n.foldersSection),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final folder in folders) folderChip(folder),
+                  newFolderChip(),
+                ],
+              ),
             ),
-          ),
-          if (allTags.isNotEmpty) ...[
+          ],
+          if (showTags && allTags.isNotEmpty) ...[
             sectionLabel(l10n.tagsSection),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),

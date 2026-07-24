@@ -1744,6 +1744,30 @@ abstract class AppLocalizations {
   /// **'Hatırlatıcıların gecikmeden gelmesi için uygulamayı pil kısıtlamasından muaf tut'**
   String get permBatteryInfo;
 
+  /// No description provided for @showTagChips.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket çiplerini göster'**
+  String get showTagChips;
+
+  /// No description provided for @showFolderChips.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör çiplerini göster'**
+  String get showFolderChips;
+
+  /// No description provided for @videoTooBigForAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video AI\'ya göndermek için çok büyük ({mb} MB). Daha kısa çek.'**
+  String videoTooBigForAi(int mb);
+
+  /// No description provided for @aiRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ çalışıyor…'**
+  String get aiRunning;
+
   /// No description provided for @permCamera.
   ///
   /// In tr, this message translates to:
