@@ -577,13 +577,13 @@ abstract class AppLocalizations {
   /// No description provided for @aiBuiltInPremium.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili AI: Premium — bugün kalan hak {count}'**
+  /// **'Dahili AI: Premium — bugün kalan puan {count}'**
   String aiBuiltInPremium(int count);
 
   /// No description provided for @aiBuiltInRemaining.
   ///
   /// In tr, this message translates to:
-  /// **'Dahili AI: bugün kalan ücretsiz hak {count}'**
+  /// **'Dahili AI: bugün kalan ücretsiz puan {count}'**
   String aiBuiltInRemaining(int count);
 
   /// No description provided for @aiBuiltInByok.

@@ -270,12 +270,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String aiBuiltInPremium(int count) {
-    return 'Dahili AI: Premium — bugün kalan hak $count';
+    return 'Dahili AI: Premium — bugün kalan puan $count';
   }
 
   @override
   String aiBuiltInRemaining(int count) {
-    return 'Dahili AI: bugün kalan ücretsiz hak $count';
+    return 'Dahili AI: bugün kalan ücretsiz puan $count';
   }
 
   @override

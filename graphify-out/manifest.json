@@ -55,8 +55,8 @@
     "semantic_hash": ""
   },
   "lib/core/constants.dart": {
-    "mtime": 1784491551.3263707,
-    "ast_hash": "01b66aa50ce37a5f03312e6d060a36fa",
+    "mtime": 1784917580.2678218,
+    "ast_hash": "16366abde705f16dc92ab5d7c2d27761",
     "semantic_hash": ""
   },
   "lib/core/l10n_ext.dart": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/data/gemini_service.dart": {
-    "mtime": 1784821433.0697749,
-    "ast_hash": "d5511f43474ef99652b8ee224d37a6d6",
+    "mtime": 1784917666.8411322,
+    "ast_hash": "545217b74d6f9f7f4d3f65c013fb186b",
     "semantic_hash": ""
   },
   "lib/features/ai/data/semantic_search.dart": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
-    "mtime": 1784913608.9373085,
-    "ast_hash": "cab1a4ee7e0be12a62f5475d1d0fcb7f",
+    "mtime": 1784917335.6966116,
+    "ast_hash": "e37b7c1697a1dbb4bc609d38f3781c11",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/note_card.dart": {
@@ -280,8 +280,8 @@
     "semantic_hash": ""
   },
   "lib/features/settings/presentation/settings_screen.dart": {
-    "mtime": 1784913608.9463305,
-    "ast_hash": "e1b43759e11c9f4551127ee62632c495",
+    "mtime": 1784917495.5888982,
+    "ast_hash": "5677ec1e30f2a02003677bbd10b61b58",
     "semantic_hash": ""
   },
   "lib/features/settings/settings_providers.dart": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784914620.46138,
-    "ast_hash": "8c97ac3cd7f62aab75e4274225e001f1",
+    "mtime": 1784917501.552209,
+    "ast_hash": "b6ecaaf261abe7d0f191ff83f5cdcc44",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784914620.4454942,
-    "ast_hash": "8218d36ee529e45ecdd121509f62435c",
+    "mtime": 1784917501.5464277,
+    "ast_hash": "5554038dc98fe110ff9135abcb8db83b",
     "semantic_hash": ""
   },
   "lib/main.dart": {
@@ -500,8 +500,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/data/ai_gate.dart": {
-    "mtime": 1784490909.9864247,
-    "ast_hash": "eabbf396573ead945887f25fa24215a5",
+    "mtime": 1784917652.0130885,
+    "ast_hash": "7bf5ac8b798c30a31ee48ad21bb3c0b2",
     "semantic_hash": ""
   },
   "lib/features/ai/data/ai_report.dart": {
@@ -515,8 +515,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/data/firebase_ai_client.dart": {
-    "mtime": 1784490816.1617434,
-    "ast_hash": "40a555f5ac3d0b3c8890dd4f58b31583",
+    "mtime": 1784917678.5369234,
+    "ast_hash": "270f44ce343954bcf6541e71b5147fe9",
     "semantic_hash": ""
   },
   "lib/features/ai/presentation/ai_generate_prompt.dart": {
@@ -825,8 +825,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_images.dart": {
-    "mtime": 1784913608.939313,
-    "ast_hash": "0cc768e3a6f9642147d88df1acb5b9e9",
+    "mtime": 1784916991.2776945,
+    "ast_hash": "97c10da84fdbb8fea49e1e2dc974dd78",
     "semantic_hash": ""
   },
   ".claude/settings.json": {
@@ -895,8 +895,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1784822920.1227577,
-    "ast_hash": "ffdfdccce2b53302d8afdfaf240c713f",
+    "mtime": 1784917859.2621877,
+    "ast_hash": "24673eabb269900b4727f85e13d95d59",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -925,13 +925,28 @@
     "semantic_hash": ""
   },
   "test/slide_deck_test.dart": {
-    "mtime": 1784829440.892146,
-    "ast_hash": "077e86cde4f069a829c84ddd84c68826",
+    "mtime": 1784917341.692984,
+    "ast_hash": "ac76953076899179c588ff0230de758c",
     "semantic_hash": ""
   },
   "lib/features/notes/data/note_docx.dart": {
     "mtime": 1784913608.9308293,
     "ast_hash": "7dfe7c3b7cf759094c23eabaaf09a774",
+    "semantic_hash": ""
+  },
+  "lib/features/notes/presentation/editor/text_wrap.dart": {
+    "mtime": 1784917331.2574,
+    "ast_hash": "842754dd72932fe295872ffdbd331396",
+    "semantic_hash": ""
+  },
+  "test/ai_cost_test.dart": {
+    "mtime": 1784917731.5681655,
+    "ast_hash": "57c997a40c91ce373f95c242f93921e2",
+    "semantic_hash": ""
+  },
+  "test/text_wrap_test.dart": {
+    "mtime": 1784916873.177905,
+    "ast_hash": "239f24730a1a5324a5014a504962252a",
     "semantic_hash": ""
   }
 }
