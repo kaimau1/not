@@ -33,10 +33,23 @@ class DeviceSpeech {
   /// SpeechRecognizer izin eksikken kendi kutusunu AÇMAZ, sessizce
   /// ERROR_INSUFFICIENT_PERMISSIONS ile düşer — kullanıcı bunu "sesle yazma
   /// çalışmıyor" olarak görür. [listen] çağrılmadan önce bu çağrılmalı.
-  /// (record eklentisinin hasPermission'ı hem denetler hem ister; yeni
-  /// bağımlılık gerektirmez.)
+  ///
+  /// KÖK NEDEN (izin VERİLMİŞKEN "Mikrofon izni verilmedi" çıkması): eskiden
+  /// doğrudan record eklentisinin hasPermission'ı çağrılıyor ve altındaki
+  /// `catch` HER hatayı "izin yok"a katlıyordu. O çağrı önce eklentinin
+  /// create'ini bekler (patlarsa istisna fırlar), ayrıca activity o an bağlı
+  /// değilse izni hiç OKUMADAN false döner — ikisi de izinli cihazda yalan
+  /// mesaj demekti. Artık önce checkSelfPermission okunur (sistem kutusu
+  /// açmaz, eklentiye/activity'ye bağlı değildir); yalnızca izin gerçekten
+  /// yoksa eklenti yoluna düşülür — kutuyu açması gereken tek durum odur.
   static Future<bool> ensureMicPermission() async {
     if (kIsWeb || !Platform.isAndroid) return true;
+    try {
+      final granted = await _method.invokeMethod<bool>('micPermissionGranted');
+      if (granted ?? false) return true;
+    } on PlatformException {
+      // Köprü yanıtlamadı; aşağıdaki eklenti yolu yine de deneyecek.
+    }
     final recorder = AudioRecorder();
     try {
       return await recorder.hasPermission();
@@ -65,6 +78,34 @@ class DeviceSpeech {
       level: (map['level'] as num?)?.toDouble(),
     );
   });
+
+  /// Keep tarzı sesli giriş: Google'ın tanıma EKRANINI açar; kullanıcı
+  /// konuşur, ekran kapanınca hem metin hem Google'ın kendi kaydettiği ses
+  /// dosyası (AMR, telefon kalitesi) döner. Tek mikrofon istemcisi Google
+  /// olduğundan [listen] + AudioRecorder ikilisinin yaşadığı mikrofon
+  /// çakışması (Android'de son açan kazanır) burada hiç yoktur.
+  ///
+  /// Dönüş: kullanıcı iptal ettiyse ya da ekran açılamadıysa null; yoksa
+  /// metin + varsa ses yolu (GET_AUDIO belgesiz olduğundan ses gelmeyebilir;
+  /// o durumda çağıran yalnız metinle devam eder).
+  static Future<({String text, String? audioPath})?> voiceInputWithAudio({
+    String locale = 'tr-TR',
+  }) async {
+    if (kIsWeb || !Platform.isAndroid) return null;
+    try {
+      final map = await _method.invokeMethod<Map<Object?, Object?>>(
+        'voiceInputWithAudio',
+        {'locale': locale},
+      );
+      if (map == null) return null;
+      return (
+        text: (map['text'] as String?) ?? '',
+        audioPath: map['audioPath'] as String?,
+      );
+    } on PlatformException {
+      return null;
+    }
+  }
 
   /// Dinlemeyi bitirir; son (tamamlanmış) metin akıştan gelir.
   static Future<void> stop() async {

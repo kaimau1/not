@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/attachment_strip.dart": {
-    "mtime": 1784925340.9696813,
-    "ast_hash": "d1758f12f210968115e1a46dc6f99810",
+    "mtime": 1784927178.996607,
+    "ast_hash": "3f188c695e1b4dc327854441e5ee67f9",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/audio_recorder_sheet.dart": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
-    "mtime": 1784925602.3079066,
-    "ast_hash": "010174511cff44d380f30603e40f2ce5",
+    "mtime": 1784927306.210684,
+    "ast_hash": "a3a8a63a1afe003f0862116c54f7d7a5",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/note_card.dart": {
@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/notes_providers.dart": {
-    "mtime": 1784617511.4697099,
-    "ast_hash": "d80aa37a01190c2aea874d9f1b3e12e0",
+    "mtime": 1784926915.2889636,
+    "ast_hash": "02984341762828abff2dfb8a4148c7b6",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/trash_screen.dart": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784925665.065075,
-    "ast_hash": "321ffd88baaeb381bf48de2b040f7f65",
+    "mtime": 1784927426.211326,
+    "ast_hash": "e1a0fe8717ac2e73a9188845184074f0",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784925665.05406,
-    "ast_hash": "1cda7793029825919c6948d797ab5848",
+    "mtime": 1784927426.1969604,
+    "ast_hash": "09d29fc091c645ea2ee37eb71ce1f8bc",
     "semantic_hash": ""
   },
   "lib/main.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1784925948.9758835,
-    "ast_hash": "70ed70570daf94f1c1524992a969f3e5",
+    "mtime": 1784927631.776468,
+    "ast_hash": "97b22546221ebcd640226a9b7017255e",
     "semantic_hash": ""
   },
   "README.md": {
@@ -550,8 +550,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/dashboard_chips.dart": {
-    "mtime": 1784617511.467018,
-    "ast_hash": "f971e6c85edc6805a5c861a81b600410",
+    "mtime": 1784926944.1971443,
+    "ast_hash": "cc361389c2475dd622d7d0000fd288d2",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/calculator_sheet.dart": {
@@ -967,6 +967,16 @@
   "lib/features/settings/presentation/permissions_onboarding.dart": {
     "mtime": 1784924681.619282,
     "ast_hash": "3e26def25b3a30994a58e10173a96571",
+    "semantic_hash": ""
+  },
+  "lib/features/notes/presentation/editor/ai_result_sheet.dart": {
+    "mtime": 1784927254.524525,
+    "ast_hash": "9e68ed9796cae0e1255507cf101b7e53",
+    "semantic_hash": ""
+  },
+  "test/ai_result_sheet_test.dart": {
+    "mtime": 1784927333.5647407,
+    "ast_hash": "b52a0bd7f3eb2b0d354766ca4258e1be",
     "semantic_hash": ""
   }
 }

@@ -11,6 +11,14 @@
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
 
 ## Bilinen eksik / risk
+- [ ] **Sesli notta canlı yazım yok** — kayıt+döküm aynı anda mikrofonu
+  paylaşamadığı için Google'ın sesli giriş ekranına geçildi (bkz. 2026-07-25
+  kararı): metin bitişte düşer, ses AMR (telefon kalitesi), duraklayınca
+  oturum biter. Keep'in sınırlarıyla aynı. Canlı yazım + ses dosyası ikisini
+  birden isteyen tek yol tek PCM akışını ikiye bölmek (Gemini Live, BYOK şart).
+- [ ] **`GET_AUDIO` belgesiz ekstra** — Google ileride sesi vermeyi keserse
+  sesli not yalnız metin üretir (çökmez). Kırılırsa üstteki maddedeki
+  seçeneklere dönülür.
 - [ ] **Word (.docx) dışa aktarımında görseller hâlâ metnin sonunda** — PDF
   nottaki yerleşimi izliyor, docx henüz izlemiyor (2026-07-24).
 - [ ] **Görüntülü not yalnız cihazda** — bilinçli karar (buluta yüklenmez):

@@ -10,9 +10,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -122,7 +119,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// sürmekte olan sesli notun kaydı. Bu yüzden gereken bağımlılıklar her
   /// build'de alanlara alınır; `dispose` yalnız bu alanları kullanır.
   NotesRepository? _notesRepo;
-  AttachmentRepository? _attachRepo;
   GeminiService? _gemini;
   bool _autoTagEnabled = true;
   bool _autoTitleEnabled = true;
@@ -184,7 +180,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   void _cacheDeps() {
     _notesRepo = ref.read(notesRepositoryProvider);
-    _attachRepo = ref.read(attachmentRepositoryProvider);
     _gemini = ref.read(geminiServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);
     _autoTitleEnabled = ref.read(autoTitleProvider);
@@ -246,11 +241,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   StreamSubscription<({String? text, double? level})>? _speechSub;
   bool _dictating = false;
 
-  /// Keep tarzı sesli not modu: dikteyle AYNI ANDA ses de m4a'ya kaydedilir.
-  AudioRecorder? _captureRecorder;
-  DateTime? _captureStart;
-  bool _voiceCapturing = false;
-
   @override
   void initState() {
     super.initState();
@@ -306,13 +296,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void dispose() {
     _debouncer.flush();
-    // Sesli not kaydı sürerken çıkıldıysa kayıt kaybolmasın: durdur ve nota
-    // arka planda bağla. Bayrak, aşağıdaki boş-not silme adımını da atlatır —
-    // ek henüz yazılmadığından not bir an "boş" görünür.
-    final wasCapturing = _voiceCapturing;
-    if (wasCapturing) _finishVoiceCaptureDetached();
     final note = _note;
-    if (!_deleted && note != null && note.isEmpty && !wasCapturing) {
+    if (!_deleted && note != null && note.isEmpty) {
       // İçi boş kalan not çıkarken sessizce silinir.
       _notesRepo?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
@@ -1490,12 +1475,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Future<void> _dictate() async {
     final note = _note;
     if (note == null) return;
-    if (_voiceCapturing) {
-      // Sesli not modunda mikrofon düğmesi TÜM oturumu bitirir (yalnız
-      // dikteyi durdurup kaydı açık bırakmak sessiz pil/depo sızıntısı olur).
-      await _stopVoiceCapture();
-      return;
-    }
     if (_dictating) {
       await _stopInlineDictation();
       return;
@@ -1598,69 +1577,52 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }, immediate: true);
   }
 
-  /// Keep tarzı sesli not: cihaz tanıması dökümü nota CANLI yazarken ses de
-  /// m4a olarak kaydedilir; durunca kayıt ses eki olur. (+) menüsündeki
-  /// "Sesli not"tan `?voice=1` ile gelir.
+  /// Keep tarzı sesli not: Google'ın sesli giriş ekranı açılır; dönüşte
+  /// metin nota yazılır, Google'ın KENDİ kaydettiği ses de ek olur.
+  /// (+) menüsündeki "Sesli not"tan `?voice=1` ile gelir.
+  ///
+  /// KÖK NEDEN (eski tasarım niye söküldü): canlı dikte + kendi m4a kaydımız
+  /// aynı anda çalışamıyor — Android'de tek mikrofonu SON açan istemci alır
+  /// ve tanıyıcı mikrofonu asenkron açtığından hep o kazanır; kayıt dosyası
+  /// sessiz çıkıyordu (9.4 sn kayıtta 0.14 sn ses — logcat ile ölçüldü).
+  /// Keep'in kendisi de bu yüzden Google ekranını kullanır: tek mikrofon
+  /// istemcisi Google'dır, metni de kaydettiği sesi de o döndürür.
   Future<void> _startVoiceCapture() async {
     final note = _note;
-    if (note == null || _voiceCapturing) return;
-    if (!await DeviceSpeech.ensureMicPermission()) {
-      if (mounted) _showSnack(context.l10n.micPermissionDenied);
-      return;
+    if (note == null) return;
+    final res = await DeviceSpeech.voiceInputWithAudio();
+    if (res == null) return; // İptal ya da sesli giriş ekranı yok.
+    final text = res.text.trim();
+    if (text.isNotEmpty) {
+      // Dikteyle aynı yazım kuralı: metin notunda gövdenin sonuna eklenir,
+      // liste notunda yeni madde olur.
+      if (note.type == NoteType.text) {
+        final base = _bodyController.logicalText;
+        final sep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
+        _writeDictated(sep, text);
+      } else {
+        _mutate(
+          (n) => n.copyWith(
+            items: [...n.items, NoteItem(id: const Uuid().v4(), text: text)],
+          ),
+          immediate: true,
+        );
+      }
     }
-    // Önce döküm, sonra kayıt: mikrofonu paylaşamayan cihazda SONRA başlayan
-    // kazanır — kayıt dosyası asla sessiz çıkmaz; en kötü durumda döküm durur
-    // (görünür bir eksik; sessiz bir ses dosyası gizli veri kaybı olurdu).
-    if (await DeviceSpeech.isAvailable()) {
-      await _startInlineDictation(note);
-    }
+    final audioPath = res.audioPath;
+    if (audioPath == null) return; // GET_AUDIO vermezse yalnız metin kalır.
     try {
-      final recorder = AudioRecorder();
-      _captureRecorder = recorder;
-      final dir = await getTemporaryDirectory();
-      await recorder.start(
-        // Ses notu kalıbıyla aynı: tek kanal 48 kbps konuşma için yeterli.
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 48000,
-          numChannels: 1,
-        ),
-        path: p.join(
-          dir.path,
-          'sesnotu_${DateTime.now().millisecondsSinceEpoch}.m4a',
-        ),
-      );
-      _captureStart = DateTime.now();
-      if (mounted) setState(() => _voiceCapturing = true);
-    } catch (e) {
-      // Kayıt açılamadı (ör. mikrofon meşgul): canlı dikte varsa tek başına
-      // sürer, kullanıcı dosya kaydının olmadığını bilsin.
-      _captureRecorder?.dispose();
-      _captureRecorder = null;
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
-    }
-  }
-
-  Future<void> _stopVoiceCapture() async {
-    if (!_voiceCapturing) return;
-    setState(() => _voiceCapturing = false);
-    if (_dictating) await _stopInlineDictation();
-    final recorder = _captureRecorder;
-    final started = _captureStart;
-    _captureRecorder = null;
-    _captureStart = null;
-    if (recorder == null) return;
-    try {
-      final path = await recorder.stop();
-      await recorder.dispose();
       final repo = ref.read(attachmentRepositoryProvider);
-      if (path == null || repo == null) return;
+      if (repo == null) return;
       final attachment = await repo.prepareAudio(
         noteId: widget.noteId,
-        sourcePath: path,
-        duration: started == null
-            ? Duration.zero
-            : DateTime.now().difference(started),
+        sourcePath: audioPath,
+        // Google süreyi bildirmez; AMR-NB ~12.2 kbps ≈ 1.6 KB/sn olduğundan
+        // dosya boyutundan kestirilir. ponytail: kaba tahmin — oynatıcı
+        // gerçek süreyi dosyadan zaten okur, bu yalnız etikette görünür.
+        duration: Duration(
+          seconds: (File(audioPath).lengthSync() / 1600).round(),
+        ),
       );
       _mutate(
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
@@ -1671,40 +1633,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
-  }
-
-  /// Kayıt sürerken ekrandan çıkıldı: kayıt kaybolmasın — durdur, eke çevir,
-  /// nota transaction'la bağla (editör kapandığından `_mutate` kullanılamaz).
-  void _finishVoiceCaptureDetached() {
-    _voiceCapturing = false;
-    final recorder = _captureRecorder;
-    final started = _captureStart;
-    _captureRecorder = null;
-    _captureStart = null;
-    // dispose içinde ref kullanılamaz (yukarıdaki KÖK NEDEN notu): depolar
-    // build'de alınan alanlardan okunur.
-    final attachmentRepo = _attachRepo;
-    final notesRepo = _notesRepo;
-    DeviceSpeech.stop();
-    if (recorder == null || attachmentRepo == null || notesRepo == null) {
-      recorder?.dispose();
-      return;
-    }
-    Future(() async {
-      final path = await recorder.stop();
-      await recorder.dispose();
-      if (path == null) return;
-      final attachment = await attachmentRepo.prepareAudio(
-        noteId: widget.noteId,
-        sourcePath: path,
-        duration: started == null
-            ? Duration.zero
-            : DateTime.now().difference(started),
-      );
-      await notesRepo.appendAttachment(widget.noteId, attachment);
-    }).catchError((Object e) {
-      debugPrint('Sesli not kaydı bağlanamadı: $e');
-    });
   }
 
   Future<void> _stopInlineDictation() async {
@@ -2290,13 +2218,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
             // açık kalabiliyordu.
             if (_aiTask != null) _AiBanner(label: _aiTask!),
-            if (_voiceCapturing)
-              _DictationBanner(
-                onStop: _stopVoiceCapture,
-                label: l10n.voiceCaptureActive,
-              )
-            else if (_dictating)
-              _DictationBanner(onStop: _dictate),
+            if (_dictating) _DictationBanner(onStop: _dictate),
             BottomAppBar(
               color: background,
               height: 56,
@@ -2335,7 +2257,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   SizedBox(
                     width: 52,
                     height: 52,
-                    child: _dictating || _voiceCapturing
+                    child: _dictating
                         ? IconButton.filled(
                             tooltip: l10n.stopAndSave,
                             iconSize: 28,
@@ -2429,12 +2351,9 @@ class _AiBanner extends StatelessWidget {
 }
 
 class _DictationBanner extends StatelessWidget {
-  const _DictationBanner({required this.onStop, this.label});
+  const _DictationBanner({required this.onStop});
 
   final VoidCallback onStop;
-
-  /// Şeritte gösterilecek metin; null ise dikte metni kullanılır.
-  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -2451,7 +2370,7 @@ class _DictationBanner extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  label ?? context.l10n.dictationListening,
+                  context.l10n.dictationListening,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onErrorContainer,
                     fontWeight: FontWeight.w600,
