@@ -37,441 +37,11 @@
       "label": "Bilinen Riskler / Tuzaklar",
       "file_type": "document",
       "source_file": "HAFIZA.md",
-      "source_location": "L70",
+      "source_location": "L72",
       "_origin": "ast",
       "id": "hafiza_bilinen_riskler_tuzaklar",
       "community": 79,
       "norm_label": "bilinen riskler / tuzaklar"
-    },
-    {
-      "label": "KALANLAR.md",
-      "file_type": "document",
-      "source_file": "KALANLAR.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "kalanlar",
-      "community": 70,
-      "norm_label": "kalanlar.md"
-    },
-    {
-      "label": "KALANLAR \u2014 canl\u0131 kalan i\u015f / plan listesi",
-      "file_type": "document",
-      "source_file": "KALANLAR.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
-      "community": 70,
-      "norm_label": "kalanlar \u2014 canl\u0131 kalan is / plan listesi"
-    },
-    {
-      "label": "Bilinen eksik / risk",
-      "file_type": "document",
-      "source_file": "KALANLAR.md",
-      "source_location": "L13",
-      "_origin": "ast",
-      "id": "kalanlar_bilinen_eksik_risk",
-      "community": 70,
-      "norm_label": "bilinen eksik / risk"
-    },
-    {
-      "label": "Sonra yap\u0131lacak",
-      "file_type": "document",
-      "source_file": "KALANLAR.md",
-      "source_location": "L46",
-      "_origin": "ast",
-      "id": "kalanlar_sonra_yap\u0131lacak",
-      "community": 70,
-      "norm_label": "sonra yap\u0131lacak"
-    },
-    {
-      "label": "MainActivity.kt",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity",
-      "community": 68,
-      "norm_label": "mainactivity.kt"
-    },
-    {
-      "label": "MainActivity",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L27",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "community": 68,
-      "norm_label": "mainactivity"
-    },
-    {
-      "label": "FlutterFragmentActivity",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "flutterfragmentactivity",
-      "community": 68,
-      "norm_label": "flutterfragmentactivity"
-    },
-    {
-      "label": "SpeechRecognizer",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "speechrecognizer",
-      "community": 68,
-      "norm_label": "speechrecognizer"
-    },
-    {
-      "label": "EventChannel",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "eventchannel",
-      "community": 68,
-      "norm_label": "eventchannel"
-    },
-    {
-      "label": ".configureFlutterEngine()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L60",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "community": 68,
-      "norm_label": ".configureflutterengine()"
-    },
-    {
-      "label": "FlutterEngine",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "flutterengine",
-      "community": 68,
-      "norm_label": "flutterengine"
-    },
-    {
-      "label": "MethodChannel",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "methodchannel",
-      "community": 68,
-      "norm_label": "methodchannel"
-    },
-    {
-      "label": ".onActivityResult()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L179",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
-      "community": 68,
-      "norm_label": ".onactivityresult()"
-    },
-    {
-      "label": "Int",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "int",
-      "community": 68,
-      "norm_label": "int"
-    },
-    {
-      "label": "Intent",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "intent",
-      "community": 68,
-      "norm_label": "intent"
-    },
-    {
-      "label": ".onRequestPermissionsResult()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "community": 68,
-      "norm_label": ".onrequestpermissionsresult()"
-    },
-    {
-      "label": "Array",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "array",
-      "community": 68,
-      "norm_label": "array"
-    },
-    {
-      "label": "String",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "community": 68,
-      "norm_label": "string"
-    },
-    {
-      "label": "IntArray",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "intarray",
-      "community": 68,
-      "norm_label": "intarray"
-    },
-    {
-      "label": ".appDetailsIntent()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L225",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent",
-      "community": 68,
-      "norm_label": ".appdetailsintent()"
-    },
-    {
-      "label": ".configureSpeechChannel()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L234",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
-      "community": 68,
-      "norm_label": ".configurespeechchannel()"
-    },
-    {
-      "label": ".startRecognizer()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L257",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
-      "community": 68,
-      "norm_label": ".startrecognizer()"
-    },
-    {
-      "label": ".recognizerIntent()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L269",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
-      "community": 68,
-      "norm_label": ".recognizerintent()"
-    },
-    {
-      "label": ".speechListener()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L285",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener",
-      "community": 68,
-      "norm_label": ".speechlistener()"
-    },
-    {
-      "label": ".commitPartial()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L403",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_commitpartial",
-      "community": 68,
-      "norm_label": ".commitpartial()"
-    },
-    {
-      "label": ".isContinuation()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L428",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
-      "community": 68,
-      "norm_label": ".iscontinuation()"
-    },
-    {
-      "label": "Boolean",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "boolean",
-      "community": 68,
-      "norm_label": "boolean"
-    },
-    {
-      "label": ".firstResult()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L436",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
-      "community": 68,
-      "norm_label": ".firstresult()"
-    },
-    {
-      "label": "Bundle",
-      "file_type": "code",
-      "source_file": "",
-      "source_location": "",
-      "_origin": "ast",
-      "id": "bundle",
-      "community": 68,
-      "norm_label": "bundle"
-    },
-    {
-      "label": ".joined()",
-      "file_type": "code",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L441",
-      "_origin": "ast",
-      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined",
-      "community": 68,
-      "norm_label": ".joined()"
-    },
-    {
-      "label": "device_speech.dart",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech",
-      "community": 132,
-      "norm_label": "device_speech.dart"
-    },
-    {
-      "label": "DeviceSpeech",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_devicespeech",
-      "community": 132,
-      "norm_label": "devicespeech"
-    },
-    {
-      "label": "_method",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_method",
-      "community": 132,
-      "norm_label": "_method"
-    },
-    {
-      "label": "static const",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "static_const",
-      "community": 122,
-      "norm_label": "static const"
-    },
-    {
-      "label": "_events",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_events",
-      "community": 132,
-      "norm_label": "_events"
-    },
-    {
-      "label": "_",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "c_users_sena_desktop_not_lib_features_notes_data_device_speech",
-      "community": 132,
-      "norm_label": "_"
-    },
-    {
-      "label": "isAvailable",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_isavailable",
-      "community": 132,
-      "norm_label": "isavailable"
-    },
-    {
-      "label": "ensureMicPermission",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_ensuremicpermission",
-      "community": 132,
-      "norm_label": "ensuremicpermission"
-    },
-    {
-      "label": "stop",
-      "file_type": "code",
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "_origin": "ast",
-      "id": "lib_features_notes_data_device_speech_stop",
-      "community": 132,
-      "norm_label": "stop"
-    },
-    {
-      "label": "dart:io",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "dart_io",
-      "community": 29,
-      "norm_label": "dart:io"
-    },
-    {
-      "label": "package:flutter/foundation.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "package_flutter_foundation_dart",
-      "community": 139,
-      "norm_label": "package:flutter/foundation.dart"
-    },
-    {
-      "label": "package:flutter/services.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "package_flutter_services_dart",
-      "community": 141,
-      "norm_label": "package:flutter/services.dart"
-    },
-    {
-      "label": "package:record/record.dart",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "id": "package_record_record_dart",
-      "community": 132,
-      "norm_label": "package:record/record.dart"
     },
     {
       "label": "note_editor_screen.dart",
@@ -909,8 +479,8 @@
       "source_file": null,
       "source_location": null,
       "_origin": "ast",
-      "id": "none_string",
-      "community": 77,
+      "id": "string",
+      "community": 97,
       "norm_label": "string?"
     },
     {
@@ -1092,6 +662,16 @@
       "id": "lib_features_notes_presentation_editor_note_editor_screen_maxvideoseconds",
       "community": 4,
       "norm_label": "_maxvideoseconds"
+    },
+    {
+      "label": "static const",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "static_const",
+      "community": 122,
+      "norm_label": "static const"
     },
     {
       "label": "_dictationItemIds",
@@ -1804,6 +1384,16 @@
       "norm_label": "dart:async"
     },
     {
+      "label": "dart:io",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "dart_io",
+      "community": 29,
+      "norm_label": "dart:io"
+    },
+    {
       "label": "package:file_selector/file_selector.dart",
       "file_type": "code",
       "source_file": null,
@@ -1814,6 +1404,16 @@
       "norm_label": "package:file_selector/file_selector.dart"
     },
     {
+      "label": "package:flutter/foundation.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "package_flutter_foundation_dart",
+      "community": 139,
+      "norm_label": "package:flutter/foundation.dart"
+    },
+    {
       "label": "package:flutter/material.dart",
       "file_type": "code",
       "source_file": null,
@@ -1822,6 +1422,16 @@
       "id": "package_flutter_material_dart",
       "community": 118,
       "norm_label": "package:flutter/material.dart"
+    },
+    {
+      "label": "package:flutter/services.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "id": "package_flutter_services_dart",
+      "community": 141,
+      "norm_label": "package:flutter/services.dart"
     },
     {
       "label": "package:flutter_riverpod/flutter_riverpod.dart",
@@ -2262,6 +1872,406 @@
       "id": "uint8list",
       "community": 5,
       "norm_label": "uint8list"
+    },
+    {
+      "label": "KALANLAR.md",
+      "file_type": "document",
+      "source_file": "KALANLAR.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 70,
+      "norm_label": "kalanlar.md",
+      "id": "kalanlar"
+    },
+    {
+      "label": "KALANLAR \u2014 canl\u0131 kalan i\u015f / plan listesi",
+      "file_type": "document",
+      "source_file": "KALANLAR.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 70,
+      "norm_label": "kalanlar \u2014 canl\u0131 kalan is / plan listesi",
+      "id": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi"
+    },
+    {
+      "label": "Bilinen eksik / risk",
+      "file_type": "document",
+      "source_file": "KALANLAR.md",
+      "source_location": "L13",
+      "_origin": "ast",
+      "community": 70,
+      "norm_label": "bilinen eksik / risk",
+      "id": "kalanlar_bilinen_eksik_risk"
+    },
+    {
+      "label": "Sonra yap\u0131lacak",
+      "file_type": "document",
+      "source_file": "KALANLAR.md",
+      "source_location": "L46",
+      "_origin": "ast",
+      "community": 70,
+      "norm_label": "sonra yap\u0131lacak",
+      "id": "kalanlar_sonra_yap\u0131lacak"
+    },
+    {
+      "label": "MainActivity.kt",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "mainactivity.kt",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity"
+    },
+    {
+      "label": "MainActivity",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L27",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "mainactivity",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity"
+    },
+    {
+      "label": "FlutterFragmentActivity",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "flutterfragmentactivity",
+      "id": "flutterfragmentactivity"
+    },
+    {
+      "label": "SpeechRecognizer",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "speechrecognizer",
+      "id": "speechrecognizer"
+    },
+    {
+      "label": "EventChannel",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "eventchannel",
+      "id": "eventchannel"
+    },
+    {
+      "label": ".configureFlutterEngine()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L60",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".configureflutterengine()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine"
+    },
+    {
+      "label": "FlutterEngine",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "flutterengine",
+      "id": "flutterengine"
+    },
+    {
+      "label": "MethodChannel",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "methodchannel",
+      "id": "methodchannel"
+    },
+    {
+      "label": ".onActivityResult()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L179",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".onactivityresult()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult"
+    },
+    {
+      "label": "Int",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "int",
+      "id": "int"
+    },
+    {
+      "label": "Intent",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "intent",
+      "id": "intent"
+    },
+    {
+      "label": ".onRequestPermissionsResult()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".onrequestpermissionsresult()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult"
+    },
+    {
+      "label": "Array",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "array",
+      "id": "array"
+    },
+    {
+      "label": "String",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "string",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "label": "IntArray",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "intarray",
+      "id": "intarray"
+    },
+    {
+      "label": ".appDetailsIntent()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L225",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".appdetailsintent()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent"
+    },
+    {
+      "label": ".configureSpeechChannel()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L234",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".configurespeechchannel()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel"
+    },
+    {
+      "label": ".startRecognizer()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L257",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".startrecognizer()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer"
+    },
+    {
+      "label": ".recognizerIntent()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L269",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".recognizerintent()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent"
+    },
+    {
+      "label": ".speechListener()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L285",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".speechlistener()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener"
+    },
+    {
+      "label": ".commitPartial()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L403",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".commitpartial()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_commitpartial"
+    },
+    {
+      "label": ".isContinuation()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L428",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".iscontinuation()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation"
+    },
+    {
+      "label": "Boolean",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "boolean",
+      "id": "boolean"
+    },
+    {
+      "label": ".firstResult()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L436",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".firstresult()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult"
+    },
+    {
+      "label": "Bundle",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": "bundle",
+      "id": "bundle"
+    },
+    {
+      "label": ".joined()",
+      "file_type": "code",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L441",
+      "_origin": "ast",
+      "community": 68,
+      "norm_label": ".joined()",
+      "id": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined"
+    },
+    {
+      "label": "device_speech.dart",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "device_speech.dart",
+      "id": "lib_features_notes_data_device_speech"
+    },
+    {
+      "label": "DeviceSpeech",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "devicespeech",
+      "id": "lib_features_notes_data_device_speech_devicespeech"
+    },
+    {
+      "label": "_method",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "_method",
+      "id": "lib_features_notes_data_device_speech_method"
+    },
+    {
+      "label": "_events",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "_events",
+      "id": "lib_features_notes_data_device_speech_events"
+    },
+    {
+      "label": "_",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "_",
+      "id": "c_users_sena_desktop_not_lib_features_notes_data_device_speech"
+    },
+    {
+      "label": "isAvailable",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "isavailable",
+      "id": "lib_features_notes_data_device_speech_isavailable"
+    },
+    {
+      "label": "ensureMicPermission",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "ensuremicpermission",
+      "id": "lib_features_notes_data_device_speech_ensuremicpermission"
+    },
+    {
+      "label": "stop",
+      "file_type": "code",
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "stop",
+      "id": "lib_features_notes_data_device_speech_stop"
+    },
+    {
+      "label": "package:record/record.dart",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "community": 132,
+      "norm_label": "package:record/record.dart",
+      "id": "package_record_record_dart"
+    },
+    {
+      "label": "String?",
+      "file_type": "code",
+      "source_file": null,
+      "source_location": null,
+      "_origin": "ast",
+      "community": 77,
+      "norm_label": "string?",
+      "id": "none_string"
     },
     {
       "label": "dashboard_chips.dart",
@@ -2802,16 +2812,6 @@
       "community": 152,
       "norm_label": "attachmentrepository?",
       "id": "attachmentrepository"
-    },
-    {
-      "label": "String?",
-      "file_type": "code",
-      "source_file": null,
-      "source_location": null,
-      "_origin": "ast",
-      "community": 97,
-      "norm_label": "string?",
-      "id": "string"
     },
     {
       "label": "AudioRecorder?",
@@ -35705,7 +35705,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "HAFIZA.md",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "hafiza_not_uygulamas\u0131_haf\u0131zas\u0131",
       "target": "hafiza_bilinen_riskler_tuzaklar",
@@ -35720,1682 +35720,6 @@
       "source": "hafiza_not_uygulamas\u0131_haf\u0131zas\u0131",
       "target": "hafiza_kararlar_tarihli_append_only",
       "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "KALANLAR.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "source": "kalanlar",
-      "target": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "KALANLAR.md",
-      "source_location": "L13",
-      "weight": 1.0,
-      "source": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
-      "target": "kalanlar_bilinen_eksik_risk",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "KALANLAR.md",
-      "source_location": "L46",
-      "weight": 1.0,
-      "source": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
-      "target": "kalanlar_sonra_yap\u0131lacak",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L27",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L225",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L403",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_commitpartial",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L60",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L234",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L436",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L428",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L441",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L179",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L269",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L285",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "method",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L257",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L32",
-      "weight": 1.0,
-      "context": "field",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "eventchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "inherits",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L27",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "flutterfragmentactivity",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L176",
-      "weight": 1.0,
-      "context": "field",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "methodchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L31",
-      "weight": 1.0,
-      "context": "field",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
-      "target": "speechrecognizer",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L235",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
-      "target": "eventchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L148",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L62",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L60",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "target": "flutterengine",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L122",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "target": "intent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L63",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
-      "target": "methodchannel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L234",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
-      "target": "flutterengine",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L179",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
-      "target": "int",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L179",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
-      "target": "intent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "target": "int",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L225",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent",
-      "target": "intent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "context": "return_type",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L269",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
-      "target": "intent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/NotlarWidgetProvider.kt",
-      "source_location": "L40",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_notlarwidgetprovider_notlarwidgetprovider_onupdate",
-      "target": "intent"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/VoiceWidgetProvider.kt",
-      "source_location": "L40",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_voicewidgetprovider_deeplinkintent",
-      "target": "intent"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "weight": 1.0,
-      "context": "generic_arg",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "target": "array",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L211",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
-      "target": "intarray",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L436",
-      "weight": 1.0,
-      "context": "return_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L428",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L441",
-      "weight": 1.0,
-      "context": "return_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L269",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L285",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L257",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L265",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L264",
-      "weight": 1.0,
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
-      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L428",
-      "weight": 1.0,
-      "context": "return_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
-      "target": "boolean",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
-      "source_location": "L436",
-      "weight": 1.0,
-      "context": "parameter_type",
-      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
-      "target": "bundle",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "c_users_sena_desktop_not_lib_features_notes_data_device_speech"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "dart_io"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_devicespeech"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_ensuremicpermission"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_events"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_isavailable"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_method"
-    },
-    {
-      "relation": "defines",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "lib_features_notes_data_device_speech_stop"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_device_speech",
-      "target": "package_record_record_dart"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/device_speech.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_device_speech",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/app/split_shell.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_app_split_shell",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/app/theme/note_colors.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_app_theme_note_colors",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/core/utils/speech_output.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_core_utils_speech_output",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/ai_cache.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_data_ai_cache",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/api_key_store.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_data_api_key_store",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/assistant_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_data_assistant_service",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/gemini_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_data_gemini_service",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/presentation/ai_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_presentation_ai_sheet",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/auth/data/desktop_oauth_flow.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_auth_data_desktop_oauth_flow",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/gmail/data/gmail_auth.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_gmail_data_gmail_auth",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/attachment_repository.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_attachment_repository",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/doc_text.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_doc_text",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_docx.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_note_docx",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_pdf.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_note_pdf",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/notes_repository.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_notes_repository",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/reminder_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_reminder_service",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/upload_queue.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_data_upload_queue",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/dashboard_chips.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_dashboard_chips",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/items_editor.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_editor_items_editor",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_editor_note_editor_screen",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/notes_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_notes_providers",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/viewers/ink_layer.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_viewers_ink_layer",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/data/permissions_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_settings_data_permissions_service",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/presentation/permissions_onboarding.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_settings_presentation_permissions_onboarding",
-      "target": "static_const"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/settings_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_settings_settings_providers",
-      "target": "static_const"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/app/theme/app_theme.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_app_theme_app_theme",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/ai_cache.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_ai_data_ai_cache",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/presentation/chat_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_ai_presentation_chat_screen",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/auth/data/desktop_oauth_flow.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_auth_data_desktop_oauth_flow",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/auth/presentation/auth_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_auth_presentation_auth_providers",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/gmail/data/gmail_auth.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_gmail_data_gmail_auth",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/attachment_repository.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_attachment_repository",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/doc_text.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_doc_text",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_docx.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_note_docx",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_pdf.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_note_pdf",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/pdf_text.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_pdf_text",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/reminder_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_reminder_service",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/share_intake.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_share_intake",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/widget_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_widget_service",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/attachment_strip.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_attachment_strip",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/audio_recorder_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_audio_recorder_sheet",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_calculator_sheet",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/dictation_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_dictation_sheet",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_note_editor_screen",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_note_images",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/note_card.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_note_card",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/viewers/image_viewer.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_viewers_image_viewer",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/viewers/pdf_viewer_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_viewers_pdf_viewer_screen",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/viewers/video_viewer.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_viewers_video_viewer",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/voice_assistant.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_voice_assistant",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/data/permissions_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_data_permissions_service",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/presentation/settings_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_presentation_settings_screen",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/translate/data/offline_translator.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_translate_data_offline_translator",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/translate/presentation/translator_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_translate_presentation_translator_screen",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/firebase_options.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_firebase_options",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/main.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_main",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "test/ai_cache_test.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "test_ai_cache_test",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "test/note_pdf_build_test.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "test_note_pdf_build_test",
-      "target": "dart_io"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/app/theme/app_theme.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_app_theme_app_theme",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/core/utils/debouncer.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_core_utils_debouncer",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/core/utils/speech_output.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_core_utils_speech_output",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/ai_cache.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_ai_data_ai_cache",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/presentation/doc_chat_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_ai_presentation_doc_chat_screen",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/auth/presentation/auth_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_auth_presentation_auth_providers",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/gmail/data/gmail_auth.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_gmail_data_gmail_auth",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/attachment_repository.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_attachment_repository",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/doc_text.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_doc_text",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_docx.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_note_docx",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_pdf.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_note_pdf",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/reminder_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_reminder_service",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/share_intake.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_share_intake",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/slide_deck.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_slide_deck",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/upload_queue.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_upload_queue",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/widget_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_widget_service",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_calculator_sheet",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_note_editor_screen",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/note_card.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_note_card",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/data/permissions_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_data_permissions_service",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/presentation/settings_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_presentation_settings_screen",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/translate/data/offline_translator.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_translate_data_offline_translator",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/translate/presentation/translator_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_translate_presentation_translator_screen",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/firebase_options.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_firebase_options",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/l10n/generated/app_localizations.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_l10n_generated_app_localizations",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/main.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_main",
-      "target": "package_flutter_foundation_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/core/utils/note_guard.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_core_utils_note_guard",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/presentation/ai_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_ai_presentation_ai_sheet",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/data/note_pdf.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_data_note_pdf",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/dashboard_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_dashboard_screen",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_calculator_sheet",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/items_editor.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_items_editor",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_note_editor_screen",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_note_images",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/note_actions_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_note_actions_sheet",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/quick_add_fab.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_quick_add_fab",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/voice_assistant_widgets.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_voice_assistant_widgets",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/data/permissions_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_data_permissions_service",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/presentation/privacy_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_presentation_privacy_screen",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "test/items_editor_checklist_test.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "test_items_editor_checklist_test",
-      "target": "package_flutter_services_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/audio_recorder_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_audio_recorder_sheet",
-      "target": "package_record_record_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/dictation_sheet.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_editor_dictation_sheet",
-      "target": "package_record_record_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/voice_assistant.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_voice_assistant",
-      "target": "package_record_record_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/data/permissions_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_settings_data_permissions_service",
-      "target": "package_record_record_dart"
-    },
-    {
-      "relation": "imports",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/translate/presentation/translator_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_translate_presentation_translator_screen",
-      "target": "package_record_record_dart"
     },
     {
       "relation": "imports",
@@ -37577,6 +35901,16 @@
       "weight": 1.0,
       "source": "lib_features_notes_presentation_editor_note_editor_screen",
       "target": "dart_async"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_note_editor_screen",
+      "target": "dart_io"
     },
     {
       "relation": "imports",
@@ -38830,6 +37164,16 @@
       "source_location": null,
       "weight": 1.0,
       "source": "lib_features_notes_presentation_editor_note_editor_screen",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_note_editor_screen",
       "target": "package_flutter_material_dart"
     },
     {
@@ -38841,6 +37185,16 @@
       "weight": 1.0,
       "source": "lib_features_notes_presentation_editor_note_editor_screen",
       "target": "package_flutter_riverpod_flutter_riverpod_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_note_editor_screen",
+      "target": "package_flutter_services_dart"
     },
     {
       "relation": "imports",
@@ -38952,6 +37306,17 @@
       "weight": 1.0,
       "source": "lib_features_notes_presentation_editor_note_editor_screen",
       "target": "settings_settings_providers_dart"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_editor_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_editor_note_editor_screen",
+      "target": "static_const"
     },
     {
       "relation": "references",
@@ -40702,6 +39067,70 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/gemini_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_data_gemini_service",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/presentation/listen_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_presentation_listen_screen",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_editor_note_images",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/notes_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_notes_providers_selectedfoldernotifier",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/notes_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_notes_providers_selectedtagnotifier",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/presentation/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_settings_presentation_settings_screen",
+      "target": "string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/features/notes/presentation/editor/note_images.dart",
       "source_location": null,
       "weight": 1.0,
@@ -40959,6 +39388,281 @@
       "context": "variable_type",
       "source": "lib_features_notes_data_widget_service",
       "target": "providersubscription"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app/split_shell.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_app_split_shell",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app/theme/note_colors.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_app_theme_note_colors",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/core/utils/speech_output.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_core_utils_speech_output",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/ai_cache.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_data_ai_cache",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/api_key_store.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_data_api_key_store",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/assistant_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_data_assistant_service",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/gemini_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_data_gemini_service",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/presentation/ai_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_ai_presentation_ai_sheet",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/auth/data/desktop_oauth_flow.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_auth_data_desktop_oauth_flow",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/gmail/data/gmail_auth.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_gmail_data_gmail_auth",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/attachment_repository.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_attachment_repository",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_device_speech",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/doc_text.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_doc_text",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_docx.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_note_docx",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_pdf.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_note_pdf",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/notes_repository.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_notes_repository",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/reminder_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_reminder_service",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/upload_queue.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_data_upload_queue",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/dashboard_chips.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_dashboard_chips",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/items_editor.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_editor_items_editor",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/notes_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_notes_providers",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/viewers/ink_layer.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_notes_presentation_viewers_ink_layer",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/data/permissions_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_settings_data_permissions_service",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/presentation/permissions_onboarding.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_settings_presentation_permissions_onboarding",
+      "target": "static_const"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/settings_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "context": "variable_type",
+      "source": "lib_features_settings_settings_providers",
+      "target": "static_const"
     },
     {
       "relation": "references",
@@ -41388,6 +40092,336 @@
       "relation": "imports",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
+      "source_file": "lib/app/theme/app_theme.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_theme_app_theme",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/ai_cache.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_ai_data_ai_cache",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/presentation/chat_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_ai_presentation_chat_screen",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/auth/data/desktop_oauth_flow.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_auth_data_desktop_oauth_flow",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/auth/presentation/auth_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_auth_presentation_auth_providers",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/gmail/data/gmail_auth.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_gmail_data_gmail_auth",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/attachment_repository.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_attachment_repository",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/doc_text.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_doc_text",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_docx.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_note_docx",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_pdf.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_note_pdf",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/pdf_text.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_pdf_text",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/reminder_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_reminder_service",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/share_intake.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_share_intake",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/widget_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_widget_service",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/attachment_strip.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_attachment_strip",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/audio_recorder_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_audio_recorder_sheet",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_calculator_sheet",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/dictation_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_dictation_sheet",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_note_images",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/note_card.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_note_card",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/viewers/image_viewer.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_viewers_image_viewer",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/viewers/pdf_viewer_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_viewers_pdf_viewer_screen",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/viewers/video_viewer.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_viewers_video_viewer",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/voice_assistant.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_voice_assistant",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/data/permissions_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_data_permissions_service",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/presentation/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_presentation_settings_screen",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/translate/data/offline_translator.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_translate_data_offline_translator",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/translate/presentation/translator_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_translate_presentation_translator_screen",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/firebase_options.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_firebase_options",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_main",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/ai_cache_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_ai_cache_test",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/note_pdf_build_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_note_pdf_build_test",
+      "target": "dart_io"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
       "source_file": "lib/features/ai/presentation/read_document.dart",
       "source_location": null,
       "weight": 1.0,
@@ -41403,6 +40437,266 @@
       "weight": 1.0,
       "source": "lib_features_settings_presentation_settings_screen",
       "target": "package_file_selector_file_selector_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/app/theme/app_theme.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_app_theme_app_theme",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/core/utils/debouncer.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_core_utils_debouncer",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/core/utils/speech_output.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_core_utils_speech_output",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/data/ai_cache.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_ai_data_ai_cache",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/presentation/doc_chat_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_ai_presentation_doc_chat_screen",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/auth/presentation/auth_providers.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_auth_presentation_auth_providers",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/gmail/data/gmail_auth.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_gmail_data_gmail_auth",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/attachment_repository.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_attachment_repository",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/doc_text.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_doc_text",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_docx.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_note_docx",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_pdf.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_note_pdf",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/reminder_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_reminder_service",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/share_intake.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_share_intake",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/slide_deck.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_slide_deck",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/upload_queue.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_upload_queue",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/widget_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_widget_service",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_calculator_sheet",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/note_card.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_note_card",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/data/permissions_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_data_permissions_service",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/presentation/settings_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_presentation_settings_screen",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/translate/data/offline_translator.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_translate_data_offline_translator",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/translate/presentation/translator_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_translate_presentation_translator_screen",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/firebase_options.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_firebase_options",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/l10n/generated/app_localizations.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_l10n_generated_app_localizations",
+      "target": "package_flutter_foundation_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/main.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_main",
+      "target": "package_flutter_foundation_dart"
     },
     {
       "relation": "imports",
@@ -42033,6 +41327,146 @@
       "weight": 1.0,
       "source": "test_text_wrap_test",
       "target": "package_flutter_material_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/core/utils/note_guard.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_core_utils_note_guard",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/ai/presentation/ai_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_ai_presentation_ai_sheet",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/note_pdf.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_note_pdf",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/dashboard_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_dashboard_screen",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/calculator_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_calculator_sheet",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/items_editor.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_items_editor",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_note_images",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/note_actions_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_note_actions_sheet",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/quick_add_fab.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_quick_add_fab",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/voice_assistant_widgets.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_voice_assistant_widgets",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/data/permissions_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_data_permissions_service",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/presentation/privacy_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_presentation_privacy_screen",
+      "target": "package_flutter_services_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "test/items_editor_checklist_test.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "test_items_editor_checklist_test",
+      "target": "package_flutter_services_dart"
     },
     {
       "relation": "imports",
@@ -44410,6 +43844,636 @@
       "target": "uint8list"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "KALANLAR.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "kalanlar",
+      "target": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "KALANLAR.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
+      "target": "kalanlar_bilinen_eksik_risk"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "KALANLAR.md",
+      "source_location": "L46",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "kalanlar_kalanlar_canl\u0131_kalan_i\u015f_plan_listesi",
+      "target": "kalanlar_sonra_yap\u0131lacak"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L225",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L403",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_commitpartial"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L60",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L234",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L436",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L428",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L441",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L179",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L269",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L285",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L257",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L32",
+      "weight": 1.0,
+      "context": "field",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "eventchannel"
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "flutterfragmentactivity"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L176",
+      "weight": 1.0,
+      "context": "field",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "methodchannel"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L31",
+      "weight": 1.0,
+      "context": "field",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity",
+      "target": "speechrecognizer"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L235",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
+      "target": "eventchannel"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L148",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L62",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L60",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
+      "target": "flutterengine"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L122",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
+      "target": "intent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L63",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configureflutterengine",
+      "target": "methodchannel"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L234",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_configurespeechchannel",
+      "target": "flutterengine"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L179",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
+      "target": "int"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L179",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onactivityresult",
+      "target": "intent"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
+      "target": "int"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L225",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_appdetailsintent",
+      "target": "intent"
+    },
+    {
+      "relation": "references",
+      "context": "return_type",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L269",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
+      "target": "intent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/NotlarWidgetProvider.kt",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_notlarwidgetprovider_notlarwidgetprovider_onupdate",
+      "target": "intent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/VoiceWidgetProvider.kt",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_voicewidgetprovider_deeplinkintent",
+      "target": "intent"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "weight": 1.0,
+      "context": "generic_arg",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
+      "target": "array"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L211",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_onrequestpermissionsresult",
+      "target": "intarray"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L436",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L428",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L441",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_joined",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L269",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L285",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L257",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_kt_string"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L265",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_recognizerintent"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L264",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_startrecognizer",
+      "target": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_speechlistener"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L428",
+      "weight": 1.0,
+      "context": "return_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_iscontinuation",
+      "target": "boolean"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt",
+      "source_location": "L436",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "confidence_score": 1.0,
+      "source": "android_app_src_main_kotlin_dev_kaimau_notlar_mainactivity_mainactivity_firstresult",
+      "target": "bundle"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "c_users_sena_desktop_not_lib_features_notes_data_device_speech"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_devicespeech"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_ensuremicpermission"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_events"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_isavailable"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_method"
+    },
+    {
+      "relation": "defines",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "lib_features_notes_data_device_speech_stop"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/data/device_speech.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_data_device_speech",
+      "target": "package_record_record_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/audio_recorder_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_audio_recorder_sheet",
+      "target": "package_record_record_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/editor/dictation_sheet.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_editor_dictation_sheet",
+      "target": "package_record_record_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/notes/presentation/voice_assistant.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_notes_presentation_voice_assistant",
+      "target": "package_record_record_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/settings/data/permissions_service.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_settings_data_permissions_service",
+      "target": "package_record_record_dart"
+    },
+    {
+      "relation": "imports",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "lib/features/translate/presentation/translator_screen.dart",
+      "source_location": null,
+      "weight": 1.0,
+      "source": "lib_features_translate_presentation_translator_screen",
+      "target": "package_record_record_dart"
+    },
+    {
       "relation": "defines",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
@@ -46034,70 +46098,6 @@
       "weight": 1.0,
       "source": "lib_features_notes_presentation_pdf_export_screen",
       "target": "viewers_pdf_viewer_screen_dart"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/data/gemini_service.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_data_gemini_service",
-      "target": "string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/ai/presentation/listen_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_ai_presentation_listen_screen",
-      "target": "string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/editor/note_images.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_notes_presentation_editor_note_images",
-      "target": "string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/notes_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_notes_providers_selectedfoldernotifier",
-      "target": "string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/notes/presentation/notes_providers.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "source": "lib_features_notes_presentation_notes_providers_selectedtagnotifier",
-      "target": "string"
-    },
-    {
-      "relation": "references",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "lib/features/settings/presentation/settings_screen.dart",
-      "source_location": null,
-      "weight": 1.0,
-      "context": "variable_type",
-      "source": "lib_features_settings_presentation_settings_screen",
-      "target": "string"
     },
     {
       "relation": "references",
@@ -84923,5 +84923,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2958dec04c2fe923cc6088095e8bf3ed2b0cb868"
+  "built_at_commit": "d5d6e0082be5a4f79c6bd44d7fb1acbe4a726466"
 }

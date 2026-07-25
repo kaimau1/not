@@ -1,13 +1,18 @@
 # Graph Report - not  (2026-07-25)
 
 ## Corpus Check
-- 162 files · ~159,612 words
+- 162 files · ~159,695 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
 - 3567 nodes · 4836 edges · 154 communities (143 shown, 11 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 18 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `d5d6e008`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_app_localizations.dart|app_localizations.dart]]
@@ -743,7 +748,7 @@ Cohesion: 0.67
 Nodes (3): _pickSort, _reorderSection, noteSortProvider
 
 ## Knowledge Gaps
-- **2484 isolated node(s):** `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `Bilinen eksik / risk`, `Sonra yapılacak`, `DeviceSpeech` (+2479 more)
+- **2484 isolated node(s):** `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `_isDesktop`, `s`, `checked` (+2479 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -756,7 +761,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **Why does `_AccountSection` connect `Exception` to `SpeechVoice`, `static const`?**
   _High betweenness centrality (0.005) - this node is a cross-community bridge._
-- **What connects `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `Bilinen eksik / risk` to the rest of the system?**
+- **What connects `Kararlar (tarihli, append-only)`, `Bilinen Riskler / Tuzaklar`, `_isDesktop` to the rest of the system?**
   _2484 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `app_localizations.dart` be split into smaller, more focused modules?**
   _Cohesion score 0.004796163069544364 - nodes in this community are weakly interconnected._
