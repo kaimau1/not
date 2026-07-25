@@ -5,8 +5,8 @@
     "semantic_hash": ""
   },
   "android/app/src/main/kotlin/dev/kaimau/notlar/MainActivity.kt": {
-    "mtime": 1784924638.6077316,
-    "ast_hash": "e0d18e28e2c0008bf80d1225f97175d6",
+    "mtime": 1785007766.5465448,
+    "ast_hash": "70ef0ddee98c9114dc2e5a51325245c0",
     "semantic_hash": ""
   },
   "android/app/src/main/kotlin/dev/kaimau/notlar/NotlarWidgetProvider.kt": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "lib/app/router.dart": {
-    "mtime": 1784925393.0699615,
-    "ast_hash": "cc22464ac6ed14506cf59b7d51062df8",
+    "mtime": 1785003379.4705324,
+    "ast_hash": "1f7760cd5d0d344fb533c9440263b8e2",
     "semantic_hash": ""
   },
   "lib/app/theme/app_theme.dart": {
@@ -225,13 +225,13 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/dashboard_screen.dart": {
-    "mtime": 1784925382.3329525,
-    "ast_hash": "31822575db56f747c68c739192931137",
+    "mtime": 1785003379.4716425,
+    "ast_hash": "d152dbf70a378b2075374306893af71b",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/attachment_strip.dart": {
-    "mtime": 1784927178.996607,
-    "ast_hash": "3f188c695e1b4dc327854441e5ee67f9",
+    "mtime": 1785003379.4731455,
+    "ast_hash": "a5e3e2d5bdf11010f0c22e9e51f80f75",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/audio_recorder_sheet.dart": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
-    "mtime": 1784927306.210684,
-    "ast_hash": "a3a8a63a1afe003f0862116c54f7d7a5",
+    "mtime": 1785007998.0546708,
+    "ast_hash": "a4250f1e2faa9c08f6961b1723ae51dd",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/note_card.dart": {
@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/notes_providers.dart": {
-    "mtime": 1784926915.2889636,
-    "ast_hash": "02984341762828abff2dfb8a4148c7b6",
+    "mtime": 1785003379.475572,
+    "ast_hash": "00f09e7abb60830fa1b235d9b485c52a",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/trash_screen.dart": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1784927426.211326,
-    "ast_hash": "e1a0fe8717ac2e73a9188845184074f0",
+    "mtime": 1785004121.3449993,
+    "ast_hash": "3a3769b931edf5487b9c1b3722d04903",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1784927426.1969604,
-    "ast_hash": "09d29fc091c645ea2ee37eb71ce1f8bc",
+    "mtime": 1785004121.3170896,
+    "ast_hash": "4a4155e930774412e6b7df57ee1e5289",
     "semantic_hash": ""
   },
   "lib/main.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1784927631.776468,
-    "ast_hash": "97b22546221ebcd640226a9b7017255e",
+    "mtime": 1785008544.2467134,
+    "ast_hash": "7839805590985b5887c47aedebaa5ae7",
     "semantic_hash": ""
   },
   "README.md": {
@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "pubspec.yaml": {
-    "mtime": 1784925050.4316986,
-    "ast_hash": "1678953509b4840f074707e7d2d8881c",
+    "mtime": 1785003379.4810653,
+    "ast_hash": "398cb87176f63ba67aa16ac314078d28",
     "semantic_hash": ""
   },
   "windows/CMakeLists.txt": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/quick_add_fab.dart": {
-    "mtime": 1784925382.33195,
-    "ast_hash": "542dfd40afb1a4264e404e3a28491907",
+    "mtime": 1785003379.4765794,
+    "ast_hash": "845d95558fbea100c0b4738738456598",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/reminders_screen.dart": {
@@ -655,8 +655,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/device_speech.dart": {
-    "mtime": 1784913608.9308293,
-    "ast_hash": "b6dcd91f4ad4d7fc46a05d60f796b2df",
+    "mtime": 1785007777.3722813,
+    "ast_hash": "fd48b6cc37d6b4b4827a0f22767df43d",
     "semantic_hash": ""
   },
   "lib/features/ai/presentation/doc_chat_screen.dart": {
@@ -665,8 +665,8 @@
     "semantic_hash": ""
   },
   "android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java": {
-    "mtime": 1784925270.512926,
-    "ast_hash": "94b28811be91bbde8f0f2cdb991d39df",
+    "mtime": 1785004032.5853722,
+    "ast_hash": "3f2e354042c4ed0300f2d3c64703ec51",
     "semantic_hash": ""
   },
   "android/gradlew": {
@@ -895,8 +895,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1784925964.7434037,
-    "ast_hash": "1297d288e40f7b67793f590ec3f5d49b",
+    "mtime": 1785008554.2816813,
+    "ast_hash": "f6ee64706fb3a0ba8755ec1996e11099",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -960,8 +960,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/viewers/video_viewer.dart": {
-    "mtime": 1784925072.8686953,
-    "ast_hash": "d604f455e02cf510139a782dd8d65ddc",
+    "mtime": 1785003379.4775796,
+    "ast_hash": "873c3ccd64fdc0c959ba754c58e43c70",
     "semantic_hash": ""
   },
   "lib/features/settings/presentation/permissions_onboarding.dart": {
@@ -977,6 +977,11 @@
   "test/ai_result_sheet_test.dart": {
     "mtime": 1784927333.5647407,
     "ast_hash": "b52a0bd7f3eb2b0d354766ca4258e1be",
+    "semantic_hash": ""
+  },
+  "lib/features/notes/presentation/qr_scan_screen.dart": {
+    "mtime": 1785003379.475572,
+    "ast_hash": "dff4721f3d40b593db4c5ea458358166",
     "semantic_hash": ""
   }
 }

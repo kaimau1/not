@@ -660,7 +660,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
@@ -720,6 +721,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 onTap: () => Navigator.pop(sheetContext, 'paste'),
               ),
           ],
+          ),
         ),
       ),
     );
