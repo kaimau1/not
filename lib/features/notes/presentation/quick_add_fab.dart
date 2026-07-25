@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../domain/note_type.dart';
+import 'qr_scan_screen.dart';
 
 /// "+" düğmesi: dokununca metin / madde listesi / sıralı liste / el yazısı
 /// seçenekleri etiketli mini düğmeler olarak belirir. (Eskiden tek dokunuş
@@ -13,8 +17,10 @@ import '../domain/note_type.dart';
 /// Seçenekler bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
 /// - Böylece açılınca yerinde büyüyüp üstteki sesli asistan düğmesini
 ///   ittirmez, konum kaymaz (madde 3).
-/// - Tam ekran görünmez bir bariyer, sayfanın herhangi bir yerine dokununca
-///   menüyü kapatır — tekrar "+" basmaya gerek kalmaz (madde 12).
+/// - Tam ekran bir bariyer, sayfanın herhangi bir yerine dokununca menüyü
+///   kapatır — tekrar "+" basmaya gerek kalmaz (madde 12). Bariyer aynı
+///   zamanda arka planı BULANIKLAŞTIRIR: menü açıkken göz seçeneklere gider,
+///   arkadaki not duvarı dikkat dağıtmaz.
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
@@ -23,6 +29,8 @@ class QuickAddFab extends StatefulWidget {
     required this.onHandwriting,
     required this.onVoiceCapture,
     required this.onVideoNote,
+    required this.onPhotoNote,
+    required this.onQrNote,
   });
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
@@ -38,6 +46,13 @@ class QuickAddFab extends StatefulWidget {
 
   /// Görüntülü not: kamera açılır, video yalnızca cihazda saklanır.
   final VoidCallback onVideoNote;
+
+  /// "Foto çek not al": kamera açılır, çekilen fotoğraf yeni notun içine
+  /// gömülür ve editör yazmaya hazır açılır.
+  final VoidCallback onPhotoNote;
+
+  /// QR kod okuyup içeriğini yeni nota yazar.
+  final VoidCallback onQrNote;
 
   @override
   State<QuickAddFab> createState() => _QuickAddFabState();
@@ -58,11 +73,13 @@ class _QuickAddFabState extends State<QuickAddFab> {
     _entry = OverlayEntry(
       builder: (context) => Stack(
         children: [
-          // Dışarı dokununca kapanan tam ekran (görünmez) bariyer.
+          // Dışarı dokununca kapanan tam ekran bariyer; arka planı bulanık
+          // yapar ve hafifçe karartır.
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: _close,
+              child: const _BlurBarrier(),
             ),
           ),
           // Seçenekler "+" düğmesinin hemen üstüne demirlenir (layout'u
@@ -80,6 +97,17 @@ class _QuickAddFabState extends State<QuickAddFab> {
                     icon: Icons.graphic_eq,
                     label: context.l10n.newVoiceCapture,
                     onTap: widget.onVoiceCapture,
+                  ),
+                  if (qrScanSupported)
+                    _option(
+                      icon: Icons.qr_code_scanner,
+                      label: context.l10n.qrScanTitle,
+                      onTap: widget.onQrNote,
+                    ),
+                  _option(
+                    icon: Icons.photo_camera_outlined,
+                    label: context.l10n.newPhotoNote,
+                    onTap: widget.onPhotoNote,
                   ),
                   _option(
                     icon: Icons.videocam_outlined,
@@ -107,6 +135,26 @@ class _QuickAddFabState extends State<QuickAddFab> {
                     onTap: () => widget.onCreate(NoteType.text),
                   ),
                 ],
+              ),
+            ),
+          ),
+          // Bulanıklığın ÜSTÜnde duran keskin "×" kopyası: bariyer tüm sayfayı
+          // (dolayısıyla asıl "+" düğmesini de) bulanıklaştırdığından, düğme
+          // bozuk görünmesin diye aynı yere net bir eş konur. Dokunuşu menüyü
+          // kapatır — asıl düğmenin davranışının aynısı.
+          // Hizalama alttan-ORTA: bağlantı noktası tüm düğme sütununu sarar ve
+          // sütun kendi içinde ortalanmıştır (sağa dayamak 14 px kaydırırdı).
+          CompositedTransformFollower(
+            link: widget.anchor,
+            targetAnchor: Alignment.bottomCenter,
+            followerAnchor: Alignment.bottomCenter,
+            child: FloatingActionButton(
+              heroTag: 'add-fab-open',
+              tooltip: context.l10n.close,
+              onPressed: _close,
+              child: Transform.rotate(
+                angle: math.pi / 4, // + → ×
+                child: const Icon(Icons.add),
               ),
             ),
           ),
@@ -188,6 +236,33 @@ class _QuickAddFabState extends State<QuickAddFab> {
       ),
     );
   }
+}
+
+/// Menü açıkken arka planı bulanıklaştıran tam ekran katman. Bulanıklık
+/// birden bindirilmez: 180 ms'de yumuşakça girer ki sayfa "donmuş" gibi
+/// görünmesin. Sistemde "hareketi azalt" açıksa anında tam bulanıklık.
+class _BlurBarrier extends StatelessWidget {
+  const _BlurBarrier();
+
+  static const _sigma = 10.0;
+  static const _dim = 0.18;
+
+  @override
+  Widget build(BuildContext context) {
+    final animate = !MediaQuery.disableAnimationsOf(context);
+    if (!animate) return _layer(1);
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      builder: (context, t, _) => _layer(t),
+    );
+  }
+
+  Widget _layer(double t) => BackdropFilter(
+    filter: ImageFilter.blur(sigmaX: _sigma * t, sigmaY: _sigma * t),
+    child: ColoredBox(color: Colors.black.withValues(alpha: _dim * t)),
+  );
 }
 
 /// Seçenekleri "+" düğmesinden çıkıyormuş gibi sırayla açar: her biri

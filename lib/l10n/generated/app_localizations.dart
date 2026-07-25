@@ -2523,6 +2523,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sunum açılamadı'**
   String get slideOpenFailed;
+
+  /// No description provided for @newPhotoNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Foto çek not al'**
+  String get newPhotoNote;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf çek'**
+  String get takePhoto;
+
+  /// No description provided for @qrScanTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'QR kod tara'**
+  String get qrScanTitle;
+
+  /// No description provided for @qrScanSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kameradan ya da fotoğraftan oku'**
+  String get qrScanSubtitle;
+
+  /// No description provided for @qrScanHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kodu çerçevenin içine getir'**
+  String get qrScanHint;
+
+  /// No description provided for @qrFromPhoto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraftan oku'**
+  String get qrFromPhoto;
+
+  /// No description provided for @qrNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu görselde kod bulunamadı'**
+  String get qrNotFound;
+
+  /// No description provided for @qrScanFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kod okunamadı: {error}'**
+  String qrScanFailed(String error);
+
+  /// No description provided for @qrTorch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Işık'**
+  String get qrTorch;
+
+  /// No description provided for @attachmentsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler ({count})'**
+  String attachmentsCount(int count);
+
+  /// No description provided for @hideAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get hideAttachments;
+
+  /// No description provided for @showAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get showAttachments;
+
+  /// No description provided for @videoBack10.
+  ///
+  /// In tr, this message translates to:
+  /// **'10 sn geri'**
+  String get videoBack10;
+
+  /// No description provided for @videoForward10.
+  ///
+  /// In tr, this message translates to:
+  /// **'10 sn ileri'**
+  String get videoForward10;
 }
 
 class _AppLocalizationsDelegate

@@ -140,6 +140,26 @@ class ShowFolderChipsNotifier extends Notifier<bool> {
   }
 }
 
+/// Editörün dibindeki ek şeridi açık mı (kullanıcı tercihi, kalıcı)? Şerit
+/// artık sayfanın altında durur ve kapatılabilir; tercih notlar arasında
+/// korunur — her notta yeniden kapatmak gerekmesin.
+final attachmentsExpandedProvider =
+    NotifierProvider<AttachmentsExpandedNotifier, bool>(
+      AttachmentsExpandedNotifier.new,
+    );
+
+class AttachmentsExpandedNotifier extends Notifier<bool> {
+  static const _key = 'attachments_expanded';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void toggle() {
+    state = !state;
+    ref.read(sharedPreferencesProvider).setBool(_key, state);
+  }
+}
+
 final filtersExpandedProvider =
     NotifierProvider<FiltersExpandedNotifier, bool>(
       FiltersExpandedNotifier.new,
