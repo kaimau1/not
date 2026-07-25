@@ -42,6 +42,7 @@ import '../../domain/note_type.dart';
 import '../color_picker_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
+import '../qr_scan_screen.dart';
 import 'ai_result_sheet.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
@@ -80,6 +81,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startDrawing = false,
     this.startVoiceCapture = false,
     this.startVideo = false,
+    this.startPhoto = false,
   });
 
   final String noteId;
@@ -94,6 +96,10 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
   /// (+) menüsündeki "Görüntülü not": açılışta kamera başlatılır.
   final bool startVideo;
+
+  /// (+) menüsündeki "Foto çek not al": açılışta fotoğraf makinesi açılır,
+  /// çekilen kare nota gömülür ve kullanıcı doğrudan yazmaya başlar.
+  final bool startPhoto;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -154,6 +160,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   bool _pendingDraw = false;
   bool _pendingVoice = false;
   bool _pendingVideo = false;
+  bool _pendingPhoto = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -168,6 +175,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (_pendingVideo) {
       _pendingVideo = false;
       _addVideo();
+    }
+    if (_pendingPhoto) {
+      _pendingPhoto = false;
+      _takePhoto();
     }
   }
 
@@ -263,6 +274,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _pendingDraw = widget.startDrawing;
     _pendingVoice = widget.startVoiceCapture;
     _pendingVideo = widget.startVideo;
+    _pendingPhoto = widget.startPhoto;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
@@ -428,6 +440,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (file == null) return;
       await _addImageBytes(await file.readAsBytes(), file.name);
     }
+  }
+
+  /// "Foto çek not al": kamerayla fotoğraf çekip nota gömer. Çekilen fotoğraf
+  /// sıradan bir görsel ektir — sayfada sürüklenir, boyutlandırılır, üzerine
+  /// yazılır ve "Metni al" ile OCR edilebilir.
+  Future<void> _takePhoto() async {
+    final l10n = context.l10n;
+    // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
+    // olmadan REDDEDER (bkz. _addVideo).
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) _showSnack(l10n.permCameraInfo);
+      return;
+    }
+    if (!mounted) return;
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.camera);
+      if (picked == null) return;
+      await _addImageBytes(await picked.readAsBytes(), picked.name);
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+    }
+  }
+
+  /// QR/barkod okur (kameradan ya da galerideki bir fotoğraftan) ve okunan
+  /// metni notun içine ekler.
+  Future<void> _scanQr() async {
+    final l10n = context.l10n;
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) _showSnack(l10n.permCameraInfo);
+      return;
+    }
+    if (!mounted) return;
+    final code = await openQrScanner(context);
+    if (code == null || !mounted) return;
+    _appendPlainText(code);
   }
 
   Future<void> _pickPdf() async {
@@ -634,6 +683,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.addImage),
               onTap: () => Navigator.pop(sheetContext, 'image'),
             ),
+            // Kamerayla anında fotoğraf: masaüstünde/web'de çekim yolu yok.
+            if (!kIsWeb && !_isDesktop)
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(l10n.takePhoto),
+                onTap: () => Navigator.pop(sheetContext, 'camera'),
+              ),
+            if (qrScanSupported)
+              ListTile(
+                leading: const Icon(Icons.qr_code_scanner),
+                title: Text(l10n.qrScanTitle),
+                subtitle: Text(l10n.qrScanSubtitle),
+                onTap: () => Navigator.pop(sheetContext, 'qr'),
+              ),
             ListTile(
               leading: const Icon(Icons.picture_as_pdf_outlined),
               title: Text(l10n.addPdf),
@@ -678,6 +741,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     switch (action) {
       case 'image':
         await _pickImage();
+      case 'camera':
+        await _takePhoto();
+      case 'qr':
+        await _scanQr();
       case 'pdf':
         await _pickPdf();
       case 'slide':
@@ -1179,9 +1246,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
-  void _appendText(String raw) {
+  /// Markdown işaretleri temizlenir — model istenmese de **kalın**/# üretiyor.
+  void _appendText(String raw) => _appendPlainText(stripMarkdown(raw));
+
+  /// Metni OLDUĞU GİBİ (Markdown temizliği yapmadan) nota ekler. QR içeriği
+  /// gibi makine verisinde temizlik zararlı: `#` ile başlayan bir satır ya da
+  /// `*` taşıyan bir adres bozulurdu.
+  void _appendPlainText(String text) {
     final note = _note;
-    final text = stripMarkdown(raw);
     if (note == null || text.trim().isEmpty) return;
     if (note.type == NoteType.text) {
       final combined = note.body.trim().isEmpty
@@ -1897,17 +1969,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ),
             ),
           ),
-        // Görsel olmayan ekler (PDF/ses) yatay şeritte kalır. Görseller her
-        // not tipinde TAM SAYFA serbest katmanda (NotePageCanvas — aşağıda).
-        AttachmentStrip(
-          attachments: [
-            for (final a in note.attachments)
-              if (a.kind != AttachmentKind.image) a,
-          ],
-          onRemove: _removeAttachment,
-          onChanged: _updateAttachment,
-          onVideoToNote: _videoToNote,
-        ),
       ],
     );
 
@@ -2210,6 +2271,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
+            // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
+            // serbest katmanda kalır (NotePageCanvas — yukarıda).
+            AttachmentStrip(
+              attachments: [
+                for (final a in note.attachments)
+                  if (a.kind != AttachmentKind.image) a,
+              ],
+              onRemove: _removeAttachment,
+              onChanged: _updateAttachment,
+              onVideoToNote: _videoToNote,
+              expanded: ref.watch(attachmentsExpandedProvider),
+              onToggle: () =>
+                  ref.read(attachmentsExpandedProvider.notifier).toggle(),
+            ),
             // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
             // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
             // açık kalabiliyordu.

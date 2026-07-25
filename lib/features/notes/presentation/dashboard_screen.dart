@@ -14,6 +14,7 @@ import '../../ai/data/ai_gate.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../settings/data/permissions_service.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
@@ -26,9 +27,16 @@ import 'color_picker_sheet.dart';
 import 'dashboard_chips.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
+import 'qr_scan_screen.dart';
 import 'quick_add_fab.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
+
+/// Ana ekran ızgarasının önbellek payı (px). Masonry ızgaranın toplam
+/// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
+/// içinde ölçülmesi istenir (bkz. [_DashboardScreenState.build]). ~10 bin px,
+/// iki sütunlu düzende yüzden fazla nota karşılık gelir.
+const double _kGridCacheExtent = 10000;
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -332,6 +340,45 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (mounted) await context.push('/note/$id?video=1');
   }
 
+  /// "Foto çek not al": not oluşturulur ve editör açılır açılmaz fotoğraf
+  /// makinesi açılır; çekilen kare nota gömülür, kullanıcı hemen yazmaya
+  /// başlar. Fotoğrafı iptal ederse boş not çıkışta kendiliğinden silinir.
+  Future<void> _createPhotoNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (mounted) await context.push('/note/$id?photo=1');
+  }
+
+  /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
+  /// oluşturulur — iptal edilirse ortada boş not kalmaz.
+  Future<void> _createQrNote() async {
+    final l10n = context.l10n;
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.permCameraInfo)));
+      }
+      return;
+    }
+    if (!mounted) return;
+    final code = await openQrScanner(context);
+    if (code == null || !mounted) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    repo.updateFields(id, {
+      'body': code,
+      if (folderId != null) 'folderId': folderId,
+    });
+    if (mounted) await context.push('/note/$id');
+  }
+
   @override
   Widget build(BuildContext context) {
     // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
@@ -625,6 +672,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   ),
                               child: CustomScrollView(
                                 key: ValueKey(segmentKey),
+                                // KÖK NEDEN (aşağı kaydırırken liste yukarı
+                                // sıçraması): SliverMasonryGrid tembeldir ve
+                                // toplam kaydırma uzunluğunu yalnızca O AN
+                                // yerleşmiş kartların ORTALAMA yüksekliğinden
+                                // TAHMİN eder. Masonry'de kart boyları çok
+                                // farklı olduğundan tahmin her karede oynuyor;
+                                // tahmin o anki konumun altına düştüğü an
+                                // ScrollPosition kendini düzeltip listeyi
+                                // yukarı çekiyordu (sona yaklaşıldıkça sık).
+                                // Geniş önbellek payı kartların TAMAMINI ilk
+                                // yerleşimde ölçtürür: uzunluk tahmin değil
+                                // gerçek olur, düzeltme/sıçrama hiç olmaz.
+                                // Bedeli, bu pay içindeki kartların önceden
+                                // kurulması; bu sınırın (≈130 kart) ötesinde
+                                // tembelliğe geri dönülür.
+                                cacheExtent: _kGridCacheExtent,
                                 slivers: [
                                   ...notesAsync.when(
                                     data: (notes) => _buildNoteSlivers(
@@ -707,6 +770,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         QuickAddFab(
                           onVoiceCapture: _createVoiceCaptureNote,
                           onVideoNote: _createVideoNote,
+                          onPhotoNote: _createPhotoNote,
+                          onQrNote: _createQrNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,
                           onHandwriting: _createHandwritingNote,

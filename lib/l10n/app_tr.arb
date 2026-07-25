@@ -521,5 +521,29 @@
   "eraser": "Silgi",
   "clearInk": "Çizimleri temizle",
   "inkTwoFingerHint": "Tek parmak çizer · iki parmakla kaydır ve yakınlaştır",
-  "slideOpenFailed": "Sunum açılamadı"
+  "slideOpenFailed": "Sunum açılamadı",
+  "newPhotoNote": "Foto çek not al",
+  "takePhoto": "Fotoğraf çek",
+  "qrScanTitle": "QR kod tara",
+  "qrScanSubtitle": "Kameradan ya da fotoğraftan oku",
+  "qrScanHint": "Kodu çerçevenin içine getir",
+  "qrFromPhoto": "Fotoğraftan oku",
+  "qrNotFound": "Bu görselde kod bulunamadı",
+  "qrScanFailed": "Kod okunamadı: {error}",
+  "@qrScanFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "qrTorch": "Işık",
+  "attachmentsCount": "Ekler ({count})",
+  "@attachmentsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "hideAttachments": "Gizle",
+  "showAttachments": "Göster",
+  "videoBack10": "10 sn geri",
+  "videoForward10": "10 sn ileri"
 }

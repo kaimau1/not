@@ -1313,4 +1313,50 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get slideOpenFailed => 'Sunum açılamadı';
+
+  @override
+  String get newPhotoNote => 'Foto çek not al';
+
+  @override
+  String get takePhoto => 'Fotoğraf çek';
+
+  @override
+  String get qrScanTitle => 'QR kod tara';
+
+  @override
+  String get qrScanSubtitle => 'Kameradan ya da fotoğraftan oku';
+
+  @override
+  String get qrScanHint => 'Kodu çerçevenin içine getir';
+
+  @override
+  String get qrFromPhoto => 'Fotoğraftan oku';
+
+  @override
+  String get qrNotFound => 'Bu görselde kod bulunamadı';
+
+  @override
+  String qrScanFailed(String error) {
+    return 'Kod okunamadı: $error';
+  }
+
+  @override
+  String get qrTorch => 'Işık';
+
+  @override
+  String attachmentsCount(int count) {
+    return 'Ekler ($count)';
+  }
+
+  @override
+  String get hideAttachments => 'Gizle';
+
+  @override
+  String get showAttachments => 'Göster';
+
+  @override
+  String get videoBack10 => '10 sn geri';
+
+  @override
+  String get videoForward10 => '10 sn ileri';
 }

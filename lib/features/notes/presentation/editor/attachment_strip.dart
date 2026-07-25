@@ -11,18 +11,32 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 
-/// Editörde gövdenin üstünde duran yatay ek şeridi.
+/// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
+///
+/// Şerit artık başlığın ALTINDA değil SAYFANIN DİBİNDE, alt çubuğun hemen
+/// üstünde durur ve KAPANABİLİR: eskiden başlıkla gövde metninin arasına
+/// giriyor, üç PDF eklenmiş bir notta yazı alanını ekranın yarısına indiriyordu.
+/// Kapanınca yalnızca "Ekler (3)" satırı kalır; sayı sayesinde ek olduğu
+/// gözden kaçmaz.
 class AttachmentStrip extends StatelessWidget {
   const AttachmentStrip({
     super.key,
     required this.attachments,
     required this.onRemove,
+    required this.expanded,
+    required this.onToggle,
     this.onChanged,
     this.onVideoToNote,
   });
 
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
+
+  /// Şerit açık mı? Kapalıyken yalnız başlık satırı çizilir (tercih kalıcıdır).
+  final bool expanded;
+
+  /// Başlık satırına dokununca çağrılır (aç/kapa).
+  final VoidCallback onToggle;
 
   /// Görüntülü nottan AI ile detaylı not çıkarır. null ise düğme gizlenir.
   final Future<void> Function(Attachment)? onVideoToNote;
@@ -34,20 +48,69 @@ class AttachmentStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (attachments.isEmpty) return const SizedBox.shrink();
-    return SizedBox(
-      height: 110,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        itemCount: attachments.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) => _AttachmentTile(
-          attachment: attachments[index],
-          onRemove: () => onRemove(attachments[index]),
-          onChanged: onChanged,
-          onVideoToNote: onVideoToNote,
+    // Klavye açıkken şerit hiç çizilmez: yazarken ekler için yer ayırmak
+    // metin alanını gereksiz daraltıyordu. Bu MediaQuery bağımlılığı bilerek
+    // BURADA duruyor — editörün kendi build'ine konsa klavye animasyonunun
+    // her karesinde tüm editör yeniden kurulurdu.
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return const SizedBox.shrink();
+    }
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        InkWell(
+          onTap: onToggle,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+            child: Row(
+              children: [
+                Icon(Icons.attach_file, size: 16, color: scheme.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    context.l10n.attachmentsCount(attachments.length),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Icon(
+                  expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+                Text(
+                  expanded
+                      ? context.l10n.hideAttachments
+                      : context.l10n.showAttachments,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: scheme.primary),
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
         ),
-      ),
+        if (expanded)
+          SizedBox(
+            height: 110,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              itemCount: attachments.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) => _AttachmentTile(
+                attachment: attachments[index],
+                onRemove: () => onRemove(attachments[index]),
+                onChanged: onChanged,
+                onVideoToNote: onVideoToNote,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

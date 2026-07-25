@@ -52,6 +52,9 @@ dependencies:
   window_manager: ^0.5.2
   cached_network_image: ^3.4.1
   image_picker: ^1.2.3
+  # QR/barkod okuma: kamera önizlemesi + galeriden fotoğraf analizi
+  # (analyzeImage). Windows eklentisi YOK — masaüstünde özellik gizlenir.
+  mobile_scanner: ^7.4.0
   # Görüntülü not oynatma (yalnız cihazda saklanan videolar).
   video_player: ^2.9.2
   file_selector: ^1.1.0
