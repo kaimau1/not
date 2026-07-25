@@ -2266,6 +2266,24 @@ abstract class AppLocalizations {
   /// **'Sıralama'**
   String get sortBy;
 
+  /// No description provided for @reorderNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notları sırala'**
+  String get reorderNotes;
+
+  /// No description provided for @reorderModeActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartları sürükleyerek sırala'**
+  String get reorderModeActive;
+
+  /// No description provided for @reorderDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get reorderDone;
+
   /// No description provided for @sortManual.
   ///
   /// In tr, this message translates to:

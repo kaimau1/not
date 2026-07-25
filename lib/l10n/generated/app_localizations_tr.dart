@@ -1180,6 +1180,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sortBy => 'Sıralama';
 
   @override
+  String get reorderNotes => 'Notları sırala';
+
+  @override
+  String get reorderModeActive => 'Kartları sürükleyerek sırala';
+
+  @override
+  String get reorderDone => 'Bitti';
+
+  @override
   String get sortManual => 'Elle (sürükleme sırası)';
 
   @override

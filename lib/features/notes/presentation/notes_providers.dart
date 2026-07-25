@@ -185,6 +185,24 @@ class SelectedFolderNotifier extends Notifier<String?> {
   void set(String? value) => state = value;
 }
 
+/// Not kartlarının elle sıralama modu (⋮ → "Notları sırala").
+///
+/// Eskiden sürükle-sırala kalıcı olarak açıktı ve uzun basış SÜRÜKLEMEYİ
+/// başlatıyordu; toplu seçim ise yalnızca parmak yerinde bırakılırsa (24 px
+/// altı hareket) gerçekleşen bir yan üründü — kullanıcı seçmek isterken
+/// kartı kazara taşıyordu. Artık uzun basış her zaman SEÇER; sıralama bu
+/// bayrakla açılan ayrı bir moda çekildi.
+final reorderModeProvider = NotifierProvider<ReorderModeNotifier, bool>(
+  ReorderModeNotifier.new,
+);
+
+class ReorderModeNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
 /// Ana ekran mikrofon widget'ı (notlar://voice) dokunulunca ayarlanan
 /// tüketilebilir bayrak; dashboard bunu görüp Sesli Not Asistanı'nı bas-başlat
 /// modunda başlatır (ayrı /voice ekranı yerine tek tutarlı sistem).

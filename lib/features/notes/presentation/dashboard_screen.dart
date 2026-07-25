@@ -413,6 +413,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         : ref.watch(filteredNotesProvider);
     final selectedIds = ref.watch(selectedNoteIdsProvider);
     final selectionActive = selectedIds.isNotEmpty;
+    // Sıralama modu yalnız süzgeçsiz görünümde geçerlidir: kullanıcı mod
+    // açıkken bir klasör/etiket çipine dokunursa mod kendiliğinden kapanır —
+    // aksi hâlde şerit durur ama kartlar sürüklenmez, kullanıcı bozuk sanır.
+    final searchActive = query.trim().isNotEmpty;
+    final reorderActive =
+        ref.watch(reorderModeProvider) &&
+        !selectionActive &&
+        !searchActive &&
+        ref.watch(noteFilterProvider) == NoteFilter.all &&
+        ref.watch(selectedFolderProvider) == null &&
+        ref.watch(selectedTagProvider) == null;
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
@@ -459,7 +470,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     // listesine uygulanır (arama barı artık birlikte kaymaz).
                     return Column(
                       children: [
-                        if (selectionActive)
+                        // Sıralama modu: kartlar sürüklenebilir. Moddan
+                        // çıkmadan başka iş yapılamayacağı için üstte kalıcı
+                        // ve tek düğmeli bir bar durur.
+                        if (reorderActive)
+                          AppBar(
+                            leading: IconButton(
+                              tooltip: l10n.reorderDone,
+                              icon: const Icon(Icons.close),
+                              onPressed: () => ref
+                                  .read(reorderModeProvider.notifier)
+                                  .set(false),
+                            ),
+                            title: Text(l10n.reorderModeActive),
+                            actions: [
+                              TextButton(
+                                onPressed: () => ref
+                                    .read(reorderModeProvider.notifier)
+                                    .set(false),
+                                child: Text(l10n.reorderDone),
+                              ),
+                              const SizedBox(width: 4),
+                            ],
+                          )
+                        else if (selectionActive)
                           AppBar(
                             leading: IconButton(
                               tooltip: l10n.cancel,
@@ -585,6 +619,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       ),
                                       onSelected: (action) => switch (action) {
                                         'sort' => _pickSort(),
+                                        'reorder' => ref
+                                            .read(reorderModeProvider.notifier)
+                                            .set(true),
                                         'reminders' => context.push(
                                           '/reminders',
                                         ),
@@ -601,6 +638,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                           Icons.sort,
                                           l10n.sortBy,
                                         ),
+                                        // Elle sıralama yalnız süzgeçsiz
+                                        // görünümde anlamlı (alt kümede sıra
+                                        // bozulur); aksi hâlde madde hiç
+                                        // görünmez ki kullanıcı tıklayıp
+                                        // "neden olmuyor" demesin.
+                                        if (!searchActive &&
+                                            ref.watch(noteFilterProvider) ==
+                                                NoteFilter.all &&
+                                            ref.watch(selectedFolderProvider) ==
+                                                null &&
+                                            ref.watch(selectedTagProvider) ==
+                                                null)
+                                          _menuItem(
+                                            'reorder',
+                                            Icons.swap_vert,
+                                            l10n.reorderNotes,
+                                          ),
                                         const PopupMenuDivider(),
                                         _menuItem(
                                           'reminders',
@@ -696,7 +750,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       columns,
                                       cellWidth: cellWidth,
                                       selectionActive: selectionActive,
-                                      searchActive: query.trim().isNotEmpty,
+                                      searchActive: searchActive,
+                                      reorderEnabled: reorderActive,
                                     ),
                                     loading: () => [
                                       const SliverFillRemaining(
@@ -812,6 +867,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required double cellWidth,
     required bool selectionActive,
     required bool searchActive,
+    required bool reorderEnabled,
   }) {
     final l10n = context.l10n;
     if (notes.isEmpty) {
@@ -839,16 +895,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ];
 
     final query = ref.read(searchQueryProvider).trim();
-    // Sürükle-sırala (madde 1) yalnızca süzgeçsiz görünümde açıktır: arama,
-    // etiket, klasör ya da tip filtresi bir alt küme gösterdiğinde elle sıra
-    // anlamsızdır (yalnız görünen notların orderIndex'i değişir). Seçim
-    // modunda da kapalıdır.
-    final reorderEnabled =
-        !selectionActive &&
-        !searchActive &&
-        ref.read(noteFilterProvider) == NoteFilter.all &&
-        ref.read(selectedFolderProvider) == null &&
-        ref.read(selectedTagProvider) == null;
+    // [reorderEnabled] çağırandan gelir: sürükle-sırala artık ⋮ → "Notları
+    // sırala" ile açılan AYRI bir moddur ([reorderModeProvider]). Eskiden
+    // kalıcı olarak açıktı ve uzun basış sürüklemeyi başlatıyordu; seçmek
+    // isteyen kullanıcı kartı kazara taşıyordu. Mod dışında uzun basış
+    // her zaman SEÇER.
 
     Widget grid(List<Note> items) => SliverMasonryGrid.count(
       crossAxisCount: columns,
@@ -860,9 +911,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final card = NoteCard(note: note, highlightQuery: query);
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
-        // Sürükleme kapalı görünümlerde (filtre/arama/seçim modu) uzun basış
-        // yine de toplu seçime girer — kullanıcı her yerden çoklu seçim
-        // yapabilsin (madde 2).
+        // Olağan hâl: uzun basış toplu seçime girer.
         if (!reorderEnabled) {
           return KeyedSubtree(
             key: ValueKey(note.id),
@@ -876,7 +925,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           cellWidth: cellWidth,
           inSection: (id) => items.any((n) => n.id == id),
           onReorder: (draggedId, to) => _reorderSection(items, draggedId, to),
-          onSelect: select,
           feedback: SizedBox(
             width: cellWidth,
             child: NoteCard(note: note, highlightQuery: query),
@@ -917,14 +965,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 }
 
 /// Bir not kartını basılı tutup sürükleyerek yeniden sıralamayı sağlayan
-/// sarmalayıcı (madde 1). Uzun basış sürüklemeyi başlatır; başka bir kartın
-/// üzerine bırakılınca [onReorder] çağrılır. Sürükleme aynı bölümle
-/// sınırlıdır ([inSection]) — sabitliler ile diğerleri karışmaz.
+/// sarmalayıcı. YALNIZCA sıralama modunda kullanılır ([reorderModeProvider]):
+/// uzun basış sürüklemeyi başlatır, başka bir kartın üzerine bırakılınca
+/// [onReorder] çağrılır. Sürükleme aynı bölümle sınırlıdır ([inSection]) —
+/// sabitliler ile diğerleri karışmaz.
 ///
-/// Uzun basıp YERİNDE bırakılırsa (kayda değer bir hareket olmadıysa)
-/// sürükleme değil TOPLU SEÇİM sayılır ve [onSelect] çağrılır (madde 2): tek
-/// jest hem sıralama hem çoklu seçime hizmet eder (Keep davranışı).
-class _ReorderableNoteCell extends StatefulWidget {
+/// Uzun basış artık seçim YAPMAZ; mod dışında seçim zaten sade bir
+/// GestureDetector ile yapılıyor. (Eskiden tek jest ikisine birden hizmet
+/// ediyordu ve kullanıcı seçmek isterken kartı kazara taşıyordu.)
+class _ReorderableNoteCell extends StatelessWidget {
   const _ReorderableNoteCell({
     super.key,
     required this.noteId,
@@ -932,7 +981,6 @@ class _ReorderableNoteCell extends StatefulWidget {
     required this.cellWidth,
     required this.inSection,
     required this.onReorder,
-    required this.onSelect,
     required this.feedback,
     required this.child,
   });
@@ -942,59 +990,35 @@ class _ReorderableNoteCell extends StatefulWidget {
   final double cellWidth;
   final bool Function(String draggedId) inSection;
   final void Function(String draggedId, int toIndex) onReorder;
-  final VoidCallback onSelect;
   final Widget feedback;
   final Widget child;
-
-  @override
-  State<_ReorderableNoteCell> createState() => _ReorderableNoteCellState();
-}
-
-class _ReorderableNoteCellState extends State<_ReorderableNoteCell> {
-  /// Parmağın bastığı ilk konum; sürükleme iptalinde ne kadar hareket
-  /// edildiğini ölçmek için tutulur.
-  Offset? _pressStart;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return DragTarget<String>(
       onWillAcceptWithDetails: (details) =>
-          details.data != widget.noteId && widget.inSection(details.data),
-      onAcceptWithDetails: (details) =>
-          widget.onReorder(details.data, widget.index),
+          details.data != noteId && inSection(details.data),
+      onAcceptWithDetails: (details) => onReorder(details.data, index),
       builder: (context, candidate, rejected) {
         final hovering = candidate.isNotEmpty;
-        return Listener(
-          // Sürükleme iptalinde başlangıçla karşılaştırmak için ilk temas
-          // konumunu kaydet (Listener olayı yutmaz; InkWell dokunuşu çalışır).
-          onPointerDown: (event) => _pressStart = event.position,
-          child: LongPressDraggable<String>(
-            data: widget.noteId,
-            feedback: Material(
-              color: Colors.transparent,
-              child: SizedBox(width: widget.cellWidth, child: widget.feedback),
-            ),
-            childWhenDragging: Opacity(opacity: 0.3, child: widget.child),
-            // Başka bir karta bırakılmadıysa (onReorder gelmez): parmak yerinde
-            // kaldıysa seçim, kaydıysa (boş alana bırakma) hiçbir şey.
-            onDraggableCanceled: (velocity, offset) {
-              final start = _pressStart;
-              if (start != null && (offset - start).distance < 24) {
-                widget.onSelect();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: hovering ? scheme.primary : Colors.transparent,
-                  width: 2,
-                ),
+        return LongPressDraggable<String>(
+          data: noteId,
+          feedback: Material(
+            color: Colors.transparent,
+            child: SizedBox(width: cellWidth, child: feedback),
+          ),
+          childWhenDragging: Opacity(opacity: 0.3, child: child),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: hovering ? scheme.primary : Colors.transparent,
+                width: 2,
               ),
-              child: widget.child,
             ),
+            child: child,
           ),
         );
       },
