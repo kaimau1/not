@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../folders/data/folders_repository.dart';
+import '../../folders/domain/note_folder.dart';
 import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
@@ -32,6 +34,31 @@ class NoteSortNotifier extends Notifier<NoteSort> {
   void set(NoteSort value) {
     state = value;
     ref.read(sharedPreferencesProvider).setString(_key, value.name);
+  }
+}
+
+/// Ana ekran ızgarasının sütun sayısı. 0 = otomatik (ekran genişliğinden
+/// hesaplanır); 1–4 arası değer kullanıcının iki parmakla yaptığı zoom
+/// hareketiyle seçilir ve kalıcıdır.
+final gridColumnsProvider = NotifierProvider<GridColumnsNotifier, int>(
+  GridColumnsNotifier.new,
+);
+
+class GridColumnsNotifier extends Notifier<int> {
+  static const _key = 'grid_columns';
+
+  /// İki parmak zoom ile gezilebilen aralık.
+  static const minColumns = 1;
+  static const maxColumns = 4;
+
+  @override
+  int build() => ref.watch(sharedPreferencesProvider).getInt(_key) ?? 0;
+
+  void set(int value) {
+    final next = value <= 0 ? 0 : value.clamp(minColumns, maxColumns);
+    if (next == state) return;
+    state = next;
+    ref.read(sharedPreferencesProvider).setInt(_key, next);
   }
 }
 
@@ -140,6 +167,47 @@ class ShowFolderChipsNotifier extends Notifier<bool> {
   }
 }
 
+/// Çip barından TEK TEK kapatılmış etiketler (kalıcı). "Etiket çiplerini
+/// göster" anahtarı hepsini birden kapatıyordu; kullanıcı yalnız birkaç
+/// etiketin çipini gizlemek istediğinde çare yoktu (madde 5).
+final hiddenTagChipsProvider =
+    NotifierProvider<HiddenChipsNotifier, Set<String>>(
+      () => HiddenChipsNotifier('hidden_tag_chips'),
+    );
+
+/// Çip barından tek tek kapatılmış klasörler (kalıcı). Klasörün KENDİSİ
+/// gizlenmez, yalnız ana ekrandaki çipi görünmez olur — gizli klasör bambaşka
+/// bir şey (bkz. [NoteFolder.hidden]).
+final hiddenFolderChipsProvider =
+    NotifierProvider<HiddenChipsNotifier, Set<String>>(
+      () => HiddenChipsNotifier('hidden_folder_chips'),
+    );
+
+class HiddenChipsNotifier extends Notifier<Set<String>> {
+  HiddenChipsNotifier(this._key);
+
+  final String _key;
+
+  @override
+  Set<String> build() =>
+      ref.watch(sharedPreferencesProvider).getStringList(_key)?.toSet() ??
+      const <String>{};
+
+  void toggle(String id) {
+    final next = {...state};
+    if (!next.remove(id)) next.add(id);
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
+  }
+
+  /// Verilen kimliklerin tamamını göster (kümeyi boşalt) ya da tamamını gizle.
+  void setAll(Iterable<String> ids, {required bool visible}) {
+    final next = visible ? <String>{} : {...ids};
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
+  }
+}
+
 /// Editörün dibindeki ek şeridi açık mı (kullanıcı tercihi, kalıcı)? Şerit
 /// artık sayfanın altında durur ve kapatılabilir; tercih notlar arasında
 /// korunur — her notta yeniden kapatmak gerekmesin.
@@ -160,10 +228,9 @@ class AttachmentsExpandedNotifier extends Notifier<bool> {
   }
 }
 
-final filtersExpandedProvider =
-    NotifierProvider<FiltersExpandedNotifier, bool>(
-      FiltersExpandedNotifier.new,
-    );
+final filtersExpandedProvider = NotifierProvider<FiltersExpandedNotifier, bool>(
+  FiltersExpandedNotifier.new,
+);
 
 class FiltersExpandedNotifier extends Notifier<bool> {
   @override
@@ -171,6 +238,39 @@ class FiltersExpandedNotifier extends Notifier<bool> {
 
   void toggle() => state = !state;
 }
+
+/// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
+final hiddenFolderIdsProvider = Provider<Set<String>>((ref) {
+  final folders =
+      ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[];
+  return {
+    for (final f in folders)
+      if (f.hidden) f.id,
+  };
+});
+
+/// Gizli klasörler bu oturumda gösteriliyor mu? Kalıcı DEĞİL: uygulama
+/// yeniden açıldığında gizli klasörler yine saklıdır — "gizli" olmanın anlamı
+/// bu. ⋮ → "Gizli klasörler" kimlik doğrulamasından sonra açar.
+final hiddenFoldersRevealedProvider =
+    NotifierProvider<HiddenFoldersRevealedNotifier, bool>(
+      HiddenFoldersRevealedNotifier.new,
+    );
+
+class HiddenFoldersRevealedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void set(bool value) => state = value;
+}
+
+/// Ana ekranda görünmesi gereken (gizli olmayan ya da gizliliği o oturumda
+/// açılmış) notlar için süzgeç: kimliği bu kümede olan klasörün notları
+/// listelerden ve aramadan düşer.
+final _suppressedFolderIdsProvider = Provider<Set<String>>((ref) {
+  if (ref.watch(hiddenFoldersRevealedProvider)) return const <String>{};
+  return ref.watch(hiddenFolderIdsProvider);
+});
 
 /// Seçili klasör (null = klasör filtresi yok).
 final selectedFolderProvider =
@@ -297,11 +397,15 @@ class SelectedTagNotifier extends Notifier<String?> {
 }
 
 /// Aktif (arşivlenmemiş) notlarda geçen tüm etiketler, alfabetik.
+/// Gizli klasördeki notların etiketleri sızmaz — çip barında görünen bir
+/// etiket, gizli notun varlığını ele verirdi.
 final allTagsProvider = Provider<List<String>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final suppressed = ref.watch(_suppressedFolderIdsProvider);
   final tags = <String>{
     for (final note in notes)
-      if (note.archivedAt == null) ...note.tags,
+      if (note.archivedAt == null && !suppressed.contains(note.folderId))
+        ...note.tags,
   };
   final sorted = tags.toList()..sort();
   return sorted;
@@ -311,9 +415,11 @@ final allTagsProvider = Provider<List<String>>((ref) {
 /// sık kullanılanları öne alıp gerisini "+N" arkasına gizler.
 final tagCountsProvider = Provider<Map<String, int>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final suppressed = ref.watch(_suppressedFolderIdsProvider);
   final counts = <String, int>{};
   for (final note in notes) {
     if (note.archivedAt != null) continue;
+    if (suppressed.contains(note.folderId)) continue;
     for (final tag in note.tags) {
       counts[tag] = (counts[tag] ?? 0) + 1;
     }
@@ -340,14 +446,21 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);
   final sort = ref.watch(noteSortProvider);
+  final suppressed = ref.watch(_suppressedFolderIdsProvider);
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
     // editörden çıkışta zaten silinirler, arka plan temizliği de kalıntıyı
     // toplar. Böylece boş kart dashboard'da hiç belirmez.
+    //
+    // Gizli klasördeki notlar da burada düşer: arama dahil hiçbir ana ekran
+    // görünümünde belirmezler (bkz. [hiddenFoldersRevealedProvider]).
     var result = [
       for (final n in list)
-        if (n.archivedAt == null && !n.isEmpty) n,
+        if (n.archivedAt == null &&
+            !n.isEmpty &&
+            !suppressed.contains(n.folderId))
+          n,
     ];
     if (folderId != null) {
       result = [

@@ -2625,6 +2625,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'10 sn ileri'**
   String get videoForward10;
+
+  /// No description provided for @selectAllItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü seç'**
+  String get selectAllItems;
+
+  /// No description provided for @showAllChips.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü göster'**
+  String get showAllChips;
+
+  /// No description provided for @hideAllChips.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü gizle'**
+  String get hideAllChips;
+
+  /// No description provided for @chipPickInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi klasör ve etiketlerin çipi ana ekranda görünsün?'**
+  String get chipPickInfo;
+
+  /// No description provided for @hiddenFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasör'**
+  String get hiddenFolder;
+
+  /// No description provided for @hiddenFolderInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.'**
+  String get hiddenFolderInfo;
+
+  /// No description provided for @hiddenFoldersMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasörler'**
+  String get hiddenFoldersMenu;
+
+  /// No description provided for @hiddenFolderAuthReason.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasörleri göstermek için kimliğini doğrula'**
+  String get hiddenFolderAuthReason;
+
+  /// No description provided for @hiddenFoldersShown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasörler gösteriliyor'**
+  String get hiddenFoldersShown;
+
+  /// No description provided for @hiddenFoldersHiddenAgain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasörler yeniden saklandı'**
+  String get hiddenFoldersHiddenAgain;
+
+  /// No description provided for @makeFolderHidden.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get makeFolderHidden;
+
+  /// No description provided for @makeFolderVisible.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlemeyi kaldır'**
+  String get makeFolderVisible;
+
+  /// No description provided for @gridColumnsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sütun'**
+  String gridColumnsCount(int count);
 }
 
 class _AppLocalizationsDelegate

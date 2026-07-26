@@ -75,10 +75,28 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   bool get _selectionMode => _selectMode || _selected.isNotEmpty;
 
-  void _exitSelection() => setState(() {
-    _selected.clear();
-    _selectMode = false;
-  });
+  /// Seçim çubuğunu ekranın DİBİNE demirleyen katman denetleyicisi.
+  /// Çubuk eskiden listenin header'ındaydı ve listeyle birlikte kayıyordu:
+  /// uzun bir listede aşağıdaki maddeleri seçtikten sonra kopyalamak için
+  /// başa dönmek gerekiyordu. Overlay'e taşınınca çubuk sayfa neresinde
+  /// olursa olsun görünür kalır (madde 1).
+  final _barController = OverlayPortalController();
+
+  void _syncBar() {
+    if (_selectionMode) {
+      if (!_barController.isShowing) _barController.show();
+    } else if (_barController.isShowing) {
+      _barController.hide();
+    }
+  }
+
+  void _exitSelection() {
+    setState(() {
+      _selected.clear();
+      _selectMode = false;
+    });
+    _syncBar();
+  }
 
   @override
   void initState() {
@@ -293,6 +311,22 @@ class _ItemsEditorState extends State<ItemsEditor> {
     setState(() {
       if (!_selected.remove(item.id)) _selected.add(item.id);
     });
+    _syncBar();
+  }
+
+  /// Tümünü seç / seçimi bırak. Çubuk artık altta sabit olduğundan uzun
+  /// listede tek dokunuşla hepsini kopyalamak mümkün.
+  void _toggleSelectAll() {
+    setState(() {
+      if (_selected.length == _items.length) {
+        _selected.clear();
+      } else {
+        _selected
+          ..clear()
+          ..addAll(_items.map((i) => i.id));
+      }
+    });
+    _syncBar();
   }
 
   /// Seçili maddeleri liste sırasıyla panoya kopyalar.
@@ -329,6 +363,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       _selected.clear();
       _selectMode = false;
     });
+    _syncBar();
     for (final item in removed) {
       _controllers.remove(item.id)?.dispose();
       _focusNodes.remove(item.id)?.dispose();
@@ -577,7 +612,10 @@ class _ItemsEditorState extends State<ItemsEditor> {
           // görünmez olduğundan bulunamıyordu.
           if (!_selectionMode && _items.isNotEmpty)
             TextButton.icon(
-              onPressed: () => setState(() => _selectMode = true),
+              onPressed: () {
+                setState(() => _selectMode = true);
+                _syncBar();
+              },
               icon: const Icon(Icons.checklist, size: 20),
               label: Text(l10n.select),
             ),
@@ -607,55 +645,16 @@ class _ItemsEditorState extends State<ItemsEditor> {
       ],
     );
 
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.only(bottom: 96),
+    final list = ReorderableListView.builder(
+      // Alt dolgu, altta sabit duran seçim çubuğunun son maddeyi örtmemesi
+      // için seçim modunda büyür.
+      padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
       buildDefaultDragHandles: false,
       shrinkWrap: widget.shrinkWrap,
       physics: widget.shrinkWrap
           ? const NeverScrollableScrollPhysics()
           : null,
-      // ponytail: seçim çubuğu listeyle birlikte kayar; sabitlemek Scaffold
-      // seviyesinde bir katman gerektirir, seçim genelde kısa listelerde
-      // yapıldığından şimdilik gerekmiyor.
-      header: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_selectionMode)
-            Material(
-              color: scheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: l10n.cancel,
-                      icon: const Icon(Icons.close, size: 20),
-                      onPressed: _exitSelection,
-                    ),
-                    Expanded(
-                      child: Text(
-                        l10n.itemsSelected(_selected.length),
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: l10n.copy,
-                      icon: const Icon(Icons.copy_outlined, size: 20),
-                      onPressed: _copySelected,
-                    ),
-                    IconButton(
-                      tooltip: l10n.delete,
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      color: scheme.error,
-                      onPressed: _deleteSelected,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          if (widget.header != null) widget.header!,
-        ],
-      ),
+      header: widget.header,
       footer: footer,
       itemCount: listItems.length,
       // İşaretsizler _items'ın başında tutulduğundan (bkz. _checkedStart)
@@ -665,6 +664,74 @@ class _ItemsEditorState extends State<ItemsEditor> {
         listItems[index],
         reorderIndex: index,
         orderNumber: index + 1,
+      ),
+    );
+
+    // Seçim çubuğu ekranın dibinde, kaydırmadan bağımsız bir katmanda durur:
+    // liste nerede olursa olsun "Kopyala" hep parmağın altındadır.
+    return OverlayPortal(
+      controller: _barController,
+      overlayChildBuilder: _selectionBar,
+      child: list,
+    );
+  }
+
+  /// Ekranın dibine demirlenmiş seçim çubuğu (Overlay çocuğu). Klavye
+  /// açıkken onun üstüne çıkar; sistem gezinme çubuğunun altında kalmaz.
+  Widget _selectionBar(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final media = MediaQuery.of(context);
+    final allSelected = _items.isNotEmpty && _selected.length == _items.length;
+    final hasSelection = _selected.isNotEmpty;
+    return Positioned(
+      left: 8,
+      right: 8,
+      bottom: 8 + media.viewInsets.bottom + media.viewPadding.bottom,
+      child: Material(
+        color: scheme.primaryContainer,
+        elevation: 6,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.cancel,
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: _exitSelection,
+              ),
+              Expanded(
+                child: Text(
+                  l10n.itemsSelected(_selected.length),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.selectAllItems,
+                icon: Icon(
+                  allSelected ? Icons.deselect : Icons.select_all,
+                  size: 20,
+                ),
+                onPressed: _items.isEmpty ? null : _toggleSelectAll,
+              ),
+              IconButton(
+                tooltip: l10n.copy,
+                icon: const Icon(Icons.copy_outlined, size: 20),
+                onPressed: hasSelection ? _copySelected : null,
+              ),
+              IconButton(
+                tooltip: l10n.delete,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                color: scheme.error,
+                onPressed: hasSelection ? _deleteSelected : null,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

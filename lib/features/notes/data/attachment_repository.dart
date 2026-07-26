@@ -57,10 +57,13 @@ _CompressResult _compressImage(_CompressRequest request) {
       interpolation: img.Interpolation.linear,
     );
   }
-  // q85 → q80: gözle ayırt edilmesi güç, dosya ~%25 küçük. 2048 px korundu
-  // çünkü OCR ve "PDF'i özetle" akışları bu görsellerden metin okuyor;
-  // çözünürlüğü düşürmek onları bozardı.
-  final encoded = Uint8List.fromList(img.encodeJpg(picture, quality: 80));
+  // Ölçüt tek yerde: [AppConstants.imageJpegQuality] (q75) ve
+  // [AppConstants.maxImageDimension] (1600 px). OCR/"PDF'i özetle" akışları bu
+  // görsellerden metin okuyor ama Gemini görseli 768 px'lik karolarla
+  // işlediğinden bu ölçü onlara yetiyor; senkron boyutu belirgin küçülüyor.
+  final encoded = Uint8List.fromList(
+    img.encodeJpg(picture, quality: AppConstants.imageJpegQuality),
+  );
   // Yeniden kodlama dosyayı büyüttüyse orijinali koru.
   if (encoded.length >= request.bytes.length) {
     return _CompressResult(request.bytes, decoded.width, decoded.height, false);

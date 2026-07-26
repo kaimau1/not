@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 
 /// Ses kaydı alt sayfası. Kayıt biterse (path, süre) döner; iptalde null.
@@ -51,11 +52,13 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
       );
       await _recorder.start(
         // Konuşma için 96 kbps stereo israftı (dakikada ~720 KB). Tek kanal
-        // 48 kbps ses notunda duyulur fark yaratmaz ama dosyayı ~4 katı
-        // küçültür — Firebase Storage kotası ve mobil veri buna gidiyordu.
+        // 32 kbps / 22.05 kHz ses notunda duyulur fark yaratmaz ama dosyayı
+        // ~6 katı küçültür — Firebase Storage kotası ve mobil veri buna
+        // gidiyordu (ölçüt: [AppConstants.audioBitRate]).
         const RecordConfig(
           encoder: AudioEncoder.aacLc,
-          bitRate: 48000,
+          bitRate: AppConstants.audioBitRate,
+          sampleRate: AppConstants.audioSampleRate,
           numChannels: 1,
         ),
         path: _path!,

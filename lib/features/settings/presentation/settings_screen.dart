@@ -496,36 +496,56 @@ class _ThemeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final choice = ref.watch(themeChoiceProvider);
-    // Dört seçenek dar ekrana sığmayabilir; taşma yerine yatay kaydırma.
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<AppThemeChoice>(
-        segments: [
-          ButtonSegment(
-            value: AppThemeChoice.system,
-            label: Text(l10n.themeSystem),
-            icon: const Icon(Icons.brightness_auto_outlined),
+    final options = <(AppThemeChoice, String, IconData)>[
+      (AppThemeChoice.system, l10n.themeSystem, Icons.brightness_auto_outlined),
+      (AppThemeChoice.light, l10n.themeLight, Icons.light_mode_outlined),
+      (AppThemeChoice.dark, l10n.themeDark, Icons.dark_mode_outlined),
+      (AppThemeChoice.paper, l10n.themePaper, Icons.menu_book_outlined),
+    ];
+    // Dört seçenek TEK SATIRA sığar: eskiden yatay kaydırmaya bırakılmıştı ve
+    // son seçenek ("Kağıt") ekranın dışında kalıyordu — kullanıcı orada bir
+    // seçenek olduğunu göremiyordu. Sığdırma üç adımda yapılır:
+    //  1. seçim tiki kaldırılır (segment başına ~28 px kazanç; seçili olan
+    //     zaten dolgu rengiyle belli),
+    //  2. dolgu daraltılır,
+    //  3. yer gerçekten yetmiyorsa (küçük ekran + büyük yazı ölçeği) etiketler
+    //     düşer, simge + ipucu kalır.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final perSegment = constraints.maxWidth / options.length;
+        // Bir segmentin etiketli hâli: simge (18) + boşluk + ~6 karakter.
+        final charWidth = MediaQuery.textScalerOf(context).scale(14) * 0.62;
+        final iconsOnly = perSegment < 26 + 6 * charWidth + 16;
+        return SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<AppThemeChoice>(
+            showSelectedIcon: false,
+            style: SegmentedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.symmetric(horizontal: iconsOnly ? 4 : 8),
+            ),
+            segments: [
+              for (final (value, label, icon) in options)
+                ButtonSegment(
+                  value: value,
+                  tooltip: label,
+                  icon: Icon(icon, size: 18),
+                  label: iconsOnly
+                      ? null
+                      : Text(
+                          label,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
+                ),
+            ],
+            selected: {choice},
+            onSelectionChanged: (selection) =>
+                ref.read(themeChoiceProvider.notifier).set(selection.first),
           ),
-          ButtonSegment(
-            value: AppThemeChoice.light,
-            label: Text(l10n.themeLight),
-            icon: const Icon(Icons.light_mode_outlined),
-          ),
-          ButtonSegment(
-            value: AppThemeChoice.dark,
-            label: Text(l10n.themeDark),
-            icon: const Icon(Icons.dark_mode_outlined),
-          ),
-          ButtonSegment(
-            value: AppThemeChoice.paper,
-            label: Text(l10n.themePaper),
-            icon: const Icon(Icons.menu_book_outlined),
-          ),
-        ],
-        selected: {choice},
-        onSelectionChanged: (selection) =>
-            ref.read(themeChoiceProvider.notifier).set(selection.first),
-      ),
+        );
+      },
     );
   }
 }
@@ -1577,9 +1597,7 @@ class _RestoreButton extends ConsumerWidget {
         SnackBar(content: Text(l10n.importBackupDone(count))),
       );
     } on FormatException {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.importBackupInvalid)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.importBackupInvalid)));
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.genericError(e.toString()))),

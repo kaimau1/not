@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/presentation/notes_providers.dart';
 import 'gemini_service.dart';
 
 final semanticIndexProvider = Provider<SemanticIndex>(
@@ -14,10 +15,18 @@ final semanticIndexProvider = Provider<SemanticIndex>(
 final semanticSearchProvider = FutureProvider.autoDispose
     .family<List<Note>, String>((ref, query) async {
       final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+      // Gizli klasördeki notlar anlamsal aramaya da girmez (düz metin
+      // aramasıyla aynı kural — bkz. filteredNotesProvider).
+      final hiddenFolders = ref.watch(hiddenFoldersRevealedProvider)
+          ? const <String>{}
+          : ref.watch(hiddenFolderIdsProvider);
       // Kilitli notların içeriği embedding'e ve sonuçlara girmez.
       final active = [
         for (final n in notes)
-          if (n.archivedAt == null && !n.locked) n,
+          if (n.archivedAt == null &&
+              !n.locked &&
+              !hiddenFolders.contains(n.folderId))
+            n,
       ];
       if (active.isEmpty || query.trim().isEmpty) return const [];
       try {

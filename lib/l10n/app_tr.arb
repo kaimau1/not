@@ -548,5 +548,23 @@
   "hideAttachments": "Gizle",
   "showAttachments": "Göster",
   "videoBack10": "10 sn geri",
-  "videoForward10": "10 sn ileri"
+  "videoForward10": "10 sn ileri",
+  "selectAllItems": "Tümünü seç",
+  "showAllChips": "Tümünü göster",
+  "hideAllChips": "Tümünü gizle",
+  "chipPickInfo": "Hangi klasör ve etiketlerin çipi ana ekranda görünsün?",
+  "hiddenFolder": "Gizli klasör",
+  "hiddenFolderInfo": "Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.",
+  "hiddenFoldersMenu": "Gizli klasörler",
+  "hiddenFolderAuthReason": "Gizli klasörleri göstermek için kimliğini doğrula",
+  "hiddenFoldersShown": "Gizli klasörler gösteriliyor",
+  "hiddenFoldersHiddenAgain": "Gizli klasörler yeniden saklandı",
+  "makeFolderHidden": "Gizle",
+  "makeFolderVisible": "Gizlemeyi kaldır",
+  "gridColumnsCount": "{count} sütun",
+  "@gridColumnsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  }
 }
