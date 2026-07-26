@@ -9,6 +9,7 @@ class NoteFolder {
     required this.id,
     required this.name,
     this.icon = defaultIcon,
+    this.hidden = false,
     this.createdAt,
   });
 
@@ -18,6 +19,16 @@ class NoteFolder {
   /// [iconChoices] içindeki simge kimliği; bilinmeyen değerler varsayılan
   /// sade klasör simgesine düşer.
   final String icon;
+
+  /// Gizli klasör: çipi ana ekranda görünmez ve içindeki notlar not
+  /// duvarına/aramaya girmez. Kullanıcı ⋮ → "Gizli klasörler" ile kimlik
+  /// doğrulayarak o oturum boyunca görünür kılar (kalıcı bir "açık" hâli
+  /// tutulmaz — uygulama yeniden açıldığında yine gizlidir).
+  ///
+  /// Bu bir ŞİFRELEME değildir: not içeriği Firestore'da düz durur, amaç
+  /// omuz üstünden bakan birinin notu görmemesi. Gerçek koruma isteyen not
+  /// başına "Kilitle" (biyometrik) seçeneğini kullanır.
+  final bool hidden;
   final DateTime? createdAt;
 
   /// Varsayılan sade simge.
@@ -46,10 +57,11 @@ class NoteFolder {
 
   IconData get iconData => iconChoices[icon] ?? Icons.folder_outlined;
 
-  NoteFolder copyWith({String? name, String? icon}) => NoteFolder(
+  NoteFolder copyWith({String? name, String? icon, bool? hidden}) => NoteFolder(
     id: id,
     name: name ?? this.name,
     icon: icon ?? this.icon,
+    hidden: hidden ?? this.hidden,
     createdAt: createdAt,
   );
 
@@ -59,6 +71,7 @@ class NoteFolder {
       id: doc.id,
       name: map['name'] as String? ?? '',
       icon: map['icon'] as String? ?? defaultIcon,
+      hidden: map['hidden'] as bool? ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -66,6 +79,7 @@ class NoteFolder {
   Map<String, dynamic> toMap() => {
     'name': name,
     'icon': icon,
+    'hidden': hidden,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

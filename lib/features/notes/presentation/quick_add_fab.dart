@@ -8,13 +8,17 @@ import '../../../core/l10n_ext.dart';
 import '../domain/note_type.dart';
 import 'qr_scan_screen.dart';
 
-/// "+" düğmesi: dokununca metin / madde listesi / sıralı liste / el yazısı
-/// seçenekleri etiketli mini düğmeler olarak belirir. (Eskiden tek dokunuş
-/// doğrudan metin notu açıyor, liste ve sıralı liste yalnız basılı tutunca
-/// çıkıyordu; kullanıcı diğer tipleri bulamıyordu. Artık her tip tek dokunuşta
-/// görünür.) Basılı tutmak da aynı menüyü açar.
+/// "+" düğmesi: dokununca yeni not tipleri ÜÇ SÜTUNLU büyük düğme panelinde
+/// belirir (metin / liste / sıralı liste / el yazısı / sesli / görüntülü /
+/// fotoğraf / QR). Basılı tutmak da aynı paneli açar.
 ///
-/// Seçenekler bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
+/// Panel neden böyle: seçenekler eskiden sağ kenara dizilmiş, her biri
+/// ayrı bir baloncuk etiketi taşıyan mini FAB'lardı. Sekiz seçenek ekranın
+/// tamamı boyunca uzayıp dağınık görünüyor, dokunma hedefleri küçük kalıyor ve
+/// etiketler notların üzerine biniyordu. Izgara hepsini tek bir toparlanmış
+/// kartta, iri ve okunur düğmeler hâlinde toplar.
+///
+/// Panel bir Overlay katmanında, düğmeye demirlenmiş olarak gösterilir:
 /// - Böylece açılınca yerinde büyüyüp üstteki sesli asistan düğmesini
 ///   ittirmez, konum kaymaz (madde 3).
 /// - Tam ekran bir bariyer, sayfanın herhangi bir yerine dokununca menüyü
@@ -89,53 +93,52 @@ class _QuickAddFabState extends State<QuickAddFab> {
             targetAnchor: Alignment.topRight,
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
-            child: Material(
-              color: Colors.transparent,
-              child: _StaggeredMenu(
-                children: [
-                  _option(
-                    icon: Icons.graphic_eq,
-                    label: context.l10n.newVoiceCapture,
-                    onTap: widget.onVoiceCapture,
+            child: _QuickAddPanel(
+              options: [
+                // Sık kullanılanlar önce: metin, liste, sıralı liste.
+                (
+                  Icons.notes,
+                  context.l10n.newTextNote,
+                  () => widget.onCreate(NoteType.text),
+                ),
+                (
+                  Icons.check_box_outlined,
+                  context.l10n.newChecklist,
+                  () => widget.onCreate(NoteType.checklist),
+                ),
+                (
+                  Icons.format_list_numbered_rounded,
+                  context.l10n.newOrderedList,
+                  () => widget.onCreate(NoteType.ordered),
+                ),
+                (
+                  Icons.graphic_eq,
+                  context.l10n.newVoiceCapture,
+                  widget.onVoiceCapture,
+                ),
+                (
+                  Icons.photo_camera_outlined,
+                  context.l10n.newPhotoNote,
+                  widget.onPhotoNote,
+                ),
+                (
+                  Icons.draw_outlined,
+                  context.l10n.newHandwriting,
+                  widget.onHandwriting,
+                ),
+                (
+                  Icons.videocam_outlined,
+                  context.l10n.newVideoNote,
+                  widget.onVideoNote,
+                ),
+                if (qrScanSupported)
+                  (
+                    Icons.qr_code_scanner,
+                    context.l10n.qrScanTitle,
+                    widget.onQrNote,
                   ),
-                  if (qrScanSupported)
-                    _option(
-                      icon: Icons.qr_code_scanner,
-                      label: context.l10n.qrScanTitle,
-                      onTap: widget.onQrNote,
-                    ),
-                  _option(
-                    icon: Icons.photo_camera_outlined,
-                    label: context.l10n.newPhotoNote,
-                    onTap: widget.onPhotoNote,
-                  ),
-                  _option(
-                    icon: Icons.videocam_outlined,
-                    label: context.l10n.newVideoNote,
-                    onTap: widget.onVideoNote,
-                  ),
-                  _option(
-                    icon: Icons.draw_outlined,
-                    label: context.l10n.newHandwriting,
-                    onTap: widget.onHandwriting,
-                  ),
-                  _option(
-                    icon: Icons.format_list_numbered_rounded,
-                    label: context.l10n.newOrderedList,
-                    onTap: () => widget.onCreate(NoteType.ordered),
-                  ),
-                  _option(
-                    icon: Icons.check_box_outlined,
-                    label: context.l10n.newChecklist,
-                    onTap: () => widget.onCreate(NoteType.checklist),
-                  ),
-                  _option(
-                    icon: Icons.notes,
-                    label: context.l10n.newTextNote,
-                    onTap: () => widget.onCreate(NoteType.text),
-                  ),
-                ],
-              ),
+              ],
+              onSelected: _select,
             ),
           ),
           // Bulanıklığın ÜSTÜnde duran keskin "×" kopyası: bariyer tüm sayfayı
@@ -168,41 +171,6 @@ class _QuickAddFabState extends State<QuickAddFab> {
   void _select(VoidCallback action) {
     _close();
     action();
-  }
-
-  Widget _option({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Material(
-            color: scheme.inverseSurface,
-            borderRadius: BorderRadius.circular(8),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onInverseSurface,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          FloatingActionButton.small(
-            heroTag: 'quick-add-$label',
-            onPressed: () => _select(onTap),
-            child: Icon(icon, size: 20),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -265,26 +233,33 @@ class _BlurBarrier extends StatelessWidget {
   );
 }
 
-/// Seçenekleri "+" düğmesinden çıkıyormuş gibi sırayla açar: her biri
-/// aşağıdan hafifçe yükselerek belirir, düğmeye en yakın olan önce.
+/// Yeni not tipleri paneli: üç sütunlu, iri dokunma hedefli düğme ızgarası.
 ///
-/// Süreler Material hareket ölçütlerine göre: öğe başına ~155 ms, aralarında
-/// ~31 ms gecikme (30-50 ms bandı), girişte easeOut. Yalnız opacity/transform
-/// canlandırılır — layout hesabı yapılmaz.
-class _StaggeredMenu extends StatefulWidget {
-  const _StaggeredMenu({required this.children});
+/// Ölçüler: panel en çok 360 dp (küçük ekranda ekran genişliği - 24), her
+/// hücre 84 dp yüksek — simge + iki satıra kadar etiket sığar, dokunma hedefi
+/// Material'ın 48 dp alt sınırının rahat üstünde kalır.
+class _QuickAddPanel extends StatefulWidget {
+  const _QuickAddPanel({required this.options, required this.onSelected});
 
-  final List<Widget> children;
+  /// (simge, etiket, işlem) üçlüleri.
+  final List<(IconData, String, VoidCallback)> options;
+
+  /// Seçilen işlemi paneli kapatarak çalıştırır.
+  final void Function(VoidCallback action) onSelected;
 
   @override
-  State<_StaggeredMenu> createState() => _StaggeredMenuState();
+  State<_QuickAddPanel> createState() => _QuickAddPanelState();
 }
 
-class _StaggeredMenuState extends State<_StaggeredMenu>
+class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
+  static const _columns = 3;
+  static const _cellHeight = 84.0;
+  static const _gap = 8.0;
+
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 260),
+    duration: const Duration(milliseconds: 220),
   )..forward();
 
   @override
@@ -295,47 +270,103 @@ class _StaggeredMenuState extends State<_StaggeredMenu>
 
   @override
   Widget build(BuildContext context) {
-    final children = widget.children;
-    // Erişilebilirlik: sistemde "hareketi azalt" açıksa animasyon yok,
-    // menü anında görünür.
-    final animate = !MediaQuery.disableAnimationsOf(context);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        for (var i = 0; i < children.length; i++)
-          if (animate)
-            _staggered(i, children.length, children[i])
-          else
-            children[i],
-      ],
-    );
-  }
+    final scheme = Theme.of(context).colorScheme;
+    // Panel genişliği ekranla sınırlı: geniş ekranda 360 dp'de durur,
+    // telefonda kenarlardan 12 dp boşluk bırakır.
+    final width = math.min(360.0, MediaQuery.sizeOf(context).width - 24);
+    final cellWidth = (width - 24 - _gap * (_columns - 1)) / _columns;
 
-  Widget _staggered(int index, int count, Widget child) {
-    // Liste yukarıdan aşağı dizili; düğmeye en yakın olan SON eleman, bu
-    // yüzden gecikme tersten hesaplanır.
-    const step = 0.12;
-    final start = (count - 1 - index) * step;
-    final animation = CurvedAnimation(
-      parent: _controller,
-      curve: Interval(
-        start,
-        (start + 0.6).clamp(0.0, 1.0),
-        curve: Curves.easeOutCubic,
+    final panel = Material(
+      color: scheme.surfaceContainerHigh,
+      elevation: 8,
+      borderRadius: BorderRadius.circular(22),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Wrap(
+          spacing: _gap,
+          runSpacing: _gap,
+          children: [
+            for (final (icon, label, action) in widget.options)
+              SizedBox(
+                width: cellWidth,
+                height: _cellHeight,
+                child: _PanelButton(
+                  icon: icon,
+                  label: label,
+                  onTap: () => widget.onSelected(action),
+                ),
+              ),
+          ],
+        ),
       ),
     );
+
+    final sized = SizedBox(width: width, child: panel);
+    // Erişilebilirlik: sistemde "hareketi azalt" açıksa animasyon yok.
+    if (MediaQuery.disableAnimationsOf(context)) return sized;
+    // Panel "+" düğmesinden büyüyerek açılır: ölçek + solma, sağ-alt köşeden.
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    );
     return FadeTransition(
-      opacity: animation,
+      opacity: curve,
       child: AnimatedBuilder(
-        animation: animation,
-        child: child,
-        builder: (context, inner) => Transform.translate(
-          offset: Offset(0, 16 * (1 - animation.value)),
-          child: Transform.scale(
-            scale: 0.9 + 0.1 * animation.value,
-            alignment: Alignment.centerRight,
-            child: inner,
+        animation: curve,
+        child: sized,
+        builder: (context, inner) => Transform.scale(
+          scale: 0.85 + 0.15 * curve.value,
+          alignment: Alignment.bottomRight,
+          child: inner,
+        ),
+      ),
+    );
+  }
+}
+
+/// Panel hücresi: üstte simge, altında etiket. Tonal zemin dokunulabilir
+/// olduğunu belli eder (düz metin düğmeler "başlık" gibi okunuyordu).
+class _PanelButton extends StatelessWidget {
+  const _PanelButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.secondaryContainer,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 26, color: scheme.onSecondaryContainer),
+              const SizedBox(height: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                    height: 1.15,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

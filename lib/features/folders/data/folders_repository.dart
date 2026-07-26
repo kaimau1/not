@@ -51,18 +51,32 @@ class FoldersRepository {
   Future<String> createFolder(
     String name, {
     String icon = NoteFolder.defaultIcon,
+    bool hidden = false,
   }) async {
     final doc = _folders.doc();
     unawaited(
-      doc.set(NoteFolder(id: doc.id, name: name.trim(), icon: icon).toMap()),
+      doc.set(
+        NoteFolder(
+          id: doc.id,
+          name: name.trim(),
+          icon: icon,
+          hidden: hidden,
+        ).toMap(),
+      ),
     );
     return doc.id;
   }
 
-  void updateFolder(String folderId, {String? name, String? icon}) {
+  void updateFolder(
+    String folderId, {
+    String? name,
+    String? icon,
+    bool? hidden,
+  }) {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name.trim();
     if (icon != null) data['icon'] = icon;
+    if (hidden != null) data['hidden'] = hidden;
     if (data.isEmpty) return;
     unawaited(_folders.doc(folderId).set(data, SetOptions(merge: true)));
   }

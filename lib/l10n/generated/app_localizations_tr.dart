@@ -1368,4 +1368,48 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get videoForward10 => '10 sn ileri';
+
+  @override
+  String get selectAllItems => 'Tümünü seç';
+
+  @override
+  String get showAllChips => 'Tümünü göster';
+
+  @override
+  String get hideAllChips => 'Tümünü gizle';
+
+  @override
+  String get chipPickInfo =>
+      'Hangi klasör ve etiketlerin çipi ana ekranda görünsün?';
+
+  @override
+  String get hiddenFolder => 'Gizli klasör';
+
+  @override
+  String get hiddenFolderInfo =>
+      'Gizli klasör ve içindeki notlar ana ekranda görünmez. Göstermek için ⋮ menüsünden \"Gizli klasörler\" seçilir ve kimlik doğrulanır.';
+
+  @override
+  String get hiddenFoldersMenu => 'Gizli klasörler';
+
+  @override
+  String get hiddenFolderAuthReason =>
+      'Gizli klasörleri göstermek için kimliğini doğrula';
+
+  @override
+  String get hiddenFoldersShown => 'Gizli klasörler gösteriliyor';
+
+  @override
+  String get hiddenFoldersHiddenAgain => 'Gizli klasörler yeniden saklandı';
+
+  @override
+  String get makeFolderHidden => 'Gizle';
+
+  @override
+  String get makeFolderVisible => 'Gizlemeyi kaldır';
+
+  @override
+  String gridColumnsCount(int count) {
+    return '$count sütun';
+  }
 }

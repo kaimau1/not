@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../app/router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
@@ -55,6 +56,51 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Filtreler arası geçiş yönü (madde 2): sola çekiş → sonraki (sağdan girer),
   /// sağa çekiş → önceki (soldan girer). Geçiş animasyonu bu yönü kullanır.
   bool _swipeForward = true;
+
+  /// İki parmak zoom başlangıcındaki sütun sayısı. Hedef sütun bu değere göre
+  /// hesaplanır; canlı değere bakmak hareketi katlardı (parmak sabit dururken
+  /// sütunlar kaymaya devam ederdi).
+  int _zoomBaseColumns = 2;
+
+  /// İki parmakla açma/kapama hareketini sütun sayısına çevirir: parmaklar
+  /// açılınca (scale > 1) kartlar büyür → sütun AZALIR, kapanınca artar.
+  ///
+  /// Eşik neden 1.25: her karede oran biraz oynadığından ham yuvarlama sütunu
+  /// ileri geri titretiyordu. Bir adım için parmak arasının en az %25
+  /// değişmesi istenir; adım atıldıktan sonra taban güncellenir ki aynı jestle
+  /// 1 → 4 arası gezilebilsin.
+  void _handleZoom(ScaleUpdateDetails details, int columns) {
+    if (details.pointerCount < 2) return;
+    const threshold = 1.25;
+    final scale = details.scale;
+    if (scale <= 0) return;
+    final int target;
+    if (scale >= threshold) {
+      target = _zoomBaseColumns - 1;
+    } else if (scale <= 1 / threshold) {
+      target = _zoomBaseColumns + 1;
+    } else {
+      return;
+    }
+    final clamped = target.clamp(
+      GridColumnsNotifier.minColumns,
+      GridColumnsNotifier.maxColumns,
+    );
+    _zoomBaseColumns = clamped;
+    if (clamped == columns) return;
+    ref.read(gridColumnsProvider.notifier).set(clamped);
+    HapticFeedback.selectionClick();
+    // Yeni düzen kaç sütun oldu — kısa bir bildirim, jest "bir şey yaptı" mı
+    // sorusunu bırakmaz.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.gridColumnsCount(clamped)),
+          duration: const Duration(milliseconds: 900),
+        ),
+      );
+  }
 
   @override
   void initState() {
@@ -202,6 +248,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.read(selectedNoteIdsProvider.notifier).clear();
   }
 
+  /// Gizli klasörleri göster/sakla. Göstermek KİMLİK DOĞRULAMASI ister
+  /// (cihazda kilit yoksa engel çıkarılmaz — bkz. authenticateForNote);
+  /// saklamak serbesttir. Açık hâl kalıcı değildir: uygulama yeniden
+  /// açıldığında klasörler yine gizlidir.
+  Future<void> _toggleHiddenFolders() async {
+    final l10n = context.l10n;
+    final revealed = ref.read(hiddenFoldersRevealedProvider);
+    if (revealed) {
+      ref.read(hiddenFoldersRevealedProvider.notifier).set(false);
+      // Gizli bir klasör o an seçiliyse süzgeç bırakılır; aksi hâlde ekran
+      // artık ulaşılamayan bir klasörde boş kalırdı.
+      final selected = ref.read(selectedFolderProvider);
+      if (selected != null &&
+          ref.read(hiddenFolderIdsProvider).contains(selected)) {
+        ref.read(selectedFolderProvider.notifier).set(null);
+      }
+      if (!mounted) return;
+      _showSnack(l10n.hiddenFoldersHiddenAgain);
+      return;
+    }
+    if (!await authenticateForNote(l10n.hiddenFolderAuthReason)) return;
+    ref.read(hiddenFoldersRevealedProvider.notifier).set(true);
+    if (!mounted) return;
+    _showSnack(l10n.hiddenFoldersShown);
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   /// Dashboard sıralama ölçütünü seçtiren alt sayfa.
   Future<void> _pickSort() async {
     final l10n = context.l10n;
@@ -251,8 +329,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// sırası) → klasörler. [direction] +1 sola çekiş (sonraki), -1 sağa çekiş.
   void _cycleFilterFolder(int direction) {
     final visibleFilters = ref.read(visibleNoteFiltersProvider);
-    final folders =
-        ref.read(foldersStreamProvider).value ?? const <NoteFolder>[];
+    // Çip barında görünmeyen klasörler (gizli olanlar ve çipi kapatılanlar)
+    // çekiş turunda da atlanır — yoksa kaydırma kullanıcıyı görünmez bir
+    // klasöre sokuyordu.
+    final revealHidden = ref.read(hiddenFoldersRevealedProvider);
+    final hiddenChips = ref.read(hiddenFolderChipsProvider);
+    final folders = [
+      for (final f
+          in ref.read(foldersStreamProvider).value ?? const <NoteFolder>[])
+        if ((!f.hidden || revealHidden) && !hiddenChips.contains(f.id)) f,
+    ];
     final segments = <(NoteFilter, String?)>[
       (NoteFilter.all, null),
       for (final f in visibleFilters) (f, null),
@@ -427,6 +513,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Dar ekranda arama odaklıyken sağdaki butonlar gizlenir; arama alanı
     // tüm genişliği kullanır. Klavye kapatılınca (sistem geri tuşu dahil)
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
+    // Gizli klasör durumu ⋮ menüsünde kullanılır; sağlayıcılar BURADA (build
+    // içinde) okunur — itemBuilder menü açılınca, yani build dışında çalışır.
+    final hasHiddenFolders = ref.watch(hiddenFolderIdsProvider).isNotEmpty;
+    final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final searchExpanded =
         _searchFocus.hasFocus &&
@@ -446,10 +536,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               children: [
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final columns = (constraints.maxWidth / 220).floor().clamp(
-                      2,
-                      6,
-                    );
+                    // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun
+                    // seçimi (1–4), yoksa ekran genişliğinden otomatik.
+                    final manualColumns = ref.watch(gridColumnsProvider);
+                    final columns = manualColumns > 0
+                        ? manualColumns
+                        : (constraints.maxWidth / 220).floor().clamp(2, 6);
                     // Masonry hücre genişliği: sürükle-sırala sırasında taşınan
                     // notun "hayalet" kopyası (feedback) bu genişlikte çizilir.
                     // gridPadding yatayda 12+12, crossAxisSpacing 8.
@@ -619,9 +711,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       ),
                                       onSelected: (action) => switch (action) {
                                         'sort' => _pickSort(),
-                                        'reorder' => ref
-                                            .read(reorderModeProvider.notifier)
-                                            .set(true),
+                                        'hidden' => _toggleHiddenFolders(),
+                                        'reorder' =>
+                                          ref
+                                              .read(
+                                                reorderModeProvider.notifier,
+                                              )
+                                              .set(true),
                                         'reminders' => context.push(
                                           '/reminders',
                                         ),
@@ -655,6 +751,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             Icons.swap_vert,
                                             l10n.reorderNotes,
                                           ),
+                                        // Gizli klasörler yalnız gizli klasörü
+                                        // OLAN kullanıcıda görünür: yoksa
+                                        // menüde ölü bir madde durmaz.
+                                        if (hasHiddenFolders)
+                                          _menuItem(
+                                            'hidden',
+                                            hiddenRevealed
+                                                ? Icons.visibility_off_outlined
+                                                : Icons.visibility_outlined,
+                                            l10n.hiddenFoldersMenu,
+                                          ),
                                         const PopupMenuDivider(),
                                         _menuItem(
                                           'reminders',
@@ -686,97 +793,106 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         // kaydırma görünümünün dışında sabit.
                         const DashboardChipsRow(),
                         Expanded(
+                          // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
+                          // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
+                          // (pointerCount kontrolü), böylece içteki yatay
+                          // çekiş ve dikey kaydırma olduğu gibi çalışır.
                           child: GestureDetector(
-                            // Yatay çekişle filtreler/klasörler arasında gezin.
-                            // Dikey kaydırma CustomScrollView'de kalır;
-                            // eksenler farklı olduğundan çakışmaz.
-                            onHorizontalDragEnd: (details) {
-                              final velocity = details.primaryVelocity ?? 0;
-                              if (velocity.abs() < 200) return;
-                              _cycleFilterFolder(velocity < 0 ? 1 : -1);
-                            },
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 260),
-                              switchInCurve: Curves.easeOutCubic,
-                              switchOutCurve: Curves.easeInCubic,
-                              transitionBuilder: (child, animation) {
-                                // Çekiş yönüne göre yumuşak kaydır + soldur.
-                                final begin = Offset(
-                                  _swipeForward ? 0.12 : -0.12,
-                                  0,
-                                );
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SlideTransition(
-                                    position: Tween(
-                                      begin: begin,
-                                      end: Offset.zero,
-                                    ).animate(animation),
-                                    child: child,
-                                  ),
-                                );
+                            onScaleStart: (_) => _zoomBaseColumns = columns,
+                            onScaleUpdate: (details) =>
+                                _handleZoom(details, columns),
+                            child: GestureDetector(
+                              // Yatay çekişle filtreler/klasörler arasında
+                              // gezin. Dikey kaydırma CustomScrollView'de
+                              // kalır; eksenler farklı olduğundan çakışmaz.
+                              onHorizontalDragEnd: (details) {
+                                final velocity = details.primaryVelocity ?? 0;
+                                if (velocity.abs() < 200) return;
+                                _cycleFilterFolder(velocity < 0 ? 1 : -1);
                               },
-                              layoutBuilder: (currentChild, previousChildren) =>
-                                  Stack(
-                                    alignment: Alignment.topCenter,
-                                    children: [
-                                      ...previousChildren,
-                                      ?currentChild,
-                                    ],
-                                  ),
-                              child: CustomScrollView(
-                                key: ValueKey(segmentKey),
-                                // KÖK NEDEN (aşağı kaydırırken liste yukarı
-                                // sıçraması): SliverMasonryGrid tembeldir ve
-                                // toplam kaydırma uzunluğunu yalnızca O AN
-                                // yerleşmiş kartların ORTALAMA yüksekliğinden
-                                // TAHMİN eder. Masonry'de kart boyları çok
-                                // farklı olduğundan tahmin her karede oynuyor;
-                                // tahmin o anki konumun altına düştüğü an
-                                // ScrollPosition kendini düzeltip listeyi
-                                // yukarı çekiyordu (sona yaklaşıldıkça sık).
-                                // Geniş önbellek payı kartların TAMAMINI ilk
-                                // yerleşimde ölçtürür: uzunluk tahmin değil
-                                // gerçek olur, düzeltme/sıçrama hiç olmaz.
-                                // Bedeli, bu pay içindeki kartların önceden
-                                // kurulması; bu sınırın (≈130 kart) ötesinde
-                                // tembelliğe geri dönülür.
-                                cacheExtent: _kGridCacheExtent,
-                                slivers: [
-                                  ...notesAsync.when(
-                                    data: (notes) => _buildNoteSlivers(
-                                      context,
-                                      notes,
-                                      columns,
-                                      cellWidth: cellWidth,
-                                      selectionActive: selectionActive,
-                                      searchActive: searchActive,
-                                      reorderEnabled: reorderActive,
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 260),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  // Çekiş yönüne göre yumuşak kaydır + soldur.
+                                  final begin = Offset(
+                                    _swipeForward ? 0.12 : -0.12,
+                                    0,
+                                  );
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: Tween(
+                                        begin: begin,
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: child,
                                     ),
-                                    loading: () => [
-                                      const SliverFillRemaining(
-                                        hasScrollBody: false,
-                                        child: Center(
-                                          child: CircularProgressIndicator(),
-                                        ),
+                                  );
+                                },
+                                layoutBuilder:
+                                    (currentChild, previousChildren) => Stack(
+                                      alignment: Alignment.topCenter,
+                                      children: [
+                                        ...previousChildren,
+                                        ?currentChild,
+                                      ],
+                                    ),
+                                child: CustomScrollView(
+                                  key: ValueKey(segmentKey),
+                                  // KÖK NEDEN (aşağı kaydırırken liste yukarı
+                                  // sıçraması): SliverMasonryGrid tembeldir ve
+                                  // toplam kaydırma uzunluğunu yalnızca O AN
+                                  // yerleşmiş kartların ORTALAMA yüksekliğinden
+                                  // TAHMİN eder. Masonry'de kart boyları çok
+                                  // farklı olduğundan tahmin her karede oynuyor;
+                                  // tahmin o anki konumun altına düştüğü an
+                                  // ScrollPosition kendini düzeltip listeyi
+                                  // yukarı çekiyordu (sona yaklaşıldıkça sık).
+                                  // Geniş önbellek payı kartların TAMAMINI ilk
+                                  // yerleşimde ölçtürür: uzunluk tahmin değil
+                                  // gerçek olur, düzeltme/sıçrama hiç olmaz.
+                                  // Bedeli, bu pay içindeki kartların önceden
+                                  // kurulması; bu sınırın (≈130 kart) ötesinde
+                                  // tembelliğe geri dönülür.
+                                  cacheExtent: _kGridCacheExtent,
+                                  slivers: [
+                                    ...notesAsync.when(
+                                      data: (notes) => _buildNoteSlivers(
+                                        context,
+                                        notes,
+                                        columns,
+                                        cellWidth: cellWidth,
+                                        selectionActive: selectionActive,
+                                        searchActive: searchActive,
+                                        reorderEnabled: reorderActive,
                                       ),
-                                    ],
-                                    error: (e, _) => [
-                                      SliverFillRemaining(
-                                        hasScrollBody: false,
-                                        child: EmptyState(
-                                          icon: Icons.error_outline,
-                                          title: l10n.genericError(
-                                            e.toString(),
+                                      loading: () => [
+                                        const SliverFillRemaining(
+                                          hasScrollBody: false,
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SliverToBoxAdapter(
-                                    child: SizedBox(height: 88),
-                                  ),
-                                ],
+                                      ],
+                                      error: (e, _) => [
+                                        SliverFillRemaining(
+                                          hasScrollBody: false,
+                                          child: EmptyState(
+                                            icon: Icons.error_outline,
+                                            title: l10n.genericError(
+                                              e.toString(),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox(height: 88),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

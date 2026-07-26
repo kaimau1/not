@@ -1982,6 +1982,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
     final hasBodyField = note.type == NoteType.text;
+    // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
+    //
+    // KÖK NEDEN: görseller sayfanın üzerinde serbest katmanda yüzüyor ve
+    // metnin ÜSTÜne çiziliyor. Yazılı metin görselin etrafından aktığı için
+    // (bkz. text_wrap.dart) sorun çıkmıyor, ama ipucu metni akmaz — sabit
+    // yerinde durur. Nota resim eklenip başa sürüklenince ipucu resmin altında
+    // kalıyor ve boş notta yazı alanının nerede olduğuna dair HİÇBİR iz
+    // kalmıyordu ("nereye yazacağım?"). Bir satırlık pay ayrılınca görsel bu
+    // bandın altına iner (üst sınır [NotePageCanvas.topLimit] ile zorlanır) ve
+    // ipucu her zaman görünür kalır.
+    final bodyFontSize = MediaQuery.textScalerOf(
+      context,
+    ).scale(Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16);
+    // Bir satır (satır aralığı ~1.45) + TextField'ın çerçevesiz dikey dolgusu.
+    final hintReserve = hasBodyField && note.body.trim().isEmpty
+        ? bodyFontSize * 1.45 + 32
+        : 0.0;
     final body = LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 96),
@@ -1991,7 +2008,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
           onExtractText: _ocrImage,
-          topLimit: _bodyTop,
+          topLimit: _bodyTop + hintReserve,
           onFloats: _applyFloats,
           // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
           // aşağıya dokunmak yeterli. Listede gövde alanı yok.

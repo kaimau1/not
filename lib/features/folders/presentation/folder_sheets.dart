@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/presentation/notes_providers.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 
@@ -16,6 +17,7 @@ Future<String?> showFolderEditorDialog(
   final l10n = context.l10n;
   final nameController = TextEditingController(text: existing?.name ?? '');
   var icon = existing?.icon ?? NoteFolder.defaultIcon;
+  var hidden = existing?.hidden ?? false;
 
   final saved = await showDialog<bool>(
     context: context,
@@ -24,57 +26,77 @@ Future<String?> showFolderEditorDialog(
         title: Text(existing == null ? l10n.newFolder : l10n.editFolder),
         content: SizedBox(
           width: 340,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameController,
-                autofocus: true,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(hintText: l10n.folderNameHint),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.folderIcon,
-                style: Theme.of(dialogContext).textTheme.labelMedium,
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: [
-                  for (final entry in NoteFolder.iconChoices.entries)
-                    InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: () => setState(() => icon = entry.key),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: icon == entry.key
-                              ? Theme.of(
-                                  dialogContext,
-                                ).colorScheme.primaryContainer
-                              : null,
-                        ),
-                        child: Icon(
-                          entry.value,
-                          size: 22,
-                          color: icon == entry.key
-                              ? Theme.of(
-                                  dialogContext,
-                                ).colorScheme.onPrimaryContainer
-                              : Theme.of(
-                                  dialogContext,
-                                ).colorScheme.onSurfaceVariant,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(hintText: l10n.folderNameHint),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.folderIcon,
+                  style: Theme.of(dialogContext).textTheme.labelMedium,
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    for (final entry in NoteFolder.iconChoices.entries)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () => setState(() => icon = entry.key),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: icon == entry.key
+                                ? Theme.of(
+                                    dialogContext,
+                                  ).colorScheme.primaryContainer
+                                : null,
+                          ),
+                          child: Icon(
+                            entry.value,
+                            size: 22,
+                            color: icon == entry.key
+                                ? Theme.of(
+                                    dialogContext,
+                                  ).colorScheme.onPrimaryContainer
+                                : Theme.of(
+                                    dialogContext,
+                                  ).colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const Divider(height: 24),
+                // Gizli klasör: çip ana ekranda görünmez, notları da not
+                // duvarına/aramaya girmez (bkz. NoteFolder.hidden).
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: Icon(
+                    hidden
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  title: Text(l10n.hiddenFolder),
+                  subtitle: Text(
+                    l10n.hiddenFolderInfo,
+                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  ),
+                  value: hidden,
+                  onChanged: (value) => setState(() => hidden = value),
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -97,9 +119,9 @@ Future<String?> showFolderEditorDialog(
   final repo = ref.read(foldersRepositoryProvider);
   if (repo == null) return null;
   if (existing == null) {
-    return repo.createFolder(name, icon: icon);
+    return repo.createFolder(name, icon: icon, hidden: hidden);
   }
-  repo.updateFolder(existing.id, name: name, icon: icon);
+  repo.updateFolder(existing.id, name: name, icon: icon, hidden: hidden);
   return existing.id;
 }
 
@@ -122,6 +144,18 @@ Future<void> showFolderActionsSheet(
             title: Text(l10n.editFolder),
             onTap: () => Navigator.pop(sheetContext, 'edit'),
           ),
+          // Gizle/göster: düzenleme diyaloğunu açmadan tek dokunuşla.
+          ListTile(
+            leading: Icon(
+              folder.hidden
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+            ),
+            title: Text(
+              folder.hidden ? l10n.makeFolderVisible : l10n.makeFolderHidden,
+            ),
+            onTap: () => Navigator.pop(sheetContext, 'hide'),
+          ),
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: Text(l10n.deleteFolder),
@@ -135,6 +169,15 @@ Future<void> showFolderActionsSheet(
   switch (action) {
     case 'edit':
       await showFolderEditorDialog(context, ref, existing: folder);
+    case 'hide':
+      ref
+          .read(foldersRepositoryProvider)
+          ?.updateFolder(folder.id, hidden: !folder.hidden);
+      // Klasör gizlenirken o an seçiliyse süzgeç bırakılır: aksi hâlde ana
+      // ekran, artık çipi görünmeyen bir klasörde kilitli kalırdı.
+      if (!folder.hidden && ref.read(selectedFolderProvider) == folder.id) {
+        ref.read(selectedFolderProvider.notifier).set(null);
+      }
     case 'delete':
       final confirmed = await showDialog<bool>(
         context: context,

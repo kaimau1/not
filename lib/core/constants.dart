@@ -69,7 +69,24 @@ abstract final class AppConstants {
   // istenirse storage.rules'da firestore.get(premiumUntil) eklenir.
   static const int maxFreeAttachmentBytes = 10 * 1024 * 1024; // 10 MB
   static const int maxPremiumAttachmentBytes = 50 * 1024 * 1024; // 50 MB
-  static const int maxImageDimension = 2048;
+  /// Görsel eklerin saklandığı/senkronlandığı en büyük kenar (px).
+  ///
+  /// 2048'den 1600'e indirildi: senkron boyutu ~%40 küçülüyor ve OCR/"PDF'i
+  /// özetle" akışları bozulmuyor — Gemini görseli 768 px'lik karolara bölerek
+  /// okuduğundan 1600 px zaten fazlasıyla yeterli. Yerel kopya da bu ölçüde
+  /// tutulur (tek dosya yüklenir), yani cihaz depolaması da azalır.
+  static const int maxImageDimension = 1600;
+
+  /// Görsel eklerin JPEG kalitesi. q80 → q75: gözle ayırt edilmesi güç,
+  /// dosya ~%15 daha küçük.
+  static const int imageJpegQuality = 75;
+
+  /// Ses eklerinin kayıt bit hızı (bit/sn) ve örnekleme oranı (Hz).
+  /// Konuşma için AAC-LC tek kanal 32 kbps / 22.05 kHz yeterli; 48 kbps'e göre
+  /// dosya üçte bir küçülür (dakikada ~240 KB), Storage kotası ve mobil veri
+  /// buna gidiyordu.
+  static const int audioBitRate = 32000;
+  static const int audioSampleRate = 22050;
 
   /// Ek bu boyutu aşarsa kullanıcıya sorulur (engellenmez). Firebase Storage
   /// ücretsiz katmanı 5 GB; sıkıştırılamayan PDF'ler kotayı sessizce yiyordu.
