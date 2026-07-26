@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Hızlı Eylemler widget'ı: yeni not, liste, sıralı liste ve sesli not
-     kısayolları. Her ikon kendi derin bağlantısıyla uygulamayı açar. -->
+     kısayolları. Her ikon kendi derin bağlantısıyla uygulamayı açar.
+
+     Dört ikonun tamamı stok @android:drawable/* sistem çizimiydi: cihaz
+     sürümüne göre değişiyor, birbiriyle aynı çizgi kalınlığını tutturmuyor
+     ve uygulamanın görsel diline ait olmuyorlardı. Artık dördü de kendi
+     vektörümüz. Renkler belirteçten gelir; Android 12+ cihazda duvar
+     kâğıdının paletine döner (values-v31/).
+
+     Dokunma hedefi: her ikon layout_weight ile eşit paya sahip ve
+     match_parent yükseklikte — 4x1 hücrede her hücre 44dp'nin üstünde
+     kalır. İkonun kendisi 12dp dolguyla ortalanır. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/qa_widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:gravity="center"
-    android:padding="6dp"
+    android:padding="8dp"
     android:background="@drawable/widget_background">
 
     <ImageView
@@ -17,8 +27,8 @@
         android:layout_weight="1"
         android:padding="12dp"
         android:scaleType="fitCenter"
-        android:src="@android:drawable/ic_menu_edit"
-        android:tint="#E8E8ED"
+        android:src="@drawable/ic_widget_note"
+        android:tint="@color/widget_icon"
         android:contentDescription="@string/widget_qa_new_note" />
 
     <ImageView
@@ -28,8 +38,8 @@
         android:layout_weight="1"
         android:padding="12dp"
         android:scaleType="fitCenter"
-        android:src="@android:drawable/ic_menu_agenda"
-        android:tint="#E8E8ED"
+        android:src="@drawable/ic_widget_checklist"
+        android:tint="@color/widget_icon"
         android:contentDescription="@string/widget_qa_checklist" />
 
     <ImageView
@@ -39,10 +49,12 @@
         android:layout_weight="1"
         android:padding="12dp"
         android:scaleType="fitCenter"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        android:tint="#E8E8ED"
+        android:src="@drawable/ic_widget_ordered"
+        android:tint="@color/widget_icon"
         android:contentDescription="@string/widget_qa_ordered" />
 
+    <!-- Mikrofon vurgu rengindedir: dördü aynı griyken göz hangisinin ana
+         eylem olduğunu seçemiyordu. -->
     <ImageView
         android:id="@+id/qa_mic"
         android:layout_width="0dp"
@@ -50,7 +62,7 @@
         android:layout_weight="1"
         android:padding="12dp"
         android:scaleType="fitCenter"
-        android:src="@android:drawable/ic_btn_speak_now"
-        android:tint="#9BB0FF"
+        android:src="@drawable/ic_widget_mic"
+        android:tint="@color/widget_icon_accent"
         android:contentDescription="@string/widget_voice_label" />
 </LinearLayout>

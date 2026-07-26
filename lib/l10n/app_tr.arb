@@ -532,6 +532,11 @@
   "qrScanHint": "Kodu çerçevenin içine getir",
   "qrFromPhoto": "Fotoğraftan oku",
   "qrNotFound": "Bu görselde kod bulunamadı",
+  "qrLinkFound": "Bu kod bir bağlantı",
+  "qrOpenLink": "Linke git",
+  "qrSaveToNote": "Nota kaydet",
+  "openLink": "Bağlantıyı aç",
+  "linkOpenFailed": "Bağlantı açılamadı",
   "qrScanFailed": "Kod okunamadı: {error}",
   "@qrScanFailed": {
     "placeholders": {

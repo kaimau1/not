@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Mikrofon widget'ı zemini. Eskiden tek düz renkti ve duvar kâğıdının
-     üstünde yassı duruyordu. Şimdi iki katman var:
+<!-- Sesli Not widget'ının zemini. İki katmanlı yapı korunuyor:
        1) köşegen gradyan — yüzeye hacim verir
-       2) ince açık kenar hattı — camsı bir çerçeve, ikonu duvar kâğıdından
-          ayırır (koyu duvar kâğıdında sınır kaybolmasın diye)
-     Yuvarlaklık 28dp: 1x1'de daireye yakın, 2x1'e büyütülünce hap biçimi.
-     Koyu tema karşılığı drawable-night/ altında. -->
+       2) ince kenar hattı — ikonu duvar kâğıdından ayırır
+     Renkler artık belirteçten geliyor: Android 12+ cihazda duvar kâğıdının
+     BİRİNCİL rengine (system_accent1) döner. Yuvarlaklık da sabit 28dp
+     değil, launcher'ın kendi widget yarıçapı — diğer widget'larla hizalanır.
+     Gece/gündüz ayrımı belirtecin işi olduğundan drawable-night/ kopyası
+     kaldırıldı. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:angle="315"
-                android:endColor="#3B48AE"
-                android:startColor="#6C7BF0"
+                android:startColor="@color/widget_accent_start"
+                android:endColor="@color/widget_accent_end"
                 android:type="linear" />
-            <corners android:radius="28dp" />
+            <corners android:radius="@dimen/widget_radius" />
         </shape>
     </item>
     <item>
@@ -22,8 +23,8 @@
             <solid android:color="#00000000" />
             <stroke
                 android:width="1dp"
-                android:color="#38FFFFFF" />
-            <corners android:radius="28dp" />
+                android:color="@color/widget_outline" />
+            <corners android:radius="@dimen/widget_radius" />
         </shape>
     </item>
 </layer-list>

@@ -19,5 +19,6 @@
         android:padding="17dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_mic"
+        android:tint="@color/widget_on_accent"
         android:contentDescription="@string/widget_voice_label" />
 </FrameLayout>

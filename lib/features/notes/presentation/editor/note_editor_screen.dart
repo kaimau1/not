@@ -17,6 +17,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
+import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -462,6 +463,44 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final code = await openQrScanner(context);
     if (code == null || !mounted) return;
     _appendPlainText(code);
+  }
+
+  /// Gövdedeki seçimin/imlecin üzerinde durduğu bağlantı (yoksa null).
+  /// Alanın metni sarma çapaları içerdiğinden konum önce mantıksal metne
+  /// çevrilir — çapalar sayılmasa adres sınırları kayardı.
+  String? _selectedLink() {
+    final selection = _bodyController.selection;
+    if (!selection.isValid) return null;
+    return linkAt(
+      _bodyController.logicalText,
+      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
+    );
+  }
+
+  /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
+  /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
+  /// platformun kendi listesinden gelir.
+  Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) {
+    final items = [...state.contextMenuButtonItems];
+    final url = _selectedLink();
+    if (url != null) {
+      items.insert(
+        0,
+        ContextMenuButtonItem(
+          label: context.l10n.openLink,
+          onPressed: () {
+            state.hideToolbar();
+            openLink(url).then((opened) {
+              if (!opened && mounted) _showSnack(context.l10n.linkOpenFailed);
+            });
+          },
+        ),
+      );
+    }
+    return AdaptiveTextSelectionToolbar.buttonItems(
+      anchors: state.contextMenuAnchors,
+      buttonItems: items,
+    );
   }
 
   Future<void> _pickPdf() async {
@@ -1799,16 +1838,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             title: Text(l10n.suggestTitle),
           ),
         ),
-      if (note.reminderAt == null)
-        PopupMenuItem(
-          value: 'add-reminder',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.alarm_add_outlined),
-            title: Text(l10n.addReminder),
-          ),
-        ),
     ];
 
     final actionsMenu = PopupMenuButton<String>(
@@ -1821,8 +1850,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             _suggestTags();
           case 'suggest-title':
             _suggestTitle();
-          case 'add-reminder':
-            _pickReminder();
         }
       },
       itemBuilder: (context) => actionEntries,
@@ -1839,12 +1866,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
 
     final metaChildren = <Widget>[
+      // Hatırlatıcı KENDİ çipinde durur. Eskiden kurulu hatırlatıcı burada
+      // görünüyor ama YENİ hatırlatıcı eklemek yalnızca ✨ simgeli AI
+      // menüsünün içinden mümkündü — kullanıcı "nota hatırlatıcı ekleme
+      // olmalı" dedi, çünkü etiket/başlık ÖNERİSİ ile aynı yerde duran bir
+      // seçeneği kimse hatırlatıcı sanmıyor.
       if (note.reminderAt != null)
         InputChip(
           avatar: const Icon(Icons.alarm, size: 16),
           label: Text(DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!)),
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
+        )
+      else
+        ActionChip(
+          avatar: const Icon(Icons.alarm_add_outlined, size: 16),
+          label: Text(l10n.addReminder),
+          onPressed: _pickReminder,
         ),
       // Klasör çipi: doluysa klasör adı+simge, boşsa "Klasör" ekleme.
       ActionChip(
@@ -1915,6 +1953,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       maxLines: null,
       minLines: note.items.isEmpty ? 8 : 2,
       keyboardType: TextInputType.multiline,
+      // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
+      // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
+      // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
+      contextMenuBuilder: (menuContext, editableState) =>
+          _bodyContextMenu(menuContext, editableState),
       decoration: InputDecoration(
         hintText: l10n.bodyHint,
         filled: false,

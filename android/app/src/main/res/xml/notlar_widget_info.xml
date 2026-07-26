@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- updatePeriodMillis=0: veriler zaten uygulama tarafından (WidgetService)
-     anında itilir; periyodik uyanma yalnızca pil harcıyordu. -->
+     anında itilir; periyodik uyanma yalnızca pil harcıyordu.
+
+     Varsayılan yükseklik 2 hücreden 3'e çıktı: notlar artık tek metin yığını
+     değil, ayrı kartlar hâlinde çiziliyor ve dört satır 2 hücreye sığmıyordu
+     (alttaki iki satır kırpılıyordu). Widget yine yeniden boyutlandırılabilir. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="180dp"
-    android:minHeight="110dp"
+    android:minHeight="180dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="40dp"
     android:targetCellWidth="3"
-    android:targetCellHeight="2"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/notlar_widget"
     android:previewLayout="@layout/notlar_widget"

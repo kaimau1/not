@@ -15,4 +15,23 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+
+    <!-- Not listesi widget'ındaki bir not satırı. Dört satır aynı görünür;
+         ortak stil olmadan aynı sekiz nitelik dört kez tekrarlanıyordu ve
+         biri değişince diğerleri geride kalıyordu. -->
+    <style name="WidgetNoteRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:background">@drawable/widget_row_background</item>
+        <item name="android:paddingLeft">12dp</item>
+        <item name="android:paddingRight">12dp</item>
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:textColor">@color/widget_on_surface</item>
+        <item name="android:visibility">gone</item>
+    </style>
 </resources>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget "yapılacaklar listesi" simgesi: iki onay işareti + iki satır.
+     Stok @android:drawable/ic_menu_agenda yerine geldi — o, cihaz sürümüne
+     göre değişen sistem çizimiydi ve uygulamanın görsel diline ait değildi.
+
+     Çizgilerle (stroke) kuruldu, dolgu yolu değil: 24dp'de kalınlık
+     mikrofon/kalem gliflerinin çizgi kalınlığıyla aynı kalsın diye. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:pathData="M3,7.4 l1.9,1.9 l4,-4"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M3,16.4 l1.9,1.9 l4,-4"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M12.5,7.6 h8.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M12.5,16.6 h8.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

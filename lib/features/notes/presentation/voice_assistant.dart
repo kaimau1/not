@@ -7,8 +7,10 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../core/utils/tr_datetime.dart';
 import '../../ai/data/assistant_service.dart';
 import '../../ai/data/gemini_service.dart';
+import '../data/attachment_repository.dart';
 import '../data/device_speech.dart';
 import '../data/notes_repository.dart';
 import '../domain/note_type.dart';
@@ -82,6 +84,10 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
   Timer? _ticker;
   String _transcript = '';
   String? _filePath;
+
+  /// Okunmuş ama henüz kullanılmamış ses kaydının yolu. AI yolu başarılıysa
+  /// [finish] sonunda silinir, düşerse nota ek olarak eklenir.
+  String? _audioPath;
   bool _useSpeech = false;
 
   @override
@@ -100,6 +106,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     if (_busy) return;
     _transcript = '';
     _filePath = null;
+    _audioPath = null;
     state = const VoiceAssistantState(phase: VoiceAssistantPhase.recording);
     try {
       _useSpeech = await DeviceSpeech.isAvailable();
@@ -242,29 +249,57 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         if (createdId != null && transcript.isNotEmpty) {
           final repo = ref.read(notesRepositoryProvider);
           final created = await repo?.watchNote(createdId).first;
-          if (repo != null && created != null && created.isEmpty) {
-            repo.updateFields(createdId, {'body': transcript});
+          if (repo != null && created != null) {
+            if (created.isEmpty) {
+              repo.updateFields(createdId, {'body': transcript});
+            }
+            // İkinci güvenlik ağı: "yarın sabah 9'da toplantım var" gibi
+            // BİLDİRİM cümlelerinde model reminderAt'i doldurmayı atlıyordu
+            // (alan şemada isteğe bağlı). Model kurmadıysa zaman dökümden
+            // yerelde çıkarılır — hatırlatıcı modelin keyfine kalmaz.
+            if (created.reminderAt == null) {
+              final when = parseTurkishDateTime(transcript);
+              if (when != null) repo.setReminder(createdId, when);
+            }
           }
         }
       } on GeminiException catch (e) {
-        // Asistan başarısız olursa dökümü düz not olarak kaydet; döküm de
-        // yoksa (ses yolu) toplu transkripsiyona düş.
-        final localAudio = audio;
-        final fallbackText = transcript.isNotEmpty
-            ? transcript
-            : localAudio == null
-            ? ''
-            : (await service.transcribeAudio(
-                localAudio,
-                mimeType ?? 'audio/mp4',
-              )).trim();
-        if (fallbackText.isEmpty) throw StateError(nothingHeardText);
+        // AI hiç çalışmıyor olabilir (anahtar yok + dahili AI kapalı + kota
+        // bitti). Kayıt yine de KAYBOLMAZ: döküm varsa düz not olur, yoksa
+        // ses kaydı nota EK olarak eklenir. Eskiden burada yeniden AI'a
+        // (transcribeAudio) gidiliyordu — AI ölüyken o çağrı da patlıyor ve
+        // konuşma tümden yok oluyordu; kökü buydu.
+        final audioPath = _audioPath;
+        if (transcript.isEmpty && audioPath == null) {
+          throw StateError(nothingHeardText);
+        }
         final repo = ref.read(notesRepositoryProvider);
         if (repo == null) {
           throw StateError(e.isAuthError ? noApiKeyText : e.message);
         }
         final id = await repo.createNote(NoteType.text);
-        repo.updateFields(id, {'body': fallbackText});
+        if (transcript.isNotEmpty) {
+          repo.updateFields(id, {'body': transcript});
+          // AI hiç çalışmasa da hatırlatıcı kurulur: zaman ayrıştırması
+          // yerelde yapılıyor, modele ihtiyaç yok.
+          final when = parseTurkishDateTime(transcript);
+          if (when != null) repo.setReminder(id, when);
+        } else {
+          final attachments = ref.read(attachmentRepositoryProvider);
+          if (attachments == null) {
+            throw StateError(e.isAuthError ? noApiKeyText : e.message);
+          }
+          final attachment = await attachments.prepareAudio(
+            noteId: id,
+            sourcePath: audioPath!,
+            duration: state.elapsed,
+          );
+          // prepareAudio kaynağı kendi klasörüne TAŞIR; artık silinmemeli.
+          _audioPath = null;
+          repo.updateFields(id, {
+            'attachments': [attachment.toMap()],
+          });
+        }
         resultNoteId = id;
         reply = savedText;
       }
@@ -291,6 +326,10 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         message: genericErrorText,
       );
     }
+    // Nota eklenmediyse geçici kayıt burada temizlenir (her yoldan geçilir).
+    final leftover = _audioPath;
+    _audioPath = null;
+    if (leftover != null) File(leftover).delete().ignore();
     return true;
   }
 
@@ -306,11 +345,13 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     state = const VoiceAssistantState();
   }
 
+  /// Kaydı okur. Dosya BURADA silinmez: AI düşerse aynı kayıt nota ek olarak
+  /// eklenecek ([_audioPath]); iş bittiğinde [finish] artanı temizler.
   Future<(Uint8List, String)> _collectAudio() async {
     final path = await _recorder?.stop();
     final file = File(path ?? _filePath ?? '');
     final bytes = await file.readAsBytes();
-    file.delete().ignore();
+    _audioPath = file.path;
     return (bytes, 'audio/mp4');
   }
 

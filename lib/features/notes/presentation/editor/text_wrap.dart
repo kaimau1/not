@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/link_text.dart';
+
 /// Metnin, üzerinde yüzen görsellerin ETRAFINDAN akmasını (Word'ün "kare
 /// sarma"sı) sağlayan katman.
 ///
@@ -255,12 +257,27 @@ void _layout(
 /// Görüntü metnini, çapaları görünmez dolgu kutularına çevirerek span'e
 /// dönüştürür. Ölçüm (TextPainter) ve çizim (TextField) aynı span'i kullanır;
 /// ikisinin ayrışması imleç kaymasına yol açardı.
-InlineSpan buildWrapSpan(String display, List<double> widths, TextStyle? style) {
+/// [linkColor] verilirse metindeki bağlantılar renklendirilir. Ölçüm yolu
+/// bunu null bırakır; renk ve alt çizgi satır genişliğini değiştirmediğinden
+/// ölçüm ile çizim yine aynı planı üretir.
+///
+/// ponytail: sarma çapası bir adresin ORTASINA düşerse (çok uzun URL, görselin
+/// yanında kırılıyorsa) adres iki parçaya bölünür ve o parçalar link sayılmaz;
+/// sarmasız satırlarda ve normal uzunluktaki adreslerde sorun yok.
+InlineSpan buildWrapSpan(
+  String display,
+  List<double> widths,
+  TextStyle? style, {
+  Color? linkColor,
+}) {
   if (widths.isEmpty || !display.contains(kWrapAnchorChar)) {
-    return TextSpan(text: display, style: style);
+    final spans = linkSpans(display, style, linkColor);
+    return spans.length == 1 && spans.first is TextSpan
+        ? spans.first as TextSpan
+        : TextSpan(style: style, children: spans);
   }
   final parts = display.split(kWrapAnchorChar);
-  final children = <InlineSpan>[TextSpan(text: parts.first, style: style)];
+  final children = <InlineSpan>[...linkSpans(parts.first, style, linkColor)];
   for (var i = 1; i < parts.length; i++) {
     final w = i - 1 < widths.length ? widths[i - 1] : 0.0;
     children.add(
@@ -269,7 +286,7 @@ InlineSpan buildWrapSpan(String display, List<double> widths, TextStyle? style) 
         child: SizedBox(width: w, height: 0),
       ),
     );
-    children.add(TextSpan(text: parts[i], style: style));
+    children.addAll(linkSpans(parts[i], style, linkColor));
   }
   return TextSpan(style: style, children: children);
 }
@@ -513,15 +530,26 @@ class WrapTextController extends TextEditingController {
     TextStyle? style,
     required bool withComposing,
   }) {
+    // Yazarken (IME oluşturma aralığı açıkken) span'e dokunulmaz: klavyenin
+    // altı çizili öneri bölgesi bizim ürettiğimiz parçalarda kayardı. Metin
+    // oturunca link rengi zaten gelir.
+    final composing = withComposing && value.isComposingRangeValid;
+    final linkColor = composing
+        ? null
+        : Theme.of(context).colorScheme.primary;
     if (_widths.isEmpty) {
-      return super.buildTextSpan(
-        context: context,
-        style: style,
-        withComposing: withComposing,
-      );
+      if (linkColor == null || findLinks(text).isEmpty) {
+        return super.buildTextSpan(
+          context: context,
+          style: style,
+          withComposing: withComposing,
+        );
+      }
+      return buildWrapSpan(text, const [], style, linkColor: linkColor)
+          as TextSpan;
     }
     // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
     // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
-    return buildWrapSpan(text, _widths, style) as TextSpan;
+    return buildWrapSpan(text, _widths, style, linkColor: linkColor) as TextSpan;
   }
 }

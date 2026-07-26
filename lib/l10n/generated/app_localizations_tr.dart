@@ -1345,6 +1345,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get qrNotFound => 'Bu görselde kod bulunamadı';
 
   @override
+  String get qrLinkFound => 'Bu kod bir bağlantı';
+
+  @override
+  String get qrOpenLink => 'Linke git';
+
+  @override
+  String get qrSaveToNote => 'Nota kaydet';
+
+  @override
+  String get openLink => 'Bağlantıyı aç';
+
+  @override
+  String get linkOpenFailed => 'Bağlantı açılamadı';
+
+  @override
   String qrScanFailed(String error) {
     return 'Kod okunamadı: $error';
   }

@@ -2584,6 +2584,36 @@ abstract class AppLocalizations {
   /// **'Bu görselde kod bulunamadı'**
   String get qrNotFound;
 
+  /// No description provided for @qrLinkFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu kod bir bağlantı'**
+  String get qrLinkFound;
+
+  /// No description provided for @qrOpenLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Linke git'**
+  String get qrOpenLink;
+
+  /// No description provided for @qrSaveToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota kaydet'**
+  String get qrSaveToNote;
+
+  /// No description provided for @openLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı aç'**
+  String get openLink;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı açılamadı'**
+  String get linkOpenFailed;
+
   /// No description provided for @qrScanFailed.
   ///
   /// In tr, this message translates to:

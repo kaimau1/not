@@ -478,13 +478,19 @@ class GeminiService {
     },
     {
       'text':
-          'Bu videoyu (hem görüntü hem ses) incele ve Türkçe, detaylı bir '
-          'nota dönüştür. Yapı (her başlık kendi satırında, düz metin): '
-          '"Özet" — 1-3 cümle; "Görülenler" — görüntüdeki önemli ayrıntılar '
-          '(yazı, tahta, ekran, belge, ortam) "- " ile madde madde; '
-          '"Konuşulanlar" — söylenenlerin özeti ya da varsa dökümü; '
-          '"Yapılacaklar" — videodan çıkan iş/hatırlatma varsa madde madde, '
-          'yoksa bu başlığı hiç yazma. Videoda olmayan şeyi uydurma. '
+          'Bu videoyu (görüntü ve ses birlikte) izle ve içeriğini, kendi '
+          'defterine not alır gibi Türkçe yaz. '
+          'Sabit başlık şablonu KULLANMA: "Özet", "Görülenler", '
+          '"Konuşulanlar" gibi bölümler açma. Videoda ne varsa doğal bir '
+          'akışla anlat — kısa paragraflar, sıralı ya da çok maddeli yerlerde '
+          '"- " ile maddeler. '
+          'Anlatıcı kalıplarından kaçın: "videoda ... görülüyor", '
+          '"konuşmacı ... diyor", "bu videoda" deme. Bilginin kendisini yaz: '
+          'toplantı saati geçiyorsa saati yaz, tahtadaki formül varsa '
+          'formülü yaz. '
+          'Videodan bir iş ya da hatırlatma çıkıyorsa onları en sona kısa '
+          'maddeler hâlinde ekle. '
+          'Videoda olmayan şeyi uydurma, tahmin yürütme, yorum katma. '
           'Markdown kullanma: yıldız, kalın işareti veya # koyma.',
     },
   ]).then(stripMarkdown);
@@ -789,6 +795,31 @@ class GeminiService {
     }
   }
 
+  /// Modele verilen "şu an" damgası: yerel saat + SAAT DİLİMİ OFSETİ + gün adı.
+  ///
+  /// Eskiden düz `DateTime.now().toIso8601String()` gidiyordu; o biçimde ofset
+  /// YOK ve modeller böyle bir damgayı çoğu zaman UTC sanıyor. Gece yarısına
+  /// yakın saatlerde bu, "yarın"ı bir gün kaydırıyordu. Gün adı da eklendi:
+  /// "haftaya salı" gibi ifadeleri saymadan çözebilsin.
+  static String _nowStamp() {
+    const days = [
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+      'Pazar',
+    ];
+    final now = DateTime.now();
+    final offset = now.timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = offset.inHours.abs().toString().padLeft(2, '0');
+    final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    final local = now.toIso8601String().split('.').first;
+    return '$local$sign$hours:$minutes (${days[now.weekday - 1]})';
+  }
+
   /// Asistan konuşmalarının ortak giriş turları (kimlik + not bağlamı).
   static List<Map<String, dynamic>> _assistantPreamble(String notesContext) => [
     {
@@ -800,7 +831,7 @@ class GeminiService {
               'net yanıt ver. Kullanıcı senden not oluşturmanı, düzenlemeni '
               'veya silmeni isteyebilir; bunun için sana verilen araçları '
               'kullan. Tarihler için ISO 8601 kullan; şu an: '
-              '${DateTime.now().toIso8601String()}. Alışveriş/yapılacak '
+              '${_nowStamp()}. Alışveriş/yapılacak '
               'listeleri için "checklist" tipini kullan. Bir aracı '
               'çağırdıktan sonra kullanıcıya ne yaptığını tek cümleyle '
               'özetle.\n\nKULLANICININ NOT DEFTERİ:\n$notesContext',
@@ -835,7 +866,11 @@ class GeminiService {
   }) async {
     const task =
         'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
-        'checklist, aksi hâlde metin; tarih/saat geçiyorsa hatırlatıcı ekle. '
+        'checklist, aksi hâlde metin. '
+        'HATIRLATICI: konuşmada herhangi bir gün ya da saat geçiyorsa '
+        '(yarın, salı, sabah 9, 14:00 ...) create_note çağrısında '
+        'reminderAt alanını MUTLAKA doldur. Kullanıcının "hatırlat" demesi '
+        'GEREKMEZ — "yarın sabah 9\'da toplantım var" demesi yeterlidir. '
         'Anlaşılır bir istek yoksa not oluşturma ve bunu belirt.';
     final hasTranscript = transcript != null && transcript.trim().isNotEmpty;
     if (!hasTranscript && audioBytes == null) {
@@ -1037,7 +1072,11 @@ class GeminiService {
           },
           'reminderAt': {
             'type': 'STRING',
-            'description': 'ISO 8601 hatırlatıcı zamanı (isteğe bağlı)',
+            'description':
+                'ISO 8601 hatırlatıcı zamanı. Konuşmada bir gün ya da saat '
+                'geçiyorsa ("yarın sabah 9", "salı 14:00", "akşam") bu alanı '
+                'MUTLAKA doldur — kullanıcı "hatırlat" demese, sadece '
+                'planını anlatsa bile.',
           },
         },
         'required': ['type', 'title'],

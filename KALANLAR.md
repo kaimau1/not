@@ -39,6 +39,26 @@
 - [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
   gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
   Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).
+- [ ] **Canlı çeviri anahtarsız çalışmıyor** — `firebase_ai 3.14.1` Live
+  Translate'in `translationConfig`/`targetLanguageCode` alanını hiç sunmuyor
+  (2026-07-26 ölçümü), o yüzden dahili AI'a taşınamadı; kullanıcı Gemini
+  anahtarı girmek zorunda. Alternatif yol: cihaz tanıma + ML Kit çevrim dışı
+  çeviri + TTS zinciri (parçaları zaten var: `device_speech`,
+  `offline_translator`, `flutter_tts`) — ayrı oturum işi.
+- [ ] **Editör diktesi Windows'ta AI'sız çalışamaz** — dikte METİN döndürmek
+  zorunda, sesli asistandaki "eke düş" yedeği burada uygulanamıyor. Android'de
+  cihaz tanıması olduğu için etkilenmiyor (2026-07-26).
+- [ ] **Sesli asistan hatırlatıcısı cihazda denenmedi** — yerel zaman
+  ayrıştırıcısı (`tr_datetime.dart`) ve emniyet ağı testlerle doğrulandı ama
+  gerçek konuşmayla uçtan uca bakılmadı; ayrıca bildirim izni verili değilse
+  hatırlatıcı kaydolur, bildirim gelmez (2026-07-26).
+- [ ] **Sohbet asistanında hatırlatıcı emniyet ağı yok** — ayrıştırıcı hazır,
+  yalnız sesli asistana bağlandı; `assistantChat` hâlâ modele bağımlı
+  (2026-07-26).
+- [ ] **Widget'ların cihazdaki görünümü doğrulanmadı** — Material You renkleri,
+  4 satırlık kart düzeni ve yeni çizgi ikonları (`ic_widget_checklist`,
+  `ic_widget_ordered`) yalnız kodda; ana ekranda gözle bakılması gerekiyor
+  (2026-07-26).
 - [ ] **AI kota sayacı istemci tarafında** — kural aynı gün puanın azalmasını
   engelliyor ama gerçek zorlama için sunucu (Cloud Functions + App Check)
   gerekiyor; App Check hiç aktive edilmemiş durumda (2026-07-24).

@@ -6,6 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/link_text.dart';
+
+/// Okunan kod bir adresse kullanıcının seçtiği eylem.
+enum _QrAction { open, save, cancel }
 
 /// QR okuma yalnızca mobile_scanner'ın eklenti sağladığı platformlarda vardır
 /// (Android/iOS/macOS). Windows'ta eklenti yok: menüde hiç görünmemesi için
@@ -51,10 +55,83 @@ class _QrScanScreenState extends State<QrScanScreen> {
     super.dispose();
   }
 
-  void _finish(String value) {
+  /// Okunan kodu sonuçlandırır. Kod bir adresse önce ne yapılacağı sorulur:
+  /// QR kodların çoğu linktir ve kullanıcı genelde siteye gitmek ister —
+  /// eskiden tek yol adresi nota yazmaktı, açmak için elle kopyalamak
+  /// gerekiyordu.
+  Future<void> _finish(String value) async {
     if (_handled || value.trim().isEmpty) return;
     _handled = true;
-    Navigator.of(context).pop(value.trim());
+    final code = value.trim();
+    final url = soleLink(code);
+    if (url == null) {
+      if (mounted) Navigator.of(context).pop(code);
+      return;
+    }
+    final action = await _askLinkAction(url);
+    if (!mounted) return;
+    if (action == _QrAction.open) {
+      final opened = await openLink(url);
+      if (!mounted) return;
+      if (!opened) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.linkOpenFailed)));
+        return;
+      }
+      // Link açıldı: not oluşturulmaz, tarayıcı kapanır.
+      Navigator.of(context).pop();
+      return;
+    }
+    Navigator.of(context).pop(action == _QrAction.save ? code : null);
+  }
+
+  /// Adres bulundu penceresi. Kapatılamaz (isDismissible: false): yarım
+  /// durumda kalıp aynı kodun bir daha okunmamasını (noDuplicates) önler —
+  /// üç seçenekten biri mutlaka seçilir.
+  Future<_QrAction?> _askLinkAction(String url) {
+    final l10n = context.l10n;
+    return showModalBottomSheet<_QrAction>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.qrLinkFound, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Text(
+                url,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, _QrAction.open),
+                icon: const Icon(Icons.open_in_new),
+                label: Text(l10n.qrOpenLink),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pop(sheetContext, _QrAction.save),
+                icon: const Icon(Icons.note_add_outlined),
+                label: Text(l10n.qrSaveToNote),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(sheetContext, _QrAction.cancel),
+                child: Text(l10n.cancel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Yakalanan kodlardan ilk anlamlı metni döndürür (yoksa null).

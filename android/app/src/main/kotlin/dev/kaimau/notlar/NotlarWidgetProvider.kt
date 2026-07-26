@@ -6,24 +6,59 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 
 /**
  * Ana ekran widget'ı: son notların başlıklarını gösterir, dokununca
  * uygulamayı açar. Veriler Dart tarafından (WidgetService) yazılır.
+ *
+ * Başlıklar tek bir metin yığını olarak gelir (satır başıyla ayrılmış) ve
+ * burada SABİT sayıda satır görünümüne dağıtılır. RemoteViews kendi başına
+ * dinamik liste kuramaz — o, ayrı bir RemoteViewsService ister; dört satır
+ * için o altyapıyı kurmak gereksiz ağırlıktı.
  */
 class NotlarWidgetProvider : AppWidgetProvider() {
+
+    private val rowIds = intArrayOf(
+        R.id.widget_row_1,
+        R.id.widget_row_2,
+        R.id.widget_row_3,
+        R.id.widget_row_4
+    )
+
     override fun onUpdate(
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
         val data = HomeWidgetPlugin.getData(context)
+        val titles = data.getString("widget_notes", "")
+            .orEmpty()
+            .split("\n")
+            .filter { it.isNotBlank() }
+
         for (widgetId in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.notlar_widget).apply {
-                setTextViewText(R.id.widget_notes, data.getString("widget_notes", "Henüz not yok"))
                 setTextViewText(R.id.widget_count, data.getString("widget_count", ""))
+
+                // Not kalmadıysa satır kartları yerine tek satırlık bilgi metni.
+                setViewVisibility(
+                    R.id.widget_empty,
+                    if (titles.isEmpty()) View.VISIBLE else View.GONE
+                )
+                if (titles.isEmpty()) {
+                    setTextViewText(
+                        R.id.widget_empty,
+                        context.getString(R.string.widget_no_notes)
+                    )
+                }
+                rowIds.forEachIndexed { index, rowId ->
+                    val title = titles.getOrNull(index)
+                    setViewVisibility(rowId, if (title == null) View.GONE else View.VISIBLE)
+                    if (title != null) setTextViewText(rowId, title)
+                }
 
                 val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 if (launchIntent != null) {

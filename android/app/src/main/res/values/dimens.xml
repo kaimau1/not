@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget köşe yarıçapları — Android 12 öncesi yedek değerler.
+     values-v31/ altında bunlar sistemin kendi widget yarıçaplarına bağlanır;
+     böylece widget, launcher'ın diğer widget'larıyla AYNI yuvarlaklıkta durur
+     (üreticiye göre değişir, sabit bir dp tutturmaya çalışmak yanlıştı). -->
+<resources>
+    <dimen name="widget_radius">24dp</dimen>
+    <dimen name="widget_inner_radius">16dp</dimen>
+</resources>

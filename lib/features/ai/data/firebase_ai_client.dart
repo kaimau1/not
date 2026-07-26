@@ -308,7 +308,11 @@ class FirebaseAiClient {
           ),
           'tags': Schema.array(items: Schema.string()),
           'reminderAt': Schema.string(
-            description: 'ISO 8601 hatırlatıcı zamanı (isteğe bağlı)',
+            description:
+                'ISO 8601 hatırlatıcı zamanı. Konuşmada bir gün ya da saat '
+                'geçiyorsa ("yarın sabah 9", "salı 14:00", "akşam") bu alanı '
+                'MUTLAKA doldur — kullanıcı "hatırlat" demese, sadece '
+                'planını anlatsa bile.',
           ),
         },
         optionalParameters: ['body', 'items', 'tags', 'reminderAt'],

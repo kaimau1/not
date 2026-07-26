@@ -18,6 +18,7 @@
         android:layout_height="30dp"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_widget_note"
+        android:tint="@color/widget_on_note"
         android:contentDescription="@string/widget_quicknote_label" />
 
     <TextView
@@ -26,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="@string/widget_quicknote_label"
-        android:textColor="#FFFFFF"
+        android:textColor="@color/widget_on_note"
         android:textSize="12sp"
         android:maxLines="1"
         android:ellipsize="end" />

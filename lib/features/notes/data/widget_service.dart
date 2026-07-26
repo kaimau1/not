@@ -44,17 +44,18 @@ class WidgetService {
         for (final n in notes)
           if (n.archivedAt == null) n,
       ];
+      // Başlıklar SADE gönderilir: madde imi ("• ") ve "not yok" metni artık
+      // Android tarafının işi — her başlık kendi kart görünümüne düşüyor
+      // (bkz. NotlarWidgetProvider). Widget dört satır gösteriyor.
       final lines = <String>[];
-      for (final note in active.take(5)) {
+      for (final note in active.take(4)) {
         final title = note.title.trim().isNotEmpty
             ? note.title.trim()
             : note.toPlainText().split('\n').first;
         if (title.trim().isEmpty) continue;
-        lines.add(
-          '• ${title.length > 40 ? '${title.substring(0, 40)}…' : title}',
-        );
+        lines.add(title.length > 40 ? '${title.substring(0, 40)}…' : title);
       }
-      final text = lines.isEmpty ? 'Henüz not yok' : lines.join('\n');
+      final text = lines.join('\n');
       final count = '${active.length} not';
       final payload = '$count\n$text';
       if (payload == _lastPayload) return;

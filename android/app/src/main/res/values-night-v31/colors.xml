@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Material You (Android 12+, KOYU tema). Açık temanın aynası: yüzeyler
+     koyu uçtan (neutral 800/900), metin ve vurgular açık uçtan (100/200)
+     seçilir — kontrast her iki temada da 4.5:1 üzerinde kalır.
+     Bkz. values-v31/colors.xml. -->
+<resources>
+    <color name="widget_surface">@android:color/system_neutral1_800</color>
+    <color name="widget_row">@android:color/system_neutral1_700</color>
+    <color name="widget_outline">@android:color/system_neutral1_600</color>
+
+    <color name="widget_on_surface">@android:color/system_neutral1_50</color>
+    <color name="widget_on_surface_muted">@android:color/system_neutral2_200</color>
+
+    <color name="widget_accent_start">@android:color/system_accent1_200</color>
+    <color name="widget_accent_end">@android:color/system_accent1_300</color>
+    <color name="widget_on_accent">@android:color/system_accent1_900</color>
+
+    <color name="widget_note_start">@android:color/system_accent3_200</color>
+    <color name="widget_note_end">@android:color/system_accent3_300</color>
+    <color name="widget_on_note">@android:color/system_accent3_900</color>
+
+    <color name="widget_icon">@android:color/system_neutral1_50</color>
+    <color name="widget_icon_accent">@android:color/system_accent1_200</color>
+</resources>
