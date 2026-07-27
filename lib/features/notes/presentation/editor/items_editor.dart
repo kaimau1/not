@@ -169,7 +169,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
   /// eklenen satır KOMŞUSUNUN değeriyle doğsun diye tutulur: aksi hâlde satır
   /// bir kare kaymadan çizilip sonraki karede yerine atlıyor ve madde
   /// eklerken titreme görünüyordu.
-  final _pads = <String, ({double start, double end})>{};
+  final _pads = <String, ({double start, double end, double top})>{};
 
   /// Satırın TAMAMINI (tutamaç + kutucuk + metin + sil düğmesi) görselin
   /// yanına kaydırır. Yalnız metni sarmak yetmiyordu: kutucuk ve tutamaç
@@ -188,7 +188,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   /// Yeni satırın başlangıç tahmini: bir üstündeki maddenin kaydırması
   /// (aynı görselin bandındaysa birebir doğrudur).
-  ({double start, double end})? _padOfNeighbour(String id) {
+  ({double start, double end, double top})? _padOfNeighbour(String id) {
     final index = _items.indexWhere((i) => i.id == id);
     if (index <= 0) return null;
     return _pads[_items[index - 1].id];
@@ -749,9 +749,9 @@ class _ItemsEditorState extends State<ItemsEditor> {
 /// Konum yerleşimden SONRA ölçülür; dolgu satırın DIŞINDAN uygulandığı için
 /// ölçüm kendi kendini beslemez (ölçülen kutu her zaman tam genişliktir).
 ///
-/// ponytail: satıra dörtte birden az yer kalıyorsa (görsel sütunu kaplıyor)
-/// satır kaydırılmaz — altına itmek listenin dikey akışını değiştirmeyi
-/// gerektirir; kullanıcı görseli daraltarak/taşıyarak çözer.
+/// Satıra dörtte birden az yer kalıyorsa (görsel sütunu kaplıyor) yana
+/// kaydırma bırakılır ve satır görselin ALTINA itilir — gövde metnindeki
+/// "satırı boşalt" davranışının liste karşılığı.
 class _FloatRow extends StatefulWidget {
   const _FloatRow({
     required this.floats,
@@ -765,10 +765,10 @@ class _FloatRow extends StatefulWidget {
   final RenderBox? Function() pageBox;
 
   /// Ölçüm gelene kadarki başlangıç kaydırması (komşu satırın değeri).
-  final ({double start, double end})? initial;
+  final ({double start, double end, double top})? initial;
 
   /// Ölçüm sonucu — çağıran, sonraki satırlara tahmin olarak verir.
-  final ValueChanged<({double start, double end})>? onMeasured;
+  final ValueChanged<({double start, double end, double top})>? onMeasured;
 
   final Widget child;
 
@@ -779,12 +779,13 @@ class _FloatRow extends StatefulWidget {
 class _FloatRowState extends State<_FloatRow> {
   late double _start = widget.initial?.start ?? 0;
   late double _end = widget.initial?.end ?? 0;
+  late double _top = widget.initial?.top ?? 0;
 
   @override
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     return Padding(
-      padding: EdgeInsets.only(left: _start, right: _end),
+      padding: EdgeInsets.only(left: _start, right: _end, top: _top),
       child: widget.child,
     );
   }
@@ -798,7 +799,11 @@ class _FloatRowState extends State<_FloatRow> {
     }
     final origin = box.localToGlobal(Offset.zero, ancestor: page);
     final width = box.size.width;
-    final bottom = origin.dy + box.size.height;
+    // Kesişme HER ZAMAN satırın itilmemiş bandıyla ölçülür: kutu kendi üst
+    // dolgusunu da içerdiğinden `box.size.height` kullanmak, itildikçe bandı
+    // büyütür, büyüyen bant daha çok görsele değer ve satır sonsuza dek
+    // aşağı kaçardı. `_top` çıkarılınca ölçüm itmeden bağımsız ve kararlı.
+    final bottom = origin.dy + box.size.height - _top;
     var start = 0.0;
     var end = 0.0;
     for (final f in widget.floats) {
@@ -814,15 +819,29 @@ class _FloatRowState extends State<_FloatRow> {
         if (pad > end) end = pad;
       }
     }
+    var top = 0.0;
     if (width - start - end < width * 0.25) {
+      // Yana kaçacak yer yok. Gövde metninde bu durumda satır boşaltılır ve
+      // metin görselin ALTINA iner (text_wrap.dart `_kMinUsableFraction`);
+      // liste maddesinde karşılığı satırı aşağı itmektir. Eskiden satır pes
+      // edip görselin altında kalıyordu.
       start = 0;
       end = 0;
+      for (final f in widget.floats) {
+        if (f.bottom <= origin.dy || f.top >= bottom) continue;
+        if (f.right - origin.dx <= 0 || f.left - origin.dx >= width) continue;
+        final push = f.bottom - origin.dy;
+        if (push > top) top = push;
+      }
     }
-    widget.onMeasured?.call((start: start, end: end));
-    if ((start - _start).abs() > 0.5 || (end - _end).abs() > 0.5) {
+    widget.onMeasured?.call((start: start, end: end, top: top));
+    if ((start - _start).abs() > 0.5 ||
+        (end - _end).abs() > 0.5 ||
+        (top - _top).abs() > 0.5) {
       setState(() {
         _start = start;
         _end = end;
+        _top = top;
       });
     }
   }

@@ -26,28 +26,12 @@
   senkronlandığı için diğer cihazda "senkronlanmadı" görünür (2026-07-24).
 - [ ] **AI videoyu 60 sn ile sınırlı alıyor** — satır içi gönderim boyutu
   sınırı; daha uzun video için Files API / parçalama gerekir (2026-07-24).
-- [ ] **Sağ sarmada tek uzun kelime**: satırda kırılacak boşluk yoksa (tek
-  uzun kelime) sağ kenar dolgusu konamaz, o satır görselin altına girebilir.
-  Tavanı kaldırmak kendi satır kırıcımızı yazmayı gerektirir (2026-07-24).
-- [ ] **Sütunun dörtte üçünden fazlasını kaplayan görselin altında liste
-  satırı kalıyor** — YALNIZ LİSTE MADDELERİNDE: her madde ayrı bir TextField ve
-  dikey yeri listede sabit, o yüzden aşağı itilemiyor. Gövde metninde bu sorun
-  YOK (`text_wrap.dart:164-173` satırı boşaltıp metni görselin altına indiriyor,
-  testi var). Çözüm yolu kendi satır kırıcımız değil, listenin yerleşiminin
-  görsel bantlarını hesaba katması; kullanıcı şimdilik görseli daraltarak
-  çözüyor (2026-07-24, kapsamı düzeltildi 2026-07-27).
 - [ ] **Liste modunda sürükleyerek sıralarken kenarda otomatik kaydırma yok**
   — liste artık serbest görsel tuvalinin içinde `shrinkWrap` ile duruyor, dış
   kaydırıcıyı sürükleme sırasında elle sürmek gerekir (2026-07-24).
 - [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
   gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
   Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).
-- [ ] **Canlı çeviri anahtarsız çalışmıyor** — `firebase_ai 3.14.1` Live
-  Translate'in `translationConfig`/`targetLanguageCode` alanını hiç sunmuyor
-  (2026-07-26 ölçümü), o yüzden dahili AI'a taşınamadı; kullanıcı Gemini
-  anahtarı girmek zorunda. Alternatif yol: cihaz tanıma + ML Kit çevrim dışı
-  çeviri + TTS zinciri (parçaları zaten var: `device_speech`,
-  `offline_translator`, `flutter_tts`) — ayrı oturum işi.
 - [ ] **Editör diktesi Windows'ta AI'sız çalışamaz** — dikte METİN döndürmek
   zorunda, sesli asistandaki "eke düş" yedeği burada uygulanamıyor. Android'de
   cihaz tanıması olduğu için etkilenmiyor (2026-07-26).
@@ -76,6 +60,23 @@
   gerekiyor; App Check hiç aktive edilmemiş durumda (2026-07-24).
 
 ## Sonra yapılacak
+Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
+silme) tamamlandı, kalanlar sırayla:
+- [ ] **Çakışma çözümü + sürüm geçmişi (TEK paket)** — ikisi de notun geçmiş
+  hâllerini saklamayı gerektiriyor; ayrı ayrı yapılırsa aynı veri iki kez
+  modellenir. Şu an alan bazlı `merge: true` ile son yazan sessizce kazanıyor
+  (`notes_repository.dart:150`), kullanıcı uyarı görmüyor. En yüksek risk.
+- [ ] **PPTX'i `Desktop\dosya okuyucu` reposundan al** — orada `pptx_render.dart`
+  1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
+  `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
+  Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
+- [ ] **İngilizce dil desteği** — l10n altyapısı hazır, `app_en.arb` yok.
+- [ ] **RTL hazırlığı → Arapça** — `text_wrap.dart` ve serbest görsel tuvali
+  baştan sona soldan-sağa varsayımıyla yazılı (çapalar, float bantları, sağ
+  kenar dolgusu). Arapça bunlardan ÖNCE eklenirse editör bozuk görünür.
+- [ ] **AI tarafının gözden geçirilmesi** — kullanıcı "detaylı düşünmemiz
+  lazım" dedi (2026-07-27); önce konuşma, sonra plan. Konular: kota/fatura
+  modeli, BYOK, hangi AI özelliği gerçekten kullanılıyor.
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.

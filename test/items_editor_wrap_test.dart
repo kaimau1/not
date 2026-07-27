@@ -115,6 +115,28 @@ void main() {
     expect(second.isPlain, isTrue);
   });
 
+  testWidgets('sutunu kaplayan gorsel satiri ASAGI iter', (tester) async {
+    // Govde metninde bu durumda satir bosaltilip metin gorselin altina
+    // iniyor (text_wrap.dart). Liste maddesinde karsiligi satiri asagi
+    // itmektir; eskiden satir pes edip gorselin ALTINDA kaliyordu.
+    final items = [
+      NoteItem(id: 'a', text: 'Ust madde'),
+      NoteItem(id: 'b', text: 'Alt madde'),
+    ];
+    // Sayfanin neredeyse tamamini kaplayan gorsel: yana kacacak yer yok.
+    await pumpList(tester, items, const [
+      FloatBox(top: 0, left: 0, right: 780, height: 120),
+    ]);
+    await tester.pumpAndSettle();
+
+    final handles = find.byIcon(Icons.drag_indicator);
+    expect(
+      tester.getTopLeft(handles.first).dy,
+      greaterThanOrEqualTo(120.0),
+      reason: 'satir gorselin altina inmedi, ustunde kaldi',
+    );
+  });
+
   testWidgets('gorselin bandindaki satirin tutamaci gorselin altinda kalmaz', (
     tester,
   ) async {

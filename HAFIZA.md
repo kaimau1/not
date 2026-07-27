@@ -225,3 +225,29 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   davranislarini elle ustlenmek demek. Kalan iki gercek eksik bunu
   gerektirmiyor - liste maddesi itilmesi YERLESIM (layout) isi, tek uzun
   kelime ise hedefli kucuk bir duzeltme.
+- 2026-07-27: **Kapsam kesme (canli ceviri + Gmail) ve iki sarma tavaninin
+  kaldirilmasi.**
+  KARAR (kullanici, 2026-07-27): canli ceviri ve Gmail ozeti KALDIRILDI - not
+  almayla iliskisiz, bakim maliyeti yuksek; Gmail readonly scope'u ayrica Play
+  Store'da ayri guvenlik denetimi (yillik ucuncu taraf denetim) gerektiriyordu.
+  Olculen sonuc: lib 26.789 -> 25.069 satir, 112 -> 104 dosya, 4 bagimlilik
+  dustu, **release APK 151.1 MB -> 107.0 MB** (buyuk kismi ML Kit ceviri
+  modelleri). 46 olu l10n anahtari temizlendi (10'u zaten oncesinde oluydu).
+  TUZAK: `app_tr.arb`'yi ConvertFrom-Json/ConvertTo-Json ile yeniden yazmak
+  TUM dosyanin bicimini degistiriyor (girinti + `":  "`) ve devasa bir diff
+  cikariyor; arb'den anahtar silmek icin satir bazli filtre kullanilmali.
+  Karistirilmamasi gerekenler (silinmedi): `gemini_service.translateText` +
+  `AiTask.translate` nottaki metni cevirme icin, `flutter_tts`/`speech_output`
+  notu sesli okuma icin, `desktop_oauth_flow` normal masaustu girisi icin.
+  **Iki sarma tavani kalkti** (ikisi de kendi satir kiricimizi YAZMADAN):
+  (1) Liste maddesi: `_FloatRowState._measure` kalan genislik %25'in altina
+  dusunce `start = end = 0` yapip PES EDIYORDU, satir gorselin altinda
+  kaliyordu. Artik satir asagi itiliyor (`top` dolgusu). TUZAK: kesisme bandi
+  `box.size.height` ile olculurse kutu kendi ust dolgusunu icerdigi icin bant
+  itildikce buyur ve satir sonsuza kadar asagi kacar - olcum `- _top` ile
+  itmeden bagimsiz tutulmali.
+  (2) `planTextWrap`: sag kenar dolgusu icin kirilacak bosluk bulunamayinca
+  (tek uzun kelime, `cut == -1`) hicbir sey yapilmiyordu. Artik satir tumuyle
+  bosaltiliyor (soldaki genis gorselin yaptiginin aynisi). Yan etki koruma:
+  dolgu yalnizca satir gercekten dar sutuna TASIYORSA denenir
+  (`overflowsIntoFloat`), yoksa sigan kisa satirlar bosuna asagi itilirdi.

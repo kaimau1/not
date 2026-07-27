@@ -183,7 +183,12 @@ WrapPlan planTextWrap({
       continue; // aynı satırı yeni genişlikle yeniden ölç
     }
 
-    if (indentEnd > 0 && rightPadded.add(line)) {
+    // Satır zaten dar sütuna sığıyorsa dolguya gerek yok — sığan metni
+    // kırmaya ya da aşağı itmeye kalkmak boşuna satır harcar.
+    final lineWidth = line < metrics.length ? metrics[line].width : 0.0;
+    final overflowsIntoFloat = lineWidth > columnWidth - indentEnd;
+
+    if (indentEnd > 0 && overflowsIntoFloat && rightPadded.add(line)) {
       final cut = _rightPadOffset(
         painter,
         display,
@@ -192,12 +197,18 @@ WrapPlan planTextWrap({
         columnWidth - indentEnd,
         top + lineHeight / 2,
       );
-      // cut == -1: satırda kırılacak boşluk yok (tek uzun kelime ya da boş
-      // satır). ponytail: o satır sağdaki görselin altına girebilir; tavanı
-      // kaldırmak kendi satır kırıcımızı yazmayı gerektirir.
       if (cut >= 0) {
         display = display.replaceRange(cut, cut, '$kWrapGlueChar$kWrapAnchorChar');
         widths.insert(_anchorCountBefore(display, cut), indentEnd);
+        continue;
+      }
+      // cut == -1: satırda kırılacak boşluk yok (tek uzun kelime). Sağa dolgu
+      // konamıyor ve kelime görselin altından geçip üstüne biniyordu. Çözüm
+      // soldaki geniş görselle aynı: satırı TÜMÜYLE boşalt, kelime bir alt
+      // satıra insin. Görselin bandı bitene dek satırlar böyle boşaltılır.
+      if (!hasStartAnchor) {
+        display = display.replaceRange(start, start, kWrapAnchorChar);
+        widths.insert(_anchorCountBefore(display, start), columnWidth);
         continue;
       }
     }

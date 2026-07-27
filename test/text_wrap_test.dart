@@ -101,6 +101,39 @@ void main() {
     expect(plan.widths.length, lessThanOrEqualTo(4));
   });
 
+  test('sagdaki gorselin altina giren tek uzun kelime asagi iner', () {
+    // Satirda kirilacak bosluk yok: saga dolgu konamiyordu ve kelime
+    // gorselin ALTINDAN gecip uzerine biniyordu. Beklenen: satir bosaltilir,
+    // kelime gorselin altina iner (%25 kuralinin yaptiginin aynisi).
+    const tekKelime =
+        'olaganustuyuksekcozunurluklugorsellestirmesistemidokumantasyonu';
+    final plan = planTextWrap(
+      logical: tekKelime,
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    );
+    expect(stripWrapAnchors(plan.display), tekKelime);
+    expect(
+      plan.widths.any((w) => w == 300),
+      isTrue,
+      reason: 'satir bosaltilmadi, kelime gorselin altinda kaldi',
+    );
+    expect(startAnchors(plan.display), greaterThan(0));
+  });
+
+  test('dar sutuna sigan kisa satir bosuna asagi itilmez', () {
+    // Yukaridaki duzeltmenin yan etkisi olmamali: gorselin yanina RAHAT
+    // sigan metin yerinde kalir.
+    final plan = planTextWrap(
+      logical: 'kisa',
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 180, right: 300, height: 40)],
+    );
+    expect(plan.widths.any((w) => w == 300), isFalse);
+  });
+
   test('bos metinde de soldaki gorsel imleci saga iter', () {
     // Imlec bug'i: metin bosken hic capa yoksa imlec sutunun solunda,
     // gorselin ustunde yanip soner.
