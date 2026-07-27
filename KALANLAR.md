@@ -91,7 +91,8 @@ silme) tamamlandı, kalanlar sırayla:
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
   Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
-- [ ] **RTL hazırlığı → Arapça** — `text_wrap.dart` ve serbest görsel tuvali
+- [ ] **RTL hazırlığı → Arapça** (kullanıcı 2026-07-28'de erteledi: "sonra
+  yaparız"; İngilizce bitti, Arapça beklemede) — `text_wrap.dart` ve görsel tuvali
   baştan sona soldan-sağa varsayımıyla yazılı (çapalar, float bantları, sağ
   kenar dolgusu). Arapça bunlardan ÖNCE eklenirse editör bozuk görünür.
   Yapılacak: `planTextWrap`'e yön geçir (parametre var, `WrapTextController`

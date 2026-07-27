@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "lib/app/router.dart": {
-    "mtime": 1785182172.8330033,
-    "ast_hash": "3a3e603f75f346d2571574f9721abf6b",
+    "mtime": 1785185340.4414744,
+    "ast_hash": "b6cc9c5f8753fc8b5f684d6919a82078",
     "semantic_hash": ""
   },
   "lib/app/theme/app_theme.dart": {
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/data/gemini_service.dart": {
-    "mtime": 1785182228.6031084,
-    "ast_hash": "3511311615eca7c358d6c66b0dfae074",
+    "mtime": 1785185354.0615442,
+    "ast_hash": "9acc7dd8b0cd74069a758db30573bd8f",
     "semantic_hash": ""
   },
   "lib/features/ai/data/semantic_search.dart": {
@@ -112,11 +112,6 @@
   "lib/features/ai/presentation/chat_screen.dart": {
     "mtime": 1784454898.715424,
     "ast_hash": "b6de1d104679798264a818120742d3e6",
-    "semantic_hash": ""
-  },
-  "lib/features/ai/presentation/suggestions_screen.dart": {
-    "mtime": 1784454898.7284327,
-    "ast_hash": "71e10a54e415c907b4d4a91b729f7b54",
     "semantic_hash": ""
   },
   "lib/features/auth/data/android_google_auth.dart": {
@@ -270,18 +265,18 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations.dart": {
-    "mtime": 1785184873.7315776,
-    "ast_hash": "e713be7fa68ba03cf59fc53befc35c79",
+    "mtime": 1785185814.3269863,
+    "ast_hash": "c0bb2585ff04e084c1dfc6baf6ff9701",
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_tr.dart": {
-    "mtime": 1785184873.7229078,
-    "ast_hash": "6b9f504e6e17ca9dc9683b87132804bc",
+    "mtime": 1785185814.31791,
+    "ast_hash": "52b1492ef4e3ccfebafafc315bf3b9e0",
     "semantic_hash": ""
   },
   "lib/main.dart": {
-    "mtime": 1784454899.0915947,
-    "ast_hash": "d0aee19c3cb9fed5233f1c152862a2f4",
+    "mtime": 1785185600.8872836,
+    "ast_hash": "b0a3a072faac46a5f82bc08630f04c75",
     "semantic_hash": ""
   },
   "test/note_test.dart": {
@@ -350,8 +345,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1785184992.8109117,
-    "ast_hash": "1c423674e5ca16e01b82c5c9f1835897",
+    "mtime": 1785185985.0411935,
+    "ast_hash": "eaf876b53066749779e58439de324c77",
     "semantic_hash": ""
   },
   "README.md": {
@@ -375,8 +370,8 @@
     "semantic_hash": ""
   },
   "pubspec.yaml": {
-    "mtime": 1785182518.4686985,
-    "ast_hash": "ae64a76cd987decbdec088b628734e22",
+    "mtime": 1785185403.9467626,
+    "ast_hash": "de017f3a8e0cdca85b97fdf8677c322e",
     "semantic_hash": ""
   },
   "windows/CMakeLists.txt": {
@@ -640,8 +635,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/presentation/ai_text_result.dart": {
-    "mtime": 1784454898.7069883,
-    "ast_hash": "3ce4bab29ea9b5ac1147d85b9c9deee0",
+    "mtime": 1785185050.5866075,
+    "ast_hash": "630dabee1bdb70861e90962193ec354f",
     "semantic_hash": ""
   },
   "lib/core/utils/speech_output.dart": {
@@ -840,8 +835,8 @@
     "semantic_hash": ""
   },
   "lib/features/ai/presentation/ai_hub_screen.dart": {
-    "mtime": 1785182132.5422575,
-    "ast_hash": "dda46472e04d2aeb8b8bf5ae5a517e54",
+    "mtime": 1785185344.6224084,
+    "ast_hash": "faa2ccd001fb2a708c6e594351081e1c",
     "semantic_hash": ""
   },
   "test/pdf_ink_test.dart": {
@@ -850,8 +845,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1785183186.5857232,
-    "ast_hash": "c601105be908d85b7beecffcc48c0fb9",
+    "mtime": 1785185961.4150653,
+    "ast_hash": "d3c91a1d50fc1eff808c20a7d1a53335",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -1040,8 +1035,8 @@
     "semantic_hash": ""
   },
   "lib/l10n/generated/app_localizations_en.dart": {
-    "mtime": 1785184873.715793,
-    "ast_hash": "5c1a738f9c73270a55f8f4aab768a2f6",
+    "mtime": 1785185814.3102279,
+    "ast_hash": "8c32bd4d68fb586c565ebe17e8cefec1",
     "semantic_hash": ""
   },
   "test/localization_test.dart": {
