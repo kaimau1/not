@@ -3,8 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../gmail/data/gmail_auth.dart';
-import '../../gmail/presentation/mail_summary_screen.dart';
 import '../../notes/data/notes_repository.dart';
 import '../data/ai_gate.dart';
 import '../data/daily_cache.dart';
@@ -12,10 +10,9 @@ import '../data/gemini_service.dart';
 import 'ai_generate_prompt.dart';
 import 'ai_text_result.dart';
 
-/// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar +
-/// (Gmail bağlıysa) önemli e-postalar, tek AI özetinde. Sonuç günde bir kez
-/// üretilip diske yazılır; ekranlar arası ve uygulama yeniden açılışında
-/// korunur, "Yenile" ile hemen tazelenir.
+/// Günlük brifing: bugünün hatırlatıcıları + son notlardaki yapılacaklar, tek
+/// AI özetinde. Sonuç günde bir kez üretilip diske yazılır; ekranlar arası ve
+/// uygulama yeniden açılışında korunur, "Yenile" ile hemen tazelenir.
 final briefingProvider = AsyncNotifierProvider<BriefingNotifier, String>(
   BriefingNotifier.new,
 );
@@ -74,27 +71,6 @@ class BriefingNotifier extends StringDailyCache {
       if (++count >= 15) break;
     }
     if (count == 0) buffer.writeln('- (yok)');
-
-    // Gmail bağlıysa önemli e-postalar (hata veya yavaşlık brifingi
-    // engellemesin: 20 saniyede yanıt gelmezse e-postasız devam edilir).
-    if (ref.read(gmailConnectedProvider)) {
-      try {
-        final emails = await ref
-            .read(importantEmailsProvider.future)
-            .timeout(const Duration(seconds: 20));
-        buffer.writeln('\nÖNEMLİ E-POSTALAR:');
-        if (emails.isEmpty) {
-          buffer.writeln('- (yok)');
-        }
-        for (final email in emails.take(8)) {
-          buffer.writeln(
-            '- ${email.from}: ${email.subject} — ${email.summary}',
-          );
-        }
-      } catch (_) {
-        // E-posta alınamazsa brifing notlarla devam eder.
-      }
-    }
 
     return ref.read(geminiServiceProvider).composeBriefing(buffer.toString());
   }

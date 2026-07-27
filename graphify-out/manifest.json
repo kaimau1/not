@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/data/reminder_service.dart": {
-    "mtime": 1784454898.8222227,
-    "ast_hash": "7a1bddb3acceb73a01e3168cae711bc0",
+    "mtime": 1785178504.1672685,
+    "ast_hash": "94ee8bca13dd981e9bb17dd6e6568d33",
     "semantic_hash": ""
   },
   "lib/features/notes/data/upload_queue.dart": {
@@ -245,13 +245,13 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/items_editor.dart": {
-    "mtime": 1785088479.748454,
-    "ast_hash": "c00991aa351928a5fd7f6042dd82b95b",
+    "mtime": 1785178545.3629658,
+    "ast_hash": "3399bd20ec0de348c25d573966e51eca",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_editor_screen.dart": {
-    "mtime": 1785094873.039218,
-    "ast_hash": "158c384215318ee044b70b2ebb4ee92e",
+    "mtime": 1785181078.264918,
+    "ast_hash": "9ef1a1f8275ba6abb9103f7f3d60bbc0",
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/note_card.dart": {
@@ -385,8 +385,8 @@
     "semantic_hash": ""
   },
   "HAFIZA.md": {
-    "mtime": 1785095296.4258606,
-    "ast_hash": "eb0b01d74f64bdd44e3a5bdd74a1538e",
+    "mtime": 1785181429.3958278,
+    "ast_hash": "5e6bb5798a1119258d30d52add1b8dce",
     "semantic_hash": ""
   },
   "README.md": {
@@ -825,8 +825,8 @@
     "semantic_hash": ""
   },
   "lib/features/notes/presentation/editor/note_images.dart": {
-    "mtime": 1784920996.654248,
-    "ast_hash": "b5a374bf85af2df4fd875161445de64d",
+    "mtime": 1785181102.1976566,
+    "ast_hash": "906abf507cc8b4da376aa87f8bae1c73",
     "semantic_hash": ""
   },
   ".claude/settings.json": {
@@ -895,8 +895,8 @@
     "semantic_hash": ""
   },
   "KALANLAR.md": {
-    "mtime": 1785095315.933391,
-    "ast_hash": "3e674afe9878b5ed5fe010ac4768faa9",
+    "mtime": 1785181440.7832398,
+    "ast_hash": "a736b6c03d2844d7f6a5150a8a0050da",
     "semantic_hash": ""
   },
   "lib/features/notes/data/pptx_render.dart": {
@@ -1072,6 +1072,16 @@
   ".claude/skills/flutter-ui/flutter-theme-system.md": {
     "mtime": 1785094553.6300597,
     "ast_hash": "c58d829df0ec049445a06f2328d3729f",
+    "semantic_hash": ""
+  },
+  "test/note_hint_position_test.dart": {
+    "mtime": 1785181118.5512917,
+    "ast_hash": "b0ccf322eb68589815f631c8b3853d6c",
+    "semantic_hash": ""
+  },
+  "test/reminder_prefix_test.dart": {
+    "mtime": 1785178570.950748,
+    "ast_hash": "a9e06b004d3cf2c3be218f25ff417f1d",
     "semantic_hash": ""
   }
 }

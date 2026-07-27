@@ -556,43 +556,8 @@ class GeminiService {
     },
   ], preferModel: _taskModel(AiTask.document));
 
-  /// Konuşma çevirmeni: ses kaydındaki konuşmanın dilini (A veya B) tespit
-  /// eder, dökümünü çıkarır ve karşı dile çevirir.
-  Future<SpeechTranslation> translateSpeech({
-    required Uint8List bytes,
-    required String mimeType,
-    required String languageA,
-    required String languageB,
-  }) async {
-    final raw = await _generate([
-      {
-        'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
-      },
-      {
-        'text':
-            'Bu ses kaydı, $languageA ve $languageB konuşan iki kişi '
-            'arasındaki bir sohbetin tek cümlesidir/turudur. '
-            '1) Konuşulan dili tespit et ($languageA mı $languageB mi). '
-            '2) Konuşmayı kendi dilinde yazıya dök. '
-            '3) Karşı dile doğal biçimde çevir. '
-            'Yanıtı YALNIZCA şu JSON şemasında ver: '
-            '{"detectedLanguage": "dil adı", "transcript": "döküm", '
-            '"translation": "çeviri"}',
-      },
-    ], jsonOutput: true, preferModel: _taskModel(AiTask.translate));
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map) {
-      throw const GeminiException('Çeviri yanıtı çözümlenemedi');
-    }
-    return SpeechTranslation(
-      detectedLanguage: decoded['detectedLanguage'] as String? ?? '',
-      transcript: decoded['transcript'] as String? ?? '',
-      translation: decoded['translation'] as String? ?? '',
-    );
-  }
-
-  /// Ham brifing verisini (hatırlatıcılar, notlar, e-postalar) samimi ve
-  /// kısa bir günlük brifinge dönüştürür.
+  /// Ham brifing verisini (hatırlatıcılar, notlar) samimi ve kısa bir günlük
+  /// brifinge dönüştürür.
   Future<String> composeBriefing(String rawData) => _generate([
     {
       'text':

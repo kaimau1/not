@@ -21,22 +21,10 @@ class AiHubScreen extends StatelessWidget {
         () => context.push('/chat'),
       ),
       (
-        Icons.translate,
-        l10n.translatorTitle,
-        l10n.hubTranslateInfo,
-        () => context.push('/translate'),
-      ),
-      (
         Icons.auto_awesome_outlined,
         l10n.aiSuggestions,
         l10n.hubSuggestionsInfo,
         () => context.push('/suggestions'),
-      ),
-      (
-        Icons.mark_email_unread_outlined,
-        l10n.importantEmails,
-        l10n.hubMailInfo,
-        () => context.push('/mail'),
       ),
       (
         Icons.wb_sunny_outlined,

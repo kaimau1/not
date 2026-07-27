@@ -11,7 +11,6 @@ import '../features/ai/presentation/chat_screen.dart';
 import '../features/ai/presentation/suggestions_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
-import '../features/gmail/presentation/mail_summary_screen.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/archive_screen.dart';
@@ -22,7 +21,6 @@ import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/translate/presentation/translator_screen.dart';
 import 'split_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -91,19 +89,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const PrivacyScreen(),
       ),
       GoRoute(
-        path: '/mail',
-        builder: (context, state) => const MailSummaryScreen(),
-      ),
-      GoRoute(
         path: '/suggestions',
         builder: (context, state) => const SuggestionsScreen(),
       ),
       GoRoute(path: '/ai', builder: (context, state) => const AiHubScreen()),
       GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
-      GoRoute(
-        path: '/translate',
-        builder: (context, state) => const TranslatorScreen(),
-      ),
       GoRoute(
         path: '/briefing',
         builder: (context, state) => const BriefingScreen(),

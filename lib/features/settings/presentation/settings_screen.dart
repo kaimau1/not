@@ -18,7 +18,6 @@ import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_providers.dart';
-import '../../gmail/data/gmail_auth.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -108,32 +107,12 @@ class SettingsScreen extends ConsumerWidget {
                   const _ForeignSpeechRateSlider(),
                 ],
               ),
-              _SettingsGroup(
-                title: l10n.settingsTranslate,
-                icon: Icons.translate,
-                children: [
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l10n.translateQuality),
-                    subtitle: Text(l10n.translateQualityInfo),
-                    value: ref.watch(preferGeminiTranslateProvider),
-                    onChanged: (value) => ref
-                        .read(preferGeminiTranslateProvider.notifier)
-                        .set(value),
-                  ),
-                ],
-              ),
               if (const PermissionsService().isSupported)
                 _SettingsGroup(
                   title: l10n.permissionsTitle,
                   icon: Icons.verified_user_outlined,
                   children: const [_PermissionsSection()],
                 ),
-              _SettingsGroup(
-                title: l10n.settingsGmail,
-                icon: Icons.mail_outline,
-                children: const [_GmailSection()],
-              ),
               // Senkron: eklerin buluta otomatik yükleme boyut sınırı.
               _SettingsGroup(
                 title: l10n.syncTitle,
@@ -1362,98 +1341,6 @@ class _AdvancedAiSection extends ConsumerWidget {
   }
 }
 
-class _GmailSection extends ConsumerStatefulWidget {
-  const _GmailSection();
-
-  @override
-  ConsumerState<_GmailSection> createState() => _GmailSectionState();
-}
-
-class _GmailSectionState extends ConsumerState<_GmailSection> {
-  bool _busy = false;
-
-  Future<void> _toggle(bool connected) async {
-    setState(() => _busy = true);
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final auth = ref.read(gmailAuthProvider);
-      if (connected) {
-        await auth.disconnect();
-      } else {
-        await auth.connect();
-      }
-      ref.invalidate(gmailConnectedProvider);
-      ref.invalidate(gmailAccountEmailProvider);
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.genericError(e.toString()))),
-      );
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final connected = ref.watch(gmailConnectedProvider);
-    final accountEmail = ref.watch(gmailAccountEmailProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.gmailInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            if (connected) ...[
-              Chip(
-                avatar: Icon(
-                  Icons.check_circle,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                label: Text(
-                  accountEmail == null || accountEmail.isEmpty
-                      ? l10n.gmailConnected
-                      : accountEmail,
-                ),
-              ),
-              TextButton(
-                onPressed: _busy ? null : () => _toggle(false),
-                child: Text(l10n.gmailChangeAccount),
-              ),
-              TextButton(
-                onPressed: _busy ? null : () => _toggle(true),
-                child: Text(l10n.disconnectGmail),
-              ),
-            ] else
-              FilledButton.tonalIcon(
-                onPressed: _busy ? null : () => _toggle(false),
-                icon: _busy
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.link),
-                label: Text(l10n.connectGmail),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
 
 /// Tüm notları (arşiv dahil, çöp hariç) tek JSON dosyası olarak dışa
 /// aktarıp paylaşım sayfasını açar. Ek dosyaları bulutta kaldığından

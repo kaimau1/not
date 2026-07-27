@@ -274,12 +274,6 @@ abstract class AppLocalizations {
   /// **'Yeni öğe'**
   String get newItemHint;
 
-  /// No description provided for @checkedItemsCount.
-  ///
-  /// In tr, this message translates to:
-  /// **'İşaretlenenler ({count})'**
-  String checkedItemsCount(int count);
-
   /// No description provided for @moreItemsCount.
   ///
   /// In tr, this message translates to:
@@ -724,48 +718,6 @@ abstract class AppLocalizations {
   /// **'Anahtarı sil'**
   String get removeApiKey;
 
-  /// No description provided for @settingsGmail.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail'**
-  String get settingsGmail;
-
-  /// No description provided for @connectGmail.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail\'i Bağla'**
-  String get connectGmail;
-
-  /// No description provided for @gmailConnected.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gmail bağlı'**
-  String get gmailConnected;
-
-  /// No description provided for @gmailChangeAccount.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hesap değiştir'**
-  String get gmailChangeAccount;
-
-  /// No description provided for @gmailInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.'**
-  String get gmailInfo;
-
-  /// No description provided for @disconnectGmail.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlantıyı kes'**
-  String get disconnectGmail;
-
-  /// No description provided for @importantEmails.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önemli E-postalar'**
-  String get importantEmails;
-
   /// No description provided for @refresh.
   ///
   /// In tr, this message translates to:
@@ -813,24 +765,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Açık kaynak lisansları'**
   String get licensesTitle;
-
-  /// No description provided for @mailEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Önemli e-posta bulunamadı'**
-  String get mailEmpty;
-
-  /// No description provided for @mailScanning.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-postalar taranıyor...'**
-  String get mailScanning;
-
-  /// No description provided for @mailWhyImportant.
-  ///
-  /// In tr, this message translates to:
-  /// **'Neden önemli: {reason}'**
-  String mailWhyImportant(String reason);
 
   /// No description provided for @suggestionsTitle.
   ///
@@ -1084,125 +1018,11 @@ abstract class AppLocalizations {
   /// **'Belirlediğin saatler arasında koyu temaya geçilir'**
   String get darkScheduleInfo;
 
-  /// No description provided for @convertToNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Nota çevir'**
-  String get convertToNote;
-
-  /// No description provided for @convertToReminderNote.
-  ///
-  /// In tr, this message translates to:
-  /// **'Hatırlatıcılı not'**
-  String get convertToReminderNote;
-
-  /// No description provided for @noteCreatedFromEmail.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-postadan not oluşturuldu'**
-  String get noteCreatedFromEmail;
-
-  /// No description provided for @mailDueDate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son tarih: {date}'**
-  String mailDueDate(String date);
-
-  /// No description provided for @translatorTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çevirmen'**
-  String get translatorTitle;
-
   /// No description provided for @aiTranslate.
   ///
   /// In tr, this message translates to:
   /// **'Çevir'**
   String get aiTranslate;
-
-  /// No description provided for @swapLanguages.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dilleri değiştir'**
-  String get swapLanguages;
-
-  /// No description provided for @liveMode.
-  ///
-  /// In tr, this message translates to:
-  /// **'Canlı'**
-  String get liveMode;
-
-  /// No description provided for @pushToTalkMode.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bas-Konuş'**
-  String get pushToTalkMode;
-
-  /// No description provided for @liveTranslateInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gemini 3.5 Live Translate ile kesintisiz çeviri: başlatın ve konuşun; hangi dilde konuşulduğu otomatik algılanır, karşı dile hem sesli hem yazılı çevrilir.'**
-  String get liveTranslateInfo;
-
-  /// No description provided for @startLive.
-  ///
-  /// In tr, this message translates to:
-  /// **'Canlı çeviriyi başlat'**
-  String get startLive;
-
-  /// No description provided for @stopLive.
-  ///
-  /// In tr, this message translates to:
-  /// **'Durdur'**
-  String get stopLive;
-
-  /// No description provided for @connecting.
-  ///
-  /// In tr, this message translates to:
-  /// **'Bağlanıyor...'**
-  String get connecting;
-
-  /// No description provided for @heardLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Duyulan'**
-  String get heardLabel;
-
-  /// No description provided for @translationLabel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çeviri'**
-  String get translationLabel;
-
-  /// No description provided for @liveTranslateError.
-  ///
-  /// In tr, this message translates to:
-  /// **'Canlı çeviri hatası: {error}'**
-  String liveTranslateError(String error);
-
-  /// No description provided for @pushToTalk.
-  ///
-  /// In tr, this message translates to:
-  /// **'Konuşmak için dokun'**
-  String get pushToTalk;
-
-  /// No description provided for @pushToTalkHint.
-  ///
-  /// In tr, this message translates to:
-  /// **'Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.'**
-  String get pushToTalkHint;
-
-  /// No description provided for @autoSpeak.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çeviriyi sesli oku'**
-  String get autoSpeak;
-
-  /// No description provided for @speakTranslation.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli oku'**
-  String get speakTranslation;
 
   /// No description provided for @voiceCommand.
   ///
@@ -1395,12 +1215,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'PDF hakkında bir soru yaz...'**
   String get pdfChatInputHint;
-
-  /// No description provided for @voiceNoteTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli Not'**
-  String get voiceNoteTitle;
 
   /// No description provided for @voiceCaptureHint.
   ///
@@ -1630,12 +1444,6 @@ abstract class AppLocalizations {
   /// **'Oluştur'**
   String get aiGenerate;
 
-  /// No description provided for @aiScanEmails.
-  ///
-  /// In tr, this message translates to:
-  /// **'E-postaları tara'**
-  String get aiScanEmails;
-
   /// No description provided for @aiGeneratedTodayInfo.
   ///
   /// In tr, this message translates to:
@@ -1762,12 +1570,6 @@ abstract class AppLocalizations {
   /// **'Video AI\'ya göndermek için çok büyük ({mb} MB). Daha kısa çek.'**
   String videoTooBigForAi(int mb);
 
-  /// No description provided for @aiRunning.
-  ///
-  /// In tr, this message translates to:
-  /// **'Yapay zekâ çalışıyor…'**
-  String get aiRunning;
-
   /// No description provided for @permCamera.
   ///
   /// In tr, this message translates to:
@@ -1810,23 +1612,11 @@ abstract class AppLocalizations {
   /// **'Görüntülü not'**
   String get newVideoNote;
 
-  /// No description provided for @videoNoteRecording.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kamera açılıyor…'**
-  String get videoNoteRecording;
-
   /// No description provided for @videoLocalOnly.
   ///
   /// In tr, this message translates to:
   /// **'Bu video yalnızca bu cihazda saklanır (buluta yüklenmez)'**
   String get videoLocalOnly;
-
-  /// No description provided for @videoTooLong.
-  ///
-  /// In tr, this message translates to:
-  /// **'Video çok uzun: en fazla {seconds} saniye'**
-  String videoTooLong(int seconds);
 
   /// No description provided for @videoToNote.
   ///
@@ -1869,12 +1659,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sesli not'**
   String get newVoiceCapture;
-
-  /// No description provided for @voiceCaptureActive.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses kaydediliyor, konuşman nota yazılıyor…'**
-  String get voiceCaptureActive;
 
   /// No description provided for @suggestTitle.
   ///
@@ -2008,18 +1792,6 @@ abstract class AppLocalizations {
   /// **'Durdur'**
   String get speechStop;
 
-  /// No description provided for @speechVoice.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ses tipi'**
-  String get speechVoice;
-
-  /// No description provided for @speechVoiceSubtitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Sesli okumada kullanilacak ses'**
-  String get speechVoiceSubtitle;
-
   /// No description provided for @speechRate.
   ///
   /// In tr, this message translates to:
@@ -2037,12 +1809,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu cihazda yuklu ses bulunamadi'**
   String get speechNoVoices;
-
-  /// No description provided for @aiSummarySpeak.
-  ///
-  /// In tr, this message translates to:
-  /// **'Ozeti sesli oku'**
-  String get aiSummarySpeak;
 
   /// No description provided for @speechVoiceTurkish.
   ///
@@ -2062,35 +1828,11 @@ abstract class AppLocalizations {
   /// **'Diğer diller otomatik olarak erkek sesiyle okunur'**
   String get speechVoiceAutoInfo;
 
-  /// No description provided for @nothingHeard.
-  ///
-  /// In tr, this message translates to:
-  /// **'Konuşma algılanmadı'**
-  String get nothingHeard;
-
   /// No description provided for @listening.
   ///
   /// In tr, this message translates to:
   /// **'Dinleniyor...'**
   String get listening;
-
-  /// No description provided for @translateDownloadingModel.
-  ///
-  /// In tr, this message translates to:
-  /// **'Dil modeli indiriliyor (bir kez)...'**
-  String get translateDownloadingModel;
-
-  /// No description provided for @translateQuality.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gemini ile çevir (daha iyi kalite)'**
-  String get translateQuality;
-
-  /// No description provided for @translateQualityInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Kapalıyken çeviri cihazda yapılır: bedava, çevrimdışı ve kota harcamaz. Açıkken Gemini kullanılır — deyim ve uzun cümlede daha iyi, ama kota harcar. ML Kit\'in desteklemediği dillerde (ör. Azerbaycanca) bu ayar ne olursa olsun Gemini kullanılır.'**
-  String get translateQualityInfo;
 
   /// No description provided for @listenPlay.
   ///
@@ -2338,12 +2080,6 @@ abstract class AppLocalizations {
   /// **'Sesli okuma'**
   String get settingsSpeech;
 
-  /// No description provided for @settingsTranslate.
-  ///
-  /// In tr, this message translates to:
-  /// **'Çeviri'**
-  String get settingsTranslate;
-
   /// No description provided for @aiAdvanced.
   ///
   /// In tr, this message translates to:
@@ -2470,23 +2206,11 @@ abstract class AppLocalizations {
   /// **'Notlarına dayanarak soru-cevap'**
   String get hubChatInfo;
 
-  /// No description provided for @hubTranslateInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Metin ve konuşma çevirisi'**
-  String get hubTranslateInfo;
-
   /// No description provided for @hubSuggestionsInfo.
   ///
   /// In tr, this message translates to:
   /// **'Notlarından çıkarılmış somut öneriler'**
   String get hubSuggestionsInfo;
-
-  /// No description provided for @hubMailInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Gelen kutundaki önemli e-postalar'**
-  String get hubMailInfo;
 
   /// No description provided for @hubBriefingInfo.
   ///

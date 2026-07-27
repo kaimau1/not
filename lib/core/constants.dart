@@ -14,8 +14,7 @@ abstract final class AppConstants {
   /// Sıralı model tercihi: biri 404 (model yok) veya 429 (kota) verirse
   /// sıradaki denenir. API'den çekilen gerçek listeyle kesiştirilir ve
   /// listede olmayan yeni flash modelleri sona eklenir (GeminiService).
-  /// Varsayılan model 3.1 flash lite'tır (hızlı + ucuz); canlı çeviri
-  /// [geminiLiveTranslateModel] ile ayrı modelde kalır.
+  /// Varsayılan model 3.1 flash lite'tır (hızlı + ucuz).
   static const List<String> geminiModelPreference = [
     'gemini-3.1-flash-lite',
     'gemini-3.5-flash',
@@ -55,11 +54,6 @@ abstract final class AppConstants {
   /// Her bu kadar karakter girdi için +1 puan (token maliyetinin kaba
   /// karşılığı — uzun sohbet geçmişi de faturaya yazılıyor).
   static const int aiCharsPerPoint = 4000;
-  static const String geminiLiveTranslateModel =
-      'gemini-3.5-live-translate-preview';
-  static const String geminiLiveWsUrl =
-      'wss://generativelanguage.googleapis.com/ws/'
-      'google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
   // Ek sınırları — dosya boyutu premium'a göre değişir. Sunucu (storage.rules)
   // 50 MB tavanı zorlar; ücretsiz 10 MB sınırı uygulama tarafında (yükleme
@@ -107,7 +101,4 @@ abstract final class AppConstants {
   static const String serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
   );
-
-  static const String gmailReadonlyScope =
-      'https://www.googleapis.com/auth/gmail.readonly';
 }

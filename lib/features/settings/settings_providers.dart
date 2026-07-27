@@ -286,27 +286,6 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
   }
 }
 
-/// Çeviri nerede yapılsın: cihazda (ML Kit, bedava/çevrimdışı) mi, Gemini'de
-/// (daha iyi kalite, kota harcar) mi. Varsayılan cihaz — bas-konuş modu böylece
-/// hiçbir kota yakmaz. ML Kit'in desteklemediği dillerde (ör. Azerbaycanca)
-/// bu ayar ne olursa olsun Gemini'ye düşülür.
-final preferGeminiTranslateProvider =
-    NotifierProvider<PreferGeminiTranslateNotifier, bool>(
-      PreferGeminiTranslateNotifier.new,
-    );
-
-class PreferGeminiTranslateNotifier extends Notifier<bool> {
-  static const _key = 'prefer_gemini_translate';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
-
 /// Günlük brifing bildirimi ayarları.
 class BriefingSettings {
   const BriefingSettings({required this.enabled, required this.minutes});

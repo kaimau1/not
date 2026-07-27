@@ -107,11 +107,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get newItemHint => 'Yeni öğe';
 
   @override
-  String checkedItemsCount(int count) {
-    return 'İşaretlenenler ($count)';
-  }
-
-  @override
   String moreItemsCount(int count) {
     return '+$count öğe daha';
   }
@@ -353,28 +348,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get removeApiKey => 'Anahtarı sil';
 
   @override
-  String get settingsGmail => 'Gmail';
-
-  @override
-  String get connectGmail => 'Gmail\'i Bağla';
-
-  @override
-  String get gmailConnected => 'Gmail bağlı';
-
-  @override
-  String get gmailChangeAccount => 'Hesap değiştir';
-
-  @override
-  String get gmailInfo =>
-      'Yapay zeka, gelen kutundaki son e-postaları tarayıp önemli olanları kısaca özetler. E-posta içeriği hiçbir yere kaydedilmez.';
-
-  @override
-  String get disconnectGmail => 'Bağlantıyı kes';
-
-  @override
-  String get importantEmails => 'Önemli E-postalar';
-
-  @override
   String get refresh => 'Yenile';
 
   @override
@@ -398,17 +371,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get licensesTitle => 'Açık kaynak lisansları';
-
-  @override
-  String get mailEmpty => 'Önemli e-posta bulunamadı';
-
-  @override
-  String get mailScanning => 'E-postalar taranıyor...';
-
-  @override
-  String mailWhyImportant(String reason) {
-    return 'Neden önemli: $reason';
-  }
 
   @override
   String get suggestionsTitle => 'Öneriler';
@@ -544,70 +506,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Belirlediğin saatler arasında koyu temaya geçilir';
 
   @override
-  String get convertToNote => 'Nota çevir';
-
-  @override
-  String get convertToReminderNote => 'Hatırlatıcılı not';
-
-  @override
-  String get noteCreatedFromEmail => 'E-postadan not oluşturuldu';
-
-  @override
-  String mailDueDate(String date) {
-    return 'Son tarih: $date';
-  }
-
-  @override
-  String get translatorTitle => 'Çevirmen';
-
-  @override
   String get aiTranslate => 'Çevir';
-
-  @override
-  String get swapLanguages => 'Dilleri değiştir';
-
-  @override
-  String get liveMode => 'Canlı';
-
-  @override
-  String get pushToTalkMode => 'Bas-Konuş';
-
-  @override
-  String get liveTranslateInfo =>
-      'Gemini 3.5 Live Translate ile kesintisiz çeviri: başlatın ve konuşun; hangi dilde konuşulduğu otomatik algılanır, karşı dile hem sesli hem yazılı çevrilir.';
-
-  @override
-  String get startLive => 'Canlı çeviriyi başlat';
-
-  @override
-  String get stopLive => 'Durdur';
-
-  @override
-  String get connecting => 'Bağlanıyor...';
-
-  @override
-  String get heardLabel => 'Duyulan';
-
-  @override
-  String get translationLabel => 'Çeviri';
-
-  @override
-  String liveTranslateError(String error) {
-    return 'Canlı çeviri hatası: $error';
-  }
-
-  @override
-  String get pushToTalk => 'Konuşmak için dokun';
-
-  @override
-  String get pushToTalkHint =>
-      'Mikrofona dokunup konuş; hangi dilde konuştuğun otomatik algılanır ve karşı dile çevrilir. Karşındaki de aynı düğmeyle kendi dilinde yanıt verebilir.';
-
-  @override
-  String get autoSpeak => 'Çeviriyi sesli oku';
-
-  @override
-  String get speakTranslation => 'Sesli oku';
 
   @override
   String get voiceCommand => 'Sesli komut';
@@ -708,9 +607,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pdfChatInputHint => 'PDF hakkında bir soru yaz...';
-
-  @override
-  String get voiceNoteTitle => 'Sesli Not';
 
   @override
   String get voiceCaptureHint =>
@@ -837,9 +733,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiGenerate => 'Oluştur';
 
   @override
-  String get aiScanEmails => 'E-postaları tara';
-
-  @override
   String get aiGeneratedTodayInfo =>
       'Bu içerik bugün oluşturuldu. Ücretsiz planda günde bir kez yenilenir; yarın tekrar oluşturabilirsin.';
 
@@ -910,9 +803,6 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get aiRunning => 'Yapay zekâ çalışıyor…';
-
-  @override
   String get permCamera => 'Kamera';
 
   @override
@@ -935,16 +825,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get newVideoNote => 'Görüntülü not';
 
   @override
-  String get videoNoteRecording => 'Kamera açılıyor…';
-
-  @override
   String get videoLocalOnly =>
       'Bu video yalnızca bu cihazda saklanır (buluta yüklenmez)';
-
-  @override
-  String videoTooLong(int seconds) {
-    return 'Video çok uzun: en fazla $seconds saniye';
-  }
 
   @override
   String get videoToNote => 'Videodan not çıkar';
@@ -966,9 +848,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get newVoiceCapture => 'Sesli not';
-
-  @override
-  String get voiceCaptureActive => 'Ses kaydediliyor, konuşman nota yazılıyor…';
 
   @override
   String get suggestTitle => 'Başlık öner';
@@ -1042,12 +921,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get speechStop => 'Durdur';
 
   @override
-  String get speechVoice => 'Ses tipi';
-
-  @override
-  String get speechVoiceSubtitle => 'Sesli okumada kullanilacak ses';
-
-  @override
   String get speechRate => 'Okuma hizi';
 
   @override
@@ -1055,9 +928,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get speechNoVoices => 'Bu cihazda yuklu ses bulunamadi';
-
-  @override
-  String get aiSummarySpeak => 'Ozeti sesli oku';
 
   @override
   String get speechVoiceTurkish => 'Türkçe ses';
@@ -1070,20 +940,7 @@ class AppLocalizationsTr extends AppLocalizations {
       'Diğer diller otomatik olarak erkek sesiyle okunur';
 
   @override
-  String get nothingHeard => 'Konuşma algılanmadı';
-
-  @override
   String get listening => 'Dinleniyor...';
-
-  @override
-  String get translateDownloadingModel => 'Dil modeli indiriliyor (bir kez)...';
-
-  @override
-  String get translateQuality => 'Gemini ile çevir (daha iyi kalite)';
-
-  @override
-  String get translateQualityInfo =>
-      'Kapalıyken çeviri cihazda yapılır: bedava, çevrimdışı ve kota harcamaz. Açıkken Gemini kullanılır — deyim ve uzun cümlede daha iyi, ama kota harcar. ML Kit\'in desteklemediği dillerde (ör. Azerbaycanca) bu ayar ne olursa olsun Gemini kullanılır.';
 
   @override
   String get listenPlay => 'Sesli dinle';
@@ -1216,9 +1073,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get settingsSpeech => 'Sesli okuma';
 
   @override
-  String get settingsTranslate => 'Çeviri';
-
-  @override
   String get aiAdvanced => 'Gelişmiş: model ve API anahtarı';
 
   @override
@@ -1287,13 +1141,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hubChatInfo => 'Notlarına dayanarak soru-cevap';
 
   @override
-  String get hubTranslateInfo => 'Metin ve konuşma çevirisi';
-
-  @override
   String get hubSuggestionsInfo => 'Notlarından çıkarılmış somut öneriler';
-
-  @override
-  String get hubMailInfo => 'Gelen kutundaki önemli e-postalar';
 
   @override
   String get hubBriefingInfo => 'Güne bakış: notlar ve e-postalar';
