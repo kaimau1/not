@@ -266,3 +266,19 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   gozle yakalanmaz; her dil eklendiginde bu once kosulur.
   Silinen ozelliklerden kalan iki bayat Turkce dizgi de duzeltildi: `permMicInfo`
   "canli ceviri" diyordu, `hubBriefingInfo` "e-postalar" diyordu.
+- 2026-07-27: **AI kapsam kararlari (paket B) + App Check.**
+  KARARLAR (kullanici, 2026-07-27): (1) "sen istemeden rapor ureten" ekranlardan
+  **Oneriler + Haftalik ozet KALDIRILDI**, gunluk brifing KALDI. (2) Fatura
+  modeli simdilik ayni: dahili AI kalir, **App Check aktive edildi** ama
+  ZORLAMA konsolda acilmadi. (3) Semantik arama kaldi.
+  Silinen: `suggestions_screen.dart`, `suggestFromNotes`, `weeklySummary`,
+  `/suggestions` rotasi, AI hub karti, 8 l10n anahtari (iki dilde).
+  Ayrica Gmail silinirken GOZDEN KACAN olu kod temizlendi: `triageEmails`,
+  `EmailMeta`, `ImportantEmail` (78 satir). DERS: bir ozellik silinirken
+  `gemini_service` gibi paylasilan servislerde o ozelligin metodu kalabiliyor;
+  analyze bunu YAKALAMAZ (public API, cagrilmamasi hata degil). Silme sonrasi
+  servisin metod listesini gozden gecir.
+  App Check sirasi (main.dart `_activateAppCheck` yorumunda da yazili):
+  once token uretimi, sonra konsolda kayit + izleme, EN SON zorlama. Ters
+  sirada tum kullanici aniden hata alir. `androidProvider` parametresi
+  deprecated; dogrusu `providerAndroid: AndroidPlayIntegrityProvider()`.

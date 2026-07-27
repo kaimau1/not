@@ -46,40 +46,6 @@ class GeminiException implements Exception {
   String toString() => message;
 }
 
-class EmailMeta {
-  const EmailMeta({
-    required this.id,
-    required this.from,
-    required this.subject,
-    required this.date,
-    required this.snippet,
-  });
-
-  final String id;
-  final String from;
-  final String subject;
-  final String date;
-  final String snippet;
-}
-
-class ImportantEmail {
-  const ImportantEmail({
-    required this.from,
-    required this.subject,
-    required this.summary,
-    required this.reason,
-    this.dueDate,
-  });
-
-  final String from;
-  final String subject;
-  final String summary;
-  final String reason;
-
-  /// E-postadan çıkarılan son tarih (fatura/randevu vb.), varsa.
-  final DateTime? dueDate;
-}
-
 class ChatTurn {
   const ChatTurn({required this.isUser, required this.text});
 
@@ -393,65 +359,6 @@ class GeminiService {
     },
   ]);
 
-  /// Son notlara bakarak eyleme dönük öneriler üretir (birleştirilebilecek
-  /// notlar dahil).
-  Future<String> suggestFromNotes(List<Note> notes) {
-    final buffer = StringBuffer();
-    // Kilitli notlar AI'ya gönderilmez.
-    for (final note in notes.where((n) => !n.locked).take(30)) {
-      final text = note.toPlainText();
-      buffer
-        ..writeln('---')
-        ..writeln(text.length > 300 ? text.substring(0, 300) : text);
-    }
-    return _generate([
-      {
-        'text':
-            'Aşağıda bir kullanıcının not defterindeki son notlar var. '
-            'Bu notlara bakarak Türkçe, EYLEME DÖNÜK 3-6 öneri üret. '
-            'Kurallar: her öneri "- " ile başlayan TEK satır olsun ve en '
-            'fazla 12 kelime; hangi nottan geldiği anlaşılsın; genel hayat '
-            'tavsiyesi VERME, yalnızca bu notlardan çıkan somut iş yaz '
-            '(tamamlanmamış işler, eksik alışveriş kalemi, takip gereken '
-            'konu, yaklaşan tarih). Konusu örtüşen notlar varsa son maddede '
-            'hangilerinin birleştirilebileceğini yaz. Markdown kullanma: '
-            'yıldız, kalın işareti veya başlık koyma, düz metin yaz.'
-            '\n\n${buffer.toString()}',
-      },
-    ]).then(stripMarkdown);
-  }
-
-  /// Son 7 günün notlarından haftalık özet ve yapılacaklar çıkarır.
-  Future<String> weeklySummary(List<Note> notes) {
-    final cutoff = DateTime.now().subtract(const Duration(days: 7));
-    final recent = [
-      for (final note in notes)
-        if (!note.locked &&
-            ((note.updatedAt ?? note.createdAt)?.isAfter(cutoff) ?? false))
-          note,
-    ];
-    if (recent.isEmpty) return Future.value('');
-    final buffer = StringBuffer();
-    for (final note in recent.take(40)) {
-      final text = note.toPlainText();
-      buffer
-        ..writeln('---')
-        ..writeln(text.length > 400 ? text.substring(0, 400) : text);
-    }
-    return _generate([
-      {
-        'text':
-            'Aşağıda kullanıcının son 7 günde yazdığı/güncellediği notlar '
-            'var. Türkçe haftalık özet çıkar. Yapı (her başlık kendi '
-            'satırında, düz metin): "Bu hafta ne birikti" — en çok yazdığı '
-            '2-4 konu, her biri tek satır; "Bekleyenler" — tamamlanmamış '
-            'işler ve yaklaşan tarihler, "- " ile madde madde; "Öneri" — '
-            'önümüzdeki hafta için tek cümle. Her madde en fazla 12 kelime, '
-            'notlarda geçmeyen şey uydurma. Markdown kullanma: yıldız, '
-            'kalın işareti veya # koyma.\n\n${buffer.toString()}',
-      },
-    ]).then(stripMarkdown);
-  }
 
   /// Görseldeki metni çıkarır (OCR) ve düzenli bir not metnine dönüştürür.
   Future<String> extractTextFromImage(Uint8List bytes, String mimeType) =>
@@ -1088,48 +995,4 @@ class GeminiService {
     },
   ];
 
-  /// E-posta metadata'larından önemlilerini seçer ve kısa Türkçe özet döner.
-  Future<List<ImportantEmail>> triageEmails(List<EmailMeta> emails) async {
-    final list = [
-      for (final email in emails)
-        {
-          'id': email.id,
-          'from': email.from,
-          'subject': email.subject,
-          'date': email.date,
-          'snippet': email.snippet,
-        },
-    ];
-    final now = DateTime.now();
-    final raw = await _generate([
-      {
-        'text':
-            'Aşağıda bir gelen kutusundaki son e-postaların listesi var '
-            '(JSON). Bugünün tarihi: ${now.year}-${now.month}-${now.day}. '
-            'Önemli olanları seç (fatura/ödeme, randevu, iş, resmi '
-            'kurum, son tarih içeren, kişisel önemli mesajlar; reklam ve '
-            'toplu bültenleri ele). Yanıtı YALNIZCA şu şemada bir JSON '
-            'dizisi olarak ver: '
-            '[{"from": "...", "subject": "...", "summary": "1-2 cümle Türkçe '
-            'özet", "reason": "neden önemli, birkaç kelime", "dueDate": '
-            '"YYYY-MM-DDTHH:MM" veya son tarih/randevu yoksa null}]. '
-            'Önemli e-posta yoksa boş dizi döndür.\n\n${jsonEncode(list)}',
-      },
-    ], jsonOutput: true);
-    final decoded = jsonDecode(raw);
-    if (decoded is! List) return const [];
-    return [
-      for (final entry in decoded)
-        if (entry is Map)
-          ImportantEmail(
-            from: entry['from'] as String? ?? '',
-            subject: entry['subject'] as String? ?? '',
-            summary: entry['summary'] as String? ?? '',
-            reason: entry['reason'] as String? ?? '',
-            dueDate: entry['dueDate'] is String
-                ? DateTime.tryParse(entry['dueDate'] as String)
-                : null,
-          ),
-    ];
-  }
 }

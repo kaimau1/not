@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../features/ai/presentation/ai_hub_screen.dart';
 import '../features/ai/presentation/briefing_screen.dart';
 import '../features/ai/presentation/chat_screen.dart';
-import '../features/ai/presentation/suggestions_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/notes/data/notes_repository.dart';
@@ -87,10 +86,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/privacy',
         builder: (context, state) => const PrivacyScreen(),
-      ),
-      GoRoute(
-        path: '/suggestions',
-        builder: (context, state) => const SuggestionsScreen(),
       ),
       GoRoute(path: '/ai', builder: (context, state) => const AiHubScreen()),
       GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),

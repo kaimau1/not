@@ -8,10 +8,6 @@ import '../data/gemini_service.dart';
 /// Düz metin döndüren AI çıktılarının (brifing, öneriler, haftalık özet)
 /// ortak gövdesi: yükleniyor / hata + "Tekrar dene" / boş durum / başlık +
 /// metin kartı. Ekranlar yalnız metinlerini ve ikonlarını verir.
-///
-/// ponytail: mail_summary bilerek dışarıda — sonucu `List<ImportantEmail>`
-/// ve hata dalında ekstra "Ayarlar" düğmesi var; buraya katmak parametre
-/// eklemek olurdu, kod kısaltmak değil.
 class AiTextResult extends StatelessWidget {
   const AiTextResult({
     super.key,

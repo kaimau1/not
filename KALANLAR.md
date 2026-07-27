@@ -55,9 +55,30 @@
   4 satırlık kart düzeni ve yeni çizgi ikonları (`ic_widget_checklist`,
   `ic_widget_ordered`) yalnız kodda; ana ekranda gözle bakılması gerekiyor
   (2026-07-26).
+- [ ] **App Check ZORLAMASI açılmadı** — uygulama artık token üretiyor
+  (`main.dart` `_activateAppCheck`), ama Firebase konsolunda "Enforce"
+  KAPALI, yani hiçbir istek reddedilmiyor. Doğru sıra: konsolda uygulamayı
+  Play Integrity ile kaydet → birkaç gün "doğrulanmamış istek" oranını izle →
+  sıfıra yaklaşınca zorlamayı aç. Ters sırada açılırsa tüm kullanıcılar hata
+  alır. Not: Play Integrity uygulamanın Play'den dağıtılmasını bekler, elle
+  kurulan APK "doğrulanmamış" görünebilir (2026-07-27).
 - [ ] **AI kota sayacı istemci tarafında** — kural aynı gün puanın azalmasını
-  engelliyor ama gerçek zorlama için sunucu (Cloud Functions + App Check)
-  gerekiyor; App Check hiç aktive edilmemiş durumda (2026-07-24).
+  engelliyor ama gerçek zorlama için sunucu (Cloud Functions) gerekiyor
+  (2026-07-24).
+- [ ] **Çevrimdışıyken ek eklenemiyor** — `appendAttachment` ve
+  `patchAttachment` `runTransaction` kullanıyor, transaction ise ağ turu
+  gerektiriyor. Uçakta/metroda nota ek eklemek sessizce çalışmıyor. Düz bir
+  bug; düzeltmesi küçük (merge'lü yazım ya da yeniden deneme) (2026-07-27).
+- [ ] **Çakışma çözümü BİLEREK yapılmadı** — iki cihazda aynı notu aynı anda
+  düzenlersen son yazan sessizce kazanır. Kullanıcı kararı (2026-07-27):
+  tek kullanıcılı uygulamada sıklığı düşük, Keep'in birleştirme makinesi
+  paylaşılan notlar için var. Gerçek bir not kaybı yaşanırsa bu madde açılır;
+  o zaman ilk adım `items` dizisini map'e taşımaktır (Firestore map'i eleman
+  eleman birleştirir, diziyi birleştiremez).
+- [ ] **AI notu baştan yazınca geri dönüş yok** — "Notu düzelt/geliştir"
+  içeriği değiştiriyor, geri alma yalnız o anki şeritte. Uygulama kapanınca
+  orijinal metin gider. Sürüm deposu/geri alma noktası bilerek yapılmadı
+  (kullanıcı kararı 2026-07-27) (2026-07-27).
 
 ## Sonra yapılacak
 Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
@@ -70,13 +91,14 @@ silme) tamamlandı, kalanlar sırayla:
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
   Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
-- [ ] **İngilizce dil desteği** — l10n altyapısı hazır, `app_en.arb` yok.
 - [ ] **RTL hazırlığı → Arapça** — `text_wrap.dart` ve serbest görsel tuvali
   baştan sona soldan-sağa varsayımıyla yazılı (çapalar, float bantları, sağ
   kenar dolgusu). Arapça bunlardan ÖNCE eklenirse editör bozuk görünür.
-- [ ] **AI tarafının gözden geçirilmesi** — kullanıcı "detaylı düşünmemiz
-  lazım" dedi (2026-07-27); önce konuşma, sonra plan. Konular: kota/fatura
-  modeli, BYOK, hangi AI özelliği gerçekten kullanılıyor.
+  Yapılacak: `planTextWrap`'e yön geçir (parametre var, `WrapTextController`
+  hiç vermiyor), sol/sağ → satır başı/sonu eşlemesini yöne göre çevir,
+  `_FloatRowState`'te yöne duyarlı dolgu. Sonra `app_ar.arb` (388 anahtar).
+  ⚠ Arapça çeviriyi kullanıcı doğrulayamaz — yayına çıkmadan Arapça bilen
+  birine gösterilmeli.
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.

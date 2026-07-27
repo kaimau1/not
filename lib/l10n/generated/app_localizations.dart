@@ -476,12 +476,6 @@ abstract class AppLocalizations {
   /// **'Sesli oku'**
   String get listenToNote;
 
-  /// No description provided for @aiSuggestions.
-  ///
-  /// In tr, this message translates to:
-  /// **'Öneriler'**
-  String get aiSuggestions;
-
   /// No description provided for @aiNoApiKey.
   ///
   /// In tr, this message translates to:
@@ -770,24 +764,6 @@ abstract class AppLocalizations {
   /// **'Açık kaynak lisansları'**
   String get licensesTitle;
 
-  /// No description provided for @suggestionsTitle.
-  ///
-  /// In tr, this message translates to:
-  /// **'Öneriler'**
-  String get suggestionsTitle;
-
-  /// No description provided for @suggestionsEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Öneri üretebilmek için birkaç not ekle'**
-  String get suggestionsEmpty;
-
-  /// No description provided for @suggestionsIntro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlarına göre öneriler'**
-  String get suggestionsIntro;
-
   /// No description provided for @generating.
   ///
   /// In tr, this message translates to:
@@ -985,24 +961,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bir soru yaz...'**
   String get chatInputHint;
-
-  /// No description provided for @weeklySummary.
-  ///
-  /// In tr, this message translates to:
-  /// **'Haftalık Özet'**
-  String get weeklySummary;
-
-  /// No description provided for @weeklySummaryEmpty.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son 7 günde not eklenmemiş'**
-  String get weeklySummaryEmpty;
-
-  /// No description provided for @weeklySummaryIntro.
-  ///
-  /// In tr, this message translates to:
-  /// **'Son 7 günün özeti'**
-  String get weeklySummaryIntro;
 
   /// No description provided for @fontSize.
   ///
@@ -2221,12 +2179,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Notlarına dayanarak soru-cevap'**
   String get hubChatInfo;
-
-  /// No description provided for @hubSuggestionsInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notlarından çıkarılmış somut öneriler'**
-  String get hubSuggestionsInfo;
 
   /// No description provided for @hubBriefingInfo.
   ///

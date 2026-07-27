@@ -215,9 +215,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listenToNote => 'Read aloud';
 
   @override
-  String get aiSuggestions => 'Suggestions';
-
-  @override
   String get aiNoApiKey => 'Enter your Gemini API key in Settings first';
 
   @override
@@ -375,16 +372,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licensesTitle => 'Open-source licences';
 
   @override
-  String get suggestionsTitle => 'Suggestions';
-
-  @override
-  String get suggestionsEmpty =>
-      'Add a few notes so suggestions can be generated';
-
-  @override
-  String get suggestionsIntro => 'Suggestions based on your notes';
-
-  @override
   String get generating => 'Generating...';
 
   @override
@@ -488,15 +475,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatInputHint => 'Type a question...';
-
-  @override
-  String get weeklySummary => 'Weekly summary';
-
-  @override
-  String get weeklySummaryEmpty => 'No notes added in the last 7 days';
-
-  @override
-  String get weeklySummaryIntro => 'The last 7 days at a glance';
 
   @override
   String get fontSize => 'Text size';
@@ -1149,9 +1127,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hubChatInfo => 'Questions answered from your notes';
-
-  @override
-  String get hubSuggestionsInfo => 'Concrete suggestions drawn from your notes';
 
   @override
   String get hubBriefingInfo =>

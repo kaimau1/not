@@ -213,9 +213,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listenToNote => 'Sesli oku';
 
   @override
-  String get aiSuggestions => 'Öneriler';
-
-  @override
   String get aiNoApiKey => 'Önce Ayarlar\'dan Gemini API anahtarını gir';
 
   @override
@@ -373,15 +370,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get licensesTitle => 'Açık kaynak lisansları';
 
   @override
-  String get suggestionsTitle => 'Öneriler';
-
-  @override
-  String get suggestionsEmpty => 'Öneri üretebilmek için birkaç not ekle';
-
-  @override
-  String get suggestionsIntro => 'Notlarına göre öneriler';
-
-  @override
   String get generating => 'Üretiliyor...';
 
   @override
@@ -485,15 +473,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get chatInputHint => 'Bir soru yaz...';
-
-  @override
-  String get weeklySummary => 'Haftalık Özet';
-
-  @override
-  String get weeklySummaryEmpty => 'Son 7 günde not eklenmemiş';
-
-  @override
-  String get weeklySummaryIntro => 'Son 7 günün özeti';
 
   @override
   String get fontSize => 'Yazı boyutu';
@@ -1145,9 +1124,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get hubChatInfo => 'Notlarına dayanarak soru-cevap';
-
-  @override
-  String get hubSuggestionsInfo => 'Notlarından çıkarılmış somut öneriler';
 
   @override
   String get hubBriefingInfo => 'Güne bakış: hatırlatıcılar ve son notlar';
