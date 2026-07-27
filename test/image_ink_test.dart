@@ -26,6 +26,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
         supportedLocales: AppLocalizations.supportedLocales,
         home: ImageViewerScreen(
           attachment: image,

@@ -25,7 +25,9 @@ class NotlarApp extends ConsumerWidget {
       theme: paper ? AppTheme.paper() : AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: themeMode,
-      locale: const Locale('tr'),
+      // null = sistem dilini kullan (desteklenmeyen dilde Flutter listedeki
+      // ilki olan Türkçe'ye düşer). Ayarlar'dan elle seçilirse o dil sabitlenir.
+      locale: ref.watch(localeProvider),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       builder: (context, child) => MediaQuery(

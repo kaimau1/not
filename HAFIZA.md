@@ -251,3 +251,18 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   bosaltiliyor (soldaki genis gorselin yaptiginin aynisi). Yan etki koruma:
   dolgu yalnizca satir gercekten dar sutuna TASIYORSA denenir
   (`overflowsIntoFloat`), yoksa sigan kisa satirlar bosuna asagi itilirdi.
+- 2026-07-27: **Ingilizce dil destegi (paket A).**
+  TUZAK (yakalandi, kalici ders): `app.dart` dili `locale: const Locale('tr')`
+  ile SABITLIYORDU - arb dosyasi eklemek tek basina hicbir sey yapmaz, once bu
+  kalkmali. Artik `localeProvider` (null = sistem dili) kullaniliyor.
+  TUZAK 2: `en` desteklenir olunca widget testleri KIRILDI. Sebep: Flutter test
+  binding'i varsayilan olarak en_US kosuyor, testler ise Turkce metin ariyordu
+  ("Sabitle" bulunamadi). Cozum: MaterialApp kuran 7 testte `locale: Locale('tr')`
+  sabitlendi - testler ortam dilinden bagimsiz olmali.
+  Dil adlari (Turkce / English) BILEREK cevrilmiyor: dilini bilmedigi bir
+  arayuzde dogru satiri bulamayan kullanici sikisir; yalniz "Sistem dili" cevrilir.
+  `tool/check_arb.ps1`: arb dosyalari arasinda anahtar + YER TUTUCU esligini
+  denetler. Yer tutucu ({count}, {error}) toplu ceviride en sik kirilan yer ve
+  gozle yakalanmaz; her dil eklendiginde bu once kosulur.
+  Silinen ozelliklerden kalan iki bayat Turkce dizgi de duzeltildi: `permMicInfo`
+  "canli ceviri" diyordu, `hubBriefingInfo` "e-postalar" diyordu.

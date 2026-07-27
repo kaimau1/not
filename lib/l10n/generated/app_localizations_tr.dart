@@ -775,7 +775,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permMic => 'Mikrofon';
 
   @override
-  String get permMicInfo => 'Sesli not, dikte ve canlı çeviri için gerekli';
+  String get permMicInfo => 'Sesli not ve dikte için gerekli';
 
   @override
   String get permNotifications => 'Bildirimler';
@@ -1070,6 +1070,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get collapseFilters => 'Filtreleri daralt';
 
   @override
+  String get settingsLanguage => 'Dil';
+
+  @override
+  String get languageSystem => 'Sistem dili';
+
+  @override
   String get settingsSpeech => 'Sesli okuma';
 
   @override
@@ -1144,7 +1150,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get hubSuggestionsInfo => 'Notlarından çıkarılmış somut öneriler';
 
   @override
-  String get hubBriefingInfo => 'Güne bakış: notlar ve e-postalar';
+  String get hubBriefingInfo => 'Güne bakış: hatırlatıcılar ve son notlar';
 
   @override
   String get hubReadInfo => 'PDF/Word belgesini sesli dinle';

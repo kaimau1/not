@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_en.dart';
 import 'app_localizations_tr.dart';
 
 // ignore_for_file: type=lint
@@ -92,7 +93,10 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('tr')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('tr'),
+  ];
 
   /// No description provided for @appName.
   ///
@@ -1525,7 +1529,7 @@ abstract class AppLocalizations {
   /// No description provided for @permMicInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not, dikte ve canlı çeviri için gerekli'**
+  /// **'Sesli not ve dikte için gerekli'**
   String get permMicInfo;
 
   /// No description provided for @permNotifications.
@@ -2074,6 +2078,18 @@ abstract class AppLocalizations {
   /// **'Filtreleri daralt'**
   String get collapseFilters;
 
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dil'**
+  String get settingsLanguage;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sistem dili'**
+  String get languageSystem;
+
   /// No description provided for @settingsSpeech.
   ///
   /// In tr, this message translates to:
@@ -2215,7 +2231,7 @@ abstract class AppLocalizations {
   /// No description provided for @hubBriefingInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Güne bakış: notlar ve e-postalar'**
+  /// **'Güne bakış: hatırlatıcılar ve son notlar'**
   String get hubBriefingInfo;
 
   /// No description provided for @hubReadInfo.
@@ -2470,7 +2486,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['tr'].contains(locale.languageCode);
+      <String>['en', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2479,6 +2495,8 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
     case 'tr':
       return AppLocalizationsTr();
   }

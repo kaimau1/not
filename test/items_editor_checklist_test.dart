@@ -7,6 +7,7 @@ import 'package:notlar/l10n/generated/app_localizations.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: const Locale('tr'),
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: child),
     );

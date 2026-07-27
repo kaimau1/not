@@ -75,6 +75,11 @@ class SettingsScreen extends ConsumerWidget {
                   _DarkScheduleEditor(),
                 ],
               ),
+              _SettingsGroup(
+                title: l10n.settingsLanguage,
+                icon: Icons.language_outlined,
+                children: const [_LanguageSelector()],
+              ),
               // Sesli Not Asistanı: yalnız asistan düğmesinin davranışı.
               _SettingsGroup(
                 title: l10n.voiceAssistantTitle,
@@ -461,6 +466,43 @@ class _PermissionTile extends StatelessWidget {
             FilledButton.tonal(
               onPressed: onAction,
               child: Text(actionLabel ?? context.l10n.permGrant),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Uygulama dili. Dil adları kendi dillerinde yazılır ("English"), yoksa
+/// dilini bilmediği bir arayüzde doğru satırı bulamayan kullanıcı sıkışır.
+class _LanguageSelector extends ConsumerWidget {
+  const _LanguageSelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 'system' yer tutucu: RadioGroup null'ı "seçim yok" saydığından sistem
+    // seçeneği null değerle temsil edilemez.
+    const system = 'system';
+    final current = ref.watch(localeProvider)?.languageCode ?? system;
+    return RadioGroup<String>(
+      groupValue: current,
+      onChanged: (value) => ref
+          .read(localeProvider.notifier)
+          .set(value == system ? null : value),
+      child: Column(
+        children: [
+          RadioListTile<String>(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            value: system,
+            title: Text(context.l10n.languageSystem),
+          ),
+          for (final entry in supportedLanguages.entries)
+            RadioListTile<String>(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              value: entry.key,
+              title: Text(entry.value),
             ),
         ],
       ),

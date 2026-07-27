@@ -35,6 +35,42 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
   }
 }
 
+/// Uygulama dili. null = sistem dili (varsayılan).
+///
+/// Dil adları bilerek yerelleştirilmez: "English" satırını İngilizce'ye
+/// geçmek isteyen bir kullanıcı okuyabilmeli, kendi dilinde yazılırsa
+/// bulamaz. Yalnız "Sistem dili" satırı çevrilir.
+const supportedLanguages = <String, String>{
+  'tr': 'Türkçe',
+  'en': 'English',
+};
+
+final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(
+  LocaleNotifier.new,
+);
+
+class LocaleNotifier extends Notifier<Locale?> {
+  static const _key = 'app_locale';
+
+  @override
+  Locale? build() {
+    final code = ref.watch(sharedPreferencesProvider).getString(_key);
+    if (code == null || !supportedLanguages.containsKey(code)) return null;
+    return Locale(code);
+  }
+
+  /// [code] null ise sistem diline dönülür.
+  void set(String? code) {
+    state = code == null ? null : Locale(code);
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (code == null) {
+      prefs.remove(_key);
+    } else {
+      prefs.setString(_key, code);
+    }
+  }
+}
+
 /// Yazı boyutu çarpanı (0.85–1.4).
 final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
   FontScaleNotifier.new,
