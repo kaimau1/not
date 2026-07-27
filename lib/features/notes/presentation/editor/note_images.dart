@@ -177,6 +177,23 @@ class _ImageTools extends StatelessWidget {
 /// [Attachment.pageY] (sayfa tepesinden dp — sayfa yüksekliği metinle
 /// değiştiğinden oran değil mutlak değer). Sayfa, en alttaki görseli
 /// kapsayacak kadar uzar; görsel aşağı sürüklendikçe büyür.
+/// İpucunun oturacağı yükseklik: gövdenin ilk satırı ([bodyTop]), onu kesen
+/// görsel bantlarının altına itilmiş hâli.
+///
+/// Bantlar yukarıdan aşağı taranır ve tek geçiş yeter: ipucu her itilişte
+/// aşağı gider, itildikten sonra o bandı bir daha kesemez, sıradaki bantlar
+/// ise zaten daha aşağıdadır. Kesişme yoksa sonuç [bodyTop]'tur — yani
+/// görselsiz notta ipucu her zamanki yerinde kalır.
+@visibleForTesting
+double hintTopFor(List<FloatBox> floats, double bodyTop, double lineHeight) {
+  final sorted = [...floats]..sort((a, b) => a.top.compareTo(b.top));
+  var y = bodyTop;
+  for (final f in sorted) {
+    if (f.top < y + lineHeight && y < f.bottom) y = f.bottom;
+  }
+  return y;
+}
+
 class NotePageCanvas extends StatefulWidget {
   const NotePageCanvas({
     super.key,
@@ -189,6 +206,8 @@ class NotePageCanvas extends StatefulWidget {
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
+    this.hint,
+    this.hintLineHeight = 0,
   });
 
   final List<Attachment> images;
@@ -197,8 +216,21 @@ class NotePageCanvas extends StatefulWidget {
   final Widget child;
 
   /// Görsellerin inebileceği en üst nokta (dp) — başlık ve çip satırının
-  /// altı. Görsel başlığın üzerine hiç çıkamaz.
+  /// altı. Görsel başlığın üzerine hiç çıkamaz. Gövde metninin ilk satırının
+  /// tepesi de burasıdır ([hint] bu noktadan aşağı itilir).
   final double topLimit;
+
+  /// Boş gövdenin ipucu metni ("Not yaz…"), tuval üzerinde konumlandırılır.
+  ///
+  /// KÖK NEDEN: ipucu metin değil dekorasyondur — sarma motoru onu görselin
+  /// etrafından akıtamaz, sabit yerinde durur ve üste sürüklenen görselin
+  /// altında kaybolur. Eskiden görsel bir satır aşağı ZORLANARAK çözülüyordu;
+  /// kullanıcı görseli en üste koyamıyordu. Artık görsel serbest, ipucu iner.
+  final Widget? hint;
+
+  /// İpucu satırının yüksekliği (dp) — hangi görsellerin ipucunu kestiği
+  /// bu bantla ölçülür.
+  final double hintLineHeight;
 
   /// Görsellerin SAYFA üzerinde kapladığı bantları bildirir; metin bunların
   /// etrafından akar (bkz. text_wrap.dart). Konumlar sayfanın (bu tuvalin
@@ -324,6 +356,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return boxes;
   }
 
+  double _hintTop(double cw) =>
+      hintTopFor(_floatsFor(cw), widget.topLimit, widget.hintLineHeight);
+
   void _reportFloats(double cw) {
     final cb = widget.onFloats;
     if (cb == null) return;
@@ -401,6 +436,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 child: widget.child,
               ),
             ),
+            // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
+            // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
+            if (widget.hint != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: _hintTop(cw),
+                child: IgnorePointer(child: widget.hint!),
+              ),
             for (final (index, img) in widget.images.indexed)
               _positioned(context, img, index, cw),
             if (selectedImg != null)

@@ -30,9 +30,12 @@
   uzun kelime) sağ kenar dolgusu konamaz, o satır görselin altına girebilir.
   Tavanı kaldırmak kendi satır kırıcımızı yazmayı gerektirir (2026-07-24).
 - [ ] **Sütunun dörtte üçünden fazlasını kaplayan görselin altında liste
-  satırı kalıyor** — satır yana kaydırılamıyor (yer yok), altına itmek listenin
-  dikey akışını değiştirmeyi gerektirir; kullanıcı görseli daraltarak çözüyor
-  (2026-07-24).
+  satırı kalıyor** — YALNIZ LİSTE MADDELERİNDE: her madde ayrı bir TextField ve
+  dikey yeri listede sabit, o yüzden aşağı itilemiyor. Gövde metninde bu sorun
+  YOK (`text_wrap.dart:164-173` satırı boşaltıp metni görselin altına indiriyor,
+  testi var). Çözüm yolu kendi satır kırıcımız değil, listenin yerleşiminin
+  görsel bantlarını hesaba katması; kullanıcı şimdilik görseli daraltarak
+  çözüyor (2026-07-24, kapsamı düzeltildi 2026-07-27).
 - [ ] **Liste modunda sürükleyerek sıralarken kenarda otomatik kaydırma yok**
   — liste artık serbest görsel tuvalinin içinde `shrinkWrap` ile duruyor, dış
   kaydırıcıyı sürükleme sırasında elle sürmek gerekir (2026-07-24).
@@ -52,6 +55,15 @@
   ayrıştırıcısı (`tr_datetime.dart`) ve emniyet ağı testlerle doğrulandı ama
   gerçek konuşmayla uçtan uca bakılmadı; ayrıca bildirim izni verili değilse
   hatırlatıcı kaydolur, bildirim gelmez (2026-07-26).
+- [ ] **Kesin alarm cihazda ölçülmedi** — `USE_EXACT_ALARM` + `exactAllowWhileIdle`
+  yazıldı ve telefona kuruldu, ama bildirimin gerçekten dakikasında geldiği
+  gözle doğrulanmadı (emülatör/test alarm zamanlamasını ölçemez). Kontrol:
+  1-2 dk sonrasına hatırlatıcı kur, saate bak (2026-07-27).
+- [ ] **Klavyeden görsel yapıştırma cihazda denenmedi** —
+  `contentInsertionConfiguration` gövdeye ve liste öğelerine verildi; Gboard'ın
+  pano çubuğundan görsel yapıştırma gerçek klavyeyle denenmedi. Üçüncü taraf
+  klavyeler bu yolu desteklemeyebilir, onlarda "+" menüsündeki "Görsel yapıştır"
+  yedek kalıyor (2026-07-27).
 - [ ] **Sohbet asistanında hatırlatıcı emniyet ağı yok** — ayrıştırıcı hazır,
   yalnız sesli asistana bağlandı; `assistantChat` hâlâ modele bağımlı
   (2026-07-26).

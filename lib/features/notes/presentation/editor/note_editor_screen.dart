@@ -617,6 +617,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     await _addImageBytes(bytes, 'pano.png');
   }
 
+  /// Klavyeden gelen görsel: Gboard'ın pano çubuğu ve "Yapıştır" düğmesi
+  /// görseli düz metin yapıştırmadan AYRI bir yolla (Android `commitContent`)
+  /// gönderir ve yalnızca alan desteklediğini bildirirse gönderir. Bu yüzden
+  /// yapılandırma hem gövdeye hem liste öğelerine verilir; olmadığında klavye
+  /// görseli hiç iletmez ve yapıştır düğmesi sessizce hiçbir şey yapmaz.
+  ContentInsertionConfiguration get _keyboardImagePaste =>
+      ContentInsertionConfiguration(
+        allowedMimeTypes: const [
+          'image/png',
+          'image/jpeg',
+          'image/gif',
+          'image/webp',
+        ],
+        onContentInserted: (content) {
+          final data = content.data;
+          if (data == null) return;
+          unawaited(
+            _addImageBytes(data, 'pano.${content.mimeType.split('/').last}'),
+          );
+        },
+      );
+
   Future<void> _recordAudio() async {
     final result = await showAudioRecorderSheet(context);
     if (result == null) return;
@@ -1919,6 +1941,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         if (a.kind == AttachmentKind.image) a,
     ];
 
+    // Görseller sayfanın üzerinde serbest katmanda yüzer ve metnin ÜSTÜne
+    // çizilir. Yazılı metin görselin etrafından akar (bkz. text_wrap.dart),
+    // ama ipucu metni DEKORASYONDUR — akmaz, sabit yerinde durur ve üste
+    // sürüklenen görselin altında kaybolur.
+    //
+    // Eskiden bu, görseli bir satır aşağı ZORLAYARAK çözülüyordu (topLimit'e
+    // bir satırlık pay eklenirdi); bedeli, kullanıcının görseli en üst satıra
+    // hiç koyamamasıydı. Artık ters yönde çözülür: görsel serbest, ipucu
+    // görselin altına iner (bkz. [NotePageCanvas.hint]).
+    final bodyFontSize = MediaQuery.textScalerOf(
+      context,
+    ).scale(Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16);
+    // İpucu satırının bandı (satır aralığı ~1.45).
+    final hintLineHeight = bodyFontSize * 1.45;
+    // Tuval ipucunu yalnız gerçekten çakışma olabilecek durumda üstlenir:
+    // gövde boş VE sayfada görsel var. Diğer hâllerde TextField'ın kendi
+    // ipucu kullanılır (odak/animasyon davranışı bozulmasın).
+    final useCanvasHint =
+        note.type == NoteType.text &&
+        note.body.trim().isEmpty &&
+        imageAttachments.isNotEmpty;
+
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1958,8 +2002,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
       contextMenuBuilder: (menuContext, editableState) =>
           _bodyContextMenu(menuContext, editableState),
+      contentInsertionConfiguration: _keyboardImagePaste,
       decoration: InputDecoration(
-        hintText: l10n.bodyHint,
+        // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
+        hintText: useCanvasHint ? null : l10n.bodyHint,
         filled: false,
         border: InputBorder.none,
       ),
@@ -1998,6 +2044,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         floats: _floats,
         pageBox: _pageBox,
         shrinkWrap: true,
+        contentInsertion: _keyboardImagePaste,
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2019,6 +2066,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         floats: _floats,
         pageBox: _pageBox,
         shrinkWrap: true,
+        contentInsertion: _keyboardImagePaste,
         header: keyedHeader,
       );
     }
@@ -2027,21 +2075,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final hasBodyField = note.type == NoteType.text;
     // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
     //
-    // KÖK NEDEN: görseller sayfanın üzerinde serbest katmanda yüzüyor ve
-    // metnin ÜSTÜne çiziliyor. Yazılı metin görselin etrafından aktığı için
-    // (bkz. text_wrap.dart) sorun çıkmıyor, ama ipucu metni akmaz — sabit
-    // yerinde durur. Nota resim eklenip başa sürüklenince ipucu resmin altında
-    // kalıyor ve boş notta yazı alanının nerede olduğuna dair HİÇBİR iz
-    // kalmıyordu ("nereye yazacağım?"). Bir satırlık pay ayrılınca görsel bu
-    // bandın altına iner (üst sınır [NotePageCanvas.topLimit] ile zorlanır) ve
-    // ipucu her zaman görünür kalır.
-    final bodyFontSize = MediaQuery.textScalerOf(
-      context,
-    ).scale(Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16);
-    // Bir satır (satır aralığı ~1.45) + TextField'ın çerçevesiz dikey dolgusu.
-    final hintReserve = hasBodyField && note.body.trim().isEmpty
-        ? bodyFontSize * 1.45 + 32
-        : 0.0;
     final body = LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: 96),
@@ -2051,7 +2084,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
           onExtractText: _ocrImage,
-          topLimit: _bodyTop + hintReserve,
+          topLimit: _bodyTop,
+          hintLineHeight: hintLineHeight,
+          hint: useCanvasHint
+              ? Padding(
+                  // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz
+                  // dikey dolgusu da eklenir ki ipucu metnin tam yerine otursun.
+                  padding: const EdgeInsets.fromLTRB(_kGutter, 16, _kGutter, 0),
+                  child: Text(
+                    l10n.bodyHint,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).hintColor,
+                    ),
+                  ),
+                )
+              : null,
           onFloats: _applyFloats,
           // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
           // aşağıya dokunmak yeterli. Listede gövde alanı yok.

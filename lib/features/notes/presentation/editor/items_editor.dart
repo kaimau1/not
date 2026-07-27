@@ -23,6 +23,7 @@ class ItemsEditor extends StatefulWidget {
     this.floats = const [],
     this.pageBox,
     this.shrinkWrap = false,
+    this.contentInsertion,
   });
 
   final List<NoteItem> items;
@@ -50,6 +51,11 @@ class ItemsEditor extends StatefulWidget {
 
   final Widget? header;
   final Widget? footer;
+
+  /// Klavyeden gelen görselin nereye gideceği (Gboard pano çubuğu /
+  /// "Yapıştır"). Ekleri not editörü yönettiğinden yapılandırma dışarıdan
+  /// verilir; null ise klavye görseli hiç göndermez.
+  final ContentInsertionConfiguration? contentInsertion;
 
   @override
   State<ItemsEditor> createState() => _ItemsEditorState();
@@ -521,6 +527,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                       onChanged: (_) => _updateText(item, controller.logicalText),
                       contextMenuBuilder: (context, editableState) =>
                           _contextMenu(context, editableState),
+                      contentInsertionConfiguration: widget.contentInsertion,
                       // Varsayılan "next" davranışı odağı metin dışı bir öğeye
                       // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
                       // bastırır, odak doğrudan yeni öğeye geçer.

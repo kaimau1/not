@@ -173,3 +173,55 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - 2026-07-26 (ikinci tur — QR/link, AI'sız ses, Material You widget, video istemi). (1) **Notlarda tıklanabilir link**: Flutter'da DÜZENLENEBİLİR bir `TextField` içinde span'e `TapGestureRecognizer` bağlamak ÇALIŞMAZ — dokunuş imleci taşımak için `EditableText`'e gider. Bu yüzden yol seçim menüsü oldu: `contextMenuBuilder` ile uzun basma menüsüne "Bağlantıyı aç" eklenir (`_bodyContextMenu`/`_selectedLink`), renklendirme ise `WrapTextController.buildTextSpan` içinde yapılır. İKİ TUZAK: (a) ölçüm (TextPainter) ile çizim AYNI span'i kullandığından link stili yalnız renk + alt çizgi olabilir — punto/kalınlık değiştirirsek satır kırılması ölçümden ayrışır ve imleç kayar; (b) IME oluşturma aralığı açıkken (`value.isComposingRangeValid`) span'e hiç dokunulmaz, yoksa klavyenin öneri altı çizgisi kayıyor. KARAR: çıplak alan adı kalıbı BİLEREK dar (TLD listesi) — `\w+\.\w+` gibi geniş bir kalıp "rapor.txt", "sürüm 1.2.3", "saat 14.30" gibi metinleri maviye boyuyordu; `test/link_text_test.dart` bu yanlış pozitifleri bekçiliyor. (2) **QR okunca "Linke git"**: QR kodların çoğu link ve tek yol adresi nota yazmaktı. Seçim sayfası `isDismissible: false` — `DetectionSpeed.noDuplicates` yüzünden yarım bırakılan tarama AYNI kodu bir daha okumuyor, o yüzden üç seçenekten biri mutlaka seçilir. (3) **KÖK NEDEN — AI ölüyken sesli asistan kaydı tümden yok oluyordu**: `finish()` içindeki `on GeminiException` yedeği, döküm yoksa `service.transcribeAudio`'ya, yani YİNE AI'a gidiyordu; anahtar yok + dahili AI kapalı + kota bitti hâlinde o çağrı da patlıyor ve istisna dış catch'e düşüp konuşma kayboluyordu. ÇÖZÜM: yedek artık AI'a hiç dokunmaz — döküm varsa düz not, yoksa ses kaydı nota EK olarak eklenir (`prepareAudio`); `_audioPath` alanı eklendi, `_collectAudio` dosyayı artık silmiyor, `finish` sonunda kullanılmayan artık temizleniyor. NOT: editör diktesinin (`dictation_sheet`) Windows yolu hâlâ AI'sız çalışamaz — oradan METİN dönmesi gerekiyor, eke düşecek yer yok; cihaz tanıması olan Android'de zaten AI'a hiç uğramıyor. (4) **ÖLÇÜM — Firebase AI kapsamı**: üretim çağrılarının tamamı `_generateFromContents` üzerinden dahili yola düşüyor, DEĞİŞİKLİK GEREKMEDİ. Yalnız iki istisna var: `embedTexts` (semantik arama — zaten `GeminiException` yakalanıp düz metin aramasına iniyor) ve canlı çeviri. Canlı çeviri Firebase AI'a TAŞINAMAZ: `firebase_ai 3.14.1` paketinde `translationConfig`/`targetLanguageCode` hiç geçmiyor (pub cache'te grep'lendi), yani Live Translate'in o alanı SDK'da yok; ham WebSocket + kullanıcı anahtarı zorunlu kalıyor. (5) **Widget'lar Material You**: renkler artık `values/colors.xml` belirteçlerinden okunuyor, `values-v31/` aynı adları `system_accent1/accent3/neutral1` ailelerine bağlıyor (duvar kâğıdı paleti); köşe yarıçapı da sabit dp değil `system_app_widget_background_radius`. Gece/gündüz ayrımı artık belirtecin işi olduğu için `drawable-night/` kopyaları SİLİNDİ. Dört stok `@android:drawable/*` ikon kendi vektörlerimizle değişti (`ic_widget_checklist`, `ic_widget_ordered` çizgiyle kuruldu — rakam yolları 24dp'de okunmuyordu). TUZAK: **RemoteViews dinamik liste kuramaz** (ayrı bir `RemoteViewsService` ister), bu yüzden not satırları SABİT dört görünüm; sağlayıcı boşları `GONE` yapıyor ve Dart artık "• " ile birleştirilmiş yığın yerine sade başlıkları `\n` ile gönderiyor. Dört kart 2 hücreye sığmadığı için varsayılan yükseklik 2→3 hücre. (6) **Video notu istemi**: "Özet / Görülenler / Konuşulanlar / Yapılacaklar" sabit başlık şablonu çıktıyı robotlaştırıyordu; istem artık şablon yasaklıyor ve "videoda ... görülüyor / konuşmacı ... diyor" anlatıcı kalıplarını da yasaklayıp bilginin kendisini yazdırıyor. DOĞRULAMA: `flutter analyze` temiz (yalnız 2 ESKİ info), `flutter test` **128/128** (yeni `link_text_test.dart` 6 test), imzalı APK derlendi ve `adb install -r` ile cihaza kuruldu (silinmedi, imza aynı). Widget'ların cihazdaki GÖRÜNÜMÜ doğrulanmadı — kullanıcı testi bekliyor.
 
 - 2026-07-26 (üçüncü tur — hatırlatıcı). **KÖK NEDEN — sesli asistan hatırlatıcı kurmuyordu** ("yarın sabah 9'da toplantım var" → not oluştu, `reminderAt` boş, çip yok; kullanıcı ölçümü). Zincirin geri kalanı SAĞLAMdı (ReminderService bildirim planlıyor, AssistantService `reminderAt`'i işliyor, editörde çip var) — sorun modelin aracı **eksik argümanla** çağırmasıydı: `reminderAt` her iki şemada da `optionalParameters` içinde ve açıklaması *"(isteğe bağlı)"*; üstelik "toplantım var" bir EMİR değil bildirim cümlesi, o yüzden model isteğe bağlı alanı rutin olarak atlıyordu. KARAR: istemi güçlendirip ummak YETERSİZ — davranış modelin keyfine bırakılmaz. Üç katmanlı çözüm: (1) yeni `lib/core/utils/tr_datetime.dart` — Türkçe konuşmadan zaman çıkaran saf fonksiyon (bugün/yarın/öbür gün, gün adları + "haftaya" öneki, sabah/öğlen/öğleden sonra/akşam/gece varsayılanları, `14:30` / `saat 9` / `9'da` / `9 buçuk`); (2) `VoiceAssistantController.finish()` içinde emniyet ağı — model `reminderAt`'i boş bıraktıysa zaman dökümden yerelde çıkarılıp `setReminder` ile kurulur (model doldurduysa DOKUNULMAZ, onun bağlamı geniş), aynı ağ AI tümden ölüyken açılan yedek nota da bağlandı; (3) şema açıklaması "(isteğe bağlı)" yerine "gün/saat geçiyorsa MUTLAKA doldur, kullanıcının 'hatırlat' demesi gerekmez" oldu (iki yerde: `gemini_service._assistantTools` + `firebase_ai_client._assistantTools`) ve modele giden "şu an" damgası artık ofset + gün adı taşıyor (`_nowStamp()`) — düz `toIso8601String()` ofsetsizdi ve modeller onu UTC sanıp gece yarısına yakın saatlerde "yarın"ı bir gün kaydırabiliyordu. TUZAK (testle bekçilendi): düz `contains` "bugünlük bu kadar"da "bugün", "yarım ekmek"te "yarın" görüp hatırlatıcı UYDURUYORdu → `_hasWord` ile kelime sınırı denetimi (Dart'ın `\b`'si ASCII `\w` üzerinden çalıştığı için Türkçe harflerde güvenilmez); ayrıca sayı MUTLAKA bir saat ipucuna bağlı olmalı (`saat`/`'da`/`:`/`buçuk`) yoksa "3 elma 2 armut" saat sanılıyordu. AYRICA keşfedilebilirlik: editörde "Hatırlatıcı ekle" ✨ simgeli AI menüsünün (Etiket öner / Başlık öner) içindeydi — kullanıcı "nota hatırlatıcı ekleme olmalı" dedi çünkü orada arayan yok; artık klasör çipinin yanında kendi ⏰ `ActionChip`'i. DOĞRULAMA: `flutter analyze` temiz (2 ESKİ info), `flutter test` **137/137** (yeni `tr_datetime_test.dart` 9 test), imzalı APK `adb install -r` ile kuruldu. Cihazda sesli asistanla UÇTAN UCA denenmedi — kullanıcı testi bekliyor.
+
+- 2026-07-27: **Hatirlatici gecikmesi + klavyeden gorsel yapistirma.**
+  (1) **KOK NEDEN - 9:00 hatirlaticisi 9:02'de geliyordu**: `reminder_service.dart`
+  `AndroidScheduleMode.inexactAllowWhileIdle` kullaniyordu ve manifest'te kesin
+  alarm izni yoktu; Android "inexact" alarmi toplu ise alip dakikalarca
+  geciktirir (tasarim geregi). COZUM: `USE_EXACT_ALARM` + `SCHEDULE_EXACT_ALARM`
+  izinleri + `exactAllowWhileIdle` - hem not hatirlaticisi hem gunluk brifing
+  (ayni kod yolundaki sibling akis, ikisi birlikte duzeltildi). RISK: Play
+  politikasinda `USE_EXACT_ALARM` "alarm saati / takvim" uygulamalarina ayrilmis;
+  yayin incelemesinde reddedilirse yol `SCHEDULE_EXACT_ALARM` + calisma aninda
+  izin isteme + izin yoksa inexact'e dusme.
+  (2) **Bildirim "yarin saat 9'da" diyordu** cunku govde ham not metni
+  (`note.toPlainText()`) ve sesli asistan dokumundeki goreli soz metinde
+  doniyor. KARAR (kullanici, 2026-07-27): not metnine DOKUNULMAZ - govdenin
+  basina `reminderTimePrefix()` ile mutlak zaman oneki konur
+  ("Bugun 09:00 - ..."). Ay adlari elle yazili: `intl`'in Turkce adlari
+  `initializeDateFormatting` cagrisi istiyor, bildirim planlamasi ise arka
+  planda da kosuyor.
+  (3) **Klavyeden gorsel yapistirma bug degil, eksik yapilandirmaydi**: Android
+  gorseli duz metin yapistirmadan AYRI bir yolla (`commitContent`) gonderir ve
+  yalnizca alan destekledigini bildirirse gonderir. Flutter karsiligi
+  `TextField.contentInsertionConfiguration`; govdeye ve liste ogelerine verildi
+  (`ItemsEditor.contentInsertion` parametresiyle - ekleri not editoru yonetiyor).
+  Masaustunde duz **Ctrl+V'ye baglanmadi**: kisayolu yakalamak TextField'in
+  normal metin yapistirmasini yutuyor, panoda gorsel olup olmadigi ise ancak
+  async ogrenilebiliyor - metin yapistirmayi elle yeniden yazmak sarma
+  capalarini bozma riski tasiyordu. Ctrl+Shift+V duruyor.
+- 2026-07-27: **Bos notta gorsel en ust satira cikamiyordu + YANLIS TESHIS duzeltmesi.**
+  KOK NEDEN: `note_editor_screen.dart` icindeki `hintReserve`, govde BOSKEN
+  `NotePageCanvas.topLimit`'e bir satirlik pay ekliyordu; amac ipucu metninin
+  ("Not yaz...") gorselin altinda kaybolmamasiydi, bedeli kullanicinin gorseli
+  en uste hic koyamamasi. COZUM ters yone cevrildi: gorsel serbest birakildi,
+  ipucu tuvale devredildi (`NotePageCanvas.hint` + saf fonksiyon
+  `hintTopFor()`), gorsel ipucunun bandini kesiyorsa ipucu gorselin ALTINA
+  iniyor. Ipucu metin degil DEKORASYON oldugu icin sarma motoru onu akitamiyor
+  - kok fark bu.
+  **TUZAK (kendi hatam, olcmeden konustum):** kullaniciya "sarma motoru
+  satirlari yalnizca yana kaydirabiliyor, asagi itemiyor" dedim ve buyuk bir
+  is onerdim. YANLIS. `text_wrap.dart:164-173` zaten yapiyor: kalan kullanilir
+  genislik sutunun %25'inin altina duserse dolgu SATIRIN TAMAMINI yiyor,
+  kirici o satira kelime sigdiramiyor ve metin gorselin altina iniyor. Testi
+  de vardi ve geciyordu: `text_wrap_test.dart` > "sutunu kaplayan gorsel metni
+  altina iter". KALANLAR.md'deki "dortte ucunden fazlasini kaplayan gorsel"
+  maddesi LISTE MADDELERI icindi (her madde ayri TextField, dikey yeri sabit),
+  govde metni icin degil - iki farkli sey karistirildi. DERS: KALANLAR/HAFIZA
+  maddesini baska bir baglama tasimadan once ilgili testi calistir.
+  **KARAR (kullanici sordu, 2026-07-27): kendi satir kiricimizi YAZMIYORUZ.**
+  Gerekce dosyanin kendi bas yorumunda zaten yazili: kendi dizgici imlec,
+  secim, IME olusturma araligi, kopyala-yapistir, metin olcegi ve bidi
+  davranislarini elle ustlenmek demek. Kalan iki gercek eksik bunu
+  gerektirmiyor - liste maddesi itilmesi YERLESIM (layout) isi, tek uzun
+  kelime ise hedefli kucuk bir duzeltme.

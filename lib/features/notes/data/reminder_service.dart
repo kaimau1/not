@@ -12,6 +12,48 @@ import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
 import 'notes_repository.dart';
 
+const _monthsTr = [
+  'Oca',
+  'Şub',
+  'Mar',
+  'Nis',
+  'May',
+  'Haz',
+  'Tem',
+  'Ağu',
+  'Eyl',
+  'Eki',
+  'Kas',
+  'Ara',
+];
+
+/// Bildirim gövdesinin başına konan mutlak zaman.
+///
+/// Not metni çoğu zaman ham konuşma dökümüdür ve içinde "yarın saat 9'da"
+/// gibi GÖRELİ sözler donar: not yarın okununca "yarın" artık yanlıştır.
+/// Önek her zaman gerçek zamanı söyler, not metnine dokunulmaz.
+///
+/// Ay adları elle yazılı: `intl`'in Türkçe adları için uygulama başında
+/// `initializeDateFormatting` çağrılması gerekir, bildirim planlaması ise
+/// arka planda da koşuyor — 12 sabit dizgi bu bağımlılıktan ucuz.
+@visibleForTesting
+String reminderTimePrefix(DateTime when, {DateTime? now}) {
+  final reference = now ?? DateTime.now();
+  final today = DateTime(reference.year, reference.month, reference.day);
+  final day = DateTime(when.year, when.month, when.day);
+  final clock =
+      '${when.hour.toString().padLeft(2, '0')}:'
+      '${when.minute.toString().padLeft(2, '0')}';
+  switch (day.difference(today).inDays) {
+    case 0:
+      return 'Bugün $clock';
+    case 1:
+      return 'Yarın $clock';
+    default:
+      return '${when.day} ${_monthsTr[when.month - 1]} $clock';
+  }
+}
+
 /// Not hatırlatıcılarını yerel bildirime çeviren servis. Not akışını izler;
 /// gelecekteki her hatırlatıcı için bildirim planlar, kaldırılanları iptal
 /// eder. Firestore senkronu sayesinde bir cihazda kurulan hatırlatıcı diğer
@@ -146,7 +188,9 @@ class ReminderService {
           ),
           windows: WindowsNotificationDetails(),
         ),
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        // Kesin alarm: "inexact" modda Android bildirimi toplu işe alıp
+        // dakikalarca geciktiriyordu (bkz. manifest'teki USE_EXACT_ALARM).
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'briefing',
       );
@@ -183,12 +227,14 @@ class ReminderService {
             ? 'Not hatırlatıcısı'
             : note.title.trim();
         final preview = note.toPlainText();
+        final trimmed = preview.length > 120
+            ? '${preview.substring(0, 120)}…'
+            : preview;
+        final prefix = reminderTimePrefix(note.reminderAt!);
         await _plugin.zonedSchedule(
           id: _notificationId(entry.key),
           title: title,
-          body: preview.length > 120
-              ? '${preview.substring(0, 120)}…'
-              : preview,
+          body: trimmed.trim().isEmpty ? prefix : '$prefix · $trimmed',
           scheduledDate: tz.TZDateTime.from(note.reminderAt!, tz.local),
           notificationDetails: const NotificationDetails(
             android: AndroidNotificationDetails(
@@ -214,7 +260,7 @@ class ReminderService {
             ),
             windows: WindowsNotificationDetails(),
           ),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           payload: 'note:${entry.key}',
         );
         _scheduled[entry.key] = note.reminderAt!;
