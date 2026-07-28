@@ -52,11 +52,20 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="notlar"/>
             </intent-filter>
-            <!-- Paylaş menüsünden not alma: metin/link ve görseller -->
+            <!-- Paylaş menüsünden not alma: metin/link, görsel, PDF ve sunum.
+                 Yalnız uygulamanın gerçekten işleyebildiği türler listelenir —
+                 `*/*` yazılsaydı Notlar her dosyada çıkıp docx/zip paylaşımında
+                 boş not açardı. -->
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="text/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="application/pdf"/>
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND"/>

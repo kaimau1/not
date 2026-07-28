@@ -282,3 +282,28 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   once token uretimi, sonra konsolda kayit + izleme, EN SON zorlama. Ters
   sirada tum kullanici aniden hata alir. `androidProvider` parametresi
   deprecated; dogrusu `providerAndroid: AndroidPlayIntegrityProvider()`.
+## 2026-07-28 — Paylas menusu: PDF/sunum/txt kabul
+- Baska uygulamadan "Paylas -> Notlar" artik PDF ve PPTX'i de aliyor; .txt/.md
+  paylasimi EK degil, notun GOVDESINE yaziliyor (ek yapilsaydi icerik notta
+  gorunmezdi). Iki yer birden degisti: `AndroidManifest.xml` intent-filter
+  (uygulama turu isleyebilse bile manifestte yoksa paylas menusunde HIC
+  cikmaz) + `share_intake.dart` icinde `SharedMediaType.file` dali.
+- KARAR: manifest `*/*` DEGIL, yalniz islenebilen MIME'lar listelendi. Sebep:
+  genel bir "file" ek turu yok (AttachmentKind = image/pdf/audio/slide/video);
+  `*/*` olsaydi docx/zip paylasiminda Notlar cikip icerigi kaybolan bos not
+  acardi. Genel dosya eki istenirse AttachmentKind + ek listesi + Storage
+  kurallari birlikte degismeli.
+- BUG KOKU (ayni gun, ilk surum calismadi): paylasilan PDF'te not hic
+  olusmuyor, sadece ana ekran aciliyordu. Sebep tur tespitinin UZANTIDAN
+  yapilmasi: receive_sharing_intent dosyayi cihaza kopyalarken adi
+  saglayicinin `_display_name` sutunundan aliyor (FileDirectory.kt) ve bu ad
+  Drive/Gmail gibi kaynaklarda UZANTISIZ geliyor -> `p.extension` bos ->
+  dosya sessizce atlaniyor. Ayni dosya baska uygulamadan (adi .pdf iken)
+  calisiyordu, yaniltici. Cozum: `shareAttachmentKind` MIME'a bakiyor,
+  uzantı yalniz yedek. DERS: paylasim/indirme akislarinda dosya ADI guvenilir
+  degil, MIME guvenilir.
+- Ikinci tuzak ayni kaynaktan: eklenti .txt dosyasini `type: text` diye verip
+  `path` alanina DOSYA YOLUNU koyuyor (metnin kendisi degil). Bu yuzden metin
+  girdisi once diskte var mi diye bakilip okunuyor; bakilmasaydi notun
+  govdesine "/data/.../cache/x.txt" yazilacakti.
+- Kanit: `test/share_intake_test.dart` (uzantisiz PDF dahil 5 durum).
