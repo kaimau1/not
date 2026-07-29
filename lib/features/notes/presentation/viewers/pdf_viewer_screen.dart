@@ -126,7 +126,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           ],
         ),
         body: viewer,
-        bottomNavigationBar: _editing ? InkToolbar(controller: _ink) : null,
+        bottomNavigationBar: _editing
+            ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
+            : null,
       ),
     );
   }

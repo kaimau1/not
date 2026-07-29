@@ -5,12 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../data/document_scan.dart';
 import '../domain/note_type.dart';
 import 'qr_scan_screen.dart';
 
 /// "+" düğmesi: dokununca yeni not tipleri ÜÇ SÜTUNLU büyük düğme panelinde
 /// belirir (metin / liste / sıralı liste / el yazısı / sesli / görüntülü /
-/// fotoğraf / QR). Basılı tutmak da aynı paneli açar.
+/// fotoğraf / belge tarama / QR). Basılı tutmak da aynı paneli açar.
 ///
 /// Panel neden böyle: seçenekler eskiden sağ kenara dizilmiş, her biri
 /// ayrı bir baloncuk etiketi taşıyan mini FAB'lardı. Sekiz seçenek ekranın
@@ -34,6 +35,7 @@ class QuickAddFab extends StatefulWidget {
     required this.onVoiceCapture,
     required this.onVideoNote,
     required this.onPhotoNote,
+    required this.onScanNote,
     required this.onQrNote,
   });
 
@@ -54,6 +56,10 @@ class QuickAddFab extends StatefulWidget {
   /// "Foto çek not al": kamera açılır, çekilen fotoğraf yeni notun içine
   /// gömülür ve editör yazmaya hazır açılır.
   final VoidCallback onPhotoNote;
+
+  /// "Belge tara not al": belge tarayıcı açılır (kenar tespiti + perspektif
+  /// düzeltme), düzeltilmiş sayfalar yeni notun içine girer.
+  final VoidCallback onScanNote;
 
   /// QR kod okuyup içeriğini yeni nota yazar.
   final VoidCallback onQrNote;
@@ -121,6 +127,12 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   context.l10n.newPhotoNote,
                   widget.onPhotoNote,
                 ),
+                if (DocumentScan.supported)
+                  (
+                    Icons.document_scanner_outlined,
+                    context.l10n.newScanNote,
+                    widget.onScanNote,
+                  ),
                 (
                   Icons.draw_outlined,
                   context.l10n.newHandwriting,

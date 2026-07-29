@@ -14,7 +14,11 @@ import 'ink_layer.dart';
 /// oranlı (0–1) vektör olarak saklanır — notla birlikte senkronlanır, her
 /// açılışta yeniden düzenlenebilir, silinebilir.
 class ImageViewerScreen extends StatefulWidget {
-  const ImageViewerScreen({super.key, required this.attachment, this.onChanged});
+  const ImageViewerScreen({
+    super.key,
+    required this.attachment,
+    this.onChanged,
+  });
 
   final Attachment attachment;
 
@@ -125,7 +129,9 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: _editing ? InkToolbar(controller: _ink) : null,
+        bottomNavigationBar: _editing
+            ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
+            : null,
       ),
     );
   }

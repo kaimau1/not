@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
-import '../editor/drawing_screen.dart' show kInkPalette;
+import 'ink_pen.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak elle-yazma katmanı. Çizim dosyaya
 /// gömülmez; sayfa/slayt oranlı (0–1) vektör olarak [InkStroke] listesinde
@@ -27,11 +27,20 @@ class InkController extends ChangeNotifier {
 
   bool editing = false;
   bool eraser = false;
+
+  /// Kullanıcının seçtiği renk — SAYDAMLIKSIZ hâli. Çizgiye yazılırken
+  /// kalemin saydamlığı uygulanır ([penColor]).
   Color color = kInkPalette.first;
+
+  /// Kalem türü (tükenmez / keçeli / fosforlu).
+  InkPen pen = InkPen.pen;
 
   /// Ekrandaki (ölçeklenmiş) sayfa üzerinde piksel kalınlık; kaydedilirken
   /// sayfa genişliğinin oranına çevrilir.
-  double widthPx = 3;
+  double widthPx = InkPen.pen.defaultWidth;
+
+  /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı.
+  Color get penColor => pen.apply(color);
 
   int _pointers = 0;
   InkStroke? _active;
@@ -63,8 +72,19 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Kalem türünü değiştirir. Kalınlık türün kendi aralığına taşınır:
+  /// fosforluya geçip 3 px'te kalmak "fosforlu çalışmıyor" izlenimi veriyordu.
+  void setPen(InkPen value) {
+    if (pen == value && !eraser) return;
+    final wasDefault = widthPx == pen.defaultWidth;
+    pen = value;
+    eraser = false;
+    widthPx = wasDefault ? value.defaultWidth : value.clampWidth(widthPx);
+    notifyListeners();
+  }
+
   void setWidth(double value) {
-    widthPx = value;
+    widthPx = pen.clampWidth(value);
     notifyListeners();
   }
 
@@ -124,7 +144,7 @@ class InkController extends ChangeNotifier {
     }
     final stroke = InkStroke(
       page: page,
-      color: color.toARGB32(),
+      color: penColor.toARGB32(),
       width: widthPx / size.width,
       points: [local.dx / size.width, local.dy / size.height],
     );
@@ -195,11 +215,7 @@ class InkController extends ChangeNotifier {
 /// Bir sayfanın/slaytın üstüne serilen dokunma + çizim katmanı. İçeren
 /// widget'ın tüm alanını kaplar (sayfa boyutu [LayoutBuilder]'dan alınır).
 class InkPageLayer extends StatelessWidget {
-  const InkPageLayer({
-    super.key,
-    required this.controller,
-    required this.page,
-  });
+  const InkPageLayer({super.key, required this.controller, required this.page});
 
   final InkController controller;
 
@@ -238,12 +254,20 @@ class InkPageLayer extends StatelessWidget {
   }
 }
 
-/// Çizim modunda ekranın altında beliren araç çubuğu: kalem/silgi, renkler,
-/// kalınlık, geri al, temizle.
+/// Çizim modunda ekranın altında beliren araç çubuğu: kalem türleri (tükenmez /
+/// keçeli / fosforlu), silgi, renkler, kalınlık, geri al, temizle.
+///
+/// El yazısı notu ekranı ile PDF/slayt/görsel üstü çizim AYNI çubuğu kullanır:
+/// seçenekler iki yerde ayrı ayrı yazılırsa biri güncellenip diğeri geride
+/// kalıyor, kullanıcı "burada var orada yok" durumuyla karşılaşıyordu.
 class InkToolbar extends StatelessWidget {
-  const InkToolbar({super.key, required this.controller});
+  const InkToolbar({super.key, required this.controller, this.hint});
 
   final InkController controller;
+
+  /// Çubuğun altındaki tek satırlık ipucu (null = ipucu yok). PDF/slayt
+  /// üstünde iki parmak jesti anlatılır; el yazısı ekranında gerekmez.
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
@@ -253,9 +277,36 @@ class InkToolbar extends StatelessWidget {
     );
   }
 
+  /// Kalem türü düğmesi: seçiliyken dolgulu, ucu seçili renkte.
+  Widget _penButton(
+    BuildContext context,
+    InkPen pen,
+    IconData icon,
+    String label,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final selected = !controller.eraser && controller.pen == pen;
+    return IconButton(
+      tooltip: label,
+      isSelected: selected,
+      // Sıkı yoğunluk: üç kalem + silgi + geri al + temizle tek satıra
+      // sığmalı (360 dp telefonda taşıyordu).
+      visualDensity: VisualDensity.compact,
+      icon: Icon(
+        icon,
+        // Seçili kalemin simgesi çizilen renkte: hangi kalemin hangi renkte
+        // olduğu tek bakışta görünür.
+        color: selected ? controller.penColor : scheme.onSurfaceVariant,
+      ),
+      onPressed: () => controller.setPen(pen),
+    );
+  }
+
   Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final pen = controller.pen;
+    final hintText = hint;
     return SafeArea(
       top: false,
       child: Material(
@@ -267,26 +318,41 @@ class InkToolbar extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  IconButton(
-                    tooltip: l10n.pen,
-                    isSelected: !controller.eraser,
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => controller.setEraser(false),
+                  _penButton(
+                    context,
+                    InkPen.pen,
+                    Icons.edit,
+                    l10n.penBallpoint,
+                  ),
+                  _penButton(
+                    context,
+                    InkPen.marker,
+                    Icons.brush,
+                    l10n.penMarker,
+                  ),
+                  _penButton(
+                    context,
+                    InkPen.highlighter,
+                    Icons.format_color_fill,
+                    l10n.penHighlighter,
                   ),
                   IconButton(
                     tooltip: l10n.eraser,
                     isSelected: controller.eraser,
+                    visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.cleaning_services_outlined),
                     onPressed: () => controller.setEraser(true),
                   ),
                   const Spacer(),
                   IconButton(
                     tooltip: l10n.undo,
+                    visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.undo),
                     onPressed: controller.ink.isEmpty ? null : controller.undo,
                   ),
                   IconButton(
                     tooltip: l10n.clearInk,
+                    visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.delete_outline),
                     onPressed: controller.ink.isEmpty ? null : controller.clear,
                   ),
@@ -309,10 +375,14 @@ class InkToolbar extends StatelessWidget {
                             // Seçili renk vurgulu; diğerleri (özellikle beyaz açık
                             // zeminde) ince çerçeveyle görünür kalır.
                             border: Border.all(
-                              color: !controller.eraser && controller.color == color
+                              color:
+                                  !controller.eraser &&
+                                      controller.color == color
                                   ? scheme.primary
                                   : scheme.outlineVariant,
-                              width: !controller.eraser && controller.color == color
+                              width:
+                                  !controller.eraser &&
+                                      controller.color == color
                                   ? 3
                                   : 1,
                             ),
@@ -322,20 +392,23 @@ class InkToolbar extends StatelessWidget {
                     ),
                   Expanded(
                     child: Slider(
-                      value: controller.widthPx,
-                      min: 1,
-                      max: 12,
+                      // Aralık kalem türüne göre: fosforlu 12 px'te kalsaydı
+                      // vurgulama işe yaramazdı.
+                      value: pen.clampWidth(controller.widthPx),
+                      min: pen.minWidth,
+                      max: pen.maxWidth,
                       onChanged: controller.setWidth,
                     ),
                   ),
                 ],
               ),
-              Text(
-                l10n.inkTwoFingerHint,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
+              if (hintText != null)
+                Text(
+                  hintText,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
             ],
           ),
         ),
@@ -440,7 +513,9 @@ class _InkNavLayerState extends State<InkNavLayer> {
     }
     final scale = matrix.getMaxScaleOnAxis();
     // Toplam ölçek [minScale, maxScale] dışına çıkmayacak kadar ölçekle.
-    final k = (scale * (dist / lastDist)).clamp(widget.minScale, widget.maxScale) / scale;
+    final k =
+        (scale * (dist / lastDist)).clamp(widget.minScale, widget.maxScale) /
+        scale;
     final pan = focal - lastFocal;
     var m = Matrix4.translationValues(pan.dx, pan.dy, 0).multiplied(matrix);
     if (k != 1) {
@@ -474,8 +549,11 @@ class _InkNavLayerState extends State<InkNavLayer> {
     final t = m.getTranslation();
     final x = t.x.clamp(box.width * (1 - s), 0.0).toDouble();
     final y = t.y.clamp(box.height * (1 - s), 0.0).toDouble();
-    return Matrix4.translationValues(x, y, 0)
-        .multiplied(Matrix4.diagonal3Values(s, s, 1));
+    return Matrix4.translationValues(
+      x,
+      y,
+      0,
+    ).multiplied(Matrix4.diagonal3Values(s, s, 1));
   }
 
   @override
@@ -502,12 +580,7 @@ class InkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final s in strokes) {
       if (s.page != page) continue;
-      final paint = Paint()
-        ..color = Color(s.color)
-        ..strokeWidth = s.width * size.width
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..style = PaintingStyle.stroke;
+      final paint = inkPaint(Color(s.color), s.width * size.width);
       if (s.points.length == 2) {
         canvas.drawCircle(
           Offset(s.points[0] * size.width, s.points[1] * size.height),

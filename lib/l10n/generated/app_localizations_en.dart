@@ -1142,7 +1142,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get annotateDone => 'Finish annotating';
 
   @override
-  String get pen => 'Pen';
+  String get penBallpoint => 'Ballpoint pen';
+
+  @override
+  String get penMarker => 'Marker';
+
+  @override
+  String get penHighlighter => 'Highlighter';
 
   @override
   String get eraser => 'Eraser';
@@ -1158,6 +1164,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newPhotoNote => 'Photo note';
+
+  @override
+  String get newScanNote => 'Scan a document';
+
+  @override
+  String get scanDocument => 'Scan document';
+
+  @override
+  String get scanDocumentSubtitle =>
+      'Finds the edges, flattens the page and adds it';
+
+  @override
+  String get scanUnsupported =>
+      'Document scanning is not supported on this device';
+
+  @override
+  String scanFailed(String error) {
+    return 'Could not scan the document: $error';
+  }
+
+  @override
+  String scanPagesAdded(int count) {
+    return '$count page(s) added to the note';
+  }
+
+  @override
+  String get scanTextTitle => 'Recognise the text too?';
+
+  @override
+  String get scanTextBody =>
+      'The text on the pages is recognised and written into the note. The image stays as it is. Takes a few seconds per page.';
+
+  @override
+  String get scanImageOnly => 'Image only';
+
+  @override
+  String get scanRecognizeText => 'Recognise text';
+
+  @override
+  String get scanRecognizing => 'Recognising text…';
 
   @override
   String get takePhoto => 'Take a photo';

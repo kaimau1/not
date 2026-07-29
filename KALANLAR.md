@@ -103,3 +103,11 @@ silme) tamamlandı, kalanlar sırayla:
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
+
+- [ ] **⚠ CI ÖLÜ — GitHub Actions koşmuyor** (2026-07-23'ten beri, `main` dahil).
+  `Derleme` iş akışının her koşusu ~3 saniyede logsuz kırmızı; runner hiç
+  başlamıyor (`runner_name` boş, log indirme 404). Son yeşil koşu #111
+  (2026-07-22). Bu bir derleme hatası DEĞİL — büyük olasılıkla Actions
+  dakikası/faturalandırma (repo private). Bakılacak: GitHub → Settings →
+  Billing → Actions kullanımı. Düzelene kadar her değişiklik YERELDE
+  doğrulanmalı (`flutter analyze` + `flutter test`, APK için Android SDK).

@@ -39,7 +39,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // uygulamayı yeniden başlatana dek login ekranında kalıyordu.
       // currentUser, authStateChanges emit'inden ÖNCE güncellendiği için
       // burada her zaman tazedir; yarış ortadan kalkar.
-      if (!refresh.ready) return null; // İlk emisyon (oturum geri yükleme) beklenir.
+      // İlk emisyon (oturum geri yükleme) beklenir.
+      if (!refresh.ready) return null;
       final loggedIn = repo.currentUser != null;
       final loggingIn = state.matchedLocation == '/login';
       if (!loggedIn && !loggingIn) return '/login';
@@ -75,6 +76,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               startVideo: state.uri.queryParameters['video'] == '1',
               // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
               startPhoto: state.uri.queryParameters['photo'] == '1',
+              // ?scan=1: belge tara not al — belge tarayıcı açılır.
+              startScan: state.uri.queryParameters['scan'] == '1',
             ),
           ),
         ],
