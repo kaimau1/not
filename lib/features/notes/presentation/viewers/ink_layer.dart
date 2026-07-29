@@ -215,11 +215,7 @@ class InkController extends ChangeNotifier {
 /// Bir sayfanın/slaytın üstüne serilen dokunma + çizim katmanı. İçeren
 /// widget'ın tüm alanını kaplar (sayfa boyutu [LayoutBuilder]'dan alınır).
 class InkPageLayer extends StatelessWidget {
-  const InkPageLayer({
-    super.key,
-    required this.controller,
-    required this.page,
-  });
+  const InkPageLayer({super.key, required this.controller, required this.page});
 
   final InkController controller;
 
@@ -380,11 +376,13 @@ class InkToolbar extends StatelessWidget {
                             // zeminde) ince çerçeveyle görünür kalır.
                             border: Border.all(
                               color:
-                                  !controller.eraser && controller.color == color
+                                  !controller.eraser &&
+                                      controller.color == color
                                   ? scheme.primary
                                   : scheme.outlineVariant,
                               width:
-                                  !controller.eraser && controller.color == color
+                                  !controller.eraser &&
+                                      controller.color == color
                                   ? 3
                                   : 1,
                             ),
@@ -515,7 +513,9 @@ class _InkNavLayerState extends State<InkNavLayer> {
     }
     final scale = matrix.getMaxScaleOnAxis();
     // Toplam ölçek [minScale, maxScale] dışına çıkmayacak kadar ölçekle.
-    final k = (scale * (dist / lastDist)).clamp(widget.minScale, widget.maxScale) / scale;
+    final k =
+        (scale * (dist / lastDist)).clamp(widget.minScale, widget.maxScale) /
+        scale;
     final pan = focal - lastFocal;
     var m = Matrix4.translationValues(pan.dx, pan.dy, 0).multiplied(matrix);
     if (k != 1) {
@@ -549,8 +549,11 @@ class _InkNavLayerState extends State<InkNavLayer> {
     final t = m.getTranslation();
     final x = t.x.clamp(box.width * (1 - s), 0.0).toDouble();
     final y = t.y.clamp(box.height * (1 - s), 0.0).toDouble();
-    return Matrix4.translationValues(x, y, 0)
-        .multiplied(Matrix4.diagonal3Values(s, s, 1));
+    return Matrix4.translationValues(
+      x,
+      y,
+      0,
+    ).multiplied(Matrix4.diagonal3Values(s, s, 1));
   }
 
   @override

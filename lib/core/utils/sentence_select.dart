@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-
 /// Metin alanlarında seçimi KELİMEden CÜMLEye genişletme.
 ///
 /// Uzun basış (ve çift dokunuş) Flutter'da yalnızca altındaki KELİMEYİ seçer.
@@ -11,6 +9,8 @@ import 'package:flutter/widgets.dart';
 /// Tutamaklarla daraltma korunur: seçim ÖNCEKİ seçimin içinde kalıyorsa
 /// dokunulmaz — yoksa kullanıcı cümleden bir parça seçemezdi.
 library;
+
+import 'package:flutter/widgets.dart';
 
 /// Cümleyi bitiren noktalama. Türkçede üç nokta tek karakter olarak da
 /// gelebildiği için '…' ayrıca listede.
@@ -51,7 +51,7 @@ int? _terminatorEnd(String text, int i) {
 /// [offset] konumunu içeren cümlenin aralığı. Satır sonu da cümle sınırıdır:
 /// listelerde ve başlıklarda nokta konmayan satırlar tek başına bir cümledir.
 TextRange sentenceRangeAt(String text, int offset) {
-  if (text.isEmpty) return const TextRange.collapsed(offset: 0);
+  if (text.isEmpty) return const TextRange.collapsed(0);
   final pos = offset.clamp(0, text.length);
 
   var start = 0;

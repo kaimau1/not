@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -472,7 +474,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final folderId = ref.read(selectedFolderProvider);
     repo.updateFields(id, {
       'body': code,
-      if (folderId != null) 'folderId': folderId,
+      // Null-aware eleman: klasör süzgeci yoksa anahtar hiç yazılmaz.
+      'folderId': ?folderId,
     });
     if (mounted) await context.push('/note/$id');
   }
@@ -868,7 +871,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   // Bedeli, bu pay içindeki kartların önceden
                                   // kurulması; bu sınırın (≈130 kart) ötesinde
                                   // tembelliğe geri dönülür.
-                                  cacheExtent: _kGridCacheExtent,
+                                  scrollCacheExtent:
+                                      const ScrollCacheExtent.pixels(
+                                        _kGridCacheExtent,
+                                      ),
                                   slivers: [
                                     ...notesAsync.when(
                                       data: (notes) => _buildNoteSlivers(

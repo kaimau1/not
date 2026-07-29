@@ -1169,7 +1169,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get scanDocument => 'Belge tara';
 
   @override
-  String get scanDocumentSubtitle => 'Kenarları bulur, düzleştirir ve nota ekler';
+  String get scanDocumentSubtitle =>
+      'Kenarları bulur, düzleştirir ve nota ekler';
 
   @override
   String get scanUnsupported => 'Belge tarama bu cihazda desteklenmiyor';

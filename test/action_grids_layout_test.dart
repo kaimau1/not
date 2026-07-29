@@ -14,7 +14,7 @@ void main() {
   Widget host(Widget child) => ProviderScope(
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-        locale: const Locale('tr'),
+      locale: const Locale('tr'),
       supportedLocales: AppLocalizations.supportedLocales,
       home: child,
     ),

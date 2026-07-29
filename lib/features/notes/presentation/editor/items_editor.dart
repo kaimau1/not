@@ -151,13 +151,15 @@ class _ItemsEditorState extends State<ItemsEditor> {
     super.dispose();
   }
 
-  WrapTextController _controllerFor(NoteItem item) =>
-      _controllers.putIfAbsent(item.id, () {
-        final controller = WrapTextController(text: item.text);
-        // Gövde metniyle aynı davranış: uzun basış kelimeyi değil cümleyi seçer.
-        attachSentenceSelection(controller);
-        return controller;
-      });
+  WrapTextController _controllerFor(NoteItem item) => _controllers.putIfAbsent(
+    item.id,
+    () {
+      final controller = WrapTextController(text: item.text);
+      // Gövde metniyle aynı davranış: uzun basış kelimeyi değil cümleyi seçer.
+      attachSentenceSelection(controller);
+      return controller;
+    },
+  );
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();
@@ -507,79 +509,83 @@ class _ItemsEditorState extends State<ItemsEditor> {
               ? scheme.primaryContainer.withValues(alpha: 0.4)
               : null,
           padding: const EdgeInsets.symmetric(horizontal: 12),
-      // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
-      // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
-      // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
-      // yarım çizgi animasyonu için satırı yeniden çizmek gerekirdi.
-      child: AnimatedOpacity(
-        opacity: checked ? 0.55 : 1,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-        child: Row(
-          children: [
-            leading,
-            Expanded(
-              // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-              child: GestureDetector(
-                onTap: _selectionMode ? () => _toggleSelection(item) : null,
-                child: AbsorbPointer(
-                  absorbing: _selectionMode,
-                  child: _wrapped(
-                    controller,
-                    baseStyle,
-                    TextField(
-                      controller: controller,
-                      focusNode: _focusFor(item),
-                      onChanged: (_) => _updateText(item, controller.logicalText),
-                      contextMenuBuilder: (context, editableState) =>
-                          _contextMenu(context, editableState),
-                      contentInsertionConfiguration: widget.contentInsertion,
-                      // Varsayılan "next" davranışı odağı metin dışı bir öğeye
-                      // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
-                      // bastırır, odak doğrudan yeni öğeye geçer.
-                      onEditingComplete: () => _insertAfter(item),
-                      textInputAction: TextInputAction.next,
-                      // Tam göster modunda satır sarılıp büyür; "dokununca aç"
-                      // modunda odaklanınca açılır, aksi hâlde tek satır.
-                      maxLines: widget.expandItems || focused ? null : 1,
-                      // Sarma planı bu stille hesaplanır; TextField'ın örtük
-                      // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
-                      // satırlar yanlış kırılır (M3 varsayılanı zaten bodyLarge).
-                      // Solma AnimatedOpacity'e bırakıldı (aşağıya bak); burada
-                      // alfa verilirse iki kez soluyor.
-                      style: checked
-                          ? baseStyle.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              color: scheme.onSurfaceVariant,
-                            )
-                          : baseStyle,
-                      decoration: InputDecoration(
-                        hintText: l10n.newItemHint,
-                        filled: false,
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
+          // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
+          // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
+          // yarım çizgi animasyonu için satırı yeniden çizmek gerekirdi.
+          child: AnimatedOpacity(
+            opacity: checked ? 0.55 : 1,
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: Row(
+              children: [
+                leading,
+                Expanded(
+                  // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
+                  child: GestureDetector(
+                    onTap: _selectionMode ? () => _toggleSelection(item) : null,
+                    child: AbsorbPointer(
+                      absorbing: _selectionMode,
+                      child: _wrapped(
+                        controller,
+                        baseStyle,
+                        TextField(
+                          controller: controller,
+                          focusNode: _focusFor(item),
+                          onChanged: (_) =>
+                              _updateText(item, controller.logicalText),
+                          contextMenuBuilder: (context, editableState) =>
+                              _contextMenu(context, editableState),
+                          contentInsertionConfiguration:
+                              widget.contentInsertion,
+                          // Varsayılan "next" davranışı odağı metin dışı bir öğeye
+                          // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
+                          // bastırır, odak doğrudan yeni öğeye geçer.
+                          onEditingComplete: () => _insertAfter(item),
+                          textInputAction: TextInputAction.next,
+                          // Tam göster modunda satır sarılıp büyür; "dokununca aç"
+                          // modunda odaklanınca açılır, aksi hâlde tek satır.
+                          maxLines: widget.expandItems || focused ? null : 1,
+                          // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                          // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                          // satırlar yanlış kırılır (M3 varsayılanı zaten bodyLarge).
+                          // Solma AnimatedOpacity'e bırakıldı (aşağıya bak); burada
+                          // alfa verilirse iki kez soluyor.
+                          style: checked
+                              ? baseStyle.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: scheme.onSurfaceVariant,
+                                )
+                              : baseStyle,
+                          decoration: InputDecoration(
+                            hintText: l10n.newItemHint,
+                            filled: false,
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
+                // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
+                // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
+                // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
+                if (focused && !_selectionMode)
+                  IconButton(
+                    tooltip: l10n.removeItem,
+                    icon: const Icon(Icons.close, size: 18),
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    onPressed: () => _removeItem(item),
+                  )
+                else
+                  const SizedBox(width: 48),
+              ],
             ),
-            // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
-            // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
-            // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
-            if (focused && !_selectionMode)
-              IconButton(
-                tooltip: l10n.removeItem,
-                icon: const Icon(Icons.close, size: 18),
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                onPressed: () => _removeItem(item),
-              )
-            else
-              const SizedBox(width: 48),
-          ],
-        ),
-      ),
+          ),
         ),
       ),
     );
@@ -613,25 +619,25 @@ class _ItemsEditorState extends State<ItemsEditor> {
     final addButton = _floatRow(
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Row(
-        children: [
-          TextButton.icon(
-            onPressed: _addItem,
-            icon: const Icon(Icons.add, size: 20),
-            label: Text(l10n.newItemHint),
-          ),
-          const Spacer(),
-          // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor ama
-          // görünmez olduğundan bulunamıyordu.
-          if (!_selectionMode && _items.isNotEmpty)
+        child: Row(
+          children: [
             TextButton.icon(
-              onPressed: () {
-                setState(() => _selectMode = true);
-                _syncBar();
-              },
-              icon: const Icon(Icons.checklist, size: 20),
-              label: Text(l10n.select),
+              onPressed: _addItem,
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(l10n.newItemHint),
             ),
+            const Spacer(),
+            // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor ama
+            // görünmez olduğundan bulunamıyordu.
+            if (!_selectionMode && _items.isNotEmpty)
+              TextButton.icon(
+                onPressed: () {
+                  setState(() => _selectMode = true);
+                  _syncBar();
+                },
+                icon: const Icon(Icons.checklist, size: 20),
+                label: Text(l10n.select),
+              ),
           ],
         ),
       ),
@@ -664,9 +670,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
       buildDefaultDragHandles: false,
       shrinkWrap: widget.shrinkWrap,
-      physics: widget.shrinkWrap
-          ? const NeverScrollableScrollPhysics()
-          : null,
+      physics: widget.shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       header: widget.header,
       footer: footer,
       itemCount: listItems.length,

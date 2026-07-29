@@ -18,7 +18,7 @@ const kInkPalette = <Color>[
 /// okunmalı).
 ///
 /// Tür ayrı bir alan olarak SAKLANMAZ; renge işlenen saydamlıktan
-/// ([Color.alpha]) okunur. Sebep: [InkStroke] Firestore'a ARGB tamsayısı
+/// (alfa kanalından) okunur. Sebep: [InkStroke] Firestore'a ARGB tamsayısı
 /// olarak yazılıyor; yeni alan eklemek eski notların şemasını değiştirirdi.
 /// Saydamlık zaten ARGB'nin içinde ve eski kayıtlar (alfa 255) tükenmez
 /// kalem olarak doğru çizilir.

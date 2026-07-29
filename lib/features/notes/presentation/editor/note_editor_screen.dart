@@ -149,7 +149,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     } on GeminiException catch (e) {
       if (mounted) {
         _showSnack(
-          e.isAuthError ? context.l10n.aiNoApiKey : context.l10n.aiError(e.message),
+          e.isAuthError
+              ? context.l10n.aiNoApiKey
+              : context.l10n.aiError(e.message),
         );
       }
     } catch (e) {
@@ -246,6 +248,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       child: field,
     );
   }
+
   final _debouncer = Debouncer();
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
@@ -394,7 +397,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           ? a.width! / a.height!
           : 1.0;
       final pageWidth = _pageBox()?.size.width ?? 0;
-      final bottom = (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
+      final bottom =
+          (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
       if (bottom + 16 > top) top = bottom + 16;
     }
     // Sayfanın altına taşmasın: içerik yüksekliğini aşarsa oraya sabitlenir.
@@ -818,74 +822,74 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       builder: (sheetContext) => SafeArea(
         child: SingleChildScrollView(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.image_outlined),
-              title: Text(l10n.addImage),
-              onTap: () => Navigator.pop(sheetContext, 'image'),
-            ),
-            // Kamerayla anında fotoğraf: masaüstünde/web'de çekim yolu yok.
-            if (!kIsWeb && !_isDesktop)
+            mainAxisSize: MainAxisSize.min,
+            children: [
               ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: Text(l10n.takePhoto),
-                onTap: () => Navigator.pop(sheetContext, 'camera'),
+                leading: const Icon(Icons.image_outlined),
+                title: Text(l10n.addImage),
+                onTap: () => Navigator.pop(sheetContext, 'image'),
               ),
-            // Belge tarama: kenar tespiti + perspektif düzeltme eklentinin
-            // platform kodunu ister, masaüstünde yok.
-            if (DocumentScan.supported)
+              // Kamerayla anında fotoğraf: masaüstünde/web'de çekim yolu yok.
+              if (!kIsWeb && !_isDesktop)
+                ListTile(
+                  leading: const Icon(Icons.photo_camera_outlined),
+                  title: Text(l10n.takePhoto),
+                  onTap: () => Navigator.pop(sheetContext, 'camera'),
+                ),
+              // Belge tarama: kenar tespiti + perspektif düzeltme eklentinin
+              // platform kodunu ister, masaüstünde yok.
+              if (DocumentScan.supported)
+                ListTile(
+                  leading: const Icon(Icons.document_scanner_outlined),
+                  title: Text(l10n.scanDocument),
+                  subtitle: Text(l10n.scanDocumentSubtitle),
+                  onTap: () => Navigator.pop(sheetContext, 'scan'),
+                ),
+              if (qrScanSupported)
+                ListTile(
+                  leading: const Icon(Icons.qr_code_scanner),
+                  title: Text(l10n.qrScanTitle),
+                  subtitle: Text(l10n.qrScanSubtitle),
+                  onTap: () => Navigator.pop(sheetContext, 'qr'),
+                ),
               ListTile(
-                leading: const Icon(Icons.document_scanner_outlined),
-                title: Text(l10n.scanDocument),
-                subtitle: Text(l10n.scanDocumentSubtitle),
-                onTap: () => Navigator.pop(sheetContext, 'scan'),
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                title: Text(l10n.addPdf),
+                onTap: () => Navigator.pop(sheetContext, 'pdf'),
               ),
-            if (qrScanSupported)
               ListTile(
-                leading: const Icon(Icons.qr_code_scanner),
-                title: Text(l10n.qrScanTitle),
-                subtitle: Text(l10n.qrScanSubtitle),
-                onTap: () => Navigator.pop(sheetContext, 'qr'),
+                leading: const Icon(Icons.slideshow_outlined),
+                title: Text(l10n.addSlide),
+                onTap: () => Navigator.pop(sheetContext, 'slide'),
               ),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf_outlined),
-              title: Text(l10n.addPdf),
-              onTap: () => Navigator.pop(sheetContext, 'pdf'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.slideshow_outlined),
-              title: Text(l10n.addSlide),
-              onTap: () => Navigator.pop(sheetContext, 'slide'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.brush_outlined),
-              title: Text(l10n.addDrawing),
-              onTap: () => Navigator.pop(sheetContext, 'drawing'),
-            ),
-            // Tarayıcıda gizli: `record` web'de dosya yolu değil blob adresi
-            // döndürüyor, ek akışı ise yol bekliyor (bkz. prepareAudio).
-            if (!kIsWeb)
               ListTile(
-                leading: const Icon(Icons.mic_none),
-                title: Text(l10n.recordAudio),
-                onTap: () => Navigator.pop(sheetContext, 'audio'),
+                leading: const Icon(Icons.brush_outlined),
+                title: Text(l10n.addDrawing),
+                onTap: () => Navigator.pop(sheetContext, 'drawing'),
               ),
-            // Görüntülü not da cihaz dosyası ister; web'de kapalı.
-            if (!kIsWeb)
-              ListTile(
-                leading: const Icon(Icons.videocam_outlined),
-                title: Text(l10n.newVideoNote),
-                subtitle: Text(l10n.videoLocalOnly),
-                onTap: () => Navigator.pop(sheetContext, 'video'),
-              ),
-            if (_isDesktop)
-              ListTile(
-                leading: const Icon(Icons.content_paste),
-                title: Text(l10n.pasteImage),
-                onTap: () => Navigator.pop(sheetContext, 'paste'),
-              ),
-          ],
+              // Tarayıcıda gizli: `record` web'de dosya yolu değil blob adresi
+              // döndürüyor, ek akışı ise yol bekliyor (bkz. prepareAudio).
+              if (!kIsWeb)
+                ListTile(
+                  leading: const Icon(Icons.mic_none),
+                  title: Text(l10n.recordAudio),
+                  onTap: () => Navigator.pop(sheetContext, 'audio'),
+                ),
+              // Görüntülü not da cihaz dosyası ister; web'de kapalı.
+              if (!kIsWeb)
+                ListTile(
+                  leading: const Icon(Icons.videocam_outlined),
+                  title: Text(l10n.newVideoNote),
+                  subtitle: Text(l10n.videoLocalOnly),
+                  onTap: () => Navigator.pop(sheetContext, 'video'),
+                ),
+              if (_isDesktop)
+                ListTile(
+                  leading: const Icon(Icons.content_paste),
+                  title: Text(l10n.pasteImage),
+                  onTap: () => Navigator.pop(sheetContext, 'paste'),
+                ),
+            ],
           ),
         ),
       ),
@@ -1772,7 +1776,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       } else {
         _mutate(
           (n) => n.copyWith(
-            items: [...n.items, NoteItem(id: const Uuid().v4(), text: text)],
+            items: [
+              ...n.items,
+              NoteItem(id: const Uuid().v4(), text: text),
+            ],
           ),
           immediate: true,
         );

@@ -360,3 +360,30 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - Kanit: `test/sentence_select_test.dart` (cumle siniri + genisletme kurallari),
   `test/drawing_capture_test.dart` (ortak `InkPainter` yoluna tasindi, fosforlu
   saydamligi dahil).
+- **CI TUZAĞI (bu turda ortaya çıktı, KOD İLE İLGİSİ YOK):** 2026-07-23'ten
+  bu yana `Derleme` iş akışının HER kosusu ~3 saniyede, LOGSUZ, "Analiz + Test"
+  isinde kırmızı. `main` dahil. Runner hiç başlamıyor (runner_name bos,
+  log indirme 404) → GitHub Actions tarafi (dakika/faturalandirma) sorunu,
+  derleme hatası değil. Son yeşil kosu: 2026-07-22 (#111).
+  DERS: bu pencerede "CI yeşil" diye güvenilemez; doğrulama YEREL yapılmalı.
+  Bu tur icin /workspace altina Flutter 3.44.6 (CI ile AYNI surum) + Android
+  SDK 37 + NDK 28.2 kuruldu; `analyze` (0 sorun), `test` (171 gecti) ve
+  `build apk --debug` (basarili) yerelde kosuldu.
+- **CI blackout'unda biriken iki `analyze` hatası düzeltildi** (kod değişikliği
+  bu turun kapsamı dışıydı ama analyze bunlarla KIRMIZI kalıyordu):
+  `cacheExtent` → `scrollCacheExtent: ScrollCacheExtent.pixels(...)` (AGP/Flutter
+  3.44'te deprecated; `ScrollCacheExtent` yalnız `package:flutter/rendering.dart`
+  içinde, material.dart onu vermiyor) ve `if (folderId != null) 'k': v` →
+  `'k': ?folderId` (null-aware eleman). `flutter analyze` INFO'larda da 1
+  dönüyor — bilgi seviyesi uyarı "önemsiz" değil, CI'yi kırıyor.
+- **TUZAK — `dart format` tüm repoyu biçimlendiriyor:** `dart format lib test`
+  50 dosyayı değiştirdi (çoğu bu turla ilgisiz); diff okunmaz hâle geldi ve
+  `router.dart`'ta satır bölünmesi YENİ bir lint doğurdu
+  (`curly_braces_in_flow_control_structures`). Sadece dokunduğun dosyaları
+  biçimlendir; toplu biçimlendirme AYRI bir commit olmalı.
+- **TUZAK — widget testinde `Picture.toImage` ilerlemiyor:** el yazısı ekranının
+  "Nota ekle" akışı testte SONSUZA KADAR asılıydı (ekran kapanmıyor, sonuç null,
+  hata da yok). Sebep: PNG kodlaması motora gidiyor, `testWidgets`'in sahte
+  zamanlı zone'unda tamamlanmıyor — `tester.pump` ne kadar pompalanırsa
+  pompalansın bitmiyor. Çözüm: `await tester.runAsync(() => Future.delayed(...))`.
+  `test/handwriting_pen_test.dart` bunu yazıyor.

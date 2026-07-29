@@ -56,10 +56,7 @@ void main() {
   const size = Size(60, 60);
 
   test('Çizilen çizgi üretilen görselde GERÇEKTEN yer alır', () async {
-    final stroke = _stroke(const [
-      Offset(10, 10),
-      Offset(50, 50),
-    ], size: size);
+    final stroke = _stroke(const [Offset(10, 10), Offset(50, 50)], size: size);
 
     final image = await _render([stroke], size);
 
