@@ -20,6 +20,7 @@ import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_guard.dart';
+import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
@@ -32,6 +33,7 @@ import '../../../settings/data/permissions_service.dart';
 import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
+import '../../data/document_scan.dart';
 import '../../data/notes_repository.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
@@ -80,6 +82,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startVoiceCapture = false,
     this.startVideo = false,
     this.startPhoto = false,
+    this.startScan = false,
   });
 
   final String noteId;
@@ -98,6 +101,10 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "Foto çek not al": açılışta fotoğraf makinesi açılır,
   /// çekilen kare nota gömülür ve kullanıcı doğrudan yazmaya başlar.
   final bool startPhoto;
+
+  /// (+) menüsündeki "Belge tara not al": açılışta belge tarayıcı başlar,
+  /// düzeltilmiş sayfalar nota girer ve istenirse yazıları tanınır.
+  final bool startScan;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -158,6 +165,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   bool _pendingVoice = false;
   bool _pendingVideo = false;
   bool _pendingPhoto = false;
+  bool _pendingScan = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -176,6 +184,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (_pendingPhoto) {
       _pendingPhoto = false;
       _takePhoto();
+    }
+    if (_pendingScan) {
+      _pendingScan = false;
+      _scanDocument();
     }
   }
 
@@ -251,6 +263,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // sıçraması yaratıyordu. Not zaten dashboard akışında yüklü olduğundan
     // (kullanıcı oradan geldi) onu SENKRON okuyup ilk kareyi dolu kur —
     // spinner→editör takası ve onunla gelen kasma ortadan kalkar.
+    // Uzun basışla seçilen kelime, içinde bulunduğu CÜMLEYE genişletilir —
+    // notta seçim neredeyse hep bir cümleyi taşımak/silmek için yapılıyor.
+    attachSentenceSelection(_bodyController);
+    attachSentenceSelection(_titleController);
     final cached = _cachedNote();
     if (cached != null) {
       _note = cached;
@@ -266,6 +282,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _pendingVoice = widget.startVoiceCapture;
     _pendingVideo = widget.startVideo;
     _pendingPhoto = widget.startPhoto;
+    _pendingScan = widget.startScan;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
@@ -448,6 +465,84 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     } catch (e) {
       if (mounted) _showSnack(l10n.attachmentFailed('$e'));
     }
+  }
+
+  /// "Belge tara": kamerayla belge tarar (kenar tespiti + perspektif düzeltme
+  /// + kontrast) ve düzeltilmiş sayfaları nota görsel eki olarak ekler.
+  ///
+  /// Tarama bitince "yazılar da tanınsın mı?" sorulur; evet denirse sayfalar
+  /// OCR'lanıp metin notun gövdesine yazılır — "belge tara, not al" modu.
+  /// Soru sessizce atlanmıyor: OCR sayfa başına birkaç saniye sürüyor ve AI
+  /// kotasından yiyor.
+  Future<void> _scanDocument() async {
+    final l10n = context.l10n;
+    if (!DocumentScan.supported) {
+      _showSnack(l10n.scanUnsupported);
+      return;
+    }
+    // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
+    // olmadan REDDEDER (bkz. _takePhoto).
+    final perms = ref.read(permissionsServiceProvider);
+    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+      if (mounted) _showSnack(l10n.permCameraInfo);
+      return;
+    }
+    if (!mounted) return;
+    List<String>? pages;
+    try {
+      pages = await DocumentScan.scanPages();
+    } catch (e) {
+      if (mounted) _showSnack(l10n.scanFailed('$e'));
+      return;
+    }
+    if (pages == null || pages.isEmpty || !mounted) return;
+
+    // Sayfa baytları bir kez okunur: hem eke hem (istenirse) OCR'a aynı
+    // baytlar gider, dosya iki kez okunmaz.
+    final pageBytes = <Uint8List>[];
+    for (final path in pages) {
+      final bytes = await DocumentScan.readPage(path);
+      if (bytes != null) pageBytes.add(bytes);
+    }
+    if (pageBytes.isEmpty) {
+      if (mounted) _showSnack(l10n.scanFailed('—'));
+      return;
+    }
+    for (var i = 0; i < pageBytes.length; i++) {
+      if (!mounted) return;
+      await _addImageBytes(pageBytes[i], 'tarama-${i + 1}.jpg');
+    }
+    if (!mounted) return;
+    _showSnack(l10n.scanPagesAdded(pageBytes.length));
+
+    final wantsText = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.scanTextTitle),
+        content: Text(l10n.scanTextBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.scanImageOnly),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.scanRecognizeText),
+          ),
+        ],
+      ),
+    );
+    if (wantsText != true || !mounted) return;
+    await _runAi(l10n.scanRecognizing, () async {
+      final service = ref.read(geminiServiceProvider);
+      for (final bytes in pageBytes) {
+        final text = stripMarkdown(
+          await service.extractTextFromImage(bytes, 'image/jpeg'),
+        ).trim();
+        if (!mounted) return;
+        if (text.isNotEmpty) _appendText(text);
+      }
+    });
   }
 
   /// QR/barkod okur (kameradan ya da galerideki bir fotoğraftan) ve okunan
@@ -737,6 +832,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 title: Text(l10n.takePhoto),
                 onTap: () => Navigator.pop(sheetContext, 'camera'),
               ),
+            // Belge tarama: kenar tespiti + perspektif düzeltme eklentinin
+            // platform kodunu ister, masaüstünde yok.
+            if (DocumentScan.supported)
+              ListTile(
+                leading: const Icon(Icons.document_scanner_outlined),
+                title: Text(l10n.scanDocument),
+                subtitle: Text(l10n.scanDocumentSubtitle),
+                onTap: () => Navigator.pop(sheetContext, 'scan'),
+              ),
             if (qrScanSupported)
               ListTile(
                 leading: const Icon(Icons.qr_code_scanner),
@@ -791,6 +895,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         await _pickImage();
       case 'camera':
         await _takePhoto();
+      case 'scan':
+        await _scanDocument();
       case 'qr':
         await _scanQr();
       case 'pdf':

@@ -1138,7 +1138,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get annotateDone => 'Yazmayı bitir';
 
   @override
-  String get pen => 'Kalem';
+  String get penBallpoint => 'Tükenmez kalem';
+
+  @override
+  String get penMarker => 'Keçeli kalem';
+
+  @override
+  String get penHighlighter => 'Fosforlu kalem';
 
   @override
   String get eraser => 'Silgi';
@@ -1155,6 +1161,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get newPhotoNote => 'Foto çek not al';
+
+  @override
+  String get newScanNote => 'Belge tara not al';
+
+  @override
+  String get scanDocument => 'Belge tara';
+
+  @override
+  String get scanDocumentSubtitle => 'Kenarları bulur, düzleştirir ve nota ekler';
+
+  @override
+  String get scanUnsupported => 'Belge tarama bu cihazda desteklenmiyor';
+
+  @override
+  String scanFailed(String error) {
+    return 'Belge taranamadı: $error';
+  }
+
+  @override
+  String scanPagesAdded(int count) {
+    return '$count sayfa nota eklendi';
+  }
+
+  @override
+  String get scanTextTitle => 'Yazılar da tanınsın mı?';
+
+  @override
+  String get scanTextBody =>
+      'Sayfalardaki yazı tanınıp notun içine yazılır. Görüntü aynen kalır. Sayfa başına birkaç saniye sürer.';
+
+  @override
+  String get scanImageOnly => 'Sadece görüntü';
+
+  @override
+  String get scanRecognizeText => 'Yazıları da tanı';
+
+  @override
+  String get scanRecognizing => 'Yazılar tanınıyor…';
 
   @override
   String get takePhoto => 'Fotoğraf çek';

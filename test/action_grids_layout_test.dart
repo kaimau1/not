@@ -71,6 +71,7 @@ void main() {
                 onVoiceCapture: () {},
                 onVideoNote: () {},
                 onPhotoNote: () {},
+                onScanNote: () {},
                 onQrNote: () {},
               ),
             ),

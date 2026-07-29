@@ -307,3 +307,56 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   girdisi once diskte var mi diye bakilip okunuyor; bakilmasaydi notun
   govdesine "/data/.../cache/x.txt" yazilacakti.
 - Kanit: `test/share_intake_test.dart` (uzantisiz PDF dahil 5 durum).
+
+## 2026-07-29 — Geri tusu / cumle secimi / belge tarama / kalem secenekleri
+- **Geri tusu seçim ve sıralama modunu kapatır** (`dashboard_screen.dart`).
+  Ana ekran yigin KOKU oldugu icin sistem geri tusu dogrudan uygulamayi
+  kapatiyordu: yanlislikla uzun basip secime giren kullanicinin cikmaktan baska
+  yolu yoktu. `PopScope(canPop: !selectionActive && !reorderActive)`.
+  Not: `build`'in tamami yeniden girintilenmesin diye govde once `final page`
+  degiskenine alindi, PopScope onu sariyor — 400+ satirlik girinti degisikligi
+  diff'i okunmaz hale getirirdi.
+- **Uzun basis kelime degil CUMLE secer** (`core/utils/sentence_select.dart`).
+  Flutter'da uzun basis yalnizca KELIME secer; notta secim neredeyse hep bir
+  cumleyi tasimak/silmek/AI'a vermek icin yapiliyor ("yarim yamalak seciliyor").
+  KARAR — genisletme denetleyici dinleyicisinden yapiliyor: `TextField`
+  `onSelectionChanged`/`SelectionChangedCause` DISA ACMIYOR (yalniz
+  `EditableText` biliyor), tek genel kanca budur.
+  Iki koruma sart: (1) secim ONCEKI secimin icindeyse dokunulmaz — yoksa
+  tutamakla daraltma imkansiz olurdu; (2) yalniz BOSLUK ICERMEYEN (tek
+  kelimelik) secim buyutulur — yoksa "tumunu sec" cumleye DARALTILIRDI.
+  Yeniden girisi `_busy` bayragi kesiyor (kendi yazdigimiz secim dinleyiciyi
+  tekrar tetikliyor). Sinir bulmada nokta ancak ARDINDAN BOSLUK gelirse cumle
+  bitirir: "12.50" ve "vb.x" boyle korunuyor. Satir sonu da sinir (baslik ve
+  liste satirlari noktasiz).
+- **Belge tarama** (`notes/data/document_scan.dart`) — `dosya-okuyucu`
+  reposundan alindi (`services/document_scanner.dart`): kenar tespiti +
+  perspektif duzeltme Google ML Kit'in (`cunning_document_scanner`), bizim
+  payimiz sayfalari nota EK yapmak. O repoda sonuc tek PDF'e gidiyordu; burada
+  sayfalar GORSEL eki oluyor — notta surukleniyor, uzerine yaziliyor ve zaten
+  var olan "Metni al" (OCR) yolundan geciyor. Kendi `ScanReviewScreen`/
+  `Perspective` kopyasi ALINMADI: ML Kit tarayicisinin kendi kirp/dondur
+  ekrani var, ikinci bir duzeltme ekrani ayni isi tekrar ederdi.
+  "Belge tara not al" = `+` menusu → `/note/<id>?scan=1`; tarama bitince
+  "yazilar da taninsin mi?" soruluyor (evet → Gemini OCR gövdeye yazar). Soru
+  sessizce atlanmiyor: OCR sayfa basina birkac saniye ve AI kotasi.
+  Windows'ta eklenti YOK → `DocumentScan.supported` false, menude hic gorunmez
+  (`qrScanSupported` kalibi).
+- **Kalem secenekleri iki yerde birden** (`viewers/ink_pen.dart`):
+  tukenmez / kececeli / fosforlu + silgi, hem el yazisi ekraninda hem PDF/
+  slayt/gorsel ustu cizimde. KARAR — `DrawingScreen` kendi cizim motorunu
+  (`Stroke`/`DrawingPainter`) BIRAKTI, artik `InkController` + `InkPageLayer` +
+  `InkToolbar` kullaniyor. Sebep: secenekler iki yerde ayri yazilirsa biri
+  guncellenip digeri geride kaliyor (istegin kendisi buydu: "ayni secenekler
+  PDF'te de olsun"); tek cubuk tek kaynak.
+  KARAR — kalem turu AYRI ALAN OLARAK SAKLANMIYOR, rengin ALFASINDAN okunuyor.
+  `InkStroke` Firestore'a ARGB tamsayisi yaziyor; yeni alan eski notlarin
+  semasini degistirirdi. Saydamlik zaten ARGB'nin icinde, eski kayitlar
+  (alfa 255) tukenmez olarak dogru ciziliyor. Fosforlu DUZ uc (`StrokeCap.butt`)
+  ile cizilir: yuvarlak uc saydam cizgide uc uca binince koyu leke birakiyordu.
+  Kalinlik araligi kalem turune bagli (fosforlu 10–46 px); tur degisince
+  kaydirici turun varsayilanina tasiniyor, yoksa fosforlu 3 px'te kalip
+  "calismiyor" gorunuyordu.
+- Kanit: `test/sentence_select_test.dart` (cumle siniri + genisletme kurallari),
+  `test/drawing_capture_test.dart` (ortak `InkPainter` yoluna tasindi, fosforlu
+  saydamligi dahil).

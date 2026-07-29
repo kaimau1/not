@@ -55,6 +55,10 @@ dependencies:
   # QR/barkod okuma: kamera önizlemesi + galeriden fotoğraf analizi
   # (analyzeImage). Windows eklentisi YOK — masaüstünde özellik gizlenir.
   mobile_scanner: ^7.4.0
+  # Belge tarama: Google ML Kit Belge Tarayıcı'yı (kenar tespiti, perspektif
+  # düzeltme, kontrast) sarar. Android/iOS eklentisi var, Windows'ta YOK —
+  # DocumentScan.supported false döner ve menüde hiç görünmez.
+  cunning_document_scanner: ^1.2.3
   # Görüntülü not oynatma (yalnız cihazda saklanan videolar).
   video_player: ^2.9.2
   file_selector: ^1.1.0

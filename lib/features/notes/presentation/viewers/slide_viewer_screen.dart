@@ -119,7 +119,12 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
           ],
         ),
         body: _body(l10n),
-        bottomNavigationBar: _editing ? InkToolbar(controller: _ink) : null,
+        bottomNavigationBar: _editing
+            ? InkToolbar(
+                controller: _ink,
+                hint: context.l10n.inkTwoFingerHint,
+              )
+            : null,
       ),
     );
   }

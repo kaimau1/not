@@ -75,6 +75,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               startVideo: state.uri.queryParameters['video'] == '1',
               // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
               startPhoto: state.uri.queryParameters['photo'] == '1',
+              // ?scan=1: belge tara not al — belge tarayıcı açılır.
+              startScan: state.uri.queryParameters['scan'] == '1',
             ),
           ),
         ],

@@ -125,7 +125,12 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             ),
           ),
         ),
-        bottomNavigationBar: _editing ? InkToolbar(controller: _ink) : null,
+        bottomNavigationBar: _editing
+            ? InkToolbar(
+                controller: _ink,
+                hint: context.l10n.inkTwoFingerHint,
+              )
+            : null,
       ),
     );
   }

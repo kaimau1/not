@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
 import 'text_wrap.dart';
 
@@ -150,8 +151,13 @@ class _ItemsEditorState extends State<ItemsEditor> {
     super.dispose();
   }
 
-  WrapTextController _controllerFor(NoteItem item) => _controllers
-      .putIfAbsent(item.id, () => WrapTextController(text: item.text));
+  WrapTextController _controllerFor(NoteItem item) =>
+      _controllers.putIfAbsent(item.id, () {
+        final controller = WrapTextController(text: item.text);
+        // Gövde metniyle aynı davranış: uzun basış kelimeyi değil cümleyi seçer.
+        attachSentenceSelection(controller);
+        return controller;
+      });
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();

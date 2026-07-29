@@ -438,6 +438,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (mounted) await context.push('/note/$id?photo=1');
   }
 
+  /// "Belge tara not al": not oluşturulur ve editör açılır açılmaz belge
+  /// tarayıcı başlar; düzeltilmiş sayfalar nota girer, istenirse yazıları da
+  /// tanınıp gövdeye yazılır. Tarama iptal edilirse boş not çıkışta silinir.
+  Future<void> _createScanNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (mounted) await context.push('/note/$id?scan=1');
+  }
+
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
   /// oluşturulur — iptal edilirse ortada boş not kalmaz.
   Future<void> _createQrNote() async {
@@ -523,7 +535,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         keyboardOpen &&
         MediaQuery.sizeOf(context).width < 600;
 
-    return CallbackShortcuts(
+    final page = CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
             _createNote(NoteType.text),
@@ -942,6 +954,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onVoiceCapture: _createVoiceCaptureNote,
                           onVideoNote: _createVideoNote,
                           onPhotoNote: _createPhotoNote,
+                          onScanNote: _createScanNote,
                           onQrNote: _createQrNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,
@@ -956,6 +969,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
+    );
+
+    // Geri tuşu: seçim ya da sıralama modu açıkken uygulamadan ÇIKMAZ, önce
+    // modu kapatır. Ana ekran yığının kökü olduğu için sistem geri tuşu
+    // doğrudan uygulamayı kapatıyordu; kullanıcı yanlışlıkla bir notu seçince
+    // (uzun basış) seçimi kapatmanın tek yolu ekrandaki "×" idi.
+    return PopScope(
+      canPop: !selectionActive && !reorderActive,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (selectionActive) {
+          ref.read(selectedNoteIdsProvider.notifier).clear();
+        } else if (reorderActive) {
+          ref.read(reorderModeProvider.notifier).set(false);
+        }
+      },
+      child: page,
     );
   }
 

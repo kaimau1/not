@@ -2204,11 +2204,23 @@ abstract class AppLocalizations {
   /// **'Yazmayı bitir'**
   String get annotateDone;
 
-  /// No description provided for @pen.
+  /// No description provided for @penBallpoint.
   ///
   /// In tr, this message translates to:
-  /// **'Kalem'**
-  String get pen;
+  /// **'Tükenmez kalem'**
+  String get penBallpoint;
+
+  /// No description provided for @penMarker.
+  ///
+  /// In tr, this message translates to:
+  /// **'Keçeli kalem'**
+  String get penMarker;
+
+  /// No description provided for @penHighlighter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fosforlu kalem'**
+  String get penHighlighter;
 
   /// No description provided for @eraser.
   ///
@@ -2239,6 +2251,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Foto çek not al'**
   String get newPhotoNote;
+
+  /// No description provided for @newScanNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge tara not al'**
+  String get newScanNote;
+
+  /// No description provided for @scanDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge tara'**
+  String get scanDocument;
+
+  /// No description provided for @scanDocumentSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kenarları bulur, düzleştirir ve nota ekler'**
+  String get scanDocumentSubtitle;
+
+  /// No description provided for @scanUnsupported.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge tarama bu cihazda desteklenmiyor'**
+  String get scanUnsupported;
+
+  /// No description provided for @scanFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge taranamadı: {error}'**
+  String scanFailed(String error);
+
+  /// No description provided for @scanPagesAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sayfa nota eklendi'**
+  String scanPagesAdded(int count);
+
+  /// No description provided for @scanTextTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazılar da tanınsın mı?'**
+  String get scanTextTitle;
+
+  /// No description provided for @scanTextBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfalardaki yazı tanınıp notun içine yazılır. Görüntü aynen kalır. Sayfa başına birkaç saniye sürer.'**
+  String get scanTextBody;
+
+  /// No description provided for @scanImageOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sadece görüntü'**
+  String get scanImageOnly;
+
+  /// No description provided for @scanRecognizeText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıları da tanı'**
+  String get scanRecognizeText;
+
+  /// No description provided for @scanRecognizing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazılar tanınıyor…'**
+  String get scanRecognizing;
 
   /// No description provided for @takePhoto.
   ///
