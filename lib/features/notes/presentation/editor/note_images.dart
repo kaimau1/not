@@ -16,8 +16,9 @@ import 'text_wrap.dart';
 void openImageViewer(
   BuildContext context,
   Attachment img,
-  ValueChanged<Attachment> onChanged,
-) {
+  ValueChanged<Attachment> onChanged, {
+  Future<void> Function(Attachment, Rect)? onCrop,
+}) {
   final hasLocal = img.localPath.isNotEmpty && File(img.localPath).existsSync();
   if (!hasLocal && !img.isUploaded) {
     ScaffoldMessenger.of(
@@ -27,7 +28,11 @@ void openImageViewer(
   }
   Navigator.of(context).push(
     MaterialPageRoute<void>(
-      builder: (_) => ImageViewerScreen(attachment: img, onChanged: onChanged),
+      builder: (_) => ImageViewerScreen(
+        attachment: img,
+        onChanged: onChanged,
+        onCrop: onCrop,
+      ),
     ),
   );
 }
@@ -202,6 +207,7 @@ class NotePageCanvas extends StatefulWidget {
     required this.minHeight,
     required this.onRemove,
     required this.onChanged,
+    this.onCrop,
     this.onExtractText,
     this.onTapEmpty,
     this.topLimit = 0,
@@ -242,6 +248,9 @@ class NotePageCanvas extends StatefulWidget {
 
   final ValueChanged<Attachment> onRemove;
   final ValueChanged<Attachment> onChanged;
+
+  /// Tam ekranda seçilen kırpma alanını uygular (bkz. [ImageViewerScreen]).
+  final Future<void> Function(Attachment, Rect)? onCrop;
   final Future<void> Function(Attachment)? onExtractText;
 
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
@@ -375,7 +384,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   List<FloatBox>? _lastFloats;
 
   void _openViewer(Attachment img) =>
-      openImageViewer(context, img, widget.onChanged);
+      openImageViewer(context, img, widget.onChanged, onCrop: widget.onCrop);
 
   @override
   Widget build(BuildContext context) {

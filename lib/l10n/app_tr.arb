@@ -212,6 +212,7 @@
   "chatHint": "Notların hakkında soru sor: \"geçen hafta yazdığım tarif neydi?\", \"alışveriş listemde ne eksik?\"",
   "chatInputHint": "Bir soru yaz...",
   "fontSize": "Yazı boyutu",
+  "fontSizePreview": "Notların bu boyutta görünecek",
   "darkSchedule": "Koyu tema zamanlaması",
   "darkScheduleInfo": "Belirlediğin saatler arasında koyu temaya geçilir",
   "aiTranslate": "Çevir",
@@ -364,8 +365,12 @@
   "speechRate": "Okuma hizi",
   "speechSystemDefault": "Sistem varsayilani",
   "speechNoVoices": "Bu cihazda yuklu ses bulunamadi",
-  "speechVoiceTurkish": "Türkçe ses",
-  "speechVoiceEnglish": "İngilizce ses",
+  "speechVoiceLanguage": "{language} sesi",
+  "@speechVoiceLanguage": {
+    "placeholders": {
+      "language": {"type": "String"}
+    }
+  },
   "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur",
   "listening": "Dinleniyor...",
   "listenPlay": "Sesli dinle",
@@ -447,6 +452,11 @@
   "hubReadInfo": "PDF/Word belgesini sesli dinle",
   "annotate": "Üzerine yaz",
   "annotateDone": "Yazmayı bitir",
+  "crop": "Kırp",
+  "cropApply": "Kırpmayı uygula",
+  "cropReset": "Seçimi sıfırla",
+  "cropHint": "Köşeleri sürükleyerek alanı seç. Kırpma geri alınamaz.",
+  "cropFailed": "Görsel kırpılamadı.",
   "penBallpoint": "Tükenmez kalem",
   "penMarker": "Keçeli kalem",
   "penHighlighter": "Fosforlu kalem",

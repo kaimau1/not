@@ -387,3 +387,56 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   zamanlı zone'unda tamamlanmıyor — `tester.pump` ne kadar pompalanırsa
   pompalansın bitmiyor. Çözüm: `await tester.runAsync(() => Future.delayed(...))`.
   `test/handwriting_pen_test.dart` bunu yazıyor.
+
+- 2026-07-30: **Gorsel kirpma, yazi boyutu zipmasi, Almanca+Ispanyolca.**
+  (1) **KARAR — kirpma KALICI** (kullanici secimi): dosyanin kendisi yeniden
+  yazilir, kirpma dikdortgeni SAKLANMAZ. Sebep: gorsel not tuvalinde, tam
+  ekranda, PDF/Word disa aktariminda, OCR'de ve AI'ya gonderimde AYRI AYRI
+  ciziliyor; dikdortgen saklansa bu yollarin HEPSI onu uygulamak zorunda
+  kalirdi ve biri unutuldugunda orada kirpilmamis gorunurdu. Bedeli: geri
+  alinamaz. Paket EKLENMEDI — `image: ^4.8.0` zaten kuruluydu (`img.copyCrop`),
+  kirpma ekrani (`viewers/image_crop.dart`) dort kose tutamaci + govde
+  suruklemesi olarak elle yazildi; hazir kirpma paketleri Windows'ta yok.
+  TUZAK 1: kirpma gorselin ORANLI (0-1) `ink` koordinatlarini gecersiz kilar →
+  `cropInk` (domain/attachment.dart) noktalari yeni cerceveye tasir, kalinligi
+  1/genislik orani ile buyutur, tumuyle disarida kalan cizgiyi duserir.
+  Kanit: `test/crop_ink_test.dart`. TUZAK 2: dosya AYNI yola yazildigi icin
+  Flutter'in gorsel onbellegi eski hali gostermeye devam ediyordu; tek tek
+  atmak yetmiyor cunku not tuvali `cacheWidth` ile sardigindan anahtar
+  `ResizeImage`, `FileImage` degil → `imageCache.clear() + clearLiveImages()`.
+  TUZAK 3: buluttaki kopya once SILINIR ve `downloadUrl` bosaltilir, yoksa
+  kuyruk "zaten yuklu" deyip yeni baytlari hic gondermezdi.
+  Kirpma ekrani `BoxFit.fill` kullanir (bkz. oradaki not) — gerilme dogrusal
+  oldugundan oranlar bozulmaz, `contain` olsaydi secim ile kirpilan alan kayardi.
+  (2) **KOK NEDEN — yazi boyutu kaydiricisi parmagin altindan kaciyordu**:
+  `fontScaleProvider` `app.dart`'ta TUM uygulamanin `textScaler`'ini suruyor;
+  `onChanged` her oynamada yazinca Ayarlar ekraninin KENDISI yeniden
+  boyutlaniyor → kaydiricinin USTUNDEKI satirlar uzayip kisaldigi icin
+  kaydirici dikeyde kayiyor, "%100"→"%95" etiketi daraldigi icin yatayda.
+  COZUM: gercek ayar yalniz `onChangeEnd`'de yazilir (surukleme boyunca deger
+  yerelde), satir `MediaQuery.withNoTextScaling` icinde, yuzde etiketi sabit
+  genislikte. Canli geri bildirim kaybolmasin diye altta SABIT YUKSEKLIKTE
+  bir onizleme satiri suruklenen olcekle buyur/kucultur.
+  (3) **KOK NEDEN — tarihler her dilde Turkce**: `DateFormat('d MMM y', 'tr')`
+  6 yerde sabitti, yani mevcut Ingilizce bile eksikti. COZUM tek yerde:
+  `app.dart` builder'inda `Intl.defaultLocale = Localizations.localeOf(...)`,
+  cagri yerlerinden 'tr' argumani silindi. Ek baslatma (initializeDateFormatting)
+  GEREKMIYOR: `flutter_localizations` etkin dilin tarih sembollerini zaten
+  yukluyor — bu yuzden ETKIN dil kullanilmali, sabit bir dil degil.
+  TUZAK: `reminders_screen.dart`'taki `static final _format` bir kez kurulup
+  ilk acilistaki dili omur boyu tasiyordu → getter'a cevrildi.
+  (4) **TUZAK — dil eklemek yedek dili sessizce degistirir**: `gen-l10n`
+  `supportedLocales`'i ALFABETIK uretiyor (de, en, es, tr) ve Flutter eslesme
+  yoksa `.first`e duser; Almanca eklendigi an sistemi ör. Fransizca olan
+  kullanici uygulamayi ALMANCA gorurdu. COZUM: `app.dart`'ta acik
+  `resolveLocale` (yedek = tr), `test/locale_fallback_test.dart` KURALIN
+  KENDISINI cagirir (kopyasini degil). Ayni test Ayarlar'daki her dilin
+  cevirisinin uretildigini de dogrular.
+  (5) `speech_output.dart`: okuma hizi "tr mi degil mi" yerine ETKIN uygulama
+  diline gore secilir (Almanca'ya gecen kullanicinin ana dili "yabanci" sayilip
+  yavas okunuyordu); olu `userChosenLanguages` sabiti silindi. Ayarlar'daki ses
+  seciciler `supportedLanguages`'tan turetildi (yeni dilde sessizce eksik
+  kalmasin) — `speechVoiceTurkish/English` anahtarlari tek parametreli
+  `speechVoiceLanguage` ile degistirildi.
+  DOGRULAMA: `flutter analyze` temiz, `flutter test` 178/178, `tool/check_arb.ps1`
+  dort dilde 406 anahtar tamam. CIHAZDA DENENMEDI (bu turda APK kurulmadi).

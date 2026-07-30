@@ -145,6 +145,7 @@
   "chatHint": "Ask about your notes: \"what was that recipe I wrote last week?\", \"what's missing from my shopping list?\"",
   "chatInputHint": "Type a question...",
   "fontSize": "Text size",
+  "fontSizePreview": "Your notes will look like this",
   "darkSchedule": "Dark theme schedule",
   "darkScheduleInfo": "Switches to the dark theme between the hours you set",
   "aiTranslate": "Translate",
@@ -279,8 +280,12 @@
   "speechRate": "Reading speed",
   "speechSystemDefault": "System default",
   "speechNoVoices": "No voices are installed on this device",
-  "speechVoiceTurkish": "Turkish voice",
-  "speechVoiceEnglish": "English voice",
+  "speechVoiceLanguage": "{language} voice",
+  "@speechVoiceLanguage": {
+    "placeholders": {
+      "language": {"type": "String"}
+    }
+  },
   "speechVoiceAutoInfo": "Other languages are read with a male voice automatically",
   "listening": "Listening...",
   "listenPlay": "Listen",
@@ -351,6 +356,11 @@
   "hubReadInfo": "Listen to a PDF or Word document",
   "annotate": "Annotate",
   "annotateDone": "Finish annotating",
+  "crop": "Crop",
+  "cropApply": "Apply crop",
+  "cropReset": "Reset selection",
+  "cropHint": "Drag the corners to choose an area. Cropping can't be undone.",
+  "cropFailed": "Couldn't crop the image.",
   "penBallpoint": "Ballpoint pen",
   "penMarker": "Marker",
   "penHighlighter": "Highlighter",

@@ -57,7 +57,7 @@ abstract final class NotePdf {
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                DateFormat('d MMMM y', 'tr').format(date),
+                DateFormat('d MMMM y').format(date),
                 style: const pw.TextStyle(
                   fontSize: 9.5,
                   color: PdfColors.grey600,

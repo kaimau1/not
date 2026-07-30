@@ -49,7 +49,7 @@ class BriefingNotifier extends StringDailyCache {
           ? '(kilitli not)'
           : note.toPlainText().split('\n').first;
       buffer.writeln(
-        '- ${DateFormat('d MMM HH:mm', 'tr').format(reminder)}: $label',
+        '- ${DateFormat('d MMM HH:mm').format(reminder)}: $label',
       );
     }
     if (!hasReminder) buffer.writeln('- (yok)');
@@ -128,7 +128,7 @@ class BriefingScreen extends ConsumerWidget {
         loadingText: l10n.briefingLoading,
         emptyIcon: Icons.wb_sunny_outlined,
         emptyTitle: l10n.briefingEmpty,
-        header: DateFormat('d MMMM EEEE', 'tr').format(DateTime.now()),
+        header: DateFormat('d MMMM EEEE').format(DateTime.now()),
         onRetry: onRefresh,
       ),
     );

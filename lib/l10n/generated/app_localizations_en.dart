@@ -480,6 +480,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSize => 'Text size';
 
   @override
+  String get fontSizePreview => 'Your notes will look like this';
+
+  @override
   String get darkSchedule => 'Dark theme schedule';
 
   @override
@@ -911,10 +914,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechNoVoices => 'No voices are installed on this device';
 
   @override
-  String get speechVoiceTurkish => 'Turkish voice';
-
-  @override
-  String get speechVoiceEnglish => 'English voice';
+  String speechVoiceLanguage(String language) {
+    return '$language voice';
+  }
 
   @override
   String get speechVoiceAutoInfo =>
@@ -1140,6 +1142,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get annotateDone => 'Finish annotating';
+
+  @override
+  String get crop => 'Crop';
+
+  @override
+  String get cropApply => 'Apply crop';
+
+  @override
+  String get cropReset => 'Reset selection';
+
+  @override
+  String get cropHint =>
+      'Drag the corners to choose an area. Cropping can\'t be undone.';
+
+  @override
+  String get cropFailed => 'Couldn\'t crop the image.';
 
   @override
   String get penBallpoint => 'Ballpoint pen';

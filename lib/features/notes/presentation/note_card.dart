@@ -28,8 +28,8 @@ String formatNoteDate(DateTime date) {
   if (date.year == now.year && date.month == now.month && date.day == now.day) {
     return DateFormat('HH:mm').format(date);
   }
-  if (date.year == now.year) return DateFormat('d MMM', 'tr').format(date);
-  return DateFormat('d MMM y', 'tr').format(date);
+  if (date.year == now.year) return DateFormat('d MMM').format(date);
+  return DateFormat('d MMM y').format(date);
 }
 
 /// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.

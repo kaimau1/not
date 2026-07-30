@@ -91,14 +91,14 @@ class SettingsScreen extends ConsumerWidget {
                 title: l10n.settingsSpeech,
                 icon: Icons.headphones_outlined,
                 children: [
-                  _SpeechVoiceSelector(
-                    language: 'tr',
-                    title: l10n.speechVoiceTurkish,
-                  ),
-                  _SpeechVoiceSelector(
-                    language: 'en',
-                    title: l10n.speechVoiceEnglish,
-                  ),
+                  // Ses seçicileri desteklenen dillerden türetilir: eskiden
+                  // 'tr' ve 'en' elle yazılıydı, yeni dil eklenince ses
+                  // seçimi sessizce eksik kalıyordu.
+                  for (final entry in supportedLanguages.entries)
+                    _SpeechVoiceSelector(
+                      language: entry.key,
+                      title: l10n.speechVoiceLanguage(entry.value),
+                    ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
@@ -614,31 +614,92 @@ class _VoiceModeSelector extends ConsumerWidget {
   }
 }
 
-class _FontScaleSlider extends ConsumerWidget {
+/// Yazı boyutu çarpanı.
+///
+/// KÖK NEDEN (kaydırıcı parmağın altından kaçıyordu): `fontScaleProvider`
+/// `app.dart`'ta TÜM uygulamanın `textScaler`'ını sürüyor. Her `onChanged`
+/// anında yazılınca Ayarlar'ın kendisi de yeniden boyutlanıyor: kaydırıcının
+/// ÜSTÜNDEKİ satırlar uzayıp kısaldığı için kaydırıcı dikeyde kayıyor, "%100"
+/// → "%95" etiketi daraldığı için de yatayda. İki önlem birlikte gerekiyor:
+///  1. gerçek ayar yalnız parmak KALKINCA yazılır (`onChangeEnd`); sürüklerken
+///     değer yerelde tutulur, böylece hiçbir şey yeniden akmaz,
+///  2. denetimin kendisi ölçekten muaf (`withNoTextScaling`) ve yüzde etiketi
+///     sabit genişlikte — yoksa yazılan değer denetimi kendi altından kaydırır.
+/// Canlı geri bildirim kaybolmasın diye altta sabit yükseklikte bir önizleme
+/// satırı sürüklenen değerle ölçeklenir (yüksekliği sabit olduğundan
+/// büyümesi üstteki kaydırıcıyı oynatmaz).
+class _FontScaleSlider extends ConsumerStatefulWidget {
   const _FontScaleSlider();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FontScaleSlider> createState() => _FontScaleSliderState();
+}
+
+class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
+  static const _min = 0.85;
+  static const _max = 1.4;
+
+  /// Sürükleme sürerken geçerli olan değer; parmak kalkınca null'a döner ve
+  /// kaydırıcı yeniden sağlayıcıyı izler.
+  double? _dragging;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scale = ref.watch(fontScaleProvider);
-    return Row(
-      children: [
-        const Icon(Icons.format_size, size: 18),
-        const SizedBox(width: 8),
-        Text(l10n.fontSize),
-        Expanded(
-          child: Slider(
-            value: scale,
-            min: 0.85,
-            max: 1.4,
-            divisions: 11,
-            label: '${(scale * 100).round()}%',
-            onChanged: (value) =>
-                ref.read(fontScaleProvider.notifier).set(value),
+    final double value = _dragging ?? ref.watch(fontScaleProvider);
+    final percent = '${(value * 100).round()}%';
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium;
+    return MediaQuery.withNoTextScaling(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.format_size, size: 18),
+              const SizedBox(width: 8),
+              Text(l10n.fontSize),
+              Expanded(
+                child: Slider(
+                  value: value,
+                  min: _min,
+                  max: _max,
+                  divisions: 11,
+                  label: percent,
+                  onChanged: (v) => setState(() => _dragging = v),
+                  onChangeEnd: (v) {
+                    ref.read(fontScaleProvider.notifier).set(v);
+                    setState(() => _dragging = null);
+                  },
+                ),
+              ),
+              // Sabit genişlik: "%85" ile "%140" arasındaki genişlik farkı
+              // kaydırıcıyı daraltıp genişletiyordu.
+              SizedBox(
+                width: 44,
+                child: Text(percent, textAlign: TextAlign.end),
+              ),
+            ],
           ),
-        ),
-        Text('${(scale * 100).round()}%'),
-      ],
+          // Önizleme kutusu en büyük ölçeğe göre boyutlanır ki sürüklerken
+          // yüksekliği değişmesin.
+          SizedBox(
+            height: (bodyStyle?.fontSize ?? 14) * _max * 1.6,
+            width: double.infinity,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                l10n.fontSizePreview,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textScaler: TextScaler.linear(value),
+                style: bodyStyle?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

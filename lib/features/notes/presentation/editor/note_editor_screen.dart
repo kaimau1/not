@@ -801,6 +801,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
+  /// Görseli KALICI olarak kırpar (tam ekrandaki kırpma ekranından gelir).
+  /// [frac] görsel oranında (0–1) seçilen alan.
+  Future<void> _cropImage(Attachment image, Rect frac) async {
+    final tooLargeMessage = _tooLargeMessage();
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    try {
+      final cropped = await repo.cropImage(
+        noteId: widget.noteId,
+        attachment: image,
+        left: frac.left,
+        top: frac.top,
+        right: frac.right,
+        bottom: frac.bottom,
+      );
+      // Dosya AYNI yola yeniden yazıldı; Flutter'ın görsel önbelleği yolu
+      // anahtar olarak kullandığından temizlenmezse eski (kırpılmamış) hâl
+      // gösterilmeye devam ederdi. Tek tek atmak yetmiyor: not tuvali
+      // `cacheWidth` ile sardığından anahtar `ResizeImage`, `FileImage` değil.
+      // ponytail: kırpma seyrek bir işlem, önbelleği tümden atmak yeterince
+      // ucuz — anahtar eşlemesini elle kurmak buna değmez.
+      PaintingBinding.instance.imageCache
+        ..clear()
+        ..clearLiveImages();
+      _updateAttachment(cropped);
+    } on FileTooLargeException {
+      if (mounted) _showSnack(tooLargeMessage);
+    } on AttachmentMissingException {
+      if (mounted) _showSnack(context.l10n.cropFailed);
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
   /// Alt bardaki bir düğme (görünüm/renk, ek, hesap makinesi) alt sayfa/menü
   /// açmadan önce klavyeyi kesin kapatır. Klavye elle kapatılmış olsa bile bir
   /// metin alanı odakta kalabiliyor; alt sayfa kapanınca odak geri gelip
@@ -2009,7 +2043,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (note.reminderAt != null)
         InputChip(
           avatar: const Icon(Icons.alarm, size: 16),
-          label: Text(DateFormat('d MMM HH:mm', 'tr').format(note.reminderAt!)),
+          label: Text(DateFormat('d MMM HH:mm').format(note.reminderAt!)),
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
         )
@@ -2087,7 +2121,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
             child: Text(
               l10n.editedAt(
-                DateFormat('d MMM y HH:mm', 'tr').format(note.updatedAt!),
+                DateFormat('d MMM y HH:mm').format(note.updatedAt!),
               ),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2196,6 +2230,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           images: imageAttachments,
           onRemove: _removeAttachment,
           onChanged: _updateAttachment,
+          onCrop: _cropImage,
           onExtractText: _ocrImage,
           topLimit: _bodyTop,
           hintLineHeight: hintLineHeight,

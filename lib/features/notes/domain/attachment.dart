@@ -60,6 +60,50 @@ class InkStroke {
   };
 }
 
+/// Görsel kırpılınca üstündeki çizimleri YENİ çerçeveye taşır.
+///
+/// Noktalar görselin oranı (0–1) olarak tutulduğundan kırpma onları geçersiz
+/// kılar: kırpma yapılıp çizimler olduğu gibi bırakılırsa çizgi görselin
+/// bambaşka bir yerine kayar. [left]/[top]/[right]/[bottom] kırpma
+/// dikdörtgeni, yine 0–1. Tümüyle dışarıda kalan çizgi düşer; kalınlık da
+/// oransal olduğu için aynı oranda büyütülür.
+List<InkStroke> cropInk(
+  List<InkStroke> strokes, {
+  required double left,
+  required double top,
+  required double right,
+  required double bottom,
+}) {
+  final w = right - left;
+  final h = bottom - top;
+  if (w <= 0 || h <= 0) return const [];
+  final out = <InkStroke>[];
+  for (final s in strokes) {
+    final points = <double>[];
+    var anyInside = false;
+    for (var i = 0; i + 1 < s.points.length; i += 2) {
+      final x = (s.points[i] - left) / w;
+      final y = (s.points[i + 1] - top) / h;
+      if (x >= 0 && x <= 1 && y >= 0 && y <= 1) anyInside = true;
+      points..add(x)..add(y);
+    }
+    // Hiçbir noktası yeni çerçeveye düşmeyen çizgi atılır; kısmen taşan çizgi
+    // korunur (çizim katmanı zaten kırpar) — yoksa kenardaki bir imza
+    // tek nokta yüzünden tümüyle silinirdi.
+    if (!anyInside) continue;
+    out.add(
+      InkStroke(
+        page: s.page,
+        color: s.color,
+        // Kalınlık görsel GENİŞLİĞİNİN oranı; çerçeve daraldıkça oran büyür.
+        width: s.width / w,
+        points: points,
+      ),
+    );
+  }
+  return out;
+}
+
 /// Bir nota bağlı dosyanın (görsel/PDF) metadata'sı.
 /// Dosyanın kendisi Firebase Storage'da tutulur; yükleme tamamlanana kadar
 /// [downloadUrl] boş kalır ve [localPath] üzerinden gösterilir.
@@ -127,10 +171,18 @@ class Attachment {
 
   bool get isUploaded => downloadUrl.isNotEmpty;
 
+  /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
+  /// değişir (dosyanın kendisi yeniden yazılır); onun dışında ek oluşturulduğu
+  /// gibi kalır.
   Attachment copyWith({
+    String? fileName,
+    String? mimeType,
     String? storagePath,
     String? downloadUrl,
     String? localPath,
+    int? sizeBytes,
+    int? width,
+    int? height,
     double? displayWidth,
     String? align,
     double? x,
@@ -140,14 +192,14 @@ class Attachment {
   }) => Attachment(
     id: id,
     kind: kind,
-    fileName: fileName,
-    mimeType: mimeType,
+    fileName: fileName ?? this.fileName,
+    mimeType: mimeType ?? this.mimeType,
     storagePath: storagePath ?? this.storagePath,
     downloadUrl: downloadUrl ?? this.downloadUrl,
     localPath: localPath ?? this.localPath,
-    sizeBytes: sizeBytes,
-    width: width,
-    height: height,
+    sizeBytes: sizeBytes ?? this.sizeBytes,
+    width: width ?? this.width,
+    height: height ?? this.height,
     displayWidth: displayWidth ?? this.displayWidth,
     align: align ?? this.align,
     x: x ?? this.x,

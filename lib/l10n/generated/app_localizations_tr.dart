@@ -478,6 +478,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get fontSize => 'Yazı boyutu';
 
   @override
+  String get fontSizePreview => 'Notların bu boyutta görünecek';
+
+  @override
   String get darkSchedule => 'Koyu tema zamanlaması';
 
   @override
@@ -909,10 +912,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get speechNoVoices => 'Bu cihazda yuklu ses bulunamadi';
 
   @override
-  String get speechVoiceTurkish => 'Türkçe ses';
-
-  @override
-  String get speechVoiceEnglish => 'İngilizce ses';
+  String speechVoiceLanguage(String language) {
+    return '$language sesi';
+  }
 
   @override
   String get speechVoiceAutoInfo =>
@@ -1136,6 +1138,22 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get annotateDone => 'Yazmayı bitir';
+
+  @override
+  String get crop => 'Kırp';
+
+  @override
+  String get cropApply => 'Kırpmayı uygula';
+
+  @override
+  String get cropReset => 'Seçimi sıfırla';
+
+  @override
+  String get cropHint =>
+      'Köşeleri sürükleyerek alanı seç. Kırpma geri alınamaz.';
+
+  @override
+  String get cropFailed => 'Görsel kırpılamadı.';
 
   @override
   String get penBallpoint => 'Tükenmez kalem';

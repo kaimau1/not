@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
 import 'app_localizations_tr.dart';
 
 // ignore_for_file: type=lint
@@ -94,7 +96,9 @@ abstract class AppLocalizations {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
     Locale('en'),
+    Locale('es'),
     Locale('tr'),
   ];
 
@@ -968,6 +972,12 @@ abstract class AppLocalizations {
   /// **'Yazı boyutu'**
   String get fontSize;
 
+  /// No description provided for @fontSizePreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların bu boyutta görünecek'**
+  String get fontSizePreview;
+
   /// No description provided for @darkSchedule.
   ///
   /// In tr, this message translates to:
@@ -1772,17 +1782,11 @@ abstract class AppLocalizations {
   /// **'Bu cihazda yuklu ses bulunamadi'**
   String get speechNoVoices;
 
-  /// No description provided for @speechVoiceTurkish.
+  /// No description provided for @speechVoiceLanguage.
   ///
   /// In tr, this message translates to:
-  /// **'Türkçe ses'**
-  String get speechVoiceTurkish;
-
-  /// No description provided for @speechVoiceEnglish.
-  ///
-  /// In tr, this message translates to:
-  /// **'İngilizce ses'**
-  String get speechVoiceEnglish;
+  /// **'{language} sesi'**
+  String speechVoiceLanguage(String language);
 
   /// No description provided for @speechVoiceAutoInfo.
   ///
@@ -2204,6 +2208,36 @@ abstract class AppLocalizations {
   /// **'Yazmayı bitir'**
   String get annotateDone;
 
+  /// No description provided for @crop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırp'**
+  String get crop;
+
+  /// No description provided for @cropApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kırpmayı uygula'**
+  String get cropApply;
+
+  /// No description provided for @cropReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi sıfırla'**
+  String get cropReset;
+
+  /// No description provided for @cropHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Köşeleri sürükleyerek alanı seç. Kırpma geri alınamaz.'**
+  String get cropHint;
+
+  /// No description provided for @cropFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel kırpılamadı.'**
+  String get cropFailed;
+
   /// No description provided for @penBallpoint.
   ///
   /// In tr, this message translates to:
@@ -2516,7 +2550,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'tr'].contains(locale.languageCode);
+      <String>['de', 'en', 'es', 'tr'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -2525,8 +2559,12 @@ class _AppLocalizationsDelegate
 AppLocalizations lookupAppLocalizations(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppLocalizationsDe();
     case 'en':
       return AppLocalizationsEn();
+    case 'es':
+      return AppLocalizationsEs();
     case 'tr':
       return AppLocalizationsTr();
   }

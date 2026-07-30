@@ -43,6 +43,8 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
 const supportedLanguages = <String, String>{
   'tr': 'Türkçe',
   'en': 'English',
+  'de': 'Deutsch',
+  'es': 'Español',
 };
 
 final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(

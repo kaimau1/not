@@ -16,7 +16,10 @@ import '../domain/note_type.dart';
 class RemindersScreen extends ConsumerWidget {
   const RemindersScreen({super.key});
 
-  static final _format = DateFormat('d MMMM y, EEEE HH:mm', 'tr');
+  /// `static final` DEĞİL: biçimlendirici bir kez kurulsaydı ilk açılıştaki
+  /// dili ömür boyu taşırdı — kullanıcı Ayarlar'dan dili değiştirince
+  /// hatırlatıcı tarihleri eski dilde kalırdı.
+  static DateFormat get _format => DateFormat('d MMMM y, EEEE HH:mm');
 
   Future<DateTime?> _pickDateTime(
     BuildContext context,

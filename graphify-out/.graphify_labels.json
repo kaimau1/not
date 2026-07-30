@@ -212,5 +212,7 @@
   "210": "SelectedNoteIdsNotifier",
   "211": "../features/ai/presentation/suggestions_screen.dart",
   "212": "isWeekly",
-  "213": "Route /suggestions"
+  "213": "Route /suggestions",
+  "214": "handle",
+  "215": "InkNavLayer"
 }

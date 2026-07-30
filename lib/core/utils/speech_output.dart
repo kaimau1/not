@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Cihazın YERLEŞİK seslendirmesi (TTS). Uygulamadaki tüm sesli okuma bunu
@@ -77,9 +78,6 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   static const _defaultRate = 0.5;
   static const _defaultForeignRate = 0.4;
 
-  /// Kullanıcının kendi seçtiği diller. Kalanlar otomatiktir.
-  static const userChosenLanguages = ['tr', 'en'];
-
   FlutterTts? _tts;
   List<String> _queue = const [];
   int _index = 0;
@@ -138,11 +136,18 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     return tts;
   }
 
-  /// O anki okuma diline göre hız. Türkçe kendi hızıyla, yabancı diller ayrı
-  /// (genelde daha yavaş) hızla okunur — [speak]/[resume] her okumada uygular.
+  /// O anki okuma diline göre hız: UYGULAMANIN dili kendi hızıyla, ötekiler
+  /// ayrı (genelde daha yavaş) "yabancı dil" hızıyla okunur — [speak]/[resume]
+  /// her okumada uygular.
+  ///
+  /// Karşılaştırma eskiden 'tr' sabitiyle yapılıyordu; uygulama Almanca'ya
+  /// alındığında kullanıcının ANA dili "yabancı" sayılıp yavaş okunuyordu.
+  /// Etkin yerel ayar `Intl` üzerinden okunur (bkz. `app.dart`) — böylece
+  /// core katmanı ayarlar sağlayıcısına bağlanmak zorunda kalmaz.
   Future<double> _rateFor(String language) async {
     final prefs = await SharedPreferences.getInstance();
-    if (language.toLowerCase() == 'tr') {
+    final appLanguage = Intl.getCurrentLocale().split(RegExp('[-_]')).first;
+    if (language.toLowerCase() == appLanguage.toLowerCase()) {
       return prefs.getDouble(_rateKey) ?? _defaultRate;
     }
     return prefs.getDouble(_foreignRateKey) ?? _defaultForeignRate;

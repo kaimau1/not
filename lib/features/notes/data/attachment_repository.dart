@@ -71,6 +71,42 @@ _CompressResult _compressImage(_CompressRequest request) {
   return _CompressResult(encoded, picture.width, picture.height, true);
 }
 
+class _CropRequest {
+  const _CropRequest(this.bytes, this.left, this.top, this.right, this.bottom);
+
+  final Uint8List bytes;
+
+  /// Kırpma dikdörtgeni, görsel boyutunun oranı (0–1).
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+}
+
+/// Kırpma her zaman JPEG üretir — `prepareImage` de girişte aynısını yapıyor,
+/// ayrıca `image` paketi WebP YAZAMIYOR; tek çıkış biçimi tutmak "png olarak
+/// kırpılınca dosya büyüdü" ve "webp kırpılamıyor" dallarının ikisini birden
+/// siliyor. Saydamlık düzleşir; girişte de düzleştiği için yeni bir kayıp yok.
+_CompressResult _cropImage(_CropRequest request) {
+  final decoded = img.decodeImage(request.bytes);
+  if (decoded == null) return _CompressResult(request.bytes, 0, 0, false);
+  final x = (request.left * decoded.width).round().clamp(0, decoded.width - 1);
+  final y = (request.top * decoded.height).round().clamp(0, decoded.height - 1);
+  final w = ((request.right - request.left) * decoded.width).round().clamp(
+    1,
+    decoded.width - x,
+  );
+  final h = ((request.bottom - request.top) * decoded.height).round().clamp(
+    1,
+    decoded.height - y,
+  );
+  final cropped = img.copyCrop(decoded, x: x, y: y, width: w, height: h);
+  final encoded = Uint8List.fromList(
+    img.encodeJpg(cropped, quality: AppConstants.imageJpegQuality),
+  );
+  return _CompressResult(encoded, cropped.width, cropped.height, true);
+}
+
 /// Ekleri önce cihaza kopyalar (not çevrimdışıyken bile eklenebilsin),
 /// sonra Firebase Storage'a yükler. Yükleme kuyruğu [uploadPending] üzerinden
 /// çalışır.
@@ -152,6 +188,71 @@ class AttachmentRepository {
       ),
       result.bytes,
     );
+  }
+
+  /// Görseli KALICI olarak kırpar (kullanıcı kararı 2026-07-30): dosyanın
+  /// kendisi yeniden yazılır, kırpma dikdörtgeni saklanmaz.
+  ///
+  /// Neden kalıcı: görsel not tuvalinde, tam ekranda, PDF/Word dışa
+  /// aktarımında, OCR'de ve AI'ya gönderimde ayrı ayrı çiziliyor. Kırpma
+  /// dikdörtgen olarak saklansaydı bu yolların HEPSİ onu uygulamak zorunda
+  /// kalırdı; biri unutulduğunda orada kırpılmamış görünürdü. Bedeli: geri
+  /// alınamaz.
+  ///
+  /// Buluttaki kopya SİLİNİR ve ek "yüklenmemiş"e döner (`downloadUrl` boş),
+  /// böylece kuyruk yeni baytları kendiliğinden gönderir. Silme, aynı adrese
+  /// yazılan yeni dosyanın taze bir indirme adresi almasını da sağlar — eski
+  /// adres önbellekte kalsaydı kırpılmamış görsel görünmeye devam ederdi.
+  Future<Attachment> cropImage({
+    required String noteId,
+    required Attachment attachment,
+    required double left,
+    required double top,
+    required double right,
+    required double bottom,
+  }) async {
+    final bytes = await readBytes(attachment);
+    if (bytes == null) throw const AttachmentMissingException();
+    final result = await compute(
+      _cropImage,
+      _CropRequest(bytes, left, top, right, bottom),
+    );
+    if (result.width == 0) throw const AttachmentMissingException();
+    if (result.bytes.length > maxBytes) throw const FileTooLargeException();
+
+    await deleteFromStorage(attachment);
+    final oldLocalPath = attachment.localPath;
+    final safeName = '${p.basenameWithoutExtension(attachment.fileName)}.jpg';
+    final stored = await _store(
+      noteId,
+      attachment.copyWith(
+        fileName: safeName,
+        mimeType: 'image/jpeg',
+        sizeBytes: result.bytes.length,
+        width: result.width,
+        height: result.height,
+        storagePath: '',
+        downloadUrl: '',
+        ink: cropInk(
+          attachment.ink,
+          left: left,
+          top: top,
+          right: right,
+          bottom: bottom,
+        ),
+      ),
+      result.bytes,
+    );
+    // Uzantı değiştiyse (ör. .png → .jpg) yerel dosya adı da değişti; eskisi
+    // artık hiçbir yerden gösterilmiyor, yetim kalmasın.
+    if (!kIsWeb && oldLocalPath.isNotEmpty && oldLocalPath != stored.localPath) {
+      try {
+        await File(oldLocalPath).delete();
+      } on FileSystemException {
+        // Dosya zaten yoksa yapacak bir şey yok.
+      }
+    }
+    return stored;
   }
 
   Future<Attachment> preparePdf({
@@ -331,4 +432,10 @@ class AttachmentRepository {
 
 class FileTooLargeException implements Exception {
   const FileTooLargeException();
+}
+
+/// Ekin baytlarına ulaşılamadı (yerel kopya silinmiş ve bulutta da yok) ya da
+/// görsel çözülemedi.
+class AttachmentMissingException implements Exception {
+  const AttachmentMissingException();
 }

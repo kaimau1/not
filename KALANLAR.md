@@ -91,15 +91,21 @@ silme) tamamlandı, kalanlar sırayla:
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
   Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
-- [ ] **RTL hazırlığı → Arapça** (kullanıcı 2026-07-28'de erteledi: "sonra
-  yaparız"; İngilizce bitti, Arapça beklemede) — `text_wrap.dart` ve görsel tuvali
-  baştan sona soldan-sağa varsayımıyla yazılı (çapalar, float bantları, sağ
-  kenar dolgusu). Arapça bunlardan ÖNCE eklenirse editör bozuk görünür.
+- [ ] **RTL hazırlığı → Arapça** (kullanıcı 2026-07-28'de erteledi, 2026-07-30'da
+  "iki tur" kararıyla yine ayrı tura bırakıldı; İngilizce + Almanca + İspanyolca
+  bitti, Arapça beklemede) — `text_wrap.dart` ve görsel tuvali baştan sona
+  soldan-sağa varsayımıyla yazılı (çapalar, float bantları, sağ kenar dolgusu).
+  Arapça bunlardan ÖNCE eklenirse editör bozuk görünür.
   Yapılacak: `planTextWrap`'e yön geçir (parametre var, `WrapTextController`
   hiç vermiyor), sol/sağ → satır başı/sonu eşlemesini yöne göre çevir,
-  `_FloatRowState`'te yöne duyarlı dolgu. Sonra `app_ar.arb` (388 anahtar).
+  `_FloatRowState`'te yöne duyarlı dolgu. Sonra `app_ar.arb` (**406** anahtar),
+  `supportedLanguages`'a `'ar': 'العربية'`.
   ⚠ Arapça çeviriyi kullanıcı doğrulayamaz — yayına çıkmadan Arapça bilen
-  birine gösterilmeli.
+  birine gösterilmeli. (Aynısı Almanca/İspanyolca için de kısmen geçerli:
+  çeviriler AI üretimi, anadili konuşanı görmedi.)
+- [ ] **Sesli asistanın tarih ayrıştırıcısı yalnız Türkçe** (`tr_datetime.dart`)
+  — de/es/en'de "yarın saat 3'te" yerel olarak çözülmez, emniyet ağı yok,
+  model'e düşer. Dil eklerken kapsam dışı bırakıldı (2026-07-30).
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
