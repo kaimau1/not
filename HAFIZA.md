@@ -440,3 +440,9 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   `speechVoiceLanguage` ile degistirildi.
   DOGRULAMA: `flutter analyze` temiz, `flutter test` 178/178, `tool/check_arb.ps1`
   dort dilde 406 anahtar tamam. CIHAZDA DENENMEDI (bu turda APK kurulmadi).
+
+## 2026-07-31 — usta sağlık kiti
+- `hooks/pre-push` kuruldu (flutter test; kırmızıysa push engellenir) +
+  `core.hooksPath=hooks`. Flutter yolu PATH'te yoksa `C:\src\flutter`'a düşer
+  ve bulunamazsa push'u DURDURUR (sessizce geçmez).
+  DOĞRULAMA: hook uçtan uca koşuldu — 178/178 yeşil, EXIT=0.
