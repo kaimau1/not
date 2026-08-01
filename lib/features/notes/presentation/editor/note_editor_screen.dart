@@ -291,6 +291,41 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// Seçimdeki tüm biçimleri siler.
   void _clearFormat() => _runOnTarget(clearRichFormat);
 
+  /// Biçim çubuğunun hedefinde SEÇİLİ metin var mı?
+  bool _hasSelection() {
+    final selection = _formatTarget?.controller.selection;
+    return selection != null && selection.isValid && !selection.isCollapsed;
+  }
+
+  /// Boyut/şeffaflık kaydırıcısı bırakıldı: SEÇİM VARSA yalnız ona (satır içi
+  /// kademe olarak), yoksa TÜM NOTA uygulanır. Kullanıcı isteği birebir buydu.
+  ///
+  /// Kaydırıcı sürekli, kademeler ayrık: en yakın kademeye yuvarlanır.
+  /// Kademe notun kendi değeriyle aynıysa işaret hiç yazılmaz (metin yine
+  /// notu izler) — gereksiz işaret metni kirletmesin.
+  void _applyStepOrNote(
+    RichFormat format,
+    List<double> steps,
+    int defaultIndex,
+    double value,
+    Note Function(Note note) noteWide,
+  ) {
+    final target = _formatTarget;
+    if (target != null && _hasSelection()) {
+      final index = richStepIndex(steps, value);
+      if (applyRichStep(
+        target.controller,
+        format,
+        index == defaultIndex ? null : index,
+      )) {
+        target.commit();
+        if (!target.focusNode.hasFocus) target.focusNode.requestFocus();
+      }
+      return;
+    }
+    _mutate(noteWide, immediate: true);
+  }
+
   void _runOnTarget(bool Function(WrapTextController controller) action) {
     final target = _formatTarget;
     if (target == null) return;
@@ -2275,9 +2310,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // aynı çarpandan beslenir (bkz. Note.fontFamily / fontScale).
     final theme = Theme.of(context);
     final bodyBase = theme.textTheme.bodyLarge ?? const TextStyle();
+    // Renk BURADA somutlaşır: satır içi opaklık (`&&k:...&&`) ancak var olan
+    // bir rengin alfasını düşürebilir; stil rengi null bırakılırsa seçime
+    // uygulanan şeffaflık hiç görünmezdi.
     final noteBodyStyle = applyNoteOpacity(
       applyNoteFont(
-        bodyBase.copyWith(fontSize: (bodyBase.fontSize ?? 16) * note.fontScale),
+        bodyBase.copyWith(
+          fontSize: (bodyBase.fontSize ?? 16) * note.fontScale,
+          color: bodyBase.color ?? theme.colorScheme.onSurface,
+        ),
         note.fontFamily,
       ),
       note.textOpacity,
@@ -2860,11 +2901,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         // kalıyor"). Çubuk klavye kadar yukarı kaldırılır; böylece "Aa"
         // düğmesi de yazarken erişilebilir olur — biçim çubuğunu açmak için
         // klavyeyi kapatmak, kapatınca da seçimi kaybetmek gerekmez.
-        bottomNavigationBar: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: Column(
+        //
+        // KASMA (v1.0.175): klavye yüksekliği ANİMASYONLU değişir; bu değeri
+        // ekranın ana build'inde okumak, animasyonun her karesinde EDİTÖRÜN
+        // TAMAMINI (sayfa tuvali, sarma ölçümü, madde listesi) yeniden
+        // kurdurup gözle görülür bir takılma yaratıyordu. Okuma artık bu
+        // küçük Builder'ın içinde: klavye oynarken yalnız alt çubuk yeniden
+        // kurulur.
+        bottomNavigationBar: Builder(
+          builder: (context) {
+            final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+            return Padding(
+              padding: EdgeInsets.only(bottom: keyboard),
+              child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
@@ -2872,7 +2921,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               // serbest katmanda kalır (NotePageCanvas — yukarıda).
               // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
               // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
-              if (MediaQuery.viewInsetsOf(context).bottom == 0)
+              if (keyboard == 0)
                 AttachmentStrip(
                   attachments: [
                     for (final a in note.attachments)
@@ -2903,11 +2952,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       fontFamily: note.fontFamily,
                       fontScale: note.fontScale,
                       textOpacity: note.textOpacity,
+                      hasSelection: _hasSelection,
                       onOpacityChanged: (value) =>
                           _mutate((n) => n.copyWith(textOpacity: value)),
-                      onOpacityEnd: (value) => _mutate(
+                      onOpacityEnd: (value) => _applyStepOrNote(
+                        RichFormat.opacity,
+                        kRichOpacitySteps,
+                        kRichOpacityDefault,
+                        value,
                         (n) => n.copyWith(textOpacity: value),
-                        immediate: true,
                       ),
                       onFontChanged: (family) => _mutate(
                         (n) => family == null
@@ -2919,9 +2972,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       // Firestore'a yazmak boşuna trafik olurdu.
                       onScaleChanged: (value) =>
                           _mutate((n) => n.copyWith(fontScale: value)),
-                      onScaleEnd: (value) => _mutate(
+                      onScaleEnd: (value) => _applyStepOrNote(
+                        RichFormat.size,
+                        kRichSizeSteps,
+                        kRichSizeDefault,
+                        value,
                         (n) => n.copyWith(fontScale: value),
-                        immediate: true,
                       ),
                       onClose: () => setState(() => _formatBarOpen = false),
                     ),
@@ -3013,7 +3069,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 ),
               ),
             ],
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

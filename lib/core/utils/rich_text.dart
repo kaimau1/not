@@ -42,7 +42,9 @@ enum RichFormat {
   italic('_'),
   underline('~'),
   highlight('=='),
-  color('%%');
+  color('%%'),
+  size('##'),
+  opacity('&&');
 
   const RichFormat(this.marker);
 
@@ -50,9 +52,57 @@ enum RichFormat {
   final String marker;
 }
 
-/// Renk seçilebilen biçimler (`==2:metin==`, `%%3:metin%%`).
-bool _takesColor(RichFormat f) =>
-    f == RichFormat.highlight || f == RichFormat.color;
+/// İndeks (1..9) alan biçimler: renk paleti, boyut ve opaklık kademeleri.
+/// İşarette `==2:metin==` gibi bir önekle taşınır.
+bool _takesIndex(RichFormat f) =>
+    f == RichFormat.highlight ||
+    f == RichFormat.color ||
+    f == RichFormat.size ||
+    f == RichFormat.opacity;
+
+/// Satır içi boyut kademeleri (`##k:metin##`, k = 1..9). Ortadaki kademe
+/// (indeks 4 → 1.0) notun kendi boyutudur: o kademe seçilince işaret hiç
+/// yazılmaz, metin nota ait boyutu izler.
+const List<double> kRichSizeSteps = [
+  0.7,
+  0.8,
+  0.9,
+  1.0,
+  1.2,
+  1.4,
+  1.6,
+  1.8,
+  2.0,
+];
+const int kRichSizeDefault = 4;
+
+/// Satır içi opaklık kademeleri (`&&k:metin&&`, k = 1..8). Son kademe (1.0)
+/// notun kendi opaklığıdır; seçilince işaret yazılmaz.
+const List<double> kRichOpacitySteps = [
+  0.3,
+  0.4,
+  0.5,
+  0.6,
+  0.7,
+  0.8,
+  0.9,
+  1.0,
+];
+const int kRichOpacityDefault = 8;
+
+/// [value]'ya en yakın kademenin indeksi (1 tabanlı).
+int richStepIndex(List<double> steps, double value) {
+  var best = 0;
+  for (var i = 1; i < steps.length; i++) {
+    if ((steps[i] - value).abs() < (steps[best] - value).abs()) best = i;
+  }
+  return best + 1;
+}
+
+double richStepValue(List<double> steps, int? index) {
+  if (index == null || index < 1 || index > steps.length) return steps.last;
+  return steps[index - 1];
+}
 
 /// Bir metin parçasının ÜZERİNDEKİ biçimlerin tümü.
 ///
@@ -68,6 +118,8 @@ class RichMark {
     this.underline = false,
     this.color,
     this.highlight,
+    this.size,
+    this.opacity,
   });
 
   /// Biçimsiz.
@@ -83,8 +135,20 @@ class RichMark {
   /// Vurgu (chip) rengi indeksi (1..n) — `==2:metin==`.
   final int? highlight;
 
+  /// Boyut kademesi (1..9) — `##5:metin##`.
+  final int? size;
+
+  /// Opaklık kademesi (1..8) — `&&4:metin&&`.
+  final int? opacity;
+
   bool get isEmpty =>
-      !bold && !italic && !underline && color == null && highlight == null;
+      !bold &&
+      !italic &&
+      !underline &&
+      color == null &&
+      highlight == null &&
+      size == null &&
+      opacity == null;
 
   bool has(RichFormat format) => switch (format) {
     RichFormat.bold => bold,
@@ -92,12 +156,16 @@ class RichMark {
     RichFormat.underline => underline,
     RichFormat.color => color != null,
     RichFormat.highlight => highlight != null,
+    RichFormat.size => size != null,
+    RichFormat.opacity => opacity != null,
   };
 
   /// Renk alan biçimlerde seçili palet indeksi, diğerlerinde null.
   int? indexOf(RichFormat format) => switch (format) {
     RichFormat.color => color,
     RichFormat.highlight => highlight,
+    RichFormat.size => size,
+    RichFormat.opacity => opacity,
     _ => null,
   };
 
@@ -107,6 +175,10 @@ class RichMark {
     RichFormat.underline => _copy(underline: true),
     RichFormat.color => _copy(color: index ?? color ?? 1),
     RichFormat.highlight => _copy(highlight: index ?? highlight ?? 1),
+    RichFormat.size => _copy(size: index ?? size ?? kRichSizeDefault),
+    RichFormat.opacity => _copy(
+      opacity: index ?? opacity ?? kRichOpacityDefault,
+    ),
   };
 
   RichMark removed(RichFormat format) => switch (format) {
@@ -115,6 +187,8 @@ class RichMark {
     RichFormat.underline => _copy(underline: false),
     RichFormat.color => _copy(clearColor: true),
     RichFormat.highlight => _copy(clearHighlight: true),
+    RichFormat.size => _copy(clearSize: true),
+    RichFormat.opacity => _copy(clearOpacity: true),
   };
 
   RichMark _copy({
@@ -123,14 +197,20 @@ class RichMark {
     bool? underline,
     int? color,
     int? highlight,
+    int? size,
+    int? opacity,
     bool clearColor = false,
     bool clearHighlight = false,
+    bool clearSize = false,
+    bool clearOpacity = false,
   }) => RichMark(
     bold: bold ?? this.bold,
     italic: italic ?? this.italic,
     underline: underline ?? this.underline,
     color: clearColor ? null : (color ?? this.color),
     highlight: clearHighlight ? null : (highlight ?? this.highlight),
+    size: clearSize ? null : (size ?? this.size),
+    opacity: clearOpacity ? null : (opacity ?? this.opacity),
   );
 
   @override
@@ -140,10 +220,13 @@ class RichMark {
       other.italic == italic &&
       other.underline == underline &&
       other.color == color &&
-      other.highlight == highlight;
+      other.highlight == highlight &&
+      other.size == size &&
+      other.opacity == opacity;
 
   @override
-  int get hashCode => Object.hash(bold, italic, underline, color, highlight);
+  int get hashCode =>
+      Object.hash(bold, italic, underline, color, highlight, size, opacity);
 }
 
 /// Düz metnin bir parçası ve üzerindeki biçimler.
@@ -165,6 +248,12 @@ final RegExp _formatPattern = RegExp(
   r'\*\*(?:(\d):)?(.+?)\*\*'
   r'|==(?:(\d):)?(.+?)=='
   r'|%%(?:(\d):)?(.+?)%%'
+  // Boyut ve opaklık işaretleri KADEME ÖNEKİ ZORUNLU tutar (`##3:` gibi):
+  // işaretler artık görünmez çizildiğinden, düz metindeki bir "## başlık ##"
+  // ya da "a && b && c" yanlışlıkla biçim sanılsa karakterler gözden
+  // KAYBOLURDU. Önek şartı bu tuzağı kapatır.
+  r'|##(\d):(.+?)##'
+  r'|&&(\d):(.+?)&&'
   r'|(?<!\w)_(?:(\d):)?(.+?)_(?!\w)'
   r'|(?<!\w)~(?:(\d):)?(.+?)~(?!\w)',
   dotAll: false,
@@ -173,7 +262,9 @@ final RegExp _formatPattern = RegExp(
 /// İçi boş kalmış işaret kutuları (`****`, `==3:==`): seçim yokken biçim
 /// düğmesine basılıp hiç yazılmadığında geriye bunlar kalır. Gösterimde
 /// zararsız ama dışa aktarılan metinde görünmemeli.
-final RegExp _emptyBoxPattern = RegExp(r'\*\*\*\*|==(?:\d:)?==|%%(?:\d:)?%%');
+final RegExp _emptyBoxPattern = RegExp(
+  r'\*\*\*\*|==(?:\d:)?==|%%(?:\d:)?%%|##\d:##|&&\d:&&',
+);
 
 /// Metinden biçim işaretlerini söker (kart önizlemesi, dışa aktarma, AI,
 /// sesli okuma — kısaca gösterime girmeyen her yol).
@@ -189,6 +280,8 @@ bool _hasMarker(String text) =>
     text.contains('**') ||
     text.contains('==') ||
     text.contains('%%') ||
+    text.contains('##') ||
+    text.contains('&&') ||
     text.contains('_') ||
     text.contains('~');
 
@@ -207,6 +300,8 @@ RichFormat _formatOf(RegExpMatch m) {
   if (text.startsWith('**')) return RichFormat.bold;
   if (text.startsWith('==')) return RichFormat.highlight;
   if (text.startsWith('%%')) return RichFormat.color;
+  if (text.startsWith('##')) return RichFormat.size;
+  if (text.startsWith('&&')) return RichFormat.opacity;
   if (text.startsWith('_')) return RichFormat.italic;
   return RichFormat.underline;
 }
@@ -305,6 +400,8 @@ String _openMarkers(RichMark mark) {
   final buffer = StringBuffer();
   if (mark.highlight != null) buffer.write('==${mark.highlight}:');
   if (mark.color != null) buffer.write('%%${mark.color}:');
+  if (mark.size != null) buffer.write('##${mark.size}:');
+  if (mark.opacity != null) buffer.write('&&${mark.opacity}:');
   if (mark.bold) buffer.write('**');
   if (mark.italic) buffer.write('_');
   if (mark.underline) buffer.write('~');
@@ -316,6 +413,8 @@ String _closeMarkers(RichMark mark) {
   if (mark.underline) buffer.write('~');
   if (mark.italic) buffer.write('_');
   if (mark.bold) buffer.write('**');
+  if (mark.opacity != null) buffer.write('&&');
+  if (mark.size != null) buffer.write('##');
   if (mark.color != null) buffer.write('%%');
   if (mark.highlight != null) buffer.write('==');
   return buffer.toString();
@@ -417,7 +516,7 @@ RichMark _markAt(List<RichSegment> segments, int plain) {
 ) {
   bool matches(RichMark mark) =>
       mark.has(format) &&
-      (!_takesColor(format) || index == null || mark.indexOf(format) == index);
+      (!_takesIndex(format) || index == null || mark.indexOf(format) == index);
 
   var pos = 0;
   var start = plain;
@@ -469,7 +568,7 @@ bool _rangeHasFormat(
     sawContent = true;
     final ok =
         seg.mark.has(format) &&
-        (!_takesColor(format) ||
+        (!_takesIndex(format) ||
             index == null ||
             seg.mark.indexOf(format) == index);
     if (!ok) allFormatted = false;
@@ -499,8 +598,18 @@ List<InlineSpan> richSpans(
   if (!_hasMarker(text)) return linkSpans(text, style, linkColor);
 
   final base = style ?? const TextStyle();
+  // İŞARETLER GÖRÜNMEZ (v1.0.175). Karakterler metinde DURUR — çıkarılsalardı
+  // imleç/seçim konumları ile denetleyicinin metni ayrışırdı (bkz. dosya
+  // başlığı) — ama neredeyse sıfır boyutta ve saydam çizilirler: kullanıcı
+  // yalnızca biçimli metni görür. `markerColor` artık yalnızca ölçüde bir
+  // etkisi kalmadığından kullanılmaz; imza korunuyor (çağrı yerleri temanın
+  // rengini vermeye devam ediyor).
   final markerStyle = base.copyWith(
-    color: markerColor,
+    color: const Color(0x00000000),
+    fontSize: 0.01,
+    letterSpacing: 0,
+    wordSpacing: 0,
+    height: 0.01,
     fontWeight: FontWeight.normal,
     fontStyle: FontStyle.normal,
     decoration: TextDecoration.none,
@@ -546,8 +655,20 @@ TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
   var style = base;
   if (mark.bold) style = style.copyWith(fontWeight: FontWeight.w700);
   if (mark.italic) style = style.copyWith(fontStyle: FontStyle.italic);
+  if (mark.size != null) {
+    style = style.copyWith(
+      fontSize: (style.fontSize ?? 16) * richStepValue(kRichSizeSteps, mark.size),
+    );
+  }
   if (mark.color != null) {
     style = style.copyWith(color: _paletteColor(palette, mark.color));
+  }
+  if (mark.opacity != null && style.color != null) {
+    style = style.copyWith(
+      color: style.color!.withValues(
+        alpha: richStepValue(kRichOpacitySteps, mark.opacity),
+      ),
+    );
   }
   if (mark.underline) {
     style = style.copyWith(
@@ -611,7 +732,7 @@ Color _paletteColor(List<Color> palette, int? index) {
     if (mark.has(format)) {
       final index = mark.indexOf(format);
       final recolor =
-          _takesColor(format) && colorIndex != null && index != colorIndex;
+          _takesIndex(format) && colorIndex != null && index != colorIndex;
       final run = _runAround(segments, ps, format, index);
       final updated = _mapRange(
         segments,
@@ -627,7 +748,7 @@ Color _paletteColor(List<Color> palette, int? index) {
     final out = _serialize(segments);
     final at = out.starts[ps.clamp(0, out.starts.length - 1)];
     final marker = format.marker;
-    final prefix = _takesColor(format) && colorIndex != null
+    final prefix = _takesIndex(format) && colorIndex != null
         ? '$marker$colorIndex:'
         : marker;
     return (
@@ -694,4 +815,102 @@ Color _paletteColor(List<Color> palette, int? index) {
     }
   }
   return (start: plain, end: plain);
+}
+
+/// Aralığa bir biçimi DOĞRUDAN yazar (aç/kapa değil).
+///
+/// Boyut ve opaklık kaydırıcıları bunu kullanır: sürüklenen değer neyse o
+/// uygulanır. [index] null ise biçim aralıktan KALDIRILIR (kaydırıcı notun
+/// kendi değerine dönünce işaret yazmanın anlamı yok).
+({String text, int start, int end}) setRangeFormat(
+  String text,
+  int start,
+  int end,
+  RichFormat format,
+  int? index,
+) {
+  if (start < 0 || end > text.length || end < start) {
+    return (text: text, start: start, end: end);
+  }
+  final leaves = _parse(text);
+  final segments = [
+    for (final leaf in leaves) RichSegment(leaf.text, leaf.mark),
+  ];
+  final ps = _toPlain(leaves, start);
+  final pe = _toPlain(leaves, end);
+  if (ps == pe) return (text: text, start: start, end: end);
+  final updated = _mapRange(
+    segments,
+    ps,
+    pe,
+    (m) => index == null ? m.removed(format) : m.applied(format, index),
+  );
+  final out = _serialize(updated);
+  return (
+    text: out.text,
+    start: out.starts[ps.clamp(0, out.starts.length - 1)],
+    end: out.ends[pe.clamp(0, out.ends.length - 1)],
+  );
+}
+
+/// Aralıktaki metnin ortak [format] indeksi (hepsi aynı değilse null).
+int? rangeFormatIndex(String text, int start, int end, RichFormat format) {
+  if (start < 0 || end > text.length || end < start) return null;
+  final leaves = _parse(text);
+  final segments = [
+    for (final leaf in leaves) RichSegment(leaf.text, leaf.mark),
+  ];
+  final ps = _toPlain(leaves, start);
+  final pe = _toPlain(leaves, end);
+  int? found;
+  var first = true;
+  var pos = 0;
+  for (final seg in segments) {
+    final segStart = pos;
+    final segEnd = pos + seg.text.length;
+    pos = segEnd;
+    if (segEnd <= ps || segStart >= pe) continue;
+    final index = seg.mark.indexOf(format);
+    if (first) {
+      found = index;
+      first = false;
+    } else if (found != index) {
+      return null;
+    }
+  }
+  return found;
+}
+
+/// İmleci GÖRÜNMEZ işaretlerin içinden çıkarır.
+///
+/// İşaretler artık çizilmediği için imlecin onların arasında durması
+/// kullanıcıya "imleç kıpırdamıyor" ya da "geri silme çalışmıyor" gibi
+/// görünürdü (silinen şey görünmeyen bir yıldızdı). Konum, gerçek bir
+/// karakterin sınırına çekilir; [backward] geriye giderken sola, ileri
+/// giderken sağa öncelik verir.
+///
+/// Boş biçim kutusunun (`****`) içi ÖZELDİR: orası çözümlemede düz metin
+/// sayıldığı için imleç orada kalır — kullanıcı yazmaya başlayınca yazdığı
+/// biçimli çıksın diye.
+int snapOutOfMarkers(String text, int offset, {bool backward = false}) {
+  if (offset <= 0 || offset >= text.length) return offset;
+  if (!_hasMarker(text)) return offset;
+  final leaves = _parse(text);
+  if (leaves.isEmpty) return offset;
+  int? before;
+  int? after;
+  for (final leaf in leaves) {
+    final start = leaf.markedStart;
+    final end = start + leaf.text.length;
+    if (offset >= start && offset <= end) return offset;
+    if (end < offset) before = end;
+    if (start > offset) {
+      after = start;
+      break;
+    }
+  }
+  // Metnin başı ve sonu da geçerli birer sınırdır: baştaki işaretin ortasından
+  // geriye giden imleç 0'a, sondakinden ileri giden imleç metnin sonuna gider.
+  if (backward) return before ?? 0;
+  return after ?? text.length;
 }

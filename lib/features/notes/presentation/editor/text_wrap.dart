@@ -565,9 +565,10 @@ class WrapTextController extends TextEditingController {
   @override
   set value(TextEditingValue newValue) {
     if (_floats.isEmpty) {
-      // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer.
+      // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer —
+      // yalnız imleç görünmez işaretin ortasına düşerse kenara çekilir.
       _widths = const [];
-      super.value = newValue;
+      super.value = _snapped(newValue);
       return;
     }
     var logical = stripWrapAnchors(newValue.text);
@@ -596,7 +597,37 @@ class WrapTextController extends TextEditingController {
       caret--;
       extent = null;
     }
+    // GÖRÜNMEZ BİÇİM İŞARETLERİ: imleç işaretin ortasına düşerse kullanıcıya
+    // "imleç kıpırdamıyor / geri silme çalışmıyor" gibi görünür (silinen şey
+    // görünmeyen bir yıldızdır). Konum gerçek bir karakterin sınırına, gidilen
+    // yöne doğru çekilir.
+    if (extent == null) {
+      final previous = wrapToLogicalOffset(
+        text,
+        selection.baseOffset < 0 ? 0 : selection.baseOffset,
+      );
+      caret = snapOutOfMarkers(logical, caret, backward: caret < previous);
+    }
     _reflow(logical, caret, extent);
+  }
+
+  /// Sarma KAPALIYKEN imleci görünmez işaretlerin dışına çeker (sarma açıkken
+  /// aynı iş [value] içinde, çapasız uzayda yapılır).
+  TextEditingValue _snapped(TextEditingValue newValue) {
+    final selection = newValue.selection;
+    if (!selection.isValid || !selection.isCollapsed) return newValue;
+    final previous = value.selection.baseOffset;
+    final caret = snapOutOfMarkers(
+      newValue.text,
+      selection.baseOffset,
+      backward: previous >= 0 && selection.baseOffset < previous,
+    );
+    if (caret == selection.baseOffset) return newValue;
+    return newValue.copyWith(
+      selection: TextSelection.collapsed(offset: caret),
+      // Oluşturma aralığı (IME) kaydırılan imleçle tutarsız kalır.
+      composing: TextRange.empty,
+    );
   }
 
   void _reflow(String logical, int logicalCaret, [int? logicalExtent]) {

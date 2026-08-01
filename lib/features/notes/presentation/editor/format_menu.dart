@@ -35,6 +35,32 @@ bool applyRichFormat(
   return _write(controller, logical, start, end, result);
 }
 
+/// SEÇİLİ metne boyut ya da opaklık kademesi yazar (aç/kapa değil: kaydırıcı
+/// hangi değerdeyse o uygulanır). [index] null ise kademe kaldırılır — metin
+/// notun kendi boyutuna/opaklığına döner.
+///
+/// Seçim yoksa hiçbir şey yapmaz ve false döner; çağıran o zaman değişikliği
+/// NOT GENELİNE uygular ("seçim varsa ona, yoksa tüm sayfaya").
+bool applyRichStep(
+  WrapTextController controller,
+  RichFormat format,
+  int? index,
+) {
+  final selection = controller.selection;
+  if (!selection.isValid || selection.isCollapsed) return false;
+  final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  return _write(
+    controller,
+    logical,
+    start,
+    end,
+    setRangeFormat(logical, start, end, format, index),
+  );
+}
+
 /// Seçimdeki (ya da imlecin içinde bulunduğu parçadaki) TÜM biçimleri siler.
 bool clearRichFormat(WrapTextController controller) {
   final selection = controller.selection;
