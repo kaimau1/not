@@ -711,3 +711,39 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   + 4G metaspace vermek, R8/dex anında host belleğini bitiriyordu.
 - APK boyutu da doğrulandı: **67,4 MB → 59,5 MB** (yazı tiplerinin tek tek
   çağrılması, PR #43). İki düzeltme aynı sürümde yayınlandı.
+
+## 2026-08-01 (yedinci giriş) — görünmez işaretler, satır içi boyut/opaklık, kasma
+
+- **İŞARETLER ARTIK GÖRÜNMÜYOR** (kullanıcı: "kelimelerin etrafındaki ** ==
+  gibi simgeler var"). Karakterler metinde DURUR — çıkarılsalardı imleç/seçim
+  konumları denetleyicinin metniyle ayrışırdı (dosya başındaki karar) — ama
+  saydam ve ~sıfır boyutta çizilir (`fontSize: 0.01`, `color: 0x00000000`).
+  Ölçüm ve çizim aynı span'den geçtiği için imleç yine kaymaz.
+- Bedeli ve çözümü: imleç görünmeyen işaretlerin ARASINDA durabiliyordu;
+  kullanıcıya "imleç kıpırdamıyor / geri silme çalışmıyor" gibi görünürdü
+  (silinen şey görünmeyen bir yıldızdı). `snapOutOfMarkers` imleci gidilen
+  yöne, gerçek bir karakterin sınırına çeker; `WrapTextController` bunu hem
+  sarmalı hem sarmasız yolda uygular. Boş biçim kutusunun (`****`) içi
+  ÖZELDİR: orası düz metin sayıldığından imleç orada kalır.
+- **TUZAK — yeni işaretlerde önek ZORUNLU**: boyut `##k:...##` ve opaklık
+  `&&k:...&&` kademe öneki olmadan eşleşmez. İşaretler görünmez olduğundan,
+  düz metindeki bir "## başlık ##" ya da "a && b && c" biçim sanılsaydı
+  karakterler kullanıcının gözünden KAYBOLURDU.
+- Boyut/şeffaflık artık "seçim varsa ona, yoksa tüm sayfaya" (kullanıcı
+  isteği): seçim varken kaydırıcı bırakılınca satır içi kademe yazılır, canlı
+  önizleme yapılmaz (hangi metnin etkileneceği görünmüyordu); seçim yokken
+  eskisi gibi not geneli canlı değişir. Kademe notun kendi değeriyle aynıysa
+  işaret hiç yazılmaz.
+- Satır içi opaklık ancak VAR OLAN bir rengin alfasını düşürebilir: editörün
+  gövde stiline renk artık açıkça yazılıyor (null bırakılırsa şeffaflık hiç
+  görünmezdi).
+- **KASMA — kök neden**: klavye yüksekliği animasyonlu değişir ve
+  `MediaQuery.viewInsetsOf(context)` ekranın ANA build'inde okunuyordu; her
+  karede editörün tamamı (sayfa tuvali, sarma ölçümü, madde listesi) yeniden
+  kuruluyordu. Okuma alt çubuğun içindeki küçük bir `Builder`'a indirildi.
+  DERS: animasyonlu MediaQuery değerlerini yaprağa en yakın yerde oku.
+- Biçim çubuğu dört satırdan İKİ satıra indi (yazı tipleri açılır menüye,
+  boyut ile şeffaflık tek kaydırıcıyı paylaşıyor): klavye + çubuk açıkken
+  nota ekranın beşte biri kalıyordu.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 246/246. CİHAZDA
+  DENENMEDİ.

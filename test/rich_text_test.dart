@@ -56,7 +56,7 @@ void main() {
       expect(_plain(_spans(text)), text);
     });
 
-    test('kalın parçası kalın çizilir, işaretler sönük', () {
+    test('kalın parçası kalın çizilir, işaretler GÖRÜNMEZ', () {
       final spans = _spans('**kalın**');
       final texts = <String, TextSpan>{};
       for (final s in spans) {
@@ -66,7 +66,10 @@ void main() {
         });
       }
       expect(texts['kalın']?.style?.fontWeight, FontWeight.w700);
-      expect(texts['**']?.style?.color, const Color(0xFF888888));
+      // İşaret karakterleri metinde DURUR (imleç kaymasın) ama saydam ve
+      // neredeyse sıfır boyutta çizilir: kullanıcı yalnız biçimli metni görür.
+      expect(texts['**']?.style?.color?.a, 0);
+      expect(texts['**']?.style?.fontSize, lessThan(1));
     });
 
     test('renk indeksi paletten seçilir', () {
@@ -215,6 +218,75 @@ void main() {
       );
       expect(r.text, 'not: ==3:==');
       expect(r.text.substring(0, r.start), 'not: ==3:');
+    });
+  });
+
+  group('boyut ve opaklık (satır içi kademe)', () {
+    test('seçime kademe yazılır, null kaldırır', () {
+      final r = setRangeFormat('merhaba dünya', 8, 13, RichFormat.size, 6);
+      expect(r.text, 'merhaba ##6:dünya##');
+      expect(r.text.substring(r.start, r.end), 'dünya');
+      final back = setRangeFormat(r.text, r.start, r.end, RichFormat.size, null);
+      expect(back.text, 'merhaba dünya');
+    });
+
+    test('kademe çizimde boyutu ve alfayı değiştirir', () {
+      final spans = richSpans(
+        '##9:büyük## ve &&3:solgun&&',
+        const TextStyle(fontSize: 16, color: Color(0xFF000000)),
+        palette: _palette,
+        markerColor: const Color(0xFF888888),
+      );
+      TextSpan? big;
+      TextSpan? faded;
+      for (final s in spans) {
+        s.visitChildren((span) {
+          if (span is TextSpan && span.text == 'büyük') big = span;
+          if (span is TextSpan && span.text == 'solgun') faded = span;
+          return true;
+        });
+      }
+      expect(big?.style?.fontSize, 16 * kRichSizeSteps.last);
+      expect(faded?.style?.color?.a, closeTo(kRichOpacitySteps[2], 0.01));
+    });
+
+    test('önek olmadan ## ve && biçim SAYILMAZ (metin kaybolmasın)', () {
+      const text = 'a ## b ## c && d && e';
+      expect(stripRichMarkers(text), text);
+    });
+
+    test('en yakın kademe seçilir', () {
+      expect(richStepIndex(kRichSizeSteps, 1.0), kRichSizeDefault);
+      expect(richStepIndex(kRichSizeSteps, 1.95), kRichSizeSteps.length);
+      expect(richStepIndex(kRichOpacitySteps, 1.0), kRichOpacityDefault);
+    });
+
+    test('aralığın ortak kademesi okunur', () {
+      expect(
+        rangeFormatIndex('##6:dünya##', 4, 9, RichFormat.size),
+        6,
+      );
+      expect(rangeFormatIndex('dünya', 0, 5, RichFormat.size), isNull);
+    });
+  });
+
+  group('görünmez işaretler', () {
+    test('imleç işaretin ortasına düşerse gerçek karaktere çekilir', () {
+      // "**dünya**": 0-1 açılış, 2-6 içerik, 7-8 kapanış.
+      expect(snapOutOfMarkers('**dünya**', 1), 2);
+      expect(snapOutOfMarkers('**dünya**', 1, backward: true), 0);
+      expect(snapOutOfMarkers('**dünya**', 8, backward: true), 7);
+      // İçerikteki konum olduğu gibi kalır.
+      expect(snapOutOfMarkers('**dünya**', 4), 4);
+    });
+
+    test('boş biçim kutusunun içi korunur (yazmaya devam edilebilsin)', () {
+      // "****" biçim olarak çözümlenmez; imleç ortada kalmalı.
+      expect(snapOutOfMarkers('a****', 3), 3);
+    });
+
+    test('işaretsiz metne dokunulmaz', () {
+      expect(snapOutOfMarkers('sıradan metin', 4), 4);
     });
   });
 }
