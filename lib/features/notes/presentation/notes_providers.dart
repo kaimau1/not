@@ -7,7 +7,10 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 
-enum NoteFilter { all, text, checklist, ordered, pinned, starred }
+/// [others] = hiçbir klasöre ve etikete girmemiş notlar. Çip barındaki
+/// klasör/etiket çipleri notları düzenli tutuyor ama düzene HİÇ girmemiş
+/// notları görünür kılmıyordu; bu süzgeç "kalanlar"ı tek dokunuşta getirir.
+enum NoteFilter { all, text, checklist, ordered, pinned, starred, others }
 
 /// Dashboard sıralama ölçütü. [manual] = akışın varsayılanı (elle sürükleme /
 /// oluşturma sırası); diğerleri istemci tarafında yeniden sıralar.
@@ -75,7 +78,11 @@ final visibleNoteFiltersProvider =
 
 class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
   static const _key = 'visible_filters';
-  static const _defaults = [NoteFilter.pinned, NoteFilter.starred];
+  static const _defaults = [
+    NoteFilter.pinned,
+    NoteFilter.starred,
+    NoteFilter.others,
+  ];
 
   @override
   List<NoteFilter> build() {
@@ -92,8 +99,22 @@ class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
         }
       }
     }
+    // Sonradan eklenen "Diğerleri" çipi, kayıtlı listesi olan kullanıcılarda
+    // sessizce eksik kalırdı (yalnız yeni kurulumlarda varsayılana giriyor).
+    // Bir kez eklenir; kullanıcı gizlerse bayrak sayesinde geri gelmez.
+    final prefs = ref.watch(sharedPreferencesProvider);
+    if (!(prefs.getBool(_othersAddedKey) ?? false)) {
+      prefs.setBool(_othersAddedKey, true);
+      if (!result.contains(NoteFilter.others)) {
+        result.add(NoteFilter.others);
+        _persist(result);
+      }
+    }
     return result;
   }
+
+  /// "Diğerleri" çipinin mevcut kullanıcılara bir kez eklendiğini işaretler.
+  static const _othersAddedKey = 'visible_filters_others_added';
 
   void _persist(List<NoteFilter> next) {
     ref.read(sharedPreferencesProvider).setStringList(_key, [
@@ -495,6 +516,11 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       NoteFilter.starred => [
         for (final n in result)
           if (n.starred) n,
+      ],
+      // Düzene girmemiş notlar: ne klasörü ne etiketi var.
+      NoteFilter.others => [
+        for (final n in result)
+          if (n.folderId == null && n.tags.isEmpty) n,
       ],
     };
     if (query.isNotEmpty) {

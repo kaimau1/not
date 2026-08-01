@@ -1355,4 +1355,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get undone => 'Undone';
+
+  @override
+  String get filterOthers => 'Others';
+
+  @override
+  String get formatTitle => 'Format';
+
+  @override
+  String get formatBold => 'Bold';
+
+  @override
+  String get formatItalic => 'Italic';
+
+  @override
+  String get formatUnderline => 'Underline';
+
+  @override
+  String get formatTextColor => 'Text colour';
+
+  @override
+  String get formatHighlight => 'Highlight';
+
+  @override
+  String get formatInfo =>
+      'Formatting travels inside the text as markers (like **bold**); markers stay hidden in exports and read-aloud.';
+
+  @override
+  String get formatMenu => 'Format…';
+
+  @override
+  String get noteFont => 'Font';
+
+  @override
+  String get noteFontDefault => 'Default';
+
+  @override
+  String get noteFontSerif => 'Book (serif)';
+
+  @override
+  String get noteFontMono => 'Typewriter';
+
+  @override
+  String get noteTextSize => 'Text size';
 }

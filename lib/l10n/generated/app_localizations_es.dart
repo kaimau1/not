@@ -1366,4 +1366,47 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get undone => 'Deshecho';
+
+  @override
+  String get filterOthers => 'Otros';
+
+  @override
+  String get formatTitle => 'Formato';
+
+  @override
+  String get formatBold => 'Negrita';
+
+  @override
+  String get formatItalic => 'Cursiva';
+
+  @override
+  String get formatUnderline => 'Subrayado';
+
+  @override
+  String get formatTextColor => 'Color del texto';
+
+  @override
+  String get formatHighlight => 'Resaltado';
+
+  @override
+  String get formatInfo =>
+      'El formato viaja dentro del texto como marcas (por ejemplo **negrita**); las marcas no aparecen al exportar ni al leer en voz alta.';
+
+  @override
+  String get formatMenu => 'Formato…';
+
+  @override
+  String get noteFont => 'Fuente';
+
+  @override
+  String get noteFontDefault => 'Predeterminada';
+
+  @override
+  String get noteFontSerif => 'Libro (serif)';
+
+  @override
+  String get noteFontMono => 'Máquina de escribir';
+
+  @override
+  String get noteTextSize => 'Tamaño del texto';
 }

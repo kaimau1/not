@@ -42,9 +42,13 @@ void openImageViewer(
 /// çizilir — yoksa çizim "kaybolmuş" görünürdü. Kutunun en-boy oranı görselin
 /// oranıyla aynı tutulduğu için oranlı noktalar birebir oturur.
 class _ImageBox extends StatelessWidget {
-  const _ImageBox({required this.img});
+  const _ImageBox({required this.img, this.fit = BoxFit.cover});
 
   final Attachment img;
+
+  /// Tuvalde `cover` (kutuyu doldurur), büyük önizlemede `contain`
+  /// (görselin tamamı görünsün — önizlemenin amacı bu).
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +81,7 @@ class _ImageBox extends StatelessWidget {
         if (hasLocal) {
           return Image.file(
             File(img.localPath),
-            fit: BoxFit.cover,
+            fit: fit,
             width: double.infinity,
             height: double.infinity,
             cacheWidth: targetWidth,
@@ -85,7 +89,7 @@ class _ImageBox extends StatelessWidget {
         } else if (img.isUploaded) {
           return CachedNetworkImage(
             imageUrl: img.downloadUrl,
-            fit: BoxFit.cover,
+            fit: fit,
             width: double.infinity,
             height: double.infinity,
             memCacheWidth: targetWidth,
@@ -371,6 +375,29 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (_selectedId != null) setState(() => _selectedId = null);
   }
 
+  /// Büyük önizlemede duran görselin kimliği (null = kapalı).
+  ///
+  /// Önizleme SAYFA DÜZENİNE dokunmaz: görselin `displayWidth`/konumu
+  /// değişmez, dolayısıyla metnin sarması da değişmez. Yalnızca üstte,
+  /// geçici bir katmanda büyük çizilir.
+  String? _previewId;
+
+  void _togglePreview(String id) =>
+      setState(() => _previewId = _previewId == id ? null : id);
+
+  void _closePreview() {
+    if (_previewId != null) setState(() => _previewId = null);
+  }
+
+  Attachment? _previewOf(List<Attachment> images) {
+    final id = _previewId;
+    if (id == null) return null;
+    for (final img in images) {
+      if (img.id == id) return img;
+    }
+    return null;
+  }
+
   double _defaultTop(int index) => 8.0 + index * 130.0;
 
   /// Görselin sayfadaki nihai yerleşimi (dp). Canlı taşıma/boyutlandırma
@@ -467,65 +494,150 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         ),
       );
     }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cw = constraints.maxWidth;
-        _reportFloats(cw);
-        // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
-        var maxBottom = 0.0;
-        for (final (index, img) in widget.images.indexed) {
-          final r = _resolve(img, index, cw);
-          final bottom = r.top + r.h + 72;
-          if (bottom > maxBottom) maxBottom = bottom;
+    // Geri tuşu önce ÖNİZLEMEYİ, sonra görsel seçimini kapatır; not ancak
+    // ikisi de kapalıyken kapanır (madde: "geri butonu direk anasayfaya
+    // dönmesin bu tür durumlarda").
+    return PopScope(
+      canPop: _previewId == null && _selectedId == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_previewId != null) {
+          _closePreview();
+        } else {
+          _deselect();
         }
-        final selected = _selectedId;
-        Attachment? selectedImg;
-        var selectedIndex = 0;
-        for (final (index, img) in widget.images.indexed) {
-          if (img.id == selected) {
-            selectedImg = img;
-            selectedIndex = index;
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cw = constraints.maxWidth;
+          _reportFloats(cw);
+          // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
+          var maxBottom = 0.0;
+          for (final (index, img) in widget.images.indexed) {
+            final r = _resolve(img, index, cw);
+            final bottom = r.top + r.h + 72;
+            if (bottom > maxBottom) maxBottom = bottom;
           }
-        }
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
-            // gövdeye odaklanılır (dokunuş metin alanına da düşer).
-            GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: () {
-                if (_selectedId != null) {
-                  _deselect();
-                } else {
-                  widget.onTapEmpty?.call();
-                }
-              },
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: maxBottom > widget.minHeight
-                      ? maxBottom
-                      : widget.minHeight,
+          final selected = _selectedId;
+          Attachment? selectedImg;
+          var selectedIndex = 0;
+          for (final (index, img) in widget.images.indexed) {
+            if (img.id == selected) {
+              selectedImg = img;
+              selectedIndex = index;
+            }
+          }
+          final previewImg = _previewOf(widget.images);
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
+              // gövdeye odaklanılır (dokunuş metin alanına da düşer).
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  if (_selectedId != null) {
+                    _deselect();
+                  } else {
+                    widget.onTapEmpty?.call();
+                  }
+                },
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: maxBottom > widget.minHeight
+                        ? maxBottom
+                        : widget.minHeight,
+                  ),
+                  child: widget.child,
                 ),
-                child: widget.child,
+              ),
+              // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
+              // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
+              if (widget.hint != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: _hintTop(cw),
+                  child: IgnorePointer(child: widget.hint!),
+                ),
+              for (final (index, img) in widget.images.indexed)
+                _positioned(context, img, index, cw),
+              if (selectedImg != null)
+                _toolbar(context, selectedImg, selectedIndex, cw),
+              // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
+              // metnin sarması olduğu gibi kalır.
+              if (previewImg != null) _preview(context, previewImg, cw),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Görseli sayfanın üzerinde BÜYÜK gösteren geçici katman. Boyut/konum
+  /// değiştirmez; herhangi bir yere dokunmak kapatır.
+  Widget _preview(BuildContext context, Attachment img, double cw) {
+    final scheme = Theme.of(context).colorScheme;
+    final aspect =
+        (img.width != null &&
+            img.height != null &&
+            img.width! > 0 &&
+            img.height! > 0)
+        ? img.width! / img.height!
+        : 1.0;
+    // Görünür alanın içinde kal: hem genişlik hem yükseklik sınırlanır ki
+    // uzun görseller taşmasın.
+    final maxW = cw - 16;
+    final maxH = widget.minHeight - 32;
+    var w = maxW;
+    var h = w / aspect;
+    if (h > maxH && maxH > 0) {
+      h = maxH;
+      w = h * aspect;
+    }
+    return Positioned(
+      left: 0,
+      right: 0,
+      // Önizleme, sayfanın GÖRÜNEN kısmının ortasında durur; sayfa
+      // kaydırıldığında da görselin bandına yakın kalsın diye üst sınır
+      // görselin konumuna göre verilir.
+      top: (widget.topLimit + 8).clamp(0.0, double.infinity),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _closePreview,
+        child: Center(
+          child: Material(
+            elevation: 8,
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            clipBehavior: Clip.antiAlias,
+            child: SizedBox(
+              width: w,
+              height: h,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: _ImageBox(img: img, fit: BoxFit.contain),
+                  ),
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: IconButton(
+                      tooltip: context.l10n.close,
+                      icon: const Icon(Icons.close, size: 20),
+                      color: Colors.white,
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black45,
+                      ),
+                      onPressed: _closePreview,
+                    ),
+                  ),
+                ],
               ),
             ),
-            // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
-            // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
-            if (widget.hint != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                top: _hintTop(cw),
-                child: IgnorePointer(child: widget.hint!),
-              ),
-            for (final (index, img) in widget.images.indexed)
-              _positioned(context, img, index, cw),
-            if (selectedImg != null)
-              _toolbar(context, selectedImg, selectedIndex, cw),
-          ],
-        );
-      },
+          ),
+        ),
+      ),
     );
   }
 
@@ -599,6 +711,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 right: 2,
                 bottom: 2,
                 child: GestureDetector(
+                  // Köşe tutamağı SÜRÜKLENİYOR ama dokunmak hiçbir şey
+                  // yapmıyordu; küçültülmüş bir görseli okumak için ya tam
+                  // ekrana gitmek ya da büyütüp sonra geri küçültmek
+                  // gerekiyordu. Dokunuş artık BÜYÜK ÖNİZLEME açar: görsel
+                  // sayfanın üstünde büyük çizilir, düzen (ve metnin akışı)
+                  // hiç değişmez — kapanınca her şey yerli yerinde kalır.
+                  onTap: () => _togglePreview(img.id),
                   onPanStart: (_) => setState(() {
                     _resizeId = img.id;
                     _resizeWFrac = (img.displayWidth ?? 0.5)

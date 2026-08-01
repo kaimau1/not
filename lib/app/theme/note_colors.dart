@@ -30,6 +30,17 @@ abstract final class NoteColors {
     return map[color] ?? scheme.surfaceContainerLow;
   }
 
+  /// Satır içi biçimlendirmenin renk paleti: metindeki `==2:...==` /
+  /// `%%2:...%%` işaretlerindeki 1..5 indeksinin karşılığı. Not renkleriyle
+  /// AYNI palet kullanılır — kullanıcı iki ayrı renk kümesi öğrenmesin.
+  static List<Color> get richPalette => const [
+    Color(0xFFE57373),
+    Color(0xFFFFC94D),
+    Color(0xFF81C784),
+    Color(0xFF64A5F5),
+    Color(0xFFB39DDB),
+  ];
+
   /// Renk seçicideki nokta rengi (daha doygun ton).
   static Color swatch(NoteColor color) => switch (color) {
     NoteColor.none => const Color(0xFF9E9E9E),

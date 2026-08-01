@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
+import 'format_menu.dart';
 import 'text_wrap.dart';
 
 /// Yanlışlıkla işaretlenen öğenin "hemen geri alındı" sayıldığı süre.
@@ -54,6 +55,8 @@ class ItemsEditor extends StatefulWidget {
     this.pageBox,
     this.shrinkWrap = false,
     this.contentInsertion,
+    this.richTheme,
+    this.textStyle,
   });
 
   final List<NoteItem> items;
@@ -86,6 +89,14 @@ class ItemsEditor extends StatefulWidget {
   /// "Yapıştır"). Ekleri not editörü yönettiğinden yapılandırma dışarıdan
   /// verilir; null ise klavye görseli hiç göndermez.
   final ContentInsertionConfiguration? contentInsertion;
+
+  /// Satır içi biçimlendirmenin (kalın/italik/renk) çizim ayarları; null ise
+  /// madde metni biçimlendirilmeden çizilir.
+  final RichTextTheme? richTheme;
+
+  /// Madde metninin temel stili (notun yazı tipi/boyutu). null ise temanın
+  /// `bodyLarge`'ı kullanılır.
+  final TextStyle? textStyle;
 
   @override
   State<ItemsEditor> createState() => _ItemsEditorState();
@@ -180,15 +191,17 @@ class _ItemsEditorState extends State<ItemsEditor> {
     super.dispose();
   }
 
-  WrapTextController _controllerFor(NoteItem item) => _controllers.putIfAbsent(
-    item.id,
-    () {
-      final controller = WrapTextController(text: item.text);
+  WrapTextController _controllerFor(NoteItem item) {
+    final controller = _controllers.putIfAbsent(item.id, () {
+      final created = WrapTextController(text: item.text);
       // Gövde metniyle aynı davranış: uzun basış kelimeyi değil cümleyi seçer.
-      attachSentenceSelection(controller);
-      return controller;
-    },
-  );
+      attachSentenceSelection(created);
+      return created;
+    });
+    // Tema (renk paleti) değişebilir; setter aynı değerde hiçbir şey yapmaz.
+    controller.richTheme = widget.richTheme;
+    return controller;
+  }
 
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();
@@ -310,6 +323,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
     if (index < 0) return;
     final wasChecked = _items[index].checked;
     final nowChecked = value ?? false;
+    // Metni BOŞ öğe işaretlenemez: yeni açılan "Yeni öğe" satırının kutusuna
+    // yanlışlıkla dokunmak, içi boş bir maddeyi işaretlilerin arasına
+    // indiriyordu — ne silinebilir bir iş, ne okunur bir satır. İşareti geri
+    // almak da gerekmesin diye kutucuk hiç tepki vermez.
+    if (nowChecked && _items[index].text.trim().isEmpty) return;
     if (nowChecked && !wasChecked) {
       // Eski sıra ŞİMDİ saklanmalı: işaret anında öğe listede yer değiştirir.
       _checkedFrom[target.id] = (index: index, at: DateTime.now());
@@ -495,10 +513,28 @@ class _ItemsEditorState extends State<ItemsEditor> {
   /// gerçek seçim ise kaldırılmıştı). Ayrıca ayrı bir "Tüm notu kopyala"
   /// seçeneği eklenir (alanlar arası gerçek seçim mümkün olmadığından tüm
   /// notu panoya almak için pratik karşılık).
-  Widget _contextMenu(BuildContext context, EditableTextState editableState) {
+  Widget _contextMenu(
+    BuildContext context,
+    EditableTextState editableState,
+    NoteItem item,
+  ) {
     final l10n = context.l10n;
     final buttonItems = <ContextMenuButtonItem>[
       ...editableState.contextMenuButtonItems,
+      // Biçim (kalın/italik/altı çizili/renk) — gövde metniyle aynı yol.
+      if (!editableState.textEditingValue.selection.isCollapsed)
+        ContextMenuButtonItem(
+          label: l10n.formatMenu,
+          onPressed: () {
+            editableState.hideToolbar();
+            final controller = _controllerFor(item);
+            showFormatSheet(
+              context,
+              controller: controller,
+              onApplied: () => _updateText(item, controller.logicalText),
+            );
+          },
+        ),
       ContextMenuButtonItem(
         label: l10n.copyWholeNote,
         onPressed: () {
@@ -521,7 +557,8 @@ class _ItemsEditorState extends State<ItemsEditor> {
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final controller = _controllerFor(item);
-    final baseStyle = theme.textTheme.bodyLarge ?? const TextStyle();
+    final baseStyle =
+        widget.textStyle ?? theme.textTheme.bodyLarge ?? const TextStyle();
     final checked = widget.showCheckboxes && item.checked;
     final focused = _focusFor(item).hasFocus;
     final selected = _selected.contains(item.id);
@@ -569,7 +606,13 @@ class _ItemsEditorState extends State<ItemsEditor> {
           else if (widget.showCheckboxes)
             Checkbox(
               value: item.checked,
-              onChanged: (value) => _toggleItem(item, value),
+              // Boş satırın kutusu PASİF: dokunulunca hiçbir şey olmadığını
+              // görmek, işaretlenip alta düşen boş bir maddeyi geri almaktan
+              // iyidir (bkz. _toggleItem). Zaten işaretliyse etkin kalır ki
+              // eski notlardaki boş işaretli satır geri alınabilsin.
+              onChanged: (item.text.trim().isEmpty && !item.checked)
+                  ? null
+                  : (value) => _toggleItem(item, value),
             )
           else
             Padding(
@@ -626,7 +669,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
                           onChanged: (_) =>
                               _updateText(item, controller.logicalText),
                           contextMenuBuilder: (context, editableState) =>
-                              _contextMenu(context, editableState),
+                              _contextMenu(context, editableState, item),
                           contentInsertionConfiguration:
                               widget.contentInsertion,
                           // Varsayılan "next" davranışı odağı metin dışı bir öğeye
@@ -779,10 +822,20 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
     // Seçim çubuğu ekranın dibinde, kaydırmadan bağımsız bir katmanda durur:
     // liste nerede olursa olsun "Kopyala" hep parmağın altındadır.
-    return OverlayPortal(
-      controller: _barController,
-      overlayChildBuilder: _selectionBar,
-      child: list,
+    //
+    // Geri tuşu seçim kipini KAPATIR, notu değil: kullanıcı yanlışlıkla seçim
+    // moduna girince telefonun geri tuşu editörden atıyordu. Aynı kural ana
+    // ekranda da geçerli (bkz. dashboard_screen).
+    return PopScope(
+      canPop: !_selectionMode,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _exitSelection();
+      },
+      child: OverlayPortal(
+        controller: _barController,
+        overlayChildBuilder: _selectionBar,
+        child: list,
+      ),
     );
   }
 

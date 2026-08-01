@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import '../../../core/utils/speech_output.dart';
 import '../../../core/utils/tr_datetime.dart';
 import '../../ai/data/assistant_service.dart';
 import '../../ai/data/gemini_service.dart';
@@ -124,6 +126,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           (event) {
             final text = event.text;
             if (text != null) {
+              // Tekrarlar köprü katmanında temizlendi (bkz. DeviceSpeech).
               _transcript = text;
               state = state.copyWith(liveTranscript: text);
             }
@@ -309,6 +312,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         message: reply,
         noteId: resultNoteId,
       );
+      _speakIfQuestion(reply);
     } on GeminiException catch (e) {
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.error,
@@ -331,6 +335,25 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     _audioPath = null;
     if (leftover != null) File(leftover).delete().ignore();
     return true;
+  }
+
+  /// Asistan SORU sorduysa yanıtı sesli okur — yalnız telefonda.
+  ///
+  /// Soru sorulduğunda ekrana bakmak gerekiyordu; oysa asistan tam da eller
+  /// meşgulken kullanılıyor. Yalnız soru okunur: "Kaydettim" gibi bildirimleri
+  /// her seferinde sesli duymak gürültü olurdu. Masaüstünde/web'de sessiz
+  /// kalır (kullanıcı isteği: "sadece ve sadece mobilde konuşsun") — orada
+  /// zaten ekran göz önünde ve hoparlör paylaşımlı bir ortamda olabilir.
+  void _speakIfQuestion(String reply) {
+    final text = reply.trim();
+    if (text.isEmpty || !text.endsWith('?')) return;
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
+    final language = Intl.getCurrentLocale().split(RegExp('[-_]')).first;
+    unawaited(
+      ref
+          .read(speechOutputProvider.notifier)
+          .speak(text, languageCode: language),
+    );
   }
 
   /// Kaydı iptal eder, hiçbir şey gönderilmez.

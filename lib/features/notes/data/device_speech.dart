@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:record/record.dart';
 
+import '../../../core/utils/speech_text.dart';
+
 /// Cihazın YERLEŞİK konuşma tanıması (Android SpeechRecognizer) için ince
 /// köprü. Dikte ve Sesli Not Asistanı bunu kullanır: ücretsiz, anlık ve
 /// Gemini kotası harcamaz — ses modele gönderilmek yerine cihazda metne
@@ -64,11 +66,17 @@ class DeviceSpeech {
   /// dolu, o ana kadarki TAM metin) veya ses seviyesi ([level] 0–1, düğme
   /// animasyonu için). Mikrofon tanıyıcıda olduğundan seviye ayrıca
   /// ölçülemez, bu yüzden aynı akıştan gelir.
+  /// Köprüden gelen metin BURADA tekrarlardan arındırılır: tanıyıcı kısa
+  /// duraklamalarda segmenti kapatıp yeniden başlatıyor ve sınırdaki kelimeyi
+  /// bilerek iki kez yazıyor (konuşulanı kaybetmemek için — bkz.
+  /// MainActivity.isContinuation). Temizlik tek yerde yapılır ki dikte, sesli
+  /// asistan ve dikte alt sayfası ayrı ayrı uğraşmasın.
   static Stream<({String? text, double? level})> listen({
     String locale = 'tr-TR',
   }) => _events.receiveBroadcastStream(locale).map((event) {
     final map = event as Map<Object?, Object?>;
-    final text = map['text'] as String?;
+    final raw = map['text'] as String?;
+    final text = raw == null ? null : dedupeSpeechSegments(raw);
     return (
       // Boş metin olayı YOK SAYILIR: tanıyıcı bazı turlarda boş sonuç
       // gönderiyor ve bu, o ana kadar yazılmış metnin üzerine yazıp

@@ -53,6 +53,7 @@ import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
 import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
+import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
 import 'note_undo.dart';
@@ -245,7 +246,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   /// Metin alanını sarma ölçümüne bağlar (görsel yoksa maliyetsiz geçer).
   Widget _wrapped(WrapTextController controller, Widget field) {
-    final style = Theme.of(context).textTheme.bodyLarge;
+    // Ölçüm, çizimle AYNI stili kullanmalı (notun yazı tipi/boyutu dahil);
+    // ayrışırsa satırlar farklı kırılır ve imleç kayar.
+    final style = _noteTextStyle();
     if (style == null) return field;
     return WrapFieldMeasure(
       controller: controller,
@@ -253,6 +256,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       floats: _floats,
       pageBox: _pageBox,
       child: field,
+    );
+  }
+
+  /// Notun kendi yazı tipi/boyutu uygulanmış gövde stili (ölçüm ve çizim
+  /// ortak kaynağı).
+  TextStyle? _noteTextStyle() {
+    final base = Theme.of(context).textTheme.bodyLarge;
+    final note = _note;
+    if (base == null || note == null) return base;
+    return base.copyWith(
+      fontFamily: note.fontFamily,
+      fontSize: (base.fontSize ?? 16) * note.fontScale,
     );
   }
 
@@ -694,6 +709,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// platformun kendi listesinden gelir.
   Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) {
     final items = [...state.contextMenuButtonItems];
+    // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş noktası
+    // SEÇİM çubuğu — biçim zaten "şu metne" uygulanır; ayrı bir düğme olsaydı
+    // önce seçimi hatırlaması gerekirdi (klavye kapanınca seçim düşüyor).
+    if (!state.textEditingValue.selection.isCollapsed) {
+      items.add(
+        ContextMenuButtonItem(
+          label: context.l10n.formatMenu,
+          onPressed: () {
+            state.hideToolbar();
+            showFormatSheet(
+              context,
+              controller: _bodyController,
+              onApplied: () => _mutate(
+                (n) => n.copyWith(body: _bodyController.logicalText),
+                immediate: true,
+              ),
+            );
+          },
+        ),
+      );
+    }
     final url = _selectedLink();
     if (url != null) {
       items.insert(
@@ -1807,6 +1843,80 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   /// Palet düğmesi: zemin rengi ve renkli çerçeve seçimi. İkisi ayrı alanlar —
   /// renkli zeminli bir nota farklı renkte çerçeve verilebilir (madde 4).
+  /// Notun yazı tipinin okunur adı.
+  static String _fontLabel(AppLocalizations l10n, String? family) =>
+      switch (family) {
+        'serif' => l10n.noteFontSerif,
+        'monospace' => l10n.noteFontMono,
+        _ => l10n.noteFontDefault,
+      };
+
+  /// Yazı tipi seçimi: sistemde her zaman bulunan genel aileler.
+  Future<void> _pickNoteFont(Note note) async {
+    final l10n = context.l10n;
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Seçili olan sağda tikle gösterilir (RadioListTile bu Flutter
+            // sürümünde RadioGroup istiyor; tek seçimlik kısa liste için
+            // ListTile daha yalın).
+            for (final family in <String?>[null, 'serif', 'monospace'])
+              ListTile(
+                title: Text(
+                  _fontLabel(l10n, family),
+                  style: TextStyle(fontFamily: family),
+                ),
+                trailing: (note.fontFamily ?? '') == (family ?? '')
+                    ? const Icon(Icons.check)
+                    : null,
+                // null "varsayılan" demek; boş dize ile taşınır.
+                onTap: () => Navigator.pop(sheetContext, family ?? ''),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    _mutate(
+      (n) => picked.isEmpty
+          ? n.copyWith(clearFontFamily: true)
+          : n.copyWith(fontFamily: picked),
+      immediate: true,
+    );
+  }
+
+  /// Yazı boyutu çarpanı: %80 – %160 arası birkaç adım.
+  Future<void> _pickNoteTextSize(Note note) async {
+    final picked = await showModalBottomSheet<double>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final scale in const [0.8, 0.9, 1.0, 1.15, 1.3, 1.6])
+              ListTile(
+                title: Text(
+                  '%${(scale * 100).round()}',
+                  style: TextStyle(fontSize: 16 * scale),
+                ),
+                trailing: note.fontScale == scale
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, scale),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    _mutate((n) => n.copyWith(fontScale: picked), immediate: true);
+  }
+
   Future<void> _showColorSheet() async {
     final note = _note;
     if (note == null) return;
@@ -1829,11 +1939,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.frameColor),
               onTap: () => Navigator.pop(sheetContext, 'frame'),
             ),
+            // Yazı tipi ve boyutu NOTA özeldir (Ayarlar'daki genel ölçekten
+            // ayrı): uzun bir belgeyi küçültmek ya da alışveriş listesini
+            // büyütmek için notu her açtığında ayarla uğraşmak gerekmesin.
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.text_fields),
+              title: Text(l10n.noteFont),
+              subtitle: Text(_fontLabel(l10n, note.fontFamily)),
+              onTap: () => Navigator.pop(sheetContext, 'font'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_size),
+              title: Text(l10n.noteTextSize),
+              subtitle: Text('%${(note.fontScale * 100).round()}'),
+              onTap: () => Navigator.pop(sheetContext, 'size'),
+            ),
           ],
         ),
       ),
     );
     if (target == null || !mounted) return;
+    if (target == 'font') {
+      await _pickNoteFont(note);
+      return;
+    }
+    if (target == 'size') {
+      await _pickNoteTextSize(note);
+      return;
+    }
     final frame = target == 'frame';
     final picked = await showNoteColorPicker(
       context,
@@ -2166,15 +2300,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final pending =
         ref.watch(pendingWritesProvider(widget.noteId)).value ?? false;
     final background = NoteColors.surface(context, note.color);
+    // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
+    // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
+    final richTheme = RichTextTheme(
+      palette: NoteColors.richPalette,
+      markerColor: Theme.of(
+        context,
+      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+    );
+    _bodyController.richTheme = richTheme;
+    // Notun kendi yazı tipi/boyutu: başlık, gövde ve maddeler aynı aileden ve
+    // aynı çarpandan beslenir (bkz. Note.fontFamily / fontScale).
+    final theme = Theme.of(context);
+    final bodyBase = theme.textTheme.bodyLarge ?? const TextStyle();
+    final noteBodyStyle = bodyBase.copyWith(
+      fontFamily: note.fontFamily,
+      fontSize: (bodyBase.fontSize ?? 16) * note.fontScale,
+    );
 
     final titleField = Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: TextField(
         controller: _titleController,
         onChanged: (value) => _mutate((n) => n.copyWith(title: value)),
-        style: Theme.of(
-          context,
-        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontFamily: note.fontFamily,
+          fontSize:
+              (Theme.of(context).textTheme.headlineSmall?.fontSize ?? 24) *
+              note.fontScale,
+        ),
         maxLines: null,
         textInputAction: TextInputAction.next,
         decoration: InputDecoration(
@@ -2198,11 +2353,36 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       }
     }
 
-    // Etiket/öneri EYLEMLERİ tek bir menüde toplanır: hatırlatıcı, klasör ve
-    // etiket çipleriyle birlikte tek satırda kalır (madde 7). Menüden kullanıcı
-    // hangi ekleme/öneri işlemini uygulayacağını seçer — çipler satırı taşırıp
-    // dikeyde yer kaplamaz. Uzun etiket dizileri yatayda kaydırılır.
+    // Başlık altındaki çip satırı: EKLEME eylemlerinin tümü tek bir "+"
+    // menüsünde, satırda ise yalnız GERÇEKTEN VAR OLANLAR (hatırlatıcı,
+    // klasör, etiketler) durur.
+    //
+    // Eskiden "Hatırlat" ve "Klasör" boşken bile birer çip kaplıyor, yanlarına
+    // "Etiket · Başlık · Alarm" adlı geniş bir çip daha giriyordu; üç ekleme
+    // düğmesi satırı doldurduğu için asıl bilgi (etiketler) ekrandan taşıyordu
+    // (ekran görüntüsündeki dağınıklık). Artık satır boş notta tek bir "+"
+    // düğmesinden ibaret, doldukça büyür.
     final actionEntries = <PopupMenuEntry<String>>[
+      PopupMenuItem(
+        value: 'reminder',
+        child: ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.alarm_add_outlined),
+          title: Text(l10n.addReminder),
+        ),
+      ),
+      PopupMenuItem(
+        value: 'folder',
+        child: ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            noteFolder?.iconData ?? Icons.create_new_folder_outlined,
+          ),
+          title: Text(l10n.folder),
+        ),
+      ),
       PopupMenuItem(
         value: 'add-tag',
         child: ListTile(
@@ -2234,10 +2414,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         ),
     ];
 
+    // Tek "+" düğmesi: ekleme/öneri eylemlerinin tamamı burada.
     final actionsMenu = PopupMenuButton<String>(
       tooltip: l10n.noteMetaMenu,
       onSelected: (action) {
         switch (action) {
+          case 'reminder':
+            _pickReminder();
+          case 'folder':
+            _pickFolder();
           case 'add-tag':
             _addTag();
           case 'suggest-tags':
@@ -2254,39 +2439,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                 height: 14,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.auto_awesome, size: 16),
-        label: Text(l10n.noteMetaMenu),
+            : const Icon(Icons.add, size: 18),
+        // Etiketsiz, dar bir düğme: satırda yer kaplamasın.
+        label: const SizedBox.shrink(),
+        labelPadding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
       ),
     );
 
     final metaChildren = <Widget>[
-      // Hatırlatıcı KENDİ çipinde durur. Eskiden kurulu hatırlatıcı burada
-      // görünüyor ama YENİ hatırlatıcı eklemek yalnızca ✨ simgeli AI
-      // menüsünün içinden mümkündü — kullanıcı "nota hatırlatıcı ekleme
-      // olmalı" dedi, çünkü etiket/başlık ÖNERİSİ ile aynı yerde duran bir
-      // seçeneği kimse hatırlatıcı sanmıyor.
+      // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(
           avatar: const Icon(Icons.alarm, size: 16),
           label: Text(DateFormat('d MMM HH:mm').format(note.reminderAt!)),
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
-        )
-      else
-        ActionChip(
-          avatar: const Icon(Icons.alarm_add_outlined, size: 16),
-          label: Text(l10n.addReminder),
-          onPressed: _pickReminder,
         ),
-      // Klasör çipi: doluysa klasör adı+simge, boşsa "Klasör" ekleme.
-      ActionChip(
-        avatar: Icon(
-          noteFolder?.iconData ?? Icons.create_new_folder_outlined,
-          size: 16,
+      // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
+      if (noteFolder != null)
+        InputChip(
+          avatar: Icon(noteFolder.iconData, size: 16),
+          label: Text(noteFolder.name),
+          onPressed: _pickFolder,
+          onDeleted: () =>
+              _mutate((n) => n.copyWith(clearFolderId: true), immediate: true),
         ),
-        label: Text(noteFolder?.name ?? l10n.folder),
-        onPressed: _pickFolder,
-      ),
       for (final tag in note.tags)
         InputChip(label: Text('#$tag'), onDeleted: () => _removeTag(tag)),
       actionsMenu,
@@ -2365,7 +2543,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       focusNode: _bodyFocus,
       // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
       // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
-      style: Theme.of(context).textTheme.bodyLarge,
+      style: noteBodyStyle,
       onChanged: (value) =>
           _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
       maxLines: null,
@@ -2419,6 +2597,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         pageBox: _pageBox,
         shrinkWrap: true,
         contentInsertion: _keyboardImagePaste,
+        richTheme: richTheme,
+        textStyle: noteBodyStyle,
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2441,6 +2621,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         pageBox: _pageBox,
         shrinkWrap: true,
         contentInsertion: _keyboardImagePaste,
+        richTheme: richTheme,
+        textStyle: noteBodyStyle,
         header: keyedHeader,
       );
     }
