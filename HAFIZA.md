@@ -513,3 +513,12 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   --dry-run assembleRelease`) hemen ardında. Böylece derleme yarıda kesilse
   bile bir sonraki koşu ısıtılmış önbellekle başlıyor. Anahtar koşuya özel
   (`...-${{ github.run_id }}`) — sabit anahtar ikinci kez yazılamıyor.
+- Koşu #151 (aynı gün, önbellek düzeltmesinden sonra): ısıtma + kaydetme
+  ÇALIŞTI (5 dk 05 sn + 1 dk 14 sn, önbellek main'e yazıldı) ama asıl derleme
+  yine `runner has received a shutdown signal` ile öldü — bu kez işin **26.
+  dakikasında**. Yani sabit bir süre sınırı YOK; runner öngörülemez biçimde
+  geri alınıyor (aynı commit dalda 16 dk 17 sn'de sorunsuz derlendi).
+  DERS: bu ortamda APK derlemesi tek denemede yeşile bağlanacağına
+  güvenilmemeli; işi KISA tutmak (önbellek isabet edince ~12 dk) ve gerekirse
+  yeniden tetiklemek gerekiyor. Önbellek artık main'de kayıtlı olduğundan
+  sonraki koşularda ısıtma adımı atlanıyor.
