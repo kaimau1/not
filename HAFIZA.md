@@ -579,3 +579,10 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   yüklendi — yani kodla ilgisi yok, runner rastgele geri alınıyor.
   DERS: main'de APK derlemesi ilk denemede yeşil olmayabilir; kod dalda
   derlendiyse yapılacak tek şey main'i yeniden tetiklemek.
+- GÖZLEM (üç koşu, aynı gün): dal ile main'in APK işleri YAN YANA koştuğunda
+  main'inki `shutdown signal` ile ölüyor, dalınki tamamlanıyor (#149/#156 dal
+  yeşil ↔ #148/#157/#159 main kırmızı). Tek başına koşan main derlemesi (#153)
+  tamamlandı. Neden kesin değil (runner tarafı) ama dalda üretilen APK zaten
+  hiçbir yere gitmiyordu — sürüm main'den yayınlanıyor. ÇÖZÜM: APK işi artık
+  YALNIZ main'de (ya da elle tetiklemede) koşuyor + iş akışına `concurrency`
+  eklendi. Böylece hem çakışma hem de dal başına boşa giden ~12 dk gitti.
