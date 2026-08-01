@@ -1419,4 +1419,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get assistantNoteCreated => 'Not oluşturuldu';
+
+  @override
+  String get noteNotFound => 'Not bulunamadı. Silinmiş olabilir.';
+
+  @override
+  String get back => 'Geri';
 }

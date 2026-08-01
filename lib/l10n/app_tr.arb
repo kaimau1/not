@@ -559,5 +559,7 @@
   "assistantMute": "Sesi kapat",
   "assistantUnmute": "Sesi aç",
   "assistantMakeNote": "Yine de nota dönüştür",
-  "assistantNoteCreated": "Not oluşturuldu"
+  "assistantNoteCreated": "Not oluşturuldu",
+  "noteNotFound": "Not bulunamadı. Silinmiş olabilir.",
+  "back": "Geri"
 }

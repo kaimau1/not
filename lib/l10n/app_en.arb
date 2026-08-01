@@ -442,5 +442,7 @@
   "assistantMute": "Mute",
   "assistantUnmute": "Unmute",
   "assistantMakeNote": "Turn into a note anyway",
-  "assistantNoteCreated": "Note created"
+  "assistantNoteCreated": "Note created",
+  "noteNotFound": "Note not found. It may have been deleted.",
+  "back": "Back"
 }

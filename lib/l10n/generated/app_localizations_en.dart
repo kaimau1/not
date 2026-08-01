@@ -1423,4 +1423,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assistantNoteCreated => 'Note created';
+
+  @override
+  String get noteNotFound => 'Note not found. It may have been deleted.';
+
+  @override
+  String get back => 'Back';
 }

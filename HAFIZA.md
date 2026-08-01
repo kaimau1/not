@@ -805,3 +805,18 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   (Ctrl+Backspace) — bu sürümde ele alınmadı.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 251/251. CİHAZDA
   DENENMEDİ.
+
+### ACİL — v1.0.181'de yeni not açılamıyordu (rota metni)
+- Dashboard'daki `_openNew` yardımcısı betikle üretilirken `'/note/$id$query'`
+  ifadesindeki `$` KAÇIRILMIŞ ve rota DÜZ METİN olarak gitmişti
+  (`/note/\$id\$query`). Uygulama var olmayan bir notu beklediği için yeni not
+  açan BÜTÜN modlar sonsuz "yükleniyor" ekranında kaldı.
+- Ne derleyici ne test gördü: geçerli bir dizeydi ve rota metni hiçbir yerde
+  doğrulanmıyordu.
+- ÖNLEM: rota tek bir yerden kuruluyor (`noteRoutePath`) ve
+  `test/note_route_test.dart` içinde `$` kaçağına karşı test edildi. Ayrıca
+  editör 6 saniye içinde not gelmezse "Not bulunamadı" gösteriyor — sonsuz
+  halka bir daha sessizce dönmesin.
+- DERS: Dart kaynağını heredoc/betikle üretirken `$` ve `\` kaçışlarını
+  ÜRETİLEN DOSYADA gözle doğrula; string içeren üretimlerde en az bir test
+  yaz. (Bu turda üç dosya betikle düzenlendi, hata yalnız bunda oluştu.)
