@@ -144,9 +144,17 @@ class Note {
   /// AI'ya gönderilecek düz metin temsili. Satır içi biçim işaretleri
   /// (`**kalın**` gibi) SÖKÜLÜR: modele, sesli okumaya ve paylaşıma giden
   /// metinde işaretlerin işi yok (bkz. rich_text.dart).
+  /// Başlığın GÖSTERİM hâli: satır içi biçim işaretleri sökülmüş.
+  ///
+  /// Başlık da artık biçimlendirilebiliyor (kullanıcı: "sadece başlığın
+  /// boyutunu ayarlayamıyorum"); işaretler yalnız editörde, görünmez olarak
+  /// yaşar. Kart, çöp kutusu, paylaşım, brifing gibi her yerde bu getter
+  /// kullanılır.
+  String get displayTitle => stripRichMarkers(title);
+
   String toPlainText() {
     final buffer = StringBuffer();
-    if (title.trim().isNotEmpty) buffer.writeln(title.trim());
+    if (title.trim().isNotEmpty) buffer.writeln(stripRichMarkers(title).trim());
     switch (type) {
       case NoteType.text:
         if (body.trim().isNotEmpty) buffer.writeln(body);
@@ -304,8 +312,13 @@ class Note {
     'locked': locked,
     // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
     if (fontFamily != null) 'fontFamily': fontFamily,
-    if (fontScale != 1) 'fontScale': fontScale,
-    if (textOpacity != 1) 'textOpacity': textOpacity,
+    // TUZAK — bu ikisi KOŞULSUZ yazılır. Belgeler `set(..., merge: true)` ile
+    // güncelleniyor: alan haritada yoksa Firestore'daki ESKİ değer olduğu gibi
+    // kalır. Koşullu yazıldıklarında kullanıcı şeffaflığı %100'e (ya da boyutu
+    // %100'e) geri çektiğinde alan haritadan düşüyor, kayıtta eski değer
+    // duruyor ve not yeniden açıldığında ayar geri geliyordu.
+    'fontScale': fontScale,
+    'textOpacity': textOpacity,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

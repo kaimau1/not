@@ -632,15 +632,21 @@ class WrapTextController extends TextEditingController {
 
   void _reflow(String logical, int logicalCaret, [int? logicalExtent]) {
     final style = _style;
+    // Aynı değeri yeniden yazmak seçim katmanını (tutamaklar, araç çubuğu)
+    // yeniden kurar: boyut kaydırıcısı sürüklenirken her karede tazelenen
+    // dizgi, tutamakların TİTREMESİNE yol açıyordu. Değişen bir şey yoksa
+    // dokunma.
     if (style == null || _columnWidth <= 0 || _floats.isEmpty) {
       _widths = const [];
       final caret = logicalCaret.clamp(0, logical.length);
       final extent = logicalExtent?.clamp(0, logical.length);
-      super.value = TextEditingValue(
-        text: logical,
-        selection: extent == null || extent == caret
-            ? TextSelection.collapsed(offset: caret)
-            : TextSelection(baseOffset: caret, extentOffset: extent),
+      _write(
+        TextEditingValue(
+          text: logical,
+          selection: extent == null || extent == caret
+              ? TextSelection.collapsed(offset: caret)
+              : TextSelection(baseOffset: caret, extentOffset: extent),
+        ),
       );
       return;
     }
@@ -663,12 +669,20 @@ class WrapTextController extends TextEditingController {
             plan.display,
             logicalExtent.clamp(0, logical.length),
           );
-    super.value = TextEditingValue(
-      text: plan.display,
-      selection: extent == null || extent == caret
-          ? TextSelection.collapsed(offset: caret)
-          : TextSelection(baseOffset: caret, extentOffset: extent),
+    _write(
+      TextEditingValue(
+        text: plan.display,
+        selection: extent == null || extent == caret
+            ? TextSelection.collapsed(offset: caret)
+            : TextSelection(baseOffset: caret, extentOffset: extent),
+      ),
     );
+  }
+
+  /// Değer gerçekten değiştiyse yazar (bkz. [_reflow] içindeki not).
+  void _write(TextEditingValue next) {
+    if (next.text == value.text && next.selection == value.selection) return;
+    super.value = next;
   }
 
   @override

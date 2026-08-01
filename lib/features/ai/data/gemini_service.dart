@@ -584,7 +584,7 @@ class GeminiService {
     attachments,
     required List<ChatTurn> history,
   }) {
-    final title = note.title.trim();
+    final title = note.displayTitle.trim();
     final contents = <Map<String, dynamic>>[
       {
         'role': 'user',
@@ -739,6 +739,15 @@ class GeminiService {
     const task =
         'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
         'checklist, aksi hâlde metin. '
+        'NOTUN İÇERİĞİ, İSTEĞİN KENDİSİ DEĞİL SONUCUDUR: kullanıcı notun '
+        'içinde ne yazmasını istediğini tarif ediyorsa (ör. "içinde kalın '
+        'harflerle kırmızı bir merhaba yazsın") nota O İÇERİĞİ yaz, komut '
+        'cümlesini DEĞİL. '
+        'BİÇİM: not metnine satır içi biçim işaretleri koyabilirsin — '
+        '**kalın**, _italik_, ~altı çizili~, %%1:renkli yazı%% ve '
+        '==1:renkli vurgu== (renk indeksleri: 1 kırmızı, 2 sarı, 3 yeşil, '
+        '4 mavi, 5 mor). İşaretler kullanıcıya görünmez, yalnız biçim '
+        'görünür; istenmiyorsa hiç kullanma. '
         'HATIRLATICI: konuşmada herhangi bir gün ya da saat geçiyorsa '
         '(yarın, salı, sabah 9, 14:00 ...) create_note çağrısında '
         'reminderAt alanını MUTLAKA doldur. Kullanıcının "hatırlat" demesi '

@@ -43,8 +43,8 @@ class BriefingNotifier extends StringDailyCache {
       }
       hasReminder = true;
       // Kilitli notun içeriği brifinge sızmasın; başlık yoksa jenerik ad.
-      final label = note.title.trim().isNotEmpty
-          ? note.title
+      final label = note.displayTitle.trim().isNotEmpty
+          ? note.displayTitle
           : note.locked
           ? '(kilitli not)'
           : note.toPlainText().split('\n').first;

@@ -747,3 +747,40 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   nota ekranın beşte biri kalıyordu.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 246/246. CİHAZDA
   DENENMEDİ.
+
+## 2026-08-01 (sekizinci giriş) — seçim kendiliğinden büyüyordu, şeffaflık kaydı
+
+- **KÖK NEDEN — "sadece merhabayı seçmiştim, boyut verirken tüm satır seçildi
+  ve büyüdü"**: `sentence_select.dart` yeni açılan TEK KELİMELİK seçimleri
+  cümleye/satıra büyütüyor (uzun basış için doğru davranış). Biçim uygulamak
+  ise metni DEĞİŞTİRİR (işaret ekler) ve seçimi kaymış konumuna programlı
+  olarak taşır; kaydırılan seçim "önceki seçimin içinde" kalmadığından
+  genişletici devreye giriyor, kullanıcının kelimesi satırın tamamına
+  büyüyordu. ÇÖZÜM: genişletme yalnız METİN AYNIYKEN çalışır (seçim gerçekten
+  kullanıcı dokunuşuyla değiştiğinde). Kanıt: `test/sentence_select_test.dart`.
+- **TUZAK — `set(..., merge: true)` ile koşullu alan yazmak**: `toMap`
+  `fontScale`/`textOpacity` alanlarını yalnız 1'den farklıysa yazıyordu.
+  Kullanıcı şeffaflığı %100'e geri çekince alan haritadan düşüyor, Firestore'da
+  ESKİ değer kalıyor ve not yeniden açıldığında ayar geri geliyordu
+  ("artırıyorum, çıkıp girince yine azalmış"). Bu iki alan artık KOŞULSUZ
+  yazılıyor. DERS: birleştirmeli yazmada "varsayılana dönüş" ancak alanı
+  açıkça yazarak (ya da silerek) anlatılabilir.
+- Seçim tutamaklarının titremesi: `_reflow` aynı metni/seçimi yeniden yazınca
+  seçim katmanı (tutamaklar + araç çubuğu) baştan kuruluyordu; boyut
+  kaydırıcısı sürüklenirken bu her karede oluyordu. Değer gerçekten
+  değişmediyse artık hiç yazılmıyor.
+- Başlık da biçimlendirilebilir oldu (kullanıcı: "sadece başlığın boyutunu
+  ayarlayamıyorum"): başlık alanı da `WrapTextController` kullanıyor ve biçim
+  çubuğunun hedefi olabiliyor. Başlığın GÖSTERİM hâli için `Note.displayTitle`
+  eklendi — kart, çöp kutusu, paylaşım, brifing, AI bağlamı hep ondan okur.
+- Şeffaflık ayarı bulunamıyordu: kaydırıcının başındaki düğme artık ADIYLA
+  yazılı ("Boyut" / "Şeffaflık") ve dokununca ötekine geçiyor.
+- Asistan istemine iki madde eklendi: (1) notun içeriği İSTEĞİN KENDİSİ değil
+  SONUCUDUR — "içinde kalın kırmızı merhaba yazsın" denince nota komut değil
+  `**%%1:merhaba%%**` yazılır; (2) satır içi biçim işaretleri ve renk
+  indeksleri tanıtıldı.
+- Yeni not oluşturup ana ekrana dönünce o not vurgulanıyor ve çerçevesi
+  yanıp sönüyor (asistanın oluşturduğu notlarda zaten vardı; artık elle
+  oluşturulanlarda da var ve vurgu nefes alıyor).
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 247/247. CİHAZDA
+  DENENMEDİ.

@@ -55,7 +55,7 @@ class _ActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final title = note.title.trim();
+    final title = note.displayTitle.trim();
     // (aksiyon, etiket, simge) — sıra sık kullanımdan seyreğe.
     final actions = <(String, String, IconData)>[
       (
@@ -208,7 +208,9 @@ Future<void> _runNoteAction(
       await SharePlus.instance.share(
         ShareParams(
           text: text,
-          subject: note.title.trim().isEmpty ? l10n.appName : note.title.trim(),
+          subject: note.displayTitle.trim().isEmpty
+              ? l10n.appName
+              : note.displayTitle.trim(),
         ),
       );
     case 'listen':
@@ -216,7 +218,7 @@ Future<void> _runNoteAction(
       // içeriği sesli de okunmasın.
       if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
-      final title = note.title.trim();
+      final title = note.displayTitle.trim();
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ListenScreen(

@@ -156,14 +156,14 @@ void main() {
     });
   });
 
-  test('seffaflik kaydedilir (varsayilan belgede yer kaplamaz)', () {
+  test('boyut ve seffaflik HER ZAMAN belgeye yazilir', () {
+    // Belgeler set(..., merge: true) ile guncelleniyor: alan haritada yoksa
+    // Firestore'daki ESKI deger kalir. Kosullu yazilirsa kullanici degeri
+    // %100'e geri cektiginde ayar geri geliyordu (v1.0.178 hatasi).
     const plain = Note(id: 'n1', type: NoteType.text);
     expect(plain.textOpacity, 1);
-    expect(
-      plain.toMap().containsKey('textOpacity'),
-      isFalse,
-      reason: 'varsayilan deger belgeye yazilmamali',
-    );
+    expect(plain.toMap()['textOpacity'], 1);
+    expect(plain.toMap()['fontScale'], 1);
     final faded = plain.copyWith(textOpacity: 0.6);
     expect(faded.toMap()['textOpacity'], 0.6);
   });

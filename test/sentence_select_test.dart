@@ -122,5 +122,24 @@ void main() {
         'Birinci cümle.',
       );
     });
+
+    test('METİN değiştiyse (biçim uygulandıysa) genişletme yapılmaz', () {
+      // KÖK NEDEN (v1.0.179): biçim uygulamak metne işaret ekler ve seçimi
+      // yeni konumuna taşır; bu programlı seçim "kullanıcı bir kelimeye uzun
+      // bastı" sanılıp TÜM SATIRA büyütülüyordu — kullanıcının seçtiği tek
+      // kelime yerine satırın tamamı biçimleniyordu.
+      final controller = attached();
+      controller.selection = const TextSelection(
+        baseOffset: 0,
+        extentOffset: 7,
+      );
+      // (buraya kadar normal: kelime cümleye büyüdü)
+      controller.value = const TextEditingValue(
+        text: '**Birinci** cümle. İkinci cümle.',
+        selection: TextSelection(baseOffset: 2, extentOffset: 9),
+      );
+      expect(controller.selection.baseOffset, 2);
+      expect(controller.selection.extentOffset, 9);
+    });
   });
 }

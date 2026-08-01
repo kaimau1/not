@@ -121,7 +121,13 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _note;
-  final _titleController = TextEditingController();
+  /// Başlık da biçimlendirilebilir (kullanıcı: "sadece başlığın boyutunu
+  /// ayarlayamıyorum, tüm sayfa büyüyor"): seçili başlık metnine boyut,
+  /// şeffaflık, kalın... uygulanabilsin diye gövdeyle AYNI denetleyiciyi
+  /// kullanır. Sarma çapası yok (başlıkta yüzen görsel olmaz), yalnız biçim
+  /// işaretlerinin görünmez çizimi ve imleç düzeltmesi için gerekli.
+  final _titleController = WrapTextController();
+  final _titleFocus = FocusNode();
 
   /// Gövde: kayan görsellerin etrafından akan metin için özel denetleyici.
   /// `.text` çapa karakterleri içerebilir — nota giden gövde her zaman
@@ -372,6 +378,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     attachSentenceSelection(_titleController);
     // Biçim çubuğu son odaklanan alana yazar; gövde odağı burada bildirilir
     // (maddeler ItemsEditor'dan bildirir).
+    _titleFocus.addListener(() {
+      if (!_titleFocus.hasFocus) return;
+      _setFormatTarget(
+        _titleController,
+        _titleFocus,
+        () => _mutate(
+          (n) => n.copyWith(title: _titleController.logicalText),
+          immediate: true,
+        ),
+      );
+    });
     _bodyFocus.addListener(() {
       if (!_bodyFocus.hasFocus) return;
       _setFormatTarget(
@@ -448,6 +465,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     _debouncer.dispose();
     _sub?.close();
     _titleController.dispose();
+    _titleFocus.dispose();
     _bodyController.dispose();
     _bodyFocus.dispose();
     super.dispose();
@@ -2306,6 +2324,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ).colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
     );
     _bodyController.richTheme = richTheme;
+    _titleController.richTheme = richTheme;
     // Notun kendi yazı tipi/boyutu: başlık, gövde ve maddeler aynı aileden ve
     // aynı çarpandan beslenir (bkz. Note.fontFamily / fontScale).
     final theme = Theme.of(context);
@@ -2329,7 +2348,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: TextField(
         controller: _titleController,
-        onChanged: (value) => _mutate((n) => n.copyWith(title: value)),
+        focusNode: _titleFocus,
+        onChanged: (_) => _mutate(
+          (n) => n.copyWith(title: _titleController.logicalText),
+        ),
         style: applyNoteOpacity(
           applyNoteFont(
             (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
@@ -2339,6 +2361,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       (Theme.of(context).textTheme.headlineSmall?.fontSize ??
                           24) *
                       note.fontScale,
+                  color:
+                      Theme.of(context).textTheme.headlineSmall?.color ??
+                      theme.colorScheme.onSurface,
                 ),
             note.fontFamily,
           ),

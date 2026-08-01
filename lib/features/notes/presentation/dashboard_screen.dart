@@ -384,6 +384,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     HapticFeedback.mediumImpact();
   }
 
+  /// Yeni notu açar; DÖNÜŞTE o notu ana ekranda vurgular.
+  ///
+  /// Kullanıcı isteği: "kişi yeni bir not oluşturup dashboard'a döndüğünde o
+  /// nota odak gitmeli ve notun çerçevesi hafif yanıp sönmeli" — uzun bir
+  /// listede yeni notun nereye düştüğü görünmüyordu (asistanın oluşturduğu
+  /// notlarda bu zaten vardı, aynı yol elle oluşturulanlara da açıldı).
+  Future<void> _openNew(String id, {String query = ''}) async {
+    if (!mounted) return;
+    await context.push('/note/\$id\$query');
+    if (!mounted) return;
+    ref.read(focusedNoteProvider.notifier).focus(id);
+  }
+
   Future<void> _createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -391,7 +404,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Aktif bir klasör filtresi varsa yeni not o klasöre doğar.
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id');
+    await _openNew(id);
   }
 
   /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
@@ -402,7 +415,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id?draw=1');
+    await _openNew(id, query: '?draw=1');
   }
 
   /// Sesli not modu (Keep'teki gibi): not oluşturulur, editör açılır açılmaz
@@ -414,7 +427,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id?voice=1');
+    await _openNew(id, query: '?voice=1');
   }
 
   /// Görüntülü not: not oluşturulur ve editör açılır açılmaz kamera açılır;
@@ -425,7 +438,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id?video=1');
+    await _openNew(id, query: '?video=1');
   }
 
   /// "Foto çek not al": not oluşturulur ve editör açılır açılmaz fotoğraf
@@ -437,7 +450,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id?photo=1');
+    await _openNew(id, query: '?photo=1');
   }
 
   /// "Belge tara not al": not oluşturulur ve editör açılır açılmaz belge
@@ -449,7 +462,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    if (mounted) await context.push('/note/$id?scan=1');
+    await _openNew(id, query: '?scan=1');
   }
 
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
@@ -477,7 +490,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // Null-aware eleman: klasör süzgeci yoksa anahtar hiç yazılmaz.
       'folderId': ?folderId,
     });
-    if (mounted) await context.push('/note/$id');
+    await _openNew(id);
   }
 
   @override
@@ -1263,20 +1276,47 @@ class _FocusHalo extends StatefulWidget {
   State<_FocusHalo> createState() => _FocusHaloState();
 }
 
-class _FocusHaloState extends State<_FocusHalo> {
+class _FocusHaloState extends State<_FocusHalo>
+    with SingleTickerProviderStateMixin {
   bool _scrolled = false;
+
+  /// Çerçevenin YANIP SÖNMESİ: sabit bir kenarlık uzun listede gözden
+  /// kaçıyordu (kullanıcı: "notun çerçevesinden hafif yanıp sönmeli").
+  /// Nefes alır gibi, göz yormayan bir ritim.
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
 
   @override
   void didUpdateWidget(covariant _FocusHalo oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.focused && !oldWidget.focused) _scrolled = false;
     _maybeScroll();
+    _syncPulse();
   }
 
   @override
   void initState() {
     super.initState();
     _maybeScroll();
+    _syncPulse();
+  }
+
+  void _syncPulse() {
+    if (widget.focused) {
+      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
+    } else {
+      _pulse
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
   }
 
   void _maybeScroll() {
@@ -1298,14 +1338,26 @@ class _FocusHaloState extends State<_FocusHalo> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: widget.focused ? scheme.primary : Colors.transparent,
-          width: 2,
+    if (!widget.focused) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.transparent, width: 2),
         ),
+        child: widget.child,
+      );
+    }
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (context, child) => Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: scheme.primary.withValues(alpha: 0.35 + 0.65 * _pulse.value),
+            width: 2,
+          ),
+        ),
+        child: child,
       ),
       child: widget.child,
     );

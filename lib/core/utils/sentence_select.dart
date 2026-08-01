@@ -104,6 +104,7 @@ class _SentenceExpander {
   final TextEditingController controller;
 
   TextSelection? _previous;
+  String? _previousText;
 
   /// Kendi yazdığımız seçimle tekrar tetiklenmemek için.
   bool _busy = false;
@@ -113,9 +114,20 @@ class _SentenceExpander {
     final selection = controller.selection;
     final previous = _previous;
     _previous = selection;
-    if (!selection.isValid || selection.isCollapsed) return;
     final text = controller.text;
+    final previousText = _previousText;
+    _previousText = text;
+    if (!selection.isValid || selection.isCollapsed) return;
     if (selection.end > text.length) return;
+
+    // KÖK NEDEN (v1.0.179): biçim uygulamak metni DEĞİŞTİRİR (işaretler
+    // eklenir) ve seçimi programlı olarak yeni konumuna taşır. Kaydırılan
+    // seçim "önceki seçimin içinde" kalmadığı için buradaki genişletme
+    // devreye giriyor, kullanıcının seçtiği tek kelime kendiliğinden TÜM
+    // SATIRA büyüyor ve bir sonraki boyut değişikliği satırın tamamına
+    // uygulanıyordu. Genişletme yalnız METİN AYNIYKEN (yani seçim gerçekten
+    // kullanıcı dokunuşuyla değiştiğinde) çalışır.
+    if (previousText != null && previousText != text) return;
 
     // Tutamakla daraltma/genişletme: seçim önceki seçimin içindeyse kullanıcı
     // bilerek küçültüyordur, karışma.
