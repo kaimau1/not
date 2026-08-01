@@ -51,8 +51,19 @@ jobs:
       # Önbellek olmadan her derleme Gradle dağıtımını ve tüm AGP/Kotlin
       # bağımlılıklarını sıfırdan indirip çözümlüyordu (~5 dk); bu adım
       # Gradle görevi başlamadan önceki bu süreyi ortadan kaldırır.
-      - name: Gradle önbelleği
-        uses: actions/cache@v4
+      #
+      # Geri yükleme ve KAYDETME bilerek AYRI adımlarda (actions/cache yerine
+      # cache/restore + cache/save). KÖK NEDEN (2026-08-01, koşu #148): runner
+      # uzun derlemenin ortasında kapatılınca ("The runner has received a
+      # shutdown signal") post adımları HİÇ çalışmıyor, dolayısıyla önbellek
+      # kaydedilmiyordu. Temmuz'daki önbellek de kullanılmadığı için düşmüştü;
+      # her deneme sıfırdan indirip aynı duvara tosluyor, bir sonrakine hiçbir
+      # şey bırakmıyordu. Kaydetme artık ısıtma adımının hemen ardında, uzun
+      # derlemeden ÖNCE yapılır: derleme yarıda kesilse bile bir sonraki koşu
+      # ısıtılmış önbellekle başlar.
+      - name: Gradle önbelleğini geri yükle
+        id: gradle_cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.gradle/caches
@@ -85,6 +96,36 @@ jobs:
           else
             echo "ANDROID_KEYSTORE_BASE64 tanımlı değil; debug imzası kullanılacak."
           fi
+
+      # Gradle dağıtımını indirir ve bağımlılık grafiğini çözer, ama HİÇBİR
+      # ŞEY derlemez (--config-only + --dry-run). Amacı önbelleği doldurup bir
+      # sonraki adımdan önce kaydedilebilir hâle getirmek; asıl derleme
+      # kesilse bile bu kazanç kalır.
+      #
+      # Önbellek zaten geri yüklendiyse ATLANIR (~6 dk kazanç). Koşul
+      # `cache-hit` DEĞİL `cache-matched-key`: kaydetme anahtarı koşuya özel
+      # olduğundan birebir isabet hiçbir zaman olmaz, önek eşleşmesi
+      # (restore-keys) olur — `cache-hit` bu durumda 'false' döner ve ısıtma
+      # boş yere her koşuda çalışırdı.
+      - name: Gradle bağımlılıklarını ısıt
+        if: steps.gradle_cache.outputs.cache-matched-key == ''
+        continue-on-error: true
+        run: |
+          flutter build apk --release --config-only --target-platform android-arm64
+          cd android && ./gradlew --no-daemon --dry-run assembleRelease
+
+      - name: Isıtılmış Gradle önbelleğini kaydet
+        if: steps.gradle_cache.outputs.cache-matched-key == ''
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          # Koşuya özel anahtar: aynı anahtar iki kez yazılamadığı için sabit
+          # anahtar ikinci koşuda "zaten var" deyip kaydetmezdi. Geri yükleme
+          # `gradle-${{ runner.os }}-` önekiyle en tazesini bulur.
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/gradle/wrapper/gradle-wrapper.properties', 'android/**/*.gradle*') }}-${{ github.run_id }}
 
       # GOOGLE_SERVER_CLIENT_ID reposunun Settings → Secrets kısmında tanımlıysa
       # Google girişi gömülü gelir; tanımlı değilse uygulama yine derlenir.

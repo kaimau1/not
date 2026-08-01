@@ -494,3 +494,22 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   düşüyor ve imleç bir daha ölçülemiyor.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 199/199 (yerel Flutter
   3.44.6, CI ile aynı sürüm). CİHAZDA DENENMEDİ.
+
+## 2026-08-01 (ikinci giriş) — APK derlemesi runner kapanmasıyla düştü
+- Koşu #148 (main, `[apk]`): "Analiz + Test" YEŞİL, "Android APK" 15 dk 20 sn
+  sonra `##[error]The runner has received a shutdown signal` ile öldü. Derleme
+  hatası DEĞİL — Gradle `assembleRelease` 871 sn koşarken runner alındı,
+  `exit code 143` (SIGTERM). Kodla ilgisi yok.
+- KÖK NEDEN (neden bu sefer sığmadı): Temmuz'daki başarılı koşuda (#109)
+  Gradle önbelleği İSABET etti, geri yükleme 52 sn sürdü, derleme 9 dk 02 sn'de
+  bitti (iş toplam ~11 dk). Bugün önbellek ISKALADI (23 Tem'den beri CI ölü
+  olduğu için 7 günlük kullanılmama süresi dolmuş, GitHub düşürmüş): Gradle
+  dağıtımı + tüm bağımlılıklar sıfırdan indi, derleme başlamadan ~4,5 dk gitti.
+- TUZAK — **iptal/kapanma post adımlarını çalıştırmaz**: `actions/cache@v4`
+  önbelleği post adımında kaydeder; runner kapanınca hiç kaydedilmedi, yani
+  her yeni deneme yine sıfırdan başlayıp aynı duvara tosluyordu (kısır döngü).
+  ÇÖZÜM: `cache/restore` + AYRI `cache/save`, kaydetme UZUN DERLEMEDEN ÖNCE,
+  bir "ısıtma" adımının (`flutter build apk --config-only` + `gradlew
+  --dry-run assembleRelease`) hemen ardında. Böylece derleme yarıda kesilse
+  bile bir sonraki koşu ısıtılmış önbellekle başlıyor. Anahtar koşuya özel
+  (`...-${{ github.run_id }}`) — sabit anahtar ikinci kez yazılamıyor.
