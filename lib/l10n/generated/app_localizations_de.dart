@@ -1459,4 +1459,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get removeBackgroundImage => 'Hintergrund entfernen';
+
+  @override
+  String get dashboardBackground => 'Startbildschirm-Hintergrund';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Bild hinter dem Notizraster (nur auf diesem Gerät).';
 }

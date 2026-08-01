@@ -2771,6 +2771,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Zemini kaldır'**
   String get removeBackgroundImage;
+
+  /// No description provided for @dashboardBackground.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran zemini'**
+  String get dashboardBackground;
+
+  /// No description provided for @dashboardBackgroundInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).'**
+  String get dashboardBackgroundInfo;
 }
 
 class _AppLocalizationsDelegate

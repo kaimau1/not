@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -73,6 +76,7 @@ class SettingsScreen extends ConsumerWidget {
                   SizedBox(height: 12),
                   _FontScaleSlider(),
                   _ExpandListItemsSwitch(),
+                  _DashboardBackgroundTile(),
                   _DarkScheduleEditor(),
                 ],
               ),
@@ -487,9 +491,8 @@ class _LanguageSelector extends ConsumerWidget {
     final current = ref.watch(localeProvider)?.languageCode ?? system;
     return RadioGroup<String>(
       groupValue: current,
-      onChanged: (value) => ref
-          .read(localeProvider.notifier)
-          .set(value == system ? null : value),
+      onChanged: (value) =>
+          ref.read(localeProvider.notifier).set(value == system ? null : value),
       child: Column(
         children: [
           RadioListTile<String>(
@@ -629,6 +632,97 @@ class _VoiceModeSelector extends ConsumerWidget {
 /// Canlı geri bildirim kaybolmasın diye altta sabit yükseklikte bir önizleme
 /// satırı sürüklenen değerle ölçeklenir (yüksekliği sabit olduğundan
 /// büyümesi üstteki kaydırıcıyı oynatmaz).
+
+/// Ana ekranın zemin görseli: seç / görünürlük / kaldır.
+///
+/// Görsel uygulamanın kendi klasörüne KOPYALANIR: galeriden seçilen yol
+/// geçici olabiliyor (Android paylaşım önbelleği), kopyalanmazsa zemin bir
+/// süre sonra kendiliğinden kayboluyordu.
+class _DashboardBackgroundTile extends ConsumerWidget {
+  const _DashboardBackgroundTile();
+
+  Future<void> _pick(BuildContext context, WidgetRef ref) async {
+    final Uint8List bytes;
+    if (kIsWeb) return;
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      const group = XTypeGroup(
+        label: 'Görseller',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      final file = await openFile(acceptedTypeGroups: const [group]);
+      if (file == null) return;
+      bytes = await file.readAsBytes();
+    } else {
+      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      bytes = await file.readAsBytes();
+    }
+    final dir = await getApplicationDocumentsDirectory();
+    // Dosya adı her seferinde değişir: aynı yol yeniden yazılsa Flutter'ın
+    // görsel önbelleği eski kareyi göstermeye devam ederdi.
+    final target = File('${dir.path}/dashboard_bg_${const Uuid().v4()}.img');
+    await target.writeAsBytes(bytes);
+    final previous = ref.read(dashboardBackgroundProvider).path;
+    ref.read(dashboardBackgroundProvider.notifier).setPath(target.path);
+    if (previous != null && previous != target.path) {
+      unawaited(File(previous).delete().catchError((_) => File(previous)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final background = ref.watch(dashboardBackgroundProvider);
+    final hasImage =
+        background.path != null && File(background.path!).existsSync();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.wallpaper),
+          title: Text(l10n.dashboardBackground),
+          subtitle: Text(l10n.dashboardBackgroundInfo),
+          trailing: hasImage
+              ? IconButton(
+                  tooltip: l10n.removeBackgroundImage,
+                  icon: const Icon(Icons.hide_image_outlined),
+                  onPressed: () => ref
+                      .read(dashboardBackgroundProvider.notifier)
+                      .setPath(null),
+                )
+              : null,
+          onTap: () => _pick(context, ref),
+        ),
+        if (hasImage)
+          Row(
+            children: [
+              const Icon(Icons.opacity, size: 18),
+              Expanded(
+                child: Slider(
+                  value: background.opacity.clamp(0.05, 1),
+                  min: 0.05,
+                  max: 1,
+                  onChanged: (value) => ref
+                      .read(dashboardBackgroundProvider.notifier)
+                      .setOpacity(value),
+                ),
+              ),
+              SizedBox(
+                width: 44,
+                child: Text(
+                  '%${(background.opacity * 100).round()}',
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
 class _FontScaleSlider extends ConsumerStatefulWidget {
   const _FontScaleSlider();
 
@@ -1407,7 +1501,8 @@ class _AssistantVoiceSwitch extends ConsumerWidget {
       title: Text(l10n.assistantVoiceSetting),
       subtitle: Text(l10n.assistantVoiceSettingInfo),
       value: ref.watch(assistantVoiceProvider),
-      onChanged: (value) => ref.read(assistantVoiceProvider.notifier).set(value),
+      onChanged: (value) =>
+          ref.read(assistantVoiceProvider.notifier).set(value),
     );
   }
 }
@@ -1460,7 +1555,6 @@ class _AdvancedAiSection extends ConsumerWidget {
     );
   }
 }
-
 
 /// Tüm notları (arşiv dahil, çöp hariç) tek JSON dosyası olarak dışa
 /// aktarıp paylaşım sayfasını açar. Ek dosyaları bulutta kaldığından

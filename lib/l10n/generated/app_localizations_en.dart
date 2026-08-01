@@ -1444,4 +1444,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeBackgroundImage => 'Remove background';
+
+  @override
+  String get dashboardBackground => 'Home screen background';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Image shown behind the note grid (this device only).';
 }

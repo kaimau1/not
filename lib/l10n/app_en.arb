@@ -449,5 +449,7 @@
   "noteBackgroundImage": "Background image",
   "chooseBackgroundImage": "Choose image",
   "changeBackgroundImage": "Change image",
-  "removeBackgroundImage": "Remove background"
+  "removeBackgroundImage": "Remove background",
+  "dashboardBackground": "Home screen background",
+  "dashboardBackgroundInfo": "Image shown behind the note grid (this device only)."
 }

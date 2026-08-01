@@ -171,6 +171,36 @@ class NoteCard extends ConsumerWidget {
     }
   }
 
+  /// Kart içeriğini notun zemin görselinin üstüne serer.
+  Widget _withNoteBackground(Note note, Widget child) {
+    final id = note.backgroundImageId;
+    if (id == null) return child;
+    final image = note.attachments.where((a) => a.id == id).firstOrNull;
+    if (image == null) return child;
+    final ImageProvider provider;
+    if (image.localPath.isNotEmpty && File(image.localPath).existsSync()) {
+      provider = FileImage(File(image.localPath));
+    } else if (image.downloadUrl.isNotEmpty) {
+      provider = CachedNetworkImageProvider(image.downloadUrl);
+    } else {
+      return child;
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: note.backgroundOpacity.clamp(0.05, 1),
+              child: Image(image: provider, fit: BoxFit.cover),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -184,7 +214,8 @@ class NoteCard extends ConsumerWidget {
     final hasTitle = note.title.trim().isNotEmpty;
     // Durum rozetleri (yıldız/sabit/AI) başlık satırının sağında akar.
     final badges = <Widget>[
-      if (note.starred) Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+      if (note.starred)
+        Icon(Icons.star, size: 14, color: Colors.amber.shade600),
       if (note.pinned)
         Icon(Icons.push_pin, size: 14, color: scheme.onSurfaceVariant),
       // AI özeti göstergesi rozet olarak sağ üstte durur.
@@ -258,7 +289,9 @@ class NoteCard extends ConsumerWidget {
             _NotePreview(note: note, highlightQuery: highlightQuery),
             // Zemin görseli ek DEĞİLDİR: kartta küçük resim olarak
             // görünmemeli (notun arkasında duvar kâğıdı olarak duruyor).
-            if (note.attachments.any((a) => a.id != note.backgroundImageId)) ...[
+            if (note.attachments.any(
+              (a) => a.id != note.backgroundImageId,
+            )) ...[
               const SizedBox(height: 8),
               _AttachmentPreview(
                 attachments: [
@@ -333,7 +366,11 @@ class NoteCard extends ConsumerWidget {
                   : 1,
             ),
           ),
-          child: content,
+          // Notun ZEMİN görseli kartta da görünür (kullanıcı isteği: "her
+          // notun zemin görseli dashboard'ta da görülmeli"). Editördeki
+          // görünürlük ayarı burada da geçerli; görsel kartın köşelerine
+          // kırpılır ve içeriğin ARKASINDA durur.
+          child: _withNoteBackground(note, content),
         ),
       ),
     );

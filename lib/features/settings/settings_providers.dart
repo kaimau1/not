@@ -412,3 +412,53 @@ class AssistantVoiceNotifier extends Notifier<bool> {
 
   void toggle() => set(!state);
 }
+
+/// Ana ekranın (dashboard) ZEMİN görseli.
+///
+/// Nota özel zeminden farkı: bu ayar cihaza aittir, buluta yazılmaz. Seçilen
+/// görsel uygulamanın kendi klasörüne KOPYALANIR — galerideki dosya silinse
+/// ya da geçici paylaşım yolu geçersizleşse bile zemin kaybolmasın.
+@immutable
+class DashboardBackground {
+  const DashboardBackground({this.path, this.opacity = 0.25});
+
+  /// Cihazdaki kopyanın yolu; null = zemin yok.
+  final String? path;
+
+  /// Görünürlük (0.05–1). Varsayılan düşük: kart ızgarası okunur kalmalı.
+  final double opacity;
+}
+
+final dashboardBackgroundProvider =
+    NotifierProvider<DashboardBackgroundNotifier, DashboardBackground>(
+      DashboardBackgroundNotifier.new,
+    );
+
+class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
+  static const _pathKey = 'dashboard_bg_path';
+  static const _opacityKey = 'dashboard_bg_opacity';
+
+  @override
+  DashboardBackground build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return DashboardBackground(
+      path: prefs.getString(_pathKey),
+      opacity: prefs.getDouble(_opacityKey) ?? 0.25,
+    );
+  }
+
+  void setPath(String? path) {
+    state = DashboardBackground(path: path, opacity: state.opacity);
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (path == null) {
+      prefs.remove(_pathKey);
+    } else {
+      prefs.setString(_pathKey, path);
+    }
+  }
+
+  void setOpacity(double value) {
+    state = DashboardBackground(path: state.path, opacity: value);
+    ref.read(sharedPreferencesProvider).setDouble(_opacityKey, value);
+  }
+}

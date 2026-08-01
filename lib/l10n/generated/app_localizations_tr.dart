@@ -1440,4 +1440,11 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get removeBackgroundImage => 'Zemini kaldır';
+
+  @override
+  String get dashboardBackground => 'Ana ekran zemini';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).';
 }

@@ -566,5 +566,7 @@
   "noteBackgroundImage": "Zemin görseli",
   "chooseBackgroundImage": "Görsel seç",
   "changeBackgroundImage": "Görseli değiştir",
-  "removeBackgroundImage": "Zemini kaldır"
+  "removeBackgroundImage": "Zemini kaldır",
+  "dashboardBackground": "Ana ekran zemini",
+  "dashboardBackgroundInfo": "Not ızgarasının arkasında duran görsel (yalnız bu cihazda)."
 }

@@ -1455,4 +1455,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get removeBackgroundImage => 'Quitar fondo';
+
+  @override
+  String get dashboardBackground => 'Fondo de la pantalla principal';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Imagen detrás de la cuadrícula de notas (solo en este dispositivo).';
 }
