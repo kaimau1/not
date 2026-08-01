@@ -203,21 +203,34 @@ class _FormatBarState extends State<FormatBar> {
                 padding: const EdgeInsets.fromLTRB(4, 0, 12, 2),
                 child: Row(
                   children: [
-                    IconButton(
-                      tooltip: sizeMode
-                          ? l10n.noteTextSize
-                          : l10n.noteTextOpacity,
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        sizeMode ? Icons.text_fields : Icons.opacity,
-                        size: 20,
+                    // ADI YAZILI düğme: yalnız damla ikonu koyunca şeffaflık
+                    // ayarını "bilmeyen asla bulamıyordu". Düğme hem o an
+                    // neyin sürüklendiğini söyler hem de dokununca ötekine
+                    // geçer.
+                    Tooltip(
+                      message: sizeMode
+                          ? l10n.noteTextOpacity
+                          : l10n.noteTextSize,
+                      child: TextButton.icon(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        icon: Icon(
+                          sizeMode ? Icons.text_fields : Icons.opacity,
+                          size: 18,
+                        ),
+                        label: Text(
+                          sizeMode ? l10n.noteTextSize : l10n.noteTextOpacity,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        onPressed: () => setState(() {
+                          _drag = null;
+                          _mode = sizeMode
+                              ? _SliderMode.opacity
+                              : _SliderMode.size;
+                        }),
                       ),
-                      onPressed: () => setState(() {
-                        _drag = null;
-                        _mode = sizeMode
-                            ? _SliderMode.opacity
-                            : _SliderMode.size;
-                      }),
                     ),
                     Expanded(
                       child: Slider(

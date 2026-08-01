@@ -215,7 +215,7 @@ class NoteCard extends ConsumerWidget {
                     child: hasTitle
                         ? highlightedText(
                             context,
-                            note.title,
+                            note.displayTitle,
                             highlightQuery,
                             maxLines: 2,
                             // Başlık da notun yazı tipini kullanır.

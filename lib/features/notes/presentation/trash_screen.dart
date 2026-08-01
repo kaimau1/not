@@ -141,7 +141,9 @@ class _TrashTile extends ConsumerWidget {
     return ListTile(
       tileColor: scheme.surfaceContainerLow,
       title: Text(
-        note.title.trim().isNotEmpty ? note.title : preview.split('\n').first,
+        note.displayTitle.trim().isNotEmpty
+            ? note.displayTitle
+            : preview.split('\n').first,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
