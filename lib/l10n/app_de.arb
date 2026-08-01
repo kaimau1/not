@@ -415,5 +415,19 @@
   "pasteAttachment": "Kopierten Anhang einfügen",
   "fullscreen": "Vollbild",
   "more": "Mehr",
-  "undone": "Rückgängig gemacht"
+  "undone": "Rückgängig gemacht",
+  "filterOthers": "Sonstige",
+  "formatTitle": "Format",
+  "formatBold": "Fett",
+  "formatItalic": "Kursiv",
+  "formatUnderline": "Unterstrichen",
+  "formatTextColor": "Textfarbe",
+  "formatHighlight": "Hervorhebung",
+  "formatInfo": "Formatierung steckt als Marker im Text (etwa **fett**); beim Export und Vorlesen bleiben die Marker unsichtbar.",
+  "formatMenu": "Format…",
+  "noteFont": "Schriftart",
+  "noteFontDefault": "Standard",
+  "noteFontSerif": "Buch (Serif)",
+  "noteFontMono": "Schreibmaschine",
+  "noteTextSize": "Schriftgröße"
 }

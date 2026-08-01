@@ -7,6 +7,7 @@ import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
 import '../domain/attachment.dart';
+import '../../../core/utils/rich_text.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'viewers/pdf_viewer_screen.dart';
@@ -48,7 +49,9 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   bool get _hasImages =>
       widget.note.attachments.any((a) => a.kind == AttachmentKind.image);
 
-  static String _contentOf(Note note) => switch (note.type) {
+  /// Dışa aktarılan metin: satır içi biçim işaretleri sökülür (PDF/Word
+  /// çıktısında "**kalın**" görünmemeli).
+  static String _contentOf(Note note) => stripRichMarkers(switch (note.type) {
     NoteType.text => note.body.trimRight(),
     NoteType.checklist => [
       for (final item in note.items) '[${item.checked ? 'x' : ' '}] ${item.text}',
@@ -56,7 +59,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     NoteType.ordered => [
       for (var i = 0; i < note.items.length; i++) '${i + 1}. ${note.items[i].text}',
     ].join('\n'),
-  };
+  });
 
   @override
   void dispose() {

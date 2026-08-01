@@ -537,5 +537,19 @@
   "pasteAttachment": "Kopyalanan eki yapıştır",
   "fullscreen": "Tam ekran",
   "more": "Diğer",
-  "undone": "Geri alındı"
+  "undone": "Geri alındı",
+  "filterOthers": "Diğerleri",
+  "formatTitle": "Biçim",
+  "formatBold": "Kalın",
+  "formatItalic": "İtalik",
+  "formatUnderline": "Altı çizili",
+  "formatTextColor": "Yazı rengi",
+  "formatHighlight": "Renkli vurgu",
+  "formatInfo": "Biçim, metnin içinde işaretle taşınır (**kalın** gibi); dışa aktarmada ve okumada işaretler görünmez.",
+  "formatMenu": "Biçim…",
+  "noteFont": "Yazı tipi",
+  "noteFontDefault": "Varsayılan",
+  "noteFontSerif": "Kitap (serif)",
+  "noteFontMono": "Daktilo",
+  "noteTextSize": "Yazı boyutu"
 }

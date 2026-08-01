@@ -1351,4 +1351,47 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get undone => 'Geri alındı';
+
+  @override
+  String get filterOthers => 'Diğerleri';
+
+  @override
+  String get formatTitle => 'Biçim';
+
+  @override
+  String get formatBold => 'Kalın';
+
+  @override
+  String get formatItalic => 'İtalik';
+
+  @override
+  String get formatUnderline => 'Altı çizili';
+
+  @override
+  String get formatTextColor => 'Yazı rengi';
+
+  @override
+  String get formatHighlight => 'Renkli vurgu';
+
+  @override
+  String get formatInfo =>
+      'Biçim, metnin içinde işaretle taşınır (**kalın** gibi); dışa aktarmada ve okumada işaretler görünmez.';
+
+  @override
+  String get formatMenu => 'Biçim…';
+
+  @override
+  String get noteFont => 'Yazı tipi';
+
+  @override
+  String get noteFontDefault => 'Varsayılan';
+
+  @override
+  String get noteFontSerif => 'Kitap (serif)';
+
+  @override
+  String get noteFontMono => 'Daktilo';
+
+  @override
+  String get noteTextSize => 'Yazı boyutu';
 }

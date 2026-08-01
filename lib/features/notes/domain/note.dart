@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/utils/rich_text.dart';
 import 'attachment.dart';
 import 'note_item.dart';
 import 'note_type.dart';
@@ -62,6 +63,8 @@ class Note {
     this.pinned = false,
     this.starred = false,
     this.locked = false,
+    this.fontFamily,
+    this.fontScale = 1,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -103,6 +106,16 @@ class Note {
   /// Kilitli not: kart içeriği gizlenir, açmak biyometrik doğrulama ister;
   /// arama yalnızca başlıkta yapılır ve AI bağlamlarına dahil edilmez.
   final bool locked;
+
+  /// Notun kendi yazı tipi: null = uygulama varsayılanı, 'serif' = kitap,
+  /// 'monospace' = daktilo. Sistemde HER ZAMAN bulunan genel aileler seçildi;
+  /// indirilen bir yazı tipi çevrimdışı açılan notta eksik kalırdı.
+  final String? fontFamily;
+
+  /// Notun kendi yazı boyutu çarpanı (1 = varsayılan). Ayarlardaki genel
+  /// ölçekten AYRIDIR: bu tek nota özeldir (uzun bir belgeyi küçültmek,
+  /// alışveriş listesini büyütmek).
+  final double fontScale;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -121,7 +134,9 @@ class Note {
       items.every((i) => i.text.trim().isEmpty) &&
       attachments.isEmpty;
 
-  /// AI'ya gönderilecek düz metin temsili.
+  /// AI'ya gönderilecek düz metin temsili. Satır içi biçim işaretleri
+  /// (`**kalın**` gibi) SÖKÜLÜR: modele, sesli okumaya ve paylaşıma giden
+  /// metinde işaretlerin işi yok (bkz. rich_text.dart).
   String toPlainText() {
     final buffer = StringBuffer();
     if (title.trim().isNotEmpty) buffer.writeln(title.trim());
@@ -142,7 +157,7 @@ class Note {
           buffer.writeln('${i + 1}. ${items[i].text}');
         }
     }
-    return buffer.toString().trim();
+    return stripRichMarkers(buffer.toString().trim());
   }
 
   /// AI ile "geliştir/düzelt" için notun İÇERİĞİ — başlık ve liste işaretleri
@@ -153,10 +168,13 @@ class Note {
   /// [skipChecked] true ise işaretli (tamamlanmış) maddeler İÇERİĞE KATILMAZ —
   /// AI düzeltme/çevirisine yalnız işaretsiz maddeler gider; tamamlananlar
   /// değiştirilmeden yerinde korunur ("işaretlilere karışma" isteği).
+  ///
+  /// Satır içi biçim işaretleri burada da sökülür: AI'ya işaretli metin
+  /// gitseydi dönen metinde işaretler bozulur ya da çoğalırdı.
   String toContentText({bool skipChecked = false}) {
     bool include(NoteItem item) =>
         item.text.trim().isNotEmpty && !(skipChecked && item.checked);
-    return switch (type) {
+    return stripRichMarkers(switch (type) {
       NoteType.text => [
         if (body.trim().isNotEmpty) body.trim(),
         // Karışık içerik: metin notundaki checklist maddeleri de içeriğe girer.
@@ -167,7 +185,7 @@ class Note {
         for (final item in items)
           if (include(item)) item.text.trim(),
       ].join('\n'),
-    };
+    });
   }
 
   Note copyWith({
@@ -184,6 +202,9 @@ class Note {
     bool? pinned,
     bool? starred,
     bool? locked,
+    String? fontFamily,
+    bool clearFontFamily = false,
+    double? fontScale,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -206,6 +227,8 @@ class Note {
     pinned: pinned ?? this.pinned,
     starred: starred ?? this.starred,
     locked: locked ?? this.locked,
+    fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
+    fontScale: fontScale ?? this.fontScale,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -240,6 +263,8 @@ class Note {
       pinned: map['pinned'] as bool? ?? false,
       starred: map['starred'] as bool? ?? false,
       locked: map['locked'] as bool? ?? false,
+      fontFamily: map['fontFamily'] as String?,
+      fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
@@ -267,6 +292,9 @@ class Note {
     'pinned': pinned,
     'starred': starred,
     'locked': locked,
+    // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
+    if (fontFamily != null) 'fontFamily': fontFamily,
+    if (fontScale != 1) 'fontScale': fontScale,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

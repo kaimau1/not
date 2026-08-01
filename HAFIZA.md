@@ -528,3 +528,48 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   APK derlemesi. Önbellek düzeltmesinin işe yaradığı böylece ölçüldü:
   #148 (soğuk, öldü) → #151 (ısıtma+kayıt, yine öldü ama önbelleği bıraktı)
   → #153 (sıcak, 12 dk, başarılı).
+
+## 2026-08-01 (üçüncü giriş) — biçimlendirme, önizleme, geri tuşu, asistan sesi
+- KARAR — **satır içi biçim, metnin İÇİNDE işaretle taşınır** (`**kalın**`,
+  `_italik_`, `~altı çizili~`, `==2:vurgu==`, `%%3:renkli%%`); ayrı bir "span"
+  alanı olarak SAKLANMAZ. Sebep: notun metni on ayrı yoldan geçiyor (arama,
+  AI, sesli okuma, PDF/Word/sunum, pano, paylaşım, widget, yedek); biçim ayrı
+  bir alanda dursaydı bu yolların HEPSİ onu ayrıca taşımak zorunda kalırdı ve
+  biri unutulduğunda metinle biçim birbirinden ayrı düşerdi. Eski notların
+  şeması da değişmedi. Bedeli: işaretler düzenleyicide GÖRÜNÜR (sönük çizilir);
+  gizlemek, imleç/seçim konumlarını metinden ayırmak demekti — sarma
+  çapalarında ödenen bedelin aynısı. Gösterime girmeyen yollarda
+  `stripRichMarkers` (kart önizlemesi, PDF/Word, `Note.toPlainText`,
+  `toContentText`). Kanıt: `test/rich_text_test.dart` — çizilen metnin
+  KAYNAKLA AYNI UZUNLUKTA olduğu ayrıca doğrulanıyor (imleç kaymasın).
+  TUZAK: ölçüm (TextPainter) ile çizim AYNI span'i kullanmalı — kalın/italik
+  metin daha geniş dizilir; `planTextWrap` da `rich` alır.
+  TUZAK 2: `_` ve `~` sıradan metinde geçiyor ("dosya_adi_uzun"); kalıp
+  ikisinin çevresinde kelime karakteri olmamasını şart koşuyor.
+- Görselin köşe tutamacına DOKUNMAK artık büyük önizleme açıyor (sürükleme
+  eskisi gibi boyutlandırır). Önizleme sayfa düzenine dokunmaz — `displayWidth`
+  değişmediği için metnin sarması da değişmez.
+- Geri tuşu geçici kipleri kapatır, notu/sayfayı değil: liste "Seç" kipi,
+  görsel seçimi ve büyük önizleme (ana ekranda seçim/sıralama zaten böyleydi).
+- **KÖK NEDEN — dökümde tekrar eden kelime**: Android köprüsü, "yeni ara sonuç
+  önceki segmentin devamı mı?" sorusunda kararsız kalınca bilerek "devamı
+  değil" der ve o ana kadarki metni kalıcı yapar (konuşulanı kaybetmemek
+  için). Bedeli sınırdaki tekrar. Temizlik TEK YERDE, `DeviceSpeech.listen`
+  içinde (`dedupeSpeechSegments`): dikte, asistan ve dikte alt sayfası ayrı
+  ayrı uğraşmıyor. Kanıt: `test/speech_text_test.dart`.
+- Asistan SORU sorduğunda (yanıt `?` ile bitiyorsa) sesli okur — yalnız
+  Android/iOS'ta (kullanıcı isteği: "sadece ve sadece mobilde konuşsun").
+  "Kaydettim" gibi bildirimler okunmaz.
+- Metni BOŞ öğe işaretlenemez (kutu pasif): boş satır işaretlenip işaretliler
+  bloğuna iniyordu.
+- Not başlığındaki çip satırı: yalnız VAR OLANLAR (hatırlatıcı/klasör/etiket)
+  çip olarak durur, tüm ekleme eylemleri tek "+" menüsünde. Ana ekranda arama
+  çubuğunun yanındaki ayrı AI düğmesi kaldırıldı (⋮ menüsünün ilk maddesi).
+- "Diğerleri" süzgeci: klasörü ve etiketi olmayan notlar. Mevcut kullanıcılara
+  bir kez otomatik eklenir (`visible_filters_others_added` bayrağı).
+- Not düzeyinde yazı tipi (varsayılan/serif/monospace) ve boyut çarpanı
+  (%80–%160) — Ayarlar'daki GENEL ölçekten ayrı, nota özel. Sistemde her zaman
+  bulunan genel aileler seçildi: indirilen bir yazı tipi çevrimdışı açılan
+  notta eksik kalırdı.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 220/220 (yerel Flutter
+  3.44.6). CİHAZDA DENENMEDİ.

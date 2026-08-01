@@ -1369,4 +1369,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get undone => 'Rückgängig gemacht';
+
+  @override
+  String get filterOthers => 'Sonstige';
+
+  @override
+  String get formatTitle => 'Format';
+
+  @override
+  String get formatBold => 'Fett';
+
+  @override
+  String get formatItalic => 'Kursiv';
+
+  @override
+  String get formatUnderline => 'Unterstrichen';
+
+  @override
+  String get formatTextColor => 'Textfarbe';
+
+  @override
+  String get formatHighlight => 'Hervorhebung';
+
+  @override
+  String get formatInfo =>
+      'Formatierung steckt als Marker im Text (etwa **fett**); beim Export und Vorlesen bleiben die Marker unsichtbar.';
+
+  @override
+  String get formatMenu => 'Format…';
+
+  @override
+  String get noteFont => 'Schriftart';
+
+  @override
+  String get noteFontDefault => 'Standard';
+
+  @override
+  String get noteFontSerif => 'Buch (Serif)';
+
+  @override
+  String get noteFontMono => 'Schreibmaschine';
+
+  @override
+  String get noteTextSize => 'Schriftgröße';
 }

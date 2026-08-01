@@ -2597,6 +2597,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Geri alındı'**
   String get undone;
+
+  /// No description provided for @filterOthers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğerleri'**
+  String get filterOthers;
+
+  /// No description provided for @formatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçim'**
+  String get formatTitle;
+
+  /// No description provided for @formatBold.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalın'**
+  String get formatBold;
+
+  /// No description provided for @formatItalic.
+  ///
+  /// In tr, this message translates to:
+  /// **'İtalik'**
+  String get formatItalic;
+
+  /// No description provided for @formatUnderline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Altı çizili'**
+  String get formatUnderline;
+
+  /// No description provided for @formatTextColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı rengi'**
+  String get formatTextColor;
+
+  /// No description provided for @formatHighlight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renkli vurgu'**
+  String get formatHighlight;
+
+  /// No description provided for @formatInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçim, metnin içinde işaretle taşınır (**kalın** gibi); dışa aktarmada ve okumada işaretler görünmez.'**
+  String get formatInfo;
+
+  /// No description provided for @formatMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçim…'**
+  String get formatMenu;
+
+  /// No description provided for @noteFont.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı tipi'**
+  String get noteFont;
+
+  /// No description provided for @noteFontDefault.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılan'**
+  String get noteFontDefault;
+
+  /// No description provided for @noteFontSerif.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kitap (serif)'**
+  String get noteFontSerif;
+
+  /// No description provided for @noteFontMono.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daktilo'**
+  String get noteFontMono;
+
+  /// No description provided for @noteTextSize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı boyutu'**
+  String get noteTextSize;
 }
 
 class _AppLocalizationsDelegate

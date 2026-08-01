@@ -420,5 +420,19 @@
   "pasteAttachment": "Paste copied attachment",
   "fullscreen": "Full screen",
   "more": "More",
-  "undone": "Undone"
+  "undone": "Undone",
+  "filterOthers": "Others",
+  "formatTitle": "Format",
+  "formatBold": "Bold",
+  "formatItalic": "Italic",
+  "formatUnderline": "Underline",
+  "formatTextColor": "Text colour",
+  "formatHighlight": "Highlight",
+  "formatInfo": "Formatting travels inside the text as markers (like **bold**); markers stay hidden in exports and read-aloud.",
+  "formatMenu": "Format…",
+  "noteFont": "Font",
+  "noteFontDefault": "Default",
+  "noteFontSerif": "Book (serif)",
+  "noteFontMono": "Typewriter",
+  "noteTextSize": "Text size"
 }

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/link_text.dart';
+import '../../../../core/utils/rich_text.dart';
 
 /// Metnin, üzerinde yüzen görsellerin ETRAFINDAN akmasını (Word'ün "kare
 /// sarma"sı) sağlayan katman.
@@ -115,6 +116,7 @@ WrapPlan planTextWrap({
   required List<FloatBox> floats,
   TextDirection direction = TextDirection.ltr,
   double textScaleFactor = 1.0,
+  RichTextTheme? rich,
 }) {
   if (floats.isEmpty || columnWidth <= 0) {
     return WrapPlan(logical, const []);
@@ -136,7 +138,7 @@ WrapPlan planTextWrap({
   // eklenen dolgu kadardır. Tavan, beklenmedik bir kırılımda sonsuz döngüyü
   // engeller — aşılırsa o ana kadarki plan kullanılır (metin yine okunur).
   for (var guard = 0; guard < 512; guard++) {
-    _layout(painter, display, widths, style, columnWidth);
+    _layout(painter, display, widths, style, columnWidth, rich);
     final metrics = painter.computeLineMetrics();
     // Boş tamponun ölçülecek satırı yoktur ama imleç ilk satırdadır: soldaki
     // görsel onu sağa itmezse imleç görselin ÜSTÜNDE yanıp söner.
@@ -261,9 +263,12 @@ void _layout(
   List<double> widths,
   TextStyle style,
   double columnWidth,
+  RichTextTheme? rich,
 ) {
   painter
-    ..text = buildWrapSpan(display, widths, style)
+    // Ölçüm de biçimi uygular: KALIN ve İTALİK metin daha geniş dizilir,
+    // ölçüm bunu görmezse satırlar çizimden farklı kırılır ve imleç kayar.
+    ..text = buildWrapSpan(display, widths, style, rich: rich)
     ..setPlaceholderDimensions([
       for (final w in widths)
         PlaceholderDimensions(
@@ -289,16 +294,27 @@ InlineSpan buildWrapSpan(
   List<double> widths,
   TextStyle? style, {
   Color? linkColor,
+  RichTextTheme? rich,
 }) {
+  List<InlineSpan> parts(String text) => rich == null
+      ? linkSpans(text, style, linkColor)
+      : richSpans(
+          text,
+          style,
+          linkColor: linkColor,
+          palette: rich.palette,
+          markerColor: rich.markerColor,
+        );
+
   if (widths.isEmpty || !display.contains(kWrapAnchorChar)) {
-    final spans = linkSpans(display, style, linkColor);
+    final spans = parts(display);
     return spans.length == 1 && spans.first is TextSpan
         ? spans.first as TextSpan
         : TextSpan(style: style, children: spans);
   }
-  final parts = display.split(kWrapAnchorChar);
-  final children = <InlineSpan>[...linkSpans(parts.first, style, linkColor)];
-  for (var i = 1; i < parts.length; i++) {
+  final segments = display.split(kWrapAnchorChar);
+  final children = <InlineSpan>[...parts(segments.first)];
+  for (var i = 1; i < segments.length; i++) {
     final w = i - 1 < widths.length ? widths[i - 1] : 0.0;
     children.add(
       WidgetSpan(
@@ -306,9 +322,31 @@ InlineSpan buildWrapSpan(
         child: SizedBox(width: w, height: 0),
       ),
     );
-    children.addAll(linkSpans(parts[i], style, linkColor));
+    children.addAll(parts(segments[i]));
   }
   return TextSpan(style: style, children: children);
+}
+
+/// Biçimlendirmenin çizim ayarları. Ölçüm ve çizim AYNI değeri kullanmalı;
+/// aksi hâlde kalın/italik metnin genişliği ikisinde ayrışır ve imleç kayar.
+@immutable
+class RichTextTheme {
+  const RichTextTheme({required this.palette, required this.markerColor});
+
+  /// Renk indeksinin (1..n) karşılığı renkler.
+  final List<Color> palette;
+
+  /// Biçim işaretlerinin (sönük) rengi.
+  final Color markerColor;
+
+  @override
+  bool operator ==(Object other) =>
+      other is RichTextTheme &&
+      other.markerColor == markerColor &&
+      other.palette.length == palette.length;
+
+  @override
+  int get hashCode => Object.hash(markerColor, palette.length);
 }
 
 /// Dikeyde [top] ile başlayan satırın metindeki aralığı.
@@ -449,12 +487,27 @@ class WrapTextController extends TextEditingController {
 
   List<double> _widths = const [];
   List<FloatBox> _floats = const [];
+  RichTextTheme? _rich;
   TextStyle? _style;
   double _columnWidth = 0;
   double _textScale = 1.0;
 
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
+
+  /// Biçimlendirmenin çizim ayarları (renk paleti + işaret rengi). Tema
+  /// bağımlı olduğu için dışarıdan verilir; değişince dizgi tazelenir çünkü
+  /// kalın/italik metnin genişliği satır kırılımını etkiler.
+  set richTheme(RichTextTheme? value) {
+    if (_rich == value) return;
+    _rich = value;
+    if (_floats.isNotEmpty && _style != null && _columnWidth > 0) {
+      _reflow(logicalText, wrapToLogicalOffset(text, selection.baseOffset));
+    }
+  }
+
+  /// Mantıksal metni ve imleç konumunu birlikte yazar (biçim uygulama).
+  void setLogical(String logical, int caret) => _reflow(logical, caret);
 
   /// Tamponda hiç dolgu yok (sarma kapalı) — sıradan bir denetleyici gibi.
   bool get isPlain => _widths.isEmpty;
@@ -532,6 +585,7 @@ class WrapTextController extends TextEditingController {
       columnWidth: _columnWidth,
       floats: _floats,
       textScaleFactor: _textScale,
+      rich: _rich,
     );
     _widths = plan.widths;
     final caret = wrapToDisplayOffset(
@@ -558,18 +612,22 @@ class WrapTextController extends TextEditingController {
         ? null
         : Theme.of(context).colorScheme.primary;
     if (_widths.isEmpty) {
-      if (linkColor == null || findLinks(text).isEmpty) {
+      // Biçim işareti ya da bağlantı yoksa üst sınıfın span'i kullanılır
+      // (IME davranışı olduğu gibi kalsın).
+      if ((linkColor == null || findLinks(text).isEmpty) &&
+          stripRichMarkers(text) == text) {
         return super.buildTextSpan(
           context: context,
           style: style,
           withComposing: withComposing,
         );
       }
-      return buildWrapSpan(text, const [], style, linkColor: linkColor)
+      return buildWrapSpan(text, const [], style, linkColor: linkColor, rich: _rich)
           as TextSpan;
     }
     // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
     // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
-    return buildWrapSpan(text, _widths, style, linkColor: linkColor) as TextSpan;
+    return buildWrapSpan(text, _widths, style, linkColor: linkColor, rich: _rich)
+        as TextSpan;
   }
 }

@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
+import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
@@ -463,7 +464,9 @@ class _NotePreview extends StatelessWidget {
             if (hasBody)
               highlightedText(
                 context,
-                note.body,
+                // Kartta biçim işaretleri (**kalın** gibi) gösterilmez:
+                // önizleme okunabilir kalmalı.
+                stripRichMarkers(note.body),
                 highlightQuery,
                 maxLines: items.isEmpty ? 4 : 2,
                 style: bodyStyle,
@@ -488,7 +491,7 @@ class _NotePreview extends StatelessWidget {
                       ),
                       Expanded(
                         child: Text(
-                          item.text,
+                          stripRichMarkers(item.text),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: item.checked

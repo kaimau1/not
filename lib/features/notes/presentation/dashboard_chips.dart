@@ -571,6 +571,7 @@ IconData _filterIcon(NoteFilter filter) => switch (filter) {
   NoteFilter.ordered => Icons.format_list_numbered_rounded,
   NoteFilter.pinned => Icons.push_pin_outlined,
   NoteFilter.starred => Icons.star_outline,
+  NoteFilter.others => Icons.label_off_outlined,
 };
 
 /// Filtre türünün yerelleştirilmiş etiketi.
@@ -582,4 +583,5 @@ String _filterLabel(AppLocalizations l10n, NoteFilter filter) =>
       NoteFilter.ordered => l10n.filterOrdered,
       NoteFilter.pinned => l10n.filterPinned,
       NoteFilter.starred => l10n.filterStarred,
+      NoteFilter.others => l10n.filterOthers,
     };

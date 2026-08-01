@@ -182,6 +182,29 @@ void main() {
     expect(items.every((i) => !i.checked), isTrue);
   });
 
+  testWidgets('metni boş öğe işaretlenemez', (tester) async {
+    // Yeni açılan "Yeni öğe" satırının kutusuna yanlışlıkla dokunmak, içi boş
+    // bir maddeyi işaretlilerin arasına indiriyordu.
+    var items = [
+      NoteItem(id: 'a', text: 'Süt'),
+      NoteItem(id: 'b', text: ''),
+    ];
+    await tester.pumpWidget(_wrap(ItemsEditor(
+      items: items,
+      onChanged: (updated) => items = updated,
+      showCheckboxes: true,
+    )));
+    await tester.pumpAndSettle();
+
+    final boxes = tester.widgetList<Checkbox>(find.byType(Checkbox)).toList();
+    expect(boxes[1].onChanged, isNull, reason: 'boş satırın kutusu pasif değil');
+
+    await tester.tap(find.byType(Checkbox).at(1), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(items.every((i) => !i.checked), isTrue);
+    expect(items.map((i) => i.id).toList(), ['a', 'b']);
+  });
+
   test('geri alma penceresi geçince öğe işaretsizlerin SONUNA girer', () {
     // Pencere içinde: hatırlanan sıra.
     expect(

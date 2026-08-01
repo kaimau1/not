@@ -706,15 +706,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             actions: searchExpanded
                                 ? const [SizedBox(width: 4)]
                                 : [
-                                    // Tüm AI özellikleri tek kapıda: eskiden
-                                    // çeviri+sohbet ikonları ve ⋮ içindeki dört
-                                    // AI maddesi dağınıktı; hepsi AI merkezine
-                                    // (/ai) taşındı.
-                                    IconButton(
-                                      tooltip: l10n.aiHubTitle,
-                                      icon: const Icon(Icons.auto_awesome),
-                                      onPressed: () => context.push('/ai'),
-                                    ),
+                                    // AI merkezinin AYRI düğmesi kaldırıldı:
+                                    // arama çubuğunun içindeki ✨ (akıllı arama)
+                                    // ile yan yana duruyor, ikisi karışıyordu.
+                                    // Girişi artık ⋮ menüsünün ilk maddesi.
                                     PopupMenuButton<String>(
                                       // Menü ekranın altına taşıp sistem gezinme
                                       // çubuğunun arkasında kalıyordu; yükseklik
@@ -725,6 +720,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             0.55,
                                       ),
                                       onSelected: (action) => switch (action) {
+                                        'ai' => context.push('/ai'),
                                         'sort' => _pickSort(),
                                         'hidden' => _toggleHiddenFolders(),
                                         'reorder' =>
@@ -744,6 +740,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                       // Yalnız sıralama + içerik yerleri +
                                       // ayarlar kaldı; AI maddeleri /ai'de.
                                       itemBuilder: (context) => [
+                                        _menuItem(
+                                          'ai',
+                                          Icons.auto_awesome,
+                                          l10n.aiHubTitle,
+                                        ),
+                                        const PopupMenuDivider(),
                                         _menuItem(
                                           'sort',
                                           Icons.sort,
