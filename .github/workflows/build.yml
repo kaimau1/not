@@ -62,6 +62,7 @@ jobs:
       # derlemeden ÖNCE yapılır: derleme yarıda kesilse bile bir sonraki koşu
       # ısıtılmış önbellekle başlar.
       - name: Gradle önbelleğini geri yükle
+        id: gradle_cache
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -100,13 +101,21 @@ jobs:
       # ŞEY derlemez (--config-only + --dry-run). Amacı önbelleği doldurup bir
       # sonraki adımdan önce kaydedilebilir hâle getirmek; asıl derleme
       # kesilse bile bu kazanç kalır.
+      #
+      # Önbellek zaten geri yüklendiyse ATLANIR (~6 dk kazanç). Koşul
+      # `cache-hit` DEĞİL `cache-matched-key`: kaydetme anahtarı koşuya özel
+      # olduğundan birebir isabet hiçbir zaman olmaz, önek eşleşmesi
+      # (restore-keys) olur — `cache-hit` bu durumda 'false' döner ve ısıtma
+      # boş yere her koşuda çalışırdı.
       - name: Gradle bağımlılıklarını ısıt
+        if: steps.gradle_cache.outputs.cache-matched-key == ''
         continue-on-error: true
         run: |
           flutter build apk --release --config-only --target-platform android-arm64
           cd android && ./gradlew --no-daemon --dry-run assembleRelease
 
       - name: Isıtılmış Gradle önbelleğini kaydet
+        if: steps.gradle_cache.outputs.cache-matched-key == ''
         continue-on-error: true
         uses: actions/cache/save@v4
         with:
