@@ -376,6 +376,49 @@ class AttachmentRepository {
     );
   }
 
+  /// Bir eki AYNI ya da BAŞKA bir nota kopyalar ("Kopyala → Yapıştır").
+  ///
+  /// Baytlar yeniden yazılır ve yeni bir kimlik verilir: iki not aynı dosyayı
+  /// paylaşsaydı birinden silmek diğerini de boşa düşürürdü. Tür ayrımı yok —
+  /// görsel, PDF, sunum, ses ve görüntülü not aynı yoldan geçer; her tür için
+  /// ayrı bir kopyalama yazılsaydı biri eklendiğinde sessizce dışarıda kalırdı.
+  ///
+  /// Kaynak yalnız buluttaysa (başka cihazdan gelen ek) baytlar oradan iner;
+  /// hiçbir yerde yoksa [AttachmentMissingException].
+  Future<Attachment> duplicate({
+    required String noteId,
+    required Attachment source,
+  }) async {
+    final bytes = await readBytes(source);
+    if (bytes == null) throw const AttachmentMissingException();
+    // Görüntülü not buluta hiç gitmediğinden boyut sınırına da girmez
+    // (bkz. prepareVideo).
+    if (source.kind != AttachmentKind.video && bytes.length > maxBytes) {
+      throw const FileTooLargeException();
+    }
+    return _store(
+      noteId,
+      Attachment(
+        id: _uuid.v4(),
+        kind: source.kind,
+        fileName: source.fileName,
+        mimeType: source.mimeType,
+        sizeBytes: bytes.length,
+        width: source.width,
+        height: source.height,
+        // Görünüm ayarları da taşınır: kopyalanan görsel notta aynı boyutta
+        // ve aynı yerleşim kipinde (sayfada/şeritte) belirir. Sayfa üzerindeki
+        // KONUM taşınmaz — onu hedef not kendi imlecine göre verir.
+        displayWidth: source.displayWidth,
+        align: source.align,
+        asFile: source.asFile,
+        ink: source.ink,
+        createdAt: DateTime.now(),
+      ),
+      bytes,
+    );
+  }
+
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
   /// indirme adresiyle birlikte güncellenmiş metadata'yı döner.
   Future<Attachment?> upload(String noteId, Attachment attachment) async {

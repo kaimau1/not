@@ -410,5 +410,15 @@
   "hiddenFoldersHiddenAgain": "Hidden folders are tucked away again",
   "makeFolderHidden": "Hide",
   "makeFolderVisible": "Unhide",
-  "gridColumnsCount": "{count} columns"
+  "gridColumnsCount": "{count} columns",
+  "addImageOnPageSubtitle": "Sits on the page, text flows around it",
+  "addImageAsFile": "Add image as a file",
+  "addImageAsFileSubtitle": "Stays out of the page, in the attachment strip",
+  "moveImageToAttachments": "Move to attachments",
+  "moveImageToPage": "Place on page",
+  "attachmentCopied": "Attachment copied",
+  "pasteAttachment": "Paste copied attachment",
+  "fullscreen": "Full screen",
+  "more": "More",
+  "undone": "Undone"
 }

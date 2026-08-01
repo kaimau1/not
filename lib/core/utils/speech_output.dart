@@ -220,6 +220,30 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     });
   }
 
+  /// Ayarlarda bir ses seçilince okunan örnek cümle — SEÇİLEN DİLDE.
+  ///
+  /// KÖK NEDEN: cümle çağrı yerinde "dil 'en' mi?" diye tek bir koşulla
+  /// seçiliyordu; Almanca ve İspanyolca ses seçilince TÜRKÇE cümle okunuyordu.
+  /// Seçilen sesin asıl merak edilen özelliği (o dili nasıl telaffuz ettiği)
+  /// böyle hiç duyulmuyor, üstelik yabancı ses Türkçe metni okuyunca tını da
+  /// yanlış duyuluyordu. Cümle artık dilin yanında BURADA durur: yeni bir dil
+  /// eklendiğinde ses seçici ile örnek cümle aynı yerden türer.
+  ///
+  /// Karşılığı olmayan dil için İngilizce'ye düşülür (sessiz kalmaktan iyi).
+  static const _voiceSamples = <String, String>{
+    'tr': 'Seçtiğin ses bu. Notların bundan sonra bu sesle, bu hızda okunacak.',
+    'en':
+        'This is the selected voice. Your notes will be read aloud like this.',
+    'de':
+        'Das ist die ausgewählte Stimme. Deine Notizen werden so vorgelesen.',
+    'es':
+        'Esta es la voz seleccionada. Tus notas se leerán en voz alta así.',
+  };
+
+  /// [language] için örnek cümle (bilinmeyen dilde İngilizce).
+  static String voiceSample(String language) =>
+      _voiceSamples[language.toLowerCase()] ?? _voiceSamples['en']!;
+
   /// Kullanıcının seçmediği diller için ses seçer: ERKEK sesi tercih edilir.
   ///
   /// Android ses cinsiyetini ayrı bir alan olarak vermez, ada gömer

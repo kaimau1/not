@@ -26,11 +26,19 @@ class AttachmentStrip extends StatelessWidget {
     required this.expanded,
     required this.onToggle,
     this.onChanged,
+    this.onCopy,
+    this.onPlaceOnPage,
     this.onVideoToNote,
   });
 
   final List<Attachment> attachments;
   final ValueChanged<Attachment> onRemove;
+
+  /// Eki panoya kopyalar (başka nota yapıştırılabilir). null ise düğme yok.
+  final ValueChanged<Attachment>? onCopy;
+
+  /// "Ek olarak" duran GÖRSELİ sayfaya (yüzen katmana) geri koyar.
+  final ValueChanged<Attachment>? onPlaceOnPage;
 
   /// Şerit açık mı? Kapalıyken yalnız başlık satırı çizilir (tercih kalıcıdır).
   final bool expanded;
@@ -106,6 +114,8 @@ class AttachmentStrip extends StatelessWidget {
                 attachment: attachments[index],
                 onRemove: () => onRemove(attachments[index]),
                 onChanged: onChanged,
+                onCopy: onCopy,
+                onPlaceOnPage: onPlaceOnPage,
                 onVideoToNote: onVideoToNote,
               ),
             ),
@@ -212,17 +222,24 @@ class _AttachmentTile extends StatelessWidget {
     required this.attachment,
     required this.onRemove,
     this.onChanged,
+    this.onCopy,
+    this.onPlaceOnPage,
     this.onVideoToNote,
   });
 
   final Attachment attachment;
   final VoidCallback onRemove;
   final ValueChanged<Attachment>? onChanged;
+  final ValueChanged<Attachment>? onCopy;
+  final ValueChanged<Attachment>? onPlaceOnPage;
   final Future<void> Function(Attachment)? onVideoToNote;
 
   bool get _hasLocal =>
       attachment.localPath.isNotEmpty &&
       File(attachment.localPath).existsSync();
+
+  /// Yalnız "ek olarak" işaretlenmiş GÖRSEL sayfaya geri konabilir.
+  bool get _canPlaceOnPage => attachment.kind == AttachmentKind.image;
 
   void _open(BuildContext context) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
@@ -430,6 +447,40 @@ class _AttachmentTile extends StatelessWidget {
             onPressed: onRemove,
           ),
         ),
+        // Kopyala (her ek türünde) ve "sayfaya koy" (yalnız ek olarak duran
+        // görselde). Küçük döşemede yer az: ikisi de sol üstte, kaldırmanın
+        // karşı köşesinde durur ki yanlışlıkla silmeye basılmasın.
+        if (onCopy != null || (onPlaceOnPage != null && _canPlaceOnPage))
+          Positioned(
+            left: 2,
+            top: 2,
+            child: Row(
+              children: [
+                if (onCopy != null)
+                  IconButton(
+                    tooltip: context.l10n.copy,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.copy_outlined, size: 16),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black38,
+                    ),
+                    onPressed: () => onCopy!(attachment),
+                  ),
+                if (onPlaceOnPage != null && _canPlaceOnPage)
+                  IconButton(
+                    tooltip: context.l10n.moveImageToPage,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.image_outlined, size: 16),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black38,
+                    ),
+                    onPressed: () => onPlaceOnPage!(attachment),
+                  ),
+              ],
+            ),
+          ),
       ],
     );
   }

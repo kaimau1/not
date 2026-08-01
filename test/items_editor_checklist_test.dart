@@ -147,4 +147,70 @@ void main() {
     // Kopyaladıktan sonra mod kapanır.
     expect(find.text('Seç'), findsOneWidget);
   });
+
+  testWidgets('hemen geri alınan işaret öğeyi ESKİ sırasına döndürür',
+      (tester) async {
+    // Yanlışlıkla işaretlenip hemen geri alınan öğe listenin sonunda
+    // kalıyordu; kullanıcı onu elle eski yerine sürüklemek zorundaydı.
+    var items = [
+      NoteItem(id: 'a', text: 'Süt'),
+      NoteItem(id: 'b', text: 'Ekmek'),
+      NoteItem(id: 'c', text: 'Yumurta'),
+    ];
+    late StateSetter rebuild;
+    await tester.pumpWidget(_wrap(StatefulBuilder(
+      builder: (context, setState) {
+        rebuild = setState;
+        return ItemsEditor(
+          items: items,
+          onChanged: (updated) => rebuild(() => items = updated),
+          showCheckboxes: true,
+        );
+      },
+    )));
+    await tester.pumpAndSettle();
+
+    // 'Ekmek' (1. sıra) yanlışlıkla işaretlendi → işaretlilerin arasına iner.
+    await tester.tap(find.byType(Checkbox).at(1));
+    await tester.pumpAndSettle();
+    expect(items.map((i) => i.text).toList(), ['Süt', 'Yumurta', 'Ekmek']);
+
+    // Hemen geri alındı: eski sırasına (1) dönmeli.
+    await tester.tap(find.byType(Checkbox).last);
+    await tester.pumpAndSettle();
+    expect(items.map((i) => i.text).toList(), ['Süt', 'Ekmek', 'Yumurta']);
+    expect(items.every((i) => !i.checked), isTrue);
+  });
+
+  test('geri alma penceresi geçince öğe işaretsizlerin SONUNA girer', () {
+    // Pencere içinde: hatırlanan sıra.
+    expect(
+      uncheckRestoreIndex(
+        uncheckedCount: 3,
+        rememberedIndex: 1,
+        sinceChecked: const Duration(seconds: 5),
+      ),
+      1,
+    );
+    // Pencere dışında: eski davranış (sona ekle).
+    expect(
+      uncheckRestoreIndex(
+        uncheckedCount: 3,
+        rememberedIndex: 1,
+        sinceChecked: kUncheckRestoreWindow + const Duration(seconds: 1),
+      ),
+      3,
+    );
+    // Hatıra yoksa (uygulama yeniden açıldı, öğe zaten işaretliydi) sona.
+    expect(uncheckRestoreIndex(uncheckedCount: 2), 2);
+    // Arada öğeler silinmişse hatırlanan sıra listenin dışına taşmaz.
+    expect(
+      uncheckRestoreIndex(
+        uncheckedCount: 1,
+        rememberedIndex: 7,
+        sinceChecked: Duration.zero,
+      ),
+      1,
+    );
+  });
 }

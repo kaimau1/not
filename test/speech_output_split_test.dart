@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/speech_output.dart';
+import 'package:notlar/features/settings/settings_providers.dart';
 
 /// Cümle bölme, sesli okumanın tek kırılgan parçası: yanlış bölerse okuma
 /// ya cümle ortasında kesilir ya da TTS motoru uzun parçayı sessizce yutar.
@@ -59,6 +60,31 @@ void main() {
 
     test('hiç ses yoksa null', () {
       expect(SpeechOutputController.pickAutoVoice(const []), isNull);
+    });
+  });
+
+  group('ses örneği', () {
+    test('her uygulama dili KENDİ cümlesini okur', () {
+      // Regresyon: örnek cümle "dil en mi?" koşuluyla seçiliyordu; Almanca ve
+      // İspanyolca ses seçilince TÜRKÇE cümle okunuyordu.
+      final samples = {
+        for (final code in supportedLanguages.keys)
+          code: SpeechOutputController.voiceSample(code),
+      };
+      expect(samples.values.toSet().length, supportedLanguages.length,
+          reason: 'iki dil aynı örnek cümleyi paylaşıyor');
+      for (final entry in samples.entries) {
+        expect(entry.value.trim(), isNotEmpty, reason: entry.key);
+      }
+      expect(samples['de'], contains('Stimme'));
+      expect(samples['es'], contains('voz'));
+    });
+
+    test('bilinmeyen dil İngilizce örneğe düşer', () {
+      expect(
+        SpeechOutputController.voiceSample('fr'),
+        SpeechOutputController.voiceSample('en'),
+      );
     });
   });
 }
