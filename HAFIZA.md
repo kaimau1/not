@@ -704,3 +704,10 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - Yan bulgu: v1.0.167 (67,4 MB) hâlâ son sürüm; APK'yi 59 MB'a indiren
   düzeltme (PR #43) main'de yayınlanamadı çünkü o derleme de aynı şekilde
   düştü. Yeni sürüm çıktığında boyut doğrulanmalı.
+
+### Doğrulandı (v1.0.174)
+- Bellek kısıtlaması sonrası main derlemesi TEK SEFERDE geçti (dört düşüşün
+  ardından). Şüphe böylece destek buldu: 16 GB'lik runner'da Gradle'a 8G heap
+  + 4G metaspace vermek, R8/dex anında host belleğini bitiriyordu.
+- APK boyutu da doğrulandı: **67,4 MB → 59,5 MB** (yazı tiplerinin tek tek
+  çağrılması, PR #43). İki düzeltme aynı sürümde yayınlandı.
