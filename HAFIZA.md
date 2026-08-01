@@ -586,3 +586,6 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   hiçbir yere gitmiyordu — sürüm main'den yayınlanıyor. ÇÖZÜM: APK işi artık
   YALNIZ main'de (ya da elle tetiklemede) koşuyor + iş akışına `concurrency`
   eklendi. Böylece hem çakışma hem de dal başına boşa giden ~12 dk gitti.
+- DOĞRULANDI: dal derlemesi kaldırıldıktan sonra main'in APK işi tek başına
+  koştu ve **v1.0.161** sorunsuz yayınlandı. Korelasyon böylece pratikte
+  sınandı: iki ağır derleme yan yana koşmadığında main yeşil.
