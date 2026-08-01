@@ -121,6 +121,10 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _note;
+
+  /// Not makul bir sürede gelmedi (bkz. initState'teki koruma).
+  bool _loadFailed = false;
+  Timer? _loadGuard;
   /// Başlık da biçimlendirilebilir (kullanıcı: "sadece başlığın boyutunu
   /// ayarlayamıyorum, tüm sayfa büyüyor"): seçili başlık metnine boyut,
   /// şeffaflık, kalın... uygulanabilsin diye gövdeyle AYNI denetleyiciyi
@@ -411,6 +415,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // henüz olmadığından `_note` null oluyor ve iki akış da SESSİZCE geri
     // dönüyordu (kayıt hiç başlamıyordu). Niyet artık beklemede tutulur ve
     // not eline geçtiği anda çalıştırılır.
+    // Not hiç gelmezse (silinmiş ya da yanlış id ile açılmış bir rota)
+    // ekranda sonsuza kadar dönen bir halka kalmasın: v1.0.181'de bozuk bir
+    // rota yüzünden bütün "yeni not" modları bu ekranda takılı kaldı ve
+    // kullanıcıya hiçbir şey söylenmiyordu.
+    _loadGuard = Timer(const Duration(seconds: 6), () {
+      if (mounted && _note == null) setState(() => _loadFailed = true);
+    });
     _pendingDraw = widget.startDrawing;
     _pendingVoice = widget.startVoiceCapture;
     _pendingVideo = widget.startVideo;
@@ -461,6 +472,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (note.tags.isEmpty) _autoTagInBackground(note);
       if (note.title.trim().isEmpty) _autoTitleInBackground(note);
     }
+    _loadGuard?.cancel();
     _speechSub?.cancel();
     _debouncer.dispose();
     _sub?.close();
@@ -2308,7 +2320,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     if (note == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(
+          child: _loadFailed
+              ? Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.note_alt_outlined,
+                        size: 40,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        l10n.noteNotFound,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton.tonal(
+                        onPressed: () => context.pop(),
+                        child: Text(l10n.back),
+                      ),
+                    ],
+                  ),
+                )
+              : const CircularProgressIndicator(),
+        ),
       );
     }
 

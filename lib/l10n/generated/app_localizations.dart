@@ -2729,6 +2729,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not oluşturuldu'**
   String get assistantNoteCreated;
+
+  /// No description provided for @noteNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not bulunamadı. Silinmiş olabilir.'**
+  String get noteNotFound;
+
+  /// No description provided for @back.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri'**
+  String get back;
 }
 
 class _AppLocalizationsDelegate

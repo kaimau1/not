@@ -437,5 +437,7 @@
   "assistantMute": "Ton aus",
   "assistantUnmute": "Ton an",
   "assistantMakeNote": "Trotzdem in Notiz umwandeln",
-  "assistantNoteCreated": "Notiz erstellt"
+  "assistantNoteCreated": "Notiz erstellt",
+  "noteNotFound": "Notiz nicht gefunden. Sie wurde vielleicht gelöscht.",
+  "back": "Zurück"
 }

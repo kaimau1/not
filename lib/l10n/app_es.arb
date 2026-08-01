@@ -437,5 +437,7 @@
   "assistantMute": "Silenciar",
   "assistantUnmute": "Activar sonido",
   "assistantMakeNote": "Convertir en nota igualmente",
-  "assistantNoteCreated": "Nota creada"
+  "assistantNoteCreated": "Nota creada",
+  "noteNotFound": "Nota no encontrada. Puede que se haya eliminado.",
+  "back": "Atrás"
 }

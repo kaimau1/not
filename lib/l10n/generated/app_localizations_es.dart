@@ -1434,4 +1434,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get assistantNoteCreated => 'Nota creada';
+
+  @override
+  String get noteNotFound => 'Nota no encontrada. Puede que se haya eliminado.';
+
+  @override
+  String get back => 'Atrás';
 }

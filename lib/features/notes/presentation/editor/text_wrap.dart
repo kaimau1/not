@@ -566,8 +566,14 @@ class WrapTextController extends TextEditingController {
   set value(TextEditingValue newValue) {
     if (_floats.isEmpty) {
       // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer —
-      // yalnız imleç görünmez işaretin ortasına düşerse kenara çekilir.
+      // yalnız imleç görünmez işaretin ortasına düşerse kenara çekilir ve
+      // işareti silen geri-silme gerçek karaktere yönlendirilir.
       _widths = const [];
+      final fixed = _markerDelete(text, newValue);
+      if (fixed != null) {
+        super.value = fixed;
+        return;
+      }
       super.value = _snapped(newValue);
       return;
     }
@@ -602,6 +608,17 @@ class WrapTextController extends TextEditingController {
     // görünmeyen bir yıldızdır). Konum gerçek bir karakterin sınırına, gidilen
     // yöne doğru çekilir.
     if (extent == null) {
+      // Görünmez işareti silen geri-silme, metnin kendisine yönlendirilir
+      // (sarmasız yoldaki [_markerDelete] ile aynı gerekçe).
+      final oldLogical = logicalText;
+      if (logical.length == oldLogical.length - 1 &&
+          isMarkerOffset(oldLogical, caret)) {
+        final fixed = deleteThroughMarkers(oldLogical, caret + 1);
+        if (fixed != null) {
+          _reflow(fixed.text, fixed.caret);
+          return;
+        }
+      }
       final previous = wrapToLogicalOffset(
         text,
         selection.baseOffset < 0 ? 0 : selection.baseOffset,
@@ -609,6 +626,23 @@ class WrapTextController extends TextEditingController {
       caret = snapOutOfMarkers(logical, caret, backward: caret < previous);
     }
     _reflow(logical, caret, extent);
+  }
+
+  /// Geri silme GÖRÜNMEZ bir işareti mi sildi? Öyleyse silme metnin kendisine
+  /// yönlendirilir (bkz. [deleteThroughMarkers]); değilse null döner ve
+  /// düzenleyicinin kendi silmesi geçerli kalır.
+  TextEditingValue? _markerDelete(String oldText, TextEditingValue newValue) {
+    final selection = newValue.selection;
+    if (!selection.isValid || !selection.isCollapsed) return null;
+    if (newValue.text.length != oldText.length - 1) return null;
+    final deleted = selection.baseOffset;
+    if (!isMarkerOffset(oldText, deleted)) return null;
+    final fixed = deleteThroughMarkers(oldText, deleted + 1);
+    if (fixed == null) return null;
+    return TextEditingValue(
+      text: fixed.text,
+      selection: TextSelection.collapsed(offset: fixed.caret),
+    );
   }
 
   /// Sarma KAPALIYKEN imleci görünmez işaretlerin dışına çeker (sarma açıkken

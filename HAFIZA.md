@@ -784,3 +784,39 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   oluşturulanlarda da var ve vurgu nefes alıyor).
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 247/247. CİHAZDA
   DENENMEDİ.
+
+## 2026-08-01 (dokuzuncu giriş) — görünmez işaretlerin üstünde geri silme
+
+- **KÖK NEDEN — "silmeye başladığımda işaretler geldi, tek tek siliniyor"**:
+  işaretler görünmez çizildiğinden imleç biçimli metnin sonunda aslında
+  KAPANIŞ İŞARETİNİN ARDINDA duruyor. Geri silme önce o işaretleri siliyor;
+  ilk silmede biçim bozulduğu için (`%%1:merhaba%%` → `%%1:merhaba%`) kalan
+  işaretler artık eşleşmiyor ve DÜZ METİN olarak ekranda beliriyordu.
+  ÇÖZÜM: silinen karakter bir işaretse silme metnin kendisine yönlendirilir
+  (`deleteThroughMarkers`) — imlecin solundaki gerçek karakter silinir, biçim
+  korunur, son harf de silinince işaret çifti `_serialize` sırasında
+  kendiliğinden düşer.
+- Boş işaret kutusu (`****`, `%%1:%%`) artık GÖRÜNMEZ çiziliyor: kutu hem
+  biçim düğmesine seçimsiz basınca hem de biçimli metnin son harfi silinince
+  oluşuyor; eskiden düz metin sanılıp ekranda yıldız olarak duruyordu.
+- DERS: görünmez karakter yalnız ÇİZİMDE değil, DÜZENLEME yollarında da
+  görünmez olmalı — imleç hareketi (snapOutOfMarkers) yetmiyor, silme de
+  yönlendirilmeli. Sıradaki adaylar: ileri silme (Del) ve kelime silme
+  (Ctrl+Backspace) — bu sürümde ele alınmadı.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 251/251. CİHAZDA
+  DENENMEDİ.
+
+### ACİL — v1.0.181'de yeni not açılamıyordu (rota metni)
+- Dashboard'daki `_openNew` yardımcısı betikle üretilirken `'/note/$id$query'`
+  ifadesindeki `$` KAÇIRILMIŞ ve rota DÜZ METİN olarak gitmişti
+  (`/note/\$id\$query`). Uygulama var olmayan bir notu beklediği için yeni not
+  açan BÜTÜN modlar sonsuz "yükleniyor" ekranında kaldı.
+- Ne derleyici ne test gördü: geçerli bir dizeydi ve rota metni hiçbir yerde
+  doğrulanmıyordu.
+- ÖNLEM: rota tek bir yerden kuruluyor (`noteRoutePath`) ve
+  `test/note_route_test.dart` içinde `$` kaçağına karşı test edildi. Ayrıca
+  editör 6 saniye içinde not gelmezse "Not bulunamadı" gösteriyor — sonsuz
+  halka bir daha sessizce dönmesin.
+- DERS: Dart kaynağını heredoc/betikle üretirken `$` ve `\` kaçışlarını
+  ÜRETİLEN DOSYADA gözle doğrula; string içeren üretimlerde en az bir test
+  yaz. (Bu turda üç dosya betikle düzenlendi, hata yalnız bunda oluştu.)

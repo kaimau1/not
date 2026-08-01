@@ -22,6 +22,16 @@ import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'split_shell.dart';
 
+/// Editör rotasının yolu.
+///
+/// TUZAK — bu yol ELLE kurulmamalı. v1.0.181'de rota metnindeki `$id`
+/// kaçırılmış bir ters bölü yüzünden düz metin olarak gitti; uygulama
+/// olmayan bir notu beklediği için YENİ NOT AÇAN BÜTÜN MODLAR "yükleniyor"
+/// ekranında kaldı ve derleyici/test bunu göremedi (geçerli bir dizeydi).
+/// Tek yer, tek test: `test/note_route_test.dart`.
+String noteRoutePath(String id, {String query = ''}) => '/note/$id$query';
+
+
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   final refresh = _RefreshNotifier(repo.authStateChanges());
@@ -133,7 +143,7 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
         final id = await repo.createNote(
           NoteType.fromId(uri.queryParameters['type']),
         );
-        router.push('/note/$id');
+        router.push(noteRoutePath(id));
       });
     }
   }

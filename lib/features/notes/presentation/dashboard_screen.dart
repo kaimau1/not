@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router.dart';
-
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -392,7 +391,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// notlarda bu zaten vardı, aynı yol elle oluşturulanlara da açıldı).
   Future<void> _openNew(String id, {String query = ''}) async {
     if (!mounted) return;
-    await context.push('/note/\$id\$query');
+    await context.push(noteRoutePath(id, query: query));
     if (!mounted) return;
     ref.read(focusedNoteProvider.notifier).focus(id);
   }

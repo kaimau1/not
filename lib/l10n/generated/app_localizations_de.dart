@@ -1437,4 +1437,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get assistantNoteCreated => 'Notiz erstellt';
+
+  @override
+  String get noteNotFound =>
+      'Notiz nicht gefunden. Sie wurde vielleicht gelöscht.';
+
+  @override
+  String get back => 'Zurück';
 }

@@ -617,6 +617,27 @@ List<InlineSpan> richSpans(
   );
   final spans = <InlineSpan>[];
 
+  /// Biçim eşleşmesi DIŞINDA kalan düz parça. İçinde boş işaret kutusu
+  /// (`****`, `%%1:%%`) varsa o da GÖRÜNMEZ çizilir: kutu, seçim yokken biçim
+  /// düğmesine basıldığında ya da biçimli metnin son harfi silindiğinde
+  /// oluşur; kullanıcıya bir anda ekrana yıldızlar dolmuş gibi görünürdü.
+  void emitPlain(String part, TextStyle styleFor) {
+    if (part.isEmpty) return;
+    var cursor = 0;
+    for (final box in _emptyBoxPattern.allMatches(part)) {
+      if (box.start > cursor) {
+        spans.addAll(
+          linkSpans(part.substring(cursor, box.start), styleFor, linkColor),
+        );
+      }
+      spans.add(TextSpan(text: box[0], style: markerStyle));
+      cursor = box.end;
+    }
+    if (cursor < part.length) {
+      spans.addAll(linkSpans(part.substring(cursor), styleFor, linkColor));
+    }
+  }
+
   void walk(String part, RichMark mark) {
     final styleFor = markStyle(base, mark, palette);
     var cursor = 0;
@@ -624,9 +645,7 @@ List<InlineSpan> richSpans(
       final content = _contentOf(m);
       if (content == null || content.isEmpty) continue;
       if (m.start > cursor) {
-        spans.addAll(
-          linkSpans(part.substring(cursor, m.start), styleFor, linkColor),
-        );
+        emitPlain(part.substring(cursor, m.start), styleFor);
       }
       final format = _formatOf(m);
       final index = _colorOf(m);
@@ -641,7 +660,7 @@ List<InlineSpan> richSpans(
       cursor = m.end;
     }
     if (cursor < part.length) {
-      spans.addAll(linkSpans(part.substring(cursor), styleFor, linkColor));
+      emitPlain(part.substring(cursor), styleFor);
     }
   }
 
@@ -913,4 +932,60 @@ int snapOutOfMarkers(String text, int offset, {bool backward = false}) {
   // geriye giden imleç 0'a, sondakinden ileri giden imleç metnin sonuna gider.
   if (backward) return before ?? 0;
   return after ?? text.length;
+}
+
+/// [index] konumundaki karakter GÖRÜNMEZ bir işaretin parçası mı?
+bool isMarkerOffset(String text, int index) {
+  if (index < 0 || index >= text.length) return false;
+  if (!_hasMarker(text)) return false;
+  for (final leaf in _parse(text)) {
+    if (index >= leaf.markedStart &&
+        index < leaf.markedStart + leaf.text.length) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Görünmez işaretin üstünde geri silme: işaret yerine imlecin solundaki
+/// GERÇEK karakteri siler.
+///
+/// KÖK NEDEN (v1.0.182): işaretler görünmez çizildiğinden imleç biçimli
+/// metnin sonunda aslında kapanış işaretinin ARDINDA duruyordu; geri silme
+/// önce o işaretleri tek tek siliyor, ilk silmede biçim bozulduğu için
+/// kalanlar bir anda EKRANDA BELİRİYORDU ("işaretler geldi, tek tek
+/// siliniyor"). Artık silme metnin kendisine iner ve biçim korunur; son harf
+/// de silinince boş kalan işaret çifti kendiliğinden düşer.
+({String text, int caret})? deleteThroughMarkers(String text, int caret) {
+  if (caret <= 0 || caret > text.length) return null;
+  final leaves = _parse(text);
+  if (leaves.isEmpty) return null;
+  final segments = [
+    for (final leaf in leaves) RichSegment(leaf.text, leaf.mark),
+  ];
+  final plainCaret = _toPlain(leaves, caret);
+  if (plainCaret <= 0) {
+    // Silinecek gerçek karakter yok (imleç metnin başındaki işaretlerin
+    // içinde): metne dokunma, imleci başa al.
+    final out = _serialize(segments);
+    return (text: out.text, caret: out.starts.first);
+  }
+  final updated = <RichSegment>[];
+  var pos = 0;
+  for (final seg in segments) {
+    final start = pos;
+    final end = pos + seg.text.length;
+    pos = end;
+    if (plainCaret - 1 < start || plainCaret - 1 >= end) {
+      updated.add(seg);
+      continue;
+    }
+    final at = plainCaret - 1 - start;
+    updated.add(
+      RichSegment(seg.text.substring(0, at) + seg.text.substring(at + 1), seg.mark),
+    );
+  }
+  final out = _serialize(updated);
+  final index = (plainCaret - 1).clamp(0, out.ends.length - 1);
+  return (text: out.text, caret: out.ends[index]);
 }

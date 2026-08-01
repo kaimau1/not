@@ -289,4 +289,43 @@ void main() {
       expect(snapOutOfMarkers('sıradan metin', 4), 4);
     });
   });
+
+  group('görünmez işaretlerin üstünde geri silme', () {
+    test('işaret yerine gerçek karakter silinir, biçim korunur', () {
+      // İmleç kapanış işaretinin ARDINDA: "%%1:merhaba%%" (uzunluk 13),
+      // imleç 13. Geri silme bir "%" silerdi ve biçim bozulup işaretler
+      // ekranda belirirdi.
+      final r = deleteThroughMarkers('%%1:merhaba%%', 13);
+      expect(r, isNotNull);
+      expect(stripRichMarkers(r!.text), 'merhab');
+      expect(r.text, '%%1:merhab%%');
+    });
+
+    test('son harf de silinince işaret çifti kendiliğinden düşer', () {
+      final r = deleteThroughMarkers('%%1:a%%', 7);
+      expect(r!.text, '');
+    });
+
+    test('işaret konumu doğru bulunur', () {
+      expect(isMarkerOffset('**ab**', 0), isTrue);
+      expect(isMarkerOffset('**ab**', 2), isFalse);
+      expect(isMarkerOffset('**ab**', 4), isTrue);
+      expect(isMarkerOffset('düz metin', 3), isFalse);
+    });
+
+    test('boş işaret kutusu GÖRÜNMEZ çizilir', () {
+      final spans = _spans('not ****');
+      TextSpan? box;
+      for (final s in spans) {
+        s.visitChildren((span) {
+          if (span is TextSpan && span.text == '****') box = span;
+          return true;
+        });
+      }
+      expect(box, isNotNull);
+      expect(box!.style?.color?.a, 0);
+      // Çizilen metin kaynakla aynı uzunlukta kalmalı (imleç kaymasın).
+      expect(_plain(spans), 'not ****');
+    });
+  });
 }
