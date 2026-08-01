@@ -509,8 +509,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final focused = FocusManager.instance.primaryFocus?.context;
     if (page == null || focused == null) return null;
     final editable = _findEditable(focused.findRenderObject());
-    if (editable == null || !editable.attached || !editable.hasSize)
+    if (editable == null || !editable.attached || !editable.hasSize) {
       return null;
+    }
     // Odak başka bir katmanda olabilir (alt sayfa, tam ekran görüntüleyici);
     // o zaman ölçüm sayfa uzayına çevrilemez.
     if (!_isDescendantOf(editable, page)) return null;

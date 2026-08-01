@@ -277,8 +277,9 @@ int _toPlain(List<_Leaf> leaves, int markedOffset) {
   for (final leaf in leaves) {
     if (markedOffset < leaf.markedStart) return plainStart;
     final end = leaf.markedStart + leaf.text.length;
-    if (markedOffset <= end)
+    if (markedOffset <= end) {
       return plainStart + (markedOffset - leaf.markedStart);
+    }
     plainStart += leaf.text.length;
   }
   return plainStart;
@@ -569,8 +570,9 @@ TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
 
 Color _paletteColor(List<Color> palette, int? index) {
   if (palette.isEmpty) return const Color(0xFFFFC94D);
-  if (index == null || index < 1 || index > palette.length)
+  if (index == null || index < 1 || index > palette.length) {
     return palette.first;
+  }
   return palette[index - 1];
 }
 
