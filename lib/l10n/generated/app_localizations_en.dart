@@ -1429,4 +1429,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get back => 'Back';
+
+  @override
+  String get addTextBlock => 'Add text';
+
+  @override
+  String get noteBackgroundImage => 'Background image';
+
+  @override
+  String get chooseBackgroundImage => 'Choose image';
+
+  @override
+  String get changeBackgroundImage => 'Change image';
+
+  @override
+  String get removeBackgroundImage => 'Remove background';
 }

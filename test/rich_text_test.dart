@@ -328,4 +328,31 @@ void main() {
       expect(_plain(spans), 'not ****');
     });
   });
+
+  group('boş kalan işaret çiftleri', () {
+    test('iç içe boş işaretler imleçte toplanır', () {
+      // "%%1:**_merhaba_**%%" içinden tüm harfler silinince geriye yalnız
+      // işaretler kalır; hiçbiri eşleşmediği için DÜZ METİN olarak çizilirdi.
+      const left = '%%1:**_';
+      const right = '_**%%';
+      final r = collapseEmptyMarkersAt('$left$right', left.length);
+      expect(r.text, '');
+      expect(r.caret, 0);
+    });
+
+    test('çevredeki gerçek metne dokunulmaz', () {
+      final r = collapseEmptyMarkersAt('a**b**c', 3);
+      expect(r.text, 'a**b**c');
+      expect(r.caret, 3);
+    });
+
+    test('imleç çiftin arasında değilse metne dokunulmaz', () {
+      // İmleç "not" kelimesinin içinde: metnin başka yerindeki `__` dizisi
+      // (kullanıcının yazdığı olabilir) korunur.
+      const text = 'not __ burada **';
+      final r = collapseEmptyMarkersAt(text, 2);
+      expect(r.text, text);
+      expect(r.caret, 2);
+    });
+  });
 }

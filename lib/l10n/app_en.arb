@@ -444,5 +444,10 @@
   "assistantMakeNote": "Turn into a note anyway",
   "assistantNoteCreated": "Note created",
   "noteNotFound": "Note not found. It may have been deleted.",
-  "back": "Back"
+  "back": "Back",
+  "addTextBlock": "Add text",
+  "noteBackgroundImage": "Background image",
+  "chooseBackgroundImage": "Choose image",
+  "changeBackgroundImage": "Change image",
+  "removeBackgroundImage": "Remove background"
 }

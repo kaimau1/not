@@ -66,6 +66,8 @@ class Note {
     this.fontFamily,
     this.fontScale = 1,
     this.textOpacity = 1,
+    this.backgroundImageId,
+    this.backgroundOpacity = 0.35,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -123,6 +125,18 @@ class Note {
   /// alır. Taban 0.3'tür: daha soluğunda kullanıcı yazdığını göremez ve
   /// ayarı geri bulamaz.
   final double textOpacity;
+
+  /// Notun ZEMİN görseli: [attachments] içindeki bir görselin id'si.
+  ///
+  /// Ayrı bir alanda değil ekler listesinde durur; yükleme kuyruğu, silme,
+  /// yedek ve çevrimdışı kopya mantığı olduğu gibi yeniden kullanılır. Zemin
+  /// görseli sayfada YÜZMEZ ve ek şeridinde görünmez (editör onu id'ye göre
+  /// ayıklar).
+  final String? backgroundImageId;
+
+  /// Zemin görselinin görünürlüğü (0.05–1). Varsayılan bilerek düşük: tam
+  /// opak bir fotoğrafın üstünde not okunmuyor.
+  final double backgroundOpacity;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -164,10 +178,14 @@ class Note {
           buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
         }
       case NoteType.checklist:
+        // Liste notunun da serbest metni olabilir (madde listesinin üstünde
+        // duran açıklama); dışa aktarmada kaybolmamalı.
+        if (body.trim().isNotEmpty) buffer.writeln(body);
         for (final item in items) {
           buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
         }
       case NoteType.ordered:
+        if (body.trim().isNotEmpty) buffer.writeln(body);
         for (var i = 0; i < items.length; i++) {
           buffer.writeln('${i + 1}. ${items[i].text}');
         }
@@ -197,6 +215,7 @@ class Note {
           if (include(item)) item.text.trim(),
       ].join('\n'),
       NoteType.checklist || NoteType.ordered => [
+        if (body.trim().isNotEmpty) body.trim(),
         for (final item in items)
           if (include(item)) item.text.trim(),
       ].join('\n'),
@@ -221,6 +240,9 @@ class Note {
     bool clearFontFamily = false,
     double? fontScale,
     double? textOpacity,
+    String? backgroundImageId,
+    bool clearBackgroundImage = false,
+    double? backgroundOpacity,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -246,6 +268,10 @@ class Note {
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
     fontScale: fontScale ?? this.fontScale,
     textOpacity: textOpacity ?? this.textOpacity,
+    backgroundImageId: clearBackgroundImage
+        ? null
+        : (backgroundImageId ?? this.backgroundImageId),
+    backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -283,6 +309,9 @@ class Note {
       fontFamily: map['fontFamily'] as String?,
       fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
       textOpacity: (map['textOpacity'] as num?)?.toDouble() ?? 1,
+      backgroundImageId: map['backgroundImageId'] as String?,
+      backgroundOpacity:
+          (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
@@ -319,6 +348,10 @@ class Note {
     // duruyor ve not yeniden açıldığında ayar geri geliyordu.
     'fontScale': fontScale,
     'textOpacity': textOpacity,
+    // Zemin görseli KALDIRILABİLİR olmalı: merge yazımında alan haritada
+    // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
+    'backgroundImageId': backgroundImageId,
+    'backgroundOpacity': backgroundOpacity,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

@@ -989,3 +989,46 @@ bool isMarkerOffset(String text, int index) {
   final index = (plainCaret - 1).clamp(0, out.ends.length - 1);
   return (text: out.text, caret: out.ends[index]);
 }
+
+/// İmlecin İKİ YANINDA kalan boş işaret çiftlerini siler.
+///
+/// KÖK NEDEN (v1.0.185): biçimli bir kelimenin son harfi silinince geriye
+/// iç içe geçmiş BOŞ işaretler kalıyor (`%%1:**_` + `_**%%`). Bunların içi
+/// boş olduğu için hiçbiri biçim olarak eşleşmiyor ve düz metin gibi
+/// ÇİZİLİYORLAR — kullanıcı sildikçe yeni işaretler beliriyormuş gibi
+/// görünüyordu. Silmeden sonra imlecin iki yanı eşleşen açılış/kapanış
+/// işaretiyse çift kaldırılır; içteki gidince dıştaki yan yana geldiği için
+/// döngü hepsini toplar.
+///
+/// Yalnız İMLECİN YANINA bakar: metnin başka yerindeki `__` gibi diziler
+/// (kullanıcının yazdığı olabilir) korunur.
+({String text, int caret}) collapseEmptyMarkersAt(String text, int caret) {
+  var out = text;
+  var at = caret.clamp(0, text.length);
+  var changed = true;
+  while (changed) {
+    changed = false;
+    for (final format in RichFormat.values) {
+      final close = format.marker;
+      if (!out.startsWith(close, at)) continue;
+      // Açılış işareti: düz (`**`) ya da kademe önekli (`%%3:`).
+      final head = out.substring(0, at);
+      var openStart = -1;
+      if (head.endsWith(close)) {
+        openStart = at - close.length;
+      } else {
+        final prefixed = RegExp(
+          '${RegExp.escape(close)}(\\d:)\$',
+        ).firstMatch(head);
+        if (prefixed != null) openStart = prefixed.start;
+      }
+      if (openStart < 0) continue;
+      out = out.replaceRange(at, at + close.length, '');
+      out = out.replaceRange(openStart, at, '');
+      at = openStart;
+      changed = true;
+      break;
+    }
+  }
+  return (text: out, caret: at);
+}

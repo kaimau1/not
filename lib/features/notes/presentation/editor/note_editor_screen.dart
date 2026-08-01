@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 // RenderEditable material.dart üzerinden gelmiyor; imlecin sayfa üzerindeki
 // yerini ölçmek için doğrudan gerekiyor (bkz. _caretPageTop).
@@ -60,6 +61,7 @@ import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
 import 'note_undo.dart';
+import '../viewers/image_crop.dart';
 import 'text_wrap.dart';
 
 bool get _isDesktop =>
@@ -122,9 +124,15 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   Note? _note;
 
+  /// LİSTE notunda serbest metin alanı açık mı? (Kullanıcı isteği: "liste
+  /// notlarına metin notu ekleme seçeneği lazım.") Notun gövdesi doluysa alan
+  /// zaten görünür; bu bayrak, gövde BOŞKEN alanı açık tutar.
+  bool _listBodyOpen = false;
+
   /// Not makul bir sürede gelmedi (bkz. initState'teki koruma).
   bool _loadFailed = false;
   Timer? _loadGuard;
+
   /// Başlık da biçimlendirilebilir (kullanıcı: "sadece başlığın boyutunu
   /// ayarlayamıyorum, tüm sayfa büyüyor"): seçili başlık metnine boyut,
   /// şeffaflık, kalın... uygulanabilsin diye gövdeyle AYNI denetleyiciyi
@@ -1990,11 +1998,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.frameColor),
               onTap: () => Navigator.pop(sheetContext, 'frame'),
             ),
+            // Zemin görseli renk seçiminin yanında: ikisi de "notun zemini".
+            ListTile(
+              leading: const Icon(Icons.wallpaper),
+              title: Text(l10n.noteBackgroundImage),
+              onTap: () => Navigator.pop(sheetContext, 'image'),
+            ),
           ],
         ),
       ),
     );
     if (target == null || !mounted) return;
+    if (target == 'image') {
+      await _showBackgroundSheet();
+      return;
+    }
     final frame = target == 'frame';
     final picked = await showNoteColorPicker(
       context,
@@ -2006,6 +2024,247 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       (n) => frame ? n.copyWith(frameColor: picked) : n.copyWith(color: picked),
       immediate: true,
     );
+  }
+
+
+  /// Notun ZEMİN görselini içeriğin ARKASINA serer.
+  ///
+  /// Görsel görünüm alanına sabitlenir (sayfa kaydırılırken kaymaz): duvar
+  /// kâğıdı gibi durur, metin üstünde okunur kalsın diye opaklığı nottan
+  /// gelir ve zeminin üstüne notun kendi rengiyle bir örtü çekilir.
+  Widget _withBackground(Note note, Attachment? image, Widget child) {
+    if (image == null) return child;
+    final provider = _backgroundProvider(image);
+    if (provider == null) return child;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Positioned.fill(
+          child: Opacity(
+            opacity: note.backgroundOpacity.clamp(0.05, 1),
+            child: Image(image: provider, fit: BoxFit.cover),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+
+  ImageProvider? _backgroundProvider(Attachment image) {
+    if (image.localPath.isNotEmpty && File(image.localPath).existsSync()) {
+      return FileImage(File(image.localPath));
+    }
+    if (image.downloadUrl.isNotEmpty) {
+      return CachedNetworkImageProvider(image.downloadUrl);
+    }
+    return null;
+  }
+
+  /// Zemin görseli sayfası: seç / değiştir / kırp / görünürlük / kaldır.
+  ///
+  /// Kullanıcı isteği: "not zeminini seçilen bir fotoğraf yapma seçeneği
+  /// olsun; koyarken kesme, üzerine yazı yazma, şeffaflığını değiştirme
+  /// olsun ve sonradan da ayarlanabilsin."
+  Future<void> _showBackgroundSheet() async {
+    final note = _note;
+    if (note == null) return;
+    _dismissKeyboard();
+    final l10n = context.l10n;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final current = _note;
+          if (current == null) return const SizedBox.shrink();
+          final image = current.backgroundImageId == null
+              ? null
+              : current.attachments
+                    .where((a) => a.id == current.backgroundImageId)
+                    .firstOrNull;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.noteBackgroundImage,
+                    style: Theme.of(sheetContext).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  if (image != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        height: 120,
+                        width: double.infinity,
+                        child: _backgroundProvider(image) == null
+                            ? const SizedBox.shrink()
+                            : Image(
+                                image: _backgroundProvider(image)!,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.opacity,
+                          size: 18,
+                          color: Theme.of(
+                            sheetContext,
+                          ).colorScheme.onSurfaceVariant,
+                        ),
+                        Expanded(
+                          child: Slider(
+                            value: current.backgroundOpacity.clamp(0.05, 1),
+                            min: 0.05,
+                            max: 1,
+                            onChanged: (value) {
+                              _mutate((n) => n.copyWith(backgroundOpacity: value));
+                              setSheetState(() {});
+                            },
+                            onChangeEnd: (value) => _mutate(
+                              (n) => n.copyWith(backgroundOpacity: value),
+                              immediate: true,
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 44,
+                          child: Text(
+                            '%${(current.backgroundOpacity * 100).round()}',
+                            textAlign: TextAlign.end,
+                            style: Theme.of(sheetContext).textTheme.labelMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.crop),
+                      title: Text(l10n.crop),
+                      onTap: () async {
+                        Navigator.pop(sheetContext);
+                        await _cropBackground(image);
+                      },
+                    ),
+                  ],
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(
+                      image == null
+                          ? l10n.chooseBackgroundImage
+                          : l10n.changeBackgroundImage,
+                    ),
+                    onTap: () async {
+                      Navigator.pop(sheetContext);
+                      await _pickBackgroundImage();
+                    },
+                  ),
+                  if (image != null)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.hide_image_outlined),
+                      title: Text(l10n.removeBackgroundImage),
+                      onTap: () {
+                        Navigator.pop(sheetContext);
+                        _removeBackgroundImage(image);
+                      },
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Zemin için görsel seçer: seçim → KIRPMA → ek olarak kaydet.
+  Future<void> _pickBackgroundImage() async {
+    final Uint8List bytes;
+    final String name;
+    if (_isDesktop) {
+      const group = XTypeGroup(
+        label: 'Görseller',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      final file = await openFile(acceptedTypeGroups: const [group]);
+      if (file == null) return;
+      bytes = await file.readAsBytes();
+      name = file.name;
+    } else {
+      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      bytes = await file.readAsBytes();
+      name = file.name;
+    }
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final tooLargeMessage = _tooLargeMessage();
+    try {
+      final attachment = await repo.prepareImage(
+        noteId: widget.noteId,
+        bytes: bytes,
+        fileName: name,
+      );
+      final previous = _note?.backgroundImageId;
+      _mutate(
+        (n) => n.copyWith(
+          attachments: [
+            for (final a in n.attachments)
+              if (a.id != previous) a,
+            attachment,
+          ],
+          backgroundImageId: attachment.id,
+        ),
+        immediate: true,
+      );
+      if (!mounted) return;
+      // Yerleştirirken kırpma: kullanıcı hangi bölgenin zemin olacağını seçer.
+      await _cropBackground(attachment);
+    } on FileTooLargeException {
+      if (mounted) _showSnack(tooLargeMessage);
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
+  Future<void> _cropBackground(Attachment image) async {
+    final provider = _backgroundProvider(image);
+    if (provider == null) return;
+    final aspect = (image.width ?? 1) / ((image.height ?? 1) == 0
+        ? 1
+        : (image.height ?? 1));
+    final rect = await Navigator.of(context).push<Rect>(
+      MaterialPageRoute(
+        builder: (_) =>
+            ImageCropScreen(image: provider, aspect: aspect <= 0 ? 1 : aspect),
+      ),
+    );
+    if (rect == null || !mounted) return;
+    await _cropImage(image, rect);
+  }
+
+  void _removeBackgroundImage(Attachment image) {
+    final repo = ref.read(attachmentRepositoryProvider);
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id != image.id) a,
+        ],
+        clearBackgroundImage: true,
+      ),
+      immediate: true,
+    );
+    unawaited(repo?.deleteFromStorage(image) ?? Future.value());
   }
 
   Widget _colorLeading(NoteColor color, {required bool frame}) {
@@ -2388,9 +2647,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
-        onChanged: (_) => _mutate(
-          (n) => n.copyWith(title: _titleController.logicalText),
-        ),
+        onChanged: (_) =>
+            _mutate((n) => n.copyWith(title: _titleController.logicalText)),
         style: applyNoteOpacity(
           applyNoteFont(
             (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
@@ -2569,8 +2827,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
     final imageAttachments = [
       for (final a in note.attachments)
-        if (a.floatsOnPage) a,
+        if (a.floatsOnPage && a.id != note.backgroundImageId) a,
     ];
+    // Zemin görseli: ekler listesinde durur ama sayfada yüzmez, şeritte de
+    // görünmez — arkada duvar kâğıdı gibi çizilir.
+    final bgImage = note.backgroundImageId == null
+        ? null
+        : note.attachments
+              .where((a) => a.id == note.backgroundImageId)
+              .firstOrNull;
 
     // Görseller sayfanın üzerinde serbest katmanda yüzer ve metnin ÜSTÜne
     // çizilir. Yazılı metin görselin etrafından akar (bkz. text_wrap.dart),
@@ -2704,12 +2969,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         richTheme: richTheme,
         textStyle: noteBodyStyle,
         onFieldFocused: _setFormatTarget,
-        header: keyedHeader,
+        header: (note.body.trim().isNotEmpty || _listBodyOpen)
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  keyedHeader,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: _kGutter),
+                    child: _wrapped(_bodyController, bodyField),
+                  ),
+                ],
+              )
+            : keyedHeader,
       );
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
-    final hasBodyField = note.type == NoteType.text;
+    final hasBodyField =
+        note.type == NoteType.text ||
+        note.body.trim().isNotEmpty ||
+        _listBodyOpen;
     // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
     //
     final body = LayoutBuilder(
@@ -2941,7 +3220,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         ),
         // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
         body: SafeArea(
-          child: note.frameColor == NoteColor.none
+          child: _withBackground(
+            note,
+            bgImage,
+            note.frameColor == NoteColor.none
               ? body
               : Container(
                   margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
@@ -2957,6 +3239,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     child: body,
                   ),
                 ),
+          ),
         ),
         // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt çubuğu
         // ekranın dibinde bırakır — yani klavye açıkken alt çubuğun tamamı
@@ -2978,161 +3261,182 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             return Padding(
               padding: EdgeInsets.only(bottom: keyboard),
               child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
-              // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
-              // serbest katmanda kalır (NotePageCanvas — yukarıda).
-              // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
-              // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
-              if (keyboard == 0)
-                AttachmentStrip(
-                  attachments: [
-                    for (final a in note.attachments)
-                      if (!a.floatsOnPage) a,
-                  ],
-                  onRemove: _removeAttachment,
-                  onChanged: _updateAttachment,
-                  onCopy: _copyAttachment,
-                  onPlaceOnPage: (a) => _setImageAsFile(a, false),
-                  onVideoToNote: _videoToNote,
-                  expanded: ref.watch(attachmentsExpandedProvider),
-                  onToggle: () =>
-                      ref.read(attachmentsExpandedProvider.notifier).toggle(),
-                ),
-              // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
-              // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
-              // açık kalabiliyordu.
-              if (_aiTask != null) _AiBanner(label: _aiTask!),
-              if (_dictating) _DictationBanner(onStop: _dictate),
-              // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
-              // yerine kendi içinde kaydırılır (Flexible + kaydırma).
-              if (_formatBarOpen)
-                Flexible(
-                  child: SingleChildScrollView(
-                    child: FormatBar(
-                      onFormat: _applyFormat,
-                      onClearFormat: _clearFormat,
-                      fontFamily: note.fontFamily,
-                      fontScale: note.fontScale,
-                      textOpacity: note.textOpacity,
-                      hasSelection: _hasSelection,
-                      onOpacityChanged: (value) =>
-                          _mutate((n) => n.copyWith(textOpacity: value)),
-                      onOpacityEnd: (value) => _applyStepOrNote(
-                        RichFormat.opacity,
-                        kRichOpacitySteps,
-                        kRichOpacityDefault,
-                        value,
-                        (n) => n.copyWith(textOpacity: value),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
+                  // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
+                  // serbest katmanda kalır (NotePageCanvas — yukarıda).
+                  // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
+                  // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
+                  if (keyboard == 0)
+                    AttachmentStrip(
+                      attachments: [
+                        for (final a in note.attachments)
+                          if (!a.floatsOnPage) a,
+                      ],
+                      onRemove: _removeAttachment,
+                      onChanged: _updateAttachment,
+                      onCopy: _copyAttachment,
+                      onPlaceOnPage: (a) => _setImageAsFile(a, false),
+                      onVideoToNote: _videoToNote,
+                      expanded: ref.watch(attachmentsExpandedProvider),
+                      onToggle: () => ref
+                          .read(attachmentsExpandedProvider.notifier)
+                          .toggle(),
+                    ),
+                  // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
+                  // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
+                  // açık kalabiliyordu.
+                  if (_aiTask != null) _AiBanner(label: _aiTask!),
+                  if (_dictating) _DictationBanner(onStop: _dictate),
+                  // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
+                  // yerine kendi içinde kaydırılır (Flexible + kaydırma).
+                  if (_formatBarOpen)
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: FormatBar(
+                          onFormat: _applyFormat,
+                          onClearFormat: _clearFormat,
+                          fontFamily: note.fontFamily,
+                          fontScale: note.fontScale,
+                          textOpacity: note.textOpacity,
+                          hasSelection: _hasSelection,
+                          onOpacityChanged: (value) =>
+                              _mutate((n) => n.copyWith(textOpacity: value)),
+                          onOpacityEnd: (value) => _applyStepOrNote(
+                            RichFormat.opacity,
+                            kRichOpacitySteps,
+                            kRichOpacityDefault,
+                            value,
+                            (n) => n.copyWith(textOpacity: value),
+                          ),
+                          onFontChanged: (family) => _mutate(
+                            (n) => family == null
+                                ? n.copyWith(clearFontFamily: true)
+                                : n.copyWith(fontFamily: family),
+                            immediate: true,
+                          ),
+                          // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
+                          // Firestore'a yazmak boşuna trafik olurdu.
+                          onScaleChanged: (value) =>
+                              _mutate((n) => n.copyWith(fontScale: value)),
+                          onScaleEnd: (value) => _applyStepOrNote(
+                            RichFormat.size,
+                            kRichSizeSteps,
+                            kRichSizeDefault,
+                            value,
+                            (n) => n.copyWith(fontScale: value),
+                          ),
+                          onClose: () => setState(() => _formatBarOpen = false),
+                        ),
                       ),
-                      onFontChanged: (family) => _mutate(
-                        (n) => family == null
-                            ? n.copyWith(clearFontFamily: true)
-                            : n.copyWith(fontFamily: family),
-                        immediate: true,
-                      ),
-                      // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
-                      // Firestore'a yazmak boşuna trafik olurdu.
-                      onScaleChanged: (value) =>
-                          _mutate((n) => n.copyWith(fontScale: value)),
-                      onScaleEnd: (value) => _applyStepOrNote(
-                        RichFormat.size,
-                        kRichSizeSteps,
-                        kRichSizeDefault,
-                        value,
-                        (n) => n.copyWith(fontScale: value),
-                      ),
-                      onClose: () => setState(() => _formatBarOpen = false),
+                    ),
+                  BottomAppBar(
+                    color: background,
+                    height: 56,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          tooltip: l10n.color,
+                          icon: const Icon(Icons.palette_outlined),
+                          onPressed: _showColorSheet,
+                        ),
+                        IconButton(
+                          tooltip: l10n.addAttachment,
+                          icon: const Icon(Icons.attach_file),
+                          onPressed: _showAttachMenu,
+                        ),
+                        IconButton(
+                          tooltip: l10n.calculatorTitle,
+                          icon: const Icon(Icons.calculate_outlined),
+                          onPressed: _openCalculator,
+                        ),
+                        // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
+                        // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
+                        // biçim ise seçim menüsünün içine gömülüydü.
+                        IconButton(
+                          tooltip: l10n.formatTitle,
+                          isSelected: _formatBarOpen,
+                          icon: const Icon(Icons.text_format),
+                          onPressed: () =>
+                              setState(() => _formatBarOpen = !_formatBarOpen),
+                        ),
+                        // Karışık içerik: metin notunun altına checklist maddesi
+                        // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
+                        // maddeden oluşur).
+                        if (note.type == NoteType.text)
+                          IconButton(
+                            tooltip: l10n.newItemHint,
+                            icon: const Icon(Icons.checklist),
+                            onPressed: _addChecklistItem,
+                          )
+                        // Liste notunun aynası: maddelerin üstüne serbest metin
+                        // ekler (kullanıcı isteği). Gövde zaten doluysa düğme
+                        // yalnız alana odaklanır.
+                        else
+                          IconButton(
+                            tooltip: l10n.addTextBlock,
+                            icon: const Icon(Icons.notes),
+                            onPressed: () {
+                              setState(() => _listBodyOpen = true);
+                              WidgetsBinding.instance.addPostFrameCallback(
+                                (_) => _bodyFocus.requestFocus(),
+                              );
+                            },
+                          ),
+                        const Spacer(),
+                        // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
+                        // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
+                        // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
+                        // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
+                        // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
+                        SizedBox(
+                          width: 52,
+                          height: 52,
+                          child: _dictating
+                              ? IconButton.filled(
+                                  tooltip: l10n.stopAndSave,
+                                  iconSize: 28,
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.error,
+                                    foregroundColor: Theme.of(
+                                      context,
+                                    ).colorScheme.onError,
+                                  ),
+                                  icon: const Icon(Icons.stop),
+                                  onPressed: _dictate,
+                                )
+                              : IconButton.filledTonal(
+                                  tooltip: l10n.liveDictation,
+                                  iconSize: 28,
+                                  icon: const Icon(Icons.mic_none),
+                                  onPressed: _dictate,
+                                ),
+                        ),
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: l10n.aiTitle,
+                          child: FilledButton.tonalIcon(
+                            onPressed: () => showAiSheet(
+                              context,
+                              note,
+                              onAppendText: _appendText,
+                              onReplaceText: _replaceText,
+                              onCreateNote: _createNoteFromText,
+                            ),
+                            icon: const Icon(Icons.auto_awesome, size: 18),
+                            // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
+                            // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
+                            // dilde aynı okunur; tam adı ipucunda duruyor.
+                            label: const Text('AI'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              BottomAppBar(
-                color: background,
-                height: 56,
-                child: Row(
-                  children: [
-                    IconButton(
-                      tooltip: l10n.color,
-                      icon: const Icon(Icons.palette_outlined),
-                      onPressed: _showColorSheet,
-                    ),
-                    IconButton(
-                      tooltip: l10n.addAttachment,
-                      icon: const Icon(Icons.attach_file),
-                      onPressed: _showAttachMenu,
-                    ),
-                    IconButton(
-                      tooltip: l10n.calculatorTitle,
-                      icon: const Icon(Icons.calculate_outlined),
-                      onPressed: _openCalculator,
-                    ),
-                    // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
-                    // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
-                    // biçim ise seçim menüsünün içine gömülüydü.
-                    IconButton(
-                      tooltip: l10n.formatTitle,
-                      isSelected: _formatBarOpen,
-                      icon: const Icon(Icons.text_format),
-                      onPressed: () =>
-                          setState(() => _formatBarOpen = !_formatBarOpen),
-                    ),
-                    // Karışık içerik: metin notunun altına checklist maddesi
-                    // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
-                    // maddeden oluşur).
-                    if (note.type == NoteType.text)
-                      IconButton(
-                        tooltip: l10n.newItemHint,
-                        icon: const Icon(Icons.checklist),
-                        onPressed: _addChecklistItem,
-                      ),
-                    const Spacer(),
-                    // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
-                    // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
-                    // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
-                    // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
-                    // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
-                    SizedBox(
-                      width: 52,
-                      height: 52,
-                      child: _dictating
-                          ? IconButton.filled(
-                              tooltip: l10n.stopAndSave,
-                              iconSize: 28,
-                              style: IconButton.styleFrom(
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.error,
-                                foregroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.onError,
-                              ),
-                              icon: const Icon(Icons.stop),
-                              onPressed: _dictate,
-                            )
-                          : IconButton.filledTonal(
-                              tooltip: l10n.liveDictation,
-                              iconSize: 28,
-                              icon: const Icon(Icons.mic_none),
-                              onPressed: _dictate,
-                            ),
-                    ),
-                    const SizedBox(width: 4),
-                    FilledButton.tonalIcon(
-                      onPressed: () => showAiSheet(
-                        context,
-                        note,
-                        onAppendText: _appendText,
-                        onReplaceText: _replaceText,
-                        onCreateNote: _createNoteFromText,
-                      ),
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                      label: Text(l10n.aiTitle),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                ],
               ),
             );
           },
