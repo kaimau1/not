@@ -623,3 +623,11 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   hangi nota eklendiği görünmüyordu.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 226/226. CİHAZDA
   DENENMEDİ.
+- DÜZELTME (koşu #165): "çakışan derlemeler" açıklaması YETERSİZ. Bu koşuda
+  dalda hiçbir derleme yokken main'inki yine öldü — üstelik 25. dakikada
+  (Gradle 1506 sn; sağlıklı koşularda aynı iş ~12 dk). Yani runner bazen
+  YAVAŞLIYOR ve sonunda geri alınıyor; çakışma bir sebep değil, olsa olsa
+  ağırlaştırıcıydı. Dal derlemesini kaldırmak yine de doğru (kullanılmayan
+  ~12 dk'yı siliyor) ama sorunu ÇÖZMÜYOR.
+  DERS: bu ortamda APK derlemesi ~%50 olasılıkla düşüyor; tek çare yeniden
+  tetiklemek. Kod dalda `Analiz + Test` yeşilse sorun kodda değildir.
