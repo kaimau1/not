@@ -57,6 +57,7 @@ class ItemsEditor extends StatefulWidget {
     this.contentInsertion,
     this.richTheme,
     this.textStyle,
+    this.onFieldFocused,
   });
 
   final List<NoteItem> items;
@@ -97,6 +98,11 @@ class ItemsEditor extends StatefulWidget {
   /// Madde metninin temel stili (notun yazı tipi/boyutu). null ise temanın
   /// `bodyLarge`'ı kullanılır.
   final TextStyle? textStyle;
+
+  /// Bir madde alanı odağı aldığında çağrılır: biçim çubuğu hangi alana
+  /// yazacağını buradan öğrenir (denetleyici + metni nota işleyen geri çağrı).
+  final void Function(WrapTextController controller, VoidCallback commit)?
+  onFieldFocused;
 
   @override
   State<ItemsEditor> createState() => _ItemsEditorState();
@@ -208,7 +214,15 @@ class _ItemsEditorState extends State<ItemsEditor> {
     // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
     // silme "x" düğmesinin görünürlüğü değişir; her iki durumda çiz.
     node.addListener(() {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      if (node.hasFocus) {
+        final controller = _controllerFor(item);
+        widget.onFieldFocused?.call(
+          controller,
+          () => _updateText(item, controller.logicalText),
+        );
+      }
+      setState(() {});
     });
     return node;
   });

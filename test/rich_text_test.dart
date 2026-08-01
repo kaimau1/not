@@ -124,9 +124,28 @@ void main() {
       expect(r.text, 'not');
     });
 
-    test('boş seçim metni değiştirmez', () {
-      final r = toggleFormat('merhaba', 3, 3, RichFormat.bold);
-      expect(r.text, 'merhaba');
+    test('seçim yokken imlece boş biçim kutusu açılır', () {
+      // Biçim düğmesine seçim olmadan basmak: kullanıcı yazmaya devam edince
+      // yazdığı biçimli çıksın diye işaretler açılır, imleç ARAYA konur.
+      final r = toggleFormat('merhaba ', 8, 8, RichFormat.bold);
+      expect(r.text, 'merhaba ****');
+      expect(r.start, 10);
+      expect(r.end, 10);
+      // İmlecin iki yanında işaretin yarısı kalır.
+      expect(r.text.substring(0, r.start), 'merhaba **');
+      expect(r.text.substring(r.end), '**');
+    });
+
+    test('renkli biçimde imleç kutusu renk önekini taşır', () {
+      final r = toggleFormat(
+        'not: ',
+        5,
+        5,
+        RichFormat.highlight,
+        colorIndex: 3,
+      );
+      expect(r.text, 'not: ==3:==');
+      expect(r.text.substring(0, r.start), 'not: ==3:');
     });
   });
 }

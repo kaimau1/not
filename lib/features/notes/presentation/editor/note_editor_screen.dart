@@ -22,6 +22,8 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
+import '../../../../core/utils/note_fonts.dart';
+import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -53,6 +55,7 @@ import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
 import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
+import 'format_bar.dart';
 import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
@@ -259,15 +262,38 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     );
   }
 
+  // ---- Biçim çubuğu ---------------------------------------------------
+
+  /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
+  bool _formatBarOpen = false;
+
+  /// Çubuğun yazacağı alan: en son odaklanan metin alanı (gövde ya da bir
+  /// liste maddesi). Çubuğun kendisi odak İSTEMEDİĞİ için bu değer düğmeye
+  /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
+  FormatTarget? _formatTarget;
+
+  void _setFormatTarget(WrapTextController controller, VoidCallback commit) {
+    _formatTarget = FormatTarget(controller: controller, commit: commit);
+  }
+
+  /// Çubuktaki biçim düğmesi: seçime uygula, seçim yoksa imlece kutu aç.
+  void _applyFormat(RichFormat format, {int? colorIndex}) {
+    final target = _formatTarget;
+    if (target == null) return;
+    if (applyRichFormat(target.controller, format, colorIndex: colorIndex)) {
+      target.commit();
+    }
+  }
+
   /// Notun kendi yazı tipi/boyutu uygulanmış gövde stili (ölçüm ve çizim
   /// ortak kaynağı).
   TextStyle? _noteTextStyle() {
     final base = Theme.of(context).textTheme.bodyLarge;
     final note = _note;
     if (base == null || note == null) return base;
-    return base.copyWith(
-      fontFamily: note.fontFamily,
-      fontSize: (base.fontSize ?? 16) * note.fontScale,
+    return applyNoteFont(
+      base.copyWith(fontSize: (base.fontSize ?? 16) * note.fontScale),
+      note.fontFamily,
     );
   }
 
@@ -292,6 +318,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // notta seçim neredeyse hep bir cümleyi taşımak/silmek için yapılıyor.
     attachSentenceSelection(_bodyController);
     attachSentenceSelection(_titleController);
+    // Biçim çubuğu son odaklanan alana yazar; gövde odağı burada bildirilir
+    // (maddeler ItemsEditor'dan bildirir).
+    _bodyFocus.addListener(() {
+      if (!_bodyFocus.hasFocus) return;
+      _setFormatTarget(
+        _bodyController,
+        () => _mutate(
+          (n) => n.copyWith(body: _bodyController.logicalText),
+          immediate: true,
+        ),
+      );
+    });
     final cached = _cachedNote();
     if (cached != null) {
       _note = cached;
@@ -1843,79 +1881,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   /// Palet düğmesi: zemin rengi ve renkli çerçeve seçimi. İkisi ayrı alanlar —
   /// renkli zeminli bir nota farklı renkte çerçeve verilebilir (madde 4).
-  /// Notun yazı tipinin okunur adı.
-  static String _fontLabel(AppLocalizations l10n, String? family) =>
-      switch (family) {
-        'serif' => l10n.noteFontSerif,
-        'monospace' => l10n.noteFontMono,
-        _ => l10n.noteFontDefault,
-      };
-
-  /// Yazı tipi seçimi: sistemde her zaman bulunan genel aileler.
-  Future<void> _pickNoteFont(Note note) async {
-    final l10n = context.l10n;
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Seçili olan sağda tikle gösterilir (RadioListTile bu Flutter
-            // sürümünde RadioGroup istiyor; tek seçimlik kısa liste için
-            // ListTile daha yalın).
-            for (final family in <String?>[null, 'serif', 'monospace'])
-              ListTile(
-                title: Text(
-                  _fontLabel(l10n, family),
-                  style: TextStyle(fontFamily: family),
-                ),
-                trailing: (note.fontFamily ?? '') == (family ?? '')
-                    ? const Icon(Icons.check)
-                    : null,
-                // null "varsayılan" demek; boş dize ile taşınır.
-                onTap: () => Navigator.pop(sheetContext, family ?? ''),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (picked == null || !mounted) return;
-    _mutate(
-      (n) => picked.isEmpty
-          ? n.copyWith(clearFontFamily: true)
-          : n.copyWith(fontFamily: picked),
-      immediate: true,
-    );
-  }
-
-  /// Yazı boyutu çarpanı: %80 – %160 arası birkaç adım.
-  Future<void> _pickNoteTextSize(Note note) async {
-    final picked = await showModalBottomSheet<double>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final scale in const [0.8, 0.9, 1.0, 1.15, 1.3, 1.6])
-              ListTile(
-                title: Text(
-                  '%${(scale * 100).round()}',
-                  style: TextStyle(fontSize: 16 * scale),
-                ),
-                trailing: note.fontScale == scale
-                    ? const Icon(Icons.check)
-                    : null,
-                onTap: () => Navigator.pop(sheetContext, scale),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (picked == null || !mounted) return;
-    _mutate((n) => n.copyWith(fontScale: picked), immediate: true);
-  }
+  // Yazı tipi ve boyutu artık BİÇİM ÇUBUĞUNDA (alt çubuktaki "Aa"): palet
+  // sayfasının içine gömülüyken bulunamıyordu ve boyut ancak hazır adımlardan
+  // seçilebiliyordu. Çubukta yazı tipi tek dokunuş, boyut ise sürüklendikçe
+  // canlı değişiyor (bkz. format_bar.dart).
 
   Future<void> _showColorSheet() async {
     final note = _note;
@@ -1939,35 +1908,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               title: Text(l10n.frameColor),
               onTap: () => Navigator.pop(sheetContext, 'frame'),
             ),
-            // Yazı tipi ve boyutu NOTA özeldir (Ayarlar'daki genel ölçekten
-            // ayrı): uzun bir belgeyi küçültmek ya da alışveriş listesini
-            // büyütmek için notu her açtığında ayarla uğraşmak gerekmesin.
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.text_fields),
-              title: Text(l10n.noteFont),
-              subtitle: Text(_fontLabel(l10n, note.fontFamily)),
-              onTap: () => Navigator.pop(sheetContext, 'font'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.format_size),
-              title: Text(l10n.noteTextSize),
-              subtitle: Text('%${(note.fontScale * 100).round()}'),
-              onTap: () => Navigator.pop(sheetContext, 'size'),
-            ),
           ],
         ),
       ),
     );
     if (target == null || !mounted) return;
-    if (target == 'font') {
-      await _pickNoteFont(note);
-      return;
-    }
-    if (target == 'size') {
-      await _pickNoteTextSize(note);
-      return;
-    }
     final frame = target == 'frame';
     final picked = await showNoteColorPicker(
       context,
@@ -2313,9 +2258,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // aynı çarpandan beslenir (bkz. Note.fontFamily / fontScale).
     final theme = Theme.of(context);
     final bodyBase = theme.textTheme.bodyLarge ?? const TextStyle();
-    final noteBodyStyle = bodyBase.copyWith(
-      fontFamily: note.fontFamily,
-      fontSize: (bodyBase.fontSize ?? 16) * note.fontScale,
+    final noteBodyStyle = applyNoteFont(
+      bodyBase.copyWith(fontSize: (bodyBase.fontSize ?? 16) * note.fontScale),
+      note.fontFamily,
     );
 
     final titleField = Padding(
@@ -2323,12 +2268,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       child: TextField(
         controller: _titleController,
         onChanged: (value) => _mutate((n) => n.copyWith(title: value)),
-        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-          fontFamily: note.fontFamily,
-          fontSize:
-              (Theme.of(context).textTheme.headlineSmall?.fontSize ?? 24) *
-              note.fontScale,
+        style: applyNoteFont(
+          (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
+              .copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize:
+                    (Theme.of(context).textTheme.headlineSmall?.fontSize ?? 24) *
+                    note.fontScale,
+              ),
+          note.fontFamily,
         ),
         maxLines: null,
         textInputAction: TextInputAction.next,
@@ -2599,6 +2547,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         contentInsertion: _keyboardImagePaste,
         richTheme: richTheme,
         textStyle: noteBodyStyle,
+        onFieldFocused: _setFormatTarget,
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2623,6 +2572,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         contentInsertion: _keyboardImagePaste,
         richTheme: richTheme,
         textStyle: noteBodyStyle,
+        onFieldFocused: _setFormatTarget,
         header: keyedHeader,
       );
     }
@@ -2902,6 +2852,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             // açık kalabiliyordu.
             if (_aiTask != null) _AiBanner(label: _aiTask!),
             if (_dictating) _DictationBanner(onStop: _dictate),
+            if (_formatBarOpen)
+              FormatBar(
+                onFormat: _applyFormat,
+                fontFamily: note.fontFamily,
+                fontScale: note.fontScale,
+                onFontChanged: (family) => _mutate(
+                  (n) => family == null
+                      ? n.copyWith(clearFontFamily: true)
+                      : n.copyWith(fontFamily: family),
+                  immediate: true,
+                ),
+                // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
+                // Firestore'a yazmak boşuna trafik olurdu.
+                onScaleChanged: (value) =>
+                    _mutate((n) => n.copyWith(fontScale: value)),
+                onScaleEnd: (value) =>
+                    _mutate((n) => n.copyWith(fontScale: value), immediate: true),
+                onClose: () => setState(() => _formatBarOpen = false),
+              ),
             BottomAppBar(
               color: background,
               height: 56,
@@ -2921,6 +2890,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                     tooltip: l10n.calculatorTitle,
                     icon: const Icon(Icons.calculate_outlined),
                     onPressed: _openCalculator,
+                  ),
+                  // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
+                  // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
+                  // biçim ise seçim menüsünün içine gömülüydü.
+                  IconButton(
+                    tooltip: l10n.formatTitle,
+                    isSelected: _formatBarOpen,
+                    icon: const Icon(Icons.text_format),
+                    onPressed: () =>
+                        setState(() => _formatBarOpen = !_formatBarOpen),
                   ),
                   // Karışık içerik: metin notunun altına checklist maddesi
                   // ekler. Yalnızca metin notunda anlamlı (liste notu zaten

@@ -1062,7 +1062,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       childCount: items.length,
       itemBuilder: (context, index) {
         final note = items[index];
-        final card = NoteCard(note: note, highlightQuery: query);
+        // Asistanın dokunduğu not: kart kısa süre vurgulanır ve görünür alana
+        // kaydırılır (bkz. focusedNoteProvider). Anahtar, kaydırma için
+        // kartın bağlamını bulmaya yarar.
+        final focused = ref.watch(focusedNoteProvider) == note.id;
+        final card = _FocusHalo(
+          focused: focused,
+          noteId: note.id,
+          child: NoteCard(note: note, highlightQuery: query),
+        );
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
         // Olağan hâl: uzun basış toplu seçime girer.
@@ -1229,6 +1237,77 @@ class _SearchField extends ConsumerWidget {
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(vertical: 10),
       ),
+    );
+  }
+}
+
+/// Asistanın dokunduğu notu görünür alana kaydırıp kısa süre vurgulayan
+/// sarmalayıcı.
+///
+/// Vurgu KARTIN İÇİNE değil çevresine çizilir: kartın kendi kenarlığı/rengi
+/// notun ayarı, geçici bir işaret onu değiştirmemeli. Kaydırma yalnız bir kez,
+/// vurgu ilk göründüğünde yapılır — kullanıcı sonra elle kaydırırsa kart geri
+/// zıplamaz.
+class _FocusHalo extends StatefulWidget {
+  const _FocusHalo({
+    required this.focused,
+    required this.noteId,
+    required this.child,
+  });
+
+  final bool focused;
+  final String noteId;
+  final Widget child;
+
+  @override
+  State<_FocusHalo> createState() => _FocusHaloState();
+}
+
+class _FocusHaloState extends State<_FocusHalo> {
+  bool _scrolled = false;
+
+  @override
+  void didUpdateWidget(covariant _FocusHalo oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focused && !oldWidget.focused) _scrolled = false;
+    _maybeScroll();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeScroll();
+  }
+
+  void _maybeScroll() {
+    if (!widget.focused || _scrolled) return;
+    _scrolled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = context.findRenderObject();
+      if (box is! RenderBox || !box.attached) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.3,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: widget.focused ? scheme.primary : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: widget.child,
     );
   }
 }

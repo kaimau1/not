@@ -16,6 +16,7 @@ import '../data/attachment_repository.dart';
 import '../data/device_speech.dart';
 import '../data/notes_repository.dart';
 import '../domain/note_type.dart';
+import 'notes_providers.dart';
 
 /// Sesli Not Asistanı'nın o anki evresi. Ana sayfadaki büyük düğme ve
 /// alttaki durum paneli bu evreye göre çizilir.
@@ -312,7 +313,13 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         message: reply,
         noteId: resultNoteId,
       );
-      _speakIfQuestion(reply);
+      _speakReply(reply);
+      // İşin ilgili olduğu not varsa ana ekran ona kaydırıp vurgular:
+      // asistan "ekledim" diyor ama hangi nota eklediği görünmüyordu.
+      final focusId = resultNoteId;
+      if (focusId != null) {
+        ref.read(focusedNoteProvider.notifier).focus(focusId);
+      }
     } on GeminiException catch (e) {
       state = VoiceAssistantState(
         phase: VoiceAssistantPhase.error,
@@ -337,16 +344,18 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     return true;
   }
 
-  /// Asistan SORU sorduysa yanıtı sesli okur — yalnız telefonda.
+  /// Asistanın YANITINI sesli okur — yalnız telefonda.
   ///
-  /// Soru sorulduğunda ekrana bakmak gerekiyordu; oysa asistan tam da eller
-  /// meşgulken kullanılıyor. Yalnız soru okunur: "Kaydettim" gibi bildirimleri
-  /// her seferinde sesli duymak gürültü olurdu. Masaüstünde/web'de sessiz
-  /// kalır (kullanıcı isteği: "sadece ve sadece mobilde konuşsun") — orada
-  /// zaten ekran göz önünde ve hoparlör paylaşımlı bir ortamda olabilir.
-  void _speakIfQuestion(String reply) {
+  /// Önce yalnız soru cümleleri okunuyordu; oysa asıl gereken tam tersiymiş:
+  /// kullanıcı bir şey SORDUĞUNDA (ör. "markette ne alacaktım?") asistan
+  /// cevabı üretiyor ama sessiz kalıyordu — eller meşgulken asistanın bütün
+  /// anlamı buydu. Artık her yanıt okunur.
+  ///
+  /// Masaüstü/web sessiz kalır (kullanıcı isteği: "sadece ve sadece mobilde
+  /// konuşsun"); orada ekran zaten göz önünde ve ortam paylaşımlı olabilir.
+  void _speakReply(String reply) {
     final text = reply.trim();
-    if (text.isEmpty || !text.endsWith('?')) return;
+    if (text.isEmpty) return;
     if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
     final language = Intl.getCurrentLocale().split(RegExp('[-_]')).first;
     unawaited(
