@@ -1320,4 +1320,35 @@ class AppLocalizationsTr extends AppLocalizations {
   String gridColumnsCount(int count) {
     return '$count sütun';
   }
+
+  @override
+  String get addImageOnPageSubtitle => 'Sayfaya yerleşir, yazı etrafından akar';
+
+  @override
+  String get addImageAsFile => 'Görseli ek olarak yükle';
+
+  @override
+  String get addImageAsFileSubtitle =>
+      'Sayfaya girmez, alttaki ek şeridinde durur';
+
+  @override
+  String get moveImageToAttachments => 'Ek olarak taşı';
+
+  @override
+  String get moveImageToPage => 'Sayfaya koy';
+
+  @override
+  String get attachmentCopied => 'Ek kopyalandı';
+
+  @override
+  String get pasteAttachment => 'Kopyalanan eki yapıştır';
+
+  @override
+  String get fullscreen => 'Tam ekran';
+
+  @override
+  String get more => 'Diğer';
+
+  @override
+  String get undone => 'Geri alındı';
 }

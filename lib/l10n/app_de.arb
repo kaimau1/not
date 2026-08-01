@@ -405,5 +405,15 @@
   "hiddenFoldersHiddenAgain": "Versteckte Ordner sind wieder verborgen",
   "makeFolderHidden": "Verstecken",
   "makeFolderVisible": "Nicht mehr verstecken",
-  "gridColumnsCount": "{count} Spalten"
+  "gridColumnsCount": "{count} Spalten",
+  "addImageOnPageSubtitle": "Liegt auf der Seite, der Text fließt darum herum",
+  "addImageAsFile": "Bild als Datei anhängen",
+  "addImageAsFileSubtitle": "Bleibt außerhalb der Seite, in der Anhangsleiste",
+  "moveImageToAttachments": "Zu den Anhängen verschieben",
+  "moveImageToPage": "Auf die Seite legen",
+  "attachmentCopied": "Anhang kopiert",
+  "pasteAttachment": "Kopierten Anhang einfügen",
+  "fullscreen": "Vollbild",
+  "more": "Mehr",
+  "undone": "Rückgängig gemacht"
 }

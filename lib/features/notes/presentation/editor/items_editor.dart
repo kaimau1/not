@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -7,7 +9,34 @@ import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
 import 'text_wrap.dart';
 
-/// Checklist ve sıralı liste düzenleyicisi. Öğeler tutamaca UZUN BASIP
+/// Yanlışlıkla işaretlenen öğenin "hemen geri alındı" sayıldığı süre.
+const kUncheckRestoreWindow = Duration(seconds: 30);
+
+/// İşareti KALKAN öğenin listeye geri gireceği konum.
+///
+/// İki farklı niyet aynı hareketle yapılıyor: (a) yanlışlıkla işaretleyip
+/// hemen geri alma — öğe eski sırasında kalmalı, (b) gerçekten tamamlanmış bir
+/// işi sonradan yeniden açma — öğe sıranın sonuna girmeli. Aradaki tek fark
+/// GEÇEN SÜREdir; [kUncheckRestoreWindow] içinde geri alınan öğe eski
+/// konumuna döner, sonrası işaretsizlerin sonuna eklenir (eski davranış).
+///
+/// [uncheckedCount] öğe listeden çıkarıldıktan SONRAKİ işaretsiz sayısıdır:
+/// hem sonuna ekleme hem de hatırlanan konumun üst sınırı odur (arada başka
+/// öğeler silinmiş olabilir).
+int uncheckRestoreIndex({
+  required int uncheckedCount,
+  int? rememberedIndex,
+  Duration? sinceChecked,
+}) {
+  if (rememberedIndex == null ||
+      sinceChecked == null ||
+      sinceChecked > kUncheckRestoreWindow) {
+    return uncheckedCount;
+  }
+  return rememberedIndex.clamp(0, uncheckedCount);
+}
+
+/// Checklist ve sıralı liste düzenleyicisi. Öğeler "Seç" modundaki tutamaçtan
 /// sürüklenerek sıralanır, Enter yeni öğe ekler. Silme "x" düğmesi yalnızca
 /// satır odaklıyken görünür (kaydırma/yazma sırasında yanlışlıkla basılmasın).
 /// Checklist modunda işaretlenen öğeler otomatik listenin en altına düşer ve
@@ -179,15 +208,37 @@ class _ItemsEditorState extends State<ItemsEditor> {
   /// eklerken titreme görünüyordu.
   final _pads = <String, ({double start, double end, double top})>{};
 
+  /// Satır başındaki sürükleme tutamacının kapladığı genişlik (yalnız seçim
+  /// modunda vardır).
+  static const double _kHandleWidth = 22;
+
+  /// Kutucuk / seçim dairesi / sıra numarasının kapladığı genişlik.
+  static const double _kLeadingWidth = 48;
+
+  /// Sil düğmesinin (odaksızken boş kutunun) genişliği.
+  static const double _kTrailingWidth = 48;
+
+  /// Satırın iki yanındaki yatay dolgu.
+  static const double _kRowPadding = 24;
+
+  /// "Yeni öğe / Seç" ve "İşaretlileri sil" düğme satırlarının sığdığı en az
+  /// genişlik. Bu satırların metni sarılamaz (düğme daralmaz); dar kalırlarsa
+  /// taşarlar — o yüzden görselin yanına sıkışmak yerine ALTINA inerler.
+  static const double _kButtonRowWidth = 280;
+
   /// Satırın TAMAMINI (tutamaç + kutucuk + metin + sil düğmesi) görselin
   /// yanına kaydırır. Yalnız metni sarmak yetmiyordu: kutucuk ve tutamaç
   /// satırın sol başında durduğundan görselin ALTINDA kalıyordu.
-  Widget _floatRow(Widget child, {String? id}) {
+  ///
+  /// [reserved] satırın metne ayrılamayan payıdır; sarma kararı bu pay
+  /// düşülerek verilir (bkz. [_FloatRow.reserved]).
+  Widget _floatRow(Widget child, {String? id, double reserved = 0}) {
     final pageBox = widget.pageBox;
     if (pageBox == null || widget.floats.isEmpty) return child;
     return _FloatRow(
       floats: widget.floats,
       pageBox: pageBox,
+      reserved: reserved,
       initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
       onMeasured: id == null ? null : (pad) => _pads[id] = pad,
       child: child,
@@ -250,12 +301,21 @@ class _ItemsEditorState extends State<ItemsEditor> {
   /// Öğe hangi blokta çizilsin: yerleşiyorsa eski durumu, değilse gerçeği.
   bool _placedAsChecked(NoteItem item) => _settling[item.id] ?? item.checked;
 
+  /// İşaretlenen öğenin işaretlenmeden ÖNCEKİ sırası ve işaretlenme anı —
+  /// [kUncheckRestoreWindow] içinde geri alınırsa öğe oraya döner.
+  final _checkedFrom = <String, ({int index, DateTime at})>{};
+
   void _toggleItem(NoteItem target, bool? value) {
     final index = _items.indexWhere((i) => i.id == target.id);
     if (index < 0) return;
     final wasChecked = _items[index].checked;
+    final nowChecked = value ?? false;
+    if (nowChecked && !wasChecked) {
+      // Eski sıra ŞİMDİ saklanmalı: işaret anında öğe listede yer değiştirir.
+      _checkedFrom[target.id] = (index: index, at: DateTime.now());
+    }
     setState(() {
-      _items[index] = _items[index].copyWith(checked: value ?? false);
+      _items[index] = _items[index].copyWith(checked: nowChecked);
       _settling[target.id] = wasChecked;
     });
     _commit();
@@ -266,7 +326,21 @@ class _ItemsEditorState extends State<ItemsEditor> {
         final current = _items.indexWhere((i) => i.id == target.id);
         if (current < 0) return;
         final item = _items.removeAt(current);
-        _items.insert(_checkedStart, item);
+        if (item.checked) {
+          _items.insert(_checkedStart, item);
+          return;
+        }
+        final memory = _checkedFrom.remove(item.id);
+        _items.insert(
+          uncheckRestoreIndex(
+            uncheckedCount: _checkedStart,
+            rememberedIndex: memory?.index,
+            sinceChecked: memory == null
+                ? null
+                : DateTime.now().difference(memory.at),
+          ),
+          item,
+        );
       });
       _commit();
     });
@@ -297,6 +371,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     setState(() => _items.removeWhere((i) => i.id == target.id));
     _controllers.remove(target.id)?.dispose();
     _focusNodes.remove(target.id)?.dispose();
+    _checkedFrom.remove(target.id);
     _commit();
   }
 
@@ -317,6 +392,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     for (final item in removed) {
       _controllers.remove(item.id)?.dispose();
       _focusNodes.remove(item.id)?.dispose();
+      _checkedFrom.remove(item.id);
     }
     _commit();
   }
@@ -450,28 +526,37 @@ class _ItemsEditorState extends State<ItemsEditor> {
     final focused = _focusFor(item).hasFocus;
     final selected = _selected.contains(item.id);
 
-    // Sol bölge (tutamak + kutucuk/numara). Uzun basış seçim modunu açar:
-    // metin alanına uzun basmak Android'in kendi metin seçimini açtığı için
-    // madde seçimi buraya bağlandı, ikisi çakışmaz.
+    // Sürükleme tutamacı YALNIZ "Seç" modunda görünür.
+    //
+    // Normalde her satırın başında duran 6 nokta yer kaplıyor, metni içeri
+    // itiyor ve ne işe yaradığı görünmüyordu (sürüklemek için ayrıca uzun
+    // basmak gerekiyordu). Seç modu zaten "satırlarla toplu iş yap" kipi;
+    // sıralama da oraya taşındı. Orada uzun basış SEÇİM demek olduğundan
+    // tutamaç gecikmesiz sürükler (ReorderableDragStartListener) ve seçim
+    // jestlerinin DIŞINDA durur — üstüne dokunmak öğeyi seçmez.
+    final dragHandle = (reorderIndex != null && _selectionMode)
+        ? ReorderableDragStartListener(
+            index: reorderIndex,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 2),
+              child: Icon(
+                Icons.drag_indicator,
+                size: 20,
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
+          )
+        : null;
+
+    // Sol bölge (kutucuk/numara). Uzun basış seçim modunu açar: metin alanına
+    // uzun basmak Android'in kendi metin seçimini açtığı için madde seçimi
+    // buraya bağlandı, ikisi çakışmaz.
     final leading = GestureDetector(
       onLongPress: () => _toggleSelection(item),
       onTap: _selectionMode ? () => _toggleSelection(item) : null,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Seçim modunda sürükleme kapalı: iki uzun basış davranışı
-          // birbirine karışmasın.
-          if (reorderIndex != null && !_selectionMode)
-            ReorderableDelayedDragStartListener(
-              index: reorderIndex,
-              child: Icon(
-                Icons.drag_indicator,
-                size: 18,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-              ),
-            )
-          else
-            const SizedBox(width: 18),
           if (_selectionMode)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -504,6 +589,11 @@ class _ItemsEditorState extends State<ItemsEditor> {
       key: ValueKey(item.id),
       child: _floatRow(
         id: item.id,
+        // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
+        // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
+        // verilmeli (bkz. _FloatRow.reserved).
+        reserved: _kRowPadding + (dragHandle == null ? 0 : _kHandleWidth) +
+            _kLeadingWidth + _kTrailingWidth,
         Container(
           color: selected
               ? scheme.primaryContainer.withValues(alpha: 0.4)
@@ -519,6 +609,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
             curve: Curves.easeOut,
             child: Row(
               children: [
+                ?dragHandle,
                 leading,
                 Expanded(
                   // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
@@ -617,6 +708,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
         : _items;
 
     final addButton = _floatRow(
+      reserved: _kButtonRowWidth,
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
@@ -650,6 +742,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
         for (final item in checkedItems) _itemRow(item),
         if (checkedItems.isNotEmpty)
           _floatRow(
+            reserved: _kButtonRowWidth,
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
               child: TextButton.icon(
@@ -759,20 +852,32 @@ class _ItemsEditorState extends State<ItemsEditor> {
 /// Konum yerleşimden SONRA ölçülür; dolgu satırın DIŞINDAN uygulandığı için
 /// ölçüm kendi kendini beslemez (ölçülen kutu her zaman tam genişliktir).
 ///
-/// Satıra dörtte birden az yer kalıyorsa (görsel sütunu kaplıyor) yana
-/// kaydırma bırakılır ve satır görselin ALTINA itilir — gövde metnindeki
-/// "satırı boşalt" davranışının liste karşılığı.
+/// Satırın METNİNE okunur bir genişlik kalmıyorsa yana kaydırma bırakılır ve
+/// satır görselin ALTINA itilir — gövde metnindeki "satırı boşalt"
+/// davranışının liste karşılığı.
 class _FloatRow extends StatefulWidget {
   const _FloatRow({
     required this.floats,
     required this.pageBox,
     required this.child,
+    this.reserved = 0,
     this.initial,
     this.onMeasured,
   });
 
   final List<FloatBox> floats;
   final RenderBox? Function() pageBox;
+
+  /// Satırın metne AYRILAMAYAN payı (tutamaç + kutucuk + sil düğmesi +
+  /// dolgu). Kalan yer ölçülürken düşülür.
+  ///
+  /// KÖK NEDEN (madde: "bir görsel yazıları sıkıştırdığında tek harf tek
+  /// satıra kadar daralıyor"): eskiden "yer kaldı mı" kararı satırın TAMAMI
+  /// üzerinden veriliyordu. Liste satırının ~140 dp'si sabit kontrollere
+  /// gidiyor; görsel satırın üçte ikisini kaplayınca satırın kendisi eşiği
+  /// geçiyor ama METNE bir-iki karakterlik yer kalıyordu — metin dikey bir
+  /// harf sütununa dönüşüp satırı ekran boyu uzatıyordu.
+  final double reserved;
 
   /// Ölçüm gelene kadarki başlangıç kaydırması (komşu satırın değeri).
   final ({double start, double end, double top})? initial;
@@ -785,6 +890,10 @@ class _FloatRow extends StatefulWidget {
   @override
   State<_FloatRow> createState() => _FloatRowState();
 }
+
+/// Bir madde satırının metnine bırakılacak en az genişlik (dp) — yaklaşık
+/// 8-10 karakter. Bundan darına sıkışan metin harf harf kırılır.
+const double _kMinRowTextWidth = 72;
 
 class _FloatRowState extends State<_FloatRow> {
   late double _start = widget.initial?.start ?? 0;
@@ -830,7 +939,15 @@ class _FloatRowState extends State<_FloatRow> {
       }
     }
     var top = 0.0;
-    if (width - start - end < width * 0.25) {
+    // Metne kalan yer: satırın sabit kontrolleri (tutamaç/kutucuk/sil) düşülür.
+    // Eşik, gövde metnindeki kuralın (sütunun dörtte biri) metin payına
+    // uygulanmış hâli; çok dar sütunlarda da okunur bir taban bırakılır.
+    final textWidth = width - start - end - widget.reserved;
+    final minTextWidth = math.max(
+      _kMinRowTextWidth,
+      (width - widget.reserved) * 0.25,
+    );
+    if (textWidth < minTextWidth) {
       // Yana kaçacak yer yok. Gövde metninde bu durumda satır boşaltılır ve
       // metin görselin ALTINA iner (text_wrap.dart `_kMinUsableFraction`);
       // liste maddesinde karşılığı satırı aşağı itmektir. Eskiden satır pes

@@ -268,6 +268,16 @@ class NotesRepository {
       });
 
   /// Ek metadata'sındaki tek bir girişi günceller (yükleme kuyruğu kullanır).
+  /// Yüklemesi biten ekin DEPO alanlarını yazar.
+  ///
+  /// KÖK NEDEN (görsel düzeni kayboluyordu): eski hâli, işlemin okuduğu güncel
+  /// eki [updated] ile OLDUĞU GİBİ değiştiriyordu. [updated], kuyruğun yüklemeye
+  /// başladığı andaki KOPYAdır; yükleme sürerken kullanıcı görseli taşıyıp
+  /// boyutlandırdıysa (saniyeler sürer) o düzen burada geri alınıyordu — not
+  /// yeniden açıldığında görsel ilk konumuna, yani sayfanın üstüne dönüyor ve
+  /// boyutu "kaydedilmemiş" görünüyordu. Artık yalnız yüklemenin ürettiği
+  /// alanlar geçirilir; düzen (x/pageY/displayWidth/hiza/çizim) belgede ne ise
+  /// o kalır.
   Future<void> patchAttachment(String noteId, Attachment updated) =>
       _firestore.runTransaction((tx) async {
         final ref = _notes.doc(noteId);
@@ -275,7 +285,8 @@ class NotesRepository {
         if (!snapshot.exists) return;
         final note = Note.fromDoc(snapshot);
         final attachments = [
-          for (final a in note.attachments) a.id == updated.id ? updated : a,
+          for (final a in note.attachments)
+            a.id == updated.id ? a.withUploadOf(updated) : a,
         ];
         tx.update(ref, {
           'attachments': [for (final a in attachments) a.toMap()],

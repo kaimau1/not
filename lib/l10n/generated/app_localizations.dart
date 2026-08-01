@@ -2537,6 +2537,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} sütun'**
   String gridColumnsCount(int count);
+
+  /// No description provided for @addImageOnPageSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya yerleşir, yazı etrafından akar'**
+  String get addImageOnPageSubtitle;
+
+  /// No description provided for @addImageAsFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseli ek olarak yükle'**
+  String get addImageAsFile;
+
+  /// No description provided for @addImageAsFileSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya girmez, alttaki ek şeridinde durur'**
+  String get addImageAsFileSubtitle;
+
+  /// No description provided for @moveImageToAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek olarak taşı'**
+  String get moveImageToAttachments;
+
+  /// No description provided for @moveImageToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya koy'**
+  String get moveImageToPage;
+
+  /// No description provided for @attachmentCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek kopyalandı'**
+  String get attachmentCopied;
+
+  /// No description provided for @pasteAttachment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalanan eki yapıştır'**
+  String get pasteAttachment;
+
+  /// No description provided for @fullscreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran'**
+  String get fullscreen;
+
+  /// No description provided for @more.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer'**
+  String get more;
+
+  /// No description provided for @undone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri alındı'**
+  String get undone;
 }
 
 class _AppLocalizationsDelegate

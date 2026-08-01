@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+// RenderEditable material.dart üzerinden gelmiyor; imlecin sayfa üzerindeki
+// yerini ölçmek için doğrudan gerekiyor (bkz. _caretPageTop).
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,6 +47,7 @@ import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
 import 'ai_result_sheet.dart';
+import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
@@ -51,6 +55,7 @@ import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
+import 'note_undo.dart';
 import 'text_wrap.dart';
 
 bool get _isDesktop =>
@@ -127,6 +132,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// sürmekte olan sesli notun kaydı. Bu yüzden gereken bağımlılıklar her
   /// build'de alanlara alınır; `dispose` yalnız bu alanları kullanır.
   NotesRepository? _notesRepo;
+  AttachmentRepository? _attachmentRepo;
   GeminiService? _gemini;
   bool _autoTagEnabled = true;
   bool _autoTitleEnabled = true;
@@ -195,6 +201,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
 
   void _cacheDeps() {
     _notesRepo = ref.read(notesRepositoryProvider);
+    _attachmentRepo = ref.read(attachmentRepositoryProvider);
     _gemini = ref.read(geminiServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);
     _autoTitleEnabled = ref.read(autoTitleProvider);
@@ -306,7 +313,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         // alanları (ek yüklemeleri, AI özeti) benimse.
         setState(() {
           _note = _note!.copyWith(
-            attachments: incoming.attachments,
+            attachments: mergeAttachmentLayout(
+              local: _note!.attachments,
+              incoming: incoming.attachments,
+            ),
             aiSummary: incoming.aiSummary,
           );
         });
@@ -317,6 +327,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void dispose() {
     _debouncer.flush();
+    // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
+    // dosyalarını korur (bkz. _flushAttachmentDeletes).
+    _flushAttachmentDeletes();
     final note = _note;
     if (!_deleted && note != null && note.isEmpty) {
       // İçi boş kalan not çıkarken sessizce silinir.
@@ -345,6 +358,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     return null;
   }
 
+  // ---- Geri alma ------------------------------------------------------
+
+  /// Değişiklikten ÖNCEKİ not anlık görüntüleri (bkz. note_undo.dart).
+  final _undoStack = NoteUndoStack();
+
+  /// Geri alma uygulanırken true: geri alınan durum yeniden yığına girmesin.
+  bool _restoring = false;
+
+  bool get _canUndo => _undoStack.canUndo;
+
+  /// Son değişikliği geri alır (araç çubuğundaki düğme ve Ctrl+Z).
+  void _undo() {
+    final previous = _undoStack.pop();
+    if (previous == null) return;
+    _restoring = true;
+    // Metin alanları nottan beslenmiyor (kendi denetleyicileri var); geri
+    // alınan gövde/başlık elle yazılmazsa ekranda eski metin kalırdı.
+    _titleController.text = previous.title;
+    _bodyController.text = previous.body;
+    _mutate((_) => previous, immediate: true);
+    _restoring = false;
+    _showSnack(context.l10n.undone);
+  }
+
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
@@ -355,6 +392,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       final next = transform(note);
       final clean = stripWrapAnchors(next.body);
       _note = clean == next.body ? next : next.copyWith(body: clean);
+      if (!_restoring) {
+        _undoStack.push(note, _note!, now: DateTime.now());
+      }
     });
     void save() {
       final current = _note;
@@ -384,30 +424,96 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     return context.l10n.attachmentTooLarge(limitMb);
   }
 
-  /// Yeni görselin sayfadaki başlangıç yeri ve boyu. Konum/boyut verilmezse
-  /// tuval onu sol üste, sayfanın YARISI genişliğinde koyuyordu — yani doğrudan
-  /// yazılmakta olan metnin üzerine. Bunun yerine küçük (%32) başlar ve
-  /// sayfadaki mevcut içeriğin (son görselin ya da metnin) ALTINA yerleşir.
+  /// Görsel eklenmeden hemen önce ölçülen imleç yüksekliği (sayfa uzayı, dp).
+  ///
+  /// Ölçüm görsel gelince YAPILAMAZ: (+) menüsü açılırken klavye kapatılır ve
+  /// odak düşer, galeri/kamera ise ekranı tümüyle terk eder. Bu yüzden değer
+  /// menü açılmadan, klavyeden yapıştırılmadan ya da kısayol basılmadan ÖNCE
+  /// alınıp burada saklanır. null = ölçülemedi (yığma yerleşimine düşülür).
+  double? _caretPageY;
+
+  /// Odaktaki metin alanındaki imlecin SAYFA (tuval) uzayındaki üst kenarı.
+  double? _caretPageTop() {
+    final page = _pageBox();
+    final focused = FocusManager.instance.primaryFocus?.context;
+    if (page == null || focused == null) return null;
+    final editable = _findEditable(focused.findRenderObject());
+    if (editable == null || !editable.attached || !editable.hasSize) return null;
+    // Odak başka bir katmanda olabilir (alt sayfa, tam ekran görüntüleyici);
+    // o zaman ölçüm sayfa uzayına çevrilemez.
+    if (!_isDescendantOf(editable, page)) return null;
+    final offset = editable.selection?.baseOffset ?? -1;
+    final caret = offset < 0
+        ? Rect.zero
+        : editable.getLocalRectForCaret(TextPosition(offset: offset));
+    return editable.localToGlobal(Offset(0, caret.top), ancestor: page).dy;
+  }
+
+  static RenderEditable? _findEditable(RenderObject? node) {
+    if (node == null) return null;
+    if (node is RenderEditable) return node;
+    RenderEditable? found;
+    node.visitChildren((child) => found ??= _findEditable(child));
+    return found;
+  }
+
+  static bool _isDescendantOf(RenderObject node, RenderObject ancestor) {
+    for (var p = node.parent; p != null; p = p.parent) {
+      if (identical(p, ancestor)) return true;
+    }
+    return false;
+  }
+
+  /// İmlecin yerini görsel eklenmeden önce saklar (bkz. [_caretPageY]).
+  void _rememberCaret() {
+    final top = _caretPageTop();
+    if (top != null) _caretPageY = top;
+  }
+
+  /// Yeni görselin sayfadaki başlangıç yeri ve boyu.
+  ///
+  /// Görsel YAZILAN SATIRA girer: eskiden sayfanın en üstüne ya da son görselin
+  /// altına konuyordu, yani kullanıcı görseli her seferinde metnin yanına elle
+  /// sürüklemek zorundaydı. İmleç ölçülemediyse (menüden gelmeyen akışlar, boş
+  /// not) eski davranışa — mevcut içeriğin altına — düşülür. Boyut küçük (%32)
+  /// başlar; tam genişlik metni tümüyle aşağı iterdi.
   Attachment _placeNewImage(Attachment image, Note note) {
     const width = 0.32;
-    var top = _bodyTop + 24;
-    for (final a in note.attachments) {
-      if (a.kind != AttachmentKind.image) continue;
+    final pageWidth = _pageBox()?.size.width ?? 0;
+
+    double bottomOf(Attachment a) {
       final aspect = (a.width != null && a.height != null && a.height! > 0)
           ? a.width! / a.height!
           : 1.0;
-      final pageWidth = _pageBox()?.size.width ?? 0;
-      final bottom =
-          (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
-      if (bottom + 16 > top) top = bottom + 16;
+      return (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
     }
+
+    final caret = _caretPageY;
+    var top = caret ?? (_bodyTop + 24);
+    for (final a in note.attachments) {
+      if (!a.floatsOnPage) continue;
+      final bottom = bottomOf(a);
+      if (caret == null) {
+        // Ölçüm yok: sırayla altına yığ.
+        if (bottom + 16 > top) top = bottom + 16;
+      } else if (top >= (a.pageY ?? 0) - 8 && top < bottom + 16) {
+        // İmlecin satırını zaten bir görsel kaplıyor: üst üste binmesin.
+        top = bottom + 16;
+      }
+    }
+    if (top < _bodyTop) top = _bodyTop;
     // Sayfanın altına taşmasın: içerik yüksekliğini aşarsa oraya sabitlenir.
     final pageHeight = _pageBox()?.size.height;
     if (pageHeight != null && top > pageHeight) top = pageHeight;
     return image.copyWith(x: 0.06, pageY: top, displayWidth: width);
   }
 
-  Future<void> _addImageBytes(Uint8List bytes, String fileName) async {
+  /// [asFile] true ise görsel sayfaya yerleşmez, alt şeritte dosya eki olur.
+  Future<void> _addImageBytes(
+    Uint8List bytes,
+    String fileName, {
+    bool asFile = false,
+  }) async {
     final tooLargeMessage = _tooLargeMessage();
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
@@ -419,7 +525,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
       _mutate(
         (n) => n.copyWith(
-          attachments: [...n.attachments, _placeNewImage(attachment, n)],
+          attachments: [
+            ...n.attachments,
+            if (asFile)
+              attachment.copyWith(asFile: true)
+            else
+              _placeNewImage(attachment, n),
+          ],
         ),
         immediate: true,
       );
@@ -433,7 +545,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }
   }
 
-  Future<void> _pickImage() async {
+  /// [asFile] true ise seçilen görsel sayfaya değil ek şeridine girer.
+  Future<void> _pickImage({bool asFile = false}) async {
     if (_isDesktop) {
       const group = XTypeGroup(
         label: 'Görseller',
@@ -441,11 +554,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       );
       final file = await openFile(acceptedTypeGroups: const [group]);
       if (file == null) return;
-      await _addImageBytes(await file.readAsBytes(), file.name);
+      await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
     } else {
       final file = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (file == null) return;
-      await _addImageBytes(await file.readAsBytes(), file.name);
+      await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
     }
   }
 
@@ -708,6 +821,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _pasteImage() async {
+    // Kısayolla yapıştırırken odak metin alanındadır: görsel imlecin satırına
+    // girsin diye ölçüm baytlar gelmeden önce alınır.
+    _rememberCaret();
     final bytes = await Pasteboard.image;
     if (bytes == null) {
       if (mounted) _showSnack(context.l10n.clipboardEmpty);
@@ -732,6 +848,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         onContentInserted: (content) {
           final data = content.data;
           if (data == null) return;
+          // Klavyeden gelen görsel yazılan satıra girer: odak hâlâ alanda
+          // olduğundan imleç burada ölçülebiliyor.
+          _rememberCaret();
           unawaited(
             _addImageBytes(data, 'pano.${content.mimeType.split('/').last}'),
           );
@@ -768,6 +887,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     await _addImageBytes(bytes, 'cizim.png');
   }
 
+  /// Nottan çıkarılan ama BAYTLARI henüz silinmemiş ekler.
+  ///
+  /// Dosya eskiden ek nottan çıkarılır çıkarılmaz siliniyordu; "Geri al" ile
+  /// geri gelen ek bu yüzden boş bir yer tutucu olurdu. Silme editörden
+  /// çıkarken yapılır: o an nota geri dönmemiş olanlar gerçekten gider.
+  final _pendingAttachmentDeletes = <Attachment>[];
+
   void _removeAttachment(Attachment attachment) {
     _mutate(
       (n) => n.copyWith(
@@ -778,13 +904,84 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
       immediate: true,
     );
+    _pendingAttachmentDeletes.add(attachment);
+  }
+
+  /// Editör kapanırken: nota geri dönmemiş eklerin baytlarını siler.
+  void _flushAttachmentDeletes() {
+    final note = _note;
+    for (final attachment in _pendingAttachmentDeletes) {
+      final restored =
+          note != null && note.attachments.any((a) => a.id == attachment.id);
+      if (restored) continue;
+      _attachmentRepo?.deleteFromStorage(attachment).ignore();
+      if (attachment.localPath.isNotEmpty) {
+        File(attachment.localPath).delete().ignore();
+      }
+    }
+    _pendingAttachmentDeletes.clear();
+  }
+
+  /// Eki kopyalar: uygulama içi ek panosuna alır ve mümkünse sistem panosuna
+  /// da yazar (görsel baytları Android/iOS/web'de, dosya yolu masaüstünde).
+  ///
+  /// Uygulama içi pano şart: sistem panosunun PDF/sunum/ses için karşılığı yok
+  /// ve görselde bile ekin çizimi ile boyutu taşınmaz (bkz.
+  /// attachment_clipboard.dart).
+  Future<void> _copyAttachment(Attachment attachment) async {
+    final l10n = context.l10n;
+    ref.read(attachmentClipboardProvider.notifier).copy(attachment);
     final repo = ref.read(attachmentRepositoryProvider);
-    if (repo != null) {
-      repo.deleteFromStorage(attachment).ignore();
+    try {
+      if (attachment.kind == AttachmentKind.image) {
+        final bytes = await repo?.readBytes(attachment);
+        if (bytes != null) await Pasteboard.writeImage(bytes);
+      } else if (_isDesktop && attachment.localPath.isNotEmpty) {
+        await Pasteboard.writeFiles([attachment.localPath]);
+      }
+    } catch (_) {
+      // Sistem panosuna yazmak her platformda mümkün değil (ör. masaüstünde
+      // görsel yazımı yok). Uygulama içi kopya yine de alındı; kullanıcıya
+      // hata göstermek yanıltıcı olurdu.
     }
-    if (attachment.localPath.isNotEmpty) {
-      File(attachment.localPath).delete().ignore();
+    if (mounted) _showSnack(l10n.attachmentCopied);
+  }
+
+  /// Panodaki eki bu nota kopyalar (baytlar yeniden yazılır, yeni kimlik alır).
+  Future<void> _pasteAttachment() async {
+    final source = ref.read(attachmentClipboardProvider);
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (source == null || repo == null) return;
+    try {
+      final copy = await repo.duplicate(
+        noteId: widget.noteId,
+        source: source,
+      );
+      _mutate(
+        (n) => n.copyWith(
+          attachments: [
+            ...n.attachments,
+            if (copy.floatsOnPage) _placeNewImage(copy, n) else copy,
+          ],
+        ),
+        immediate: true,
+      );
+    } on FileTooLargeException {
+      if (mounted) _showSnack(_tooLargeMessage());
+    } on AttachmentMissingException {
+      if (mounted) _showSnack(context.l10n.attachmentNotSynced);
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
+  }
+
+  /// Görseli sayfa ile ek şeridi arasında taşır (madde: "resimleri ek olarak
+  /// yükleme seçeneği"). Sayfaya dönerken imlecin satırına yerleşir.
+  void _setImageAsFile(Attachment image, bool asFile) {
+    final note = _note;
+    if (note == null) return;
+    final moved = image.copyWith(asFile: asFile);
+    _updateAttachment(asFile ? moved : _placeNewImage(moved, note));
   }
 
   /// Bir eki (görsel) yeni değerleriyle (genişlik/hiza) değiştirir — kullanıcı
@@ -848,8 +1045,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   }
 
   Future<void> _showAttachMenu() async {
+    // İmleç ölçümü klavye kapatılmadan ÖNCE alınır: eklenecek görsel yazılan
+    // satıra gitsin (odak düşünce ölçüm imkânsız).
+    _rememberCaret();
     _dismissKeyboard();
     final l10n = context.l10n;
+    final copied = ref.read(attachmentClipboardProvider);
     final action = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -861,8 +1062,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
               ListTile(
                 leading: const Icon(Icons.image_outlined),
                 title: Text(l10n.addImage),
+                subtitle: Text(l10n.addImageOnPageSubtitle),
                 onTap: () => Navigator.pop(sheetContext, 'image'),
               ),
+              // Aynı görsel, sayfada yüzmek yerine alt şeritte DOSYA eki
+              // olarak: metnin yerleşimini hiç değiştirmez.
+              ListTile(
+                leading: const Icon(Icons.attachment_outlined),
+                title: Text(l10n.addImageAsFile),
+                subtitle: Text(l10n.addImageAsFileSubtitle),
+                onTap: () => Navigator.pop(sheetContext, 'image-file'),
+              ),
+              if (copied != null)
+                ListTile(
+                  leading: const Icon(Icons.content_paste_go),
+                  title: Text(l10n.pasteAttachment),
+                  subtitle: Text(
+                    copied.fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () => Navigator.pop(sheetContext, 'paste-attachment'),
+                ),
               // Kamerayla anında fotoğraf: masaüstünde/web'de çekim yolu yok.
               if (!kIsWeb && !_isDesktop)
                 ListTile(
@@ -931,6 +1152,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     switch (action) {
       case 'image':
         await _pickImage();
+      case 'image-file':
+        await _pickImage(asFile: true);
+      case 'paste-attachment':
+        await _pasteAttachment();
       case 'camera':
         await _takePhoto();
       case 'scan':
@@ -2083,9 +2308,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       ),
     );
 
+    // Sayfada yüzen görseller: "ek olarak" işaretlenenler buraya girmez,
+    // alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
     final imageAttachments = [
       for (final a in note.attachments)
-        if (a.kind == AttachmentKind.image) a,
+        if (a.floatsOnPage) a,
     ];
 
     // Görseller sayfanın üzerinde serbest katmanda yüzer ve metnin ÜSTÜne
@@ -2232,6 +2459,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
           onChanged: _updateAttachment,
           onCrop: _cropImage,
           onExtractText: _ocrImage,
+          onCopy: _copyAttachment,
+          onDetach: (a) => _setImageAsFile(a, true),
           topLimit: _bodyTop,
           hintLineHeight: hintLineHeight,
           hint: useCanvasHint
@@ -2268,6 +2497,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             control: true,
             shift: true,
           ): _pasteImage,
+        // Ctrl+Z: metin alanı odaktayken Flutter'ın kendi metin geri alması
+        // önce davranır (yazılan harfleri geri alır); alan odakta değilken
+        // buraya düşer ve NOTUN son değişikliği geri alınır.
+        const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
       },
       child: Scaffold(
         backgroundColor: background,
@@ -2287,6 +2520,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                       .withValues(alpha: pending ? 0.9 : 0.5),
                 ),
               ),
+            ),
+            // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
+            // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
+            // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
+            // oynamasın.
+            IconButton(
+              tooltip: l10n.undo,
+              icon: const Icon(Icons.undo),
+              onPressed: _canUndo ? _undo : null,
             ),
             IconButton(
               tooltip: note.starred ? l10n.unstar : l10n.star,
@@ -2462,10 +2704,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
             AttachmentStrip(
               attachments: [
                 for (final a in note.attachments)
-                  if (a.kind != AttachmentKind.image) a,
+                  if (!a.floatsOnPage) a,
               ],
               onRemove: _removeAttachment,
               onChanged: _updateAttachment,
+              onCopy: _copyAttachment,
+              onPlaceOnPage: (a) => _setImageAsFile(a, false),
               onVideoToNote: _videoToNote,
               expanded: ref.watch(attachmentsExpandedProvider),
               onToggle: () =>

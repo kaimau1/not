@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/link_text.dart';
@@ -34,6 +36,10 @@ const int _kWrapGlueCode = 0x2060;
 /// sıkıştırılan metin harf harf kırılıp okunmaz hâle gelir; o satırlar
 /// tümüyle boşaltılır ve metin görselin ALTINA iner.
 const double _kMinUsableFraction = 0.25;
+
+/// Oranın yanında MUTLAK bir taban (dp): dar bir sütunda dörtte bir de birkaç
+/// karaktere düşebiliyor. Yazı ölçeğiyle birlikte büyür.
+const double _kMinUsableWidth = 72;
 
 /// Gövde metninin üzerinde yüzen bir görselin kapladığı dikey bant.
 ///
@@ -163,7 +169,10 @@ WrapPlan planTextWrap({
     if (indentEnd < 0) indentEnd = 0;
     if (indentStart + indentEnd > 0 &&
         columnWidth - indentStart - indentEnd <
-            columnWidth * _kMinUsableFraction) {
+            math.max(
+              columnWidth * _kMinUsableFraction,
+              _kMinUsableWidth * textScaleFactor,
+            )) {
       // Kalan yer okunur bir satıra yetmiyor: dolgu satırın TAMAMINI yer,
       // kırıcı o satıra hiç kelime sığdıramaz ve metin görselin ALTINA iner.
       // Satır başına bir satır yüksekliği ilerlendiği için döngü görselin

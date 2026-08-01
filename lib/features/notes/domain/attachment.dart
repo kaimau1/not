@@ -104,6 +104,28 @@ List<InkStroke> cropInk(
   return out;
 }
 
+/// Akıştan gelen ek listesini yerel düzenle birleştirir.
+///
+/// Ek LİSTESİ (hangi ekler var, hangileri yüklendi) sunucudan gelir; her ekin
+/// DÜZENİ (konum/boyut/hiza/şeritte mi) editör açıkken YERELDİR. İkisi
+/// ayrılmazsa yazma ile anlık görüntü arasındaki yarışta kullanıcının az önce
+/// verdiği konum/boyut bir kare için geri döner ve o kare içinde tetiklenen bir
+/// kayıtla kalıcılaşır ("boyutu kaydedilmemiş oluyor").
+List<Attachment> mergeAttachmentLayout({
+  required List<Attachment> local,
+  required List<Attachment> incoming,
+}) {
+  if (local.isEmpty) return incoming;
+  final byId = {for (final a in local) a.id: a};
+  return [
+    for (final remote in incoming)
+      if (byId[remote.id] case final mine?)
+        remote.withLayoutOf(mine)
+      else
+        remote,
+  ];
+}
+
 /// Bir nota bağlı dosyanın (görsel/PDF) metadata'sı.
 /// Dosyanın kendisi Firebase Storage'da tutulur; yükleme tamamlanana kadar
 /// [downloadUrl] boş kalır ve [localPath] üzerinden gösterilir.
@@ -124,6 +146,7 @@ class Attachment {
     this.x,
     this.y,
     this.pageY,
+    this.asFile = false,
     this.ink = const [],
     this.createdAt,
   });
@@ -165,11 +188,55 @@ class Attachment {
   /// bir kez çevrilir. Yatay konum [x] (genişlik oranı) ile ortak.
   final double? pageY;
 
+  /// Yalnız GÖRSEL ekler için: true ise görsel sayfada yüzmez, alt taraftaki
+  /// ek şeridinde PDF/ses gibi bir DOSYA eki olarak durur.
+  ///
+  /// Her görsel tuvale düşüyordu; kullanıcının bir görseli "yazının arasına
+  /// koymadan sadece iliştirmek" istediği durumda (kaynak belge, fiş, ekran
+  /// görüntüsü) metnin yerleşimini bozuyor, taşınıp küçültülmesi gerekiyordu.
+  /// Görsel olmayan eklerde yok sayılır — onlar zaten hep şerittedir.
+  final bool asFile;
+
   /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
   final List<InkStroke> ink;
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
+
+  /// Görsel SAYFADA yüzüyor mu? (Görsel olmayan ekler hiçbir zaman yüzmez.)
+  bool get floatsOnPage => kind == AttachmentKind.image && !asFile;
+
+  /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
+  /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.
+  ///
+  /// Yükleme saniyeler sürer ve kullanıcı o sırada görseli taşıyıp
+  /// boyutlandırabilir; yüklemenin başladığı andaki kopya olduğu gibi yazılsa
+  /// bu düzen sessizce geri alınırdı (bkz. `NotesRepository.patchAttachment`).
+  Attachment withUploadOf(Attachment uploaded) => copyWith(
+    storagePath: uploaded.storagePath,
+    downloadUrl: uploaded.downloadUrl,
+    localPath: uploaded.localPath,
+    sizeBytes: uploaded.sizeBytes,
+    fileName: uploaded.fileName,
+    mimeType: uploaded.mimeType,
+    width: uploaded.width,
+    height: uploaded.height,
+  );
+
+  /// [remote]'un depo/yükleme durumunu alıp bu ekin YEREL düzenini korur.
+  ///
+  /// Editör açıkken gelen her Firestore anlık görüntüsü ekleri olduğu gibi
+  /// benimsiyordu; yazma ile anlık görüntü arasındaki yarışta (ya da başka bir
+  /// cihazın eski kopyası geldiğinde) kullanıcının az önce verdiği konum/boyut
+  /// bir kare için geri dönüyor ve o hâliyle yeniden kaydedilebiliyordu.
+  Attachment withLayoutOf(Attachment local) => copyWith(
+    displayWidth: local.displayWidth,
+    align: local.align,
+    x: local.x,
+    y: local.y,
+    pageY: local.pageY,
+    asFile: local.asFile,
+  );
 
   /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
   /// değişir (dosyanın kendisi yeniden yazılır); onun dışında ek oluşturulduğu
@@ -188,6 +255,7 @@ class Attachment {
     double? x,
     double? y,
     double? pageY,
+    bool? asFile,
     List<InkStroke>? ink,
   }) => Attachment(
     id: id,
@@ -205,6 +273,7 @@ class Attachment {
     x: x ?? this.x,
     y: y ?? this.y,
     pageY: pageY ?? this.pageY,
+    asFile: asFile ?? this.asFile,
     ink: ink ?? this.ink,
     createdAt: createdAt,
   );
@@ -225,6 +294,7 @@ class Attachment {
     x: (map['x'] as num?)?.toDouble(),
     y: (map['y'] as num?)?.toDouble(),
     pageY: (map['pageY'] as num?)?.toDouble(),
+    asFile: map['asFile'] as bool? ?? false,
     ink: [
       for (final e in (map['ink'] as List?) ?? const [])
         InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
@@ -248,6 +318,8 @@ class Attachment {
     if (x != null) 'x': x,
     if (y != null) 'y': y,
     if (pageY != null) 'pageY': pageY,
+    // Yalnız true iken yazılır: eski notların şemasına yeni bir alan eklemez.
+    if (asFile) 'asFile': true,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

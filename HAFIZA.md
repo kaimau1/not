@@ -446,3 +446,51 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   `core.hooksPath=hooks`. Flutter yolu PATH'te yoksa `C:\src\flutter`'a düşer
   ve bulunamazsa push'u DURDURUR (sessizce geçmez).
   DOĞRULAMA: hook uçtan uca koşuldu — 178/178 yeşil, EXIT=0.
+
+## 2026-08-01 — görsel düzeni, geri al, seçim modu tutamacı
+- **KÖK NEDEN — "görsel en üste dönüyor, boyutu kaydedilmiyor"**: kuyruk
+  yüklemeyi bitirince `patchAttachment` işlemin okuduğu GÜNCEL eki, yüklemeye
+  BAŞLARKEN aldığı kopyayla olduğu gibi değiştiriyordu. Yükleme saniyeler
+  sürüyor ve kullanıcı tam o sırada görseli taşıyıp boyutlandırıyor → düzen
+  sessizce geri alınıyordu. ÇÖZÜM iki katmanlı: (1) `Attachment.withUploadOf`
+  yalnız depo alanlarını (storagePath/downloadUrl/localPath/boyut/ölçüler)
+  geçirir, düzen belgede ne ise o kalır; (2) editör açıkken gelen her anlık
+  görüntü `mergeAttachmentLayout` ile birleştirilir — ek LİSTESİ sunucudan,
+  her ekin DÜZENİ yerelden. Kanıt: `test/attachment_layout_test.dart`.
+- **KÖK NEDEN — "görsel yazıyı tek harf tek satıra sıkıştırıyor"**: liste
+  satırında sarma kararı satırın TAMAMI üzerinden veriliyordu; oysa satırın
+  ~140 dp'si tutamaç/kutucuk/sil düğmesine gidiyor. Görsel satırın üçte ikisini
+  kaplayınca satır eşiği geçiyor ama METNE bir-iki karakter kalıyor, satır
+  dikey bir harf sütununa dönüşüyordu (ekran görüntüsündeki "adlıpında…"
+  sütunu). ÇÖZÜM: `_FloatRow.reserved` — chrome payı düşülerek ölçülür;
+  düğme satırlarına (`Yeni öğe/Seç`, `İşaretlileri sil`) da pay verildi, yoksa
+  sıkışıp TAŞIYORLARDI (RenderFlex overflow — testte ortaya çıktı).
+  Gövde metnine de mutlak taban eklendi (`_kMinUsableWidth`, 72 dp).
+- KARAR — **sürükleme tutamacı yalnız "Seç" modunda**. Normalde 6 nokta yer
+  kaplıyor ve ne işe yaradığı görünmüyordu. Seç modunda uzun basış SEÇİM
+  demek olduğundan tutamaç gecikmesiz sürükler
+  (`ReorderableDragStartListener`, `ReorderableDelayedDragStartListener` değil)
+  ve seçim jestlerinin DIŞINDA durur.
+- KARAR — **geri alma NOTUN TAMAMINI saklar** (`note_undo.dart`), tek tek
+  işlemlerin tersini değil: her düzenleme yolu kendi tersini yazsaydı biri
+  unutulduğunda "Geri al" sessizce yanlış iş yapardı. TUZAK: yapı parmak izine
+  öğe SIRASI konulmamalı — işaretleme tek hareket ama iki yazma üretiyor
+  (yerinde değişim + 220 ms sonra taşıma), sıra da izde olsaydı ilk "Geri al"
+  öğeyi işaretli hâlde eski yerine koyup dururdu.
+- TUZAK — **eki silince baytları hemen silmek geri almayı boşa düşürüyor**:
+  silme artık editör kapanırken yapılır; o an nota geri dönmüş ek dosyasını
+  korur (`_flushAttachmentDeletes`).
+- Ses örneği cümlesi dile bağlandı (`SpeechOutputController.voiceSample`):
+  "dil en mi?" koşulu yüzünden Almanca/İspanyolca ses seçilince TÜRKÇE cümle
+  okunuyordu — seçilen sesin asıl merak edilen özelliği hiç duyulmuyordu.
+- `Attachment.asFile`: görsel sayfada yüzmek yerine alt şeritte DOSYA eki
+  olabilir; yalnız true iken Firestore'a yazılır (eski notların şeması değişmez).
+- Ek panosu uygulama içidir (`attachment_clipboard.dart`): sistem panosunun
+  PDF/sunum/ses karşılığı yok, görselde bile çizim/boyut taşınmıyor. Sistem
+  panosuna yazma buna EK olarak, hata yutularak yapılır (`Pasteboard.writeImage`
+  masaüstünde yok).
+- Yeni görsel imlecin satırına yerleşir: ölçüm (+) menüsü açılmadan/klavyeden
+  yapıştırılmadan ÖNCE alınır (`_rememberCaret`) — menü klavyeyi kapatınca odak
+  düşüyor ve imleç bir daha ölçülemiyor.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 199/199 (yerel Flutter
+  3.44.6, CI ile aynı sürüm). CİHAZDA DENENMEDİ.

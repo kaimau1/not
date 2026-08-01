@@ -67,10 +67,12 @@ void main() {
     await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
 
-    final handles = find.byIcon(Icons.drag_indicator);
-    expect(handles, findsNWidgets(3));
+    // Satir basindaki tutamac artik yalniz Sec modunda; kaymayi satirin
+    // metin alani uzerinden olcuyoruz.
+    final fields = find.byType(TextField);
+    expect(fields, findsNWidgets(3));
     expect(
-      tester.getTopLeft(handles.at(2)).dx,
+      tester.getTopLeft(fields.at(2)).dx,
       greaterThanOrEqualTo(140.0),
       reason: 'yeni satir kaymadan dogdu -> madde eklerken titreme',
     );
@@ -130,15 +132,14 @@ void main() {
     ]);
     await tester.pumpAndSettle();
 
-    final handles = find.byIcon(Icons.drag_indicator);
     expect(
-      tester.getTopLeft(handles.first).dy,
+      tester.getTopLeft(find.byType(TextField).first).dy,
       greaterThanOrEqualTo(120.0),
       reason: 'satir gorselin altina inmedi, ustunde kaldi',
     );
   });
 
-  testWidgets('gorselin bandindaki satirin tutamaci gorselin altinda kalmaz', (
+  testWidgets('gorselin bandindaki satir gorselin YANINA kayar', (
     tester,
   ) async {
     final items = [
@@ -151,9 +152,9 @@ void main() {
     // Olcum kare sonunda yapilir; kaydirma bir sonraki karede uygulanir.
     await tester.pumpAndSettle();
 
-    final handles = find.byIcon(Icons.drag_indicator);
-    final firstX = tester.getTopLeft(handles.first).dx;
-    final secondX = tester.getTopLeft(handles.at(1)).dx;
+    final fields = find.byType(TextField);
+    final firstX = tester.getTopLeft(fields.first).dx;
+    final secondX = tester.getTopLeft(fields.at(1)).dx;
     expect(
       firstX,
       greaterThanOrEqualTo(140.0),
@@ -161,5 +162,29 @@ void main() {
     );
     // Gorselin altindaki satir yerinde durur.
     expect(secondX, lessThan(140.0));
+  });
+
+  testWidgets('metne tek harflik yer kaliyorsa satir ASAGI iner', (
+    tester,
+  ) async {
+    // KOK NEDEN (madde: "bir gorsel yazilari sikistirdiginda tek harf tek
+    // satira kadar daraliyor"): satirin ~140 dp'si tutamac/kutucuk/sil
+    // dugmesine gidiyor. 800 dp genislikte, sag kenari 600'de biten bir
+    // gorselin yaninda satirin KENDISI esigi geciyordu (200 > 800*0.25) ama
+    // metne ~60 dp kaliyor ve yazi dikey bir harf sutununa donusuyordu.
+    final items = [
+      NoteItem(id: 'a', text: 'Gorselin yanindaki uzun madde metni'),
+      NoteItem(id: 'b', text: 'Alt madde'),
+    ];
+    await pumpList(tester, items, const [
+      FloatBox(top: 0, left: 0, right: 600, height: 120),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.byType(TextField).first).dy,
+      greaterThanOrEqualTo(120.0),
+      reason: 'metne bir-iki karakterlik yer kalmasina ragmen satir yana kaydi',
+    );
   });
 }

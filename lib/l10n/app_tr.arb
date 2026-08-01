@@ -527,5 +527,15 @@
     "placeholders": {
       "count": {"type": "int"}
     }
-  }
+  },
+  "addImageOnPageSubtitle": "Sayfaya yerleşir, yazı etrafından akar",
+  "addImageAsFile": "Görseli ek olarak yükle",
+  "addImageAsFileSubtitle": "Sayfaya girmez, alttaki ek şeridinde durur",
+  "moveImageToAttachments": "Ek olarak taşı",
+  "moveImageToPage": "Sayfaya koy",
+  "attachmentCopied": "Ek kopyalandı",
+  "pasteAttachment": "Kopyalanan eki yapıştır",
+  "fullscreen": "Tam ekran",
+  "more": "Diğer",
+  "undone": "Geri alındı"
 }

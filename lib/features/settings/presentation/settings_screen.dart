@@ -838,14 +838,12 @@ class _SpeechVoiceSelectorState extends ConsumerState<_SpeechVoiceSelector> {
             await controller.setVoice(widget.language, picked);
             if (!mounted) return;
             setState(() => _selected = picked);
-            // Seçilen ses hemen duyulsun: adından anlaşılmıyor. Cümle,
-            // tını ve hız farkı duyulacak kadar uzun tutulur.
+            // Seçilen ses hemen duyulsun: adından anlaşılmıyor. Cümle
+            // SEÇİLEN DİLDEDİR (bkz. SpeechOutputController.voiceSample) —
+            // yabancı sese Türkçe cümle okutmak ne telaffuzu ne tınıyı
+            // gösteriyordu.
             await controller.speak(
-              widget.language == 'en'
-                  ? 'This is the selected voice. Your notes will be read '
-                        'aloud like this.'
-                  : 'Seçtiğin ses bu. Notların bundan sonra bu sesle, '
-                        'bu hızda okunacak.',
+              SpeechOutputController.voiceSample(widget.language),
               languageCode: widget.language,
             );
           },

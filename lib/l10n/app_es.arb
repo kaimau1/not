@@ -405,5 +405,15 @@
   "hiddenFoldersHiddenAgain": "Las carpetas ocultas vuelven a estar escondidas",
   "makeFolderHidden": "Ocultar",
   "makeFolderVisible": "Dejar de ocultar",
-  "gridColumnsCount": "{count} columnas"
+  "gridColumnsCount": "{count} columnas",
+  "addImageOnPageSubtitle": "Se coloca en la página y el texto la rodea",
+  "addImageAsFile": "Añadir imagen como archivo",
+  "addImageAsFileSubtitle": "No entra en la página, queda en la barra de adjuntos",
+  "moveImageToAttachments": "Mover a los adjuntos",
+  "moveImageToPage": "Colocar en la página",
+  "attachmentCopied": "Adjunto copiado",
+  "pasteAttachment": "Pegar el adjunto copiado",
+  "fullscreen": "Pantalla completa",
+  "more": "Más",
+  "undone": "Deshecho"
 }

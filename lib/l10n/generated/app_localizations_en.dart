@@ -1324,4 +1324,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String gridColumnsCount(int count) {
     return '$count columns';
   }
+
+  @override
+  String get addImageOnPageSubtitle => 'Sits on the page, text flows around it';
+
+  @override
+  String get addImageAsFile => 'Add image as a file';
+
+  @override
+  String get addImageAsFileSubtitle =>
+      'Stays out of the page, in the attachment strip';
+
+  @override
+  String get moveImageToAttachments => 'Move to attachments';
+
+  @override
+  String get moveImageToPage => 'Place on page';
+
+  @override
+  String get attachmentCopied => 'Attachment copied';
+
+  @override
+  String get pasteAttachment => 'Paste copied attachment';
+
+  @override
+  String get fullscreen => 'Full screen';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get undone => 'Undone';
 }

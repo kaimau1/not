@@ -112,6 +112,8 @@ class _ImageTools extends StatelessWidget {
     required this.onFullscreen,
     required this.onRemove,
     this.onExtractText,
+    this.onCopy,
+    this.onDetach,
   });
 
   final double wFrac;
@@ -121,6 +123,12 @@ class _ImageTools extends StatelessWidget {
   final VoidCallback onFullscreen;
   final VoidCallback onRemove;
   final VoidCallback? onExtractText;
+
+  /// Görseli panoya kopyalar (uygulama içi ek panosu + sistem panosu).
+  final VoidCallback? onCopy;
+
+  /// Görseli sayfadan alıp alt şeritte DOSYA eki yapar.
+  final VoidCallback? onDetach;
 
   @override
   Widget build(BuildContext context) {
@@ -144,15 +152,8 @@ class _ImageTools extends StatelessWidget {
                 onChangeEnd: onWidthEnd,
               ),
             ),
-            if (onExtractText != null)
-              IconButton(
-                tooltip: l10n.extractText,
-                visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.document_scanner_outlined, size: 20),
-                onPressed: onExtractText,
-              ),
             IconButton(
-              tooltip: 'Tam ekran',
+              tooltip: l10n.fullscreen,
               visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.fullscreen, size: 20),
               onPressed: onFullscreen,
@@ -163,6 +164,54 @@ class _ImageTools extends StatelessWidget {
               icon: const Icon(Icons.delete_outline, size: 20),
               color: scheme.error,
               onPressed: onRemove,
+            ),
+            // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
+            // çubuk dar ekranda kaydırıcıya yer bırakmazdı.
+            PopupMenuButton<String>(
+              tooltip: l10n.more,
+              icon: const Icon(Icons.more_vert, size: 20),
+              onSelected: (action) {
+                switch (action) {
+                  case 'ocr':
+                    onExtractText?.call();
+                  case 'copy':
+                    onCopy?.call();
+                  case 'detach':
+                    onDetach?.call();
+                }
+              },
+              itemBuilder: (context) => [
+                if (onExtractText != null)
+                  PopupMenuItem(
+                    value: 'ocr',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.document_scanner_outlined),
+                      title: Text(l10n.extractText),
+                    ),
+                  ),
+                if (onCopy != null)
+                  PopupMenuItem(
+                    value: 'copy',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.copy_outlined),
+                      title: Text(l10n.copy),
+                    ),
+                  ),
+                if (onDetach != null)
+                  PopupMenuItem(
+                    value: 'detach',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.attachment_outlined),
+                      title: Text(l10n.moveImageToAttachments),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -209,6 +258,8 @@ class NotePageCanvas extends StatefulWidget {
     required this.onChanged,
     this.onCrop,
     this.onExtractText,
+    this.onCopy,
+    this.onDetach,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -252,6 +303,12 @@ class NotePageCanvas extends StatefulWidget {
   /// Tam ekranda seçilen kırpma alanını uygular (bkz. [ImageViewerScreen]).
   final Future<void> Function(Attachment, Rect)? onCrop;
   final Future<void> Function(Attachment)? onExtractText;
+
+  /// Görseli panoya kopyalar; null ise menüde görünmez.
+  final ValueChanged<Attachment>? onCopy;
+
+  /// Görseli sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
+  final ValueChanged<Attachment>? onDetach;
 
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
@@ -614,6 +671,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onExtractText: widget.onExtractText == null
             ? null
             : () => widget.onExtractText!(img),
+        onCopy: widget.onCopy == null ? null : () => widget.onCopy!(img),
+        onDetach: widget.onDetach == null
+            ? null
+            : () {
+                _deselect();
+                widget.onDetach!(img);
+              },
         onFullscreen: () => _openViewer(img),
         onRemove: () => widget.onRemove(img),
       ),
