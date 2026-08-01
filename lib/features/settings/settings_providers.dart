@@ -389,3 +389,26 @@ final effectiveThemeModeProvider = Provider.autoDispose<ThemeMode>((ref) {
     AppThemeChoice.dark => ThemeMode.dark,
   };
 });
+
+/// Sesli asistan yanıtını yüksek sesle okusun mu?
+///
+/// Varsayılan AÇIK: asistanın bütün anlamı eller meşgulken cevabı duymak.
+/// Ayar hem Ayarlar ekranından hem asistan panelindeki "sustur" düğmesinden
+/// değişir — ikisi AYNI değeri okur, biri açıkken diğeri kapalı görünmez.
+final assistantVoiceProvider = NotifierProvider<AssistantVoiceNotifier, bool>(
+  AssistantVoiceNotifier.new,
+);
+
+class AssistantVoiceNotifier extends Notifier<bool> {
+  static const _key = 'assistant_voice';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+
+  void toggle() => set(!state);
+}

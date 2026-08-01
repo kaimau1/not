@@ -1398,4 +1398,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteTextSize => 'Text size';
+
+  @override
+  String get formatClear => 'Clear formatting';
+
+  @override
+  String get noteTextOpacity => 'Opacity';
+
+  @override
+  String get assistantVoiceSetting => 'Assistant speaks replies';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'The voice assistant reads its reply out loud (phone only).';
+
+  @override
+  String get assistantMute => 'Mute';
+
+  @override
+  String get assistantUnmute => 'Unmute';
+
+  @override
+  String get assistantMakeNote => 'Turn into a note anyway';
+
+  @override
+  String get assistantNoteCreated => 'Note created';
 }

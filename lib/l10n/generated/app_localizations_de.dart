@@ -1412,4 +1412,29 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noteTextSize => 'Schriftgröße';
+
+  @override
+  String get formatClear => 'Formatierung entfernen';
+
+  @override
+  String get noteTextOpacity => 'Transparenz';
+
+  @override
+  String get assistantVoiceSetting => 'Assistent antwortet laut';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'Der Sprachassistent liest seine Antwort vor (nur am Telefon).';
+
+  @override
+  String get assistantMute => 'Ton aus';
+
+  @override
+  String get assistantUnmute => 'Ton an';
+
+  @override
+  String get assistantMakeNote => 'Trotzdem in Notiz umwandeln';
+
+  @override
+  String get assistantNoteCreated => 'Notiz erstellt';
 }

@@ -22,24 +22,36 @@ class FormatBar extends StatelessWidget {
   const FormatBar({
     super.key,
     required this.onFormat,
+    required this.onClearFormat,
     required this.fontFamily,
     required this.fontScale,
+    required this.textOpacity,
     required this.onFontChanged,
     required this.onScaleChanged,
     required this.onScaleEnd,
+    required this.onOpacityChanged,
+    required this.onOpacityEnd,
     required this.onClose,
   });
 
   /// Biçim düğmesine basıldı: seçime uygula (seçim yoksa imlece kutu aç).
   final void Function(RichFormat format, {int? colorIndex}) onFormat;
 
+  /// Seçimdeki tüm biçimleri siler.
+  final VoidCallback onClearFormat;
+
   final String? fontFamily;
   final double fontScale;
+
+  /// Not metninin opaklığı (0.3–1.0).
+  final double textOpacity;
   final ValueChanged<String?> onFontChanged;
 
   /// Sürükleme SIRASINDA (canlı önizleme) ve bırakınca (kalıcı kayıt).
   final ValueChanged<double> onScaleChanged;
   final ValueChanged<double> onScaleEnd;
+  final ValueChanged<double> onOpacityChanged;
+  final ValueChanged<double> onOpacityEnd;
 
   final VoidCallback onClose;
 
@@ -85,8 +97,7 @@ class FormatBar extends StatelessWidget {
                     _ColorPicker(
                       icon: Icons.format_color_text,
                       tooltip: l10n.formatTextColor,
-                      onPick: (i) =>
-                          onFormat(RichFormat.color, colorIndex: i),
+                      onPick: (i) => onFormat(RichFormat.color, colorIndex: i),
                     ),
                     _ColorPicker(
                       icon: Icons.format_color_fill,
@@ -94,6 +105,15 @@ class FormatBar extends StatelessWidget {
                       filled: true,
                       onPick: (i) =>
                           onFormat(RichFormat.highlight, colorIndex: i),
+                    ),
+                    const SizedBox(width: 8),
+                    // Biçimi temizle: seçimdeki (ya da imlecin bulunduğu
+                    // parçadaki) her biçim tek dokunuşta gider — düğmeleri
+                    // tek tek geri basmak gerekmez.
+                    _Btn(
+                      icon: Icons.format_clear,
+                      tooltip: l10n.formatClear,
+                      onTap: onClearFormat,
                     ),
                     const SizedBox(width: 8),
                     IconButton(
@@ -120,7 +140,8 @@ class FormatBar extends StatelessWidget {
                               Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: ChoiceChip(
-                                  selected: (fontFamily ?? '') == (font.id ?? ''),
+                                  selected:
+                                      (fontFamily ?? '') == (font.id ?? ''),
                                   onSelected: (_) => onFontChanged(font.id),
                                   visualDensity: VisualDensity.compact,
                                   label: Text(
@@ -142,33 +163,29 @@ class FormatBar extends StatelessWidget {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
-                child: Row(
-                  children: [
-                    const Icon(Icons.text_fields, size: 16),
-                    Expanded(
-                      child: Slider(
-                        value: fontScale.clamp(0.7, 2.0),
-                        min: 0.7,
-                        max: 2,
-                        // Sürüklerken metin ANINDA büyür/küçülür; kaydırıcı
-                        // sayfanın altında sabit durduğu için parmağın
-                        // altından kaçmaz (Ayarlar'daki tuzağın tersi).
-                        onChanged: onScaleChanged,
-                        onChangeEnd: onScaleEnd,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 46,
-                      child: Text(
-                        '%${(fontScale * 100).round()}',
-                        textAlign: TextAlign.end,
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                    ),
-                  ],
-                ),
+              // 3. satır: CANLI boyut. Sürüklerken metin anında büyür/küçülür;
+              // kaydırıcı sayfanın altında sabit durduğu için parmağın
+              // altından kaçmaz (Ayarlar'daki tuzağın tersi).
+              _SliderRow(
+                icon: Icons.text_fields,
+                tooltip: l10n.noteTextSize,
+                value: fontScale,
+                min: 0.7,
+                max: 2,
+                onChanged: onScaleChanged,
+                onChangeEnd: onScaleEnd,
+              ),
+              // 4. satır: şeffaflık. En düşük değer bilerek %30 — daha
+              // soluğunda metin kâğıt üstünde okunmaz hâle geliyor ve
+              // kullanıcı yazdığını göremediği için ayarı geri bulamazdı.
+              _SliderRow(
+                icon: Icons.opacity,
+                tooltip: l10n.noteTextOpacity,
+                value: textOpacity,
+                min: 0.3,
+                max: 1,
+                onChanged: onOpacityChanged,
+                onChangeEnd: onOpacityEnd,
               ),
             ],
           ),
@@ -184,6 +201,54 @@ class FormatBar extends StatelessWidget {
         serifLabel: l10n.noteFontSerif,
         monoLabel: l10n.noteFontMono,
       );
+}
+
+/// Simge + kaydırıcı + yüzde: boyut ve şeffaflık aynı düzeni kullanır.
+class _SliderRow extends StatelessWidget {
+  const _SliderRow({
+    required this.icon,
+    required this.tooltip,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    required this.onChangeEnd,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<double> onChangeEnd;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(12, 0, 12, 2),
+    child: Row(
+      children: [
+        Tooltip(message: tooltip, child: Icon(icon, size: 16)),
+        Expanded(
+          child: Slider(
+            value: value.clamp(min, max),
+            min: min,
+            max: max,
+            onChanged: onChanged,
+            onChangeEnd: onChangeEnd,
+          ),
+        ),
+        SizedBox(
+          width: 46,
+          child: Text(
+            '%${(value * 100).round()}',
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _Btn extends StatelessWidget {
@@ -262,9 +327,17 @@ class _ColorPicker extends StatelessWidget {
 /// yazacağını bilmeli. Odak değiştikçe editör burayı tazeler.
 @immutable
 class FormatTarget {
-  const FormatTarget({required this.controller, required this.commit});
+  const FormatTarget({
+    required this.controller,
+    required this.focusNode,
+    required this.commit,
+  });
 
   final WrapTextController controller;
+
+  /// Alanın odak düğümü: biçim uygulandıktan sonra odak (ve klavye) geri
+  /// verilir — kullanıcı yazmaya kaldığı yerden devam eder.
+  final FocusNode focusNode;
 
   /// Metin değişince notu kaydeden geri çağrı (programlı değişiklikte
   /// TextField'ın `onChanged`'i çalışmaz).

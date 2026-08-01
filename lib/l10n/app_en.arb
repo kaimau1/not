@@ -434,5 +434,13 @@
   "noteFontDefault": "Default",
   "noteFontSerif": "Book (serif)",
   "noteFontMono": "Typewriter",
-  "noteTextSize": "Text size"
+  "noteTextSize": "Text size",
+  "formatClear": "Clear formatting",
+  "noteTextOpacity": "Opacity",
+  "assistantVoiceSetting": "Assistant speaks replies",
+  "assistantVoiceSettingInfo": "The voice assistant reads its reply out loud (phone only).",
+  "assistantMute": "Mute",
+  "assistantUnmute": "Unmute",
+  "assistantMakeNote": "Turn into a note anyway",
+  "assistantNoteCreated": "Note created"
 }

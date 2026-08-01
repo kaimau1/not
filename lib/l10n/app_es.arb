@@ -429,5 +429,13 @@
   "noteFontDefault": "Predeterminada",
   "noteFontSerif": "Libro (serif)",
   "noteFontMono": "Máquina de escribir",
-  "noteTextSize": "Tamaño del texto"
+  "noteTextSize": "Tamaño del texto",
+  "formatClear": "Borrar formato",
+  "noteTextOpacity": "Transparencia",
+  "assistantVoiceSetting": "El asistente responde en voz alta",
+  "assistantVoiceSettingInfo": "El asistente de voz lee su respuesta en voz alta (solo en el teléfono).",
+  "assistantMute": "Silenciar",
+  "assistantUnmute": "Activar sonido",
+  "assistantMakeNote": "Convertir en nota igualmente",
+  "assistantNoteCreated": "Nota creada"
 }

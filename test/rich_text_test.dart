@@ -136,6 +136,75 @@ void main() {
       expect(r.text.substring(r.end), '**');
     });
 
+    test('imleç kalın bir parçanın İÇİNDEYKEN aynı düğme biçimi kaldırır', () {
+      // Word davranışı (kullanıcı isteği): "tekrar aynı yere kalınlaştırmaya
+      // bastığımda kalkmalı". Seçim gerekmez.
+      final r = toggleFormat('merhaba **dünya**', 12, 12, RichFormat.bold);
+      expect(r.text, 'merhaba dünya');
+      expect(r.start, 10);
+    });
+
+    test('iki biçim üst üste binebilir (kalın + renk)', () {
+      final bold = toggleFormat('merhaba dünya', 8, 13, RichFormat.bold);
+      expect(bold.text, 'merhaba **dünya**');
+      // Seçim biçimden SONRA da içeriğin üstünde: ikinci biçim doğrudan
+      // verilebilir (eskiden imleç sona toplanıyordu).
+      final colored = toggleFormat(
+        bold.text,
+        bold.start,
+        bold.end,
+        RichFormat.color,
+        colorIndex: 3,
+      );
+      expect(stripRichMarkers(colored.text), 'merhaba dünya');
+      expect(colored.text, contains('%%3:'));
+      expect(colored.text, contains('**'));
+      // İç içe biçim çizimde de birikir.
+      final spans = _spans(colored.text);
+      expect(_plain(spans), colored.text);
+      TextSpan? content;
+      for (final s in spans) {
+        s.visitChildren((span) {
+          if (span is TextSpan && span.text == 'dünya') content = span;
+          return true;
+        });
+      }
+      expect(content?.style?.fontWeight, FontWeight.w700);
+      expect(content?.style?.color, _palette[2]);
+    });
+
+    test('iki biçimden yalnız biri kaldırılır, diğeri kalır', () {
+      final r = toggleFormat('%%3:**dünya**%%', 6, 11, RichFormat.bold);
+      expect(stripRichMarkers(r.text), 'dünya');
+      expect(r.text.contains('**'), isFalse);
+      expect(r.text.contains('%%3:'), isTrue);
+    });
+
+    test('seçim işaretin ORTASINDA bitse de biçim doğru aralığa uygulanır', () {
+      // Kullanıcı işaretin yarısını da seçmiş olabilir; konum en yakın gerçek
+      // karaktere hizalanır (eski kodun "yarım işaret" hatalarının kaynağı).
+      final r = toggleFormat('**dünya**', 1, 8, RichFormat.italic);
+      expect(stripRichMarkers(r.text), 'dünya');
+      expect(r.text, contains('_'));
+    });
+
+    test('biçimi temizle: seçimdeki tüm işaretler gider', () {
+      final r = clearFormat('a **b** ==2:c== d', 0, 17);
+      expect(r.text, 'a b c d');
+      expect(r.start, 0);
+      expect(r.end, 7);
+    });
+
+    test('biçimi temizle: seçim yokken imlecin parçası temizlenir', () {
+      final r = clearFormat('a **b** c', 5, 5);
+      expect(r.text, 'a b c');
+    });
+
+    test('boş biçim kutusu dışa aktarılan metinde görünmez', () {
+      expect(stripRichMarkers('not ****'), 'not ');
+      expect(stripRichMarkers('not ==3:=='), 'not ');
+    });
+
     test('renkli biçimde imleç kutusu renk önekini taşır', () {
       final r = toggleFormat(
         'not: ',

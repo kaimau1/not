@@ -1409,4 +1409,29 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noteTextSize => 'Tamaño del texto';
+
+  @override
+  String get formatClear => 'Borrar formato';
+
+  @override
+  String get noteTextOpacity => 'Transparencia';
+
+  @override
+  String get assistantVoiceSetting => 'El asistente responde en voz alta';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'El asistente de voz lee su respuesta en voz alta (solo en el teléfono).';
+
+  @override
+  String get assistantMute => 'Silenciar';
+
+  @override
+  String get assistantUnmute => 'Activar sonido';
+
+  @override
+  String get assistantMakeNote => 'Convertir en nota igualmente';
+
+  @override
+  String get assistantNoteCreated => 'Nota creada';
 }

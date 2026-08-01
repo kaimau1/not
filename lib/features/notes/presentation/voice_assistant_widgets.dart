@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/speech_output.dart';
 import '../../../core/widgets/countdown_bar.dart';
 import '../../settings/settings_providers.dart';
 import 'voice_assistant.dart';
@@ -162,6 +163,30 @@ class VoiceAssistantButton extends ConsumerWidget {
   }
 }
 
+/// Asistan panelindeki sustur düğmesi.
+///
+/// Ayarlardaki "Asistan sesli yanıtlasın" ile AYNI değeri okur/yazar: burada
+/// susturulan asistan Ayarlar'da da kapalı görünür. Dokunulduğu anda süren
+/// okuma da kesilir — "sustur" düğmesinden beklenen ilk şey budur.
+class _AssistantMuteButton extends ConsumerWidget {
+  const _AssistantMuteButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(assistantVoiceProvider);
+    final l10n = context.l10n;
+    return IconButton(
+      tooltip: on ? l10n.assistantMute : l10n.assistantUnmute,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(on ? Icons.volume_up_outlined : Icons.volume_off, size: 20),
+      onPressed: () {
+        ref.read(assistantVoiceProvider.notifier).toggle();
+        if (on) ref.read(speechOutputProvider.notifier).stop();
+      },
+    );
+  }
+}
+
 /// Ana sayfanın altında asistanın ne yaptığını gösteren durum paneli:
 /// kayıt (süre + canlı döküm), işleme, sonuç ("Notu aç") ve hata.
 /// Boşta hiç görünmez.
@@ -252,31 +277,58 @@ class VoiceAssistantPanel extends ConsumerWidget {
           Expanded(child: Text(l10n.voiceProcessing)),
         ],
       ),
-      VoiceAssistantPhase.done => Row(
+      VoiceAssistantPhase.done => Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outline, size: 20, color: scheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              assistant.message,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.check_circle_outline, size: 20, color: scheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  assistant.message,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              // Sustur: yanıt okunurken susturur ve AYARDAKİ tercihi
+              // değiştirir — ses iki yerden de aynı anahtarla yönetilir.
+              const _AssistantMuteButton(),
+              if (assistant.noteId != null)
+                TextButton(
+                  onPressed: () {
+                    notifier.dismiss();
+                    context.push('/note/${assistant.noteId}');
+                  },
+                  child: Text(l10n.openNote),
+                ),
+              IconButton(
+                tooltip: l10n.close,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: notifier.dismiss,
+              ),
+            ],
           ),
-          if (assistant.noteId != null)
-            TextButton(
-              onPressed: () {
-                notifier.dismiss();
-                context.push('/note/${assistant.noteId}');
-              },
-              child: Text(l10n.openNote),
+          // Asistan "bu bir not değil" deyip hiçbir şey oluşturmadıysa
+          // konuşulan yine de kaydedilebilsin: karar kullanıcının olsun.
+          if (assistant.noteId == null && assistant.liveTranscript.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 30, top: 4),
+              child: FilledButton.tonalIcon(
+                onPressed: () async {
+                  final id = await notifier.convertTranscriptToNote(
+                    createdText: l10n.assistantNoteCreated,
+                  );
+                  if (id == null || !context.mounted) return;
+                  notifier.dismiss();
+                  context.push('/note/$id');
+                },
+                icon: const Icon(Icons.note_add_outlined, size: 18),
+                label: Text(l10n.assistantMakeNote),
+              ),
             ),
-          IconButton(
-            tooltip: l10n.close,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close, size: 20),
-            onPressed: notifier.dismiss,
-          ),
         ],
       ),
       VoiceAssistantPhase.error => Row(
