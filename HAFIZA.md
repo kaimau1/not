@@ -685,3 +685,22 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   (zaman geçiyorsa hatırlatıcı yerelde kurulur).
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 238/238. CİHAZDA
   DENENMEDİ.
+
+## 2026-08-01 (altıncı giriş) — APK derlemesi üst üste üç kez düştü: bellek şüphesi
+
+- Üç ardışık main derlemesi (#168 e774033, #171 f9c1b51 ve arada #170) AYNI
+  yerde öldü: javac bittikten sonra, R8/dex sırasında (~13–17. dakika),
+  `The runner has received a shutdown signal` + `exit code 143`. Dalda hiçbir
+  derleme koşmuyordu — yani "çakışan derleme" açıklaması bu kez de geçersiz.
+- ŞÜPHE (kanıtlanmadı): host BELLEĞİ. `android/gradle.properties` Gradle
+  JVM'ine `-Xmx8G -XX:MaxMetaspaceSize=4G` veriyordu; runner 16 GB. Buna
+  Kotlin daemon (ayrı JVM, tavan verilmezse aynı değeri miras alır), javac,
+  Dart AOT ve R8 eklenince derlemenin en ağır anında host'un belleği bitiyor
+  ve runner geri alınıyor. 143 = SIGKILL, OOM killer imzası.
+- YAPILAN: heap 4G, metaspace 1G, `org.gradle.workers.max=3`,
+  `kotlin.daemon.jvmargs=-Xmx1536m`. Ölçüt basit: bundan sonraki main
+  derlemeleri geçiyorsa şüphe doğrulanır; yine aynı yerde ölüyorsa sebep
+  runner tarafındadır ve tek çare yeniden tetiklemektir (bkz. ikinci giriş).
+- Yan bulgu: v1.0.167 (67,4 MB) hâlâ son sürüm; APK'yi 59 MB'a indiren
+  düzeltme (PR #43) main'de yayınlanamadı çünkü o derleme de aynı şekilde
+  düştü. Yeni sürüm çıktığında boyut doğrulanmalı.
