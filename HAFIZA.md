@@ -631,3 +631,12 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   ~12 dk'yı siliyor) ama sorunu ÇÖZMÜYOR.
   DERS: bu ortamda APK derlemesi ~%50 olasılıkla düşüyor; tek çare yeniden
   tetiklemek. Kod dalda `Analiz + Test` yeşilse sorun kodda değildir.
+- **ÖLÇÜLDÜ — `GoogleFonts.getFont(ad)` APK'yi 8 MB büyütüyor**: ada göre
+  arama, paketin bin beş yüzü aşkın yazı tipini tanımlayan kataloğunu
+  derlemeye sokuyor ve ağaç budama onu atamıyor (v1.0.161: 59,4 MB →
+  v1.0.167: 67,4 MB; aradaki tek fark bu çağrıydı). ÇÖZÜM: yazı tipleri
+  `note_fonts.dart` içinde tek tek, adıyla çağrılıyor
+  (`GoogleFonts.lora(...)`). `kNoteFonts` ile çağrı listesinin ayrışmasını
+  `test/note_fonts_test.dart` yakalıyor — yazı tipini YÜKLEMEDEN, yalnız
+  anahtarları karşılaştırarak (testte ağ yok; google_fonts indirmeye kalkarsa
+  test kırmızıya döner).

@@ -45,17 +45,38 @@ const List<NoteFontOption> kNoteFonts = [
 ///
 /// Bilinmeyen ya da indirilemeyen bir ad geldiğinde stil DEĞİŞMEDEN döner:
 /// eski bir notta duran ya da elle bozulmuş bir değer metni yok etmemeli.
+///
+/// TUZAK — **`GoogleFonts.getFont(ad)` KULLANILMAZ**: ada göre arama, paketin
+/// bin beş yüzü aşkın yazı tipini tanımlayan kataloğunu derlemeye sokar ve
+/// ağaç budama onu atamaz. Ölçüldü: APK 59,4 MB → 67,4 MB (v1.0.167).
+/// Yazı tipleri BURADA tek tek, adıyla çağrılır; kullanılmayan katalog
+/// derlemeye hiç girmez. Yeni bir yazı tipi eklerken hem [kNoteFonts]'a hem
+/// buraya satır eklenmeli — ikisi ayrışırsa seçenek listede görünür ama
+/// varsayılanla çizilir.
 TextStyle applyNoteFont(TextStyle base, String? family) {
   if (family == null || family.isEmpty) return base;
   if (family == 'serif' || family == 'monospace') {
     return base.copyWith(fontFamily: family);
   }
-  try {
-    return GoogleFonts.getFont(family, textStyle: base);
-  } catch (_) {
-    return base;
-  }
+  final builder = _googleBuilders[family];
+  return builder == null ? base : builder(base);
 }
+
+/// Katalog yazı tiplerinin ÇAĞRILARI. Her biri doğrudan adıyla yazılır;
+/// böylece derleyici yalnız bu altısını tutar (bkz. yukarıdaki tuzak).
+final Map<String, TextStyle Function(TextStyle)> _googleBuilders = {
+  'Lora': (base) => GoogleFonts.lora(textStyle: base),
+  'Merriweather': (base) => GoogleFonts.merriweather(textStyle: base),
+  'Playfair Display': (base) => GoogleFonts.playfairDisplay(textStyle: base),
+  'Nunito': (base) => GoogleFonts.nunito(textStyle: base),
+  'Caveat': (base) => GoogleFonts.caveat(textStyle: base),
+  'Roboto Mono': (base) => GoogleFonts.robotoMono(textStyle: base),
+};
+
+/// Çağrısı yazılmış katalog yazı tipleri. [kNoteFonts] ile bunun ayrışması,
+/// seçeneğin listede görünüp varsayılanla çizilmesi demek olurdu; test bu iki
+/// listenin örtüştüğünü doğrular (yazı tipini YÜKLEMEDEN — ağ gerekmez).
+Set<String> get googleNoteFontIds => _googleBuilders.keys.toSet();
 
 /// Genel ailelerin etiketleri çeviriden gelir (bu katman l10n bilmez);
 /// katalog yazı tipleri kendi adlarıyla görünür.

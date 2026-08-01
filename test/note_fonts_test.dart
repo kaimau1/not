@@ -23,6 +23,21 @@ void main() {
     expect(applyNoteFont(base, 'Bu Yazı Tipi Yok 123').fontSize, 16);
   });
 
+  test('listedeki her katalog yazı tipinin çağrısı yazılmış', () {
+    // Regresyon kapısı: applyNoteFont ada göre ARAMA yapmaz (o yol APK'yi
+    // 8 MB büyütüyordu), her yazı tipini tek tek çağırır. Listeye eklenip
+    // çağrısı yazılmayan bir yazı tipi seçicide görünür ama varsayılanla
+    // çizilirdi — burada yakalanır. Yazı tipi YÜKLENMEZ: test ağ istemez.
+    final listed = kNoteFonts
+        .where((f) => f.google)
+        .map((f) => f.id)
+        .whereType<String>()
+        .toSet();
+    expect(googleNoteFontIds, containsAll(listed));
+    expect(listed, containsAll(googleNoteFontIds),
+        reason: 'çağrısı yazılmış ama listede olmayan yazı tipi var');
+  });
+
   test('katalog kısa ve yinelemesiz', () {
     final ids = kNoteFonts.map((f) => f.id).toList();
     expect(ids.toSet().length, ids.length, reason: 'yinelenen yazı tipi');
