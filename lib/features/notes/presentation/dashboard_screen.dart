@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
@@ -17,6 +19,7 @@ import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../settings/data/permissions_service.dart';
+import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
@@ -492,6 +495,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _openNew(id);
   }
 
+  /// Ayarlardan seçilen ana ekran zemin görseli (yoksa boş liste).
+  List<Widget> _dashboardBackground(WidgetRef ref) {
+    final background = ref.watch(dashboardBackgroundProvider);
+    final path = background.path;
+    if (path == null) return const [];
+    final file = File(path);
+    if (!file.existsSync()) return const [];
+    return [
+      Positioned.fill(
+        child: Opacity(
+          opacity: background.opacity.clamp(0.05, 1),
+          child: Image(image: FileImage(file), fit: BoxFit.cover),
+        ),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     // Arka plan servislerini ayakta tut: ek yükleme kuyruğu, hatırlatıcı
@@ -561,6 +581,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           body: SafeArea(
             child: Stack(
               children: [
+                // Ana ekran ZEMİN görseli (Ayarlar → Görünüm). Kart
+                // ızgarasının arkasında durur; görünürlük ayarı okunurluğu
+                // korumak için varsayılan olarak düşüktür.
+                ..._dashboardBackground(ref),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     // Sütun sayısı: kullanıcı iki parmakla zoom yaptıysa onun

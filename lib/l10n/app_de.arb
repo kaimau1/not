@@ -444,5 +444,7 @@
   "noteBackgroundImage": "Hintergrundbild",
   "chooseBackgroundImage": "Bild wählen",
   "changeBackgroundImage": "Bild ändern",
-  "removeBackgroundImage": "Hintergrund entfernen"
+  "removeBackgroundImage": "Hintergrund entfernen",
+  "dashboardBackground": "Startbildschirm-Hintergrund",
+  "dashboardBackgroundInfo": "Bild hinter dem Notizraster (nur auf diesem Gerät)."
 }

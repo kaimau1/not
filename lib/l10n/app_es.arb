@@ -444,5 +444,7 @@
   "noteBackgroundImage": "Imagen de fondo",
   "chooseBackgroundImage": "Elegir imagen",
   "changeBackgroundImage": "Cambiar imagen",
-  "removeBackgroundImage": "Quitar fondo"
+  "removeBackgroundImage": "Quitar fondo",
+  "dashboardBackground": "Fondo de la pantalla principal",
+  "dashboardBackgroundInfo": "Imagen detrás de la cuadrícula de notas (solo en este dispositivo)."
 }

@@ -849,3 +849,16 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   bir daha kaldırılamazdı.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 256/256. CİHAZDA
   DENENMEDİ.
+
+### Zemin görselleri: kartta ve ana ekranda
+- Notun zemin görseli artık KARTTA da çiziliyor (aynı görünürlük ayarıyla,
+  kartın köşelerine kırpılarak). Kullanıcı isteği: "her notun zemin görseli
+  dashboard'ta da görülmeli".
+- ANA EKRANIN kendi zemin görseli eklendi (Ayarlar → Görünüm). Nota özel
+  zeminden farkı: cihaza aittir, buluta yazılmaz. Seçilen görsel uygulamanın
+  klasörüne KOPYALANIR — galeriden gelen yol geçici olabiliyor (paylaşım
+  önbelleği), kopyalanmazsa zemin bir süre sonra kendiliğinden kaybolurdu.
+  Dosya adı her seçimde değişir: aynı yola yazsaydık Flutter'ın görsel
+  önbelleği eski kareyi göstermeye devam ederdi.
+- Varsayılan görünürlükler düşük (not %35, ana ekran %25): tam opak bir
+  fotoğrafın üstünde ne not ne kart okunuyor.
