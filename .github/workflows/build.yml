@@ -5,6 +5,12 @@ on:
     branches: ['**']
   workflow_dispatch:
 
+# Aynı dala arka arkaya push edilirse eskisi iptal edilir: iki ağır derleme
+# yan yana koştuğunda runner'lardan biri geri alınıyor (aşağıya bak).
+concurrency:
+  group: derleme-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FLUTTER_VERSION: '3.44.6'
 
@@ -31,13 +37,24 @@ jobs:
         run: flutter test
 
   # Her push'ta APK derlemek CI dakikalarını boşa yakıyordu (~15 dk/derleme).
-  # Artık yalnızca elle tetiklenince (Actions → Run workflow) veya commit
-  # mesajında [apk] geçince derlenir. Analiz+Test her push'ta çalışmaya devam eder.
+  # Artık yalnızca elle tetiklenince (Actions → Run workflow) ya da MAIN'e
+  # giren commit'in mesajında [apk] geçince derlenir. Analiz+Test her push'ta
+  # çalışmaya devam eder.
+  #
+  # DALDA DERLENMEZ. Gözlem (2026-08-01, üç koşu): dal ile main'in APK işleri
+  # yan yana koştuğunda main'inki "runner has received a shutdown signal" ile
+  # ölüyor, dalınki bitiyor — main'de yalnız tek başına koşan derleme (#153)
+  # tamamlandı. Nedeni kesin bilinmiyor (runner tarafı), ama dalda üretilen APK
+  # zaten hiçbir yere gitmiyordu: sürüm main'den yayınlanıyor. İkinci ağır işi
+  # kaldırmak hem bu çakışmayı hem de boşa giden ~12 dk'yı ortadan kaldırır.
   android:
     name: Android APK
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.ref == 'refs/heads/main' &&
+       contains(github.event.head_commit.message, '[apk]'))
     permissions:
       contents: write
     steps:
