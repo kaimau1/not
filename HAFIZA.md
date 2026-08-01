@@ -522,3 +522,9 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   güvenilmemeli; işi KISA tutmak (önbellek isabet edince ~12 dk) ve gerekirse
   yeniden tetiklemek gerekiyor. Önbellek artık main'de kayıtlı olduğundan
   sonraki koşularda ısıtma adımı atlanıyor.
+- SONUÇ: ısıtılmış önbellekle yeniden tetiklenen koşu (#153) BAŞARILI —
+  ısıtma adımı atlandı, iş ~12 dk sürdü ve **v1.0.153** sürümü
+  `notlar-v1.0.153.apk` (59,4 MB) ile yayınlandı. 23 Tem'den beri ilk yeşil
+  APK derlemesi. Önbellek düzeltmesinin işe yaradığı böylece ölçüldü:
+  #148 (soğuk, öldü) → #151 (ısıtma+kayıt, yine öldü ama önbelleği bıraktı)
+  → #153 (sıcak, 12 dk, başarılı).
