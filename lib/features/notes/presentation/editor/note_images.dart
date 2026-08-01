@@ -142,7 +142,11 @@ class _ImageTools extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         child: Row(
           children: [
-            Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
+            Icon(
+              Icons.photo_size_select_large,
+              size: 18,
+              color: scheme.primary,
+            ),
             Expanded(
               child: Slider(
                 value: wFrac,
@@ -166,53 +170,55 @@ class _ImageTools extends StatelessWidget {
               onPressed: onRemove,
             ),
             // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
-            // çubuk dar ekranda kaydırıcıya yer bırakmazdı.
-            PopupMenuButton<String>(
-              tooltip: l10n.more,
-              icon: const Icon(Icons.more_vert, size: 20),
-              onSelected: (action) {
-                switch (action) {
-                  case 'ocr':
-                    onExtractText?.call();
-                  case 'copy':
-                    onCopy?.call();
-                  case 'detach':
-                    onDetach?.call();
-                }
-              },
-              itemBuilder: (context) => [
-                if (onExtractText != null)
-                  PopupMenuItem(
-                    value: 'ocr',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.document_scanner_outlined),
-                      title: Text(l10n.extractText),
+            // çubuk dar ekranda kaydırıcıya yer bırakmazdı. Hiçbiri
+            // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
+            if (onExtractText != null || onCopy != null || onDetach != null)
+              PopupMenuButton<String>(
+                tooltip: l10n.more,
+                icon: const Icon(Icons.more_vert, size: 20),
+                onSelected: (action) {
+                  switch (action) {
+                    case 'ocr':
+                      onExtractText?.call();
+                    case 'copy':
+                      onCopy?.call();
+                    case 'detach':
+                      onDetach?.call();
+                  }
+                },
+                itemBuilder: (context) => [
+                  if (onExtractText != null)
+                    PopupMenuItem(
+                      value: 'ocr',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.document_scanner_outlined),
+                        title: Text(l10n.extractText),
+                      ),
                     ),
-                  ),
-                if (onCopy != null)
-                  PopupMenuItem(
-                    value: 'copy',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.copy_outlined),
-                      title: Text(l10n.copy),
+                  if (onCopy != null)
+                    PopupMenuItem(
+                      value: 'copy',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.copy_outlined),
+                        title: Text(l10n.copy),
+                      ),
                     ),
-                  ),
-                if (onDetach != null)
-                  PopupMenuItem(
-                    value: 'detach',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.attachment_outlined),
-                      title: Text(l10n.moveImageToAttachments),
+                  if (onDetach != null)
+                    PopupMenuItem(
+                      value: 'detach',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.attachment_outlined),
+                        title: Text(l10n.moveImageToAttachments),
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),
@@ -395,7 +401,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     var top = (_moveId == img.id && _moveTop != null)
         ? _moveTop!
         : img.pageY ??
-              (img.y != null ? img.y! * _legacyCanvasHeight : _defaultTop(index));
+              (img.y != null
+                  ? img.y! * _legacyCanvasHeight
+                  : _defaultTop(index));
     left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
     // Başlık/çip bölgesi görsele kapalı: üst sınırın altına inemez.
     if (top < widget.topLimit) top = widget.topLimit;
@@ -637,12 +645,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   /// Araç çubuğu seçili görselin hemen altında belirir (sayfa uzun olduğundan
   /// alta sabitlemek görünmez kalabilirdi).
-  Widget _toolbar(
-    BuildContext context,
-    Attachment img,
-    int index,
-    double cw,
-  ) {
+  Widget _toolbar(BuildContext context, Attachment img, int index, double cw) {
     final r = _resolve(img, index, cw);
     final wFrac =
         ((_resizeId == img.id && _resizeWFrac != null)
