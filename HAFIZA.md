@@ -589,3 +589,37 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - DOĞRULANDI: dal derlemesi kaldırıldıktan sonra main'in APK işi tek başına
   koştu ve **v1.0.161** sorunsuz yayınlandı. Korelasyon böylece pratikte
   sınandı: iki ağır derleme yan yana koşmadığında main yeşil.
+
+## 2026-08-01 (dördüncü giriş) — biçim çubuğu, yazı tipleri, asistan sesi
+- KARAR — biçim/yazı tipi ayarları **alt çubuktaki "Aa" düğmesinin açtığı
+  SABİT çubukta**. Eskiden yazı tipi palet sayfasının, biçim ise seçim
+  menüsünün içindeydi: "seç → menü → sayfa → düğme" dört adımdı ve yazı tipi
+  bulunamıyordu. Çubuk açıkken hepsi tek dokunuş, boyut ise SÜRÜKLENDİKÇE
+  canlı değişiyor (kaydırıcı sayfanın altında sabit durduğu için parmağın
+  altından kaçmıyor — Ayarlar'daki tuzağın tersi).
+- TUZAK — **çubuktaki düğme odağı çalarsa seçim gider**: metin alanı odağı
+  düşünce seçim de düşüyor ve biçim uygulanacak metin kalmıyordu. Çubuk
+  `Focus(canRequestFocus: false, descendantsAreFocusable: false)` +
+  `TextFieldTapRegion` içinde; dokunma çalışır, odak yerinde kalır.
+- Seçim YOKKEN biçim düğmesi imlece boş bir kutu açıp imleci ARAYA koyar:
+  kullanıcı yazmaya devam edince yazdığı biçimli çıkıyor ("her harf kendi
+  içinde düzenlenebilmeli").
+- Biçim çubuğu hangi alana yazacağını `FormatTarget` ile bilir: gövde ve her
+  liste maddesi ayrı denetleyici kullanıyor, odak değiştikçe hedef tazeleniyor
+  (ItemsEditor.onFieldFocused).
+- Yazı tipi listesi genişledi (`core/utils/note_fonts.dart`): ilk üçü
+  çevrimdışı garanti (varsayılan/serif/monospace), gerisi Google Fonts
+  katalogundan. Uygulamanın kendi tipografisi zaten aynı yoldan geliyor
+  (`GoogleFonts.interTightTextTheme`), yani yeni bir çevrimdışı riski yok —
+  indirilemeyen yazı tipinde metin varsayılanla çizilir (`applyNoteFont`
+  hatayı yutar). Kanıt: `test/note_fonts_test.dart`.
+- Not kartı önizlemesi artık notun yazı tipini ve boyut çarpanını kullanıyor
+  (çarpan ızgara bozulmasın diye 0.8–1.4 arasına kırpılır).
+- Asistan artık HER yanıtı sesli okuyor (yalnız mobil). Önce yalnız soru
+  cümleleri okunuyordu; oysa gereken tersiymiş — kullanıcı bir şey SORDUĞUNDA
+  cevabı duymak istiyor.
+- Asistan bir notu oluşturup güncelleyince ana ekran o nota kaydırıp 4 sn
+  vurguluyor (`focusedNoteProvider` + `_FocusHalo`): "ekledim" deniyor ama
+  hangi nota eklendiği görünmüyordu.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 226/226. CİHAZDA
+  DENENMEDİ.

@@ -207,8 +207,23 @@ Color _paletteColor(List<Color> palette, int? index) {
   RichFormat format, {
   int? colorIndex,
 }) {
-  if (end <= start || start < 0 || end > text.length) {
+  if (start < 0 || end > text.length || end < start) {
     return (text: text, start: start, end: end);
+  }
+  // Seçim YOKSA imlece boş bir biçim kutusu açılır ve imleç ARASINA konur:
+  // kullanıcı düğmeye basıp yazmaya devam eder, yazdığı biçimli çıkar
+  // ("her harf kendi içinde düzenlenebilmeli"). Seçmek şart olsaydı biçim
+  // yalnız yazdıktan SONRA uygulanabilirdi.
+  if (end == start) {
+    final marker = format.marker;
+    final prefix = _takesColor(format) && colorIndex != null
+        ? '$marker$colorIndex:'
+        : marker;
+    return (
+      text: text.replaceRange(start, start, '$prefix$marker'),
+      start: start + prefix.length,
+      end: start + prefix.length,
+    );
   }
   final marker = format.marker;
   final selected = text.substring(start, end);

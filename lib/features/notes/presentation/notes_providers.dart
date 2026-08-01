@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../folders/data/folders_repository.dart';
@@ -384,6 +386,36 @@ class SemanticSearchEnabledNotifier extends Notifier<bool> {
 }
 
 /// Çoklu seçim modu: seçili not id'leri (boş küme = seçim modu kapalı).
+/// Ana ekranın "şu nota bak" işareti: sesli asistan bir notu oluşturup
+/// güncelleyince o notu görünür alana kaydırıp kısa süre vurgulamak için
+/// kullanılır. Asistan "ekledim" diyor ama hangi nota eklediği görünmüyordu.
+///
+/// Vurgu kendiliğinden söner: kullanıcı kapatmakla uğraşmasın.
+final focusedNoteProvider =
+    NotifierProvider<FocusedNoteNotifier, String?>(FocusedNoteNotifier.new);
+
+class FocusedNoteNotifier extends Notifier<String?> {
+  static const _duration = Duration(seconds: 4);
+  Timer? _timer;
+
+  @override
+  String? build() {
+    ref.onDispose(() => _timer?.cancel());
+    return null;
+  }
+
+  void focus(String noteId) {
+    _timer?.cancel();
+    state = noteId;
+    _timer = Timer(_duration, () => state = null);
+  }
+
+  void clear() {
+    _timer?.cancel();
+    state = null;
+  }
+}
+
 final selectedNoteIdsProvider =
     NotifierProvider<SelectedNoteIdsNotifier, Set<String>>(
       SelectedNoteIdsNotifier.new,

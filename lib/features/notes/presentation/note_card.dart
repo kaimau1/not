@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -217,8 +218,13 @@ class NoteCard extends ConsumerWidget {
                             note.title,
                             highlightQuery,
                             maxLines: 2,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            // Başlık da notun yazı tipini kullanır.
+                            style: applyNoteFont(
+                              (Theme.of(context).textTheme.titleSmall ??
+                                      const TextStyle())
+                                  .copyWith(fontWeight: FontWeight.w600),
+                              note.fontFamily,
+                            ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -431,8 +437,18 @@ class _NotePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final bodyStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
-      color: scheme.onSurface.withValues(alpha: 0.85),
+    // Kart önizlemesi notun KENDİ yazı tipini ve boyut çarpanını kullanır:
+    // kullanıcı yazı tipini değiştirdiğinde ana ekranda da görmeli, yoksa
+    // seçim yalnız editörde varmış gibi duruyordu. Kartın kendi küçük taban
+    // boyutu korunur; çarpan onun üzerine biner (ızgara bozulmasın diye
+    // makul bir tavanla).
+    final cardBase = Theme.of(context).textTheme.bodySmall ?? const TextStyle();
+    final bodyStyle = applyNoteFont(
+      cardBase.copyWith(
+        color: scheme.onSurface.withValues(alpha: 0.85),
+        fontSize: (cardBase.fontSize ?? 12) * note.fontScale.clamp(0.8, 1.4),
+      ),
+      note.fontFamily,
     );
 
     switch (note.type) {
@@ -495,7 +511,7 @@ class _NotePreview extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: item.checked
-                              ? bodyStyle?.copyWith(
+                              ? bodyStyle.copyWith(
                                   decoration: TextDecoration.lineThrough,
                                   color: scheme.onSurfaceVariant.withValues(
                                     alpha: 0.6,
@@ -572,7 +588,7 @@ class _NotePreview extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style:
                             shown[i].checked && note.type == NoteType.checklist
-                            ? bodyStyle?.copyWith(
+                            ? bodyStyle.copyWith(
                                 decoration: TextDecoration.lineThrough,
                                 color: scheme.onSurfaceVariant.withValues(
                                   alpha: 0.6,
