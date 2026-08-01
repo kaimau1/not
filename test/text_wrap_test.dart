@@ -220,4 +220,54 @@ void main() {
     expect(stripWrapAnchors(withAnchors), 'abcd');
     expect(stripWrapAnchors('temiz metin'), 'temiz metin');
   });
+
+  test('yeniden dizgi SECIMI korur (yazi tipi degisince secim silinmesin)', () {
+    // KOK NEDEN: _reflow her cagrildiginda imleci topluyordu; yazi tipi/boyut
+    // degisimi ya da bir gorselin tasinmasi dizgiyi tazeledigi icin kullanici
+    // metni seçemiyordu ("yazi tipi degistiginde sayfada yazilari secemiyorum").
+    const style = TextStyle(fontSize: 14);
+    final c = WrapTextController()
+      ..updateLayout(
+        floats: const [FloatBox(top: 0, left: 0, right: 120, height: 400)],
+        style: style,
+        columnWidth: 300,
+      );
+    c.text = 'birinci satir ve devami';
+    // Kullanici 'satir' kelimesini seciyor (mantiksal 8..13).
+    c.selection = TextSelection(
+      baseOffset: wrapToDisplayOffset(c.text, 8),
+      extentOffset: wrapToDisplayOffset(c.text, 13),
+    );
+    expect(c.selection.isCollapsed, isFalse);
+
+    // Yazi tipi degisti: ayni metin, YENI stil.
+    c.updateLayout(
+      floats: const [FloatBox(top: 0, left: 0, right: 120, height: 400)],
+      style: const TextStyle(fontSize: 18),
+      columnWidth: 300,
+    );
+    expect(c.selection.isCollapsed, isFalse, reason: 'secim silinmemeli');
+    final display = c.text;
+    expect(
+      wrapToLogicalOffset(display, c.selection.start),
+      8,
+    );
+    expect(wrapToLogicalOffset(display, c.selection.end), 13);
+  });
+
+  test('setLogical secimi verilen araliga tasir (bicim uygulandiktan sonra)', () {
+    const style = TextStyle(fontSize: 14);
+    final c = WrapTextController()
+      ..updateLayout(
+        floats: const [FloatBox(top: 0, left: 0, right: 120, height: 400)],
+        style: style,
+        columnWidth: 300,
+      );
+    c.text = 'merhaba dunya';
+    c.setLogical('merhaba **dunya**', 10, 15);
+    expect(c.logicalText, 'merhaba **dunya**');
+    final display = c.text;
+    expect(wrapToLogicalOffset(display, c.selection.start), 10);
+    expect(wrapToLogicalOffset(display, c.selection.end), 15);
+  });
 }

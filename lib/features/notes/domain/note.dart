@@ -65,6 +65,7 @@ class Note {
     this.locked = false,
     this.fontFamily,
     this.fontScale = 1,
+    this.textOpacity = 1,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -116,6 +117,12 @@ class Note {
   /// ölçekten AYRIDIR: bu tek nota özeldir (uzun bir belgeyi küçültmek,
   /// alışveriş listesini büyütmek).
   final double fontScale;
+
+  /// Not metninin opaklığı (0.3–1). 1 = tam koyu. Soluk yazı, tamamlanmış ya
+  /// da arka plana itilmek istenen notları renk değiştirmeden geri plana
+  /// alır. Taban 0.3'tür: daha soluğunda kullanıcı yazdığını göremez ve
+  /// ayarı geri bulamaz.
+  final double textOpacity;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -205,6 +212,7 @@ class Note {
     String? fontFamily,
     bool clearFontFamily = false,
     double? fontScale,
+    double? textOpacity,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -229,6 +237,7 @@ class Note {
     locked: locked ?? this.locked,
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
     fontScale: fontScale ?? this.fontScale,
+    textOpacity: textOpacity ?? this.textOpacity,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -265,6 +274,7 @@ class Note {
       locked: map['locked'] as bool? ?? false,
       fontFamily: map['fontFamily'] as String?,
       fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
+      textOpacity: (map['textOpacity'] as num?)?.toDouble() ?? 1,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
@@ -295,6 +305,7 @@ class Note {
     // Varsayılandan farklıysa yazılır: eski notların şeması büyümez.
     if (fontFamily != null) 'fontFamily': fontFamily,
     if (fontScale != 1) 'fontScale': fontScale,
+    if (textOpacity != 1) 'textOpacity': textOpacity,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

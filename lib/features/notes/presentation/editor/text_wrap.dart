@@ -209,7 +209,11 @@ WrapPlan planTextWrap({
         top + lineHeight / 2,
       );
       if (cut >= 0) {
-        display = display.replaceRange(cut, cut, '$kWrapGlueChar$kWrapAnchorChar');
+        display = display.replaceRange(
+          cut,
+          cut,
+          '$kWrapGlueChar$kWrapAnchorChar',
+        );
         widths.insert(_anchorCountBefore(display, cut), indentEnd);
         continue;
       }
@@ -502,12 +506,32 @@ class WrapTextController extends TextEditingController {
     if (_rich == value) return;
     _rich = value;
     if (_floats.isNotEmpty && _style != null && _columnWidth > 0) {
-      _reflow(logicalText, wrapToLogicalOffset(text, selection.baseOffset));
+      _reflowKeepingSelection();
     }
   }
 
-  /// Mantıksal metni ve imleç konumunu birlikte yazar (biçim uygulama).
-  void setLogical(String logical, int caret) => _reflow(logical, caret);
+  /// Mantıksal metni ve imleç/seçim konumunu birlikte yazar (biçim uygulama).
+  ///
+  /// [extent] verilirse seçim KORUNUR: biçim uygulanan metin seçili kalır ve
+  /// kullanıcı üst üste iki biçim verebilir (kalın + renk).
+  void setLogical(String logical, int caret, [int? extent]) =>
+      _reflow(logical, caret, extent);
+
+  /// Metni değiştirmeden yeniden dizer; imleç VE seçim olduğu gibi kalır.
+  ///
+  /// KÖK NEDEN (v1.0.168): burası eskiden imleci topluyordu. Yazı tipi/boyut
+  /// değişmek ya da bir görselin taşınması dizgiyi tazeliyor, tazeleme de
+  /// kullanıcının seçimini siliyordu — sarma çapası bulunan bir notta metin
+  /// seçmek imkânsızdı ("yazı tipi değiştiğinde sayfada yazıları seçemiyorum").
+  void _reflowKeepingSelection() {
+    final base = selection.baseOffset;
+    final extent = selection.extentOffset;
+    _reflow(
+      logicalText,
+      wrapToLogicalOffset(text, base < 0 ? text.length : base),
+      extent < 0 || extent == base ? null : wrapToLogicalOffset(text, extent),
+    );
+  }
 
   /// Tamponda hiç dolgu yok (sarma kapalı) — sıradan bir denetleyici gibi.
   bool get isPlain => _widths.isEmpty;
@@ -531,7 +555,7 @@ class WrapTextController extends TextEditingController {
     _style = style;
     _columnWidth = columnWidth;
     _textScale = textScaleFactor;
-    _reflow(logicalText, wrapToLogicalOffset(text, selection.baseOffset));
+    _reflowKeepingSelection();
   }
 
   /// Mantıksal metni doğrudan yazar (AI sonucu, geri alma, not yükleme...).
@@ -547,12 +571,18 @@ class WrapTextController extends TextEditingController {
       return;
     }
     var logical = stripWrapAnchors(newValue.text);
-    var caret = wrapToLogicalOffset(
-      newValue.text,
-      newValue.selection.baseOffset < 0
-          ? newValue.text.length
-          : newValue.selection.baseOffset,
-    );
+    final rawBase = newValue.selection.baseOffset < 0
+        ? newValue.text.length
+        : newValue.selection.baseOffset;
+    final rawExtent = newValue.selection.extentOffset < 0
+        ? rawBase
+        : newValue.selection.extentOffset;
+    var caret = wrapToLogicalOffset(newValue.text, rawBase);
+    // Seçim (uzun basıp metin işaretleme) çapalı tamponda da korunur; yalnız
+    // imleç taşınırsa extent null kalır.
+    int? extent = rawExtent == rawBase
+        ? null
+        : wrapToLogicalOffset(newValue.text, rawExtent);
     // SATIR BAŞINDA GERİ SİLME: imleç satır başı dolgusunun hemen ardındadır,
     // dolayısıyla geri silme gerçek metni değil DOLGUYU siler. Eski hâlinde
     // dolgu bir sonraki dizgide yeniden konuyor, kullanıcıya "silme satır
@@ -564,18 +594,22 @@ class WrapTextController extends TextEditingController {
         caret > 0) {
       logical = logical.replaceRange(caret - 1, caret, '');
       caret--;
+      extent = null;
     }
-    _reflow(logical, caret);
+    _reflow(logical, caret, extent);
   }
 
-  void _reflow(String logical, int logicalCaret) {
+  void _reflow(String logical, int logicalCaret, [int? logicalExtent]) {
     final style = _style;
     if (style == null || _columnWidth <= 0 || _floats.isEmpty) {
       _widths = const [];
       final caret = logicalCaret.clamp(0, logical.length);
+      final extent = logicalExtent?.clamp(0, logical.length);
       super.value = TextEditingValue(
         text: logical,
-        selection: TextSelection.collapsed(offset: caret),
+        selection: extent == null || extent == caret
+            ? TextSelection.collapsed(offset: caret)
+            : TextSelection(baseOffset: caret, extentOffset: extent),
       );
       return;
     }
@@ -592,9 +626,17 @@ class WrapTextController extends TextEditingController {
       plan.display,
       logicalCaret.clamp(0, logical.length),
     );
+    final extent = logicalExtent == null
+        ? null
+        : wrapToDisplayOffset(
+            plan.display,
+            logicalExtent.clamp(0, logical.length),
+          );
     super.value = TextEditingValue(
       text: plan.display,
-      selection: TextSelection.collapsed(offset: caret),
+      selection: extent == null || extent == caret
+          ? TextSelection.collapsed(offset: caret)
+          : TextSelection(baseOffset: caret, extentOffset: extent),
     );
   }
 
@@ -608,9 +650,7 @@ class WrapTextController extends TextEditingController {
     // altı çizili öneri bölgesi bizim ürettiğimiz parçalarda kayardı. Metin
     // oturunca link rengi zaten gelir.
     final composing = withComposing && value.isComposingRangeValid;
-    final linkColor = composing
-        ? null
-        : Theme.of(context).colorScheme.primary;
+    final linkColor = composing ? null : Theme.of(context).colorScheme.primary;
     if (_widths.isEmpty) {
       // Biçim işareti ya da bağlantı yoksa üst sınıfın span'i kullanılır
       // (IME davranışı olduğu gibi kalsın).
@@ -622,12 +662,24 @@ class WrapTextController extends TextEditingController {
           withComposing: withComposing,
         );
       }
-      return buildWrapSpan(text, const [], style, linkColor: linkColor, rich: _rich)
+      return buildWrapSpan(
+            text,
+            const [],
+            style,
+            linkColor: linkColor,
+            rich: _rich,
+          )
           as TextSpan;
     }
     // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
     // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
-    return buildWrapSpan(text, _widths, style, linkColor: linkColor, rich: _rich)
+    return buildWrapSpan(
+          text,
+          _widths,
+          style,
+          linkColor: linkColor,
+          rich: _rich,
+        )
         as TextSpan;
   }
 }

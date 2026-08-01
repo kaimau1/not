@@ -640,3 +640,48 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   `test/note_fonts_test.dart` yakalıyor — yazı tipini YÜKLEMEDEN, yalnız
   anahtarları karşılaştırarak (testte ağ yok; google_fonts indirmeye kalkarsa
   test kırmızıya döner).
+
+## 2026-08-01 (beşinci giriş) — biçim motoru yeniden yazıldı, klavye, şeffaflık
+
+- **KÖK NEDEN — biçim işaretleri neden "çok hatalıydı"**: `toggleFormat` metin
+  üzerinde çalışıyordu; işaretleri elle kesip yapıştırıyordu. İki biçim üst
+  üste gelince (kalın + renk), seçim işaretin ortasına düşünce ya da aynı
+  düğmeye ikinci kez basılınca tutarsız metin çıkıyordu (tek başına kalmış
+  `**`, kaldırılamayan biçim, kayan seçim). ÇÖZÜM: tek yol —
+  `işaretli metin → _parse (düz metin + parça başına RichMark) → aralığa
+  ekle/çıkar → _serialize (+ konum eşlemesi)`. İç içe biçim artık doğal
+  çalışıyor (`==1:%%2:**a**%%==`), sıra sabit (dıştan içe: vurgu → renk →
+  kalın → italik → altı çizili), gidiş-dönüş kararlı.
+- Konum eşlemesi İKİ dizidir (`starts`/`ends`): seçim BAŞI açılış işaretinden
+  sonraya, SONU kapanış işaretinden önceye düşmeli. Tek dizi olsaydı biçim
+  verilen metin seçili kalmaz, arka arkaya iki biçim verilemezdi.
+- Seçim işaretin ortasına düşerse en yakın gerçek karaktere hizalanır
+  (`_toPlain`) — "yarım işaret" hatalarının kaynağı buydu.
+- **KÖK NEDEN — "yazı tipi değişince metni seçemiyorum"**:
+  `WrapTextController._reflow` her çağrıldığında `TextSelection.collapsed`
+  yazıyordu. Yazı tipi/boyut değişimi ya da bir görselin taşınması dizgiyi
+  tazelediği için seçim anında siliniyordu; sarma çapası olan bir notta metin
+  seçmek imkânsızdı. `_reflow` artık seçimin İKİ ucunu da taşıyor
+  (`_reflowKeepingSelection`). Kanıt: `test/text_wrap_test.dart`.
+- **TUZAK — Scaffold `bottomNavigationBar` klavyenin ALTINDA kalır**:
+  `resizeToAvoidBottomInset` yalnız GÖVDEYİ kısaltır, alt çubuğu ekranın
+  dibinde bırakır. Biçim çubuğu oradaydı; klavye açıkken hem çubuk hem "Aa"
+  düğmesi erişilemiyordu (kullanıcı klavyeyi kapatmak zorunda kalıyor, kapatınca
+  da seçim gidiyordu — "biçim yalnız seçime uygulanmıyor" şikâyetinin asıl
+  sebebi buydu). ÇÖZÜM: çubuk `MediaQuery.viewInsetsOf().bottom` kadar
+  kaldırılıyor; ek şeridi klavye açıkken gizleniyor (zaten görünmüyordu).
+- Word mantığı: imleç biçimli bir parçanın İÇİNDEYKEN aynı düğme biçimi o
+  parçanın tamamından kaldırır. Ayrıca "biçimi temizle" düğmesi eklendi.
+- Not artık `textOpacity` taşıyor (0.3–1). Taban bilerek 0.3: daha soluğunda
+  kullanıcı yazdığını göremez ve ayarı geri bulamaz. Varsayılan 1 belgeye
+  yazılmaz (eski notlar aynen kalır).
+- Liste notlarının KART önizlemesinde ham işaretler görünüyordu: metin notu
+  dalı `stripRichMarkers`'tan geçiyor, checklist/sıralı dalı atlanmıştı. Arama
+  da artık işaretsiz metinde arıyor ("558" araması `**558**` notunu bulur).
+- Asistan sesi tek anahtarla yönetiliyor (`assistantVoiceProvider`): Ayarlar'daki
+  anahtar ile panelin "sustur" düğmesi AYNI değeri okur/yazar.
+- Asistan "bu not değil" deyip hiçbir şey oluşturmadığında panelde "Yine de
+  nota dönüştür" çıkıyor: eldeki döküm modele HİÇ gitmeden nota yazılır
+  (zaman geçiyorsa hatırlatıcı yerelde kurulur).
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 238/238. CİHAZDA
+  DENENMEDİ.

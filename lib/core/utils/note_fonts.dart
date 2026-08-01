@@ -62,6 +62,17 @@ TextStyle applyNoteFont(TextStyle base, String? family) {
   return builder == null ? base : builder(base);
 }
 
+/// Notun şeffaflık ayarını [base] stiline uygular.
+///
+/// Rengi olmayan stiller temadan besleniyor; opaklık verilebilmesi için renk
+/// BURADA somutlaşır ([fallback] ile). 1 (tam koyu) hiçbir şey değiştirmez —
+/// eski notlar bir kıl bile kaymasın.
+TextStyle applyNoteOpacity(TextStyle base, double opacity, Color fallback) {
+  if (opacity >= 1) return base;
+  final color = base.color ?? fallback;
+  return base.copyWith(color: color.withValues(alpha: opacity.clamp(0.1, 1)));
+}
+
 /// Katalog yazı tiplerinin ÇAĞRILARI. Her biri doğrudan adıyla yazılır;
 /// böylece derleyici yalnız bu altısını tutar (bkz. yukarıdaki tuzak).
 final Map<String, TextStyle Function(TextStyle)> _googleBuilders = {

@@ -155,4 +155,16 @@ void main() {
       expect(NoteColor.fromId('bilinmeyen'), NoteColor.none);
     });
   });
+
+  test('seffaflik kaydedilir (varsayilan belgede yer kaplamaz)', () {
+    const plain = Note(id: 'n1', type: NoteType.text);
+    expect(plain.textOpacity, 1);
+    expect(
+      plain.toMap().containsKey('textOpacity'),
+      isFalse,
+      reason: 'varsayilan deger belgeye yazilmamali',
+    );
+    final faded = plain.copyWith(textOpacity: 0.6);
+    expect(faded.toMap()['textOpacity'], 0.6);
+  });
 }

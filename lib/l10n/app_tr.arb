@@ -551,5 +551,13 @@
   "noteFontDefault": "Varsayılan",
   "noteFontSerif": "Kitap (serif)",
   "noteFontMono": "Daktilo",
-  "noteTextSize": "Yazı boyutu"
+  "noteTextSize": "Yazı boyutu",
+  "formatClear": "Biçimi temizle",
+  "noteTextOpacity": "Şeffaflık",
+  "assistantVoiceSetting": "Asistan sesli yanıtlasın",
+  "assistantVoiceSettingInfo": "Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).",
+  "assistantMute": "Sesi kapat",
+  "assistantUnmute": "Sesi aç",
+  "assistantMakeNote": "Yine de nota dönüştür",
+  "assistantNoteCreated": "Not oluşturuldu"
 }

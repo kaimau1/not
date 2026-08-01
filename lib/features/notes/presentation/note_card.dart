@@ -443,12 +443,18 @@ class _NotePreview extends StatelessWidget {
     // boyutu korunur; çarpan onun üzerine biner (ızgara bozulmasın diye
     // makul bir tavanla).
     final cardBase = Theme.of(context).textTheme.bodySmall ?? const TextStyle();
-    final bodyStyle = applyNoteFont(
-      cardBase.copyWith(
-        color: scheme.onSurface.withValues(alpha: 0.85),
-        fontSize: (cardBase.fontSize ?? 12) * note.fontScale.clamp(0.8, 1.4),
+    final bodyStyle = applyNoteOpacity(
+      applyNoteFont(
+        cardBase.copyWith(
+          color: scheme.onSurface.withValues(alpha: 0.85),
+          fontSize: (cardBase.fontSize ?? 12) * note.fontScale.clamp(0.8, 1.4),
+        ),
+        note.fontFamily,
       ),
-      note.fontFamily,
+      // Notun şeffaflığı kartta da görünür (yazı tipiyle aynı gerekçe); kart
+      // yazısı zaten soluk olduğundan çarpım 0.85 üzerinden gider.
+      note.textOpacity,
+      scheme.onSurface,
     );
 
     switch (note.type) {
@@ -583,7 +589,11 @@ class _NotePreview extends StatelessWidget {
                       ),
                     Expanded(
                       child: Text(
-                        shown[i].text,
+                        // Kartta biçim işaretleri (**kalın**, %%2:renk%%)
+                        // gösterilmez — metin notunda olduğu gibi. KÖK NEDEN:
+                        // bu dal atlanmıştı, liste notlarının önizlemesinde
+                        // ham işaretler görünüyordu.
+                        stripRichMarkers(shown[i].text),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style:

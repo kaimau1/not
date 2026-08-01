@@ -272,17 +272,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
   FormatTarget? _formatTarget;
 
-  void _setFormatTarget(WrapTextController controller, VoidCallback commit) {
-    _formatTarget = FormatTarget(controller: controller, commit: commit);
+  void _setFormatTarget(
+    WrapTextController controller,
+    FocusNode focusNode,
+    VoidCallback commit,
+  ) {
+    _formatTarget = FormatTarget(
+      controller: controller,
+      focusNode: focusNode,
+      commit: commit,
+    );
   }
 
   /// Çubuktaki biçim düğmesi: seçime uygula, seçim yoksa imlece kutu aç.
-  void _applyFormat(RichFormat format, {int? colorIndex}) {
+  void _applyFormat(RichFormat format, {int? colorIndex}) =>
+      _runOnTarget((c) => applyRichFormat(c, format, colorIndex: colorIndex));
+
+  /// Seçimdeki tüm biçimleri siler.
+  void _clearFormat() => _runOnTarget(clearRichFormat);
+
+  void _runOnTarget(bool Function(WrapTextController controller) action) {
     final target = _formatTarget;
     if (target == null) return;
-    if (applyRichFormat(target.controller, format, colorIndex: colorIndex)) {
-      target.commit();
-    }
+    if (!action(target.controller)) return;
+    target.commit();
+    // Odak (ve klavye) alana geri verilir: biçim uygulanan metin seçili
+    // kaldığı için kullanıcı üstüne ikinci bir biçim koyabilir ya da yazmaya
+    // devam edebilir. Çubuğun kendisi odak istemez (bkz. FormatBar).
+    if (!target.focusNode.hasFocus) target.focusNode.requestFocus();
   }
 
   /// Notun kendi yazı tipi/boyutu uygulanmış gövde stili (ölçüm ve çizim
@@ -324,6 +341,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       if (!_bodyFocus.hasFocus) return;
       _setFormatTarget(
         _bodyController,
+        _bodyFocus,
         () => _mutate(
           (n) => n.copyWith(body: _bodyController.logicalText),
           immediate: true,
@@ -491,7 +509,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final focused = FocusManager.instance.primaryFocus?.context;
     if (page == null || focused == null) return null;
     final editable = _findEditable(focused.findRenderObject());
-    if (editable == null || !editable.attached || !editable.hasSize) return null;
+    if (editable == null || !editable.attached || !editable.hasSize)
+      return null;
     // Odak başka bir katmanda olabilir (alt sayfa, tam ekran görüntüleyici);
     // o zaman ölçüm sayfa uzayına çevrilemez.
     if (!_isDescendantOf(editable, page)) return null;
@@ -1027,10 +1046,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     final repo = ref.read(attachmentRepositoryProvider);
     if (source == null || repo == null) return;
     try {
-      final copy = await repo.duplicate(
-        noteId: widget.noteId,
-        source: source,
-      );
+      final copy = await repo.duplicate(noteId: widget.noteId, source: source);
       _mutate(
         (n) => n.copyWith(
           attachments: [
@@ -2258,9 +2274,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     // aynı çarpandan beslenir (bkz. Note.fontFamily / fontScale).
     final theme = Theme.of(context);
     final bodyBase = theme.textTheme.bodyLarge ?? const TextStyle();
-    final noteBodyStyle = applyNoteFont(
-      bodyBase.copyWith(fontSize: (bodyBase.fontSize ?? 16) * note.fontScale),
-      note.fontFamily,
+    final noteBodyStyle = applyNoteOpacity(
+      applyNoteFont(
+        bodyBase.copyWith(fontSize: (bodyBase.fontSize ?? 16) * note.fontScale),
+        note.fontFamily,
+      ),
+      note.textOpacity,
+      theme.colorScheme.onSurface,
     );
 
     final titleField = Padding(
@@ -2268,15 +2288,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
       child: TextField(
         controller: _titleController,
         onChanged: (value) => _mutate((n) => n.copyWith(title: value)),
-        style: applyNoteFont(
-          (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
-              .copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize:
-                    (Theme.of(context).textTheme.headlineSmall?.fontSize ?? 24) *
-                    note.fontScale,
-              ),
-          note.fontFamily,
+        style: applyNoteOpacity(
+          applyNoteFont(
+            (Theme.of(context).textTheme.headlineSmall ?? const TextStyle())
+                .copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize:
+                      (Theme.of(context).textTheme.headlineSmall?.fontSize ??
+                          24) *
+                      note.fontScale,
+                ),
+            note.fontFamily,
+          ),
+          note.textOpacity,
+          theme.colorScheme.onSurface,
         ),
         maxLines: null,
         textInputAction: TextInputAction.next,
@@ -2827,136 +2852,167 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
                   ),
                 ),
         ),
-        bottomNavigationBar: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
-            // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
-            // serbest katmanda kalır (NotePageCanvas — yukarıda).
-            AttachmentStrip(
-              attachments: [
-                for (final a in note.attachments)
-                  if (!a.floatsOnPage) a,
-              ],
-              onRemove: _removeAttachment,
-              onChanged: _updateAttachment,
-              onCopy: _copyAttachment,
-              onPlaceOnPage: (a) => _setImageAsFile(a, false),
-              onVideoToNote: _videoToNote,
-              expanded: ref.watch(attachmentsExpandedProvider),
-              onToggle: () =>
-                  ref.read(attachmentsExpandedProvider.notifier).toggle(),
-            ),
-            // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
-            // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
-            // açık kalabiliyordu.
-            if (_aiTask != null) _AiBanner(label: _aiTask!),
-            if (_dictating) _DictationBanner(onStop: _dictate),
-            if (_formatBarOpen)
-              FormatBar(
-                onFormat: _applyFormat,
-                fontFamily: note.fontFamily,
-                fontScale: note.fontScale,
-                onFontChanged: (family) => _mutate(
-                  (n) => family == null
-                      ? n.copyWith(clearFontFamily: true)
-                      : n.copyWith(fontFamily: family),
-                  immediate: true,
+        // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt çubuğu
+        // ekranın dibinde bırakır — yani klavye açıkken alt çubuğun tamamı
+        // (biçim çubuğu dahil) klavyenin ALTINDA kalıyordu ve kullanılamıyordu
+        // ("düzenleme alanı güzel ama altta olduğu için klavyenin altında
+        // kalıyor"). Çubuk klavye kadar yukarı kaldırılır; böylece "Aa"
+        // düğmesi de yazarken erişilebilir olur — biçim çubuğunu açmak için
+        // klavyeyi kapatmak, kapatınca da seçimi kaybetmek gerekmez.
+        bottomNavigationBar: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
+              // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
+              // serbest katmanda kalır (NotePageCanvas — yukarıda).
+              // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
+              // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
+              if (MediaQuery.viewInsetsOf(context).bottom == 0)
+                AttachmentStrip(
+                  attachments: [
+                    for (final a in note.attachments)
+                      if (!a.floatsOnPage) a,
+                  ],
+                  onRemove: _removeAttachment,
+                  onChanged: _updateAttachment,
+                  onCopy: _copyAttachment,
+                  onPlaceOnPage: (a) => _setImageAsFile(a, false),
+                  onVideoToNote: _videoToNote,
+                  expanded: ref.watch(attachmentsExpandedProvider),
+                  onToggle: () =>
+                      ref.read(attachmentsExpandedProvider.notifier).toggle(),
                 ),
-                // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
-                // Firestore'a yazmak boşuna trafik olurdu.
-                onScaleChanged: (value) =>
-                    _mutate((n) => n.copyWith(fontScale: value)),
-                onScaleEnd: (value) =>
-                    _mutate((n) => n.copyWith(fontScale: value), immediate: true),
-                onClose: () => setState(() => _formatBarOpen = false),
-              ),
-            BottomAppBar(
-              color: background,
-              height: 56,
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: l10n.color,
-                    icon: const Icon(Icons.palette_outlined),
-                    onPressed: _showColorSheet,
+              // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
+              // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
+              // açık kalabiliyordu.
+              if (_aiTask != null) _AiBanner(label: _aiTask!),
+              if (_dictating) _DictationBanner(onStop: _dictate),
+              // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
+              // yerine kendi içinde kaydırılır (Flexible + kaydırma).
+              if (_formatBarOpen)
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: FormatBar(
+                      onFormat: _applyFormat,
+                      onClearFormat: _clearFormat,
+                      fontFamily: note.fontFamily,
+                      fontScale: note.fontScale,
+                      textOpacity: note.textOpacity,
+                      onOpacityChanged: (value) =>
+                          _mutate((n) => n.copyWith(textOpacity: value)),
+                      onOpacityEnd: (value) => _mutate(
+                        (n) => n.copyWith(textOpacity: value),
+                        immediate: true,
+                      ),
+                      onFontChanged: (family) => _mutate(
+                        (n) => family == null
+                            ? n.copyWith(clearFontFamily: true)
+                            : n.copyWith(fontFamily: family),
+                        immediate: true,
+                      ),
+                      // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
+                      // Firestore'a yazmak boşuna trafik olurdu.
+                      onScaleChanged: (value) =>
+                          _mutate((n) => n.copyWith(fontScale: value)),
+                      onScaleEnd: (value) => _mutate(
+                        (n) => n.copyWith(fontScale: value),
+                        immediate: true,
+                      ),
+                      onClose: () => setState(() => _formatBarOpen = false),
+                    ),
                   ),
-                  IconButton(
-                    tooltip: l10n.addAttachment,
-                    icon: const Icon(Icons.attach_file),
-                    onPressed: _showAttachMenu,
-                  ),
-                  IconButton(
-                    tooltip: l10n.calculatorTitle,
-                    icon: const Icon(Icons.calculate_outlined),
-                    onPressed: _openCalculator,
-                  ),
-                  // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
-                  // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
-                  // biçim ise seçim menüsünün içine gömülüydü.
-                  IconButton(
-                    tooltip: l10n.formatTitle,
-                    isSelected: _formatBarOpen,
-                    icon: const Icon(Icons.text_format),
-                    onPressed: () =>
-                        setState(() => _formatBarOpen = !_formatBarOpen),
-                  ),
-                  // Karışık içerik: metin notunun altına checklist maddesi
-                  // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
-                  // maddeden oluşur).
-                  if (note.type == NoteType.text)
+                ),
+              BottomAppBar(
+                color: background,
+                height: 56,
+                child: Row(
+                  children: [
                     IconButton(
-                      tooltip: l10n.newItemHint,
-                      icon: const Icon(Icons.checklist),
-                      onPressed: _addChecklistItem,
+                      tooltip: l10n.color,
+                      icon: const Icon(Icons.palette_outlined),
+                      onPressed: _showColorSheet,
                     ),
-                  const Spacer(),
-                  // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
-                  // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
-                  // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
-                  // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
-                  // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
-                  SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: _dictating
-                        ? IconButton.filled(
-                            tooltip: l10n.stopAndSave,
-                            iconSize: 28,
-                            style: IconButton.styleFrom(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.error,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onError,
+                    IconButton(
+                      tooltip: l10n.addAttachment,
+                      icon: const Icon(Icons.attach_file),
+                      onPressed: _showAttachMenu,
+                    ),
+                    IconButton(
+                      tooltip: l10n.calculatorTitle,
+                      icon: const Icon(Icons.calculate_outlined),
+                      onPressed: _openCalculator,
+                    ),
+                    // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
+                    // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
+                    // biçim ise seçim menüsünün içine gömülüydü.
+                    IconButton(
+                      tooltip: l10n.formatTitle,
+                      isSelected: _formatBarOpen,
+                      icon: const Icon(Icons.text_format),
+                      onPressed: () =>
+                          setState(() => _formatBarOpen = !_formatBarOpen),
+                    ),
+                    // Karışık içerik: metin notunun altına checklist maddesi
+                    // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
+                    // maddeden oluşur).
+                    if (note.type == NoteType.text)
+                      IconButton(
+                        tooltip: l10n.newItemHint,
+                        icon: const Icon(Icons.checklist),
+                        onPressed: _addChecklistItem,
+                      ),
+                    const Spacer(),
+                    // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
+                    // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
+                    // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
+                    // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
+                    // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
+                    SizedBox(
+                      width: 52,
+                      height: 52,
+                      child: _dictating
+                          ? IconButton.filled(
+                              tooltip: l10n.stopAndSave,
+                              iconSize: 28,
+                              style: IconButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.onError,
+                              ),
+                              icon: const Icon(Icons.stop),
+                              onPressed: _dictate,
+                            )
+                          : IconButton.filledTonal(
+                              tooltip: l10n.liveDictation,
+                              iconSize: 28,
+                              icon: const Icon(Icons.mic_none),
+                              onPressed: _dictate,
                             ),
-                            icon: const Icon(Icons.stop),
-                            onPressed: _dictate,
-                          )
-                        : IconButton.filledTonal(
-                            tooltip: l10n.liveDictation,
-                            iconSize: 28,
-                            icon: const Icon(Icons.mic_none),
-                            onPressed: _dictate,
-                          ),
-                  ),
-                  const SizedBox(width: 4),
-                  FilledButton.tonalIcon(
-                    onPressed: () => showAiSheet(
-                      context,
-                      note,
-                      onAppendText: _appendText,
-                      onReplaceText: _replaceText,
-                      onCreateNote: _createNoteFromText,
                     ),
-                    icon: const Icon(Icons.auto_awesome, size: 18),
-                    label: Text(l10n.aiTitle),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    FilledButton.tonalIcon(
+                      onPressed: () => showAiSheet(
+                        context,
+                        note,
+                        onAppendText: _appendText,
+                        onReplaceText: _replaceText,
+                        onCreateNote: _createNoteFromText,
+                      ),
+                      icon: const Icon(Icons.auto_awesome, size: 18),
+                      label: Text(l10n.aiTitle),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

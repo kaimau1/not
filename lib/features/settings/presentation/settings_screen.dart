@@ -60,6 +60,7 @@ class SettingsScreen extends ConsumerWidget {
                   _BriefingEditor(),
                   _AutoTagSwitch(),
                   _AutoTitleSwitch(),
+                  _AssistantVoiceSwitch(),
                   _AiSkipCheckedSwitch(),
                   _AdvancedAiSection(),
                 ],
@@ -1389,6 +1390,24 @@ class _AutoTitleSwitch extends ConsumerWidget {
       subtitle: Text(l10n.autoTitleSettingInfo),
       value: ref.watch(autoTitleProvider),
       onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Sesli asistan yanıtını yüksek sesle okusun mu? (Asistan panelindeki
+/// "sustur" düğmesiyle aynı anahtar.)
+class _AssistantVoiceSwitch extends ConsumerWidget {
+  const _AssistantVoiceSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.assistantVoiceSetting),
+      subtitle: Text(l10n.assistantVoiceSettingInfo),
+      value: ref.watch(assistantVoiceProvider),
+      onChanged: (value) => ref.read(assistantVoiceProvider.notifier).set(value),
     );
   }
 }

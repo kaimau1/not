@@ -20,7 +20,7 @@ bool applyRichFormat(
   int? colorIndex,
 }) {
   final selection = controller.selection;
-  if (!selection.isValid || selection.isCollapsed) return false;
+  if (!selection.isValid) return false;
   final display = controller.text;
   final logical = stripWrapAnchors(display);
   final start = wrapToLogicalOffset(display, selection.start);
@@ -32,8 +32,40 @@ bool applyRichFormat(
     format,
     colorIndex: colorIndex,
   );
-  if (result.text == logical) return false;
-  controller.setLogical(result.text, result.end);
+  return _write(controller, logical, start, end, result);
+}
+
+/// Seçimdeki (ya da imlecin içinde bulunduğu parçadaki) TÜM biçimleri siler.
+bool clearRichFormat(WrapTextController controller) {
+  final selection = controller.selection;
+  if (!selection.isValid) return false;
+  final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  return _write(
+    controller,
+    logical,
+    start,
+    end,
+    clearFormat(logical, start, end),
+  );
+}
+
+/// Sonucu denetleyiciye yazar. SEÇİM KORUNUR: biçim verilen metin seçili
+/// kalır, böylece kullanıcı arka arkaya kalın + renk verebilir (eskiden
+/// imleç sona toplanıyor ve ikinci biçim için yeniden seçmek gerekiyordu).
+bool _write(
+  WrapTextController controller,
+  String logical,
+  int start,
+  int end,
+  ({String text, int start, int end}) result,
+) {
+  if (result.text == logical && result.start == start && result.end == end) {
+    return false;
+  }
+  controller.setLogical(result.text, result.start, result.end);
   return true;
 }
 
@@ -94,11 +126,13 @@ Future<void> showFormatSheet(
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(l10n.formatTextColor, style: Theme.of(sheetContext).textTheme.labelLarge),
+                Text(
+                  l10n.formatTextColor,
+                  style: Theme.of(sheetContext).textTheme.labelLarge,
+                ),
                 const SizedBox(height: 8),
                 _ColorRow(
-                  onPick: (index) =>
-                      apply(RichFormat.color, colorIndex: index),
+                  onPick: (index) => apply(RichFormat.color, colorIndex: index),
                 ),
                 const SizedBox(height: 16),
                 Text(

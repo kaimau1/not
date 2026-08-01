@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/rich_text.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../settings/settings_providers.dart';
@@ -601,9 +602,11 @@ bool _matches(Note note, String query) {
   if (note.title.toLowerCase().contains(query)) return true;
   // Kilitli notun içeriği aramaya sızmasın; yalnızca başlıktan bulunur.
   if (note.locked) return false;
-  if (note.body.toLowerCase().contains(query)) return true;
+  // Arama biçim İŞARETLERİNİ görmez: "558" araması `**558**` yazan notu da
+  // bulmalı (işaret metnin içinde taşınıyor, bkz. rich_text.dart).
+  if (stripRichMarkers(note.body).toLowerCase().contains(query)) return true;
   for (final item in note.items) {
-    if (item.text.toLowerCase().contains(query)) return true;
+    if (stripRichMarkers(item.text).toLowerCase().contains(query)) return true;
   }
   for (final attachment in note.attachments) {
     if (attachment.fileName.toLowerCase().contains(query)) return true;

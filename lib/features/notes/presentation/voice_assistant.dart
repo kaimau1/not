@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../../core/utils/tr_datetime.dart';
 import '../../ai/data/assistant_service.dart';
+import '../../settings/settings_providers.dart';
 import '../../ai/data/gemini_service.dart';
 import '../data/attachment_repository.dart';
 import '../data/device_speech.dart';
@@ -312,6 +313,10 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         phase: VoiceAssistantPhase.done,
         message: reply,
         noteId: resultNoteId,
+        // Döküm done evresinde de saklanır: asistan konuşulanı "not değil"
+        // sayıp hiçbir şey oluşturmadığında kullanıcı panelden "yine de nota
+        // dönüştür" diyebilsin (bkz. [convertTranscriptToNote]).
+        liveTranscript: transcript,
       );
       _speakReply(reply);
       // İşin ilgili olduğu not varsa ana ekran ona kaydırıp vurgular:
@@ -357,12 +362,35 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     final text = reply.trim();
     if (text.isEmpty) return;
     if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
+    // Ayarlardan (ya da panelin "sustur" düğmesinden) kapatılabilir.
+    if (!ref.read(assistantVoiceProvider)) return;
     final language = Intl.getCurrentLocale().split(RegExp('[-_]')).first;
     unawaited(
       ref
           .read(speechOutputProvider.notifier)
           .speak(text, languageCode: language),
     );
+  }
+
+  /// Konuşulanı DÜZ NOT olarak kaydeder — asistan not oluşturmadığında.
+  ///
+  /// Asistan "bu bir yapılacak ya da alışveriş listesi değil" deyip elini
+  /// kolunu sallayarak dönebiliyor; konuşan kişi için ise o cümle çoğu zaman
+  /// yine de saklanmaya değer. Bu yol modele HİÇ gitmez: eldeki döküm
+  /// doğrudan nota yazılır (zaman geçiyorsa hatırlatıcı da yerelde kurulur).
+  /// Oluşan notun id'si döner, yoksa null.
+  Future<String?> convertTranscriptToNote({required String createdText}) async {
+    final text = state.liveTranscript.trim();
+    if (text.isEmpty) return null;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return null;
+    final id = await repo.createNote(NoteType.text);
+    repo.updateFields(id, {'body': text});
+    final when = parseTurkishDateTime(text);
+    if (when != null) repo.setReminder(id, when);
+    state = state.copyWith(noteId: id, message: createdText);
+    ref.read(focusedNoteProvider.notifier).focus(id);
+    return id;
   }
 
   /// Kaydı iptal eder, hiçbir şey gönderilmez.

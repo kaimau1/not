@@ -429,5 +429,13 @@
   "noteFontDefault": "Standard",
   "noteFontSerif": "Buch (Serif)",
   "noteFontMono": "Schreibmaschine",
-  "noteTextSize": "Schriftgröße"
+  "noteTextSize": "Schriftgröße",
+  "formatClear": "Formatierung entfernen",
+  "noteTextOpacity": "Transparenz",
+  "assistantVoiceSetting": "Assistent antwortet laut",
+  "assistantVoiceSettingInfo": "Der Sprachassistent liest seine Antwort vor (nur am Telefon).",
+  "assistantMute": "Ton aus",
+  "assistantUnmute": "Ton an",
+  "assistantMakeNote": "Trotzdem in Notiz umwandeln",
+  "assistantNoteCreated": "Notiz erstellt"
 }

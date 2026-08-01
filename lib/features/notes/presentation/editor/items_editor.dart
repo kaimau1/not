@@ -101,7 +101,11 @@ class ItemsEditor extends StatefulWidget {
 
   /// Bir madde alanı odağı aldığında çağrılır: biçim çubuğu hangi alana
   /// yazacağını buradan öğrenir (denetleyici + metni nota işleyen geri çağrı).
-  final void Function(WrapTextController controller, VoidCallback commit)?
+  final void Function(
+    WrapTextController controller,
+    FocusNode focusNode,
+    VoidCallback commit,
+  )?
   onFieldFocused;
 
   @override
@@ -219,6 +223,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
         final controller = _controllerFor(item);
         widget.onFieldFocused?.call(
           controller,
+          node,
           () => _updateText(item, controller.logicalText),
         );
       }

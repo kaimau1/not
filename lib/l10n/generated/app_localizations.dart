@@ -2681,6 +2681,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazı boyutu'**
   String get noteTextSize;
+
+  /// No description provided for @formatClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Biçimi temizle'**
+  String get formatClear;
+
+  /// No description provided for @noteTextOpacity.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şeffaflık'**
+  String get noteTextOpacity;
+
+  /// No description provided for @assistantVoiceSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asistan sesli yanıtlasın'**
+  String get assistantVoiceSetting;
+
+  /// No description provided for @assistantVoiceSettingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).'**
+  String get assistantVoiceSettingInfo;
+
+  /// No description provided for @assistantMute.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi kapat'**
+  String get assistantMute;
+
+  /// No description provided for @assistantUnmute.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi aç'**
+  String get assistantUnmute;
+
+  /// No description provided for @assistantMakeNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yine de nota dönüştür'**
+  String get assistantMakeNote;
+
+  /// No description provided for @assistantNoteCreated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not oluşturuldu'**
+  String get assistantNoteCreated;
 }
 
 class _AppLocalizationsDelegate

@@ -75,4 +75,19 @@ void main() {
       'Lora',
     );
   });
+
+  test('seffaflik: 1 stili degistirmez, altinda renk soluklasir', () {
+    const colored = TextStyle(fontSize: 16, color: Color(0xFF102030));
+    expect(applyNoteOpacity(colored, 1, const Color(0xFF000000)), colored);
+    final faded = applyNoteOpacity(colored, 0.5, const Color(0xFF000000));
+    expect(faded.color?.a, closeTo(0.5, 0.01));
+    expect(faded.color?.r, colored.color?.r);
+    // Rengi olmayan stilde taban renk devreye girer (yoksa opaklik uygulanamaz).
+    final fromFallback = applyNoteOpacity(
+      const TextStyle(fontSize: 16),
+      0.4,
+      const Color(0xFF203040),
+    );
+    expect(fromFallback.color?.a, closeTo(0.4, 0.01));
+  });
 }

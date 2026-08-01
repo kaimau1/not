@@ -1394,4 +1394,29 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noteTextSize => 'Yazı boyutu';
+
+  @override
+  String get formatClear => 'Biçimi temizle';
+
+  @override
+  String get noteTextOpacity => 'Şeffaflık';
+
+  @override
+  String get assistantVoiceSetting => 'Asistan sesli yanıtlasın';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'Sesli asistan yanıtını yüksek sesle okur (yalnız telefonda).';
+
+  @override
+  String get assistantMute => 'Sesi kapat';
+
+  @override
+  String get assistantUnmute => 'Sesi aç';
+
+  @override
+  String get assistantMakeNote => 'Yine de nota dönüştür';
+
+  @override
+  String get assistantNoteCreated => 'Not oluşturuldu';
 }
