@@ -573,3 +573,9 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   notta eksik kalırdı.
 - DOĞRULAMA: `flutter analyze` temiz, `flutter test` 220/220 (yerel Flutter
   3.44.6). CİHAZDA DENENMEDİ.
+- Runner kapanması TEKRARLADI (koşu #157, main): önbellek İSABET etti (ısıtma
+  atlandı, 42 sn geri yükleme) ama derleme 8,5 dakikada `shutdown signal` ile
+  öldü. AYNI COMMIT dalda (koşu #156) 11 dk 59 sn'de sorunsuz derlendi ve APK
+  yüklendi — yani kodla ilgisi yok, runner rastgele geri alınıyor.
+  DERS: main'de APK derlemesi ilk denemede yeşil olmayabilir; kod dalda
+  derlendiyse yapılacak tek şey main'i yeniden tetiklemek.
