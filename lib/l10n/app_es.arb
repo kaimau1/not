@@ -439,5 +439,10 @@
   "assistantMakeNote": "Convertir en nota igualmente",
   "assistantNoteCreated": "Nota creada",
   "noteNotFound": "Nota no encontrada. Puede que se haya eliminado.",
-  "back": "Atrás"
+  "back": "Atrás",
+  "addTextBlock": "Añadir texto",
+  "noteBackgroundImage": "Imagen de fondo",
+  "chooseBackgroundImage": "Elegir imagen",
+  "changeBackgroundImage": "Cambiar imagen",
+  "removeBackgroundImage": "Quitar fondo"
 }

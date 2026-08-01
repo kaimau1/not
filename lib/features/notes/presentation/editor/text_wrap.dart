@@ -574,7 +574,7 @@ class WrapTextController extends TextEditingController {
         super.value = fixed;
         return;
       }
-      super.value = _snapped(newValue);
+      super.value = _snapped(_collapsed(text, newValue));
       return;
     }
     var logical = stripWrapAnchors(newValue.text);
@@ -619,6 +619,11 @@ class WrapTextController extends TextEditingController {
           return;
         }
       }
+      if (logical.length < oldLogical.length) {
+        final collapsed = collapseEmptyMarkersAt(logical, caret);
+        logical = collapsed.text;
+        caret = collapsed.caret;
+      }
       final previous = wrapToLogicalOffset(
         text,
         selection.baseOffset < 0 ? 0 : selection.baseOffset,
@@ -626,6 +631,23 @@ class WrapTextController extends TextEditingController {
       caret = snapOutOfMarkers(logical, caret, backward: caret < previous);
     }
     _reflow(logical, caret, extent);
+  }
+
+  /// Silmeden sonra imlecin iki yanında BOŞ işaret çifti kaldıysa toplar.
+  ///
+  /// Biçimli bir kelimenin son harfi silinince geriye iç içe boş işaretler
+  /// kalıyor; hiçbiri eşleşmediğinden düz metin gibi çiziliyor ve kullanıcı
+  /// sildikçe yeni işaretler beliriyormuş gibi görünüyordu.
+  TextEditingValue _collapsed(String oldText, TextEditingValue newValue) {
+    if (newValue.text.length >= oldText.length) return newValue;
+    final selection = newValue.selection;
+    if (!selection.isValid || !selection.isCollapsed) return newValue;
+    final result = collapseEmptyMarkersAt(newValue.text, selection.baseOffset);
+    if (result.text == newValue.text) return newValue;
+    return TextEditingValue(
+      text: result.text,
+      selection: TextSelection.collapsed(offset: result.caret),
+    );
   }
 
   /// Geri silme GÖRÜNMEZ bir işareti mi sildi? Öyleyse silme metnin kendisine

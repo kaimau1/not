@@ -1440,4 +1440,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get back => 'Atrás';
+
+  @override
+  String get addTextBlock => 'Añadir texto';
+
+  @override
+  String get noteBackgroundImage => 'Imagen de fondo';
+
+  @override
+  String get chooseBackgroundImage => 'Elegir imagen';
+
+  @override
+  String get changeBackgroundImage => 'Cambiar imagen';
+
+  @override
+  String get removeBackgroundImage => 'Quitar fondo';
 }

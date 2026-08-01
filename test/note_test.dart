@@ -167,4 +167,21 @@ void main() {
     final faded = plain.copyWith(textOpacity: 0.6);
     expect(faded.toMap()['textOpacity'], 0.6);
   });
+
+  test('zemin gorseli kaydedilir ve KALDIRILABILIR', () {
+    // Alanlar kosulsuz yazilir: merge:true ile alan haritada yoksa eski deger
+    // kalirdi ve zemin bir daha kaldirilamazdi (bkz. seffaflik hatasi).
+    const plain = Note(id: 'n1', type: NoteType.text);
+    expect(plain.backgroundImageId, isNull);
+    expect(plain.toMap().containsKey('backgroundImageId'), isTrue);
+    final withBg = plain.copyWith(
+      backgroundImageId: 'att1',
+      backgroundOpacity: 0.5,
+    );
+    expect(withBg.toMap()['backgroundImageId'], 'att1');
+    expect(withBg.toMap()['backgroundOpacity'], 0.5);
+    final cleared = withBg.copyWith(clearBackgroundImage: true);
+    expect(cleared.backgroundImageId, isNull);
+    expect(cleared.toMap()['backgroundImageId'], isNull);
+  });
 }

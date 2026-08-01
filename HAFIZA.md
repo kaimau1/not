@@ -820,3 +820,32 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
 - DERS: Dart kaynağını heredoc/betikle üretirken `$` ve `\` kaçışlarını
   ÜRETİLEN DOSYADA gözle doğrula; string içeren üretimlerde en az bir test
   yaz. (Bu turda üç dosya betikle düzenlendi, hata yalnız bunda oluştu.)
+
+## 2026-08-02 — boş işaret artıkları, liste notunda metin, zemin görseli
+
+- **KÖK NEDEN — "sildikçe yeni işaretler geliyor"**: biçimli bir kelimenin son
+  harfi normal yoldan silinince geriye İÇ İÇE BOŞ işaretler kalıyor
+  (`%%1:**_` + `_**%%`). İçi boş olduğundan hiçbiri biçim olarak eşleşmiyor ve
+  DÜZ METİN gibi çiziliyorlar. `deleteThroughMarkers` yalnız "silinen karakter
+  işaretse" devreye giriyordu, bu durumu kapsamıyordu. ÇÖZÜM:
+  `collapseEmptyMarkersAt` — silmeden sonra imlecin İKİ YANI eşleşen bir
+  açılış/kapanış çiftiyse çift kaldırılır; içteki gidince dıştaki yan yana
+  geldiği için döngü hepsini toplar. Yalnız imlecin yanına bakar: metnin
+  başka yerindeki `__` gibi diziler korunur.
+- Liste notlarına serbest metin bloğu eklendi (alt çubukta "Metin ekle"):
+  gövde alanı madde listesinin başlığında duruyor; `toPlainText` ve
+  `toContentText` artık liste notlarında da gövdeyi taşıyor (yoksa dışa
+  aktarmada kaybolurdu).
+- Alt çubuktaki "Yapay Zeka" etiketi dar ekranda taşıyordu → "AI" (tam adı
+  ipucunda).
+- **Zemin görseli**: not artık `backgroundImageId` + `backgroundOpacity`
+  taşıyor. Görsel ayrı bir alanda değil EKLER listesinde duruyor (yükleme
+  kuyruğu, çevrimdışı kopya, silme mantığı yeniden kullanılıyor) ama sayfada
+  yüzmüyor ve şeritte/kartta görünmüyor — editör onu id'ye göre ayıklıyor.
+  Yerleştirirken kırpma ImageCropScreen ile, sonradan da değiştirilebiliyor.
+  Varsayılan opaklık %35: tam opak fotoğrafın üstünde not okunmuyor.
+- TUZAK (yine): `merge: true` yazımında kaldırılabilir alanlar KOŞULSUZ
+  yazılmalı — `backgroundImageId` null da olsa haritaya girer, yoksa zemin
+  bir daha kaldırılamazdı.
+- DOĞRULAMA: `flutter analyze` temiz, `flutter test` 256/256. CİHAZDA
+  DENENMEDİ.

@@ -1425,4 +1425,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get back => 'Geri';
+
+  @override
+  String get addTextBlock => 'Metin ekle';
+
+  @override
+  String get noteBackgroundImage => 'Zemin görseli';
+
+  @override
+  String get chooseBackgroundImage => 'Görsel seç';
+
+  @override
+  String get changeBackgroundImage => 'Görseli değiştir';
+
+  @override
+  String get removeBackgroundImage => 'Zemini kaldır';
 }

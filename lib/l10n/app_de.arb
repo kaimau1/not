@@ -439,5 +439,10 @@
   "assistantMakeNote": "Trotzdem in Notiz umwandeln",
   "assistantNoteCreated": "Notiz erstellt",
   "noteNotFound": "Notiz nicht gefunden. Sie wurde vielleicht gelöscht.",
-  "back": "Zurück"
+  "back": "Zurück",
+  "addTextBlock": "Text hinzufügen",
+  "noteBackgroundImage": "Hintergrundbild",
+  "chooseBackgroundImage": "Bild wählen",
+  "changeBackgroundImage": "Bild ändern",
+  "removeBackgroundImage": "Hintergrund entfernen"
 }

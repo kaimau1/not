@@ -256,9 +256,16 @@ class NoteCard extends ConsumerWidget {
             )
           else ...[
             _NotePreview(note: note, highlightQuery: highlightQuery),
-            if (note.attachments.isNotEmpty) ...[
+            // Zemin görseli ek DEĞİLDİR: kartta küçük resim olarak
+            // görünmemeli (notun arkasında duvar kâğıdı olarak duruyor).
+            if (note.attachments.any((a) => a.id != note.backgroundImageId)) ...[
               const SizedBox(height: 8),
-              _AttachmentPreview(attachments: note.attachments),
+              _AttachmentPreview(
+                attachments: [
+                  for (final a in note.attachments)
+                    if (a.id != note.backgroundImageId) a,
+                ],
+              ),
             ],
           ],
           if (note.tags.isNotEmpty || note.reminderAt != null) ...[

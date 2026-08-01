@@ -561,5 +561,10 @@
   "assistantMakeNote": "Yine de nota dönüştür",
   "assistantNoteCreated": "Not oluşturuldu",
   "noteNotFound": "Not bulunamadı. Silinmiş olabilir.",
-  "back": "Geri"
+  "back": "Geri",
+  "addTextBlock": "Metin ekle",
+  "noteBackgroundImage": "Zemin görseli",
+  "chooseBackgroundImage": "Görsel seç",
+  "changeBackgroundImage": "Görseli değiştir",
+  "removeBackgroundImage": "Zemini kaldır"
 }

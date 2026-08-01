@@ -2741,6 +2741,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Geri'**
   String get back;
+
+  /// No description provided for @addTextBlock.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin ekle'**
+  String get addTextBlock;
+
+  /// No description provided for @noteBackgroundImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin görseli'**
+  String get noteBackgroundImage;
+
+  /// No description provided for @chooseBackgroundImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel seç'**
+  String get chooseBackgroundImage;
+
+  /// No description provided for @changeBackgroundImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseli değiştir'**
+  String get changeBackgroundImage;
+
+  /// No description provided for @removeBackgroundImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemini kaldır'**
+  String get removeBackgroundImage;
 }
 
 class _AppLocalizationsDelegate
