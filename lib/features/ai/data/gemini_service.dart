@@ -81,9 +81,9 @@ class SpeechTranslation {
 /// istekler doğrudan sağlayıcıya gider, araya sunucu girmez. Anahtar yoksa
 /// dahili yola (Firebase AI Logic) düşer.
 ///
-/// Adı tarihsel olarak `GeminiService` kaldı: Gemini hâlâ varsayılan ve tek
-/// tam yetenekli sağlayıcı (araç çağrısı + embedding + ses/video). Diğer
-/// sağlayıcılar metin/görsel/PDF işlerinin tamamını yapar; farklar
+/// Adı tarihsel olarak `GeminiService` kaldı. Sağlayıcılar arası tek gerçek
+/// fark artık EMBEDDING (semantik arama) ve ses/video girişi; metin, görsel,
+/// PDF ve araç çağrılı asistan hepsinde çalışır. Kalan farklar
 /// [_requireGemini] çevresinde toplandı.
 class GeminiService {
   GeminiService(
@@ -114,9 +114,9 @@ class GeminiService {
   /// yetenek kontrollerinde kullanılır.
   AiProvider get provider => _provider;
 
-  /// Yalnız Gemini'de olan yetenekler (araç çağrılı asistan, embedding,
-  /// ses/video girişi) için kapı. Başka sağlayıcı seçiliyken bu işler sessizce
-  /// yanlış sonuç vermek yerine ne yapılacağını söyleyen bir hata verir.
+  /// Yalnız Gemini'de olan yetenekler (embedding, ses/video girişi) için kapı.
+  /// Başka sağlayıcı seçiliyken bu işler sessizce yanlış sonuç vermek yerine
+  /// ne yapılacağını söyleyen bir hata verir.
   void _requireGemini(String feature) {
     if (_provider == AiProvider.gemini) return;
     throw GeminiException(
@@ -173,9 +173,6 @@ class GeminiService {
         _ => GeminiException('Bağlantı hatası: ${e.message}'),
       };
 
-  /// Denenecek modeller: tercih listesi ∩ API'deki gerçek liste, ardından
-  /// listede olmayan diğer genel amaçlı flash modelleri (yeniden eskiye).
-  /// Liste çekilemezse tercih listesi olduğu gibi kullanılır.
   /// Sağlayıcının model kataloğunu çeker ve uygulamaya uygun sıraya sokar
   /// (bkz. model_catalog.dart). Liste çekilemezse Gemini'de sabit tercih
   /// listesine düşülür; diğer sağlayıcılarda sabit liste yoktur (model
@@ -820,7 +817,6 @@ class GeminiService {
     // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
     final prefer = _taskModel(AiTask.voice) ?? AppConstants.voiceAssistantModel;
     final stored = await _keyStore.read(_provider);
-    if (stored != null && stored.isNotEmpty) _requireGemini('Sesli asistan');
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -853,7 +849,6 @@ class GeminiService {
         },
     ];
     final stored = await _keyStore.read(_provider);
-    if (stored != null && stored.isNotEmpty) _requireGemini('AI asistanı');
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -892,6 +887,12 @@ class GeminiService {
 
   /// Araç çağrısı döngüsü: model araç isterse çalıştırılır, sonuç geri
   /// beslenir; metin yanıtı gelince döner.
+  ///
+  /// Gemini teli AYRI tutuldu (aşağıdaki gövde): oradaki döngü modelin
+  /// gönderdiği parçaları geçmişe AYNEN geri koyuyor ve bu, modelin kendi iç
+  /// imzalarını koruduğu için bilerek değiştirilmedi. OpenAI/Anthropic teli
+  /// [_runToolLoopCompat]'e gider — o da kendi ham yanıtını aynen geçmişe
+  /// koyar, yani ilke üç sağlayıcıda da aynı.
   Future<String> _runToolLoop(
     String key,
     List<Map<String, dynamic>> contents,
@@ -902,6 +903,9 @@ class GeminiService {
     onToolCall, {
     String? prefer,
   }) async {
+    if (_provider.wire != AiWire.gemini) {
+      return _runToolLoopCompat(key, contents, onToolCall, prefer: prefer);
+    }
     for (var round = 0; round < 6; round++) {
       final response = await _withModel(
         key,
@@ -970,6 +974,64 @@ class GeminiService {
         });
       }
       contents.add({'role': 'user', 'parts': responseParts});
+    }
+    throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
+  }
+
+  /// OpenAI ve Anthropic teli için araç çağrısı döngüsü.
+  ///
+  /// Geçmiş, Gemini `contents` biçimine geri çevrilmeden sağlayıcının KENDİ
+  /// mesaj biçiminde tutulur: modelin ham yanıtı (araç çağrısı kimlikleriyle
+  /// birlikte) olduğu gibi geçmişe eklenir. Kimliği yeniden üretmeye
+  /// çalışmak, sonucu yanlış çağrıya bağlama riski taşırdı — OpenAI ve
+  /// Anthropic sonucu `tool_call_id` / `tool_use_id` ile eşleştiriyor.
+  Future<String> _runToolLoopCompat(
+    String key,
+    List<Map<String, dynamic>> contents,
+    Future<Map<String, dynamic>> Function(
+      String name,
+      Map<String, dynamic> args,
+    )
+    onToolCall, {
+    String? prefer,
+  }) async {
+    final messages = toWireMessages(_provider, contents);
+    for (var round = 0; round < 6; round++) {
+      final response = await _withModel(
+        key,
+        (model) => _dio.post<Map<String, dynamic>>(
+          chatPath(_provider, model),
+          options: Options(headers: _provider.authHeaders(key)),
+          data: buildToolBody(
+            provider: _provider,
+            model: model,
+            messages: messages,
+            geminiTools: _assistantTools,
+          ),
+        ),
+        prefer: prefer,
+      );
+      final reply = parseToolReply(_provider, response.data);
+      if (reply.calls.isEmpty) {
+        if (reply.text.isEmpty) {
+          throw const GeminiException('Modelden boş yanıt döndü');
+        }
+        return reply.text;
+      }
+      messages.add(assistantTurn(_provider, response.data));
+      final results = <ToolResult>[];
+      for (final call in reply.calls) {
+        Map<String, dynamic> value;
+        try {
+          value = await onToolCall(call.name, call.args);
+        } catch (e) {
+          // Aracın hatası döngüyü bitirmez: sonuç olarak modele bildirilir,
+          // model kendini düzeltebilir ya da kullanıcıya açıklayabilir.
+          value = {'status': 'error', 'message': e.toString()};
+        }
+        results.add((id: call.id, name: call.name, value: value));
+      }
+      messages.addAll(toolResultTurns(_provider, results));
     }
     throw const GeminiException('İşlem tamamlanamadı, tekrar deneyin');
   }
