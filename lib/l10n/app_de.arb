@@ -446,5 +446,11 @@
   "changeBackgroundImage": "Bild ändern",
   "removeBackgroundImage": "Hintergrund entfernen",
   "dashboardBackground": "Startbildschirm-Hintergrund",
-  "dashboardBackgroundInfo": "Bild hinter dem Notizraster (nur auf diesem Gerät)."
+  "dashboardBackgroundInfo": "Bild hinter dem Notizraster (nur auf diesem Gerät).",
+  "aiProvider": "KI-Anbieter",
+  "aiProviderInfo": "Wähle den Anbieter, zu dem dein Schlüssel gehört. Der Schlüssel jedes Anbieters wird separat gespeichert, ein Wechsel erfordert also keine erneute Eingabe.",
+  "apiKeyFieldLabel": "API-Schlüssel",
+  "getApiKey": "Wo bekomme ich einen Schlüssel?",
+  "recommendedModel": "Empfohlen",
+  "freeTierBadge": "Mit kostenlosem Kontingent"
 }

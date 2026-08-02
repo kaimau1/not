@@ -1462,4 +1462,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get dashboardBackgroundInfo =>
       'Imagen detrás de la cuadrícula de notas (solo en este dispositivo).';
+
+  @override
+  String get aiProvider => 'Proveedor de IA';
+
+  @override
+  String get aiProviderInfo => 'Elige el proveedor al que pertenece tu clave. La clave de cada proveedor se guarda por separado, así que cambiar no exige volver a introducirla.';
+
+  @override
+  String get apiKeyFieldLabel => 'Clave de API';
+
+  @override
+  String get getApiKey => '¿Dónde consigo una clave?';
+
+  @override
+  String get recommendedModel => 'Recomendado';
+
+  @override
+  String get freeTierBadge => 'Tiene nivel gratuito';
 }

@@ -1466,4 +1466,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get dashboardBackgroundInfo =>
       'Bild hinter dem Notizraster (nur auf diesem Gerät).';
+
+  @override
+  String get aiProvider => 'KI-Anbieter';
+
+  @override
+  String get aiProviderInfo => 'Wähle den Anbieter, zu dem dein Schlüssel gehört. Der Schlüssel jedes Anbieters wird separat gespeichert, ein Wechsel erfordert also keine erneute Eingabe.';
+
+  @override
+  String get apiKeyFieldLabel => 'API-Schlüssel';
+
+  @override
+  String get getApiKey => 'Wo bekomme ich einen Schlüssel?';
+
+  @override
+  String get recommendedModel => 'Empfohlen';
+
+  @override
+  String get freeTierBadge => 'Mit kostenlosem Kontingent';
 }

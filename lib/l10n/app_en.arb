@@ -283,7 +283,9 @@
   "speechVoiceLanguage": "{language} voice",
   "@speechVoiceLanguage": {
     "placeholders": {
-      "language": {"type": "String"}
+      "language": {
+        "type": "String"
+      }
     }
   },
   "speechVoiceAutoInfo": "Other languages are read with a male voice automatically",
@@ -451,5 +453,11 @@
   "changeBackgroundImage": "Change image",
   "removeBackgroundImage": "Remove background",
   "dashboardBackground": "Home screen background",
-  "dashboardBackgroundInfo": "Image shown behind the note grid (this device only)."
+  "dashboardBackgroundInfo": "Image shown behind the note grid (this device only).",
+  "aiProvider": "AI provider",
+  "aiProviderInfo": "Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.",
+  "apiKeyFieldLabel": "API key",
+  "getApiKey": "Where do I get a key?",
+  "recommendedModel": "Recommended",
+  "freeTierBadge": "Has a free tier"
 }
