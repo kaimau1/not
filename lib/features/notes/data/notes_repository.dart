@@ -12,6 +12,11 @@ import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 
+/// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
+/// dokunmaz. Editör açılırken ekler, kapanırken çıkarır. Provider değil düz
+/// bir küme, çünkü değişimi hiçbir arayüzü yeniden çizmemeli.
+final openEditorNoteIds = <String>{};
+
 final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return null;
@@ -236,13 +241,17 @@ class NotesRepository {
   }
 
   /// Boş kalıp unutulmuş notları siler. Şu an editörde yazılıyor olabilecek
-  /// taze notlara dokunmaz: son düzenleme 2 dakikadan eskiyse silinir.
-  /// (Editörde açık boş bir not yanlışlıkla silinse bile editörün merge'lü
-  /// yazımları dokümanı yeniden oluşturur — veri kaybı olmaz. Boş notlar
-  /// ayrıca dashboard listesinde hiç gösterilmez.)
+  /// taze notlara dokunmaz: not [openEditorNoteIds] içinde OLMAMALI ve son
+  /// düzenlemesi 2 dakikadan eski olmalı.
+  ///
+  /// Açık not koruması sonradan eklendi: kullanıcı yeni nota yazmaya
+  /// başladığında doküman bir süre boş kalır (ilk kayıt henüz yapılmamıştır);
+  /// o sırada silinmesi, editörün sonraki merge'lü yazımı dokümanı yeniden
+  /// yaratsa bile klasör/renk/sıra gibi alanları sıfırlıyordu.
   Future<void> cleanupEmptyNotes(List<Note> notes) async {
     final cutoff = DateTime.now().subtract(const Duration(minutes: 2));
     for (final note in notes) {
+      if (openEditorNoteIds.contains(note.id)) continue;
       final updated = note.updatedAt;
       if (note.isEmpty && updated != null && updated.isBefore(cutoff)) {
         hardDelete(note.id);
