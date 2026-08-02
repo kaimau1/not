@@ -1,5 +1,3 @@
-import 'ai_provider.dart';
-
 /// Uygulamanın iç istek biçimini (Gemini `contents`) sağlayıcının tel
 /// biçimine çevirir ve yanıtı geri metne indirger.
 ///
@@ -9,6 +7,8 @@ import 'ai_provider.dart';
 /// çağrı yerlerini çoğaltmak yerine biçim TEK yerde çevrilir; yeni bir
 /// sağlayıcı eklemek bu dosyaya bir `case` eklemek demektir.
 library;
+
+import 'ai_provider.dart';
 
 /// Sağlayıcının bu içerik türünü kabul etmediği durumlarda atılır — çağıran
 /// bunu kullanıcının anlayacağı bir mesaja çevirir.
