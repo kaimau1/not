@@ -18,8 +18,27 @@ jobs:
   test:
     name: Analiz + Test
     runs-on: ubuntu-latest
+    outputs:
+      apk: ${{ steps.marker.outputs.apk }}
     steps:
       - uses: actions/checkout@v4
+
+      # KÖK NEDEN: işaret eskiden `contains(head_commit.message, '[apk]')` ile
+      # aranıyordu ve o ifade commit mesajının TAMAMINA (gövde dahil) bakar.
+      # Gövdede işaretten SÖZ EDEN bir cümle ("[apk] yok" gibi) derlemeyi
+      # istemeden tetikliyordu. Artık yalnız ilk satıra (commit BAŞLIĞI)
+      # bakılıyor; gövdede işaretten serbestçe söz edilebilir.
+      - name: Derleme işaretini oku
+        id: marker
+        run: |
+          title=$(git log -1 --pretty=%s)
+          if [[ "$title" == *'[apk]'* ]]; then
+            echo "apk=true" >> "$GITHUB_OUTPUT"
+            echo "Başlıkta [apk] var → APK derlenecek."
+          else
+            echo "apk=false" >> "$GITHUB_OUTPUT"
+            echo "Başlıkta [apk] yok → APK derlenmeyecek."
+          fi
 
       - uses: subosito/flutter-action@v2
         with:
@@ -53,8 +72,7 @@ jobs:
     needs: test
     if: >
       github.event_name == 'workflow_dispatch' ||
-      (github.ref == 'refs/heads/main' &&
-       contains(github.event.head_commit.message, '[apk]'))
+      (github.ref == 'refs/heads/main' && needs.test.outputs.apk == 'true')
     permissions:
       contents: write
     steps:
