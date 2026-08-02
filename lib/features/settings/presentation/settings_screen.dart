@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/language_names.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_provider.dart';
@@ -32,6 +33,18 @@ import '../settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  /// Ses seçicisi gösterilecek diller: uygulamanın o anki dili + Türkçe +
+  /// İngilizce (yinelenenler ayıklanır). Yalnız çevirisi ÜRETİLMİŞ diller
+  /// alınır; olmayan bir dile ses ayarı sunmak anlamsız olurdu.
+  static List<String> _voiceLanguages(BuildContext context) {
+    final supported = supportedLanguages.keys.toSet();
+    return <String>{
+      Localizations.localeOf(context).toLanguageTag(),
+      'tr',
+      'en',
+    }.where(supported.contains).toList();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -102,10 +115,16 @@ class SettingsScreen extends ConsumerWidget {
                   // Ses seçicileri desteklenen dillerden türetilir: eskiden
                   // 'tr' ve 'en' elle yazılıydı, yeni dil eklenince ses
                   // seçimi sessizce eksik kalıyordu.
-                  for (final entry in supportedLanguages.entries)
+                  //
+                  // AMA hepsi için değil: dil sayısı 100'e çıkınca burası yüz
+                  // tane ses seçicisi çizerdi ve ayarlar kullanılamaz hâle
+                  // gelirdi. Kullanıcının gerçekten ihtiyaç duyduğu diller
+                  // dar bir küme — uygulamanın o anki dili ve konuşma
+                  // çevirisinin iki ucu; ötesi teoriktir.
+                  for (final code in _voiceLanguages(context))
                     _SpeechVoiceSelector(
-                      language: entry.key,
-                      title: l10n.speechVoiceLanguage(entry.value),
+                      language: code,
+                      title: l10n.speechVoiceLanguage(languageLabel(code)),
                     ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -487,15 +506,42 @@ class _PermissionTile extends StatelessWidget {
 
 /// Uygulama dili. Dil adları kendi dillerinde yazılır ("English"), yoksa
 /// dilini bilmediği bir arayüzde doğru satırı bulamayan kullanıcı sıkışır.
+/// Dil seçimi.
+///
+/// Az sayıda dilde radyo listesi en hızlı yol; liste büyüyünce (hedef 100+)
+/// aynı düzen kullanılamaz — ayarlar sayfası yüz satırla dolar ve kullanıcı
+/// kendi dilini kaydırarak arar. Bu yüzden eşiği aşınca ARAMALI bir alt
+/// sayfaya geçilir. İki ayrı ekran yazmak yerine eşik konuldu: dört dilde
+/// arama kutusu göstermek de gereksiz sürtünmedir.
 class _LanguageSelector extends ConsumerWidget {
   const _LanguageSelector();
+
+  /// Üzerinde aramalı sayfaya geçilen dil sayısı.
+  static const _inlineLimit = 8;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // 'system' yer tutucu: RadioGroup null'ı "seçim yok" saydığından sistem
     // seçeneği null değerle temsil edilemez.
     const system = 'system';
-    final current = ref.watch(localeProvider)?.languageCode ?? system;
+    final languages = supportedLanguages;
+    final selected = ref.watch(localeProvider)?.toLanguageTag();
+    final current = selected ?? system;
+
+    if (languages.length > _inlineLimit) {
+      return ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(context.l10n.settingsLanguage),
+        subtitle: Text(
+          selected == null
+              ? context.l10n.languageSystem
+              : languageLabel(selected),
+        ),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _pick(context, ref, languages, selected),
+      );
+    }
+
     return RadioGroup<String>(
       groupValue: current,
       onChanged: (value) =>
@@ -508,7 +554,7 @@ class _LanguageSelector extends ConsumerWidget {
             value: system,
             title: Text(context.l10n.languageSystem),
           ),
-          for (final entry in supportedLanguages.entries)
+          for (final entry in languages.entries)
             RadioListTile<String>(
               contentPadding: EdgeInsets.zero,
               dense: true,
@@ -516,6 +562,110 @@ class _LanguageSelector extends ConsumerWidget {
               title: Text(entry.value),
             ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _pick(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, String> languages,
+    String? selected,
+  ) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => _LanguageSheet(
+        languages: languages,
+        selected: selected,
+      ),
+    );
+    if (choice == null) return;
+    ref.read(localeProvider.notifier).set(choice == 'system' ? null : choice);
+  }
+}
+
+class _LanguageSheet extends StatefulWidget {
+  const _LanguageSheet({required this.languages, required this.selected});
+
+  final Map<String, String> languages;
+  final String? selected;
+
+  @override
+  State<_LanguageSheet> createState() => _LanguageSheetState();
+}
+
+class _LanguageSheetState extends State<_LanguageSheet> {
+  final _controller = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Arama hem dilin KENDİ adında hem de kodunda yapılır: kullanıcı
+  /// "日本語" yazamıyorsa "ja" yazabilmeli. Büyük/küçük harf yok sayılır;
+  /// `toLowerCase` Türkçe'nin I/ı çiftinde bile burada güvenli, çünkü
+  /// karşılaştırma iki tarafta da aynı dönüşümden geçiyor.
+  bool _matches(MapEntry<String, String> entry) {
+    if (_query.isEmpty) return true;
+    final q = _query.toLowerCase();
+    return entry.value.toLowerCase().contains(q) ||
+        entry.key.toLowerCase().contains(q);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final matches = widget.languages.entries.where(_matches).toList();
+    return Padding(
+      // Klavye açılınca liste kısalsın, arama kutusu klavyenin altında kalmasın.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.75,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: TextField(
+                controller: _controller,
+                autofocus: true,
+                onChanged: (value) => setState(() => _query = value.trim()),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: l10n.settingsLanguage,
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                children: [
+                  if (_query.isEmpty)
+                    ListTile(
+                      title: Text(l10n.languageSystem),
+                      trailing: widget.selected == null
+                          ? const Icon(Icons.check)
+                          : null,
+                      onTap: () => Navigator.pop(context, 'system'),
+                    ),
+                  for (final entry in matches)
+                    ListTile(
+                      title: Text(entry.value),
+                      subtitle: Text(entry.key),
+                      trailing: entry.key == widget.selected
+                          ? const Icon(Icons.check)
+                          : null,
+                      onTap: () => Navigator.pop(context, entry.key),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
