@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+// `AppExitResponse` (didRequestAppExit'in dönüş tipi) dart:ui'de yaşıyor;
+// material/services onu yeniden dışa AKTARMIYOR. `show` ile alınır ki
+// dart:ui'nin Color/TextStyle gibi tipleri material'ınkilerle çakışmasın.
+import 'dart:ui' show AppExitResponse;
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
