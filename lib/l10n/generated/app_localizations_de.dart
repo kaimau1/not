@@ -1484,4 +1484,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get freeTierBadge => 'Mit kostenlosem Kontingent';
+
+  @override
+  String get continueWithoutAccount => 'Ohne Konto fortfahren';
+
+  @override
+  String get localAccountInfo => 'Deine Notizen bleiben nur auf diesem Gerät: kein Zugriff von anderen Geräten, weg beim Deinstallieren, und die interne KI ist aus. Du kannst jederzeit ein Google-Konto verknüpfen — deine Notizen bleiben erhalten.';
+
+  @override
+  String get localAccountBadge => 'Lokales Konto';
+
+  @override
+  String get linkGoogleAccount => 'Google-Konto verknüpfen';
+
+  @override
+  String get accountLinked => 'Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert.';
 }

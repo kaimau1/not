@@ -127,11 +127,26 @@ class AiGate {
   /// (kendi anahtarını girenler muaf, çünkü GeminiService anahtar varken bu
   /// kapıya hiç gelmez).
   ///
-  /// Sayaç Firestore'da `users/{uid}` altında tutulur: cihaz yereli
-  /// (SharedPreferences) uygulama verisi silinince sıfırlanıyor ve her cihaz
-  /// kendi hakkını sayıyordu. Cihaz yereli yine yazılır — çevrimdışıyken ve
-  /// oturum yokken kapının tümden açılmaması için yedek sayaçtır.
+  /// Sayaç Firestore'da `aiQuota/{uid}` altında tutulur (bkz. firestore.rules
+  /// — pencere damgası sunucudan gelir, istemci sıfırlayamaz). Cihaz yereli
+  /// yine yazılır: çevrimdışıyken ve oturum yokken kapının tümden açılmaması
+  /// için yedek sayaçtır.
   Future<void> consume([int cost = 1]) async {
+    // YEREL HESAP (anonim giriş) dahili AI'ı KULLANAMAZ. Kök neden: anonim
+    // kullanıcı çıkış yapıp yeniden girdiğinde yeni bir uid alır; sunucu
+    // sayacı uid'e bağlı olduğundan bu, sınırsız ücretsiz AI musluğu demek
+    // olurdu — üstelik fatura projeye çıkar. Anonim kullanıcı kendi
+    // anahtarını girerse (BYOK) bu kapıya hiç uğramaz, orada sınır yok.
+    if (_ref.read(isAnonymousProvider)) {
+      throw const GeminiException(
+        'Dahili yapay zeka için Google hesabıyla giriş yapman gerekiyor. '
+        "Yerel hesapla, Ayarlar'dan kendi API anahtarını girerek tüm AI "
+        'özelliklerini kullanabilirsin.',
+        // isAuthError BİLEREK false: çağrı yerleri (ör. editörün _runAi'si)
+        // bu bayrakta kendi genel "anahtar gir" metnini gösteriyor ve buradaki
+        // asıl açıklama kaybolurdu.
+      );
+    }
     final premium = _ref.read(premiumProvider).value ?? false;
     final limit = premium
         ? AppConstants.premiumDailyAiPoints
@@ -142,7 +157,7 @@ class AiGate {
 
     var used = prefs.getInt(_prefsKey(day)) ?? 0;
     if (uid != null) {
-      final remote = await _consumeRemote(uid, day, cost, limit);
+      final remote = await _consumeRemote(uid, cost, limit);
       // Sunucu sayacı okunabildiyse o esastır (cihazlar arası ortak).
       if (remote == _remoteDenied) _throwOut(premium, limit);
       if (remote != null) used = remote - cost;
@@ -154,40 +169,60 @@ class AiGate {
 
   static const int _remoteDenied = -1;
 
+  /// Kota penceresi artık takvim günü değil, son sıfırlamadan itibaren 24
+  /// saat (bkz. firestore.rules — takvim gününü kurallarda güvenle
+  /// hesaplamak mümkün değil). Mesaj da buna göre yazıldı.
+  static const _quotaWindow = Duration(hours: 24);
+
   static Never _throwOut(bool premium, int limit) => throw GeminiException(
     premium
-        ? 'Bugünlük premium AI puanın ($limit) doldu. Yarın yenilenir; '
-              "dilersen Ayarlar'dan kendi Gemini anahtarını girerek "
-              'sınırsız kullanabilirsin.'
-        : 'Bugünlük ücretsiz AI puanın doldu. Yarın yenilenir; dilersen '
-              "Ayarlar'dan kendi Gemini anahtarını girebilir veya "
-              "Premium'a geçebilirsin.",
+        ? 'Premium AI puanın ($limit) doldu. 24 saat içinde yenilenir; '
+              "dilersen Ayarlar'dan kendi API anahtarını girerek sınırsız "
+              'kullanabilirsin.'
+        : 'Ücretsiz AI puanın doldu. 24 saat içinde yenilenir; dilersen '
+              "Ayarlar'dan kendi API anahtarını girebilir veya Premium'a "
+              'geçebilirsin.',
   );
 
   /// Sunucu sayacını işlemle (transaction) artırır ve YENİ toplamı döndürür.
   /// Ağ yoksa/işlem başarısızsa null döner — kapı o zaman cihaz yerelindeki
   /// yedek sayaçla çalışır (AI zaten ağsız çalışmadığı için bu yol nadirdir).
-  Future<int?> _consumeRemote(String uid, String day, int cost, int limit) async {
+  ///
+  /// Pencerenin dolup dolmadığına istemci karar veriyor gibi görünse de son
+  /// söz SUNUCUDA: saatini ileri alan bir istemcinin sıfırlama yazımı
+  /// kuraldaki `resource.data.dayStart < request.time - 24h` koşuluna takılır,
+  /// işlem düşer ve yerel yedek sayaç devreye girer.
+  Future<int?> _consumeRemote(String uid, int cost, int limit) async {
     final doc = FirebaseFirestore.instance
-        .collection(AppConstants.usersCollection)
+        .collection(AppConstants.aiQuotaCollection)
         .doc(uid);
     try {
       return await FirebaseFirestore.instance
           .runTransaction<int>((tx) async {
             final snap = await tx.get(doc);
-            final usage = snap.data()?['aiUsage'] as Map<String, dynamic>?;
-            // Gün değiştiyse sayaç sıfırdan başlar.
-            final used = usage?['day'] == day
-                ? (usage?['points'] as num?)?.toInt() ?? 0
-                : 0;
+            final data = snap.data();
+            final dayStart = (data?['dayStart'] as Timestamp?)?.toDate();
+            final expired =
+                dayStart == null ||
+                DateTime.now().difference(dayStart) >= _quotaWindow;
+            final used = expired
+                ? 0
+                : (data?['points'] as num?)?.toInt() ?? 0;
             final next = used + cost;
             // Tavan aşılıyorsa sayaç ARTIRILMAZ ve çağırana "reddedildi"
             // bildirilir; sayacın kendisini döndürmek, yerel yedek kontrolün
             // hakkı geçirmesine yol açıyordu.
             if (next > limit) return _remoteDenied;
-            tx.set(doc, {
-              'aiUsage': {'day': day, 'points': next},
-            }, SetOptions(merge: true));
+            if (!snap.exists || expired) {
+              // Yeni pencere: damga SUNUCUdan alınır (kural bunu şart koşuyor).
+              tx.set(doc, {
+                'dayStart': FieldValue.serverTimestamp(),
+                'points': next,
+              });
+            } else {
+              // Aynı pencere: yalnız puan artar, damgaya dokunulmaz.
+              tx.update(doc, {'points': next});
+            }
             return next;
           })
           .timeout(const Duration(seconds: 8));

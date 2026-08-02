@@ -452,5 +452,10 @@
   "apiKeyFieldLabel": "Clave de API",
   "getApiKey": "¿Dónde consigo una clave?",
   "recommendedModel": "Recomendado",
-  "freeTierBadge": "Tiene nivel gratuito"
+  "freeTierBadge": "Tiene nivel gratuito",
+  "continueWithoutAccount": "Continuar sin cuenta",
+  "localAccountInfo": "Tus notas se quedan solo en este dispositivo: no se abren en otro, se pierden si desinstalas la app y la IA integrada está desactivada. Puedes vincular una cuenta de Google cuando quieras; tus notas se conservan.",
+  "localAccountBadge": "Cuenta local",
+  "linkGoogleAccount": "Vincular cuenta de Google",
+  "accountLinked": "Tu cuenta de Google está vinculada. Tus notas ya se respaldan."
 }

@@ -30,5 +30,15 @@ class WebGoogleAuth implements AuthRepository {
       _auth.signInWithPopup(GoogleAuthProvider());
 
   @override
+  Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
+
+  @override
+  Future<UserCredential> linkWithGoogle() {
+    final user = _auth.currentUser;
+    if (user == null) return signInWithGoogle();
+    return user.linkWithPopup(GoogleAuthProvider());
+  }
+
+  @override
   Future<void> signOut() => _auth.signOut();
 }

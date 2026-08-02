@@ -459,5 +459,10 @@
   "apiKeyFieldLabel": "API key",
   "getApiKey": "Where do I get a key?",
   "recommendedModel": "Recommended",
-  "freeTierBadge": "Has a free tier"
+  "freeTierBadge": "Has a free tier",
+  "continueWithoutAccount": "Continue without an account",
+  "localAccountInfo": "Your notes stay on this device only: they cannot be opened elsewhere, they are gone if you uninstall the app, and built-in AI is off. You can link a Google account at any time — your notes carry over.",
+  "localAccountBadge": "Local account",
+  "linkGoogleAccount": "Link a Google account",
+  "accountLinked": "Your Google account is linked. Your notes are backed up now."
 }

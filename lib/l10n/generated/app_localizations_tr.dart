@@ -1465,4 +1465,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get freeTierBadge => 'Ücretsiz kademe var';
+
+  @override
+  String get continueWithoutAccount => 'Hesapsız devam et';
+
+  @override
+  String get localAccountInfo => 'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.';
+
+  @override
+  String get localAccountBadge => 'Yerel hesap';
+
+  @override
+  String get linkGoogleAccount => 'Google hesabı bağla';
+
+  @override
+  String get accountLinked => 'Google hesabın bağlandı. Notların artık yedekleniyor.';
 }

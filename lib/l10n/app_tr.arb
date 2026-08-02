@@ -634,5 +634,10 @@
   "apiKeyFieldLabel": "API anahtarı",
   "getApiKey": "Anahtarı nereden alırım?",
   "recommendedModel": "Önerilen",
-  "freeTierBadge": "Ücretsiz kademe var"
+  "freeTierBadge": "Ücretsiz kademe var",
+  "continueWithoutAccount": "Hesapsız devam et",
+  "localAccountInfo": "Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.",
+  "localAccountBadge": "Yerel hesap",
+  "linkGoogleAccount": "Google hesabı bağla",
+  "accountLinked": "Google hesabın bağlandı. Notların artık yedekleniyor."
 }

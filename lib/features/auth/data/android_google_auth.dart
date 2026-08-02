@@ -27,12 +27,24 @@ class AndroidGoogleAuth implements AuthRepository {
   User? get currentUser => _auth.currentUser;
 
   @override
-  Future<UserCredential> signInWithGoogle() async {
+  Future<UserCredential> signInWithGoogle() async =>
+      _auth.signInWithCredential(await _googleCredential());
+
+  @override
+  Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
+
+  @override
+  Future<UserCredential> linkWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) return signInWithGoogle();
+    return user.linkWithCredential(await _googleCredential());
+  }
+
+  Future<AuthCredential> _googleCredential() async {
     await _ensureInitialized();
     final account = await GoogleSignIn.instance.authenticate();
     final idToken = account.authentication.idToken;
-    final credential = GoogleAuthProvider.credential(idToken: idToken);
-    return _auth.signInWithCredential(credential);
+    return GoogleAuthProvider.credential(idToken: idToken);
   }
 
   @override
