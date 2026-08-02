@@ -99,7 +99,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
         title: Text(l10n.drawingTitle),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsetsDirectional.only(end: 8),
             child: FilledButton.tonalIcon(
               onPressed: _saving ? null : _save,
               icon: const Icon(Icons.check, size: 18),

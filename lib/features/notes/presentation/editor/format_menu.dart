@@ -222,7 +222,7 @@ class _ColorRow extends StatelessWidget {
       children: [
         for (var i = 0; i < palette.length; i++)
           Padding(
-            padding: const EdgeInsets.only(right: 10),
+            padding: const EdgeInsetsDirectional.only(end: 10),
             child: InkWell(
               onTap: () => onPick(i + 1),
               customBorder: const CircleBorder(),

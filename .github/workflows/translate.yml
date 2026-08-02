@@ -1,0 +1,105 @@
+name: Çeviri üret
+
+# Elle tetiklenir: Actions → "Çeviri üret" → Run workflow.
+#
+# Neden CI'da: `tool/translate_arb.dart` yerelde de çalışır, ama anahtarın
+# yerel bir dosyada dolaşmaması ve 100 dilin uzun sürebilmesi için asıl yeri
+# burası. Anahtar depo Secrets'ında (AI_TRANSLATE_KEY) durur, loglara düşmez.
+#
+# Sonuç doğrudan main'e itilmez: yeni bir dala push edilir ve PR açılır.
+# Çeviri otomatik üretiliyor; gözden geçirilmeden yayınlanmamalı.
+on:
+  workflow_dispatch:
+    inputs:
+      langs:
+        description: 'Diller (virgülle): fr,it,pt,ru,ar,hi,ja,ko,zh,id,nl,pl'
+        required: true
+        default: 'fr,it,pt,ru,ar,hi,ja,ko,zh,id,nl,pl'
+      provider:
+        description: 'Sağlayıcı'
+        required: true
+        default: 'gemini'
+        type: choice
+        options: [gemini, openai, openrouter, anthropic]
+      model:
+        description: 'Model kimliği (boş = sağlayıcının varsayılanı)'
+        required: false
+        default: ''
+      force:
+        description: 'Var olan çevirileri de yeniden üret'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  FLUTTER_VERSION: '3.44.6'
+
+jobs:
+  translate:
+    name: ARB üret ve PR aç
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Bağımlılıkları indir
+        run: flutter pub get
+
+      - name: Anahtarı doğrula
+        env:
+          AI_TRANSLATE_KEY: ${{ secrets.AI_TRANSLATE_KEY }}
+        run: |
+          if [ -z "$AI_TRANSLATE_KEY" ]; then
+            echo "AI_TRANSLATE_KEY tanımlı değil."
+            echo "Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+
+      - name: Çevirileri üret
+        env:
+          AI_TRANSLATE_KEY: ${{ secrets.AI_TRANSLATE_KEY }}
+        run: |
+          dart run tool/translate_arb.dart \
+            --key="$AI_TRANSLATE_KEY" \
+            --langs='${{ inputs.langs }}' \
+            --provider='${{ inputs.provider }}' \
+            ${{ inputs.model != '' && format('--model={0}', inputs.model) || '' }} \
+            ${{ inputs.force && '--force' || '' }}
+
+      # Üretilen ARB'lerden Dart sınıflarını yeniden kurar. Burada kırılırsa
+      # (ör. yer tutucusu bozulmuş bir çeviri) PR hiç açılmaz — bozuk çeviri
+      # depoya girmez.
+      - name: Çevirileri derle ve sına
+        run: |
+          flutter gen-l10n
+          flutter analyze
+          flutter test
+
+      - name: PR aç
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: claude/ceviri-${{ github.run_number }}
+          commit-message: 'Ceviri: ${{ inputs.langs }}'
+          title: 'Çeviri: ${{ inputs.langs }}'
+          body: |
+            `tool/translate_arb.dart` ile otomatik üretildi.
+
+            - Sağlayıcı: `${{ inputs.provider }}`
+            - Diller: `${{ inputs.langs }}`
+
+            Makine çevirisi — birleştirmeden önce en azından bildiğin
+            dillerde göz gezdir. Yer tutucular (`{name}`) ve kısa düğme
+            metinleri en sık bozulan yerler.
+
+            `flutter analyze` ve `flutter test` bu dallarda zaten koştu;
+            `locale_fallback_test` her dilin Flutter tarafından
+            desteklendiğini de doğruluyor.
+          draft: true

@@ -528,9 +528,9 @@ class _ChipVisibilitySection extends StatelessWidget {
             ),
           ),
         Align(
-          alignment: Alignment.centerRight,
+          alignment: AlignmentDirectional.centerEnd,
           child: Padding(
-            padding: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsetsDirectional.only(end: 12),
             child: TextButton.icon(
               onPressed: () =>
                   onSetAll([for (final e in entries) e.id], !allVisible),

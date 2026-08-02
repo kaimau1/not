@@ -230,7 +230,7 @@ class NoteCard extends ConsumerWidget {
     final content = Padding(
       // Başlıksız kartta sağdan biraz içerik payı bırakılır ki ilk satır
       // köşedeki üç nokta düğmesinin altına girmesin.
-      padding: EdgeInsets.fromLTRB(12, 10, showTopRow ? 12 : 20, 10),
+      padding: EdgeInsetsDirectional.fromSTEB(12, 10, showTopRow ? 12 : 20, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -239,7 +239,7 @@ class NoteCard extends ConsumerWidget {
             Padding(
               // Sağdaki 30px köşedeki üç nokta düğmesine yer açar; uzun başlık
               // düğmenin altına girmeden kısalır (…).
-              padding: const EdgeInsets.only(bottom: 6, right: 30),
+              padding: const EdgeInsetsDirectional.only(bottom: 6, end: 30),
               child: Row(
                 children: [
                   Expanded(
@@ -261,7 +261,7 @@ class NoteCard extends ConsumerWidget {
                   ),
                   for (final badge in badges)
                     Padding(
-                      padding: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsetsDirectional.only(start: 4),
                       child: badge,
                     ),
                 ],
@@ -326,7 +326,7 @@ class NoteCard extends ConsumerWidget {
             const SizedBox(height: 6),
             // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
             Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: Text(
                 formatNoteDate(note.updatedAt!),
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -390,9 +390,9 @@ class NoteCard extends ConsumerWidget {
             // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
             // seçim sırasında sabit kalır).
             if (!selectionActive)
-              Positioned(
+              PositionedDirectional(
                 top: 2,
-                right: 2,
+                end: 2,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -402,7 +402,7 @@ class NoteCard extends ConsumerWidget {
                       width: 36,
                       height: 36,
                       child: Align(
-                        alignment: Alignment.topRight,
+                        alignment: AlignmentDirectional.topEnd,
                         child: Padding(
                           padding: const EdgeInsets.all(6),
                           child: Icon(
@@ -417,9 +417,9 @@ class NoteCard extends ConsumerWidget {
                 ),
               ),
             if (selected)
-              Positioned(
+              PositionedDirectional(
                 top: 6,
-                right: 6,
+                end: 6,
                 child: Container(
                   decoration: BoxDecoration(
                     color: scheme.primary,
@@ -546,7 +546,7 @@ class _NotePreview extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(right: 6, top: 1),
+                        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
                         child: Icon(
                           item.checked
                               ? Icons.check_box
@@ -617,7 +617,7 @@ class _NotePreview extends StatelessWidget {
                   children: [
                     if (note.type == NoteType.checklist)
                       Padding(
-                        padding: const EdgeInsets.only(right: 6, top: 1),
+                        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
                         child: Icon(
                           shown[i].checked
                               ? Icons.check_box
@@ -628,7 +628,7 @@ class _NotePreview extends StatelessWidget {
                       )
                     else
                       Padding(
-                        padding: const EdgeInsets.only(right: 6),
+                        padding: const EdgeInsetsDirectional.only(end: 6),
                         child: Text('${i + 1}.', style: bodyStyle),
                       ),
                     Expanded(

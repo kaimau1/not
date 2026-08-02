@@ -339,7 +339,7 @@ class _ShapeBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsetsDirectional.only(end: 6),
                   child: Text(
                     p.bullet,
                     style: TextStyle(

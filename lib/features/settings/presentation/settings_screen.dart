@@ -194,7 +194,7 @@ class _SettingsGroup extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 8),
             child: Row(
               children: [
                 if (icon != null) ...[
@@ -938,7 +938,7 @@ class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
             height: (bodyStyle?.fontSize ?? 14) * _max * 1.6,
             width: double.infinity,
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 l10n.fontSizePreview,
                 maxLines: 1,
@@ -1440,7 +1440,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
           ),
         ),
         Align(
-          alignment: Alignment.centerLeft,
+          alignment: AlignmentDirectional.centerStart,
           child: TextButton.icon(
             onPressed: () => launchUrl(
               Uri.parse(provider.keyUrl),
@@ -1506,7 +1506,7 @@ class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
           ),
         if (entries.isNotEmpty)
           Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
               onPressed: () => setState(AiDiagnostics.clear),
               icon: const Icon(Icons.delete_outline, size: 18),

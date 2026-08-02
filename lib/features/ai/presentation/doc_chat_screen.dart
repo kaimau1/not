@@ -197,7 +197,7 @@ class _DocChatScreenState extends ConsumerState<DocChatScreen> {
                           itemBuilder: (context, index) {
                             if (index == _history.length) {
                               return Align(
-                                alignment: Alignment.centerLeft,
+                                alignment: AlignmentDirectional.centerStart,
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Text(l10n.aiThinking),
@@ -207,8 +207,8 @@ class _DocChatScreenState extends ConsumerState<DocChatScreen> {
                             final turn = _history[index];
                             return Align(
                               alignment: turn.isUser
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
+                                  ? AlignmentDirectional.centerEnd
+                                  : AlignmentDirectional.centerStart,
                               child: Container(
                                 margin: const EdgeInsets.symmetric(vertical: 4),
                                 padding: const EdgeInsets.symmetric(

@@ -413,8 +413,8 @@ class _AttachmentTile extends StatelessWidget {
         if (!attachment.isUploaded &&
             _hasLocal &&
             attachment.kind != AttachmentKind.video)
-          Positioned(
-            left: 6,
+          PositionedDirectional(
+            start: 6,
             bottom: 6,
             child: Tooltip(
               message: context.l10n.attachmentUploading,
@@ -435,8 +435,8 @@ class _AttachmentTile extends StatelessWidget {
               ),
             ),
           ),
-        Positioned(
-          right: 2,
+        PositionedDirectional(
+          end: 2,
           top: 2,
           child: IconButton(
             tooltip: context.l10n.removeAttachment,
@@ -451,8 +451,8 @@ class _AttachmentTile extends StatelessWidget {
         // görselde). Küçük döşemede yer az: ikisi de sol üstte, kaldırmanın
         // karşı köşesinde durur ki yanlışlıkla silmeye basılmasın.
         if (onCopy != null || (onPlaceOnPage != null && _canPlaceOnPage))
-          Positioned(
-            left: 2,
+          PositionedDirectional(
+            start: 2,
             top: 2,
             child: Row(
               children: [

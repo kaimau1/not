@@ -362,7 +362,7 @@ class InkToolbar extends StatelessWidget {
                 children: [
                   for (final color in kInkPalette)
                     Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsetsDirectional.only(end: 8),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: () => controller.setColor(color),

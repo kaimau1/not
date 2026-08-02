@@ -124,7 +124,7 @@ class _CalculatorSheetState extends State<_CalculatorSheet> {
                 hintText: l10n.calcExpressionHint,
                 suffixIcon: hasExpression
                     ? Padding(
-                        padding: const EdgeInsets.only(right: 12),
+                        padding: const EdgeInsetsDirectional.only(end: 12),
                         child: Text(
                           value == null
                               ? l10n.calcInvalid
