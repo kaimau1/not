@@ -9,12 +9,18 @@ import '../../../core/utils/markdown.dart';
 import '../../notes/domain/note.dart';
 import '../../settings/settings_providers.dart';
 import 'ai_gate.dart';
+import 'ai_provider.dart';
 import 'api_key_store.dart';
 import 'firebase_ai_client.dart';
+import 'model_catalog.dart';
+import 'provider_chat.dart';
 
 final geminiServiceProvider = Provider<GeminiService>(
   (ref) => GeminiService(
     ref.watch(apiKeyStoreProvider),
+    // Sağlayıcı değişince servis yeniden kurulur: oturum önbelleği
+    // (model listesi, çalışan model) eski sağlayıcıya aitti, taşınmamalı.
+    provider: ref.watch(activeProviderProvider),
     taskModel: (task) => ref.read(aiTaskModelsProvider)[task],
     // Anahtar girilmemişse istekler dahili (Firebase AI Logic) yoldan
     // yapılır; her çağrı önce premium/kota kapısından geçer.
@@ -32,7 +38,7 @@ final geminiServiceProvider = Provider<GeminiService>(
 /// yeniden çağrılıp FutureBuilder'ı sıfırlamaz. Eskiden bölüm her rebuild'de
 /// önce boşalıp (yükseklik 0) sonra dolduğu için ayarlar sayfası anlık
 /// zıplıyordu (madde 3).
-final availableModelsProvider = FutureProvider<List<String>>(
+final availableModelsProvider = FutureProvider<List<AiModel>>(
   (ref) => ref.watch(geminiServiceProvider).availableModels(),
 );
 
@@ -71,20 +77,28 @@ class SpeechTranslation {
   final String translation;
 }
 
-/// Gemini REST API istemcisi. Kullanıcının kendi anahtarıyla çalışır;
-/// tüm istekler doğrudan Google'a gider, araya sunucu girmez.
+/// AI sağlayıcısı istemcisi. Kullanıcının kendi anahtarıyla çalışır; tüm
+/// istekler doğrudan sağlayıcıya gider, araya sunucu girmez. Anahtar yoksa
+/// dahili yola (Firebase AI Logic) düşer.
+///
+/// Adı tarihsel olarak `GeminiService` kaldı: Gemini hâlâ varsayılan ve tek
+/// tam yetenekli sağlayıcı (araç çağrısı + embedding + ses/video). Diğer
+/// sağlayıcılar metin/görsel/PDF işlerinin tamamını yapar; farklar
+/// [_requireGemini] çevresinde toplandı.
 class GeminiService {
   GeminiService(
     this._keyStore, {
     Dio? dio,
+    AiProvider provider = AiProvider.gemini,
     String? Function(AiTask)? taskModel,
     this._builtIn,
-  }) : _taskModel = taskModel ?? _noModel,
+  }) : _provider = provider,
+       _taskModel = taskModel ?? _noModel,
        _dio =
            dio ??
            Dio(
              BaseOptions(
-               baseUrl: AppConstants.geminiBaseUrl,
+               baseUrl: provider.baseUrl,
                connectTimeout: const Duration(seconds: 20),
                receiveTimeout: const Duration(minutes: 3),
              ),
@@ -93,7 +107,24 @@ class GeminiService {
   static String? _noModel(AiTask task) => null;
 
   final ApiKeyStore _keyStore;
+  final AiProvider _provider;
   final Dio _dio;
+
+  /// Seçili sağlayıcı — arayüz mesajlarında ("... ile gönderilemiyor") ve
+  /// yetenek kontrollerinde kullanılır.
+  AiProvider get provider => _provider;
+
+  /// Yalnız Gemini'de olan yetenekler (araç çağrılı asistan, embedding,
+  /// ses/video girişi) için kapı. Başka sağlayıcı seçiliyken bu işler sessizce
+  /// yanlış sonuç vermek yerine ne yapılacağını söyleyen bir hata verir.
+  void _requireGemini(String feature) {
+    if (_provider == AiProvider.gemini) return;
+    throw GeminiException(
+      '$feature şu an yalnızca Google Gemini ile çalışıyor. '
+      "Ayarlar > Yapay Zeka'dan sağlayıcıyı Gemini'ye çevirebilir ya da "
+      'anahtarı kaldırıp dahili AI\'ı kullanabilirsin.',
+    );
+  }
 
   /// Anahtarsız kullanımda devreye giren dahili yol (Firebase AI Logic).
   /// null ise (testler) anahtar zorunlu kalır.
@@ -102,7 +133,8 @@ class GeminiService {
   /// Ayarlardan gelen kullanıcı model seçimleri (null = otomatik).
   final String? Function(AiTask) _taskModel;
 
-  /// Oturum önbelleği: API'den çekilen aday modeller ve son çalışan model.
+  /// Oturum önbelleği: API'den çekilen model kataloğu ve son çalışan model.
+  List<AiModel>? _catalog;
   List<String>? _candidates;
   String? _activeModel;
 
@@ -111,7 +143,7 @@ class GeminiService {
     try {
       final response = await _dio.get<dynamic>(
         '/models',
-        options: Options(headers: {'x-goog-api-key': key}),
+        options: Options(headers: _provider.authHeaders(key)),
       );
       return response.statusCode == 200;
     } on DioException {
@@ -120,7 +152,7 @@ class GeminiService {
   }
 
   Future<String> _apiKey() async {
-    final key = await _keyStore.read();
+    final key = await _keyStore.read(_provider);
     if (key == null || key.isEmpty) {
       throw const GeminiException('API anahtarı yok', isAuthError: true);
     }
@@ -144,50 +176,43 @@ class GeminiService {
   /// Denenecek modeller: tercih listesi ∩ API'deki gerçek liste, ardından
   /// listede olmayan diğer genel amaçlı flash modelleri (yeniden eskiye).
   /// Liste çekilemezse tercih listesi olduğu gibi kullanılır.
-  Future<List<String>> _fetchCandidates(String key) async {
+  /// Sağlayıcının model kataloğunu çeker ve uygulamaya uygun sıraya sokar
+  /// (bkz. model_catalog.dart). Liste çekilemezse Gemini'de sabit tercih
+  /// listesine düşülür; diğer sağlayıcılarda sabit liste yoktur (model
+  /// kimlikleri sık değişiyor), o yüzden boş döner ve kullanıcı model
+  /// seçimini elle yapabilir.
+  Future<List<AiModel>> _fetchCatalog(String key) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/models',
-        queryParameters: {'pageSize': 1000},
-        options: Options(headers: {'x-goog-api-key': key}),
+        queryParameters: _provider == AiProvider.gemini
+            ? {'pageSize': 1000}
+            : null,
+        options: Options(headers: _provider.authHeaders(key)),
       );
-      final models = response.data?['models'] as List<dynamic>? ?? const [];
-      final available = <String>{
-        for (final m in models)
-          if (((m as Map<String, dynamic>)['supportedGenerationMethods']
-                      as List<dynamic>? ??
-                  const [])
-              .contains('generateContent'))
-            (m['name'] as String? ?? '').replaceFirst('models/', ''),
-      };
-      final list = rankModels(available);
+      final list = rankModels(
+        _provider,
+        parseModelList(_provider, response.data),
+      );
       if (list.isNotEmpty) return list;
     } on DioException {
-      // Liste çekilemedi; sabit tercih listesiyle devam edilir.
+      // Liste çekilemedi; aşağıdaki yedeğe düşülür.
     }
-    return AppConstants.geminiModelPreference;
+    if (_provider != AiProvider.gemini) return const [];
+    return [
+      for (final id in AppConstants.geminiModelPreference)
+        AiModel(id: id, label: id, recommended: true),
+    ];
   }
 
-  /// API'deki modellerden deneme sırasını üretir: önce tercih listesi
-  /// (mevcut olanlar), ardından tercihte olmayan genel amaçlı flash
-  /// modelleri yeniden eskiye. TTS/canlı/görüntü/embedding elenir.
-  static List<String> rankModels(Set<String> available) {
-    final preferred = [
-      for (final id in AppConstants.geminiModelPreference)
-        if (available.contains(id)) id,
-    ];
-    final extras =
-        available
-            .where(
-              (id) =>
-                  id.startsWith('gemini-') &&
-                  id.contains('flash') &&
-                  !AppConstants.geminiModelPreference.contains(id) &&
-                  !RegExp('tts|live|image|audio|embed').hasMatch(id),
-            )
-            .toList()
-          ..sort((a, b) => b.compareTo(a));
-    return [...preferred, ...extras];
+  /// Deneme sırası: katalogdaki kimlikler. Katalog boşsa (sağlayıcı listeyi
+  /// vermediyse) kullanıcının seçtiği model tek aday olur.
+  Future<List<String>> _fetchCandidates(String key) async {
+    final catalog = _catalog ??= await _fetchCatalog(key);
+    final ids = [for (final model in catalog) model.id];
+    if (ids.isNotEmpty) return ids;
+    final chosen = _taskModel(AiTask.general);
+    return chosen == null ? const [] : [chosen];
   }
 
   /// [run]'ı modellerle sırayla dener: 404 ve 429'da sıradaki modele geçer,
@@ -200,7 +225,17 @@ class GeminiService {
     String? prefer,
   }) async {
     final candidates = _candidates ??= await _fetchCandidates(key);
-    final first = prefer != null && candidates.contains(prefer)
+    // Katalog boş VE kullanıcı model seçmediyse denenecek hiçbir şey yok:
+    // `ordered` boş kalır, döngü hiç dönmez ve eskiden `lastSkipped!` null
+    // kontrolünde patlıyordu. Kullanıcıya ne yapacağını söyle.
+    if (candidates.isEmpty && prefer == null && _activeModel == null) {
+      throw GeminiException(
+        '${_provider.label} model listesi alınamadı. '
+        "Ayarlar > Yapay Zeka > Model'den kullanmak istediğin modeli "
+        'elle seçebilirsin.',
+      );
+    }
+    final first = prefer != null && (candidates.isEmpty || candidates.contains(prefer))
         ? prefer
         : _activeModel;
     final ordered = [?first, ...candidates.where((m) => m != first)];
@@ -241,7 +276,7 @@ class GeminiService {
     String? preferModel,
   }) async {
     // Anahtar yoksa dahili yol: istek Firebase AI Logic üzerinden gider.
-    final stored = await _keyStore.read();
+    final stored = await _keyStore.read(_provider);
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -254,34 +289,29 @@ class GeminiService {
       );
     }
     final key = stored;
-    final response = await _withModel(
-      key,
-      (model) => _dio.post<Map<String, dynamic>>(
-        '/models/$model:generateContent',
-        options: Options(headers: {'x-goog-api-key': key}),
-        data: {
-          'contents': contents,
-          'generationConfig': {
-            if (jsonOutput) 'responseMimeType': 'application/json',
-          },
-        },
-      ),
-      prefer: preferModel ?? _taskModel(AiTask.general),
-    );
-    final candidates = response.data?['candidates'] as List<dynamic>?;
-    if (candidates == null || candidates.isEmpty) {
-      throw const GeminiException('Modelden yanıt alınamadı');
+    // İstek gövdesi sağlayıcının tel biçimine BURADA çevrilir; çağrı yerleri
+    // (özet, OCR, sohbet...) Gemini şeklini üretmeye devam eder.
+    final Response<Map<String, dynamic>> response;
+    try {
+      response = await _withModel(
+        key,
+        (model) => _dio.post<Map<String, dynamic>>(
+          chatPath(_provider, model),
+          options: Options(headers: _provider.authHeaders(key)),
+          data: buildChatBody(
+            provider: _provider,
+            model: model,
+            contents: contents,
+            jsonOutput: jsonOutput,
+          ),
+        ),
+        prefer: preferModel ?? _taskModel(AiTask.general),
+      );
+    } on UnsupportedContentException catch (e) {
+      throw GeminiException(e.message);
     }
-    final content =
-        (candidates.first as Map<String, dynamic>)['content']
-            as Map<String, dynamic>?;
-    final responseParts = content?['parts'] as List<dynamic>? ?? const [];
-    final text = [
-      for (final part in responseParts)
-        if ((part as Map<String, dynamic>)['text'] != null)
-          part['text'] as String,
-    ].join();
-    if (text.isEmpty) {
+    final text = parseChatText(_provider, response.data);
+    if (text == null || text.isEmpty) {
       throw const GeminiException('Modelden boş yanıt döndü');
     }
     return text;
@@ -631,6 +661,11 @@ class GeminiService {
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
   Future<List<List<double>>> embedTexts(List<String> texts) async {
     if (texts.isEmpty) return const [];
+    // Semantik arama vektör gerektirir; sağlayıcılar arasında biçim ve
+    // boyut uyuşmadığı için (aynı dizinde karışık vektör arama sonucunu
+    // bozar) yalnız Gemini desteklenir. Çağıran (semantic_search) hata
+    // gelince düz aramaya düşer — kullanıcı arama yapamaz duruma gelmez.
+    _requireGemini('Semantik arama');
     final key = await _apiKey();
     const embedModel = 'models/gemini-embedding-001';
     try {
@@ -784,7 +819,8 @@ class GeminiService {
     // standart flash tercih edilir: lite, araç çağrılı not oluşturmada
     // tipi/içeriği tutarsız verip boş not üretebiliyordu (madde 15).
     final prefer = _taskModel(AiTask.voice) ?? AppConstants.voiceAssistantModel;
-    final stored = await _keyStore.read();
+    final stored = await _keyStore.read(_provider);
+    if (stored != null && stored.isNotEmpty) _requireGemini('Sesli asistan');
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -816,7 +852,8 @@ class GeminiService {
           ],
         },
     ];
-    final stored = await _keyStore.read();
+    final stored = await _keyStore.read(_provider);
+    if (stored != null && stored.isNotEmpty) _requireGemini('AI asistanı');
     if (stored == null || stored.isEmpty) {
       final builtIn = _builtIn;
       if (builtIn == null) {
@@ -836,11 +873,21 @@ class GeminiService {
     );
   }
 
-  /// Ayarlardaki model seçicileri için kullanılabilir model listesi.
-  Future<List<String>> availableModels() async {
-    final key = await _keyStore.read();
-    if (key == null || key.isEmpty) return AppConstants.geminiModelPreference;
-    return _candidates ??= await _fetchCandidates(key);
+  /// Ayarlardaki model seçicileri için kullanılabilir model listesi —
+  /// sağlayıcının API'sinden CANLI çekilir, "not için yeterli" olanlar
+  /// [AiModel.recommended] ile işaretlenir.
+  ///
+  /// Anahtar yoksa dahili AI (Firebase AI Logic) kullanılıyor demektir; o yol
+  /// Gemini modelleriyle çalıştığından sabit tercih listesi gösterilir.
+  Future<List<AiModel>> availableModels() async {
+    final key = await _keyStore.read(_provider);
+    if (key == null || key.isEmpty) {
+      return [
+        for (final id in AppConstants.geminiModelPreference)
+          AiModel(id: id, label: id, recommended: true),
+      ];
+    }
+    return _catalog ??= await _fetchCatalog(key);
   }
 
   /// Araç çağrısı döngüsü: model araç isterse çalıştırılır, sonuç geri

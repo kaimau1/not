@@ -6,7 +6,9 @@
   "loginError": "Giriş başarısız: {error}",
   "@loginError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "searchHint": "Notlarda ara...",
@@ -21,7 +23,9 @@
   "editedAt": "Düzenlendi: {date}",
   "@editedAt": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "sectionPinned": "Sabitlenmiş",
@@ -36,13 +40,17 @@
   "notesDeletedCount": "{count} not silindi",
   "@notesDeletedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectedCount": "{count} seçildi",
   "@selectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "deleteSelected": "Seçilenleri sil",
@@ -53,7 +61,9 @@
   "moreItemsCount": "+{count} öğe daha",
   "@moreItemsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "addAttachment": "Ekle",
@@ -66,7 +76,9 @@
   "attachmentFailed": "Ek eklenemedi: {error}",
   "@attachmentFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "attachmentUploading": "Yükleniyor...",
@@ -74,7 +86,9 @@
   "attachmentTooLarge": "Dosya çok büyük (en fazla {limit} MB)",
   "@attachmentTooLarge": {
     "placeholders": {
-      "limit": {"type": "int"}
+      "limit": {
+        "type": "int"
+      }
     }
   },
   "removeAttachment": "Eki kaldır",
@@ -102,7 +116,9 @@
   "aiError": "Yapay zeka isteği başarısız: {error}",
   "@aiError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "aiSummaryTitle": "AI Özeti",
@@ -121,13 +137,17 @@
   "aiBuiltInPremium": "Dahili AI: Premium — bugün kalan puan {count}",
   "@aiBuiltInPremium": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "aiBuiltInRemaining": "Dahili AI: bugün kalan ücretsiz puan {count}",
   "@aiBuiltInRemaining": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "aiBuiltInByok": "Kendi anahtarın kullanılıyor — sınırsız",
@@ -145,7 +165,9 @@
   "emptyTrashConfirm": "{count} not kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?",
   "@emptyTrashConfirm": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "trashEmptied": "Çöp kutusu boşaltıldı",
@@ -183,7 +205,9 @@
   "genericError": "Bir şeyler ters gitti: {error}",
   "@genericError": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "addTag": "Etiket",
@@ -314,7 +338,13 @@
   "showTagChips": "Etiket çiplerini göster",
   "showFolderChips": "Klasör çiplerini göster",
   "videoTooBigForAi": "Video AI'ya göndermek için çok büyük ({mb} MB). Daha kısa çek.",
-  "@videoTooBigForAi": { "placeholders": { "mb": { "type": "int" } } },
+  "@videoTooBigForAi": {
+    "placeholders": {
+      "mb": {
+        "type": "int"
+      }
+    }
+  },
   "permCamera": "Kamera",
   "permCameraInfo": "Görüntülü not ve fotoğraf çekimi için gerekli",
   "permOnboardTitle": "Başlamadan önce",
@@ -340,7 +370,9 @@
   "deleteFolderConfirm": "\"{name}\" klasörü silinecek. İçindeki notlar silinmez, klasörsüz kalır.",
   "@deleteFolderConfirm": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "folderNameHint": "Klasör adı",
@@ -352,7 +384,9 @@
   "deleteChecked": "İşaretlileri sil ({count})",
   "@deleteChecked": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "removeItem": "Öğeyi sil",
@@ -368,7 +402,9 @@
   "speechVoiceLanguage": "{language} sesi",
   "@speechVoiceLanguage": {
     "placeholders": {
-      "language": {"type": "String"}
+      "language": {
+        "type": "String"
+      }
     }
   },
   "speechVoiceAutoInfo": "Diğer diller otomatik olarak erkek sesiyle okunur",
@@ -399,7 +435,9 @@
   "notesArchivedCount": "{count} not arşivlendi",
   "@notesArchivedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "backgroundColor": "Zemin rengi",
@@ -418,7 +456,13 @@
   "tagsSection": "Etiketler",
   "expandFilters": "Filtreleri genişlet",
   "collapseFilters": "Filtreleri daralt",
-  "@largeAttachmentBody": {"placeholders": {"size": {"type": "String"}}},
+  "@largeAttachmentBody": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "settingsLanguage": "Dil",
   "languageSystem": "Sistem dili",
   "settingsSpeech": "Sesli okuma",
@@ -434,7 +478,9 @@
   "importBackupDone": "{count} not geri yüklendi",
   "@importBackupDone": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "importBackupInvalid": "Geçersiz yedek dosyası",
@@ -471,11 +517,19 @@
   "scanUnsupported": "Belge tarama bu cihazda desteklenmiyor",
   "scanFailed": "Belge taranamadı: {error}",
   "@scanFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "scanPagesAdded": "{count} sayfa nota eklendi",
   "@scanPagesAdded": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "scanTextTitle": "Yazılar da tanınsın mı?",
   "scanTextBody": "Sayfalardaki yazı tanınıp notun içine yazılır. Görüntü aynen kalır. Sayfa başına birkaç saniye sürer.",
@@ -496,14 +550,18 @@
   "qrScanFailed": "Kod okunamadı: {error}",
   "@qrScanFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "qrTorch": "Işık",
   "attachmentsCount": "Ekler ({count})",
   "@attachmentsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "hideAttachments": "Gizle",
@@ -525,7 +583,9 @@
   "gridColumnsCount": "{count} sütun",
   "@gridColumnsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "addImageOnPageSubtitle": "Sayfaya yerleşir, yazı etrafından akar",
@@ -568,5 +628,11 @@
   "changeBackgroundImage": "Görseli değiştir",
   "removeBackgroundImage": "Zemini kaldır",
   "dashboardBackground": "Ana ekran zemini",
-  "dashboardBackgroundInfo": "Not ızgarasının arkasında duran görsel (yalnız bu cihazda)."
+  "dashboardBackgroundInfo": "Not ızgarasının arkasında duran görsel (yalnız bu cihazda).",
+  "aiProvider": "Yapay zeka sağlayıcısı",
+  "aiProviderInfo": "Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.",
+  "apiKeyFieldLabel": "API anahtarı",
+  "getApiKey": "Anahtarı nereden alırım?",
+  "recommendedModel": "Önerilen",
+  "freeTierBadge": "Ücretsiz kademe var"
 }

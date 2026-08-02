@@ -446,5 +446,11 @@
   "changeBackgroundImage": "Cambiar imagen",
   "removeBackgroundImage": "Quitar fondo",
   "dashboardBackground": "Fondo de la pantalla principal",
-  "dashboardBackgroundInfo": "Imagen detrás de la cuadrícula de notas (solo en este dispositivo)."
+  "dashboardBackgroundInfo": "Imagen detrás de la cuadrícula de notas (solo en este dispositivo).",
+  "aiProvider": "Proveedor de IA",
+  "aiProviderInfo": "Elige el proveedor al que pertenece tu clave. La clave de cada proveedor se guarda por separado, así que cambiar no exige volver a introducirla.",
+  "apiKeyFieldLabel": "Clave de API",
+  "getApiKey": "¿Dónde consigo una clave?",
+  "recommendedModel": "Recomendado",
+  "freeTierBadge": "Tiene nivel gratuito"
 }

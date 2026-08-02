@@ -2783,6 +2783,41 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).'**
   String get dashboardBackgroundInfo;
+  /// No description provided for @aiProvider.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zeka sağlayıcısı'**
+  String get aiProvider;
+
+  /// No description provided for @aiProviderInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.'**
+  String get aiProviderInfo;
+
+  /// No description provided for @apiKeyFieldLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'API anahtarı'**
+  String get apiKeyFieldLabel;
+
+  /// No description provided for @getApiKey.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anahtarı nereden alırım?'**
+  String get getApiKey;
+
+  /// No description provided for @recommendedModel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önerilen'**
+  String get recommendedModel;
+
+  /// No description provided for @freeTierBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz kademe var'**
+  String get freeTierBadge;
 }
 
 class _AppLocalizationsDelegate

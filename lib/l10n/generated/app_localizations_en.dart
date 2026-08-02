@@ -1451,4 +1451,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboardBackgroundInfo =>
       'Image shown behind the note grid (this device only).';
+
+  @override
+  String get aiProvider => 'AI provider';
+
+  @override
+  String get aiProviderInfo => 'Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.';
+
+  @override
+  String get apiKeyFieldLabel => 'API key';
+
+  @override
+  String get getApiKey => 'Where do I get a key?';
+
+  @override
+  String get recommendedModel => 'Recommended';
+
+  @override
+  String get freeTierBadge => 'Has a free tier';
 }

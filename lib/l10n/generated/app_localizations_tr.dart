@@ -1447,4 +1447,22 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get dashboardBackgroundInfo =>
       'Not ızgarasının arkasında duran görsel (yalnız bu cihazda).';
+
+  @override
+  String get aiProvider => 'Yapay zeka sağlayıcısı';
+
+  @override
+  String get aiProviderInfo => 'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.';
+
+  @override
+  String get apiKeyFieldLabel => 'API anahtarı';
+
+  @override
+  String get getApiKey => 'Anahtarı nereden alırım?';
+
+  @override
+  String get recommendedModel => 'Önerilen';
+
+  @override
+  String get freeTierBadge => 'Ücretsiz kademe var';
 }

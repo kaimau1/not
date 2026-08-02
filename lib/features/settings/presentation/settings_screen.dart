@@ -11,12 +11,15 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/ai_provider.dart';
 import '../../ai/data/api_key_store.dart';
+import '../../ai/data/model_catalog.dart';
 import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
@@ -1120,7 +1123,7 @@ class _BuiltInAiStatus extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final hasKey = (ref.watch(geminiApiKeyProvider).value ?? '').isNotEmpty;
+    final hasKey = (ref.watch(activeApiKeyProvider).value ?? '').isNotEmpty;
     final premium = ref.watch(premiumProvider).value ?? false;
     final remaining = ref.watch(freeAiRemainingProvider);
 
@@ -1173,14 +1176,15 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
     setState(() => _busy = true);
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    final provider = ref.read(activeProviderProvider);
     try {
       final valid = await ref.read(geminiServiceProvider).validateKey(key);
       if (!valid) {
         messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyInvalid)));
         return;
       }
-      await ref.read(apiKeyStoreProvider).save(key);
-      ref.invalidate(geminiApiKeyProvider);
+      await ref.read(apiKeyStoreProvider).save(provider, key);
+      _invalidateKeys(provider);
       _controller.clear();
       messenger.showSnackBar(SnackBar(content: Text(l10n.apiKeyValid)));
     } finally {
@@ -1189,19 +1193,60 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
   }
 
   Future<void> _removeKey() async {
-    await ref.read(apiKeyStoreProvider).clear();
-    ref.invalidate(geminiApiKeyProvider);
+    final provider = ref.read(activeProviderProvider);
+    await ref.read(apiKeyStoreProvider).clear(provider);
+    _invalidateKeys(provider);
+  }
+
+  /// Anahtar değişince model listesi de tazelenmeli: katalog anahtarla
+  /// çekiliyor, eski liste yanlış sağlayıcıya ait kalırdı.
+  void _invalidateKeys(AiProvider provider) {
+    ref.invalidate(activeApiKeyProvider);
+    ref.invalidate(providerApiKeyProvider(provider));
+    ref.invalidate(availableModelsProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final storedKey = ref.watch(geminiApiKeyProvider).value;
+    final provider = ref.watch(activeProviderProvider);
+    final storedKey = ref.watch(activeApiKeyProvider).value;
     final hasKey = storedKey != null && storedKey.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        DropdownButtonFormField<AiProvider>(
+          initialValue: provider,
+          decoration: InputDecoration(labelText: l10n.aiProvider),
+          items: [
+            for (final option in AiProvider.values)
+              DropdownMenuItem(
+                value: option,
+                child: Text(
+                  option.freeTier
+                      ? '${option.label} · ${l10n.freeTierBadge}'
+                      : option.label,
+                ),
+              ),
+          ],
+          onChanged: (value) {
+            if (value == null) return;
+            ref.read(activeProviderProvider.notifier).set(value);
+            // Sağlayıcı değişti: anahtar ve model listesi o sağlayıcıya ait
+            // olmalı, önceki sağlayıcının önbelleği gösterilmemeli.
+            _controller.clear();
+            _invalidateKeys(value);
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.aiProviderInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 14),
         if (hasKey)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
@@ -1209,7 +1254,7 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               children: [
                 Chip(
                   avatar: const Icon(Icons.key, size: 16),
-                  label: Text('${l10n.geminiApiKey}: ${l10n.apiKeySavedBadge}'),
+                  label: Text('${provider.label}: ${l10n.apiKeySavedBadge}'),
                 ),
                 const SizedBox(width: 8),
                 TextButton(
@@ -1223,8 +1268,10 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
           controller: _controller,
           obscureText: true,
           decoration: InputDecoration(
-            labelText: l10n.geminiApiKey,
-            hintText: l10n.geminiApiKeyHint,
+            labelText: '${provider.label} · ${l10n.apiKeyFieldLabel}',
+            // İpucu sağlayıcının anahtar biçimi: yanlış sağlayıcıya
+            // yapıştırıldığında kullanıcı hatayı beklemeden görür.
+            hintText: provider.keyHint,
           ),
         ),
         const SizedBox(height: 8),
@@ -1234,7 +1281,18 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => launchUrl(
+              Uri.parse(provider.keyUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            icon: const Icon(Icons.open_in_new, size: 18),
+            label: Text(l10n.getApiKey),
+          ),
+        ),
+        const SizedBox(height: 4),
         FilledButton.tonalIcon(
           onPressed: _busy ? null : _validateAndSave,
           icon: _busy
@@ -1318,7 +1376,8 @@ class _ModelSelectors extends ConsumerWidget {
     // Liste önbellekli sağlayıcıdan (availableModelsProvider) izlenir; inline
     // FutureBuilder her rebuild'de yeni bir future kurup bölümü boşaltıp
     // yeniden doldurduğu için ayarlar sayfası zıplıyordu (madde 3).
-    final models = ref.watch(availableModelsProvider).value ?? const <String>[];
+    final models =
+        ref.watch(availableModelsProvider).value ?? const <AiModel>[];
     if (models.isEmpty) return const SizedBox.shrink();
     final selected = ref.watch(aiTaskModelsProvider);
     return Column(
@@ -1330,6 +1389,7 @@ class _ModelSelectors extends ConsumerWidget {
             models: models,
             value: selected[task],
             autoLabel: l10n.aiModelAuto,
+            recommendedLabel: l10n.recommendedModel,
             onChanged: (v) =>
                 ref.read(aiTaskModelsProvider.notifier).set(task, v),
           ),
@@ -1353,10 +1413,14 @@ class _ModelSelectors extends ConsumerWidget {
         AiTask.voice => l10n.aiModelVoice,
       };
 
-  /// Ham model kimliği yerine okunur ad: "gemini-3.5-flash" → "3.5 Flash —
-  /// hızlı". Bilinmeyen adlar olduğu gibi kalır (liste API'den geliyor).
-  static String _friendlyModel(String id) {
-    var name = id.replaceFirst('gemini-', '').replaceAll('-preview', '');
+  /// Ham model kimliği yerine okunur ad: "gemini-3.5-flash" → "3.5 Flash".
+  /// Sağlayıcı bir görünen ad verdiyse (OpenAI/Anthropic veriyor) o kullanılır;
+  /// yalnızca Gemini gibi ham kimlik dönen sağlayıcılarda güzelleştirilir.
+  static String _friendlyModel(AiModel model) {
+    if (model.label != model.id) return model.label;
+    var name = model.id
+        .replaceFirst('gemini-', '')
+        .replaceAll('-preview', '');
     final lower = name.toLowerCase();
     final hint = lower.contains('flash-lite')
         ? 'en hızlı'
@@ -1377,27 +1441,94 @@ class _ModelSelectors extends ConsumerWidget {
 
   Widget _modelDropdown({
     required String label,
-    required List<String> models,
+    required List<AiModel> models,
     required String? value,
     required String autoLabel,
+    required String recommendedLabel,
     required ValueChanged<String?> onChanged,
   }) {
-    // Kayıtlı model artık listede yoksa (kaldırılmış olabilir) yine göster;
-    // zincir zaten çalışan bir modele düşer.
-    final items = value != null && !models.contains(value)
-        ? [value, ...models]
+    // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
+    // değişmiş olabilir) yine göster; zincir zaten çalışan bir modele düşer.
+    final items = value != null && !models.any((m) => m.id == value)
+        ? [AiModel(id: value, label: value), ...models]
         : models;
     return DropdownButtonFormField<String?>(
       initialValue: value,
       decoration: InputDecoration(labelText: label),
+      // Seçili öğe kapalı hâlde TEK satıra sığmalı: açık listedeki iki satırlı
+      // (ad + gerekçe) görünüm alana sığmayıp taşma çizgisi veriyordu.
+      selectedItemBuilder: (context) => [
+        Text(autoLabel, overflow: TextOverflow.ellipsis),
+        for (final m in items)
+          Text(_friendlyModel(m), overflow: TextOverflow.ellipsis),
+      ],
       items: [
         DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
         for (final m in items)
-          DropdownMenuItem<String?>(value: m, child: Text(_friendlyModel(m))),
+          DropdownMenuItem<String?>(
+            value: m.id,
+            child: _modelEntry(m, recommendedLabel),
+          ),
       ],
       onChanged: onChanged,
     );
   }
+
+  /// Liste satırı: ad + (varsa) ÖNERİLEN rozeti ve tek satırlık gerekçe.
+  /// Kullanıcı sağlayıcının onlarca modeli arasından hangisinin not almaya
+  /// uygun olduğunu tahmin etmek zorunda kalmasın.
+  static Widget _modelEntry(AiModel model, String recommendedLabel) => Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              _friendlyModel(model),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (model.recommended) ...[
+            const SizedBox(width: 6),
+            Builder(
+              builder: (context) {
+                final scheme = Theme.of(context).colorScheme;
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    recommendedLabel,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
+      if (model.note != null)
+        Builder(
+          builder: (context) => Text(
+            model.note!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+    ],
+  );
 }
 
 class _BriefingEditor extends ConsumerWidget {
