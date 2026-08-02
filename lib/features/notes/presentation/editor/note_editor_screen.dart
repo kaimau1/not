@@ -121,7 +121,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
 }
 
-class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
+class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
+    with WidgetsBindingObserver {
   Note? _note;
 
   /// LİSTE notunda serbest metin alanı açık mı? (Kullanıcı isteği: "liste
@@ -378,6 +379,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
   @override
   void initState() {
     super.initState();
+    // Uygulama arka plana alınırken/kapatılırken bekleyen kaydı zorlamak için
+    // (bkz. [_saveNow] — "kapatınca not kayboluyor" kök nedeni).
+    WidgetsBinding.instance.addObserver(this);
+    // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
+    // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
+    openEditorNoteIds.add(widget.noteId);
+    // dispose'da `ref` kullanılamadığından (bkz. yukarıdaki KÖK NEDEN notu)
+    // depo/ayar bağımlılıkları ilk build'den ÖNCE de elde olmalı: yaşam
+    // döngüsü kaydı ilk kare çizilmeden gelebilir.
+    _cacheDeps();
     // İlk açılış kasması (madde 3): editör başlangıçta _note null olduğu için
     // bir kare boyunca CircularProgressIndicator gösterip ardından tüm editörü
     // kuruyordu; bu geçiş, sayfa animasyonuyla aynı anda büyük bir yerleşim
@@ -466,8 +477,64 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
     }, fireImmediately: true);
   }
 
+  /// Bekleyen kaydı ERTELEMEDEN yazar; metin alanlarındaki en güncel içerik
+  /// nota işlenir.
+  ///
+  /// KÖK NEDEN ("not düzenlerken dashboard'a dönmeden uygulamayı tamamen
+  /// kapatınca not bazen kaydolmuyor, kayboluyor"): kayıt yalnız iki yerde
+  /// kesinleşiyordu — debounce zamanlayıcısı dolduğunda ve `dispose()`
+  /// içindeki flush'ta. Uygulama görev listesinden kapatıldığında (ya da
+  /// sistem onu öldürdüğünde) rota pop EDİLMEZ, dolayısıyla `dispose()` hiç
+  /// çalışmaz ve o an bekleyen yazım onunla birlikte kaybolur. Yeni açılmış
+  /// bir notta bu, notun Firestore'da BOŞ kalması demektir; boş notlar arka
+  /// planda temizlendiği için not tümüyle yok olur — "kayboluyor" şikâyeti
+  /// tam olarak budur. Bu yüzden kayıt artık her çıkış kapısında zorlanır:
+  /// arka plana alma (`inactive`/`paused`/`hidden`/`detached`) ve masaüstünde
+  /// pencere kapatma isteği (`didRequestAppExit`).
+  void _saveNow() {
+    final note = _note;
+    if (note == null || _deleted) return;
+    // Denetleyicilerdeki metin nota işlenir: son tuş vuruşunun `onChanged`'i
+    // gelmemiş olabilir. Gövde/başlık için tek gerçek kaynak denetleyicidir —
+    // nota dışarıdan yazan her yol (dikte, AI, yapıştırma) denetleyiciyi de
+    // günceller, o yüzden burada geri alma riski yok.
+    final title = _titleController.logicalText;
+    final body = _bodyController.logicalText;
+    final drifted = title != note.title || body != note.body;
+    // Yazılacak yeni bir şey yoksa hiç dokunma: `inactive` evresi (bildirim
+    // perdesi, kamera/galeri açılışı, izin diyaloğu) sık gelir ve her
+    // seferinde boş yere `updatedAt` tazelemek notu listede öne fırlatırdı.
+    if (!drifted && !_debouncer.hasPending) return;
+    final current = drifted ? note.copyWith(title: title, body: body) : note;
+    _note = current;
+    // setState YOK: denetleyiciler bu metni zaten gösteriyor, yeniden çizime
+    // gerek yok — üstelik `detached` evresinde setState çağırmak güvensiz.
+    _debouncer.cancel();
+    _notesRepo?.updateNote(current);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // `resumed` dışındaki her evre bir "çıkış" olabilir: Android'de görev
+    // listesi açılınca `inactive`, arka plana geçince `hidden`/`paused`,
+    // öldürülmeden hemen önce `detached` gelir. Kayıt hepsinde zorlanır —
+    // fazladan yazımın maliyeti yok (Firestore merge, aynı içerik).
+    if (state != AppLifecycleState.resumed) _saveNow();
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() async {
+    // Masaüstü (Windows): pencere kapatma düğmesi. `detached` burada
+    // güvenilir gelmediğinden kapanışa izin vermeden önce kaydedilir.
+    _saveNow();
+    return super.didRequestAppExit();
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    openEditorNoteIds.remove(widget.noteId);
     _debouncer.flush();
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
@@ -540,10 +607,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen> {
         _undoStack.push(note, _note!, now: DateTime.now());
       }
     });
+    // KÖK NEDEN (bekleyen son kayıt yutuluyordu): bu kapanış `ref.read` ile
+    // depoyu okuyordu, oysa `dispose()` içindeki `_debouncer.flush()` de aynı
+    // kapanışı çalıştırır — ve `dispose` sırasında `ref` kullanmak istisna
+    // atar (bkz. sınıfın başındaki not). Yani editörden çıkarken bekleyen
+    // yazım kaydedilmediği gibi, atılan istisna dispose'un GERİ KALANINI da
+    // (ek silme flush'ı, boş not temizliği, otomatik başlık) iptal ediyordu.
+    // Depo artık her build'de tazelenen alandan okunur.
     void save() {
       final current = _note;
       if (current != null && !_deleted) {
-        ref.read(notesRepositoryProvider)?.updateNote(current);
+        _notesRepo?.updateNote(current);
       }
     }
 
