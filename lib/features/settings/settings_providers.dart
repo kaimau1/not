@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/language_names.dart';
+import '../../l10n/generated/app_localizations.dart';
+
 /// main() içinde gerçek örnekle override edilir.
 final sharedPreferencesProvider = Provider<SharedPreferences>(
   (ref) => throw UnimplementedError('main() içinde override edilmeli'),
@@ -40,11 +43,18 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
 /// Dil adları bilerek yerelleştirilmez: "English" satırını İngilizce'ye
 /// geçmek isteyen bir kullanıcı okuyabilmeli, kendi dilinde yazılırsa
 /// bulamaz. Yalnız "Sistem dili" satırı çevrilir.
-const supportedLanguages = <String, String>{
-  'tr': 'Türkçe',
-  'en': 'English',
-  'de': 'Deutsch',
-  'es': 'Español',
+///
+/// KÖK NEDEN (elle tutulan liste): burası eskiden elle yazılmış dört
+/// girdilik sabit bir haritaydı ve `.arb` dosyalarıyla senkron kalması
+/// kullanıcıya bırakılmıştı — dil eklenip buraya yazılmayınca seçenek hiç
+/// görünmüyor, tersi olunca çevirisi olmayan bir dil seçilebiliyordu.
+/// Liste artık TEK KAYNAKtan, üretilen çevirilerden türetiliyor: yeni bir
+/// `app_xx.arb` eklemek dili seçilebilir yapmaya yeter, ikinci bir yeri
+/// güncellemek gerekmez. Ad kataloğu ayrıdır (bkz. language_names.dart) ve
+/// desteklenen kümeyi BELİRLEMEZ, yalnız adlandırır.
+Map<String, String> get supportedLanguages => {
+  for (final locale in AppLocalizations.supportedLocales)
+    locale.toLanguageTag(): languageLabel(locale.toLanguageTag()),
 };
 
 final localeProvider = NotifierProvider<LocaleNotifier, Locale?>(
@@ -57,13 +67,23 @@ class LocaleNotifier extends Notifier<Locale?> {
   @override
   Locale? build() {
     final code = ref.watch(sharedPreferencesProvider).getString(_key);
+    // Çevirisi ARTIK üretilmeyen bir dil kayıtlıysa (dil listeden çıkarıldı)
+    // sistem diline düşülür; aksi hâlde uygulama yüklenemeyen bir yerel
+    // ayarla açılmaya çalışırdı.
     if (code == null || !supportedLanguages.containsKey(code)) return null;
-    return Locale(code);
+    return _parse(code);
+  }
+
+  /// 'pt-BR' gibi bölgeli etiketleri doğru [Locale]'e çevirir. Düz
+  /// `Locale('pt-BR')` dil kodunu 'pt-BR' sanır ve hiçbir çeviriyle eşleşmez.
+  static Locale _parse(String tag) {
+    final parts = tag.split(RegExp('[-_]'));
+    return parts.length > 1 ? Locale(parts.first, parts[1]) : Locale(parts.first);
   }
 
   /// [code] null ise sistem diline dönülür.
   void set(String? code) {
-    state = code == null ? null : Locale(code);
+    state = code == null ? null : _parse(code);
     final prefs = ref.read(sharedPreferencesProvider);
     if (code == null) {
       prefs.remove(_key);

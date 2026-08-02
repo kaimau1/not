@@ -2,13 +2,63 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
-- **GitHub Actions ödeme sorunu**: 2026-07-21'den beri tüm CI run'ları
-  "recent account payments have failed or your spending limit needs to be
-  increased" hatasıyla başlamıyor → analiz/test ve imzalı APK/Release üretimi
-  duruyor. GitHub → Settings → Billing & plans'ten çözülmeli; sonra `[apk]`
-  içeren bir commit ya da Actions → Run workflow ile Release tazelenmeli.
 - **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** (bilinçli ertelendi,
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
+
+## Play'e çıkış — kalan iş (2026-08-02)
+
+Sıra bilerek böyle: önce senin tarafındaki konsol işleri (kodu bekletmiyor),
+sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
+
+### Senin yapman gerekenler (kod tarafı hazır)
+- [ ] **`firebase deploy --only firestore:rules`** — `aiQuota/{uid}` kuralları
+  yayınlanmadan kota sunucuda uygulanmaz, sayaç yalnız cihaz yerelinde kalır.
+  Yeni APK'yı bundan ÖNCE dağıtma.
+- [ ] **App Check zorlamasını AÇ** (Firebase konsolu → App Check → APIs).
+  Uygulama token üretiyor (`main.dart` `_activateAppCheck`), Play Integrity
+  hazır. Kapalı kaldığı sürece APK'dan Firebase yapılandırmasını çıkaran biri
+  Gemini faturasını yakabilir. Sıra: Play'de yayınla → sonra zorlamayı aç
+  (sideload APK attestation'dan geçemez, bkz. HAFIZA 2026-07-18).
+- [ ] **Çeviri dalgasını tetikle** — Settings → Secrets → `AI_TRANSLATE_KEY`
+  ekle, sonra Actions → "Çeviri üret" → Run workflow. Varsayılan diller:
+  fr,it,pt,ru,ar,hi,ja,ko,zh,id,nl,pl. Draft PR açılır; makine çevirisi,
+  bildiğin dillerde göz gezdir.
+- [ ] **PRIVACY_POLICY.md'yi herkese açık bir URL'e koy** (alınan domain ya da
+  GitHub Pages). Play mağaza listesi şart koşuyor.
+
+### Kod tarafında kalanlar
+- [ ] **Play Billing** — lifetime (tek ödeme) + AI aboneliği. Karar bekliyor:
+  RevenueCat (`purchases_flutter`, makbuz doğrulama/iptal/iade hazır) mı,
+  `in_app_purchase` + Cloud Function (üçüncü taraf yok ama Play Developer API
+  servis hesabı + RTDN Pub/Sub sıfırdan kurulacak) mı. `users/{uid}.premiumUntil`
+  kurallarda istemciye zaten kapalı; satın alma doğrulaması onu SUNUCUdan
+  yazacak. NOT: projede henüz `functions/` dizini yok.
+- [ ] **Deneme süresi (1 ay)** — abonelikte Play Console'un kendi ücretsiz
+  denemesi kullanılır (kod gerekmez). Lifetime'ın Play'de denemesi YOK; kendi
+  `trialUntil` alanımız gerekir ve CİHAZA değil hesaba bağlanmalı (yoksa
+  sil-kur = sınırsız deneme). Deneme kotası "5 istek" değil PUAN olmalı —
+  `AiGate` zaten puan bazlı, düz istek sayısı 200 sayfalık PDF'te sömürülür.
+- [ ] **Paket sınırları uygulanmadı** — kararlaştırılan yapı: ücretsizde ek
+  (görsel/PDF/ses/video) yok ya da ~50 MB tavan, lifetime'da 2 GB tavan.
+  `AppConstants.maxFree/PremiumAttachmentBytes` var ama depolama TAVANI yok;
+  lifetime'ın maliyeti ancak tavanla öngörülebilir olur.
+- [ ] **RTL cihazda denenmedi** — 35 yerleşim yönlü karşılığına çevrildi ve
+  `rtl_layout_test` geri sızmayı engelliyor, ama Arapça bir çeviri henüz yok;
+  gerçek ekranda kimse bakmadı. Çeviri dalgası gelince Arapça'ya geçip not
+  kartı, sohbet balonları ve ek şeridine bakılmalı.
+- [ ] **Semantik arama ve ses/video girişi yalnız Gemini'de** — embedding
+  vektör boyutu sağlayıcılar arası uyuşmuyor (aynı dizinde karışık vektör
+  aramayı bozar). Diğer sağlayıcıda açık hata veriliyor, sessiz yanlış sonuç
+  yok (2026-08-02).
+- [ ] **100 dil, Flutter'ın kapsamıyla sınırlı** — `GlobalMaterialLocalizations`
+  çevirisi olmayan yerel ayar uygulamayı o dilde ÇALIŞMA ANINDA hataya düşürür;
+  Flutter ~78 taban dil destekliyor. 100+ sayısına bölge varyantlarıyla
+  (pt-BR, zh-Hans/Hant, es-419) ulaşılır. Ötesi = Material/Cupertino için elle
+  `LocalizationsDelegate` yazmak. `locale_fallback_test` bunu CI'da doğruluyor.
+- [ ] **Anonim hesaptan Google'a geçişte hesap ÇAKIŞMASI** — seçilen Google
+  hesabı başka bir uid'e bağlıysa `credential-already-in-use` gelir ve
+  birleştirme yapılamaz (Firebase iki uid'i birleştiremez). Şu an hata
+  gösteriliyor; istenirse "yerel notları o hesaba kopyala" akışı yazılabilir.
 
 ## Bilinen eksik / risk
 - [ ] **Sesli notta canlı yazım yok** — kayıt+döküm aynı anda mikrofonu

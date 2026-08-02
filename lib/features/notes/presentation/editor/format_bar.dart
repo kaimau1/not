@@ -352,7 +352,7 @@ class _ColorPicker extends StatelessWidget {
             children: [
               for (var i = 0; i < palette.length; i++)
                 Padding(
-                  padding: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsetsDirectional.only(end: 10),
                   child: InkWell(
                     onTap: () => Navigator.pop(context, i + 1),
                     customBorder: const CircleBorder(),

@@ -171,7 +171,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     itemBuilder: (context, index) {
                       if (index == _history.length) {
                         return Align(
-                          alignment: Alignment.centerLeft,
+                          alignment: AlignmentDirectional.centerStart,
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Text(l10n.aiThinking),
@@ -198,8 +198,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       );
                       return Align(
                         alignment: turn.isUser
-                            ? Alignment.centerRight
-                            : Alignment.centerLeft,
+                            ? AlignmentDirectional.centerEnd
+                            : AlignmentDirectional.centerStart,
                         child: turn.isUser
                             ? bubble
                             : Row(

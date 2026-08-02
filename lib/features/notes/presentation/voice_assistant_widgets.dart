@@ -315,7 +315,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
           // konuşulan yine de kaydedilebilsin: karar kullanıcının olsun.
           if (assistant.noteId == null && assistant.liveTranscript.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 30, top: 4),
+              padding: const EdgeInsetsDirectional.only(start: 30, top: 4),
               child: FilledButton.tonalIcon(
                 onPressed: () async {
                   final id = await notifier.convertTranscriptToNote(
@@ -391,7 +391,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
               if (autoDismiss != null) ...[
                 const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsetsDirectional.only(end: 6),
                   child: CountdownBar(
                     duration: autoDismiss,
                     onEnd: notifier.dismiss,

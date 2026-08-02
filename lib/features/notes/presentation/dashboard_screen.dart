@@ -964,9 +964,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 // Asistan paneli, "not silindi" bildirimiyle aynı yerleşimi
                 // kullanır: düğmelerin ÜSTÜnde değil SOLUNDA, ekranın dibinde.
                 // Sağda düğme sütunu kadar boşluk bırakılır.
-                const Positioned(
-                  left: 8,
-                  right: 88,
+                const PositionedDirectional(
+                  start: 8,
+                  end: 88,
                   bottom: 16,
                   child: VoiceAssistantPanel(),
                 ),

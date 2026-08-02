@@ -3128,7 +3128,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           backgroundColor: background,
           actions: [
             Padding(
-              padding: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsetsDirectional.only(end: 4),
               child: Tooltip(
                 message: pending ? l10n.syncPending : l10n.synced,
                 child: Icon(

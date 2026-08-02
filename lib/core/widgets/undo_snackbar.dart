@@ -30,7 +30,7 @@ void showUndoSnackBar(
         // Sağda mikrofon/"+" düğmeleri için yer bırakılır: bildirim onların
         // ÜSTÜne çıkmak yerine SOLUNDA, ekranın dibinde durur. (width ile
         // margin birlikte kullanılamaz; konumu margin belirler.)
-        margin: const EdgeInsets.only(left: 12, right: 88, bottom: 12),
+        margin: const EdgeInsetsDirectional.only(start: 12, end: 88, bottom: 12),
         // ScaffoldMessenger'ın kendi zamanlayıcısı bu süre dolunca bildirimi
         // kapatır — sayfa değişse de sayaç bu süreden bağımsız sıfırlanmaz.
         duration: duration,

@@ -8,6 +8,8 @@
 /// sağlayıcı eklemek bu dosyaya bir `case` eklemek demektir.
 library;
 
+import 'dart:convert';
+
 import 'ai_provider.dart';
 
 /// Sağlayıcının bu içerik türünü kabul etmediği durumlarda atılır — çağıran
@@ -214,4 +216,221 @@ String? _joinText(Object? parts, String field) {
       if (part is Map && part[field] is String) part[field] as String,
   ].join();
   return text.isEmpty ? null : text;
+}
+
+// ---- Araç çağrısı (asistan) ------------------------------------------
+//
+// Gemini yolu `GeminiService._runToolLoop`'ta OLDUĞU GİBİ kaldı: oradaki
+// döngü modelin gönderdiği parçaları GEÇMİŞE AYNEN geri koyuyor ve bu,
+// modelin kendi iç imzalarını (thought signature vb.) koruduğu için
+// bilerek bozulmadı. Aşağıdakiler OpenAI/Anthropic teli için AYRI bir
+// döngünün yapı taşları; onlar da kendi ham yanıtlarını geçmişe aynen
+// koyar, yani "verbatim" ilkesi üç sağlayıcıda da aynı.
+
+/// Modelin çağırmak istediği tek bir araç.
+class ToolCall {
+  const ToolCall({required this.id, required this.name, required this.args});
+
+  /// Sağlayıcının verdiği çağrı kimliği; sonucu doğru çağrıya bağlamak için
+  /// geri gönderilmesi ZORUNLUDUR (OpenAI `tool_call_id`, Anthropic
+  /// `tool_use_id`).
+  final String id;
+
+  final String name;
+  final Map<String, dynamic> args;
+}
+
+/// Bir araç çağrısının sonucu.
+typedef ToolResult = ({String id, String name, Map<String, dynamic> value});
+
+/// İç `contents` biçimini sağlayıcının mesaj dizisine çevirir (araç
+/// döngüsünün başlangıç geçmişi). Gemini teli için çağrılmaz.
+List<Map<String, dynamic>> toWireMessages(
+  AiProvider provider,
+  List<Map<String, dynamic>> contents,
+) => [
+  for (final content in contents)
+    {
+      'role': _role(content, assistant: 'assistant'),
+      'content': [
+        for (final part in _parts(content))
+          provider.wire == AiWire.anthropic
+              ? _anthropicPart(provider, part)
+              : _openAiPart(provider, part),
+      ],
+    },
+];
+
+/// Araçlı sohbet isteği gövdesi.
+Map<String, dynamic> buildToolBody({
+  required AiProvider provider,
+  required String model,
+  required List<Map<String, dynamic>> messages,
+  required List<Map<String, dynamic>> geminiTools,
+}) => switch (provider.wire) {
+  AiWire.openai => {
+    'model': model,
+    'messages': messages,
+    'tools': [
+      for (final tool in geminiTools)
+        {
+          'type': 'function',
+          'function': {
+            'name': tool['name'],
+            'description': tool['description'],
+            'parameters': _toJsonSchema(tool['parameters']),
+          },
+        },
+    ],
+  },
+  AiWire.anthropic => {
+    'model': model,
+    'max_tokens': _anthropicMaxTokens,
+    'messages': messages,
+    'tools': [
+      for (final tool in geminiTools)
+        {
+          'name': tool['name'],
+          'description': tool['description'],
+          'input_schema': _toJsonSchema(tool['parameters']),
+        },
+    ],
+  },
+  // Gemini kendi döngüsünü kullanır; buraya düşmesi programlama hatasıdır.
+  AiWire.gemini => throw StateError('Gemini kendi araç döngüsünü kullanır'),
+};
+
+/// Gemini şema lehçesini düz JSON Schema'ya çevirir.
+///
+/// Gemini tip adlarını BÜYÜK harf bekler ('OBJECT', 'STRING', 'ARRAY');
+/// OpenAI ve Anthropic ise JSON Schema'nın küçük harfli adlarını. Araç
+/// tanımları tek yerde (Gemini lehçesinde) tutulup burada çevriliyor —
+/// aksi hâlde her araç iki kez yazılırdı ve biri güncellenmeyi unuturdu.
+Object? _toJsonSchema(Object? schema) {
+  if (schema is List) return [for (final item in schema) _toJsonSchema(item)];
+  if (schema is! Map) return schema;
+  return {
+    for (final entry in schema.entries)
+      entry.key: entry.key == 'type' && entry.value is String
+          ? (entry.value as String).toLowerCase()
+          : _toJsonSchema(entry.value),
+  };
+}
+
+/// Yanıttan metni ve istenen araç çağrılarını çıkarır.
+({String text, List<ToolCall> calls}) parseToolReply(
+  AiProvider provider,
+  Object? body,
+) {
+  if (body is! Map) return (text: '', calls: const []);
+  if (provider.wire == AiWire.anthropic) {
+    final content = body['content'];
+    final calls = <ToolCall>[];
+    if (content is List) {
+      for (final part in content) {
+        if (part is Map && part['type'] == 'tool_use') {
+          calls.add(
+            ToolCall(
+              id: part['id'] as String? ?? '',
+              name: part['name'] as String? ?? '',
+              args: part['input'] is Map
+                  ? Map<String, dynamic>.from(part['input'] as Map)
+                  : <String, dynamic>{},
+            ),
+          );
+        }
+      }
+    }
+    return (text: _joinText(content, 'text') ?? '', calls: calls);
+  }
+  final choices = body['choices'];
+  if (choices is! List || choices.isEmpty) return (text: '', calls: const []);
+  final message = (choices.first as Map)['message'];
+  if (message is! Map) return (text: '', calls: const []);
+  final calls = <ToolCall>[];
+  final toolCalls = message['tool_calls'];
+  if (toolCalls is List) {
+    for (final call in toolCalls) {
+      if (call is! Map) continue;
+      final fn = call['function'];
+      if (fn is! Map) continue;
+      calls.add(
+        ToolCall(
+          id: call['id'] as String? ?? '',
+          name: fn['name'] as String? ?? '',
+          // OpenAI argümanları JSON METNİ olarak gönderir, nesne olarak değil.
+          args: _decodeArgs(fn['arguments']),
+        ),
+      );
+    }
+  }
+  final content = message['content'];
+  return (
+    text: content is String ? content : _joinText(content, 'text') ?? '',
+    calls: calls,
+  );
+}
+
+Map<String, dynamic> _decodeArgs(Object? raw) {
+  if (raw is Map) return Map<String, dynamic>.from(raw);
+  if (raw is! String || raw.isEmpty) return <String, dynamic>{};
+  try {
+    final decoded = jsonDecode(raw);
+    return decoded is Map ? Map<String, dynamic>.from(decoded) : {};
+  } on FormatException {
+    // Model bozuk JSON ürettiyse araç boş argümanla çağrılır; döngü
+    // sonucu görüp kendini düzeltebilir.
+    return <String, dynamic>{};
+  }
+}
+
+/// Modelin ham yanıt mesajını geçmişe AYNEN eklemek için hazırlar.
+/// Yeniden kurmak yerine ham hâlini korumak, araç çağrısı kimlikleri ve
+/// sağlayıcıya özgü ek alanların bozulmamasını garanti eder.
+Map<String, dynamic> assistantTurn(AiProvider provider, Object? body) {
+  if (provider.wire == AiWire.anthropic) {
+    final content = (body is Map ? body['content'] : null) ?? const [];
+    return {'role': 'assistant', 'content': content};
+  }
+  final choices = (body is Map ? body['choices'] : null);
+  final message = choices is List && choices.isNotEmpty
+      ? (choices.first as Map)['message']
+      : null;
+  return message is Map
+      ? Map<String, dynamic>.from(message)
+      : {'role': 'assistant', 'content': ''};
+}
+
+/// Araç sonuçlarını geçmişe eklenecek mesaj(lar)a çevirir.
+///
+/// OpenAI her sonuç için AYRI bir `tool` mesajı ister; Anthropic hepsini TEK
+/// bir kullanıcı mesajının içinde bekler.
+List<Map<String, dynamic>> toolResultTurns(
+  AiProvider provider,
+  List<ToolResult> results,
+) {
+  if (provider.wire == AiWire.anthropic) {
+    return [
+      {
+        'role': 'user',
+        'content': [
+          for (final result in results)
+            {
+              'type': 'tool_result',
+              'tool_use_id': result.id,
+              'content': jsonEncode(result.value),
+            },
+        ],
+      },
+    ];
+  }
+  return [
+    for (final result in results)
+      {
+        'role': 'tool',
+        'tool_call_id': result.id,
+        'name': result.name,
+        'content': jsonEncode(result.value),
+      },
+  ];
 }

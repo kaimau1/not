@@ -594,7 +594,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
         ? ReorderableDragStartListener(
             index: reorderIndex,
             child: Padding(
-              padding: const EdgeInsets.only(right: 2),
+              padding: const EdgeInsetsDirectional.only(end: 2),
               child: Icon(
                 Icons.drag_indicator,
                 size: 20,
@@ -976,6 +976,10 @@ class _FloatRowState extends State<_FloatRow> {
   Widget build(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
     return Padding(
+      // BİLEREK FİZİKSEL (Directional DEĞİL): bu boşluklar sayfaya konmuş
+      // yüzen görsellerin ÖLÇÜLEN x koordinatlarından hesaplanıyor
+      // (bkz. text_wrap.dart). Yönlü karşılığına çevrilirse RTL'de metin
+      // görselin bulunmadığı tarafa kaçar — sarma tam ters yerde olur.
       padding: EdgeInsets.only(left: _start, right: _end, top: _top),
       child: widget.child,
     );

@@ -273,4 +273,186 @@ void main() {
       expect(anthropic['anthropic-version'], isNotEmpty);
     });
   });
+
+  group('araç çağrısı — istek gövdesi', () {
+    const geminiTools = [
+      {
+        'name': 'create_note',
+        'description': 'Yeni not oluşturur',
+        'parameters': {
+          'type': 'OBJECT',
+          'properties': {
+            'title': {'type': 'STRING'},
+            'items': {
+              'type': 'ARRAY',
+              'items': {'type': 'STRING'},
+            },
+          },
+          'required': ['title'],
+        },
+      },
+    ];
+
+    test('Gemini şema lehçesi JSON Schema\'ya çevrilir (küçük harf)', () {
+      // Gemini tip adlarını BÜYÜK harf ister, OpenAI/Anthropic küçük.
+      // Araçlar tek yerde Gemini lehçesinde tutulup burada çevriliyor.
+      final body = buildToolBody(
+        provider: AiProvider.openai,
+        model: 'gpt-5-mini',
+        messages: const [],
+        geminiTools: geminiTools,
+      );
+      final fn = ((body['tools'] as List).first as Map)['function'] as Map;
+      final params = fn['parameters'] as Map;
+      expect(params['type'], 'object');
+      final props = params['properties'] as Map;
+      expect((props['title'] as Map)['type'], 'string');
+      expect((props['items'] as Map)['type'], 'array');
+      // İç içe şemalar da çevrilmeli.
+      expect(((props['items'] as Map)['items'] as Map)['type'], 'string');
+      // Tip DIŞI alanlar olduğu gibi kalmalı.
+      expect(params['required'], ['title']);
+    });
+
+    test('Anthropic input_schema ve max_tokens ile gider', () {
+      final body = buildToolBody(
+        provider: AiProvider.anthropic,
+        model: 'claude-haiku-4-5',
+        messages: const [],
+        geminiTools: geminiTools,
+      );
+      final tool = (body['tools'] as List).first as Map;
+      expect(tool['name'], 'create_note');
+      expect((tool['input_schema'] as Map)['type'], 'object');
+      expect(body['max_tokens'], isA<int>());
+    });
+
+    test('Gemini kendi döngüsünü kullanır, buraya düşmemeli', () {
+      expect(
+        () => buildToolBody(
+          provider: AiProvider.gemini,
+          model: 'm',
+          messages: const [],
+          geminiTools: geminiTools,
+        ),
+        throwsA(isA<StateError>()),
+      );
+    });
+  });
+
+  group('araç çağrısı — yanıt çözümleme', () {
+    test('OpenAI: argümanlar JSON METNİ olarak gelir, çözülür', () {
+      final reply = parseToolReply(AiProvider.openai, {
+        'choices': [
+          {
+            'message': {
+              'content': null,
+              'tool_calls': [
+                {
+                  'id': 'call_abc',
+                  'function': {
+                    'name': 'create_note',
+                    'arguments': '{"title":"Market","type":"checklist"}',
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      });
+      expect(reply.calls, hasLength(1));
+      expect(reply.calls.first.id, 'call_abc');
+      expect(reply.calls.first.name, 'create_note');
+      expect(reply.calls.first.args['title'], 'Market');
+    });
+
+    test('OpenAI: bozuk JSON argüman çökmez, boş harita olur', () {
+      final reply = parseToolReply(AiProvider.openai, {
+        'choices': [
+          {
+            'message': {
+              'tool_calls': [
+                {
+                  'id': 'c1',
+                  'function': {'name': 'x', 'arguments': '{bozuk'},
+                },
+              ],
+            },
+          },
+        ],
+      });
+      expect(reply.calls.first.args, isEmpty);
+    });
+
+    test('Anthropic: tool_use parçası okunur, metin ayrı toplanır', () {
+      final reply = parseToolReply(AiProvider.anthropic, {
+        'content': [
+          {'type': 'text', 'text': 'Ekliyorum'},
+          {
+            'type': 'tool_use',
+            'id': 'toolu_1',
+            'name': 'create_note',
+            'input': {'title': 'Market'},
+          },
+        ],
+      });
+      expect(reply.text, 'Ekliyorum');
+      expect(reply.calls.first.id, 'toolu_1');
+      expect(reply.calls.first.args['title'], 'Market');
+    });
+
+    test('araç çağrısı yoksa yalnız metin döner', () {
+      final reply = parseToolReply(AiProvider.openai, {
+        'choices': [
+          {
+            'message': {'content': 'Notlarında 3 madde var'},
+          },
+        ],
+      });
+      expect(reply.calls, isEmpty);
+      expect(reply.text, 'Notlarında 3 madde var');
+    });
+  });
+
+  group('araç çağrısı — sonuçların geçmişe eklenmesi', () {
+    final results = <ToolResult>[
+      (id: 'call_1', name: 'create_note', value: {'status': 'ok'}),
+      (id: 'call_2', name: 'delete_note', value: {'status': 'ok'}),
+    ];
+
+    test('OpenAI her sonuç için AYRI tool mesajı ister', () {
+      final turns = toolResultTurns(AiProvider.openai, results);
+      expect(turns, hasLength(2));
+      expect(turns.first['role'], 'tool');
+      // Kimlik olmadan sonuç yanlış çağrıya bağlanır.
+      expect(turns.first['tool_call_id'], 'call_1');
+      expect(turns.last['tool_call_id'], 'call_2');
+    });
+
+    test('Anthropic hepsini TEK kullanıcı mesajında bekler', () {
+      final turns = toolResultTurns(AiProvider.anthropic, results);
+      expect(turns, hasLength(1));
+      expect(turns.first['role'], 'user');
+      final content = turns.first['content'] as List;
+      expect(content, hasLength(2));
+      expect((content.first as Map)['type'], 'tool_result');
+      expect((content.first as Map)['tool_use_id'], 'call_1');
+    });
+
+    test('asistan turu HAM yanıttan alınır (kimlikler bozulmasın)', () {
+      final turn = assistantTurn(AiProvider.openai, {
+        'choices': [
+          {
+            'message': {
+              'role': 'assistant',
+              'tool_calls': [
+                {'id': 'call_1'},
+              ],
+            },
+          },
+        ],
+      });
+      expect(((turn['tool_calls'] as List).first as Map)['id'], 'call_1');
+    });
+  });
 }
