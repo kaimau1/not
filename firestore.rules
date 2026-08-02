@@ -2,37 +2,70 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedInAs(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
     // Kullanıcının kök dokümanı (premiumUntil gibi hesap alanları).
     // premiumUntil istemciden YAZILAMAZ: kullanıcı kendi dokümanına
     // premiumUntil yazarak ücretsiz premium alamasın. Alan yalnızca
     // konsoldan/sunucudan (ileride Play Billing Cloud Function) yazılır.
-    // AI kota sayacı (aiUsage) istemcide tutulur ama GERİ ALINAMAZ: aynı gün
-    // içinde puan yalnızca ARTABİLİR. Aksi hâlde kullanıcı sayacı sıfırlayıp
-    // dahili AI'ı sınırsız kullanır ve fatura projeye çıkardı. Gün değişince
-    // (aiUsage.day farklıysa) sayaç serbestçe sıfırlanabilir.
-    function aiUsageOk() {
-      let incoming = request.resource.data.get('aiUsage', {});
-      let existing = resource.data.get('aiUsage', {});
-      return !('aiUsage' in request.resource.data)
-        || incoming.get('day', '') != existing.get('day', '')
-        || incoming.get('points', 0) >= existing.get('points', 0);
-    }
-
     match /users/{uid} {
-      allow read, delete: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null
-        && request.auth.uid == uid
+      allow read, delete: if signedInAs(uid);
+      allow create: if signedInAs(uid)
         && !request.resource.data.keys().hasAny(['premiumUntil']);
-      allow update: if request.auth != null
-        && request.auth.uid == uid
+      allow update: if signedInAs(uid)
         && !request.resource.data.diff(resource.data)
-            .affectedKeys().hasAny(['premiumUntil'])
-        && aiUsageOk();
+            .affectedKeys().hasAny(['premiumUntil']);
     }
 
     // Her kullanıcı yalnızca kendi verisini okuyup yazabilir.
     match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if signedInAs(uid);
+    }
+
+    // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:
+    //
+    // KÖK NEDEN (iki ayrı açık, ikisi de faturayı projeye çıkarıyordu):
+    // (1) Sayaç `users/{uid}` içindeydi ve o doküman istemciden SİLİNEBİLİYOR
+    //     (hesap silme akışı için gerekli). Silip yeniden yaratmak sayacı
+    //     sıfırlıyordu.
+    // (2) Daha büyüğü: gün bilgisi istemcinin yazdığı bir METİNDİ
+    //     ('2026-08-02') ve kural "gün değiştiyse sayaç sıfırlanabilir"
+    //     diyordu. Yani istemci her istekte uydurma bir gün yazarak kotayı
+    //     hiç doldurmadan sınırsız AI kullanabilirdi — silmeye bile gerek yok.
+    //
+    // ÇÖZÜM: pencere damgası artık SUNUCU zamanı (`request.time`); istemci
+    // uyduramaz. Sayaç aynı pencerede yalnız ARTAR, pencere ancak sunucu
+    // saatine göre 24 saat geçtiyse sıfırlanır. Doküman silinemez.
+    //
+    // KARAR (takas): kota "gece yarısı" yerine "son sıfırlamadan 24 saat
+    // sonra" yenilenir. Takvim gününü kurallarda güvenle hesaplamak
+    // (saat dilimi + metin biçimlendirme) mümkün değil; kayan pencere hem
+    // güvenli hem kullanıcı açısından adil.
+    match /aiQuota/{uid} {
+      allow read: if signedInAs(uid);
+
+      allow create: if signedInAs(uid)
+        && request.resource.data.dayStart == request.time
+        && request.resource.data.points is int
+        && request.resource.data.points >= 0;
+
+      allow update: if signedInAs(uid)
+        && request.resource.data.points is int
+        && (
+          // Aynı pencere: puan yalnız artabilir (geri alınamaz).
+          (request.resource.data.dayStart == resource.data.dayStart
+            && request.resource.data.points >= resource.data.points)
+          // Yeni pencere: damga sunucudan gelmeli VE eskisi 24 saati doldurmalı.
+          || (request.resource.data.dayStart == request.time
+            && resource.data.dayStart < request.time - duration.value(24, 'h'))
+        );
+
+      // Silme YOK: silip yeniden yaratmak sayacı sıfırlamanın en kolay yolu.
+      // Uid'ler yeniden kullanılmadığından hesap silinince artakalan sayaç
+      // (bir sayı + bir zaman damgası) kimseye ait değildir.
+      allow delete: if false;
     }
   }
 }

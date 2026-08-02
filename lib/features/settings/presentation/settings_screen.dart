@@ -221,9 +221,13 @@ class _ProfileCard extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final user = ref.watch(authStateProvider).value;
+    // Yerel (anonim) hesabın adı da e-postası da yok; kart adsız kalmasın —
+    // kullanıcı hangi hesap türünde olduğunu buradan görür.
     final name = (user?.displayName?.trim().isNotEmpty ?? false)
         ? user!.displayName!
-        : (user?.email ?? '');
+        : (user?.email?.trim().isNotEmpty ?? false)
+        ? user!.email!
+        : (ref.watch(isAnonymousProvider) ? l10n.localAccountBadge : '');
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1128,7 +1132,11 @@ class _BuiltInAiStatus extends ConsumerWidget {
     final remaining = ref.watch(freeAiRemainingProvider);
 
     final (icon, text) = hasKey
+        // Kendi anahtarı varsa hesap türü fark etmez: maliyet kullanıcıda,
+        // sınır yok. Yerel hesap uyarısı bu durumda yanıltıcı olurdu.
         ? (Icons.key, l10n.aiBuiltInByok)
+        : ref.watch(isAnonymousProvider)
+        ? (Icons.phonelink_lock_outlined, l10n.localAccountInfo)
         : premium
         ? (Icons.workspace_premium_outlined, l10n.aiBuiltInPremium(remaining))
         : (Icons.bolt_outlined, l10n.aiBuiltInRemaining(remaining));
@@ -1897,6 +1905,28 @@ class _AccountSection extends ConsumerWidget {
     }
   }
 
+  /// Yerel hesabı Google hesabına BAĞLAR — yeni giriş DEĞİL.
+  ///
+  /// `signInWithGoogle` çağrılsaydı yeni bir uid oluşur ve anonim hesapta
+  /// biriken bütün notlar erişilemez hâle gelirdi. `linkWithGoogle` uid'i
+  /// koruyarak hesabı yükseltir; notlar taşınmaya gerek kalmadan yerinde
+  /// kalır ve o andan itibaren yedeklenir.
+  Future<void> _linkAccount(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ref.read(authRepositoryProvider).linkWithGoogle();
+      messenger.showSnackBar(SnackBar(content: Text(l10n.accountLinked)));
+    } catch (e) {
+      // En sık hata: seçilen Google hesabı BAŞKA bir hesaba zaten bağlı
+      // (credential-already-in-use). Bu durumda birleştirme yapılamaz —
+      // Firebase iki uid'i tek başına birleştiremez.
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.loginError(e.toString()))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -1905,6 +1935,46 @@ class _AccountSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Yerel (anonim) hesapta yükseltme yolu HER ZAMAN görünür olmalı:
+        // kullanıcı notlarının yalnız bu cihazda olduğunu bilmeden aylarca
+        // kullanıp uygulamayı silince hepsini kaybedebilir.
+        if (ref.watch(isAnonymousProvider)) ...[
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.phonelink_lock_outlined, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        l10n.localAccountBadge,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.localAccountInfo,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  FilledButton.tonalIcon(
+                    icon: const Icon(Icons.link, size: 18),
+                    label: Text(l10n.linkGoogleAccount),
+                    onPressed: () => _linkAccount(context, ref),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         TextButton.icon(
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),

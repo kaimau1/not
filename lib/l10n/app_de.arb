@@ -452,5 +452,10 @@
   "apiKeyFieldLabel": "API-Schlüssel",
   "getApiKey": "Wo bekomme ich einen Schlüssel?",
   "recommendedModel": "Empfohlen",
-  "freeTierBadge": "Mit kostenlosem Kontingent"
+  "freeTierBadge": "Mit kostenlosem Kontingent",
+  "continueWithoutAccount": "Ohne Konto fortfahren",
+  "localAccountInfo": "Deine Notizen bleiben nur auf diesem Gerät: kein Zugriff von anderen Geräten, weg beim Deinstallieren, und die interne KI ist aus. Du kannst jederzeit ein Google-Konto verknüpfen — deine Notizen bleiben erhalten.",
+  "localAccountBadge": "Lokales Konto",
+  "linkGoogleAccount": "Google-Konto verknüpfen",
+  "accountLinked": "Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert."
 }

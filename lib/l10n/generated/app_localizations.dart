@@ -2818,6 +2818,35 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ücretsiz kademe var'**
   String get freeTierBadge;
+  /// No description provided for @continueWithoutAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesapsız devam et'**
+  String get continueWithoutAccount;
+
+  /// No description provided for @localAccountInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.'**
+  String get localAccountInfo;
+
+  /// No description provided for @localAccountBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerel hesap'**
+  String get localAccountBadge;
+
+  /// No description provided for @linkGoogleAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabı bağla'**
+  String get linkGoogleAccount;
+
+  /// No description provided for @accountLinked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google hesabın bağlandı. Notların artık yedekleniyor.'**
+  String get accountLinked;
 }
 
 class _AppLocalizationsDelegate

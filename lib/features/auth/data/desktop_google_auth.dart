@@ -21,7 +21,20 @@ class DesktopGoogleAuth implements AuthRepository {
   User? get currentUser => _auth.currentUser;
 
   @override
-  Future<UserCredential> signInWithGoogle() async {
+  Future<UserCredential> signInAnonymously() => _auth.signInAnonymously();
+
+  @override
+  Future<UserCredential> linkWithGoogle() async {
+    final user = _auth.currentUser;
+    if (user == null) return signInWithGoogle();
+    return user.linkWithCredential(await _googleCredential());
+  }
+
+  @override
+  Future<UserCredential> signInWithGoogle() async =>
+      _auth.signInWithCredential(await _googleCredential());
+
+  Future<AuthCredential> _googleCredential() async {
     final tokens = await DesktopOAuthFlow(
       scopes: const ['openid', 'email', 'profile'],
     ).run();
@@ -37,11 +50,10 @@ class DesktopGoogleAuth implements AuthRepository {
       await _tokenStore.saveGrantedScopes(tokens.grantedScopes);
     }
 
-    final credential = GoogleAuthProvider.credential(
+    return GoogleAuthProvider.credential(
       idToken: tokens.idToken,
       accessToken: tokens.accessToken,
     );
-    return _auth.signInWithCredential(credential);
   }
 
   @override

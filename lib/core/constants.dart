@@ -5,6 +5,11 @@ abstract final class AppConstants {
   // Firestore koleksiyon adları
   static const String usersCollection = 'users';
   static const String notesCollection = 'notes';
+
+  /// Dahili AI kota sayacı — `users/{uid}` ALTINDA DEĞİL, ayrı kök
+  /// koleksiyonda. Gerekçe firestore.rules'da: kullanıcı dokümanı istemciden
+  /// silinebildiği için sayaç orada sıfırlanabiliyordu.
+  static const String aiQuotaCollection = 'aiQuota';
   static const String foldersCollection = 'folders';
 
   // Gemini

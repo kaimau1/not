@@ -1480,4 +1480,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get freeTierBadge => 'Tiene nivel gratuito';
+
+  @override
+  String get continueWithoutAccount => 'Continuar sin cuenta';
+
+  @override
+  String get localAccountInfo => 'Tus notas se quedan solo en este dispositivo: no se abren en otro, se pierden si desinstalas la app y la IA integrada está desactivada. Puedes vincular una cuenta de Google cuando quieras; tus notas se conservan.';
+
+  @override
+  String get localAccountBadge => 'Cuenta local';
+
+  @override
+  String get linkGoogleAccount => 'Vincular cuenta de Google';
+
+  @override
+  String get accountLinked => 'Tu cuenta de Google está vinculada. Tus notas ya se respaldan.';
 }

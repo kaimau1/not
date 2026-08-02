@@ -1469,4 +1469,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get freeTierBadge => 'Has a free tier';
+
+  @override
+  String get continueWithoutAccount => 'Continue without an account';
+
+  @override
+  String get localAccountInfo => 'Your notes stay on this device only: they cannot be opened elsewhere, they are gone if you uninstall the app, and built-in AI is off. You can link a Google account at any time — your notes carry over.';
+
+  @override
+  String get localAccountBadge => 'Local account';
+
+  @override
+  String get linkGoogleAccount => 'Link a Google account';
+
+  @override
+  String get accountLinked => 'Your Google account is linked. Your notes are backed up now.';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../data/auth_repository.dart';
 import 'auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -14,10 +15,24 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
 
-  Future<void> _signIn() async {
+  Future<void> _signIn() =>
+      _run((auth) => auth.signInWithGoogle());
+
+  /// "Hesapsız devam et": Firebase anonim girişi. Google hesabı istemeden
+  /// anında not almaya başlanır; kısıtlar [_localAccountNote]'ta yazılı.
+  ///
+  /// Neden bu var: Play'de ilk açılışta hesap zorunluluğu en büyük kurulum
+  /// kaybı sebeplerinden biri. Anonim giriş uid ürettiği için veri katmanı
+  /// (tamamı uid'e bağlı) olduğu gibi çalışır, sonradan `linkWithGoogle` ile
+  /// aynı uid gerçek hesaba yükseltilir ve notlar taşınmaya gerek kalmadan
+  /// yerinde kalır.
+  Future<void> _continueLocal() =>
+      _run((auth) => auth.signInAnonymously());
+
+  Future<void> _run(Future<void> Function(AuthRepository) action) async {
     setState(() => _busy = true);
     try {
-      await ref.read(authRepositoryProvider).signInWithGoogle();
+      await action(ref.read(authRepositoryProvider));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -79,6 +94,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         )
                       : const Icon(Icons.login_rounded),
                   label: Text(l10n.signInWithGoogle),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _busy ? null : _continueLocal,
+                  child: Text(l10n.continueWithoutAccount),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.localAccountInfo,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
