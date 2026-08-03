@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/tr_datetime.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/ai_report.dart';
@@ -46,13 +47,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     try {
       final notes = ref.read(notesStreamProvider).value ?? const [];
       final assistant = ref.read(assistantServiceProvider);
+      String? createdNoteId;
       final reply = await ref
           .read(geminiServiceProvider)
           .assistantChat(
             notesContext: assistant.buildNotesContext(notes),
             history: List.of(_history),
-            onToolCall: assistant.execute,
+            onToolCall: (name, args) async {
+              final result = await assistant.execute(name, args);
+              if (name != 'delete_note' && result['noteId'] is String) {
+                createdNoteId = result['noteId'] as String;
+              }
+              return result;
+            },
           );
+      await _ensureReminder(createdNoteId, text);
       if (mounted) {
         setState(() => _history.add(ChatTurn(isUser: false, text: reply)));
       }
@@ -79,6 +88,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _scrollToEnd();
       }
     }
+  }
+
+  /// Güvenlik ağı: "yarın 9'a diş randevusu notu ekle" gibi cümlelerde model
+  /// notu oluşturup `reminderAt`'i doldurmayı atlayabiliyor (alan şemada
+  /// isteğe bağlı). Model kurmadıysa zaman kullanıcının kendi cümlesinden
+  /// YERELDE çıkarılır — hatırlatıcı modelin keyfine kalmaz, ekstra API
+  /// çağrısı da olmaz. Sesli asistandaki ağın aynısı (bkz.
+  /// `VoiceAssistantController.send`); ayrıştırıcı şimdilik yalnız Türkçe,
+  /// diğer dillerde null döner ve davranış eskisi gibi kalır.
+  Future<void> _ensureReminder(String? noteId, String source) async {
+    if (noteId == null) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final note = await repo.watchNote(noteId).first;
+    if (note == null || note.reminderAt != null) return;
+    final when = parseTurkishDateTime(source);
+    if (when != null) repo.setReminder(noteId, when);
   }
 
   /// Sesli komut: kaydet → yazıya dök → doğrudan gönder.

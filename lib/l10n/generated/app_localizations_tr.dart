@@ -1452,7 +1452,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiProvider => 'Yapay zeka sağlayıcısı';
 
   @override
-  String get aiProviderInfo => 'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.';
+  String get aiProviderInfo =>
+      'Kendi anahtarınla çalışan sağlayıcıyı seç. Her sağlayıcının anahtarı ayrı saklanır; aralarında geçiş yapınca yeniden girmen gerekmez.';
 
   @override
   String get apiKeyFieldLabel => 'API anahtarı';
@@ -1470,7 +1471,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get continueWithoutAccount => 'Hesapsız devam et';
 
   @override
-  String get localAccountInfo => 'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.';
+  String get localAccountInfo =>
+      'Notların yalnız bu cihazda kalır: başka cihazdan açılamaz, uygulamayı silersen geri getirilemez ve dahili yapay zeka kapalı olur. İstediğin an Google hesabı bağlayabilirsin — notların olduğu gibi kalır.';
 
   @override
   String get localAccountBadge => 'Yerel hesap';
@@ -1479,5 +1481,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get linkGoogleAccount => 'Google hesabı bağla';
 
   @override
-  String get accountLinked => 'Google hesabın bağlandı. Notların artık yedekleniyor.';
+  String get accountLinked =>
+      'Google hesabın bağlandı. Notların artık yedekleniyor.';
 }

@@ -15,14 +15,11 @@ import 'note_pdf.dart';
 /// numara/onay kutusu) [NotePdf.parseLines] ile PDF'tekiyle birebir aynı
 /// kurallardan okunur — iki çıktı hiçbir zaman farklı yorumlamaz.
 ///
-/// Görseller `word/media/` içine gömülür ve metnin ardından tam satır
-/// genişliğinde eklenir. Word'ün açamayacağı bir tür gelirse (beklenmiyor;
-/// ekler jpg/png'ye normalize ediliyor) o görsel sessizce atlanmaz —
-/// content-type tablosunda yaygın türlerin tamamı tanımlı.
+/// Görseller `word/media/` içine gömülür ve NOTTAKİ yerlerine, nottaki
+/// oranları ve hizalarıyla girer — PDF ile aynı kural. Word'ün açamayacağı bir
+/// tür gelirse (beklenmiyor; ekler jpg/png'ye normalize ediliyor) o görsel
+/// sessizce atlanmaz — content-type tablosunda yaygın türlerin tamamı tanımlı.
 abstract final class NoteDocx {
-  /// px → EMU (English Metric Unit, 96 dpi): Word çizim boyut birimi.
-  static const _emuPerPx = 9525;
-
   /// Görselin sayfada kaplayabileceği en büyük alan (EMU): ~15,2 cm × ~19 cm
   /// (A4, 2 cm kenar boşluğuyla).
   static const _maxCx = 5760000;
@@ -56,7 +53,28 @@ abstract final class NoteDocx {
     if (title.trim().isNotEmpty || date != null) {
       body.write(_p(''));
     }
-    for (final line in NotePdf.parseLines(content)) {
+    // Görseller NOTTAKİ YERLERİNE girer — kural PDF ile birebir aynı
+    // (bkz. `NotePdf._withImages`): her görsel [ExportImage.line] ile verilen
+    // satırdan ÖNCE gelir, düzen bilgisi olmayan görsel metnin sonuna eklenir.
+    // DİKKAT: rId ve `word/media/` dosya adı ÖZGÜN [images] sırasını izler;
+    // yerleşim sırası onu değiştirmemeli, yoksa görseller birbirinin yerine
+    // gömülür. Bu yüzden sıralama indeksler üzerinden yapılır.
+    final lines = NotePdf.parseLines(content);
+    final placed = [
+      for (var i = 0; i < images.length; i++)
+        if (images[i].line != null) i,
+    ]..sort((a, b) => images[a].line!.compareTo(images[b].line!));
+    final trailing = [
+      for (var i = 0; i < images.length; i++)
+        if (images[i].line == null) i,
+    ];
+    var next = 0;
+    for (var index = 0; index < lines.length; index++) {
+      while (next < placed.length && images[placed[next]].line! <= index) {
+        body.write(_imageParagraph(images[placed[next]], placed[next] + 1));
+        next++;
+      }
+      final line = lines[index];
       body.write(switch (line.kind) {
         PdfLineKind.blank => _p(''),
         PdfLineKind.paragraph => _p(_r(line.text)),
@@ -71,7 +89,10 @@ abstract final class NoteDocx {
         PdfLineKind.bullet => _p(_r('• ${line.text}')),
       });
     }
-    for (var i = 0; i < images.length; i++) {
+    for (; next < placed.length; next++) {
+      body.write(_imageParagraph(images[placed[next]], placed[next] + 1));
+    }
+    for (final i in trailing) {
       body.write(_imageParagraph(images[i], i + 1));
     }
 
@@ -168,19 +189,28 @@ abstract final class NoteDocx {
       .replaceAll('>', '&gt;')
       .replaceAll('"', '&quot;');
 
-  /// Satır genişliğine (üst sınırlarla) ölçeklenmiş gömülü görsel paragrafı.
+  /// Nottaki oranıyla ölçeklenmiş, nottaki hizasına yerleştirilmiş gömülü
+  /// görsel paragrafı. Ölçekleme PDF'teki `NotePdf._imageWidget` ile aynı:
+  /// genişlik satır genişliğinin [ExportImage.widthFraction] katı (düzen
+  /// bilgisi yoksa tam genişlik), yükseklik oranla türetilir ve sayfayı
+  /// aşarsa geri ölçeklenir.
   static String _imageParagraph(ExportImage img, int n) {
-    var cx = (img.width <= 0 ? 480 : img.width) * _emuPerPx;
-    var cy = (img.height <= 0 ? 360 : img.height) * _emuPerPx;
-    if (cx > _maxCx) {
-      cy = cy * _maxCx ~/ cx;
-      cx = _maxCx;
+    final iw = img.width <= 0 ? 480.0 : img.width.toDouble();
+    final ih = img.height <= 0 ? 360.0 : img.height.toDouble();
+    var w = _maxCx * (img.widthFraction ?? 1).clamp(0.1, 1.0);
+    var h = w * ih / iw;
+    if (h > _maxCy) {
+      h = _maxCy.toDouble();
+      w = h * iw / ih;
     }
-    if (cy > _maxCy) {
-      cx = cx * _maxCy ~/ cy;
-      cy = _maxCy;
-    }
-    return '<w:p><w:r><w:drawing>'
+    final cx = w.round();
+    final cy = h.round();
+    final jc = switch (img.align) {
+      ExportAlign.left => 'left',
+      ExportAlign.center => 'center',
+      ExportAlign.right => 'right',
+    };
+    return '<w:p><w:pPr><w:jc w:val="$jc"/></w:pPr><w:r><w:drawing>'
         '<wp:inline distT="0" distB="0" distL="0" distR="0">'
         '<wp:extent cx="$cx" cy="$cy"/>'
         '<wp:docPr id="$n" name="Resim $n"/>'

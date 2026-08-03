@@ -1467,7 +1467,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiProvider => 'Proveedor de IA';
 
   @override
-  String get aiProviderInfo => 'Elige el proveedor al que pertenece tu clave. La clave de cada proveedor se guarda por separado, así que cambiar no exige volver a introducirla.';
+  String get aiProviderInfo =>
+      'Elige el proveedor al que pertenece tu clave. La clave de cada proveedor se guarda por separado, así que cambiar no exige volver a introducirla.';
 
   @override
   String get apiKeyFieldLabel => 'Clave de API';
@@ -1485,7 +1486,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get continueWithoutAccount => 'Continuar sin cuenta';
 
   @override
-  String get localAccountInfo => 'Tus notas se quedan solo en este dispositivo: no se abren en otro, se pierden si desinstalas la app y la IA integrada está desactivada. Puedes vincular una cuenta de Google cuando quieras; tus notas se conservan.';
+  String get localAccountInfo =>
+      'Tus notas se quedan solo en este dispositivo: no se abren en otro, se pierden si desinstalas la app y la IA integrada está desactivada. Puedes vincular una cuenta de Google cuando quieras; tus notas se conservan.';
 
   @override
   String get localAccountBadge => 'Cuenta local';
@@ -1494,5 +1496,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get linkGoogleAccount => 'Vincular cuenta de Google';
 
   @override
-  String get accountLinked => 'Tu cuenta de Google está vinculada. Tus notas ya se respaldan.';
+  String get accountLinked =>
+      'Tu cuenta de Google está vinculada. Tus notas ya se respaldan.';
 }

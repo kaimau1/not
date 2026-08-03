@@ -1,0 +1,1503 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Italian (`it`).
+class AppLocalizationsIt extends AppLocalizations {
+  AppLocalizationsIt([String locale = 'it']) : super(locale);
+
+  @override
+  String get appName => 'Note';
+
+  @override
+  String get loginTagline => 'Le tue note, su ogni dispositivo';
+
+  @override
+  String get signInWithGoogle => 'Accedi con Google';
+
+  @override
+  String loginError(String error) {
+    return 'Accesso non riuscito: $error';
+  }
+
+  @override
+  String get searchHint => 'Cerca nelle note...';
+
+  @override
+  String get filterAll => 'Tutte';
+
+  @override
+  String get filterText => 'Testo';
+
+  @override
+  String get filterChecklist => 'Elenco';
+
+  @override
+  String get filterOrdered => 'Numerato';
+
+  @override
+  String get filterPinned => 'In evidenza';
+
+  @override
+  String get filterStarred => 'Preferite';
+
+  @override
+  String get star => 'Aggiungi ai preferiti';
+
+  @override
+  String get unstar => 'Rimuovi dai preferiti';
+
+  @override
+  String editedAt(String date) {
+    return 'Modificata: $date';
+  }
+
+  @override
+  String get sectionPinned => 'In evidenza';
+
+  @override
+  String get sectionOthers => 'Altre';
+
+  @override
+  String get emptyNotes => 'Ancora nessuna nota';
+
+  @override
+  String get emptyNotesHint => 'Tocca + per creare la tua prima nota';
+
+  @override
+  String get emptySearch => 'Nessun risultato';
+
+  @override
+  String get newTextNote => 'Nota di testo';
+
+  @override
+  String get newChecklist => 'Elenco';
+
+  @override
+  String get newOrderedList => 'Elenco numerato';
+
+  @override
+  String get noteDeleted => 'Nota eliminata';
+
+  @override
+  String notesDeletedCount(int count) {
+    return '$count note eliminate';
+  }
+
+  @override
+  String selectedCount(int count) {
+    return '$count selezionate';
+  }
+
+  @override
+  String get deleteSelected => 'Elimina selezionate';
+
+  @override
+  String get undo => 'Annulla';
+
+  @override
+  String get titleHint => 'Titolo';
+
+  @override
+  String get bodyHint => 'Nota...';
+
+  @override
+  String get newItemHint => 'Nuovo elemento';
+
+  @override
+  String moreItemsCount(int count) {
+    return '+$count altri elementi';
+  }
+
+  @override
+  String get addAttachment => 'Aggiungi';
+
+  @override
+  String get addImage => 'Aggiungi immagine';
+
+  @override
+  String get addPdf => 'Aggiungi PDF';
+
+  @override
+  String get addSlide => 'Aggiungi diapositive';
+
+  @override
+  String get pasteImage => 'Incolla immagine dagli appunti';
+
+  @override
+  String get clipboardEmpty => 'Nessuna immagine negli appunti';
+
+  @override
+  String get noNoteSelected => 'Scegli una nota a sinistra';
+
+  @override
+  String attachmentFailed(String error) {
+    return 'Impossibile aggiungere l\'allegato: $error';
+  }
+
+  @override
+  String get attachmentUploading => 'Caricamento...';
+
+  @override
+  String get attachmentNotSynced =>
+      'Questo file non è ancora stato sincronizzato su questo dispositivo';
+
+  @override
+  String attachmentTooLarge(int limit) {
+    return 'File troppo grande (massimo $limit MB)';
+  }
+
+  @override
+  String get removeAttachment => 'Rimuovi allegato';
+
+  @override
+  String get pin => 'Fissa in alto';
+
+  @override
+  String get unpin => 'Togli dall\'alto';
+
+  @override
+  String get delete => 'Elimina';
+
+  @override
+  String get color => 'Colore';
+
+  @override
+  String get aiTitle => 'IA';
+
+  @override
+  String get aiSummarize => 'Riassumi la nota';
+
+  @override
+  String get aiAnalyze => 'Analizza';
+
+  @override
+  String get aiSectionNote => 'Questa nota';
+
+  @override
+  String get aiSectionAttachments => 'Allegati';
+
+  @override
+  String get summarize => 'Riassumi';
+
+  @override
+  String get summaryDetailTitle => 'Tipo di riassunto';
+
+  @override
+  String get summaryShort => 'Riassunto breve';
+
+  @override
+  String get summaryShortInfo => 'Poche frasi di sintesi più i punti chiave';
+
+  @override
+  String get summaryDetailed => 'Riassunto dettagliato';
+
+  @override
+  String get summaryDetailedInfo =>
+      'Abbastanza completo da non dover aprire l\'originale';
+
+  @override
+  String get listen => 'Ascolta';
+
+  @override
+  String get ask => 'Fai una domanda';
+
+  @override
+  String get extractText => 'Estrai il testo';
+
+  @override
+  String get transcribe => 'Trascrivi';
+
+  @override
+  String get listenToNote => 'Leggi ad alta voce';
+
+  @override
+  String get aiNoApiKey =>
+      'Inserisci prima la tua chiave API Gemini nelle impostazioni';
+
+  @override
+  String aiError(String error) {
+    return 'Richiesta IA non riuscita: $error';
+  }
+
+  @override
+  String get aiSummaryTitle => 'Riassunto IA';
+
+  @override
+  String get aiThinking => 'Sto pensando...';
+
+  @override
+  String get copy => 'Copia';
+
+  @override
+  String get copied => 'Copiato';
+
+  @override
+  String get settings => 'Impostazioni';
+
+  @override
+  String get settingsAppearance => 'Aspetto';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Chiaro';
+
+  @override
+  String get themeDark => 'Scuro';
+
+  @override
+  String get settingsAi => 'IA';
+
+  @override
+  String get geminiApiKey => 'Chiave API Gemini';
+
+  @override
+  String get geminiApiKeyHint => 'Incolla la chiave che inizia con AIza...';
+
+  @override
+  String get geminiApiKeyInfo =>
+      'La chiave è facoltativa: senza, le richieste IA passano dal servizio integrato dell\'app (una quota gratuita giornaliera, più alta con Premium). Per un uso illimitato con la tua chiave, ottienine una gratis su aistudio.google.com; la chiave resta solo su questo dispositivo, in un archivio sicuro.';
+
+  @override
+  String aiBuiltInPremium(int count) {
+    return 'IA integrata: Premium — $count punti rimasti oggi';
+  }
+
+  @override
+  String aiBuiltInRemaining(int count) {
+    return 'IA integrata: $count punti gratuiti rimasti oggi';
+  }
+
+  @override
+  String get aiBuiltInByok => 'Con la tua chiave — illimitato';
+
+  @override
+  String get aiReport => 'Segnala questa risposta';
+
+  @override
+  String get aiReportThanks => 'Segnalazione ricevuta, grazie';
+
+  @override
+  String get privacyPolicyTitle => 'Informativa sulla privacy';
+
+  @override
+  String get lockNote => 'Blocca';
+
+  @override
+  String get unlockNote => 'Sblocca';
+
+  @override
+  String get lockedNote => 'Nota bloccata';
+
+  @override
+  String get unlockAuthReason =>
+      'Verifica la tua identità per aprire la nota bloccata';
+
+  @override
+  String get exportBackup => 'Esporta backup (JSON)';
+
+  @override
+  String get expandListItems => 'Mostra le righe per intero';
+
+  @override
+  String get expandListItemsInfo =>
+      'Gli elementi lunghi vanno a capo su più righe e restano interamente visibili. Se disattivato, una riga resta su un solo rigo e si espande al tocco.';
+
+  @override
+  String get emptyTrash => 'Svuota cestino';
+
+  @override
+  String emptyTrashConfirm(int count) {
+    return '$count note verranno eliminate definitivamente. L\'operazione non può essere annullata. Confermi?';
+  }
+
+  @override
+  String get trashEmptied => 'Cestino svuotato';
+
+  @override
+  String get validateAndSave => 'Verifica e salva';
+
+  @override
+  String get clear => 'Cancella';
+
+  @override
+  String get aiDiagnostics => 'Diagnostica IA';
+
+  @override
+  String get aiDiagnosticsEmpty => 'Nessun errore registrato';
+
+  @override
+  String aiDiagnosticsCount(int count) {
+    return 'Ultimi $count errori registrati';
+  }
+
+  @override
+  String get apiKeyValid => 'Chiave API verificata e salvata';
+
+  @override
+  String get apiKeyInvalid => 'La chiave API non è valida';
+
+  @override
+  String get apiKeySavedBadge => 'Salvata';
+
+  @override
+  String get removeApiKey => 'Elimina chiave';
+
+  @override
+  String get refresh => 'Aggiorna';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get signOut => 'Esci';
+
+  @override
+  String get signOutConfirm => 'Vuoi davvero uscire?';
+
+  @override
+  String get deleteAccount => 'Elimina il mio account e i miei dati';
+
+  @override
+  String get deleteAccountWarning =>
+      'L\'operazione non può essere annullata: tutte le tue note, gli allegati e il tuo account verranno eliminati definitivamente. Vuoi continuare?';
+
+  @override
+  String get deleteAccountConfirm => 'Elimina definitivamente';
+
+  @override
+  String get licensesTitle => 'Licenze open source';
+
+  @override
+  String get generating => 'Generazione...';
+
+  @override
+  String get retry => 'Riprova';
+
+  @override
+  String get cancel => 'Annulla';
+
+  @override
+  String get close => 'Chiudi';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get syncPending => 'In attesa di sincronizzazione';
+
+  @override
+  String get synced => 'Sincronizzata';
+
+  @override
+  String genericError(String error) {
+    return 'Qualcosa è andato storto: $error';
+  }
+
+  @override
+  String get addTag => 'Etichetta';
+
+  @override
+  String get tagHint => 'es. lavoro, casa, scuola';
+
+  @override
+  String get addReminder => 'Ricordamelo';
+
+  @override
+  String get share => 'Condividi';
+
+  @override
+  String get archive => 'Archivia';
+
+  @override
+  String get unarchive => 'Togli dall\'archivio';
+
+  @override
+  String get archiveTitle => 'Archivio';
+
+  @override
+  String get archiveEmpty => 'Nessuna nota nell\'archivio';
+
+  @override
+  String get trashTitle => 'Cestino';
+
+  @override
+  String get trashEmpty => 'Il cestino è vuoto';
+
+  @override
+  String get trashInfo =>
+      'Le note eliminate restano qui; puoi ripristinarle o eliminarle definitivamente.';
+
+  @override
+  String get restore => 'Ripristina';
+
+  @override
+  String get deleteForever => 'Elimina definitivamente';
+
+  @override
+  String get deleteForeverConfirm =>
+      'Questa nota verrà eliminata definitivamente. Confermi?';
+
+  @override
+  String get recordAudio => 'Registrazione vocale';
+
+  @override
+  String get recording => 'Registrazione...';
+
+  @override
+  String get stopAndSave => 'Termina e aggiungi';
+
+  @override
+  String get micPermissionDenied =>
+      'L\'autorizzazione al microfono è stata negata';
+
+  @override
+  String get speechRecognitionFailed =>
+      'Il riconoscimento vocale non ha funzionato. Verifica che l\'autorizzazione al microfono sia concessa e che l\'app Google sia aggiornata.';
+
+  @override
+  String get addDrawing => 'Aggiungi disegno';
+
+  @override
+  String get drawingTitle => 'Disegno';
+
+  @override
+  String get addToNote => 'Aggiungi alla nota';
+
+  @override
+  String get chatTitle => 'Chatta con le tue note';
+
+  @override
+  String get chatHint =>
+      'Chiedi qualcosa sulle tue note: «qual era quella ricetta che ho scritto la settimana scorsa?», «cosa manca nella lista della spesa?»';
+
+  @override
+  String get chatInputHint => 'Scrivi una domanda...';
+
+  @override
+  String get fontSize => 'Dimensione del testo';
+
+  @override
+  String get fontSizePreview => 'Le tue note appariranno così';
+
+  @override
+  String get darkSchedule => 'Programmazione tema scuro';
+
+  @override
+  String get darkScheduleInfo =>
+      'Passa al tema scuro tra gli orari che imposti';
+
+  @override
+  String get aiTranslate => 'Traduci';
+
+  @override
+  String get voiceCommand => 'Comando vocale';
+
+  @override
+  String get semanticSearchToggle => 'Ricerca semantica con l\'IA';
+
+  @override
+  String get semanticSearchHint =>
+      'Cerca per significato: «spese dell\'auto»...';
+
+  @override
+  String get briefingTitle => 'Riepilogo del giorno';
+
+  @override
+  String get briefingLoading => 'Preparazione del riepilogo...';
+
+  @override
+  String get briefingEmpty => 'Niente per oggi';
+
+  @override
+  String get briefingSetting => 'Notifica del riepilogo giornaliero';
+
+  @override
+  String get briefingSettingInfo =>
+      'Ricevi ogni mattina una notifica con il riepilogo della giornata, all\'orario che preferisci';
+
+  @override
+  String get autoTagSetting => 'Etichetta automaticamente';
+
+  @override
+  String get autoTagSettingInfo =>
+      'Quando una nota viene chiusa senza etichette, l\'IA ne aggiunge una adatta';
+
+  @override
+  String get suggestTags => 'Suggerisci etichette';
+
+  @override
+  String get aiFixNote => 'Sistema la nota';
+
+  @override
+  String get fixLevelTitle => 'Quanto va sistemata?';
+
+  @override
+  String get fixSimple => 'Leggero';
+
+  @override
+  String get fixSimpleInfo => 'Solo ortografia ed errori di battitura';
+
+  @override
+  String get fixBalanced => 'Equilibrato';
+
+  @override
+  String get fixBalancedInfo =>
+      'Anche la struttura delle frasi, per una scrittura più pulita';
+
+  @override
+  String get fixDetailed => 'Approfondito';
+
+  @override
+  String get fixDetailedInfo => 'Riscrive l\'intero testo da cima a fondo';
+
+  @override
+  String get existingTagsLabel => 'Etichette precedenti';
+
+  @override
+  String get aiSkipCheckedSetting =>
+      'Escludi gli elementi spuntati dalle modifiche IA';
+
+  @override
+  String get aiSkipCheckedInfo =>
+      'Quando l\'IA sistema o traduce un elenco, gli elementi completati (spuntati) restano esattamente come sono; vengono modificati solo quelli non spuntati.';
+
+  @override
+  String get noteUpdatedUndo => 'Nota aggiornata';
+
+  @override
+  String get aiImprove => 'Migliora la nota';
+
+  @override
+  String get improveFormal => 'Rendila più formale';
+
+  @override
+  String get improveShorten => 'Accorcia';
+
+  @override
+  String get improveBullets => 'Trasforma in elenco puntato';
+
+  @override
+  String get improveNumbered => 'Trasforma in elenco numerato';
+
+  @override
+  String get replaceNote => 'Sostituisci la nota';
+
+  @override
+  String get openAsNewNote => 'Come nuova nota';
+
+  @override
+  String get pdfChatHint =>
+      'Chiedi qualcosa su questo PDF: «riassumilo», «c\'è una clausola penale?», «qual è la scadenza?»';
+
+  @override
+  String get pdfChatInputHint => 'Scrivi una domanda sul PDF...';
+
+  @override
+  String get voiceCaptureHint =>
+      'Parla: «comprare latte e pane» oppure «riunione domani alle 9, ricordamelo» — l\'IA scrive la tua nota quando hai finito.';
+
+  @override
+  String get voiceFinish => 'Termina';
+
+  @override
+  String get voiceProcessing => 'Elaborazione di quanto hai detto...';
+
+  @override
+  String get voiceNothingHeard => 'Nessun parlato rilevato nella registrazione';
+
+  @override
+  String get voiceNoteSaved => 'La tua nota vocale è stata salvata';
+
+  @override
+  String get openNote => 'Apri nota';
+
+  @override
+  String get remindersTitle => 'Promemoria';
+
+  @override
+  String get remindersEmpty => 'Nessun promemoria';
+
+  @override
+  String get remindersEmptyHint =>
+      'Aggiungi un promemoria a una nota, oppure crea una nuova nota con promemoria dal pulsante +';
+
+  @override
+  String get remindersUpcoming => 'In arrivo';
+
+  @override
+  String get remindersPast => 'Passati';
+
+  @override
+  String get newReminder => 'Nuovo promemoria';
+
+  @override
+  String get remindersUntitled => 'Nota senza titolo';
+
+  @override
+  String get remindersEdit => 'Cambia l\'orario';
+
+  @override
+  String get remindersRemove => 'Rimuovi promemoria';
+
+  @override
+  String get aiModelChat => 'Riassunti, titoli, etichette e chat';
+
+  @override
+  String get aiModelDocument => 'Podcast e chat sui documenti';
+
+  @override
+  String get aiModelTranslate => 'Traduzione';
+
+  @override
+  String get aiModelVoice => 'Note vocali';
+
+  @override
+  String get aiModelAuto => 'Automatico (consigliato)';
+
+  @override
+  String get aiModelsInfo =>
+      'Puoi scegliere un modello diverso per ogni compito: i testi brevi vanno bene con un modello veloce, i documenti lunghi richiedono un modello più capace. Se il modello scelto esaurisce la quota o viene ritirato, viene provato automaticamente il successivo.';
+
+  @override
+  String get clearNote => 'Svuota';
+
+  @override
+  String get clearNoteConfirm =>
+      'Il contenuto della nota (testo ed elementi dell\'elenco) verrà eliminato. Confermi?';
+
+  @override
+  String get themePaper => 'Carta';
+
+  @override
+  String get calculatorTitle => 'Calcolatrice';
+
+  @override
+  String get calcExpressionHint => 'es. 12,5×3+40';
+
+  @override
+  String get calcInvalid => 'Espressione non valida';
+
+  @override
+  String get liveDictation => 'Detta';
+
+  @override
+  String get dictationListening =>
+      'In ascolto... il testo compare mentre parli';
+
+  @override
+  String get dictationNoKeyInfo =>
+      'La dettatura in tempo reale non è disponibile su questo dispositivo; la registrazione verrà trascritta tutta insieme quando ti fermi.';
+
+  @override
+  String get dictationHoldHint =>
+      'Tieni premuto il microfono e parla; il testo viene scritto quando lasci';
+
+  @override
+  String itemsSelected(int count) {
+    return '$count elementi selezionati';
+  }
+
+  @override
+  String get noteChatTitle => 'Chatta con questa nota';
+
+  @override
+  String get noteChatHint => 'Chiedi qualcosa su questa nota';
+
+  @override
+  String get noteChatIntro =>
+      'Vengono letti il contenuto della nota e i suoi allegati (PDF/immagine), e la tua domanda trova risposta a partire da questi.';
+
+  @override
+  String get dictationProcessing => 'Trascrizione...';
+
+  @override
+  String get aiDailyManualInfo =>
+      'Con il piano gratuito non viene generato automaticamente, quindi non consuma la tua quota giornaliera. Puoi generarlo una volta al giorno con il pulsante qui sotto.';
+
+  @override
+  String get aiGenerate => 'Genera';
+
+  @override
+  String get aiGeneratedTodayInfo =>
+      'È stato generato oggi. Con il piano gratuito si rinnova una volta al giorno; potrai generarlo di nuovo domani.';
+
+  @override
+  String get voiceAssistantTitle => 'Assistente per note vocali';
+
+  @override
+  String get voiceListening => 'In ascolto...';
+
+  @override
+  String get voiceHoldHint =>
+      'Tieni premuto e parla; la nota viene creata quando lasci';
+
+  @override
+  String get voiceTapHint => 'Tocca e parla; tocca di nuovo per terminare';
+
+  @override
+  String get voiceTooShort => 'La registrazione era troppo breve, riprova';
+
+  @override
+  String get voiceModeSetting => 'Come funziona';
+
+  @override
+  String get voiceModeHold => 'Tieni premuto per parlare';
+
+  @override
+  String get voiceModeTap => 'Tocca per iniziare / tocca per fermare';
+
+  @override
+  String get voiceModeInfo =>
+      'Tieni premuto per parlare: ascolta finché tieni premuto il pulsante e crea la nota quando lasci. Tocca per iniziare: un tocco avvia la registrazione, un secondo tocco la termina.';
+
+  @override
+  String get voiceHeardLive => 'Parlato rilevato';
+
+  @override
+  String get permissionsTitle => 'Autorizzazioni';
+
+  @override
+  String get permMic => 'Microfono';
+
+  @override
+  String get permMicInfo => 'Necessario per le note vocali e la dettatura';
+
+  @override
+  String get permNotifications => 'Notifiche';
+
+  @override
+  String get permNotificationsInfo =>
+      'Necessarie per i promemoria e il riepilogo giornaliero';
+
+  @override
+  String get permBattery => 'Ottimizzazione della batteria';
+
+  @override
+  String get permBatteryInfo =>
+      'Esenta l\'app dalle restrizioni della batteria perché i promemoria arrivino in orario';
+
+  @override
+  String get showTagChips => 'Mostra i chip delle etichette';
+
+  @override
+  String get showFolderChips => 'Mostra i chip delle cartelle';
+
+  @override
+  String videoTooBigForAi(int mb) {
+    return 'Il video è troppo grande per essere inviato all\'IA ($mb MB). Registrane uno più breve.';
+  }
+
+  @override
+  String get permCamera => 'Fotocamera';
+
+  @override
+  String get permCameraInfo =>
+      'Necessaria per le note video e per scattare foto';
+
+  @override
+  String get permOnboardTitle => 'Prima di iniziare';
+
+  @override
+  String get permOnboardInfo =>
+      'Note richiede queste autorizzazioni solo quando usi la funzione corrispondente. Puoi concederle ora qui sotto, oppure modificarle in seguito in Impostazioni > Autorizzazioni.';
+
+  @override
+  String get permOnboardGrantAll => 'Concedi le autorizzazioni';
+
+  @override
+  String get permOnboardSkip => 'Non ora';
+
+  @override
+  String get newVideoNote => 'Nota video';
+
+  @override
+  String get videoLocalOnly =>
+      'Questo video è salvato solo su questo dispositivo (non caricato sul cloud)';
+
+  @override
+  String get videoToNote => 'Crea una nota dal video';
+
+  @override
+  String get videoToNoteRunning => 'Analisi del video…';
+
+  @override
+  String get permGranted => 'Concessa';
+
+  @override
+  String get permGrant => 'Concedi';
+
+  @override
+  String get permOpenSettings => 'Apri le impostazioni';
+
+  @override
+  String get newHandwriting => 'Scrittura a mano';
+
+  @override
+  String get newVoiceCapture => 'Nota vocale';
+
+  @override
+  String get suggestTitle => 'Suggerisci un titolo';
+
+  @override
+  String get noteMetaMenu => 'Etichetta · Titolo · Promemoria';
+
+  @override
+  String get folder => 'Cartella';
+
+  @override
+  String get noFolder => 'Nessuna cartella';
+
+  @override
+  String get newFolder => 'Nuova cartella';
+
+  @override
+  String get editFolder => 'Modifica cartella';
+
+  @override
+  String get deleteFolder => 'Elimina cartella';
+
+  @override
+  String deleteFolderConfirm(String name) {
+    return 'La cartella «$name» verrà eliminata. Le note al suo interno non vengono eliminate — semplicemente non avranno più una cartella.';
+  }
+
+  @override
+  String get folderNameHint => 'Nome della cartella';
+
+  @override
+  String get folderIcon => 'Icona';
+
+  @override
+  String get editFilters => 'Modifica i filtri';
+
+  @override
+  String get editFiltersInfo =>
+      'Scegli quali filtri compaiono nella schermata principale. Nasconderne alcuni mantiene la pagina ordinata.';
+
+  @override
+  String get select => 'Seleziona';
+
+  @override
+  String get noteArchived => 'Nota archiviata';
+
+  @override
+  String deleteChecked(int count) {
+    return 'Elimina gli spuntati ($count)';
+  }
+
+  @override
+  String get removeItem => 'Elimina elemento';
+
+  @override
+  String get copyWholeNote => 'Copia tutta la nota';
+
+  @override
+  String get allCopied => 'L\'intera nota è stata copiata negli appunti';
+
+  @override
+  String get speechPlay => 'Leggi ad alta voce';
+
+  @override
+  String get speechPause => 'Pausa';
+
+  @override
+  String get speechResume => 'Riprendi';
+
+  @override
+  String get speechStop => 'Ferma';
+
+  @override
+  String get speechRate => 'Velocità di lettura';
+
+  @override
+  String get speechSystemDefault => 'Predefinito di sistema';
+
+  @override
+  String get speechNoVoices =>
+      'Su questo dispositivo non è installata alcuna voce';
+
+  @override
+  String speechVoiceLanguage(String language) {
+    return 'Voce $language';
+  }
+
+  @override
+  String get speechVoiceAutoInfo =>
+      'Le altre lingue vengono lette automaticamente con una voce maschile';
+
+  @override
+  String get listening => 'In ascolto...';
+
+  @override
+  String get listenPlay => 'Ascolta';
+
+  @override
+  String get listenReadingPdf => 'Lettura del documento...';
+
+  @override
+  String get listenConvertWithAi => 'Converti con l\'IA';
+
+  @override
+  String get listenMakePodcast => 'Podcast completo';
+
+  @override
+  String get listenMakePodcastSummary => 'Podcast riassuntivo';
+
+  @override
+  String get listenOriginalText => 'Testo originale';
+
+  @override
+  String get listenPodcastReady => 'La narrazione del podcast è pronta';
+
+  @override
+  String get listenPodcastCached =>
+      'Generato in precedenza — nessun token speso';
+
+  @override
+  String get listenRegenerate => 'Genera di nuovo';
+
+  @override
+  String get listenNoText =>
+      'Da questo documento non è emerso testo leggibile. Un PDF scansionato non ha uno strato di testo, e una presentazione può contenere solo immagini.';
+
+  @override
+  String get readDocument => 'Leggi un documento (Word, PDF, diapositive)';
+
+  @override
+  String get readDocUnsupported => 'Questo tipo di file non può essere letto.';
+
+  @override
+  String get exportPdf => 'Esporta in PDF';
+
+  @override
+  String get pdfTitleField => 'Titolo';
+
+  @override
+  String get pdfContentField => 'Contenuto';
+
+  @override
+  String get pdfMarkupHint =>
+      'I segni a inizio riga diventano formattazione: [x] e [ ] per le caselle, 1. per un elenco numerato, - per un punto elenco.';
+
+  @override
+  String get pdfIncludeDate => 'Includi la data';
+
+  @override
+  String get exportIncludeImages => 'Includi le immagini';
+
+  @override
+  String get exportWord => 'Condividi come Word (.docx)';
+
+  @override
+  String get pdfPreview => 'Anteprima';
+
+  @override
+  String get largeAttachmentTitle => 'File di grandi dimensioni';
+
+  @override
+  String largeAttachmentBody(String size) {
+    return 'Questo file è di $size MB. I PDF non possono essere compressi; verrà caricato così com\'è e occuperà spazio di archiviazione. Continuare?';
+  }
+
+  @override
+  String get speechRateForeign => 'Velocità in lingua straniera';
+
+  @override
+  String notesArchivedCount(int count) {
+    return '$count note archiviate';
+  }
+
+  @override
+  String get backgroundColor => 'Colore di sfondo';
+
+  @override
+  String get backgroundColorInfo => 'Il colore di sfondo della nota';
+
+  @override
+  String get frameColor => 'Cornice';
+
+  @override
+  String get frameColorInfo =>
+      'Disegna una cornice attorno alla nota nel colore che scegli';
+
+  @override
+  String get sortBy => 'Ordina';
+
+  @override
+  String get reorderNotes => 'Riordina le note';
+
+  @override
+  String get reorderModeActive => 'Trascina le schede per riordinarle';
+
+  @override
+  String get reorderDone => 'Fatto';
+
+  @override
+  String get sortManual => 'Manuale (ordine trascinato)';
+
+  @override
+  String get sortUpdated => 'Modificate di recente';
+
+  @override
+  String get sortCreated => 'Data di creazione';
+
+  @override
+  String get sortTitle => 'Per titolo (A–Z)';
+
+  @override
+  String get foldersSection => 'Cartelle';
+
+  @override
+  String get tagsSection => 'Etichette';
+
+  @override
+  String get expandFilters => 'Espandi i filtri';
+
+  @override
+  String get collapseFilters => 'Comprimi i filtri';
+
+  @override
+  String get settingsLanguage => 'Lingua';
+
+  @override
+  String get languageSystem => 'Lingua di sistema';
+
+  @override
+  String get settingsSpeech => 'Lettura ad alta voce';
+
+  @override
+  String get aiAdvanced => 'Avanzate: modello e chiave API';
+
+  @override
+  String get aiAdvancedInfo =>
+      'Scelta del modello e la tua chiave Gemini. Alla maggior parte delle persone non serve.';
+
+  @override
+  String get openBriefing => 'Apri il riepilogo';
+
+  @override
+  String get syncTitle => 'Sincronizzazione';
+
+  @override
+  String get syncLimitTitle => 'Limite di caricamento automatico';
+
+  @override
+  String get syncLimitInfo =>
+      'Gli allegati più grandi di questo limite restano sul dispositivo e non vengono caricati. Il testo delle note viene sempre sincronizzato.';
+
+  @override
+  String get syncLimitUnlimited => 'Nessun limite';
+
+  @override
+  String get backupTitle => 'Backup';
+
+  @override
+  String get importBackup => 'Ripristina da backup (JSON)';
+
+  @override
+  String importBackupDone(int count) {
+    return '$count note ripristinate';
+  }
+
+  @override
+  String get importBackupInvalid => 'File di backup non valido';
+
+  @override
+  String get aiHubTitle => 'IA';
+
+  @override
+  String get aiSummarizeInfo => 'Produce un breve riassunto';
+
+  @override
+  String get aiAnalyzeInfo => 'Elenca i punti chiave e le cose da fare';
+
+  @override
+  String get moveToFolder => 'Sposta in una cartella';
+
+  @override
+  String get voiceAssistantBadge => 'Assistente';
+
+  @override
+  String get assistantGenericError =>
+      'Qualcosa è andato storto — puoi riprovare?';
+
+  @override
+  String get quickAddTooltip => 'Nuova nota — scegli un tipo';
+
+  @override
+  String get autoTitleSetting => 'Suggerisci un titolo alla chiusura';
+
+  @override
+  String get autoTitleSettingInfo =>
+      'Quando esci dall\'editor, una nota rimasta senza titolo ne riceve uno breve, scritto a partire dal suo contenuto.';
+
+  @override
+  String get hubChatInfo => 'Risposte tratte dalle tue note';
+
+  @override
+  String get hubBriefingInfo =>
+      'La tua giornata a colpo d\'occhio: promemoria e note recenti';
+
+  @override
+  String get hubReadInfo => 'Ascolta un documento PDF o Word';
+
+  @override
+  String get annotate => 'Annota';
+
+  @override
+  String get annotateDone => 'Termina l\'annotazione';
+
+  @override
+  String get crop => 'Ritaglia';
+
+  @override
+  String get cropApply => 'Applica il ritaglio';
+
+  @override
+  String get cropReset => 'Reimposta la selezione';
+
+  @override
+  String get cropHint =>
+      'Trascina gli angoli per scegliere un\'area. Il ritaglio non può essere annullato.';
+
+  @override
+  String get cropFailed => 'Impossibile ritagliare l\'immagine.';
+
+  @override
+  String get penBallpoint => 'Penna a sfera';
+
+  @override
+  String get penMarker => 'Pennarello';
+
+  @override
+  String get penHighlighter => 'Evidenziatore';
+
+  @override
+  String get eraser => 'Gomma';
+
+  @override
+  String get clearInk => 'Cancella le annotazioni';
+
+  @override
+  String get inkTwoFingerHint =>
+      'Un dito disegna · due dita spostano e ingrandiscono';
+
+  @override
+  String get slideOpenFailed => 'Non è stato possibile aprire la presentazione';
+
+  @override
+  String get newPhotoNote => 'Nota fotografica';
+
+  @override
+  String get newScanNote => 'Scansiona un documento';
+
+  @override
+  String get scanDocument => 'Scansiona il documento';
+
+  @override
+  String get scanDocumentSubtitle =>
+      'Individua i bordi, raddrizza la pagina e la aggiunge';
+
+  @override
+  String get scanUnsupported =>
+      'La scansione di documenti non è supportata su questo dispositivo';
+
+  @override
+  String scanFailed(String error) {
+    return 'Impossibile scansionare il documento: $error';
+  }
+
+  @override
+  String scanPagesAdded(int count) {
+    return '$count pagina/e aggiunta/e alla nota';
+  }
+
+  @override
+  String get scanTextTitle => 'Riconoscere anche il testo?';
+
+  @override
+  String get scanTextBody =>
+      'Il testo delle pagine viene riconosciuto e scritto nella nota. L\'immagine resta com\'è. Richiede qualche secondo per pagina.';
+
+  @override
+  String get scanImageOnly => 'Solo immagine';
+
+  @override
+  String get scanRecognizeText => 'Riconosci il testo';
+
+  @override
+  String get scanRecognizing => 'Riconoscimento del testo…';
+
+  @override
+  String get takePhoto => 'Scatta una foto';
+
+  @override
+  String get qrScanTitle => 'Scansiona un codice QR';
+
+  @override
+  String get qrScanSubtitle => 'Leggilo con la fotocamera o da una foto';
+
+  @override
+  String get qrScanHint => 'Allinea il codice all\'interno della cornice';
+
+  @override
+  String get qrFromPhoto => 'Leggi da una foto';
+
+  @override
+  String get qrNotFound => 'Nessun codice trovato in questa immagine';
+
+  @override
+  String get qrLinkFound => 'Questo codice è un link';
+
+  @override
+  String get qrOpenLink => 'Vai al link';
+
+  @override
+  String get qrSaveToNote => 'Salva in una nota';
+
+  @override
+  String get openLink => 'Apri il link';
+
+  @override
+  String get linkOpenFailed => 'Non è stato possibile aprire il link';
+
+  @override
+  String qrScanFailed(String error) {
+    return 'Impossibile leggere il codice: $error';
+  }
+
+  @override
+  String get qrTorch => 'Torcia';
+
+  @override
+  String attachmentsCount(int count) {
+    return 'Allegati ($count)';
+  }
+
+  @override
+  String get hideAttachments => 'Nascondi';
+
+  @override
+  String get showAttachments => 'Mostra';
+
+  @override
+  String get videoBack10 => 'Indietro di 10 s';
+
+  @override
+  String get videoForward10 => 'Avanti di 10 s';
+
+  @override
+  String get selectAllItems => 'Seleziona tutto';
+
+  @override
+  String get showAllChips => 'Mostra tutto';
+
+  @override
+  String get hideAllChips => 'Nascondi tutto';
+
+  @override
+  String get chipPickInfo =>
+      'Quali chip di cartella ed etichetta devono comparire nella schermata principale?';
+
+  @override
+  String get hiddenFolder => 'Cartella nascosta';
+
+  @override
+  String get hiddenFolderInfo =>
+      'Una cartella nascosta e le note al suo interno non compaiono nella schermata principale. Per mostrarle, scegli «Cartelle nascoste» dal menu ⋮ e verifica la tua identità.';
+
+  @override
+  String get hiddenFoldersMenu => 'Cartelle nascoste';
+
+  @override
+  String get hiddenFolderAuthReason =>
+      'Verifica la tua identità per mostrare le cartelle nascoste';
+
+  @override
+  String get hiddenFoldersShown => 'Le cartelle nascoste sono visibili';
+
+  @override
+  String get hiddenFoldersHiddenAgain =>
+      'Le cartelle nascoste sono di nuovo celate';
+
+  @override
+  String get makeFolderHidden => 'Nascondi';
+
+  @override
+  String get makeFolderVisible => 'Mostra';
+
+  @override
+  String gridColumnsCount(int count) {
+    return '$count colonne';
+  }
+
+  @override
+  String get addImageOnPageSubtitle =>
+      'Sta nella pagina, il testo le scorre attorno';
+
+  @override
+  String get addImageAsFile => 'Aggiungi l\'immagine come file';
+
+  @override
+  String get addImageAsFileSubtitle =>
+      'Resta fuori dalla pagina, nella striscia degli allegati';
+
+  @override
+  String get moveImageToAttachments => 'Sposta negli allegati';
+
+  @override
+  String get moveImageToPage => 'Colloca nella pagina';
+
+  @override
+  String get attachmentCopied => 'Allegato copiato';
+
+  @override
+  String get pasteAttachment => 'Incolla l\'allegato copiato';
+
+  @override
+  String get fullscreen => 'Schermo intero';
+
+  @override
+  String get more => 'Altro';
+
+  @override
+  String get undone => 'Annullato';
+
+  @override
+  String get filterOthers => 'Altre';
+
+  @override
+  String get formatTitle => 'Formattazione';
+
+  @override
+  String get formatBold => 'Grassetto';
+
+  @override
+  String get formatItalic => 'Corsivo';
+
+  @override
+  String get formatUnderline => 'Sottolineato';
+
+  @override
+  String get formatTextColor => 'Colore del testo';
+
+  @override
+  String get formatHighlight => 'Evidenziazione';
+
+  @override
+  String get formatInfo =>
+      'La formattazione viaggia dentro il testo come marcatori (per esempio **grassetto**); i marcatori restano nascosti nelle esportazioni e nella lettura ad alta voce.';
+
+  @override
+  String get formatMenu => 'Formattazione…';
+
+  @override
+  String get noteFont => 'Carattere';
+
+  @override
+  String get noteFontDefault => 'Predefinito';
+
+  @override
+  String get noteFontSerif => 'Libro (serif)';
+
+  @override
+  String get noteFontMono => 'Macchina da scrivere';
+
+  @override
+  String get noteTextSize => 'Dimensione del testo';
+
+  @override
+  String get formatClear => 'Rimuovi la formattazione';
+
+  @override
+  String get noteTextOpacity => 'Opacità';
+
+  @override
+  String get assistantVoiceSetting => 'L\'assistente legge le risposte';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'L\'assistente vocale legge la sua risposta ad alta voce (solo su telefono).';
+
+  @override
+  String get assistantMute => 'Disattiva l\'audio';
+
+  @override
+  String get assistantUnmute => 'Riattiva l\'audio';
+
+  @override
+  String get assistantMakeNote => 'Trasformala comunque in una nota';
+
+  @override
+  String get assistantNoteCreated => 'Nota creata';
+
+  @override
+  String get noteNotFound =>
+      'Nota non trovata. Potrebbe essere stata eliminata.';
+
+  @override
+  String get back => 'Indietro';
+
+  @override
+  String get addTextBlock => 'Aggiungi testo';
+
+  @override
+  String get noteBackgroundImage => 'Immagine di sfondo';
+
+  @override
+  String get chooseBackgroundImage => 'Scegli un\'immagine';
+
+  @override
+  String get changeBackgroundImage => 'Cambia immagine';
+
+  @override
+  String get removeBackgroundImage => 'Rimuovi lo sfondo';
+
+  @override
+  String get dashboardBackground => 'Sfondo della schermata principale';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Immagine mostrata dietro la griglia delle note (solo su questo dispositivo).';
+
+  @override
+  String get aiProvider => 'Fornitore di IA';
+
+  @override
+  String get aiProviderInfo =>
+      'Scegli il fornitore a cui appartiene la tua chiave. La chiave di ogni fornitore viene conservata separatamente, così tornare indietro non richiede di digitarla di nuovo.';
+
+  @override
+  String get apiKeyFieldLabel => 'Chiave API';
+
+  @override
+  String get getApiKey => 'Dove ottengo una chiave?';
+
+  @override
+  String get recommendedModel => 'Consigliato';
+
+  @override
+  String get freeTierBadge => 'Ha un piano gratuito';
+
+  @override
+  String get continueWithoutAccount => 'Continua senza account';
+
+  @override
+  String get localAccountInfo =>
+      'Le tue note restano solo su questo dispositivo: non possono essere aperte altrove, spariscono se disinstalli l\'app e l\'IA integrata è disattivata. Puoi collegare un account Google in qualsiasi momento — le tue note verranno mantenute.';
+
+  @override
+  String get localAccountBadge => 'Account locale';
+
+  @override
+  String get linkGoogleAccount => 'Collega un account Google';
+
+  @override
+  String get accountLinked =>
+      'Il tuo account Google è collegato. Ora le tue note sono salvate.';
+}

@@ -259,25 +259,14 @@ class NotesRepository {
     }
   }
 
-  /// Nota yeni bir ek ekler — dokümandaki GÜNCEL listeye (transaction).
-  /// Editör kapanmış olsa bile güvenli; sesli not modu ekrandan çıkarken
-  /// kaydı bununla bağlar.
-  Future<void> appendAttachment(String noteId, Attachment attachment) =>
-      _firestore.runTransaction((tx) async {
-        final ref = _notes.doc(noteId);
-        final snapshot = await tx.get(ref);
-        if (!snapshot.exists) return;
-        final note = Note.fromDoc(snapshot);
-        tx.update(ref, {
-          'attachments': [
-            for (final a in note.attachments) a.toMap(),
-            attachment.toMap(),
-          ],
-        });
-      });
-
   /// Ek metadata'sındaki tek bir girişi günceller (yükleme kuyruğu kullanır).
   /// Yüklemesi biten ekin DEPO alanlarını yazar.
+  ///
+  /// Transaction burada bilerek: listenin tek bir elemanını değiştirmek
+  /// oku-değiştir-yaz gerektiriyor. Çevrimdışı çalışmaması sorun DEĞİL —
+  /// yalnız Storage yüklemesi BİTTİKTEN sonra çağrılır, yani ağ zaten vardır
+  /// (tek çağıran: `UploadQueue`). Ek EKLEME yolları ayrıdır ve çevrimdışı
+  /// çalışır: paylaşım `arrayUnion`, editör merge'lü yazım.
   ///
   /// KÖK NEDEN (görsel düzeni kayboluyordu): eski hâli, işlemin okuduğu güncel
   /// eki [updated] ile OLDUĞU GİBİ değiştiriyordu. [updated], kuyruğun yüklemeye

@@ -1471,7 +1471,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiProvider => 'KI-Anbieter';
 
   @override
-  String get aiProviderInfo => 'Wähle den Anbieter, zu dem dein Schlüssel gehört. Der Schlüssel jedes Anbieters wird separat gespeichert, ein Wechsel erfordert also keine erneute Eingabe.';
+  String get aiProviderInfo =>
+      'Wähle den Anbieter, zu dem dein Schlüssel gehört. Der Schlüssel jedes Anbieters wird separat gespeichert, ein Wechsel erfordert also keine erneute Eingabe.';
 
   @override
   String get apiKeyFieldLabel => 'API-Schlüssel';
@@ -1489,7 +1490,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get continueWithoutAccount => 'Ohne Konto fortfahren';
 
   @override
-  String get localAccountInfo => 'Deine Notizen bleiben nur auf diesem Gerät: kein Zugriff von anderen Geräten, weg beim Deinstallieren, und die interne KI ist aus. Du kannst jederzeit ein Google-Konto verknüpfen — deine Notizen bleiben erhalten.';
+  String get localAccountInfo =>
+      'Deine Notizen bleiben nur auf diesem Gerät: kein Zugriff von anderen Geräten, weg beim Deinstallieren, und die interne KI ist aus. Du kannst jederzeit ein Google-Konto verknüpfen — deine Notizen bleiben erhalten.';
 
   @override
   String get localAccountBadge => 'Lokales Konto';
@@ -1498,5 +1500,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get linkGoogleAccount => 'Google-Konto verknüpfen';
 
   @override
-  String get accountLinked => 'Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert.';
+  String get accountLinked =>
+      'Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert.';
 }

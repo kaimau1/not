@@ -11,18 +11,18 @@ Sıra bilerek böyle: önce senin tarafındaki konsol işleri (kodu bekletmiyor)
 sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 
 ### Senin yapman gerekenler (kod tarafı hazır)
-- [ ] **`firebase deploy --only firestore:rules`** — `aiQuota/{uid}` kuralları
-  yayınlanmadan kota sunucuda uygulanmaz, sayaç yalnız cihaz yerelinde kalır.
-  Yeni APK'yı bundan ÖNCE dağıtma.
 - [ ] **App Check zorlamasını AÇ** (Firebase konsolu → App Check → APIs).
   Uygulama token üretiyor (`main.dart` `_activateAppCheck`), Play Integrity
   hazır. Kapalı kaldığı sürece APK'dan Firebase yapılandırmasını çıkaran biri
   Gemini faturasını yakabilir. Sıra: Play'de yayınla → sonra zorlamayı aç
   (sideload APK attestation'dan geçemez, bkz. HAFIZA 2026-07-18).
-- [ ] **Çeviri dalgasını tetikle** — Settings → Secrets → `AI_TRANSLATE_KEY`
-  ekle, sonra Actions → "Çeviri üret" → Run workflow. Varsayılan diller:
-  fr,it,pt,ru,ar,hi,ja,ko,zh,id,nl,pl. Draft PR açılır; makine çevirisi,
-  bildiğin dillerde göz gezdir.
+- [ ] **Çevirileri anadili konuşana göstert** — 2026-08-03'te 11 dil eklendi
+  (fr, it, pt, ru, hi, ja, ko, zh, id, nl, pl); toplam 15 dil. Hiçbiri anadili
+  konuşan biri tarafından okunmadı. Aynısı de/es için de geçerli. Yayına
+  çıkmadan önce en azından en çok kullanılacak dillerde göz gezdirilmeli.
+  ⚠ Arapça BİLEREK dışarıda: `app_ar.arb` oluşur oluşmaz dil listesinde
+  seçilebilir hâle gelir ve RTL işi bitmeden editör bozuk görünür
+  (bkz. aşağıdaki "RTL hazırlığı → Arapça" maddesi).
 - [ ] **PRIVACY_POLICY.md'yi herkese açık bir URL'e koy** (alınan domain ya da
   GitHub Pages). Play mağaza listesi şart koşuyor.
 
@@ -43,9 +43,9 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   `AppConstants.maxFree/PremiumAttachmentBytes` var ama depolama TAVANI yok;
   lifetime'ın maliyeti ancak tavanla öngörülebilir olur.
 - [ ] **RTL cihazda denenmedi** — 35 yerleşim yönlü karşılığına çevrildi ve
-  `rtl_layout_test` geri sızmayı engelliyor, ama Arapça bir çeviri henüz yok;
-  gerçek ekranda kimse bakmadı. Çeviri dalgası gelince Arapça'ya geçip not
-  kartı, sohbet balonları ve ek şeridine bakılmalı.
+  `rtl_layout_test` geri sızmayı engelliyor, ama Arapça bir çeviri henüz yok
+  (bilerek, üstteki maddeye bak); gerçek ekranda kimse bakmadı. Arapça
+  eklenince not kartı, sohbet balonları ve ek şeridine bakılmalı.
 - [ ] **Semantik arama ve ses/video girişi yalnız Gemini'de** — embedding
   vektör boyutu sağlayıcılar arası uyuşmuyor (aynı dizinde karışık vektör
   aramayı bozar). Diğer sağlayıcıda açık hata veriliyor, sessiz yanlış sonuç
@@ -69,8 +69,6 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 - [ ] **`GET_AUDIO` belgesiz ekstra** — Google ileride sesi vermeyi keserse
   sesli not yalnız metin üretir (çökmez). Kırılırsa üstteki maddedeki
   seçeneklere dönülür.
-- [ ] **Word (.docx) dışa aktarımında görseller hâlâ metnin sonunda** — PDF
-  nottaki yerleşimi izliyor, docx henüz izlemiyor (2026-07-24).
 - [ ] **Görüntülü not yalnız cihazda** — bilinçli karar (buluta yüklenmez):
   uygulama silinirse ya da başka cihaza geçilirse video kaybolur; metadata
   senkronlandığı için diğer cihazda "senkronlanmadı" görünür (2026-07-24).
@@ -98,9 +96,6 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   pano çubuğundan görsel yapıştırma gerçek klavyeyle denenmedi. Üçüncü taraf
   klavyeler bu yolu desteklemeyebilir, onlarda "+" menüsündeki "Görsel yapıştır"
   yedek kalıyor (2026-07-27).
-- [ ] **Sohbet asistanında hatırlatıcı emniyet ağı yok** — ayrıştırıcı hazır,
-  yalnız sesli asistana bağlandı; `assistantChat` hâlâ modele bağımlı
-  (2026-07-26).
 - [ ] **Widget'ların cihazdaki görünümü doğrulanmadı** — Material You renkleri,
   4 satırlık kart düzeni ve yeni çizgi ikonları (`ic_widget_checklist`,
   `ic_widget_ordered`) yalnız kodda; ana ekranda gözle bakılması gerekiyor
@@ -115,10 +110,6 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 - [ ] **AI kota sayacı istemci tarafında** — kural aynı gün puanın azalmasını
   engelliyor ama gerçek zorlama için sunucu (Cloud Functions) gerekiyor
   (2026-07-24).
-- [ ] **Çevrimdışıyken ek eklenemiyor** — `appendAttachment` ve
-  `patchAttachment` `runTransaction` kullanıyor, transaction ise ağ turu
-  gerektiriyor. Uçakta/metroda nota ek eklemek sessizce çalışmıyor. Düz bir
-  bug; düzeltmesi küçük (merge'lü yazım ya da yeniden deneme) (2026-07-27).
 - [ ] **Çakışma çözümü BİLEREK yapılmadı** — iki cihazda aynı notu aynı anda
   düzenlersen son yazan sessizce kazanır. Kullanıcı kararı (2026-07-27):
   tek kullanıcılı uygulamada sıklığı düşük, Keep'in birleştirme makinesi
@@ -159,11 +150,3 @@ silme) tamamlandı, kalanlar sırayla:
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
-
-- [ ] **⚠ CI ÖLÜ — GitHub Actions koşmuyor** (2026-07-23'ten beri, `main` dahil).
-  `Derleme` iş akışının her koşusu ~3 saniyede logsuz kırmızı; runner hiç
-  başlamıyor (`runner_name` boş, log indirme 404). Son yeşil koşu #111
-  (2026-07-22). Bu bir derleme hatası DEĞİL — büyük olasılıkla Actions
-  dakikası/faturalandırma (repo private). Bakılacak: GitHub → Settings →
-  Billing → Actions kullanımı. Düzelene kadar her değişiklik YERELDE
-  doğrulanmalı (`flutter analyze` + `flutter test`, APK için Android SDK).

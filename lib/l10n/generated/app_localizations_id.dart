@@ -1,0 +1,1500 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Indonesian (`id`).
+class AppLocalizationsId extends AppLocalizations {
+  AppLocalizationsId([String locale = 'id']) : super(locale);
+
+  @override
+  String get appName => 'Catatan';
+
+  @override
+  String get loginTagline => 'Catatan Anda, di semua perangkat';
+
+  @override
+  String get signInWithGoogle => 'Masuk dengan Google';
+
+  @override
+  String loginError(String error) {
+    return 'Gagal masuk: $error';
+  }
+
+  @override
+  String get searchHint => 'Cari catatan...';
+
+  @override
+  String get filterAll => 'Semua';
+
+  @override
+  String get filterText => 'Teks';
+
+  @override
+  String get filterChecklist => 'Daftar';
+
+  @override
+  String get filterOrdered => 'Bernomor';
+
+  @override
+  String get filterPinned => 'Disematkan';
+
+  @override
+  String get filterStarred => 'Berbintang';
+
+  @override
+  String get star => 'Beri bintang';
+
+  @override
+  String get unstar => 'Hapus bintang';
+
+  @override
+  String editedAt(String date) {
+    return 'Diubah: $date';
+  }
+
+  @override
+  String get sectionPinned => 'Disematkan';
+
+  @override
+  String get sectionOthers => 'Lainnya';
+
+  @override
+  String get emptyNotes => 'Belum ada catatan';
+
+  @override
+  String get emptyNotesHint => 'Ketuk + untuk membuat catatan pertama Anda';
+
+  @override
+  String get emptySearch => 'Tidak ada hasil';
+
+  @override
+  String get newTextNote => 'Catatan teks';
+
+  @override
+  String get newChecklist => 'Daftar';
+
+  @override
+  String get newOrderedList => 'Daftar bernomor';
+
+  @override
+  String get noteDeleted => 'Catatan dihapus';
+
+  @override
+  String notesDeletedCount(int count) {
+    return '$count catatan dihapus';
+  }
+
+  @override
+  String selectedCount(int count) {
+    return '$count dipilih';
+  }
+
+  @override
+  String get deleteSelected => 'Hapus yang dipilih';
+
+  @override
+  String get undo => 'Urungkan';
+
+  @override
+  String get titleHint => 'Judul';
+
+  @override
+  String get bodyHint => 'Catatan...';
+
+  @override
+  String get newItemHint => 'Item baru';
+
+  @override
+  String moreItemsCount(int count) {
+    return '+$count item lainnya';
+  }
+
+  @override
+  String get addAttachment => 'Tambah';
+
+  @override
+  String get addImage => 'Tambah gambar';
+
+  @override
+  String get addPdf => 'Tambah PDF';
+
+  @override
+  String get addSlide => 'Tambah slide';
+
+  @override
+  String get pasteImage => 'Tempel gambar dari papan klip';
+
+  @override
+  String get clipboardEmpty => 'Tidak ada gambar di papan klip';
+
+  @override
+  String get noNoteSelected => 'Pilih catatan di sebelah kiri';
+
+  @override
+  String attachmentFailed(String error) {
+    return 'Lampiran tidak dapat ditambahkan: $error';
+  }
+
+  @override
+  String get attachmentUploading => 'Mengunggah...';
+
+  @override
+  String get attachmentNotSynced =>
+      'Berkas ini belum tersinkron ke perangkat ini';
+
+  @override
+  String attachmentTooLarge(int limit) {
+    return 'Berkas terlalu besar (maksimal $limit MB)';
+  }
+
+  @override
+  String get removeAttachment => 'Hapus lampiran';
+
+  @override
+  String get pin => 'Sematkan';
+
+  @override
+  String get unpin => 'Lepas sematan';
+
+  @override
+  String get delete => 'Hapus';
+
+  @override
+  String get color => 'Warna';
+
+  @override
+  String get aiTitle => 'AI';
+
+  @override
+  String get aiSummarize => 'Ringkas catatan';
+
+  @override
+  String get aiAnalyze => 'Analisis';
+
+  @override
+  String get aiSectionNote => 'Catatan ini';
+
+  @override
+  String get aiSectionAttachments => 'Lampiran';
+
+  @override
+  String get summarize => 'Ringkas';
+
+  @override
+  String get summaryDetailTitle => 'Jenis ringkasan';
+
+  @override
+  String get summaryShort => 'Ringkasan singkat';
+
+  @override
+  String get summaryShortInfo =>
+      'Beberapa kalimat gambaran umum ditambah poin-poin utama';
+
+  @override
+  String get summaryDetailed => 'Ringkasan terperinci';
+
+  @override
+  String get summaryDetailedInfo =>
+      'Cukup lengkap sehingga Anda tidak perlu membuka aslinya';
+
+  @override
+  String get listen => 'Dengarkan';
+
+  @override
+  String get ask => 'Ajukan pertanyaan';
+
+  @override
+  String get extractText => 'Ambil teksnya';
+
+  @override
+  String get transcribe => 'Transkripsikan';
+
+  @override
+  String get listenToNote => 'Bacakan';
+
+  @override
+  String get aiNoApiKey => 'Masukkan dulu kunci API Gemini Anda di setelan';
+
+  @override
+  String aiError(String error) {
+    return 'Permintaan AI gagal: $error';
+  }
+
+  @override
+  String get aiSummaryTitle => 'Ringkasan AI';
+
+  @override
+  String get aiThinking => 'Sedang berpikir...';
+
+  @override
+  String get copy => 'Salin';
+
+  @override
+  String get copied => 'Tersalin';
+
+  @override
+  String get settings => 'Setelan';
+
+  @override
+  String get settingsAppearance => 'Tampilan';
+
+  @override
+  String get themeSystem => 'Sistem';
+
+  @override
+  String get themeLight => 'Terang';
+
+  @override
+  String get themeDark => 'Gelap';
+
+  @override
+  String get settingsAi => 'AI';
+
+  @override
+  String get geminiApiKey => 'Kunci API Gemini';
+
+  @override
+  String get geminiApiKeyHint => 'Tempel kunci yang diawali AIza...';
+
+  @override
+  String get geminiApiKeyInfo =>
+      'Kunci bersifat opsional: tanpa kunci, permintaan AI melewati layanan bawaan aplikasi (ada jatah harian gratis, lebih besar dengan Premium). Untuk pemakaian tanpa batas dengan kunci sendiri, ambil kunci gratis di aistudio.google.com; kunci hanya disimpan di perangkat ini, dalam penyimpanan aman.';
+
+  @override
+  String aiBuiltInPremium(int count) {
+    return 'AI bawaan: Premium — sisa $count poin hari ini';
+  }
+
+  @override
+  String aiBuiltInRemaining(int count) {
+    return 'AI bawaan: sisa $count poin gratis hari ini';
+  }
+
+  @override
+  String get aiBuiltInByok => 'Memakai kunci Anda sendiri — tanpa batas';
+
+  @override
+  String get aiReport => 'Laporkan jawaban ini';
+
+  @override
+  String get aiReportThanks => 'Laporan diterima, terima kasih';
+
+  @override
+  String get privacyPolicyTitle => 'Kebijakan privasi';
+
+  @override
+  String get lockNote => 'Kunci';
+
+  @override
+  String get unlockNote => 'Buka kunci';
+
+  @override
+  String get lockedNote => 'Catatan terkunci';
+
+  @override
+  String get unlockAuthReason =>
+      'Verifikasi identitas Anda untuk membuka catatan terkunci';
+
+  @override
+  String get exportBackup => 'Ekspor cadangan (JSON)';
+
+  @override
+  String get expandListItems => 'Tampilkan baris daftar sepenuhnya';
+
+  @override
+  String get expandListItemsInfo =>
+      'Item panjang dipenggal ke beberapa baris dan tetap terlihat seluruhnya. Bila dimatikan, satu baris tetap satu baris dan melebar saat diketuk.';
+
+  @override
+  String get emptyTrash => 'Kosongkan sampah';
+
+  @override
+  String emptyTrashConfirm(int count) {
+    return '$count catatan akan dihapus permanen. Tindakan ini tidak dapat dibatalkan. Anda yakin?';
+  }
+
+  @override
+  String get trashEmptied => 'Sampah dikosongkan';
+
+  @override
+  String get validateAndSave => 'Periksa dan simpan';
+
+  @override
+  String get clear => 'Bersihkan';
+
+  @override
+  String get aiDiagnostics => 'Diagnostik AI';
+
+  @override
+  String get aiDiagnosticsEmpty => 'Tidak ada galat yang tercatat';
+
+  @override
+  String aiDiagnosticsCount(int count) {
+    return '$count catatan galat terakhir';
+  }
+
+  @override
+  String get apiKeyValid => 'Kunci API terverifikasi dan tersimpan';
+
+  @override
+  String get apiKeyInvalid => 'Kunci API tidak valid';
+
+  @override
+  String get apiKeySavedBadge => 'Tersimpan';
+
+  @override
+  String get removeApiKey => 'Hapus kunci';
+
+  @override
+  String get refresh => 'Segarkan';
+
+  @override
+  String get account => 'Akun';
+
+  @override
+  String get signOut => 'Keluar';
+
+  @override
+  String get signOutConfirm => 'Anda yakin ingin keluar?';
+
+  @override
+  String get deleteAccount => 'Hapus akun dan data saya';
+
+  @override
+  String get deleteAccountWarning =>
+      'Tindakan ini tidak dapat dibatalkan: semua catatan, lampiran, dan akun Anda akan dihapus permanen. Ingin melanjutkan?';
+
+  @override
+  String get deleteAccountConfirm => 'Hapus permanen';
+
+  @override
+  String get licensesTitle => 'Lisensi sumber terbuka';
+
+  @override
+  String get generating => 'Membuat...';
+
+  @override
+  String get retry => 'Coba lagi';
+
+  @override
+  String get cancel => 'Batal';
+
+  @override
+  String get close => 'Tutup';
+
+  @override
+  String get ok => 'OKE';
+
+  @override
+  String get syncPending => 'Menunggu sinkronisasi';
+
+  @override
+  String get synced => 'Tersinkron';
+
+  @override
+  String genericError(String error) {
+    return 'Ada yang tidak beres: $error';
+  }
+
+  @override
+  String get addTag => 'Tag';
+
+  @override
+  String get tagHint => 'mis. kerja, rumah, sekolah';
+
+  @override
+  String get addReminder => 'Ingatkan saya';
+
+  @override
+  String get share => 'Bagikan';
+
+  @override
+  String get archive => 'Arsipkan';
+
+  @override
+  String get unarchive => 'Keluarkan dari arsip';
+
+  @override
+  String get archiveTitle => 'Arsip';
+
+  @override
+  String get archiveEmpty => 'Tidak ada catatan di arsip';
+
+  @override
+  String get trashTitle => 'Sampah';
+
+  @override
+  String get trashEmpty => 'Sampah kosong';
+
+  @override
+  String get trashInfo =>
+      'Catatan yang dihapus tetap di sini; Anda dapat memulihkannya atau menghapusnya selamanya.';
+
+  @override
+  String get restore => 'Pulihkan';
+
+  @override
+  String get deleteForever => 'Hapus permanen';
+
+  @override
+  String get deleteForeverConfirm =>
+      'Catatan ini akan dihapus permanen. Anda yakin?';
+
+  @override
+  String get recordAudio => 'Rekaman suara';
+
+  @override
+  String get recording => 'Merekam...';
+
+  @override
+  String get stopAndSave => 'Selesai dan tambahkan';
+
+  @override
+  String get micPermissionDenied => 'Izin mikrofon ditolak';
+
+  @override
+  String get speechRecognitionFailed =>
+      'Pengenalan suara tidak berhasil. Pastikan izin mikrofon sudah diberikan dan aplikasi Google sudah diperbarui.';
+
+  @override
+  String get addDrawing => 'Tambah gambar tangan';
+
+  @override
+  String get drawingTitle => 'Gambar tangan';
+
+  @override
+  String get addToNote => 'Tambahkan ke catatan';
+
+  @override
+  String get chatTitle => 'Mengobrol dengan catatan Anda';
+
+  @override
+  String get chatHint =>
+      'Tanyakan tentang catatan Anda: «apa resep yang saya tulis minggu lalu?», «apa yang kurang di daftar belanja saya?»';
+
+  @override
+  String get chatInputHint => 'Ketik pertanyaan...';
+
+  @override
+  String get fontSize => 'Ukuran teks';
+
+  @override
+  String get fontSizePreview => 'Catatan Anda akan tampak seperti ini';
+
+  @override
+  String get darkSchedule => 'Jadwal tema gelap';
+
+  @override
+  String get darkScheduleInfo =>
+      'Beralih ke tema gelap di antara jam yang Anda tentukan';
+
+  @override
+  String get aiTranslate => 'Terjemahkan';
+
+  @override
+  String get voiceCommand => 'Perintah suara';
+
+  @override
+  String get semanticSearchToggle => 'Pencarian makna dengan AI';
+
+  @override
+  String get semanticSearchHint => 'Cari berdasarkan makna: «biaya mobil»...';
+
+  @override
+  String get briefingTitle => 'Ringkasan harian';
+
+  @override
+  String get briefingLoading => 'Menyiapkan ringkasan Anda...';
+
+  @override
+  String get briefingEmpty => 'Tidak ada apa-apa untuk hari ini';
+
+  @override
+  String get briefingSetting => 'Notifikasi ringkasan harian';
+
+  @override
+  String get briefingSettingInfo =>
+      'Terima notifikasi berisi ringkasan hari itu setiap pagi pada jam yang Anda pilih';
+
+  @override
+  String get autoTagSetting => 'Beri tag otomatis';
+
+  @override
+  String get autoTagSettingInfo =>
+      'Saat catatan ditutup tanpa tag, AI menambahkan tag yang sesuai';
+
+  @override
+  String get suggestTags => 'Sarankan tag';
+
+  @override
+  String get aiFixNote => 'Rapikan catatan';
+
+  @override
+  String get fixLevelTitle => 'Seberapa jauh dirapikan?';
+
+  @override
+  String get fixSimple => 'Ringan';
+
+  @override
+  String get fixSimpleInfo => 'Hanya ejaan dan salah ketik';
+
+  @override
+  String get fixBalanced => 'Seimbang';
+
+  @override
+  String get fixBalancedInfo =>
+      'Termasuk struktur kalimat, agar tulisan lebih rapi';
+
+  @override
+  String get fixDetailed => 'Menyeluruh';
+
+  @override
+  String get fixDetailedInfo =>
+      'Menulis ulang seluruh teks dari awal sampai akhir';
+
+  @override
+  String get existingTagsLabel => 'Tag sebelumnya';
+
+  @override
+  String get aiSkipCheckedSetting =>
+      'Kecualikan item tercentang dari suntingan AI';
+
+  @override
+  String get aiSkipCheckedInfo =>
+      'Saat AI merapikan atau menerjemahkan daftar, item yang sudah selesai (tercentang) dibiarkan apa adanya; hanya item yang belum tercentang yang disunting.';
+
+  @override
+  String get noteUpdatedUndo => 'Catatan diperbarui';
+
+  @override
+  String get aiImprove => 'Perbaiki catatan';
+
+  @override
+  String get improveFormal => 'Buat lebih formal';
+
+  @override
+  String get improveShorten => 'Persingkat';
+
+  @override
+  String get improveBullets => 'Ubah jadi daftar berpoin';
+
+  @override
+  String get improveNumbered => 'Ubah jadi daftar bernomor';
+
+  @override
+  String get replaceNote => 'Ganti catatan';
+
+  @override
+  String get openAsNewNote => 'Sebagai catatan baru';
+
+  @override
+  String get pdfChatHint =>
+      'Tanyakan tentang PDF ini: «ringkas dong», «ada klausul denda?», «kapan tenggatnya?»';
+
+  @override
+  String get pdfChatInputHint => 'Ketik pertanyaan tentang PDF...';
+
+  @override
+  String get voiceCaptureHint =>
+      'Bicara saja: «beli susu dan roti» atau «rapat besok jam 9, ingatkan aku» — AI menyusun catatan Anda setelah selesai.';
+
+  @override
+  String get voiceFinish => 'Selesai';
+
+  @override
+  String get voiceProcessing => 'Memproses yang Anda ucapkan...';
+
+  @override
+  String get voiceNothingHeard =>
+      'Tidak ada suara bicara yang terdeteksi dalam rekaman';
+
+  @override
+  String get voiceNoteSaved => 'Catatan suara Anda telah disimpan';
+
+  @override
+  String get openNote => 'Buka catatan';
+
+  @override
+  String get remindersTitle => 'Pengingat';
+
+  @override
+  String get remindersEmpty => 'Tidak ada pengingat';
+
+  @override
+  String get remindersEmptyHint =>
+      'Tambahkan pengingat ke sebuah catatan, atau buat catatan baru berpengingat lewat tombol +';
+
+  @override
+  String get remindersUpcoming => 'Akan datang';
+
+  @override
+  String get remindersPast => 'Sudah lewat';
+
+  @override
+  String get newReminder => 'Pengingat baru';
+
+  @override
+  String get remindersUntitled => 'Catatan tanpa judul';
+
+  @override
+  String get remindersEdit => 'Ubah waktunya';
+
+  @override
+  String get remindersRemove => 'Hapus pengingat';
+
+  @override
+  String get aiModelChat => 'Ringkasan, judul, tag, dan obrolan';
+
+  @override
+  String get aiModelDocument => 'Podcast dan obrolan dokumen';
+
+  @override
+  String get aiModelTranslate => 'Terjemahan';
+
+  @override
+  String get aiModelVoice => 'Catatan suara';
+
+  @override
+  String get aiModelAuto => 'Otomatis (disarankan)';
+
+  @override
+  String get aiModelsInfo =>
+      'Anda dapat memilih model berbeda untuk tiap tugas: teks pendek cukup dengan model cepat, dokumen panjang butuh model yang lebih mumpuni. Jika model pilihan Anda kehabisan kuota atau ditarik, model berikutnya dicoba otomatis.';
+
+  @override
+  String get clearNote => 'Kosongkan';
+
+  @override
+  String get clearNoteConfirm =>
+      'Isi catatan (teks dan item daftar) akan dihapus. Anda yakin?';
+
+  @override
+  String get themePaper => 'Kertas';
+
+  @override
+  String get calculatorTitle => 'Kalkulator';
+
+  @override
+  String get calcExpressionHint => 'mis. 12,5×3+40';
+
+  @override
+  String get calcInvalid => 'Ekspresi tidak valid';
+
+  @override
+  String get liveDictation => 'Dikte';
+
+  @override
+  String get dictationListening =>
+      'Mendengarkan... teks muncul sambil Anda berbicara';
+
+  @override
+  String get dictationNoKeyInfo =>
+      'Dikte langsung tidak tersedia di perangkat ini; rekaman akan ditranskripsikan sekaligus saat Anda berhenti.';
+
+  @override
+  String get dictationHoldHint =>
+      'Tahan mikrofon lalu bicara; teks ditulis saat Anda melepasnya';
+
+  @override
+  String itemsSelected(int count) {
+    return '$count item dipilih';
+  }
+
+  @override
+  String get noteChatTitle => 'Mengobrol dengan catatan ini';
+
+  @override
+  String get noteChatHint => 'Tanyakan sesuatu tentang catatan ini';
+
+  @override
+  String get noteChatIntro =>
+      'Isi catatan dan lampirannya (PDF/gambar) dibaca, lalu pertanyaan Anda dijawab berdasarkan itu.';
+
+  @override
+  String get dictationProcessing => 'Mentranskripsikan...';
+
+  @override
+  String get aiDailyManualInfo =>
+      'Pada paket gratis ini tidak dibuat otomatis, jadi tidak memakan jatah harian Anda. Anda bisa membuatnya sekali sehari dengan tombol di bawah.';
+
+  @override
+  String get aiGenerate => 'Buat';
+
+  @override
+  String get aiGeneratedTodayInfo =>
+      'Ini dibuat hari ini. Pada paket gratis, isinya diperbarui sekali sehari; Anda bisa membuatnya lagi besok.';
+
+  @override
+  String get voiceAssistantTitle => 'Asisten catatan suara';
+
+  @override
+  String get voiceListening => 'Mendengarkan...';
+
+  @override
+  String get voiceHoldHint =>
+      'Tahan lalu bicara; catatan dibuat saat Anda melepasnya';
+
+  @override
+  String get voiceTapHint => 'Ketuk lalu bicara; ketuk lagi untuk selesai';
+
+  @override
+  String get voiceTooShort => 'Rekaman itu terlalu pendek, coba lagi';
+
+  @override
+  String get voiceModeSetting => 'Cara kerjanya';
+
+  @override
+  String get voiceModeHold => 'Tahan untuk bicara';
+
+  @override
+  String get voiceModeTap => 'Ketuk untuk mulai / ketuk untuk berhenti';
+
+  @override
+  String get voiceModeInfo =>
+      'Tahan untuk bicara: mendengarkan selama Anda menahan tombol dan membuat catatan saat dilepas. Ketuk untuk mulai: satu ketukan memulai perekaman, ketukan kedua mengakhirinya.';
+
+  @override
+  String get voiceHeardLive => 'Suara bicara terdeteksi';
+
+  @override
+  String get permissionsTitle => 'Izin';
+
+  @override
+  String get permMic => 'Mikrofon';
+
+  @override
+  String get permMicInfo => 'Diperlukan untuk catatan suara dan dikte';
+
+  @override
+  String get permNotifications => 'Notifikasi';
+
+  @override
+  String get permNotificationsInfo =>
+      'Diperlukan untuk pengingat dan ringkasan harian';
+
+  @override
+  String get permBattery => 'Optimalisasi baterai';
+
+  @override
+  String get permBatteryInfo =>
+      'Bebaskan aplikasi dari pembatasan baterai agar pengingat datang tepat waktu';
+
+  @override
+  String get showTagChips => 'Tampilkan chip tag';
+
+  @override
+  String get showFolderChips => 'Tampilkan chip folder';
+
+  @override
+  String videoTooBigForAi(int mb) {
+    return 'Video terlalu besar untuk dikirim ke AI ($mb MB). Rekam yang lebih pendek.';
+  }
+
+  @override
+  String get permCamera => 'Kamera';
+
+  @override
+  String get permCameraInfo => 'Diperlukan untuk catatan video dan memotret';
+
+  @override
+  String get permOnboardTitle => 'Sebelum mulai';
+
+  @override
+  String get permOnboardInfo =>
+      'Catatan hanya meminta izin ini saat Anda memakai fitur terkait. Anda bisa memberikannya sekarang di bawah, atau mengubahnya nanti di Setelan > Izin.';
+
+  @override
+  String get permOnboardGrantAll => 'Berikan izin';
+
+  @override
+  String get permOnboardSkip => 'Nanti saja';
+
+  @override
+  String get newVideoNote => 'Catatan video';
+
+  @override
+  String get videoLocalOnly =>
+      'Video ini hanya tersimpan di perangkat ini (tidak diunggah ke awan)';
+
+  @override
+  String get videoToNote => 'Buat catatan dari video';
+
+  @override
+  String get videoToNoteRunning => 'Menelaah video…';
+
+  @override
+  String get permGranted => 'Diberikan';
+
+  @override
+  String get permGrant => 'Berikan';
+
+  @override
+  String get permOpenSettings => 'Buka setelan';
+
+  @override
+  String get newHandwriting => 'Tulisan tangan';
+
+  @override
+  String get newVoiceCapture => 'Catatan suara';
+
+  @override
+  String get suggestTitle => 'Sarankan judul';
+
+  @override
+  String get noteMetaMenu => 'Tag · Judul · Pengingat';
+
+  @override
+  String get folder => 'Folder';
+
+  @override
+  String get noFolder => 'Tanpa folder';
+
+  @override
+  String get newFolder => 'Folder baru';
+
+  @override
+  String get editFolder => 'Ubah folder';
+
+  @override
+  String get deleteFolder => 'Hapus folder';
+
+  @override
+  String deleteFolderConfirm(String name) {
+    return 'Folder «$name» akan dihapus. Catatan di dalamnya tidak dihapus — hanya tidak lagi punya folder.';
+  }
+
+  @override
+  String get folderNameHint => 'Nama folder';
+
+  @override
+  String get folderIcon => 'Ikon';
+
+  @override
+  String get editFilters => 'Ubah filter';
+
+  @override
+  String get editFiltersInfo =>
+      'Pilih filter mana yang muncul di layar utama. Menyembunyikan sebagian membuat halaman lebih rapi.';
+
+  @override
+  String get select => 'Pilih';
+
+  @override
+  String get noteArchived => 'Catatan diarsipkan';
+
+  @override
+  String deleteChecked(int count) {
+    return 'Hapus yang tercentang ($count)';
+  }
+
+  @override
+  String get removeItem => 'Hapus item';
+
+  @override
+  String get copyWholeNote => 'Salin seluruh catatan';
+
+  @override
+  String get allCopied => 'Seluruh catatan disalin ke papan klip';
+
+  @override
+  String get speechPlay => 'Bacakan';
+
+  @override
+  String get speechPause => 'Jeda';
+
+  @override
+  String get speechResume => 'Lanjutkan';
+
+  @override
+  String get speechStop => 'Hentikan';
+
+  @override
+  String get speechRate => 'Kecepatan membaca';
+
+  @override
+  String get speechSystemDefault => 'Bawaan sistem';
+
+  @override
+  String get speechNoVoices =>
+      'Tidak ada suara yang terpasang di perangkat ini';
+
+  @override
+  String speechVoiceLanguage(String language) {
+    return 'Suara $language';
+  }
+
+  @override
+  String get speechVoiceAutoInfo =>
+      'Bahasa lain dibacakan otomatis dengan suara pria';
+
+  @override
+  String get listening => 'Mendengarkan...';
+
+  @override
+  String get listenPlay => 'Dengarkan';
+
+  @override
+  String get listenReadingPdf => 'Membaca dokumen...';
+
+  @override
+  String get listenConvertWithAi => 'Ubah dengan AI';
+
+  @override
+  String get listenMakePodcast => 'Podcast lengkap';
+
+  @override
+  String get listenMakePodcastSummary => 'Podcast ringkasan';
+
+  @override
+  String get listenOriginalText => 'Teks asli';
+
+  @override
+  String get listenPodcastReady => 'Narasi podcast sudah siap';
+
+  @override
+  String get listenPodcastCached => 'Dibuat sebelumnya — tidak memakai token';
+
+  @override
+  String get listenRegenerate => 'Buat lagi';
+
+  @override
+  String get listenNoText =>
+      'Tidak ada teks terbaca yang keluar dari dokumen ini. PDF hasil pindaian tidak punya lapisan teks, dan presentasi bisa jadi hanya berisi gambar.';
+
+  @override
+  String get readDocument => 'Baca dokumen (Word, PDF, slide)';
+
+  @override
+  String get readDocUnsupported => 'Jenis berkas ini tidak dapat dibaca.';
+
+  @override
+  String get exportPdf => 'Ekspor sebagai PDF';
+
+  @override
+  String get pdfTitleField => 'Judul';
+
+  @override
+  String get pdfContentField => 'Isi';
+
+  @override
+  String get pdfMarkupHint =>
+      'Tanda di awal baris menjadi format: [x] dan [ ] untuk kotak centang, 1. untuk daftar bernomor, - untuk poin.';
+
+  @override
+  String get pdfIncludeDate => 'Sertakan tanggal';
+
+  @override
+  String get exportIncludeImages => 'Sertakan gambar';
+
+  @override
+  String get exportWord => 'Bagikan sebagai Word (.docx)';
+
+  @override
+  String get pdfPreview => 'Pratinjau';
+
+  @override
+  String get largeAttachmentTitle => 'Berkas besar';
+
+  @override
+  String largeAttachmentBody(String size) {
+    return 'Berkas ini berukuran $size MB. PDF tidak dapat dimampatkan; berkas akan diunggah apa adanya dan diperhitungkan dalam penyimpanan Anda. Lanjutkan?';
+  }
+
+  @override
+  String get speechRateForeign => 'Kecepatan bahasa asing';
+
+  @override
+  String notesArchivedCount(int count) {
+    return '$count catatan diarsipkan';
+  }
+
+  @override
+  String get backgroundColor => 'Warna latar';
+
+  @override
+  String get backgroundColorInfo => 'Warna latar catatan';
+
+  @override
+  String get frameColor => 'Bingkai';
+
+  @override
+  String get frameColorInfo =>
+      'Menggambar bingkai di sekeliling catatan dengan warna pilihan Anda';
+
+  @override
+  String get sortBy => 'Urutkan';
+
+  @override
+  String get reorderNotes => 'Atur ulang urutan catatan';
+
+  @override
+  String get reorderModeActive => 'Seret kartu untuk mengubah urutannya';
+
+  @override
+  String get reorderDone => 'Selesai';
+
+  @override
+  String get sortManual => 'Manual (urutan seretan)';
+
+  @override
+  String get sortUpdated => 'Baru diperbarui';
+
+  @override
+  String get sortCreated => 'Tanggal dibuat';
+
+  @override
+  String get sortTitle => 'Menurut judul (A–Z)';
+
+  @override
+  String get foldersSection => 'Folder';
+
+  @override
+  String get tagsSection => 'Tag';
+
+  @override
+  String get expandFilters => 'Bentangkan filter';
+
+  @override
+  String get collapseFilters => 'Ciutkan filter';
+
+  @override
+  String get settingsLanguage => 'Bahasa';
+
+  @override
+  String get languageSystem => 'Bahasa sistem';
+
+  @override
+  String get settingsSpeech => 'Bacakan';
+
+  @override
+  String get aiAdvanced => 'Lanjutan: model dan kunci API';
+
+  @override
+  String get aiAdvancedInfo =>
+      'Pilihan model dan kunci Gemini Anda sendiri. Kebanyakan orang tidak membutuhkannya.';
+
+  @override
+  String get openBriefing => 'Buka ringkasan';
+
+  @override
+  String get syncTitle => 'Sinkronisasi';
+
+  @override
+  String get syncLimitTitle => 'Batas unggah otomatis';
+
+  @override
+  String get syncLimitInfo =>
+      'Lampiran yang lebih besar dari ini tetap di perangkat dan tidak diunggah. Teks catatan selalu tersinkron.';
+
+  @override
+  String get syncLimitUnlimited => 'Tanpa batas';
+
+  @override
+  String get backupTitle => 'Cadangan';
+
+  @override
+  String get importBackup => 'Pulihkan dari cadangan (JSON)';
+
+  @override
+  String importBackupDone(int count) {
+    return '$count catatan dipulihkan';
+  }
+
+  @override
+  String get importBackupInvalid => 'Berkas cadangan tidak valid';
+
+  @override
+  String get aiHubTitle => 'AI';
+
+  @override
+  String get aiSummarizeInfo => 'Menghasilkan ringkasan singkat';
+
+  @override
+  String get aiAnalyzeInfo =>
+      'Mendaftar poin utama dan hal yang harus dikerjakan';
+
+  @override
+  String get moveToFolder => 'Pindahkan ke folder';
+
+  @override
+  String get voiceAssistantBadge => 'Asisten';
+
+  @override
+  String get assistantGenericError => 'Ada yang tidak beres — bisa coba lagi?';
+
+  @override
+  String get quickAddTooltip => 'Catatan baru — pilih jenisnya';
+
+  @override
+  String get autoTitleSetting => 'Sarankan judul saat ditutup';
+
+  @override
+  String get autoTitleSettingInfo =>
+      'Saat Anda meninggalkan editor, catatan yang dibiarkan tanpa judul mendapat judul singkat yang disusun dari isinya.';
+
+  @override
+  String get hubChatInfo => 'Jawaban yang diambil dari catatan Anda';
+
+  @override
+  String get hubBriefingInfo =>
+      'Hari Anda sekilas: pengingat dan catatan terbaru';
+
+  @override
+  String get hubReadInfo => 'Dengarkan dokumen PDF atau Word';
+
+  @override
+  String get annotate => 'Beri catatan';
+
+  @override
+  String get annotateDone => 'Selesai memberi catatan';
+
+  @override
+  String get crop => 'Pangkas';
+
+  @override
+  String get cropApply => 'Terapkan pangkasan';
+
+  @override
+  String get cropReset => 'Atur ulang pilihan';
+
+  @override
+  String get cropHint =>
+      'Seret sudut-sudutnya untuk memilih area. Pemangkasan tidak dapat dibatalkan.';
+
+  @override
+  String get cropFailed => 'Gambar tidak dapat dipangkas.';
+
+  @override
+  String get penBallpoint => 'Pulpen';
+
+  @override
+  String get penMarker => 'Spidol';
+
+  @override
+  String get penHighlighter => 'Stabilo';
+
+  @override
+  String get eraser => 'Penghapus';
+
+  @override
+  String get clearInk => 'Hapus semua coretan';
+
+  @override
+  String get inkTwoFingerHint =>
+      'Satu jari menggambar · dua jari menggeser dan memperbesar';
+
+  @override
+  String get slideOpenFailed => 'Presentasi tidak dapat dibuka';
+
+  @override
+  String get newPhotoNote => 'Catatan foto';
+
+  @override
+  String get newScanNote => 'Pindai dokumen';
+
+  @override
+  String get scanDocument => 'Pindai dokumen';
+
+  @override
+  String get scanDocumentSubtitle =>
+      'Menemukan tepinya, meratakan halaman, lalu menambahkannya';
+
+  @override
+  String get scanUnsupported =>
+      'Pemindaian dokumen tidak didukung di perangkat ini';
+
+  @override
+  String scanFailed(String error) {
+    return 'Dokumen tidak dapat dipindai: $error';
+  }
+
+  @override
+  String scanPagesAdded(int count) {
+    return '$count halaman ditambahkan ke catatan';
+  }
+
+  @override
+  String get scanTextTitle => 'Kenali teksnya juga?';
+
+  @override
+  String get scanTextBody =>
+      'Teks pada halaman dikenali dan dituliskan ke dalam catatan. Gambarnya tetap apa adanya. Perlu beberapa detik per halaman.';
+
+  @override
+  String get scanImageOnly => 'Hanya gambar';
+
+  @override
+  String get scanRecognizeText => 'Kenali teks';
+
+  @override
+  String get scanRecognizing => 'Mengenali teks…';
+
+  @override
+  String get takePhoto => 'Ambil foto';
+
+  @override
+  String get qrScanTitle => 'Pindai kode QR';
+
+  @override
+  String get qrScanSubtitle => 'Baca dengan kamera atau dari sebuah foto';
+
+  @override
+  String get qrScanHint => 'Sejajarkan kode di dalam bingkai';
+
+  @override
+  String get qrFromPhoto => 'Baca dari foto';
+
+  @override
+  String get qrNotFound => 'Tidak ada kode yang ditemukan pada gambar ini';
+
+  @override
+  String get qrLinkFound => 'Kode ini berupa tautan';
+
+  @override
+  String get qrOpenLink => 'Buka tautannya';
+
+  @override
+  String get qrSaveToNote => 'Simpan ke catatan';
+
+  @override
+  String get openLink => 'Buka tautan';
+
+  @override
+  String get linkOpenFailed => 'Tautan tidak dapat dibuka';
+
+  @override
+  String qrScanFailed(String error) {
+    return 'Kode tidak dapat dibaca: $error';
+  }
+
+  @override
+  String get qrTorch => 'Senter';
+
+  @override
+  String attachmentsCount(int count) {
+    return 'Lampiran ($count)';
+  }
+
+  @override
+  String get hideAttachments => 'Sembunyikan';
+
+  @override
+  String get showAttachments => 'Tampilkan';
+
+  @override
+  String get videoBack10 => 'Mundur 10 dtk';
+
+  @override
+  String get videoForward10 => 'Maju 10 dtk';
+
+  @override
+  String get selectAllItems => 'Pilih semua';
+
+  @override
+  String get showAllChips => 'Tampilkan semua';
+
+  @override
+  String get hideAllChips => 'Sembunyikan semua';
+
+  @override
+  String get chipPickInfo =>
+      'Chip folder dan tag mana yang harus muncul di layar utama?';
+
+  @override
+  String get hiddenFolder => 'Folder tersembunyi';
+
+  @override
+  String get hiddenFolderInfo =>
+      'Folder tersembunyi dan catatan di dalamnya tidak muncul di layar utama. Untuk menampilkannya, pilih «Folder tersembunyi» dari menu ⋮ lalu verifikasi identitas Anda.';
+
+  @override
+  String get hiddenFoldersMenu => 'Folder tersembunyi';
+
+  @override
+  String get hiddenFolderAuthReason =>
+      'Verifikasi identitas Anda untuk menampilkan folder tersembunyi';
+
+  @override
+  String get hiddenFoldersShown => 'Folder tersembunyi sedang ditampilkan';
+
+  @override
+  String get hiddenFoldersHiddenAgain =>
+      'Folder tersembunyi disembunyikan kembali';
+
+  @override
+  String get makeFolderHidden => 'Sembunyikan';
+
+  @override
+  String get makeFolderVisible => 'Tampilkan';
+
+  @override
+  String gridColumnsCount(int count) {
+    return '$count kolom';
+  }
+
+  @override
+  String get addImageOnPageSubtitle =>
+      'Duduk di halaman, teks mengalir di sekitarnya';
+
+  @override
+  String get addImageAsFile => 'Tambahkan gambar sebagai berkas';
+
+  @override
+  String get addImageAsFileSubtitle =>
+      'Tetap di luar halaman, di baris lampiran';
+
+  @override
+  String get moveImageToAttachments => 'Pindahkan ke lampiran';
+
+  @override
+  String get moveImageToPage => 'Tempatkan di halaman';
+
+  @override
+  String get attachmentCopied => 'Lampiran disalin';
+
+  @override
+  String get pasteAttachment => 'Tempel lampiran yang disalin';
+
+  @override
+  String get fullscreen => 'Layar penuh';
+
+  @override
+  String get more => 'Lainnya';
+
+  @override
+  String get undone => 'Diurungkan';
+
+  @override
+  String get filterOthers => 'Lainnya';
+
+  @override
+  String get formatTitle => 'Format';
+
+  @override
+  String get formatBold => 'Tebal';
+
+  @override
+  String get formatItalic => 'Miring';
+
+  @override
+  String get formatUnderline => 'Garis bawah';
+
+  @override
+  String get formatTextColor => 'Warna teks';
+
+  @override
+  String get formatHighlight => 'Sorotan';
+
+  @override
+  String get formatInfo =>
+      'Format ikut tersimpan di dalam teks berupa penanda (misalnya **tebal**); penanda tetap tersembunyi saat diekspor dan dibacakan.';
+
+  @override
+  String get formatMenu => 'Format…';
+
+  @override
+  String get noteFont => 'Fon';
+
+  @override
+  String get noteFontDefault => 'Bawaan';
+
+  @override
+  String get noteFontSerif => 'Buku (serif)';
+
+  @override
+  String get noteFontMono => 'Mesin tik';
+
+  @override
+  String get noteTextSize => 'Ukuran teks';
+
+  @override
+  String get formatClear => 'Bersihkan format';
+
+  @override
+  String get noteTextOpacity => 'Keburaman';
+
+  @override
+  String get assistantVoiceSetting => 'Asisten membacakan jawaban';
+
+  @override
+  String get assistantVoiceSettingInfo =>
+      'Asisten suara membacakan jawabannya dengan suara keras (hanya di ponsel).';
+
+  @override
+  String get assistantMute => 'Bisukan';
+
+  @override
+  String get assistantUnmute => 'Nyalakan suara';
+
+  @override
+  String get assistantMakeNote => 'Tetap jadikan catatan';
+
+  @override
+  String get assistantNoteCreated => 'Catatan dibuat';
+
+  @override
+  String get noteNotFound => 'Catatan tidak ditemukan. Mungkin sudah dihapus.';
+
+  @override
+  String get back => 'Kembali';
+
+  @override
+  String get addTextBlock => 'Tambah teks';
+
+  @override
+  String get noteBackgroundImage => 'Gambar latar';
+
+  @override
+  String get chooseBackgroundImage => 'Pilih gambar';
+
+  @override
+  String get changeBackgroundImage => 'Ganti gambar';
+
+  @override
+  String get removeBackgroundImage => 'Hapus latar';
+
+  @override
+  String get dashboardBackground => 'Latar layar utama';
+
+  @override
+  String get dashboardBackgroundInfo =>
+      'Gambar yang tampil di belakang kisi catatan (hanya perangkat ini).';
+
+  @override
+  String get aiProvider => 'Penyedia AI';
+
+  @override
+  String get aiProviderInfo =>
+      'Pilih penyedia tempat kunci Anda berasal. Kunci tiap penyedia disimpan terpisah, jadi kembali ke penyedia sebelumnya tidak perlu mengetik ulang.';
+
+  @override
+  String get apiKeyFieldLabel => 'Kunci API';
+
+  @override
+  String get getApiKey => 'Di mana saya bisa dapat kunci?';
+
+  @override
+  String get recommendedModel => 'Disarankan';
+
+  @override
+  String get freeTierBadge => 'Punya paket gratis';
+
+  @override
+  String get continueWithoutAccount => 'Lanjut tanpa akun';
+
+  @override
+  String get localAccountInfo =>
+      'Catatan Anda hanya ada di perangkat ini: tidak bisa dibuka di tempat lain, hilang jika aplikasi dicopot, dan AI bawaan dimatikan. Anda bisa menautkan akun Google kapan saja — catatan Anda ikut terbawa.';
+
+  @override
+  String get localAccountBadge => 'Akun lokal';
+
+  @override
+  String get linkGoogleAccount => 'Tautkan akun Google';
+
+  @override
+  String get accountLinked =>
+      'Akun Google Anda tertaut. Catatan Anda kini dicadangkan.';
+}

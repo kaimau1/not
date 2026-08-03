@@ -1456,7 +1456,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiProvider => 'AI provider';
 
   @override
-  String get aiProviderInfo => 'Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.';
+  String get aiProviderInfo =>
+      'Choose the provider your own key belongs to. Each provider’s key is stored separately, so switching back does not require typing it again.';
 
   @override
   String get apiKeyFieldLabel => 'API key';
@@ -1474,7 +1475,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithoutAccount => 'Continue without an account';
 
   @override
-  String get localAccountInfo => 'Your notes stay on this device only: they cannot be opened elsewhere, they are gone if you uninstall the app, and built-in AI is off. You can link a Google account at any time — your notes carry over.';
+  String get localAccountInfo =>
+      'Your notes stay on this device only: they cannot be opened elsewhere, they are gone if you uninstall the app, and built-in AI is off. You can link a Google account at any time — your notes carry over.';
 
   @override
   String get localAccountBadge => 'Local account';
@@ -1483,5 +1485,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkGoogleAccount => 'Link a Google account';
 
   @override
-  String get accountLinked => 'Your Google account is linked. Your notes are backed up now.';
+  String get accountLinked =>
+      'Your Google account is linked. Your notes are backed up now.';
 }
