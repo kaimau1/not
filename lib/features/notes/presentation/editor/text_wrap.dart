@@ -153,16 +153,22 @@ WrapPlan planTextWrap({
         : painter.preferredLineHeight;
     final bottom = top + lineHeight;
 
-    // Satırı kesen görseller: her biri metni GENİŞ tarafına iter — soldaki
-    // görsel satır başına, sağdaki satır sonuna dolgu koydurur.
+    // Satırı kesen görseller: her biri metni GENİŞ tarafına iter.
+    //
+    // Görselin yeri FİZİKSELdir (ölçülen x), dolgu ise MANTIKSAL satır başına/
+    // sonuna konan bir çapa karakteridir. LTR'de satır başı fiziksel solda,
+    // RTL'de fiziksel sağdadır — bu eşleme çevrilmezse RTL'de dolgu görselin
+    // BULUNMADIĞI tarafa konur ve metin görselin üstüne biner.
+    final ltr = direction == TextDirection.ltr;
     var indentStart = 0.0;
     var indentEnd = 0.0;
     for (final f in floats) {
       if (f.top < bottom && top < f.bottom) {
-        if (columnWidth - f.right >= f.left) {
-          if (f.right > indentStart) indentStart = f.right;
+        final hugsLeft = columnWidth - f.right >= f.left;
+        final pad = hugsLeft ? f.right : columnWidth - f.left;
+        if (hugsLeft == ltr) {
+          if (pad > indentStart) indentStart = pad;
         } else {
-          final pad = columnWidth - f.left;
           if (pad > indentEnd) indentEnd = pad;
         }
       }
@@ -205,7 +211,10 @@ WrapPlan planTextWrap({
         display,
         start,
         range.end,
-        columnWidth - indentEnd,
+        // Metnin durması gereken FİZİKSEL x. LTR'de satır soldan akar, sınır
+        // sağdaki görselin solu; RTL'de satır sağdan akar, sınır soldaki
+        // görselin sağıdır (yani soldan `indentEnd` kadar içeride).
+        ltr ? columnWidth - indentEnd : indentEnd,
         top + lineHeight / 2,
       );
       if (cut >= 0) {
@@ -476,6 +485,10 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
       style: widget.style,
       columnWidth: width,
       textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+      // Yön dizginin kendisini etkiler: dolgu MANTIKSAL satır başına konur,
+      // görselin yeri ise FİZİKSELdir (bkz. planTextWrap). Geçilmezse Arapça
+      // gibi sağdan sola dillerde metin görselin üstüne biner.
+      direction: Directionality.of(context),
     );
   }
 }
@@ -495,6 +508,7 @@ class WrapTextController extends TextEditingController {
   TextStyle? _style;
   double _columnWidth = 0;
   double _textScale = 1.0;
+  TextDirection _direction = TextDirection.ltr;
 
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
@@ -544,10 +558,12 @@ class WrapTextController extends TextEditingController {
     required TextStyle style,
     required double columnWidth,
     double textScaleFactor = 1.0,
+    TextDirection direction = TextDirection.ltr,
   }) {
     if (_columnWidth == columnWidth &&
         _textScale == textScaleFactor &&
         _style == style &&
+        _direction == direction &&
         sameFloatList(_floats, floats)) {
       return;
     }
@@ -555,6 +571,7 @@ class WrapTextController extends TextEditingController {
     _style = style;
     _columnWidth = columnWidth;
     _textScale = textScaleFactor;
+    _direction = direction;
     _reflowKeepingSelection();
   }
 
@@ -712,6 +729,7 @@ class WrapTextController extends TextEditingController {
       columnWidth: _columnWidth,
       floats: _floats,
       textScaleFactor: _textScale,
+      direction: _direction,
       rich: _rich,
     );
     _widths = plan.widths;
