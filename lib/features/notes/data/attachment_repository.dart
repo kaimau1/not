@@ -12,6 +12,7 @@ import '../../../core/constants.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
+import 'notes_repository.dart' show storageUsedBytesProvider;
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
