@@ -25,6 +25,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
+import '../../../../core/utils/format_bytes.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_fonts.dart';
@@ -637,8 +638,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // ---- Ekler ----------------------------------------------------------
 
-  /// "Dosya çok büyük" mesajı — sınır premium'a göre (50 MB) / ücretsiz (10 MB).
-  String _tooLargeMessage() {
+  /// Ek sınırı mesajı. İki ayrı sınır var ve ikisi de aynı istisna ağacından
+  /// geliyor: TEK dosya boyutu (premium 50 MB / ücretsiz 10 MB) ve TOPLAM
+  /// depolama tavanı ([StorageFullException]). [error] verilmezse dosya
+  /// boyutu mesajı döner.
+  String _tooLargeMessage([FileTooLargeException? error]) {
+    if (error is StorageFullException) {
+      return context.l10n.storageFull(formatBytes(error.quotaBytes));
+    }
     final premium = ref.read(premiumProvider).value ?? false;
     final limitMb =
         (premium
@@ -740,7 +747,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     String fileName, {
     bool asFile = false,
   }) async {
-    final tooLargeMessage = _tooLargeMessage();
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {
@@ -761,8 +767,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         immediate: true,
       );
-    } on FileTooLargeException {
-      _showSnack(tooLargeMessage);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       // Yalnız FileTooLargeException yakalanıyordu; başka her hata (web'de
       // dosya sistemi yok, disk dolu, izin reddi) yukarı kaçıp await'i
@@ -1004,8 +1010,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
-    } on FileTooLargeException {
-      if (mounted) _showSnack(_tooLargeMessage());
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
@@ -1060,8 +1066,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
-    } on FileTooLargeException {
-      if (mounted) _showSnack(_tooLargeMessage());
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
@@ -1119,8 +1125,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
-    } on FileTooLargeException {
-      if (mounted) _showSnack(_tooLargeMessage());
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
@@ -1210,8 +1216,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         immediate: true,
       );
-    } on FileTooLargeException {
-      if (mounted) _showSnack(_tooLargeMessage());
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.attachmentNotSynced);
     } catch (e) {
@@ -1245,7 +1251,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Görseli KALICI olarak kırpar (tam ekrandaki kırpma ekranından gelir).
   /// [frac] görsel oranında (0–1) seçilen alan.
   Future<void> _cropImage(Attachment image, Rect frac) async {
-    final tooLargeMessage = _tooLargeMessage();
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {
@@ -1267,8 +1272,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ..clear()
         ..clearLiveImages();
       _updateAttachment(cropped);
-    } on FileTooLargeException {
-      if (mounted) _showSnack(tooLargeMessage);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.cropFailed);
     } catch (e) {
@@ -2199,7 +2204,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
-    final tooLargeMessage = _tooLargeMessage();
     try {
       final attachment = await repo.prepareImage(
         noteId: widget.noteId,
@@ -2221,8 +2225,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (!mounted) return;
       // Yerleştirirken kırpma: kullanıcı hangi bölgenin zemin olacağını seçer.
       await _cropBackground(attachment);
-    } on FileTooLargeException {
-      if (mounted) _showSnack(tooLargeMessage);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
@@ -2461,9 +2465,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
-    } on FileTooLargeException {
+    } on FileTooLargeException catch (e) {
       File(path).delete().ignore();
-      if (mounted) _showSnack(_tooLargeMessage());
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       File(path).delete().ignore();
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
@@ -2544,8 +2548,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
         immediate: true,
       );
-    } on FileTooLargeException {
-      if (mounted) _showSnack(_tooLargeMessage());
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }

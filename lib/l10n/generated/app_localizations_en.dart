@@ -153,6 +153,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Storage is full ($limit). Delete old attachments to free up space.';
+  }
+
+  @override
+  String get storageUsage => 'Storage';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used of $limit used';
+  }
+
+  @override
   String get removeAttachment => 'Remove attachment';
 
   @override

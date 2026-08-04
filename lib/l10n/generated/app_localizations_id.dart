@@ -153,6 +153,19 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Penyimpanan penuh ($limit). Hapus lampiran lama untuk mengosongkan ruang.';
+  }
+
+  @override
+  String get storageUsage => 'Penyimpanan';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used dari $limit terpakai';
+  }
+
+  @override
   String get removeAttachment => 'Hapus lampiran';
 
   @override

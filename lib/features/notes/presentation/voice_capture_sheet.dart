@@ -49,7 +49,7 @@ enum VoiceCaptureAction {
   ///
   /// Tasarımın dört çipinde YOK; mevcut sesli asistanın konuşmadan başlık,
   /// madde ve HATIRLATICI çıkaran akışı (`voiceAssistantProvider`) yalnız bu
-  /// yolla erişilebilir kaldığı için eklendi — bkz. test/tr_datetime_test.dart.
+  /// yolla erişilebilir kaldığı için eklendi — bkz. test/spoken_datetime_test.dart.
   compose,
 }
 

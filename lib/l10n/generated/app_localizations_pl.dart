@@ -153,6 +153,19 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Brak miejsca w pamięci ($limit). Usuń stare załączniki, aby zwolnić miejsce.';
+  }
+
+  @override
+  String get storageUsage => 'Pamięć';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return 'Użyto $used z $limit';
+  }
+
+  @override
   String get removeAttachment => 'Usuń załącznik';
 
   @override

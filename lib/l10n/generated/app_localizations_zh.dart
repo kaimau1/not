@@ -152,6 +152,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return '存储空间已满（$limit）。请删除旧附件以释放空间。';
+  }
+
+  @override
+  String get storageUsage => '存储空间';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '已使用 $used/$limit';
+  }
+
+  @override
   String get removeAttachment => '删除附件';
 
   @override

@@ -40,10 +40,11 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   `trialUntil` alanımız gerekir ve CİHAZA değil hesaba bağlanmalı (yoksa
   sil-kur = sınırsız deneme). Deneme kotası "5 istek" değil PUAN olmalı —
   `AiGate` zaten puan bazlı, düz istek sayısı 200 sayfalık PDF'te sömürülür.
-- [ ] **Paket sınırları uygulanmadı** — kararlaştırılan yapı: ücretsizde ek
-  (görsel/PDF/ses/video) yok ya da ~50 MB tavan, lifetime'da 2 GB tavan.
-  `AppConstants.maxFree/PremiumAttachmentBytes` var ama depolama TAVANI yok;
-  lifetime'ın maliyeti ancak tavanla öngörülebilir olur.
+- [ ] **Depolama tavanı SUNUCUda zorlanmıyor** — tavanın kendisi kondu
+  (2026-08-05: ücretsiz 50 MB, premium 2 GB; sayım notlardaki `sizeBytes`
+  toplamı, gösterge Ayarlar > Senkron'da). Sayaç İSTEMCİde: APK'yı değiştiren
+  biri tavanı aşabilir. Play Billing'le birlikte Cloud Function/Storage kuralı
+  gerekir (aynı sorun AI kota sayacında da var, aşağıya bak).
 - [ ] **RTL cihazda denenmedi** — 35 yerleşim yönlü karşılığına çevrildi ve
   `rtl_layout_test` geri sızmayı engelliyor, ama Arapça bir çeviri henüz yok
   (bilerek, üstteki maddeye bak); gerçek ekranda kimse bakmadı. Arapça
@@ -83,7 +84,7 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   zorunda, sesli asistandaki "eke düş" yedeği burada uygulanamıyor. Android'de
   cihaz tanıması olduğu için etkilenmiyor (2026-07-26).
 - [ ] **Sesli asistan hatırlatıcısı cihazda denenmedi** — yerel zaman
-  ayrıştırıcısı (`tr_datetime.dart`) ve emniyet ağı testlerle doğrulandı ama
+  ayrıştırıcısı (`spoken_datetime.dart`) ve emniyet ağı testlerle doğrulandı ama
   gerçek konuşmayla uçtan uca bakılmadı; ayrıca bildirim izni verili değilse
   hatırlatıcı kaydolur, bildirim gelmez (2026-07-26).
 - [ ] **Kesin alarm cihazda ölçülmedi** — `USE_EXACT_ALARM` + `exactAllowWhileIdle`
@@ -119,13 +120,12 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   içeriği değiştiriyor, geri alma yalnız o anki şeritte. Uygulama kapanınca
   orijinal metin gider. Sürüm deposu/geri alma noktası bilerek yapılmadı
   (kullanıcı kararı 2026-07-27) (2026-07-27).
-- [ ] **AI denetiminin iki düzeltmesi testsiz** — sesli nottaki "çift not"
-  koruması (`voice_assistant.dart finish()`) ve semantik aramanın boş vektör
-  yedeği (`gemini_service.dart embedTexts`) yalnız muhakemeyle doğrulandı;
-  ikisi de Firestore/servis sahtesi ister, projede öyle bir altyapı yok.
-  Cihazda da denenmedi. Kontrol: sesli notu ağ kesikken bitir (tek not
-  oluşmalı), sonra semantik aramayı anahtarsız çalıştır (düz aramaya
-  düşmeli) (2026-08-04).
+- [ ] **Sesli nottaki "çift not" koruması testsiz** — `voice_assistant.dart
+  finish()` içindeki `resultNoteId == null` kapısı yalnız muhakemeyle
+  doğrulandı; testi Firestore + mikrofon sahtesi ister, projede öyle bir
+  altyapı yok. Kontrol: sesli notu ağ kesikken bitir, tek not oluşmalı
+  (2026-08-04). Denetimin diğer yarısı (semantik aramanın boş vektör yedeği)
+  2026-08-05'te `test/embed_texts_test.dart` ile kapandı.
 
 
 ## Devir paketi (2026-08-04) — uygulandı, kalan uçlar
@@ -154,9 +154,10 @@ silme) tamamlandı, kalanlar sırayla:
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
   Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
-- [ ] **Sesli asistanın tarih ayrıştırıcısı yalnız Türkçe** (`tr_datetime.dart`)
-  — de/es/en'de "yarın saat 3'te" yerel olarak çözülmez, emniyet ağı yok,
-  model'e düşer. Dil eklerken kapsam dışı bırakıldı (2026-07-30).
+- [ ] **Tarih ayrıştırıcısı 16 dilin yalnız 4'ünde**
+  (`spoken_datetime.dart`: tr, en, de, es — 2026-08-05). Kalan 12 dilde
+  "yarın saat 3'te" yerelde çözülmez, emniyet ağı yok, model'e düşer.
+  Yeni dil eklemek = `_languages`'a bir sözlük girişi + test.
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.

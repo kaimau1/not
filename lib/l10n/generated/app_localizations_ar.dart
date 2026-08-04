@@ -152,6 +152,19 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'مساحة التخزين ممتلئة ($limit). احذف المرفقات القديمة لتحرير مساحة.';
+  }
+
+  @override
+  String get storageUsage => 'التخزين';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used من $limit مستخدمة';
+  }
+
+  @override
   String get removeAttachment => 'إزالة المرفق';
 
   @override

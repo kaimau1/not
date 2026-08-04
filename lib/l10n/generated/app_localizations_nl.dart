@@ -153,6 +153,19 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Opslag is vol ($limit). Verwijder oude bijlagen om ruimte vrij te maken.';
+  }
+
+  @override
+  String get storageUsage => 'Opslag';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used van $limit gebruikt';
+  }
+
+  @override
   String get removeAttachment => 'Bijlage verwijderen';
 
   @override

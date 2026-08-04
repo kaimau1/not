@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/utils/tr_datetime.dart';
+import '../../../core/utils/spoken_datetime.dart';
 import '../../notes/data/notes_repository.dart';
 import '../data/ai_history.dart';
 import '../data/assistant_service.dart';
@@ -93,15 +93,15 @@ class ChatController extends Notifier<ChatState> {
   /// notu oluşturup `reminderAt`'i doldurmayı atlayabiliyor (alan şemada
   /// isteğe bağlı). Model kurmadıysa zaman kullanıcının kendi cümlesinden
   /// YERELDE çıkarılır — hatırlatıcı modelin keyfine kalmaz, ekstra API
-  /// çağrısı da olmaz. Sesli asistandaki ağın aynısı; ayrıştırıcı şimdilik
-  /// yalnız Türkçe, diğer dillerde null döner ve davranış eskisi gibi kalır.
+  /// çağrısı da olmaz. Sesli asistandaki ağın aynısı; ayrıştırıcı tr/en/de/es
+  /// biliyor, kalan dillerde null döner ve davranış eskisi gibi kalır.
   Future<void> _ensureReminder(String? noteId, String source) async {
     if (noteId == null) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     final note = await repo.watchNote(noteId).first;
     if (note == null || note.reminderAt != null) return;
-    final when = parseTurkishDateTime(source);
+    final when = parseSpokenDateTimeNow(source);
     if (when != null) repo.setReminder(noteId, when);
   }
 }

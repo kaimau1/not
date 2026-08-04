@@ -92,6 +92,26 @@
       }
     }
   },
+  "storageFull": "Depolama doldu ({limit}). Yer açmak için eski ekleri sil.",
+  "@storageFull": {
+    "placeholders": {
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
+  "storageUsage": "Depolama",
+  "storageUsageValue": "{used} / {limit} kullanıldı",
+  "@storageUsageValue": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "removeAttachment": "Eki kaldır",
   "pin": "Sabitle",
   "unpin": "Sabitlemeyi kaldır",

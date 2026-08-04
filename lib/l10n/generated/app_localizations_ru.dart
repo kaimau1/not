@@ -153,6 +153,19 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Хранилище заполнено ($limit). Удалите старые вложения, чтобы освободить место.';
+  }
+
+  @override
+  String get storageUsage => 'Хранилище';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return 'Использовано $used из $limit';
+  }
+
+  @override
   String get removeAttachment => 'Удалить вложение';
 
   @override

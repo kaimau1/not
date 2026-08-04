@@ -14,7 +14,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
@@ -220,8 +222,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         icon: Icons.cloud_sync_outlined,
         title: l10n.syncTitle,
         summary: '',
-        keywords: 'yedek geri yukle sinir mb yukleme',
+        keywords: 'yedek geri yukle sinir mb yukleme depolama alan kota',
         rows: [
+          _SettingRow(
+            const _StorageUsage(),
+            title: l10n.storageUsage,
+            keywords: 'depolama alan kota gb mb dolu',
+          ),
           _SettingRow(
             const _SyncLimitSelector(),
             title: l10n.syncLimitTitle,
@@ -1290,6 +1297,52 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
       value: ref.watch(expandListItemsProvider),
       onChanged: (value) =>
           ref.read(expandListItemsProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Kullanılan bulut depolama alanı: "12,4 MB / 50 MB kullanıldı" + çubuk.
+///
+/// Tavan olmadan lifetime paketinin maliyeti öngörülemiyordu; tavan konunca
+/// kullanıcının nerede olduğunu görebileceği bir yer de gerekti — "ek
+/// eklenemiyor" hatasını ilk kez yükleme anında görmek kötü bir sürpriz.
+class _StorageUsage extends ConsumerWidget {
+  const _StorageUsage();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final premium = ref.watch(premiumProvider).value ?? false;
+    final quota = premium
+        ? AppConstants.maxPremiumStorageBytes
+        : AppConstants.maxFreeStorageBytes;
+    final used = ref.watch(storageUsedBytesProvider);
+    final ratio = (used / quota).clamp(0.0, 1.0);
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.storageUsage),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              backgroundColor: scheme.surfaceContainerHighest,
+              // Doluya yaklaşınca uyarı rengi: çubuğun kendisi zaten
+              // okunuyorsa ayrıca metin okumaya gerek kalmasın.
+              color: ratio >= 0.9 ? scheme.error : scheme.primary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            l10n.storageUsageValue(formatBytes(used), formatBytes(quota)),
+          ),
+        ],
+      ),
     );
   }
 }

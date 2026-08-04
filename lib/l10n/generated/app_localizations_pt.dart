@@ -153,6 +153,19 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Armazenamento cheio ($limit). Exclua anexos antigos para liberar espaço.';
+  }
+
+  @override
+  String get storageUsage => 'Armazenamento';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used de $limit usados';
+  }
+
+  @override
   String get removeAttachment => 'Remover anexo';
 
   @override
