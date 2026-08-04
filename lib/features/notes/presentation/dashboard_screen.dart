@@ -368,9 +368,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// düşüyor, satır da sessizce temizleniyordu; kullanıcı kaydın kaybolduğunu
   /// sanıyordu. Artık kart vurgulanıp görünür alana kaydırılır ve tek dokunuşla
   /// açılabilen bir bildirim çıkar.
+  /// İKİNCİ KÖK NEDEN (kullanıcı: "bazen oluşuyor bazen oluşmuyor"): açık bir
+  /// SÜZGEÇ ya da arama, yeni notu listeden eliyordu. Yeni not sade bir metin
+  /// notudur: "Yıldızlı" süzgeci, bir etiket seçimi ya da yazılı bir arama
+  /// varken hiçbirine uymaz ve ekranda hiç belirmez — kullanıcı için bu,
+  /// notun oluşmamasıyla aynı şey. Notu gizleyecek süzgeçler kaydın hemen
+  /// ardından temizlenir (klasör süzgeci KALIR: not zaten o klasöre doğuyor).
   void _afterQuickCapture(String id) {
     if (!mounted) return;
     final l10n = context.l10n;
+    if (ref.read(noteFilterProvider) != NoteFilter.all) {
+      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    }
+    if (ref.read(selectedTagProvider) != null) {
+      ref.read(selectedTagProvider.notifier).set(null);
+    }
+    if (ref.read(searchQueryProvider).trim().isNotEmpty) {
+      _searchController.clear();
+      ref.read(searchQueryProvider.notifier).set('');
+    }
     ref.read(focusedNoteProvider.notifier).focus(id);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -1775,9 +1791,14 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
     // notu yazmaya başlayabilsin, yazdığı harfler ilkinin üstüne binmesin.
     _controller.clear();
     setState(() => _hasText = false);
-    final id = await repo.createNote(NoteType.text);
-    final folderId = ref.read(selectedFolderProvider);
-    repo.updateFields(id, {'body': text, 'folderId': ?folderId});
+    // Metin TEK yazımda gider (önce boş not + sonra gövde DEĞİL): iki yazım
+    // arasında doküman boş kalıyor ve o ara akışa düşerse not ana ekran
+    // süzgecinden eleniyordu — "bazen oluşuyor bazen oluşmuyor"un kaynağı.
+    final id = await repo.createNote(
+      NoteType.text,
+      body: text,
+      folderId: ref.read(selectedFolderProvider),
+    );
     // Klavye kapanır: not kaydedildi, imleç boş satırda yanıp sönmesin —
     // "kaydettim ama bir şey olmadı" hissinin bir parçası da buydu.
     FocusManager.instance.primaryFocus?.unfocus();

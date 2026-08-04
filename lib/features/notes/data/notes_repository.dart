@@ -134,12 +134,26 @@ class NotesRepository {
     return bTime.compareTo(aTime);
   }
 
-  /// Yeni boş not oluşturur ve id'sini döner; editör bu id ile açılır.
-  Future<String> createNote(NoteType type, {double? orderIndex}) async {
+  /// Yeni not oluşturur ve id'sini döner; editör bu id ile açılır.
+  ///
+  /// [body] ve [folderId] İÇERİKLİ oluşturma içindir (ana ekrandaki "Yeni
+  /// not…" satırı gibi). Ayrı bir `updateFields` çağrısı yerine TEK yazımda
+  /// geçmeleri önemli: iki yazım arasında doküman bir an BOŞ kalıyor, o anda
+  /// yayınlanan akış anlık görüntüsünde not "boş" olduğu için ana ekran
+  /// süzgecinden (`!n.isEmpty`) düşüyor ve — zamanlamaya göre — kullanıcıya
+  /// hiç görünmeyebiliyordu ("bazen oluşuyor bazen oluşmuyor").
+  Future<String> createNote(
+    NoteType type, {
+    double? orderIndex,
+    String body = '',
+    String? folderId,
+  }) async {
     final doc = _notes.doc();
     final note = Note(
       id: doc.id,
       type: type,
+      body: body,
+      folderId: folderId,
       items: type == NoteType.text
           ? const []
           : [NoteItem(id: _uuid.v4(), text: '')],

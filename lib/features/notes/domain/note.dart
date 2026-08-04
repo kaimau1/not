@@ -283,6 +283,15 @@ class Note {
 
   factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final map = doc.data() ?? const <String, dynamic>{};
+    // Sunucuya ULAŞMAMIŞ yazımlarda `serverTimestamp()` yerel kopyada NULL
+    // okunur. Tarihsiz not, "Son düzenlenen" sıralamasında en eskiye ("DAHA
+    // ÖNCE" kovasına) düşüyor ve listenin en dibinde beliriyordu; ağ hızına
+    // göre kimi zaman anında doğru yere gelip kimi zaman gelmediğinden not
+    // "bazen oluşuyor bazen oluşmuyor" gibi görünüyordu. Bekleyen yazımda
+    // zaman ŞİMDİ kabul edilir — sunucu damgası geldiğinde gerçek değerle
+    // değişir. (Yalnız bekleyen yazımda: eski kayıtların tarihi uydurulmaz.)
+    final pending = doc.metadata.hasPendingWrites;
+    final localNow = pending ? DateTime.now() : null;
     return Note(
       id: doc.id,
       type: NoteType.fromId(map['type'] as String?),
@@ -313,8 +322,8 @@ class Note {
       backgroundOpacity:
           (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
-      createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
-      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate(),
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
+      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
       deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),
