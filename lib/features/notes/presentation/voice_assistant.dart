@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../../core/utils/speech_output.dart';
-import '../../../core/utils/tr_datetime.dart';
+import '../../../core/utils/spoken_datetime.dart';
 import '../../ai/data/ai_history.dart';
 import '../../ai/data/assistant_service.dart';
 import '../../settings/settings_providers.dart';
@@ -198,7 +198,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
   /// Levha zaten dinledi; elimizde metin var, mikrofona hiç dokunulmaz.
   /// [finish] yeniden yazılmadı çünkü asıl değer onun İÇİNDEKİ güvenlik
   /// ağlarında: model boş not kurarsa dökümle doldurma, hatırlatıcıyı yerelde
-  /// çözme (`parseTurkishDateTime`), yapay zekâ tümden ölüyken kaydı düz nota
+  /// çözme (`parseSpokenDateTimeNow`), yapay zekâ tümden ölüyken kaydı düz nota
   /// düşürme. `_useSpeech = true` ses toplama adımını atlatır — o yolda
   /// [finish] zaten yalnız dökümle çalışır.
   Future<bool> composeFromTranscript(
@@ -309,7 +309,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             repo.updateFields(id, {'body': transcript});
             // AI hiç çalışmasa da hatırlatıcı kurulur: zaman ayrıştırması
             // yerelde yapılıyor, modele ihtiyaç yok.
-            final when = parseTurkishDateTime(transcript);
+            final when = parseSpokenDateTimeNow(transcript);
             if (when != null) repo.setReminder(id, when);
           } else {
             final attachments = ref.read(attachmentRepositoryProvider);
@@ -354,7 +354,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             // (alan şemada isteğe bağlı). Model kurmadıysa zaman dökümden
             // yerelde çıkarılır — hatırlatıcı modelin keyfine kalmaz.
             if (created.reminderAt == null) {
-              final when = parseTurkishDateTime(transcript);
+              final when = parseSpokenDateTimeNow(transcript);
               if (when != null) repo.setReminder(createdId, when);
             }
           }
@@ -441,7 +441,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     if (repo == null) return null;
     final id = await repo.createNote(NoteType.text);
     repo.updateFields(id, {'body': text});
-    final when = parseTurkishDateTime(text);
+    final when = parseSpokenDateTimeNow(text);
     if (when != null) repo.setReminder(id, when);
     state = state.copyWith(noteId: id, message: createdText);
     ref.read(focusedNoteProvider.notifier).focus(id);
