@@ -125,59 +125,71 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               const SizedBox(height: 16),
               _SectionLabel(l10n.aiOnYourNotes),
               const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _TaskTile(
-                      icon: Icons.summarize_outlined,
-                      title: l10n.aiTaskWeekSummary,
-                      info: l10n.aiTaskWeekSummaryInfo,
-                      onTap: () => _send(l10n.aiTaskWeekSummaryInfo),
+              // IntrinsicHeight ŞART: `CrossAxisAlignment.stretch` çocukları
+              // Row'un yüksekliğine gerer, ListView'da dikey alan SINIRSIZ
+              // olduğu için Row sonsuz yükseklik alıyordu. Debug'da assert
+              // atıyor, RELEASE'de assert çalışmadığından kutular sonsuz
+              // yükseklikle yerleşiyor ve ALTINDAKİ HER ŞEY erişilemez uzağa
+              // itiliyordu — kullanıcı sayfada yalnız sohbet kartı ile brifing
+              // satırını görüyordu. IntrinsicHeight, Row'a en uzun çocuğun
+              // yüksekliğini vererek stretch'i sınırlı hale getirir.
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _TaskTile(
+                        icon: Icons.summarize_outlined,
+                        title: l10n.aiTaskWeekSummary,
+                        info: l10n.aiTaskWeekSummaryInfo,
+                        onTap: () => _send(l10n.aiTaskWeekSummaryInfo),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _TaskTile(
-                      icon: Icons.new_label_outlined,
-                      title: l10n.aiTaskTagUntagged,
-                      info: l10n.aiTaskTagUntaggedInfo(untagged),
-                      onTap: untagged == 0
-                          ? null
-                          : () => _send(l10n.aiTaskTagUntagged),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _TaskTile(
+                        icon: Icons.new_label_outlined,
+                        title: l10n.aiTaskTagUntagged,
+                        info: l10n.aiTaskTagUntaggedInfo(untagged),
+                        onTap: untagged == 0
+                            ? null
+                            : () => _send(l10n.aiTaskTagUntagged),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _TaskTile(
-                      icon: Icons.title,
-                      title: l10n.aiTaskSuggestTitles,
-                      info: l10n.aiTaskSuggestTitlesInfo(untitled),
-                      onTap: untitled == 0
-                          ? null
-                          : () => _send(l10n.aiTaskSuggestTitles),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: _TaskTile(
+                        icon: Icons.title,
+                        title: l10n.aiTaskSuggestTitles,
+                        info: l10n.aiTaskSuggestTitlesInfo(untitled),
+                        onTap: untitled == 0
+                            ? null
+                            : () => _send(l10n.aiTaskSuggestTitles),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde
-                    // ölçülür, puan harcamaz. Yine de burada duruyor çünkü
-                    // kullanıcı açısından aynı iş — "notlarımı toparla".
-                    child: _TaskTile(
-                      icon: Icons.copy_all_outlined,
-                      title: l10n.aiTaskDuplicates,
-                      info: l10n.aiTaskDuplicatesInfo(duplicates),
-                      onTap: duplicates == 0
-                          ? null
-                          : () => showDuplicatesSheet(context),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde
+                      // ölçülür, puan harcamaz. Yine de burada duruyor çünkü
+                      // kullanıcı açısından aynı iş — "notlarımı toparla".
+                      child: _TaskTile(
+                        icon: Icons.copy_all_outlined,
+                        title: l10n.aiTaskDuplicates,
+                        info: l10n.aiTaskDuplicatesInfo(duplicates),
+                        onTap: duplicates == 0
+                            ? null
+                            : () => showDuplicatesSheet(context),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (history.isNotEmpty) ...[
                 const SizedBox(height: 16),
@@ -204,10 +216,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               Text(
                 l10n.aiPointsRenew,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -308,10 +317,7 @@ class AiPointsBar extends StatelessWidget {
           children: [
             Text(
               l10n.aiPointsToday,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
             ),
             const Spacer(),
             Text(
@@ -410,8 +416,7 @@ class _ChatCard extends StatelessWidget {
                               : AlignmentDirectional.centerStart,
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
-                              maxWidth:
-                                  MediaQuery.sizeOf(context).width * 0.84,
+                              maxWidth: MediaQuery.sizeOf(context).width * 0.84,
                             ),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
