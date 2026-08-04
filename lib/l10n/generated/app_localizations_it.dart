@@ -153,6 +153,19 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Spazio esaurito ($limit). Elimina i vecchi allegati per liberare spazio.';
+  }
+
+  @override
+  String get storageUsage => 'Spazio di archiviazione';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used di $limit utilizzati';
+  }
+
+  @override
   String get removeAttachment => 'Rimuovi allegato';
 
   @override

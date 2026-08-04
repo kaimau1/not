@@ -21,7 +21,18 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   final maxBytes = premium
       ? AppConstants.maxPremiumAttachmentBytes
       : AppConstants.maxFreeAttachmentBytes;
-  return AttachmentRepository(FirebaseStorage.instance, uid, maxBytes);
+  return AttachmentRepository(
+    FirebaseStorage.instance,
+    uid,
+    maxBytes,
+    quotaBytes: premium
+        ? AppConstants.maxPremiumStorageBytes
+        : AppConstants.maxFreeStorageBytes,
+    // Kullanılan alan İSTEK ANINDA okunur (`watch` değil): depo notlar her
+    // değiştiğinde yeniden kurulsaydı yükleme kuyruğu elindeki nesneyi
+    // kaybederdi.
+    usedBytes: () => ref.read(storageUsedBytesProvider),
+  );
 });
 
 class _CompressRequest {
@@ -107,17 +118,57 @@ _CompressResult _cropImage(_CropRequest request) {
   return _CompressResult(encoded, cropped.width, cropped.height, true);
 }
 
+/// [incoming] bayt eklenirse toplam depolama tavanı aşılır mı.
+///
+/// [quota] 0 (ya da altı) = tavan yok. [incoming] EKSİ olabilir: yerini aldığı
+/// eski ek düşüldüğünde (kırpma) fark küçülür.
+bool storageQuotaExceeded({
+  required int used,
+  required int incoming,
+  required int quota,
+}) {
+  if (quota <= 0) return false;
+  return used + incoming > quota;
+}
+
 /// Ekleri önce cihaza kopyalar (not çevrimdışıyken bile eklenebilsin),
 /// sonra Firebase Storage'a yükler. Yükleme kuyruğu [uploadPending] üzerinden
 /// çalışır.
 class AttachmentRepository {
-  AttachmentRepository(this._storage, this.uid, this.maxBytes);
+  AttachmentRepository(
+    this._storage,
+    this.uid,
+    this.maxBytes, {
+    this.quotaBytes = 0,
+    this.usedBytes,
+  });
 
   final FirebaseStorage _storage;
   final String uid;
 
   /// Bu kullanıcı için izin verilen en büyük ek boyutu (premium'a göre).
   final int maxBytes;
+
+  /// Bu kullanıcının TOPLAM depolama tavanı (bayt). 0 = sınırsız (testler ve
+  /// tavan devre dışıyken).
+  final int quotaBytes;
+
+  /// Şu an kullanılan alan. Çağrı anında okunur; null ise tavan denetlenmez.
+  final int Function()? usedBytes;
+
+  /// Yeni gelen [incoming] bayt tavanı aşıyor mu. Tek kapı: her `prepare*`
+  /// kendi denetimini yazsaydı biri eklendiğinde sessizce tavansız kalırdı.
+  void _checkQuota(int incoming) {
+    final used = usedBytes;
+    if (used == null) return;
+    if (storageQuotaExceeded(
+      used: used(),
+      incoming: incoming,
+      quota: quotaBytes,
+    )) {
+      throw StorageFullException(quotaBytes);
+    }
+  }
 
   static const _uuid = Uuid();
 
@@ -138,8 +189,13 @@ class AttachmentRepository {
   Future<Attachment> _store(
     String noteId,
     Attachment meta,
-    Uint8List bytes,
-  ) async {
+    Uint8List bytes, {
+    int freedBytes = 0,
+  }) async {
+    // [freedBytes]: aynı çağrıda yerini alacağı eski ekin boyutu (kırpma).
+    // Sayılmasaydı tavana dayanmış kullanıcı görselini KIRPAMAZDI — kırpma
+    // yeri neredeyse her zaman boşaltır.
+    _checkQuota(bytes.length - freedBytes);
     final objectName = '${meta.id}_${meta.fileName}';
     if (!kIsWeb) {
       final dir = await _attachmentsDir(noteId);
@@ -242,6 +298,7 @@ class AttachmentRepository {
         ),
       ),
       result.bytes,
+      freedBytes: attachment.sizeBytes,
     );
     // Uzantı değiştiyse (ör. .png → .jpg) yerel dosya adı da değişti; eskisi
     // artık hiçbir yerden gösterilmiyor, yetim kalmasın.
@@ -326,6 +383,8 @@ class AttachmentRepository {
     if (sizeBytes > maxBytes) {
       throw const FileTooLargeException();
     }
+    // Ses [_store]'a girmiyor (dosya kopyalanıyor), tavan kapısı burada.
+    _checkQuota(sizeBytes);
     final id = _uuid.v4();
     final fileName = 'kayit_${duration.inSeconds}s.m4a';
     final dir = await _attachmentsDir(noteId);
@@ -475,6 +534,17 @@ class AttachmentRepository {
 
 class FileTooLargeException implements Exception {
   const FileTooLargeException();
+}
+
+/// Toplam depolama tavanı doldu. [FileTooLargeException]'ı GENİŞLETİR:
+/// arayüzdeki her `on FileTooLargeException` yakalaması bunu da tutar, yani
+/// yeni bir çağrı yeri eklendiğinde ek sessizce tavansız eklenmez — en
+/// kötü ihtimalle mesaj "dosya çok büyük" der.
+class StorageFullException extends FileTooLargeException {
+  const StorageFullException(this.quotaBytes);
+
+  /// Aşılan tavan (bayt).
+  final int quotaBytes;
 }
 
 /// Ekin baytlarına ulaşılamadı (yerel kopya silinmiş ve bulutta da yok) ya da

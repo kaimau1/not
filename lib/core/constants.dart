@@ -68,6 +68,18 @@ abstract final class AppConstants {
   // istenirse storage.rules'da firestore.get(premiumUntil) eklenir.
   static const int maxFreeAttachmentBytes = 10 * 1024 * 1024; // 10 MB
   static const int maxPremiumAttachmentBytes = 50 * 1024 * 1024; // 50 MB
+
+  // Toplam bulut depolama tavanı. TEK dosya sınırı (üstteki) maliyeti
+  // öngörülebilir kılmıyordu: 10 MB'lık eklerden 500 tane yüklenince fatura
+  // yine patlıyor. Lifetime (tek ödeme) paketinin maliyeti ancak TOPLAM bir
+  // tavanla hesaplanabilir olduğu için bu ikinci kapı eklendi.
+  //
+  // Sayım istemci tarafında yapılır (notlardaki `sizeBytes` toplamı) — katı
+  // sunucu zorlaması için her yüklemede Firestore okuyan bir Storage kuralı
+  // ya da Cloud Function gerekir; kişisel not uygulamasında gereksiz.
+  // ponytail: Play Billing eklenirken sunucu tarafı sayaç da düşünülmeli.
+  static const int maxFreeStorageBytes = 50 * 1024 * 1024; // 50 MB
+  static const int maxPremiumStorageBytes = 2 * 1024 * 1024 * 1024; // 2 GB
   /// Görsel eklerin saklandığı/senkronlandığı en büyük kenar (px).
   ///
   /// 2048'den 1600'e indirildi: senkron boyutu ~%40 küçülüyor ve OCR/"PDF'i

@@ -152,6 +152,19 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Depolama doldu ($limit). Yer açmak için eski ekleri sil.';
+  }
+
+  @override
+  String get storageUsage => 'Depolama';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used / $limit kullanıldı';
+  }
+
+  @override
   String get removeAttachment => 'Eki kaldır';
 
   @override

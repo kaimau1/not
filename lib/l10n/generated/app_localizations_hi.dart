@@ -153,6 +153,19 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'स्टोरेज भर गया है ($limit)। जगह खाली करने के लिए पुराने अटैचमेंट हटाएँ।';
+  }
+
+  @override
+  String get storageUsage => 'स्टोरेज';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$limit में से $used इस्तेमाल';
+  }
+
+  @override
   String get removeAttachment => 'अनुलग्नक हटाएँ';
 
   @override

@@ -152,6 +152,19 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return '保存容量がいっぱいです（$limit）。古い添付ファイルを削除して空き容量を作ってください。';
+  }
+
+  @override
+  String get storageUsage => 'ストレージ';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$limit 中 $used 使用';
+  }
+
+  @override
   String get removeAttachment => '添付ファイルを削除';
 
   @override

@@ -384,6 +384,24 @@ abstract class AppLocalizations {
   /// **'Dosya çok büyük (en fazla {limit} MB)'**
   String attachmentTooLarge(int limit);
 
+  /// No description provided for @storageFull.
+  ///
+  /// In tr, this message translates to:
+  /// **'Depolama doldu ({limit}). Yer açmak için eski ekleri sil.'**
+  String storageFull(String limit);
+
+  /// No description provided for @storageUsage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Depolama'**
+  String get storageUsage;
+
+  /// No description provided for @storageUsageValue.
+  ///
+  /// In tr, this message translates to:
+  /// **'{used} / {limit} kullanıldı'**
+  String storageUsageValue(String used, String limit);
+
   /// No description provided for @removeAttachment.
   ///
   /// In tr, this message translates to:

@@ -153,6 +153,19 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return 'Stockage plein ($limit). Supprimez d\'anciennes pièces jointes pour libérer de l\'espace.';
+  }
+
+  @override
+  String get storageUsage => 'Stockage';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$used sur $limit utilisés';
+  }
+
+  @override
   String get removeAttachment => 'Supprimer la pièce jointe';
 
   @override

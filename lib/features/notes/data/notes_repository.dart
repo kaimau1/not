@@ -49,6 +49,33 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   });
 });
 
+/// Notların eklerinin BULUTTA kapladığı toplam alan (bayt).
+///
+/// Görüntülü notlar sayılmaz: Storage'a hiç yüklenmiyorlar (bkz.
+/// [AttachmentKind.video]), yani depolama faturasına da girmiyorlar.
+int cloudAttachmentBytes(List<Note> notes) {
+  var total = 0;
+  for (final note in notes) {
+    for (final attachment in note.attachments) {
+      if (attachment.kind == AttachmentKind.video) continue;
+      total += attachment.sizeBytes;
+    }
+  }
+  return total;
+}
+
+/// Kullanılan bulut depolama alanı (bayt) — tavan denetiminin ve Ayarlar'daki
+/// göstergenin kaynağı.
+///
+/// Çöp kutusundaki notlar SAYILMAZ: sayılsaydı "yer açmak için sil" işe
+/// yaramaz görünürdü (çöp 30 gün sonra boşalıyor). Karşılığında gerçek Storage
+/// kullanımı bu sayının biraz üstünde olabilir; istemci tarafı sayım zaten
+/// yaklaşık (bkz. [AppConstants.maxFreeStorageBytes]).
+final storageUsedBytesProvider = Provider<int>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  return cloudAttachmentBytes(notes);
+});
+
 /// Çöp kutusundaki (soft-delete edilmiş) notlar.
 final trashStreamProvider = StreamProvider<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);

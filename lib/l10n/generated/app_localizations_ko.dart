@@ -152,6 +152,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String storageFull(String limit) {
+    return '저장 공간이 가득 찼습니다($limit). 오래된 첨부 파일을 삭제해 공간을 확보하세요.';
+  }
+
+  @override
+  String get storageUsage => '저장 공간';
+
+  @override
+  String storageUsageValue(String used, String limit) {
+    return '$limit 중 $used 사용';
+  }
+
+  @override
   String get removeAttachment => '첨부파일 삭제';
 
   @override
