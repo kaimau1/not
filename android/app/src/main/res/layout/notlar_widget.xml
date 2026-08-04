@@ -7,8 +7,8 @@
      ister) satır sayısı SABİTtir — sağlayıcı boş kalanları GONE yapar.
      Dört satır, 3x3 hücrelik alana sığan en fazla satırdır.
 
-     Renkler values/colors.xml belirteçlerinden gelir; Android 12+ cihazda
-     duvar kâğıdı paletine döner (values-v31/). -->
+     Renkler values/colors.xml (gece: values-night/) belirteçlerinden gelir —
+     uygulamanın kağıt paletiyle aynı. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"

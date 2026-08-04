@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
@@ -15,6 +16,7 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -29,13 +31,14 @@ import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
-import 'dashboard_chips.dart';
+import 'filter_sheet.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
 import 'qr_scan_screen.dart';
 import 'quick_add_fab.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
+import 'voice_capture_sheet.dart';
 
 /// Ana ekran ızgarasının önbellek payı (px). Masonry ızgaranın toplam
 /// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
@@ -284,68 +287,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  /// Dashboard sıralama ölçütünü seçtiren alt sayfa.
-  Future<void> _pickSort() async {
-    final l10n = context.l10n;
-    final current = ref.read(noteSortProvider);
-    final options = <(NoteSort, String, IconData)>[
-      (NoteSort.manual, l10n.sortManual, Icons.drag_indicator),
-      (NoteSort.updated, l10n.sortUpdated, Icons.update),
-      (NoteSort.created, l10n.sortCreated, Icons.schedule_outlined),
-      (NoteSort.title, l10n.sortTitle, Icons.sort_by_alpha),
-    ];
-    final picked = await showModalBottomSheet<NoteSort>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Text(
-                l10n.sortBy,
-                style: Theme.of(sheetContext).textTheme.titleSmall,
-              ),
-            ),
-            for (final (sort, label, icon) in options)
-              ListTile(
-                leading: Icon(icon),
-                title: Text(label),
-                trailing: current == sort
-                    ? Icon(
-                        Icons.check,
-                        color: Theme.of(sheetContext).colorScheme.primary,
-                      )
-                    : null,
-                onTap: () => Navigator.pop(sheetContext, sort),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) ref.read(noteSortProvider.notifier).set(picked);
-  }
+  // Sıralama seçici alt sayfası (_pickSort) kaldırıldı: sıralama artık Süz
+  // levhasının SIRALAMA bölümünde, süzgeçlerle aynı yerde.
 
   /// Ana ekranı yatay çekince (madde 1) aktif görünümü sonraki/önceki
   /// segmente taşır. Gezinme sırası: Tümü → görünür filtreler (kullanıcı
   /// sırası) → klasörler. [direction] +1 sola çekiş (sonraki), -1 sağa çekiş.
   void _cycleFilterFolder(int direction) {
-    final visibleFilters = ref.read(visibleNoteFiltersProvider);
-    // Çip barında görünmeyen klasörler (gizli olanlar ve çipi kapatılanlar)
-    // çekiş turunda da atlanır — yoksa kaydırma kullanıcıyı görünmez bir
-    // klasöre sokuyordu.
+    // Çip barı kalkınca "kullanıcının seçtiği görünür süzgeçler" listesi de
+    // kalktı; çekiş artık süzgeçlerin TAMAMINI geziyor. Gizli klasörler yine
+    // atlanır — kaydırma kullanıcıyı görünmez bir klasöre sokmamalı.
     final revealHidden = ref.read(hiddenFoldersRevealedProvider);
-    final hiddenChips = ref.read(hiddenFolderChipsProvider);
     final folders = [
       for (final f
           in ref.read(foldersStreamProvider).value ?? const <NoteFolder>[])
-        if ((!f.hidden || revealHidden) && !hiddenChips.contains(f.id)) f,
+        if (!f.hidden || revealHidden) f,
     ];
     final segments = <(NoteFilter, String?)>[
-      (NoteFilter.all, null),
-      for (final f in visibleFilters) (f, null),
+      for (final f in NoteFilter.values) (f, null),
       for (final folder in folders) (NoteFilter.all, folder.id),
     ];
     if (segments.length < 2) return;
@@ -407,6 +366,74 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
     await _openNew(id);
+  }
+
+  /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
+  /// eyleme göre notu kurar.
+  ///
+  /// Levha, Ayarlar'daki "basılı tut / bas-başlat" tercihine kendi içinde
+  /// uyar; bu yüzden düğme TEK DOKUNUŞLA açılıyor. Tasarım "basılı tutunca
+  /// açılsın" diyordu ama o zaman bas-başlat'ı seçmiş kullanıcı ana ekranda
+  /// yine basılı tutmak zorunda kalırdı — ayar anlamsızlaşırdı.
+  Future<void> _captureVoiceNote() async {
+    final l10n = context.l10n;
+    final result = await showVoiceCaptureSheet(
+      context,
+      target: VoiceCaptureTarget.dashboard,
+    );
+    if (result == null || !mounted) return;
+
+    // "Asistan oluştursun": notu döküme bakarak asistan kurar — başlık,
+    // maddeler ve HATIRLATICI çıkarır (bkz. voice_assistant.dart).
+    if (result.action == VoiceCaptureAction.compose) {
+      await ref
+          .read(voiceAssistantProvider.notifier)
+          .composeFromTranscript(
+            result.text,
+            nothingHeardText: l10n.voiceNothingHeard,
+            savedText: l10n.voiceNoteSaved,
+            noApiKeyText: l10n.aiNoApiKey,
+            genericErrorText: l10n.assistantGenericError,
+          );
+      return;
+    }
+
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+
+    var text = result.text;
+    final instruction = voiceCaptureInstruction(result.action);
+    if (instruction != null) {
+      try {
+        final rewritten = await ref
+            .read(geminiServiceProvider)
+            .rewriteText(text, instruction);
+        if (rewritten.trim().isNotEmpty) text = rewritten.trim();
+      } on GeminiException catch (e) {
+        if (!mounted) return;
+        // Metin KAYBOLMAZ: yapay zekâ dönüşümü başarısızsa not ham dökümle
+        // kurulur, kullanıcı konuştuklarını yeniden söylemek zorunda kalmasın.
+        _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
+      }
+    }
+
+    final asList = result.action == VoiceCaptureAction.asList;
+    final id = await repo.createNote(
+      asList ? NoteType.checklist : NoteType.text,
+    );
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    if (asList) {
+      repo.updateFields(id, {
+        'items': [
+          for (final line in text.split('\n'))
+            if (line.trim().isNotEmpty)
+              {'id': const Uuid().v4(), 'text': line.trim(), 'done': false},
+        ],
+      });
+    } else {
+      repo.updateFields(id, {'body': text});
+    }
   }
 
   /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
@@ -563,6 +590,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Gizli klasör durumu ⋮ menüsünde kullanılır; sağlayıcılar BURADA (build
     // içinde) okunur — itemBuilder menü açılınca, yani build dışında çalışır.
     final hasHiddenFolders = ref.watch(hiddenFolderIdsProvider).isNotEmpty;
+    // Elle sıralama yalnız süzgeçsiz görünümde anlamlı (alt kümede sıra
+    // bozulur); aksi hâlde menü maddesi hiç görünmez ki kullanıcı tıklayıp
+    // "neden olmuyor" demesin.
+    final reorderAvailable =
+        !searchActive &&
+        ref.watch(noteFilterProvider) == NoteFilter.all &&
+        ref.watch(selectedFolderProvider) == null &&
+        ref.watch(selectedTagProvider) == null;
     final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final searchExpanded =
@@ -742,10 +777,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             actions: searchExpanded
                                 ? const [SizedBox(width: 4)]
                                 : [
-                                    // AI merkezinin AYRI düğmesi kaldırıldı:
-                                    // arama çubuğunun içindeki ✨ (akıllı arama)
-                                    // ile yan yana duruyor, ikisi karışıyordu.
-                                    // Girişi artık ⋮ menüsünün ilk maddesi.
+                                    // Yapay Zeka yeniden KENDİ düğmesi oldu.
+                                    // Bir süre ⋮ menüsünde durmuştu çünkü arama
+                                    // alanının içindeki ✨ (akıllı arama) ile
+                                    // karışıyordu; o ✨ artık Metin/Anlam
+                                    // segmenti olduğundan karışıklık kalktı.
+                                    Tooltip(
+                                      message: l10n.aiHubTitle,
+                                      child: SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: Material(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.secondaryContainer,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            onTap: () => context.push('/ai'),
+                                            child: Icon(
+                                              Icons.auto_awesome,
+                                              size: 22,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondaryContainer,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
                                     PopupMenuButton<String>(
                                       // Menü ekranın altına taşıp sistem gezinme
                                       // çubuğunun arkasında kalıyordu; yükseklik
@@ -756,8 +821,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                             0.55,
                                       ),
                                       onSelected: (action) => switch (action) {
-                                        'ai' => context.push('/ai'),
-                                        'sort' => _pickSort(),
                                         'hidden' => _toggleHiddenFolders(),
                                         'reorder' =>
                                           ref
@@ -773,32 +836,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         'settings' => context.push('/settings'),
                                         _ => null,
                                       },
-                                      // Yalnız sıralama + içerik yerleri +
-                                      // ayarlar kaldı; AI maddeleri /ai'de.
+                                      // Tasarım bu menüyü dörde indiriyor
+                                      // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
+                                      // Sıralama Süz levhasına taşındı; elle
+                                      // sıralama ve gizli klasörler tasarımda
+                                      // hiç yok ama başka girişi olmadığı için
+                                      // burada KALDI — kaldırsaydım iki özellik
+                                      // erişilemez olurdu.
                                       itemBuilder: (context) => [
-                                        _menuItem(
-                                          'ai',
-                                          Icons.auto_awesome,
-                                          l10n.aiHubTitle,
-                                        ),
-                                        const PopupMenuDivider(),
-                                        _menuItem(
-                                          'sort',
-                                          Icons.sort,
-                                          l10n.sortBy,
-                                        ),
                                         // Elle sıralama yalnız süzgeçsiz
                                         // görünümde anlamlı (alt kümede sıra
                                         // bozulur); aksi hâlde madde hiç
                                         // görünmez ki kullanıcı tıklayıp
                                         // "neden olmuyor" demesin.
-                                        if (!searchActive &&
-                                            ref.watch(noteFilterProvider) ==
-                                                NoteFilter.all &&
-                                            ref.watch(selectedFolderProvider) ==
-                                                null &&
-                                            ref.watch(selectedTagProvider) ==
-                                                null)
+                                        if (reorderAvailable)
                                           _menuItem(
                                             'reorder',
                                             Icons.swap_vert,
@@ -815,7 +866,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                 : Icons.visibility_outlined,
                                             l10n.hiddenFoldersMenu,
                                           ),
-                                        const PopupMenuDivider(),
+                                        // Ayırıcı yalnız üstünde madde VARSA:
+                                        // ikisi de gizliyken menü bir çizgiyle
+                                        // başlıyordu, bozuk görünüyordu.
+                                        if (reorderAvailable || hasHiddenFolders)
+                                          const PopupMenuDivider(),
                                         _menuItem(
                                           'reminders',
                                           Icons.alarm_outlined,
@@ -842,9 +897,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     const SizedBox(width: 4),
                                   ],
                           ),
-                        // Filtre + klasör + etiket çipleri tek kompakt satırda,
-                        // kaydırma görünümünün dışında sabit.
-                        const DashboardChipsRow(),
+                        // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
+                        // dokuz artı çipli bar (dashboard_chips.dart) ve ona
+                        // bağlı "hangi çip görünsün" ayarları kaldırıldı;
+                        // süzme tek yoldan, Süz levhasından yapılıyor.
+                        const DashboardFilterRow(),
+                        // Hızlı yakala: "+" → editör → yaz → geri yolunu tek
+                        // satıra indirir. Tasarım bunu kaydırma akışının
+                        // içine koyuyordu; sabit satırda tutuyorum ki liste
+                        // aşağıdayken yukarı kaydırmadan da yazılabilsin.
+                        _QuickCaptureRow(
+                          onCreateChecklist: () =>
+                              _createNote(NoteType.checklist),
+                          onVoice: _captureVoiceNote,
+                        ),
                         Expanded(
                           // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
@@ -990,9 +1056,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Sesli Not Asistanı: sayfa değiştirmeden burada dinler.
-                        const VoiceAssistantButton(),
-                        const SizedBox(height: 6),
+                        // Asistan: ortak dinleme levhasını açar. Eski "Asistan"
+                        // yazılı 68 px'lik yuvarlak düğme kaldırıldı — kayıt
+                        // durumunu levha gösteriyor, düğmenin nefes almasına
+                        // gerek kalmadı.
+                        Tooltip(
+                          message: l10n.voiceAssistantTitle,
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: Material(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(14),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: _captureVoiceNote,
+                                child: Icon(
+                                  Icons.mic_none,
+                                  size: 24,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
                           onVoiceCapture: _createVoiceCaptureNote,
@@ -1065,7 +1157,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         SliverFillRemaining(
           hasScrollBody: false,
           child: searchActive
-              ? EmptyState(icon: Icons.search_off, title: l10n.emptySearch)
+              ? EmptyState(
+                  icon: Icons.search_off,
+                  title: l10n.emptySearch,
+                  // Aramada sonuç yoksa anlamsal aramayı hatırlat: kelimesi
+                  // geçmeyen ama konusu tutan not orada bulunuyor.
+                  subtitle: ref.read(semanticSearchEnabledProvider)
+                      ? null
+                      : l10n.emptySearchSemanticHint,
+                )
               : EmptyState(
                   icon: Icons.sticky_note_2_outlined,
                   title: l10n.emptyNotes,
@@ -1090,6 +1190,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // kalıcı olarak açıktı ve uzun basış sürüklemeyi başlatıyordu; seçmek
     // isteyen kullanıcı kartı kazara taşıyordu. Mod dışında uzun basış
     // her zaman SEÇER.
+
+    final listView = ref.watch(noteListViewProvider);
+
+    /// Liste görünümü: tek sütun, kompakt satır. Sürükle-sırala BURADA yok —
+    /// o mod ızgaraya özgü (hücre genişliğiyle çalışıyor); liste görünümünde
+    /// ⋮ menüsündeki sıralama maddesi zaten görünmüyor.
+    Widget rows(List<Note> items) => SliverList.separated(
+      itemCount: items.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 2),
+      itemBuilder: (context, index) {
+        final note = items[index];
+        final focused = ref.watch(focusedNoteProvider) == note.id;
+        return _FocusHalo(
+          focused: focused,
+          noteId: note.id,
+          child: GestureDetector(
+            onLongPress: () =>
+                ref.read(selectedNoteIdsProvider.notifier).toggle(note.id),
+            child: NoteListRow(
+              note: note,
+              selected: ref.watch(selectedNoteIdsProvider).contains(note.id),
+              selectionActive: selectionActive,
+            ),
+          ),
+        );
+      },
+    );
 
     Widget grid(List<Note> items) => SliverMasonryGrid.count(
       crossAxisCount: columns,
@@ -1132,32 +1259,86 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
     );
 
-    Widget header(String text) => SliverToBoxAdapter(
+    // Başlık metni ZATEN büyük harfli anahtarlardan gelir; kodda
+    // `toUpperCase()` çağırmıyoruz — Türkçe'de "Etiket" → "ETIKET" olur
+    // (noktasız I), Dart'ın büyük harfe çevirmesi yerel ayar tanımıyor.
+    Widget header(String text, int count) => SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-        child: Text(
-          text.toUpperCase(),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            letterSpacing: 1.1,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
+        child: Row(
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Divider(
+                height: 1,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.sectionNoteCount(count),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );
 
     const gridPadding = EdgeInsets.symmetric(horizontal: 12);
 
-    if (pinned.isEmpty || others.isEmpty) {
+    // Tarih kovaları yalnız "Son düzenlenen" sıralamasında anlamlı: kullanıcı
+    // Başlık ya da Renk sıralamasını seçtiyse "BUGÜN" başlığı altındaki sıra
+    // tarihe göre olmaz, başlık yalan söyler. O modlarda tek akış kalır.
+    final bucketsActive = ref.read(noteSortProvider) == NoteSort.updated;
+
+    if (!bucketsActive) {
+      if (pinned.isEmpty || others.isEmpty) {
+        return [
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          SliverPadding(padding: gridPadding, sliver: listView ? rows(notes) : grid(notes)),
+        ];
+      }
       return [
-        const SliverToBoxAdapter(child: SizedBox(height: 8)),
-        SliverPadding(padding: gridPadding, sliver: grid(notes)),
+        header(l10n.sectionPinnedShort, pinned.length),
+        SliverPadding(padding: gridPadding, sliver: listView ? rows(pinned) : grid(pinned)),
+        header(l10n.sectionOthers, others.length),
+        SliverPadding(padding: gridPadding, sliver: listView ? rows(others) : grid(others)),
       ];
     }
+
+    final buckets = <(String, List<Note>)>[
+      (l10n.sectionPinnedShort, pinned),
+      for (final (label, list) in dateBuckets(others, DateTime.now()))
+        (
+          switch (label) {
+            NoteBucket.today => l10n.sectionToday,
+            NoteBucket.thisWeek => l10n.sectionThisWeek,
+            NoteBucket.earlier => l10n.sectionEarlier,
+          },
+          list,
+        ),
+    ];
+
     return [
-      header(l10n.sectionPinned),
-      SliverPadding(padding: gridPadding, sliver: grid(pinned)),
-      header(l10n.sectionOthers),
-      SliverPadding(padding: gridPadding, sliver: grid(others)),
+      // Boş kova hiç çizilmez — başlık tek başına duran bir çizgi olurdu.
+      for (final (label, list) in buckets)
+        if (list.isNotEmpty) ...[
+          header(label, list.length),
+          SliverPadding(padding: gridPadding, sliver: listView ? rows(list) : grid(list)),
+        ],
     ];
   }
 }
@@ -1232,46 +1413,133 @@ class _SearchField extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final query = ref.watch(searchQueryProvider);
     final semantic = ref.watch(semanticSearchEnabledProvider);
     final scheme = Theme.of(context).colorScheme;
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      onChanged: (value) => ref.read(searchQueryProvider.notifier).set(value),
-      // Alan dışına dokununca odak bırakılır; bar daralır, butonlar döner.
-      onTapOutside: (_) => focusNode?.unfocus(),
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: semantic
-            ? context.l10n.semanticSearchHint
-            : context.l10n.searchHint,
-        prefixIcon: const Icon(Icons.search, size: 20),
-        suffixIcon: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              tooltip: context.l10n.semanticSearchToggle,
-              icon: Icon(
-                Icons.auto_awesome,
-                size: 18,
-                color: semantic ? scheme.primary : scheme.onSurfaceVariant,
+    // Anlamsal arama ESKİDEN alanın içindeki ✨ düğmesiydi: açık mı kapalı mı
+    // olduğu yalnız ikon renginden anlaşılıyor, "akıllı arama" diye bir şeyin
+    // varlığı hiç fark edilmiyordu. İki sekmeli segment modu okunur kılıyor.
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          Icon(Icons.search, size: 19, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              onChanged: (value) =>
+                  ref.read(searchQueryProvider.notifier).set(value),
+              // Alan dışına dokununca odak bırakılır; bar daralır.
+              onTapOutside: (_) => focusNode?.unfocus(),
+              textInputAction: TextInputAction.search,
+              style: const TextStyle(fontSize: 13.5),
+              decoration: InputDecoration(
+                hintText: semantic ? l10n.semanticSearchHint : l10n.searchHint,
+                hintStyle: TextStyle(
+                  fontSize: 13.5,
+                  color: scheme.onSurfaceVariant,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
-              onPressed: () =>
-                  ref.read(semanticSearchEnabledProvider.notifier).toggle(),
             ),
-            if (query.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: () {
-                  controller.clear();
-                  ref.read(searchQueryProvider.notifier).set('');
-                },
+          ),
+          if (query.isNotEmpty)
+            IconButton(
+              tooltip: l10n.close,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: () {
+                controller.clear();
+                ref.read(searchQueryProvider.notifier).set('');
+              },
+            ),
+          Padding(
+            padding: const EdgeInsets.all(2),
+            child: Container(
+              decoration: BoxDecoration(
+                color: scheme.surface,
+                borderRadius: BorderRadius.circular(8),
               ),
-          ],
+              padding: const EdgeInsets.all(2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _SearchModeTab(
+                    label: l10n.searchModeText,
+                    selected: !semantic,
+                    onTap: () {
+                      if (semantic) {
+                        ref
+                            .read(semanticSearchEnabledProvider.notifier)
+                            .toggle();
+                      }
+                    },
+                  ),
+                  _SearchModeTab(
+                    label: l10n.searchModeMeaning,
+                    selected: semantic,
+                    onTap: () {
+                      if (!semantic) {
+                        ref
+                            .read(semanticSearchEnabledProvider.notifier)
+                            .toggle();
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+}
+
+class _SearchModeTab extends StatelessWidget {
+  const _SearchModeTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? scheme.primary : Colors.transparent,
+      borderRadius: BorderRadius.circular(6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(6),
+        onTap: onTap,
+        child: Container(
+          height: 26,
+          padding: const EdgeInsets.symmetric(horizontal: 9),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w600,
+              color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+            ),
+          ),
         ),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(vertical: 10),
       ),
     );
   }
@@ -1385,4 +1653,161 @@ class _FocusHaloState extends State<_FocusHalo>
       child: widget.child,
     );
   }
+}
+
+/// Ana ekranın en üstündeki tek satırlık not girişi.
+///
+/// Kısa notlar için editöre gitmek gereksiz bir tur: aç, yaz, geri dön.
+/// Burada Enter'a basmak notu doğrudan kaydeder ve satır temizlenir; kullanıcı
+/// arka arkaya beş not düşecekse ekrandan hiç ayrılmaz.
+class _QuickCaptureRow extends ConsumerStatefulWidget {
+  const _QuickCaptureRow({
+    required this.onCreateChecklist,
+    required this.onVoice,
+  });
+
+  final VoidCallback onCreateChecklist;
+  final VoidCallback onVoice;
+
+  @override
+  ConsumerState<_QuickCaptureRow> createState() => _QuickCaptureRowState();
+}
+
+class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
+  final _controller = TextEditingController();
+  bool _hasText = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    // Satır ÖNCE temizlenir: kayıt ağ üzerinden dönerken kullanıcı ikinci
+    // notu yazmaya başlayabilsin, yazdığı harfler ilkinin üstüne binmesin.
+    _controller.clear();
+    setState(() => _hasText = false);
+    final id = await repo.createNote(NoteType.text);
+    final folderId = ref.read(selectedFolderProvider);
+    repo.updateFields(id, {'body': text, 'folderId': ?folderId});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: Container(
+        height: 46,
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                onChanged: (v) {
+                  final has = v.trim().isNotEmpty;
+                  if (has != _hasText) setState(() => _hasText = has);
+                },
+                onSubmitted: (_) => _save(),
+                textInputAction: TextInputAction.done,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  hintText: l10n.quickCaptureHint,
+                  hintStyle: TextStyle(
+                    fontSize: 14.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+            if (_hasText)
+              SizedBox(
+                height: 34,
+                child: FilledButton.icon(
+                  onPressed: _save,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                  ),
+                  icon: const Icon(Icons.check, size: 16),
+                  label: Text(
+                    l10n.quickCaptureSave,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              )
+            else ...[
+              _QuickCaptureIcon(
+                icon: Icons.checklist,
+                tooltip: l10n.filterChecklist,
+                onTap: widget.onCreateChecklist,
+              ),
+              _QuickCaptureIcon(
+                icon: Icons.mic_none,
+                tooltip: l10n.voiceAssistantTitle,
+                onTap: widget.onVoice,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickCaptureIcon extends StatelessWidget {
+  const _QuickCaptureIcon({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip,
+    child: SizedBox(
+      width: 34,
+      height: 34,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(9),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(9),
+          onTap: onTap,
+          child: Icon(
+            icon,
+            size: 19,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    ),
+  );
 }

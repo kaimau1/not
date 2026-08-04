@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Not listesi widget'ının başlık satırındaki mikrofon düğmesinin zemini:
-     yuvarlak vurgu hapı. Dokunma hedefinin 44dp'nin altına düşmemesi için
-     düzende boyut değil PADDING ile büyütülür (ikon 24dp, kutu 44dp). -->
+<!-- Not listesi widget'ının başlık satırındaki mikrofon düğmesinin zemini.
+     Yuvarlak hap değil, yumuşak köşeli kare kapsül: yeni tasarım dilinde
+     44dp'lik ikon düğmeleri r12 kare (bkz. ana ekrandaki Yapay Zeka / ⋯
+     düğmeleri). Yarıçap iç kart belirtecinden gelir, böylece Android 12+
+     cihazda launcher'ın kendi iç yarıçapına uyar.
+     Dokunma hedefinin 44dp'nin altına düşmemesi için düzende boyut değil
+     PADDING ile büyütülür (ikon 24dp, kutu 44dp). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <solid android:color="@color/widget_accent_end" />
+    android:shape="rectangle">
+    <solid android:color="@color/widget_accent" />
+    <corners android:radius="@dimen/widget_inner_radius" />
 </shape>

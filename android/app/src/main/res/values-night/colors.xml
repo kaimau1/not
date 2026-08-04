@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget renk belirteçleri — KOYU tema, Android 12 öncesi yedek.
-     Bkz. values/colors.xml (açıklama orada). -->
+<!-- Widget renk belirteçleri — KOYU tema, TÜM cihazlar.
+     Kağıt paletinin gece karşılığı; simgenin koyu varyantıyla aynı zemin
+     (#241C10). Sistem gece moduna göre seçilir — uygulamadaki tema seçimini
+     BİLMEZ (widget'ın uygulama temasını giymesi ayrı bir iş).
+     Bkz. values/colors.xml (karar açıklaması orada). -->
 <resources>
-    <color name="widget_surface">#16161A</color>
-    <color name="widget_row">#22222A</color>
-    <color name="widget_outline">#38FFFFFF</color>
+    <color name="widget_surface">#241C10</color>
+    <color name="widget_row">#30271A</color>
+    <color name="widget_outline">#4E453B</color>
 
-    <color name="widget_on_surface">#E8E8ED</color>
-    <color name="widget_on_surface_muted">#9A9AA5</color>
+    <color name="widget_on_surface">#F5EDD8</color>
+    <color name="widget_on_surface_muted">#CFC5B8</color>
 
-    <color name="widget_accent_start">#8994F5</color>
-    <color name="widget_accent_end">#4C5AC8</color>
-    <color name="widget_on_accent">#0B0B10</color>
+    <color name="widget_accent">#FFDDAE</color>
+    <color name="widget_on_accent">#261A01</color>
 
-    <color name="widget_note_start">#5BD494</color>
-    <color name="widget_note_end">#35A96C</color>
-    <color name="widget_on_note">#0B0B10</color>
+    <color name="widget_note">#E1AD66</color>
+    <color name="widget_on_note">#241C10</color>
 
-    <color name="widget_icon">#E8E8ED</color>
-    <color name="widget_icon_accent">#9BB0FF</color>
+    <color name="widget_icon">#F5EDD8</color>
+    <color name="widget_icon_accent">#FFDDAE</color>
 </resources>

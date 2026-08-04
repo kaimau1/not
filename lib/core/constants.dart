@@ -101,8 +101,18 @@ abstract final class AppConstants {
     'GOOGLE_DESKTOP_CLIENT_SECRET',
   );
 
-  // Android'de google_sign_in için sunucu (web) client ID.
-  // Boş bırakılırsa eklenti google-services.json içinden okur.
+  // Android'de google_sign_in için sunucu (web) client ID — ZORUNLU.
+  //
+  // DİKKAT: "boş bırakılırsa eklenti google-services.json içinden okur" DOĞRU
+  // DEĞİL — bu repoda google-services.json yok (Firebase yapılandırması
+  // firebase_options.dart üzerinden geliyor). Define geçilmezse uygulama
+  // sorunsuz DERLENİR ama giriş çalışma anında
+  // "serverClientId must be provided on Android" ile çöker; hata ancak
+  // telefonda görülür. 2026-08-04'te yerel bir release derlemesi tam bu
+  // yüzden kırık çıktı.
+  //
+  // Yerel derleme:  flutter build apk --release --dart-define-from-file=env.json
+  // CI: aynı değeri GitHub Secrets'tan geçer (.github/workflows/build.yml).
   static const String serverClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
   );

@@ -53,12 +53,12 @@ import '../color_picker_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
+import '../voice_capture_sheet.dart';
 import 'ai_result_sheet.dart';
 import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
-import 'dictation_sheet.dart';
 import 'drawing_screen.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
@@ -376,9 +376,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
 
-  /// Doğrudan (alt sayfasız) dikte durumu.
-  StreamSubscription<({String? text, double? level})>? _speechSub;
-  bool _dictating = false;
 
   @override
   void initState() {
@@ -552,7 +549,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (note.title.trim().isEmpty) _autoTitleInBackground(note);
     }
     _loadGuard?.cancel();
-    _speechSub?.cancel();
     _debouncer.dispose();
     _sub?.close();
     _titleController.dispose();
@@ -2402,35 +2398,180 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Sesli yazdırma. Cihazın yerleşik tanıması varsa düğme DOĞRUDAN dikteyi
   /// başlatır (alt sayfa açılmaz): konuşma anında nota akar, düğmeye tekrar
   /// basınca durur. Yerleşik tanıma yoksa (Windows) eski alt sayfa açılır.
-  Future<void> _dictate() async {
-    final note = _note;
-    if (note == null) return;
-    if (_dictating) {
-      await _stopInlineDictation();
+  /// Alt bardaki üç araç segmentinden biri.
+  Widget _toolSegment({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool active = false,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: active ? scheme.primaryContainer : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: active ? scheme.onPrimaryContainer : scheme.onSurface,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: active ? scheme.onPrimaryContainer : scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// "Ekle" segmenti: küçük bir açılır liste.
+  ///
+  /// Tasarımdaki dört satırın (madde, fotoğraf, belge, zemin rengi) altına
+  /// "tüm ekler" satırı EKLENDİ: mevcut ek menüsünde kamera, belge tarama, QR,
+  /// slayt, çizim, ses ve video da var; dört satıra indirseydik bunlar
+  /// erişilemez olurdu.
+  Widget _addToolMenu(AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    return PopupMenuButton<String>(
+      tooltip: l10n.addAttachment,
+      offset: const Offset(0, -8),
+      constraints: const BoxConstraints(minWidth: 206),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      onSelected: (value) {
+        switch (value) {
+          case 'item':
+            _addChecklistItem();
+          case 'photo':
+            _pickImage();
+          case 'document':
+            _pickPdf();
+          case 'color':
+            _showColorSheet();
+          case 'more':
+            _showAttachMenu();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'item',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.checklist),
+            title: Text(l10n.newItemHint),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'photo',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.image_outlined),
+            title: Text(l10n.addImage),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'document',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.picture_as_pdf_outlined),
+            title: Text(l10n.addPdf),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'color',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.palette_outlined),
+            title: Text(l10n.color),
+          ),
+        ),
+        const PopupMenuDivider(),
+        PopupMenuItem(
+          value: 'more',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.attach_file),
+            title: Text(l10n.addAttachment),
+          ),
+        ),
+      ],
+      child: Container(
+        height: 38,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, size: 18, color: scheme.onSurface),
+            const SizedBox(width: 6),
+            Text(
+              l10n.addAttachment,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, size: 18, color: scheme.onSurface),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
+  ///
+  /// ESKİDEN dikte doğrudan gövdeye canlı yazıyordu; kullanıcı yanlış tanınan
+  /// bir cümleyi ancak nottan silerek düzeltebiliyordu. Artık metin önce
+  /// levhada gözden geçiriliyor, nota yalnız onaylanan hâli giriyor.
+  Future<void> _captureVoice() async {
+    final result = await showVoiceCaptureSheet(
+      context,
+      target: VoiceCaptureTarget.editor,
+    );
+    if (result == null || !mounted) return;
+
+    final instruction = voiceCaptureInstruction(result.action);
+    if (instruction == null) {
+      _appendText(result.text);
       return;
     }
-    if (await DeviceSpeech.isAvailable()) {
-      // İzin YOKKEN SpeechRecognizer sormadan hata verir; önce iste.
-      if (!await DeviceSpeech.ensureMicPermission()) {
-        if (mounted) _showSnack(context.l10n.micPermissionDenied);
-        return;
-      }
-      await _startInlineDictation(note);
-      return;
+
+    final l10n = context.l10n;
+    setState(() => _aiTask = l10n.aiThinking);
+    try {
+      final text = await ref
+          .read(geminiServiceProvider)
+          .rewriteText(result.text, instruction);
+      if (!mounted) return;
+      _appendText(text.trim().isEmpty ? result.text : text.trim());
+    } on GeminiException catch (e) {
+      if (mounted) _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
+    } catch (e) {
+      if (mounted) _showSnack(l10n.aiError(e.toString()));
+    } finally {
+      if (mounted) setState(() => _aiTask = null);
     }
-    // Yerleşik tanıma yok: eski alt sayfa yolu.
-    if (!mounted) return;
-    if (note.type == NoteType.text) {
-      final base = _bodyController.logicalText;
-      final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
-      void writeLive(String full) => _writeDictated(baseWithSep, full);
-      final text = await showDictationSheet(context, onPartial: writeLive);
-      if (text != null && text.trim().isNotEmpty) writeLive(text.trim());
-      return;
-    }
-    final text = await showDictationSheet(context);
-    if (text == null || text.trim().isEmpty) return;
-    _appendText(text);
   }
 
   /// Dikte metnini gövdeye yazar: taban (mevcut gövde + ayraç) sabit kalır,
@@ -2447,65 +2588,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _mutate((n) => n.copyWith(body: combined), immediate: true);
   }
 
-  Future<void> _startInlineDictation(Note note) async {
-    final base = _bodyController.logicalText;
-    final baseWithSep = base.trim().isEmpty ? '' : '${base.trimRight()}\n';
-    _dictationItemIds.clear();
-    setState(() => _dictating = true);
-    _speechSub = DeviceSpeech.listen().listen(
-      (event) {
-        final text = event.text;
-        if (text == null) return;
-        // Metin notunda anlık gövdeye; liste tiplerinde her duraklama
-        // (satır sonu) anında ayrı madde olarak eklenir — eskiden döküm
-        // yalnız "Bitir"de tek öğe olarak düşüyordu.
-        if (note.type == NoteType.text) {
-          _writeDictated(baseWithSep, text);
-        } else {
-          _syncDictatedItems(text);
-        }
-      },
-      onError: (Object e) {
-        _stopInlineDictation();
-        // Cihaz tanıma hatası — AI ile ilgisi yok; "yapay zeka isteği
-        // başarısız" gibi yanıltıcı bir mesaj gösterme.
-        if (mounted) _showSnack(context.l10n.speechRecognitionFailed);
-      },
-    );
-  }
-
-  /// Bu dikte oturumunun eklediği öğelerin kimlikleri: her olayda dökümün
-  /// tamamı yeniden gelir; önceki dikte öğeleri yenileriyle değiştirilir,
-  /// kullanıcının elle yazdığı öğelere dokunulmaz.
-  final List<String> _dictationItemIds = [];
-
-  void _syncDictatedItems(String full) {
-    const uuid = Uuid();
-    final lines = [
-      for (final line in full.split('\n'))
-        if (line.trim().isNotEmpty) line.trim(),
-    ];
-    _mutate((n) {
-      // Sondaki boş "yeni öğe" satırları ve önceki dikte öğeleri çıkarılır.
-      final kept = [
-        for (final item in n.items)
-          if (!_dictationItemIds.contains(item.id)) item,
-      ];
-      while (kept.isNotEmpty && kept.last.text.trim().isEmpty) {
-        kept.removeLast();
-      }
-      _dictationItemIds
-        ..clear()
-        ..addAll([for (final _ in lines) uuid.v4()]);
-      return n.copyWith(
-        items: [
-          ...kept,
-          for (var i = 0; i < lines.length; i++)
-            NoteItem(id: _dictationItemIds[i], text: lines[i]),
-        ],
-      );
-    }, immediate: true);
-  }
+  // Satır satır CANLI dikte (gövdeye anında yazan `_startInlineDictation` ve
+  // liste notunda her duraklamayı madde yapan `_syncDictatedItems`) kaldırıldı:
+  // yerini sesli yakalama levhası aldı (bkz. `_captureVoice`). Yanlış tanınan
+  // cümle artık nota girmeden levhada düzeltiliyor. `_writeDictated` duruyor —
+  // Keep tarzı sesli notu (`_startVoiceCapture`) o kullanıyor.
 
   /// Keep tarzı sesli not: Google'ın sesli giriş ekranı açılır; dönüşte
   /// metin nota yazılır, Google'ın KENDİ kaydettiği ses de ek olur.
@@ -2566,20 +2653,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
-  }
-
-  Future<void> _stopInlineDictation() async {
-    await DeviceSpeech.stop();
-    // Son sonucun gelmesi için kısa bekleme (tanıyıcı stop sonrası yazar).
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    await _speechSub?.cancel();
-    _speechSub = null;
-    if (!mounted) return;
-    setState(() => _dictating = false);
-    // Liste tiplerinde öğeler dikte sırasında anlık eklendi (_syncDictatedItems);
-    // burada yalnız oturum durumu temizlenir — sonraki dikte bu öğeleri
-    // "kendi öğesi" sanıp değiştirmesin.
-    _dictationItemIds.clear();
   }
 
   /// Dahili hesap makinesi: sonucu metin notunda imlecin bulunduğu yere,
@@ -2937,25 +3010,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         note.body.trim().isEmpty &&
         imageAttachments.isNotEmpty;
 
+    // Son güncelleme zamanı artık ÜST BARDA (başlık yerinde) duruyor: gövdenin
+    // içinde her açılışta bir satır yer kaplıyordu ve "Düzenlendi:" öneki
+    // tarihin kendisinden uzundu. Üst barda önek olmadan okunuyor.
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        titleField,
-        metaChips,
-        // Son güncelleme zamanı — kullanıcı en son ne zaman dokunduğunu görür.
-        if (note.updatedAt != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
-            child: Text(
-              l10n.editedAt(
-                DateFormat('d MMM y HH:mm').format(note.updatedAt!),
-              ),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-      ],
+      children: [titleField, metaChips],
     );
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
@@ -3126,6 +3186,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         backgroundColor: background,
         appBar: AppBar(
           backgroundColor: background,
+          // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
+          // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
+          // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
+          // menüsüne taşındığı için durum bir yerde görünmeliydi.
+          titleSpacing: 0,
+          title: note.updatedAt == null
+              ? null
+              : Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        DateFormat('d MMM y HH:mm').format(note.updatedAt!),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    if (note.pinned) ...[
+                      const SizedBox(width: 6),
+                      const Icon(Icons.push_pin, size: 14),
+                    ],
+                    if (note.starred) ...[
+                      const SizedBox(width: 6),
+                      Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+                    ],
+                  ],
+                ),
           actions: [
             Padding(
               padding: const EdgeInsetsDirectional.only(end: 4),
@@ -3150,30 +3241,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               icon: const Icon(Icons.undo),
               onPressed: _canUndo ? _undo : null,
             ),
+            // Hesap makinesi alt bardan buraya taşındı: alt bar üç etiketli
+            // araca indi, hesap makinesi ise metin biçimiyle ilgisi olmayan
+            // ayrı bir araç.
             IconButton(
-              tooltip: note.starred ? l10n.unstar : l10n.star,
-              icon: Icon(
-                note.starred ? Icons.star : Icons.star_outline,
-                color: note.starred ? Colors.amber.shade600 : null,
-              ),
-              onPressed: () => _mutate(
-                (n) => n.copyWith(starred: !n.starred),
-                immediate: true,
-              ),
+              tooltip: l10n.calculatorTitle,
+              icon: const Icon(Icons.calculate_outlined),
+              onPressed: _openCalculator,
             ),
-            IconButton(
-              tooltip: note.pinned ? l10n.unpin : l10n.pin,
-              icon: Icon(
-                note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-              ),
-              onPressed: () => _mutate(
-                (n) => n.copyWith(pinned: !n.pinned),
-                immediate: true,
-              ),
-            ),
+            // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
+            // barın başlık alanındaki göstergelerden okunuyor.
             PopupMenuButton<String>(
               onSelected: (action) {
                 switch (action) {
+                  case 'pin':
+                    _mutate(
+                      (n) => n.copyWith(pinned: !n.pinned),
+                      immediate: true,
+                    );
+                  case 'star':
+                    _mutate(
+                      (n) => n.copyWith(starred: !n.starred),
+                      immediate: true,
+                    );
                   case 'share':
                     _share();
                   case 'pdf':
@@ -3210,6 +3300,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 }
               },
               itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'pin',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      note.pinned
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                    ),
+                    title: Text(note.pinned ? l10n.unpin : l10n.pin),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'star',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      note.starred ? Icons.star : Icons.star_outline,
+                      color: note.starred ? Colors.amber.shade600 : null,
+                    ),
+                    title: Text(note.starred ? l10n.unstar : l10n.star),
+                  ),
+                ),
+                const PopupMenuDivider(),
                 PopupMenuItem(
                   value: 'share',
                   child: ListTile(
@@ -3366,7 +3482,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
                   // açık kalabiliyordu.
                   if (_aiTask != null) _AiBanner(label: _aiTask!),
-                  if (_dictating) _DictationBanner(onStop: _dictate),
                   // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                   // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                   if (_formatBarOpen)
@@ -3409,106 +3524,116 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         ),
                       ),
                     ),
+                  // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
+                  // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
+                  // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
+                  // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
+                  // "Ekle" açılırına taşındı.
                   BottomAppBar(
                     color: background,
-                    height: 56,
+                    height: 64,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                     child: Row(
                       children: [
-                        IconButton(
-                          tooltip: l10n.color,
-                          icon: const Icon(Icons.palette_outlined),
-                          onPressed: _showColorSheet,
-                        ),
-                        IconButton(
-                          tooltip: l10n.addAttachment,
-                          icon: const Icon(Icons.attach_file),
-                          onPressed: _showAttachMenu,
-                        ),
-                        IconButton(
-                          tooltip: l10n.calculatorTitle,
-                          icon: const Icon(Icons.calculate_outlined),
-                          onPressed: _openCalculator,
-                        ),
-                        // Biçim çubuğu: yazı tipi/boyut ve karakter biçimleri tek
-                        // dokunuşluk mesafede. Eskiden yazı tipi palet sayfasının,
-                        // biçim ise seçim menüsünün içine gömülüydü.
-                        IconButton(
-                          tooltip: l10n.formatTitle,
-                          isSelected: _formatBarOpen,
-                          icon: const Icon(Icons.text_format),
-                          onPressed: () =>
-                              setState(() => _formatBarOpen = !_formatBarOpen),
-                        ),
-                        // Karışık içerik: metin notunun altına checklist maddesi
-                        // ekler. Yalnızca metin notunda anlamlı (liste notu zaten
-                        // maddeden oluşur).
-                        if (note.type == NoteType.text)
-                          IconButton(
-                            tooltip: l10n.newItemHint,
-                            icon: const Icon(Icons.checklist),
-                            onPressed: _addChecklistItem,
-                          )
-                        // Liste notunun aynası: maddelerin üstüne serbest metin
-                        // ekler (kullanıcı isteği). Gövde zaten doluysa düğme
-                        // yalnız alana odaklanır.
-                        else
-                          IconButton(
-                            tooltip: l10n.addTextBlock,
-                            icon: const Icon(Icons.notes),
-                            onPressed: () {
-                              setState(() => _listBodyOpen = true);
-                              WidgetsBinding.instance.addPostFrameCallback(
-                                (_) => _bodyFocus.requestFocus(),
-                              );
-                            },
+                        Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface,
+                            borderRadius: BorderRadius.circular(13),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                            ),
                           ),
-                        const Spacer(),
-                        // Mikrofon başparmak bölgesinde, AI'ın yanında ve dolgulu:
-                        // yardımcı ikonların arasında kaybolmaz. Ses kaydı eki artık
-                        // ataş menüsünde; bu düğme konuşmayı anlık yazıya döker.
-                        // Dikte düğmesi: doğrudan başlatır/durdurur, büyük ve dolgulu.
-                        // Dinlerken renk değişir ki kaydın sürdüğü açıkça görülsün.
-                        SizedBox(
-                          width: 52,
-                          height: 52,
-                          child: _dictating
-                              ? IconButton.filled(
-                                  tooltip: l10n.stopAndSave,
-                                  iconSize: 28,
-                                  style: IconButton.styleFrom(
-                                    backgroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.error,
-                                    foregroundColor: Theme.of(
-                                      context,
-                                    ).colorScheme.onError,
-                                  ),
-                                  icon: const Icon(Icons.stop),
-                                  onPressed: _dictate,
-                                )
-                              : IconButton.filledTonal(
-                                  tooltip: l10n.liveDictation,
-                                  iconSize: 28,
-                                  icon: const Icon(Icons.mic_none),
-                                  onPressed: _dictate,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _toolSegment(
+                                icon: Icons.text_format,
+                                label: l10n.formatTitle,
+                                active: _formatBarOpen,
+                                onTap: () => setState(
+                                  () => _formatBarOpen = !_formatBarOpen,
                                 ),
+                              ),
+                              const SizedBox(width: 3),
+                              // Karışık içerik: metin notunun altına checklist
+                              // maddesi ekler. Liste notunda aynası çalışır —
+                              // maddelerin üstüne serbest metin ekler.
+                              if (note.type == NoteType.text)
+                                _toolSegment(
+                                  icon: Icons.checklist,
+                                  label: l10n.editorToolList,
+                                  onTap: _addChecklistItem,
+                                )
+                              else
+                                _toolSegment(
+                                  icon: Icons.notes,
+                                  label: l10n.addTextBlock,
+                                  onTap: () {
+                                    setState(() => _listBodyOpen = true);
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback(
+                                          (_) => _bodyFocus.requestFocus(),
+                                        );
+                                  },
+                                ),
+                              const SizedBox(width: 3),
+                              _addToolMenu(l10n),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 4),
+                        const Spacer(),
                         Tooltip(
                           message: l10n.aiTitle,
-                          child: FilledButton.tonalIcon(
-                            onPressed: () => showAiSheet(
-                              context,
-                              note,
-                              onAppendText: _appendText,
-                              onReplaceText: _replaceText,
-                              onCreateNote: _createNoteFromText,
+                          child: SizedBox(
+                            height: 44,
+                            child: FilledButton.tonalIcon(
+                              onPressed: () => showAiSheet(
+                                context,
+                                note,
+                                onAppendText: _appendText,
+                                onReplaceText: _replaceText,
+                                onCreateNote: _createNoteFromText,
+                              ),
+                              style: FilledButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                              icon: const Icon(Icons.auto_awesome, size: 19),
+                              // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
+                              // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
+                              // dilde aynı okunur; tam adı ipucunda duruyor.
+                              label: const Text('AI'),
                             ),
-                            icon: const Icon(Icons.auto_awesome, size: 18),
-                            // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
-                            // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
-                            // dilde aynı okunur; tam adı ipucunda duruyor.
-                            label: const Text('AI'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
+                        // yakalama editörün en sık kullanılan girişi.
+                        Tooltip(
+                          message: l10n.liveDictation,
+                          child: SizedBox(
+                            width: 50,
+                            height: 50,
+                            child: Material(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(14),
+                              elevation: 2,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: _captureVoice,
+                                child: Icon(
+                                  Icons.mic_none,
+                                  size: 25,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -3573,44 +3698,3 @@ class _AiBanner extends StatelessWidget {
   }
 }
 
-class _DictationBanner extends StatelessWidget {
-  const _DictationBanner({required this.onStop});
-
-  final VoidCallback onStop;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.errorContainer,
-      child: InkWell(
-        onTap: onStop,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              Icon(Icons.mic, size: 18, color: scheme.onErrorContainer),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  context.l10n.dictationListening,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onErrorContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Text(
-                context.l10n.stopAndSave,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.onErrorContainer,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

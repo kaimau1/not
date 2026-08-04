@@ -232,6 +232,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get copied => '已复制';
 
   @override
+  String get settingsSearchHint => '搜索设置 — “简报”, “麦克风”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return '没有匹配“$query”的设置';
+  }
+
+  @override
   String get settings => '设置';
 
   @override
@@ -728,6 +736,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get voiceHeardLive => '检测到说话声';
+
+  @override
+  String get voiceCaptureReady => '语音已就绪';
+
+  @override
+  String get voiceCaptureEditHint => '点击文本进行编辑';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · 自动标点';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => '添加到笔记';
+
+  @override
+  String get voiceCaptureCreateNote => '创建新笔记';
+
+  @override
+  String get voiceCaptureRestart => '重新录音';
+
+  @override
+  String get voiceChipSummarizeAdd => '添加为摘要';
+
+  @override
+  String get voiceChipSummarizeSave => '保存为摘要';
+
+  @override
+  String get voiceChipToItems => '拆分为条目';
+
+  @override
+  String get voiceChipAsList => '转为清单';
+
+  @override
+  String get voiceChipFix => '整理内容';
+
+  @override
+  String get voiceChipCompose => '让助手来写';
+
+  @override
+  String get editorToolList => '列表';
 
   @override
   String get permissionsTitle => '权限';
@@ -1315,6 +1364,137 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filterOthers => '其他';
+
+  @override
+  String get chatSuggestion1 => '我的购物清单还缺什么？';
+
+  @override
+  String get chatSuggestion2 => '总结本周的工作笔记';
+
+  @override
+  String get chatSuggestion3 => '我明天有提醒吗？';
+
+  @override
+  String get aiPointsToday => '今日积分';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => '午夜重置';
+
+  @override
+  String get aiChatWithNotes => '与笔记对话';
+
+  @override
+  String get aiChatInputHint => '询问关于笔记的内容…';
+
+  @override
+  String get aiChatLooking => '正在查找笔记…';
+
+  @override
+  String get aiChatFullScreen => '全屏';
+
+  @override
+  String get aiOnYourNotes => '基于笔记';
+
+  @override
+  String get aiRecentOps => '最近操作';
+
+  @override
+  String get aiTaskWeekSummary => '总结本周';
+
+  @override
+  String get aiTaskWeekSummaryInfo => '过去7天的总结';
+
+  @override
+  String get aiTaskTagUntagged => '为未分类笔记添加标签';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count 条笔记等待标记';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => '建议标题';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count 条笔记没有标题';
+  }
+
+  @override
+  String get sectionPinnedShort => '已置顶';
+
+  @override
+  String get sectionToday => '今天';
+
+  @override
+  String get sectionThisWeek => '本周';
+
+  @override
+  String get sectionEarlier => '更早';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count 条笔记';
+  }
+
+  @override
+  String get emptySearchSemanticHint => '尝试“含义”选项卡';
+
+  @override
+  String get quickCaptureHint => '新笔记…';
+
+  @override
+  String get quickCaptureSave => '保存';
+
+  @override
+  String get quickAddWrite => '书写';
+
+  @override
+  String get quickAddCapture => '捕捉 — 从内容创建笔记';
+
+  @override
+  String get viewToggle => '视图';
+
+  @override
+  String get searchModeText => '文本';
+
+  @override
+  String get searchModeMeaning => '含义';
+
+  @override
+  String get filterReminded => '带提醒';
+
+  @override
+  String get filterLocked => '已锁定';
+
+  @override
+  String get sortColor => '颜色';
+
+  @override
+  String get filterSheetTitle => '筛选';
+
+  @override
+  String get filterReset => '重置';
+
+  @override
+  String get filterSectionStatus => '状态';
+
+  @override
+  String get filterSectionFolder => '文件夹';
+
+  @override
+  String get filterSectionTag => '标签';
+
+  @override
+  String get filterSectionSort => '排序';
+
+  @override
+  String get filterSheetSortHint => '仅在按最后编辑时间排序时显示日期分组（今天、本周……）。';
 
   @override
   String get formatTitle => '格式';

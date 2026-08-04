@@ -5,9 +5,15 @@
      widget'a Material You'nun katmanlı yüzey hissini verir.
 
      Yarıçap İÇ yarıçaptır (widget_inner_radius): iç içe köşelerde dış
-     köşeden küçük olması gerekir, aynı olursa kart kenara yapışık görünür. -->
+     köşeden küçük olması gerekir, aynı olursa kart kenara yapışık görünür.
+
+     1px kenarlık yeni tasarım dilinden: kartlarda gölge yok, ayrım
+     outlineVariant hattıyla yapılıyor. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/widget_row" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/widget_outline" />
     <corners android:radius="@dimen/widget_inner_radius" />
 </shape>

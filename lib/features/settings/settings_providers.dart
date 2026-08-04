@@ -13,6 +13,11 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
 /// Tema seçimi: sistem/açık/koyu artı "kağıt" (hafif saman kağıdı renkli
 /// açık tema). ThemeMode'da karşılığı olmadığından kendi enum'ımız var;
 /// aynı prefs anahtarını kullandığı için eski kayıtlar geriye uyumludur.
+///
+/// VARSAYILAN kağıt: i1 simge çalışmasıyla marka kağıt paletine geçti
+/// (simge, uygulama ve ana ekran widget'ları aynı palet). Ayarı hiç
+/// ellememiş kullanıcı güncellemede kağıda geçer; kayıtlı seçimi olan
+/// kendi temasında kalır — bunu bozmamak için orElse dışına dokunulmadı.
 enum AppThemeChoice { system, light, dark, paper }
 
 final themeChoiceProvider =
@@ -28,7 +33,7 @@ class ThemeChoiceNotifier extends Notifier<AppThemeChoice> {
     final stored = ref.watch(sharedPreferencesProvider).getString(_key);
     return AppThemeChoice.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => AppThemeChoice.system,
+      orElse: () => AppThemeChoice.paper,
     );
   }
 

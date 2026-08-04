@@ -55,7 +55,9 @@ void main() {
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli üç sütunlu büyük düğmelerle açılır', (tester) async {
+  testWidgets('"+" paneli YAZ satırları + YAKALA ızgarası olarak açılır', (
+    tester,
+  ) async {
     final link = LayerLink();
     await tester.pumpWidget(
       host(
@@ -83,24 +85,35 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // Üç sütun: metin / liste / sıralı liste ilk satırda yan yana durur.
+    // YAZ bölümü: üç seçenek ALT ALTA, tam genişlik satırlar. (Eskiden üçü
+    // yan yana üç sütundu; hepsi aynı boyda küçük kutu olduğu için gözle
+    // ayırt edilemiyorlardı.)
     final text = tester.getRect(find.text('Metin notu'));
     final list = tester.getRect(find.text('Liste'));
     final ordered = tester.getRect(find.text('Sıralı liste'));
-    expect(text.center.dy, closeTo(list.center.dy, 1));
-    expect(list.center.dy, closeTo(ordered.center.dy, 1));
-    expect(text.center.dx, lessThan(list.center.dx));
-    expect(list.center.dx, lessThan(ordered.center.dx));
+    expect(text.center.dy, lessThan(list.center.dy));
+    expect(list.center.dy, lessThan(ordered.center.dy));
+    // Aynı sol kenardan başlarlar — satır, ızgara hücresi değil.
+    expect(text.left, closeTo(list.left, 1));
+    expect(list.left, closeTo(ordered.left, 1));
 
-    // Dördüncü seçenek bir alt satıra iner (3 sütun, tek satır değil).
-    expect(
-      tester.getRect(find.text('Sesli not')).center.dy,
-      greaterThan(text.center.dy),
+    // Bölüm başlıkları görünür ve YAKALA, YAZ'ın altındadır.
+    expect(find.text('YAZ'), findsOneWidget);
+    final capture = tester.getRect(
+      find.text('YAKALA — İÇERİKTEN NOT OLUŞTURUR'),
     );
+    expect(capture.center.dy, greaterThan(ordered.center.dy));
+
+    // YAKALA ızgarası üç sütun: ilk iki yakalama seçeneği yan yana.
+    final voice = tester.getRect(find.text('Sesli not'));
+    final photo = tester.getRect(find.text('Foto çek not al'));
+    expect(voice.center.dy, closeTo(photo.center.dy, 1));
+    expect(voice.center.dx, lessThan(photo.center.dx));
+    expect(voice.center.dy, greaterThan(capture.center.dy));
 
     // Panel ekrandan taşmaz.
     final width = tester.view.physicalSize.width / tester.view.devicePixelRatio;
     expect(text.left, greaterThanOrEqualTo(0));
-    expect(tester.getRect(find.text('Sıralı liste')).right, lessThan(width));
+    expect(photo.right, lessThan(width));
   });
 }

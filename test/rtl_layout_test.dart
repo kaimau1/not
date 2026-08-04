@@ -18,7 +18,10 @@ void main() {
   /// bulunmadığı tarafa kaçar.
   const mirrored = [
     'lib/features/notes/presentation/note_card.dart',
-    'lib/features/notes/presentation/dashboard_chips.dart',
+    // Eski çip barının (dashboard_chips.dart) yerini alan süzgeç satırı +
+    // Süz levhası; dosya silinince koruma buraya taşındı.
+    'lib/features/notes/presentation/filter_sheet.dart',
+    'lib/features/notes/presentation/voice_capture_sheet.dart',
     'lib/features/ai/presentation/chat_screen.dart',
     'lib/features/ai/presentation/doc_chat_screen.dart',
     'lib/core/widgets/undo_snackbar.dart',

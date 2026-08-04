@@ -1,15 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Notlar — adaptive on plan katmani</title>
-<desc>Android adaptive icon on plani. Zemin saydam. Olcek 0.845 DENEYEREK bulundu, hesapla degil: uc aday (0.845 / 1.0 / 1.19) daire ve squircle maskeyle simule edildi, 1.19'da sayfa soldan ve alttan kesiliyordu. Iki kirpma ust uste biniyor: launcher 108dp tuvalin yalnizca merkezdeki 72dp'sini gosteriyor, ustune flutter_launcher_icons uretilen XML'e android:inset="16%" ekliyor. 0.845'te cizimin kosegeni 66dp guvenli daireye tam oturuyor. XML'i elle duzeltmeye kalkma, arac her calismada yeniden yaziyor. Kaynak kutu 726x808, merkezi (539,522).</desc>
-<g transform="translate(512,512) scale(0.845) translate(-539,-522)">
-<path d="M232 176 H792 A56 56 0 0 1 848 232 V778 L748 926 H232 A56 56 0 0 1 176 870 V232 A56 56 0 0 1 232 176 Z" fill="#1E1B62" opacity=".22"/>
-<path d="M232 150 H792 A56 56 0 0 1 848 206 V752 L748 900 H232 A56 56 0 0 1 176 844 V206 A56 56 0 0 1 232 150 Z" fill="#ffffff"/>
-<path d="M848 752 L748 900 L748 752 Z" fill="#C5CCEE"/>
-<rect x="256" y="336" width="464" height="26" rx="13" fill="#B7C0E8"/>
-<rect x="256" y="406" width="464" height="26" rx="13" fill="#B7C0E8"/>
-<rect x="256" y="476" width="464" height="26" rx="13" fill="#B7C0E8"/>
-<rect x="256" y="546" width="384" height="26" rx="13" fill="#B7C0E8"/>
-<rect x="256" y="616" width="296" height="26" rx="13" fill="#B7C0E8"/>
-<path d="M806 118 Q823 197 902 214 Q823 231 806 310 Q789 231 710 214 Q789 197 806 118 Z" fill="#FFC24A"/>
+<title>Notlar — adaptive on plan katmani (i1)</title>
+<desc>Android adaptive icon on plani. Zemin saydam; zemin rengi artik duz renk oldugu icin PNG degil, pubspec'teki adaptive_icon_background hex'inden (#F5EDD8) geliyor. Isaret 108dp tuvalin merkezinde ve kosegeni 66dp guvenli daireye oturuyor, bu yuzden daire/kare/squircle maskede kirpilmiyor. Olcek 7.48 (kaynak 76 birimlik viewBox, isaret kutusu 50x67, merkez 38/40.5) — eski 0.845 mantiginin aynisi: launcher 108dp tuvalin yalnizca merkezdeki 72dp'sini gosteriyor, ustune flutter_launcher_icons uretilen XML'e android:inset="16%" ekliyor. XML'i elle duzeltmeye kalkma, arac her calismada yeniden yaziyor. Kat ucgeni OYULMUS degil, zemin rengiyle BOYANMISTIR — saydam on planda kat cizgisi gorunsun diye; zemin rengi degisirse kat ve satir dolgulari da guncellenmeli.</desc>
+<g transform="translate(512,512) scale(7.48) translate(-38,-40.5)">
+<path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="#7D5703"/>
+<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#F5EDD8"/>
+<path d="M25 35h26M25 47h26M25 59h15" stroke="#F5EDD8" stroke-width="5.4" stroke-linecap="round"/>
 </g>
 </svg>

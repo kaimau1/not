@@ -1,29 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Hızlı Not widget'ının zemini. Mikrofon widget'ıyla aynı iki katmanlı
-     yapı, farklı renk ailesi: Android 12+ cihazda duvar kâğıdının ÜÇÜNCÜL
-     rengi (system_accent3). İki widget yan yanayken ayırt edilebilsin diye
-     ayrı hue seçildi — ikisi de aynı duvar kâğıdından türediği için yine de
-     birbirine ve temaya uyumlu kalır.
-     Gece/gündüz ayrımı belirteçte olduğundan drawable-night/ kopyası
-     kaldırıldı. -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="315"
-                android:startColor="@color/widget_note_start"
-                android:endColor="@color/widget_note_end"
-                android:type="linear" />
-            <corners android:radius="@dimen/widget_radius" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#00000000" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_outline" />
-            <corners android:radius="@dimen/widget_radius" />
-        </shape>
-    </item>
-</layer-list>
+<!-- Hızlı Not widget'ının zemini. Mikrofon widget'ıyla aynı düz yapı, farklı
+     ton: mikrofon primary, bu primaryContainer. İki widget yan yanayken
+     ayırt edilebilsin diye ayrıldı — ikisi de aynı kağıt paletinden geldiği
+     için yine de birbirine ve uygulamaya uyumlu kalır.
+     Gradyan yeni tasarım diliyle kaldırıldı; bkz. widget_mic_background.xml. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_note" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/widget_outline" />
+    <corners android:radius="@dimen/widget_radius" />
+</shape>

@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget renk belirteçleri — AÇIK tema, Android 12 ÖNCESİ cihazlar.
+<!-- Widget renk belirteçleri — AÇIK tema, TÜM cihazlar.
 
      Widget'ların tüm renkleri bu belirteçlerden okunur; çizimler (drawable)
-     ve düzenler (layout) artık ham hex taşımaz. Android 12+ karşılığı
-     values-v31/ altındadır ve aynı adları duvar kâğıdından türeyen sistem
-     renklerine (Material You) bağlar — dosyaların geri kalanı değişmez.
+     ve düzenler (layout) ham hex taşımaz. Gece karşılığı values-night/.
 
-     Buradaki değerler o yeteneğin olmadığı cihazlar için YEDEKtir; eski
-     widget'ların sabit paletiyle aynı tutuldu. -->
+     KARAR (i1 simge çalışması): burası eskiden yalnızca Android 12 öncesi
+     YEDEKti; 12+ cihazda values-v31/colors.xml aynı adları duvar kâğıdından
+     türeyen sistem renklerine (Material You) bağlıyordu. O bağ kaldırıldı,
+     çünkü marka kağıt paletine geçti ve kağıt artık uygulamanın VARSAYILAN
+     teması (settings_providers.dart / AppThemeChoice.paper, tohum #8A6C3C):
+     simge, uygulama ve widget'ın aynı paleti giymesi duvar kâğıdına uyumdan
+     önce geldi. Bedeli bilinçli — widget artık duvar kâğıdıyla değişmiyor.
+     Şekil tarafı hâlâ sisteme bağlı: values-v31/dimens.xml köşe yarıçapını
+     launcher'ın kendi değerinden alır, o kaldı.
+
+     Vurgu artık TEK renk: yeni tasarım dilinde gradyan yok, düz dolgu +
+     1px kenar var. Bu yüzden eski _start/_end çiftleri tek belirtece indi. -->
 <resources>
-    <!-- Yüzeyler -->
-    <color name="widget_surface">#F4F3F8</color>
-    <color name="widget_row">#FFFFFF</color>
-    <color name="widget_outline">#1F000000</color>
+    <!-- Yüzeyler: surface / surfaceContainerLow / outlineVariant -->
+    <color name="widget_surface">#F5EDD8</color>
+    <color name="widget_row">#F0E6CC</color>
+    <color name="widget_outline">#CFC5B8</color>
 
-    <!-- Metin -->
-    <color name="widget_on_surface">#16161A</color>
-    <color name="widget_on_surface_muted">#5A5A66</color>
+    <!-- Metin: onSurface / onSurfaceVariant -->
+    <color name="widget_on_surface">#1F1B16</color>
+    <color name="widget_on_surface_muted">#4E453B</color>
 
-    <!-- Vurgu: mikrofon / sesli not (mavi aile) -->
-    <color name="widget_accent_start">#6C7BF0</color>
-    <color name="widget_accent_end">#3B48AE</color>
-    <color name="widget_on_accent">#FFFFFF</color>
+    <!-- Vurgu: mikrofon / sesli not — primary + onPrimary -->
+    <color name="widget_accent">#7D5703</color>
+    <color name="widget_on_accent">#FFF8EE</color>
 
-    <!-- İkincil vurgu: hızlı not (ana ekranda mikrofonla karışmasın diye
-         ayrı hue; Android 12+ karşılığı system_accent3, yani üçüncül renk) -->
-    <color name="widget_note_start">#41C77D</color>
-    <color name="widget_note_end">#2E9E63</color>
-    <color name="widget_on_note">#FFFFFF</color>
+    <!-- İkincil vurgu: hızlı not — primaryContainer + onPrimaryContainer.
+         Mikrofonla yan yana dururken ayırt edilsin diye daha açık tonda. -->
+    <color name="widget_note">#FFDDAE</color>
+    <color name="widget_on_note">#261A01</color>
 
     <!-- Hızlı eylemler çubuğundaki ikonlar -->
-    <color name="widget_icon">#16161A</color>
-    <color name="widget_icon_accent">#3B48AE</color>
+    <color name="widget_icon">#1F1B16</color>
+    <color name="widget_icon_accent">#7D5703</color>
+
+    <!-- flutter_launcher_icons tarafından yazılır (adaptive_icon_background). -->
+    <color name="ic_launcher_background">#F5EDD8</color>
 </resources>

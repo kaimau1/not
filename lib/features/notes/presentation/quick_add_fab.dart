@@ -100,8 +100,10 @@ class _QuickAddFabState extends State<QuickAddFab> {
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
             child: _QuickAddPanel(
-              options: [
-                // Sık kullanılanlar önce: metin, liste, sıralı liste.
+              // YAZ: boş bir not açan üç seçenek. Tam genişlik satır, çünkü
+              // en sık kullanılanlar bunlar ve ızgarada üçü de aynı boyda
+              // küçük kutulara dönüşüp gözde ayırt edilemiyordu.
+              writeOptions: [
                 (
                   Icons.notes,
                   context.l10n.newTextNote,
@@ -117,6 +119,12 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   context.l10n.newOrderedList,
                   () => widget.onCreate(NoteType.ordered),
                 ),
+              ],
+              // YAKALA: hepsi bir İÇERİKTEN not üretir (ses, fotoğraf, tarama,
+              // el yazısı, video, QR). Bölüm başlığı bunu açıkça söylüyor —
+              // kullanıcı "Fotoğraflı not"un fotoğrafı nereye koyduğunu
+              // denemeden anlamıyordu.
+              captureOptions: [
                 (
                   Icons.graphic_eq,
                   context.l10n.newVoiceCapture,
@@ -251,10 +259,17 @@ class _BlurBarrier extends StatelessWidget {
 /// hücre 84 dp yüksek — simge + iki satıra kadar etiket sığar, dokunma hedefi
 /// Material'ın 48 dp alt sınırının rahat üstünde kalır.
 class _QuickAddPanel extends StatefulWidget {
-  const _QuickAddPanel({required this.options, required this.onSelected});
+  const _QuickAddPanel({
+    required this.writeOptions,
+    required this.captureOptions,
+    required this.onSelected,
+  });
 
-  /// (simge, etiket, işlem) üçlüleri.
-  final List<(IconData, String, VoidCallback)> options;
+  /// (simge, etiket, işlem) üçlüleri — boş not açanlar.
+  final List<(IconData, String, VoidCallback)> writeOptions;
+
+  /// (simge, etiket, işlem) üçlüleri — içerikten not üretenler.
+  final List<(IconData, String, VoidCallback)> captureOptions;
 
   /// Seçilen işlemi paneli kapatarak çalıştırır.
   final void Function(VoidCallback action) onSelected;
@@ -266,7 +281,7 @@ class _QuickAddPanel extends StatefulWidget {
 class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
   static const _columns = 3;
-  static const _cellHeight = 84.0;
+  static const _cellHeight = 64.0;
   static const _gap = 8.0;
 
   late final AnimationController _controller = AnimationController(
@@ -288,27 +303,44 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     final width = math.min(360.0, MediaQuery.sizeOf(context).width - 24);
     final cellWidth = (width - 24 - _gap * (_columns - 1)) / _columns;
 
+    final l10n = context.l10n;
     final panel = Material(
-      color: scheme.surfaceContainerHigh,
+      color: scheme.surface,
       elevation: 8,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Wrap(
-          spacing: _gap,
-          runSpacing: _gap,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final (icon, label, action) in widget.options)
-              SizedBox(
-                width: cellWidth,
-                height: _cellHeight,
-                child: _PanelButton(
-                  icon: icon,
-                  label: label,
-                  onTap: () => widget.onSelected(action),
-                ),
+            _SectionLabel(l10n.quickAddWrite),
+            for (final (icon, label, action) in widget.writeOptions)
+              _WriteRow(
+                icon: icon,
+                label: label,
+                onTap: () => widget.onSelected(action),
               ),
+            const SizedBox(height: 6),
+            Divider(height: 1, color: scheme.outlineVariant),
+            _SectionLabel(l10n.quickAddCapture),
+            Wrap(
+              spacing: _gap,
+              runSpacing: _gap,
+              children: [
+                for (final (icon, label, action) in widget.captureOptions)
+                  SizedBox(
+                    width: cellWidth,
+                    height: _cellHeight,
+                    child: _PanelButton(
+                      icon: icon,
+                      label: label,
+                      onTap: () => widget.onSelected(action),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -337,6 +369,74 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   }
 }
 
+/// Panel bölüm başlığı (YAZ / YAKALA…).
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.5,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    ),
+  );
+}
+
+/// YAZ bölümünün tam genişlik satırı.
+class _WriteRow extends StatelessWidget {
+  const _WriteRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: SizedBox(
+          height: 44,
+          child: Row(
+            children: [
+              const SizedBox(width: 4),
+              Icon(icon, size: 20, color: scheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Panel hücresi: üstte simge, altında etiket. Tonal zemin dokunulabilir
 /// olduğunu belli eder (düz metin düğmeler "başlık" gibi okunuyordu).
 class _PanelButton extends StatelessWidget {
@@ -354,8 +454,8 @@ class _PanelButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
-      color: scheme.secondaryContainer,
-      borderRadius: BorderRadius.circular(16),
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(12),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -364,7 +464,7 @@ class _PanelButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 26, color: scheme.onSecondaryContainer),
+              Icon(icon, size: 21, color: scheme.onSurfaceVariant),
               const SizedBox(height: 6),
               Flexible(
                 child: Text(

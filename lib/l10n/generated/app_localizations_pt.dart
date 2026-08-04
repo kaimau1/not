@@ -236,6 +236,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get copied => 'Copiado';
 
   @override
+  String get settingsSearchHint =>
+      'Pesquisar definições — “resumo”, “microfone”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return 'Nenhuma definição corresponde a «$query»';
+  }
+
+  @override
   String get settings => 'Definições';
 
   @override
@@ -758,6 +767,47 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Fala detetada';
+
+  @override
+  String get voiceCaptureReady => 'Speech ready';
+
+  @override
+  String get voiceCaptureEditHint => 'Tap the text to edit';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · automatic punctuation';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'Add to note';
+
+  @override
+  String get voiceCaptureCreateNote => 'Create new note';
+
+  @override
+  String get voiceCaptureRestart => 'Record again';
+
+  @override
+  String get voiceChipSummarizeAdd => 'Add as summary';
+
+  @override
+  String get voiceChipSummarizeSave => 'Save as summary';
+
+  @override
+  String get voiceChipToItems => 'Split into items';
+
+  @override
+  String get voiceChipAsList => 'Make a checklist';
+
+  @override
+  String get voiceChipFix => 'Clean up';
+
+  @override
+  String get voiceChipCompose => 'Deixar o assistente escrever';
+
+  @override
+  String get editorToolList => 'List';
 
   @override
   String get permissionsTitle => 'Permissões';
@@ -1372,6 +1422,138 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get filterOthers => 'Outras';
+
+  @override
+  String get chatSuggestion1 => 'O que falta na minha lista de compras?';
+
+  @override
+  String get chatSuggestion2 => 'Resumir as notas de trabalho desta semana';
+
+  @override
+  String get chatSuggestion3 => 'Tenho algum lembrete para amanhã?';
+
+  @override
+  String get aiPointsToday => 'Pontos de hoje';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'renova à meia-noite';
+
+  @override
+  String get aiChatWithNotes => 'Conversar com as suas notas';
+
+  @override
+  String get aiChatInputHint => 'Pergunte algo sobre as suas notas…';
+
+  @override
+  String get aiChatLooking => 'a pesquisar nas suas notas…';
+
+  @override
+  String get aiChatFullScreen => 'Ecrã completo';
+
+  @override
+  String get aiOnYourNotes => 'NAS SUAS NOTAS';
+
+  @override
+  String get aiRecentOps => 'RECENTE';
+
+  @override
+  String get aiTaskWeekSummary => 'Resumir a semana';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'Um resumo dos últimos 7 dias';
+
+  @override
+  String get aiTaskTagUntagged => 'Etiquetar as sem etiqueta';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count notas à espera de etiquetas';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'Sugerir títulos';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count notas sem título';
+  }
+
+  @override
+  String get sectionPinnedShort => 'FIXADO';
+
+  @override
+  String get sectionToday => 'HOJE';
+
+  @override
+  String get sectionThisWeek => 'ESTA SEMANA';
+
+  @override
+  String get sectionEarlier => 'ANTERIOR';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count notas';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'Tente o separador Significado';
+
+  @override
+  String get quickCaptureHint => 'Nova nota…';
+
+  @override
+  String get quickCaptureSave => 'Guardar';
+
+  @override
+  String get quickAddWrite => 'ESCREVER';
+
+  @override
+  String get quickAddCapture => 'CAPTURAR — CRIA UMA NOTA A PARTIR DO CONTEÚDO';
+
+  @override
+  String get viewToggle => 'Visualizar';
+
+  @override
+  String get searchModeText => 'Texto';
+
+  @override
+  String get searchModeMeaning => 'Significado';
+
+  @override
+  String get filterReminded => 'Com lembrete';
+
+  @override
+  String get filterLocked => 'Bloqueado';
+
+  @override
+  String get sortColor => 'Cor';
+
+  @override
+  String get filterSheetTitle => 'Filtrar';
+
+  @override
+  String get filterReset => 'Repor';
+
+  @override
+  String get filterSectionStatus => 'ESTADO';
+
+  @override
+  String get filterSectionFolder => 'PASTA';
+
+  @override
+  String get filterSectionTag => 'ETIQUETA';
+
+  @override
+  String get filterSectionSort => 'ORDENAR';
+
+  @override
+  String get filterSheetSortHint =>
+      'Os grupos de data (HOJE, ESTA SEMANA…) só são apresentados ao ordenar por última edição.';
 
   @override
   String get formatTitle => 'Formatação';

@@ -31,12 +31,15 @@ import '../../notes/domain/note_type.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
-  /// Ses seçicisi gösterilecek diller: uygulamanın o anki dili + Türkçe +
-  /// İngilizce (yinelenenler ayıklanır). Yalnız çevirisi ÜRETİLMİŞ diller
-  /// alınır; olmayan bir dile ses ayarı sunmak anlamsız olurdu.
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  /// Ses secicisi cizilecek diller: uygulamanin o anki dili + tr/en.
   static List<String> _voiceLanguages(BuildContext context) {
     final supported = supportedLanguages.keys.toSet();
     return <String>{
@@ -46,190 +49,365 @@ class SettingsScreen extends ConsumerWidget {
     }.where(supported.contains).toList();
   }
 
+  /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
+  /// aranan ayara ulasmak icin ekranlarca kaydirmak gerekiyordu.
+  /// Kalici DEGIL - her acilista "Gorunum" acik gelir (en sik dokunulan).
+  String _open = 'appearance';
+  String _query = '';
+  final _searchController = TextEditingController();
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final areas = <_Area>[
+      _Area(
+        id: 'ai',
+        icon: Icons.auto_awesome,
+        title: l10n.settingsAi,
+        summary: _aiSummary(l10n),
+        keywords: 'brifing etiket baslik asistan model api anahtar',
+        children: const [
+          _BuiltInAiStatus(),
+          _BriefingEditor(),
+          _AutoTagSwitch(),
+          _AutoTitleSwitch(),
+          _AssistantVoiceSwitch(),
+          _AiSkipCheckedSwitch(),
+          _AdvancedAiSection(),
+        ],
+      ),
+      _Area(
+        id: 'appearance',
+        icon: Icons.palette_outlined,
+        title: l10n.settingsAppearance,
+        summary: _appearanceSummary(l10n),
+        keywords: 'tema yazi boyutu zemin koyu acik kagit liste',
+        children: const [
+          _ThemeSelector(),
+          SizedBox(height: 12),
+          _FontScaleSlider(),
+          _ExpandListItemsSwitch(),
+          _DashboardBackgroundTile(),
+          _DarkScheduleEditor(),
+        ],
+      ),
+      // Ses: asistan dugmesinin davranisi + sesli okuma + sistem dili.
+      // Tasarim ucunu tek alanda topluyor; kodda uc ayri karttilar ve
+      // "okuma hizi" ile "asistan dugmesi" arasinda gezinmek gerekiyordu.
+      _Area(
+        id: 'sound',
+        icon: Icons.record_voice_over_outlined,
+        title: l10n.settingsSpeech,
+        summary: _soundSummary(l10n),
+        keywords: 'mikrofon ses okuma hiz dil basili tut',
+        children: [
+          const _VoiceModeSelector(),
+          for (final code in _voiceLanguages(context))
+            _SpeechVoiceSelector(
+              language: code,
+              title: l10n.speechVoiceLanguage(languageLabel(code)),
+            ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(
+              l10n.speechVoiceAutoInfo,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const _SpeechRateSlider(),
+          const _ForeignSpeechRateSlider(),
+          const _LanguageSelector(),
+        ],
+      ),
+      if (const PermissionsService().isSupported)
+        _Area(
+          id: 'permissions',
+          icon: Icons.verified_user_outlined,
+          title: l10n.permissionsTitle,
+          summary: '',
+          keywords: 'mikrofon kamera bildirim izin',
+          children: const [_PermissionsSection()],
+        ),
+      _Area(
+        id: 'sync',
+        icon: Icons.cloud_sync_outlined,
+        title: l10n.syncTitle,
+        summary: '',
+        keywords: 'yedek geri yukle sinir mb yukleme',
+        children: const [
+          _SyncLimitSelector(),
+          _BackupButton(),
+          _RestoreButton(),
+        ],
+      ),
+      _Area(
+        id: 'account',
+        icon: Icons.manage_accounts_outlined,
+        title: l10n.account,
+        summary: '',
+        keywords: 'cikis hesap sil e-posta',
+        children: const [_AccountSection()],
+      ),
+    ];
+
+    final query = _query.trim().toLowerCase();
+    final visible = query.isEmpty
+        ? areas
+        : [
+            for (final a in areas)
+              if (a.matches(query)) a,
+          ];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
-            // Alt boşluk sistem gezinme çubuğunu da içerir; "Çıkış yap"
-            // telefonun gezinme düğmelerinin altında kalmasın.
             padding: EdgeInsets.fromLTRB(
-              16,
-              16,
-              16,
+              14,
+              12,
+              14,
               16 + MediaQuery.paddingOf(context).bottom + 48,
             ),
             children: [
-              // Üstte kimlik/hesap kartı: kim olduğun ve senkron durumu ilk
-              // bakışta görünür (redesign'daki profil kartı düzeni).
               const _ProfileCard(),
-              const SizedBox(height: 18),
-              // Yapay zekâ: günlük kullanım ayarları üstte; model seçimi ve
-              // API anahtarı çoğu kullanıcıyı ilgilendirmediğinden "Gelişmiş"
-              // başlığı altına katlandı (progressive disclosure).
-              _SettingsGroup(
-                title: l10n.settingsAi,
-                icon: Icons.auto_awesome,
-                children: const [
-                  _BuiltInAiStatus(),
-                  _BriefingEditor(),
-                  _AutoTagSwitch(),
-                  _AutoTitleSwitch(),
-                  _AssistantVoiceSwitch(),
-                  _AiSkipCheckedSwitch(),
-                  _AdvancedAiSection(),
-                ],
-              ),
-              _SettingsGroup(
-                title: l10n.settingsAppearance,
-                icon: Icons.palette_outlined,
-                children: const [
-                  _ThemeSelector(),
-                  SizedBox(height: 12),
-                  _FontScaleSlider(),
-                  _ExpandListItemsSwitch(),
-                  _DashboardBackgroundTile(),
-                  _DarkScheduleEditor(),
-                ],
-              ),
-              _SettingsGroup(
-                title: l10n.settingsLanguage,
-                icon: Icons.language_outlined,
-                children: const [_LanguageSelector()],
-              ),
-              // Sesli Not Asistanı: yalnız asistan düğmesinin davranışı.
-              _SettingsGroup(
-                title: l10n.voiceAssistantTitle,
-                icon: Icons.record_voice_over_outlined,
-                children: const [_VoiceModeSelector()],
-              ),
-              // Sesli okuma (TTS): ses seçimi + okuma hızları tek yerde.
-              _SettingsGroup(
-                title: l10n.settingsSpeech,
-                icon: Icons.headphones_outlined,
-                children: [
-                  // Ses seçicileri desteklenen dillerden türetilir: eskiden
-                  // 'tr' ve 'en' elle yazılıydı, yeni dil eklenince ses
-                  // seçimi sessizce eksik kalıyordu.
-                  //
-                  // AMA hepsi için değil: dil sayısı 100'e çıkınca burası yüz
-                  // tane ses seçicisi çizerdi ve ayarlar kullanılamaz hâle
-                  // gelirdi. Kullanıcının gerçekten ihtiyaç duyduğu diller
-                  // dar bir küme — uygulamanın o anki dili ve konuşma
-                  // çevirisinin iki ucu; ötesi teoriktir.
-                  for (final code in _voiceLanguages(context))
-                    _SpeechVoiceSelector(
-                      language: code,
-                      title: l10n.speechVoiceLanguage(languageLabel(code)),
+              const SizedBox(height: 12),
+              // Ayar arama: alan basliklarinda ve anahtar kelimelerde arar.
+              Container(
+                height: 42,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsetsDirectional.only(start: 12, end: 6),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.search,
+                      size: 19,
+                      color: scheme.onSurfaceVariant,
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      l10n.speechVoiceAutoInfo,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (v) => setState(() => _query = v),
+                        style: const TextStyle(fontSize: 13.5),
+                        decoration: InputDecoration(
+                          hintText: l10n.settingsSearchHint,
+                          hintStyle: TextStyle(
+                            fontSize: 13.5,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
                       ),
                     ),
-                  ),
-                  const _SpeechRateSlider(),
-                  const _ForeignSpeechRateSlider(),
-                ],
-              ),
-              if (const PermissionsService().isSupported)
-                _SettingsGroup(
-                  title: l10n.permissionsTitle,
-                  icon: Icons.verified_user_outlined,
-                  children: const [_PermissionsSection()],
+                    if (query.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                  ],
                 ),
-              // Senkron: eklerin buluta otomatik yükleme boyut sınırı.
-              _SettingsGroup(
-                title: l10n.syncTitle,
-                icon: Icons.cloud_sync_outlined,
-                children: const [_SyncLimitSelector()],
               ),
-              // Yedek: dışa aktarma ve geri yükleme tek görünür grupta —
-              // eskiden "Hesap" içinde gömülüydü, bulunamıyordu.
-              _SettingsGroup(
-                title: l10n.backupTitle,
-                icon: Icons.save_alt,
-                children: const [_BackupButton(), _RestoreButton()],
-              ),
-              _SettingsGroup(
-                title: l10n.account,
-                icon: Icons.manage_accounts_outlined,
-                children: const [_AccountSection()],
-              ),
+              const SizedBox(height: 12),
+              if (visible.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.search_off,
+                        size: 42,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(l10n.settingsSearchEmpty(_query.trim())),
+                    ],
+                  ),
+                )
+              else
+                for (final area in visible)
+                  _SettingsArea(
+                    area: area,
+                    // Arama sirasinda eslesen alanlar acik gelir: kullanici
+                    // buldugu seyi bir de elle acmak zorunda kalmasin.
+                    open: query.isNotEmpty || _open == area.id,
+                    onTap: () => setState(
+                      () => _open = _open == area.id ? '' : area.id,
+                    ),
+                  ),
             ],
           ),
         ),
       ),
     );
   }
+
+  String _aiSummary(AppLocalizations l10n) =>
+      l10n.aiBuiltInRemaining(ref.watch(freeAiRemainingProvider));
+
+  String _appearanceSummary(AppLocalizations l10n) {
+    final theme = switch (ref.watch(themeChoiceProvider)) {
+      AppThemeChoice.system => l10n.themeSystem,
+      AppThemeChoice.light => l10n.themeLight,
+      AppThemeChoice.dark => l10n.themeDark,
+      AppThemeChoice.paper => l10n.themePaper,
+    };
+    final scale = (ref.watch(fontScaleProvider) * 100).round();
+    return '$theme · $scale%';
+  }
+
+  /// Okuma HIZI ozete girmiyor: hiz motordan asenkron okunuyor
+  /// (speechOutputProvider.rate()), ozet satiri ise senkron bir String
+  /// istiyor. Yaninda bekleyen bir "%100" yazmaktansa yalniz dugme modunu
+  /// gosteriyorum.
+  String _soundSummary(AppLocalizations l10n) =>
+      ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold
+      ? l10n.voiceModeHold
+      : l10n.voiceModeTap;
 }
 
-/// Ayarlarda bir bölümü gruplayan kart: üstte simge + başlık, altında yuvarlak
-/// köşeli hafif zeminli çerçevede çocuk widget'lar. Uzun düz liste yerine
-/// görsel olarak ayrık gruplar (redesign'daki organizasyon).
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({
+/// Ayarlar alaninin tanimi. Arama hem baslikta hem [keywords] icinde arar:
+/// kullanici "mikrofon" yazinca hem Izinler hem Ses alani cikmali.
+class _Area {
+  const _Area({
+    required this.id,
+    required this.icon,
     required this.title,
+    required this.summary,
+    required this.keywords,
     required this.children,
-    this.icon,
   });
 
+  final String id;
+  final IconData icon;
   final String title;
-  final IconData? icon;
+  final String summary;
+  final String keywords;
   final List<Widget> children;
+
+  bool matches(String query) =>
+      title.toLowerCase().contains(query) ||
+      summary.toLowerCase().contains(query) ||
+      keywords.toLowerCase().contains(query);
+}
+
+/// Akordeon alan: kapaliyken baslik + DURUM OZETI, acikken icerik.
+///
+/// Ozet satiri tasarimin asil fikri: kullanici alani acmadan "tema kagit,
+/// yazi %100" gibi guncel durumu okuyabiliyor.
+class _SettingsArea extends StatelessWidget {
+  const _SettingsArea({
+    required this.area,
+    required this.open,
+    required this.onTap,
+  });
+
+  final _Area area;
+  final bool open;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: 4, bottom: 8),
-            child: Row(
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 16, color: scheme.primary),
-                  const SizedBox(width: 6),
-                ],
-                Text(
-                  title.toUpperCase(),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    letterSpacing: 1.1,
-                    color: scheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        decoration: BoxDecoration(
+          color: open ? scheme.surfaceContainerLow : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: scheme.outlineVariant.withValues(alpha: 0.5),
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      area.icon,
+                      size: 21,
+                      color: open ? scheme.primary : scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            area.title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          if (area.summary.isNotEmpty)
+                            Text(
+                              area.summary,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: open ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 160),
+                      child: Icon(
+                        Icons.expand_more,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
-          ),
-        ],
+            if (open)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: area.children,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
+
+// _SettingsGroup (basliksiz kart grubu) kaldirildi: yerini akordeon
+// _SettingsArea aldi, dokuz grup alti alana indi.
 
 /// Ayarların en üstündeki kimlik kartı: avatar, ad, e-posta ve senkron durumu.
 class _ProfileCard extends ConsumerWidget {

@@ -232,6 +232,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get copied => 'コピーしました';
 
   @override
+  String get settingsSearchHint => '設定を検索 — 「ブリーフィング」、「マイク」';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return '「$query」に一致する設定はありません';
+  }
+
+  @override
   String get settings => '設定';
 
   @override
@@ -737,6 +745,47 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get voiceHeardLive => '音声を検出しました';
+
+  @override
+  String get voiceCaptureReady => '録音準備完了';
+
+  @override
+  String get voiceCaptureEditHint => 'テキストをタップして編集';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · 自動句読点';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'ノートに追加';
+
+  @override
+  String get voiceCaptureCreateNote => '新規ノートを作成';
+
+  @override
+  String get voiceCaptureRestart => '再録音';
+
+  @override
+  String get voiceChipSummarizeAdd => '要約として追加';
+
+  @override
+  String get voiceChipSummarizeSave => '要約として保存';
+
+  @override
+  String get voiceChipToItems => '項目に分割';
+
+  @override
+  String get voiceChipAsList => 'チェックリストにする';
+
+  @override
+  String get voiceChipFix => '整える';
+
+  @override
+  String get voiceChipCompose => 'アシスタントに書かせる';
+
+  @override
+  String get editorToolList => 'リスト';
 
   @override
   String get permissionsTitle => '権限';
@@ -1329,6 +1378,137 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get filterOthers => 'その他';
+
+  @override
+  String get chatSuggestion1 => '買い物リストに何が足りない？';
+
+  @override
+  String get chatSuggestion2 => '今週の作業メモを要約して';
+
+  @override
+  String get chatSuggestion3 => '明日リマインダーはある？';
+
+  @override
+  String get aiPointsToday => '今日のポイント';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => '深夜に更新';
+
+  @override
+  String get aiChatWithNotes => 'ノートとチャット';
+
+  @override
+  String get aiChatInputHint => 'ノートについて聞く…';
+
+  @override
+  String get aiChatLooking => 'ノートを確認中…';
+
+  @override
+  String get aiChatFullScreen => '全画面表示';
+
+  @override
+  String get aiOnYourNotes => 'ノートを活用';
+
+  @override
+  String get aiRecentOps => '最近の操作';
+
+  @override
+  String get aiTaskWeekSummary => '今週を要約';
+
+  @override
+  String get aiTaskWeekSummaryInfo => '過去7日間の要約を作成';
+
+  @override
+  String get aiTaskTagUntagged => 'タグ付け';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count 件のノートがタグ待ち';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'タイトルを提案';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count 件のノートにタイトルがありません';
+  }
+
+  @override
+  String get sectionPinnedShort => 'ピン留め';
+
+  @override
+  String get sectionToday => '今日';
+
+  @override
+  String get sectionThisWeek => '今週';
+
+  @override
+  String get sectionEarlier => '過去';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count 件のノート';
+  }
+
+  @override
+  String get emptySearchSemanticHint => '「意味」タブを試す';
+
+  @override
+  String get quickCaptureHint => '新しいノート…';
+
+  @override
+  String get quickCaptureSave => '保存';
+
+  @override
+  String get quickAddWrite => '書く';
+
+  @override
+  String get quickAddCapture => 'キャプチャ — コンテンツからノートを作成';
+
+  @override
+  String get viewToggle => '表示';
+
+  @override
+  String get searchModeText => 'テキスト';
+
+  @override
+  String get searchModeMeaning => '意味';
+
+  @override
+  String get filterReminded => 'リマインダー付き';
+
+  @override
+  String get filterLocked => 'ロック済み';
+
+  @override
+  String get sortColor => '色';
+
+  @override
+  String get filterSheetTitle => 'フィルタ';
+
+  @override
+  String get filterReset => 'リセット';
+
+  @override
+  String get filterSectionStatus => 'ステータス';
+
+  @override
+  String get filterSectionFolder => 'フォルダー';
+
+  @override
+  String get filterSectionTag => 'タグ';
+
+  @override
+  String get filterSectionSort => '並び替え';
+
+  @override
+  String get filterSheetSortHint => '日付順で並び替えるときのみ、日付グループ（今日、今週…）が表示されます。';
 
   @override
   String get formatTitle => '書式';

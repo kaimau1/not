@@ -79,10 +79,9 @@ void main() {
     expect(c.read(filteredNotesProvider).requireValue, isEmpty);
   });
 
-  test('gizli klasörün etiketi çip barına sızmaz', () async {
+  test('gizli klasörün etiketi Süz levhasına sızmaz', () async {
     final c = await ready();
     expect(c.read(allTagsProvider), ['iş']);
-    expect(c.read(tagCountsProvider).containsKey('finans'), isFalse);
   });
 
   test('gizlilik açılınca notlar geri gelir', () async {

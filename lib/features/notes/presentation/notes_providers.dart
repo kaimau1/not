@@ -13,11 +13,24 @@ import '../domain/note_type.dart';
 /// [others] = hiçbir klasöre ve etikete girmemiş notlar. Çip barındaki
 /// klasör/etiket çipleri notları düzenli tutuyor ama düzene HİÇ girmemiş
 /// notları görünür kılmıyordu; bu süzgeç "kalanlar"ı tek dokunuşta getirir.
-enum NoteFilter { all, text, checklist, ordered, pinned, starred, others }
+/// Süz levhasının DURUM bölümü. `reminded` ve `locked` yeni tasarımla eklendi;
+/// tür süzgeçleri (text/checklist/ordered) tasarımın listesinde yok ama
+/// silinmedi — bugün kullanılan bir yetenek, levhada aynı bölümde duruyorlar.
+enum NoteFilter {
+  all,
+  text,
+  checklist,
+  ordered,
+  pinned,
+  starred,
+  reminded,
+  locked,
+  others,
+}
 
 /// Dashboard sıralama ölçütü. [manual] = akışın varsayılanı (elle sürükleme /
 /// oluşturma sırası); diğerleri istemci tarafında yeniden sıralar.
-enum NoteSort { manual, updated, created, title }
+enum NoteSort { manual, updated, created, title, color }
 
 /// Seçili sıralama ölçütü (kalıcı). Sabitlenmiş notlar dashboard'da yine ayrı
 /// bir bölümde toplanır; sıralama her bölümün kendi içinde uygulanır.
@@ -68,167 +81,60 @@ class GridColumnsNotifier extends Notifier<int> {
   }
 }
 
-/// Ana ekranda görünen filtre çipleri. "Tümü" her zaman görünür; gerisi
-/// kullanıcı isteğine bağlıdır. Varsayılanda tip filtreleri (metin/liste/
-/// sıralı) gizlidir — sayfa sade kalır, isteyen filtre menüsünden ekler.
+/// Ana ekrandaki tarih grupları.
+enum NoteBucket { today, thisWeek, earlier }
+
+/// Notları son güncelleme tarihine göre üç kovaya böler; her kovanın kendi
+/// içindeki sıra KORUNUR (çağıran zaten sıralanmış liste verir).
 ///
-/// Sıralı liste (Set değil): kullanıcı filtre menüsünden çipleri sürükleyip
-/// yeniden dizebilir; sıra kalıcıdır ve çip barında aynen uygulanır.
-final visibleNoteFiltersProvider =
-    NotifierProvider<VisibleNoteFiltersNotifier, List<NoteFilter>>(
-      VisibleNoteFiltersNotifier.new,
-    );
-
-class VisibleNoteFiltersNotifier extends Notifier<List<NoteFilter>> {
-  static const _key = 'visible_filters';
-  static const _defaults = [
-    NoteFilter.pinned,
-    NoteFilter.starred,
-    NoteFilter.others,
-  ];
-
-  @override
-  List<NoteFilter> build() {
-    final stored = ref.watch(sharedPreferencesProvider).getStringList(_key);
-    if (stored == null) return _defaults;
-    // Kayıtlı sırayı koru; geçersiz/yinelenen adları ve "Tümü"yü ele.
-    final result = <NoteFilter>[];
-    for (final name in stored) {
-      for (final filter in NoteFilter.values) {
-        if (filter.name == name &&
-            filter != NoteFilter.all &&
-            !result.contains(filter)) {
-          result.add(filter);
-        }
-      }
+/// Sınırlar takvim gününe göre: "bugün" = [now] ile aynı gün, "bu hafta" =
+/// son 7 günün başlangıcından bugüne kadar. Saat farkıyla değil gün farkıyla
+/// hesaplanır — 23:59'da yazılan not ertesi sabah 00:01'de "bugün" olmamalı.
+/// Tarihi olmayan not en eskiye düşer.
+List<(NoteBucket, List<Note>)> dateBuckets(List<Note> notes, DateTime now) {
+  final today = DateTime(now.year, now.month, now.day);
+  final weekStart = today.subtract(const Duration(days: 6));
+  final result = {
+    NoteBucket.today: <Note>[],
+    NoteBucket.thisWeek: <Note>[],
+    NoteBucket.earlier: <Note>[],
+  };
+  for (final note in notes) {
+    final at = note.updatedAt;
+    if (at == null) {
+      result[NoteBucket.earlier]!.add(note);
+      continue;
     }
-    // Sonradan eklenen "Diğerleri" çipi, kayıtlı listesi olan kullanıcılarda
-    // sessizce eksik kalırdı (yalnız yeni kurulumlarda varsayılana giriyor).
-    // Bir kez eklenir; kullanıcı gizlerse bayrak sayesinde geri gelmez.
-    final prefs = ref.watch(sharedPreferencesProvider);
-    if (!(prefs.getBool(_othersAddedKey) ?? false)) {
-      prefs.setBool(_othersAddedKey, true);
-      if (!result.contains(NoteFilter.others)) {
-        result.add(NoteFilter.others);
-        _persist(result);
-      }
-    }
-    return result;
-  }
-
-  /// "Diğerleri" çipinin mevcut kullanıcılara bir kez eklendiğini işaretler.
-  static const _othersAddedKey = 'visible_filters_others_added';
-
-  void _persist(List<NoteFilter> next) {
-    ref.read(sharedPreferencesProvider).setStringList(_key, [
-      for (final f in next) f.name,
-    ]);
-  }
-
-  void toggle(NoteFilter filter) {
-    if (filter == NoteFilter.all) return;
-    final next = state.contains(filter)
-        ? [
-            for (final f in state)
-              if (f != filter) f,
-          ]
-        : [...state, filter];
-    state = next;
-    _persist(next);
-    // Gizlenen filtre o an seçiliyse listeyi kilitlemesin.
-    if (!next.contains(ref.read(noteFilterProvider)) &&
-        ref.read(noteFilterProvider) != NoteFilter.all) {
-      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    final day = DateTime(at.year, at.month, at.day);
+    if (!day.isBefore(today)) {
+      result[NoteBucket.today]!.add(note);
+    } else if (!day.isBefore(weekStart)) {
+      result[NoteBucket.thisWeek]!.add(note);
+    } else {
+      result[NoteBucket.earlier]!.add(note);
     }
   }
-
-  /// Görünür filtrelerin sırasını değiştirir (filtre menüsünde sürükle-bırak).
-  void reorder(int oldIndex, int newIndex) {
-    final next = [...state];
-    var target = newIndex;
-    if (target > oldIndex) target -= 1;
-    final item = next.removeAt(oldIndex);
-    next.insert(target, item);
-    state = next;
-    _persist(next);
-  }
+  return [for (final entry in result.entries) (entry.key, entry.value)];
 }
 
-/// Ana ekran filtre barı genişletildi mi? (madde 4) Kapalıyken tek satır
-/// kompakt çip; açıkken klasör ve etiketler bölümler hâlinde tam görünür.
-/// Çip barında etiket çipleri görünsün mü (kullanıcı tercihi, kalıcı).
-/// Filtreler gibi gizlenebilir: çok etiketi olan kullanıcıda satır şişiyordu.
-final showTagChipsProvider = NotifierProvider<ShowTagChipsNotifier, bool>(
-  ShowTagChipsNotifier.new,
+/// Ana ekran ızgara mı liste mi (kullanıcı tercihi, kalıcı).
+///
+/// Izgara masonry kartlar, liste tek sütun kompakt satırlar. Sütun SAYISI
+/// ayrı bir tercih ([gridColumnsProvider], iki parmak zoom) — liste görünümü
+/// "1 sütunluk ızgara" DEĞİL, satır yerleşimi bambaşka.
+final noteListViewProvider = NotifierProvider<NoteListViewNotifier, bool>(
+  NoteListViewNotifier.new,
 );
 
-class ShowTagChipsNotifier extends Notifier<bool> {
-  static const _key = 'show_tag_chips';
+class NoteListViewNotifier extends Notifier<bool> {
+  static const _key = 'note_list_view';
 
   @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
 
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
-
-/// Çip barında klasör çipleri görünsün mü (kullanıcı tercihi, kalıcı).
-final showFolderChipsProvider = NotifierProvider<ShowFolderChipsNotifier, bool>(
-  ShowFolderChipsNotifier.new,
-);
-
-class ShowFolderChipsNotifier extends Notifier<bool> {
-  static const _key = 'show_folder_chips';
-
-  @override
-  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
-
-  void set(bool value) {
-    state = value;
-    ref.read(sharedPreferencesProvider).setBool(_key, value);
-  }
-}
-
-/// Çip barından TEK TEK kapatılmış etiketler (kalıcı). "Etiket çiplerini
-/// göster" anahtarı hepsini birden kapatıyordu; kullanıcı yalnız birkaç
-/// etiketin çipini gizlemek istediğinde çare yoktu (madde 5).
-final hiddenTagChipsProvider =
-    NotifierProvider<HiddenChipsNotifier, Set<String>>(
-      () => HiddenChipsNotifier('hidden_tag_chips'),
-    );
-
-/// Çip barından tek tek kapatılmış klasörler (kalıcı). Klasörün KENDİSİ
-/// gizlenmez, yalnız ana ekrandaki çipi görünmez olur — gizli klasör bambaşka
-/// bir şey (bkz. [NoteFolder.hidden]).
-final hiddenFolderChipsProvider =
-    NotifierProvider<HiddenChipsNotifier, Set<String>>(
-      () => HiddenChipsNotifier('hidden_folder_chips'),
-    );
-
-class HiddenChipsNotifier extends Notifier<Set<String>> {
-  HiddenChipsNotifier(this._key);
-
-  final String _key;
-
-  @override
-  Set<String> build() =>
-      ref.watch(sharedPreferencesProvider).getStringList(_key)?.toSet() ??
-      const <String>{};
-
-  void toggle(String id) {
-    final next = {...state};
-    if (!next.remove(id)) next.add(id);
-    state = next;
-    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
-  }
-
-  /// Verilen kimliklerin tamamını göster (kümeyi boşalt) ya da tamamını gizle.
-  void setAll(Iterable<String> ids, {required bool visible}) {
-    final next = visible ? <String>{} : {...ids};
-    state = next;
-    ref.read(sharedPreferencesProvider).setStringList(_key, next.toList());
+  void toggle() {
+    state = !state;
+    ref.read(sharedPreferencesProvider).setBool(_key, state);
   }
 }
 
@@ -250,17 +156,6 @@ class AttachmentsExpandedNotifier extends Notifier<bool> {
     state = !state;
     ref.read(sharedPreferencesProvider).setBool(_key, state);
   }
-}
-
-final filtersExpandedProvider = NotifierProvider<FiltersExpandedNotifier, bool>(
-  FiltersExpandedNotifier.new,
-);
-
-class FiltersExpandedNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
-
-  void toggle() => state = !state;
 }
 
 /// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
@@ -465,21 +360,9 @@ final allTagsProvider = Provider<List<String>>((ref) {
   return sorted;
 });
 
-/// Etiket → kullanım sayısı (aktif notlarda). Ana sayfadaki çip satırı en
-/// sık kullanılanları öne alıp gerisini "+N" arkasına gizler.
-final tagCountsProvider = Provider<Map<String, int>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-  final suppressed = ref.watch(_suppressedFolderIdsProvider);
-  final counts = <String, int>{};
-  for (final note in notes) {
-    if (note.archivedAt != null) continue;
-    if (suppressed.contains(note.folderId)) continue;
-    for (final tag in note.tags) {
-      counts[tag] = (counts[tag] ?? 0) + 1;
-    }
-  }
-  return counts;
-});
+// Etiket → kullanım sayısı sağlayıcısı (tagCountsProvider) kaldırıldı: tek
+// tüketicisi çip satırıydı ("+N" arkasına gizlenen etiketleri sıralamak için).
+// Süz levhası etiketleri alfabetik listeliyor, sayıya ihtiyaç duymuyor.
 
 /// Arşivlenmiş notlar (arşiv ekranı için).
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
@@ -550,6 +433,14 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
         for (final n in result)
           if (n.starred) n,
       ],
+      NoteFilter.reminded => [
+        for (final n in result)
+          if (n.reminderAt != null) n,
+      ],
+      NoteFilter.locked => [
+        for (final n in result)
+          if (n.locked) n,
+      ],
       // Düzene girmemiş notlar: ne klasörü ne etiketi var.
       NoteFilter.others => [
         for (final n in result)
@@ -593,6 +484,16 @@ List<Note> _sortedNotes(List<Note> notes, NoteSort sort) {
         if (at.isEmpty) return 1;
         if (bt.isEmpty) return -1;
         return at.compareTo(bt);
+      });
+    // Renge göre: aynı renkli notlar bir arada. Renksiz (none) notlar SONA
+    // düşer — renk verilmemiş olması bir renk değil, "belirtilmemiş"tir;
+    // başa gelseydi kullanıcı renkli grupları görmek için kaydırırdı.
+    case NoteSort.color:
+      list.sort((a, b) {
+        final ai = a.color == NoteColor.none ? 999 : a.color.index;
+        final bi = b.color == NoteColor.none ? 999 : b.color.index;
+        if (ai != bi) return ai.compareTo(bi);
+        return dateDesc(a.updatedAt, b.updatedAt);
       });
   }
   return list;

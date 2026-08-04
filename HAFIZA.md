@@ -924,3 +924,62 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **DEĞİŞMEMESİ GEREKEN — `_FloatRowState` dolgusu**: KALANLAR "yöne duyarlı dolgu" gerektiğini yazıyordu ama YANLIŞTI. Oradaki `EdgeInsets.only(left:, right:)` bilerek fiziksel ve RTL'de de doğru: görsel fiziksel olarak neredeyse metin oradan kaçmalı, okuma yönünden bağımsız. Yönlüye çevrilseydi RTL'de bozulurdu. Kodda zaten bunu açıklayan yorum vardı. `_lineRange` de yöne duyarsız ama güvenli: `getLineBoundary` fiziksel x ne olursa olsun tam satırı döndürüyor.
   Regresyon testi `test/rtl_text_wrap_test.dart` (5 test): aynı görsel için RTL sonucu LTR'nin AYNASI olmalı — fiziksel soldaki görsel LTR'de satır BAŞI çapası, RTL'de satır SONU birleştiricisi üretmeli. Dolgunun MİKTARI yönden bağımsız (120dp görsel her iki yönde 120dp), değişen yalnız TARAFI.
   **KALAN RİSK**: Arapça ne çeviri ne yerleşim olarak cihazda görülmedi.
+
+## 2026-08-04 — i1 simgesi, widget'lar kağıt paletine, editör 3b
+
+- 2026-08-04: **Devir paketi uygulandı — i1 uygulama simgesi.** Çivit degrade + beyaz sayfa + altın kıvılcım yerine kağıt paleti: krem `#F5EDD8` zemin, sepya `#7D5703` sayfa, kat SAĞ ÜSTTE, üç satır (en alt kısa). Kullanıcı sade sürümü seçti (kıvılcımlı alternatif pakette duruyor, uygulanmadı).
+  **KARAR — zemin PNG değil hex**: zemin düz renge döndüğü için `adaptive_icon_background: "#F5EDD8"`; araç bunu `values/colors.xml`'e yazıyor ve MEVCUT 13 widget rengini koruyor (doğrulandı). 384 KB'lık `icon_background.png` ve `drawable-*/ic_launcher_background.png` (5 dosya) silindi.
+  **KÖK DÜZELTME — paketteki monokrom SVG Android'de çalışmazdı.** Devir dosyası satırları ve katı `#C9C6BF` ile DOLU çiziyordu; Android monokrom katmanın rengini yok sayıp yalnız ALFA kanalını kullandığı için tintlendikten sonra her şey tek blob olur, satırlar kaybolurdu. Doğrusu satırların/katın maske ile OYULMASI (saydam delik) — `assets/icon/src/icon_monochrome.svg` öyle yazıldı.
+  **TUZAK — `flutter_launcher_icons` `<monochrome>` yazmıyor** ve `mipmap-anydpi-v26/ic_launcher.xml`'i her koşuda baştan yazıp elle eklenen bloğu SİLİYOR. Uyarı hem XML'e hem `pubspec.yaml`'a yazıldı. `compileSdk = 37`, katman destekleniyor.
+  **TUZAK — headless Chrome ekran görüntüsü ASENKRON**: `chrome --screenshot` çağrısı dönse bile PNG birkaç saniye sonra yazılıyor; hemen kontrol edilirse ESKİ dosya görülüp "üretilmedi" sanılıyor (bir tur bu şekilde kaybedildi).
+
+- 2026-08-04: **Varsayılan tema kağıt oldu** (`AppThemeChoice.paper`). Simge kağıt paletine geçince marka orası oldu. Kayıtlı `theme_mode` anahtarı olan kullanıcı kendi seçiminde kalır; ayarı hiç ellememiş olan güncellemede kağıda geçer. `test/theme_default_test.dart` bu geriye uyumu koruyor.
+
+- 2026-08-04: **Widget'lar Material You'dan ÇIKARILDI.** `values-v31/colors.xml` ve `values-night-v31/colors.xml` silindi; renk artık her cihazda kağıt paletinden geliyor.
+  **NEDEN ÖNCE TERSİ ÖNERİLDİ**: ilk öneri "Material You kalsın"dı, dayanağı "uygulamanın varsayılan teması çivit, widget'ı kağıda zorlarsak uyumsuz görünür"dü. Kullanıcı aynı oturumda varsayılanı kağıt yapınca DAYANAK ÇÜRÜDÜ ve karar geri alındı. Bedeli bilinçli: widget artık duvar kâğıdıyla değişmiyor.
+  **KORUNDU** — `values-v31/dimens.xml`: köşe yarıçapı hâlâ launcher'ın sistem değerinden geliyor. Renk bağı kesildi, ŞEKİL hizası değil.
+  **KALAN SINIR**: widget sistem gece moduna bakıyor, uygulamadaki tema seçimine değil. Kullanıcı uygulamada Koyu seçip telefon açık modda kalırsa widget kağıt durur. Çözümü (SharedPreferences + RemoteViews ile 4 palet) ayrı iş olarak reddedilmedi, ertelendi.
+  Gradyanlar kaldırıldı (yeni dilde gradyan/gölge yok), `widget_accent_start/_end` + `widget_note_start/_end` çiftleri tek belirtece indi, yarıçaplar 24/16 → 16/12 (yalnız 12 öncesi).
+
+- 2026-08-04: **3b — editör üst/alt barı + ortak dinleme levhası.**
+  **KARAR — levha sıfırdan yazılmadı**: `editor/dictation_sheet.dart` zaten cihaz tanıma / kayıt+Gemini yedeği, basılı-tut tercihi ve hata evrelerini taşıyordu; tasarıma taşınıp `presentation/voice_capture_sheet.dart` olarak iki ekranın ortak bileşeni yapıldı, eski dosya silindi.
+  **DAVRANIŞ DEĞİŞİKLİĞİ — canlı dikte kaldırıldı.** Eskiden tanınan metin doğrudan gövdeye yazılıyordu (liste notunda her duraklama = yeni madde, `_syncDictatedItems`). Artık metin levhada birikiyor, kullanıcı düzeltip onaylıyor. BEDELİ: liste notunda maddelere bölme artık yerel değil, "Maddelere böl" çipiyle YAPAY ZEKÂ çağrısı — bir puan harcıyor. Kullanıcı bilerek onayladı.
+  **KORUNDU — `_writeDictated`**: Keep tarzı sesli not (`_startVoiceCapture`, `?voice=1`) onu hâlâ kullanıyor; canlı dikte temizliğinde silinmemesi gerekiyordu.
+  **TUZAK (eski koddan devralındı, korundu)**: basılı-tut modunda ana düğme idle ve listening evrelerinde AYNI ağaçta kalmalı — aksi hâlde parmak basılıyken düğme ağaçtan kalkar ve `onLongPressEnd` hiç gelmez.
+  **SAPMA — "Ekle ▾" açılırında 5. satır var.** Tasarım dört satır istiyor; mevcut ek menüsünde kamera, belge tarama, QR, slayt, çizim, ses ve video da var. Dörde indirmek bunları ERİŞİLEMEZ yapardı, altta "tüm ekler" satırı bırakıldı.
+  **EKSİK BIRAKILDI**: biçim düğmelerinde "aktif biçim" vurgusu yok — editör imlecin bulunduğu parçanın biçimini şeride akıtmıyor, sahte aktiflik göstermek yerine boş bırakıldı.
+  12 yeni l10n anahtarı 16 dile çevrildi (`tool/translate_arb.dart`). **TUZAK**: `~/.claude/gemini-keys.txt` ilk satırı YORUM; ayrıca `gemini-3.1-flash` ve `gemini-2.5-flash` bu anahtarla 404, `gemini-3.5-flash` dakikada 5 istekte kotaya takılıyor — toplu çeviride `gemini-3.1-flash-lite` çalıştı.
+
+## 2026-08-04 (ikinci giriş) — 5a ana ekran, 6a yapay zekâ, 4a ayarlar
+
+- 2026-08-04: **5a — ana ekran.** Çip barı (`dashboard_chips.dart`, 587 satır) tümüyle silindi; yerine Süz levhası (`filter_sheet.dart`) + yalnız UYGULANMIŞ süzgeçleri gösteren satır geldi.
+  **SESSİZ ÖLÜ KOD RİSKİ**: çip barıyla birlikte 6 sağlayıcı (`visibleNoteFilters`, `showTagChips`, `showFolderChips`, `hiddenTagChips`, `hiddenFolderChips`, `filtersExpanded`) ve `tagCountsProvider` sahipsiz kaldı. Analyzer public sağlayıcıları KULLANILMIYOR diye işaretlemez — elle taranıp silindi. Bir dosya silindiğinde bu taramayı yapmak şart.
+  **EKLENEN VERİ KATMANI**: tasarımın istediği `NoteFilter.reminded`, `NoteFilter.locked` ve `NoteSort.color` kodda YOKTU; eklendi (`note_filter_sort_test.dart`). Tasarımın DURUM listesi tür süzgeçlerini (Metin/Liste/Sıralı) düşürüyordu — silinmediler, aynı bölümde duruyorlar.
+  **KARAR — tarih kovaları yalnız "Son düzenlenen" sıralamasında.** Başlık/Renk sıralamasında "BUGÜN" başlığı altındaki sıra tarihe göre olmaz, başlık yalan söyler. Süz levhasında bu bir ipucu satırıyla yazılı.
+  **TUZAK — `toUpperCase()` Türkçe'yi bozar**: bölüm başlıkları ("ETİKET") kodda büyük harfe çevrilmez, ARB'de zaten büyük harfli anahtarlar olarak tutulur. Dart'ın `toUpperCase()`i yerel ayar tanımaz, "Etiket" → "ETIKET" (noktasız I) yapardı.
+  **KORUNDU** — `_cycleFilterFolder` (yatay çekiş) artık süzgeçlerin tamamını geziyor; gizli klasörler yine atlanıyor.
+
+- 2026-08-04: **Sesli asistan düğmesi → ortak dinleme levhası.** `VoiceAssistantButton` (≈148 satır) silindi.
+  **KAYBOLMASI AN MESELESİ OLAN ÖZELLİK**: mevcut asistan konuşmadan başlık/madde/HATIRLATICI çıkarıyor ve bunu `test/tr_datetime_test.dart` (9 test) koruyor. Tasarımın dört çipinin hiçbiri bu işi yapmıyordu; düz uygulasaydım özellik ve testleri sahipsiz kalırdı. ÇÖZÜM: levhaya ana ekranda beşinci çip ("Asistan oluştursun") + `VoiceAssistantController.composeFromTranscript`.
+  **NEDEN `finish()` YENİDEN YAZILMADI**: asıl değer onun içindeki güvenlik ağlarında (model boş not kurarsa dökümle doldurma, hatırlatıcıyı yerelde çözme, AI ölüyken düz nota düşürme). `_useSpeech = true` ses toplama adımını atlatıyor, o yolda `finish()` zaten yalnız dökümle çalışıyor.
+  `VoiceAssistantPanel` DURUYOR: ana ekran widget'ından (`notlar://voice`) başlayan oturumun durumunu hâlâ o gösteriyor.
+
+- 2026-08-04: **6a — yapay zekâ sayfası.** Üç satırlık menü çalışan sayfaya döndü: puan çubuğu, sohbet kartı, öneri kutuları, belge oku.
+  **KARAR — sohbet geçmişi sağlayıcıya taşındı** (`chat_controller.dart`). Sohbet iki yerde birden görünüyor (hub kartı + tam ekran); geçmiş `ChatScreen`'in kendi `State`inde kalsaydı "tam ekran"a geçen kullanıcı yazdıklarını kaybederdi.
+  **UYDURMA SAYI YOK**: öneri kutularındaki sayılar gerçek sorgudan (etiketsiz/başlıksız not sayısı, arşivlenmiş ve kilitli notlar hariç). Tasarımdaki dördüncü kutu ("Kopyaları temizle — 3 benzer not") EKLENMEDİ: benzerlik ölçümü uygulamada yok, sahte sayı göstermektense kutu hiç konmadı. "SON İŞLEMLER" bölümü de yok — beslendiği bir işlem geçmişi deposu yok.
+
+- 2026-08-04: **4a — ayarlar.** Dokuz kart altı akordeon alana indi (`_SettingsArea`), her başlığın altında DURUM ÖZETİ var; ayar arama eklendi.
+  **KARAR — arama ALAN düzeyinde**: tasarım satır satır süzme istiyor ama her satırı aranabilir bir tanıma çevirmek 2000 satırlık dosyanın tümünü yeniden yazmak demekti. Alanların başlığı + elle yazılmış anahtar kelimeleri aranıyor; eşleşen alanlar açık geliyor.
+  **ÖZETE GİRMEYEN DEĞER**: okuma hızı, motordan ASENKRON okunuyor (`speechOutputProvider.rate()`); özet satırı senkron String istiyor, yanıp sönen bir "%100" yerine yalnız düğme modu gösteriliyor.
+  Dil ayarı "Ses" alanına taşındı (tasarımın yerleşimi), `_SettingsGroup` silindi.
+
+- 2026-08-04: **TUZAK — yerleşim testi tasarım değişince kırılır, kırılmalıdır da.** `action_grids_layout_test` "+" panelini üç sütun olarak doğruluyordu; panel YAZ satırları + YAKALA ızgarasına ayrılınca kırıldı. Test YANLIŞ değildi, eski niyeti koruyordu — yeni niyete göre güncellendi (satırlar alt alta, ızgara altta). Aynı şekilde `rtl_layout_test` yeni `voice_capture_sheet.dart`teki fiziksel `EdgeInsets.only(left:)`i yakaladı; Arapça'da imleç yanlış tarafa düşecekti.
+
+- 2026-08-04: **TUZAK — `flutter install` DERLEMEZ.** Telefona kurulum istendiğinde `flutter install --release` çalıştırıldı ve "başarıyla kuruldu" denildi; oysa o komut yalnız `build/app/outputs/flutter-apk/app-release.apk` dosyasını kurar. Oradaki APK BİR GÜN ÖNCEDEN kalmaydı (bu turdaki doğrulama derlemelerinin hepsi `--debug` olduğu için release APK'ya hiç dokunulmamıştı) — kullanıcı telefonda dünkü uygulamayı gördü, "hiçbir şey değişmemiş" dedi. DOĞRUSU: `flutter build apk --release` SONRA `flutter install`. Kontrol: kurmadan önce APK'nın `LastWriteTime`ına bak, derleme tarihinden eskiyse kurma.
+
+- 2026-08-04: **KÖK NEDEN — yerel release APK'da Google girişi çöküyor: `--dart-define` eksikliği.** Telefonda `GoogleSignInException(clientConfigurationError, "serverClientId must be provided on Android")`. İlk teşhis YANLIŞTI (SHA-1 imza uyuşmazlığı sanıldı); kullanıcı "CI derlemesi de çalışıyordu" deyince ölçüm yapıldı: `pubspec.lock` DEĞİŞMEMİŞ, auth kodu bu turda hiç dokunulmamış, `google_sign_in` sürümü aynı. Yani kod CI ile birebir aynıydı — fark yalnız DERLEME KOMUTUNDA.
+  **ZİNCİR**: `AppConstants.serverClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID')` → define geçilmezse boş string → kod eklentiye `null` geçiyor → eklenti hatayı atıyor. Uygulama sorunsuz DERLENİYOR; hata yalnız telefonda, giriş anında görünüyor. Sessiz kırılma bu yüzden tehlikeli.
+  **NEDEN "google-services.json'dan okur" YORUMU YANILTICIYDI**: bu repoda o dosya YOK, Firebase yapılandırması `firebase_options.dart` üzerinden geliyor — eklentinin keşfedecek bir kaynağı yok. Yorum düzeltildi.
+  **ÇÖZÜM**: değer Firebase CLI ile geri kazanıldı (`firebase apps:sdkconfig ANDROID <appId> --project notlar-kaimau` → `oauth_client` içinde `client_type: 3` = web istemcisi), `env.json`'a yazıldı (gitignore'lu), derleme `--dart-define-from-file=env.json` ile yapıldı. `env.example.json` bu anahtarı hiç belgelemiyordu — eklendi. `CLAUDE.md`'ye yerel release komutu yazıldı.
+  **YAN BULGU — imza anahtarı yedeksiz**: CLAUDE.md "anahtar repo DIŞINDA `Desktop\notlar-keystore\`" diyordu ama o klasör YOK. Tek kopya `android/app/notlar-release.jks` (gitignore'lu, yani depoda da yok). Makine giderse aynı imzayla güncelleme yayınlanamaz. CLAUDE.md gerçeğe göre düzeltildi; makine dışı yedek KULLANICININ işi.
+  **YAN BULGU — APK boyutu**: bayraksız `flutter build apk` tüm mimarileri paketliyor (110 MB); CI `--target-platform android-arm64` ile ~60 MB üretiyor.

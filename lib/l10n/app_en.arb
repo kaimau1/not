@@ -69,6 +69,13 @@
   "aiThinking": "Thinking...",
   "copy": "Copy",
   "copied": "Copied",
+  "settingsSearchHint": "Search settings — “briefing”, “microphone”",
+  "settingsSearchEmpty": "No setting matches «{query}»",
+  "@settingsSearchEmpty": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
   "settings": "Settings",
   "settingsAppearance": "Appearance",
   "themeSystem": "System",
@@ -230,6 +237,26 @@
   "voiceModeTap": "Tap to start / tap to stop",
   "voiceModeInfo": "Hold to talk: it listens while you hold the button and creates the note when you let go. Tap to start: one tap begins recording, a second tap ends it.",
   "voiceHeardLive": "Speech detected",
+  "voiceCaptureReady": "Speech ready",
+  "voiceCaptureEditHint": "Tap the text to edit",
+  "voiceCapturePunctuation": "{language} · automatic punctuation",
+  "@voiceCapturePunctuation": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceCaptureAddToNote": "Add to note",
+  "voiceCaptureCreateNote": "Create new note",
+  "voiceCaptureRestart": "Record again",
+  "voiceChipSummarizeAdd": "Add as summary",
+  "voiceChipSummarizeSave": "Save as summary",
+  "voiceChipToItems": "Split into items",
+  "voiceChipAsList": "Make a checklist",
+  "voiceChipFix": "Clean up",
+  "voiceChipCompose": "Let the assistant write it",
+  "editorToolList": "List",
   "permissionsTitle": "Permissions",
   "permMic": "Microphone",
   "permMicInfo": "Needed for voice notes and dictation",
@@ -424,6 +451,70 @@
   "more": "More",
   "undone": "Undone",
   "filterOthers": "Others",
+  "chatSuggestion1": "What is missing from my shopping list?",
+  "chatSuggestion2": "Summarise this week's work notes",
+  "chatSuggestion3": "Do I have a reminder for tomorrow?",
+  "aiPointsToday": "Today's points",
+  "aiPointsOf": "{used} / {total}",
+  "@aiPointsOf": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "aiPointsRenew": "renews at midnight",
+  "aiChatWithNotes": "Chat with your notes",
+  "aiChatInputHint": "Ask something about your notes…",
+  "aiChatLooking": "looking through your notes…",
+  "aiChatFullScreen": "Full screen",
+  "aiOnYourNotes": "ON YOUR NOTES",
+  "aiRecentOps": "RECENT",
+  "aiTaskWeekSummary": "Summarise the week",
+  "aiTaskWeekSummaryInfo": "One summary from the last 7 days",
+  "aiTaskTagUntagged": "Tag the untagged",
+  "aiTaskTagUntaggedInfo": "{count} notes waiting for tags",
+  "@aiTaskTagUntaggedInfo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "aiTaskSuggestTitles": "Suggest titles",
+  "aiTaskSuggestTitlesInfo": "{count} notes have no title",
+  "@aiTaskSuggestTitlesInfo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sectionPinnedShort": "PINNED",
+  "sectionToday": "TODAY",
+  "sectionThisWeek": "THIS WEEK",
+  "sectionEarlier": "EARLIER",
+  "sectionNoteCount": "{count} notes",
+  "@sectionNoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptySearchSemanticHint": "Try the Meaning tab",
+  "quickCaptureHint": "New note…",
+  "quickCaptureSave": "Save",
+  "quickAddWrite": "WRITE",
+  "quickAddCapture": "CAPTURE — CREATES A NOTE FROM CONTENT",
+  "viewToggle": "View",
+  "searchModeText": "Text",
+  "searchModeMeaning": "Meaning",
+  "filterReminded": "With reminder",
+  "filterLocked": "Locked",
+  "sortColor": "Colour",
+  "filterSheetTitle": "Filter",
+  "filterReset": "Reset",
+  "filterSectionStatus": "STATUS",
+  "filterSectionFolder": "FOLDER",
+  "filterSectionTag": "TAG",
+  "filterSectionSort": "SORT",
+  "filterSheetSortHint": "Date groups (TODAY, THIS WEEK…) are only shown when sorting by last edited.",
   "formatTitle": "Format",
   "formatBold": "Bold",
   "formatItalic": "Italic",

@@ -34,6 +34,18 @@ String formatNoteDate(DateTime date) {
   return DateFormat('d MMM y').format(date);
 }
 
+/// Notu açar; kilitliyse önce kimlik doğrulaması ister.
+///
+/// Hem ızgara kartı hem liste satırı buradan geçer — kilit kontrolünü iki
+/// yerde tekrarlamak, birinde unutulduğunda sessiz bir veri sızıntısı olurdu.
+Future<void> openNoteRoute(BuildContext context, Note note) async {
+  if (note.locked) {
+    final ok = await authenticateForNote(context.l10n.unlockAuthReason);
+    if (!ok || !context.mounted) return;
+  }
+  if (context.mounted) await context.push('/note/${note.id}');
+}
+
 /// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.
 Widget highlightedText(
   BuildContext context,
@@ -90,14 +102,7 @@ class NoteCard extends ConsumerWidget {
   /// Aktif arama sorgusu; boş değilse eşleşmeler vurgulanır.
   final String highlightQuery;
 
-  Future<void> _openNote(BuildContext context) async {
-    // Kilitli not: önce kimlik doğrulaması (biyometrik/ekran kilidi).
-    if (note.locked) {
-      final ok = await authenticateForNote(context.l10n.unlockAuthReason);
-      if (!ok || !context.mounted) return;
-    }
-    if (context.mounted) await context.push('/note/${note.id}');
-  }
+  Future<void> _openNote(BuildContext context) => openNoteRoute(context, note);
 
   void _delete(BuildContext context, WidgetRef ref) {
     final repo = ref.read(notesRepositoryProvider);
@@ -212,20 +217,22 @@ class NoteCard extends ConsumerWidget {
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
 
     final hasTitle = note.title.trim().isNotEmpty;
-    // Durum rozetleri (yıldız/sabit/AI) başlık satırının sağında akar.
-    final badges = <Widget>[
-      if (note.starred)
-        Icon(Icons.star, size: 14, color: Colors.amber.shade600),
+    // Durum simgeleri ALT meta satırına indi. Eskiden başlık satırının sağında
+    // akıyorlardı ve başlığı sola sıkıştırıyorlardı: üç rozetli bir notta
+    // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
+    final statusIcons = <Widget>[
       if (note.pinned)
-        Icon(Icons.push_pin, size: 14, color: scheme.onSurfaceVariant),
-      // AI özeti göstergesi rozet olarak sağ üstte durur.
+        Icon(Icons.push_pin, size: 13, color: scheme.onSurfaceVariant),
+      if (note.starred)
+        Icon(Icons.star, size: 13, color: Colors.amber.shade600),
       if (!note.locked && note.aiSummary != null)
-        Icon(Icons.auto_awesome, size: 14, color: scheme.primary),
+        Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
+      if (note.reminderAt != null)
+        Icon(Icons.alarm, size: 13, color: scheme.onSurfaceVariant),
     ];
-    // Üst satır yalnızca başlık ya da rozet varsa çizilir. Başlıksız notta
-    // (madde 5) boş bir üst bant bırakılmaz; içerik doğrudan tepeden başlar,
-    // "yazılar ortaya kayıyor" izlenimi ortadan kalkar.
-    final showTopRow = hasTitle || badges.isNotEmpty;
+    // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
+    // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.
+    final showTopRow = hasTitle;
 
     final content = Padding(
       // Başlıksız kartta sağdan biraz içerik payı bırakılır ki ilk satır
@@ -237,34 +244,20 @@ class NoteCard extends ConsumerWidget {
         children: [
           if (showTopRow)
             Padding(
-              // Sağdaki 30px köşedeki üç nokta düğmesine yer açar; uzun başlık
-              // düğmenin altına girmeden kısalır (…).
-              padding: const EdgeInsetsDirectional.only(bottom: 6, end: 30),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: hasTitle
-                        ? highlightedText(
-                            context,
-                            note.displayTitle,
-                            highlightQuery,
-                            maxLines: 2,
-                            // Başlık da notun yazı tipini kullanır.
-                            style: applyNoteFont(
-                              (Theme.of(context).textTheme.titleSmall ??
-                                      const TextStyle())
-                                  .copyWith(fontWeight: FontWeight.w600),
-                              note.fontFamily,
-                            ),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                  for (final badge in badges)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 4),
-                      child: badge,
-                    ),
-                ],
+              // Sağdaki 22px köşedeki üç nokta / seçim kutusuna yer açar; uzun
+              // başlık düğmenin altına girmeden kısalır (…).
+              padding: const EdgeInsetsDirectional.only(bottom: 6, end: 22),
+              child: highlightedText(
+                context,
+                note.displayTitle,
+                highlightQuery,
+                maxLines: 2,
+                // Başlık da notun yazı tipini kullanır.
+                style: applyNoteFont(
+                  (Theme.of(context).textTheme.titleSmall ?? const TextStyle())
+                      .copyWith(fontWeight: FontWeight.w600),
+                  note.fontFamily,
+                ),
               ),
             ),
           // Kilitli not: içerik kartta gösterilmez; yalnızca kilit satırı.
@@ -301,38 +294,44 @@ class NoteCard extends ConsumerWidget {
               ),
             ],
           ],
-          if (note.tags.isNotEmpty || note.reminderAt != null) ...[
+          // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
+          // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
+          // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
+          if (statusIcons.isNotEmpty ||
+              note.tags.isNotEmpty ||
+              note.updatedAt != null) ...[
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 4,
-              runSpacing: 4,
+            Row(
               children: [
-                if (note.reminderAt != null)
-                  _MiniBadge(
-                    icon: Icons.alarm,
-                    label:
-                        '${note.reminderAt!.day}.${note.reminderAt!.month} '
-                        '${note.reminderAt!.hour.toString().padLeft(2, '0')}:'
-                        '${note.reminderAt!.minute.toString().padLeft(2, '0')}',
+                for (final icon in statusIcons)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 4),
+                    child: icon,
                   ),
-                // Kart etiketlerle uzamasın: en fazla 2 etiket + "+N".
-                for (final tag in note.tags.take(2)) _MiniBadge(label: '#$tag'),
-                if (note.tags.length > 2)
-                  _MiniBadge(label: '+${note.tags.length - 2}'),
+                if (note.tags.isNotEmpty)
+                  Flexible(
+                    child: Text(
+                      '#${note.tags.first}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                const Spacer(),
+                if (note.updatedAt != null)
+                  Text(
+                    formatNoteDate(note.updatedAt!),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
               ],
-            ),
-          ],
-          if (note.updatedAt != null) ...[
-            const SizedBox(height: 6),
-            // Son güncelleme: kartın sağ altında sessiz bir zaman damgası.
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: Text(
-                formatNoteDate(note.updatedAt!),
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
             ),
           ],
         ],
@@ -436,41 +435,8 @@ class NoteCard extends ConsumerWidget {
   }
 }
 
-class _MiniBadge extends StatelessWidget {
-  const _MiniBadge({required this.label, this.icon});
-
-  final String label;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHigh.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11, color: scheme.onSurfaceVariant),
-            const SizedBox(width: 3),
-          ],
-          // fontSize 10 kaldırıldı: tip ölçeğinin dışında keyfi bir değerdi.
-          // labelSmall (11sp) Material'in kendi en küçük rolü.
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// _MiniBadge (etiket/alarm için küçük hap rozeti) kaldırıldı: kart meta
+// satırı artık düz simge + metin, ayrı bir zemin kutusu taşımıyor.
 
 class _NotePreview extends StatelessWidget {
   const _NotePreview({required this.note, this.highlightQuery = ''});
@@ -786,6 +752,139 @@ class _AttachmentPreview extends StatelessWidget {
     return Container(
       color: Colors.black12,
       child: const Icon(Icons.image_outlined, size: 20),
+    );
+  }
+}
+
+/// Liste görünümündeki not satırı.
+///
+/// Izgaradaki [NoteCard]'ın "tek sütuna sıkıştırılmış" hâli DEĞİL: kart
+/// yüksekliği içeriğe göre değişir, satır sabittir. Tarama için tasarlandı —
+/// çok notu olan kullanıcı kartlarda ikinci ekrana taşan bir listeyi
+/// kaydırmak yerine tek bakışta on beş başlık görsün.
+class NoteListRow extends ConsumerWidget {
+  const NoteListRow({
+    super.key,
+    required this.note,
+    required this.selected,
+    required this.selectionActive,
+  });
+
+  final Note note;
+  final bool selected;
+  final bool selectionActive;
+
+  /// Satırın türünü anlatan simge. Kilitli not içeriğini göstermediği için
+  /// kilit simgesi tür simgesinin önüne geçer.
+  IconData get _icon {
+    if (note.locked) return Icons.lock_outline;
+    return switch (note.type) {
+      NoteType.checklist => Icons.checklist,
+      NoteType.ordered => Icons.format_list_numbered,
+      NoteType.text => Icons.notes,
+    };
+  }
+
+  /// Tek satırlık önizleme. Kilitli notta içerik SIZDIRILMAZ.
+  String _preview(BuildContext context) {
+    if (note.locked) return context.l10n.lockedNote;
+    final source = note.body.trim().isNotEmpty
+        ? note.body
+        : [for (final i in note.items) i.text].join(' · ');
+    final flat = source.replaceAll('\n', ' ').trim();
+    // 46 karakter: iki satırlık bir cümlenin başı. Daha uzunu zaten
+    // ellipsize edilirdi, kısaltmak ölçümü ucuzlatıyor.
+    return flat.length > 46 ? '${flat.substring(0, 46)}…' : flat;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final preview = _preview(context);
+    return Material(
+      color: selected ? scheme.secondaryContainer : scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: selectionActive
+            ? () => ref.read(selectedNoteIdsProvider.notifier).toggle(note.id)
+            : () => openNoteRoute(context, note),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 64),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(_icon, size: 20, color: scheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      note.displayTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (preview.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        preview,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (note.updatedAt != null)
+                    Text(
+                      formatNoteDate(note.updatedAt!),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (note.pinned)
+                        Icon(
+                          Icons.push_pin,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      if (note.starred)
+                        Icon(Icons.star, size: 13, color: Colors.amber.shade600),
+                      if (note.reminderAt != null)
+                        Icon(
+                          Icons.alarm,
+                          size: 13,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

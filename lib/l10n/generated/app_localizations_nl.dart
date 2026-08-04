@@ -235,6 +235,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get copied => 'Gekopieerd';
 
   @override
+  String get settingsSearchHint =>
+      'Instellingen doorzoeken — “briefing”, “microfoon”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return 'Geen instelling komt overeen met «$query»';
+  }
+
+  @override
   String get settings => 'Instellingen';
 
   @override
@@ -755,6 +764,47 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Spraak gedetecteerd';
+
+  @override
+  String get voiceCaptureReady => 'Speech ready';
+
+  @override
+  String get voiceCaptureEditHint => 'Tap the text to edit';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · automatic punctuation';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'Add to note';
+
+  @override
+  String get voiceCaptureCreateNote => 'Create new note';
+
+  @override
+  String get voiceCaptureRestart => 'Record again';
+
+  @override
+  String get voiceChipSummarizeAdd => 'Add as summary';
+
+  @override
+  String get voiceChipSummarizeSave => 'Save as summary';
+
+  @override
+  String get voiceChipToItems => 'Split into items';
+
+  @override
+  String get voiceChipAsList => 'Make a checklist';
+
+  @override
+  String get voiceChipFix => 'Clean up';
+
+  @override
+  String get voiceChipCompose => 'Laat de assistent dit schrijven';
+
+  @override
+  String get editorToolList => 'List';
 
   @override
   String get permissionsTitle => 'Toestemmingen';
@@ -1367,6 +1417,140 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get filterOthers => 'Overige';
+
+  @override
+  String get chatSuggestion1 =>
+      'Wat ontbreekt er aan mijn boodschappenlijstje?';
+
+  @override
+  String get chatSuggestion2 => 'Vat de werknotities van deze week samen';
+
+  @override
+  String get chatSuggestion3 => 'Heb ik een herinnering voor morgen?';
+
+  @override
+  String get aiPointsToday => 'Punten van vandaag';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'vernieuwt om middernacht';
+
+  @override
+  String get aiChatWithNotes => 'Chat met je notities';
+
+  @override
+  String get aiChatInputHint => 'Vraag iets over je notities…';
+
+  @override
+  String get aiChatLooking => 'doorzoekt je notities…';
+
+  @override
+  String get aiChatFullScreen => 'Volledig scherm';
+
+  @override
+  String get aiOnYourNotes => 'OVER JE NOTITIES';
+
+  @override
+  String get aiRecentOps => 'RECENT';
+
+  @override
+  String get aiTaskWeekSummary => 'Vat de week samen';
+
+  @override
+  String get aiTaskWeekSummaryInfo =>
+      'Eén samenvatting van de afgelopen 7 dagen';
+
+  @override
+  String get aiTaskTagUntagged => 'Label de notities zonder label';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count notities wachten op labels';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'Titels voorstellen';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count notities hebben geen titel';
+  }
+
+  @override
+  String get sectionPinnedShort => 'VASTGEZET';
+
+  @override
+  String get sectionToday => 'VANDAAG';
+
+  @override
+  String get sectionThisWeek => 'DEZE WEEK';
+
+  @override
+  String get sectionEarlier => 'EERDER';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count notities';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'Probeer het tabblad Betekenis';
+
+  @override
+  String get quickCaptureHint => 'Nieuwe notitie…';
+
+  @override
+  String get quickCaptureSave => 'Opslaan';
+
+  @override
+  String get quickAddWrite => 'SCHRIJVEN';
+
+  @override
+  String get quickAddCapture => 'VASTLEGGEN — MAAKT EEN NOTITIE VAN INHOUD';
+
+  @override
+  String get viewToggle => 'Weergave';
+
+  @override
+  String get searchModeText => 'Tekst';
+
+  @override
+  String get searchModeMeaning => 'Betekenis';
+
+  @override
+  String get filterReminded => 'Met herinnering';
+
+  @override
+  String get filterLocked => 'Vergrendeld';
+
+  @override
+  String get sortColor => 'Kleur';
+
+  @override
+  String get filterSheetTitle => 'Filter';
+
+  @override
+  String get filterReset => 'Reset';
+
+  @override
+  String get filterSectionStatus => 'STATUS';
+
+  @override
+  String get filterSectionFolder => 'MAP';
+
+  @override
+  String get filterSectionTag => 'TAG';
+
+  @override
+  String get filterSectionSort => 'SORTEER';
+
+  @override
+  String get filterSheetSortHint =>
+      'Datumgroepen (VANDAAG, DEZE WEEK...) worden alleen getoond bij sortering op laatst bewerkt.';
 
   @override
   String get formatTitle => 'Opmaak';

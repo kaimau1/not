@@ -235,6 +235,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copied => 'Copied';
 
   @override
+  String get settingsSearchHint => 'Search settings — “briefing”, “microphone”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return 'No setting matches «$query»';
+  }
+
+  @override
   String get settings => 'Settings';
 
   @override
@@ -751,6 +759,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Speech detected';
+
+  @override
+  String get voiceCaptureReady => 'Speech ready';
+
+  @override
+  String get voiceCaptureEditHint => 'Tap the text to edit';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · automatic punctuation';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'Add to note';
+
+  @override
+  String get voiceCaptureCreateNote => 'Create new note';
+
+  @override
+  String get voiceCaptureRestart => 'Record again';
+
+  @override
+  String get voiceChipSummarizeAdd => 'Add as summary';
+
+  @override
+  String get voiceChipSummarizeSave => 'Save as summary';
+
+  @override
+  String get voiceChipToItems => 'Split into items';
+
+  @override
+  String get voiceChipAsList => 'Make a checklist';
+
+  @override
+  String get voiceChipFix => 'Clean up';
+
+  @override
+  String get voiceChipCompose => 'Let the assistant write it';
+
+  @override
+  String get editorToolList => 'List';
 
   @override
   String get permissionsTitle => 'Permissions';
@@ -1358,6 +1407,138 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get filterOthers => 'Others';
+
+  @override
+  String get chatSuggestion1 => 'What is missing from my shopping list?';
+
+  @override
+  String get chatSuggestion2 => 'Summarise this week\'s work notes';
+
+  @override
+  String get chatSuggestion3 => 'Do I have a reminder for tomorrow?';
+
+  @override
+  String get aiPointsToday => 'Today\'s points';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'renews at midnight';
+
+  @override
+  String get aiChatWithNotes => 'Chat with your notes';
+
+  @override
+  String get aiChatInputHint => 'Ask something about your notes…';
+
+  @override
+  String get aiChatLooking => 'looking through your notes…';
+
+  @override
+  String get aiChatFullScreen => 'Full screen';
+
+  @override
+  String get aiOnYourNotes => 'ON YOUR NOTES';
+
+  @override
+  String get aiRecentOps => 'RECENT';
+
+  @override
+  String get aiTaskWeekSummary => 'Summarise the week';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'One summary from the last 7 days';
+
+  @override
+  String get aiTaskTagUntagged => 'Tag the untagged';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count notes waiting for tags';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'Suggest titles';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count notes have no title';
+  }
+
+  @override
+  String get sectionPinnedShort => 'PINNED';
+
+  @override
+  String get sectionToday => 'TODAY';
+
+  @override
+  String get sectionThisWeek => 'THIS WEEK';
+
+  @override
+  String get sectionEarlier => 'EARLIER';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count notes';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'Try the Meaning tab';
+
+  @override
+  String get quickCaptureHint => 'New note…';
+
+  @override
+  String get quickCaptureSave => 'Save';
+
+  @override
+  String get quickAddWrite => 'WRITE';
+
+  @override
+  String get quickAddCapture => 'CAPTURE — CREATES A NOTE FROM CONTENT';
+
+  @override
+  String get viewToggle => 'View';
+
+  @override
+  String get searchModeText => 'Text';
+
+  @override
+  String get searchModeMeaning => 'Meaning';
+
+  @override
+  String get filterReminded => 'With reminder';
+
+  @override
+  String get filterLocked => 'Locked';
+
+  @override
+  String get sortColor => 'Colour';
+
+  @override
+  String get filterSheetTitle => 'Filter';
+
+  @override
+  String get filterReset => 'Reset';
+
+  @override
+  String get filterSectionStatus => 'STATUS';
+
+  @override
+  String get filterSectionFolder => 'FOLDER';
+
+  @override
+  String get filterSectionTag => 'TAG';
+
+  @override
+  String get filterSectionSort => 'SORT';
+
+  @override
+  String get filterSheetSortHint =>
+      'Date groups (TODAY, THIS WEEK…) are only shown when sorting by last edited.';
 
   @override
   String get formatTitle => 'Format';

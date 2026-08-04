@@ -540,6 +540,18 @@ abstract class AppLocalizations {
   /// **'Kopyalandı'**
   String get copied;
 
+  /// No description provided for @settingsSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayar ara — “brifing”, “mikrofon”'**
+  String get settingsSearchHint;
+
+  /// No description provided for @settingsSearchEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'«{query}» için ayar yok'**
+  String settingsSearchEmpty(String query);
+
   /// No description provided for @settings.
   ///
   /// In tr, this message translates to:
@@ -1505,6 +1517,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Algılanan konuşma'**
   String get voiceHeardLive;
+
+  /// No description provided for @voiceCaptureReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşma hazır'**
+  String get voiceCaptureReady;
+
+  /// No description provided for @voiceCaptureEditHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltmek için metne dokun'**
+  String get voiceCaptureEditHint;
+
+  /// No description provided for @voiceCapturePunctuation.
+  ///
+  /// In tr, this message translates to:
+  /// **'{language} · noktalama otomatik'**
+  String voiceCapturePunctuation(String language);
+
+  /// No description provided for @voiceCaptureAddToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get voiceCaptureAddToNote;
+
+  /// No description provided for @voiceCaptureCreateNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not oluştur'**
+  String get voiceCaptureCreateNote;
+
+  /// No description provided for @voiceCaptureRestart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Baştan dinle'**
+  String get voiceCaptureRestart;
+
+  /// No description provided for @voiceChipSummarizeAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetleyerek ekle'**
+  String get voiceChipSummarizeAdd;
+
+  /// No description provided for @voiceChipSummarizeSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetleyerek kaydet'**
+  String get voiceChipSummarizeSave;
+
+  /// No description provided for @voiceChipToItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddelere böl'**
+  String get voiceChipToItems;
+
+  /// No description provided for @voiceChipAsList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste notu yap'**
+  String get voiceChipAsList;
+
+  /// No description provided for @voiceChipFix.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt'**
+  String get voiceChipFix;
+
+  /// No description provided for @voiceChipCompose.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asistan oluştursun'**
+  String get voiceChipCompose;
+
+  /// No description provided for @editorToolList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get editorToolList;
 
   /// No description provided for @permissionsTitle.
   ///
@@ -2627,6 +2717,252 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Diğerleri'**
   String get filterOthers;
+
+  /// No description provided for @chatSuggestion1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş listemde ne eksik?'**
+  String get chatSuggestion1;
+
+  /// No description provided for @chatSuggestion2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu haftaki iş notlarımı özetle'**
+  String get chatSuggestion2;
+
+  /// No description provided for @chatSuggestion3.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın için hatırlatıcım var mı?'**
+  String get chatSuggestion3;
+
+  /// No description provided for @aiPointsToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünkü puan'**
+  String get aiPointsToday;
+
+  /// No description provided for @aiPointsOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'{used} / {total}'**
+  String aiPointsOf(int used, int total);
+
+  /// No description provided for @aiPointsRenew.
+  ///
+  /// In tr, this message translates to:
+  /// **'gece yarısı yenilenir'**
+  String get aiPointsRenew;
+
+  /// No description provided for @aiChatWithNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarınla sohbet'**
+  String get aiChatWithNotes;
+
+  /// No description provided for @aiChatInputHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarına bir şey sor…'**
+  String get aiChatInputHint;
+
+  /// No description provided for @aiChatLooking.
+  ///
+  /// In tr, this message translates to:
+  /// **'notlarına bakıyor…'**
+  String get aiChatLooking;
+
+  /// No description provided for @aiChatFullScreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran'**
+  String get aiChatFullScreen;
+
+  /// No description provided for @aiOnYourNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'NOTLARIN ÜZERİNDE'**
+  String get aiOnYourNotes;
+
+  /// No description provided for @aiRecentOps.
+  ///
+  /// In tr, this message translates to:
+  /// **'SON İŞLEMLER'**
+  String get aiRecentOps;
+
+  /// No description provided for @aiTaskWeekSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftayı özetle'**
+  String get aiTaskWeekSummary;
+
+  /// No description provided for @aiTaskWeekSummaryInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 7 günün notlarından tek özet'**
+  String get aiTaskWeekSummaryInfo;
+
+  /// No description provided for @aiTaskTagUntagged.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketsizleri etiketle'**
+  String get aiTaskTagUntagged;
+
+  /// No description provided for @aiTaskTagUntaggedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not etiket bekliyor'**
+  String aiTaskTagUntaggedInfo(int count);
+
+  /// No description provided for @aiTaskSuggestTitles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık öner'**
+  String get aiTaskSuggestTitles;
+
+  /// No description provided for @aiTaskSuggestTitlesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} başlıksız not var'**
+  String aiTaskSuggestTitlesInfo(int count);
+
+  /// No description provided for @sectionPinnedShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'SABİT'**
+  String get sectionPinnedShort;
+
+  /// No description provided for @sectionToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'BUGÜN'**
+  String get sectionToday;
+
+  /// No description provided for @sectionThisWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'BU HAFTA'**
+  String get sectionThisWeek;
+
+  /// No description provided for @sectionEarlier.
+  ///
+  /// In tr, this message translates to:
+  /// **'DAHA ÖNCE'**
+  String get sectionEarlier;
+
+  /// No description provided for @sectionNoteCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not'**
+  String sectionNoteCount(int count);
+
+  /// No description provided for @emptySearchSemanticHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlam sekmesini dene'**
+  String get emptySearchSemanticHint;
+
+  /// No description provided for @quickCaptureHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not…'**
+  String get quickCaptureHint;
+
+  /// No description provided for @quickCaptureSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get quickCaptureSave;
+
+  /// No description provided for @quickAddWrite.
+  ///
+  /// In tr, this message translates to:
+  /// **'YAZ'**
+  String get quickAddWrite;
+
+  /// No description provided for @quickAddCapture.
+  ///
+  /// In tr, this message translates to:
+  /// **'YAKALA — İÇERİKTEN NOT OLUŞTURUR'**
+  String get quickAddCapture;
+
+  /// No description provided for @viewToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get viewToggle;
+
+  /// No description provided for @searchModeText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin'**
+  String get searchModeText;
+
+  /// No description provided for @searchModeMeaning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlam'**
+  String get searchModeMeaning;
+
+  /// No description provided for @filterReminded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alarmlı'**
+  String get filterReminded;
+
+  /// No description provided for @filterLocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kilitli'**
+  String get filterLocked;
+
+  /// No description provided for @sortColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk'**
+  String get sortColor;
+
+  /// No description provided for @filterSheetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süz'**
+  String get filterSheetTitle;
+
+  /// No description provided for @filterReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get filterReset;
+
+  /// No description provided for @filterSectionStatus.
+  ///
+  /// In tr, this message translates to:
+  /// **'DURUM'**
+  String get filterSectionStatus;
+
+  /// No description provided for @filterSectionFolder.
+  ///
+  /// In tr, this message translates to:
+  /// **'KLASÖR'**
+  String get filterSectionFolder;
+
+  /// No description provided for @filterSectionTag.
+  ///
+  /// In tr, this message translates to:
+  /// **'ETİKET'**
+  String get filterSectionTag;
+
+  /// No description provided for @filterSectionSort.
+  ///
+  /// In tr, this message translates to:
+  /// **'SIRALAMA'**
+  String get filterSectionSort;
+
+  /// No description provided for @filterSheetSortHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.'**
+  String get filterSheetSortHint;
 
   /// No description provided for @formatTitle.
   ///

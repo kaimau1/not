@@ -4,11 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
-import '../../../core/utils/tr_datetime.dart';
-import '../../notes/data/notes_repository.dart';
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/ai_report.dart';
-import '../data/assistant_service.dart';
+import 'chat_controller.dart';
 import '../data/gemini_service.dart';
 
 /// Notlar üzerinde yapay zeka asistanı: soru sorabilir ("geçen ay yazdığım
@@ -24,8 +22,11 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
-  final _history = <ChatTurn>[];
-  bool _busy = false;
+
+  // Geçmiş ve "meşgul" durumu artık chatProvider'da: Yapay Zeka sayfasındaki
+  // sohbet kartıyla AYNI konuşma sürüyor, tam ekrana geçince baştan başlamıyor.
+  List<ChatTurn> get _history => ref.watch(chatProvider).turns;
+  bool get _busy => ref.watch(chatProvider).busy;
 
   @override
   void dispose() {
@@ -38,81 +39,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = (spokenText ?? _controller.text).trim();
     if (text.isEmpty || _busy) return;
     final l10n = context.l10n;
-    setState(() {
-      _history.add(ChatTurn(isUser: true, text: text));
-      _busy = true;
-    });
     _controller.clear();
     _scrollToEnd();
-    try {
-      final notes = ref.read(notesStreamProvider).value ?? const [];
-      final assistant = ref.read(assistantServiceProvider);
-      String? createdNoteId;
-      final reply = await ref
-          .read(geminiServiceProvider)
-          .assistantChat(
-            notesContext: assistant.buildNotesContext(notes),
-            history: List.of(_history),
-            onToolCall: (name, args) async {
-              final result = await assistant.execute(name, args);
-              if (name != 'delete_note' && result['noteId'] is String) {
-                createdNoteId = result['noteId'] as String;
-              }
-              return result;
-            },
-          );
-      await _ensureReminder(createdNoteId, text);
-      if (mounted) {
-        setState(() => _history.add(ChatTurn(isUser: false, text: reply)));
-      }
-    } on GeminiException catch (e) {
-      if (mounted) {
-        setState(
-          () => _history.add(
-            ChatTurn(
-              isUser: false,
-              text: e.isAuthError ? l10n.aiNoApiKey : l10n.aiError(e.message),
-            ),
-          ),
+    await ref
+        .read(chatProvider.notifier)
+        .send(
+          text,
+          noApiKeyText: l10n.aiNoApiKey,
+          errorText: l10n.aiError,
         );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(
-          () => _history.add(ChatTurn(isUser: false, text: l10n.aiError('$e'))),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _busy = false);
-        _scrollToEnd();
-      }
-    }
+    if (mounted) _scrollToEnd();
   }
 
-  /// Güvenlik ağı: "yarın 9'a diş randevusu notu ekle" gibi cümlelerde model
-  /// notu oluşturup `reminderAt`'i doldurmayı atlayabiliyor (alan şemada
-  /// isteğe bağlı). Model kurmadıysa zaman kullanıcının kendi cümlesinden
-  /// YERELDE çıkarılır — hatırlatıcı modelin keyfine kalmaz, ekstra API
-  /// çağrısı da olmaz. Sesli asistandaki ağın aynısı (bkz.
-  /// `VoiceAssistantController.send`); ayrıştırıcı şimdilik yalnız Türkçe,
-  /// diğer dillerde null döner ve davranış eskisi gibi kalır.
-  Future<void> _ensureReminder(String? noteId, String source) async {
-    if (noteId == null) return;
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final note = await repo.watchNote(noteId).first;
-    if (note == null || note.reminderAt != null) return;
-    final when = parseTurkishDateTime(source);
-    if (when != null) repo.setReminder(noteId, when);
-  }
+  // _ensureReminder chat_controller.dart'a taşındı: hatırlatıcı güvenlik ağı
+  // sohbetin nereden başlatıldığından bağımsız çalışmalı.
 
   /// Sesli komut: kaydet → yazıya dök → doğrudan gönder.
   Future<void> _voiceInput() async {
     final l10n = context.l10n;
     final result = await showAudioRecorderSheet(context);
     if (result == null) return;
-    setState(() => _busy = true);
     try {
       final bytes = await File(result.path).readAsBytes();
       File(result.path).delete().ignore();
@@ -120,11 +66,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           .read(geminiServiceProvider)
           .transcribeAudio(bytes, 'audio/mp4');
       if (!mounted) return;
-      setState(() => _busy = false);
       if (text.trim().isNotEmpty) await _send(text);
     } on GeminiException catch (e) {
       if (mounted) {
-        setState(() => _busy = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -135,7 +79,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _busy = false);
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.aiError('$e'))));

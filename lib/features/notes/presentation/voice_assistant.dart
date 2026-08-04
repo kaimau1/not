@@ -192,6 +192,32 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
   /// dokunma) sessizce iptal edilir; false döner ki arayüz ipucu gösterebilsin.
   /// [genericErrorText] beklenmeyen hatalarda ham istisna metni yerine
   /// gösterilir (kullanıcıya "Exception: ..." dökülmesin).
+  /// Sesli yakalama levhasından gelen HAZIR dökümle notu asistana kurdurur.
+  ///
+  /// Levha zaten dinledi; elimizde metin var, mikrofona hiç dokunulmaz.
+  /// [finish] yeniden yazılmadı çünkü asıl değer onun İÇİNDEKİ güvenlik
+  /// ağlarında: model boş not kurarsa dökümle doldurma, hatırlatıcıyı yerelde
+  /// çözme (`parseTurkishDateTime`), yapay zekâ tümden ölüyken kaydı düz nota
+  /// düşürme. `_useSpeech = true` ses toplama adımını atlatır — o yolda
+  /// [finish] zaten yalnız dökümle çalışır.
+  Future<bool> composeFromTranscript(
+    String transcript, {
+    required String nothingHeardText,
+    required String savedText,
+    required String noApiKeyText,
+    required String genericErrorText,
+  }) {
+    _transcript = transcript;
+    _useSpeech = true;
+    state = state.copyWith(phase: VoiceAssistantPhase.recording);
+    return finish(
+      nothingHeardText: nothingHeardText,
+      savedText: savedText,
+      noApiKeyText: noApiKeyText,
+      genericErrorText: genericErrorText,
+    );
+  }
+
   Future<bool> finish({
     required String nothingHeardText,
     required String savedText,

@@ -233,6 +233,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get copied => 'Kopyalandı';
 
   @override
+  String get settingsSearchHint => 'Ayar ara — “brifing”, “mikrofon”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return '«$query» için ayar yok';
+  }
+
+  @override
   String get settings => 'Ayarlar';
 
   @override
@@ -749,6 +757,47 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Algılanan konuşma';
+
+  @override
+  String get voiceCaptureReady => 'Konuşma hazır';
+
+  @override
+  String get voiceCaptureEditHint => 'Düzeltmek için metne dokun';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · noktalama otomatik';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'Nota ekle';
+
+  @override
+  String get voiceCaptureCreateNote => 'Yeni not oluştur';
+
+  @override
+  String get voiceCaptureRestart => 'Baştan dinle';
+
+  @override
+  String get voiceChipSummarizeAdd => 'Özetleyerek ekle';
+
+  @override
+  String get voiceChipSummarizeSave => 'Özetleyerek kaydet';
+
+  @override
+  String get voiceChipToItems => 'Maddelere böl';
+
+  @override
+  String get voiceChipAsList => 'Liste notu yap';
+
+  @override
+  String get voiceChipFix => 'Düzelt';
+
+  @override
+  String get voiceChipCompose => 'Asistan oluştursun';
+
+  @override
+  String get editorToolList => 'Liste';
 
   @override
   String get permissionsTitle => 'İzinler';
@@ -1354,6 +1403,138 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get filterOthers => 'Diğerleri';
+
+  @override
+  String get chatSuggestion1 => 'Alışveriş listemde ne eksik?';
+
+  @override
+  String get chatSuggestion2 => 'Bu haftaki iş notlarımı özetle';
+
+  @override
+  String get chatSuggestion3 => 'Yarın için hatırlatıcım var mı?';
+
+  @override
+  String get aiPointsToday => 'Bugünkü puan';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'gece yarısı yenilenir';
+
+  @override
+  String get aiChatWithNotes => 'Notlarınla sohbet';
+
+  @override
+  String get aiChatInputHint => 'Notlarına bir şey sor…';
+
+  @override
+  String get aiChatLooking => 'notlarına bakıyor…';
+
+  @override
+  String get aiChatFullScreen => 'Tam ekran';
+
+  @override
+  String get aiOnYourNotes => 'NOTLARIN ÜZERİNDE';
+
+  @override
+  String get aiRecentOps => 'SON İŞLEMLER';
+
+  @override
+  String get aiTaskWeekSummary => 'Haftayı özetle';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'Son 7 günün notlarından tek özet';
+
+  @override
+  String get aiTaskTagUntagged => 'Etiketsizleri etiketle';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count not etiket bekliyor';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'Başlık öner';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count başlıksız not var';
+  }
+
+  @override
+  String get sectionPinnedShort => 'SABİT';
+
+  @override
+  String get sectionToday => 'BUGÜN';
+
+  @override
+  String get sectionThisWeek => 'BU HAFTA';
+
+  @override
+  String get sectionEarlier => 'DAHA ÖNCE';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count not';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'Anlam sekmesini dene';
+
+  @override
+  String get quickCaptureHint => 'Yeni not…';
+
+  @override
+  String get quickCaptureSave => 'Kaydet';
+
+  @override
+  String get quickAddWrite => 'YAZ';
+
+  @override
+  String get quickAddCapture => 'YAKALA — İÇERİKTEN NOT OLUŞTURUR';
+
+  @override
+  String get viewToggle => 'Görünüm';
+
+  @override
+  String get searchModeText => 'Metin';
+
+  @override
+  String get searchModeMeaning => 'Anlam';
+
+  @override
+  String get filterReminded => 'Alarmlı';
+
+  @override
+  String get filterLocked => 'Kilitli';
+
+  @override
+  String get sortColor => 'Renk';
+
+  @override
+  String get filterSheetTitle => 'Süz';
+
+  @override
+  String get filterReset => 'Sıfırla';
+
+  @override
+  String get filterSectionStatus => 'DURUM';
+
+  @override
+  String get filterSectionFolder => 'KLASÖR';
+
+  @override
+  String get filterSectionTag => 'ETİKET';
+
+  @override
+  String get filterSectionSort => 'SIRALAMA';
+
+  @override
+  String get filterSheetSortHint =>
+      'Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.';
 
   @override
   String get formatTitle => 'Biçim';

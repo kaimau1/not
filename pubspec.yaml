@@ -132,14 +132,20 @@ flutter:
 #   chrome --headless --force-device-scale-factor=1 --window-size=1024,1024 \
 #          --default-background-color=00000000 --screenshot=icon.png dosya.html
 #
-# Zemin artık düz renk değil görsel: degrade tek hex ile anlatılamıyor.
+# Zemin i1 tasarımıyla düz renge döndü (kağıt teması surface'i), o yüzden
+# artık PNG değil doğrudan hex: araç bunu values/colors.xml'e yazıyor.
 # Ön plan ayrı ve KÜÇÜLTÜLMÜŞ bir dosya — Android 108dp tuvalin yalnız
 # merkezdeki 72dp'sini göstermeyi garanti eder, tam boy sayfa her launcher'da
 # kenarlarından kırpılırdı.
+#
+# Android 13+ temalı simge (<monochrome>) bu araçta YOK: katmanı
+# mipmap-anydpi-v26/ic_launcher.xml'e elle ekliyoruz ve araç her koşuda
+# siliyor. Bu dosyayı çalıştırdıktan sonra XML'i tekrar kontrol et
+# (kaynağı assets/icon/src/icon_monochrome.svg → drawable-xxxhdpi).
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "assets/icon/icon_background.png"
+  adaptive_icon_background: "#F5EDD8"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   windows:
     generate: true

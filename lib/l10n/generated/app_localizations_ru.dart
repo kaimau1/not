@@ -235,6 +235,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get copied => 'Скопировано';
 
   @override
+  String get settingsSearchHint => 'Поиск настроек — «брифинг», «микрофон»';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return 'Настройки по запросу «$query» не найдены';
+  }
+
+  @override
   String get settings => 'Настройки';
 
   @override
@@ -755,6 +763,47 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'Речь обнаружена';
+
+  @override
+  String get voiceCaptureReady => 'Голос готов';
+
+  @override
+  String get voiceCaptureEditHint => 'Нажмите на текст, чтобы изменить';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · автопунктуация';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'Добавить в заметку';
+
+  @override
+  String get voiceCaptureCreateNote => 'Создать новую заметку';
+
+  @override
+  String get voiceCaptureRestart => 'Записать снова';
+
+  @override
+  String get voiceChipSummarizeAdd => 'Добавить как резюме';
+
+  @override
+  String get voiceChipSummarizeSave => 'Сохранить как резюме';
+
+  @override
+  String get voiceChipToItems => 'Разбить на пункты';
+
+  @override
+  String get voiceChipAsList => 'Преобразовать в список';
+
+  @override
+  String get voiceChipFix => 'Исправить';
+
+  @override
+  String get voiceChipCompose => 'Пусть напишет ассистент';
+
+  @override
+  String get editorToolList => 'Список';
 
   @override
   String get permissionsTitle => 'Разрешения';
@@ -1363,6 +1412,139 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get filterOthers => 'Остальные';
+
+  @override
+  String get chatSuggestion1 => 'Чего не хватает в моем списке покупок?';
+
+  @override
+  String get chatSuggestion2 =>
+      'Сделай краткий обзор рабочих заметок за неделю';
+
+  @override
+  String get chatSuggestion3 => 'Есть ли у меня напоминания на завтра?';
+
+  @override
+  String get aiPointsToday => 'Лимиты на сегодня';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'обновление в полночь';
+
+  @override
+  String get aiChatWithNotes => 'Чат с заметками';
+
+  @override
+  String get aiChatInputHint => 'Спросите что-нибудь о ваших заметках…';
+
+  @override
+  String get aiChatLooking => 'изучаю ваши заметки…';
+
+  @override
+  String get aiChatFullScreen => 'Во весь экран';
+
+  @override
+  String get aiOnYourNotes => 'ПО ВАШИМ ЗАМЕТКАМ';
+
+  @override
+  String get aiRecentOps => 'НЕДАВНЕЕ';
+
+  @override
+  String get aiTaskWeekSummary => 'Итоги недели';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'Сводка за последние 7 дней';
+
+  @override
+  String get aiTaskTagUntagged => 'Добавить теги';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count заметок без тегов';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'Придумать заголовки';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count заметок без заголовков';
+  }
+
+  @override
+  String get sectionPinnedShort => 'ЗАКРЕПЛЕННЫЕ';
+
+  @override
+  String get sectionToday => 'СЕГОДНЯ';
+
+  @override
+  String get sectionThisWeek => 'НА ЭТОЙ НЕДЕЛЕ';
+
+  @override
+  String get sectionEarlier => 'РАНЕЕ';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count заметок';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'Попробуйте вкладку «Смысл»';
+
+  @override
+  String get quickCaptureHint => 'Новая заметка…';
+
+  @override
+  String get quickCaptureSave => 'Сохранить';
+
+  @override
+  String get quickAddWrite => 'ЗАПИСАТЬ';
+
+  @override
+  String get quickAddCapture => 'ЗАХВАТ — СОЗДАТЬ ЗАМЕТКУ ИЗ КОНТЕНТА';
+
+  @override
+  String get viewToggle => 'Вид';
+
+  @override
+  String get searchModeText => 'Текст';
+
+  @override
+  String get searchModeMeaning => 'Смысл';
+
+  @override
+  String get filterReminded => 'С напоминанием';
+
+  @override
+  String get filterLocked => 'Заблокированные';
+
+  @override
+  String get sortColor => 'Цвет';
+
+  @override
+  String get filterSheetTitle => 'Фильтр';
+
+  @override
+  String get filterReset => 'Сбросить';
+
+  @override
+  String get filterSectionStatus => 'СТАТУС';
+
+  @override
+  String get filterSectionFolder => 'ПАПКА';
+
+  @override
+  String get filterSectionTag => 'ТЕГ';
+
+  @override
+  String get filterSectionSort => 'СОРТИРОВКА';
+
+  @override
+  String get filterSheetSortHint =>
+      'Группы по датам (СЕГОДНЯ, НА ЭТОЙ НЕДЕЛЕ…) отображаются только при сортировке по дате изменения.';
 
   @override
   String get formatTitle => 'Форматирование';

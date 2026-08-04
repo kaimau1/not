@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Not listesi widget'ının zemini. Renk ve yarıçap artık belirteçten gelir
-     (values/colors.xml + values-v31/): Android 12+ cihazda duvar kâğıdının
-     paletini ve launcher'ın kendi köşe yarıçapını alır. -->
+<!-- Not listesi widget'ının zemini. Renk ve yarıçap belirteçten gelir: renk
+     kağıt paletinden (values/colors.xml), yarıçap Android 12+ cihazda
+     launcher'ın kendi widget yarıçapından (values-v31/dimens.xml).
+
+     1px kenarlık yeni tasarım dilinden: gölge yerine outlineVariant hattı;
+     widget'ı duvar kâğıdından da ayırır. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/widget_surface" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/widget_outline" />
     <corners android:radius="@dimen/widget_radius" />
 </shape>

@@ -133,12 +133,12 @@ class _FormatBarState extends State<FormatBar> {
               ),
               // 1. satır: karakter biçimleri + yazı tipi menüsü.
               SizedBox(
-                height: 44,
+                height: 40,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 8),
                       _Btn(
                         icon: Icons.format_bold,
                         tooltip: l10n.formatBold,
@@ -307,6 +307,11 @@ class _FontMenu extends StatelessWidget {
   }
 }
 
+/// Biçim şeridi düğmesi: 42×40 kutu, r12.
+///
+/// IconButton'ın kendi 48×48 kutusu şeritte yan yana yedi düğmeyi dar ekranda
+/// taşırıyordu; sabit ölçü hem sığdırır hem alt bardaki araç segmentleriyle
+/// aynı yuvarlaklığı verir.
 class _Btn extends StatelessWidget {
   const _Btn({required this.icon, required this.tooltip, required this.onTap});
 
@@ -315,11 +320,17 @@ class _Btn extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: tooltip,
-    visualDensity: VisualDensity.compact,
-    icon: Icon(icon, size: 22),
-    onPressed: onTap,
+  Widget build(BuildContext context) => Tooltip(
+    message: tooltip,
+    child: InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: SizedBox(
+        width: 42,
+        height: 40,
+        child: Icon(icon, size: 22),
+      ),
+    ),
   );
 }
 

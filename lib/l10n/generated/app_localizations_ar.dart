@@ -232,6 +232,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get copied => 'تم النسخ';
 
   @override
+  String get settingsSearchHint => 'ابحث في الإعدادات — \"موجز\"، \"ميكروفون\"';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return 'لا يوجد إعداد يطابق «$query»';
+  }
+
+  @override
   String get settings => 'الإعدادات';
 
   @override
@@ -749,6 +757,47 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'تم رصد كلام';
+
+  @override
+  String get voiceCaptureReady => 'جاهز للتسجيل';
+
+  @override
+  String get voiceCaptureEditHint => 'انقر على النص للتعديل';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · ترقيم تلقائي';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'إضافة إلى الملاحظة';
+
+  @override
+  String get voiceCaptureCreateNote => 'إنشاء ملاحظة جديدة';
+
+  @override
+  String get voiceCaptureRestart => 'تسجيل مجددًا';
+
+  @override
+  String get voiceChipSummarizeAdd => 'إضافة كملخص';
+
+  @override
+  String get voiceChipSummarizeSave => 'حفظ كملخص';
+
+  @override
+  String get voiceChipToItems => 'تقسيم إلى عناصر';
+
+  @override
+  String get voiceChipAsList => 'تحويل إلى قائمة مهام';
+
+  @override
+  String get voiceChipFix => 'تنقيح النص';
+
+  @override
+  String get voiceChipCompose => 'دع المساعد يكتبها';
+
+  @override
+  String get editorToolList => 'قائمة';
 
   @override
   String get permissionsTitle => 'الأذونات';
@@ -1349,6 +1398,138 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterOthers => 'أخرى';
+
+  @override
+  String get chatSuggestion1 => 'ما المفقود من قائمة تسوقي؟';
+
+  @override
+  String get chatSuggestion2 => 'لخص ملاحظات العمل لهذا الأسبوع';
+
+  @override
+  String get chatSuggestion3 => 'هل لدي تذكير للغد؟';
+
+  @override
+  String get aiPointsToday => 'نقاط اليوم';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'تتجدد عند منتصف الليل';
+
+  @override
+  String get aiChatWithNotes => 'تحدث مع ملاحظاتك';
+
+  @override
+  String get aiChatInputHint => 'اسأل شيئاً عن ملاحظاتك…';
+
+  @override
+  String get aiChatLooking => 'أبحث في ملاحظاتك…';
+
+  @override
+  String get aiChatFullScreen => 'ملء الشاشة';
+
+  @override
+  String get aiOnYourNotes => 'في ملاحظاتك';
+
+  @override
+  String get aiRecentOps => 'الأحدث';
+
+  @override
+  String get aiTaskWeekSummary => 'لخص الأسبوع';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'ملخص واحد من آخر 7 أيام';
+
+  @override
+  String get aiTaskTagUntagged => 'أضف وسوماً للملاحظات غير المصنفة';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count ملاحظة تنتظر التصنيف';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'اقترح عناوين';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count ملاحظة بدون عنوان';
+  }
+
+  @override
+  String get sectionPinnedShort => 'مثبتة';
+
+  @override
+  String get sectionToday => 'اليوم';
+
+  @override
+  String get sectionThisWeek => 'هذا الأسبوع';
+
+  @override
+  String get sectionEarlier => 'سابقاً';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count ملاحظة';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'جرب تبويب المعنى';
+
+  @override
+  String get quickCaptureHint => 'ملاحظة جديدة…';
+
+  @override
+  String get quickCaptureSave => 'حفظ';
+
+  @override
+  String get quickAddWrite => 'كتابة';
+
+  @override
+  String get quickAddCapture => 'التقاط — إنشاء ملاحظة من المحتوى';
+
+  @override
+  String get viewToggle => 'عرض';
+
+  @override
+  String get searchModeText => 'نص';
+
+  @override
+  String get searchModeMeaning => 'المعنى';
+
+  @override
+  String get filterReminded => 'مع تذكير';
+
+  @override
+  String get filterLocked => 'مقفل';
+
+  @override
+  String get sortColor => 'اللون';
+
+  @override
+  String get filterSheetTitle => 'تصفية';
+
+  @override
+  String get filterReset => 'إعادة تعيين';
+
+  @override
+  String get filterSectionStatus => 'الحالة';
+
+  @override
+  String get filterSectionFolder => 'المجلد';
+
+  @override
+  String get filterSectionTag => 'الوسم';
+
+  @override
+  String get filterSectionSort => 'الترتيب';
+
+  @override
+  String get filterSheetSortHint =>
+      'تظهر مجموعات التاريخ (اليوم، هذا الأسبوع...) فقط عند الترتيب حسب آخر تعديل.';
 
   @override
   String get formatTitle => 'التنسيق';

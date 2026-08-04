@@ -1,30 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Sesli Not widget'ının zemini. İki katmanlı yapı korunuyor:
-       1) köşegen gradyan — yüzeye hacim verir
-       2) ince kenar hattı — ikonu duvar kâğıdından ayırır
-     Renkler artık belirteçten geliyor: Android 12+ cihazda duvar kâğıdının
-     BİRİNCİL rengine (system_accent1) döner. Yuvarlaklık da sabit 28dp
-     değil, launcher'ın kendi widget yarıçapı — diğer widget'larla hizalanır.
-     Gece/gündüz ayrımı belirtecin işi olduğundan drawable-night/ kopyası
-     kaldırıldı. -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:angle="315"
-                android:startColor="@color/widget_accent_start"
-                android:endColor="@color/widget_accent_end"
-                android:type="linear" />
-            <corners android:radius="@dimen/widget_radius" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#00000000" />
-            <stroke
-                android:width="1dp"
-                android:color="@color/widget_outline" />
-            <corners android:radius="@dimen/widget_radius" />
-        </shape>
-    </item>
-</layer-list>
+<!-- Sesli Not widget'ının zemini: düz dolgu + 1px kenar hattı.
+     Köşegen gradyan KALDIRILDI — yeni tasarım dilinde gradyan ve gölge yok,
+     yüzeyler düz, ayrım outlineVariant kenarlıkla yapılıyor. Kenar hattı
+     ikonu duvar kâğıdından ayırdığı için korundu.
+     Renk belirteçten geliyor (kağıt paleti; bkz. values/colors.xml).
+     Yuvarlaklık Android 12+ cihazda hâlâ launcher'ın kendi widget yarıçapı —
+     diğer widget'larla hizalanır.
+     Gece/gündüz ayrımı belirtecin işi olduğundan drawable-night/ kopyası yok. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_accent" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/widget_outline" />
+    <corners android:radius="@dimen/widget_radius" />
+</shape>

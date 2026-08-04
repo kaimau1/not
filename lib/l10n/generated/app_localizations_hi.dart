@@ -234,6 +234,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get copied => 'कॉपी हो गया';
 
   @override
+  String get settingsSearchHint => 'सेटिंग खोजें — “briefing”, “microphone”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return '«$query» से मेल खाने वाली कोई सेटिंग नहीं है';
+  }
+
+  @override
   String get settings => 'सेटिंग';
 
   @override
@@ -753,6 +761,47 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get voiceHeardLive => 'बोली पहचानी गई';
+
+  @override
+  String get voiceCaptureReady => 'बोली तैयार है';
+
+  @override
+  String get voiceCaptureEditHint => 'संपादित करने के लिए टेक्स्ट पर टैप करें';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · स्वचालित विराम चिह्न';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => 'नोट में जोड़ें';
+
+  @override
+  String get voiceCaptureCreateNote => 'नया नोट बनाएं';
+
+  @override
+  String get voiceCaptureRestart => 'फिर से रिकॉर्ड करें';
+
+  @override
+  String get voiceChipSummarizeAdd => 'सारांश के रूप में जोड़ें';
+
+  @override
+  String get voiceChipSummarizeSave => 'सारांश के रूप में सहेजें';
+
+  @override
+  String get voiceChipToItems => 'आइटम में विभाजित करें';
+
+  @override
+  String get voiceChipAsList => 'चेकलिस्ट बनाएं';
+
+  @override
+  String get voiceChipFix => 'साफ करें';
+
+  @override
+  String get voiceChipCompose => 'असिस्टेंट को लिखने दें';
+
+  @override
+  String get editorToolList => 'सूची';
 
   @override
   String get permissionsTitle => 'अनुमतियाँ';
@@ -1359,6 +1408,138 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filterOthers => 'अन्य';
+
+  @override
+  String get chatSuggestion1 => 'मेरी शॉपिंग लिस्ट में क्या कमी है?';
+
+  @override
+  String get chatSuggestion2 => 'इस सप्ताह के कार्य नोट्स का सारांश दें';
+
+  @override
+  String get chatSuggestion3 => 'क्या मेरे पास कल के लिए कोई रिमाइंडर है?';
+
+  @override
+  String get aiPointsToday => 'आज के पॉइंट्स';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => 'आधी रात को नवीनीकृत होगा';
+
+  @override
+  String get aiChatWithNotes => 'अपने नोट्स के साथ चैट करें';
+
+  @override
+  String get aiChatInputHint => 'अपने नोट्स के बारे में कुछ पूछें...';
+
+  @override
+  String get aiChatLooking => 'आपके नोट्स देखे जा रहे हैं...';
+
+  @override
+  String get aiChatFullScreen => 'पूर्ण स्क्रीन';
+
+  @override
+  String get aiOnYourNotes => 'आपके नोट्स पर';
+
+  @override
+  String get aiRecentOps => 'हाल ही में';
+
+  @override
+  String get aiTaskWeekSummary => 'सप्ताह का सारांश';
+
+  @override
+  String get aiTaskWeekSummaryInfo => 'पिछले 7 दिनों का एक सारांश';
+
+  @override
+  String get aiTaskTagUntagged => 'अनटैग किए गए को टैग करें';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '$count नोट्स टैग की प्रतीक्षा में';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => 'शीर्षक सुझाएं';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '$count नोट्स का कोई शीर्षक नहीं है';
+  }
+
+  @override
+  String get sectionPinnedShort => 'पिन किया गया';
+
+  @override
+  String get sectionToday => 'आज';
+
+  @override
+  String get sectionThisWeek => 'इस सप्ताह';
+
+  @override
+  String get sectionEarlier => 'पहले';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '$count नोट्स';
+  }
+
+  @override
+  String get emptySearchSemanticHint => 'अर्थ (Meaning) टैब आज़माएं';
+
+  @override
+  String get quickCaptureHint => 'नया नोट...';
+
+  @override
+  String get quickCaptureSave => 'सहेजें';
+
+  @override
+  String get quickAddWrite => 'लिखें';
+
+  @override
+  String get quickAddCapture => 'कैप्चर — सामग्री से एक नोट बनाता है';
+
+  @override
+  String get viewToggle => 'दृश्य';
+
+  @override
+  String get searchModeText => 'टेक्स्ट';
+
+  @override
+  String get searchModeMeaning => 'अर्थ';
+
+  @override
+  String get filterReminded => 'रिमाइंडर के साथ';
+
+  @override
+  String get filterLocked => 'लॉक किया गया';
+
+  @override
+  String get sortColor => 'रंग';
+
+  @override
+  String get filterSheetTitle => 'फ़िल्टर';
+
+  @override
+  String get filterReset => 'रीसेट';
+
+  @override
+  String get filterSectionStatus => 'स्थिति';
+
+  @override
+  String get filterSectionFolder => 'FOLDER';
+
+  @override
+  String get filterSectionTag => 'TAG';
+
+  @override
+  String get filterSectionSort => 'SORT';
+
+  @override
+  String get filterSheetSortHint =>
+      'Mga grupo ng petsa (NGAYON, NGAYONG LINGGO…) ay ipinapakita lamang kapag nag-aayos ayon sa huling inedit.';
 
   @override
   String get formatTitle => 'स्वरूपण';

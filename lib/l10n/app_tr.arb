@@ -125,6 +125,13 @@
   "aiThinking": "Düşünüyor...",
   "copy": "Kopyala",
   "copied": "Kopyalandı",
+  "settingsSearchHint": "Ayar ara — “brifing”, “mikrofon”",
+  "settingsSearchEmpty": "«{query}» için ayar yok",
+  "@settingsSearchEmpty": {
+    "placeholders": {
+      "query": { "type": "String" }
+    }
+  },
   "settings": "Ayarlar",
   "settingsAppearance": "Görünüm",
   "themeSystem": "Sistem",
@@ -328,6 +335,26 @@
   "voiceModeTap": "Bas-başlat / bas-bitir",
   "voiceModeInfo": "Basılı tut: düğmeye bastığın sürece dinler, bırakınca notu oluşturur. Bas-başlat: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.",
   "voiceHeardLive": "Algılanan konuşma",
+  "voiceCaptureReady": "Konuşma hazır",
+  "voiceCaptureEditHint": "Düzeltmek için metne dokun",
+  "voiceCapturePunctuation": "{language} · noktalama otomatik",
+  "@voiceCapturePunctuation": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "voiceCaptureAddToNote": "Nota ekle",
+  "voiceCaptureCreateNote": "Yeni not oluştur",
+  "voiceCaptureRestart": "Baştan dinle",
+  "voiceChipSummarizeAdd": "Özetleyerek ekle",
+  "voiceChipSummarizeSave": "Özetleyerek kaydet",
+  "voiceChipToItems": "Maddelere böl",
+  "voiceChipAsList": "Liste notu yap",
+  "voiceChipFix": "Düzelt",
+  "voiceChipCompose": "Asistan oluştursun",
+  "editorToolList": "Liste",
   "permissionsTitle": "İzinler",
   "permMic": "Mikrofon",
   "permMicInfo": "Sesli not ve dikte için gerekli",
@@ -599,6 +626,70 @@
   "more": "Diğer",
   "undone": "Geri alındı",
   "filterOthers": "Diğerleri",
+  "chatSuggestion1": "Alışveriş listemde ne eksik?",
+  "chatSuggestion2": "Bu haftaki iş notlarımı özetle",
+  "chatSuggestion3": "Yarın için hatırlatıcım var mı?",
+  "aiPointsToday": "Bugünkü puan",
+  "aiPointsOf": "{used} / {total}",
+  "@aiPointsOf": {
+    "placeholders": {
+      "used": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "aiPointsRenew": "gece yarısı yenilenir",
+  "aiChatWithNotes": "Notlarınla sohbet",
+  "aiChatInputHint": "Notlarına bir şey sor…",
+  "aiChatLooking": "notlarına bakıyor…",
+  "aiChatFullScreen": "Tam ekran",
+  "aiOnYourNotes": "NOTLARIN ÜZERİNDE",
+  "aiRecentOps": "SON İŞLEMLER",
+  "aiTaskWeekSummary": "Haftayı özetle",
+  "aiTaskWeekSummaryInfo": "Son 7 günün notlarından tek özet",
+  "aiTaskTagUntagged": "Etiketsizleri etiketle",
+  "aiTaskTagUntaggedInfo": "{count} not etiket bekliyor",
+  "@aiTaskTagUntaggedInfo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "aiTaskSuggestTitles": "Başlık öner",
+  "aiTaskSuggestTitlesInfo": "{count} başlıksız not var",
+  "@aiTaskSuggestTitlesInfo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "sectionPinnedShort": "SABİT",
+  "sectionToday": "BUGÜN",
+  "sectionThisWeek": "BU HAFTA",
+  "sectionEarlier": "DAHA ÖNCE",
+  "sectionNoteCount": "{count} not",
+  "@sectionNoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptySearchSemanticHint": "Anlam sekmesini dene",
+  "quickCaptureHint": "Yeni not…",
+  "quickCaptureSave": "Kaydet",
+  "quickAddWrite": "YAZ",
+  "quickAddCapture": "YAKALA — İÇERİKTEN NOT OLUŞTURUR",
+  "viewToggle": "Görünüm",
+  "searchModeText": "Metin",
+  "searchModeMeaning": "Anlam",
+  "filterReminded": "Alarmlı",
+  "filterLocked": "Kilitli",
+  "sortColor": "Renk",
+  "filterSheetTitle": "Süz",
+  "filterReset": "Sıfırla",
+  "filterSectionStatus": "DURUM",
+  "filterSectionFolder": "KLASÖR",
+  "filterSectionTag": "ETİKET",
+  "filterSectionSort": "SIRALAMA",
+  "filterSheetSortHint": "Tarih grupları (BUGÜN, BU HAFTA…) yalnız “Son düzenlenen” sıralamasında gösterilir.",
   "formatTitle": "Biçim",
   "formatBold": "Kalın",
   "formatItalic": "İtalik",

@@ -232,6 +232,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get copied => '복사됨';
 
   @override
+  String get settingsSearchHint => '설정 검색 — “브리핑”, “마이크”';
+
+  @override
+  String settingsSearchEmpty(String query) {
+    return '«$query»에 일치하는 설정이 없습니다';
+  }
+
+  @override
   String get settings => '설정';
 
   @override
@@ -738,6 +746,47 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get voiceHeardLive => '말소리 감지됨';
+
+  @override
+  String get voiceCaptureReady => '음성 인식 준비 완료';
+
+  @override
+  String get voiceCaptureEditHint => '텍스트를 눌러 수정하세요';
+
+  @override
+  String voiceCapturePunctuation(String language) {
+    return '$language · 자동 구두점';
+  }
+
+  @override
+  String get voiceCaptureAddToNote => '노트에 추가';
+
+  @override
+  String get voiceCaptureCreateNote => '새 노트 생성';
+
+  @override
+  String get voiceCaptureRestart => '다시 녹음';
+
+  @override
+  String get voiceChipSummarizeAdd => '요약으로 추가';
+
+  @override
+  String get voiceChipSummarizeSave => '요약으로 저장';
+
+  @override
+  String get voiceChipToItems => '항목별 분리';
+
+  @override
+  String get voiceChipAsList => '체크리스트로 변환';
+
+  @override
+  String get voiceChipFix => '다듬기';
+
+  @override
+  String get voiceChipCompose => '어시스턴트에게 작성 요청';
+
+  @override
+  String get editorToolList => '목록';
 
   @override
   String get permissionsTitle => '권한';
@@ -1330,6 +1379,138 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filterOthers => '기타';
+
+  @override
+  String get chatSuggestion1 => '쇼핑 목록에서 빠진 게 뭐야?';
+
+  @override
+  String get chatSuggestion2 => '이번 주 업무 노트 요약해 줘';
+
+  @override
+  String get chatSuggestion3 => '내일 알림이 있나?';
+
+  @override
+  String get aiPointsToday => '오늘의 포인트';
+
+  @override
+  String aiPointsOf(int used, int total) {
+    return '$used / $total';
+  }
+
+  @override
+  String get aiPointsRenew => '자정에 갱신됨';
+
+  @override
+  String get aiChatWithNotes => '노트와 대화하기';
+
+  @override
+  String get aiChatInputHint => '노트에 대해 물어보세요…';
+
+  @override
+  String get aiChatLooking => '노트를 살펴보는 중…';
+
+  @override
+  String get aiChatFullScreen => '전체 화면';
+
+  @override
+  String get aiOnYourNotes => '노트 기반';
+
+  @override
+  String get aiRecentOps => '최근 작업';
+
+  @override
+  String get aiTaskWeekSummary => '이번 주 요약';
+
+  @override
+  String get aiTaskWeekSummaryInfo => '지난 7일간의 요약';
+
+  @override
+  String get aiTaskTagUntagged => '태그 없는 항목 태그하기';
+
+  @override
+  String aiTaskTagUntaggedInfo(int count) {
+    return '태그 대기 중인 노트 $count개';
+  }
+
+  @override
+  String get aiTaskSuggestTitles => '제목 제안';
+
+  @override
+  String aiTaskSuggestTitlesInfo(int count) {
+    return '제목 없는 노트 $count개';
+  }
+
+  @override
+  String get sectionPinnedShort => '고정됨';
+
+  @override
+  String get sectionToday => '오늘';
+
+  @override
+  String get sectionThisWeek => '이번 주';
+
+  @override
+  String get sectionEarlier => '이전';
+
+  @override
+  String sectionNoteCount(int count) {
+    return '노트 $count개';
+  }
+
+  @override
+  String get emptySearchSemanticHint => '의미 탭을 시도해 보세요';
+
+  @override
+  String get quickCaptureHint => '새 노트…';
+
+  @override
+  String get quickCaptureSave => '저장';
+
+  @override
+  String get quickAddWrite => '작성';
+
+  @override
+  String get quickAddCapture => '캡처 — 콘텐츠로 노트 생성';
+
+  @override
+  String get viewToggle => '보기';
+
+  @override
+  String get searchModeText => '텍스트';
+
+  @override
+  String get searchModeMeaning => '의미';
+
+  @override
+  String get filterReminded => '알림 있음';
+
+  @override
+  String get filterLocked => '잠김';
+
+  @override
+  String get sortColor => '색상';
+
+  @override
+  String get filterSheetTitle => '필터';
+
+  @override
+  String get filterReset => '초기화';
+
+  @override
+  String get filterSectionStatus => '상태';
+
+  @override
+  String get filterSectionFolder => '폴더';
+
+  @override
+  String get filterSectionTag => '태그';
+
+  @override
+  String get filterSectionSort => '정렬';
+
+  @override
+  String get filterSheetSortHint =>
+      '날짜별 정렬(오늘, 이번 주 등)은 마지막 수정일 기준 정렬 시에만 표시됩니다.';
 
   @override
   String get formatTitle => '서식';

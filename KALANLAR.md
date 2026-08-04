@@ -123,6 +123,31 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   orijinal metin gider. Sürüm deposu/geri alma noktası bilerek yapılmadı
   (kullanıcı kararı 2026-07-27) (2026-07-27).
 
+
+## Devir paketi (2026-08-04) — uygulandı, kalan uçlar
+
+- [ ] **Biçim şeridinde "aktif biçim" vurgusu yok** (3b). Tasarım aktif biçimi
+  `primaryContainer` istiyor; editör imlecin bulunduğu parçanın biçimini
+  şeride akıtmıyor. Sahte aktiflik göstermemek için boş bırakıldı.
+- [ ] **Widget uygulamanın temasını giymiyor** — sistem gece moduna bakıyor.
+  Kullanıcı uygulamada Koyu seçip telefon açık modda kalırsa widget kağıt
+  durur. Çözüm: seçilen temayı SharedPreferences'a yaz, Kotlin sağlayıcı
+  RemoteViews ile renkleri çalışma anında uygulasın (4 palet × açık/koyu).
+- [ ] **6a: "Kopyaları temizle" kutusu yok** — benzer not bulmak için bir
+  benzerlik ölçümü gerekiyor, uygulamada yok. Uydurma sayı göstermemek için
+  kutu hiç konmadı.
+- [ ] **6a: "SON İŞLEMLER" bölümü yok** — yapay zekâ işlem geçmişi diye bir
+  depo yok. Eklenirse bölüm de eklenebilir.
+- [ ] **4a: ayar arama satır düzeyinde değil, ALAN düzeyinde.** Alan başlığı +
+  elle yazılmış anahtar kelimeler aranıyor. Satır satır süzme için her ayar
+  satırının aranabilir bir tanıma dönmesi gerekir.
+- [ ] **Web ikonları güncellenmedi** — `web/` hâlâ Flutter şablonunun stok
+  ikonlarını taşıyor (eski çivit simge de oraya hiç işlenmemişti). Proje
+  hedefi Android + Windows olduğu için atlandı.
+- [ ] **Yeni çeviriler (44 anahtar × 14 dil) makine üretimi**, gözden
+  geçirilmedi — yukarıdaki "Çevirileri anadili konuşana göstert" maddesinin
+  kapsamına girer.
+
 ## Sonra yapılacak
 Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
 silme) tamamlandı, kalanlar sırayla:

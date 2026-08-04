@@ -53,6 +53,13 @@ final freeAiRemainingProvider = Provider<int>((ref) {
   return ref.watch(aiGateProvider).remainingToday();
 });
 
+/// Bugünkü toplam puan hakkı. Yapay Zeka sayfasındaki çubuk "kalan / toplam"
+/// gösterdiği için paydaya da erişmek gerekiyor.
+final aiDailyLimitProvider = Provider<int>((ref) {
+  ref.watch(aiQuotaVersionProvider);
+  return ref.watch(aiGateProvider).dailyLimit;
+});
+
 /// Bir isteğin kaç puana mal olduğunu içeriğinden hesaplar.
 ///
 /// Maliyet çağrı yerlerinde elle belirtilmez: her yeni AI özelliği doğru
@@ -115,6 +122,9 @@ class AiGate {
   int _dailyLimit() => (_ref.read(premiumProvider).value ?? false)
       ? AppConstants.premiumDailyAiPoints
       : AppConstants.freeDailyAiPoints;
+
+  /// Dışarıya açık hâli: Yapay Zeka sayfasındaki puan çubuğunun paydası.
+  int get dailyLimit => _dailyLimit();
 
   int remainingToday() {
     final remaining = _dailyLimit() - _usedToday();
