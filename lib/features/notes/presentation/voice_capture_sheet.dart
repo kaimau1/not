@@ -4,6 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -106,6 +107,16 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
 /// dinleme başlamaz. ready = konuşma bitti, metin gözden geçiriliyor.
 enum _Phase { idle, listening, processing, ready, error }
 
+/// Basılı-tut modunda bu süreden KISA basış "dinlemeyi kilitler": parmak
+/// kalksa da dinleme sürer, kullanıcı "Bitir"e basana dek durmaz.
+///
+/// KÖK NEDEN: mod tek yolluydu — düğme bırakılınca dinleme her hâlükârda
+/// biterdi. Parmağını bir an kaydıran ya da uzun konuşmak isteyen kullanıcı
+/// "ses kısmı çalışmıyor" diyordu; boş dökümle hata ekranına düşülüyordu.
+/// Kilit, iki modu tek düğmede birleştirir: tut-konuş-bırak ya da dokun-konuş-
+/// bitir. İkisi de aynı düğmeden, ayar değiştirmeden çalışır.
+const _kHoldLatchThreshold = Duration(milliseconds: 600);
+
 class _VoiceCaptureSheet extends ConsumerStatefulWidget {
   const _VoiceCaptureSheet({required this.target});
 
@@ -132,6 +143,16 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   bool _useSpeech = false;
   bool _ready = false;
 
+  /// Parmak şu an düğmenin üstünde mi (basılı-tut modu).
+  bool _pressed = false;
+
+  /// Basış anı — kısa dokunuşu (kilit) uzun basıştan ayırmak için.
+  DateTime? _pressedAt;
+
+  /// Kısa dokunuşla kilitlendi mi: dinleme parmak kalksa da sürer ve düğme
+  /// "Bitir"e döner.
+  bool _latched = false;
+
   @override
   void initState() {
     super.initState();
@@ -146,7 +167,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     // modunda kullanıcı düğmeyi tutana dek bekle.
     if (ref.read(voiceButtonModeProvider) == VoiceButtonMode.tap) {
       await _startListening();
+      return;
     }
+    // Basılı-tut: izin kutusunu ŞİMDİ aç. Eskiden ilk basışta açılıyordu;
+    // parmak düğmedeyken sistem kutusu çıkıyor, kullanıcı "İzin ver"e basmak
+    // için parmağını kaldırınca bırakma olayı dinlemeyi hiç başlamadan
+    // bitiriyor ve "konuşma algılanamadı" hatası çıkıyordu.
+    if (_useSpeech) await DeviceSpeech.ensureMicPermission();
   }
 
   Future<void> _startListening() async {
@@ -265,6 +292,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       _editController.clear();
       _elapsed = Duration.zero;
       _phase = _Phase.idle;
+      _pressed = false;
+      _pressedAt = null;
+      _latched = false;
     });
     if (ref.read(voiceButtonModeProvider) == VoiceButtonMode.tap) {
       await _startListening();
@@ -322,10 +352,18 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     final scheme = Theme.of(context).colorScheme;
     final holdMode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold;
     final listening = _phase == _Phase.listening;
+    // Sistem gezinme çubuğu (geri/ana sayfa) levhanın ALTINI örtüyordu:
+    // showModalBottomSheet'in useSafeArea'sı üst/yanları korur, ALTI bilerek
+    // korumaz (klavye için). Alt boşluğu levha kendi ekler; klavye açıkken
+    // onun yüksekliği zaten daha büyüktür.
+    final bottomGap = math.max(
+      MediaQuery.viewInsetsOf(context).bottom,
+      MediaQuery.viewPaddingOf(context).bottom,
+    );
 
     if (!_ready || _phase == _Phase.processing) {
       return Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.fromLTRB(32, 32, 32, 32 + bottomGap),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -341,7 +379,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
     if (_phase == _Phase.error) {
       return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+        padding: EdgeInsets.fromLTRB(20, 24, 20, 24 + bottomGap),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -359,7 +397,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 8, 14, 14),
+      padding: EdgeInsets.fromLTRB(14, 8, 14, 14 + bottomGap),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -422,8 +460,18 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  ready ? l10n.voiceCaptureReady : l10n.voiceListening,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  // Başlık DURUMU söyler: basılı-tut modunda levha açılır
+                  // açılmaz "Dinliyorum..." yazması yanlıştı — mikrofon o an
+                  // kapalıydı, kullanıcı konuşup boş dönüyordu.
+                  ready
+                      ? l10n.voiceCaptureReady
+                      : listening
+                      ? l10n.voiceListening
+                      : l10n.voiceModeHold,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -581,18 +629,31 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       );
     }
 
+    // Düğme "basılı tut" ile mi çalışıyor: kilitlendiyse artık dokunmalı
+    // düğmedir (bas → bitir).
+    final holdActive = holdMode && !_latched;
+
     // Basılı-tut modu: düğme idle ve listening evrelerinde AYNI ağaçta
     // kalmalı — aksi hâlde parmak basılıyken düğme ağaçtan kalkar ve bırakma
-    // olayı (onLongPressEnd) hiç gelmez. (Eski dikte sayfasında bulunmuş bir
-    // tuzak; yerleşim değişse de kural aynı.)
+    // olayı hiç gelmez. (Eski dikte sayfasında bulunmuş bir tuzak; yerleşim
+    // değişse de kural aynı.)
     final button = SizedBox(
       height: 54,
       width: double.infinity,
       child: FilledButton.icon(
-        onPressed: holdMode ? null : _finish,
+        // Basılı-tut modunda dokunma geri bildirimi Listener'dan gelir; düğme
+        // yine de ETKİN kalır (eskiden disabled'dı ve soluk görünüyordu).
+        onPressed: holdActive
+            ? null
+            : listening
+            ? _finish
+            : _startListening,
         style: FilledButton.styleFrom(
           backgroundColor: listening ? scheme.error : scheme.primaryContainer,
-          foregroundColor: listening ? scheme.onError : scheme.onPrimaryContainer,
+          foregroundColor: listening
+              ? scheme.onError
+              : scheme.onPrimaryContainer,
+          // Basılı-tutta düğme "devre dışı" görünmemeli: parmak orada duracak.
           disabledBackgroundColor: listening
               ? scheme.error
               : scheme.primaryContainer,
@@ -604,16 +665,79 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           ),
         ),
         icon: Icon(listening ? Icons.stop_circle : Icons.mic),
-        label: Text(listening ? l10n.voiceFinish : l10n.dictationHoldHint),
+        label: Text(
+          listening
+              ? (holdActive && _pressed ? l10n.voiceListening : l10n.voiceFinish)
+              : (holdActive ? l10n.voiceModeHold : l10n.voiceModeTap),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
 
-    if (!holdMode) return button;
-    return GestureDetector(
-      onLongPressStart: (_) => _startListening(),
-      onLongPressEnd: (_) => _finish(),
-      child: button,
+    // Düğmenin altındaki tek satırlık kullanım ipucu: hangi modda ne
+    // yapılacağı düğmenin kendisinde değil burada yazar (etiket kısa kalsın).
+    // Dinlerken dokunmalı modda ipucu YOK: düğme zaten "Bitir" diyor.
+    final hintText = holdActive
+        ? l10n.dictationHoldHint
+        : listening
+        ? ''
+        : l10n.voiceTapHint;
+    final hint = hintText.isEmpty
+        ? const SizedBox(height: 6)
+        : Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              hintText,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+            ),
+          );
+
+    if (!holdActive) {
+      return Column(mainAxisSize: MainAxisSize.min, children: [button, hint]);
+    }
+
+    // Listener (GestureDetector.onLongPress DEĞİL): uzun basış tanıyıcısı
+    // ~500 ms bekler, o süre boyunca konuşulanlar kaybolurdu. Parmak değer
+    // değmez dinleme başlar.
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Listener(
+          onPointerDown: (_) => _pressStart(),
+          onPointerUp: (_) => _pressEnd(),
+          onPointerCancel: (_) => _pressEnd(),
+          child: button,
+        ),
+        hint,
+      ],
     );
+  }
+
+  /// Parmak düğmeye değdi: beklemeden dinlemeye başla.
+  void _pressStart() {
+    _pressedAt = DateTime.now();
+    setState(() => _pressed = true);
+    HapticFeedback.selectionClick();
+    if (_phase == _Phase.idle) _startListening();
+  }
+
+  /// Parmak kalktı: uzun basışsa döküme geç, kısa dokunuşsa dinlemeyi KİLİTLE
+  /// (bkz. [_kHoldLatchThreshold]).
+  void _pressEnd() {
+    if (!_pressed) return;
+    final start = _pressedAt;
+    final quick =
+        start == null ||
+        DateTime.now().difference(start) < _kHoldLatchThreshold;
+    setState(() {
+      _pressed = false;
+      if (quick) _latched = true;
+    });
+    if (!quick) _finish();
   }
 
   Widget _chips(AppLocalizations l10n, ColorScheme scheme) {

@@ -318,6 +318,12 @@ abstract class AppLocalizations {
   /// **'Ekle'**
   String get addAttachment;
 
+  /// No description provided for @addAttachmentMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer ek türleri…'**
+  String get addAttachmentMore;
+
   /// No description provided for @addImage.
   ///
   /// In tr, this message translates to:

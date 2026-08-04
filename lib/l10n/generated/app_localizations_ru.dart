@@ -115,6 +115,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addAttachment => 'Добавить';
 
   @override
+  String get addAttachmentMore => 'Другие типы вложений…';
+
+  @override
   String get addImage => 'Добавить изображение';
 
   @override

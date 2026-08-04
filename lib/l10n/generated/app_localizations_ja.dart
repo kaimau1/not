@@ -115,6 +115,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addAttachment => '追加';
 
   @override
+  String get addAttachmentMore => 'その他の添付ファイル…';
+
+  @override
   String get addImage => '画像を追加';
 
   @override

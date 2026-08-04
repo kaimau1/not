@@ -115,6 +115,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addAttachment => 'Ekle';
 
   @override
+  String get addAttachmentMore => 'Diğer ek türleri…';
+
+  @override
   String get addImage => 'Görsel ekle';
 
   @override

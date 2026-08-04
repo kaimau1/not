@@ -259,7 +259,15 @@ class _FilterSheet extends ConsumerWidget {
     final applied = appliedFilterCount(ref) > 0;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+      // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
+      // useSafeArea levhanın ALTINI korumaz, son bölüm çubuğun arkasında
+      // kalıyordu.
+      padding: EdgeInsets.fromLTRB(
+        14,
+        0,
+        14,
+        20 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -279,6 +287,13 @@ class _FilterSheet extends ConsumerWidget {
                   onPressed: () => resetFilters(ref),
                   child: Text(l10n.filterReset),
                 ),
+              // "Bitti": levhayı kapatmanın görünür yolu. Aşağı sürüklemek ya
+              // da dışarı dokunmak da kapatır ama levha ekranı doldurduğunda
+              // ikisi de akla gelmiyordu.
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.close),
+              ),
             ],
           ),
           const SizedBox(height: 6),
@@ -426,19 +441,28 @@ class _Option extends StatelessWidget {
         child: Container(
           height: 36,
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: selected ? scheme.primary : scheme.outlineVariant,
             ),
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w600,
-              color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+          // KÖK NEDEN (levha kullanışsızdı): kutuda `alignment: center`
+          // vardı. Wrap çocuklarına GEVŞEK kısıt verir; hizalaması olan bir
+          // Container gevşek kısıtta eldeki EN GENİŞ ölçüyü alır — her seçenek
+          // satırın tamamını kaplıyor, dokuz süzgeç + klasörler + etiketler +
+          // sıralama alt alta uzayıp ekranlarca kaydırma gerektiriyordu.
+          // widthFactor: 1 olan Center, yüksekliği doldururken genişliği
+          // METNE göre verir; seçenekler yan yana çip gibi akar.
+          child: Center(
+            widthFactor: 1,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+              ),
             ),
           ),
         ),

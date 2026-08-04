@@ -32,6 +32,7 @@
   "newItemHint": "新条目",
   "moreItemsCount": "还有 {count} 个条目",
   "addAttachment": "添加",
+  "addAttachmentMore": "更多附件类型…",
   "addImage": "添加图片",
   "addPdf": "添加 PDF",
   "addSlide": "添加幻灯片",

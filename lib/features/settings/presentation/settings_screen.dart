@@ -1489,6 +1489,37 @@ class _BuiltInAiStatus extends ConsumerWidget {
   }
 }
 
+/// AI bölümündeki form alanlarının ORTAK görünümü.
+///
+/// Genel tema alanları yalnız dolgu rengiyle çiziyor (kenarlık yok); kâğıt
+/// temada o dolgu kart zeminiyle neredeyse aynı olduğundan açılır listeler ve
+/// anahtar kutusu "sayfaya dağılmış yazılar" gibi duruyordu. Burada görünür
+/// kenarlık + tek tip iç boşluk verilir, alanların nerede başlayıp bittiği
+/// belli olur.
+InputDecoration _aiFieldDecoration(
+  BuildContext context, {
+  required String label,
+  String? hint,
+}) {
+  final scheme = Theme.of(context).colorScheme;
+  OutlineInputBorder border(Color color, [double width = 1]) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+  return InputDecoration(
+    labelText: label,
+    hintText: hint,
+    filled: true,
+    fillColor: scheme.surface,
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+    border: border(scheme.outlineVariant),
+    enabledBorder: border(scheme.outlineVariant),
+    focusedBorder: border(scheme.primary, 1.6),
+  );
+}
+
 class _GeminiKeyEditor extends ConsumerStatefulWidget {
   const _GeminiKeyEditor();
 
@@ -1554,7 +1585,8 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
       children: [
         DropdownButtonFormField<AiProvider>(
           initialValue: provider,
-          decoration: InputDecoration(labelText: l10n.aiProvider),
+          isExpanded: true,
+          decoration: _aiFieldDecoration(context, label: l10n.aiProvider),
           items: [
             for (final option in AiProvider.values)
               DropdownMenuItem(
@@ -1582,6 +1614,10 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
+        // Sağlayıcı bloğu ile anahtar bloğu arasına ayırıcı: ikisi arka arkaya
+        // duran metin yığını gibi okunuyordu.
+        const SizedBox(height: 14),
+        const Divider(height: 1),
         const SizedBox(height: 14),
         if (hasKey)
           Padding(
@@ -1603,11 +1639,12 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
         TextField(
           controller: _controller,
           obscureText: true,
-          decoration: InputDecoration(
-            labelText: '${provider.label} · ${l10n.apiKeyFieldLabel}',
+          decoration: _aiFieldDecoration(
+            context,
+            label: '${provider.label} · ${l10n.apiKeyFieldLabel}',
             // İpucu sağlayıcının anahtar biçimi: yanlış sağlayıcıya
             // yapıştırıldığında kullanıcı hatayı beklemeden görür.
-            hintText: provider.keyHint,
+            hint: provider.keyHint,
           ),
         ),
         const SizedBox(height: 8),
@@ -1640,6 +1677,8 @@ class _GeminiKeyEditorState extends ConsumerState<_GeminiKeyEditor> {
               : const Icon(Icons.check_circle_outline),
           label: Text(l10n.validateAndSave),
         ),
+        const SizedBox(height: 10),
+        const Divider(height: 1),
         const _AiDiagnosticsTile(),
       ],
     );
@@ -1721,6 +1760,7 @@ class _ModelSelectors extends ConsumerWidget {
       children: [
         for (final task in AiTask.values) ...[
           _modelDropdown(
+            context: context,
             label: _taskLabel(l10n, task),
             models: models,
             value: selected[task],
@@ -1776,6 +1816,7 @@ class _ModelSelectors extends ConsumerWidget {
   }
 
   Widget _modelDropdown({
+    required BuildContext context,
     required String label,
     required List<AiModel> models,
     required String? value,
@@ -1790,7 +1831,8 @@ class _ModelSelectors extends ConsumerWidget {
         : models;
     return DropdownButtonFormField<String?>(
       initialValue: value,
-      decoration: InputDecoration(labelText: label),
+      isExpanded: true,
+      decoration: _aiFieldDecoration(context, label: label),
       // Seçili öğe kapalı hâlde TEK satıra sığmalı: açık listedeki iki satırlı
       // (ad + gerekçe) görünüm alana sığmayıp taşma çizgisi veriyordu.
       selectedItemBuilder: (context) => [
@@ -1923,16 +1965,78 @@ class _BriefingEditor extends ConsumerWidget {
   }
 }
 
+/// AI alanındaki anahtar satırlarının ORTAK biçimi.
+///
+/// Dördü de ayrı ayrı `SwitchListTile` kuruyordu: başlıklar gövde punto,
+/// açıklamalar aynı puntoda ve tam genişlikte olduğundan satırlar birbirine
+/// karışıyor, hangi açıklamanın hangi anahtara ait olduğu okunmuyordu
+/// (kullanıcı: "ai kısmında görünüm bozuk ve karışık"). Tek yerde: başlık
+/// vurgulu, açıklama küçük ve soluk, anahtar sağda hizalı.
+class _AiSwitchTile extends StatelessWidget {
+  const _AiSwitchTile({
+    required this.title,
+    required this.info,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String info;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    info,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.3,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AutoTagSwitch extends ConsumerWidget {
   const _AutoTagSwitch();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.autoTagSetting),
-      subtitle: Text(l10n.autoTagSettingInfo),
+    return _AiSwitchTile(
+      title: l10n.autoTagSetting,
+      info: l10n.autoTagSettingInfo,
       value: ref.watch(autoTagProvider),
       onChanged: (value) => ref.read(autoTagProvider.notifier).set(value),
     );
@@ -1945,10 +2049,9 @@ class _AutoTitleSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.autoTitleSetting),
-      subtitle: Text(l10n.autoTitleSettingInfo),
+    return _AiSwitchTile(
+      title: l10n.autoTitleSetting,
+      info: l10n.autoTitleSettingInfo,
       value: ref.watch(autoTitleProvider),
       onChanged: (value) => ref.read(autoTitleProvider.notifier).set(value),
     );
@@ -1963,10 +2066,9 @@ class _AssistantVoiceSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.assistantVoiceSetting),
-      subtitle: Text(l10n.assistantVoiceSettingInfo),
+    return _AiSwitchTile(
+      title: l10n.assistantVoiceSetting,
+      info: l10n.assistantVoiceSettingInfo,
       value: ref.watch(assistantVoiceProvider),
       onChanged: (value) =>
           ref.read(assistantVoiceProvider.notifier).set(value),
@@ -1980,10 +2082,9 @@ class _AiSkipCheckedSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.aiSkipCheckedSetting),
-      subtitle: Text(l10n.aiSkipCheckedInfo),
+    return _AiSwitchTile(
+      title: l10n.aiSkipCheckedSetting,
+      info: l10n.aiSkipCheckedInfo,
       value: ref.watch(aiSkipCheckedProvider),
       onChanged: (value) => ref.read(aiSkipCheckedProvider.notifier).set(value),
     );
@@ -2004,7 +2105,12 @@ class _AdvancedAiSection extends ConsumerWidget {
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 8),
+        // Üstteki boşluk ŞART: içeriğin ilk çocuğu, etiketi kutunun ÜSTÜNE
+        // taşan bir form alanı (sağlayıcı açılır listesi). Boşluksuzken o
+        // etiket başlığın alt satırının üstüne biniyor ve bölüm "bozuk ve
+        // karışık" görünüyordu.
+        childrenPadding: const EdgeInsets.only(top: 14, bottom: 8),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
         leading: const Icon(Icons.tune),
         title: Text(l10n.aiAdvanced),
         subtitle: Text(

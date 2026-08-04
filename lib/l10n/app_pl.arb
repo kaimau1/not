@@ -32,6 +32,7 @@
   "newItemHint": "Nowa pozycja",
   "moreItemsCount": "+{count} innych pozycji",
   "addAttachment": "Dodaj",
+  "addAttachmentMore": "Więcej typów załączników…",
   "addImage": "Dodaj obraz",
   "addPdf": "Dodaj PDF",
   "addSlide": "Dodaj slajdy",

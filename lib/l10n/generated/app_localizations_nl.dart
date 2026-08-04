@@ -115,6 +115,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get addAttachment => 'Toevoegen';
 
   @override
+  String get addAttachmentMore => 'Meer bijlagetypen…';
+
+  @override
   String get addImage => 'Afbeelding toevoegen';
 
   @override

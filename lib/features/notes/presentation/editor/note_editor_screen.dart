@@ -2446,8 +2446,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// "tüm ekler" satırı EKLENDİ: mevcut ek menüsünde kamera, belge tarama, QR,
   /// slayt, çizim, ses ve video da var; dört satıra indirseydik bunlar
   /// erişilemez olurdu.
-  Widget _addToolMenu(AppLocalizations l10n) {
+  ///
+  /// İKİ TEKRAR TEMİZLENDİ (kullanıcı: "ekle kısmı düzensiz, 2 kez ekle
+  /// seçeneği çıkıyor"):
+  /// - Son satır düğmenin kendisiyle aynı adı ("Ekle") taşıyordu; artık
+  ///   "Diğer ek türleri…" diyor ve ne açtığı belli.
+  /// - "Yeni öğe" yalnız LİSTE notunda kalır: metin notunda alt çubuğun kendi
+  ///   "Liste" segmenti zaten aynı işi yapıyor, menüde ikinci kez duruyordu.
+  Widget _addToolMenu(AppLocalizations l10n, NoteType noteType) {
     final scheme = Theme.of(context).colorScheme;
+    final showItem = noteType != NoteType.text;
     return PopupMenuButton<String>(
       tooltip: l10n.addAttachment,
       offset: const Offset(0, -8),
@@ -2468,15 +2476,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         }
       },
       itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'item',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.checklist),
-            title: Text(l10n.newItemHint),
+        if (showItem)
+          PopupMenuItem(
+            value: 'item',
+            child: ListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.checklist),
+              title: Text(l10n.newItemHint),
+            ),
           ),
-        ),
         PopupMenuItem(
           value: 'photo',
           child: ListTile(
@@ -2511,7 +2520,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             dense: true,
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.attach_file),
-            title: Text(l10n.addAttachment),
+            title: Text(l10n.addAttachmentMore),
           ),
         ),
       ],
@@ -3578,7 +3587,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                   },
                                 ),
                               const SizedBox(width: 3),
-                              _addToolMenu(l10n),
+                              _addToolMenu(l10n, note.type),
                             ],
                           ),
                         ),

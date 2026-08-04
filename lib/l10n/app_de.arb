@@ -32,6 +32,7 @@
   "newItemHint": "Neuer Eintrag",
   "moreItemsCount": "+{count} weitere Einträge",
   "addAttachment": "Hinzufügen",
+  "addAttachmentMore": "Weitere Anhangtypen …",
   "addImage": "Bild hinzufügen",
   "addPdf": "PDF hinzufügen",
   "addSlide": "Folien hinzufügen",

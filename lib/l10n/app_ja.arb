@@ -32,6 +32,7 @@
   "newItemHint": "新しい項目",
   "moreItemsCount": "他 {count} 件の項目",
   "addAttachment": "追加",
+  "addAttachmentMore": "その他の添付ファイル…",
   "addImage": "画像を追加",
   "addPdf": "PDF を追加",
   "addSlide": "スライドを追加",

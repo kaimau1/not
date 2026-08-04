@@ -115,6 +115,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get addAttachment => 'Adicionar';
 
   @override
+  String get addAttachmentMore => 'Mais tipos de anexo…';
+
+  @override
   String get addImage => 'Adicionar imagem';
 
   @override

@@ -115,6 +115,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addAttachment => 'जोड़ें';
 
   @override
+  String get addAttachmentMore => 'अन्य अटैचमेंट प्रकार…';
+
+  @override
   String get addImage => 'चित्र जोड़ें';
 
   @override

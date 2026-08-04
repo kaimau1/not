@@ -32,6 +32,7 @@
   "newItemHint": "Nieuw item",
   "moreItemsCount": "+{count} andere items",
   "addAttachment": "Toevoegen",
+  "addAttachmentMore": "Meer bijlagetypen…",
   "addImage": "Afbeelding toevoegen",
   "addPdf": "Pdf toevoegen",
   "addSlide": "Dia's toevoegen",

@@ -115,6 +115,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get addAttachment => 'Tambah';
 
   @override
+  String get addAttachmentMore => 'Jenis lampiran lainnya…';
+
+  @override
   String get addImage => 'Tambah gambar';
 
   @override

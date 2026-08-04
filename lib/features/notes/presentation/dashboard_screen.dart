@@ -358,6 +358,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.read(focusedNoteProvider.notifier).focus(id);
   }
 
+  /// Üstteki "Yeni not…" satırından not kaydedildi.
+  ///
+  /// KÖK NEDEN (kullanıcı: "kaydet dememe rağmen not oluşturmuyor"): not
+  /// gerçekte oluşuyordu ama ekranda HİÇBİR ŞEY değişmiyordu — yeni not
+  /// sabitlenmiş notların altındaki bölüme, çoğu zaman görünür alanın dışına
+  /// düşüyor, satır da sessizce temizleniyordu; kullanıcı kaydın kaybolduğunu
+  /// sanıyordu. Artık kart vurgulanıp görünür alana kaydırılır ve tek dokunuşla
+  /// açılabilen bir bildirim çıkar.
+  void _afterQuickCapture(String id) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    ref.read(focusedNoteProvider.notifier).focus(id);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l10n.assistantNoteCreated),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: l10n.openNote,
+            onPressed: () => _openNew(id),
+          ),
+        ),
+      );
+  }
+
   Future<void> _createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
@@ -910,6 +936,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onCreateChecklist: () =>
                               _createNote(NoteType.checklist),
                           onVoice: _captureVoiceNote,
+                          onSaved: _afterQuickCapture,
                         ),
                         Expanded(
                           // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
@@ -1664,10 +1691,15 @@ class _QuickCaptureRow extends ConsumerStatefulWidget {
   const _QuickCaptureRow({
     required this.onCreateChecklist,
     required this.onVoice,
+    required this.onSaved,
   });
 
   final VoidCallback onCreateChecklist;
   final VoidCallback onVoice;
+
+  /// Not oluşturulduktan sonra çağrılır (yeni notun id'si ile): ana ekran
+  /// kartı vurgular ve bildirim gösterir.
+  final void Function(String noteId) onSaved;
 
   @override
   ConsumerState<_QuickCaptureRow> createState() => _QuickCaptureRowState();
@@ -1695,6 +1727,10 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
     final id = await repo.createNote(NoteType.text);
     final folderId = ref.read(selectedFolderProvider);
     repo.updateFields(id, {'body': text, 'folderId': ?folderId});
+    // Klavye kapanır: not kaydedildi, imleç boş satırda yanıp sönmesin —
+    // "kaydettim ama bir şey olmadı" hissinin bir parçası da buydu.
+    FocusManager.instance.primaryFocus?.unfocus();
+    widget.onSaved(id);
   }
 
   @override

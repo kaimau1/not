@@ -115,6 +115,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addAttachment => '添加';
 
   @override
+  String get addAttachmentMore => '更多附件类型…';
+
+  @override
   String get addImage => '添加图片';
 
   @override

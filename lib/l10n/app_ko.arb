@@ -32,6 +32,7 @@
   "newItemHint": "새 항목",
   "moreItemsCount": "+{count}개 항목 더",
   "addAttachment": "추가",
+  "addAttachmentMore": "다른 첨부 형식…",
   "addImage": "이미지 추가",
   "addPdf": "PDF 추가",
   "addSlide": "슬라이드 추가",

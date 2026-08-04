@@ -32,6 +32,7 @@
   "newItemHint": "New item",
   "moreItemsCount": "+{count} more items",
   "addAttachment": "Add",
+  "addAttachmentMore": "More attachment types…",
   "addImage": "Add image",
   "addPdf": "Add PDF",
   "addSlide": "Add slides",
