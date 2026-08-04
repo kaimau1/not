@@ -196,7 +196,13 @@ class AttachmentRepository {
     // [freedBytes]: aynı çağrıda yerini alacağı eski ekin boyutu (kırpma).
     // Sayılmasaydı tavana dayanmış kullanıcı görselini KIRPAMAZDI — kırpma
     // yeri neredeyse her zaman boşaltır.
-    _checkQuota(bytes.length - freedBytes);
+    //
+    // Görüntülü not tavana girmez: buluta hiç yüklenmiyor (bkz. prepareVideo,
+    // upload). Ayrım kaynağın türünden okunuyor ki "video kopyala" gibi yeni
+    // bir yol eklendiğinde ayrıca hatırlanması gerekmesin.
+    if (meta.kind != AttachmentKind.video) {
+      _checkQuota(bytes.length - freedBytes);
+    }
     final objectName = '${meta.id}_${meta.fileName}';
     if (!kIsWeb) {
       final dir = await _attachmentsDir(noteId);
