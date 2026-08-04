@@ -144,6 +144,15 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
         _error = e.message;
         _generating = false;
       });
+    } catch (e) {
+      // HER hata yakalanır (yalnız GeminiException değil): güvenli depo,
+      // dosya sistemi ya da eklenti kaynaklı bir istisnada `_generating`
+      // true kalıyor ve ekran sonsuza dek dönen çarkta takılıyordu.
+      if (!mounted) return;
+      setState(() {
+        _error = context.l10n.aiError('$e');
+        _generating = false;
+      });
     }
   }
 

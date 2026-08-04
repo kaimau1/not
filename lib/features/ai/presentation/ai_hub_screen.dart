@@ -47,6 +47,11 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // Kendi anahtarını girenler (BYOK) ve premium kullanıcılar dahili kapıdan
+    // hiç geçmez, sayaç hiç azalmaz — çubuk onlara sürekli "30 / 30" diyordu.
+    // Sınır uygulanmayan kullanıcıya puan çubuğu HİÇ gösterilmez (Ayarlar
+    // zaten durumu ayrı ayrı yazıyor, bkz. _BuiltInAiStatus).
+    final metered = !ref.watch(aiUnlimitedProvider);
     final remaining = ref.watch(freeAiRemainingProvider);
     final limit = ref.watch(aiDailyLimitProvider);
     final chat = ref.watch(chatProvider);
@@ -82,7 +87,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
             children: [
-              AiPointsBar(remaining: remaining, limit: limit),
+              if (metered) AiPointsBar(remaining: remaining, limit: limit),
               const SizedBox(height: 16),
               _ChatCard(
                 chat: chat,

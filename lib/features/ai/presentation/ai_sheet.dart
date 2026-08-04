@@ -624,13 +624,17 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                   // puan çubuğu, altında asistan kartı, sonra iki sütunlu iş
                   // kutuları. Eskiden burası düz bir ListTile listesiydi ve
                   // hangi işin ne yaptığı ancak alt yazıyı okuyunca anlaşılıyordu.
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
-                    child: AiPointsBar(
-                      remaining: ref.watch(freeAiRemainingProvider),
-                      limit: ref.watch(aiDailyLimitProvider),
+                  // Sınırsız kullanıcıda (BYOK/premium) çubuk gizlenir: sayaç
+                  // hiç azalmadığı için sürekli dolu görünüyor ve yanlış
+                  // bilgi veriyordu (bkz. ai_hub_screen.dart).
+                  if (!ref.watch(aiUnlimitedProvider))
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                      child: AiPointsBar(
+                        remaining: ref.watch(freeAiRemainingProvider),
+                        limit: ref.watch(aiDailyLimitProvider),
+                      ),
                     ),
-                  ),
                   // Notun tamamıyla (gövde + PDF/görsel ekleri) sohbet.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -282,41 +282,47 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         // HER hata yakalanır (yalnız GeminiException değil): anahtarsız
         // kullanıcıda ağ/eklenti kaynaklı başka istisnalar da çıkabiliyor ve o
         // yollarda not HİÇ oluşmuyordu — "AI olmasa dahi not oluşmalı".
-        final failure = e is GeminiException
-            ? (e.isAuthError ? noApiKeyText : e.message)
-            : genericErrorText;
-        final audioPath = _audioPath;
-        if (transcript.isEmpty && audioPath == null) {
-          throw StateError(nothingHeardText);
-        }
-        final repo = ref.read(notesRepositoryProvider);
-        if (repo == null) {
-          throw StateError(failure);
-        }
-        final id = await repo.createNote(NoteType.text);
-        if (transcript.isNotEmpty) {
-          repo.updateFields(id, {'body': transcript});
-          // AI hiç çalışmasa da hatırlatıcı kurulur: zaman ayrıştırması
-          // yerelde yapılıyor, modele ihtiyaç yok.
-          final when = parseTurkishDateTime(transcript);
-          if (when != null) repo.setReminder(id, when);
-        } else {
-          final attachments = ref.read(attachmentRepositoryProvider);
-          if (attachments == null) {
+        // Asistan ZATEN bir not kurduysa yedek yol İKİNCİ bir not kurmaz:
+        // araç çağrısı başarılı olup çağrı sonraki turda düşerse (ağ hatası,
+        // 6 tur sınırı) aynı konuşmadan iki not oluşuyordu. Notun içeriği
+        // eksikse aşağıdaki güvenlik ağı zaten dökümle dolduruyor.
+        if (resultNoteId == null) {
+          final failure = e is GeminiException
+              ? (e.isAuthError ? noApiKeyText : e.message)
+              : genericErrorText;
+          final audioPath = _audioPath;
+          if (transcript.isEmpty && audioPath == null) {
+            throw StateError(nothingHeardText);
+          }
+          final repo = ref.read(notesRepositoryProvider);
+          if (repo == null) {
             throw StateError(failure);
           }
-          final attachment = await attachments.prepareAudio(
-            noteId: id,
-            sourcePath: audioPath!,
-            duration: state.elapsed,
-          );
-          // prepareAudio kaynağı kendi klasörüne TAŞIR; artık silinmemeli.
-          _audioPath = null;
-          repo.updateFields(id, {
-            'attachments': [attachment.toMap()],
-          });
+          final id = await repo.createNote(NoteType.text);
+          if (transcript.isNotEmpty) {
+            repo.updateFields(id, {'body': transcript});
+            // AI hiç çalışmasa da hatırlatıcı kurulur: zaman ayrıştırması
+            // yerelde yapılıyor, modele ihtiyaç yok.
+            final when = parseTurkishDateTime(transcript);
+            if (when != null) repo.setReminder(id, when);
+          } else {
+            final attachments = ref.read(attachmentRepositoryProvider);
+            if (attachments == null) {
+              throw StateError(failure);
+            }
+            final attachment = await attachments.prepareAudio(
+              noteId: id,
+              sourcePath: audioPath!,
+              duration: state.elapsed,
+            );
+            // prepareAudio kaynağı kendi klasörüne TAŞIR; artık silinmemeli.
+            _audioPath = null;
+            repo.updateFields(id, {
+              'attachments': [attachment.toMap()],
+            });
+          }
+          resultNoteId = id;
         }
-        resultNoteId = id;
         reply = savedText;
       }
 

@@ -122,6 +122,13 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   içeriği değiştiriyor, geri alma yalnız o anki şeritte. Uygulama kapanınca
   orijinal metin gider. Sürüm deposu/geri alma noktası bilerek yapılmadı
   (kullanıcı kararı 2026-07-27) (2026-07-27).
+- [ ] **AI denetiminin iki düzeltmesi testsiz** — sesli nottaki "çift not"
+  koruması (`voice_assistant.dart finish()`) ve semantik aramanın boş vektör
+  yedeği (`gemini_service.dart embedTexts`) yalnız muhakemeyle doğrulandı;
+  ikisi de Firestore/servis sahtesi ister, projede öyle bir altyapı yok.
+  Cihazda da denenmedi. Kontrol: sesli notu ağ kesikken bitir (tek not
+  oluşmalı), sonra semantik aramayı anahtarsız çalıştır (düz aramaya
+  düşmeli) (2026-08-04).
 
 
 ## Devir paketi (2026-08-04) — uygulandı, kalan uçlar

@@ -685,6 +685,13 @@ class GeminiService {
         },
       );
       final embeddings = response.data?['embeddings'] as List<dynamic>? ?? [];
+      // Vektör gelmediyse BURADA hata verilir: çağıran (SemanticIndex) boş
+      // listenin `.first`ine gidip StateError atıyordu ve o istisna
+      // semanticSearchProvider'ın `on GeminiException` yedeğine takılmadığı
+      // için arama düz metne düşmek yerine hata ekranına düşüyordu.
+      if (embeddings.isEmpty) {
+        throw const GeminiException('Semantik arama için vektör alınamadı');
+      }
       return [
         for (final e in embeddings)
           [
