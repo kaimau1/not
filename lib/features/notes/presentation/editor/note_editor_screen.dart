@@ -2560,6 +2560,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
     if (result == null || !mounted) return;
 
+    // Dökümü yapılamamış konuşma (anahtar yok / kota / ağ): kayıt nota SES EKİ
+    // olarak girer — yapay zekâ çalışmasa da konuşma kaybolmaz.
+    final audioPath = result.audioPath;
+    if (audioPath != null) {
+      await _attachVoiceAudio(audioPath, result.audioDuration);
+      if (!mounted) return;
+      if (result.text.trim().isNotEmpty) _appendText(result.text);
+      return;
+    }
+
     final instruction = voiceCaptureInstruction(result.action);
     if (instruction == null) {
       _appendText(result.text);
@@ -2580,6 +2590,33 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (mounted) _showSnack(l10n.aiError(e.toString()));
     } finally {
       if (mounted) setState(() => _aiTask = null);
+    }
+  }
+
+  /// Sesli yakalama levhasından dönen (dökümü yapılamamış) kaydı nota ek olarak
+  /// bağlar. Yol levhadan devralınır: burada kullanılmazsa dosya silinir.
+  Future<void> _attachVoiceAudio(String path, Duration duration) async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) {
+      File(path).delete().ignore();
+      return;
+    }
+    try {
+      final attachment = await repo.prepareAudio(
+        noteId: widget.noteId,
+        sourcePath: path,
+        duration: duration,
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        immediate: true,
+      );
+    } on FileTooLargeException {
+      File(path).delete().ignore();
+      if (mounted) _showSnack(_tooLargeMessage());
+    } catch (e) {
+      File(path).delete().ignore();
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
   }
 

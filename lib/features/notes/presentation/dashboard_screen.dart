@@ -23,6 +23,7 @@ import '../../folders/domain/note_folder.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
+import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -358,7 +359,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ref.read(focusedNoteProvider.notifier).focus(id);
   }
 
-  /// Üstteki "Yeni not…" satırından not kaydedildi.
+  /// Ana ekranda (hızlı yakalama satırı ya da sesli yakalama) not oluşturuldu:
+  /// kullanıcı GÖRSÜN.
   ///
   /// KÖK NEDEN (kullanıcı: "kaydet dememe rağmen not oluşturmuyor"): not
   /// gerçekte oluşuyordu ama ekranda HİÇBİR ŞEY değişmiyordu — yeni not
@@ -411,7 +413,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     // "Asistan oluştursun": notu döküme bakarak asistan kurar — başlık,
     // maddeler ve HATIRLATICI çıkarır (bkz. voice_assistant.dart).
-    if (result.action == VoiceCaptureAction.compose) {
+    // Ses eki yolunda (döküm yapılamadı) bu çip zaten gösterilmez; yine de
+    // gelirse aşağıdaki düz akış çalışır — kayıt kaybolmasın.
+    if (result.action == VoiceCaptureAction.compose &&
+        result.audioPath == null) {
       await ref
           .read(voiceAssistantProvider.notifier)
           .composeFromTranscript(
@@ -429,17 +434,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     var text = result.text;
     final instruction = voiceCaptureInstruction(result.action);
-    if (instruction != null) {
+    // Metin varsa ve bir dönüşüm istendiyse yapay zekâya gidilir. Metin BOŞSA
+    // (yalnız ses kaydı elde) çağrı hiç yapılmaz: gönderilecek bir şey yok.
+    if (instruction != null && text.trim().isNotEmpty) {
       try {
         final rewritten = await ref
             .read(geminiServiceProvider)
             .rewriteText(text, instruction);
         if (rewritten.trim().isNotEmpty) text = rewritten.trim();
-      } on GeminiException catch (e) {
-        if (!mounted) return;
+      } catch (e) {
         // Metin KAYBOLMAZ: yapay zekâ dönüşümü başarısızsa not ham dökümle
         // kurulur, kullanıcı konuştuklarını yeniden söylemek zorunda kalmasın.
-        _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
+        // HER hata yakalanır (yalnız GeminiException değil): anahtar yokken
+        // ağ/eklenti kaynaklı başka bir istisna da çıkabiliyor ve o zaman not
+        // hiç oluşmuyordu. `mounted` kontrolü de yalnız BİLDİRİMİ atlar,
+        // fonksiyondan çıkmaz — eskiden çıkıyordu ve not oluşmadan dönüyordu.
+        if (mounted) {
+          _showSnack(
+            e is GeminiException
+                ? (e.isAuthError ? l10n.aiNoApiKey : e.message)
+                : l10n.assistantGenericError,
+          );
+        }
       }
     }
 
@@ -457,8 +473,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               {'id': const Uuid().v4(), 'text': line.trim(), 'done': false},
         ],
       });
-    } else {
+    } else if (text.trim().isNotEmpty) {
       repo.updateFields(id, {'body': text});
+    }
+    // Dökümü yapılamamış konuşma: kayıt nota SES EKİ olarak girer, böylece
+    // yapay zekâ hiç çalışmasa da konuşma kaybolmaz.
+    final audioPath = result.audioPath;
+    if (audioPath != null) {
+      await _attachVoiceAudio(id, audioPath, result.audioDuration);
+    }
+    if (!mounted) return;
+    _afterQuickCapture(id);
+  }
+
+  /// Sesli yakalamadan dönen ses kaydını yeni nota ek olarak bağlar.
+  Future<void> _attachVoiceAudio(
+    String noteId,
+    String path,
+    Duration duration,
+  ) async {
+    final attachments = ref.read(attachmentRepositoryProvider);
+    final repo = ref.read(notesRepositoryProvider);
+    if (attachments == null || repo == null) {
+      File(path).delete().ignore();
+      return;
+    }
+    try {
+      final attachment = await attachments.prepareAudio(
+        noteId: noteId,
+        sourcePath: path,
+        duration: duration,
+      );
+      repo.updateFields(noteId, {
+        'attachments': [attachment.toMap()],
+      });
+    } catch (e) {
+      File(path).delete().ignore();
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
   }
 

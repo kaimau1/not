@@ -56,7 +56,22 @@ enum VoiceCaptureAction {
 /// Levhanın hangi ekrandan açıldığı: yalnız etiketleri ve çipleri değiştirir.
 enum VoiceCaptureTarget { editor, dashboard }
 
-typedef VoiceCaptureResult = ({String text, VoiceCaptureAction action});
+/// Levhanın sonucu.
+///
+/// [audioPath] yalnızca DÖKÜM YAPILAMADIĞINDA dolu olur (bkz.
+/// `_toAudioFallback`): cihazda yerleşik tanıma yoksa konuşma ses olarak
+/// kaydedilip yazıya dökülmek üzere yapay zekâya gönderilir; anahtar yoksa,
+/// kota bittiyse ya da ağ yoksa o çağrı düşer. ESKİDEN kayıt o noktada
+/// SİLİNİYOR ve kullanıcı hata ekranıyla baş başa kalıyordu — konuşulan her
+/// şey yok oluyordu. Artık kayıt korunur ve nota SES EKİ olarak girer:
+/// yapay zekâ olmasa da not oluşur. Çağıran ekran dolu geldiğinde eki nota
+/// bağlamakla yükümlüdür; [audioDuration] ek etiketinde görünen süredir.
+typedef VoiceCaptureResult = ({
+  String text,
+  VoiceCaptureAction action,
+  String? audioPath,
+  Duration audioDuration,
+});
 
 /// Seçilen eylemin modele verilecek yönergesi.
 ///
@@ -152,6 +167,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   /// Kısa dokunuşla kilitlendi mi: dinleme parmak kalksa da sürer ve düğme
   /// "Bitir"e döner.
   bool _latched = false;
+
+  /// Dökümü yapılamamış ama korunan ses kaydının yolu; dolu olduğunda not
+  /// SES EKİYLE oluşur (bkz. [_toAudioFallback]).
+  String? _readyAudioPath;
 
   @override
   void initState() {
@@ -254,20 +273,28 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     }
 
     setState(() => _phase = _Phase.processing);
+    // Kaydın yolu try DIŞINDA tutulur: döküm düşerse dosya SİLİNMEZ, nota ses
+    // eki olarak eklenmek üzere elde kalır (bkz. [_toAudioFallback]).
+    String? path;
     try {
-      final path = await _recorder?.stop();
+      path = await _recorder?.stop();
       if (path == null) throw StateError(l10n.voiceNothingHeard);
       final bytes = await File(path).readAsBytes();
-      File(path).delete().ignore();
       final text = await ref
           .read(geminiServiceProvider)
           .transcribeAudio(bytes, 'audio/mp4');
       if (!mounted) return;
+      if (text.trim().isEmpty) {
+        _toAudioFallback(path, l10n.voiceNothingHeard);
+        return;
+      }
+      // Döküm elde: ses dosyasına artık gerek yok.
+      File(path).delete().ignore();
       _toReview(text.trim(), l10n.voiceNothingHeard);
     } on GeminiException catch (e) {
-      _fail(e.isAuthError ? l10n.aiNoApiKey : e.message);
+      _toAudioFallback(path, e.isAuthError ? l10n.aiNoApiKey : e.message);
     } catch (e) {
-      _fail(e.toString());
+      _toAudioFallback(path, e.toString());
     }
   }
 
@@ -279,6 +306,30 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     setState(() {
       _text = text;
       _editController.text = text;
+      _phase = _Phase.ready;
+    });
+  }
+
+  /// Döküm yapılamadı ama ELDE KAYIT VAR.
+  ///
+  /// KÖK NEDEN (kullanıcı: "API key yoksa not oluşmuyor, AI olmasa dahi
+  /// oluşmalı"): cihazda yerleşik tanıma yoksa konuşma önce ses olarak
+  /// kaydedilip yazıya dökülmek üzere yapay zekâya gönderiliyor. Anahtar yok,
+  /// kota dolu ya da ağ yoksa o çağrı düşüyordu ve levha hata ekranına
+  /// geçiyordu — kayıt da silinmiş olduğundan konuşulan her şey yok oluyordu.
+  /// Artık kayıt korunur, levha gözden geçirme evresine geçer ve not SES EKİ
+  /// ile oluşturulur; kullanıcı isterse metni kendisi yazar.
+  void _toAudioFallback(String? path, String message) {
+    if (!mounted) return;
+    if (path == null) {
+      _fail(message);
+      return;
+    }
+    setState(() {
+      _readyAudioPath = path;
+      _text = '';
+      _editController.text = '';
+      _errorMessage = message;
       _phase = _Phase.ready;
     });
   }
@@ -295,6 +346,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       _pressed = false;
       _pressedAt = null;
       _latched = false;
+      _errorMessage = '';
     });
     if (ref.read(voiceButtonModeProvider) == VoiceButtonMode.tap) {
       await _startListening();
@@ -303,8 +355,18 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
   void _submit(VoiceCaptureAction action) {
     final text = _editController.text.trim();
-    if (text.isEmpty) return;
-    Navigator.pop(context, (text: text, action: action));
+    // Metin boş olsa da ses kaydı varsa not oluşur: dökümü yapılamamış bir
+    // konuşma da nottur (ek olarak girer).
+    if (text.isEmpty && _readyAudioPath == null) return;
+    final audio = _readyAudioPath;
+    // Yol çağırana devredildi: levha artık o dosyayı SİLMEZ.
+    _readyAudioPath = null;
+    Navigator.pop(context, (
+      text: text,
+      action: action,
+      audioPath: audio,
+      audioDuration: _elapsed,
+    ));
   }
 
   Future<void> _cancel() async {
@@ -323,6 +385,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     } catch (_) {}
     _recorder?.dispose();
     _recorder = null;
+    // Kullanılmayan (gönderilmemiş) kayıt geçici klasörde kalmasın.
+    final leftover = _readyAudioPath;
+    _readyAudioPath = null;
+    if (leftover != null) File(leftover).delete().ignore();
   }
 
   void _fail(String message) {
@@ -340,6 +406,10 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     _speechSub?.cancel();
     _recorder?.dispose();
     _editController.dispose();
+    // Gönderilmeden kapatıldıysa kayıt geçici klasörde kalmasın (gönderildiyse
+    // _submit yolu null'lar).
+    final leftover = _readyAudioPath;
+    if (leftover != null) File(leftover).delete().ignore();
     super.dispose();
   }
 
@@ -428,7 +498,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
           ],
           const SizedBox(height: 12),
           _actions(l10n, scheme, holdMode, listening),
-          if (_phase == _Phase.ready) ...[
+          // Çipler yapay zekâ ister; döküm zaten yapılamadıysa (ses eki yolu)
+          // hepsi aynı hatayla düşerdi — gösterilmezler.
+          if (_phase == _Phase.ready && _readyAudioPath == null) ...[
             const SizedBox(height: 10),
             _chips(l10n, scheme),
           ],
@@ -509,18 +581,48 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   Widget _transcript(ColorScheme scheme, bool listening) {
     const style = TextStyle(fontSize: 17, height: 1.55);
     if (_phase == _Phase.ready) {
+      final audio = _readyAudioPath != null;
       return ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 74, maxHeight: 210),
         child: SingleChildScrollView(
-          child: TextField(
-            controller: _editController,
-            maxLines: null,
-            style: style,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ses eki rozeti: döküm yapılamadığında notun İÇİNDE ne
+              // olacağını söyler — kullanıcı boş metin alanına bakıp
+              // "hiçbir şey kaydedilmemiş" sanmasın.
+              if (audio)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.mic_none, size: 16, color: scheme.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${context.l10n.recordAudio} · ${_format(_elapsed)}',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              TextField(
+                controller: _editController,
+                maxLines: null,
+                style: style,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: audio ? context.l10n.quickCaptureHint : null,
+                ),
+              ),
+            ],
           ),
         ),
       );
