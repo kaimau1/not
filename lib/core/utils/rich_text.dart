@@ -794,6 +794,34 @@ Color _paletteColor(List<Color> palette, int? index) {
       final caret = out.starts[ps.clamp(0, out.starts.length - 1)];
       return (text: out.text, start: caret, end: caret);
     }
+    // KÖK NEDEN (kullanıcı: "kelimenin içine tıklayıp işlem yapınca yine
+    // markdown üretiliyor"): imleç bir kelimenin ORTASINDAyken boş kutu
+    // açmak ham işaret bırakıyordu. `_` ve `~` çözümleyicide kelime içinde
+    // SAYILMIYOR (bkz. _formatPattern'daki (?<!\w)/(?!\w) koşulları), yani
+    // "merh__aba" hiçbir zaman italiğe dönüşmüyor — kullanıcı notunda ham
+    // alt çizgi görüyor. `**` çözümleniyor ama o da kelimeyi "merh****aba"
+    // diye ikiye bölüyor.
+    //
+    // Doğru davranış Word ve Docs'ta olan: imleç kelimenin içindeyse biçim
+    // KELİMENİN TAMAMINA uygulanır. Kelime başında/sonunda ya da boşlukta
+    // imleç eski davranışta kalır (boş kutu = "biçimli yazmaya başla").
+    final plain = [for (final seg in segments) seg.text].join();
+    final word = _wordAround(plain, ps);
+    if (word != null) {
+      final updated = _mapRange(
+        segments,
+        word.start,
+        word.end,
+        (m) => m.applied(format, colorIndex),
+      );
+      final out = _serialize(updated);
+      return (
+        text: out.text,
+        start: out.starts[word.start.clamp(0, out.starts.length - 1)],
+        end: out.ends[word.end.clamp(0, out.ends.length - 1)],
+      );
+    }
+
     // Biçimsiz imleç: boş kutu açılır, imleç ARASINA konur.
     final out = _serialize(segments);
     final at = out.starts[ps.clamp(0, out.starts.length - 1)];
@@ -851,6 +879,34 @@ Color _paletteColor(List<Color> palette, int? index) {
     start: out.starts[ps.clamp(0, out.starts.length - 1)],
     end: out.ends[pe.clamp(0, out.ends.length - 1)],
   );
+}
+
+/// Kelime karakteri: harf, rakam, alt çizgi — Türkçe harfler DAHİL.
+///
+/// `\w` KULLANILMAZ: Dart'ta unicode bayrağı olmadan `\w` yalnız `[A-Za-z0-9_]`
+/// demektir ve "çalışma" gibi bir kelimede "ş"yi kelime karakteri saymaz.
+/// Kelime sınırı Türkçe metinde ASCII'ye göre farklı çıkarsa aynı tıklama
+/// kelimeden kelimeye başka davranırdı.
+final RegExp _wordChar = RegExp(r'[\p{L}\p{N}_]', unicode: true);
+
+/// İmleç bir KELİMENİN İÇİNDEyse o kelimenin aralığı, değilse null.
+///
+/// "İçinde" = iki yanında da kelime karakteri var. Kelimenin başında ya da
+/// sonundaki imleç null döner: orada boş biçim kutusu açmak doğru davranıştır
+/// (kullanıcı biçimli yazmaya başlamak istiyordur).
+({int start, int end})? _wordAround(String plain, int at) {
+  if (at <= 0 || at >= plain.length) return null;
+  if (!_wordChar.hasMatch(plain[at - 1]) || !_wordChar.hasMatch(plain[at])) {
+    return null;
+  }
+  var start = at, end = at;
+  while (start > 0 && _wordChar.hasMatch(plain[start - 1])) {
+    start--;
+  }
+  while (end < plain.length && _wordChar.hasMatch(plain[end])) {
+    end++;
+  }
+  return (start: start, end: end);
 }
 
 /// İmleci içeren, biçimi aynı olan kesintisiz parça (biçimsizse boş aralık).
