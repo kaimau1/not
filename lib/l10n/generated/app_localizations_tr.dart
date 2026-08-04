@@ -476,7 +476,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get addToNote => 'Nota ekle';
 
   @override
-  String get chatTitle => 'Notlarla Sohbet';
+  String get chatTitle => 'Not Asistanı';
 
   @override
   String get chatHint =>
@@ -1155,6 +1155,15 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
 
   @override
+  String get aiFixNoteInfo => 'Yazım ve noktalamayı düzeltir';
+
+  @override
+  String get aiTranslateInfo => 'Notu seçtiğin dile çevirir';
+
+  @override
+  String get aiImproveInfo => 'Üslubu değiştirir: resmî, kısa ya da liste';
+
+  @override
   String get aiAnalyzeInfo => 'Ana noktaları ve yapılacakları listeler';
 
   @override
@@ -1428,7 +1437,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiPointsRenew => 'gece yarısı yenilenir';
 
   @override
-  String get aiChatWithNotes => 'Notlarınla sohbet';
+  String get aiChatWithNotes => 'Not Asistanı';
 
   @override
   String get aiChatInputHint => 'Notlarına bir şey sor…';
@@ -1534,6 +1543,9 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SIRALAMA';
+
+  @override
+  String get filterFavoriteHint => 'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun';
 
   @override
   String get filterSheetSortHint =>

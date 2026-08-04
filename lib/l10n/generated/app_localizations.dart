@@ -993,7 +993,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatTitle.
   ///
   /// In tr, this message translates to:
-  /// **'Notlarla Sohbet'**
+  /// **'Not Asistanı'**
   String get chatTitle;
 
   /// No description provided for @chatHint.
@@ -2256,6 +2256,24 @@ abstract class AppLocalizations {
   /// **'Kısa bir özet çıkarır'**
   String get aiSummarizeInfo;
 
+  /// No description provided for @aiFixNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım ve noktalamayı düzeltir'**
+  String get aiFixNoteInfo;
+
+  /// No description provided for @aiTranslateInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu seçtiğin dile çevirir'**
+  String get aiTranslateInfo;
+
+  /// No description provided for @aiImproveInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üslubu değiştirir: resmî, kısa ya da liste'**
+  String get aiImproveInfo;
+
   /// No description provided for @aiAnalyzeInfo.
   ///
   /// In tr, this message translates to:
@@ -2763,7 +2781,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiChatWithNotes.
   ///
   /// In tr, this message translates to:
-  /// **'Notlarınla sohbet'**
+  /// **'Not Asistanı'**
   String get aiChatWithNotes;
 
   /// No description provided for @aiChatInputHint.
@@ -2963,6 +2981,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'SIRALAMA'**
   String get filterSectionSort;
+
+  /// No description provided for @filterFavoriteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun'**
+  String get filterFavoriteHint;
 
   /// No description provided for @filterSheetSortHint.
   ///

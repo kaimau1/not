@@ -858,28 +858,34 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       if (!editor)
         (l10n.voiceChipCompose, VoiceCaptureAction.compose),
     ];
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: entries.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (_, i) {
-          final (label, action) = entries[i];
-          return ActionChip(
+    // ÇİPLER SATIRA SIĞAR: eskiden yatay kaydırılan bir liste vardı ve son çip
+    // ("Asistan oluştursun") ekranın dışında kalıyordu — kaydırılabildiği belli
+    // olmadığı için o seçenek yok sayılıyordu. Wrap taşanı ALT SATIRA indirir;
+    // hepsi tek bakışta görünür.
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        for (final (label, action) in entries)
+          ActionChip(
             label: Text(
               label,
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
+            labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             backgroundColor: scheme.secondaryContainer,
             side: BorderSide.none,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
             onPressed: () => _submit(action),
-          );
-        },
-      ),
+          ),
+      ],
     );
   }
 }

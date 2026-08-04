@@ -1002,7 +1002,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         _QuickCaptureRow(
                           onCreateChecklist: () =>
                               _createNote(NoteType.checklist),
-                          onVoice: _captureVoiceNote,
                           onSaved: _afterQuickCapture,
                         ),
                         Expanded(
@@ -1757,12 +1756,10 @@ class _FocusHaloState extends State<_FocusHalo>
 class _QuickCaptureRow extends ConsumerStatefulWidget {
   const _QuickCaptureRow({
     required this.onCreateChecklist,
-    required this.onVoice,
     required this.onSaved,
   });
 
   final VoidCallback onCreateChecklist;
-  final VoidCallback onVoice;
 
   /// Not oluşturulduktan sonra çağrılır (yeni notun id'si ile): ana ekran
   /// kartı vurgular ve bildirim gösterir.
@@ -1867,18 +1864,14 @@ class _QuickCaptureRowState extends ConsumerState<_QuickCaptureRow> {
                   ),
                 ),
               )
-            else ...[
+            else
+              // Mikrofon buradan KALDIRILDI: sağ altta zaten kalıcı bir sesli
+              // yakalama düğmesi var, aynı iş iki yerde duruyordu.
               _QuickCaptureIcon(
                 icon: Icons.checklist,
                 tooltip: l10n.filterChecklist,
                 onTap: widget.onCreateChecklist,
               ),
-              _QuickCaptureIcon(
-                icon: Icons.mic_none,
-                tooltip: l10n.voiceAssistantTitle,
-                onTap: widget.onVoice,
-              ),
-            ],
           ],
         ),
       ),

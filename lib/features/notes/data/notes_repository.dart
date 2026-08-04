@@ -240,14 +240,16 @@ class NotesRepository {
     hardDelete(note.id);
   }
 
-  /// Çöp kutusunda 24 saati doldurmuş notları ekleriyle birlikte kalıcı
-  /// siler. Her uygulama açılışında çağrılır; böylece silinen notlar
-  /// Firebase'de uzun süre kalmaz (madde 4). "Geri Al" ve Çöp Kutusu yine
-  /// bu kısa pencere boyunca çalışır — güvenlik ağı korunur.
+  /// Çöp kutusunda [trashRetention] süresini doldurmuş notları ekleriyle
+  /// birlikte kalıcı siler. Her uygulama açılışında çağrılır.
+  ///
+  /// Süre 24 SAATTEN 30 GÜNE çıkarıldı (kullanıcı isteği): bir haftalık
+  /// tatilden dönen kullanıcı yanlışlıkla sildiği notu bulamıyordu. Depolama
+  /// bedeli önemsiz — silinen notlar zaten ana listede görünmüyor.
+  static const trashRetention = Duration(days: 30);
+
   Future<void> purgeOldTrash() async {
-    final cutoff = Timestamp.fromDate(
-      DateTime.now().subtract(const Duration(hours: 24)),
-    );
+    final cutoff = Timestamp.fromDate(DateTime.now().subtract(trashRetention));
     final snapshot = await _notes.where('deletedAt', isLessThan: cutoff).get();
     for (final doc in snapshot.docs) {
       await deleteNotePermanently(Note.fromDoc(doc));

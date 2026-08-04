@@ -473,7 +473,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addToNote => 'メモに追加';
 
   @override
-  String get chatTitle => 'メモとチャット';
+  String get chatTitle => 'ノートアシスタント';
 
   @override
   String get chatHint => 'メモについて質問しましょう:「先週書いたあのレシピは何だった？」「買い物リストに足りないものは？」';
@@ -1136,6 +1136,15 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiSummarizeInfo => '短い要約を作ります';
 
   @override
+  String get aiFixNoteInfo => 'つづりと句読点を直します';
+
+  @override
+  String get aiTranslateInfo => '選んだ言語にノートを翻訳します';
+
+  @override
+  String get aiImproveInfo => '文体を変えます: 硬め・短め・リスト';
+
+  @override
   String get aiAnalyzeInfo => '要点とやることを一覧にします';
 
   @override
@@ -1403,7 +1412,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiPointsRenew => '深夜に更新';
 
   @override
-  String get aiChatWithNotes => 'ノートとチャット';
+  String get aiChatWithNotes => 'ノートアシスタント';
 
   @override
   String get aiChatInputHint => 'ノートについて聞く…';
@@ -1509,6 +1518,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get filterSectionSort => '並び替え';
+
+  @override
+  String get filterFavoriteHint => '星をタップするとホーム画面に残ります';
 
   @override
   String get filterSheetSortHint => '日付順で並び替えるときのみ、日付グループ（今日、今週…）が表示されます。';

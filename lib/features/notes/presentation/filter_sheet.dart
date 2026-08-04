@@ -136,6 +136,9 @@ class DashboardFilterRow extends ConsumerWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
+                  // ÖNCE uygulanmış süzgeçler (kaldırılabilir), SONRA favori
+                  // kısayolları. Sıra bilinçli: ekranda ne olduğunu anlatan
+                  // çip, henüz basılmamış kısayoldan önce gelir.
                   if (filter != NoteFilter.all)
                     _AppliedChip(
                       label: filterLabel(l10n, filter),
@@ -155,6 +158,7 @@ class DashboardFilterRow extends ConsumerWidget {
                       onRemove: () =>
                           ref.read(selectedTagProvider.notifier).set(null),
                     ),
+                  ...favoriteFilterChips(context, ref),
                 ],
               ),
             ),
@@ -189,6 +193,131 @@ class DashboardFilterRow extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Süz" düğmesinin sağındaki FAVORİ kısayolları.
+///
+/// Süz levhasında yıldızlanan seçenekler burada tek dokunuşluk çip olur:
+/// dokunmak süzgeci uygular, ikinci dokunuş kaldırır (sıralamada kaldırma yok,
+/// bir sıralama her zaman seçilidir). ZATEN UYGULANMIŞ olan favori çizilmez —
+/// solundaki kaldırılabilir çip onu zaten gösteriyor, ikisi yan yana aynı
+/// etiketi iki kez yazardı.
+List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
+  final favorites = ref.watch(favoriteFiltersProvider);
+  if (favorites.isEmpty) return const [];
+  final l10n = context.l10n;
+  final filter = ref.watch(noteFilterProvider);
+  final folderId = ref.watch(selectedFolderProvider);
+  final tag = ref.watch(selectedTagProvider);
+  final sort = ref.watch(noteSortProvider);
+  final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
+  final folders = [
+    for (final f
+        in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
+      if (!f.hidden || revealHidden) f,
+  ];
+  final tags = ref.watch(allTagsProvider);
+
+  final chips = <Widget>[];
+  for (final token in favorites) {
+    final parts = token.split(':');
+    if (parts.length < 2) continue;
+    final value = parts.sublist(1).join(':');
+    switch (parts.first) {
+      case 'filter':
+        final f = NoteFilter.values.where((v) => v.name == value).firstOrNull;
+        if (f == null || f == NoteFilter.all || filter == f) continue;
+        chips.add(
+          _FavoriteChip(
+            label: filterLabel(l10n, f),
+            onTap: () => ref.read(noteFilterProvider.notifier).set(f),
+          ),
+        );
+      case 'folder':
+        // Silinmiş (ya da gizlenmiş) klasörün jetonu ÇÖZÜLEMEZ ve çizilmez;
+        // ayrı bir temizlik gerekmez.
+        final folder = folders.where((f) => f.id == value).firstOrNull;
+        if (folder == null || folderId == folder.id) continue;
+        chips.add(
+          _FavoriteChip(
+            label: folder.name,
+            icon: Icons.folder_outlined,
+            onTap: () =>
+                ref.read(selectedFolderProvider.notifier).set(folder.id),
+          ),
+        );
+      case 'tag':
+        if (!tags.contains(value) || tag == value) continue;
+        chips.add(
+          _FavoriteChip(
+            label: '#$value',
+            onTap: () => ref.read(selectedTagProvider.notifier).set(value),
+          ),
+        );
+      case 'sort':
+        final s = NoteSort.values.where((v) => v.name == value).firstOrNull;
+        if (s == null || sort == s) continue;
+        chips.add(
+          _FavoriteChip(
+            label: sortLabel(l10n, s),
+            icon: Icons.swap_vert,
+            onTap: () => ref.read(noteSortProvider.notifier).set(s),
+          ),
+        );
+    }
+  }
+  return chips;
+}
+
+class _FavoriteChip extends StatelessWidget {
+  const _FavoriteChip({required this.label, required this.onTap, this.icon});
+
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            height: 36,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon ?? Icons.star,
+                  size: 14,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -257,6 +386,8 @@ class _FilterSheet extends ConsumerWidget {
     ];
     final tags = ref.watch(allTagsProvider);
     final applied = appliedFilterCount(ref) > 0;
+    final favorites = ref.watch(favoriteFiltersProvider);
+    final favoritesNotifier = ref.read(favoriteFiltersProvider.notifier);
 
     return SingleChildScrollView(
       // Alt boşluk sistem gezinme çubuğunu (geri/ana sayfa) hesaba katar:
@@ -298,6 +429,24 @@ class _FilterSheet extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
 
+          // Yıldız ipucu: çipin sonundaki yıldızın ne işe yaradığı bir kez
+          // yazılı olmalı, yoksa süs sanılıyor.
+          Row(
+            children: [
+              Icon(Icons.star, size: 14, color: scheme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.filterFavoriteHint,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
           _SectionLabel(l10n.filterSectionStatus),
           _OptionWrap(
             children: [
@@ -306,6 +455,14 @@ class _FilterSheet extends ConsumerWidget {
                   label: filterLabel(l10n, f),
                   selected: filter == f,
                   onTap: () => ref.read(noteFilterProvider.notifier).set(f),
+                  // "Tümü" favorilenemez: süzgeci KALDIRAN seçenek, ana ekranda
+                  // çip olarak durmasının anlamı yok.
+                  favorite: f == NoteFilter.all
+                      ? null
+                      : favorites.contains(filterFavoriteToken(f)),
+                  onToggleFavorite: () => favoritesNotifier.toggle(
+                    filterFavoriteToken(f),
+                  ),
                 ),
             ],
           ),
@@ -323,6 +480,10 @@ class _FilterSheet extends ConsumerWidget {
                     onTap: () => ref
                         .read(selectedFolderProvider.notifier)
                         .set(folderId == f.id ? null : f.id),
+                    favorite: favorites.contains(folderFavoriteToken(f.id)),
+                    onToggleFavorite: () => favoritesNotifier.toggle(
+                      folderFavoriteToken(f.id),
+                    ),
                   ),
               ],
             ),
@@ -339,6 +500,9 @@ class _FilterSheet extends ConsumerWidget {
                     onTap: () => ref
                         .read(selectedTagProvider.notifier)
                         .set(tag == t ? null : t),
+                    favorite: favorites.contains(tagFavoriteToken(t)),
+                    onToggleFavorite: () =>
+                        favoritesNotifier.toggle(tagFavoriteToken(t)),
                   ),
               ],
             ),
@@ -352,9 +516,31 @@ class _FilterSheet extends ConsumerWidget {
                   label: sortLabel(l10n, s),
                   selected: sort == s,
                   onTap: () => ref.read(noteSortProvider.notifier).set(s),
+                  favorite: favorites.contains(sortFavoriteToken(s)),
+                  onToggleFavorite: () =>
+                      favoritesNotifier.toggle(sortFavoriteToken(s)),
                 ),
             ],
           ),
+
+          const SizedBox(height: 8),
+          // ELLE SIRALAMA buradan da açılır: sıralamayı düşünen kullanıcı bu
+          // levhayı açıyor, oysa kartları sürükleyerek dizme kipi yalnız ⋮
+          // menüsünde duruyordu ve kimse bulamıyordu. Yalnız süzgeçsiz
+          // görünümde anlamlı (alt kümede sıra bozulur), o yüzden koşullu.
+          if (!applied)
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  ref.read(noteSortProvider.notifier).set(NoteSort.manual);
+                  ref.read(reorderModeProvider.notifier).set(true);
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.swap_vert, size: 18),
+                label: Text(l10n.reorderNotes),
+              ),
+            ),
 
           const SizedBox(height: 4),
           Text(
@@ -423,15 +609,22 @@ class _Option extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.favorite,
+    this.onToggleFavorite,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
+  /// null = bu seçenek favorilenemez. Dolu ise çipin sonunda yıldız çıkar.
+  final bool? favorite;
+  final VoidCallback? onToggleFavorite;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final star = favorite;
     return Material(
       color: selected ? scheme.primaryContainer : Colors.transparent,
       borderRadius: BorderRadius.circular(10),
@@ -440,7 +633,7 @@ class _Option extends StatelessWidget {
         onTap: onTap,
         child: Container(
           height: 36,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsetsDirectional.only(start: 12, end: star == null ? 12 : 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
@@ -454,16 +647,36 @@ class _Option extends StatelessWidget {
           // sıralama alt alta uzayıp ekranlarca kaydırma gerektiriyordu.
           // widthFactor: 1 olan Center, yüksekliği doldururken genişliği
           // METNE göre verir; seçenekler yan yana çip gibi akar.
-          child: Center(
-            widthFactor: 1,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                ),
               ),
-            ),
+              // Yıldız çipin İÇİNDE ayrı bir dokunma hedefi: etikete dokunmak
+              // süzgeci uygular, yıldıza dokunmak favorilere ekler/çıkarır.
+              // (Basılı tutma jesti seçilmedi — görünmez bir yetenek olurdu.)
+              if (star != null)
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: onToggleFavorite,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      star ? Icons.star : Icons.star_border,
+                      size: 16,
+                      color: star
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

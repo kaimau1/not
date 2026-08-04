@@ -471,7 +471,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addToNote => '添加到笔记';
 
   @override
-  String get chatTitle => '与你的笔记对话';
+  String get chatTitle => '笔记助手';
 
   @override
   String get chatHint => '问问你的笔记：「上周写的那个菜谱是什么？」「购物清单里还缺什么？」';
@@ -1124,6 +1124,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiSummarizeInfo => '生成一段简短摘要';
 
   @override
+  String get aiFixNoteInfo => '修正拼写和标点';
+
+  @override
+  String get aiTranslateInfo => '将笔记翻译成所选语言';
+
+  @override
+  String get aiImproveInfo => '改变语气：正式、更短或列表';
+
+  @override
   String get aiAnalyzeInfo => '列出要点和待办事项';
 
   @override
@@ -1389,7 +1398,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiPointsRenew => '午夜重置';
 
   @override
-  String get aiChatWithNotes => '与笔记对话';
+  String get aiChatWithNotes => '笔记助手';
 
   @override
   String get aiChatInputHint => '询问关于笔记的内容…';
@@ -1495,6 +1504,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get filterSectionSort => '排序';
+
+  @override
+  String get filterFavoriteHint => '点击星标可将该选项固定在主屏幕';
 
   @override
   String get filterSheetSortHint => '仅在按最后编辑时间排序时显示日期分组（今天、本周……）。';

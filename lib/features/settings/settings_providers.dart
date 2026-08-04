@@ -322,8 +322,11 @@ class SyncLimitMbNotifier extends Notifier<int> {
 }
 
 /// Sesli Not Asistanı düğmesinin kullanım şekli.
-/// hold (varsayılan): basılı tutarak konuş, bırakınca not oluşur.
-/// tap: bir dokunuşla kayıt başlar, ikinci dokunuşla biter.
+/// tap (VARSAYILAN): bir dokunuşla kayıt başlar, ikinci dokunuşla biter.
+/// hold: basılı tutarak konuş, bırakınca not oluşur.
+///
+/// Varsayılan bas-başlat/bas-bitir: basılı tutmak uzun konuşmalarda yorucu ve
+/// parmağın kayması kaydı kesiyor; kullanıcı isteği de bu yönde.
 enum VoiceButtonMode { hold, tap }
 
 final voiceButtonModeProvider =
@@ -339,7 +342,7 @@ class VoiceButtonModeNotifier extends Notifier<VoiceButtonMode> {
     final stored = ref.watch(sharedPreferencesProvider).getString(_key);
     return VoiceButtonMode.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => VoiceButtonMode.hold,
+      orElse: () => VoiceButtonMode.tap,
     );
   }
 

@@ -481,7 +481,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addToNote => 'Dodaj do notatki';
 
   @override
-  String get chatTitle => 'Rozmowa z notatkami';
+  String get chatTitle => 'Asystent notatek';
 
   @override
   String get chatHint =>
@@ -1165,6 +1165,15 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aiSummarizeInfo => 'Tworzy krótkie podsumowanie';
 
   @override
+  String get aiFixNoteInfo => 'Poprawia pisownię i interpunkcję';
+
+  @override
+  String get aiTranslateInfo => 'Tłumaczy notatkę na wybrany język';
+
+  @override
+  String get aiImproveInfo => 'Zmienia ton: formalny, krótszy lub lista';
+
+  @override
   String get aiAnalyzeInfo =>
       'Wypisuje najważniejsze punkty i zadania do zrobienia';
 
@@ -1444,7 +1453,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aiPointsRenew => 'odnowienie o północy';
 
   @override
-  String get aiChatWithNotes => 'Czat z notatkami';
+  String get aiChatWithNotes => 'Asystent notatek';
 
   @override
   String get aiChatInputHint => 'Zapytaj o coś w swoich notatkach…';
@@ -1550,6 +1559,9 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SORTIE';
+
+  @override
+  String get filterFavoriteHint => 'Dotknij gwiazdki, aby opcja została na ekranie głównym';
 
   @override
   String get filterSheetSortHint =>

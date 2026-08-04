@@ -479,7 +479,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get addToNote => 'Tambahkan ke catatan';
 
   @override
-  String get chatTitle => 'Mengobrol dengan catatan Anda';
+  String get chatTitle => 'Asisten Catatan';
 
   @override
   String get chatHint =>
@@ -1164,6 +1164,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get aiSummarizeInfo => 'Menghasilkan ringkasan singkat';
 
   @override
+  String get aiFixNoteInfo => 'Memperbaiki ejaan dan tanda baca';
+
+  @override
+  String get aiTranslateInfo => 'Menerjemahkan catatan ke bahasa pilihanmu';
+
+  @override
+  String get aiImproveInfo => 'Mengubah gaya: formal, lebih singkat atau daftar';
+
+  @override
   String get aiAnalyzeInfo =>
       'Mendaftar poin utama dan hal yang harus dikerjakan';
 
@@ -1442,7 +1451,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get aiPointsRenew => 'gece yarısı yenilenir';
 
   @override
-  String get aiChatWithNotes => 'Notlarınla sohbet et';
+  String get aiChatWithNotes => 'Asisten Catatan';
 
   @override
   String get aiChatInputHint => 'Notların hakkında bir şey sor…';
@@ -1548,6 +1557,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SIRALA';
+
+  @override
+  String get filterFavoriteHint => 'Ketuk bintang agar opsi itu tetap di layar utama';
 
   @override
   String get filterSheetSortHint =>

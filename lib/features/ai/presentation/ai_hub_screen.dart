@@ -82,7 +82,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
             children: [
-              _PointsBar(remaining: remaining, limit: limit),
+              AiPointsBar(remaining: remaining, limit: limit),
               const SizedBox(height: 16),
               _ChatCard(
                 chat: chat,
@@ -169,8 +169,11 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
 
 /// Günlük puan çubuğu. Her soru bir puan düşer; kullanıcı kotayı ancak
 /// istek reddedilince fark ediyordu.
-class _PointsBar extends StatelessWidget {
-  const _PointsBar({required this.remaining, required this.limit});
+///
+/// Not içindeki AI levhası da aynı çubuğu gösteriyor (iki yüzey aynı dili
+/// konuşsun), bu yüzden herkese açık.
+class AiPointsBar extends StatelessWidget {
+  const AiPointsBar({super.key, required this.remaining, required this.limit});
 
   final int remaining;
   final int limit;

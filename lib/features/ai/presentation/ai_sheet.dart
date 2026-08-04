@@ -14,7 +14,9 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
+import '../data/ai_gate.dart';
 import '../data/ai_report.dart';
+import 'ai_hub_screen.dart' show AiPointsBar;
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
 import 'doc_chat_screen.dart';
@@ -616,80 +618,101 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         ],
                       ),
                     ),
-                  // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
-                  if (widget.onReplaceText != null)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                      child: FilledButton.tonalIcon(
-                        onPressed: widget.note.isEmpty ? null : _pickFixLevel,
-                        icon: const Icon(Icons.auto_fix_high, size: 18),
-                        label: Text(l10n.aiFixNote),
-                      ),
+                  // GÖRÜNÜM ana ekrandaki Yapay Zeka sayfasıyla AYNI dili
+                  // konuşur (kullanıcı: "not içindeki ai alanı da yenilenmeli,
+                  // ana sayfadaki genel ai alanı gibi olabilir"): üstte günlük
+                  // puan çubuğu, altında asistan kartı, sonra iki sütunlu iş
+                  // kutuları. Eskiden burası düz bir ListTile listesiydi ve
+                  // hangi işin ne yaptığı ancak alt yazıyı okuyunca anlaşılıyordu.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 14),
+                    child: AiPointsBar(
+                      remaining: ref.watch(freeAiRemainingProvider),
+                      limit: ref.watch(aiDailyLimitProvider),
                     ),
-                  _sectionLabel(context, l10n.aiSectionNote),
+                  ),
                   // Notun tamamıyla (gövde + PDF/görsel ekleri) sohbet.
-                  ListTile(
-                    leading: const Icon(Icons.forum_outlined),
-                    title: Text(l10n.noteChatTitle),
-                    subtitle: Text(
-                      l10n.noteChatIntro,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _AiRow(
+                      icon: Icons.forum_outlined,
+                      title: l10n.noteChatTitle,
+                      subtitle: l10n.noteChatIntro,
+                      onTap:
+                          widget.note.isEmpty &&
+                              widget.note.attachments.isEmpty
+                          ? null
+                          : () {
+                              Navigator.pop(context);
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (_) =>
+                                      DocChatScreen(note: widget.note),
+                                ),
+                              );
+                            },
                     ),
-                    enabled:
-                        !widget.note.isEmpty ||
-                        widget.note.attachments.isNotEmpty,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => DocChatScreen(note: widget.note),
+                  ),
+                  _sectionLabel(context, l10n.aiSectionNote),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _AiTileGrid(
+                      tiles: [
+                        // Hızlı erişim: tek dokunuşla yazım/düzen düzeltmesi.
+                        if (widget.onReplaceText != null)
+                          (
+                            Icons.auto_fix_high,
+                            l10n.aiFixNote,
+                            l10n.aiFixNoteInfo,
+                            widget.note.isEmpty ? null : _pickFixLevel,
+                          ),
+                        // Alt yazılar iki benzer işlemin farkını söyler: özet
+                        // kısa metin, analiz yapılacak/ana nokta dökümü.
+                        (
+                          Icons.summarize_outlined,
+                          l10n.aiSummarize,
+                          l10n.aiSummarizeInfo,
+                          widget.note.isEmpty
+                              ? null
+                              : () => _run(
+                                  (s) => s.summarizeNote(widget.note),
+                                  cacheAsSummary: true,
+                                  cacheKey: AiCache.keyFor(
+                                    'note_summary',
+                                    widget.note.toPlainText(),
+                                  ),
+                                ),
                         ),
-                      );
-                    },
-                  ),
-                  // Alt yazılar iki benzer işlemin farkını söyler: özet kısa
-                  // metin, analiz yapılacak/ana nokta dökümü.
-                  ListTile(
-                    leading: const Icon(Icons.summarize_outlined),
-                    title: Text(l10n.aiSummarize),
-                    subtitle: Text(l10n.aiSummarizeInfo),
-                    enabled: !widget.note.isEmpty,
-                    onTap: () => _run(
-                      (s) => s.summarizeNote(widget.note),
-                      cacheAsSummary: true,
-                      cacheKey: AiCache.keyFor(
-                        'note_summary',
-                        widget.note.toPlainText(),
-                      ),
+                        (
+                          Icons.insights_outlined,
+                          l10n.aiAnalyze,
+                          l10n.aiAnalyzeInfo,
+                          widget.note.isEmpty
+                              ? null
+                              : () => _run(
+                                  (s) => s.analyzeNote(widget.note),
+                                  cacheKey: AiCache.keyFor(
+                                    'note_analyze',
+                                    widget.note.toPlainText(),
+                                  ),
+                                ),
+                        ),
+                        (
+                          Icons.translate,
+                          l10n.aiTranslate,
+                          l10n.aiTranslateInfo,
+                          widget.note.isEmpty ? null : _pickLanguageAndTranslate,
+                        ),
+                        if (widget.onReplaceText != null)
+                          (
+                            Icons.auto_awesome_outlined,
+                            l10n.aiImprove,
+                            l10n.aiImproveInfo,
+                            widget.note.isEmpty ? null : _pickImprovement,
+                          ),
+                      ],
                     ),
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.insights_outlined),
-                    title: Text(l10n.aiAnalyze),
-                    subtitle: Text(l10n.aiAnalyzeInfo),
-                    enabled: !widget.note.isEmpty,
-                    onTap: () => _run(
-                      (s) => s.analyzeNote(widget.note),
-                      cacheKey: AiCache.keyFor(
-                        'note_analyze',
-                        widget.note.toPlainText(),
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.translate),
-                    title: Text(l10n.aiTranslate),
-                    enabled: !widget.note.isEmpty,
-                    onTap: _pickLanguageAndTranslate,
-                  ),
-                  if (widget.onReplaceText != null)
-                    ListTile(
-                      leading: const Icon(Icons.auto_fix_high_outlined),
-                      title: Text(l10n.aiImprove),
-                      enabled: !widget.note.isEmpty,
-                      onTap: _pickImprovement,
-                    ),
                   // Ekler: dosya adı satır başlığında BİR kez geçer, işlemler
                   // altında açılır. Eskiden her ek için adı tekrarlayan ayrı
                   // satırlar vardı (bir PDF = üç uzun satır).
@@ -859,6 +882,150 @@ class _AiSheetState extends ConsumerState<AiSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Levhanın tam genişlikli satırı (asistan girişi). Yapay Zeka sayfasındaki
+/// `_HubRow` ile aynı görünüm — iki yüzey aynı dili konuşsun.
+class _AiRow extends StatelessWidget {
+  const _AiRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  /// null: yapacak iş yok (boş not) — satır soluk ve dokunulamaz.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Opacity(
+      opacity: onTap == null ? 0.5 : 1,
+      child: Material(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: scheme.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: scheme.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          height: 1.35,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// İki sütunlu iş kutuları (özetle / analiz / çevir…). Yapay Zeka sayfasındaki
+/// `_TaskTile` ızgarasının aynısı; işlem null ise kutu soluk ve dokunulamaz.
+class _AiTileGrid extends StatelessWidget {
+  const _AiTileGrid({required this.tiles});
+
+  /// (simge, başlık, açıklama, işlem) — işlem null ise devre dışı.
+  final List<(IconData, String, String, VoidCallback?)> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    // Levha yatayda 16+16 dolgulu; iki sütun, arada 8 px.
+    final width = ((MediaQuery.sizeOf(context).width - 32 - 8) / 2).clamp(
+      120.0,
+      300.0,
+    );
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final (icon, title, info, onTap) in tiles)
+          SizedBox(
+            width: width,
+            child: Opacity(
+              opacity: onTap == null ? 0.5 : 1,
+              child: Material(
+                color: scheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: onTap,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 96),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: scheme.outlineVariant),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, size: 20, color: scheme.primary),
+                        const SizedBox(height: 8),
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          info,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            height: 1.35,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

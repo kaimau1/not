@@ -479,7 +479,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addToNote => 'Добавить в заметку';
 
   @override
-  String get chatTitle => 'Чат с заметками';
+  String get chatTitle => 'Ассистент заметок';
 
   @override
   String get chatHint =>
@@ -1161,6 +1161,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiSummarizeInfo => 'Даёт краткий пересказ';
 
   @override
+  String get aiFixNoteInfo => 'Исправляет орфографию и пунктуацию';
+
+  @override
+  String get aiTranslateInfo => 'Переводит заметку на выбранный язык';
+
+  @override
+  String get aiImproveInfo => 'Меняет стиль: официально, короче или списком';
+
+  @override
   String get aiAnalyzeInfo => 'Перечисляет ключевые пункты и задачи';
 
   @override
@@ -1438,7 +1447,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiPointsRenew => 'обновление в полночь';
 
   @override
-  String get aiChatWithNotes => 'Чат с заметками';
+  String get aiChatWithNotes => 'Ассистент заметок';
 
   @override
   String get aiChatInputHint => 'Спросите что-нибудь о ваших заметках…';
@@ -1544,6 +1553,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'СОРТИРОВКА';
+
+  @override
+  String get filterFavoriteHint => 'Нажмите звёздочку, чтобы закрепить фильтр на главном экране';
 
   @override
   String get filterSheetSortHint =>

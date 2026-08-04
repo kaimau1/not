@@ -55,6 +55,7 @@ import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
 import '../voice_capture_sheet.dart';
 import 'ai_result_sheet.dart';
+import 'attach_sheet.dart';
 import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
@@ -1282,111 +1283,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
+  /// "Ekle" levhası: TEK sayfa, iki sütunlu ızgara (bkz. attach_sheet.dart).
+  /// Eski iki katmanlı yapı (küçük açılır menü + ayrı "tüm ekler" levhası)
+  /// kaldırıldı; her seçenek tek dokunuşla görünür.
   Future<void> _showAttachMenu() async {
     // İmleç ölçümü klavye kapatılmadan ÖNCE alınır: eklenecek görsel yazılan
     // satıra gitsin (odak düşünce ölçüm imkânsız).
     _rememberCaret();
     _dismissKeyboard();
-    final l10n = context.l10n;
     final copied = ref.read(attachmentClipboardProvider);
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.image_outlined),
-                title: Text(l10n.addImage),
-                subtitle: Text(l10n.addImageOnPageSubtitle),
-                onTap: () => Navigator.pop(sheetContext, 'image'),
-              ),
-              // Aynı görsel, sayfada yüzmek yerine alt şeritte DOSYA eki
-              // olarak: metnin yerleşimini hiç değiştirmez.
-              ListTile(
-                leading: const Icon(Icons.attachment_outlined),
-                title: Text(l10n.addImageAsFile),
-                subtitle: Text(l10n.addImageAsFileSubtitle),
-                onTap: () => Navigator.pop(sheetContext, 'image-file'),
-              ),
-              if (copied != null)
-                ListTile(
-                  leading: const Icon(Icons.content_paste_go),
-                  title: Text(l10n.pasteAttachment),
-                  subtitle: Text(
-                    copied.fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () => Navigator.pop(sheetContext, 'paste-attachment'),
-                ),
-              // Kamerayla anında fotoğraf: masaüstünde/web'de çekim yolu yok.
-              if (!kIsWeb && !_isDesktop)
-                ListTile(
-                  leading: const Icon(Icons.photo_camera_outlined),
-                  title: Text(l10n.takePhoto),
-                  onTap: () => Navigator.pop(sheetContext, 'camera'),
-                ),
-              // Belge tarama: kenar tespiti + perspektif düzeltme eklentinin
-              // platform kodunu ister, masaüstünde yok.
-              if (DocumentScan.supported)
-                ListTile(
-                  leading: const Icon(Icons.document_scanner_outlined),
-                  title: Text(l10n.scanDocument),
-                  subtitle: Text(l10n.scanDocumentSubtitle),
-                  onTap: () => Navigator.pop(sheetContext, 'scan'),
-                ),
-              if (qrScanSupported)
-                ListTile(
-                  leading: const Icon(Icons.qr_code_scanner),
-                  title: Text(l10n.qrScanTitle),
-                  subtitle: Text(l10n.qrScanSubtitle),
-                  onTap: () => Navigator.pop(sheetContext, 'qr'),
-                ),
-              ListTile(
-                leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: Text(l10n.addPdf),
-                onTap: () => Navigator.pop(sheetContext, 'pdf'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.slideshow_outlined),
-                title: Text(l10n.addSlide),
-                onTap: () => Navigator.pop(sheetContext, 'slide'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.brush_outlined),
-                title: Text(l10n.addDrawing),
-                onTap: () => Navigator.pop(sheetContext, 'drawing'),
-              ),
-              // Tarayıcıda gizli: `record` web'de dosya yolu değil blob adresi
-              // döndürüyor, ek akışı ise yol bekliyor (bkz. prepareAudio).
-              if (!kIsWeb)
-                ListTile(
-                  leading: const Icon(Icons.mic_none),
-                  title: Text(l10n.recordAudio),
-                  onTap: () => Navigator.pop(sheetContext, 'audio'),
-                ),
-              // Görüntülü not da cihaz dosyası ister; web'de kapalı.
-              if (!kIsWeb)
-                ListTile(
-                  leading: const Icon(Icons.videocam_outlined),
-                  title: Text(l10n.newVideoNote),
-                  subtitle: Text(l10n.videoLocalOnly),
-                  onTap: () => Navigator.pop(sheetContext, 'video'),
-                ),
-              if (_isDesktop)
-                ListTile(
-                  leading: const Icon(Icons.content_paste),
-                  title: Text(l10n.pasteImage),
-                  onTap: () => Navigator.pop(sheetContext, 'paste'),
-                ),
-            ],
-          ),
-        ),
-      ),
+    final action = await showAttachSheet(
+      context,
+      isDesktop: _isDesktop,
+      copiedAttachmentName: copied?.fileName,
     );
+    if (!mounted) return;
     switch (action) {
       case 'image':
         await _pickImage();
@@ -1412,6 +1323,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _addVideo();
       case 'paste':
         await _pasteImage();
+      case 'color':
+        await _showColorSheet();
     }
   }
 
@@ -2440,109 +2353,41 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// "Ekle" segmenti: küçük bir açılır liste.
+  /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).
   ///
-  /// Tasarımdaki dört satırın (madde, fotoğraf, belge, zemin rengi) altına
-  /// "tüm ekler" satırı EKLENDİ: mevcut ek menüsünde kamera, belge tarama, QR,
-  /// slayt, çizim, ses ve video da var; dört satıra indirseydik bunlar
-  /// erişilemez olurdu.
-  ///
-  /// İKİ TEKRAR TEMİZLENDİ (kullanıcı: "ekle kısmı düzensiz, 2 kez ekle
-  /// seçeneği çıkıyor"):
-  /// - Son satır düğmenin kendisiyle aynı adı ("Ekle") taşıyordu; artık
-  ///   "Diğer ek türleri…" diyor ve ne açtığı belli.
-  /// - "Yeni öğe" yalnız LİSTE notunda kalır: metin notunda alt çubuğun kendi
-  ///   "Liste" segmenti zaten aynı işi yapıyor, menüde ikinci kez duruyordu.
-  Widget _addToolMenu(AppLocalizations l10n, NoteType noteType) {
+  /// Eski hâli iki katmanlıydı — küçük bir açılır menü (madde/görsel/PDF/renk)
+  /// ve onun içinden açılan ikinci bir "tüm ekler" levhası. Aynı seçenek iki
+  /// yerde duruyor, "Ekle" adı üç kez geçiyordu. Artık tek dokunuş, tek sayfa.
+  Widget _addToolButton(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
-    final showItem = noteType != NoteType.text;
-    return PopupMenuButton<String>(
-      tooltip: l10n.addAttachment,
-      offset: const Offset(0, -8),
-      constraints: const BoxConstraints(minWidth: 206),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      onSelected: (value) {
-        switch (value) {
-          case 'item':
-            _addChecklistItem();
-          case 'photo':
-            _pickImage();
-          case 'document':
-            _pickPdf();
-          case 'color':
-            _showColorSheet();
-          case 'more':
-            _showAttachMenu();
-        }
-      },
-      itemBuilder: (context) => [
-        if (showItem)
-          PopupMenuItem(
-            value: 'item',
-            child: ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.checklist),
-              title: Text(l10n.newItemHint),
+    return Tooltip(
+      message: l10n.addAttachment,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: _showAttachMenu,
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 18, color: scheme.onSurface),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.addAttachment,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ],
             ),
           ),
-        PopupMenuItem(
-          value: 'photo',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.image_outlined),
-            title: Text(l10n.addImage),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'document',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.picture_as_pdf_outlined),
-            title: Text(l10n.addPdf),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'color',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.palette_outlined),
-            title: Text(l10n.color),
-          ),
-        ),
-        const PopupMenuDivider(),
-        PopupMenuItem(
-          value: 'more',
-          child: ListTile(
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.attach_file),
-            title: Text(l10n.addAttachmentMore),
-          ),
-        ),
-      ],
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 18, color: scheme.onSurface),
-            const SizedBox(width: 6),
-            Text(
-              l10n.addAttachment,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurface,
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, size: 18, color: scheme.onSurface),
-          ],
         ),
       ),
     );
@@ -3624,7 +3469,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                   },
                                 ),
                               const SizedBox(width: 3),
-                              _addToolMenu(l10n, note.type),
+                              _addToolButton(l10n),
                             ],
                           ),
                         ),

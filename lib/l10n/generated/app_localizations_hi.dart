@@ -478,7 +478,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addToNote => 'नोट में जोड़ें';
 
   @override
-  String get chatTitle => 'अपने नोट्स से बात करें';
+  String get chatTitle => 'नोट असिस्टेंट';
 
   @override
   String get chatHint =>
@@ -1158,6 +1158,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiSummarizeInfo => 'एक संक्षिप्त सारांश बनाता है';
 
   @override
+  String get aiFixNoteInfo => 'वर्तनी और विराम चिह्न ठीक करता है';
+
+  @override
+  String get aiTranslateInfo => 'नोट को चुनी हुई भाषा में अनुवाद करता है';
+
+  @override
+  String get aiImproveInfo => 'शैली बदलता है: औपचारिक, छोटा या सूची';
+
+  @override
   String get aiAnalyzeInfo => 'मुख्य बिंदु और करने के काम सूचीबद्ध करता है';
 
   @override
@@ -1433,7 +1442,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiPointsRenew => 'आधी रात को नवीनीकृत होगा';
 
   @override
-  String get aiChatWithNotes => 'अपने नोट्स के साथ चैट करें';
+  String get aiChatWithNotes => 'नोट असिस्टेंट';
 
   @override
   String get aiChatInputHint => 'अपने नोट्स के बारे में कुछ पूछें...';
@@ -1539,6 +1548,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SORT';
+
+  @override
+  String get filterFavoriteHint => 'किसी विकल्प को होम स्क्रीन पर रखने के लिए तारे पर टैप करें';
 
   @override
   String get filterSheetSortHint =>

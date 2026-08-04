@@ -473,7 +473,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addToNote => '메모에 추가';
 
   @override
-  String get chatTitle => '메모와 대화하기';
+  String get chatTitle => '노트 어시스턴트';
 
   @override
   String get chatHint =>
@@ -1137,6 +1137,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiSummarizeInfo => '짧은 요약을 만듭니다';
 
   @override
+  String get aiFixNoteInfo => '맞춤법과 문장부호를 고칩니다';
+
+  @override
+  String get aiTranslateInfo => '선택한 언어로 노트를 번역합니다';
+
+  @override
+  String get aiImproveInfo => '문체를 바꿉니다: 격식, 축약 또는 목록';
+
+  @override
   String get aiAnalyzeInfo => '핵심 내용과 할 일을 정리합니다';
 
   @override
@@ -1404,7 +1413,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiPointsRenew => '자정에 갱신됨';
 
   @override
-  String get aiChatWithNotes => '노트와 대화하기';
+  String get aiChatWithNotes => '노트 어시스턴트';
 
   @override
   String get aiChatInputHint => '노트에 대해 물어보세요…';
@@ -1510,6 +1519,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get filterSectionSort => '정렬';
+
+  @override
+  String get filterFavoriteHint => '별표를 누르면 홈 화면에 유지됩니다';
 
   @override
   String get filterSheetSortHint =>

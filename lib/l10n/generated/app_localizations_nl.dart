@@ -481,7 +481,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get addToNote => 'Aan notitie toevoegen';
 
   @override
-  String get chatTitle => 'Chatten met je notities';
+  String get chatTitle => 'Notitie-assistent';
 
   @override
   String get chatHint =>
@@ -1164,6 +1164,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get aiSummarizeInfo => 'Maakt een korte samenvatting';
 
   @override
+  String get aiFixNoteInfo => 'Corrigeert spelling en interpunctie';
+
+  @override
+  String get aiTranslateInfo => 'Vertaalt de notitie naar een gekozen taal';
+
+  @override
+  String get aiImproveInfo => 'Verandert de toon: formeel, korter of lijst';
+
+  @override
   String get aiAnalyzeInfo => 'Zet de kernpunten en to-do\'s op een rij';
 
   @override
@@ -1443,7 +1452,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get aiPointsRenew => 'vernieuwt om middernacht';
 
   @override
-  String get aiChatWithNotes => 'Chat met je notities';
+  String get aiChatWithNotes => 'Notitie-assistent';
 
   @override
   String get aiChatInputHint => 'Vraag iets over je notities…';
@@ -1550,6 +1559,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'SORTEER';
+
+  @override
+  String get filterFavoriteHint => 'Tik op een ster om die optie op het startscherm te houden';
 
   @override
   String get filterSheetSortHint =>

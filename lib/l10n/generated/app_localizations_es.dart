@@ -480,7 +480,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addToNote => 'Añadir a la nota';
 
   @override
-  String get chatTitle => 'Chatea con tus notas';
+  String get chatTitle => 'Asistente de notas';
 
   @override
   String get chatHint =>
@@ -1166,6 +1166,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiSummarizeInfo => 'Genera un resumen breve';
 
   @override
+  String get aiFixNoteInfo => 'Corrige ortografía y puntuación';
+
+  @override
+  String get aiTranslateInfo => 'Traduce la nota al idioma que elijas';
+
+  @override
+  String get aiImproveInfo => 'Cambia el tono: formal, más corto o lista';
+
+  @override
   String get aiAnalyzeInfo => 'Enumera los puntos clave y las tareas';
 
   @override
@@ -1443,7 +1452,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aiPointsRenew => 'se renuevan a medianoche';
 
   @override
-  String get aiChatWithNotes => 'Chatea con tus notas';
+  String get aiChatWithNotes => 'Asistente de notas';
 
   @override
   String get aiChatInputHint => 'Pregunta algo sobre tus notas…';
@@ -1550,6 +1559,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'ORDENAR';
+
+  @override
+  String get filterFavoriteHint => 'Toca una estrella para tener esa opción en la pantalla principal';
 
   @override
   String get filterSheetSortHint =>

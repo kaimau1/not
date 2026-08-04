@@ -475,7 +475,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addToNote => 'إضافة إلى الملاحظة';
 
   @override
-  String get chatTitle => 'محادثة مع ملاحظاتك';
+  String get chatTitle => 'مساعد الملاحظات';
 
   @override
   String get chatHint =>
@@ -1152,6 +1152,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiSummarizeInfo => 'ينتج ملخّصًا قصيرًا';
 
   @override
+  String get aiFixNoteInfo => 'يصحح الإملاء وعلامات الترقيم';
+
+  @override
+  String get aiTranslateInfo => 'يترجم الملاحظة إلى اللغة التي تختارها';
+
+  @override
+  String get aiImproveInfo => 'يغيّر الأسلوب: رسمي أو أقصر أو قائمة';
+
+  @override
   String get aiAnalyzeInfo => 'يعدّد النقاط الأساسية والمهام';
 
   @override
@@ -1423,7 +1432,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiPointsRenew => 'تتجدد عند منتصف الليل';
 
   @override
-  String get aiChatWithNotes => 'تحدث مع ملاحظاتك';
+  String get aiChatWithNotes => 'مساعد الملاحظات';
 
   @override
   String get aiChatInputHint => 'اسأل شيئاً عن ملاحظاتك…';
@@ -1529,6 +1538,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'الترتيب';
+
+  @override
+  String get filterFavoriteHint => 'اضغط على النجمة لإبقاء الخيار في الشاشة الرئيسية';
 
   @override
   String get filterSheetSortHint =>

@@ -482,7 +482,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addToNote => 'Ajouter à la note';
 
   @override
-  String get chatTitle => 'Discuter avec vos notes';
+  String get chatTitle => 'Assistant de notes';
 
   @override
   String get chatHint =>
@@ -1168,6 +1168,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiSummarizeInfo => 'Produit un résumé court';
 
   @override
+  String get aiFixNoteInfo => 'Corrige l\'orthographe et la ponctuation';
+
+  @override
+  String get aiTranslateInfo => 'Traduit la note dans la langue choisie';
+
+  @override
+  String get aiImproveInfo => 'Change le ton : formel, plus court ou liste';
+
+  @override
   String get aiAnalyzeInfo => 'Liste les points clés et les tâches à faire';
 
   @override
@@ -1447,7 +1456,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiPointsRenew => 'renouvellement à minuit';
 
   @override
-  String get aiChatWithNotes => 'Discuter avec vos notes';
+  String get aiChatWithNotes => 'Assistant de notes';
 
   @override
   String get aiChatInputHint => 'Posez une question sur vos notes…';
@@ -1553,6 +1562,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get filterSectionSort => 'TRI';
+
+  @override
+  String get filterFavoriteHint => 'Touche une étoile pour garder l\'option sur l\'écran d\'accueil';
 
   @override
   String get filterSheetSortHint =>
