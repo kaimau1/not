@@ -1168,16 +1168,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiSummarizeInfo => 'Produit un résumé court';
 
   @override
-  String get aiFixNoteInfo => 'Corrige l\'orthographe et la ponctuation';
-
-  @override
-  String get aiTranslateInfo => 'Traduit la note dans la langue choisie';
+  String get aiAnalyzeInfo => 'Liste les points clés et les tâches à faire';
 
   @override
   String get aiImproveInfo => 'Change le ton : formel, plus court ou liste';
 
   @override
-  String get aiAnalyzeInfo => 'Liste les points clés et les tâches à faire';
+  String get aiTranslateInfo => 'Traduit la note dans la langue choisie';
+
+  @override
+  String get aiFixNoteInfo => 'Corrige l\'orthographe et la ponctuation';
 
   @override
   String get moveToFolder => 'Déplacer vers un dossier';
@@ -1471,6 +1471,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiOnYourNotes => 'SUR VOS NOTES';
 
   @override
+  String get aiTaskDuplicates => 'Nettoyer les doublons';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count notes en double';
+  }
+
+  @override
+  String get duplicatesTitle => 'Notes en double';
+
+  @override
+  String get duplicatesHint =>
+      'La note la plus ancienne de chaque groupe est conservée, les autres vont à la corbeille.';
+
+  @override
+  String get duplicatesKeepBadge => 'conservée';
+
+  @override
+  String get duplicatesDeleteAll => 'Mettre les doublons à la corbeille';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count doublons mis à la corbeille';
+  }
+
+  @override
+  String get aiRecentActions => 'ACTIONS RÉCENTES';
+
+  @override
+  String get aiHistoryClear => 'Effacer';
+
+  @override
+  String get aiHistoryQuestion => 'Question';
+
+  @override
+  String get aiHistoryNoteAction => 'Action sur la note';
+
+  @override
+  String get aiHistoryVoiceNote => 'Note vocale';
+
+  @override
   String get aiRecentOps => 'RÉCENT';
 
   @override
@@ -1564,7 +1605,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get filterSectionSort => 'TRI';
 
   @override
-  String get filterFavoriteHint => 'Touche une étoile pour garder l\'option sur l\'écran d\'accueil';
+  String get filterFavoriteHint =>
+      'Touche une étoile pour garder l\'option sur l\'écran d\'accueil';
 
   @override
   String get filterSheetSortHint =>

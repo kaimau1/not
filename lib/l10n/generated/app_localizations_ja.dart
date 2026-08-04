@@ -1136,16 +1136,16 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiSummarizeInfo => '短い要約を作ります';
 
   @override
-  String get aiFixNoteInfo => 'つづりと句読点を直します';
-
-  @override
-  String get aiTranslateInfo => '選んだ言語にノートを翻訳します';
+  String get aiAnalyzeInfo => '要点とやることを一覧にします';
 
   @override
   String get aiImproveInfo => '文体を変えます: 硬め・短め・リスト';
 
   @override
-  String get aiAnalyzeInfo => '要点とやることを一覧にします';
+  String get aiTranslateInfo => '選んだ言語にノートを翻訳します';
+
+  @override
+  String get aiFixNoteInfo => 'つづりと句読点を直します';
 
   @override
   String get moveToFolder => 'フォルダへ移動';
@@ -1425,6 +1425,46 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiOnYourNotes => 'ノートを活用';
+
+  @override
+  String get aiTaskDuplicates => '重複を整理';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '重複したメモが $count 件';
+  }
+
+  @override
+  String get duplicatesTitle => '重複したメモ';
+
+  @override
+  String get duplicatesHint => '各グループで最も古いメモが残り、ほかはゴミ箱に移動します。';
+
+  @override
+  String get duplicatesKeepBadge => '残す';
+
+  @override
+  String get duplicatesDeleteAll => '重複をゴミ箱へ移動';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count 件の重複をゴミ箱に移動しました';
+  }
+
+  @override
+  String get aiRecentActions => '最近の操作';
+
+  @override
+  String get aiHistoryClear => '消去';
+
+  @override
+  String get aiHistoryQuestion => '質問';
+
+  @override
+  String get aiHistoryNoteAction => 'メモの操作';
+
+  @override
+  String get aiHistoryVoiceNote => '音声メモ';
 
   @override
   String get aiRecentOps => '最近の操作';

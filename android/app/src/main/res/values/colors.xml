@@ -41,4 +41,41 @@
 
     <!-- flutter_launcher_icons tarafından yazılır (adaptive_icon_background). -->
     <color name="ic_launcher_background">#F5EDD8</color>
+
+    <!-- ============================================================
+         AÇIK/KOYU AÇIK AÇIK (niteleyicisiz) ikizler.
+
+         Yukarıdaki belirteçler SİSTEM gece moduna göre seçilir
+         (values-night/). Ama tema uygulamanın kendi ayarından da gelebilir:
+         kullanıcı uygulamada Koyu seçip telefon açık modda kalırsa widget
+         kağıt duruyordu. Sağlayıcı o durumda rengi ÇALIŞMA ANINDA uyguluyor
+         (bkz. WidgetTheme.kt) ve bunun için niteleyiciye BAĞLI OLMAYAN,
+         iki paleti de aynı anda okunabilen adlara ihtiyacı var.
+
+         Değerler yukarıdaki (açık) ve values-night/ (koyu) ile birebir aynı;
+         biri değişirse ikizi de değişmeli.
+         ============================================================ -->
+    <color name="widget_light_surface">#F5EDD8</color>
+    <color name="widget_light_row">#F0E6CC</color>
+    <color name="widget_light_outline">#CFC5B8</color>
+    <color name="widget_light_on_surface">#1F1B16</color>
+    <color name="widget_light_on_surface_muted">#4E453B</color>
+    <color name="widget_light_accent">#7D5703</color>
+    <color name="widget_light_on_accent">#FFF8EE</color>
+    <color name="widget_light_note">#FFDDAE</color>
+    <color name="widget_light_on_note">#261A01</color>
+    <color name="widget_light_icon">#1F1B16</color>
+    <color name="widget_light_icon_accent">#7D5703</color>
+
+    <color name="widget_dark_surface">#241C10</color>
+    <color name="widget_dark_row">#30271A</color>
+    <color name="widget_dark_outline">#4E453B</color>
+    <color name="widget_dark_on_surface">#F5EDD8</color>
+    <color name="widget_dark_on_surface_muted">#CFC5B8</color>
+    <color name="widget_dark_accent">#FFDDAE</color>
+    <color name="widget_dark_on_accent">#261A01</color>
+    <color name="widget_dark_note">#E1AD66</color>
+    <color name="widget_dark_on_note">#241C10</color>
+    <color name="widget_dark_icon">#F5EDD8</color>
+    <color name="widget_dark_icon_accent">#FFDDAE</color>
 </resources>

@@ -4,6 +4,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
+import 'format_menu.dart';
 import 'text_wrap.dart';
 
 /// Klavyenin hemen üstünde duran biçim çubuğu.
@@ -39,7 +40,13 @@ class FormatBar extends StatefulWidget {
     required this.onOpacityChanged,
     required this.onOpacityEnd,
     required this.onClose,
+    this.target,
   });
+
+  /// Çubuğun yazdığı alan. Yalnız AKTİF BİÇİM vurgusu için gerekli: imleç ya
+  /// da seçim değiştikçe hangi düğmenin basılı duracağı buradan hesaplanır
+  /// (bkz. [activeRichFormats]). null ise hiçbir düğme vurgulanmaz.
+  final FormatTarget? target;
 
   /// Biçim düğmesine basıldı: seçime uygula (seçim yoksa imlece kutu aç).
   final void Function(RichFormat format, {int? colorIndex}) onFormat;
@@ -77,6 +84,51 @@ enum _SliderMode { size, opacity }
 
 class _FormatBarState extends State<FormatBar> {
   _SliderMode _mode = _SliderMode.size;
+
+  /// İmleçte/seçimde etkin olan biçimler; düğme vurgusu bundan çizilir.
+  RichMark _active = RichMark.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _watchTarget(null);
+  }
+
+  @override
+  void didUpdateWidget(covariant FormatBar old) {
+    super.didUpdateWidget(old);
+    if (old.target?.controller != widget.target?.controller) {
+      _watchTarget(old.target);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.target?.controller.removeListener(_refreshActive);
+    super.dispose();
+  }
+
+  /// Denetleyici değişince aboneliği taşı. TextEditingController hem metin
+  /// hem SEÇİM değişiminde bildirir; imleci oynatmak da vurguyu tazeler.
+  void _watchTarget(FormatTarget? old) {
+    old?.controller.removeListener(_refreshActive);
+    widget.target?.controller.addListener(_refreshActive);
+    // initState/didUpdateWidget'ın arkasından zaten bir build geliyor;
+    // setState'siz atama yeterli (ve initState'te setState yasak).
+    _active = _computeActive();
+  }
+
+  RichMark _computeActive() {
+    final controller = widget.target?.controller;
+    return controller == null ? RichMark.none : activeRichFormats(controller);
+  }
+
+  void _refreshActive() {
+    if (!mounted) return;
+    final next = _computeActive();
+    // Her tuş vuruşunda değil, vurgu GERÇEKTEN değişince çiz.
+    if (next != _active) setState(() => _active = next);
+  }
 
   /// Sürükleme sürerken parmağın değeri. Seçim varken sayfa değişmediği için
   /// kaydırıcı yalnız buradan beslenir — yoksa topuz parmağın altında donardı.
@@ -142,22 +194,26 @@ class _FormatBarState extends State<FormatBar> {
                       _Btn(
                         icon: Icons.format_bold,
                         tooltip: l10n.formatBold,
+                        active: _active.bold,
                         onTap: () => widget.onFormat(RichFormat.bold),
                       ),
                       _Btn(
                         icon: Icons.format_italic,
                         tooltip: l10n.formatItalic,
+                        active: _active.italic,
                         onTap: () => widget.onFormat(RichFormat.italic),
                       ),
                       _Btn(
                         icon: Icons.format_underlined,
                         tooltip: l10n.formatUnderline,
+                        active: _active.underline,
                         onTap: () => widget.onFormat(RichFormat.underline),
                       ),
                       const SizedBox(width: 8),
                       _ColorPicker(
                         icon: Icons.format_color_text,
                         tooltip: l10n.formatTextColor,
+                        activeIndex: _active.color,
                         onPick: (i) =>
                             widget.onFormat(RichFormat.color, colorIndex: i),
                       ),
@@ -165,6 +221,7 @@ class _FormatBarState extends State<FormatBar> {
                         icon: Icons.format_color_fill,
                         tooltip: l10n.formatHighlight,
                         filled: true,
+                        activeIndex: _active.highlight,
                         onPick: (i) => widget.onFormat(
                           RichFormat.highlight,
                           colorIndex: i,
@@ -313,25 +370,44 @@ class _FontMenu extends StatelessWidget {
 /// taşırıyordu; sabit ölçü hem sığdırır hem alt bardaki araç segmentleriyle
 /// aynı yuvarlaklığı verir.
 class _Btn extends StatelessWidget {
-  const _Btn({required this.icon, required this.tooltip, required this.onTap});
+  const _Btn({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.active = false,
+  });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
 
+  /// İmleçteki/seçimdeki biçim bu düğmeninki mi — basılı görünür.
+  final bool active;
+
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: tooltip,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: SizedBox(
-        width: 42,
-        height: 40,
-        child: Icon(icon, size: 22),
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: active ? scheme.primaryContainer : null,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          width: 42,
+          height: 40,
+          child: Icon(
+            icon,
+            size: 22,
+            color: active ? scheme.onPrimaryContainer : null,
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Renk düğmesi: dokununca paletten seçtirir (menü, odak istemez).
@@ -341,6 +417,7 @@ class _ColorPicker extends StatelessWidget {
     required this.tooltip,
     required this.onPick,
     this.filled = false,
+    this.activeIndex,
   });
 
   final IconData icon;
@@ -348,12 +425,44 @@ class _ColorPicker extends StatelessWidget {
   final ValueChanged<int> onPick;
   final bool filled;
 
+  /// İmleçteki/seçimdeki renk indeksi (1..n), yoksa null. Dolu olduğunda
+  /// düğme basılı çizilir ve ikonun altına o rengin şeridi konur — hangi
+  /// rengin uygulandığı menüyü açmadan görünsün.
+  final int? activeIndex;
+
   @override
   Widget build(BuildContext context) {
     final palette = NoteColors.richPalette;
+    final scheme = Theme.of(context).colorScheme;
+    final index = activeIndex;
+    // Palet dışında kalan indeks (eski nottan gelen) rengi çizdirmez ama
+    // düğme yine basılı görünür — biçim gerçekten orada.
+    final color = index != null && index >= 1 && index <= palette.length
+        ? palette[index - 1]
+        : null;
     return PopupMenuButton<int>(
       tooltip: tooltip,
-      icon: Icon(icon, size: 22),
+      icon: index == null
+          ? Icon(icon, size: 22)
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 20, color: scheme.onPrimaryContainer),
+                const SizedBox(height: 2),
+                Container(
+                  width: 18,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: color ?? scheme.onPrimaryContainer,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+      style: index == null
+          ? null
+          : IconButton.styleFrom(backgroundColor: scheme.primaryContainer),
       onSelected: onPick,
       itemBuilder: (context) => [
         PopupMenuItem<int>(

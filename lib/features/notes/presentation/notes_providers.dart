@@ -8,6 +8,7 @@ import '../../folders/domain/note_folder.dart';
 import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import '../domain/note_similarity.dart';
 import '../domain/note_type.dart';
 
 /// [others] = hiçbir klasöre ve etikete girmemiş notlar. Çip barındaki
@@ -192,6 +193,15 @@ class AttachmentsExpandedNotifier extends Notifier<bool> {
     ref.read(sharedPreferencesProvider).setBool(_key, state);
   }
 }
+
+/// Birbirinin kopyası olan not kümeleri (bkz. [duplicateNoteGroups]).
+///
+/// Sağlayıcıda: hesap O(n²) ve her çizimde yeniden yapılamaz. Riverpod
+/// sonucu önbelleğe alır, yalnız not listesi değişince yeniden hesaplanır.
+final duplicateNotesProvider = Provider<List<List<Note>>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  return duplicateNoteGroups(notes);
+});
 
 /// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
 final hiddenFolderIdsProvider = Provider<Set<String>>((ref) {

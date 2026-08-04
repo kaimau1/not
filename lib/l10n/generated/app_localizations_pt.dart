@@ -1168,16 +1168,16 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiSummarizeInfo => 'Produz um resumo curto';
 
   @override
-  String get aiFixNoteInfo => 'Corrige ortografia e pontuação';
-
-  @override
-  String get aiTranslateInfo => 'Traduz a nota para o idioma escolhido';
+  String get aiAnalyzeInfo => 'Lista os pontos principais e as tarefas';
 
   @override
   String get aiImproveInfo => 'Muda o tom: formal, mais curto ou lista';
 
   @override
-  String get aiAnalyzeInfo => 'Lista os pontos principais e as tarefas';
+  String get aiTranslateInfo => 'Traduz a nota para o idioma escolhido';
+
+  @override
+  String get aiFixNoteInfo => 'Corrige ortografia e pontuação';
 
   @override
   String get moveToFolder => 'Mover para uma pasta';
@@ -1471,6 +1471,47 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiOnYourNotes => 'NAS SUAS NOTAS';
 
   @override
+  String get aiTaskDuplicates => 'Limpar duplicados';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count notas duplicadas';
+  }
+
+  @override
+  String get duplicatesTitle => 'Notas duplicadas';
+
+  @override
+  String get duplicatesHint =>
+      'A nota mais antiga de cada grupo é mantida, as restantes vão para o lixo.';
+
+  @override
+  String get duplicatesKeepBadge => 'mantida';
+
+  @override
+  String get duplicatesDeleteAll => 'Mover duplicados para o lixo';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count duplicados movidos para o lixo';
+  }
+
+  @override
+  String get aiRecentActions => 'AÇÕES RECENTES';
+
+  @override
+  String get aiHistoryClear => 'Limpar';
+
+  @override
+  String get aiHistoryQuestion => 'Pergunta';
+
+  @override
+  String get aiHistoryNoteAction => 'Ação na nota';
+
+  @override
+  String get aiHistoryVoiceNote => 'Nota de voz';
+
+  @override
   String get aiRecentOps => 'RECENTE';
 
   @override
@@ -1564,7 +1605,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get filterSectionSort => 'ORDENAR';
 
   @override
-  String get filterFavoriteHint => 'Toca numa estrela para manter essa opção no ecrã principal';
+  String get filterFavoriteHint =>
+      'Toca numa estrela para manter essa opção no ecrã principal';
 
   @override
   String get filterSheetSortHint =>

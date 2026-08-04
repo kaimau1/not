@@ -1164,17 +1164,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get aiSummarizeInfo => 'Menghasilkan ringkasan singkat';
 
   @override
-  String get aiFixNoteInfo => 'Memperbaiki ejaan dan tanda baca';
+  String get aiAnalyzeInfo =>
+      'Mendaftar poin utama dan hal yang harus dikerjakan';
+
+  @override
+  String get aiImproveInfo =>
+      'Mengubah gaya: formal, lebih singkat atau daftar';
 
   @override
   String get aiTranslateInfo => 'Menerjemahkan catatan ke bahasa pilihanmu';
 
   @override
-  String get aiImproveInfo => 'Mengubah gaya: formal, lebih singkat atau daftar';
-
-  @override
-  String get aiAnalyzeInfo =>
-      'Mendaftar poin utama dan hal yang harus dikerjakan';
+  String get aiFixNoteInfo => 'Memperbaiki ejaan dan tanda baca';
 
   @override
   String get moveToFolder => 'Pindahkan ke folder';
@@ -1466,6 +1467,47 @@ class AppLocalizationsId extends AppLocalizations {
   String get aiOnYourNotes => 'NOTLARIN ÜZERİNDE';
 
   @override
+  String get aiTaskDuplicates => 'Bersihkan duplikat';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count catatan duplikat';
+  }
+
+  @override
+  String get duplicatesTitle => 'Catatan duplikat';
+
+  @override
+  String get duplicatesHint =>
+      'Catatan terlama di setiap grup dipertahankan, sisanya masuk ke sampah.';
+
+  @override
+  String get duplicatesKeepBadge => 'dipertahankan';
+
+  @override
+  String get duplicatesDeleteAll => 'Pindahkan duplikat ke sampah';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count duplikat dipindahkan ke sampah';
+  }
+
+  @override
+  String get aiRecentActions => 'TINDAKAN TERAKHIR';
+
+  @override
+  String get aiHistoryClear => 'Hapus';
+
+  @override
+  String get aiHistoryQuestion => 'Pertanyaan';
+
+  @override
+  String get aiHistoryNoteAction => 'Tindakan catatan';
+
+  @override
+  String get aiHistoryVoiceNote => 'Catatan suara';
+
+  @override
   String get aiRecentOps => 'SON İŞLEMLER';
 
   @override
@@ -1559,7 +1601,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get filterSectionSort => 'SIRALA';
 
   @override
-  String get filterFavoriteHint => 'Ketuk bintang agar opsi itu tetap di layar utama';
+  String get filterFavoriteHint =>
+      'Ketuk bintang agar opsi itu tetap di layar utama';
 
   @override
   String get filterSheetSortHint =>

@@ -22,6 +22,11 @@ class QuickNoteWidgetProvider : AppWidgetProvider() {
                     R.id.quick_note_root,
                     deepLinkIntent(context, "notlar://new?type=text", requestCode = 30)
                 )
+                WidgetTheme.paletteFor(context)?.let { palette ->
+                    setBackgroundRes(R.id.quick_note_root, palette.noteBackground)
+                    setIconTint(R.id.quick_note_icon, palette.onNote)
+                    setTextColor(R.id.quick_note_label, palette.onNote)
+                }
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }

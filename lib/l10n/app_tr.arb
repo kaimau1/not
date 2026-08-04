@@ -647,6 +647,28 @@
   "aiChatLooking": "notlarına bakıyor…",
   "aiChatFullScreen": "Tam ekran",
   "aiOnYourNotes": "NOTLARIN ÜZERİNDE",
+  "aiTaskDuplicates": "Kopyaları temizle",
+  "aiTaskDuplicatesInfo": "{count} kopya not var",
+  "@aiTaskDuplicatesInfo": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "duplicatesTitle": "Kopya notlar",
+  "duplicatesHint": "Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.",
+  "duplicatesKeepBadge": "korunur",
+  "duplicatesDeleteAll": "Kopyaları çöpe taşı",
+  "duplicatesDone": "{count} kopya çöp kutusuna taşındı",
+  "@duplicatesDone": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "aiRecentActions": "SON İŞLEMLER",
+  "aiHistoryClear": "Temizle",
+  "aiHistoryQuestion": "Soru",
+  "aiHistoryNoteAction": "Not işlemi",
+  "aiHistoryVoiceNote": "Sesli not",
   "aiRecentOps": "SON İŞLEMLER",
   "aiTaskWeekSummary": "Haftayı özetle",
   "aiTaskWeekSummaryInfo": "Son 7 günün notlarından tek özet",

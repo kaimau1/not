@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -73,14 +73,44 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.settingsAi,
         summary: _aiSummary(l10n),
         keywords: 'brifing etiket baslik asistan model api anahtar',
-        children: const [
-          _BuiltInAiStatus(),
-          _BriefingEditor(),
-          _AutoTagSwitch(),
-          _AutoTitleSwitch(),
-          _AssistantVoiceSwitch(),
-          _AiSkipCheckedSwitch(),
-          _AdvancedAiSection(),
+        rows: [
+          _SettingRow(
+            const _BuiltInAiStatus(),
+            title: l10n.settingsAi,
+            keywords: 'kota puan hak api anahtar premium',
+          ),
+          _SettingRow(
+            const _BriefingEditor(),
+            title: l10n.briefingSetting,
+            keywords: l10n.briefingSettingInfo,
+          ),
+          _SettingRow(
+            const _AutoTagSwitch(),
+            title: l10n.autoTagSetting,
+            keywords: l10n.autoTagSettingInfo,
+          ),
+          _SettingRow(
+            const _AutoTitleSwitch(),
+            title: l10n.autoTitleSetting,
+            keywords: l10n.autoTitleSettingInfo,
+          ),
+          _SettingRow(
+            const _AssistantVoiceSwitch(),
+            title: l10n.assistantVoiceSetting,
+            keywords: l10n.assistantVoiceSettingInfo,
+          ),
+          _SettingRow(
+            const _AiSkipCheckedSwitch(),
+            title: l10n.aiSkipCheckedSetting,
+            keywords: l10n.aiSkipCheckedInfo,
+          ),
+          _SettingRow(
+            const _AdvancedAiSection(),
+            title: l10n.aiAdvanced,
+            keywords:
+                '${l10n.aiAdvancedInfo} gemini openai claude openrouter '
+                'api anahtar model tanilama',
+          ),
         ],
       ),
       _Area(
@@ -89,13 +119,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.settingsAppearance,
         summary: _appearanceSummary(l10n),
         keywords: 'tema yazi boyutu zemin koyu acik kagit liste',
-        children: const [
-          _ThemeSelector(),
-          SizedBox(height: 12),
-          _FontScaleSlider(),
-          _ExpandListItemsSwitch(),
-          _DashboardBackgroundTile(),
-          _DarkScheduleEditor(),
+        rows: [
+          _SettingRow(
+            // Boşluk seçicinin İÇİNDE: ayrı bir satır olsaydı süzmede tek
+            // başına kalıp araya boşluk bırakırdı.
+            const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [_ThemeSelector(), SizedBox(height: 12)],
+            ),
+            title: l10n.settingsAppearance,
+            keywords:
+                'tema ${l10n.themeSystem} ${l10n.themeLight} '
+                '${l10n.themeDark} ${l10n.themePaper}',
+          ),
+          _SettingRow(const _FontScaleSlider(), title: l10n.fontSize),
+          _SettingRow(
+            const _ExpandListItemsSwitch(),
+            title: l10n.expandListItems,
+            keywords: l10n.expandListItemsInfo,
+          ),
+          _SettingRow(
+            const _DashboardBackgroundTile(),
+            title: l10n.dashboardBackground,
+            keywords: l10n.dashboardBackgroundInfo,
+          ),
+          _SettingRow(
+            const _DarkScheduleEditor(),
+            title: l10n.darkSchedule,
+            keywords: l10n.darkScheduleInfo,
+          ),
         ],
       ),
       // Ses: asistan dugmesinin davranisi + sesli okuma + sistem dili.
@@ -107,25 +159,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.settingsSpeech,
         summary: _soundSummary(l10n),
         keywords: 'mikrofon ses okuma hiz dil basili tut',
-        children: [
-          const _VoiceModeSelector(),
+        rows: [
+          _SettingRow(
+            const _VoiceModeSelector(),
+            title: l10n.voiceModeSetting,
+            keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
+          ),
           for (final code in _voiceLanguages(context))
-            _SpeechVoiceSelector(
-              language: code,
+            _SettingRow(
+              _SpeechVoiceSelector(
+                language: code,
+                title: l10n.speechVoiceLanguage(languageLabel(code)),
+              ),
               title: l10n.speechVoiceLanguage(languageLabel(code)),
+              keywords: 'ses tipi seslendirme',
             ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              l10n.speechVoiceAutoInfo,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+          _SettingRow(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(
+                l10n.speechVoiceAutoInfo,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
+            // Bu satır bir AÇIKLAMA: üstündeki ses seçicilerle aynı sorgularda
+            // görünsün ki seçiciler süzülünce açıklaması da gelsin.
+            keywords: '${l10n.speechVoiceAutoInfo} ses tipi seslendirme',
           ),
-          const _SpeechRateSlider(),
-          const _ForeignSpeechRateSlider(),
-          const _LanguageSelector(),
+          _SettingRow(const _SpeechRateSlider(), title: l10n.speechRate),
+          _SettingRow(
+            const _ForeignSpeechRateSlider(),
+            title: l10n.speechRateForeign,
+          ),
+          _SettingRow(
+            const _LanguageSelector(),
+            title: l10n.settingsLanguage,
+            keywords: 'dil language uygulama dili',
+          ),
         ],
       ),
       if (const PermissionsService().isSupported)
@@ -135,7 +207,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: l10n.permissionsTitle,
           summary: '',
           keywords: 'mikrofon kamera bildirim izin',
-          children: const [_PermissionsSection()],
+          rows: [
+            _SettingRow(
+              const _PermissionsSection(),
+              title: l10n.permissionsTitle,
+              keywords: 'mikrofon kamera bildirim izin',
+            ),
+          ],
         ),
       _Area(
         id: 'sync',
@@ -143,10 +221,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.syncTitle,
         summary: '',
         keywords: 'yedek geri yukle sinir mb yukleme',
-        children: const [
-          _SyncLimitSelector(),
-          _BackupButton(),
-          _RestoreButton(),
+        rows: [
+          _SettingRow(
+            const _SyncLimitSelector(),
+            title: l10n.syncLimitTitle,
+            keywords: '${l10n.syncLimitInfo} sinir mb yukleme',
+          ),
+          _SettingRow(
+            const _BackupButton(),
+            title: l10n.exportBackup,
+            keywords: 'yedek disa aktar',
+          ),
+          _SettingRow(
+            const _RestoreButton(),
+            title: l10n.importBackup,
+            keywords: 'geri yukle ice aktar',
+          ),
         ],
       ),
       _Area(
@@ -155,17 +245,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: l10n.account,
         summary: '',
         keywords: 'cikis hesap sil e-posta',
-        children: const [_AccountSection()],
+        rows: [
+          _SettingRow(
+            const _AccountSection(),
+            title: l10n.account,
+            keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
+          ),
+        ],
       ),
     ];
 
     final query = _query.trim().toLowerCase();
-    final visible = query.isEmpty
-        ? areas
-        : [
-            for (final a in areas)
-              if (a.matches(query)) a,
-          ];
+    final visible = [
+      for (final a in areas)
+        if (a.visible(query)) a,
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
@@ -246,6 +340,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 for (final area in visible)
                   _SettingsArea(
                     area: area,
+                    // Arama sirasinda yalnizca ESLESEN satirlar cizilir;
+                    // "hiz" arayan kullanici Ses alaninin tamamini degil iki
+                    // hiz kaydiricisini gorur.
+                    rows: area.visibleRows(query),
                     // Arama sirasinda eslesen alanlar acik gelir: kullanici
                     // buldugu seyi bir de elle acmak zorunda kalmasin.
                     open: query.isNotEmpty || _open == area.id,
@@ -286,6 +384,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
 /// Ayarlar alaninin tanimi. Arama hem baslikta hem [keywords] icinde arar:
 /// kullanici "mikrofon" yazinca hem Izinler hem Ses alani cikmali.
+/// Alanin icindeki TEK bir ayar satiri.
+///
+/// Eskiden alanlar duz `List<Widget>` tasiyordu ve arama yalnizca ALAN
+/// basligina bakiyordu: "hiz" arayan kullaniciya Ses alaninin tamami aciliyor,
+/// aradigi satiri yine gozle bulmasi gerekiyordu. Satirin aranabilir bir
+/// tanimi olunca suzme satir satir yapilabiliyor.
+class _SettingRow {
+  const _SettingRow(this.child, {this.title = '', this.keywords = ''});
+
+  final Widget child;
+
+  /// Satirin ekranda gorunen basligi (l10n'dan) — ayni metin arandiginda
+  /// eslessin diye burada tekrarlanir.
+  final String title;
+
+  /// Baslikta gecmeyen ama kullanicinin arayabilecegi kelimeler.
+  final String keywords;
+
+  bool matches(String query) =>
+      title.toLowerCase().contains(query) ||
+      keywords.toLowerCase().contains(query);
+}
+
 class _Area {
   const _Area({
     required this.id,
@@ -293,7 +414,7 @@ class _Area {
     required this.title,
     required this.summary,
     required this.keywords,
-    required this.children,
+    required this.rows,
   });
 
   final String id;
@@ -301,12 +422,29 @@ class _Area {
   final String title;
   final String summary;
   final String keywords;
-  final List<Widget> children;
+  final List<_SettingRow> rows;
 
   bool matches(String query) =>
       title.toLowerCase().contains(query) ||
       summary.toLowerCase().contains(query) ||
       keywords.toLowerCase().contains(query);
+
+  /// Sorguda gorunecek satirlar.
+  ///
+  /// ALANIN KENDISI eslesiyorsa (kullanici "ses" yazdi) alanin TUM satirlari
+  /// gosterilir — bolumun adini arayan kisi bolumun tamamini ister. Alan
+  /// eslesmiyorsa yalnizca eslesen satirlar kalir.
+  List<Widget> visibleRows(String query) {
+    if (query.isEmpty || matches(query)) return [for (final r in rows) r.child];
+    return [
+      for (final r in rows)
+        if (r.matches(query)) r.child,
+    ];
+  }
+
+  /// Alan listede hic gorunmeli mi: kendisi ya da bir satiri eslesiyorsa.
+  bool visible(String query) =>
+      query.isEmpty || matches(query) || rows.any((r) => r.matches(query));
 }
 
 /// Akordeon alan: kapaliyken baslik + DURUM OZETI, acikken icerik.
@@ -316,11 +454,16 @@ class _Area {
 class _SettingsArea extends StatelessWidget {
   const _SettingsArea({
     required this.area,
+    required this.rows,
     required this.open,
     required this.onTap,
   });
 
   final _Area area;
+
+  /// Cizilecek satirlar — aramada suzulmus olabilir (bkz. [_Area.visibleRows]).
+  final List<Widget> rows;
+
   final bool open;
   final VoidCallback onTap;
 
@@ -396,7 +539,7 @@ class _SettingsArea extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: area.children,
+                  children: rows,
                 ),
               ),
           ],
@@ -2460,3 +2603,33 @@ class _AccountSection extends ConsumerWidget {
     );
   }
 }
+
+/// Arama suzgecinin test kancalari.
+///
+/// `_Area` ve `_SettingRow` bu dosyaya ozel (private) kalmali — ayar ekrani
+/// disinda kullanilacak seyler degil. Suzme mantigi ise sinanmaya deger:
+/// satir duzeyi suzme "hangi satir gorunur" sorusunun cevabi ve gozle
+/// dogrulamasi zahmetli. Bu iki yapici testin nesne kurmasina izin verir,
+/// tipi disari acmadan.
+@visibleForTesting
+Object settingsRowForTest(
+  Widget child, {
+  String title = '',
+  String keywords = '',
+}) => _SettingRow(child, title: title, keywords: keywords);
+
+@visibleForTesting
+dynamic settingsAreaForTest({
+  required String id,
+  required String title,
+  required String summary,
+  required String keywords,
+  required List<Object> rows,
+}) => _Area(
+  id: id,
+  icon: Icons.settings,
+  title: title,
+  summary: summary,
+  keywords: keywords,
+  rows: [for (final r in rows) r as _SettingRow],
+);

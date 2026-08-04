@@ -76,9 +76,6 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   senkronlandığı için diğer cihazda "senkronlanmadı" görünür (2026-07-24).
 - [ ] **AI videoyu 60 sn ile sınırlı alıyor** — satır içi gönderim boyutu
   sınırı; daha uzun video için Files API / parçalama gerekir (2026-07-24).
-- [ ] **Liste modunda sürükleyerek sıralarken kenarda otomatik kaydırma yok**
-  — liste artık serbest görsel tuvalinin içinde `shrinkWrap` ile duruyor, dış
-  kaydırıcıyı sürükleme sırasında elle sürmek gerekir (2026-07-24).
 - [ ] **Sarma sırasında IME oluşturma aralığı (altı çizili tahmin metni)
   gösterilmiyor** — çapalar aralığın konumunu kaydırdığı için atlanıyor.
   Yalnız görselli metin notunda; harf girişi etkilenmiyor (2026-07-24).
@@ -133,25 +130,16 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 
 ## Devir paketi (2026-08-04) — uygulandı, kalan uçlar
 
-- [ ] **Biçim şeridinde "aktif biçim" vurgusu yok** (3b). Tasarım aktif biçimi
-  `primaryContainer` istiyor; editör imlecin bulunduğu parçanın biçimini
-  şeride akıtmıyor. Sahte aktiflik göstermemek için boş bırakıldı.
-- [ ] **Widget uygulamanın temasını giymiyor** — sistem gece moduna bakıyor.
-  Kullanıcı uygulamada Koyu seçip telefon açık modda kalırsa widget kağıt
-  durur. Çözüm: seçilen temayı SharedPreferences'a yaz, Kotlin sağlayıcı
-  RemoteViews ile renkleri çalışma anında uygulasın (4 palet × açık/koyu).
-- [ ] **6a: "Kopyaları temizle" kutusu yok** — benzer not bulmak için bir
-  benzerlik ölçümü gerekiyor, uygulamada yok. Uydurma sayı göstermemek için
-  kutu hiç konmadı.
-- [ ] **6a: "SON İŞLEMLER" bölümü yok** — yapay zekâ işlem geçmişi diye bir
-  depo yok. Eklenirse bölüm de eklenebilir.
-- [ ] **4a: ayar arama satır düzeyinde değil, ALAN düzeyinde.** Alan başlığı +
-  elle yazılmış anahtar kelimeler aranıyor. Satır satır süzme için her ayar
-  satırının aranabilir bir tanıma dönmesi gerekir.
+- [ ] **Widget'ın YENİ tema davranışı cihazda görülmedi** — uygulamada
+  seçilen tema artık widget'a yazılıyor ve Kotlin sağlayıcı renkleri çalışma
+  anında uyguluyor; derleniyor ama gerçek ana ekranda kimse bakmadı.
+  Kontrol: telefonu AÇIK moda al, uygulamada Koyu seç, dört widget'a da bak
+  (2026-08-05).
 - [ ] **Web ikonları güncellenmedi** — `web/` hâlâ Flutter şablonunun stok
   ikonlarını taşıyor (eski çivit simge de oraya hiç işlenmemişti). Proje
-  hedefi Android + Windows olduğu için atlandı.
-- [ ] **Yeni çeviriler (44 anahtar × 14 dil) makine üretimi**, gözden
+  hedefi Android + Windows olduğu için atlandı. YAPILMAYACAK: `web/`
+  derlenmiyor bile; madde kayıt olarak duruyor.
+- [ ] **Yeni çeviriler (44 + 12 anahtar × 15 dil) makine üretimi**, gözden
   geçirilmedi — yukarıdaki "Çevirileri anadili konuşana göstert" maddesinin
   kapsamına girer.
 

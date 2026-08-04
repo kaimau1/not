@@ -1158,16 +1158,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiSummarizeInfo => 'एक संक्षिप्त सारांश बनाता है';
 
   @override
-  String get aiFixNoteInfo => 'वर्तनी और विराम चिह्न ठीक करता है';
-
-  @override
-  String get aiTranslateInfo => 'नोट को चुनी हुई भाषा में अनुवाद करता है';
+  String get aiAnalyzeInfo => 'मुख्य बिंदु और करने के काम सूचीबद्ध करता है';
 
   @override
   String get aiImproveInfo => 'शैली बदलता है: औपचारिक, छोटा या सूची';
 
   @override
-  String get aiAnalyzeInfo => 'मुख्य बिंदु और करने के काम सूचीबद्ध करता है';
+  String get aiTranslateInfo => 'नोट को चुनी हुई भाषा में अनुवाद करता है';
+
+  @override
+  String get aiFixNoteInfo => 'वर्तनी और विराम चिह्न ठीक करता है';
 
   @override
   String get moveToFolder => 'फ़ोल्डर में ले जाएँ';
@@ -1457,6 +1457,47 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiOnYourNotes => 'आपके नोट्स पर';
 
   @override
+  String get aiTaskDuplicates => 'डुप्लिकेट साफ़ करें';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count डुप्लिकेट नोट हैं';
+  }
+
+  @override
+  String get duplicatesTitle => 'डुप्लिकेट नोट';
+
+  @override
+  String get duplicatesHint =>
+      'हर समूह का सबसे पुराना नोट रखा जाता है, बाकी कूड़ेदान में चले जाते हैं।';
+
+  @override
+  String get duplicatesKeepBadge => 'रखा जाएगा';
+
+  @override
+  String get duplicatesDeleteAll => 'डुप्लिकेट को कूड़ेदान में भेजें';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count डुप्लिकेट कूड़ेदान में भेजे गए';
+  }
+
+  @override
+  String get aiRecentActions => 'हाल की कार्रवाइयाँ';
+
+  @override
+  String get aiHistoryClear => 'साफ़ करें';
+
+  @override
+  String get aiHistoryQuestion => 'प्रश्न';
+
+  @override
+  String get aiHistoryNoteAction => 'नोट कार्रवाई';
+
+  @override
+  String get aiHistoryVoiceNote => 'वॉइस नोट';
+
+  @override
   String get aiRecentOps => 'हाल ही में';
 
   @override
@@ -1550,7 +1591,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get filterSectionSort => 'SORT';
 
   @override
-  String get filterFavoriteHint => 'किसी विकल्प को होम स्क्रीन पर रखने के लिए तारे पर टैप करें';
+  String get filterFavoriteHint =>
+      'किसी विकल्प को होम स्क्रीन पर रखने के लिए तारे पर टैप करें';
 
   @override
   String get filterSheetSortHint =>

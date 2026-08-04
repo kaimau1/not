@@ -60,6 +60,21 @@ class NotlarWidgetProvider : AppWidgetProvider() {
                     if (title != null) setTextViewText(rowId, title)
                 }
 
+                // Uygulamada sistemden farklı bir tema seçiliyse renkleri
+                // çalışma anında uygula (bkz. WidgetTheme).
+                WidgetTheme.paletteFor(context)?.let { palette ->
+                    setBackgroundRes(R.id.widget_root, palette.background)
+                    setTextColor(R.id.widget_title, palette.onSurface)
+                    setTextColor(R.id.widget_count, palette.onSurfaceMuted)
+                    setTextColor(R.id.widget_empty, palette.onSurfaceMuted)
+                    setBackgroundRes(R.id.widget_mic, palette.micButton)
+                    setIconTint(R.id.widget_mic, palette.onAccent)
+                    rowIds.forEach { rowId ->
+                        setBackgroundRes(rowId, palette.rowBackground)
+                        setTextColor(rowId, palette.onSurface)
+                    }
+                }
+
                 val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 if (launchIntent != null) {
                     val pendingIntent = PendingIntent.getActivity(

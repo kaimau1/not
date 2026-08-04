@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -37,6 +38,33 @@ int uncheckRestoreIndex({
   return rememberedIndex.clamp(0, uncheckedCount);
 }
 
+/// Sürükleyerek sıralarken parmağın konumuna göre kare başına kaç piksel
+/// kaydırılacağı. Negatif = yukarı, pozitif = aşağı, 0 = kaydırma yok.
+///
+/// [top] ve [bottom] görünür sayfa kutusunun ekran koordinatlarıdır. Parmak
+/// [band] kadarlık kenar şeridine girdikçe kaydırma hızlanır; şeridin dışında
+/// kaydırma durur. Ayrı bir işlev: kenar mantığı widget kurmadan sınanabilsin.
+double reorderAutoScrollStep({
+  required double pointerY,
+  required double top,
+  required double bottom,
+  double band = 88,
+  double maxStep = 14,
+}) {
+  // Kutu banttan darsa (çok kısa liste) bant kutunun yarısına iner; yoksa üst
+  // ve alt bantlar örtüşür ve parmak nerede olursa olsun kaydırma tetiklenir.
+  final effective = math.min(band, (bottom - top) / 2);
+  if (effective <= 0) return 0;
+  if (pointerY < top + effective) {
+    return -maxStep * ((top + effective - pointerY) / effective).clamp(0.0, 1.0);
+  }
+  if (pointerY > bottom - effective) {
+    return maxStep *
+        ((pointerY - (bottom - effective)) / effective).clamp(0.0, 1.0);
+  }
+  return 0;
+}
+
 /// Checklist ve sıralı liste düzenleyicisi. Öğeler "Seç" modundaki tutamaçtan
 /// sürüklenerek sıralanır, Enter yeni öğe ekler. Silme "x" düğmesi yalnızca
 /// satır odaklıyken görünür (kaydırma/yazma sırasında yanlışlıkla basılmasın).
@@ -74,9 +102,10 @@ class ItemsEditor extends StatefulWidget {
 
   /// true: liste kendi kaydırmasını yapmaz, dıştaki sayfa kaydırır (serbest
   /// görsel tuvalinin içindeyken şart — iç içe iki kaydırıcı olamaz).
-  /// ponytail: sürükleyerek sıralarken kenara gelince otomatik kaydırma
-  /// çalışmaz; kısa listelerde sorun değil, gerekirse dış kaydırıcıyı
-  /// sürükleme sırasında elle sürmek gerekir.
+  /// Bu kipte sürükleyerek sıralarken kenar kaydırmasını editör kendi
+  /// yürütür (bkz. [_ItemsEditorState._autoScrollTo]): ReorderableListView'ın
+  /// yerleşik otomatik kaydırıcısı KENDİ görünüm kutusunu kaydırır, o da bu
+  /// kipte kaydırılamaz olduğu için hiçbir şey yapmıyordu.
   final bool shrinkWrap;
 
   /// true: uzun satırlar tamamen sarılıp görünür. false: satır tek satırda
@@ -161,6 +190,70 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _items = List.of(widget.items);
   }
 
+  /// Dıştaki sayfa kaydırıcısı ([ItemsEditor.shrinkWrap] kipinde liste kendi
+  /// kaydırmasını yapmaz). Sürükleyerek sıralarken kenar kaydırması bunun
+  /// üzerinden yürür.
+  ScrollableState? _outerScroll;
+
+  /// Sürükleme sürüyor mu ve o an kare başına kaç piksel kaydırılacak.
+  bool _reordering = false;
+  double _autoScrollStep = 0;
+  Timer? _autoScrollTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _outerScroll = widget.shrinkWrap ? Scrollable.maybeOf(context) : null;
+  }
+
+  /// Sürükleme sırasında parmağın konumuna göre kenar kaydırmasını ayarlar.
+  /// Parmak bandın dışındaysa kaydırma durur.
+  void _autoScrollTo(Offset globalPosition) {
+    final scrollable = _outerScroll;
+    if (!_reordering || scrollable == null) return;
+    final box = scrollable.context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final top = box.localToGlobal(Offset.zero).dy;
+    final step = reorderAutoScrollStep(
+      pointerY: globalPosition.dy,
+      top: top,
+      bottom: top + box.size.height,
+    );
+    _autoScrollStep = step;
+    if (step == 0) {
+      _stopAutoScroll();
+      return;
+    }
+    _autoScrollTimer ??= Timer.periodic(
+      const Duration(milliseconds: 16),
+      (_) => _autoScrollTick(),
+    );
+  }
+
+  void _autoScrollTick() {
+    final position = _outerScroll?.position;
+    if (position == null || !position.hasContentDimensions) {
+      _stopAutoScroll();
+      return;
+    }
+    final target = (position.pixels + _autoScrollStep).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    // Uca gelindiyse zamanlayıcıyı boşuna döndürme.
+    if (target == position.pixels) {
+      _stopAutoScroll();
+      return;
+    }
+    position.jumpTo(target);
+  }
+
+  void _stopAutoScroll() {
+    _autoScrollTimer?.cancel();
+    _autoScrollTimer = null;
+    _autoScrollStep = 0;
+  }
+
   @override
   void didUpdateWidget(covariant ItemsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -192,6 +285,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   @override
   void dispose() {
+    _stopAutoScroll();
     for (final c in _controllers.values) {
       c.dispose();
     }
@@ -832,12 +926,28 @@ class _ItemsEditorState extends State<ItemsEditor> {
       // İşaretsizler _items'ın başında tutulduğundan (bkz. _checkedStart)
       // buradaki index'ler _items index'leriyle birebir örtüşür.
       onReorderItem: _reorder,
+      onReorderStart: (_) => _reordering = true,
+      onReorderEnd: (_) {
+        _reordering = false;
+        _stopAutoScroll();
+      },
       itemBuilder: (context, index) => _itemRow(
         listItems[index],
         reorderIndex: index,
         orderNumber: index + 1,
       ),
     );
+
+    // Kenar kaydırması yalnız shrinkWrap kipinde elle yürütülür; normal kipte
+    // ReorderableListView'ın kendi otomatik kaydırıcısı zaten çalışıyor.
+    final scrollableList = widget.shrinkWrap
+        ? Listener(
+            onPointerMove: (event) => _autoScrollTo(event.position),
+            onPointerUp: (_) => _stopAutoScroll(),
+            onPointerCancel: (_) => _stopAutoScroll(),
+            child: list,
+          )
+        : list;
 
     // Seçim çubuğu ekranın dibinde, kaydırmadan bağımsız bir katmanda durur:
     // liste nerede olursa olsun "Kopyala" hep parmağın altındadır.
@@ -853,7 +963,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       child: OverlayPortal(
         controller: _barController,
         overlayChildBuilder: _selectionBar,
-        child: list,
+        child: scrollableList,
       ),
     );
   }

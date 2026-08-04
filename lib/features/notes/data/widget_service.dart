@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../../../core/utils/debouncer.dart';
+import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
 import 'notes_repository.dart';
 
@@ -22,6 +24,14 @@ class WidgetService {
   final Ref _ref;
   ProviderSubscription<AsyncValue<List<Note>>>? _sub;
 
+  /// Tema değişimini izleyen abonelikler. Kullanıcı temayı değiştirir
+  /// değiştirmez widget da dönmeli; not değişikliğini beklemek "widget eski
+  /// temada kaldı" demek olurdu.
+  final _themeSubs = <ProviderSubscription<Object?>>[];
+
+  /// Son yazılan tema; aynıysa widget uyandırılmaz.
+  String? _lastTheme;
+
   /// Yazarken her tuş vuruşu bir snapshot üretir; widget'ı her seferinde
   /// yenilemek boşuna işlem (ve pil) harcar. Art arda değişiklikler
   /// toplanıp tek güncellemeye iner.
@@ -36,6 +46,54 @@ class WidgetService {
       final notes = next.value;
       if (notes != null) _debouncer(() => _update(notes));
     }, fireImmediately: true);
+    // Temayı ETKİLEYEN iki ayar. `effectiveThemeModeProvider` autoDispose
+    // olduğundan buradan izlenemez (autoDispose olmayan sağlayıcı onu
+    // dinleyemez); kaynaklarını dinleyip değeri okuma anında hesaplıyoruz.
+    for (final provider in [themeChoiceProvider, darkScheduleProvider]) {
+      _themeSubs.add(
+        _ref.listen<Object?>(provider, (_, _) => _pushTheme()),
+      );
+    }
+    _pushTheme();
+  }
+
+  /// Geçerli temayı widget'a yazar.
+  ///
+  /// Üç değer: `light`, `dark`, `system`. Sistem seçiliyken Android tarafı
+  /// hiçbir şeye dokunmaz — kaynak niteleyicileri (values-night/) zaten doğru
+  /// olanı seçiyor (bkz. WidgetTheme.kt).
+  ///
+  /// BİLİNEN SINIR: gece zamanlaması AÇIKKEN mod saat başına dakikada bir
+  /// tiklerle döner ve o anki dönüşü buraya itmiyoruz; widget bir sonraki not
+  /// ya da ayar değişiminde yakalar. Dakikada bir widget uyandırmak pil
+  /// açısından bu kadar küçük bir kazanca değmiyor.
+  Future<void> _pushTheme() async {
+    try {
+      final theme = switch (_ref.read(effectiveThemeModeProvider)) {
+        ThemeMode.light => 'light',
+        ThemeMode.dark => 'dark',
+        ThemeMode.system => 'system',
+      };
+      if (theme == _lastTheme) return;
+      _lastTheme = theme;
+      await HomeWidget.saveWidgetData<String>('widget_theme', theme);
+      await _updateAllWidgets();
+    } catch (e) {
+      debugPrint('Widget teması yazılamadı: $e');
+    }
+  }
+
+  /// Dört widget sağlayıcısının hepsi yenilenir: tema hepsini ilgilendiriyor
+  /// (not listesi yalnız NotlarWidgetProvider'ı).
+  Future<void> _updateAllWidgets() async {
+    for (final name in const [
+      'NotlarWidgetProvider',
+      'QuickActionsWidgetProvider',
+      'QuickNoteWidgetProvider',
+      'VoiceWidgetProvider',
+    ]) {
+      await HomeWidget.updateWidget(androidName: name);
+    }
   }
 
   Future<void> _update(List<Note> notes) async {
@@ -71,5 +129,9 @@ class WidgetService {
   void dispose() {
     _debouncer.dispose();
     _sub?.close();
+    for (final sub in _themeSubs) {
+      sub.close();
+    }
+    _themeSubs.clear();
   }
 }

@@ -1169,16 +1169,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiSummarizeInfo => 'Erstellt eine kurze Zusammenfassung';
 
   @override
-  String get aiFixNoteInfo => 'Korrigiert Rechtschreibung und Zeichensetzung';
-
-  @override
-  String get aiTranslateInfo => 'Übersetzt die Notiz in eine gewählte Sprache';
+  String get aiAnalyzeInfo => 'Listet die wichtigsten Punkte und Aufgaben auf';
 
   @override
   String get aiImproveInfo => 'Ändert den Ton: förmlich, kürzer oder Liste';
 
   @override
-  String get aiAnalyzeInfo => 'Listet die wichtigsten Punkte und Aufgaben auf';
+  String get aiTranslateInfo => 'Übersetzt die Notiz in eine gewählte Sprache';
+
+  @override
+  String get aiFixNoteInfo => 'Korrigiert Rechtschreibung und Zeichensetzung';
 
   @override
   String get moveToFolder => 'In Ordner verschieben';
@@ -1472,6 +1472,47 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aiOnYourNotes => 'ZU DEINEN NOTIZEN';
 
   @override
+  String get aiTaskDuplicates => 'Duplikate bereinigen';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count doppelte Notizen';
+  }
+
+  @override
+  String get duplicatesTitle => 'Doppelte Notizen';
+
+  @override
+  String get duplicatesHint =>
+      'Die älteste Notiz jeder Gruppe bleibt erhalten, der Rest wandert in den Papierkorb.';
+
+  @override
+  String get duplicatesKeepBadge => 'bleibt';
+
+  @override
+  String get duplicatesDeleteAll => 'Duplikate in den Papierkorb';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count Duplikate in den Papierkorb verschoben';
+  }
+
+  @override
+  String get aiRecentActions => 'LETZTE AKTIONEN';
+
+  @override
+  String get aiHistoryClear => 'Leeren';
+
+  @override
+  String get aiHistoryQuestion => 'Frage';
+
+  @override
+  String get aiHistoryNoteAction => 'Notizaktion';
+
+  @override
+  String get aiHistoryVoiceNote => 'Sprachnotiz';
+
+  @override
   String get aiRecentOps => 'KÜRZLICH';
 
   @override
@@ -1565,7 +1606,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get filterSectionSort => 'SORTIEREN';
 
   @override
-  String get filterFavoriteHint => 'Tippe auf einen Stern, um die Option auf dem Startbildschirm zu behalten';
+  String get filterFavoriteHint =>
+      'Tippe auf einen Stern, um die Option auf dem Startbildschirm zu behalten';
 
   @override
   String get filterSheetSortHint =>

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/tr_datetime.dart';
 import '../../notes/data/notes_repository.dart';
+import '../data/ai_history.dart';
 import '../data/assistant_service.dart';
 import '../data/gemini_service.dart';
 
@@ -35,10 +36,13 @@ class ChatController extends Notifier<ChatState> {
   ///
   /// Hata metinleri PARAMETRE olarak geliyor: denetleyicinin `BuildContext`i
   /// yok, yerelleştirmeyi çağıran ekran çözer.
+  /// [historyLabel] "SON İŞLEMLER" listesine yazılacak ad ("Soru"). Metnin
+  /// KENDİSİ yazılmaz — geçmişte kişisel veri tutulmuyor (bkz. AiHistory).
   Future<void> send(
     String text, {
     required String noApiKeyText,
     required String Function(String) errorText,
+    String? historyLabel,
   }) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || state.busy) return;
@@ -65,6 +69,11 @@ class ChatController extends Notifier<ChatState> {
           );
       await _ensureReminder(createdNoteId, trimmed);
       _addReply(reply);
+      // Yalnız BAŞARILI iş geçmişe girer: hata alan bir istek "yapılan iş"
+      // değil, kullanıcı onu zaten ekranda gördü.
+      if (historyLabel != null) {
+        ref.read(aiHistoryProvider.notifier).record(historyLabel);
+      }
     } on GeminiException catch (e) {
       _addReply(e.isAuthError ? noApiKeyText : errorText(e.message));
     } catch (e) {

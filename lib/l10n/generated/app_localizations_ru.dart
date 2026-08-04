@@ -1161,16 +1161,16 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiSummarizeInfo => 'Даёт краткий пересказ';
 
   @override
-  String get aiFixNoteInfo => 'Исправляет орфографию и пунктуацию';
-
-  @override
-  String get aiTranslateInfo => 'Переводит заметку на выбранный язык';
+  String get aiAnalyzeInfo => 'Перечисляет ключевые пункты и задачи';
 
   @override
   String get aiImproveInfo => 'Меняет стиль: официально, короче или списком';
 
   @override
-  String get aiAnalyzeInfo => 'Перечисляет ключевые пункты и задачи';
+  String get aiTranslateInfo => 'Переводит заметку на выбранный язык';
+
+  @override
+  String get aiFixNoteInfo => 'Исправляет орфографию и пунктуацию';
 
   @override
   String get moveToFolder => 'Переместить в папку';
@@ -1462,6 +1462,47 @@ class AppLocalizationsRu extends AppLocalizations {
   String get aiOnYourNotes => 'ПО ВАШИМ ЗАМЕТКАМ';
 
   @override
+  String get aiTaskDuplicates => 'Удалить дубликаты';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return 'Дубликатов заметок: $count';
+  }
+
+  @override
+  String get duplicatesTitle => 'Дубликаты заметок';
+
+  @override
+  String get duplicatesHint =>
+      'Самая старая заметка в каждой группе сохраняется, остальные отправляются в корзину.';
+
+  @override
+  String get duplicatesKeepBadge => 'сохранится';
+
+  @override
+  String get duplicatesDeleteAll => 'Переместить дубликаты в корзину';
+
+  @override
+  String duplicatesDone(int count) {
+    return 'Дубликатов перемещено в корзину: $count';
+  }
+
+  @override
+  String get aiRecentActions => 'ПОСЛЕДНИЕ ДЕЙСТВИЯ';
+
+  @override
+  String get aiHistoryClear => 'Очистить';
+
+  @override
+  String get aiHistoryQuestion => 'Вопрос';
+
+  @override
+  String get aiHistoryNoteAction => 'Действие с заметкой';
+
+  @override
+  String get aiHistoryVoiceNote => 'Голосовая заметка';
+
+  @override
   String get aiRecentOps => 'НЕДАВНЕЕ';
 
   @override
@@ -1555,7 +1596,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get filterSectionSort => 'СОРТИРОВКА';
 
   @override
-  String get filterFavoriteHint => 'Нажмите звёздочку, чтобы закрепить фильтр на главном экране';
+  String get filterFavoriteHint =>
+      'Нажмите звёздочку, чтобы закрепить фильтр на главном экране';
 
   @override
   String get filterSheetSortHint =>

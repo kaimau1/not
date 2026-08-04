@@ -35,6 +35,23 @@ bool applyRichFormat(
   return _write(controller, logical, start, end, result);
 }
 
+/// Denetleyicinin o anki seçiminde (ya da imlecinde) ETKİN olan biçimler.
+///
+/// Biçim şeridi hangi düğmeyi "basılı" göstereceğini buradan öğrenir.
+/// [applyRichFormat] ile AYNI dönüşümden geçer (görüntü uzayı → mantıksal
+/// metin): aksi hâlde vurgu ile düğmenin gerçekte uyguladığı biçim farklı
+/// yerlere bakar ve şerit yalan söylerdi.
+RichMark activeRichFormats(WrapTextController controller) {
+  final selection = controller.selection;
+  if (!selection.isValid) return RichMark.none;
+  final display = controller.text;
+  return activeFormats(
+    stripWrapAnchors(display),
+    wrapToLogicalOffset(display, selection.start),
+    wrapToLogicalOffset(display, selection.end),
+  );
+}
+
 /// SEÇİLİ metne boyut ya da opaklık kademesi yazar (aç/kapa değil: kaydırıcı
 /// hangi değerdeyse o uygulanır). [index] null ise kademe kaldırılır — metin
 /// notun kendi boyutuna/opaklığına döner.

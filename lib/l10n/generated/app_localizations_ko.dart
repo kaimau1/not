@@ -1137,16 +1137,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aiSummarizeInfo => '짧은 요약을 만듭니다';
 
   @override
-  String get aiFixNoteInfo => '맞춤법과 문장부호를 고칩니다';
-
-  @override
-  String get aiTranslateInfo => '선택한 언어로 노트를 번역합니다';
+  String get aiAnalyzeInfo => '핵심 내용과 할 일을 정리합니다';
 
   @override
   String get aiImproveInfo => '문체를 바꿉니다: 격식, 축약 또는 목록';
 
   @override
-  String get aiAnalyzeInfo => '핵심 내용과 할 일을 정리합니다';
+  String get aiTranslateInfo => '선택한 언어로 노트를 번역합니다';
+
+  @override
+  String get aiFixNoteInfo => '맞춤법과 문장부호를 고칩니다';
 
   @override
   String get moveToFolder => '폴더로 이동';
@@ -1426,6 +1426,46 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiOnYourNotes => '노트 기반';
+
+  @override
+  String get aiTaskDuplicates => '중복 정리';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '중복 메모 $count개';
+  }
+
+  @override
+  String get duplicatesTitle => '중복 메모';
+
+  @override
+  String get duplicatesHint => '각 그룹에서 가장 오래된 메모는 남고 나머지는 휴지통으로 이동합니다.';
+
+  @override
+  String get duplicatesKeepBadge => '유지';
+
+  @override
+  String get duplicatesDeleteAll => '중복을 휴지통으로 이동';
+
+  @override
+  String duplicatesDone(int count) {
+    return '중복 $count개를 휴지통으로 옮겼습니다';
+  }
+
+  @override
+  String get aiRecentActions => '최근 작업';
+
+  @override
+  String get aiHistoryClear => '지우기';
+
+  @override
+  String get aiHistoryQuestion => '질문';
+
+  @override
+  String get aiHistoryNoteAction => '메모 작업';
+
+  @override
+  String get aiHistoryVoiceNote => '음성 메모';
 
   @override
   String get aiRecentOps => '최근 작업';

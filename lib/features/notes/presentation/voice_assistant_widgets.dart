@@ -83,6 +83,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                   savedText: l10n.voiceNoteSaved,
                   noApiKeyText: l10n.aiNoApiKey,
                   genericErrorText: l10n.assistantGenericError,
+                  historyLabel: l10n.aiHistoryVoiceNote,
                 ),
                 icon: const Icon(Icons.check, size: 18),
                 label: Text(l10n.voiceFinish),

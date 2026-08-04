@@ -34,6 +34,13 @@ class QuickActionsWidgetProvider : AppWidgetProvider() {
                     R.id.qa_mic,
                     deepLinkIntent(context, "notlar://voice", requestCode = 23)
                 )
+                WidgetTheme.paletteFor(context)?.let { palette ->
+                    setBackgroundRes(R.id.qa_widget_root, palette.background)
+                    setIconTint(R.id.qa_new_note, palette.icon)
+                    setIconTint(R.id.qa_checklist, palette.icon)
+                    setIconTint(R.id.qa_ordered, palette.icon)
+                    setIconTint(R.id.qa_mic, palette.iconAccent)
+                }
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }

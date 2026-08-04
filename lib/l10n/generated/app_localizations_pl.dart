@@ -1165,17 +1165,17 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aiSummarizeInfo => 'Tworzy krótkie podsumowanie';
 
   @override
-  String get aiFixNoteInfo => 'Poprawia pisownię i interpunkcję';
-
-  @override
-  String get aiTranslateInfo => 'Tłumaczy notatkę na wybrany język';
+  String get aiAnalyzeInfo =>
+      'Wypisuje najważniejsze punkty i zadania do zrobienia';
 
   @override
   String get aiImproveInfo => 'Zmienia ton: formalny, krótszy lub lista';
 
   @override
-  String get aiAnalyzeInfo =>
-      'Wypisuje najważniejsze punkty i zadania do zrobienia';
+  String get aiTranslateInfo => 'Tłumaczy notatkę na wybrany język';
+
+  @override
+  String get aiFixNoteInfo => 'Poprawia pisownię i interpunkcję';
 
   @override
   String get moveToFolder => 'Przenieś do folderu';
@@ -1468,6 +1468,47 @@ class AppLocalizationsPl extends AppLocalizations {
   String get aiOnYourNotes => 'NA TWOICH NOTATKACH';
 
   @override
+  String get aiTaskDuplicates => 'Usuń duplikaty';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return 'Zduplikowane notatki: $count';
+  }
+
+  @override
+  String get duplicatesTitle => 'Zduplikowane notatki';
+
+  @override
+  String get duplicatesHint =>
+      'Najstarsza notatka w każdej grupie zostaje zachowana, reszta trafia do kosza.';
+
+  @override
+  String get duplicatesKeepBadge => 'zostaje';
+
+  @override
+  String get duplicatesDeleteAll => 'Przenieś duplikaty do kosza';
+
+  @override
+  String duplicatesDone(int count) {
+    return 'Przeniesiono duplikaty do kosza: $count';
+  }
+
+  @override
+  String get aiRecentActions => 'OSTATNIE DZIAŁANIA';
+
+  @override
+  String get aiHistoryClear => 'Wyczyść';
+
+  @override
+  String get aiHistoryQuestion => 'Pytanie';
+
+  @override
+  String get aiHistoryNoteAction => 'Działanie na notatce';
+
+  @override
+  String get aiHistoryVoiceNote => 'Notatka głosowa';
+
+  @override
   String get aiRecentOps => 'OSTATNIE';
 
   @override
@@ -1561,7 +1602,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get filterSectionSort => 'SORTIE';
 
   @override
-  String get filterFavoriteHint => 'Dotknij gwiazdki, aby opcja została na ekranie głównym';
+  String get filterFavoriteHint =>
+      'Dotknij gwiazdki, aby opcja została na ekranie głównym';
 
   @override
   String get filterSheetSortHint =>

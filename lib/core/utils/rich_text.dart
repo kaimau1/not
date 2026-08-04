@@ -576,6 +576,37 @@ bool _rangeHasFormat(
   return sawContent && allFormatted;
 }
 
+/// [start]–[end] aralığında ETKİN olan biçimler — biçim şeridinin hangi
+/// düğmeyi "basılı" göstereceği.
+///
+/// Tanım [toggleFormat] ile AYNI olmak zorunda: şerit, düğmeye basılınca
+/// biçimin KALKACAĞI durumu vurgulamalı, yoksa vurgu yalan söyler. Bu yüzden
+/// imleçte (seçim yokken) imlecin solundaki karakterin biçimi, seçim varken
+/// ise yalnız aralığın TAMAMINI kaplayan biçimler etkin sayılır.
+///
+/// İndeks alan biçimlerde (renk, vurgu, boyut, opaklık) dönen [RichMark] o
+/// aralıktaki indeksi de taşır; şerit renk noktasını buna göre boyar.
+RichMark activeFormats(String text, int start, int end) {
+  if (start < 0 || end > text.length || end < start) return RichMark.none;
+  final leaves = _parse(text);
+  final segments = [
+    for (final leaf in leaves) RichSegment(leaf.text, leaf.mark),
+  ];
+  final ps = _toPlain(leaves, start);
+  final pe = _toPlain(leaves, end);
+  if (ps == pe) return _markAt(segments, ps);
+
+  var active = RichMark.none;
+  for (final format in RichFormat.values) {
+    if (!_rangeHasFormat(segments, ps, pe, format, null)) continue;
+    // İndeks aralık boyunca değişiyorsa (iki farklı renk) hangisini
+    // göstereceğimiz belirsizdir; ilk parçanınki alınır — düğme yine doğru
+    // biçimi kaldırır, yalnız renk noktası ilk parçaya göre boyanır.
+    active = active.applied(format, _markAt(segments, ps + 1).indexOf(format));
+  }
+  return active;
+}
+
 // ---------------------------------------------------------------------------
 // Çizim
 // ---------------------------------------------------------------------------

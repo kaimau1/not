@@ -47,6 +47,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           text,
           noApiKeyText: l10n.aiNoApiKey,
           errorText: l10n.aiError,
+          historyLabel: l10n.aiHistoryQuestion,
         );
     if (mounted) _scrollToEnd();
   }

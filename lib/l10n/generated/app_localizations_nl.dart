@@ -1164,16 +1164,16 @@ class AppLocalizationsNl extends AppLocalizations {
   String get aiSummarizeInfo => 'Maakt een korte samenvatting';
 
   @override
-  String get aiFixNoteInfo => 'Corrigeert spelling en interpunctie';
-
-  @override
-  String get aiTranslateInfo => 'Vertaalt de notitie naar een gekozen taal';
+  String get aiAnalyzeInfo => 'Zet de kernpunten en to-do\'s op een rij';
 
   @override
   String get aiImproveInfo => 'Verandert de toon: formeel, korter of lijst';
 
   @override
-  String get aiAnalyzeInfo => 'Zet de kernpunten en to-do\'s op een rij';
+  String get aiTranslateInfo => 'Vertaalt de notitie naar een gekozen taal';
+
+  @override
+  String get aiFixNoteInfo => 'Corrigeert spelling en interpunctie';
 
   @override
   String get moveToFolder => 'Naar map verplaatsen';
@@ -1467,6 +1467,47 @@ class AppLocalizationsNl extends AppLocalizations {
   String get aiOnYourNotes => 'OVER JE NOTITIES';
 
   @override
+  String get aiTaskDuplicates => 'Duplicaten opruimen';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count dubbele notities';
+  }
+
+  @override
+  String get duplicatesTitle => 'Dubbele notities';
+
+  @override
+  String get duplicatesHint =>
+      'De oudste notitie van elke groep blijft bewaard, de rest gaat naar de prullenbak.';
+
+  @override
+  String get duplicatesKeepBadge => 'blijft';
+
+  @override
+  String get duplicatesDeleteAll => 'Duplicaten naar prullenbak';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count duplicaten naar de prullenbak verplaatst';
+  }
+
+  @override
+  String get aiRecentActions => 'RECENTE ACTIES';
+
+  @override
+  String get aiHistoryClear => 'Wissen';
+
+  @override
+  String get aiHistoryQuestion => 'Vraag';
+
+  @override
+  String get aiHistoryNoteAction => 'Notitieactie';
+
+  @override
+  String get aiHistoryVoiceNote => 'Spraaknotitie';
+
+  @override
   String get aiRecentOps => 'RECENT';
 
   @override
@@ -1561,7 +1602,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get filterSectionSort => 'SORTEER';
 
   @override
-  String get filterFavoriteHint => 'Tik op een ster om die optie op het startscherm te houden';
+  String get filterFavoriteHint =>
+      'Tik op een ster om die optie op het startscherm te houden';
 
   @override
   String get filterSheetSortHint =>

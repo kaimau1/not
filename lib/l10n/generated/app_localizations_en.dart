@@ -1157,16 +1157,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSummarizeInfo => 'Produces a short summary';
 
   @override
-  String get aiFixNoteInfo => 'Fixes spelling and punctuation';
-
-  @override
-  String get aiTranslateInfo => 'Translates the note into a language you pick';
+  String get aiAnalyzeInfo => 'Lists the key points and to-dos';
 
   @override
   String get aiImproveInfo => 'Changes the tone: formal, shorter or a list';
 
   @override
-  String get aiAnalyzeInfo => 'Lists the key points and to-dos';
+  String get aiTranslateInfo => 'Translates the note into a language you pick';
+
+  @override
+  String get aiFixNoteInfo => 'Fixes spelling and punctuation';
 
   @override
   String get moveToFolder => 'Move to folder';
@@ -1456,6 +1456,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiOnYourNotes => 'ON YOUR NOTES';
 
   @override
+  String get aiTaskDuplicates => 'Clean up duplicates';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count duplicate notes';
+  }
+
+  @override
+  String get duplicatesTitle => 'Duplicate notes';
+
+  @override
+  String get duplicatesHint =>
+      'The oldest note in each group is kept, the rest go to the trash.';
+
+  @override
+  String get duplicatesKeepBadge => 'kept';
+
+  @override
+  String get duplicatesDeleteAll => 'Move duplicates to trash';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count duplicates moved to trash';
+  }
+
+  @override
+  String get aiRecentActions => 'RECENT ACTIONS';
+
+  @override
+  String get aiHistoryClear => 'Clear';
+
+  @override
+  String get aiHistoryQuestion => 'Question';
+
+  @override
+  String get aiHistoryNoteAction => 'Note action';
+
+  @override
+  String get aiHistoryVoiceNote => 'Voice note';
+
+  @override
   String get aiRecentOps => 'RECENT';
 
   @override
@@ -1549,7 +1590,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterSectionSort => 'SORT';
 
   @override
-  String get filterFavoriteHint => 'Tap a star to keep that option on the home screen';
+  String get filterFavoriteHint =>
+      'Tap a star to keep that option on the home screen';
 
   @override
   String get filterSheetSortHint =>

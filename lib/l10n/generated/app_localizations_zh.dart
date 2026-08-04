@@ -1124,16 +1124,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiSummarizeInfo => '生成一段简短摘要';
 
   @override
-  String get aiFixNoteInfo => '修正拼写和标点';
-
-  @override
-  String get aiTranslateInfo => '将笔记翻译成所选语言';
+  String get aiAnalyzeInfo => '列出要点和待办事项';
 
   @override
   String get aiImproveInfo => '改变语气：正式、更短或列表';
 
   @override
-  String get aiAnalyzeInfo => '列出要点和待办事项';
+  String get aiTranslateInfo => '将笔记翻译成所选语言';
+
+  @override
+  String get aiFixNoteInfo => '修正拼写和标点';
 
   @override
   String get moveToFolder => '移动到文件夹';
@@ -1411,6 +1411,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiOnYourNotes => '基于笔记';
+
+  @override
+  String get aiTaskDuplicates => '清理重复项';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '有 $count 条重复笔记';
+  }
+
+  @override
+  String get duplicatesTitle => '重复笔记';
+
+  @override
+  String get duplicatesHint => '每组中最早的笔记会保留，其余移入回收站。';
+
+  @override
+  String get duplicatesKeepBadge => '保留';
+
+  @override
+  String get duplicatesDeleteAll => '将重复项移入回收站';
+
+  @override
+  String duplicatesDone(int count) {
+    return '已将 $count 条重复项移入回收站';
+  }
+
+  @override
+  String get aiRecentActions => '最近操作';
+
+  @override
+  String get aiHistoryClear => '清除';
+
+  @override
+  String get aiHistoryQuestion => '提问';
+
+  @override
+  String get aiHistoryNoteAction => '笔记操作';
+
+  @override
+  String get aiHistoryVoiceNote => '语音笔记';
 
   @override
   String get aiRecentOps => '最近操作';

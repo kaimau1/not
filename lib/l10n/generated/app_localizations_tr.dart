@@ -1155,16 +1155,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiSummarizeInfo => 'Kısa bir özet çıkarır';
 
   @override
-  String get aiFixNoteInfo => 'Yazım ve noktalamayı düzeltir';
-
-  @override
-  String get aiTranslateInfo => 'Notu seçtiğin dile çevirir';
+  String get aiAnalyzeInfo => 'Ana noktaları ve yapılacakları listeler';
 
   @override
   String get aiImproveInfo => 'Üslubu değiştirir: resmî, kısa ya da liste';
 
   @override
-  String get aiAnalyzeInfo => 'Ana noktaları ve yapılacakları listeler';
+  String get aiTranslateInfo => 'Notu seçtiğin dile çevirir';
+
+  @override
+  String get aiFixNoteInfo => 'Yazım ve noktalamayı düzeltir';
 
   @override
   String get moveToFolder => 'Klasöre taşı';
@@ -1452,6 +1452,47 @@ class AppLocalizationsTr extends AppLocalizations {
   String get aiOnYourNotes => 'NOTLARIN ÜZERİNDE';
 
   @override
+  String get aiTaskDuplicates => 'Kopyaları temizle';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count kopya not var';
+  }
+
+  @override
+  String get duplicatesTitle => 'Kopya notlar';
+
+  @override
+  String get duplicatesHint =>
+      'Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.';
+
+  @override
+  String get duplicatesKeepBadge => 'korunur';
+
+  @override
+  String get duplicatesDeleteAll => 'Kopyaları çöpe taşı';
+
+  @override
+  String duplicatesDone(int count) {
+    return '$count kopya çöp kutusuna taşındı';
+  }
+
+  @override
+  String get aiRecentActions => 'SON İŞLEMLER';
+
+  @override
+  String get aiHistoryClear => 'Temizle';
+
+  @override
+  String get aiHistoryQuestion => 'Soru';
+
+  @override
+  String get aiHistoryNoteAction => 'Not işlemi';
+
+  @override
+  String get aiHistoryVoiceNote => 'Sesli not';
+
+  @override
   String get aiRecentOps => 'SON İŞLEMLER';
 
   @override
@@ -1545,7 +1586,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get filterSectionSort => 'SIRALAMA';
 
   @override
-  String get filterFavoriteHint => 'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun';
+  String get filterFavoriteHint =>
+      'Ana ekranda kısayol olarak görünmesi için bir seçeneğin yıldızına dokun';
 
   @override
   String get filterSheetSortHint =>

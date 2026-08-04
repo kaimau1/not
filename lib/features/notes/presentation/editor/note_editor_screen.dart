@@ -301,11 +301,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     FocusNode focusNode,
     VoidCallback commit,
   ) {
+    final changed = _formatTarget?.controller != controller;
     _formatTarget = FormatTarget(
       controller: controller,
       focusNode: focusNode,
       commit: commit,
     );
+    // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: aktif biçim vurgusu yeni
+    // alanın imlecinden hesaplanmalı. Kapalıyken çizim değişmediği için
+    // gereksiz yere setState çağırmıyoruz (odak her satırda değişiyor).
+    if (changed && _formatBarOpen && mounted) setState(() {});
   }
 
   /// Çubuktaki biçim düğmesi: seçime uygula, seçim yoksa imlece kutu aç.
@@ -3379,6 +3384,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     Flexible(
                       child: SingleChildScrollView(
                         child: FormatBar(
+                          target: _formatTarget,
                           onFormat: _applyFormat,
                           onClearFormat: _clearFormat,
                           fontFamily: note.fontFamily,

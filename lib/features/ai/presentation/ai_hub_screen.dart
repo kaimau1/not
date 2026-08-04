@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_similarity.dart';
+import '../../notes/presentation/duplicates_sheet.dart';
+import '../../notes/presentation/notes_providers.dart';
 import '../data/ai_gate.dart';
+import '../data/ai_history.dart';
 import 'chat_controller.dart';
 import 'read_document.dart';
 
@@ -40,7 +45,12 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     setState(() => _hasText = false);
     await ref
         .read(chatProvider.notifier)
-        .send(text, noApiKeyText: l10n.aiNoApiKey, errorText: l10n.aiError);
+        .send(
+          text,
+          noApiKeyText: l10n.aiNoApiKey,
+          errorText: l10n.aiError,
+          historyLabel: l10n.aiHistoryQuestion,
+        );
   }
 
   @override
@@ -65,6 +75,10 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     ];
     final untagged = active.where((n) => n.tags.isEmpty).length;
     final untitled = active.where((n) => n.title.trim().isEmpty).length;
+    // Kopya sayısı artık uydurma değil: metin benzerliğinden ölçülüyor
+    // (yerel, AI'sız — bkz. note_similarity.dart).
+    final duplicates = duplicateCount(ref.watch(duplicateNotesProvider));
+    final history = ref.watch(aiHistoryProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -111,10 +125,6 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
               const SizedBox(height: 16),
               _SectionLabel(l10n.aiOnYourNotes),
               const SizedBox(height: 8),
-              // Tasarımda dört kutu var; "Kopyaları temizle" YOK çünkü benzer
-              // not bulmak için bir benzerlik ölçümü gerekiyor ve uygulamada
-              // öyle bir şey yok. Uydurma bir sayı göstermektense kutuyu hiç
-              // koymadım.
               Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -140,14 +150,49 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-              _TaskTile(
-                icon: Icons.title,
-                title: l10n.aiTaskSuggestTitles,
-                info: l10n.aiTaskSuggestTitlesInfo(untitled),
-                onTap: untitled == 0
-                    ? null
-                    : () => _send(l10n.aiTaskSuggestTitles),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _TaskTile(
+                      icon: Icons.title,
+                      title: l10n.aiTaskSuggestTitles,
+                      info: l10n.aiTaskSuggestTitlesInfo(untitled),
+                      onTap: untitled == 0
+                          ? null
+                          : () => _send(l10n.aiTaskSuggestTitles),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde
+                    // ölçülür, puan harcamaz. Yine de burada duruyor çünkü
+                    // kullanıcı açısından aynı iş — "notlarımı toparla".
+                    child: _TaskTile(
+                      icon: Icons.copy_all_outlined,
+                      title: l10n.aiTaskDuplicates,
+                      info: l10n.aiTaskDuplicatesInfo(duplicates),
+                      onTap: duplicates == 0
+                          ? null
+                          : () => showDuplicatesSheet(context),
+                    ),
+                  ),
+                ],
               ),
+              if (history.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _SectionLabel(l10n.aiRecentActions)),
+                    TextButton(
+                      onPressed: ref.read(aiHistoryProvider.notifier).clear,
+                      child: Text(l10n.aiHistoryClear),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                _HistoryCard(entries: history),
+              ],
               const SizedBox(height: 16),
               _HubRow(
                 icon: Icons.headphones_outlined,
@@ -167,6 +212,74 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "SON İŞLEMLER" kartı: yapay zekânın en son yaptığı beş iş.
+///
+/// Yalnız işin ADI ve ne kadar önce olduğu yazar — soru metni ya da not
+/// içeriği tutulmuyor (bkz. AiHistory). Amaç denetim değil, "az önce ne
+/// yaptırmıştım" sorusuna cevap.
+class _HistoryCard extends StatelessWidget {
+  const _HistoryCard({required this.entries});
+
+  final List<AiHistoryEntry> entries;
+
+  /// Bugünse saat, değilse gün+ay. "3 dk önce" biçimi için dört ayrı l10n
+  /// anahtarı (ve 16 çeviri) gerekirdi; `intl` zaten yerel ayara uygun saat
+  /// ve tarih veriyor, kullanıcının merak ettiği sıra da böyle görünüyor.
+  static String _when(DateTime at) {
+    final now = DateTime.now();
+    final sameDay =
+        at.year == now.year && at.month == now.month && at.day == now.day;
+    return sameDay
+        ? DateFormat.Hm().format(at)
+        : DateFormat('d MMM').format(at);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      child: Column(
+        children: [
+          for (final entry in entries.take(5))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 15,
+                    color: scheme.primary,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      entry.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                  Text(
+                    _when(entry.at),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

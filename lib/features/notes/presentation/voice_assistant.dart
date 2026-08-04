@@ -10,6 +10,7 @@ import 'package:record/record.dart';
 
 import '../../../core/utils/speech_output.dart';
 import '../../../core/utils/tr_datetime.dart';
+import '../../ai/data/ai_history.dart';
 import '../../ai/data/assistant_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../ai/data/gemini_service.dart';
@@ -206,6 +207,7 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
     required String savedText,
     required String noApiKeyText,
     required String genericErrorText,
+    String? historyLabel,
   }) {
     _transcript = transcript;
     _useSpeech = true;
@@ -215,14 +217,18 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
       savedText: savedText,
       noApiKeyText: noApiKeyText,
       genericErrorText: genericErrorText,
+      historyLabel: historyLabel,
     );
   }
 
+  /// [historyLabel] verilirse iş bitince "SON İŞLEMLER"e yazılır (yalnız ad,
+  /// konuşma metni DEĞİL — bkz. AiHistory).
   Future<bool> finish({
     required String nothingHeardText,
     required String savedText,
     required String noApiKeyText,
     required String genericErrorText,
+    String? historyLabel,
   }) async {
     if (state.phase != VoiceAssistantPhase.recording) return true;
     if (state.elapsed < const Duration(seconds: 1) && _transcript.isEmpty) {
@@ -364,6 +370,9 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         // dönüştür" diyebilsin (bkz. [convertTranscriptToNote]).
         liveTranscript: transcript,
       );
+      if (historyLabel != null) {
+        ref.read(aiHistoryProvider.notifier).record(historyLabel);
+      }
       _speakReply(reply);
       // İşin ilgili olduğu not varsa ana ekran ona kaydırıp vurgular:
       // asistan "ekledim" diyor ama hangi nota eklediği görünmüyordu.

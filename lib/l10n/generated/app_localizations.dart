@@ -2256,17 +2256,11 @@ abstract class AppLocalizations {
   /// **'Kısa bir özet çıkarır'**
   String get aiSummarizeInfo;
 
-  /// No description provided for @aiFixNoteInfo.
+  /// No description provided for @aiAnalyzeInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yazım ve noktalamayı düzeltir'**
-  String get aiFixNoteInfo;
-
-  /// No description provided for @aiTranslateInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Notu seçtiğin dile çevirir'**
-  String get aiTranslateInfo;
+  /// **'Ana noktaları ve yapılacakları listeler'**
+  String get aiAnalyzeInfo;
 
   /// No description provided for @aiImproveInfo.
   ///
@@ -2274,11 +2268,17 @@ abstract class AppLocalizations {
   /// **'Üslubu değiştirir: resmî, kısa ya da liste'**
   String get aiImproveInfo;
 
-  /// No description provided for @aiAnalyzeInfo.
+  /// No description provided for @aiTranslateInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Ana noktaları ve yapılacakları listeler'**
-  String get aiAnalyzeInfo;
+  /// **'Notu seçtiğin dile çevirir'**
+  String get aiTranslateInfo;
+
+  /// No description provided for @aiFixNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazım ve noktalamayı düzeltir'**
+  String get aiFixNoteInfo;
 
   /// No description provided for @moveToFolder.
   ///
@@ -2807,6 +2807,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'NOTLARIN ÜZERİNDE'**
   String get aiOnYourNotes;
+
+  /// No description provided for @aiTaskDuplicates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyaları temizle'**
+  String get aiTaskDuplicates;
+
+  /// No description provided for @aiTaskDuplicatesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kopya not var'**
+  String aiTaskDuplicatesInfo(int count);
+
+  /// No description provided for @duplicatesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopya notlar'**
+  String get duplicatesTitle;
+
+  /// No description provided for @duplicatesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her kümede en eski not korunur, kalanlar çöp kutusuna taşınır.'**
+  String get duplicatesHint;
+
+  /// No description provided for @duplicatesKeepBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'korunur'**
+  String get duplicatesKeepBadge;
+
+  /// No description provided for @duplicatesDeleteAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyaları çöpe taşı'**
+  String get duplicatesDeleteAll;
+
+  /// No description provided for @duplicatesDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kopya çöp kutusuna taşındı'**
+  String duplicatesDone(int count);
+
+  /// No description provided for @aiRecentActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'SON İŞLEMLER'**
+  String get aiRecentActions;
+
+  /// No description provided for @aiHistoryClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizle'**
+  String get aiHistoryClear;
+
+  /// No description provided for @aiHistoryQuestion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Soru'**
+  String get aiHistoryQuestion;
+
+  /// No description provided for @aiHistoryNoteAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not işlemi'**
+  String get aiHistoryNoteAction;
+
+  /// No description provided for @aiHistoryVoiceNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not'**
+  String get aiHistoryVoiceNote;
 
   /// No description provided for @aiRecentOps.
   ///

@@ -441,6 +441,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             savedText: l10n.voiceNoteSaved,
             noApiKeyText: l10n.aiNoApiKey,
             genericErrorText: l10n.assistantGenericError,
+            historyLabel: l10n.aiHistoryVoiceNote,
           );
       return;
     }

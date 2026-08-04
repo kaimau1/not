@@ -15,6 +15,7 @@ import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_gate.dart';
+import '../data/ai_history.dart';
 import '../data/ai_report.dart';
 import 'ai_hub_screen.dart' show AiPointsBar;
 import 'listen_screen.dart';
@@ -103,6 +104,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
       replaceAsType: replaceAsType,
       keepChecked: keepChecked,
     );
+    // Geçmiş etiketi HER asenkron adımdan önce okunur: sonrasında levha
+    // kapanmış (context ağaçtan kalkmış) olabilir.
+    final historyLabel = context.l10n.aiHistoryNoteAction;
     setState(() {
       _loading = true;
       _result = null;
@@ -138,6 +142,8 @@ class _AiSheetState extends ConsumerState<AiSheet> {
               AiSummary(text: text, model: 'gemini', createdAt: DateTime.now()),
             );
       }
+      // Başarılı iş "SON İŞLEMLER"e girer; not içeriği değil yalnız işin adı.
+      ref.read(aiHistoryProvider.notifier).record(historyLabel);
       if (mounted) setState(() => _result = text);
     } on GeminiException catch (e) {
       if (mounted) {

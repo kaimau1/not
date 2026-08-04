@@ -1152,16 +1152,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiSummarizeInfo => 'ينتج ملخّصًا قصيرًا';
 
   @override
-  String get aiFixNoteInfo => 'يصحح الإملاء وعلامات الترقيم';
-
-  @override
-  String get aiTranslateInfo => 'يترجم الملاحظة إلى اللغة التي تختارها';
+  String get aiAnalyzeInfo => 'يعدّد النقاط الأساسية والمهام';
 
   @override
   String get aiImproveInfo => 'يغيّر الأسلوب: رسمي أو أقصر أو قائمة';
 
   @override
-  String get aiAnalyzeInfo => 'يعدّد النقاط الأساسية والمهام';
+  String get aiTranslateInfo => 'يترجم الملاحظة إلى اللغة التي تختارها';
+
+  @override
+  String get aiFixNoteInfo => 'يصحح الإملاء وعلامات الترقيم';
 
   @override
   String get moveToFolder => 'نقل إلى مجلد';
@@ -1447,6 +1447,47 @@ class AppLocalizationsAr extends AppLocalizations {
   String get aiOnYourNotes => 'في ملاحظاتك';
 
   @override
+  String get aiTaskDuplicates => 'تنظيف التكرارات';
+
+  @override
+  String aiTaskDuplicatesInfo(int count) {
+    return '$count ملاحظات مكررة';
+  }
+
+  @override
+  String get duplicatesTitle => 'الملاحظات المكررة';
+
+  @override
+  String get duplicatesHint =>
+      'يتم الاحتفاظ بأقدم ملاحظة في كل مجموعة، وتنتقل البقية إلى سلة المهملات.';
+
+  @override
+  String get duplicatesKeepBadge => 'محفوظة';
+
+  @override
+  String get duplicatesDeleteAll => 'نقل التكرارات إلى سلة المهملات';
+
+  @override
+  String duplicatesDone(int count) {
+    return 'تم نقل $count من التكرارات إلى سلة المهملات';
+  }
+
+  @override
+  String get aiRecentActions => 'الإجراءات الأخيرة';
+
+  @override
+  String get aiHistoryClear => 'مسح';
+
+  @override
+  String get aiHistoryQuestion => 'سؤال';
+
+  @override
+  String get aiHistoryNoteAction => 'إجراء على الملاحظة';
+
+  @override
+  String get aiHistoryVoiceNote => 'ملاحظة صوتية';
+
+  @override
   String get aiRecentOps => 'الأحدث';
 
   @override
@@ -1540,7 +1581,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get filterSectionSort => 'الترتيب';
 
   @override
-  String get filterFavoriteHint => 'اضغط على النجمة لإبقاء الخيار في الشاشة الرئيسية';
+  String get filterFavoriteHint =>
+      'اضغط على النجمة لإبقاء الخيار في الشاشة الرئيسية';
 
   @override
   String get filterSheetSortHint =>

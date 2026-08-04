@@ -25,6 +25,10 @@ class VoiceWidgetProvider : AppWidgetProvider() {
                     R.id.voice_widget_root,
                     deepLinkIntent(context, "notlar://voice", requestCode = 10)
                 )
+                WidgetTheme.paletteFor(context)?.let { palette ->
+                    setBackgroundRes(R.id.voice_widget_root, palette.micBackground)
+                    setIconTint(R.id.voice_widget_mic, palette.onAccent)
+                }
             }
             appWidgetManager.updateAppWidget(widgetId, views)
         }
