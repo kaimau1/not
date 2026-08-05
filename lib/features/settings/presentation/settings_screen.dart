@@ -1674,19 +1674,26 @@ class _BuiltInAiStatus extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: scheme.primary),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      // Satır artık Premium sayfasına götürüyor: kota/puan farkının ne
+      // kazandırdığı hiçbir yerde anlatılmıyordu (premium çalışması).
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => context.push('/premium'),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: scheme.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                text,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
             ),
-          ),
-        ],
+            Icon(Icons.chevron_right, size: 16, color: scheme.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }

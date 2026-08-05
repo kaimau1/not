@@ -1743,4 +1743,149 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountLinked =>
       'Your Google account is linked. Your notes are backed up now.';
+
+  @override
+  String scanReviewPage(int current, int total) {
+    return 'Page $current / $total';
+  }
+
+  @override
+  String get scanRotatePage => 'Rotate page';
+
+  @override
+  String get scanDeletePage => 'Delete page';
+
+  @override
+  String get scanLastPage => 'The last page cannot be deleted';
+
+  @override
+  String get scanAdjustCorners => 'Adjust corners';
+
+  @override
+  String get scanFilterOriginal => 'Original';
+
+  @override
+  String get scanFilterAuto => 'Enhance';
+
+  @override
+  String get scanFilterGray => 'Grayscale';
+
+  @override
+  String get scanFilterBw => 'Black & white';
+
+  @override
+  String get scanApplyAll => 'Apply to all';
+
+  @override
+  String get scanPageFailed => 'Could not display the page';
+
+  @override
+  String get scanCropHint => 'Fix a skewed page with \"Adjust corners\"';
+
+  @override
+  String get scanAddAsPdf => 'Add as PDF';
+
+  @override
+  String get scanAddAsImages => 'Add as images';
+
+  @override
+  String get scanBuildingPdf => 'Preparing PDF…';
+
+  @override
+  String scanOcrProgress(int done, int total) {
+    return 'Recognizing text… $done/$total';
+  }
+
+  @override
+  String get scanAutoDetect => 'Auto-detect edges';
+
+  @override
+  String get scanReset => 'Reset';
+
+  @override
+  String get scanDetecting => 'Looking for edges…';
+
+  @override
+  String get scanAutoFound =>
+      'Edges found automatically; fine-tune with the handles if needed';
+
+  @override
+  String get scanDragHint => 'Drag the corners to the edges of the paper';
+
+  @override
+  String get scanApplyCorners => 'Straighten & apply';
+
+  @override
+  String get scanWorking => 'Straightening…';
+
+  @override
+  String get scanPdfAdded => 'Scan added to the note as a PDF attachment';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String premiumStatusActive(String date) {
+    return 'Premium active — until $date';
+  }
+
+  @override
+  String get premiumStatusFree => 'You are using the free version';
+
+  @override
+  String get premiumPerksTitle => 'What changes with Premium?';
+
+  @override
+  String get premiumPerkAi => 'Daily AI points';
+
+  @override
+  String get premiumPerkAttach => 'Attachment size';
+
+  @override
+  String get premiumPerkStorage => 'Cloud storage';
+
+  @override
+  String get premiumPerkAuto => 'Automatic daily content';
+
+  @override
+  String get premiumPerkAutoBody =>
+      'The daily briefing and suggestions are prepared automatically every day; on free they only run on demand.';
+
+  @override
+  String get premiumHowTitle => 'How to get it?';
+
+  @override
+  String get premiumHowBody =>
+      'Premium will soon be available through the Play Store. We are currently in early access.';
+
+  @override
+  String get premiumByokHint =>
+      'If you enter your own Gemini API key, AI features run without quota — independent of Premium (Settings → AI).';
+
+  @override
+  String get premiumDiscoverTitle => 'Features you may have missed';
+
+  @override
+  String get discoverScanBody =>
+      'Scanned pages are straightened and enhanced, then turned into a SEARCHABLE PDF with one tap — the text layer is produced on device, for free.';
+
+  @override
+  String get discoverSemanticBody =>
+      'The \"Smart\" tab in the search box searches by MEANING, not words: type \"flight times\" and your travel note shows up.';
+
+  @override
+  String get discoverAssistantBody =>
+      'The microphone on the home screen turns your speech into notes, lists and reminders by itself — just say \"dentist tomorrow at 9\".';
+
+  @override
+  String get discoverLockBody =>
+      'You can lock a note with fingerprint/face: its content never leaks into search, widgets or AI.';
+
+  @override
+  String get discoverHiddenBody =>
+      'Notes in a hidden folder never appear on the home screen or in search; revealing the folder requires authentication.';
+
+  @override
+  String get discoverExportBody =>
+      'Every note can be exported as PDF or Word, images included (in the share menu).';
 }

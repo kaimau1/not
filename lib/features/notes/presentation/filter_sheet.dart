@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../folders/presentation/folder_sheets.dart';
 import 'notes_providers.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
@@ -467,27 +468,40 @@ class _FilterSheet extends ConsumerWidget {
             ],
           ),
 
-          if (folders.isNotEmpty) ...[
-            _SectionLabel(l10n.filterSectionFolder),
-            _OptionWrap(
-              children: [
-                for (final f in folders)
-                  _Option(
-                    label: f.name,
-                    selected: folderId == f.id,
-                    // Seçili klasöre tekrar dokunmak seçimi KALDIRIR: levhada
-                    // ayrı bir "hepsi" satırı olmadan da geri dönülebilsin.
-                    onTap: () => ref
-                        .read(selectedFolderProvider.notifier)
-                        .set(folderId == f.id ? null : f.id),
-                    favorite: favorites.contains(folderFavoriteToken(f.id)),
-                    onToggleFavorite: () => favoritesNotifier.toggle(
-                      folderFavoriteToken(f.id),
-                    ),
+          // Bölüm klasör YOKKEN de görünür: "+ Yeni klasör" ile klasör
+          // doğrudan buradan da oluşturulabilir (eskiden tek yol notun kendi
+          // klasör seçicisiydi ve fark edilmiyordu).
+          _SectionLabel(l10n.filterSectionFolder),
+          _OptionWrap(
+            children: [
+              for (final f in folders)
+                _Option(
+                  label: f.name,
+                  selected: folderId == f.id,
+                  // Seçili klasöre tekrar dokunmak seçimi KALDIRIR: levhada
+                  // ayrı bir "hepsi" satırı olmadan da geri dönülebilsin.
+                  onTap: () => ref
+                      .read(selectedFolderProvider.notifier)
+                      .set(folderId == f.id ? null : f.id),
+                  favorite: favorites.contains(folderFavoriteToken(f.id)),
+                  onToggleFavorite: () => favoritesNotifier.toggle(
+                    folderFavoriteToken(f.id),
                   ),
-              ],
-            ),
-          ],
+                ),
+              _Option(
+                label: '+ ${l10n.newFolder}',
+                selected: false,
+                onTap: () async {
+                  final id = await showFolderEditorDialog(context, ref);
+                  // Yeni klasör hemen süzgeç olarak da seçilir: kullanıcı
+                  // "oluştu mu" diye aramasın, boş klasörünü karşısında görsün.
+                  if (id != null) {
+                    ref.read(selectedFolderProvider.notifier).set(id);
+                  }
+                },
+              ),
+            ],
+          ),
 
           if (tags.isNotEmpty) ...[
             _SectionLabel(l10n.filterSectionTag),

@@ -529,7 +529,14 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             }
           }
           final previewImg = _previewOf(widget.images);
-          return Stack(
+          // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
+          // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
+          // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
+          // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
+          // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
+          // kapatır hem hedefine (ör. metin alanına odak) gider.
+          final imgForDismiss = selectedImg;
+          final content = Stack(
             clipBehavior: Clip.none,
             children: [
               // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
@@ -569,6 +576,27 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               // metnin sarması olduğu gibi kalır.
               if (previewImg != null) _preview(context, previewImg, cw),
             ],
+          );
+          if (imgForDismiss == null) return content;
+          final r = _resolve(imgForDismiss, selectedIndex, cw);
+          // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
+          // bir bant: ikisinin de dışı "dışarısı" sayılır.
+          final imageRect = Rect.fromLTWH(
+            r.left - 24,
+            r.top - 24,
+            r.w + 48,
+            r.h + 48,
+          );
+          final toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+          return Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (event) {
+              final p = event.localPosition;
+              if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
+                _deselect();
+              }
+            },
+            child: content,
           );
         },
       ),

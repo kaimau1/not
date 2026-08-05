@@ -225,6 +225,14 @@ Future<String?> showFolderPickSheet(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // "Yeni klasör" EN ÜSTTE: eskiden tüm klasörlerin altındaydı ve
+            // klasörü çok olan kullanıcıda ekran dışında kalıyordu — yeni
+            // klasörün doğrudan eklenebildiği fark edilmiyordu.
+            ListTile(
+              leading: const Icon(Icons.create_new_folder_outlined),
+              title: Text(l10n.newFolder),
+              onTap: () => Navigator.pop(sheetContext, newSentinel),
+            ),
             ListTile(
               leading: const Icon(Icons.folder_off_outlined),
               title: Text(l10n.noFolder),
@@ -238,11 +246,6 @@ Future<String?> showFolderPickSheet(
                 selected: currentFolderId == folder.id,
                 onTap: () => Navigator.pop(sheetContext, folder.id),
               ),
-            ListTile(
-              leading: const Icon(Icons.create_new_folder_outlined),
-              title: Text(l10n.newFolder),
-              onTap: () => Navigator.pop(sheetContext, newSentinel),
-            ),
           ],
         ),
       ),

@@ -1708,4 +1708,150 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get accountLinked => 'Google アカウントを連携しました。これでメモはバックアップされます。';
+
+  @override
+  String scanReviewPage(int current, int total) {
+    return 'Sayfa $current / $total';
+  }
+
+  @override
+  String get scanRotatePage => 'Sayfayı döndür';
+
+  @override
+  String get scanDeletePage => 'Sayfayı sil';
+
+  @override
+  String get scanLastPage => 'Son sayfa silinemez';
+
+  @override
+  String get scanAdjustCorners => 'Köşeleri ayarla';
+
+  @override
+  String get scanFilterOriginal => 'Özgün';
+
+  @override
+  String get scanFilterAuto => 'Netleştir';
+
+  @override
+  String get scanFilterGray => 'Gri';
+
+  @override
+  String get scanFilterBw => 'Siyah-beyaz';
+
+  @override
+  String get scanApplyAll => 'Hepsine uygula';
+
+  @override
+  String get scanPageFailed => 'Sayfa görüntülenemedi';
+
+  @override
+  String get scanCropHint =>
+      'Yamuk sayfayı \"Köşeleri ayarla\" ile düzeltebilirsin';
+
+  @override
+  String get scanAddAsPdf => 'PDF olarak ekle';
+
+  @override
+  String get scanAddAsImages => 'Görsel olarak ekle';
+
+  @override
+  String get scanBuildingPdf => 'PDF hazırlanıyor…';
+
+  @override
+  String scanOcrProgress(int done, int total) {
+    return 'Metin tanınıyor… $done/$total';
+  }
+
+  @override
+  String get scanAutoDetect => 'Kenarları otomatik bul';
+
+  @override
+  String get scanReset => 'Sıfırla';
+
+  @override
+  String get scanDetecting => 'Kenarlar aranıyor…';
+
+  @override
+  String get scanAutoFound =>
+      'Kenarlar otomatik bulundu; gerekirse tutamaçlardan ince ayar yap';
+
+  @override
+  String get scanDragHint => 'Köşeleri kâğıdın kenarlarına sürükle';
+
+  @override
+  String get scanApplyCorners => 'Düzelt ve uygula';
+
+  @override
+  String get scanWorking => 'Düzeltiliyor…';
+
+  @override
+  String get scanPdfAdded => 'Tarama, PDF eki olarak nota eklendi';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String premiumStatusActive(String date) {
+    return 'Premium etkin — $date tarihine kadar';
+  }
+
+  @override
+  String get premiumStatusFree => 'Ücretsiz sürümü kullanıyorsun';
+
+  @override
+  String get premiumPerksTitle => 'Premium ile ne değişir?';
+
+  @override
+  String get premiumPerkAi => 'Günlük yapay zeka puanı';
+
+  @override
+  String get premiumPerkAttach => 'Ek dosya boyutu';
+
+  @override
+  String get premiumPerkStorage => 'Bulut depolama alanı';
+
+  @override
+  String get premiumPerkAuto => 'Otomatik günlük içerik';
+
+  @override
+  String get premiumPerkAutoBody =>
+      'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.';
+
+  @override
+  String get premiumHowTitle => 'Nasıl edinilir?';
+
+  @override
+  String get premiumHowBody =>
+      'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.';
+
+  @override
+  String get premiumByokHint =>
+      'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).';
+
+  @override
+  String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
+
+  @override
+  String get discoverScanBody =>
+      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
+
+  @override
+  String get discoverSemanticBody =>
+      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
+
+  @override
+  String get discoverAssistantBody =>
+      'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.';
+
+  @override
+  String get discoverLockBody =>
+      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.';
+
+  @override
+  String get discoverHiddenBody =>
+      'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.';
+
+  @override
+  String get discoverExportBody =>
+      'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
 }

@@ -19,11 +19,15 @@ import 'package:flutter/foundation.dart';
 class DocumentScan {
   const DocumentScan._();
 
-  /// Tarayıcı yalnız eklentinin platform kodu olan yerlerde vardır
-  /// (Android/iOS). Windows'ta menüde HİÇ görünmemeli — çalışmayan bir
-  /// düğme göstermektense (bkz. `qrScanSupported`).
+  /// KAMERALI tarayıcı (ML Kit) yalnız eklentinin platform kodu olan yerlerde
+  /// vardır (Android/iOS).
   static bool get supported =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+  /// "Belge tara" menüde görünsün mü. Masaüstünde kamera yok ama tarama VAR:
+  /// seçilen fotoğraflar dosya-okuyucu'dan taşınan kenar bulma + perspektif
+  /// düzeltme + netleştirme borusundan geçirilir (bkz. ScanReviewScreen).
+  static bool get available => supported || (!kIsWeb && Platform.isWindows);
 
   /// Tarama arayüzünü açar; kullanıcı vazgeçerse null, aksi hâlde taranan
   /// sayfaların (JPEG) dosya yolları döner. Kamera iznini paket ister.

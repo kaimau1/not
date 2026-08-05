@@ -103,7 +103,14 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
             children: [
-              if (metered) AiPointsBar(remaining: remaining, limit: limit),
+              // Puan çubuğuna dokunmak Premium sayfasını açar: "puan nedir,
+              // nasıl artar" sorusunun cevabı artık bir dokunuş uzakta.
+              if (metered)
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => context.push('/premium'),
+                  child: AiPointsBar(remaining: remaining, limit: limit),
+                ),
               const SizedBox(height: 16),
               _ChatCard(
                 chat: chat,

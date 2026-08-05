@@ -64,7 +64,7 @@ class _AttachSheet extends StatelessWidget {
       ),
       if (!kIsWeb && !isDesktop)
         ('camera', Icons.photo_camera_outlined, l10n.takePhoto, null),
-      if (DocumentScan.supported)
+      if (DocumentScan.available)
         (
           'scan',
           Icons.document_scanner_outlined,

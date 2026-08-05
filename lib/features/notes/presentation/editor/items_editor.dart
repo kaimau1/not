@@ -379,8 +379,14 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return _pads[_items[index - 1].id];
   }
 
-  /// Madde metnini, sayfadaki görsellerin etrafından akacak şekilde ölçüme
-  /// bağlar. Sayfa kutusu yoksa (liste serbest tuvalin dışında) dokunmaz.
+  /// Madde alanını sarma denetleyicisinin ölçümüne bağlar.
+  ///
+  /// Bantlar BİLEREK BOŞ geçilir: liste satırını görselin yanına [_FloatRow]
+  /// satırın TAMAMINI kaydırarak taşıyor. Alan içi sarma çapaları da aynı
+  /// bantlara göre girinti basınca ikisi üst üste biniyor ve görselin
+  /// yanındaki maddelerin metni kutucuktan kopuk, "kaymış" görünüyordu
+  /// (ekran görüntüsüyle bildirilen hata). Boş bant listesi ayrıca daha
+  /// önce eklenmiş çapaları da temizler.
   Widget _wrapped(
     WrapTextController controller,
     TextStyle style,
@@ -391,7 +397,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     return WrapFieldMeasure(
       controller: controller,
       style: style,
-      floats: widget.floats,
+      floats: const [],
       pageBox: pageBox,
       child: field,
     );
@@ -776,43 +782,89 @@ class _ItemsEditorState extends State<ItemsEditor> {
                       child: _wrapped(
                         controller,
                         baseStyle,
-                        TextField(
-                          controller: controller,
-                          focusNode: _focusFor(item),
-                          onChanged: (_) =>
-                              _updateText(item, controller.logicalText),
-                          contextMenuBuilder: (context, editableState) =>
-                              _contextMenu(context, editableState, item),
-                          contentInsertionConfiguration:
-                              widget.contentInsertion,
-                          // Varsayılan "next" davranışı odağı metin dışı bir öğeye
-                          // taşıyıp klavyeyi kapatıp açıyordu; onEditingComplete onu
-                          // bastırır, odak doğrudan yeni öğeye geçer.
-                          onEditingComplete: () => _insertAfter(item),
-                          textInputAction: TextInputAction.next,
-                          // Tam göster modunda satır sarılıp büyür; "dokununca aç"
-                          // modunda odaklanınca açılır, aksi hâlde tek satır.
-                          maxLines: widget.expandItems || focused ? null : 1,
-                          // Sarma planı bu stille hesaplanır; TextField'ın örtük
-                          // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
-                          // satırlar yanlış kırılır (M3 varsayılanı zaten bodyLarge).
-                          // Solma AnimatedOpacity'e bırakıldı (aşağıya bak); burada
-                          // alfa verilirse iki kez soluyor.
-                          style: checked
-                              ? baseStyle.copyWith(
-                                  decoration: TextDecoration.lineThrough,
-                                  color: scheme.onSurfaceVariant,
-                                )
-                              : baseStyle,
-                          decoration: InputDecoration(
-                            hintText: l10n.newItemHint,
-                            filled: false,
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                            ),
-                          ),
+                        Builder(
+                          builder: (context) {
+                            // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
+                            // burada alfa verilirse iki kez soluyor.
+                            final fieldStyle = checked
+                                ? baseStyle.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: scheme.onSurfaceVariant,
+                                  )
+                                : baseStyle;
+                            final field = TextField(
+                              controller: controller,
+                              focusNode: _focusFor(item),
+                              onChanged: (_) =>
+                                  _updateText(item, controller.logicalText),
+                              contextMenuBuilder: (context, editableState) =>
+                                  _contextMenu(context, editableState, item),
+                              contentInsertionConfiguration:
+                                  widget.contentInsertion,
+                              // Varsayılan "next" davranışı odağı metin dışı bir
+                              // öğeye taşıyıp klavyeyi kapatıp açıyordu;
+                              // onEditingComplete onu bastırır, odak doğrudan
+                              // yeni öğeye geçer.
+                              onEditingComplete: () => _insertAfter(item),
+                              textInputAction: TextInputAction.next,
+                              // Tam göster modunda satır sarılıp büyür; "dokununca
+                              // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
+                              maxLines: widget.expandItems || focused ? null : 1,
+                              // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                              // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                              // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
+                              style: fieldStyle,
+                              decoration: InputDecoration(
+                                hintText: l10n.newItemHint,
+                                filled: false,
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                              ),
+                            );
+                            // Tek satır kipinde taşan metnin "devamı var"
+                            // göstergesi: TextField kırpar ama üç nokta koyamaz
+                            // (kaydırılabilir alan), kullanıcı metnin bittiğini
+                            // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
+                            // sağına "…" konur; odaklanınca satır zaten açılır.
+                            if (widget.expandItems || focused) return field;
+                            return LayoutBuilder(
+                              builder: (context, constraints) {
+                                if (!constraints.maxWidth.isFinite) {
+                                  return field;
+                                }
+                                final painter = TextPainter(
+                                  text: TextSpan(
+                                    text: controller.text,
+                                    style: fieldStyle,
+                                  ),
+                                  maxLines: 1,
+                                  textDirection: Directionality.of(context),
+                                  textScaler: MediaQuery.textScalerOf(context),
+                                )..layout();
+                                final overflowing =
+                                    painter.width > constraints.maxWidth - 14;
+                                painter.dispose();
+                                if (!overflowing) return field;
+                                return Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Expanded(child: field),
+                                    Text(
+                                      '…',
+                                      style: fieldStyle.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
                     ),

@@ -47,6 +47,7 @@ import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
 import '../../data/notes_repository.dart';
+import '../../data/scan/scan_title.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/note_item.dart';
@@ -55,6 +56,7 @@ import '../color_picker_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
+import '../scan_review_screen.dart';
 import '../voice_capture_sheet.dart';
 import 'ai_result_sheet.dart';
 import 'attach_sheet.dart';
@@ -828,40 +830,85 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  /// "Belge tara": kamerayla belge tarar (kenar tespiti + perspektif düzeltme
-  /// + kontrast) ve düzeltilmiş sayfaları nota görsel eki olarak ekler.
+  /// "Belge tara": kamerayla (masaüstünde seçilen fotoğraflardan) belge
+  /// tarar. Sayfalar önce İNCELEME ekranından geçer (köşe düzeltme, filtre,
+  /// döndürme — dosya-okuyucu projesinden taşınan boru hattı) ve sonuç ya
+  /// **tek aranabilir PDF eki** ya da düzeltilmiş görsel ekleri olur.
   ///
-  /// Tarama bitince "yazılar da tanınsın mı?" sorulur; evet denirse sayfalar
-  /// OCR'lanıp metin notun gövdesine yazılır — "belge tara, not al" modu.
-  /// Soru sessizce atlanmıyor: OCR sayfa başına birkaç saniye sürüyor ve AI
-  /// kotasından yiyor.
+  /// Görsel yolunda tarama bitince "yazılar da tanınsın mı?" sorulur; evet
+  /// denirse sayfalar OCR'lanıp metin notun gövdesine yazılır. Soru sessizce
+  /// atlanmıyor: OCR sayfa başına birkaç saniye sürüyor ve AI kotasından
+  /// yiyor. (PDF yolunda soruya gerek yok: metin katmanı cihazda, ücretsiz.)
   Future<void> _scanDocument() async {
     final l10n = context.l10n;
-    if (!DocumentScan.supported) {
-      _showSnack(l10n.scanUnsupported);
-      return;
-    }
-    // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
-    // olmadan REDDEDER (bkz. _takePhoto).
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) _showSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
     List<String>? pages;
-    try {
-      pages = await DocumentScan.scanPages();
-    } catch (e) {
-      if (mounted) _showSnack(l10n.scanFailed('$e'));
+    var autoCrop = false;
+    if (DocumentScan.supported) {
+      // Manifest'te CAMERA bildirildiği için Android çekim niyetini izin
+      // olmadan REDDEDER (bkz. _takePhoto).
+      final perms = ref.read(permissionsServiceProvider);
+      if (!await perms.cameraGranted() && !await perms.requestCamera()) {
+        if (mounted) _showSnack(l10n.permCameraInfo);
+        return;
+      }
+      if (!mounted) return;
+      try {
+        pages = await DocumentScan.scanPages();
+      } catch (e) {
+        if (mounted) _showSnack(l10n.scanFailed('$e'));
+        return;
+      }
+    } else if (_isDesktop) {
+      // Masaüstünde ML Kit yok ama tarama artık VAR: seçilen fotoğraflar
+      // kenar bulma + perspektif düzeltme + netleştirme borusundan geçer.
+      const group = XTypeGroup(
+        label: 'Görseller',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+      final files = await openFiles(acceptedTypeGroups: const [group]);
+      if (files.isEmpty) return;
+      pages = [for (final f in files) f.path];
+      autoCrop = true;
+    } else {
+      _showSnack(l10n.scanUnsupported);
       return;
     }
     if (pages == null || pages.isEmpty || !mounted) return;
 
-    // Sayfa baytları bir kez okunur: hem eke hem (istenirse) OCR'a aynı
-    // baytlar gider, dosya iki kez okunmaz.
+    final result = await ScanReviewScreen.open(
+      context,
+      pages,
+      autoCrop: autoCrop,
+    );
+    if (result == null || !mounted) return;
+
+    final pdfBytes = result.pdfBytes;
+    if (pdfBytes != null) {
+      final repo = ref.read(attachmentRepositoryProvider);
+      if (repo == null) return;
+      try {
+        final attachment = await repo.preparePdf(
+          noteId: widget.noteId,
+          bytes: pdfBytes,
+          fileName: scanFileName(result.title, DateTime.now()),
+        );
+        _mutate(
+          (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+          immediate: true,
+        );
+        if (mounted) _showSnack(l10n.scanPdfAdded);
+      } on FileTooLargeException catch (e) {
+        if (mounted) _showSnack(_tooLargeMessage(e));
+      } catch (e) {
+        if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+      }
+      return;
+    }
+
+    // Görsel yolu: sayfa baytları bir kez okunur — hem eke hem (istenirse)
+    // OCR'a aynı baytlar gider, dosya iki kez okunmaz.
     final pageBytes = <Uint8List>[];
-    for (final path in pages) {
+    for (final path in result.imagePaths ?? const <String>[]) {
       final bytes = await DocumentScan.readPage(path);
       if (bytes != null) pageBytes.add(bytes);
     }
