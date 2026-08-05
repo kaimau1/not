@@ -60,6 +60,14 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // ML Kit metin tanımanın kullanılmayan dil modelleri için R8
+            // dontwarn kuralları (bkz. proguard-rules.pro — bunlar olmadan
+            // release derlemesi "Missing class ...chinese/korean..." ile
+            // düşüyor).
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
