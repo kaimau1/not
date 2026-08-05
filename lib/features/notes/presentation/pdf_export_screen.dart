@@ -177,7 +177,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     setState(() => _busy = true);
     try {
       final title = _title.text.trim();
-      final bytes = NoteDocx.build(
+      final bytes = await NoteDocx.build(
         title: title,
         content: _content.text,
         date: _date,

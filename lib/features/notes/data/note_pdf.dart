@@ -19,11 +19,11 @@ import 'package:pdf/widgets.dart' as pw;
 abstract final class NotePdf {
   static const fontAsset = 'assets/fonts/PTSans-Regular.ttf';
 
-  static pw.Font? _font;
-
-  static Future<pw.Font> _loadFont() async =>
-      _font ??= pw.Font.ttf(await rootBundle.load(fontAsset));
-
+  /// PDF üretimi (yerleşim + font alt kümeleme + görsel kodlama) compute()
+  /// izolesinde koşar: 20 görselli bir not ana izolede saniyelerce kare
+  /// düşürüyor, ilerleme çubuğu bile oynayamıyordu. Font baytları ve tarih
+  /// etiketi ANA izolede hazırlanır — rootBundle ve yerel ayarlı DateFormat
+  /// (sembolleri flutter_localizations ana izolede yükler) izolede yok.
   static Future<Uint8List> build({
     required String title,
     required String content,
@@ -31,9 +31,29 @@ abstract final class NotePdf {
     List<ExportImage> images = const [],
     PdfPageFormat format = PdfPageFormat.a4,
   }) async {
-    final font = await _loadFont();
+    final fontBytes = await rootBundle.load(fontAsset);
+    final dateLabel = date == null
+        ? null
+        : DateFormat('d MMMM y').format(date);
+    return compute(
+      _buildInIsolate,
+      _PdfRequest(
+        title: title,
+        content: content,
+        dateLabel: dateLabel,
+        images: images,
+        fontBytes: fontBytes,
+        format: format,
+      ),
+    );
+  }
+
+  static Future<Uint8List> _buildInIsolate(_PdfRequest r) async {
+    final font = pw.Font.ttf(r.fontBytes);
+    final title = r.title;
+    final format = r.format;
     final doc = pw.Document(title: title.isEmpty ? 'Not' : title);
-    final lines = parseLines(content);
+    final lines = parseLines(r.content);
 
     doc.addPage(
       pw.MultiPage(
@@ -53,18 +73,18 @@ abstract final class NotePdf {
               title.trim(),
               style: pw.TextStyle(fontSize: 21, lineSpacing: 2),
             ),
-          if (date != null)
+          if (r.dateLabel != null)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 4),
               child: pw.Text(
-                DateFormat('d MMMM y').format(date),
+                r.dateLabel!,
                 style: const pw.TextStyle(
                   fontSize: 9.5,
                   color: PdfColors.grey600,
                 ),
               ),
             ),
-          if (title.trim().isNotEmpty || date != null)
+          if (title.trim().isNotEmpty || r.dateLabel != null)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 12, bottom: 6),
               child: pw.Divider(height: 1, color: PdfColors.grey400),
@@ -73,7 +93,7 @@ abstract final class NotePdf {
           // hangi satırdan önce durduğu, genişliği ve hizası nottan gelir.
           // Düzen bilgisi olmayan görsel (ör. paylaş menüsünden dışa aktarma)
           // eskisi gibi metnin sonuna eklenir.
-          ..._withImages(lines, images, format),
+          ..._withImages(lines, r.images, format),
         ],
       ),
     );
@@ -297,6 +317,26 @@ abstract final class NotePdf {
   static final _checkboxPattern = RegExp(r'^\s*\[([ xX])\]\s*(.*)$');
   static final _numberedPattern = RegExp(r'^\s*(\d{1,3})[.)]\s+(.*)$');
   static final _bulletPattern = RegExp(r'^\s*[-•*]\s+(.*)$');
+}
+
+/// [NotePdf._buildInIsolate]'a taşınan istek — tüm alanlar izoleler arası
+/// gönderilebilir (String/ByteData/Uint8List).
+class _PdfRequest {
+  const _PdfRequest({
+    required this.title,
+    required this.content,
+    required this.dateLabel,
+    required this.images,
+    required this.fontBytes,
+    required this.format,
+  });
+
+  final String title;
+  final String content;
+  final String? dateLabel;
+  final List<ExportImage> images;
+  final ByteData fontBytes;
+  final PdfPageFormat format;
 }
 
 /// Dışa aktarmaya (PDF/Word) girecek bir görsel: baytlar + piksel boyutları

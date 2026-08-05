@@ -26,12 +26,22 @@ class UploadQueue {
   final Ref _ref;
   final Set<String> _inFlight = {};
 
-  /// Son başarısız deneme zamanı (ek başına): not akışı her tuş vuruşunda
-  /// snapshot ürettiğinden, kalıcı olarak başarısız bir yükleme aralıksız
-  /// yeniden denenip ağ/pil yakıyordu. Deneme arası en az 1 dk beklenir;
-  /// bağlantı gelince zaten connectivity tetiği yeniden dener.
-  final Map<String, DateTime> _lastFailure = {};
-  static const _retryDelay = Duration(minutes: 1);
+  /// Son başarısız deneme + deneme sayısı (ek başına): not akışı her tuş
+  /// vuruşunda snapshot ürettiğinden, kalıcı olarak başarısız bir yükleme
+  /// aralıksız yeniden denenip ağ/pil yakıyordu. Bekleme ÜSTEL büyür
+  /// (1-2-4-… dk, tavan 6 saat): bozuk dosya/kural reddi gibi hiç
+  /// düzelmeyecek bir hata sabit 1 dk'da bir Storage'a tam yükleme denemesi
+  /// yapıyordu. Bağlantı gelince connectivity tetiği yine dener; kalıcı "pes
+  /// et" YOK — geçici hatayı kalıcıdan istemcide ayırt edemeyiz, 6 saatlik
+  /// tavan zaten zararsız.
+  final Map<String, ({DateTime at, int attempts})> _lastFailure = {};
+  static const _baseRetryDelay = Duration(minutes: 1);
+  static const _maxRetryDelay = Duration(hours: 6);
+
+  Duration _retryDelayFor(int attempts) {
+    final scaled = _baseRetryDelay * (1 << (attempts - 1).clamp(0, 12));
+    return scaled > _maxRetryDelay ? _maxRetryDelay : scaled;
+  }
   ProviderSubscription<AsyncValue<List<Note>>>? _notesSub;
   ProviderSubscription<int>? _limitSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -68,6 +78,14 @@ class UploadQueue {
     final limitMb = _ref.read(syncLimitMbProvider);
     final limitBytes = limitMb <= 0 ? null : limitMb * 1024 * 1024;
 
+    // Silinen notların artıkları birikmesin: harita yalnız hâlâ var olan
+    // ekler için kayıt tutar.
+    final liveKeys = <String>{
+      for (final note in notes)
+        for (final attachment in note.attachments) '${note.id}/${attachment.id}',
+    };
+    _lastFailure.removeWhere((key, _) => !liveKeys.contains(key));
+
     for (final note in notes) {
       for (final attachment in note.attachments) {
         // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
@@ -77,7 +95,8 @@ class UploadQueue {
         final key = '${note.id}/${attachment.id}';
         final lastFailure = _lastFailure[key];
         if (lastFailure != null &&
-            DateTime.now().difference(lastFailure) < _retryDelay) {
+            DateTime.now().difference(lastFailure.at) <
+                _retryDelayFor(lastFailure.attempts)) {
           continue;
         }
         if (!_inFlight.add(key)) continue;
@@ -89,8 +108,11 @@ class UploadQueue {
           _lastFailure.remove(key);
         } catch (e) {
           // Bağlantı yoksa veya yükleme başarısızsa bir sonraki tetikte
-          // (en erken _retryDelay sonra) yeniden denenir.
-          _lastFailure[key] = DateTime.now();
+          // (üstel bekleme dolduysa) yeniden denenir.
+          _lastFailure[key] = (
+            at: DateTime.now(),
+            attempts: (lastFailure?.attempts ?? 0) + 1,
+          );
           debugPrint('Ek yüklenemedi ($key): $e');
         } finally {
           _inFlight.remove(key);

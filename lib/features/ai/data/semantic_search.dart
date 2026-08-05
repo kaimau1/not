@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,13 +47,23 @@ final semanticSearchProvider = FutureProvider.autoDispose
 
 /// Bellek içi embedding indeksi: her notun vektörü not değiştikçe yenilenir,
 /// arama kosinüs benzerliğiyle yapılır. Vektörler yalnızca bellekte tutulur.
+///
+/// Vektörler saklanırken NORMALİZE edilir: kosinüs benzerliği düz iç çarpıma
+/// iner (skorlamada norm hesabı tekrarlanmaz) ve sorgu vektörü sorgu metnine
+/// göre önbelleklenir — aynı sorgu (ör. kullanıcı sonucu açıp geri dönünce
+/// provider'ın yeniden kurulması) ikinci kez ağa çıkmaz.
 class SemanticIndex {
   SemanticIndex(this._ref);
 
   final Ref _ref;
 
-  /// noteId → (güncellenme zamanı, vektör)
-  final _cache = <String, (DateTime?, List<double>)>{};
+  /// noteId → (güncellenme zamanı, normalize vektör)
+  final _cache = <String, (DateTime?, Float32List)>{};
+
+  /// sorgu metni → normalize vektör (küçük, eklenme sıralı; taşınca en eski
+  /// atılır — LinkedHashMap sırası eklenme sırasıdır).
+  final _queryCache = <String, Float32List>{};
+  static const _maxQueryCache = 32;
 
   Future<List<Note>> search(String query, List<Note> notes) async {
     final service = _ref.read(geminiServiceProvider);
@@ -75,17 +86,24 @@ class SemanticIndex {
       ];
       final vectors = await service.embedTexts(texts);
       for (var j = 0; j < batch.length && j < vectors.length; j++) {
-        _cache[batch[j].id] = (batch[j].updatedAt, vectors[j]);
+        _cache[batch[j].id] = (batch[j].updatedAt, _normalized(vectors[j]));
       }
     }
 
-    final queryVector = (await service.embedTexts([query])).first;
+    var queryVector = _queryCache[query];
+    if (queryVector == null) {
+      queryVector = _normalized((await service.embedTexts([query])).first);
+      if (_queryCache.length >= _maxQueryCache) {
+        _queryCache.remove(_queryCache.keys.first);
+      }
+      _queryCache[query] = queryVector;
+    }
 
     final scored = <(Note, double)>[];
     for (final note in notes) {
       final entry = _cache[note.id];
       if (entry == null) continue;
-      scored.add((note, _cosine(queryVector, entry.$2)));
+      scored.add((note, _dot(queryVector, entry.$2)));
     }
     scored.sort((a, b) => b.$2.compareTo(a.$2));
     return [
@@ -94,15 +112,27 @@ class SemanticIndex {
     ];
   }
 
-  static double _cosine(List<double> a, List<double> b) {
+  /// Birim uzunluğa ölçekler; sıfır vektör olduğu gibi kalır (skoru 0 çıkar).
+  static Float32List _normalized(List<double> v) {
+    final out = Float32List.fromList([for (final x in v) x]);
+    var norm = 0.0;
+    for (final x in out) {
+      norm += x * x;
+    }
+    if (norm == 0) return out;
+    final inv = 1 / sqrt(norm);
+    for (var i = 0; i < out.length; i++) {
+      out[i] *= inv;
+    }
+    return out;
+  }
+
+  static double _dot(Float32List a, Float32List b) {
     if (a.isEmpty || b.isEmpty || a.length != b.length) return 0;
-    var dot = 0.0, normA = 0.0, normB = 0.0;
+    var dot = 0.0;
     for (var i = 0; i < a.length; i++) {
       dot += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
     }
-    if (normA == 0 || normB == 0) return 0;
-    return dot / (sqrt(normA) * sqrt(normB));
+    return dot;
   }
 }

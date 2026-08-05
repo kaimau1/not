@@ -45,11 +45,15 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- notlar:// derin bağlantıları (widget mikrofonu, kısayollar) -->
+            <!-- notlar:// derin bağlantıları (widget mikrofonu, kısayollar).
+                 BROWSABLE BİLEREK YOK: widget/kısayol intent'leri explicit
+                 (targetClass ile) olduğundan filtreye ihtiyaç duymaz; BROWSABLE
+                 ise herhangi bir web sayfasının <a href="notlar://voice"> ile
+                 uygulamayı öne getirip SES KAYDINI başlatmasına izin
+                 veriyordu. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="notlar"/>
             </intent-filter>
             <!-- Paylaş menüsünden not alma: metin/link, görsel, PDF ve sunum.

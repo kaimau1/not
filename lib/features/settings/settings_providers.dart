@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -392,12 +394,49 @@ class BriefingSettingsNotifier extends Notifier<BriefingSettings> {
   }
 }
 
-/// Dakikada bir güncellenen saat (zamanlamalı tema geçişi için).
-/// autoDispose: zamanlama KAPALIYKEN kimse izlemez ve dakikalık zamanlayıcı
-/// tümüyle durur — sürekli çalışan gereksiz bir uyandırma kaynağıydı (pil).
-final _clockProvider = StreamProvider.autoDispose<DateTime>(
-  (ref) => Stream.periodic(const Duration(minutes: 1), (_) => DateTime.now()),
-);
+/// Zamanlamalı tema geçişi için "şimdi" akışı.
+/// autoDispose: zamanlama KAPALIYKEN kimse izlemez ve zamanlayıcı tümüyle
+/// durur — sürekli çalışan gereksiz bir uyandırma kaynağıydı (pil).
+///
+/// Dakikalık tik DEĞİL: tema günde iki kez değişiyor ama dakikalık tik,
+/// [effectiveThemeModeProvider] kök widget'ta izlendiği için TÜM MaterialApp
+/// alt ağacını günde 1440 kez yeniden kuruyordu. Tek Timer bir SONRAKİ geçiş
+/// anına (start/end) kurulur, tetiklenince yeniden kurulur: günde 2 uyandırma.
+final _clockProvider = StreamProvider.autoDispose<DateTime>((ref) {
+  final schedule = ref.watch(darkScheduleProvider);
+  final controller = StreamController<DateTime>();
+  Timer? timer;
+  void arm() {
+    final now = DateTime.now();
+    // +1 sn tampon: tetik tam sınırda düşerse isDarkAt doğru tarafta kalsın.
+    timer = Timer(_nextBoundary(now, schedule).difference(now) +
+        const Duration(seconds: 1), () {
+      controller.add(DateTime.now());
+      arm();
+    });
+  }
+
+  arm();
+  ref.onDispose(() {
+    timer?.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
+
+/// [now]'dan sonraki ilk tema geçiş anı (bugünkü ya da yarınki start/end).
+DateTime _nextBoundary(DateTime now, DarkSchedule schedule) {
+  DateTime? best;
+  for (final minutes in [schedule.startMinutes, schedule.endMinutes]) {
+    for (final dayOffset in [0, 1]) {
+      // Gün aritmetiği DateTime kurucusunda: DST günlerinde Duration eklemek
+      // saat kaydırabiliyor.
+      final t = DateTime(now.year, now.month, now.day + dayOffset, 0, minutes);
+      if (t.isAfter(now) && (best == null || t.isBefore(best))) best = t;
+    }
+  }
+  return best ?? now.add(const Duration(days: 1));
+}
 
 /// Kullanıcı seçimi + zamanlama birleşimiyle geçerli tema modu.
 /// "Kağıt" açık tema gibi davranır; hangi açık temanın kullanılacağına

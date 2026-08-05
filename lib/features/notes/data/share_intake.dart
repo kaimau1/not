@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../../../app/router.dart';
@@ -54,6 +55,21 @@ final shareIntakeProvider = Provider<void>((ref) {
     // Dosya paylaşımı türe göre ayrılır: düz metin GÖVDEYE yazılır (ek olarak
     // eklenseydi içeriği notta görünmezdi), PDF/sunum eke gider.
     //
+    // Diskten YALNIZ eklentinin kopyaladığı önbellek dizini okunur: paylaşım
+    // "yolu" aslında gönderen uygulamanın kontrolündeki bir metin. Kötü
+    // niyetli bir uygulama text/plain ile kendi seçtiği bir yol gönderirse
+    // (ör. bu uygulamanın secure storage XML'i) içerik nota okunup buluta
+    // senkronlanırdı. receive_sharing_intent gerçek dosya paylaşımlarını her
+    // zaman önce kendi önbelleğine kopyalar; onun dışındaki her yol metindir.
+    final cachePath = (await getTemporaryDirectory()).path;
+    bool safeToRead(String path) {
+      try {
+        return p.isWithin(cachePath, path);
+      } catch (_) {
+        return false;
+      }
+    }
+
     final bodyParts = <String>[];
     final docs = <SharedMediaFile>[];
     for (final f in files) {
@@ -68,11 +84,16 @@ final shareIntakeProvider = Provider<void>((ref) {
         continue;
       }
       // Metin girdisi iki şey olabilir: paylaşılan yazının KENDİSİ ya da bir
-      // .txt dosyasının YOLU — eklenti ikisini de aynı alanda veriyor. Diskte
-      // varsa içeriği okunur, yoksa metnin kendisidir.
+      // .txt dosyasının YOLU — eklenti ikisini de aynı alanda veriyor.
+      // Önbellekteyse (yani gerçekten eklentinin kopyaladığı bir dosyaysa)
+      // içeriği okunur, değilse metnin kendisidir.
       try {
         final file = File(f.path);
-        bodyParts.add(file.existsSync() ? await file.readAsString() : f.path);
+        bodyParts.add(
+          safeToRead(f.path) && file.existsSync()
+              ? await file.readAsString()
+              : f.path,
+        );
       } catch (_) {
         // Okunamayan dosya notu engellemesin.
       }
@@ -87,6 +108,9 @@ final shareIntakeProvider = Provider<void>((ref) {
     if (attachRepo != null) {
       for (final file in docs) {
         try {
+          // Ek dosyaları da aynı kurala tabi: önbellek dışındaki bir yolu
+          // (sahte MIME ile işaretlenmiş keyfi bir dosyayı) eke çevirme.
+          if (!safeToRead(file.path)) continue;
           final bytes = await File(file.path).readAsBytes();
           final kind = shareAttachmentKind(file)!;
           var name = p.basename(file.path);

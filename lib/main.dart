@@ -68,23 +68,12 @@ Future<void> main() async {
     );
   }
 
-  if (!kIsWeb && Platform.isAndroid) {
-    // Yüksek yenileme hızlı ekranlarda (120/144/165 Hz) en yüksek modu iste.
-    try {
-      await FlutterDisplayMode.setHighRefreshRate();
-    } catch (_) {
-      // Desteklenmeyen cihazlarda sessizce geç.
-    }
-  }
-
   if (!DefaultFirebaseOptions.isConfigured) {
     runApp(const SetupRequiredApp());
     return;
   }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await _activateAppCheck();
 
   // Offline-first: yerel önbellek her platformda açık ve sınırsız.
   FirebaseFirestore.instance.settings = const Settings(
@@ -100,4 +89,17 @@ Future<void> main() async {
       child: const NotlarApp(),
     ),
   );
+
+  // İlk kareyi GEÇİKTİRMEYEN kurulumlar runApp'ten sonra yapılır:
+  // - App Check: Play Integrity turu 300-1500 ms sürebiliyor ve zorlama
+  //   kapalıyken hiçbir istek token'ın hazır olmasını beklemiyor; açılışı
+  //   bloklamasının hiçbir getirisi yoktu.
+  // - Yüksek yenileme hızı: ilk kareyi etkilemez; bazı OEM'ler Flutter'ı
+  //   60 Hz'e sabitlediği için istek yine de gerekli.
+  unawaited(_activateAppCheck());
+  if (!kIsWeb && Platform.isAndroid) {
+    unawaited(
+      FlutterDisplayMode.setHighRefreshRate().catchError((Object _) {}),
+    );
+  }
 }

@@ -203,7 +203,11 @@ class AttachmentRepository {
     if (meta.kind != AttachmentKind.video) {
       _checkQuota(bytes.length - freedBytes);
     }
-    final objectName = '${meta.id}_${meta.fileName}';
+    // basename ŞART: fileName Firestore'dan geliyor (Attachment.fromMap) ve
+    // prepare* yolları temizlese de duplicate() gibi yollar mevcut kaydı
+    // olduğu gibi taşır. "../../x" biçimli bir ad, yazmayı uygulama
+    // sandbox'ının dışına taşırdı (path traversal); tek noktada kesilir.
+    final objectName = '${meta.id}_${p.basename(meta.fileName)}';
     if (!kIsWeb) {
       final dir = await _attachmentsDir(noteId);
       final file = File(p.join(dir.path, objectName));

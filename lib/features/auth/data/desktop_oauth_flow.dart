@@ -67,9 +67,12 @@ class DesktopOAuthFlow {
         'code_challenge': challenge,
         'code_challenge_method': 'S256',
         'state': state,
-        'access_type': 'offline',
-        // Refresh token'ın her seferinde dönmesini garanti eder.
-        'prompt': 'consent',
+        // access_type=offline BİLEREK YOK: refresh token istenmiyor. Firebase
+        // Auth kendi oturumunu kendi yeniliyor; eskiden istenip güvenli
+        // depoda saklanan refresh token'ı kodun HİÇBİR yeri okumuyordu —
+        // uzun ömürlü bir Google kimlik bilgisini boşuna diskte tutmak
+        // yalnızca saldırı yüzeyi büyütüyordu. ('prompt=consent' de onunla
+        // birlikte gitti: tek amacı refresh token'ı her girişte döndürmekti.)
         'include_granted_scopes': 'true',
       },
     );
@@ -136,32 +139,6 @@ class DesktopOAuthFlow {
       expiresIn: (json['expires_in'] as num?)?.toInt() ?? 3600,
       idToken: json['id_token'] as String?,
       refreshToken: json['refresh_token'] as String?,
-      grantedScopes: (json['scope'] as String? ?? '').split(' '),
-    );
-  }
-
-  /// Kayıtlı refresh token ile yeni bir access token alır.
-  static Future<OAuthTokens> refresh(String refreshToken) async {
-    final response = await http.post(
-      Uri.parse(_tokenEndpoint),
-      body: {
-        'client_id': AppConstants.desktopClientId,
-        'client_secret': AppConstants.desktopClientSecret,
-        'refresh_token': refreshToken,
-        'grant_type': 'refresh_token',
-      },
-    );
-    if (response.statusCode != 200) {
-      throw StateError(
-        'Token yenileme başarısız (${response.statusCode}): ${response.body}',
-      );
-    }
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    return OAuthTokens(
-      accessToken: json['access_token'] as String,
-      expiresIn: (json['expires_in'] as num?)?.toInt() ?? 3600,
-      idToken: json['id_token'] as String?,
-      refreshToken: refreshToken,
       grantedScopes: (json['scope'] as String? ?? '').split(' '),
     );
   }

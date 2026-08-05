@@ -1138,7 +1138,13 @@ class _DashboardBackgroundTile extends ConsumerWidget {
       if (file == null) return;
       bytes = await file.readAsBytes();
     } else {
-      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
+      // boşuna bellek (bkz. editördeki aynı tavan).
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        maxHeight: 2400,
+      );
       if (file == null) return;
       bytes = await file.readAsBytes();
     }
@@ -2348,8 +2354,14 @@ class _BackupButton extends ConsumerWidget {
     'archivedAt': n.archivedAt?.toIso8601String(),
     'reminderAt': n.reminderAt?.toIso8601String(),
     'attachments': [
+      // BİLEREK storagePath, downloadUrl DEĞİL: downloadUrl içindeki
+      // `?token=` Storage kurallarını atlayan, süresi dolmayan bir anahtardır.
+      // Yedek dosyası e-posta/bulut diskle elden ele dolaşır; URL yazılsaydı
+      // yedeği gören herkes kullanıcının tüm eklerine oturum açmadan süresiz
+      // erişirdi. storagePath tek başına işe yaramaz (kural denetiminden
+      // geçer); geri yükleme ekleri zaten atlıyor (bkz. _RestoreButton).
       for (final a in n.attachments)
-        {'fileName': a.fileName, 'kind': a.kind.name, 'url': a.downloadUrl},
+        {'fileName': a.fileName, 'kind': a.kind.name, 'path': a.storagePath},
     ],
   };
 

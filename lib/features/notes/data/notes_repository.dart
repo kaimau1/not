@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
@@ -30,9 +31,24 @@ final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
 final notesStreamProvider = StreamProvider<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
-  // Açılışta bir kez: çöp kutusunda 30 günü doldurmuş notları ekleriyle
-  // birlikte kalıcı sil.
-  unawaited(Future(() => repo.purgeOldTrash()).catchError((Object _) {}));
+  // Günde en fazla bir kez: çöp kutusunda 30 günü doldurmuş notları ekleriyle
+  // birlikte kalıcı sil. Her açılışta koşturmak, soğuk başlangıçta ilk
+  // senkronla yarışan bir sunucu okuması demekti; süre 30 gün olduğuna göre
+  // günlük tarama fazlasıyla yeterli.
+  final prefs = ref.watch(sharedPreferencesProvider);
+  const purgeKey = 'last_trash_purge_ms';
+  final lastPurge = prefs.getInt(purgeKey) ?? 0;
+  if (DateTime.now().millisecondsSinceEpoch - lastPurge >
+      const Duration(hours: 24).inMilliseconds) {
+    unawaited(() async {
+      try {
+        await repo.purgeOldTrash();
+        await prefs.setInt(purgeKey, DateTime.now().millisecondsSinceEpoch);
+      } catch (_) {
+        // Ağ yoksa sonraki açılışta yeniden denenir.
+      }
+    }());
+  }
   // Boş kalıp unutulmuş notları temizle (editör açıkken uygulama
   // kapatılırsa dispose'daki silme çalışmaz, kalıntı burada gider).
   // Her emisyonda değil, en fazla 30 saniyede bir çalışır.
@@ -77,7 +93,12 @@ final storageUsedBytesProvider = Provider<int>((ref) {
 });
 
 /// Çöp kutusundaki (soft-delete edilmiş) notlar.
-final trashStreamProvider = StreamProvider<List<Note>>((ref) {
+///
+/// autoDispose ŞART: watchTrash tüm koleksiyonu dinleyen İKİNCİ bir
+/// dinleyicidir. Kalıcı provider'da çöp ekranı bir kez açılınca oturum boyu
+/// açık kalıyor, her not düzenlemesi koleksiyonun ikinci kez indirilip
+/// ayrıştırılmasına mal oluyordu. Ekran kapanınca dinleyici de kapanır.
+final trashStreamProvider = StreamProvider.autoDispose<List<Note>>((ref) {
   final repo = ref.watch(notesRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.watchTrash();
@@ -147,10 +168,15 @@ class NotesRepository {
 
   /// Belgedeki yerel değişiklikler sunucuya ulaştı mı? (editördeki
   /// bulut/senkron göstergesi için)
+  ///
+  /// distinct ŞART: includeMetadataChanges her metadata geçişinde (cache'ten
+  /// geldi bayrağı dahil) olay üretir; boolean değişmeden editörün göstergesi
+  /// boşuna yeniden çizilirdi.
   Stream<bool> watchPendingWrites(String noteId) => _notes
       .doc(noteId)
       .snapshots(includeMetadataChanges: true)
-      .map((doc) => doc.metadata.hasPendingWrites);
+      .map((doc) => doc.metadata.hasPendingWrites)
+      .distinct();
 
   static int _compare(Note a, Note b) {
     if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
@@ -210,13 +236,28 @@ class NotesRepository {
   /// [Note.orderIndex] atanır. Yalnız değeri değişen notlar yazılır — sürükleme
   /// başına gereksiz Firestore yazımı olmaz. Sıralama, akıştaki `_compare`
   /// tarafından (sabitliler önce, sonra orderIndex artan) uygulanır.
+  /// Yazımlar TEK batch'te gider ve `updatedAt`'e DOKUNULMAZ: sürükleme salt
+  /// sıra değişikliğidir; eskiden not başına ayrı yazım + serverTimestamp
+  /// gidiyordu, onlarca not tek tek snapshot yayını tetikliyor ve "son
+  /// güncellenene göre" sıralamada notların düzenlenme tarihi bozuluyordu.
   void reorderNotes(List<Note> ordered) {
+    var batch = _firestore.batch();
+    var ops = 0;
     for (var i = 0; i < ordered.length; i++) {
       final want = i * 1000.0;
       if (ordered[i].orderIndex != want) {
-        updateFields(ordered[i].id, {'orderIndex': want});
+        batch.set(_notes.doc(ordered[i].id), {
+          'orderIndex': want,
+        }, SetOptions(merge: true));
+        // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
+        if (++ops == 450) {
+          unawaited(batch.commit());
+          batch = _firestore.batch();
+          ops = 0;
+        }
       }
     }
+    if (ops > 0) unawaited(batch.commit());
   }
 
   void setPinned(String noteId, bool pinned) =>
@@ -256,14 +297,17 @@ class NotesRepository {
   /// Notu Storage'daki ekleriyle birlikte kalıcı siler (çöp ekranındaki
   /// "kalıcı sil" ve otomatik çöp boşaltma kullanır).
   Future<void> deleteNotePermanently(Note note) async {
-    for (final attachment in note.attachments) {
-      if (attachment.storagePath.isNotEmpty) {
-        await FirebaseStorage.instance
-            .ref(attachment.storagePath)
-            .delete()
-            .catchError((Object _) {});
-      }
-    }
+    // Ek silmeleri paralel: sıralı bekleyiş, çok ekli notlarda (çöp boşaltma
+    // açılışta çalıştığı için) ilk senkronla yarışan uzun bir ağ kuyruğu
+    // oluşturuyordu.
+    await Future.wait([
+      for (final attachment in note.attachments)
+        if (attachment.storagePath.isNotEmpty)
+          FirebaseStorage.instance
+              .ref(attachment.storagePath)
+              .delete()
+              .catchError((Object _) {}),
+    ]);
     hardDelete(note.id);
   }
 

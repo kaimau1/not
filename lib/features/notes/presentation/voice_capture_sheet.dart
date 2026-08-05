@@ -132,6 +132,11 @@ enum _Phase { idle, listening, processing, ready, error }
 /// bitir. İkisi de aynı düğmeden, ayar değiştirmeden çalışır.
 const _kHoldLatchThreshold = Duration(milliseconds: 600);
 
+/// Tek oturumda en uzun dinleme/kayıt. Sınırsızken levhayı açık unutan
+/// kullanıcıda mikrofon + kodlayıcı (konuşma yolunda tanıyıcı döngüsü)
+/// süresiz çalışıyordu; dolunca biriken içerik gözden geçirmeye taşınır.
+const _maxCaptureDuration = Duration(minutes: 10);
+
 class _VoiceCaptureSheet extends ConsumerStatefulWidget {
   const _VoiceCaptureSheet({required this.target});
 
@@ -219,16 +224,34 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             if (mounted) setState(() {});
           },
           onError: (Object e) {
+            // Yerli taraf oturumu kendisi kapattıysa (uygulama arka plana
+            // düştü ya da uzun süre konuşma yok — bkz. MainActivity) hata
+            // göstermek yerine gözden geçirmeye geç: biriken metin kullanılır.
+            if (e is PlatformException &&
+                (e.code == 'speech_background' || e.code == 'speech_idle')) {
+              if (mounted) _finish();
+              return;
+            }
             // Biriken metin korunur; kullanıcı "Bitir" ile kullanabilsin diye
             // hata yalnızca gösterilir.
-            if (mounted) setState(() => _errorMessage = e.toString());
+            if (mounted) {
+              setState(
+                () => _errorMessage = e is PlatformException
+                    ? (e.message ?? e.code)
+                    : e.toString(),
+              );
+            }
           },
         );
       } else {
         await _startRecording();
       }
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _elapsed += const Duration(seconds: 1));
+        if (!mounted) return;
+        setState(() => _elapsed += const Duration(seconds: 1));
+        // Üst sınır: levha açık unutulursa mikrofon süresiz kalmasın; o ana
+        // kadarki metin/kayıt gözden geçirme evresine taşınır.
+        if (_elapsed >= _maxCaptureDuration) _finish();
       });
     } catch (e) {
       _fail(e.toString());

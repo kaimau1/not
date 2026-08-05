@@ -36,7 +36,8 @@ class QrScanScreen extends StatefulWidget {
   State<QrScanScreen> createState() => _QrScanScreenState();
 }
 
-class _QrScanScreenState extends State<QrScanScreen> {
+class _QrScanScreenState extends State<QrScanScreen>
+    with WidgetsBindingObserver {
   /// noDuplicates: aynı kod saniyede onlarca kez yakalanıyor; ilk okumada
   /// ekranı kapatacağımız için tekrarları motora hiç ürettirmiyoruz.
   final _controller = MobileScannerController(
@@ -50,7 +51,30 @@ class _QrScanScreenState extends State<QrScanScreen> {
   bool _analyzing = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// Denetleyici ELLE verildiği için mobile_scanner yaşam döngüsünü kendisi
+  /// yönetmiyor: ekran açıkken uygulama arka plana düşerse kamera + barkod
+  /// çözümleyici çalışmaya devam ediyordu (pil + gizlilik).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _controller.start();
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _controller.stop();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }

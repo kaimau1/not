@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/local_file.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
@@ -19,7 +20,7 @@ void openImageViewer(
   ValueChanged<Attachment> onChanged, {
   Future<void> Function(Attachment, Rect)? onCrop,
 }) {
-  final hasLocal = img.localPath.isNotEmpty && File(img.localPath).existsSync();
+  final hasLocal = localFileExists(img.localPath);
   if (!hasLocal && !img.isUploaded) {
     ScaffoldMessenger.of(
       context,
@@ -67,8 +68,8 @@ class _ImageBox extends StatelessWidget {
 
   Widget _content(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hasLocal =
-        img.localPath.isNotEmpty && File(img.localPath).existsSync();
+    // build sıcak yolunda senkron stat yapmamak için önbellekli denetim.
+    final hasLocal = localFileExists(img.localPath);
     // Görseli EKRAN boyutunda çözdür: ekler 2048 px'e kadar saklanıyor ama
     // tuvalde ~300-400 px gösteriliyor; tam çözünürlükte decode etmek boşuna
     // bellek + işlemci (kaydırma takılması) demekti.

@@ -25,12 +25,34 @@ abstract final class NoteDocx {
   static const _maxCx = 5760000;
   static const _maxCy = 7200000;
 
-  static Uint8List build({
+  /// Zip sıkıştırması (tüm görsel baytları üzerinde deflate) ana izolede
+  /// kareyi düpedüz kilitliyordu — üretim compute() izolesine taşındı. Tarih
+  /// etiketi ANA izolede biçimlenir: DateFormat'ın yerel sembollerini
+  /// flutter_localizations yalnız ana izolede yükler.
+  static Future<Uint8List> build({
     required String title,
     required String content,
     DateTime? date,
     List<ExportImage> images = const [],
   }) {
+    final dateLabel = date == null
+        ? null
+        : DateFormat('d MMMM y', 'tr').format(date);
+    return compute(
+      _buildInIsolate,
+      _DocxRequest(
+        title: title,
+        content: content,
+        dateLabel: dateLabel,
+        images: images,
+      ),
+    );
+  }
+
+  static Uint8List _buildInIsolate(_DocxRequest r) {
+    final title = r.title;
+    final content = r.content;
+    final images = r.images;
     final body = StringBuffer();
     if (title.trim().isNotEmpty) {
       body.write(
@@ -39,18 +61,18 @@ abstract final class NoteDocx {
         ),
       );
     }
-    if (date != null) {
+    if (r.dateLabel != null) {
       body.write(
         _p(
           _r(
-            DateFormat('d MMMM y', 'tr').format(date),
+            r.dateLabel!,
             rPr:
                 '<w:color w:val="777777"/><w:sz w:val="19"/><w:szCs w:val="19"/>',
           ),
         ),
       );
     }
-    if (title.trim().isNotEmpty || date != null) {
+    if (title.trim().isNotEmpty || r.dateLabel != null) {
       body.write(_p(''));
     }
     // Görseller NOTTAKİ YERLERİNE girer — kural PDF ile birebir aynı
@@ -224,4 +246,20 @@ abstract final class NoteDocx {
         '</pic:pic></a:graphicData></a:graphic>'
         '</wp:inline></w:drawing></w:r></w:p>';
   }
+}
+
+/// [NoteDocx._buildInIsolate]'a taşınan istek — tüm alanlar izoleler arası
+/// gönderilebilir (String/Uint8List).
+class _DocxRequest {
+  const _DocxRequest({
+    required this.title,
+    required this.content,
+    required this.dateLabel,
+    required this.images,
+  });
+
+  final String title;
+  final String content;
+  final String? dateLabel;
+  final List<ExportImage> images;
 }

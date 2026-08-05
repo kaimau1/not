@@ -83,11 +83,23 @@ class FoldersRepository {
 
   /// Klasörü siler; içindeki notlar SİLİNMEZ, klasörsüz kalır
   /// (folderId temizlenir).
+  ///
+  /// Tek batch'te: not başına ayrı yazım, her biri ayrı snapshot yayını
+  /// tetikliyordu (kalabalık klasörde onlarca ardışık liste yeniden çizimi).
   Future<void> deleteFolder(String folderId) async {
     final notes = await _notes.where('folderId', isEqualTo: folderId).get();
+    var batch = _firestore.batch();
+    var ops = 0;
     for (final doc in notes.docs) {
-      unawaited(doc.reference.set({'folderId': null}, SetOptions(merge: true)));
+      batch.set(doc.reference, {'folderId': null}, SetOptions(merge: true));
+      // Firestore batch tavanı 500 işlem; taşarsa parça parça gönder.
+      if (++ops == 450) {
+        unawaited(batch.commit());
+        batch = _firestore.batch();
+        ops = 0;
+      }
     }
-    unawaited(_folders.doc(folderId).delete());
+    batch.delete(_folders.doc(folderId));
+    unawaited(batch.commit());
   }
 }

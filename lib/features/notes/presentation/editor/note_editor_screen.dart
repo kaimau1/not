@@ -26,6 +26,7 @@ import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/format_bytes.dart';
+import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_fonts.dart';
@@ -788,7 +789,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (file == null) return;
       await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
     } else {
-      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      // Boyut tavanı platform tarafında uygulanır: 48 MP'lik bir fotoğrafın
+      // ~20 MB'ı ana izoleye okunup sıkıştırma izolesine kopyalanıyordu;
+      // ek zaten 1600 px'e küçültülüyor (bkz. _compressImage), kalite kaybı yok.
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        maxHeight: 2400,
+      );
       if (file == null) return;
       await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
     }
@@ -808,7 +816,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     if (!mounted) return;
     try {
-      final picked = await ImagePicker().pickImage(source: ImageSource.camera);
+      final picked = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2400,
+        maxHeight: 2400,
+      );
       if (picked == null) return;
       await _addImageBytes(await picked.readAsBytes(), picked.name);
     } catch (e) {
@@ -1170,6 +1182,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _attachmentRepo?.deleteFromStorage(attachment).ignore();
       if (attachment.localPath.isNotEmpty) {
         File(attachment.localPath).delete().ignore();
+        forgetLocalFile(attachment.localPath);
       }
     }
     _pendingAttachmentDeletes.clear();
@@ -2048,11 +2061,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   ImageProvider? _backgroundProvider(Attachment image) {
-    if (image.localPath.isNotEmpty && File(image.localPath).existsSync()) {
-      return FileImage(File(image.localPath));
+    // Önbellekli varlık denetimi + ekran genişliğine sınırlı decode: zemin
+    // 1600 px'e kadar saklanıyor, tam boy bitmap'i bellekte tutmak boşuna.
+    final targetWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context))
+            .round();
+    if (localFileExists(image.localPath)) {
+      return ResizeImage(FileImage(File(image.localPath)), width: targetWidth);
     }
     if (image.downloadUrl.isNotEmpty) {
-      return CachedNetworkImageProvider(image.downloadUrl);
+      return ResizeImage(
+        CachedNetworkImageProvider(image.downloadUrl),
+        width: targetWidth,
+      );
     }
     return null;
   }
@@ -2197,7 +2219,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       bytes = await file.readAsBytes();
       name = file.name;
     } else {
-      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        maxHeight: 2400,
+      );
       if (file == null) return;
       bytes = await file.readAsBytes();
       name = file.name;

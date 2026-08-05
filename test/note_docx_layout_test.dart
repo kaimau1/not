@@ -39,11 +39,11 @@ void main() {
     align: align,
   );
 
-  test('görseller nottaki satırlarına giriyor, düzensizler sona kalıyor', () {
+  test('görseller nottaki satırlarına giriyor, düzensizler sona kalıyor', () async {
     // Sıra bilerek karışık: trailing görsel ÖNCE geliyor ki yerleşim
     // sıralaması ile rId sıralaması birbirine karışırsa test kırılsın.
     final xml = documentXml(
-      NoteDocx.build(
+      await NoteDocx.build(
         title: '',
         content: 'bir\niki\nüç',
         images: [
@@ -68,8 +68,8 @@ void main() {
     expect(at('>üç<'), lessThan(at('rIdImg1')));
   });
 
-  test('rId, özgün sıradaki medya dosyasını gösteriyor', () {
-    final bytes = NoteDocx.build(
+  test('rId, özgün sıradaki medya dosyasını gösteriyor', () async {
+    final bytes = await NoteDocx.build(
       title: '',
       content: 'bir\niki',
       images: [
@@ -90,9 +90,9 @@ void main() {
     expect(xml, contains('Target="media/image2.jpg"'));
   });
 
-  test('nottaki oran ve hiza uygulanıyor', () {
+  test('nottaki oran ve hiza uygulanıyor', () async {
     final xml = documentXml(
-      NoteDocx.build(
+      await NoteDocx.build(
         title: '',
         content: 'bir',
         images: [image(line: 0, widthFraction: 0.5, align: ExportAlign.right)],
@@ -104,9 +104,9 @@ void main() {
     expect(xml, contains('<w:jc w:val="right"/>'));
   });
 
-  test('düzen bilgisi olmayan görsel tam genişlikte ve ortada', () {
+  test('düzen bilgisi olmayan görsel tam genişlikte ve ortada', () async {
     final xml = documentXml(
-      NoteDocx.build(title: '', content: 'bir', images: [image()]),
+      await NoteDocx.build(title: '', content: 'bir', images: [image()]),
     );
 
     expect(xml, contains('cx="5760000" cy="4320000"'));

@@ -46,20 +46,33 @@ service cloud.firestore {
     match /aiQuota/{uid} {
       allow read: if signedInAs(uid);
 
+      // Yalnız iki alan yazılabilir ve puana mutlak tavan var: doküman
+      // silinemez olduğundan buraya konan keyfi alan/şişkin veri de kalıcı
+      // olurdu. Tavan, premium günlük hakkın (300) rahat üstünde tutuldu ki
+      // limit artışında kuralı güncellemeyi unutmak AI'ı kilitlemesin.
       allow create: if signedInAs(uid)
+        && request.resource.data.keys().hasOnly(['dayStart', 'points'])
         && request.resource.data.dayStart == request.time
         && request.resource.data.points is int
-        && request.resource.data.points >= 0;
+        && request.resource.data.points >= 0
+        && request.resource.data.points <= 1000;
 
       allow update: if signedInAs(uid)
+        && request.resource.data.keys().hasOnly(['dayStart', 'points'])
         && request.resource.data.points is int
+        && request.resource.data.points <= 1000
         && (
-          // Aynı pencere: puan yalnız artabilir (geri alınamaz).
+          // Aynı pencere: puan yalnız ARTABİLİR. Katı `>` şart — `>=` eşit
+          // değeri de geçiriyordu, değiştirilmiş bir istemci sayacı hep aynı
+          // değerde yazarak kotayı hiç doldurmadan sınırsız AI kullanabilirdi
+          // (fatura projeye çıkar; AiGate.consume her çağrıda en az 1 ekler,
+          // meşru istemci `>`'a hiç takılmaz).
           (request.resource.data.dayStart == resource.data.dayStart
-            && request.resource.data.points >= resource.data.points)
+            && request.resource.data.points > resource.data.points)
           // Yeni pencere: damga sunucudan gelmeli VE eskisi 24 saati doldurmalı.
           || (request.resource.data.dayStart == request.time
-            && resource.data.dayStart < request.time - duration.value(24, 'h'))
+            && resource.data.dayStart < request.time - duration.value(24, 'h')
+            && request.resource.data.points >= 0)
         );
 
       // Silme YOK: silip yeniden yaratmak sayacı sıfırlamanın en kolay yolu.

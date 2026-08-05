@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
 import android.speech.RecognitionListener
@@ -40,6 +41,24 @@ class MainActivity : FlutterFragmentActivity() {
     // sessizlikte kendiliğinden kapandığında yeniden başlatılır.
     private var listening = false
 
+    // Yeniden başlatma pil korumaları. Tanıyıcı sessizlikte ~3 sn'de bir
+    // kapanıp yeniden kurulur; bu döngü frensiz kalırsa (ör. mikrofonu başka
+    // uygulama kaptığında) ana thread'de sıcak bir bind/unbind döngüsüne
+    // dönüşüyor ve dinleme unutulursa mikrofon + servis süresiz açık kalıyor.
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var pendingRestart: Runnable? = null
+    private var lastStartAt = 0L
+    private var rapidRestarts = 0
+    private var lastProgressAt = 0L
+
+    // 1,5 sn'den kısa arayla dönen restart "hızlı" sayılır; art arda 5 kez
+    // olursa tanıma gerçekten bozuktur, dinleme bitirilir. 2 dk boyunca tek
+    // kelime gelmediyse kullanıcı büyük olasılıkla uzaklaştı: mikrofonu
+    // süresiz açık tutmak yerine oturum kapatılır (birikmiş metin korunur).
+    private val rapidRestartWindowMs = 1_500L
+    private val maxRapidRestarts = 5
+    private val idleTimeoutMs = 2 * 60_000L
+
     // Son gönderilen ses seviyesi (RMS olay seli kısılırken karşılaştırılır).
     private var lastRmsLevel = -1f
 
@@ -72,6 +91,8 @@ class MainActivity : FlutterFragmentActivity() {
                     // akış kapanır.
                     "stopSpeech" -> {
                         listening = false
+                        pendingRestart?.let { mainHandler.removeCallbacks(it) }
+                        pendingRestart = null
                         recognizer?.stopListening()
                         result.success(true)
                     }
@@ -241,14 +262,13 @@ class MainActivity : FlutterFragmentActivity() {
                     lastRmsLevel = -1f
                     segmentEnded = false
                     listening = true
+                    rapidRestarts = 0
+                    lastProgressAt = SystemClock.elapsedRealtime()
                     startRecognizer(arguments as? String ?: "tr-TR")
                 }
 
                 override fun onCancel(arguments: Any?) {
-                    listening = false
-                    recognizer?.cancel()
-                    recognizer?.destroy()
-                    recognizer = null
+                    stopRecognizer()
                     speechSink = null
                 }
             })
@@ -256,14 +276,83 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun startRecognizer(locale: String) {
         // SpeechRecognizer yalnızca ana thread'den sürülebilir.
-        Handler(Looper.getMainLooper()).post {
+        mainHandler.post {
             if (!listening) return@post
+            lastStartAt = SystemClock.elapsedRealtime()
             recognizer?.destroy()
             val speech = SpeechRecognizer.createSpeechRecognizer(this)
             recognizer = speech
             speech.setRecognitionListener(speechListener(locale))
             speech.startListening(recognizerIntent(locale))
         }
+    }
+
+    // Sessizlik kapanışlarından sonra çağrılır. startRecognizer'dan farkı
+    // frenler: (1) 2 dk hiç metin gelmediyse oturum biter; (2) art arda hızlı
+    // dönen restart'lar üstel gecikmeyle yavaşlatılır ve tavana vurunca
+    // dinleme kapatılır — çıplak döngü, bozuk tanıyıcıda saniyede onlarca
+    // kez servis bind'ı yapıp pili eritiyordu.
+    private fun restartRecognizer(locale: String) {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastProgressAt > idleTimeoutMs) {
+            Log.d(logTag, "restart yok: ${idleTimeoutMs / 1000}s ilerleme yok, oturum kapatildi")
+            finishListening("speech_idle", "Uzun süre konuşma algılanmadı, dinleme durduruldu")
+            return
+        }
+        if (now - lastStartAt < rapidRestartWindowMs) rapidRestarts++ else rapidRestarts = 0
+        if (rapidRestarts >= maxRapidRestarts) {
+            Log.d(logTag, "restart yok: $rapidRestarts hizli dongu, oturum kapatildi")
+            finishListening("speech_error", "Konuşma tanıma tekrar tekrar başarısız oldu")
+            return
+        }
+        if (rapidRestarts == 0) {
+            startRecognizer(locale)
+            return
+        }
+        val delay = (300L shl (rapidRestarts - 1)).coerceAtMost(2_400L)
+        Log.d(logTag, "restart geciktirildi: n=$rapidRestarts delay=${delay}ms")
+        val restart = Runnable {
+            pendingRestart = null
+            if (listening) startRecognizer(locale)
+        }
+        pendingRestart = restart
+        mainHandler.postDelayed(restart, delay)
+    }
+
+    // Dinlemeyi durdurur ve tanıyıcıyı serbest bırakır (akışı kapatmaz).
+    private fun stopRecognizer() {
+        listening = false
+        pendingRestart?.let { mainHandler.removeCallbacks(it) }
+        pendingRestart = null
+        recognizer?.cancel()
+        recognizer?.destroy()
+        recognizer = null
+    }
+
+    // Oturumu uygulama adına bitirir: birikmiş metin son kez gönderilir ki
+    // kullanıcının söyledikleri kaybolmasın, ardından hata olayıyla Dart
+    // tarafına "dinleme bitti" bilgisi düşer (ekranlar hatayı gösterir,
+    // biriken metni korur — bkz. voice_capture_sheet/voice_assistant).
+    private fun finishListening(code: String, message: String) {
+        commitPartial()
+        if (accumulated.isNotEmpty()) {
+            speechSink?.success(mapOf("text" to accumulated.toString()))
+        }
+        stopRecognizer()
+        speechSink?.error(code, message, null)
+    }
+
+    // Uygulama arka plana düşünce mikrofon bırakılır: FGS'siz bir uygulamanın
+    // arka planda dinlemeye devam etmesi hem pil hem gizlilik sorunu; Android
+    // 11+ zaten mikrofonu bir süre sonra keser ama restart döngüsü CPU
+    // yakmayı sürdürüyordu. (voiceInputWithAudio yolunda listening=false
+    // olduğundan Google'ın sesli giriş ekranı açılırken buraya takılmaz.)
+    override fun onStop() {
+        if (listening) {
+            Log.d(logTag, "onStop: arka plan, dinleme kapatildi")
+            finishListening("speech_background", "Uygulama arka plana alındı, dinleme durduruldu")
+        }
+        super.onStop()
     }
 
     private fun recognizerIntent(locale: String): Intent =
@@ -300,6 +389,7 @@ class MainActivity : FlutterFragmentActivity() {
             if (!continues) commitPartial()
             segmentEnded = false
             lastPartial = text
+            lastProgressAt = SystemClock.elapsedRealtime()
             speechSink?.success(mapOf("text" to joined(text)))
         }
 
@@ -327,7 +417,10 @@ class MainActivity : FlutterFragmentActivity() {
             // son dolu ara sonuç kullanılmazsa konuşulan cümle tamamen
             // kaybolur ve Flutter'a boş metin gidip ekrandakini de siler.
             // Final sonuç varsa aynı segmentin ara sonucunun yerini alır.
-            if (!text.isNullOrBlank()) lastPartial = text
+            if (!text.isNullOrBlank()) {
+                lastPartial = text
+                lastProgressAt = SystemClock.elapsedRealtime()
+            }
             commitPartial()
             segmentEnded = false
             speechSink?.success(mapOf("text" to accumulated.toString()))
@@ -335,7 +428,7 @@ class MainActivity : FlutterFragmentActivity() {
             // konuşuyorsa kaldığı yerden devam etsin diye yeniden başlatılır.
             // ponytail: yeniden başlatma sırasında ~200 ms sağırlık var; sorun
             // olursa Android 13+ EXTRA_SEGMENTED_SESSION'a geçilir.
-            if (listening) startRecognizer(locale)
+            if (listening) restartRecognizer(locale)
         }
 
         override fun onError(error: Int) {
@@ -371,7 +464,7 @@ class MainActivity : FlutterFragmentActivity() {
                     speechSink?.success(mapOf("text" to accumulated.toString()))
                 }
                 segmentEnded = false
-                startRecognizer(locale)
+                restartRecognizer(locale)
                 return
             }
             if (listening) {

@@ -15,9 +15,14 @@ Future<bool> authenticateForNote(String reason) async {
       // Uygulama kısa süreliğine arka plana düşse de doğrulama sürsün.
       persistAcrossBackgrounding: true,
     );
-  } on PlatformException {
-    // Platform doğrulamayı hiç sunamadıysa (ör. Windows'ta Hello kapalı)
-    // kullanıcıyı notundan mahrum bırakma.
-    return true;
+  } on PlatformException catch (e) {
+    // Yalnızca "cihazda hiç kilit/kimlik kurulu değil" durumları serbest
+    // bırakır (ör. Windows'ta Hello kapalı) — üstteki isDeviceSupported
+    // kuralıyla aynı mantık. Diğer her istisna KAPALI sayılır: özellikle
+    // LockedOut (5 kez yanlış parmak izi) eskiden buraya düşüp notu AÇIYORDU,
+    // yani kilit bilerek yanlış denemeyle aşılabiliyordu.
+    return e.code == 'NotAvailable' ||
+        e.code == 'NotEnrolled' ||
+        e.code == 'PasscodeNotSet';
   }
 }
