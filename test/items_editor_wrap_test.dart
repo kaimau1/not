@@ -89,12 +89,19 @@ void main() {
     expect(find.text('Oge 29'), findsOneWidget);
   });
 
-  testWidgets('gorselin bandindaki madde sarma capasi alir', (tester) async {
+  testWidgets('gorselin bandindaki madde capasiz kalir (satir butun kayar)', (
+    tester,
+  ) async {
+    // KOK NEDEN (ekran goruntusu, 2026-08-06): satiri _FloatRow zaten BUTUN
+    // olarak gorselin yanina kaydiriyor; alan ici sarma capalari da ayni
+    // banda gore girinti basinca iki kaydirma ust uste biniyor ve gorselin
+    // yanindaki maddelerin metni kutucuktan kopuk, "kaymis" gorunuyordu.
+    // Artik liste maddesinde alan ici capa HIC kullanilmaz.
     final items = [
       NoteItem(
         id: 'a',
-        text: 'Bu madde epey uzun bir metin icerir ve gorselin yanindan '
-            'akmasi beklenir cunku ust bantta duruyor',
+        text: 'Bu madde epey uzun bir metin icerir ve gorselin yaninda '
+            'butun olarak durmasi beklenir cunku ust bantta duruyor',
       ),
       NoteItem(id: 'b', text: 'Asagidaki madde gorselden uzak'),
     ];
@@ -102,7 +109,7 @@ void main() {
     await pumpList(tester, items, const [
       FloatBox(top: 0, left: 0, right: 140, height: 40),
     ]);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final fields = tester
         .widgetList<TextField>(find.byType(TextField))
@@ -110,11 +117,10 @@ void main() {
     final first = fields.first.controller! as WrapTextController;
     final second = fields[1].controller! as WrapTextController;
 
-    expect(first.isPlain, isFalse, reason: 'ilk madde sarilmadi');
-    expect(first.text.contains(kWrapAnchorChar), isTrue);
-    // Nota giden metin capasizdir.
+    expect(first.isPlain, isTrue, reason: 'madde alaninda capa kalmamali');
+    expect(first.text.contains(kWrapAnchorChar), isFalse);
+    // Nota giden metin degismeden durur.
     expect(first.logicalText, items.first.text);
-    // Gorselin bandinin disindaki madde dokunulmadan kalir.
     expect(second.isPlain, isTrue);
   });
 

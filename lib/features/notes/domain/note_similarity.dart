@@ -66,18 +66,34 @@ const double kDuplicateThreshold = 0.8;
 /// Karşılaştırma O(n²) ama iki ucuzlatma var: (1) trigram kümeleri bir kez
 /// hesaplanır, (2) liste küme boyutuna göre sıralanıp boyut oranı eşiğin
 /// altına düşünce iç döngü kırılır — Jaccard `min/max` oranını aşamaz.
+/// [trigramCache] verilirse trigram kümeleri `(updatedAt)` damgasıyla orada
+/// saklanır ve İÇERİĞİ DEĞİŞMEMİŞ notlar için yeniden hesaplanmaz: sağlayıcı
+/// her not yazımında (yazarken 3 sn'de bir) yeniden çalışıyor ve n notun
+/// tamamının normalize + trigram maliyeti her seferinde ödeniyordu. Boş küme
+/// "karşılaştırmaya değmez" işaretidir (kısa not).
 List<List<Note>> duplicateNoteGroups(
   List<Note> notes, {
   double threshold = kDuplicateThreshold,
+  Map<String, (DateTime?, Set<String>)>? trigramCache,
 }) {
   final entries = <({Note note, Set<String> grams})>[];
   for (final note in notes) {
     if (note.archivedAt != null || note.deletedAt != null || note.locked) {
       continue;
     }
-    final normalized = normalizeForCompare(note.toPlainText());
-    if (normalized.length < kMinCompareLength) continue;
-    entries.add((note: note, grams: textTrigrams(normalized)));
+    var grams = switch (trigramCache?[note.id]) {
+      (final stamp, final cached) when stamp == note.updatedAt => cached,
+      _ => null,
+    };
+    if (grams == null) {
+      final normalized = normalizeForCompare(note.toPlainText());
+      grams = normalized.length < kMinCompareLength
+          ? const <String>{}
+          : textTrigrams(normalized);
+      trigramCache?[note.id] = (note.updatedAt, grams);
+    }
+    if (grams.isEmpty) continue;
+    entries.add((note: note, grams: grams));
   }
   // Büyükten küçüğe: iç döngüde oran düşünce kırmak için boyut sıralı olmalı.
   entries.sort((a, b) => b.grams.length.compareTo(a.grams.length));

@@ -108,33 +108,32 @@ class RemindersScreen extends ConsumerWidget {
             for (final n in withReminder.reversed)
               if (!n.reminderAt!.isAfter(now)) n,
           ];
-          return ListView(
+          // Düz kayıt listesi + builder: tembel kurulum, satırlar yalnız
+          // görünür olunca (ve önizleme metni ancak o zaman) üretilir.
+          final entries = <Object>[
+            if (upcoming.isNotEmpty) l10n.remindersUpcoming,
+            for (final n in upcoming) (note: n, past: false),
+            if (past.isNotEmpty) l10n.remindersPast,
+            for (final n in past) (note: n, past: true),
+          ];
+          return ListView.builder(
             padding: EdgeInsets.fromLTRB(
               12,
               8,
               12,
               88 + MediaQuery.paddingOf(context).bottom,
             ),
-            children: [
-              if (upcoming.isNotEmpty) ...[
-                _SectionHeader(l10n.remindersUpcoming),
-                for (final note in upcoming)
-                  _ReminderTile(
-                    note: note,
-                    past: false,
-                    onEdit: () => _editReminder(context, ref, note),
-                  ),
-              ],
-              if (past.isNotEmpty) ...[
-                _SectionHeader(l10n.remindersPast),
-                for (final note in past)
-                  _ReminderTile(
-                    note: note,
-                    past: true,
-                    onEdit: () => _editReminder(context, ref, note),
-                  ),
-              ],
-            ],
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              if (entry is String) return _SectionHeader(entry);
+              final row = entry as ({Note note, bool past});
+              return _ReminderTile(
+                note: row.note,
+                past: row.past,
+                onEdit: () => _editReminder(context, ref, row.note),
+              );
+            },
           );
         },
       ),

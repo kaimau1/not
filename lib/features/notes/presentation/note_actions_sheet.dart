@@ -223,6 +223,8 @@ Future<void> _runNoteAction(
         MaterialPageRoute<void>(
           builder: (_) => ListenScreen(
             title: title.isEmpty ? l10n.appName : title,
+            // Kilitli notun podcast metni de diske yazılmasın.
+            allowCache: !note.locked,
             // toPlainText değil: başlık ve `- [x]` işaretleri sesli okunmasın.
             loadText: () async => note.toContentText(),
           ),

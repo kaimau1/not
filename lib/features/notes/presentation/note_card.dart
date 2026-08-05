@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
@@ -182,14 +183,18 @@ class NoteCard extends ConsumerWidget {
     if (id == null) return child;
     final image = note.attachments.where((a) => a.id == id).firstOrNull;
     if (image == null) return child;
-    final ImageProvider provider;
-    if (image.localPath.isNotEmpty && File(image.localPath).existsSync()) {
+    ImageProvider provider;
+    if (localFileExists(image.localPath)) {
       provider = FileImage(File(image.localPath));
     } else if (image.downloadUrl.isNotEmpty) {
       provider = CachedNetworkImageProvider(image.downloadUrl);
     } else {
       return child;
     }
+    // Zemin görseli 1600 px'e kadar saklanıyor; kart genişliği için 800 px
+    // fazlasıyla yeter. Sınırsız çözme, kart başına ~10 MB bitmap demekti
+    // (ızgarada onlarca kart aynı anda ayakta).
+    provider = ResizeImage(provider, width: 800);
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Stack(
@@ -209,9 +214,15 @@ class NoteCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final selectedIds = ref.watch(selectedNoteIdsProvider);
-    final selectionActive = selectedIds.isNotEmpty;
-    final selected = selectedIds.contains(note.id);
+    // select() ŞART: küme her değişimde yeni bir Set olduğundan kümenin
+    // kendisini izlemek, TEK not seçilince görünürdeki BÜTÜN kartları yeniden
+    // çiziyordu; artık yalnız durumu değişen kart çizilir.
+    final selectionActive = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    );
+    final selected = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.contains(note.id)),
+    );
 
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
@@ -741,8 +752,7 @@ class _AttachmentPreview extends StatelessWidget {
         memCacheWidth: 480,
       );
     }
-    if (attachment.localPath.isNotEmpty &&
-        File(attachment.localPath).existsSync()) {
+    if (localFileExists(attachment.localPath)) {
       return Image.file(
         File(attachment.localPath),
         fit: BoxFit.cover,

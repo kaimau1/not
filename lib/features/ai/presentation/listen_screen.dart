@@ -22,10 +22,15 @@ class ListenScreen extends ConsumerStatefulWidget {
     super.key,
     required this.title,
     required this.loadText,
+    this.allowCache = true,
   });
 
   final String title;
   final Future<String> Function() loadText;
+
+  /// KİLİTLİ nottan açılan belgede false: üretilen podcast metni düz metin
+  /// dosyası olarak diske yazılır, kilitli içerik önbellekten okunabilirdi.
+  final bool allowCache;
 
   @override
   ConsumerState<ListenScreen> createState() => _ListenScreenState();
@@ -107,7 +112,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       summarize ? 'podcast_summary' : 'podcast_full',
       source,
     );
-    if (!force) {
+    if (!force && widget.allowCache) {
       final cached = await AiCache.read(key);
       if (cached != null && cached.trim().isNotEmpty) {
         if (!mounted) return;
@@ -129,7 +134,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       final script = await ref
           .read(geminiServiceProvider)
           .podcastScript(source, title: widget.title, summarize: summarize);
-      await AiCache.write(key, script);
+      if (widget.allowCache) await AiCache.write(key, script);
       if (!mounted) return;
       setState(() {
         _text = script;

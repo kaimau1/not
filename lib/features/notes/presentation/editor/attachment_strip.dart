@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/local_file.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -136,17 +137,22 @@ class _AudioTile extends StatefulWidget {
 }
 
 class _AudioTileState extends State<_AudioTile> {
-  final _player = AudioPlayer();
+  /// TEMBEL: AudioPlayer() kurulur kurulmaz platform tarafında bir oynatıcı
+  /// (Android'de ExoPlayer) ayırıyor. Eskiden her ses eki karosu state
+  /// kurulurken oynatıcı açıyordu — çok sesli notta şeritte kaydırmak bile
+  /// birden çok yerel oynatıcı ayağa kaldırıyordu. İlk oynatmada kurulur.
+  AudioPlayer? _player;
   bool _loaded = false;
 
   Future<void> _toggle() async {
     try {
+      final player = _player ??= AudioPlayer();
       if (!_loaded) {
         final a = widget.attachment;
-        if (a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
-          await _player.setFilePath(a.localPath);
+        if (localFileExists(a.localPath)) {
+          await player.setFilePath(a.localPath);
         } else if (a.isUploaded) {
-          await _player.setUrl(a.downloadUrl);
+          await player.setUrl(a.downloadUrl);
         } else {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -156,14 +162,16 @@ class _AudioTileState extends State<_AudioTile> {
           return;
         }
         _loaded = true;
+        // Oynatıcı ilk kez kurulduysa StreamBuilder'lı düğmeye geç.
+        if (mounted) setState(() {});
       }
-      if (_player.playing) {
-        await _player.pause();
+      if (player.playing) {
+        await player.pause();
       } else {
-        if (_player.processingState == ProcessingState.completed) {
-          await _player.seek(Duration.zero);
+        if (player.processingState == ProcessingState.completed) {
+          await player.seek(Duration.zero);
         }
-        await _player.play();
+        await player.play();
       }
     } catch (e) {
       if (mounted) {
@@ -176,20 +184,27 @@ class _AudioTileState extends State<_AudioTile> {
 
   @override
   void dispose() {
-    _player.dispose();
+    _player?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final player = _player;
     return SizedBox(
       width: 140,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          if (player == null)
+            IconButton.filledTonal(
+              onPressed: _toggle,
+              icon: const Icon(Icons.play_arrow),
+            )
+          else
           StreamBuilder<PlayerState>(
-            stream: _player.playerStateStream,
+            stream: player.playerStateStream,
             builder: (context, snapshot) {
               final playing = snapshot.data?.playing ?? false;
               final completed =
@@ -234,9 +249,7 @@ class _AttachmentTile extends StatelessWidget {
   final ValueChanged<Attachment>? onPlaceOnPage;
   final Future<void> Function(Attachment)? onVideoToNote;
 
-  bool get _hasLocal =>
-      attachment.localPath.isNotEmpty &&
-      File(attachment.localPath).existsSync();
+  bool get _hasLocal => localFileExists(attachment.localPath);
 
   /// Yalnız "ek olarak" işaretlenmiş GÖRSEL sayfaya geri konabilir.
   bool get _canPlaceOnPage => attachment.kind == AttachmentKind.image;

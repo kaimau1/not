@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -96,7 +97,16 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
   bool _useSpeech = false;
 
   @override
-  VoiceAssistantState build() => const VoiceAssistantState();
+  VoiceAssistantState build() {
+    // ProviderScope kayıt ortasında sökülürse (çıkış, hot restart, test)
+    // mikrofon ve yerel akışlar da bırakılmalı — yoksa AudioRecorder sızar.
+    ref.onDispose(_teardownMic);
+    return const VoiceAssistantState();
+  }
+
+  /// Kayıt üst sınırı: dinlemeyi açıp unutan kullanıcıda mikrofonun ve
+  /// (konuşma yolunda) tanıyıcı döngüsünün süresiz açık kalmaması için.
+  static const _maxRecording = Duration(minutes: 10);
 
   bool get _busy =>
       state.phase == VoiceAssistantPhase.recording ||
@@ -136,8 +146,15 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
             final level = event.level;
             if (level != null) state = state.copyWith(level: level);
           },
-          onError: (Object _) {
+          onError: (Object e) {
             // Tanıma düşse de biriken metin korunur; "Bitir" ile not oluşur.
+            // Yerli taraf oturumu kapattıysa (arka plan/uzun sessizlik)
+            // mikrofon zaten bırakıldı; sayaç da boşuna işlemesin.
+            if (e is PlatformException &&
+                (e.code == 'speech_background' || e.code == 'speech_idle')) {
+              _ticker?.cancel();
+              _ticker = null;
+            }
           },
         );
       } else {
@@ -145,9 +162,22 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
         if (state.phase == VoiceAssistantPhase.error) return;
       }
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        state = state.copyWith(
-          elapsed: state.elapsed + const Duration(seconds: 1),
-        );
+        final next = state.elapsed + const Duration(seconds: 1);
+        state = state.copyWith(elapsed: next);
+        // Üst sınır: mikrofon bırakılır ama panel ve biriken döküm DURUR —
+        // kullanıcı "Bitir" ile o ana kadarkini kullanabilir. Kayıt dosyası
+        // da diskte kalır (_collectAudio ikinci stop'ta _filePath'e düşer).
+        if (next >= _maxRecording) {
+          _ticker?.cancel();
+          _ticker = null;
+          if (_useSpeech) {
+            DeviceSpeech.stop();
+          } else {
+            _recorder?.stop();
+          }
+          _ampSub?.cancel();
+          _ampSub = null;
+        }
       });
     } catch (_) {
       await _teardownMic();
@@ -271,8 +301,19 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           audioBytes: audio,
           mimeType: mimeType,
           onToolCall: (name, args) async {
+            // Sesli akış eller serbest çalışır, onay kutusu gösterilemez;
+            // yıkıcı silme burada HİÇ çalışmaz (sohbette onayla çalışıyor).
+            // Not içeriğinden gelen bir "talimat" modeli kandırsa bile sesli
+            // yoldan not silinemez.
+            if (name == 'delete_note') {
+              return {
+                'status': 'error',
+                'message':
+                    'Sesli akışta not silinmez; silme sohbetten onayla yapılır',
+              };
+            }
             final result = await assistant.execute(name, args);
-            if (name != 'delete_note' && result['noteId'] is String) {
+            if (result['noteId'] is String) {
               resultNoteId = result['noteId'] as String;
             }
             return result;

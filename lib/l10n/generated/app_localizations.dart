@@ -960,6 +960,12 @@ abstract class AppLocalizations {
   /// **'Bu not kalıcı olarak silinecek. Emin misin?'**
   String get deleteForeverConfirm;
 
+  /// No description provided for @assistantDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?'**
+  String assistantDeleteConfirm(String title);
+
   /// No description provided for @recordAudio.
   ///
   /// In tr, this message translates to:
@@ -3329,6 +3335,264 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Google hesabın bağlandı. Notların artık yedekleniyor.'**
   String get accountLinked;
+
+  /// No description provided for @scanReviewPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {current} / {total}'**
+  String scanReviewPage(int current, int total);
+
+  /// No description provided for @scanRotatePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfayı döndür'**
+  String get scanRotatePage;
+
+  /// No description provided for @scanDeletePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfayı sil'**
+  String get scanDeletePage;
+
+  /// No description provided for @scanLastPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son sayfa silinemez'**
+  String get scanLastPage;
+
+  /// No description provided for @scanAdjustCorners.
+  ///
+  /// In tr, this message translates to:
+  /// **'Köşeleri ayarla'**
+  String get scanAdjustCorners;
+
+  /// No description provided for @scanFilterOriginal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özgün'**
+  String get scanFilterOriginal;
+
+  /// No description provided for @scanFilterAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Netleştir'**
+  String get scanFilterAuto;
+
+  /// No description provided for @scanFilterGray.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gri'**
+  String get scanFilterGray;
+
+  /// No description provided for @scanFilterBw.
+  ///
+  /// In tr, this message translates to:
+  /// **'Siyah-beyaz'**
+  String get scanFilterBw;
+
+  /// No description provided for @scanApplyAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsine uygula'**
+  String get scanApplyAll;
+
+  /// No description provided for @scanPageFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa görüntülenemedi'**
+  String get scanPageFailed;
+
+  /// No description provided for @scanCropHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yamuk sayfayı \"Köşeleri ayarla\" ile düzeltebilirsin'**
+  String get scanCropHint;
+
+  /// No description provided for @scanAddAsPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF olarak ekle'**
+  String get scanAddAsPdf;
+
+  /// No description provided for @scanAddAsImages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel olarak ekle'**
+  String get scanAddAsImages;
+
+  /// No description provided for @scanBuildingPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF hazırlanıyor…'**
+  String get scanBuildingPdf;
+
+  /// No description provided for @scanOcrProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin tanınıyor… {done}/{total}'**
+  String scanOcrProgress(int done, int total);
+
+  /// No description provided for @scanAutoDetect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kenarları otomatik bul'**
+  String get scanAutoDetect;
+
+  /// No description provided for @scanReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırla'**
+  String get scanReset;
+
+  /// No description provided for @scanDetecting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kenarlar aranıyor…'**
+  String get scanDetecting;
+
+  /// No description provided for @scanAutoFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kenarlar otomatik bulundu; gerekirse tutamaçlardan ince ayar yap'**
+  String get scanAutoFound;
+
+  /// No description provided for @scanDragHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Köşeleri kâğıdın kenarlarına sürükle'**
+  String get scanDragHint;
+
+  /// No description provided for @scanApplyCorners.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzelt ve uygula'**
+  String get scanApplyCorners;
+
+  /// No description provided for @scanWorking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzeltiliyor…'**
+  String get scanWorking;
+
+  /// No description provided for @scanPdfAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarama, PDF eki olarak nota eklendi'**
+  String get scanPdfAdded;
+
+  /// No description provided for @premiumTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium'**
+  String get premiumTitle;
+
+  /// No description provided for @premiumStatusActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium etkin — {date} tarihine kadar'**
+  String premiumStatusActive(String date);
+
+  /// No description provided for @premiumStatusFree.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ücretsiz sürümü kullanıyorsun'**
+  String get premiumStatusFree;
+
+  /// No description provided for @premiumPerksTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium ile ne değişir?'**
+  String get premiumPerksTitle;
+
+  /// No description provided for @premiumPerkAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük yapay zeka puanı'**
+  String get premiumPerkAi;
+
+  /// No description provided for @premiumPerkAttach.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek dosya boyutu'**
+  String get premiumPerkAttach;
+
+  /// No description provided for @premiumPerkStorage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulut depolama alanı'**
+  String get premiumPerkStorage;
+
+  /// No description provided for @premiumPerkAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik günlük içerik'**
+  String get premiumPerkAuto;
+
+  /// No description provided for @premiumPerkAutoBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.'**
+  String get premiumPerkAutoBody;
+
+  /// No description provided for @premiumHowTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nasıl edinilir?'**
+  String get premiumHowTitle;
+
+  /// No description provided for @premiumHowBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.'**
+  String get premiumHowBody;
+
+  /// No description provided for @premiumByokHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).'**
+  String get premiumByokHint;
+
+  /// No description provided for @premiumDiscoverTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gözden kaçan özellikler'**
+  String get premiumDiscoverTitle;
+
+  /// No description provided for @discoverScanBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.'**
+  String get discoverScanBody;
+
+  /// No description provided for @discoverSemanticBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.'**
+  String get discoverSemanticBody;
+
+  /// No description provided for @discoverAssistantBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.'**
+  String get discoverAssistantBody;
+
+  /// No description provided for @discoverLockBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.'**
+  String get discoverLockBody;
+
+  /// No description provided for @discoverHiddenBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.'**
+  String get discoverHiddenBody;
+
+  /// No description provided for @discoverExportBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).'**
+  String get discoverExportBody;
 }
 
 class _AppLocalizationsDelegate

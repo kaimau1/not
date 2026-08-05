@@ -2,6 +2,15 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+- [ ] **firestore.rules'u YAYINLA** (`firebase deploy --only firestore:rules`):
+  2026-08-05 denetimi `aiQuota` kurallarını sıkılaştırdı (katı artış + alan
+  beyaz listesi + tavan); depoda hazır ama sunucuda eski kural duruyor.
+
+## 2026-08-05 denetiminden kalan (bkz. HAFIZA aynı tarih)
+- [ ] storage.rules kullanıcı başına TOPLAM kota zorlayamıyor (kurallar bucket
+  kullanımını sayamaz; istemci tavanı var). Sunucu zorlaması Cloud Function
+  (finalize tetikleyicisi + Firestore sayaç) ister — Play Billing'den önce.
+
 - **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** (bilinçli ertelendi,
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
 

@@ -11,6 +11,7 @@ import '../../notes/presentation/duplicates_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/ai_gate.dart';
 import '../data/ai_history.dart';
+import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import 'read_document.dart';
 
@@ -50,6 +51,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           noApiKeyText: l10n.aiNoApiKey,
           errorText: l10n.aiError,
           historyLabel: l10n.aiHistoryQuestion,
+          confirmDelete: (title) => confirmAssistantDelete(context, title),
         );
   }
 
@@ -101,7 +103,14 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
             children: [
-              if (metered) AiPointsBar(remaining: remaining, limit: limit),
+              // Puan çubuğuna dokunmak Premium sayfasını açar: "puan nedir,
+              // nasıl artar" sorusunun cevabı artık bir dokunuş uzakta.
+              if (metered)
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => context.push('/premium'),
+                  child: AiPointsBar(remaining: remaining, limit: limit),
+                ),
               const SizedBox(height: 16),
               _ChatCard(
                 chat: chat,

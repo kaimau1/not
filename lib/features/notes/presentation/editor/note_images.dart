@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/local_file.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
@@ -19,7 +20,7 @@ void openImageViewer(
   ValueChanged<Attachment> onChanged, {
   Future<void> Function(Attachment, Rect)? onCrop,
 }) {
-  final hasLocal = img.localPath.isNotEmpty && File(img.localPath).existsSync();
+  final hasLocal = localFileExists(img.localPath);
   if (!hasLocal && !img.isUploaded) {
     ScaffoldMessenger.of(
       context,
@@ -67,8 +68,8 @@ class _ImageBox extends StatelessWidget {
 
   Widget _content(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hasLocal =
-        img.localPath.isNotEmpty && File(img.localPath).existsSync();
+    // build sıcak yolunda senkron stat yapmamak için önbellekli denetim.
+    final hasLocal = localFileExists(img.localPath);
     // Görseli EKRAN boyutunda çözdür: ekler 2048 px'e kadar saklanıyor ama
     // tuvalde ~300-400 px gösteriliyor; tam çözünürlükte decode etmek boşuna
     // bellek + işlemci (kaydırma takılması) demekti.
@@ -528,7 +529,14 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             }
           }
           final previewImg = _previewOf(widget.images);
-          return Stack(
+          // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
+          // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
+          // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
+          // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
+          // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
+          // kapatır hem hedefine (ör. metin alanına odak) gider.
+          final imgForDismiss = selectedImg;
+          final content = Stack(
             clipBehavior: Clip.none,
             children: [
               // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
@@ -568,6 +576,27 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               // metnin sarması olduğu gibi kalır.
               if (previewImg != null) _preview(context, previewImg, cw),
             ],
+          );
+          if (imgForDismiss == null) return content;
+          final r = _resolve(imgForDismiss, selectedIndex, cw);
+          // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
+          // bir bant: ikisinin de dışı "dışarısı" sayılır.
+          final imageRect = Rect.fromLTWH(
+            r.left - 24,
+            r.top - 24,
+            r.w + 48,
+            r.h + 48,
+          );
+          final toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+          return Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (event) {
+              final p = event.localPosition;
+              if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
+                _deselect();
+              }
+            },
+            child: content,
           );
         },
       ),

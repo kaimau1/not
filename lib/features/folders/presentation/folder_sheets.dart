@@ -19,110 +19,115 @@ Future<String?> showFolderEditorDialog(
   var icon = existing?.icon ?? NoteFolder.defaultIcon;
   var hidden = existing?.hidden ?? false;
 
-  final saved = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (dialogContext, setState) => AlertDialog(
-        title: Text(existing == null ? l10n.newFolder : l10n.editFolder),
-        content: SizedBox(
-          width: 340,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(hintText: l10n.folderNameHint),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.folderIcon,
-                  style: Theme.of(dialogContext).textTheme.labelMedium,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    for (final entry in NoteFolder.iconChoices.entries)
-                      InkWell(
-                        borderRadius: BorderRadius.circular(10),
-                        onTap: () => setState(() => icon = entry.key),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: icon == entry.key
-                                ? Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.primaryContainer
-                                : null,
-                          ),
-                          child: Icon(
-                            entry.value,
-                            size: 22,
-                            color: icon == entry.key
-                                ? Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.onPrimaryContainer
-                                : Theme.of(
-                                    dialogContext,
-                                  ).colorScheme.onSurfaceVariant,
+  try {
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text(existing == null ? l10n.newFolder : l10n.editFolder),
+          content: SizedBox(
+            width: 340,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(hintText: l10n.folderNameHint),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.folderIcon,
+                    style: Theme.of(dialogContext).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      for (final entry in NoteFolder.iconChoices.entries)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(10),
+                          onTap: () => setState(() => icon = entry.key),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: icon == entry.key
+                                  ? Theme.of(
+                                      dialogContext,
+                                    ).colorScheme.primaryContainer
+                                  : null,
+                            ),
+                            child: Icon(
+                              entry.value,
+                              size: 22,
+                              color: icon == entry.key
+                                  ? Theme.of(
+                                      dialogContext,
+                                    ).colorScheme.onPrimaryContainer
+                                  : Theme.of(
+                                      dialogContext,
+                                    ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
-                const Divider(height: 24),
-                // Gizli klasör: çip ana ekranda görünmez, notları da not
-                // duvarına/aramaya girmez (bkz. NoteFolder.hidden).
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  secondary: Icon(
-                    hidden
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
+                    ],
                   ),
-                  title: Text(l10n.hiddenFolder),
-                  subtitle: Text(
-                    l10n.hiddenFolderInfo,
-                    style: Theme.of(dialogContext).textTheme.bodySmall,
+                  const Divider(height: 24),
+                  // Gizli klasör: çip ana ekranda görünmez, notları da not
+                  // duvarına/aramaya girmez (bkz. NoteFolder.hidden).
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    secondary: Icon(
+                      hidden
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    title: Text(l10n.hiddenFolder),
+                    subtitle: Text(
+                      l10n.hiddenFolderInfo,
+                      style: Theme.of(dialogContext).textTheme.bodySmall,
+                    ),
+                    value: hidden,
+                    onChanged: (value) => setState(() => hidden = value),
                   ),
-                  value: hidden,
-                  onChanged: (value) => setState(() => hidden = value),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.ok),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.ok),
-          ),
-        ],
       ),
-    ),
-  );
+    );
 
-  final name = nameController.text.trim();
-  nameController.dispose();
-  if (!(saved ?? false) || name.isEmpty) return null;
-  final repo = ref.read(foldersRepositoryProvider);
-  if (repo == null) return null;
-  if (existing == null) {
-    return repo.createFolder(name, icon: icon, hidden: hidden);
+    final name = nameController.text.trim();
+    if (!(saved ?? false) || name.isEmpty) return null;
+    final repo = ref.read(foldersRepositoryProvider);
+    if (repo == null) return null;
+    if (existing == null) {
+      return repo.createFolder(name, icon: icon, hidden: hidden);
+    }
+    repo.updateFolder(existing.id, name: name, icon: icon, hidden: hidden);
+    return existing.id;
+  } finally {
+    // finally İÇİNDE: showDialog fırlarsa ya da çağıranın rotası programlı
+    // kapanırsa denetleyici (ve dinleyicileri) sızıyordu.
+    nameController.dispose();
   }
-  repo.updateFolder(existing.id, name: name, icon: icon, hidden: hidden);
-  return existing.id;
 }
 
 /// Klasör çipine uzun basınca açılan menü: düzenle / sil.
@@ -220,6 +225,14 @@ Future<String?> showFolderPickSheet(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // "Yeni klasör" EN ÜSTTE: eskiden tüm klasörlerin altındaydı ve
+            // klasörü çok olan kullanıcıda ekran dışında kalıyordu — yeni
+            // klasörün doğrudan eklenebildiği fark edilmiyordu.
+            ListTile(
+              leading: const Icon(Icons.create_new_folder_outlined),
+              title: Text(l10n.newFolder),
+              onTap: () => Navigator.pop(sheetContext, newSentinel),
+            ),
             ListTile(
               leading: const Icon(Icons.folder_off_outlined),
               title: Text(l10n.noFolder),
@@ -233,11 +246,6 @@ Future<String?> showFolderPickSheet(
                 selected: currentFolderId == folder.id,
                 onTap: () => Navigator.pop(sheetContext, folder.id),
               ),
-            ListTile(
-              leading: const Icon(Icons.create_new_folder_outlined),
-              title: Text(l10n.newFolder),
-              onTap: () => Navigator.pop(sheetContext, newSentinel),
-            ),
           ],
         ),
       ),

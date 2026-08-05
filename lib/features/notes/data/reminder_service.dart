@@ -4,7 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/data/latest_all.dart' as tz_data;
+// 10 yıllık pencere yeter: tam IANA veritabanının yarısından küçük ve
+// initializeTimeZones ilk dashboard karesinde SENKRON ayrıştırılıyor —
+// hatırlatıcılar zaten en fazla birkaç ay ileriye kurulur.
+import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../app/router.dart';
@@ -188,9 +191,12 @@ class ReminderService {
           ),
           windows: WindowsNotificationDetails(),
         ),
-        // Kesin alarm: "inexact" modda Android bildirimi toplu işe alıp
-        // dakikalarca geciktiriyordu (bkz. manifest'teki USE_EXACT_ALARM).
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        // BİLEREK inexact (hatırlatıcılardan farklı): sabah brifingi birkaç
+        // dakika kaysa kimse fark etmez; exact alarm hem her sabah Doze'u
+        // kırıp pil yakıyor hem de USE_EXACT_ALARM'ın Play politikası
+        // (yalnız alarm/takvim uygulamaları) riskini büyütüyordu. Dakikası
+        // dakikasına çalması gereken NOT hatırlatıcıları exact kalır.
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: 'briefing',
       );

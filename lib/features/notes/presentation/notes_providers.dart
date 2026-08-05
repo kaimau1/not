@@ -194,13 +194,24 @@ class AttachmentsExpandedNotifier extends Notifier<bool> {
   }
 }
 
+/// [duplicateNotesProvider]'ın trigram önbelleği: not içeriği değişmedikçe
+/// kümeler yeniden hesaplanmaz. Ayrı bir autoDispose sağlayıcıda ki harita
+/// örneği, duplicates sağlayıcısı her yeniden çalıştığında (her snapshot)
+/// sıfırlanmasın; ikisi birlikte yaşayıp birlikte ölür.
+final _trigramCacheProvider =
+    Provider.autoDispose<Map<String, (DateTime?, Set<String>)>>((ref) => {});
+
 /// Birbirinin kopyası olan not kümeleri (bkz. [duplicateNoteGroups]).
 ///
 /// Sağlayıcıda: hesap O(n²) ve her çizimde yeniden yapılamaz. Riverpod
 /// sonucu önbelleğe alır, yalnız not listesi değişince yeniden hesaplanır.
-final duplicateNotesProvider = Provider<List<List<Note>>>((ref) {
+///
+/// autoDispose ŞART: kalıcı sürümde AI Hub bir kez açılınca sağlayıcı oturum
+/// boyu abone kalıyor ve kullanıcı BAŞKA bir notta yazarken bile her
+/// snapshot'ta O(n²) kopya taraması dönüyordu. Ekran kapanınca durur.
+final duplicateNotesProvider = Provider.autoDispose<List<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-  return duplicateNoteGroups(notes);
+  return duplicateNoteGroups(notes, trigramCache: ref.watch(_trigramCacheProvider));
 });
 
 /// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
@@ -300,6 +311,40 @@ class SearchQueryNotifier extends Notifier<String> {
   String build() => '';
 
   void set(String value) => state = value;
+}
+
+/// [searchQueryProvider]'ın GECİKTİRİLMİŞ kopyası — süzme ve anlamsal arama
+/// bunu izler, arama KUTUSU anlık olanı.
+///
+/// Kutu her tuş vuruşunda sorguyu güncelliyor; süzme doğrudan onu izleseydi
+/// (eskiden öyleydi) her karakter tüm notların taranmasını, anlamsal modda da
+/// AYRI BİR EMBEDDING HTTP İSTEĞİNİ tetiklerdi — 17 karakterlik bir arama 15
+/// ağ isteği demekti (radyoyu her seferinde uyandırdığı için pil de yiyor).
+/// Kullanıcı yazmayı bıraktıktan sonra tek güncelleme düşer; temizlenen sorgu
+/// beklemeden yansır ki ekran anında normale dönsün.
+final debouncedSearchQueryProvider =
+    NotifierProvider<DebouncedSearchQueryNotifier, String>(
+      DebouncedSearchQueryNotifier.new,
+    );
+
+class DebouncedSearchQueryNotifier extends Notifier<String> {
+  static const _delay = Duration(milliseconds: 350);
+
+  Timer? _timer;
+
+  @override
+  String build() {
+    ref.onDispose(() => _timer?.cancel());
+    ref.listen(searchQueryProvider, (_, next) {
+      _timer?.cancel();
+      if (next.trim().isEmpty) {
+        state = next;
+        return;
+      }
+      _timer = Timer(_delay, () => state = next);
+    });
+    return ref.read(searchQueryProvider);
+  }
 }
 
 final noteFilterProvider = NotifierProvider<NoteFilterNotifier, NoteFilter>(
@@ -423,7 +468,9 @@ final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
 /// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
-  final query = ref.watch(searchQueryProvider).trim().toLowerCase();
+  // Geciktirilmiş sorgu: her tuş vuruşunda tüm notları taramamak için
+  // (bkz. debouncedSearchQueryProvider).
+  final query = ref.watch(debouncedSearchQueryProvider).trim().toLowerCase();
   final filter = ref.watch(noteFilterProvider);
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);

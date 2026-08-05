@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 /// PDF'ten düz metin çıkarır. `pdfrx` zaten görüntüleyici için kurulu —
@@ -41,7 +42,19 @@ class PdfText {
   /// PDF metni ham haliyle okutulunca kulağa berbat gelir: "Sayfa 12 / 47"
   /// sesli okunur, tirelenmiş kelimeler ikiye bölünür, her sayfada aynı
   /// başlık tekrarlanır. Bunlar temizlenmezse ses kaydı dinlenmez olur.
-  static String cleanForSpeech(String raw) {
+  ///
+  /// Büyük belgede compute() izolesinde çalışır: 300 sayfalık PDF ~15k satır
+  /// eder ve çok geçişli regex ana izolede yüzlerce ms kare düşürüyordu.
+  /// Küçük metinde izole kurulumu işin kendisinden pahalı — eşik altı yerinde
+  /// çalışır. (Saf String → String; testler senkron çekirdeği kullanır.)
+  static Future<String> cleanForSpeech(String raw) async {
+    const isolateThreshold = 20000;
+    if (raw.length < isolateThreshold) return cleanForSpeechSync(raw);
+    return compute(cleanForSpeechSync, raw);
+  }
+
+  @visibleForTesting
+  static String cleanForSpeechSync(String raw) {
     // 1) Satır sonu tirelemesi: "kelime-\nnin" → "kelimenin".
     //    Tire İKİ YANDAN da harfe bitişik olmalı; yoksa "- 13 -\n14" gibi
     //    süsleme satırları da birleşiyor ve sayfa numarası tespiti bozuluyordu

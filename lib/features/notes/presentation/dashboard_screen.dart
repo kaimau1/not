@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -621,13 +622,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final background = ref.watch(dashboardBackgroundProvider);
     final path = background.path;
     if (path == null) return const [];
-    final file = File(path);
-    if (!file.existsSync()) return const [];
+    // Önbellekli varlık denetimi: build her tuş vuruşunda çalışıyor, senkron
+    // stat her seferinde ödenmesin. Çözünürlük ekran genişliğiyle sınırlı —
+    // sınırsız decode tam boy bitmap'i bellekte tutuyordu.
+    if (!localFileExists(path)) return const [];
+    final targetWidth =
+        (MediaQuery.sizeOf(context).width *
+                MediaQuery.devicePixelRatioOf(context))
+            .round();
     return [
       Positioned.fill(
         child: Opacity(
           opacity: background.opacity.clamp(0.05, 1),
-          child: Image(image: FileImage(file), fit: BoxFit.cover),
+          child: Image(
+            image: ResizeImage(FileImage(File(path)), width: targetWidth),
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     ];
@@ -659,7 +669,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
 
     final l10n = context.l10n;
-    final query = ref.watch(searchQueryProvider);
+    // Geciktirilmiş sorgu: anlamsal arama her tuş vuruşunda ayrı bir
+    // embedding HTTP isteği atmasın (bkz. debouncedSearchQueryProvider).
+    final query = ref.watch(debouncedSearchQueryProvider);
     final semanticActive =
         ref.watch(semanticSearchEnabledProvider) && query.trim().length > 2;
     final notesAsync = semanticActive
@@ -1295,19 +1307,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         final note = items[index];
-        final focused = ref.watch(focusedNoteProvider) == note.id;
-        return _FocusHalo(
-          focused: focused,
-          noteId: note.id,
-          child: GestureDetector(
-            onLongPress: () =>
-                ref.read(selectedNoteIdsProvider.notifier).toggle(note.id),
-            child: NoteListRow(
-              note: note,
-              selected: ref.watch(selectedNoteIdsProvider).contains(note.id),
-              selectionActive: selectionActive,
-            ),
-          ),
+        // Consumer + select: vurgu/seçim değişince yalnız İLGİLİ satır
+        // yeniden çizilsin — ekranın ref'i izleseydi 4 sn'lik vurgu döngüsü
+        // ve her seçim tüm dashboard'u yeniden kurar (eskiden kuruyordu).
+        return Consumer(
+          builder: (context, cellRef, _) {
+            final focused = cellRef.watch(
+              focusedNoteProvider.select((id) => id == note.id),
+            );
+            final selected = cellRef.watch(
+              selectedNoteIdsProvider.select((s) => s.contains(note.id)),
+            );
+            return _FocusHalo(
+              focused: focused,
+              noteId: note.id,
+              child: GestureDetector(
+                onLongPress: () => cellRef
+                    .read(selectedNoteIdsProvider.notifier)
+                    .toggle(note.id),
+                child: NoteListRow(
+                  note: note,
+                  selected: selected,
+                  selectionActive: selectionActive,
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -1321,12 +1346,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final note = items[index];
         // Asistanın dokunduğu not: kart kısa süre vurgulanır ve görünür alana
         // kaydırılır (bkz. focusedNoteProvider). Anahtar, kaydırma için
-        // kartın bağlamını bulmaya yarar.
-        final focused = ref.watch(focusedNoteProvider) == note.id;
-        final card = _FocusHalo(
-          focused: focused,
-          noteId: note.id,
-          child: NoteCard(note: note, highlightQuery: query),
+        // kartın bağlamını bulmaya yarar. Consumer + select: vurgu değişince
+        // tüm dashboard değil yalnız ilgili hücre yeniden çizilir.
+        final card = Consumer(
+          builder: (context, cellRef, _) {
+            final focused = cellRef.watch(
+              focusedNoteProvider.select((id) => id == note.id),
+            );
+            return _FocusHalo(
+              focused: focused,
+              noteId: note.id,
+              child: NoteCard(note: note, highlightQuery: query),
+            );
+          },
         );
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);

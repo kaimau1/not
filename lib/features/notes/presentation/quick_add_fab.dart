@@ -135,7 +135,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   context.l10n.newPhotoNote,
                   widget.onPhotoNote,
                 ),
-                if (DocumentScan.supported)
+                if (DocumentScan.available)
                   (
                     Icons.document_scanner_outlined,
                     context.l10n.newScanNote,

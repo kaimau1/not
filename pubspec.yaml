@@ -59,6 +59,10 @@ dependencies:
   # düzeltme, kontrast) sarar. Android/iOS eklentisi var, Windows'ta YOK —
   # DocumentScan.supported false döner ve menüde hiç görünmez.
   cunning_document_scanner: ^1.2.3
+  # Cihaz-içi OCR (ML Kit, Latin — Türkçe dahil): taranan sayfalara görünmez
+  # metin katmanı (aranabilir PDF) ve akıllı belge adı için. İnternet gerekmez,
+  # AI kotası harcamaz. Android/iOS; masaüstünde ScanOcr.supported false döner.
+  google_mlkit_text_recognition: ^0.15.0
   # Görüntülü not oynatma (yalnız cihazda saklanan videolar).
   video_player: ^2.9.2
   file_selector: ^1.1.0

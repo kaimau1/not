@@ -6,14 +6,14 @@ import 'package:notlar/features/notes/data/pdf_text.dart';
 void main() {
   test('Satır sonu tirelemesi birleştirilir', () {
     expect(
-      PdfText.cleanForSpeech('kelime-\nnin sonu'),
+      PdfText.cleanForSpeechSync('kelime-\nnin sonu'),
       'kelimenin sonu',
     );
   });
 
   test('Yalnız sayfa numarası olan satırlar atılır', () {
     const raw = 'Giriş metni\n12\n- 13 -\n14 / 47\nDevam metni';
-    expect(PdfText.cleanForSpeech(raw), 'Giriş metni\nDevam metni');
+    expect(PdfText.cleanForSpeechSync(raw), 'Giriş metni\nDevam metni');
   });
 
   test('Her sayfada tekrarlayan üstbilgi atılır', () {
@@ -26,7 +26,7 @@ void main() {
       header,
       'Üçüncü sayfa içeriği',
     ].join('\n');
-    final cleaned = PdfText.cleanForSpeech(raw);
+    final cleaned = PdfText.cleanForSpeechSync(raw);
     expect(cleaned.contains(header), isFalse);
     expect(cleaned.contains('Birinci sayfa içeriği'), isTrue);
     expect(cleaned.contains('Üçüncü sayfa içeriği'), isTrue);
@@ -35,11 +35,11 @@ void main() {
   test('İki kez geçen uzun cümle KORUNUR (üstbilgi değil)', () {
     // 3 tekrar eşiği: gerçek içerik iki kez geçebilir, silinmemeli.
     const line = 'Bu cümle içerikte iki kez geçiyor.';
-    final cleaned = PdfText.cleanForSpeech('$line\nAra metin\n$line');
+    final cleaned = PdfText.cleanForSpeechSync('$line\nAra metin\n$line');
     expect(line.allMatches(cleaned).length, 2);
   });
 
   test('Boş girdi boş döner', () {
-    expect(PdfText.cleanForSpeech('   \n\n  '), '');
+    expect(PdfText.cleanForSpeechSync('   \n\n  '), '');
   });
 }

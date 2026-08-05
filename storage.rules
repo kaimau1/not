@@ -6,6 +6,12 @@ service firebase.storage {
     // create/update: en fazla 50 MB (premium tavanı) ve yalnızca uygulamanın
     // yüklediği türler (görsel/PDF/ses) — keyfi dosya barındırma kapalı.
     // Ücretsiz 10 MB sınırı uygulama tarafında; sunucu tek tavan (50 MB) tutar.
+    //
+    // TOPLAM kota (kullanıcı başına 50 MB / 2 GB) BURADA ZORLANAMAZ: Storage
+    // kuralları bucket kullanımını toplayamaz/sayamaz. İstemci tavanı
+    // AttachmentRepository uygular; sunucu tarafı zorlama Cloud Function
+    // (finalize tetikleyicisi + Firestore sayaç) ister — Play Billing öncesi
+    // yapılacaklar listesinde (bkz. KALANLAR).
     // delete AYRI tutulur: request.resource silmede null olduğundan boyut
     // koşulu delete'e de uygulanırsa kullanıcı kendi ekini SİLEMEZ
     // (eski kuralın yetim dosya bırakan açığı buydu).

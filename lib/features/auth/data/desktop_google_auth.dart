@@ -45,10 +45,10 @@ class DesktopGoogleAuth implements AuthRepository {
       await windowManager.focus();
     } catch (_) {}
 
-    if (tokens.refreshToken != null) {
-      await _tokenStore.saveRefreshToken(tokens.refreshToken!);
-      await _tokenStore.saveGrantedScopes(tokens.grantedScopes);
-    }
+    // Refresh token artık İSTENMİYOR ve saklanmıyor (bkz. DesktopOAuthFlow —
+    // hiçbir yer okumuyordu). signOut'taki clear() eski sürümlerin diske
+    // yazdığı token'ı da temizlemeye devam ediyor.
+    await _tokenStore.saveGrantedScopes(tokens.grantedScopes);
 
     return GoogleAuthProvider.credential(
       idToken: tokens.idToken,

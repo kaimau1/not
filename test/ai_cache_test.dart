@@ -51,7 +51,7 @@ void main() {
       final file = File('${dir.path}/entry_$i.txt')..writeAsStringSync('$i');
       file.setLastModifiedSync(DateTime(2026, 1, 1).add(Duration(days: i)));
     }
-    AiCache.prune(dir);
+    await AiCache.prune(dir);
 
     final remaining = dir
         .listSync()
@@ -71,7 +71,7 @@ void main() {
     for (var i = 0; i < 3; i++) {
       File('${dir.path}/k_$i.txt').writeAsStringSync('$i');
     }
-    AiCache.prune(dir);
+    await AiCache.prune(dir);
     expect(dir.listSync().whereType<File>().length, 3);
   });
 }

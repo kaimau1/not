@@ -13,6 +13,10 @@ import 'package:path_provider/path_provider.dart';
 /// Firestore yerine cihaza yazılıyor çünkü (1) podcast metni 20-50 KB tutuyor
 /// ve nota gömülseydi her not düzenlemesinde yeniden senkronlanırdı,
 /// (2) "Belge oku" akışının bağlı olduğu bir not yok.
+///
+/// KİLİTLİ nottan türeyen çıktılar buraya YAZILMAZ (çağıranlar cacheKey'i
+/// null geçer): dosyalar düz metin ve kilidin amacı içeriğin diskte açıkta
+/// dolaşmaması.
 abstract final class AiCache {
   /// Üstünde tutulacak dosya sayısı. Metin küçük ama sınırsız büyüyen bir
   /// önbellek cihazda yıllar içinde birikir.
@@ -21,6 +25,10 @@ abstract final class AiCache {
   /// Testler gerçek uygulama klasörüne yazmasın diye.
   @visibleForTesting
   static Directory? overrideDir;
+
+  /// Budama oturum başına bir kez yeter: her yazımda klasörü listeleyip her
+  /// dosyayı stat'lamak (ana izolede senkron sistem çağrıları) israftı.
+  static bool _prunedThisSession = false;
 
   /// Girdi bir belgenin tamamı kadar uzun olabildiğinden anahtar özetlenir.
   /// Tür uzunluk önekiyle yazılıyor: düz birleştirme olsaydı ('a','bc') ile
@@ -38,12 +46,12 @@ abstract final class AiCache {
 
   static Future<String?> read(String key) async {
     final file = File(p.join((await _dir()).path, '$key.txt'));
-    if (!file.existsSync()) return null;
     try {
+      if (!await file.exists()) return null;
       // Erişim tazelenir ki budama sık kullanılanı değil gerçekten eskiyeni
       // atsın.
-      file.setLastModifiedSync(DateTime.now());
-      return file.readAsStringSync();
+      await file.setLastModified(DateTime.now());
+      return await file.readAsString();
     } on FileSystemException {
       return null;
     }
@@ -52,27 +60,39 @@ abstract final class AiCache {
   static Future<void> write(String key, String value) async {
     final dir = await _dir();
     try {
-      File(p.join(dir.path, '$key.txt')).writeAsStringSync(value, flush: true);
+      await File(
+        p.join(dir.path, '$key.txt'),
+      ).writeAsString(value, flush: true);
     } on FileSystemException {
       // Önbellek yazılamadıysa özellik yine çalışır, sadece yavaşlar.
       return;
     }
-    prune(dir);
+    if (_prunedThisSession) return;
+    _prunedThisSession = true;
+    await prune(dir);
   }
 
-  /// [maxEntries] üstünü en eskiden başlayarak atar.
+  /// [maxEntries] üstünü en eskiden başlayarak atar. Her dosya BİR KEZ
+  /// stat'lanır — eskiden stat, sıralama karşılaştırıcısının içindeydi
+  /// (O(n log n) senkron sistem çağrısı).
   @visibleForTesting
-  static void prune(Directory dir) {
-    final files = dir.listSync().whereType<File>().toList();
-    if (files.length <= maxEntries) return;
-    files.sort(
-      (a, b) => a.statSync().modified.compareTo(b.statSync().modified),
-    );
-    for (final file in files.take(files.length - maxEntries)) {
+  static Future<void> prune(Directory dir) async {
+    final files = <(File, DateTime)>[];
+    await for (final entry in dir.list()) {
+      if (entry is! File) continue;
       try {
-        file.deleteSync();
+        files.add((entry, (await entry.stat()).modified));
       } on FileSystemException {
-        // Kilitliyse bir dahaki yazımda tekrar denenir.
+        // Stat edilemeyen dosya budamaya girmez.
+      }
+    }
+    if (files.length <= maxEntries) return;
+    files.sort((a, b) => a.$2.compareTo(b.$2));
+    for (final (file, _) in files.take(files.length - maxEntries)) {
+      try {
+        await file.delete();
+      } on FileSystemException {
+        // Kilitliyse bir dahaki budamada tekrar denenir.
       }
     }
   }

@@ -18,6 +18,7 @@ import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_provider.dart';
@@ -1138,7 +1139,13 @@ class _DashboardBackgroundTile extends ConsumerWidget {
       if (file == null) return;
       bytes = await file.readAsBytes();
     } else {
-      final file = await ImagePicker().pickImage(source: ImageSource.gallery);
+      // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
+      // boşuna bellek (bkz. editördeki aynı tavan).
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 2400,
+        maxHeight: 2400,
+      );
       if (file == null) return;
       bytes = await file.readAsBytes();
     }
@@ -1667,19 +1674,26 @@ class _BuiltInAiStatus extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: scheme.primary),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+      // Satır artık Premium sayfasına götürüyor: kota/puan farkının ne
+      // kazandırdığı hiçbir yerde anlatılmıyordu (premium çalışması).
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => context.push('/premium'),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: scheme.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                text,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
             ),
-          ),
-        ],
+            Icon(Icons.chevron_right, size: 16, color: scheme.onSurfaceVariant),
+          ],
+        ),
       ),
     );
   }
@@ -2348,8 +2362,14 @@ class _BackupButton extends ConsumerWidget {
     'archivedAt': n.archivedAt?.toIso8601String(),
     'reminderAt': n.reminderAt?.toIso8601String(),
     'attachments': [
+      // BİLEREK storagePath, downloadUrl DEĞİL: downloadUrl içindeki
+      // `?token=` Storage kurallarını atlayan, süresi dolmayan bir anahtardır.
+      // Yedek dosyası e-posta/bulut diskle elden ele dolaşır; URL yazılsaydı
+      // yedeği gören herkes kullanıcının tüm eklerine oturum açmadan süresiz
+      // erişirdi. storagePath tek başına işe yaramaz (kural denetiminden
+      // geçer); geri yükleme ekleri zaten atlıyor (bkz. _RestoreButton).
       for (final a in n.attachments)
-        {'fileName': a.fileName, 'kind': a.kind.name, 'url': a.downloadUrl},
+        {'fileName': a.fileName, 'kind': a.kind.name, 'path': a.storagePath},
     ],
   };
 
@@ -2358,6 +2378,13 @@ class _BackupButton extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final notes = ref.read(notesStreamProvider).value;
     if (notes == null) return;
+    // Kilitli not varsa dışa aktarma kimlik ister: yedek, kilitli notların
+    // gövdesini DÜZ METİN taşır — kapı yalnız ekran geçişinde kalsaydı kilit
+    // buradan boşaltılabilirdi (locked bayrağı yedekte yine de yazılıdır).
+    if (notes.any((n) => n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
     try {
       final payload = const JsonEncoder.withIndent('  ').convert({
         'app': 'notlar',

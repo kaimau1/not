@@ -11,7 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:path_provider/path_provider.dart';
+
 import 'app/app.dart';
+import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/settings/settings_providers.dart';
 import 'firebase_options.dart';
@@ -68,23 +71,12 @@ Future<void> main() async {
     );
   }
 
-  if (!kIsWeb && Platform.isAndroid) {
-    // Yüksek yenileme hızlı ekranlarda (120/144/165 Hz) en yüksek modu iste.
-    try {
-      await FlutterDisplayMode.setHighRefreshRate();
-    } catch (_) {
-      // Desteklenmeyen cihazlarda sessizce geç.
-    }
-  }
-
   if (!DefaultFirebaseOptions.isConfigured) {
     runApp(const SetupRequiredApp());
     return;
   }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  await _activateAppCheck();
 
   // Offline-first: yerel önbellek her platformda açık ve sınırsız.
   FirebaseFirestore.instance.settings = const Settings(
@@ -94,10 +86,34 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
+  // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
+  // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür
+  // (birkaç ms; ilk not ayrıştırılmadan hazır olmalı).
+  if (!kIsWeb) {
+    try {
+      appSupportPath = (await getApplicationSupportDirectory()).path;
+    } catch (_) {
+      // Taban çözülemedi: ekler yalnız buluttan gösterilir, uygulama çalışır.
+    }
+  }
+
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       child: const NotlarApp(),
     ),
   );
+
+  // İlk kareyi GEÇİKTİRMEYEN kurulumlar runApp'ten sonra yapılır:
+  // - App Check: Play Integrity turu 300-1500 ms sürebiliyor ve zorlama
+  //   kapalıyken hiçbir istek token'ın hazır olmasını beklemiyor; açılışı
+  //   bloklamasının hiçbir getirisi yoktu.
+  // - Yüksek yenileme hızı: ilk kareyi etkilemez; bazı OEM'ler Flutter'ı
+  //   60 Hz'e sabitlediği için istek yine de gerekli.
+  unawaited(_activateAppCheck());
+  if (!kIsWeb && Platform.isAndroid) {
+    unawaited(
+      FlutterDisplayMode.setHighRefreshRate().catchError((Object _) {}),
+    );
+  }
 }

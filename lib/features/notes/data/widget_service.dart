@@ -98,9 +98,12 @@ class WidgetService {
 
   Future<void> _update(List<Note> notes) async {
     try {
+      // Kilitli notlar widget'a HİÇ çıkmaz: biyometrik kilitli notun ilk
+      // satırı, telefon kilitliyken bile ana ekranda okunabiliyordu (uygulama
+      // içinde kilitliyi ayıklayan diğer yüzeylerle aynı kural).
       final active = [
         for (final n in notes)
-          if (n.archivedAt == null) n,
+          if (n.archivedAt == null && !n.locked) n,
       ];
       // Başlıklar SADE gönderilir: madde imi ("• ") ve "not yok" metni artık
       // Android tarafının işi — her başlık kendi kart görünümüne düşüyor

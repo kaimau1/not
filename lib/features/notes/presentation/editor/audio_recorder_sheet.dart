@@ -64,7 +64,11 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
         path: _path!,
       );
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (mounted) setState(() => _elapsed += const Duration(seconds: 1));
+        if (!mounted) return;
+        setState(() => _elapsed += const Duration(seconds: 1));
+        // Üst sınır: levha açık unutulursa mikrofon + kodlayıcı süresiz
+        // çalışmasın; o ana kadarki kayıt KAYDEDİLEREK kapanır.
+        if (_elapsed >= const Duration(minutes: 10)) _stop(save: true);
       });
     } catch (e) {
       if (mounted) setState(() => _error = e.toString());
