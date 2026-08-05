@@ -139,12 +139,26 @@ class NotesRepository {
       .doc(uid)
       .collection(AppConstants.notesCollection);
 
-  Stream<List<Note>> watchNotes() =>
-      _notes.where('deletedAt', isNull: true).snapshots().map((snapshot) {
-        final notes = [for (final doc in snapshot.docs) Note.fromDoc(doc)];
-        notes.sort(_compare);
-        return notes;
-      });
+  /// ARTIMLI ayrıştırma: her snapshot'ta yalnız değişen dokümanlar
+  /// `Note.fromDoc`tan geçer. Editörde yazarken 3 sn'de bir snapshot düşer;
+  /// eskiden her seferinde TÜM koleksiyon (items + attachments + zaman
+  /// damgaları) yeniden ayrıştırılıyordu — maliyet nota değil koleksiyona
+  /// orantılıydı. Önbellek akış (dolayısıyla oturum/uid) başına birdir;
+  /// ilk snapshot'ta tüm dokümanlar "added" olarak gelir ve haritayı doldurur.
+  Stream<List<Note>> watchNotes() {
+    final cache = <String, Note>{};
+    return _notes.where('deletedAt', isNull: true).snapshots().map((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.removed) {
+          cache.remove(change.doc.id);
+        } else {
+          cache[change.doc.id] = Note.fromDoc(change.doc);
+        }
+      }
+      final notes = cache.values.toList()..sort(_compare);
+      return notes;
+    });
+  }
 
   /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
   /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).

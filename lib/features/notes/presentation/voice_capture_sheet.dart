@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -915,10 +916,14 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
 /// Dalga çubukları.
 ///
-/// TEK ticker, 24 çubuk: her çubuğun kendi `AnimationController`ı olsaydı 24
-/// denetleyici dönerdi. Bunun yerine geçen süre tek yerden okunur ve her
-/// çubuğun ölçeği kendi periyodundan (560 + i·41 ms) hesaplanır — tasarımdaki
-/// kayan dalga etkisi aynen çıkar, maliyeti tek ticker.
+/// TEK ticker, TEK CustomPaint: her çubuğun kendi `AnimationController`ı
+/// olsaydı 24 denetleyici dönerdi. Eskiden tek ticker vardı ama her vsync'te
+/// `setState` 24 Expanded/FractionallySizedBox/DecoratedBox'lık alt ağacı
+/// yeniden KURUYORDU — mikrofon zaten açıkken (en pahalı durum) kare başına
+/// boşuna widget işi. Artık ticker bir ValueNotifier'ı besliyor ve yalnız
+/// painter yeniden ÇİZİYOR; widget ağacına hiç dokunulmuyor. Her çubuğun
+/// ölçeği kendi periyodundan (560 + i·41 ms) hesaplanır — tasarımdaki kayan
+/// dalga etkisi aynen çıkar.
 class _Waveform extends StatefulWidget {
   const _Waveform({required this.active, required this.scheme});
 
@@ -931,17 +936,15 @@ class _Waveform extends StatefulWidget {
 
 class _WaveformState extends State<_Waveform>
     with SingleTickerProviderStateMixin {
-  static const _barCount = 24;
-
   late final Ticker _ticker;
-  Duration _elapsed = Duration.zero;
+  final _elapsed = ValueNotifier<Duration>(Duration.zero);
 
   @override
   void initState() {
     super.initState();
     _ticker = createTicker((elapsed) {
       if (!widget.active) return;
-      setState(() => _elapsed = elapsed);
+      _elapsed.value = elapsed;
     });
     if (widget.active) _ticker.start();
   }
@@ -953,12 +956,16 @@ class _WaveformState extends State<_Waveform>
       _ticker.start();
     } else if (!widget.active && _ticker.isActive) {
       _ticker.stop();
+      // Durunca çubuklar bekleme yüksekliğine insin (painter active'e bakar;
+      // notifier'ı dürtmek son bir çizim tetikler).
+      _elapsed.value = Duration.zero;
     }
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _elapsed.dispose();
     super.dispose();
   }
 
@@ -966,37 +973,62 @@ class _WaveformState extends State<_Waveform>
   Widget build(BuildContext context) {
     return SizedBox(
       height: 48,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          for (var i = 0; i < _barCount; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            Expanded(
-              child: FractionallySizedBox(
-                heightFactor: _factor(i),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: widget.active
-                        ? widget.scheme.primary
-                        : widget.scheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
+      width: double.infinity,
+      child: CustomPaint(
+        painter: _WaveformPainter(
+          elapsed: _elapsed,
+          active: widget.active,
+          color: widget.active
+              ? widget.scheme.primary
+              : widget.scheme.outlineVariant,
+        ),
       ),
     );
   }
+}
+
+class _WaveformPainter extends CustomPainter {
+  _WaveformPainter({
+    required this.elapsed,
+    required this.active,
+    required this.color,
+  }) : super(repaint: elapsed);
+
+  static const _barCount = 24;
+  static const _gap = 4.0;
+
+  final ValueListenable<Duration> elapsed;
+  final bool active;
+  final Color color;
 
   /// Dinleme bitince çubuklar %16'ya iner ve durur.
   double _factor(int index) {
-    if (!widget.active) return 0.16;
+    if (!active) return 0.16;
     final period = 560 + index * 41;
-    final phase = (_elapsed.inMilliseconds % period) / period;
+    final phase = (elapsed.value.inMilliseconds % period) / period;
     // .32 → 1 → .32 arası yumuşak gidiş geliş.
     return 0.32 + 0.68 * (0.5 - 0.5 * math.cos(2 * math.pi * phase));
   }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final barWidth = (size.width - _gap * (_barCount - 1)) / _barCount;
+    if (barWidth <= 0) return;
+    for (var i = 0; i < _barCount; i++) {
+      final height = size.height * _factor(i);
+      final left = i * (barWidth + _gap);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(left, (size.height - height) / 2, barWidth, height),
+          const Radius.circular(3),
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WaveformPainter old) =>
+      old.active != active || old.color != color || old.elapsed != elapsed;
 }

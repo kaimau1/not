@@ -301,8 +301,19 @@ class VoiceAssistantController extends Notifier<VoiceAssistantState> {
           audioBytes: audio,
           mimeType: mimeType,
           onToolCall: (name, args) async {
+            // Sesli akış eller serbest çalışır, onay kutusu gösterilemez;
+            // yıkıcı silme burada HİÇ çalışmaz (sohbette onayla çalışıyor).
+            // Not içeriğinden gelen bir "talimat" modeli kandırsa bile sesli
+            // yoldan not silinemez.
+            if (name == 'delete_note') {
+              return {
+                'status': 'error',
+                'message':
+                    'Sesli akışta not silinmez; silme sohbetten onayla yapılır',
+              };
+            }
             final result = await assistant.execute(name, args);
-            if (name != 'delete_note' && result['noteId'] is String) {
+            if (result['noteId'] is String) {
               resultNoteId = result['noteId'] as String;
             }
             return result;

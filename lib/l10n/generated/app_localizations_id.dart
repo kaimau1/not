@@ -467,6 +467,11 @@ class AppLocalizationsId extends AppLocalizations {
       'Catatan ini akan dihapus permanen. Anda yakin?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'Rekaman suara';
 
   @override

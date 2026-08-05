@@ -38,11 +38,16 @@ class ChatController extends Notifier<ChatState> {
   /// yok, yerelleştirmeyi çağıran ekran çözer.
   /// [historyLabel] "SON İŞLEMLER" listesine yazılacak ad ("Soru"). Metnin
   /// KENDİSİ yazılmaz — geçmişte kişisel veri tutulmuyor (bkz. AiHistory).
+  /// [confirmDelete] verilirse `delete_note` aracı çalışmadan ÖNCE kullanıcıya
+  /// sorulur (başlıkla). Not içeriği güvenilmez kaynaklardan gelebiliyor
+  /// (paylaşım, OCR, PDF); istemdeki ayraçlara ek ikinci savunma katmanı —
+  /// model kandırılsa bile silme onaysız gerçekleşmez.
   Future<void> send(
     String text, {
     required String noApiKeyText,
     required String Function(String) errorText,
     String? historyLabel,
+    Future<bool> Function(String noteTitle)? confirmDelete,
   }) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty || state.busy) return;
@@ -60,6 +65,23 @@ class ChatController extends Notifier<ChatState> {
             notesContext: assistant.buildNotesContext(notes),
             history: List.of(state.turns),
             onToolCall: (name, args) async {
+              if (name == 'delete_note' && confirmDelete != null) {
+                final noteId = args['noteId'] as String? ?? '';
+                final title = notes
+                    .where((n) => n.id == noteId)
+                    .map((n) => n.title.trim())
+                    .firstOrNull;
+                final approved = await confirmDelete(
+                  (title == null || title.isEmpty) ? noteId : title,
+                );
+                if (!approved) {
+                  // Model bunu yanıtında kullanıcıya aktarır; işlem yapılmadı.
+                  return {
+                    'status': 'cancelled',
+                    'message': 'Kullanıcı silme işlemini onaylamadı',
+                  };
+                }
+              }
               final result = await assistant.execute(name, args);
               if (name != 'delete_note' && result['noteId'] is String) {
                 createdNoteId = result['noteId'] as String;

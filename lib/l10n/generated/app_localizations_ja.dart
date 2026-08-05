@@ -461,6 +461,11 @@ class AppLocalizationsJa extends AppLocalizations {
   String get deleteForeverConfirm => 'このメモは完全に削除されます。よろしいですか？';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => '音声録音';
 
   @override

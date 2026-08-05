@@ -464,6 +464,11 @@ class AppLocalizationsTr extends AppLocalizations {
       'Bu not kalıcı olarak silinecek. Emin misin?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'Ses kaydı';
 
   @override

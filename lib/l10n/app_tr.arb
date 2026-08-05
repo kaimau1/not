@@ -252,6 +252,12 @@
   "restore": "Geri al",
   "deleteForever": "Kalıcı olarak sil",
   "deleteForeverConfirm": "Bu not kalıcı olarak silinecek. Emin misin?",
+  "assistantDeleteConfirm": "Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?",
+  "@assistantDeleteConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
   "recordAudio": "Ses kaydı",
   "recording": "Kaydediliyor...",
   "stopAndSave": "Bitir ve ekle",

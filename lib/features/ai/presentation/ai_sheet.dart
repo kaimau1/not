@@ -96,6 +96,10 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     NoteType? replaceAsType,
     bool keepChecked = false,
   }) async {
+    // KİLİTLİ notun içeriğinden türeyen çıktı diske yazılmaz: ai_cache düz
+    // metin dosyalarıdır, kilidin sakladığı içerik oradan okunabilirdi.
+    // Tek kapı burada — çağrı yerlerine bırakılsaydı biri unutulurdu.
+    if (widget.note.locked) cacheKey = null;
     _retryAction = () => _run(
       action,
       cacheAsSummary: cacheAsSummary,
@@ -766,6 +770,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                               MaterialPageRoute<void>(
                                 builder: (_) => ListenScreen(
                                   title: pdf.fileName,
+                                  allowCache: !widget.note.locked,
                                   loadText: () async => PdfText.cleanForSpeech(
                                     await PdfText.extract(pdf.localPath),
                                   ),
@@ -826,6 +831,7 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                               MaterialPageRoute<void>(
                                 builder: (_) => ListenScreen(
                                   title: slide.fileName,
+                                  allowCache: !widget.note.locked,
                                   loadText: () async =>
                                       DocText.extract(slide.localPath),
                                 ),

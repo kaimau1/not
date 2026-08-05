@@ -18,6 +18,7 @@ import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/ai_provider.dart';
@@ -2370,6 +2371,13 @@ class _BackupButton extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final notes = ref.read(notesStreamProvider).value;
     if (notes == null) return;
+    // Kilitli not varsa dışa aktarma kimlik ister: yedek, kilitli notların
+    // gövdesini DÜZ METİN taşır — kapı yalnız ekran geçişinde kalsaydı kilit
+    // buradan boşaltılabilirdi (locked bayrağı yedekte yine de yazılıdır).
+    if (notes.any((n) => n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
     try {
       final payload = const JsonEncoder.withIndent('  ').convert({
         'app': 'notlar',

@@ -11,7 +11,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:path_provider/path_provider.dart';
+
 import 'app/app.dart';
+import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/settings/settings_providers.dart';
 import 'firebase_options.dart';
@@ -82,6 +85,17 @@ Future<void> main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
+
+  // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
+  // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür
+  // (birkaç ms; ilk not ayrıştırılmadan hazır olmalı).
+  if (!kIsWeb) {
+    try {
+      appSupportPath = (await getApplicationSupportDirectory()).path;
+    } catch (_) {
+      // Taban çözülemedi: ekler yalnız buluttan gösterilir, uygulama çalışır.
+    }
+  }
 
   runApp(
     ProviderScope(

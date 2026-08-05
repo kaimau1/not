@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
+
 /// build() sıcak yolundaki dosya-varlığı denetimleri için süreç ömürlü
 /// önbellek.
 ///
@@ -24,3 +26,29 @@ bool localFileExists(String path) {
 
 /// Dosyayı silen yol, önbellekteki "var" kaydını da düşürmeli.
 void forgetLocalFile(String path) => _existsCache.remove(path);
+
+/// Uygulama destek klasörü — main() açılışta doldurur (web'de null kalır).
+///
+/// Ekin cihazdaki yolu BURADAN TÜRETİLİR, artık Firestore'a yazılmaz:
+/// mutlak yerel yol (Windows'ta gerçek kullanıcı adını içerir) buluta
+/// senkronlanıyordu ve başka cihazda zaten anlamsızdı. Depo katmanı da aynı
+/// kalıpla yazar (bkz. AttachmentRepository._store):
+/// `<base>/attachments/<noteId>/<ekId>_<dosyaAdı>`.
+String? appSupportPath;
+
+/// [noteId] içindeki [attachmentId] ekinin cihazdaki beklenen yolu; taban
+/// bilinmiyorsa (web, testler) ya da kimlikler boşsa ''.
+String derivedAttachmentPath({
+  required String noteId,
+  required String attachmentId,
+  required String fileName,
+}) {
+  final base = appSupportPath;
+  if (base == null || noteId.isEmpty || attachmentId.isEmpty) return '';
+  return p.join(
+    base,
+    'attachments',
+    noteId,
+    '${attachmentId}_${p.basename(fileName)}',
+  );
+}

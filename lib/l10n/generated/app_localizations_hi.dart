@@ -466,6 +466,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह नोट हमेशा के लिए हटा दिया जाएगा। क्या आप निश्चित हैं?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'आवाज़ रिकॉर्डिंग';
 
   @override

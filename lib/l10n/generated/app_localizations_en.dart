@@ -466,6 +466,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'This note will be permanently deleted. Are you sure?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'The assistant wants to move the note \"$title\" to the trash. Do you approve?';
+  }
+
+  @override
   String get recordAudio => 'Voice recording';
 
   @override

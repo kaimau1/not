@@ -467,6 +467,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Эта заметка будет удалена безвозвратно. Вы уверены?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'Голосовая запись';
 
   @override

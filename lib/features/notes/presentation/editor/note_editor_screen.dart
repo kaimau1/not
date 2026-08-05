@@ -1641,6 +1641,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       MaterialPageRoute<void>(
         builder: (_) => ListenScreen(
           title: title.isEmpty ? context.l10n.appName : title,
+          // Kilitli notun podcast metni de diske yazılmasın.
+          allowCache: !note.locked,
           // toPlainText değil: başlık ve `- [x]` işaretleri okunmasın.
           loadText: () async => note.toContentText(),
         ),

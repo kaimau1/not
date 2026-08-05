@@ -461,6 +461,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get deleteForeverConfirm => '이 메모가 영구히 삭제됩니다. 계속할까요?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => '음성 녹음';
 
   @override

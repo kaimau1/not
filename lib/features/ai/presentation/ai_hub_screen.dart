@@ -11,6 +11,7 @@ import '../../notes/presentation/duplicates_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/ai_gate.dart';
 import '../data/ai_history.dart';
+import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import 'read_document.dart';
 
@@ -50,6 +51,7 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           noApiKeyText: l10n.aiNoApiKey,
           errorText: l10n.aiError,
           historyLabel: l10n.aiHistoryQuestion,
+          confirmDelete: (title) => confirmAssistantDelete(context, title),
         );
   }
 

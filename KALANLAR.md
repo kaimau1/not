@@ -6,20 +6,10 @@
   2026-08-05 denetimi `aiQuota` kurallarını sıkılaştırdı (katı artış + alan
   beyaz listesi + tavan); depoda hazır ama sunucuda eski kural duruyor.
 
-## 2026-08-05 denetiminden ertelenenler (bkz. HAFIZA aynı tarih)
-- [ ] `Attachment.toMap` hâlâ `localPath` yazıyor: mutlak yerel yol (Windows'ta
-  kullanıcı adı içerir) Firestore'a senkronlanıyor. Çözüm cihaz-yerel bir
-  eşleme (attachmentId → path) ister; küçük iş değil.
-- [ ] AI önbelleği (`ai_cache`) düz metin; kilitli nottan türeyen çıktı da
-  düşebilir. Ya kilitliden üretileni yazma ya Keystore ile şifrele.
-- [ ] storage.rules kullanıcı başına TOPLAM kota zorlamıyor (istemci tarafı
-  tavan var). Play Billing'den önce kapatılmalı.
-- [ ] `watchNotes` her snapshot'ta tüm koleksiyonu yeniden ayrıştırıyor;
-  `docChanges` ile artımlı ayrıştırma büyük kazanç ama dikkatli iş.
-- [ ] Ses dalga formu (`voice_capture_sheet._Waveform`) her vsync'te 24
-  widget'lık setState; tek CustomPaint + repaint dinleyicisine indirilebilir.
-- [ ] Asistanın `delete_note`/yıkıcı `update_note` araçları onaysız çalışıyor
-  (softDelete olduğu için critical değil); modal onay eklenebilir.
+## 2026-08-05 denetiminden kalan (bkz. HAFIZA aynı tarih)
+- [ ] storage.rules kullanıcı başına TOPLAM kota zorlayamıyor (kurallar bucket
+  kullanımını sayamaz; istemci tavanı var). Sunucu zorlaması Cloud Function
+  (finalize tetikleyicisi + Firestore sayaç) ister — Play Billing'den önce.
 
 - **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** (bilinçli ertelendi,
   bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.

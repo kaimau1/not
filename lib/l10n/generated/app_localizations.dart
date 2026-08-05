@@ -960,6 +960,12 @@ abstract class AppLocalizations {
   /// **'Bu not kalıcı olarak silinecek. Emin misin?'**
   String get deleteForeverConfirm;
 
+  /// No description provided for @assistantDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?'**
+  String assistantDeleteConfirm(String title);
+
   /// No description provided for @recordAudio.
   ///
   /// In tr, this message translates to:

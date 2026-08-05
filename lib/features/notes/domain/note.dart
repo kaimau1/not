@@ -303,7 +303,11 @@ class Note {
       ],
       attachments: [
         for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
-          Attachment.fromMap(Map<String, dynamic>.from(raw as Map)),
+          // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
+          Attachment.fromMap(
+            Map<String, dynamic>.from(raw as Map),
+            noteId: doc.id,
+          ),
       ],
       tags: [
         for (final tag in (map['tags'] as List<dynamic>? ?? const []))

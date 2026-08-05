@@ -469,6 +469,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Esta nota será eliminada permanentemente. Tem a certeza?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'Gravação de voz';
 
   @override

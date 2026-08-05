@@ -144,6 +144,12 @@
   "restore": "Restore",
   "deleteForever": "Delete permanently",
   "deleteForeverConfirm": "This note will be permanently deleted. Are you sure?",
+  "assistantDeleteConfirm": "The assistant wants to move the note \"{title}\" to the trash. Do you approve?",
+  "@assistantDeleteConfirm": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
   "recordAudio": "Voice recording",
   "recording": "Recording...",
   "stopAndSave": "Finish and add",

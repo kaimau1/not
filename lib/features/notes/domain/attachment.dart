@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../../core/utils/local_file.dart';
+
 enum AttachmentKind {
   image('image'),
   pdf('pdf'),
@@ -278,14 +280,20 @@ class Attachment {
     createdAt: createdAt,
   );
 
-  factory Attachment.fromMap(Map<String, dynamic> map) => Attachment(
+  /// [noteId] verilirse yerel yol cihazda TÜRETİLİR (bkz.
+  /// [derivedAttachmentPath]); belgedeki `localPath` yalnız eski kayıtlar
+  /// için yedek olarak okunur — yeni yazımlar bu alanı hiç içermez.
+  factory Attachment.fromMap(
+    Map<String, dynamic> map, {
+    String? noteId,
+  }) => Attachment(
     id: map['id'] as String? ?? '',
     kind: AttachmentKind.fromId(map['kind'] as String?),
     fileName: map['fileName'] as String? ?? '',
     mimeType: map['mimeType'] as String? ?? '',
     storagePath: map['storagePath'] as String? ?? '',
     downloadUrl: map['downloadUrl'] as String? ?? '',
-    localPath: map['localPath'] as String? ?? '',
+    localPath: _resolveLocalPath(map, noteId),
     sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
     width: (map['width'] as num?)?.toInt(),
     height: (map['height'] as num?)?.toInt(),
@@ -302,6 +310,22 @@ class Attachment {
     createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
   );
 
+  /// Cihazdaki dosyanın var olup olmadığına bakılmaksızın beklenen yerel yol;
+  /// eski belgelerdeki `localPath` alanı yalnız türetilemediğinde kullanılır
+  /// (türetilen yol bu cihaz için her zaman doğrudur, senkronlanan yol ise
+  /// başka bir cihazın yolu olabilir).
+  static String _resolveLocalPath(Map<String, dynamic> map, String? noteId) {
+    if (noteId != null) {
+      final derived = derivedAttachmentPath(
+        noteId: noteId,
+        attachmentId: map['id'] as String? ?? '',
+        fileName: map['fileName'] as String? ?? '',
+      );
+      if (derived.isNotEmpty) return derived;
+    }
+    return map['localPath'] as String? ?? '';
+  }
+
   Map<String, dynamic> toMap() => {
     'id': id,
     'kind': kind.id,
@@ -309,7 +333,10 @@ class Attachment {
     'mimeType': mimeType,
     'storagePath': storagePath,
     'downloadUrl': downloadUrl,
-    'localPath': localPath,
+    // localPath BİLEREK YAZILMIYOR: mutlak cihaz yolu (Windows'ta kullanıcı
+    // adı içerir) buluta senkronlanıyordu, başka cihazda anlamsızdı ve dosya
+    // sistemi işlemlerini yanlış yola yönlendirebiliyordu. Yol artık okuma
+    // sırasında türetiliyor (bkz. _resolveLocalPath).
     'sizeBytes': sizeBytes,
     if (width != null) 'width': width,
     if (height != null) 'height': height,

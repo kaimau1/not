@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../notes/presentation/editor/audio_recorder_sheet.dart';
 import '../data/ai_report.dart';
+import 'assistant_confirm.dart';
 import 'chat_controller.dart';
 import '../data/gemini_service.dart';
 
@@ -48,6 +49,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           noApiKeyText: l10n.aiNoApiKey,
           errorText: l10n.aiError,
           historyLabel: l10n.aiHistoryQuestion,
+          confirmDelete: (title) => confirmAssistantDelete(context, title),
         );
     if (mounted) _scrollToEnd();
   }

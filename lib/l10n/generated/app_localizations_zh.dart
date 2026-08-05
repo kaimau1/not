@@ -459,6 +459,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteForeverConfirm => '这条笔记将被永久删除。确定吗？';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => '语音录制';
 
   @override

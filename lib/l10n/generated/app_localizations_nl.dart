@@ -468,6 +468,11 @@ class AppLocalizationsNl extends AppLocalizations {
       'Deze notitie wordt definitief verwijderd. Weet je het zeker?';
 
   @override
+  String assistantDeleteConfirm(String title) {
+    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+  }
+
+  @override
   String get recordAudio => 'Spraakopname';
 
   @override
