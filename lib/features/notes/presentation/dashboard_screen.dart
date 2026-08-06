@@ -738,8 +738,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   for (final n in list)
                     if ((semanticFolder == null ||
                             n.folderId == semanticFolder) &&
-                        (semanticTag == null ||
-                            n.tags.contains(semanticTag)) &&
+                        (semanticTag == null || n.tags.contains(semanticTag)) &&
                         noteMatchesFilter(n, semanticFilter))
                       n,
                 ],
@@ -1043,7 +1042,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         // Ayırıcı yalnız üstünde madde VARSA:
                                         // ikisi de gizliyken menü bir çizgiyle
                                         // başlıyordu, bozuk görünüyordu.
-                                        if (reorderAvailable || hasHiddenFolders)
+                                        if (reorderAvailable ||
+                                            hasHiddenFolders)
                                           const PopupMenuDivider(),
                                         _menuItem(
                                           'reminders',
@@ -1292,6 +1292,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       canPop: !selectionActive && !reorderActive,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        // "+" paneli açıksa geri tuşu ONUN: Flutter aynı rotadaki tüm
+        // PopScope geri çağrılarını çalıştırıyor, yoksa tek geri hem paneli
+        // hem seçim modunu birden kapatırdı.
+        if (quickAddPanelOpen.value) return;
         if (selectionActive) {
           ref.read(selectedNoteIdsProvider.notifier).clear();
         } else if (reorderActive) {
@@ -1505,14 +1509,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       if (pinned.isEmpty || others.isEmpty) {
         return [
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
-          SliverPadding(padding: gridPadding, sliver: listView ? rows(notes) : grid(notes)),
+          SliverPadding(
+            padding: gridPadding,
+            sliver: listView ? rows(notes) : grid(notes),
+          ),
         ];
       }
       return [
         header(l10n.sectionPinnedShort, pinned.length),
-        SliverPadding(padding: gridPadding, sliver: listView ? rows(pinned) : grid(pinned)),
+        SliverPadding(
+          padding: gridPadding,
+          sliver: listView ? rows(pinned) : grid(pinned),
+        ),
         header(l10n.sectionOthers, others.length),
-        SliverPadding(padding: gridPadding, sliver: listView ? rows(others) : grid(others)),
+        SliverPadding(
+          padding: gridPadding,
+          sliver: listView ? rows(others) : grid(others),
+        ),
       ];
     }
 
@@ -1534,7 +1547,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       for (final (label, list) in buckets)
         if (list.isNotEmpty) ...[
           header(label, list.length),
-          SliverPadding(padding: gridPadding, sliver: listView ? rows(list) : grid(list)),
+          SliverPadding(
+            padding: gridPadding,
+            sliver: listView ? rows(list) : grid(list),
+          ),
         ],
     ];
   }

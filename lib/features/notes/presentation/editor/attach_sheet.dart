@@ -14,11 +14,16 @@ import '../qr_scan_screen.dart';
 /// alanı tamamen yenilenmeli, tek sayfada hepsi görülmeli").
 ///
 /// ŞİMDİ: tek dokunuş → tek levha → her seçenek görünür. İki sütun, iri
-/// dokunma hedefleri; simge + etiket. "Yeni öğe" BURADA YOK: alt çubuğun kendi
-/// liste/metin segmenti zaten aynı işi yapıyordu.
+/// dokunma hedefleri; simge + etiket.
+///
+/// "Metin ekle" / "Liste maddesi ekle" de BURADA (en üstteki bölüm): eskiden
+/// alt çubukta kendi segmentleri vardı, çubuk üç segmentle kalabalıktı ve
+/// "ekleme" işi iki ayrı yere bölünmüştü. Artık eklenen her şey tek kapıdan
+/// geçiyor, çubukta yalnız "Biçim" ve "Ekle" kaldı.
 Future<String?> showAttachSheet(
   BuildContext context, {
   required bool isDesktop,
+  required bool textNote,
   String? copiedAttachmentName,
 }) => showModalBottomSheet<String>(
   context: context,
@@ -33,6 +38,7 @@ Future<String?> showAttachSheet(
   ),
   builder: (sheetContext) => _AttachSheet(
     isDesktop: isDesktop,
+    textNote: textNote,
     copiedAttachmentName: copiedAttachmentName,
   ),
 );
@@ -41,9 +47,19 @@ Future<String?> showAttachSheet(
 typedef _Entry = (String, IconData, String, String?);
 
 class _AttachSheet extends StatelessWidget {
-  const _AttachSheet({required this.isDesktop, this.copiedAttachmentName});
+  const _AttachSheet({
+    required this.isDesktop,
+    required this.textNote,
+    this.copiedAttachmentName,
+  });
 
   final bool isDesktop;
+
+  /// Metin notu mu (true) yoksa liste notu mu — "not içeriği" bölümündeki tek
+  /// seçenek buna göre değişir: metin notuna liste maddesi, liste notuna
+  /// serbest metin eklenir.
+  final bool textNote;
+
   final String? copiedAttachmentName;
 
   @override
@@ -52,10 +68,23 @@ class _AttachSheet extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final copied = copiedAttachmentName;
 
+    // Notun KENDİ içeriğine eklenenler (ek dosya değil): en üstte, tek satır.
+    final content = <_Entry>[
+      if (textNote)
+        ('list-item', Icons.checklist, l10n.editorToolList, null)
+      else
+        ('text-block', Icons.notes, l10n.addTextBlock, null),
+    ];
+
     // GÖRSEL bölümü ile BELGE/DİĞER bölümü ayrı başlıklar altında: on üç
     // seçenek tek yığın hâlinde okunmuyordu.
     final visual = <_Entry>[
-      ('image', Icons.image_outlined, l10n.addImage, l10n.addImageOnPageSubtitle),
+      (
+        'image',
+        Icons.image_outlined,
+        l10n.addImage,
+        l10n.addImageOnPageSubtitle,
+      ),
       (
         'image-file',
         Icons.attachment_outlined,
@@ -80,12 +109,22 @@ class _AttachSheet extends StatelessWidget {
       ('slide', Icons.slideshow_outlined, l10n.addSlide, null),
       if (!kIsWeb) ('audio', Icons.mic_none, l10n.recordAudio, null),
       if (!kIsWeb)
-        ('video', Icons.videocam_outlined, l10n.newVideoNote, l10n.videoLocalOnly),
+        (
+          'video',
+          Icons.videocam_outlined,
+          l10n.newVideoNote,
+          l10n.videoLocalOnly,
+        ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
       ('color', Icons.palette_outlined, l10n.color, l10n.backgroundColorInfo),
       if (copied != null)
-        ('paste-attachment', Icons.content_paste_go, l10n.pasteAttachment, copied),
+        (
+          'paste-attachment',
+          Icons.content_paste_go,
+          l10n.pasteAttachment,
+          copied,
+        ),
     ];
 
     return SingleChildScrollView(
@@ -116,6 +155,8 @@ class _AttachSheet extends StatelessWidget {
               ),
             ],
           ),
+          _SectionLabel(l10n.attachNoteContent),
+          _Grid(entries: content, scheme: scheme),
           _SectionLabel(l10n.quickAddCapture),
           _Grid(entries: visual, scheme: scheme),
           _SectionLabel(l10n.aiSectionAttachments),

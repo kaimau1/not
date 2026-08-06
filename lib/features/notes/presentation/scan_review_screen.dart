@@ -278,9 +278,9 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
 
   void _removeCurrent() {
     if (_pages.length <= 1) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.scanLastPage)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.scanLastPage)));
       return;
     }
     setState(() {
@@ -352,114 +352,148 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
     final preparing = _preparing;
     final exporting = _exporting;
     final locked = _busy || preparing != null || exporting != null;
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: Text(l10n.scanReviewPage(_index + 1, _pages.length)),
-        actions: [
-          IconButton(
-            tooltip: l10n.scanRotatePage,
-            icon: const Icon(Icons.rotate_right),
-            onPressed: locked ? null : _rotate,
-          ),
-          IconButton(
-            tooltip: l10n.scanDeletePage,
-            icon: const Icon(Icons.delete_outline),
-            onPressed: locked ? null : _removeCurrent,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (preparing != null)
-            LinearProgressIndicator(
-              value: _pages.isEmpty ? null : (preparing + 1) / _pages.length,
-            )
-          else if (_busy || exporting != null)
-            const LinearProgressIndicator(),
-          if (exporting != null)
+    // Geri tuşu taranan sayfaları onaysız atıyordu; geri gelmeleri için
+    // belgenin baştan taranması gerekiyor.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final discard = await _confirmDiscard();
+        if (discard && context.mounted) Navigator.pop(context);
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: Text(l10n.scanReviewPage(_index + 1, _pages.length)),
+          actions: [
+            IconButton(
+              tooltip: l10n.scanRotatePage,
+              icon: const Icon(Icons.rotate_right),
+              onPressed: locked ? null : _rotate,
+            ),
+            IconButton(
+              tooltip: l10n.scanDeletePage,
+              icon: const Icon(Icons.delete_outline),
+              onPressed: locked ? null : _removeCurrent,
+            ),
+          ],
+        ),
+        body: Column(
+          children: [
+            if (preparing != null)
+              LinearProgressIndicator(
+                value: _pages.isEmpty ? null : (preparing + 1) / _pages.length,
+              )
+            else if (_busy || exporting != null)
+              const LinearProgressIndicator(),
+            if (exporting != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Text(
+                  exporting,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ),
+            Expanded(
+              child: PageView.builder(
+                controller: _controller,
+                itemCount: _pages.length,
+                onPageChanged: (i) => setState(() => _index = i),
+                itemBuilder: (_, i) => InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 5,
+                  child: Center(
+                    child: Image.file(
+                      File(_pages[i]),
+                      key: ValueKey(_pages[i]),
+                      errorBuilder: (_, _, _) => Text(
+                        l10n.scanPageFailed,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            _filterRow(),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Text(
-                exporting,
+                l10n.scanCropHint,
+                textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
             ),
-          Expanded(
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: _pages.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (_, i) => InteractiveViewer(
-                minScale: 1,
-                maxScale: 5,
-                child: Center(
-                  child: Image.file(
-                    File(_pages[i]),
-                    key: ValueKey(_pages[i]),
-                    errorBuilder: (_, _, _) => Text(
-                      l10n.scanPageFailed,
-                      style: const TextStyle(color: Colors.white),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: locked ? null : _editCorners,
+                        icon: const Icon(Icons.crop_free),
+                        label: Text(l10n.scanAdjustCorners),
+                      ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: locked
+                            ? null
+                            : () => Navigator.of(
+                                context,
+                              ).pop(ScanReviewResult.images(_pages)),
+                        icon: const Icon(Icons.image_outlined),
+                        label: Text(l10n.scanAddAsImages),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: locked ? null : _finishAsPdf,
+                    icon: const Icon(Icons.picture_as_pdf_outlined),
+                    label: Text(l10n.scanAddAsPdf),
                   ),
                 ),
-              ),
+              ],
             ),
-          ),
-          _filterRow(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            child: Text(
-              l10n.scanCropHint,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: locked ? null : _editCorners,
-                      icon: const Icon(Icons.crop_free),
-                      label: Text(l10n.scanAdjustCorners),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: locked
-                          ? null
-                          : () => Navigator.of(
-                              context,
-                            ).pop(ScanReviewResult.images(_pages)),
-                      icon: const Icon(Icons.image_outlined),
-                      label: Text(l10n.scanAddAsImages),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: locked ? null : _finishAsPdf,
-                  icon: const Icon(Icons.picture_as_pdf_outlined),
-                  label: Text(l10n.scanAddAsPdf),
-                ),
-              ),
-            ],
           ),
         ),
       ),
     );
+  }
+
+  /// Sayfaları atmadan önce onay. Yalnız geri tuşundan çağrılır; "PDF olarak
+  /// ekle" / "Görsel olarak ekle" doğrudan `Navigator.pop` ile çıktığından
+  /// PopScope'a takılmaz.
+  Future<bool> _confirmDiscard() async {
+    final l10n = context.l10n;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.scanDiscardTitle),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.scanDiscardConfirm),
+          ),
+        ],
+      ),
+    );
+    return discard ?? false;
   }
 
   /// Filtre seçimi — yatay kaydırmalı çip şeridi.
@@ -494,7 +528,9 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : null,
-                onSelected: locked ? null : (_) => _chooseFilter(_index, filter),
+                onSelected: locked
+                    ? null
+                    : (_) => _chooseFilter(_index, filter),
               ),
             ),
           if (_pages.length > 1)

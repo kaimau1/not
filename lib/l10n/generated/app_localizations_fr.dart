@@ -1724,6 +1724,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addTextBlock => 'Ajouter du texte';
 
   @override
+  String get attachNoteContent => 'Not içeriği';
+
+  @override
   String get noteBackgroundImage => 'Image de fond';
 
   @override
@@ -1791,6 +1794,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get scanLastPage => 'Son sayfa silinemez';
+
+  @override
+  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+
+  @override
+  String get scanDiscardConfirm => 'At';
 
   @override
   String get scanAdjustCorners => 'Köşeleri ayarla';

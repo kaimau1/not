@@ -7,12 +7,6 @@
   artık dürüst rozet gösteriyor; kalıcı hata (kural reddi) hâlâ sonsuz sessiz
   denemede. Ek başına durum + dokun-yeniden-dene ister (upload_queue
   `_lastFailure`'ı provider'a açmak).
-- [ ] **Ana ekranda seçim modu + "+" paneli birlikte açıkken tek geri ikisini
-  birden kapatıyor** (iki PopScope aynı rotada) — kozmetik.
-- [ ] **Kopyalar levhasında "Tümünü sil"de Geri Al yok** (çöpe gider,
-  kurtarılabilir).
-- [ ] **Belge tarama incelemesinde geri tuşu sayfaları onaysız atıyor**
-  (yeniden taranabilir; tartışılır).
 - [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
   kutusu senkronu çözüldü; scroll paylaşımı split-shell refaktörü ister).
 - [ ] **Cihazda doğrulanmadı**: temiz Kes/Kopyala (özellikle donanım Ctrl+C

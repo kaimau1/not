@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,7 +28,9 @@ Future<String?> showFolderEditorDialog(
         builder: (dialogContext, setState) => AlertDialog(
           title: Text(existing == null ? l10n.newFolder : l10n.editFolder),
           content: SizedBox(
-            width: 340,
+            // Sabit 340 dar telefonlarda taşıyordu: AlertDialog kenarlardan
+            // ~40dp yiyor, 360dp'lik ekranda içeriğe 280dp kalıyor.
+            width: math.min(340, MediaQuery.sizeOf(dialogContext).width - 80),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

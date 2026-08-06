@@ -1658,6 +1658,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addTextBlock => '添加文字';
 
   @override
+  String get attachNoteContent => 'Not içeriği';
+
+  @override
   String get noteBackgroundImage => '背景图片';
 
   @override
@@ -1722,6 +1725,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get scanLastPage => 'Son sayfa silinemez';
+
+  @override
+  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+
+  @override
+  String get scanDiscardConfirm => 'At';
 
   @override
   String get scanAdjustCorners => 'Köşeleri ayarla';

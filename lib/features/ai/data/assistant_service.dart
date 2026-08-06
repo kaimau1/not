@@ -20,6 +20,10 @@ class AssistantService {
 
   static const _uuid = Uuid();
 
+  /// Tarihin yalnız GÜN kısmı (`2026-08-06`).
+  static String? _day(DateTime? value) =>
+      value?.toIso8601String().split('T').first;
+
   /// Modele verilecek not defteri bağlamı (id'li kompakt liste).
   ///
   /// İçerik `<<<NOTLAR ... >>>` ayraçlarıyla işaretlenir ve nottan gelen
@@ -35,10 +39,32 @@ class AssistantService {
       for (final n in notes)
         if (!n.locked) n,
     ];
+    // En son düzenlenen 80 not: kota keyfi bir kesitte harcanmasın. Liste
+    // buraya kullanıcının sıralama tercihiyle geliyordu (başlık, oluşturma…),
+    // yani 80'den fazla notu olanda YENİ notlar bağlama hiç girmeyebiliyordu.
+    visible.sort((a, b) {
+      final at = a.updatedAt ?? a.createdAt;
+      final bt = b.updatedAt ?? b.createdAt;
+      if (at == null || bt == null) return at == null ? 1 : -1;
+      return bt.compareTo(at);
+    });
     for (final note in visible.take(80)) {
-      final text = note.toPlainText().replaceAll('<<<', '‹‹‹').replaceAll('>>>', '›››');
+      final text = note
+          .toPlainText()
+          .replaceAll('<<<', '‹‹‹')
+          .replaceAll('>>>', '›››');
+      // TARİH ŞART: modele "şu an" damgası veriliyor ama notların tarihi
+      // verilmediğinden "son 7 günün notlarını özetle" gibi HER zaman sorusu
+      // "not yok" diye cevaplanıyordu. Asistanın not arama aracı da yok, yani
+      // tarihi başka yoldan öğrenemiyor. Gün hassasiyeti yeter — saat eklemek
+      // 80 not için boşuna jeton.
+      final updated = _day(note.updatedAt);
+      final created = _day(note.createdAt);
       buffer.writeln(
         '- id: ${note.id} | tip: ${note.type.id}'
+        '${updated == null ? '' : ' | güncellendi: $updated'}'
+        // Oluşturma tarihi yalnız FARKLIYSA yazılır: çoğu notta ikisi aynı gün.
+        '${created == null || created == updated ? '' : ' | oluşturuldu: $created'}'
         '${note.tags.isEmpty ? '' : ' | etiketler: ${note.tags.join(',')}'}'
         '${note.reminderAt != null ? ' | hatırlatıcı: ${note.reminderAt!.toIso8601String()}' : ''}',
       );

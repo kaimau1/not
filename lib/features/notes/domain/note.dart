@@ -66,6 +66,9 @@ class Note {
     this.fontFamily,
     this.fontScale = 1,
     this.textOpacity = 1,
+    this.titleFontFamily,
+    this.titleFontScale = 1,
+    this.titleTextOpacity = 1,
     this.backgroundImageId,
     this.backgroundOpacity = 0.35,
     this.orderIndex = 0,
@@ -125,6 +128,19 @@ class Note {
   /// alır. Taban 0.3'tür: daha soluğunda kullanıcı yazdığını göremez ve
   /// ayarı geri bulamaz.
   final double textOpacity;
+
+  /// Başlığın KENDİ yazı tipi / boyutu / opaklığı.
+  ///
+  /// Eskiden başlık gövdeyle aynı üç değerden besleniyordu: gövdeyi büyütmek
+  /// başlığı da büyütüyor, başlığı büyütmek gövdeyi de büyütüyordu — biçim
+  /// çubuğu hangi alandayken kullanılırsa kullanılsın sonuç ikisine birden
+  /// gidiyordu. Artık biçim çubuğu ODAKTAKİ alana yazar.
+  ///
+  /// Eski notlarda bu alanlar kayıtta YOK: [Note.fromDoc] onları gövdenin
+  /// değerinden devralır, böylece mevcut notların görünümü birebir korunur.
+  final String? titleFontFamily;
+  final double titleFontScale;
+  final double titleTextOpacity;
 
   /// Notun ZEMİN görseli: [attachments] içindeki bir görselin id'si.
   ///
@@ -244,6 +260,10 @@ class Note {
     bool clearFontFamily = false,
     double? fontScale,
     double? textOpacity,
+    String? titleFontFamily,
+    bool clearTitleFontFamily = false,
+    double? titleFontScale,
+    double? titleTextOpacity,
     String? backgroundImageId,
     bool clearBackgroundImage = false,
     double? backgroundOpacity,
@@ -272,6 +292,11 @@ class Note {
     fontFamily: clearFontFamily ? null : (fontFamily ?? this.fontFamily),
     fontScale: fontScale ?? this.fontScale,
     textOpacity: textOpacity ?? this.textOpacity,
+    titleFontFamily: clearTitleFontFamily
+        ? null
+        : (titleFontFamily ?? this.titleFontFamily),
+    titleFontScale: titleFontScale ?? this.titleFontScale,
+    titleTextOpacity: titleTextOpacity ?? this.titleTextOpacity,
     backgroundImageId: clearBackgroundImage
         ? null
         : (backgroundImageId ?? this.backgroundImageId),
@@ -326,9 +351,24 @@ class Note {
       fontFamily: map['fontFamily'] as String?,
       fontScale: (map['fontScale'] as num?)?.toDouble() ?? 1,
       textOpacity: (map['textOpacity'] as num?)?.toDouble() ?? 1,
+      // GEÇİŞ: başlık alanları eklenmeden önce yazılmış notlarda kayıtta yok.
+      // Gövdenin değerini devralırlar — eski notlar bugüne kadar nasıl
+      // görünüyorsa öyle kalır, ayrışma ilk düzenlemeden sonra başlar.
+      // `containsKey`: başlığın yazı tipi BİLEREK null olabilir (varsayılan
+      // yazı tipi) ve bu "hiç yazılmamış"tan farklıdır.
+      titleFontFamily: map.containsKey('titleFontFamily')
+          ? map['titleFontFamily'] as String?
+          : map['fontFamily'] as String?,
+      titleFontScale:
+          (map['titleFontScale'] as num?)?.toDouble() ??
+          (map['fontScale'] as num?)?.toDouble() ??
+          1,
+      titleTextOpacity:
+          (map['titleTextOpacity'] as num?)?.toDouble() ??
+          (map['textOpacity'] as num?)?.toDouble() ??
+          1,
       backgroundImageId: map['backgroundImageId'] as String?,
-      backgroundOpacity:
-          (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
+      backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
@@ -365,6 +405,12 @@ class Note {
     // duruyor ve not yeniden açıldığında ayar geri geliyordu.
     'fontScale': fontScale,
     'textOpacity': textOpacity,
+    // Başlık alanları da KOŞULSUZ yazılır (yukarıdaki merge tuzağının aynısı).
+    // Yazı tipi null da yazılır: başlık, gövde başka bir yazı tipindeyken
+    // varsayılana dönebilmeli — koşullu yazılsa eski değer kayıtta kalırdı.
+    'titleFontFamily': titleFontFamily,
+    'titleFontScale': titleFontScale,
+    'titleTextOpacity': titleTextOpacity,
     // Zemin görseli KALDIRILABİLİR olmalı: merge yazımında alan haritada
     // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
     'backgroundImageId': backgroundImageId,

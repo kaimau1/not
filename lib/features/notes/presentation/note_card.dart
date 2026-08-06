@@ -284,11 +284,12 @@ class NoteCard extends ConsumerWidget {
                 note.displayTitle,
                 highlightQuery,
                 maxLines: 2,
-                // Başlık da notun yazı tipini kullanır.
+                // Başlık kartta da KENDİ yazı tipini kullanır (gövdeninkini
+                // değil): başlığın yazı tipi artık gövdeden bağımsız.
                 style: applyNoteFont(
                   (Theme.of(context).textTheme.titleSmall ?? const TextStyle())
                       .copyWith(fontWeight: FontWeight.w600),
-                  note.fontFamily,
+                  note.titleFontFamily,
                 ),
               ),
             ),
@@ -544,7 +545,10 @@ class _NotePreview extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
+                        padding: const EdgeInsetsDirectional.only(
+                          end: 6,
+                          top: 1,
+                        ),
                         child: Icon(
                           item.checked
                               ? Icons.check_box
@@ -615,7 +619,10 @@ class _NotePreview extends StatelessWidget {
                   children: [
                     if (note.type == NoteType.checklist)
                       Padding(
-                        padding: const EdgeInsetsDirectional.only(end: 6, top: 1),
+                        padding: const EdgeInsetsDirectional.only(
+                          end: 6,
+                          top: 1,
+                        ),
                         child: Icon(
                           shown[i].checked
                               ? Icons.check_box
@@ -901,7 +908,11 @@ class NoteListRow extends ConsumerWidget {
                           color: scheme.onSurfaceVariant,
                         ),
                       if (note.starred)
-                        Icon(Icons.star, size: 13, color: Colors.amber.shade600),
+                        Icon(
+                          Icons.star,
+                          size: 13,
+                          color: Colors.amber.shade600,
+                        ),
                       if (note.reminderAt != null)
                         Icon(
                           Icons.alarm,

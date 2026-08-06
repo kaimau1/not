@@ -3264,6 +3264,12 @@ abstract class AppLocalizations {
   /// **'Metin ekle'**
   String get addTextBlock;
 
+  /// No description provided for @attachNoteContent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not içeriği'**
+  String get attachNoteContent;
+
   /// No description provided for @noteBackgroundImage.
   ///
   /// In tr, this message translates to:
@@ -3389,6 +3395,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Son sayfa silinemez'**
   String get scanLastPage;
+
+  /// No description provided for @scanDiscardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taranan sayfalar atılsın mı?'**
+  String get scanDiscardTitle;
+
+  /// No description provided for @scanDiscardConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'At'**
+  String get scanDiscardConfirm;
 
   /// No description provided for @scanAdjustCorners.
   ///

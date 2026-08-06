@@ -1708,6 +1708,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTextBlock => 'Add text';
 
   @override
+  String get attachNoteContent => 'Note content';
+
+  @override
   String get noteBackgroundImage => 'Background image';
 
   @override
@@ -1775,6 +1778,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scanLastPage => 'The last page cannot be deleted';
+
+  @override
+  String get scanDiscardTitle => 'Discard scanned pages?';
+
+  @override
+  String get scanDiscardConfirm => 'Discard';
 
   @override
   String get scanAdjustCorners => 'Adjust corners';

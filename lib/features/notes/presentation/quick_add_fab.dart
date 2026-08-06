@@ -26,6 +26,14 @@ import 'qr_scan_screen.dart';
 ///   kapatır — tekrar "+" basmaya gerek kalmaz (madde 12). Bariyer aynı
 ///   zamanda arka planı BULANIKLAŞTIRIR: menü açıkken göz seçeneklere gider,
 ///   arkadaki not duvarı dikkat dağıtmaz.
+/// Panel şu an açık mı — ana ekranın PopScope'u okur.
+///
+/// Panel ve ana ekran AYNI rotada iki ayrı PopScope kuruyor; Flutter geri
+/// tuşunda rotadaki TÜM PopScope geri çağrılarını çalıştırdığı için tek geri
+/// hem paneli hem seçim modunu birden kapatıyordu. Ana ekran bunu okuyup
+/// sırayı panele bırakır.
+final quickAddPanelOpen = ValueNotifier(false);
+
 class QuickAddFab extends StatefulWidget {
   const QuickAddFab({
     super.key,
@@ -76,6 +84,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
   void _close() {
     _entry?.remove();
     _entry = null;
+    quickAddPanelOpen.value = false;
     if (mounted) setState(() {});
   }
 
@@ -185,6 +194,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
       ),
     );
     Overlay.of(context).insert(_entry!);
+    quickAddPanelOpen.value = true;
     setState(() {});
   }
 
@@ -197,6 +207,8 @@ class _QuickAddFabState extends State<QuickAddFab> {
   void dispose() {
     _entry?.remove();
     _entry = null;
+    // Panel açıkken ekran kapanırsa bayrak takılı kalmasın.
+    quickAddPanelOpen.value = false;
     super.dispose();
   }
 

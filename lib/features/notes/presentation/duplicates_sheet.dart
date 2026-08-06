@@ -40,11 +40,7 @@ class _DuplicatesSheet extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.done_all,
-              size: 40,
-              color: scheme.onSurfaceVariant,
-            ),
+            Icon(Icons.done_all, size: 40, color: scheme.onSurfaceVariant),
             const SizedBox(height: 12),
             Text(l10n.aiTaskDuplicatesInfo(0), textAlign: TextAlign.center),
           ],
@@ -53,9 +49,7 @@ class _DuplicatesSheet extends ConsumerWidget {
     }
 
     // Silinecekler: her kümenin İLKİ (en eski) korunur.
-    final removable = [
-      for (final group in groups) ...group.skip(1),
-    ];
+    final removable = [for (final group in groups) ...group.skip(1)];
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -105,15 +99,26 @@ class _DuplicatesSheet extends ConsumerWidget {
                 onPressed: () {
                   final repo = ref.read(notesRepositoryProvider);
                   if (repo == null) return;
-                  for (final note in removable) {
-                    repo.softDelete(note.id);
+                  final ids = [for (final note in removable) note.id];
+                  for (final id in ids) {
+                    repo.softDelete(id);
                   }
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
                     ..showSnackBar(
                       SnackBar(
-                        content: Text(l10n.duplicatesDone(removable.length)),
+                        content: Text(l10n.duplicatesDone(ids.length)),
+                        // Toplu silmede yanlış eşleşme en pahalı hata:
+                        // çöpten tek tek çıkarmak yerine tek dokunuş.
+                        action: SnackBarAction(
+                          label: l10n.undo,
+                          onPressed: () {
+                            for (final id in ids) {
+                              repo.restore(id);
+                            }
+                          },
+                        ),
                       ),
                     );
                 },
@@ -165,7 +170,9 @@ class _GroupCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13.5,
-                      color: i == 0 ? scheme.onSurface : scheme.onSurfaceVariant,
+                      color: i == 0
+                          ? scheme.onSurface
+                          : scheme.onSurfaceVariant,
                       decoration: i == 0 ? null : TextDecoration.lineThrough,
                     ),
                   ),

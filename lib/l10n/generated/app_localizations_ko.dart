@@ -1676,6 +1676,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get addTextBlock => '텍스트 추가';
 
   @override
+  String get attachNoteContent => 'Not içeriği';
+
+  @override
   String get noteBackgroundImage => '배경 이미지';
 
   @override
@@ -1741,6 +1744,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get scanLastPage => 'Son sayfa silinemez';
+
+  @override
+  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+
+  @override
+  String get scanDiscardConfirm => 'At';
 
   @override
   String get scanAdjustCorners => 'Köşeleri ayarla';
