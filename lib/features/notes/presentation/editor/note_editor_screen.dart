@@ -77,6 +77,35 @@ import 'text_wrap.dart';
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
+/// İki madde listesi EKRANDA aynı mı? Yalnız madde METNİ değiştiyse aynı
+/// sayılır: o metni satırın kendi denetleyicisi zaten çiziyor.
+///
+/// KÖK NEDEN (yazarken kasma) — editörün saf-yazım kısayolu ([_sameVisual])
+/// eskiden madde listelerini `identical` ile karşılaştırıyordu. Bir maddeye
+/// yazmak `ItemsEditor` üzerinden HER TUŞTA yeni bir liste nesnesi üretir,
+/// dolayısıyla `identical` hep false çıkıyor ve kısayol yalnız gövde/başlık
+/// alanında işliyordu: LİSTE notunda her harf, editörün 3700 satırlık
+/// build'ini (sayfa tuvali, çipler, ek şeridi, bütün satırlar) yeniden
+/// kuruyordu.
+///
+/// Metin dışındaki her fark (sayı, sıra, kimlik, işaret) görünürdür. Metnin
+/// DOLULUĞU da öyle: `Note.isEmpty` menü girdilerini ve ipucunu etkiliyor.
+@visibleForTesting
+bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    final x = a[i];
+    final y = b[i];
+    if (x.id != y.id ||
+        x.checked != y.checked ||
+        x.text.trim().isEmpty != y.text.trim().isEmpty) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /// Bir liste satırının başındaki işaretleri ayıklar: madde imi (-, •, *),
 /// numara (1. / 1)) ve onay kutusu ([ ], [x]). Onay kutusu doluysa
 /// [checked] true döner. AI çıktısı / yapıştırılan metin nota geri
@@ -247,6 +276,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Gövde metninin sayfa kenarlarından boşluğu.
   static const double _kGutter = 16;
+
+  /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
+  /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
+  /// sığmalı. `shrinkWrap` dokunma hedefini 48 dp'ye YUVARLAMAZ — o yuvarlama
+  /// çipin görünen yüksekliğini değiştirmese de satıra 10+ dp ekliyordu.
+  static const _kChipDensity = VisualDensity(horizontal: -3, vertical: -3);
+  static const _kChipPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 2);
+
+  /// Silme (×) ikonunun kutusu: varsayılanı çipi gereğinden geniş yapıyor.
+  static const _kChipDeleteBox = BoxConstraints(maxWidth: 20, maxHeight: 20);
 
   /// Başlık bloğunun yüksekliğini ölçüp [_bodyTop]'u tazeler. Yükseklik
   /// yalnız başlık/çipler değişince oynar (sarma onu etkilemez), bu yüzden
@@ -747,7 +786,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
   static bool _sameVisual(Note a, Note b) =>
-      identical(a.items, b.items) &&
+      sameItemsVisually(a.items, b.items) &&
       identical(a.attachments, b.attachments) &&
       identical(a.tags, b.tags) &&
       identical(a.aiSummary, b.aiSummary) &&
@@ -2975,8 +3014,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       theme.colorScheme.onSurface,
     );
 
+    // Üstündeki çip satırına yapışık: aradaki 8 dp, çipler başlığın ALTINDAYKEN
+    // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
     final titleField = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
@@ -3002,10 +3043,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         maxLines: null,
         textInputAction: TextInputAction.next,
-        // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — o da
-        // başlık ile gövde arasındaki çip satırı; odak metin dışına çıkınca
-        // klavye kapanıyordu. "İleri" artık doğrudan gövdeye (liste notunda
-        // ilk maddeye) atlar.
+        // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
+        // olmayan bir öğeye düşerse klavye kapanıyordu. "İleri" doğrudan
+        // gövdeye (liste notunda ilk maddeye) atlar.
         onEditingComplete: _focusAfterTitle,
         // Başlık da biçimlendirilebiliyor: Kes/Kopyala temiz-metin sürümü
         // (gövdeyle aynı gerekçe).
@@ -3117,50 +3157,82 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: Chip(
         avatar: _titleGenerating
             ? const SizedBox(
-                width: 14,
-                height: 14,
+                width: 12,
+                height: 12,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : const Icon(Icons.add, size: 18),
+            : const Icon(Icons.add, size: 16),
         // Etiketsiz, dar bir düğme: satırda yer kaplamasın.
         label: const SizedBox.shrink(),
         labelPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.compact,
+        padding: _kChipPadding,
+        visualDensity: _kChipDensity,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
+
+    // Çip yazısı: gövdeyle aynı aileden ama küçük — satır üst bar ile başlık
+    // arasındaki dar banda sığmalı (bkz. [metaChips]).
+    final chipLabelStyle = theme.textTheme.labelMedium?.copyWith(fontSize: 12.5);
 
     final metaChildren = <Widget>[
       // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(
-          avatar: const Icon(Icons.alarm, size: 16),
+          avatar: const Icon(Icons.alarm, size: 14),
           label: Text(DateFormat('d MMM HH:mm').format(note.reminderAt!)),
+          labelStyle: chipLabelStyle,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          deleteIconBoxConstraints: _kChipDeleteBox,
           onPressed: _pickReminder,
           onDeleted: _clearReminder,
         ),
       // Klasör çipi yalnız notun klasörü VARSA; seçmek "+" menüsünden.
       if (noteFolder != null)
         InputChip(
-          avatar: Icon(noteFolder.iconData, size: 16),
+          avatar: Icon(noteFolder.iconData, size: 14),
           label: Text(noteFolder.name),
+          labelStyle: chipLabelStyle,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          deleteIconBoxConstraints: _kChipDeleteBox,
           onPressed: _pickFolder,
           onDeleted: () =>
               _mutate((n) => n.copyWith(clearFolderId: true), immediate: true),
         ),
       for (final tag in note.tags)
-        InputChip(label: Text('#$tag'), onDeleted: () => _removeTag(tag)),
+        InputChip(
+          label: Text('#$tag'),
+          labelStyle: chipLabelStyle,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          deleteIconBoxConstraints: _kChipDeleteBox,
+          onDeleted: () => _removeTag(tag),
+        ),
       actionsMenu,
     ];
 
+    // Klasör/etiket çipleri BAŞLIĞIN ÜSTÜNDE, üst barın hemen altındaki dar
+    // bantta durur (kullanıcı isteği 2026-08-06: "başlık ve üst alan
+    // arasındaki boşluğa yerleşsin, yeni bir alan açılmasın").
+    //
+    // O boşluk zaten vardı: üst barın 56 dp'lik bandında içerik küçük (11,5
+    // punto tarih + ikonlar) olduğu için altında kullanılmayan bir şerit
+    // kalıyordu. Çipler oraya sıkıştırıldığı ve başlığın altındaki satır
+    // kapandığı için başlık bloğu UZAMAZ, kısalır.
     final metaChips = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             for (var i = 0; i < metaChildren.length; i++) ...[
-              if (i > 0) const SizedBox(width: 6),
+              if (i > 0) const SizedBox(width: 4),
               metaChildren[i],
             ],
           ],
@@ -3209,7 +3281,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // tarihin kendisinden uzundu. Üst barda önek olmadan okunuyor.
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [titleField, metaChips],
+      children: [metaChips, titleField],
     );
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
