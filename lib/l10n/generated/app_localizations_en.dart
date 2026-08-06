@@ -147,6 +147,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentUploading => 'Uploading...';
 
   @override
+  String get attachmentUploadFailed => 'Upload failed — tap to retry';
+
+  @override
   String get attachmentNotSynced =>
       'This file hasn\'t synced to this device yet';
 

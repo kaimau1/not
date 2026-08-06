@@ -42,6 +42,7 @@
   "noNoteSelected": "Pick a note from the left",
   "attachmentFailed": "Couldn't add the attachment: {error}",
   "attachmentUploading": "Uploading...",
+  "attachmentUploadFailed": "Upload failed — tap to retry",
   "attachmentNotSynced": "This file hasn't synced to this device yet",
   "attachmentTooLarge": "File is too large ({limit} MB max)",
   "storageFull": "Storage is full ({limit}). Delete old attachments to free up space.",

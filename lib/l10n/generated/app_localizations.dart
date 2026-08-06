@@ -378,6 +378,12 @@ abstract class AppLocalizations {
   /// **'Yükleniyor...'**
   String get attachmentUploading;
 
+  /// No description provided for @attachmentUploadFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüklenemedi — yeniden denemek için dokun'**
+  String get attachmentUploadFailed;
+
   /// No description provided for @attachmentNotSynced.
   ///
   /// In tr, this message translates to:

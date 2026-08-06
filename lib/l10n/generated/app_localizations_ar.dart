@@ -147,6 +147,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get attachmentUploading => 'جارٍ الرفع...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced => 'لم تتم مزامنة هذا الملف مع هذا الجهاز بعد';
 
   @override

@@ -147,6 +147,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get attachmentUploading => 'Загрузка...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced =>
       'Этот файл ещё не синхронизирован на этом устройстве';
 

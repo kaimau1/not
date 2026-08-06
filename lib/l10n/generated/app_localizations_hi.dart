@@ -147,6 +147,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get attachmentUploading => 'अपलोड हो रहा है...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced =>
       'यह फ़ाइल अभी इस डिवाइस पर सिंक नहीं हुई है';
 

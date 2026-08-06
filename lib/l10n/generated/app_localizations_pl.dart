@@ -147,6 +147,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get attachmentUploading => 'Przesyłanie...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced =>
       'Ten plik nie został jeszcze zsynchronizowany na tym urządzeniu';
 

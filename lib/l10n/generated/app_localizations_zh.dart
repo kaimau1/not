@@ -147,6 +147,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get attachmentUploading => '正在上传...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced => '该文件尚未同步到此设备';
 
   @override

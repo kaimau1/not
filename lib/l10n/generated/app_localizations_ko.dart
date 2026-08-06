@@ -147,6 +147,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get attachmentUploading => '업로드 중...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced => '이 파일은 아직 이 기기에 동기화되지 않았습니다';
 
   @override

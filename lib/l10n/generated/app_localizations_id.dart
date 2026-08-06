@@ -147,6 +147,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get attachmentUploading => 'Mengunggah...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced =>
       'Berkas ini belum tersinkron ke perangkat ini';
 

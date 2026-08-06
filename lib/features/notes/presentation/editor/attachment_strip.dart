@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../settings/settings_providers.dart';
+import '../../data/upload_queue.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -77,7 +78,11 @@ class AttachmentStrip extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
             child: Row(
               children: [
-                Icon(Icons.attach_file, size: 16, color: scheme.onSurfaceVariant),
+                Icon(
+                  Icons.attach_file,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -88,7 +93,9 @@ class AttachmentStrip extends StatelessWidget {
                   ),
                 ),
                 Icon(
-                  expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up,
+                  expanded
+                      ? Icons.keyboard_arrow_down
+                      : Icons.keyboard_arrow_up,
                   size: 20,
                   color: scheme.onSurfaceVariant,
                 ),
@@ -205,20 +212,20 @@ class _AudioTileState extends State<_AudioTile> {
               icon: const Icon(Icons.play_arrow),
             )
           else
-          StreamBuilder<PlayerState>(
-            stream: player.playerStateStream,
-            builder: (context, snapshot) {
-              final playing = snapshot.data?.playing ?? false;
-              final completed =
-                  snapshot.data?.processingState == ProcessingState.completed;
-              return IconButton.filledTonal(
-                onPressed: _toggle,
-                icon: Icon(
-                  playing && !completed ? Icons.pause : Icons.play_arrow,
-                ),
-              );
-            },
-          ),
+            StreamBuilder<PlayerState>(
+              stream: player.playerStateStream,
+              builder: (context, snapshot) {
+                final playing = snapshot.data?.playing ?? false;
+                final completed =
+                    snapshot.data?.processingState == ProcessingState.completed;
+                return IconButton.filledTonal(
+                  onPressed: _toggle,
+                  icon: Icon(
+                    playing && !completed ? Icons.pause : Icons.play_arrow,
+                  ),
+                );
+              },
+            ),
           const SizedBox(height: 2),
           Text(
             widget.attachment.fileName,
@@ -295,6 +302,13 @@ class _AttachmentTile extends ConsumerWidget {
     final limitMb = ref.watch(syncLimitMbProvider);
     final overSyncLimit =
         limitMb > 0 && attachment.sizeBytes > limitMb * 1024 * 1024;
+    // Kalıcı hata: çark burada da yalan söylüyordu (kural reddi/bozuk dosya
+    // hiç düzelmez, kuyruk 6 saatlik beklemeye kadar sessizce tırmanır).
+    // Eşik 3 deneme ≈ 1+2+4 dk: geçici bağlantı kesintisi buraya gelmeden
+    // düzelir, kalıcı hata gelir.
+    final failedAttempts =
+        ref.watch(uploadFailuresProvider)[attachment.id] ?? 0;
+    final uploadFailed = !overSyncLimit && failedAttempts >= 3;
 
     Widget content;
     if (attachment.kind == AttachmentKind.audio) {
@@ -443,27 +457,48 @@ class _AttachmentTile extends ConsumerWidget {
             child: Tooltip(
               message: overSyncLimit
                   ? context.l10n.syncLimitInfo
+                  : uploadFailed
+                  ? context.l10n.attachmentUploadFailed
                   : context.l10n.attachmentUploading,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(6),
+              child: Material(
+                color: uploadFailed ? scheme.error : Colors.black54,
+                borderRadius: BorderRadius.circular(6),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  // Yalnız hata rozeti dokunulabilir: çark ve sınır rozeti
+                  // bilgilendirme, elle tetiklenecek bir şey yok.
+                  onTap: uploadFailed
+                      ? () {
+                          ref.read(uploadQueueProvider).retryNow(attachment.id);
+                          ScaffoldMessenger.of(context)
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(context.l10n.attachmentUploading),
+                              ),
+                            );
+                        }
+                      : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: overSyncLimit
+                        ? const Icon(
+                            Icons.cloud_off_outlined,
+                            size: 12,
+                            color: Colors.white,
+                          )
+                        : uploadFailed
+                        ? Icon(Icons.refresh, size: 12, color: scheme.onError)
+                        : const SizedBox(
+                            width: 10,
+                            height: 10,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 1.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
                 ),
-                child: overSyncLimit
-                    ? const Icon(
-                        Icons.cloud_off_outlined,
-                        size: 12,
-                        color: Colors.white,
-                      )
-                    : const SizedBox(
-                        width: 10,
-                        height: 10,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
-                          color: Colors.white,
-                        ),
-                      ),
               ),
             ),
           ),

@@ -20,6 +20,43 @@ final uploadQueueProvider = Provider<UploadQueue>((ref) {
   return queue;
 });
 
+/// Yüklenemeyen ekler: ek id'si → ARKA ARKAYA başarısız deneme sayısı.
+///
+/// Kuyruk kalıcı hatada (Storage kural reddi, bozuk dosya) sessizce yeniden
+/// denemeye devam ediyordu; arayüzde ise ilk günden beri aynı dönen çark
+/// vardı, yani kullanıcı "yükleniyor" ile "hiç yüklenmeyecek"i ayırt
+/// edemiyor ve elle müdahale edemiyordu.
+///
+/// Anahtar ek id'si (uuid): not id'siyle birleşik anahtar kuyruğun İÇİNDE
+/// kalır — şeride kadar `noteId` taşımak iki widget katmanını değiştirmek
+/// demekti, ek id'leri zaten benzersiz.
+final uploadFailuresProvider =
+    NotifierProvider<UploadFailuresNotifier, Map<String, int>>(
+      UploadFailuresNotifier.new,
+    );
+
+class UploadFailuresNotifier extends Notifier<Map<String, int>> {
+  @override
+  Map<String, int> build() => const {};
+
+  void fail(String attachmentId, int attempts) =>
+      state = {...state, attachmentId: attempts};
+
+  void clear(String attachmentId) {
+    if (!state.containsKey(attachmentId)) return;
+    state = {...state}..remove(attachmentId);
+  }
+
+  /// Silinen notların/eklerin artığı birikmesin.
+  void retain(Set<String> liveIds) {
+    if (state.keys.every(liveIds.contains)) return;
+    state = {
+      for (final entry in state.entries)
+        if (liveIds.contains(entry.key)) entry.key: entry.value,
+    };
+  }
+}
+
 class UploadQueue {
   UploadQueue(this._ref);
 
@@ -42,6 +79,7 @@ class UploadQueue {
     final scaled = _baseRetryDelay * (1 << (attempts - 1).clamp(0, 12));
     return scaled > _maxRetryDelay ? _maxRetryDelay : scaled;
   }
+
   ProviderSubscription<AsyncValue<List<Note>>>? _notesSub;
   ProviderSubscription<int>? _limitSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
@@ -67,6 +105,16 @@ class UploadQueue {
     });
   }
 
+  /// Kullanıcı "yeniden dene" dedi: üstel bekleme SIFIRLANIR ve kuyruk hemen
+  /// tetiklenir. Bekleme tavanı 6 saate tırmanmış bir ekte, kullanıcı sorunu
+  /// (kota/kural/bağlantı) düzeltmiş olsa bile saatlerce hiçbir şey olmuyordu.
+  void retryNow(String attachmentId) {
+    _lastFailure.removeWhere((key, _) => key.endsWith('/$attachmentId'));
+    _ref.read(uploadFailuresProvider.notifier).clear(attachmentId);
+    final notes = _ref.read(notesStreamProvider).value;
+    if (notes != null) unawaited(_process(notes));
+  }
+
   Future<void> _process(List<Note> notes) async {
     final attachmentRepo = _ref.read(attachmentRepositoryProvider);
     final notesRepo = _ref.read(notesRepositoryProvider);
@@ -82,9 +130,14 @@ class UploadQueue {
     // ekler için kayıt tutar.
     final liveKeys = <String>{
       for (final note in notes)
-        for (final attachment in note.attachments) '${note.id}/${attachment.id}',
+        for (final attachment in note.attachments)
+          '${note.id}/${attachment.id}',
     };
     _lastFailure.removeWhere((key, _) => !liveKeys.contains(key));
+    _ref.read(uploadFailuresProvider.notifier).retain({
+      for (final note in notes)
+        for (final attachment in note.attachments) attachment.id,
+    });
 
     for (final note in notes) {
       for (final attachment in note.attachments) {
@@ -106,13 +159,15 @@ class UploadQueue {
             await notesRepo.patchAttachment(note.id, uploaded);
           }
           _lastFailure.remove(key);
+          _ref.read(uploadFailuresProvider.notifier).clear(attachment.id);
         } catch (e) {
           // Bağlantı yoksa veya yükleme başarısızsa bir sonraki tetikte
           // (üstel bekleme dolduysa) yeniden denenir.
-          _lastFailure[key] = (
-            at: DateTime.now(),
-            attempts: (lastFailure?.attempts ?? 0) + 1,
-          );
+          final attempts = (lastFailure?.attempts ?? 0) + 1;
+          _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+          _ref
+              .read(uploadFailuresProvider.notifier)
+              .fail(attachment.id, attempts);
           debugPrint('Ek yüklenemedi ($key): $e');
         } finally {
           _inFlight.remove(key);

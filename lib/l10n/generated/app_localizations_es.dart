@@ -147,6 +147,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get attachmentUploading => 'Subiendo...';
 
   @override
+  String get attachmentUploadFailed =>
+      'Yüklenemedi — yeniden denemek için dokun';
+
+  @override
   String get attachmentNotSynced =>
       'Este archivo todavía no se ha sincronizado en este dispositivo';
 

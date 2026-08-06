@@ -3,10 +3,6 @@
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
 ## 2026-08-06 genel kullanım denetiminden kalan (bilinçli ertelenen küçük uçlar)
-- [ ] **Ek yükleme kalıcı hatasında elle "yeniden dene" yok** — sınır-üstü ek
-  artık dürüst rozet gösteriyor; kalıcı hata (kural reddi) hâlâ sonsuz sessiz
-  denemede. Ek başına durum + dokun-yeniden-dene ister (upload_queue
-  `_lastFailure`'ı provider'a açmak).
 - [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
   kutusu senkronu çözüldü; scroll paylaşımı split-shell refaktörü ister).
 - [ ] **Cihazda doğrulanmadı**: temiz Kes/Kopyala (özellikle donanım Ctrl+C
@@ -131,12 +127,12 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 - [ ] **AI kota sayacı istemci tarafında** — kural aynı gün puanın azalmasını
   engelliyor ama gerçek zorlama için sunucu (Cloud Functions) gerekiyor
   (2026-07-24).
-- [ ] **Çakışma çözümü BİLEREK yapılmadı** — iki cihazda aynı notu aynı anda
-  düzenlersen son yazan sessizce kazanır. Kullanıcı kararı (2026-07-27):
-  tek kullanıcılı uygulamada sıklığı düşük, Keep'in birleştirme makinesi
-  paylaşılan notlar için var. Gerçek bir not kaybı yaşanırsa bu madde açılır;
-  o zaman ilk adım `items` dizisini map'e taşımaktır (Firestore map'i eleman
-  eleman birleştirir, diziyi birleştiremez).
+- [ ] **Çakışma çözümü ve sürüm geçmişi YAPILMAYACAK** — iki cihazda aynı notu
+  aynı anda düzenlersen son yazan sessizce kazanır, geri dönüş yok. Kullanıcı
+  kararı 2026-07-27'de verildi, **2026-08-06'da tasarım sunulduktan sonra
+  yeniden onaylandı** ("sürüm geçmişine gerek yok, en son neyse o"). Gerçek bir
+  not kaybı yaşanırsa madde açılır; o zaman ilk adım `items` dizisini map'e
+  taşımaktır (Firestore map'i eleman eleman birleştirir, diziyi birleştiremez).
 - [ ] **AI notu baştan yazınca geri dönüş yok** — "Notu düzelt/geliştir"
   içeriği değiştiriyor, geri alma yalnız o anki şeritte. Uygulama kapanınca
   orijinal metin gider. Sürüm deposu/geri alma noktası bilerek yapılmadı
@@ -167,10 +163,6 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 ## Sonra yapılacak
 Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
 silme) tamamlandı, kalanlar sırayla:
-- [ ] **Çakışma çözümü + sürüm geçmişi (TEK paket)** — ikisi de notun geçmiş
-  hâllerini saklamayı gerektiriyor; ayrı ayrı yapılırsa aynı veri iki kez
-  modellenir. Şu an alan bazlı `merge: true` ile son yazan sessizce kazanıyor
-  (`notes_repository.dart:150`), kullanıcı uyarı görmüyor. En yüksek risk.
 - [ ] **PPTX'i `Desktop\dosya okuyucu` reposundan al** — orada `pptx_render.dart`
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
