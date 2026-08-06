@@ -19,8 +19,15 @@
   kullanımını sayamaz; istemci tavanı var). Sunucu zorlaması Cloud Function
   (finalize tetikleyicisi + Firestore sayaç) ister — Play Billing'den önce.
 
-- **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** (bilinçli ertelendi,
-  bkz. 2026-07-23 kararı): şu an çizim yalnız uygulama içinde görünüyor.
+- [ ] **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** — çizim yalnız
+  uygulama içinde görünüyor. **2026-08-06 incelemesi: mevcut bağımlılıklarla
+  YAPILAMIYOR.** `pdfrx` yalnız görüntüler, `pdf` yalnız sıfırdan üretir; var
+  olan bir PDF'i ayrıştırıp içerik akışına yazan kütüphane yok. KULLANICI
+  KARARI BEKLİYOR: (a) sayfaları rasterleştirip PDF'i yeniden kur — yeni
+  bağımlılık yok ama uygulamanın taradığı PDF'lerdeki görünmez OCR metin
+  katmanı yok olur (yalnız paylaşılan kopyada, orijinal ek bozulmaz);
+  (b) `syncfusion_flutter_pdf` ekle — metin korunur, bedeli ağır bağımlılık +
+  Play lisans denetimi.
 
 ## Play'e çıkış — kalan iş (2026-08-02)
 
@@ -79,6 +86,12 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   hesabı başka bir uid'e bağlıysa `credential-already-in-use` gelir ve
   birleştirme yapılamaz (Firebase iki uid'i birleştiremez). Şu an hata
   gösteriliyor; istenirse "yerel notları o hesaba kopyala" akışı yazılabilir.
+  **2026-08-06 incelemesi:** doğrudan kopyalama TEHLİKELİ — anonim hesaba bir
+  kez çıkılınca geri girilemez, yarıda kalan kopyanın kalanı kalıcı kayıptır.
+  Güvenli tasarım: önce yerel yedek al → Google'a gir → yedeği geri yükle
+  (bir şey giderse dosya diskte durur). Ön koşul: yedekle/geri yükle mantığı
+  şu an `settings_screen.dart` içindeki widget'lara gömülü, servise
+  çıkarılmalı. Uçtan uca sınamak iki ayrı Google hesabı + gerçek cihaz ister.
 
 ## Bilinen eksik / risk
 - [ ] **Sesli notta canlı yazım yok** — kayıt+döküm aynı anda mikrofonu
@@ -163,10 +176,12 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
 ## Sonra yapılacak
 Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
 silme) tamamlandı, kalanlar sırayla:
-- [ ] **PPTX'i `Desktop\dosya okuyucu` reposundan al** — orada `pptx_render.dart`
-  1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
-  `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
-  Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
+- [ ] **PPTX'i `Desktop\dosya okuyucu` reposundan al** — buradaki
+  `pptx_render.dart` testsiz. Kaynak depoda `pptx_render.dart` 61 KB +
+  `pptx_editor.dart` 18 KB + `pptx_geometry.dart` 25 KB (~2500 satır) ve ~60 KB
+  test. Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
+  **KENDİ OTURUMUNU İSTER** (2026-08-06 ölçümü): tek oturumda yarısı yapılıp
+  bırakılırsa en kötü sonuç çıkar.
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
