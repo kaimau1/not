@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/video_viewer.dart';
 import 'text_wrap.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
@@ -106,6 +108,162 @@ class _ImageBox extends StatelessWidget {
   }
 }
 
+/// Video ekin sayfa üzerindeki kutusu: video **olduğu yerde** oynar — ortada
+/// oynat/durdur düğmesi, ayrı ekrana gitmek gerekmez (tam ekran, araç
+/// çubuğundaki düğmede). Dosya yoksa (video buluta çıkmaz — başka cihazda
+/// yalnız yer tutucu olur) ya da oynatıcı desteklenmiyorsa (masaüstü) kamera
+/// simgeli yer tutucu çizilir; kutu taşınıp boyutlandırılabilir kalır.
+class _VideoBox extends StatefulWidget {
+  const _VideoBox({required this.video, this.fit = BoxFit.cover, this.onSize});
+
+  final Attachment video;
+
+  /// Tuvalde `cover`, büyük önizlemede `contain` (bkz. [_ImageBox.fit]).
+  final BoxFit fit;
+
+  /// Video çözülünce doğal boyutunu bildirir — ekin `width`/`height` alanları
+  /// boşsa kalıcılaştırılır ki kutunun oranı (1:1 varsayılan yerine) sonraki
+  /// açılışta da doğru olsun. null = zaten biliniyor, bildirme.
+  final ValueChanged<Size>? onSize;
+
+  @override
+  State<_VideoBox> createState() => _VideoBoxState();
+}
+
+class _VideoBoxState extends State<_VideoBox> {
+  VideoPlayerController? _controller;
+  bool _failed = false;
+  bool _playing = false;
+  bool _sizeReported = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
+  Future<void> _init() async {
+    // Dosya yoksa denemeye gerek yok: yer tutucu kalır.
+    if (!localFileExists(widget.video.localPath)) return;
+    final controller = VideoPlayerController.file(
+      File(widget.video.localPath),
+    );
+    _controller = controller;
+    try {
+      await controller.initialize();
+      if (!mounted) return;
+      controller.addListener(_onTick);
+      setState(() {});
+      final size = controller.value.size;
+      if (!_sizeReported && size.width > 0 && size.height > 0) {
+        _sizeReported = true;
+        widget.onSize?.call(size);
+      }
+    } catch (_) {
+      // Oynatıcı bu platformda yok (Windows) ya da dosya bozuk.
+      if (mounted) setState(() => _failed = true);
+    }
+  }
+
+  /// Yalnız oynuyor/durdu geçişinde yeniden çizim — her karede setState
+  /// çağırmak kutuyu boşuna ısıtırdı (VideoPlayer kendi karesini kendisi
+  /// tazeliyor).
+  void _onTick() {
+    final playing = _controller?.value.isPlaying ?? false;
+    if (playing != _playing && mounted) setState(() => _playing = playing);
+  }
+
+  @override
+  void didUpdateWidget(covariant _VideoBox old) {
+    super.didUpdateWidget(old);
+    if (old.video.localPath != widget.video.localPath) {
+      _controller?.removeListener(_onTick);
+      _controller?.dispose();
+      _controller = null;
+      _failed = false;
+      _init();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_onTick);
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggle() async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isPlaying) {
+      await controller.pause();
+      return;
+    }
+    // Bittiyse oynat = baştan.
+    final v = controller.value;
+    if (v.duration > Duration.zero && v.position >= v.duration) {
+      await controller.seekTo(Duration.zero);
+    }
+    await controller.play();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final controller = _controller;
+    if (controller == null || _failed || !controller.value.isInitialized) {
+      return Container(
+        color: scheme.surfaceContainerHigh,
+        alignment: Alignment.center,
+        child: Icon(Icons.videocam_outlined, color: scheme.onSurfaceVariant),
+      );
+    }
+    final size = controller.value.size;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipRect(
+          child: FittedBox(
+            fit: widget.fit,
+            clipBehavior: Clip.hardEdge,
+            child: SizedBox(
+              width: size.width,
+              height: size.height,
+              child: VideoPlayer(controller),
+            ),
+          ),
+        ),
+        // Oynat/durdur dokunuşu KENDİ alır: dıştaki jest (seçim) çalışmaya
+        // devam eder — videonun kenarına dokunmak seçer, ortasına dokunmak
+        // oynatır. Oynarken düğme yarı saydamlaşır, video okunur kalır.
+        Center(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _toggle,
+            child: AnimatedOpacity(
+              opacity: _playing ? 0.35 : 1,
+              duration: const Duration(milliseconds: 200),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Colors.black45,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _playing ? Icons.pause : Icons.play_arrow,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Seçili görselin işlem çubuğu içeriği (genişlik kaydırıcısı + OCR + tam
 /// ekran + sil): küçük tuval ve tam sayfa katmanı ortak kullanır.
 class _ImageTools extends StatelessWidget {
@@ -119,6 +277,7 @@ class _ImageTools extends StatelessWidget {
     this.onExtractText,
     this.onCopy,
     this.onDetach,
+    this.onVideoToNote,
   });
 
   final double wFrac;
@@ -134,6 +293,9 @@ class _ImageTools extends StatelessWidget {
 
   /// Görseli sayfadan alıp alt şeritte DOSYA eki yapar.
   final VoidCallback? onDetach;
+
+  /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
+  final VoidCallback? onVideoToNote;
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +339,10 @@ class _ImageTools extends StatelessWidget {
             // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
             // çubuk dar ekranda kaydırıcıya yer bırakmazdı. Hiçbiri
             // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
-            if (onExtractText != null || onCopy != null || onDetach != null)
+            if (onExtractText != null ||
+                onCopy != null ||
+                onDetach != null ||
+                onVideoToNote != null)
               PopupMenuButton<String>(
                 tooltip: l10n.more,
                 icon: const Icon(Icons.more_vert, size: 20),
@@ -189,9 +354,21 @@ class _ImageTools extends StatelessWidget {
                       onCopy?.call();
                     case 'detach':
                       onDetach?.call();
+                    case 'videoToNote':
+                      onVideoToNote?.call();
                   }
                 },
                 itemBuilder: (context) => [
+                  if (onVideoToNote != null)
+                    PopupMenuItem(
+                      value: 'videoToNote',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.auto_awesome_outlined),
+                        title: Text(l10n.videoToNote),
+                      ),
+                    ),
                   if (onExtractText != null)
                     PopupMenuItem(
                       value: 'ocr',
@@ -232,7 +409,9 @@ class _ImageTools extends StatelessWidget {
 }
 
 /// Metin notunda görselleri (el yazısı çizimleri dahil — onlar da görsel
-/// ektir) TÜM SAYFA üzerinde serbest katman olarak gösterir: [child]
+/// ektir) ve videoları TÜM SAYFA üzerinde serbest katman olarak gösterir:
+/// video da görsel gibi taşınır/boyutlandırılır ve olduğu yerde oynar
+/// ([_VideoBox]). [child]
 /// (başlık + gövde metni) normal akışında durur, görseller üstünde yüzer ve
 /// sayfayla birlikte kayar. Görsel metnin sağına/soluna, sayfanın istenen
 /// yerine sürüklenebilir; kalan alana metin yazılır ("çerçeve içi" küçük
@@ -271,6 +450,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onExtractText,
     this.onCopy,
     this.onDetach,
+    this.onVideoToNote,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -320,6 +500,9 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Görseli sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
   final ValueChanged<Attachment>? onDetach;
+
+  /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
+  final ValueChanged<Attachment>? onVideoToNote;
 
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
@@ -476,8 +659,35 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   List<FloatBox>? _lastFloats;
 
-  void _openViewer(Attachment img) =>
-      openImageViewer(context, img, widget.onChanged, onCrop: widget.onCrop);
+  void _openViewer(Attachment img) {
+    if (img.kind == AttachmentKind.video) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => VideoViewerScreen(attachment: img),
+        ),
+      );
+      return;
+    }
+    openImageViewer(context, img, widget.onChanged, onCrop: widget.onCrop);
+  }
+
+  /// Ekin türüne göre sayfa kutusu içeriği: görsele [_ImageBox], videoya
+  /// yerinde oynayan [_VideoBox]. Videonun doğal boyutu ekte yoksa ilk
+  /// çözümde kalıcılaştırılır (oran 1:1 varsayılanında kalmasın).
+  Widget _boxFor(Attachment a, {BoxFit fit = BoxFit.cover}) {
+    if (a.kind == AttachmentKind.video) {
+      return _VideoBox(
+        video: a,
+        fit: fit,
+        onSize: (a.width == null || a.height == null)
+            ? (s) => widget.onChanged(
+                a.copyWith(width: s.width.round(), height: s.height.round()),
+              )
+            : null,
+      );
+    }
+    return _ImageBox(img: a, fit: fit);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -646,7 +856,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: _ImageBox(img: img, fit: BoxFit.contain),
+                    child: _boxFor(img, fit: BoxFit.contain),
                   ),
                   Positioned(
                     right: 4,
@@ -730,7 +940,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: _ImageBox(img: img),
+                  child: _boxFor(img),
                 ),
               ),
             ),
@@ -801,6 +1011,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 : (img.displayWidth ?? 0.5))
             .clamp(_minWidthFrac, 1.0)
             .toDouble();
+    // OCR ve pano kopyası görsele özgü; videoda menüde gösterilmez
+    // (taşı/boyutlandır/tam ekran/sil ve "Ek olarak taşı" ortak).
+    final isVideo = img.kind == AttachmentKind.video;
     return Positioned(
       left: 8,
       right: 8,
@@ -819,10 +1032,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             _resizeWFrac = null;
           });
         },
-        onExtractText: widget.onExtractText == null
+        onExtractText: widget.onExtractText == null || isVideo
             ? null
             : () => widget.onExtractText!(img),
-        onCopy: widget.onCopy == null ? null : () => widget.onCopy!(img),
+        onCopy: widget.onCopy == null || isVideo
+            ? null
+            : () => widget.onCopy!(img),
+        onVideoToNote: widget.onVideoToNote == null || !isVideo
+            ? null
+            : () => widget.onVideoToNote!(img),
         onDetach: widget.onDetach == null
             ? null
             : () {

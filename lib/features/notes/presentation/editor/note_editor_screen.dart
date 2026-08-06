@@ -2180,8 +2180,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         sourcePath: picked.path,
         duration: Duration.zero,
       );
+      // Video da görsel gibi SAYFAYA yerleşir (imlecin satırına) ve olduğu
+      // yerde oynatılır; "Ek olarak taşı" ile şeride alınabilir.
       _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        (n) => n.copyWith(
+          attachments: [...n.attachments, _placeNewImage(attachment, n)],
+        ),
         immediate: true,
       );
       if (mounted) _showSnack(l10n.videoLocalOnly);
@@ -3164,8 +3168,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ),
     );
 
-    // Sayfada yüzen görseller: "ek olarak" işaretlenenler buraya girmez,
-    // alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
+    // Sayfada yüzen görseller ve videolar: "ek olarak" işaretlenenler buraya
+    // girmez, alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
     final imageAttachments = [
       for (final a in note.attachments)
         if (a.floatsOnPage && a.id != note.backgroundImageId) a,
@@ -3335,6 +3339,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onExtractText: _ocrImage,
           onCopy: _copyAttachment,
           onDetach: (a) => _setImageAsFile(a, true),
+          onVideoToNote: _videoToNote,
           topLimit: _bodyTop,
           hintLineHeight: hintLineHeight,
           hint: useCanvasHint
@@ -3673,8 +3678,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Görsel olmayan ekler (PDF/sunum/ses/video) SAYFANIN DİBİNDE,
-                  // kapanabilir bir şeritte. Görseller her not tipinde TAM SAYFA
+                  // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
+                  // işaretli görsel/video) SAYFANIN DİBİNDE, kapanabilir bir
+                  // şeritte. Görseller ve videolar her not tipinde TAM SAYFA
                   // serbest katmanda kalır (NotePageCanvas — yukarıda).
                   // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
                   // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.

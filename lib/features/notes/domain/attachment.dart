@@ -190,8 +190,8 @@ class Attachment {
   /// bir kez çevrilir. Yatay konum [x] (genişlik oranı) ile ortak.
   final double? pageY;
 
-  /// Yalnız GÖRSEL ekler için: true ise görsel sayfada yüzmez, alt taraftaki
-  /// ek şeridinde PDF/ses gibi bir DOSYA eki olarak durur.
+  /// Yalnız GÖRSEL ve VİDEO ekler için: true ise ek sayfada yüzmez, alt
+  /// taraftaki ek şeridinde PDF/ses gibi bir DOSYA eki olarak durur.
   ///
   /// Her görsel tuvale düşüyordu; kullanıcının bir görseli "yazının arasına
   /// koymadan sadece iliştirmek" istediği durumda (kaynak belge, fiş, ekran
@@ -205,8 +205,12 @@ class Attachment {
 
   bool get isUploaded => downloadUrl.isNotEmpty;
 
-  /// Görsel SAYFADA yüzüyor mu? (Görsel olmayan ekler hiçbir zaman yüzmez.)
-  bool get floatsOnPage => kind == AttachmentKind.image && !asFile;
+  /// Ek SAYFADA yüzüyor mu? Görseller gibi videolar da serbest tuvale
+  /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF/ses/sunum
+  /// hiçbir zaman yüzmez.
+  bool get floatsOnPage =>
+      (kind == AttachmentKind.image || kind == AttachmentKind.video) &&
+      !asFile;
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
   /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.

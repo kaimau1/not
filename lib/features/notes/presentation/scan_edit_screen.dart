@@ -49,6 +49,11 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
   bool _autoFound = false;
   bool _detecting = false;
 
+  /// Sürüklenmekte olan köşenin İNDEKSİ (yoksa null) — büyüteç bu köşeyi
+  /// izler. dosya-okuyucu 2026-08-06 bulgusu: parmak köşeyi kapattığı için
+  /// büyüteç olmadan hassas ayar yapılamıyor.
+  int? _dragCorner;
+
   @override
   void initState() {
     super.initState();
@@ -249,6 +254,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
         Offset toScreen(Offset imagePoint) => fit.origin + imagePoint * fit.scale;
 
         return Stack(
+          clipBehavior: Clip.none,
           children: [
             Positioned.fill(
               child: CustomPaint(
@@ -263,9 +269,45 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
             ),
             for (var i = 0; i < 4; i++)
               _handle(i, toScreen(_corners[i]), fit.scale, img),
+            if (_dragCorner != null)
+              _buildMagnifier(toScreen(_corners[_dragCorner!])),
           ],
         );
       },
+    );
+  }
+
+  /// Köşe sürüklenirken parmağın üstünde duran büyüteç (RawMagnifier,
+  /// 1,8 kat). Parmağın 70 px üstünde durur, odak parmaktadır.
+  Widget _buildMagnifier(Offset at) {
+    const size = Size(120, 120);
+    const above = 70.0;
+    final left = at.dx - size.width / 2;
+    final top = at.dy - size.height / 2 - above;
+    return Positioned(
+      left: left,
+      top: top,
+      child: IgnorePointer(
+        child: RawMagnifier(
+          size: size,
+          focalPointOffset: const Offset(0, above),
+          magnificationScale: 1.8,
+          decoration: MagnifierDecoration(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(60),
+              side: const BorderSide(color: Colors.white70, width: 2),
+            ),
+            shadows: const [
+              BoxShadow(
+                color: Color(0x66000000),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+                blurStyle: BlurStyle.outer,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -277,6 +319,7 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
       top: screenPoint.dy - touch / 2,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
+        onPanStart: (_) => setState(() => _dragCorner = index),
         onPanUpdate: (d) {
           final next = _corners[index] + d.delta / scale;
           setState(() {
@@ -286,6 +329,8 @@ class _ScanEditScreenState extends State<ScanEditScreen> {
             );
           });
         },
+        onPanEnd: (_) => setState(() => _dragCorner = null),
+        onPanCancel: () => setState(() => _dragCorner = null),
         child: const SizedBox(
           width: touch,
           height: touch,
