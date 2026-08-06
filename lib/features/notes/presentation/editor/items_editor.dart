@@ -355,7 +355,57 @@ class ItemsEditorState extends State<ItemsEditor> {
     return node;
   });
 
-  void _commit() => widget.onChanged(List.of(_items));
+  void _commit() {
+    // Silinen satırların taşma ölçümü sonsuza dek yaşamasın (bkz.
+    // [_overflowsLine]); ölçüm satır sayısından çoksa bayatlar ayıklanır.
+    if (_overflowCache.length > _items.length) {
+      final live = {for (final i in _items) i.id};
+      _overflowCache.removeWhere((id, _) => !live.contains(id));
+    }
+    widget.onChanged(List.of(_items));
+  }
+
+  /// Tek satır kipinde satır başına son taşma ölçümü (metin + genişlik +
+  /// punto ile birlikte). Ölçüm `TextPainter.layout` demek; önbelleksiz
+  /// hâlinde EKRANDAKİ HER SATIR, her yeniden çizimde yeniden ölçülüyordu —
+  /// bir maddeye yazarken editörün tamamı yeniden kurulduğu için bu, tuş
+  /// başına satır sayısı kadar metin yerleşimi ediyordu (kasmanın
+  /// kaynaklarından biri). Metin/genişlik/punto değişmedikçe ölçüm tekrar
+  /// edilmez.
+  final _overflowCache =
+      <String, ({String text, double width, double fontSize, bool value})>{};
+
+  bool _overflowsLine(
+    BuildContext context,
+    String id,
+    String text,
+    TextStyle style,
+    double maxWidth,
+  ) {
+    final fontSize = style.fontSize ?? 0;
+    final cached = _overflowCache[id];
+    if (cached != null &&
+        cached.text == text &&
+        cached.width == maxWidth &&
+        cached.fontSize == fontSize) {
+      return cached.value;
+    }
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final value = painter.width > maxWidth - 14;
+    painter.dispose();
+    _overflowCache[id] = (
+      text: text,
+      width: maxWidth,
+      fontSize: fontSize,
+      value: value,
+    );
+    return value;
+  }
 
   /// Satırların son ölçülen kaydırma değerleri (id → sol/sağ dolgu). Yeni
   /// eklenen satır KOMŞUSUNUN değeriyle doğsun diye tutulur: aksi hâlde satır
@@ -980,37 +1030,46 @@ class ItemsEditorState extends State<ItemsEditor> {
                             // (kaydırılabilir alan), kullanıcı metnin bittiğini
                             // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
                             // sağına "…" konur; odaklanınca satır zaten açılır.
-                            if (widget.expandItems || focused) return field;
+                            //
+                            // KÖK NEDEN (imleç görünmüyordu) — ağacın ŞEKLİ
+                            // odakla DEĞİŞMEMELİ: eskiden odaksızken
+                            // `LayoutBuilder > Row > Expanded > TextField`,
+                            // odaklanınca çıplak `TextField` dönüyordu. Dokunuş
+                            // odağı verir, gelen yeniden çizimde alanın öğesi
+                            // BAŞKA bir konuma düştüğü için TextField'ın state'i
+                            // (ve içindeki EditableText) sıfırdan kuruluyordu;
+                            // yeni state odağı ZATEN almış bir düğümle açıldığı
+                            // için "odak değişti" olayı hiç gelmiyor ve imlecin
+                            // yanıp sönme zamanlayıcısı başlamıyordu — imleç
+                            // ancak ilk harfte beliriyordu. Yalnız "tam göster"
+                            // (odaktan bağımsız) sarmalayıcıyı belirler; odak
+                            // artık yalnız "…"in görünürlüğünü değiştirir.
+                            if (widget.expandItems) return field;
                             return LayoutBuilder(
                               builder: (context, constraints) {
-                                if (!constraints.maxWidth.isFinite) {
-                                  return field;
-                                }
-                                final painter = TextPainter(
-                                  text: TextSpan(
-                                    text: controller.text,
-                                    style: fieldStyle,
-                                  ),
-                                  maxLines: 1,
-                                  textDirection: Directionality.of(context),
-                                  textScaler: MediaQuery.textScalerOf(context),
-                                )..layout();
                                 final overflowing =
-                                    painter.width > constraints.maxWidth - 14;
-                                painter.dispose();
-                                if (!overflowing) return field;
+                                    !focused &&
+                                    constraints.maxWidth.isFinite &&
+                                    _overflowsLine(
+                                      context,
+                                      item.id,
+                                      controller.text,
+                                      fieldStyle,
+                                      constraints.maxWidth,
+                                    );
                                 return Row(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Expanded(child: field),
-                                    Text(
-                                      '…',
-                                      style: fieldStyle.copyWith(
-                                        color: scheme.onSurfaceVariant,
+                                    if (overflowing)
+                                      Text(
+                                        '…',
+                                        style: fieldStyle.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 );
                               },

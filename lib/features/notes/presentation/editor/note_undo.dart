@@ -57,11 +57,31 @@ class NoteUndoStack {
   /// [before] durumunu yığına koyar. Süren bir YAZMA dizisiyse (yapı aynı ve
   /// son kayıt [coalesceWindow] içinde) yeni bir adım açılmaz: dizinin
   /// başlangıcı zaten yığındadır.
+  /// Son hesaplanan parmak izi (nesne KİMLİĞİNE bağlı — Note değişmez).
+  ///
+  /// Her tuş vuruşunda [push] iki parmak izi kuruyordu ve her biri notun tüm
+  /// maddelerini/eklerini dizip SIRALIYOR. Ardışık çağrılarda bir öncekinin
+  /// `after`'ı bu çağrının `before`'udur; önbellek o yarıyı bedavaya getirir.
+  Note? _keyedNote;
+  String? _keyedValue;
+
+  String _cachedKey(Note n) {
+    if (identical(_keyedNote, n)) return _keyedValue!;
+    final key = structureKey(n);
+    _keyedNote = n;
+    _keyedValue = key;
+    return key;
+  }
+
   void push(Note before, Note after, {required DateTime now}) {
     // Yeni bir değişiklik ileri (yinele) zincirini geçersiz kılar — geri
     // alınan durumun üstüne yazıldı, artık "ilerisi" yok (Word/Docs kuralı).
     _redo.clear();
-    final structural = structureKey(before) != structureKey(after);
+    final beforeKey = _cachedKey(before);
+    final afterKey = structureKey(after);
+    _keyedNote = after;
+    _keyedValue = afterKey;
+    final structural = beforeKey != afterKey;
     final last = _lastPushAt;
     if (!structural &&
         _entries.isNotEmpty &&
