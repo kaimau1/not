@@ -145,10 +145,16 @@ void main() {
   test('desteklenmeyen dilde emniyet ağı yok', () {
     expect(spokenDateTimeSupported('tr'), isTrue);
     expect(spokenDateTimeSupported('en-US'), isTrue);
-    expect(spokenDateTimeSupported('fr'), isFalse);
-    // Fransızca "demain à 9h" çözülmez: hatırlatıcı modele kalır.
+    // Fransızca 2026-08-06'da eklendi (bkz. spoken_datetime_i18n_test.dart);
+    // sözlüğü olmayan bir dil hâlâ modele düşer.
+    expect(spokenDateTimeSupported('sv'), isFalse);
+    // İsveççe "imorgon klockan 9" çözülmez: hatırlatıcı modele kalır.
     expect(
-      parseSpokenDateTime('demain à 9h', languageCode: 'fr', now: now),
+      parseSpokenDateTime(
+        'imorgon klockan 9',
+        languageCode: 'sv',
+        now: now,
+      ),
       isNull,
     );
   });

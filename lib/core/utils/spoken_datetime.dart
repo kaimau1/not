@@ -1,4 +1,5 @@
-/// Konuşmadan tarih/saat çıkaran ayrıştırıcı (tr, en, de, es).
+/// Konuşmadan tarih/saat çıkaran ayrıştırıcı — uygulamanın 16 dilinin
+/// tamamı (tr, en, de, es, fr, it, pt, nl, pl, ru, id, hi, ja, ko, zh, ar).
 ///
 /// Sesli asistanın emniyet ağıdır: model `create_note`'u çağırırken
 /// `reminderAt` alanını doldurmayı atlayabiliyor ("yarın sabah 9'da toplantım
@@ -81,10 +82,27 @@ String _defaultLower(String text) => text.toLowerCase();
 String _turkishLower(String text) =>
     text.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
 
-/// Latin harfleri — kelime sınırı denetimi için. Dart'ın `\b`'si ASCII `\w`
-/// üzerinden çalıştığından "ü", "ş", "ñ" gibi harflerde yanlış yerde sınır
-/// görüyor; bu yüzden sınır elle denetlenir.
-final RegExp _letter = RegExp('[a-zà-öø-ÿğış]');
+/// Harf sayılan karakterler — kelime sınırı denetimi için. Dart'ın `\b`'si
+/// ASCII `\w` üzerinden çalıştığından "ü", "ş", "ñ" gibi harflerde yanlış
+/// yerde sınır görüyor; bu yüzden sınır elle denetlenir.
+///
+/// Latin Ext-A (ğışłśż…), Kiril, Arap ve Devanagari BİLEREK dahil: bu
+/// yazılarda kelimeler boşlukla ayrılıyor, harf sayılmazlarsa her konum sınır
+/// gibi görünür ve "завтра" uzun bir kelimenin ortasında da eşleşirdi.
+///
+/// CJK ve Hangul BİLEREK dışarıda: Japonca/Çince kelimeleri boşlukla
+/// ayırmıyor, Korece de eklerini kelimeye bitiştiriyor ("내일에"). Onları harf
+/// saymak her eşleşmeyi öldürürdü; oralarda alt dize eşleşmesi kabul.
+/// Aralıklar `\u` ile yazıldı: Arap bloğunun başındaki karakterler görünmez
+/// biçim işaretleri, kaynağa çıplak yazılırsa okunamaz/bozulabilir hâle gelir.
+final RegExp _letter = RegExp(
+  '[a-zà-öø-ÿğış'
+  'Ā-ſ' // Latin Ext-A: ł, ś, ż, ğ, ı, š…
+  'Ѐ-ӿ' // Kiril
+  '؀-ۿ' // Arap
+  'ऀ-ॿ' // Devanagari
+  ']',
+);
 
 const _weekdayNames = [
   DateTime.monday,
@@ -215,6 +233,294 @@ final Map<String, _SpokenLanguage> _languages = {
     nextWeek: const ['próxima semana', 'semana que viene'],
     hourPrefix: RegExp(r'\ba\s+las?\s+(\d{1,2})\b'),
     halfPast: RegExp(r'\b(\d{1,2})\s+y media\b'),
+  ),
+  // TUZAK — `\b` ASCII: 'à', 'в', 'ا' gibi harflerin ÖNÜNDE sınır bulunamaz
+  // (iki taraf da ASCII-dışı → sınır yok), o yüzden aşağıdaki kalıplarda
+  // `\b` yerine `(?:^|\s)` kullanıldı. Sondaki `(?!\d)` de "à 9h"/"9時" gibi
+  // saate harf/işaret bitişen yazımları kaçırmamak için `\b`'nin yerini alır.
+  'fr': _SpokenLanguage(
+    parts: const {
+      'après-midi': 15,
+      'matin': 9,
+      'midi': 12,
+      'soir': 19,
+      'nuit': 22,
+    },
+    afternoonParts: const {'après-midi', 'soir', 'nuit'},
+    weekdays: _weekdayMap(const [
+      'lundi',
+      'mardi',
+      'mercredi',
+      'jeudi',
+      'vendredi',
+      'samedi',
+      'dimanche',
+    ]),
+    today: const ["aujourd'hui"],
+    // "après-demain" ÖNCE aranıyor (_parseDay), ayrıca '-' harf sayılmadığı
+    // için burada ayrı bir kalıp gerekmiyor.
+    tomorrow: const ['demain'],
+    dayAfterTomorrow: const ['après-demain'],
+    nextWeek: const ['semaine prochaine'],
+    hourPrefix: RegExp(r'(?:^|\s)à\s+(\d{1,2})(?!\d)'),
+    halfPast: RegExp(r'\b(\d{1,2})\s*(?:h|heures?)\s+et\s+demie\b'),
+  ),
+  'it': _SpokenLanguage(
+    parts: const {
+      'pomeriggio': 15,
+      'mattina': 9,
+      'mezzogiorno': 12,
+      'sera': 19,
+      'notte': 22,
+    },
+    afternoonParts: const {'pomeriggio', 'sera', 'notte'},
+    weekdays: _weekdayMap(const [
+      'lunedì',
+      'martedì',
+      'mercoledì',
+      'giovedì',
+      'venerdì',
+      'sabato',
+      'domenica',
+    ]),
+    today: const ['oggi'],
+    // "dopodomani" içindeki "domani" kelime sınırından geçemez ('o' harf).
+    tomorrow: const ['domani'],
+    dayAfterTomorrow: const ['dopodomani'],
+    nextWeek: const ['prossima settimana', 'settimana prossima'],
+    hourPrefix: RegExp(r'\balle\s+(\d{1,2})\b'),
+    halfPast: RegExp(r'\b(\d{1,2})\s+e\s+mezza\b'),
+  ),
+  'pt': _SpokenLanguage(
+    parts: const {
+      'da manhã': 9,
+      'meio-dia': 12,
+      'da tarde': 15,
+      'da noite': 21,
+      'manhã': 9,
+      'tarde': 15,
+      'noite': 21,
+    },
+    afternoonParts: const {'da tarde', 'da noite', 'tarde', 'noite'},
+    // Kısa biçimler: "segunda-feira" içindeki "segunda" da eşleşir ('-' harf
+    // değil), tersi olmazdı.
+    weekdays: _weekdayMap(const [
+      'segunda',
+      'terça',
+      'quarta',
+      'quinta',
+      'sexta',
+      'sábado',
+      'domingo',
+    ]),
+    today: const ['hoje'],
+    tomorrow: const ['amanhã'],
+    dayAfterTomorrow: const ['depois de amanhã'],
+    nextWeek: const ['próxima semana', 'semana que vem'],
+    hourPrefix: RegExp(r'(?:^|\s)(?:às|as)\s+(\d{1,2})(?!\d)'),
+    halfPast: RegExp(r'\b(\d{1,2})\s+e\s+meia\b'),
+  ),
+  'nl': _SpokenLanguage(
+    parts: const {'middag': 15, 'ochtend': 9, 'avond': 19, 'nacht': 22},
+    afternoonParts: const {'middag', 'avond', 'nacht'},
+    weekdays: _weekdayMap(const [
+      'maandag',
+      'dinsdag',
+      'woensdag',
+      'donderdag',
+      'vrijdag',
+      'zaterdag',
+      'zondag',
+    ]),
+    today: const ['vandaag'],
+    tomorrow: const ['morgen'],
+    dayAfterTomorrow: const ['overmorgen'],
+    nextWeek: const ['volgende week'],
+    hourPrefix: RegExp(r'\bom\s+(\d{1,2})\b'),
+    // "half 9" Felemenkçede 8:30 — Almancadaki gerekçenin aynısı, bilerek yok.
+  ),
+  'pl': _SpokenLanguage(
+    parts: const {
+      'po południu': 15,
+      'rano': 9,
+      'południe': 12,
+      'wieczorem': 19,
+      'wieczór': 19,
+      'w nocy': 22,
+    },
+    afternoonParts: const {'po południu', 'wieczorem', 'wieczór', 'w nocy'},
+    // Lehçe gün adlarını çekimliyor ("we wtorek" ama "w środę"); taban biçim
+    // yazıldı, çekimli hâller modele düşer.
+    weekdays: _weekdayMap(const [
+      'poniedziałek',
+      'wtorek',
+      'środa',
+      'czwartek',
+      'piątek',
+      'sobota',
+      'niedziela',
+    ]),
+    today: const ['dzisiaj', 'dziś'],
+    tomorrow: const ['jutro'],
+    dayAfterTomorrow: const ['pojutrze'],
+    nextWeek: const ['przyszłym tygodniu', 'przyszły tydzień'],
+    hourPrefix: RegExp(r'\bo\s+(\d{1,2})\b'),
+  ),
+  'ru': _SpokenLanguage(
+    parts: const {
+      'после обеда': 15,
+      'утром': 9,
+      'утро': 9,
+      'днём': 13,
+      'вечером': 19,
+      'вечер': 19,
+      'ночью': 22,
+      'ночь': 22,
+    },
+    afternoonParts: const {
+      'после обеда',
+      'днём',
+      'вечером',
+      'вечер',
+      'ночью',
+      'ночь',
+    },
+    weekdays: _weekdayMap(const [
+      'понедельник',
+      'вторник',
+      'среда',
+      'четверг',
+      'пятница',
+      'суббота',
+      'воскресенье',
+    ]),
+    today: const ['сегодня'],
+    tomorrow: const ['завтра'],
+    dayAfterTomorrow: const ['послезавтра'],
+    nextWeek: const ['следующей неделе', 'следующая неделя'],
+    hourPrefix: RegExp(r'(?:^|\s)в\s+(\d{1,2})(?!\d)'),
+  ),
+  'id': _SpokenLanguage(
+    parts: const {'sore': 15, 'pagi': 9, 'siang': 12, 'malam': 19},
+    afternoonParts: const {'sore', 'malam'},
+    // NOT: 'minggu' hem Pazar hem "hafta" demek; "minggu depan" (gelecek
+    // hafta) gelecek PAZAR olarak çözülür. Hatırlatıcı bağlamında kabul
+    // edilebilir bir yaklaşım, yanlış saat değil.
+    weekdays: _weekdayMap(const [
+      'senin',
+      'selasa',
+      'rabu',
+      'kamis',
+      'jumat',
+      'sabtu',
+      'minggu',
+    ]),
+    today: const ['hari ini'],
+    tomorrow: const ['besok'],
+    dayAfterTomorrow: const ['lusa'],
+    nextWeek: const ['minggu depan', 'pekan depan'],
+    hourPrefix: RegExp(r'\bjam\s+(\d{1,2})\b'),
+  ),
+  'hi': _SpokenLanguage(
+    parts: const {'दोपहर': 15, 'सुबह': 9, 'शाम': 19, 'रात': 22},
+    afternoonParts: const {'दोपहर', 'शाम', 'रात'},
+    weekdays: _weekdayMap(const [
+      'सोमवार',
+      'मंगलवार',
+      'बुधवार',
+      'गुरुवार',
+      'शुक्रवार',
+      'शनिवार',
+      'रविवार',
+    ]),
+    today: const ['आज'],
+    // 'कल' hem "yarın" hem "dün" demek. Hatırlatıcı istemi doğası gereği
+    // GELECEĞE bakar, o yüzden yarın kabul edildi.
+    tomorrow: const ['कल'],
+    dayAfterTomorrow: const ['परसों'],
+    nextWeek: const ['अगले हफ्ते', 'अगले सप्ताह'],
+    hourPrefix: RegExp(r'(\d{1,2})\s*बजे'),
+  ),
+  'ja': _SpokenLanguage(
+    parts: const {'午後': 15, '午前': 10, '朝': 9, '昼': 12, '夕方': 18, '夜': 22},
+    afternoonParts: const {'午後', '夕方', '夜'},
+    weekdays: _weekdayMap(const [
+      '月曜日',
+      '火曜日',
+      '水曜日',
+      '木曜日',
+      '金曜日',
+      '土曜日',
+      '日曜日',
+    ]),
+    today: const ['今日'],
+    tomorrow: const ['明日', 'あした'],
+    dayAfterTomorrow: const ['明後日', 'あさって'],
+    nextWeek: const ['来週'],
+    hourPrefix: RegExp(r'(\d{1,2})\s*時'),
+  ),
+  'ko': _SpokenLanguage(
+    parts: const {'오후': 15, '오전': 10, '아침': 9, '점심': 12, '저녁': 19, '밤': 22},
+    afternoonParts: const {'오후', '저녁', '밤'},
+    weekdays: _weekdayMap(const [
+      '월요일',
+      '화요일',
+      '수요일',
+      '목요일',
+      '금요일',
+      '토요일',
+      '일요일',
+    ]),
+    today: const ['오늘'],
+    tomorrow: const ['내일'],
+    dayAfterTomorrow: const ['모레'],
+    nextWeek: const ['다음 주', '다음주'],
+    hourPrefix: RegExp(r'(\d{1,2})\s*시'),
+  ),
+  'zh': _SpokenLanguage(
+    parts: const {'下午': 15, '上午': 10, '早上': 9, '中午': 12, '晚上': 19, '夜里': 22},
+    afternoonParts: const {'下午', '晚上', '夜里'},
+    weekdays: _weekdayMap(const [
+      '星期一',
+      '星期二',
+      '星期三',
+      '星期四',
+      '星期五',
+      '星期六',
+      '星期日',
+    ]),
+    today: const ['今天'],
+    tomorrow: const ['明天'],
+    dayAfterTomorrow: const ['后天', '後天'],
+    nextWeek: const ['下周', '下星期'],
+    hourPrefix: RegExp(r'(\d{1,2})\s*[点點]'),
+  ),
+  'ar': _SpokenLanguage(
+    parts: const {
+      'بعد الظهر': 15,
+      'الصباح': 9,
+      'صباحا': 9,
+      'الظهر': 12,
+      'المساء': 19,
+      'مساء': 19,
+      'الليل': 22,
+      'ليلا': 22,
+    },
+    afternoonParts: const {'بعد الظهر', 'المساء', 'مساء', 'الليل', 'ليلا'},
+    weekdays: _weekdayMap(const [
+      'الاثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+      'السبت',
+      'الأحد',
+    ]),
+    today: const ['اليوم'],
+    tomorrow: const ['غدا', 'غدًا', 'بكرة'],
+    dayAfterTomorrow: const ['بعد غد'],
+    nextWeek: const ['الأسبوع القادم', 'الأسبوع المقبل'],
+    hourPrefix: RegExp(r'(?:^|\s)(?:الساعة|في)\s+(\d{1,2})(?!\d)'),
   ),
 };
 
@@ -372,8 +678,4 @@ DateTime? parseSpokenDateTime(
 /// Uygulamanın o anki dilinde ayrıştırır — çağrı yerleri dil kodunu tek tek
 /// hesaplamasın (biri unutulursa o akış sessizce Türkçeye sabitlenirdi).
 DateTime? parseSpokenDateTimeNow(String text, {DateTime? now}) =>
-    parseSpokenDateTime(
-      text,
-      languageCode: Intl.getCurrentLocale(),
-      now: now,
-    );
+    parseSpokenDateTime(text, languageCode: Intl.getCurrentLocale(), now: now);

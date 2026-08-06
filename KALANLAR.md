@@ -167,10 +167,6 @@ silme) tamamlandı, kalanlar sırayla:
   1321 satır + 4 test dosyası (~900 satır), buradaki 921 satır ve testsiz.
   `pptx_editor.dart`, `slide_canvas.dart`, `slideshow_screen.dart` de var.
   Port işi: `Attachment` modeli ve depolama katmanı iki repoda farklı.
-- [ ] **Tarih ayrıştırıcısı 16 dilin yalnız 4'ünde**
-  (`spoken_datetime.dart`: tr, en, de, es — 2026-08-05). Kalan 12 dilde
-  "yarın saat 3'te" yerelde çözülmez, emniyet ağı yok, model'e düşer.
-  Yeni dil eklemek = `_languages`'a bir sözlük girişi + test.
 - [ ] **Farklılaşma özellikleri** (kullanıcı 2026-07-24'te sordu, ayrı oturum):
   1) notlardan otomatik aralıklı tekrar/kart üretimi, 2) tüm defterle sohbet
   (RAG), 3) otomatik not bağlama. Sırayla 1 → 2 → 3 önerildi.
