@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import 'note_card.dart';
 
 /// Tüm hatırlatıcıların tek yerden görüldüğü ekran: yaklaşan ve geçmiş
 /// hatırlatıcılar listelenir; buradan düzenlenir, kaldırılır veya yeni
@@ -29,7 +31,10 @@ class RemindersScreen extends ConsumerWidget {
     final date = await showDatePicker(
       context: context,
       initialDate: initial.isAfter(now) ? initial : now,
-      firstDate: DateTime(now.year - 1),
+      // Geçmiş TARİH seçilemez: geçmişe kurulan hatırlatıcı hiç planlanmıyor
+      // (reminder_service gelecek olmayanı atlar), kullanıcı "kurdum" sanıp
+      // hiçbir bildirim almıyordu.
+      firstDate: DateTime(now.year, now.month, now.day),
       lastDate: now.add(const Duration(days: 365 * 5)),
     );
     if (date == null || !context.mounted) return null;
@@ -38,7 +43,26 @@ class RemindersScreen extends ConsumerWidget {
       initialTime: TimeOfDay.fromDateTime(initial),
     );
     if (time == null) return null;
-    return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    final picked = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    // Bugünün geçmiş bir SAATİ de seçilebiliyor; sessizce "Geçmiş" bölümüne
+    // düşürmek yerine uyar ve hiç kurma.
+    if (!picked.isAfter(DateTime.now())) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(content: Text(context.l10n.reminderInPast)),
+          );
+      }
+      return null;
+    }
+    return picked;
   }
 
   Future<void> _editReminder(
@@ -66,7 +90,7 @@ class RemindersScreen extends ConsumerWidget {
     if (picked == null || !context.mounted) return;
     final id = await repo.createNote(NoteType.text);
     repo.setReminder(id, picked);
-    if (context.mounted) await context.push('/note/$id');
+    if (context.mounted) await context.push(noteRoutePath(id));
   }
 
   @override
@@ -176,15 +200,20 @@ class _ReminderTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final preview = note.toPlainText().replaceAll('\n', ' · ');
-    final title = note.title.trim().isNotEmpty
-        ? note.title.trim()
-        : (preview.isEmpty ? l10n.remindersUntitled : preview);
+    // Kilitli notun içeriği kimlik doğrulamasız yüzeylerde gösterilmez.
+    final preview = note.locked
+        ? ''
+        : note.toPlainText().replaceAll('\n', ' · ');
+    final title = note.locked
+        ? l10n.lockedNote
+        : (note.displayTitle.trim().isNotEmpty
+              ? note.displayTitle.trim()
+              : (preview.isEmpty ? l10n.remindersUntitled : preview));
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        onTap: () => context.push('/note/${note.id}'),
+        onTap: () => openNoteRoute(context, note),
         leading: Icon(
           past ? Icons.alarm_on_outlined : Icons.alarm,
           color: past ? scheme.onSurfaceVariant : scheme.primary,

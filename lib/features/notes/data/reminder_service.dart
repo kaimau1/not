@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -124,7 +125,7 @@ class ReminderService {
               );
             default:
               try {
-                _ref.read(routerProvider).push('/note/$noteId');
+                _ref.read(routerProvider).push(noteRoutePath(noteId));
               } catch (_) {}
           }
         }
@@ -225,55 +226,88 @@ class ReminderService {
         }
       }
 
-      // Yeni veya zamanı değişenleri planla.
+      // Yeni veya zamanı değişenleri planla. try/catch DÖNGÜNÜN İÇİNDE:
+      // tek bir hatırlatıcının hatası (ör. Android 12'de kullanıcı
+      // SCHEDULE_EXACT_ALARM iznini kapattıysa exact_alarms_not_permitted)
+      // dıştaki catch'e taşınsaydı kalan hatırlatıcıların HİÇBİRİ
+      // planlanmıyordu.
       for (final entry in wanted.entries) {
         final note = entry.value;
         if (_scheduled[entry.key] == note.reminderAt) continue;
-        final title = note.title.trim().isEmpty
-            ? 'Not hatırlatıcısı'
-            : note.title.trim();
-        final preview = note.toPlainText();
-        final trimmed = preview.length > 120
-            ? '${preview.substring(0, 120)}…'
-            : preview;
-        final prefix = reminderTimePrefix(note.reminderAt!);
-        await _plugin.zonedSchedule(
-          id: _notificationId(entry.key),
-          title: title,
-          body: trimmed.trim().isEmpty ? prefix : '$prefix · $trimmed',
-          scheduledDate: tz.TZDateTime.from(note.reminderAt!, tz.local),
-          notificationDetails: const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'reminders',
-              'Hatırlatıcılar',
-              channelDescription: 'Not hatırlatıcı bildirimleri',
-              importance: Importance.high,
-              priority: Priority.high,
-              // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
-              // öne getirir ki işlem güvenilir biçimde ana izolatta yapılsın.
-              actions: <AndroidNotificationAction>[
-                AndroidNotificationAction(
-                  'done',
-                  'Tamamlandı',
-                  showsUserInterface: true,
-                ),
-                AndroidNotificationAction(
-                  'snooze1h',
-                  '1 saat ertele',
-                  showsUserInterface: true,
-                ),
-              ],
-            ),
-            windows: WindowsNotificationDetails(),
-          ),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          payload: 'note:${entry.key}',
-        );
-        _scheduled[entry.key] = note.reminderAt!;
+        try {
+          await _scheduleReminder(entry.key, note);
+          _scheduled[entry.key] = note.reminderAt!;
+        } catch (e) {
+          debugPrint('Hatırlatıcı planlanamadı (${entry.key}): $e');
+        }
       }
     } catch (e) {
       // Bildirim altyapısı olmayan ortamlarda uygulamayı düşürme.
       debugPrint('Hatırlatıcı planlanamadı: $e');
+    }
+  }
+
+  Future<void> _scheduleReminder(String noteId, Note note) async {
+    final title = note.displayTitle.trim().isEmpty
+        ? 'Not hatırlatıcısı'
+        : note.displayTitle.trim();
+    final preview = note.toPlainText();
+    final trimmed = preview.length > 120
+        ? '${preview.substring(0, 120)}…'
+        : preview;
+    // Önek ÇALMA anına göre: bildirim tam reminderAt'te görünür, yani o an
+    // "bugün"dür. Planlama anına göre hesaplansaydı yarına kurulan
+    // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
+    final prefix = reminderTimePrefix(note.reminderAt!, now: note.reminderAt);
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'reminders',
+        'Hatırlatıcılar',
+        channelDescription: 'Not hatırlatıcı bildirimleri',
+        importance: Importance.high,
+        priority: Priority.high,
+        // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
+        // öne getirir ki işlem güvenilir biçimde ana izolatta yapılsın.
+        actions: <AndroidNotificationAction>[
+          AndroidNotificationAction(
+            'done',
+            'Tamamlandı',
+            showsUserInterface: true,
+          ),
+          AndroidNotificationAction(
+            'snooze1h',
+            '1 saat ertele',
+            showsUserInterface: true,
+          ),
+        ],
+      ),
+      windows: WindowsNotificationDetails(),
+    );
+    final body = trimmed.trim().isEmpty ? prefix : '$prefix · $trimmed';
+    final scheduledDate = tz.TZDateTime.from(note.reminderAt!, tz.local);
+    try {
+      await _plugin.zonedSchedule(
+        id: _notificationId(noteId),
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        payload: 'note:$noteId',
+      );
+    } on PlatformException catch (e) {
+      // Kullanıcı kesin alarm iznini kapatmış olabilir: hatırlatıcı hiç
+      // kurulmamaktansa birkaç dakika kayabilen inexact ile kurulur.
+      if (e.code != 'exact_alarms_not_permitted') rethrow;
+      await _plugin.zonedSchedule(
+        id: _notificationId(noteId),
+        title: title,
+        body: body,
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: 'note:$noteId',
+      );
     }
   }
 

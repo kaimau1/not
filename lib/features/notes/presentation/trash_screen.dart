@@ -137,16 +137,18 @@ class _TrashTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final preview = note.toPlainText();
+    // Kilitli notun başlığı/içeriği kimlik doğrulamasız yüzeylerde gösterilmez
+    // (ana ekran kartıyla aynı kural).
+    final preview = note.locked ? '' : note.toPlainText();
+    final title = note.locked
+        ? l10n.lockedNote
+        : (note.displayTitle.trim().isNotEmpty
+              ? note.displayTitle
+              : preview.split('\n').first);
     return ListTile(
       tileColor: scheme.surfaceContainerLow,
-      title: Text(
-        note.displayTitle.trim().isNotEmpty
-            ? note.displayTitle
-            : preview.split('\n').first,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      leading: note.locked ? const Icon(Icons.lock_outline) : null,
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: preview.isEmpty
           ? null
           : Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),

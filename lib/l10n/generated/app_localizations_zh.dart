@@ -98,6 +98,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get undo => '撤销';
 
   @override
+  String get redo => '重做';
+
+  @override
   String get titleHint => '标题';
 
   @override
@@ -640,6 +643,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get remindersPast => '已过去';
+
+  @override
+  String get reminderInPast => '所选时间已过去——请选择未来的时间。';
 
   @override
   String get newReminder => '新建提醒';

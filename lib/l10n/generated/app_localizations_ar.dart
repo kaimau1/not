@@ -98,6 +98,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get undo => 'تراجع';
 
   @override
+  String get redo => 'إعادة';
+
+  @override
   String get titleHint => 'العنوان';
 
   @override
@@ -653,6 +656,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get remindersPast => 'الماضية';
+
+  @override
+  String get reminderInPast => 'الوقت المحدد قد مضى — اختر وقتًا في المستقبل.';
 
   @override
   String get newReminder => 'تذكير جديد';

@@ -205,21 +205,31 @@ class _QuickAddFabState extends State<QuickAddFab> {
     final l10n = context.l10n;
     // FAB'ın onLongPress'i yok: uzun basış dıştaki GestureDetector'a düşer
     // (InkWell uzun basışı sahiplenmediğinden çakışma olmaz).
-    return GestureDetector(
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        if (!_open) _openMenu();
+    //
+    // PopScope: panel bir Overlay katmanı, rota DEĞİL — sistem geri tuşu
+    // Navigator'a gidiyor ve panel açıkken geri basmak paneli bırakıp
+    // UYGULAMADAN çıkıyordu. Geri artık önce paneli kapatır.
+    return PopScope(
+      canPop: !_open,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _close();
       },
-      child: FloatingActionButton(
-        heroTag: 'add-fab',
-        tooltip: l10n.quickAddTooltip,
-        // Dokunmak tip menüsünü açar (metin/madde/sıralı/el yazısı); açıkken
-        // tekrar dokunmak kapatır.
-        onPressed: _open ? _close : _openMenu,
-        child: AnimatedRotation(
-          turns: _open ? 0.125 : 0, // + → × dönüşü
-          duration: const Duration(milliseconds: 160),
-          child: const Icon(Icons.add),
+      child: GestureDetector(
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          if (!_open) _openMenu();
+        },
+        child: FloatingActionButton(
+          heroTag: 'add-fab',
+          tooltip: l10n.quickAddTooltip,
+          // Dokunmak tip menüsünü açar (metin/madde/sıralı/el yazısı); açıkken
+          // tekrar dokunmak kapatır.
+          onPressed: _open ? _close : _openMenu,
+          child: AnimatedRotation(
+            turns: _open ? 0.125 : 0, // + → × dönüşü
+            duration: const Duration(milliseconds: 160),
+            child: const Icon(Icons.add),
+          ),
         ),
       ),
     );

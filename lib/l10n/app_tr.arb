@@ -55,6 +55,7 @@
   },
   "deleteSelected": "Seçilenleri sil",
   "undo": "Geri Al",
+  "redo": "Yinele",
   "titleHint": "Başlık",
   "bodyHint": "Not...",
   "newItemHint": "Yeni öğe",
@@ -150,7 +151,9 @@
   "settingsSearchEmpty": "«{query}» için ayar yok",
   "@settingsSearchEmpty": {
     "placeholders": {
-      "query": { "type": "String" }
+      "query": {
+        "type": "String"
+      }
     }
   },
   "settings": "Ayarlar",
@@ -255,7 +258,9 @@
   "assistantDeleteConfirm": "Asistan \"{title}\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?",
   "@assistantDeleteConfirm": {
     "placeholders": {
-      "title": {"type": "String"}
+      "title": {
+        "type": "String"
+      }
     }
   },
   "recordAudio": "Ses kaydı",
@@ -317,6 +322,7 @@
   "remindersEmptyHint": "Bir nota hatırlatıcı ekle veya + düğmesiyle yeni bir hatırlatıcılı not oluştur",
   "remindersUpcoming": "Yaklaşan",
   "remindersPast": "Geçmiş",
+  "reminderInPast": "Seçilen zaman geçmişte — gelecekte bir zaman seç.",
   "newReminder": "Yeni hatırlatıcı",
   "remindersUntitled": "Adsız not",
   "remindersEdit": "Zamanı değiştir",
@@ -663,8 +669,12 @@
   "aiPointsOf": "{used} / {total}",
   "@aiPointsOf": {
     "placeholders": {
-      "used": { "type": "int" },
-      "total": { "type": "int" }
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "aiPointsRenew": "gece yarısı yenilenir",
@@ -677,7 +687,9 @@
   "aiTaskDuplicatesInfo": "{count} kopya not var",
   "@aiTaskDuplicatesInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duplicatesTitle": "Kopya notlar",
@@ -687,7 +699,9 @@
   "duplicatesDone": "{count} kopya çöp kutusuna taşındı",
   "@duplicatesDone": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "aiRecentActions": "SON İŞLEMLER",
@@ -702,14 +716,18 @@
   "aiTaskTagUntaggedInfo": "{count} not etiket bekliyor",
   "@aiTaskTagUntaggedInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "aiTaskSuggestTitles": "Başlık öner",
   "aiTaskSuggestTitlesInfo": "{count} başlıksız not var",
   "@aiTaskSuggestTitlesInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sectionPinnedShort": "SABİT",
@@ -785,7 +803,16 @@
   "linkGoogleAccount": "Google hesabı bağla",
   "accountLinked": "Google hesabın bağlandı. Notların artık yedekleniyor.",
   "scanReviewPage": "Sayfa {current} / {total}",
-  "@scanReviewPage": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@scanReviewPage": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanRotatePage": "Sayfayı döndür",
   "scanDeletePage": "Sayfayı sil",
   "scanLastPage": "Son sayfa silinemez",
@@ -801,7 +828,16 @@
   "scanAddAsImages": "Görsel olarak ekle",
   "scanBuildingPdf": "PDF hazırlanıyor…",
   "scanOcrProgress": "Metin tanınıyor… {done}/{total}",
-  "@scanOcrProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@scanOcrProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanAutoDetect": "Kenarları otomatik bul",
   "scanReset": "Sıfırla",
   "scanDetecting": "Kenarlar aranıyor…",
@@ -812,7 +848,13 @@
   "scanPdfAdded": "Tarama, PDF eki olarak nota eklendi",
   "premiumTitle": "Premium",
   "premiumStatusActive": "Premium etkin — {date} tarihine kadar",
-  "@premiumStatusActive": {"placeholders": {"date": {"type": "String"}}},
+  "@premiumStatusActive": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "premiumStatusFree": "Ücretsiz sürümü kullanıyorsun",
   "premiumPerksTitle": "Premium ile ne değişir?",
   "premiumPerkAi": "Günlük yapay zeka puanı",

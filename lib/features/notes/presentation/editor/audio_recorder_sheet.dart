@@ -105,7 +105,22 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return SafeArea(
+    // Sistem geri tuşu/jesti: `isDismissible: false` yalnız bariyer
+    // dokunuşunu engeller, GERİ tuşu levhayı yine kapatıyordu — dakikalarca
+    // süren kayıt tek yanlış jestle onaysız çöpe gidiyordu. Geri artık
+    // "durdur ve KAYDET" gibi davranır: yanlışlıkla kaydedilen ek tek
+    // dokunuşla silinebilir, kaybolan kayıt geri gelmez.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_error != null) {
+          Navigator.pop(context);
+        } else {
+          _stop(save: true);
+        }
+      },
+      child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -158,6 +173,7 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
             ],
           ],
         ),
+      ),
       ),
     );
   }

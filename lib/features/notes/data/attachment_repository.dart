@@ -287,7 +287,18 @@ class AttachmentRepository {
     if (result.width == 0) throw const AttachmentMissingException();
     if (result.bytes.length > maxBytes) throw const FileTooLargeException();
 
-    await deleteFromStorage(attachment);
+    // Silme hatası (özellikle ÇEVRİMDIŞI) kırpmayı DÜŞÜRMEZ: dosya cihazda
+    // dururken "attachmentFailed" veriliyordu. Silinemeyen bulut kopyası
+    // sorun değil — ek "yüklenmemiş"e döndüğü için kuyruk yeni baytları aynı
+    // adrese yazıp üzerine geçer (ad değiştiyse eski kopya yetim kalır; bu,
+    // kullanıcının kırpamamasından iyidir). Silme _store'dan ÖNCE kalmalı:
+    // sonra olsaydı kuyruk yeni baytları yükledikten hemen sonra silme
+    // YENİ dosyayı götürebilirdi (yarış).
+    try {
+      await deleteFromStorage(attachment);
+    } catch (_) {
+      // Çevrimdışı ya da geçici Storage hatası — yukarıdaki nota bak.
+    }
     final oldLocalPath = attachment.localPath;
     final safeName = '${p.basenameWithoutExtension(attachment.fileName)}.jpg';
     final stored = await _store(

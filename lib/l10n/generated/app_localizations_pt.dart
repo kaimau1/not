@@ -98,6 +98,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get undo => 'Anular';
 
   @override
+  String get redo => 'Refazer';
+
+  @override
   String get titleHint => 'Título';
 
   @override
@@ -661,6 +664,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get remindersPast => 'Passados';
+
+  @override
+  String get reminderInPast =>
+      'O horário selecionado já passou — escolha um horário futuro.';
 
   @override
   String get newReminder => 'Novo lembrete';

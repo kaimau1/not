@@ -288,6 +288,12 @@ abstract class AppLocalizations {
   /// **'Geri Al'**
   String get undo;
 
+  /// No description provided for @redo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yinele'**
+  String get redo;
+
   /// No description provided for @titleHint.
   ///
   /// In tr, this message translates to:
@@ -1319,6 +1325,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Geçmiş'**
   String get remindersPast;
+
+  /// No description provided for @reminderInPast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen zaman geçmişte — gelecekte bir zaman seç.'**
+  String get reminderInPast;
 
   /// No description provided for @newReminder.
   ///

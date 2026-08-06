@@ -98,6 +98,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get undo => 'Отменить';
 
   @override
+  String get redo => 'Повторить';
+
+  @override
   String get titleHint => 'Заголовок';
 
   @override
@@ -658,6 +661,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get remindersPast => 'Прошедшие';
+
+  @override
+  String get reminderInPast =>
+      'Выбранное время уже прошло — выберите время в будущем.';
 
   @override
   String get newReminder => 'Новое напоминание';

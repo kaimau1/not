@@ -98,6 +98,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get undo => 'Ongedaan maken';
 
   @override
+  String get redo => 'Opnieuw';
+
+  @override
   String get titleHint => 'Titel';
 
   @override
@@ -659,6 +662,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get remindersPast => 'Voorbij';
+
+  @override
+  String get reminderInPast =>
+      'De gekozen tijd ligt in het verleden — kies een tijd in de toekomst.';
 
   @override
   String get newReminder => 'Nieuwe herinnering';

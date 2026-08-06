@@ -77,7 +77,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/note/:id',
+            // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
+            // noteId ile yapıyor; go/pushReplacement aynı GoRoute'un Element'ini
+            // geri dönüştürürse key olmadan ekranda ÖNCEKİ notun içeriği kalırdı.
             builder: (context, state) => NoteEditorScreen(
+              key: ValueKey('note-${state.pathParameters['id']}'),
               noteId: state.pathParameters['id']!,
               // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
               startDrawing: state.uri.queryParameters['draw'] == '1',
@@ -153,12 +157,11 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
     }
   }
 
-  appLinks
-      .getInitialLink()
-      .then((uri) {
-        if (uri != null) handle(uri);
-      })
-      .catchError((_) {});
+  // TUZAK — getInitialLink AYRICA ÇAĞRILMAZ: Android eklentisi başlangıç
+  // bağlantısını stream'in ilk dinleyicisine de gönderiyor (onListen →
+  // initialLinkSent), getInitialLink ise o bayrağı İŞARETLEMEDEN aynı URI'yi
+  // döndürüyor. İkisi birden dinlenince soğuk açılışta handle() iki kez
+  // çalışıyor ve widget'ın "Yeni not" kısayolu ÇİFT not açıyordu.
   final sub = appLinks.uriLinkStream.listen(handle, onError: (_) {});
   ref.onDispose(sub.cancel);
 });

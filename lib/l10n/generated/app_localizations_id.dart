@@ -98,6 +98,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get undo => 'Urungkan';
 
   @override
+  String get redo => 'Ulangi';
+
+  @override
   String get titleHint => 'Judul';
 
   @override
@@ -660,6 +663,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get remindersPast => 'Sudah lewat';
+
+  @override
+  String get reminderInPast =>
+      'Waktu yang dipilih sudah lewat — pilih waktu di masa depan.';
 
   @override
   String get newReminder => 'Pengingat baru';

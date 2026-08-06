@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -89,20 +90,31 @@ final shareIntakeProvider = Provider<void>((ref) {
       // içeriği okunur, değilse metnin kendisidir.
       try {
         final file = File(f.path);
+        // readAsString DEĞİL: UTF-8 olmayan bir .txt (Windows-1254/ANSI
+        // Türkçe'de hâlâ yaygın) FormatException atıyor ve paylaşım tek
+        // içerikse not hiç oluşmuyordu. allowMalformed geçersiz baytları
+        // U+FFFD ile değiştirir — metnin okunur kısmı kurtulur.
         bodyParts.add(
           safeToRead(f.path) && file.existsSync()
-              ? await file.readAsString()
+              ? utf8.decode(await file.readAsBytes(), allowMalformed: true)
               : f.path,
         );
       } catch (_) {
         // Okunamayan dosya notu engellemesin.
       }
     }
-    if (bodyParts.isEmpty && docs.isEmpty) return;
+    if (bodyParts.isEmpty && docs.isEmpty) {
+      // İşlenmeyen içerik eklentide asılı kalmasın: reset edilmezse uygulama
+      // tekrar öne gelince aynı çöp girdi yeniden değerlendiriliyordu.
+      ReceiveSharingIntent.instance.reset();
+      return;
+    }
 
-    final id = await repo.createNote(NoteType.text);
+    // Gövde TEK yazımda: createNote + ayrı updateFields arasında doküman bir
+    // an boş kalıyor ve o anki akış anlık görüntüsünde not süzgeçten
+    // düşebiliyordu (bkz. NotesRepository.createNote yorumu).
     final body = bodyParts.join('\n').trim();
-    if (body.isNotEmpty) repo.updateFields(id, {'body': body});
+    final id = await repo.createNote(NoteType.text, body: body);
 
     final attachRepo = ref.read(attachmentRepositoryProvider);
     if (attachRepo != null) {
@@ -152,7 +164,7 @@ final shareIntakeProvider = Provider<void>((ref) {
     // Aynı içerik uygulama tekrar öne gelince yeniden işlenmesin.
     ReceiveSharingIntent.instance.reset();
     try {
-      ref.read(routerProvider).push('/note/$id');
+      ref.read(routerProvider).push(noteRoutePath(id));
     } catch (_) {}
   }
 

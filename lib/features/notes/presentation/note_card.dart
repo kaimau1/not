@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart';
@@ -39,12 +41,31 @@ String formatNoteDate(DateTime date) {
 ///
 /// Hem ızgara kartı hem liste satırı buradan geçer — kilit kontrolünü iki
 /// yerde tekrarlamak, birinde unutulduğunda sessiz bir veri sızıntısı olurdu.
+///
+/// [_openingNoteId]: aynı karta art arda iki dokunuş (özellikle geniş
+/// ekranda liste hep görünürken) aynı notun İKİ editörünü üst üste
+/// açabiliyordu; açılış sürerken gelen ikinci dokunuş yutulur.
+String? _openingNoteId;
+
 Future<void> openNoteRoute(BuildContext context, Note note) async {
-  if (note.locked) {
-    final ok = await authenticateForNote(context.l10n.unlockAuthReason);
-    if (!ok || !context.mounted) return;
+  if (_openingNoteId == note.id) return;
+  _openingNoteId = note.id;
+  try {
+    if (note.locked) {
+      final ok = await authenticateForNote(context.l10n.unlockAuthReason);
+      if (!ok || !context.mounted) return;
+    }
+    if (context.mounted) {
+      final push = context.push(noteRoutePath(note.id));
+      // Rota yığına girdikten hemen sonra kilit açılır (push editör
+      // KAPANANA dek tamamlanmaz; onu bekleseydik editör açıkken karttan
+      // ikinci kez açmak da engellenirdi — o ayrı bir tercih).
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      unawaited(push);
+    }
+  } finally {
+    _openingNoteId = null;
   }
-  if (context.mounted) await context.push('/note/${note.id}');
 }
 
 /// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.

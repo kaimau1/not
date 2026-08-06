@@ -98,6 +98,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get undo => '실행 취소';
 
   @override
+  String get redo => '다시 실행';
+
+  @override
   String get titleHint => '제목';
 
   @override
@@ -646,6 +649,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get remindersPast => '지난 알림';
+
+  @override
+  String get reminderInPast => '선택한 시간이 이미 지났습니다. 미래 시간을 선택하세요.';
 
   @override
   String get newReminder => '새 알림';

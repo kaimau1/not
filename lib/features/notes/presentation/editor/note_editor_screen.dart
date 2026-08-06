@@ -21,6 +21,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../app/router.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
@@ -300,6 +301,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// basıldığında hâlâ geçerlidir (bkz. FormatBar).
   FormatTarget? _formatTarget;
 
+  /// Silinen madde satırının denetleyicisi hedefteyse hedef bırakılır —
+  /// biçim çubuğu dispose edilmiş denetleyiciye yazmasın.
+  void _clearFormatTargetFor(WrapTextController controller) {
+    if (_formatTarget?.controller != controller) return;
+    _formatTarget = null;
+    if (_formatBarOpen && mounted) setState(() {});
+  }
+
   void _setFormatTarget(
     WrapTextController controller,
     FocusNode focusNode,
@@ -385,6 +394,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   final _debouncer = Debouncer();
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
+
+  /// Madde editörünün durumu: başlıktaki klavye "İleri" tuşu liste notunda
+  /// ilk maddeye odaklanabilsin diye GlobalKey. Karışık ve saf liste dalları
+  /// aynı anahtarı kullanır — tip değişiminde (metin+madde ↔ liste) State
+  /// korunur; madde listesi zaten didUpdateWidget'ta senkronlanıyor.
+  final _itemsEditorKey = GlobalKey<ItemsEditorState>();
+
+  /// Başlıkta klavyenin "İleri" tuşu: odak çip satırına değil İÇERİĞE geçer
+  /// (gövde; gövde alanı yoksa ilk madde). Varsayılan `nextFocus` odağı metin
+  /// dışına taşıyıp klavyeyi kapatıyordu.
+  void _focusAfterTitle() {
+    final note = _note;
+    if (note == null) return;
+    final hasBody =
+        note.type == NoteType.text ||
+        note.body.trim().isNotEmpty ||
+        _listBodyOpen;
+    if (hasBody) {
+      _bodyFocus.requestFocus();
+    } else {
+      _itemsEditorKey.currentState?.focusFirstItem();
+    }
+  }
 
 
   @override
@@ -473,8 +505,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
         _runPendingIntents();
       } else {
-        // Editör açıkken yerel metin esastır; yalnızca arka planda değişen
-        // alanları (ek yüklemeleri, AI özeti) benimse.
+        // Not BAŞKA yerden çöpe atıldı (geniş ekranda soldaki kartın menüsü
+        // ya da ikinci cihaz). Editör tam dokümanı `deletedAt: null` ile
+        // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
+        // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
+        // "Geri al" snackbar'ı zaten ekranda.
+        if (incoming.deletedAt != null && _note!.deletedAt == null) {
+          _deleted = true;
+          _debouncer.cancel();
+          if (mounted && context.canPop()) context.pop();
+          return;
+        }
+        // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
+        // gerisi uzaktan benimsenir:
+        //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
+        //  - meta (sabit/yıldız/kilit/arşiv/klasör/etiket/renk/hatırlatıcı):
+        //    karttan ya da ikinci cihazdan yapılan değişiklik, editörün
+        //    tam-doküman kaydıyla sessizce GERİ ALINMASIN. Yereldeki meta
+        //    değişikliği kaybolmaz: Firestore gecikme telafisi yerel yazımı
+        //    akışa anında yansıtır, bayat snapshot gelmez.
+        final localTitle = _titleController.logicalText;
+        final localBody = _bodyController.logicalText;
+        // Kullanıcı bu oturumda HİÇ yazmadıysa içerik de benimsenir: notu
+        // yalnızca açıp bakan tarafta ikinci cihazın düzenlemesi canlı akar
+        // ve bayat taban tam-doküman kaydıyla onu ezemez.
+        final pristine =
+            !_undoStack.canUndo &&
+            !_debouncer.hasPending &&
+            localTitle == _note!.title &&
+            localBody == _note!.body;
         setState(() {
           _note = _note!.copyWith(
             attachments: mergeAttachmentLayout(
@@ -482,7 +541,32 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               incoming: incoming.attachments,
             ),
             aiSummary: incoming.aiSummary,
+            pinned: incoming.pinned,
+            starred: incoming.starred,
+            locked: incoming.locked,
+            tags: incoming.tags,
+            color: incoming.color,
+            frameColor: incoming.frameColor,
+            folderId: incoming.folderId,
+            clearFolderId: incoming.folderId == null,
+            archivedAt: incoming.archivedAt,
+            clearArchivedAt: incoming.archivedAt == null,
+            reminderAt: incoming.reminderAt,
+            clearReminderAt: incoming.reminderAt == null,
           );
+          if (pristine) {
+            _note = _note!.copyWith(
+              title: incoming.title,
+              body: incoming.body,
+              items: incoming.items,
+            );
+            if (incoming.title != localTitle) {
+              _titleController.text = incoming.title;
+            }
+            if (incoming.body != localBody) {
+              _bodyController.text = incoming.body;
+            }
+          }
         });
       }
     }, fireImmediately: true);
@@ -502,9 +586,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// tam olarak budur. Bu yüzden kayıt artık her çıkış kapısında zorlanır:
   /// arka plana alma (`inactive`/`paused`/`hidden`/`detached`) ve masaüstünde
   /// pencere kapatma isteği (`didRequestAppExit`).
-  void _saveNow() {
+  Future<void>? _saveNow() {
     final note = _note;
-    if (note == null || _deleted) return;
+    if (note == null || _deleted) return null;
     // Denetleyicilerdeki metin nota işlenir: son tuş vuruşunun `onChanged`'i
     // gelmemiş olabilir. Gövde/başlık için tek gerçek kaynak denetleyicidir —
     // nota dışarıdan yazan her yol (dikte, AI, yapıştırma) denetleyiciyi de
@@ -515,13 +599,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Yazılacak yeni bir şey yoksa hiç dokunma: `inactive` evresi (bildirim
     // perdesi, kamera/galeri açılışı, izin diyaloğu) sık gelir ve her
     // seferinde boş yere `updatedAt` tazelemek notu listede öne fırlatırdı.
-    if (!drifted && !_debouncer.hasPending) return;
+    if (!drifted && !_debouncer.hasPending) return null;
     final current = drifted ? note.copyWith(title: title, body: body) : note;
     _note = current;
     // setState YOK: denetleyiciler bu metni zaten gösteriyor, yeniden çizime
     // gerek yok — üstelik `detached` evresinde setState çağırmak güvensiz.
     _debouncer.cancel();
-    _notesRepo?.updateNote(current);
+    return _notesRepo?.updateNote(current);
   }
 
   @override
@@ -538,7 +622,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Future<AppExitResponse> didRequestAppExit() async {
     // Masaüstü (Windows): pencere kapatma düğmesi. `detached` burada
     // güvenilir gelmediğinden kapanışa izin vermeden önce kaydedilir.
-    _saveNow();
+    // Yazım kısa bir süre BEKLENİR: `unawaited` bırakılsaydı süreç, Firestore
+    // yerel kalıcılığı diske inmeden ölebilir ve son 3 sn'lik yazım
+    // kaybolabilirdi. Zaman aşımı şart — future SUNUCU onayında tamamlanır,
+    // çevrimdışıyken sonsuza dek bekler; 2 sn yerel commit için yeterli.
+    final write = _saveNow();
+    if (write != null) {
+      await write.timeout(const Duration(seconds: 2), onTimeout: () {});
+    }
     return super.didRequestAppExit();
   }
 
@@ -546,7 +637,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
-    _debouncer.flush();
+    // Yalnız `_debouncer.flush()` DEĞİL: denetleyici metni nottan sapmış ama
+    // bekleyen debounce yoksa (IME'nin odak düşerken onChanged üretmeden
+    // commit ettiği otomatik düzeltme, alan içi Ctrl+Z) flush hiçbir şey
+    // yazmazdı — _saveNow aynı drift ağını çıkış yolunda da kurar.
+    _saveNow();
     // Silinen eklerin baytları burada gider: "Geri al" ile geri gelenler
     // dosyalarını korur (bkz. _flushAttachmentDeletes).
     _flushAttachmentDeletes();
@@ -588,10 +683,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _restoring = false;
 
   bool get _canUndo => _undoStack.canUndo;
+  bool get _canRedo => _undoStack.canRedo;
 
   /// Son değişikliği geri alır (araç çubuğundaki düğme ve Ctrl+Z).
   void _undo() {
-    final previous = _undoStack.pop();
+    final note = _note;
+    if (note == null) return;
+    final previous = _undoStack.undo(note);
     if (previous == null) return;
     _restoring = true;
     // Metin alanları nottan beslenmiyor (kendi denetleyicileri var); geri
@@ -601,6 +699,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _mutate((_) => previous, immediate: true);
     _restoring = false;
     _showSnack(context.l10n.undone);
+  }
+
+  /// Geri alınan değişikliği yineler (düğme + Ctrl+Y / Ctrl+Shift+Z).
+  void _redo() {
+    final note = _note;
+    if (note == null) return;
+    final next = _undoStack.redoStep(note);
+    if (next == null) return;
+    _restoring = true;
+    _titleController.text = next.title;
+    _bodyController.text = next.body;
+    _mutate((_) => next, immediate: true);
+    _restoring = false;
   }
 
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
@@ -984,7 +1095,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
   /// platformun kendi listesinden gelir.
   Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) {
-    final items = [...state.contextMenuButtonItems];
+    // Kes/Kopyala temiz-metin sürümleriyle değiştirilir: varsayılanları
+    // panoya biçim işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını
+    // HAM olarak yazıyordu — dışarı yapıştıran kullanıcı çöp görüyordu.
+    final items = cleanClipboardMenuItems(state);
     // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş noktası
     // SEÇİM çubuğu — biçim zaten "şu metne" uygulanır; ayrı bir düğme olsaydı
     // önce seçimi hatırlaması gerekirdi (klavye kapanınca seçim düşüyor).
@@ -1424,6 +1538,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       time.hour,
       time.minute,
     );
+    // Bugünün geçmiş bir saati: bildirim hiç planlanmaz (reminder_service
+    // yalnız geleceği kurar) — sessizce kurmuş gibi görünmek yerine uyar.
+    if (!reminder.isAfter(DateTime.now())) {
+      if (mounted) _showSnack(context.l10n.reminderInPast);
+      return;
+    }
     _mutate((n) => n.copyWith(reminderAt: reminder), immediate: true);
   }
 
@@ -1673,7 +1793,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     await SharePlus.instance.share(
       ShareParams(
         text: text,
-        subject: note.title.trim().isEmpty ? 'Not' : note.title.trim(),
+        // Başlık biçimlendirilebiliyor: paylaşım konusuna işaretsiz hâli gider.
+        subject: note.displayTitle.trim().isEmpty
+            ? 'Not'
+            : note.displayTitle.trim(),
       ),
     );
   }
@@ -1811,15 +1934,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// öğeler, tip, başlık) tek dokunuşla döner.
   void _offerReplaceUndo(Note before) {
     if (!mounted) return;
+    // Snackbar KÖK messenger'da yaşar ve editör kapandıktan sonra da 4 sn
+    // ekranda kalır: depo şimdiden yakalanır ki geri alma editörsüz de
+    // çalışsın; unmount SONRASI dokunuşta denetleyici/ref/setState'e
+    // dokunulmaz (dispose edilmiş controller'a yazmak çökertiyordu).
+    final repo = ref.read(notesRepositoryProvider);
     showUndoSnackBar(
       context,
       message: context.l10n.noteUpdatedUndo,
       undoLabel: context.l10n.undo,
       onUndo: () {
+        repo?.updateNote(before);
+        if (!mounted) return;
         _titleController.text = before.title;
         _bodyController.text = before.body;
         setState(() => _note = before);
-        ref.read(notesRepositoryProvider)?.updateNote(before);
       },
     );
   }
@@ -1882,7 +2011,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fields['body'] = '';
     }
     repo.updateFields(id, fields);
-    if (mounted) context.push('/note/$id');
+    if (mounted) context.push(noteRoutePath(id));
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.
@@ -2324,7 +2453,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _removeBackgroundImage(Attachment image) {
-    final repo = ref.read(attachmentRepositoryProvider);
     _mutate(
       (n) => n.copyWith(
         attachments: [
@@ -2335,7 +2463,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ),
       immediate: true,
     );
-    unawaited(repo?.deleteFromStorage(image) ?? Future.value());
+    // Baytlar HEMEN silinmez: normal ek silmeyle aynı erteleme (bkz.
+    // _pendingAttachmentDeletes). Anında silinince "Geri al" bozuk
+    // (senkronsuz) bir kayda dönüyordu.
+    _pendingAttachmentDeletes.add(image);
   }
 
   Widget _colorLeading(NoteColor color, {required bool frame}) {
@@ -2795,6 +2926,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
         maxLines: null,
         textInputAction: TextInputAction.next,
+        // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — o da
+        // başlık ile gövde arasındaki çip satırı; odak metin dışına çıkınca
+        // klavye kapanıyordu. "İleri" artık doğrudan gövdeye (liste notunda
+        // ilk maddeye) atlar.
+        onEditingComplete: _focusAfterTitle,
+        // Başlık da biçimlendirilebiliyor: Kes/Kopyala temiz-metin sürümü
+        // (gövdeyle aynı gerekçe).
+        contextMenuBuilder: (menuContext, state) =>
+            AdaptiveTextSelectionToolbar.buttonItems(
+              anchors: state.contextMenuAnchors,
+              buttonItems: cleanClipboardMenuItems(state),
+            ),
         decoration: InputDecoration(
           hintText: l10n.titleHint,
           filled: false,
@@ -3045,7 +3188,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // sil mantığı olduğu gibi yeniden kullanılır. Madde kalmayınca (hepsi
       // silinince) note.items boşalır ve editör kendiliğinden saf metne döner.
       pageContent = ItemsEditor(
-        key: ValueKey('mixed-${note.id}'),
+        key: _itemsEditorKey,
         items: note.items,
         showCheckboxes: true,
         expandItems: ref.watch(expandListItemsProvider),
@@ -3057,6 +3200,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         richTheme: richTheme,
         textStyle: noteBodyStyle,
         onFieldFocused: _setFormatTarget,
+        onFieldDisposed: _clearFormatTargetFor,
+        wholeNoteText: () => _note?.toPlainText() ?? '',
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -3070,7 +3215,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     } else {
       pageContent = ItemsEditor(
-        key: ValueKey('items-${note.id}'),
+        key: _itemsEditorKey,
         items: note.items,
         showCheckboxes: note.type == NoteType.checklist,
         expandItems: ref.watch(expandListItemsProvider),
@@ -3082,6 +3227,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         richTheme: richTheme,
         textStyle: noteBodyStyle,
         onFieldFocused: _setFormatTarget,
+        onFieldDisposed: _clearFormatTargetFor,
+        wholeNoteText: () => _note?.toPlainText() ?? '',
         header: (note.body.trim().isNotEmpty || _listBodyOpen)
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -3144,7 +3291,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ),
     );
 
-    return CallbackShortcuts(
+    return Actions(
+      actions: {
+        // Klavyeden Kopyala/Kes (Ctrl+C / Ctrl+X): EditableText bu eylemleri
+        // `Action.overridable` ile kaydettiğinden buradaki üst-ağaç eylemi
+        // onları devralır ve panoya TEMİZ metin yazar (biçim işaretsiz,
+        // çapasız). Uymayan durumlar varsayılana devredilir (callingAction).
+        CopySelectionTextIntent: _CleanCopySelectionAction(this),
+      },
+      child: CallbackShortcuts(
       bindings: {
         if (_isDesktop)
           const SingleActivator(
@@ -3156,6 +3311,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // önce davranır (yazılan harfleri geri alır); alan odakta değilken
         // buraya düşer ve NOTUN son değişikliği geri alınır.
         const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
+        const SingleActivator(LogicalKeyboardKey.keyY, control: true): _redo,
+        const SingleActivator(
+          LogicalKeyboardKey.keyZ,
+          control: true,
+          shift: true,
+        ): _redo,
       },
       child: Scaffold(
         backgroundColor: background,
@@ -3216,6 +3377,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               icon: const Icon(Icons.undo),
               onPressed: _canUndo ? _undo : null,
             ),
+            // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
+            // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
+            if (_canRedo)
+              IconButton(
+                tooltip: l10n.redo,
+                icon: const Icon(Icons.redo),
+                onPressed: _redo,
+              ),
             // Hesap makinesi alt bardan buraya taşındı: alt bar üç etiketli
             // araca indi, hesap makinesi ise metin biçimiyle ilgisi olmayan
             // ayrı bir araç.
@@ -3621,7 +3790,48 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           },
         ),
       ),
+      ),
     );
+  }
+}
+
+/// Klavyeden Kopyala/Kes'in temiz-metin sürümü.
+///
+/// EditableText, [CopySelectionTextIntent] eylemini `Action.overridable`
+/// olarak kaydeder: odaklı alanın üst ağacında aynı Intent için bir eylem
+/// varsa ONUN çalışmasına izin verir. Buradaki eylem, biçim çubuğunun zaten
+/// izlediği son odaklı alanı ([FormatTarget]) kullanır; hedef odaklı değilse
+/// ya da seçim yoksa varsayılan davranışa ([Action.callingAction]) devreder.
+class _CleanCopySelectionAction extends Action<CopySelectionTextIntent> {
+  _CleanCopySelectionAction(this.owner);
+
+  final _NoteEditorScreenState owner;
+
+  @override
+  Object? invoke(CopySelectionTextIntent intent) {
+    final target = owner._formatTarget;
+    if (target == null || !target.focusNode.hasFocus) {
+      return callingAction?.invoke(intent);
+    }
+    final controller = target.controller;
+    final value = controller.value;
+    final selection = value.selection;
+    if (!selection.isValid || selection.isCollapsed) {
+      return callingAction?.invoke(intent);
+    }
+    final text = clipboardTextOf(value);
+    if (text.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: text));
+    }
+    if (intent.collapseSelection) {
+      // Kes: seçilen ham aralık alandan silinir ve kayıt olağan yoldan akar.
+      controller.value = TextEditingValue(
+        text: value.text.replaceRange(selection.start, selection.end, ''),
+        selection: TextSelection.collapsed(offset: selection.start),
+      );
+      target.commit();
+    }
+    return null;
   }
 }
 

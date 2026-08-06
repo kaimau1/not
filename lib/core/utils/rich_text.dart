@@ -254,9 +254,15 @@ final RegExp _formatPattern = RegExp(
   // KAYBOLURDU. Önek şartı bu tuzağı kapatır.
   r'|##(\d):(.+?)##'
   r'|&&(\d):(.+?)&&'
-  r'|(?<!\w)_(?:(\d):)?(.+?)_(?!\w)'
-  r'|(?<!\w)~(?:(\d):)?(.+?)~(?!\w)',
+  // Kelime sınırı `\w` ile DEĞİL unicode sınıfıyla: `\w` = [A-Za-z0-9_],
+  // Türkçe harfler (ş, ı, ğ...) kelime karakteri sayılmıyordu ve
+  // "yaş_ortalama_x" gibi düz metindeki alt çizgiler yanlışlıkla italik
+  // sanılıp GÖRÜNMEZ oluyordu (aynı yazım ASCII kelimede korunuyordu).
+  // _wordChar (aşağıda) zaten bilinçli olarak unicode — ikisi artık tutarlı.
+  r'|(?<![\p{L}\p{N}_])_(?:(\d):)?(.+?)_(?![\p{L}\p{N}_])'
+  r'|(?<![\p{L}\p{N}_])~(?:(\d):)?(.+?)~(?![\p{L}\p{N}_])',
   dotAll: false,
+  unicode: true,
 );
 
 /// İçi boş kalmış işaret kutuları (`****`, `==3:==`): seçim yokken biçim
@@ -274,6 +280,26 @@ String stripRichMarkers(String text) {
   // bir vurgu sanılır ve dışa aktarılan metne "3:" sızardı.
   final cleaned = text.replaceAll(_emptyBoxPattern, '');
   return _parse(cleaned).map((leaf) => leaf.text).join();
+}
+
+/// Seçilen [start, end) aralığının PANOYA gidecek düz karşılığı: biçim
+/// işaretleri sökülür, işaretin ORTASINA düşen uçlar en yakın gerçek
+/// karaktere hizalanır (yarım `%%1:` panoya sızmaz).
+///
+/// Sistem Kopyala/Kes varsayılan olarak alanın HAM metnini yazar; editördeki
+/// kopyalama yolları bunun yerine bu işlevi kullanır — yoksa `**kalın**`
+/// dışarı işaretli gider (dosya başındaki tasarım sözü).
+String plainSelection(String text, int start, int end) {
+  final from = start.clamp(0, text.length);
+  final to = end.clamp(from, text.length);
+  if (from >= to) return '';
+  if (!_hasMarker(text)) return text.substring(from, to);
+  final leaves = _parse(text);
+  if (leaves.isEmpty) return '';
+  final plain = leaves.map((l) => l.text).join();
+  final ps = _toPlain(leaves, from);
+  final pe = _toPlain(leaves, to);
+  return plain.substring(ps.clamp(0, plain.length), pe.clamp(ps, plain.length));
 }
 
 bool _hasMarker(String text) =>

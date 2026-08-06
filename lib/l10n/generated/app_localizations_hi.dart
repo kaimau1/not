@@ -98,6 +98,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get undo => 'पूर्ववत करें';
 
   @override
+  String get redo => 'फिर से करें';
+
+  @override
   String get titleHint => 'शीर्षक';
 
   @override
@@ -656,6 +659,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get remindersPast => 'बीते हुए';
+
+  @override
+  String get reminderInPast =>
+      'चुना गया समय बीत चुका है — भविष्य का समय चुनें।';
 
   @override
   String get newReminder => 'नया अनुस्मारक';

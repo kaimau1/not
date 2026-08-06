@@ -290,6 +290,10 @@ Future<void> _runNoteAction(
     case 'select':
       ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
     case 'delete':
+      // Kilitli not kimlik doğrulamasız SİLİNMESİN: paylaş/kopyala/dinle/PDF
+      // hep doğrulama isterken silme istemiyordu — çöp+geri al olsa da
+      // koruma modeliyle tutarsızdı (30 gün sonra kalıcı gider).
+      if (!await unlockIfNeeded()) return;
       repo.softDelete(note.id);
       if (context.mounted) {
         showUndoSnackBar(

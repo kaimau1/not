@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/rich_text.dart';
@@ -102,6 +103,71 @@ String stripWrapAnchors(String text) =>
     (text.contains(kWrapAnchorChar) || text.contains(kWrapGlueChar))
     ? text.replaceAll(kWrapAnchorChar, '').replaceAll(kWrapGlueChar, '')
     : text;
+
+/// Alandaki seçimin PANOYA gidecek hali: sarma çapaları VE biçim işaretleri
+/// temizlenmiş düz metin.
+///
+/// Sistem Kopyala/Kes alanın HAM metnini yazar; editördeki kopyalama yolları
+/// (seçim menüsü + Ctrl+C/X) bunun yerine burayı kullanır — yoksa `**kalın**`
+/// işaretleri ve görünmez çapa karakterleri (U+FFFC/U+2060) dışarı sızar.
+String clipboardTextOf(TextEditingValue value) {
+  final selection = value.selection;
+  if (!selection.isValid || selection.isCollapsed) return '';
+  final logical = stripWrapAnchors(value.text);
+  return plainSelection(
+    logical,
+    wrapToLogicalOffset(value.text, selection.start),
+    wrapToLogicalOffset(value.text, selection.end),
+  );
+}
+
+/// Seçim menüsündeki varsayılan Kes/Kopyala öğelerini temiz-metin
+/// sürümleriyle değiştirir; diğer öğeler (Yapıştır, Tümünü Seç...) aynen
+/// kalır. Gövde, başlık ve liste maddelerinin menüleri buradan geçer.
+List<ContextMenuButtonItem> cleanClipboardMenuItems(EditableTextState state) =>
+    [
+      for (final item in state.contextMenuButtonItems)
+        if (item.type == ContextMenuButtonType.copy)
+          ContextMenuButtonItem(
+            type: ContextMenuButtonType.copy,
+            onPressed: () => cleanClipboardAction(state, cut: false),
+          )
+        else if (item.type == ContextMenuButtonType.cut)
+          ContextMenuButtonItem(
+            type: ContextMenuButtonType.cut,
+            onPressed: () => cleanClipboardAction(state, cut: true),
+          )
+        else
+          item,
+    ];
+
+/// Seçim menüsünden temiz Kopyala/Kes: panoya işaretsiz/çapasız metin gider;
+/// kes ham aralığı alandan siler (onChanged tetiklenir, kayıt olağan yoldan
+/// akar), kopya varsayılan mobil davranış gibi seçimi imlece indirir.
+void cleanClipboardAction(EditableTextState state, {required bool cut}) {
+  final value = state.textEditingValue;
+  final selection = value.selection;
+  if (!selection.isValid || selection.isCollapsed) {
+    state.hideToolbar();
+    return;
+  }
+  final text = clipboardTextOf(value);
+  if (text.isNotEmpty) {
+    Clipboard.setData(ClipboardData(text: text));
+  }
+  state.userUpdateTextEditingValue(
+    cut
+        ? TextEditingValue(
+            text: value.text.replaceRange(selection.start, selection.end, ''),
+            selection: TextSelection.collapsed(offset: selection.start),
+          )
+        : value.copyWith(
+            selection: TextSelection.collapsed(offset: selection.end),
+          ),
+    SelectionChangedCause.toolbar,
+  );
+  state.hideToolbar();
+}
 
 /// [logical] metni [columnWidth] genişliğinde dizerken, [floats] görsellerinin
 /// kestiği satırların başına ne genişlikte dolgu gerektiğini hesaplar.

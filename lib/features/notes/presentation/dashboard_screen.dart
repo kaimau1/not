@@ -56,7 +56,13 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  final _searchController = TextEditingController();
+  /// Metin provider'dan başlar: dar↔geniş kesme noktası geçişinde (tablet
+  /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
+  /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
+  /// süzülü kalırdı (searchQueryProvider global, kutu ise State'te).
+  late final _searchController = TextEditingController(
+    text: ref.read(searchQueryProvider),
+  );
   final _searchFocus = FocusNode();
 
   /// "+" menüsünün demirlendiği nokta: mikrofon + "+" sütununun tamamı.
@@ -220,7 +226,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _joinSelected(Set<String> ids) {
     final parts = [
       for (final n in _selectedNotes(ids))
-        if (n.locked) n.title.trim() else n.toPlainText(),
+        // displayTitle: başlık biçimlendirilebiliyor, işaretler panoya sızmasın.
+        if (n.locked) n.displayTitle.trim() else n.toPlainText(),
     ];
     return parts.where((t) => t.trim().isNotEmpty).join('\n\n———\n\n');
   }
@@ -406,11 +413,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final id = await repo.createNote(type);
-    // Aktif bir klasör filtresi varsa yeni not o klasöre doğar.
-    final folderId = ref.read(selectedFolderProvider);
-    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    // Klasör TEK yazımda: createNote + ayrı updateFields arasında doküman bir
+    // an klasörsüz/boş kalıyordu (bkz. NotesRepository.createNote yorumu).
+    final id = await repo.createNote(
+      type,
+      folderId: ref.read(selectedFolderProvider),
+    );
     await _openNew(id);
+    // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
+    // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
+    // görünmüyordu) FAB yolunda açık kalmıştı. Klasör süzgeci kalır (not o
+    // klasöre doğdu); boş bırakılıp silinen not için süzgeçlere dokunulmaz.
+    if (!mounted) return;
+    final kept = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final survives = kept.any((n) => n.id == id && !n.isEmpty);
+    if (!survives) return;
+    if (ref.read(noteFilterProvider) != NoteFilter.all) {
+      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    }
+    if (ref.read(selectedTagProvider) != null) {
+      ref.read(selectedTagProvider.notifier).set(null);
+    }
+    if (ref.read(searchQueryProvider).trim().isNotEmpty) {
+      _searchController.clear();
+      ref.read(searchQueryProvider.notifier).set('');
+    }
   }
 
   /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen

@@ -98,6 +98,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get undo => '元に戻す';
 
   @override
+  String get redo => 'やり直す';
+
+  @override
   String get titleHint => 'タイトル';
 
   @override
@@ -645,6 +648,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get remindersPast => '過去';
+
+  @override
+  String get reminderInPast => '選択した時刻は過去です。未来の時刻を選んでください。';
 
   @override
   String get newReminder => '新しいリマインダー';

@@ -98,6 +98,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get undo => 'Geri Al';
 
   @override
+  String get redo => 'Yinele';
+
+  @override
   String get titleHint => 'Başlık';
 
   @override
@@ -653,6 +656,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get remindersPast => 'Geçmiş';
+
+  @override
+  String get reminderInPast =>
+      'Seçilen zaman geçmişte — gelecekte bir zaman seç.';
 
   @override
   String get newReminder => 'Yeni hatırlatıcı';

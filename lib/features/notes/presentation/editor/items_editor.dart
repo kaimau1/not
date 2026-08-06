@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
 import 'format_menu.dart';
@@ -86,6 +87,8 @@ class ItemsEditor extends StatefulWidget {
     this.richTheme,
     this.textStyle,
     this.onFieldFocused,
+    this.wholeNoteText,
+    this.onFieldDisposed,
   });
 
   final List<NoteItem> items;
@@ -137,11 +140,20 @@ class ItemsEditor extends StatefulWidget {
   )?
   onFieldFocused;
 
+  /// "Tüm notu kopyala" için notun TAM düz metni (başlık + gövde + maddeler).
+  /// null ise yalnız maddeler kopyalanır (bağımsız kullanım).
+  final String Function()? wholeNoteText;
+
+  /// Bir madde satırı silinip denetleyicisi dispose edilmeden ÖNCE çağrılır:
+  /// biçim çubuğunun hedefi bu alansa hedefi bıraksın — yoksa çubuk dispose
+  /// edilmiş denetleyiciye yazmaya çalışıyordu.
+  final void Function(WrapTextController controller)? onFieldDisposed;
+
   @override
-  State<ItemsEditor> createState() => _ItemsEditorState();
+  State<ItemsEditor> createState() => ItemsEditorState();
 }
 
-class _ItemsEditorState extends State<ItemsEditor> {
+class ItemsEditorState extends State<ItemsEditor> {
   static const _uuid = Uuid();
 
   late List<NoteItem> _items;
@@ -267,6 +279,23 @@ class _ItemsEditorState extends State<ItemsEditor> {
     // karşılaştırma false kalır.
     if (!_sameItems(_items, widget.items)) {
       setState(() => _items = List.of(widget.items));
+      // Denetleyici metinleri de SENKRONLANMALI: controller yalnız ilk
+      // kurulumda maddenin metnini alıyor. Metin dışarıdan değişince (Geri
+      // al, AI "Değiştir"in kimlik koruyan yolu) alan eski metni göstermeye
+      // devam ediyor ve o satıra yazılan ilk harf BAYAT metni nota geri
+      // yazıyordu — geri alma sessizce iptal oluyordu.
+      for (final item in _items) {
+        final controller = _controllers[item.id];
+        if (controller == null || controller.logicalText == item.text) {
+          continue;
+        }
+        final node = _focusNodes[item.id];
+        final selection = controller.selection;
+        final caret = (node != null && node.hasFocus && selection.isValid)
+            ? selection.baseOffset.clamp(0, item.text.length)
+            : item.text.length;
+        controller.setLogical(item.text, caret);
+      }
     }
   }
 
@@ -406,8 +435,70 @@ class _ItemsEditorState extends State<ItemsEditor> {
   void _updateText(NoteItem target, String text) {
     final index = _items.indexWhere((i) => i.id == target.id);
     if (index < 0) return;
+    // Metinde satır sonu: ya çok satırlı bir YAPIŞTIRMA ya da donanım
+    // klavyesinin Enter'ı (çok satırlı alanda Enter onEditingComplete'e
+    // düşmez, alana `\n` girer). İki durumda da satırlar ayrı maddelere
+    // bölünür — "ekmek\nsüt\nyumurta" tek şişkin madde olmaz.
+    if (text.contains('\n')) {
+      _splitMultiline(target, index, text);
+      return;
+    }
     _items[index] = _items[index].copyWith(text: text);
     _commit();
+  }
+
+  /// `- [x]`, `-`, `•`, `3.` gibi liste öneklerini soyar; checklist'te
+  /// işaret durumunu da okur.
+  static final _lineMarker = RegExp(
+    r'^\s*(?:[-*•]\s*)?(?:\[([ xX])\]\s*)?(?:\d+[.)]\s+)?',
+  );
+
+  void _splitMultiline(NoteItem target, int index, String text) {
+    final lines = text.split('\n');
+    final first = lines.first;
+    final rest = <NoteItem>[];
+    for (var i = 1; i < lines.length; i++) {
+      final match = _lineMarker.firstMatch(lines[i]);
+      final body = lines[i].substring(match?.end ?? 0);
+      if (body.trim().isEmpty) continue;
+      final checked = match?.group(1) != null &&
+          match!.group(1)!.toLowerCase() == 'x';
+      rest.add(
+        NoteItem(
+          id: _uuid.v4(),
+          text: body,
+          checked: widget.showCheckboxes && checked,
+        ),
+      );
+    }
+    setState(() {
+      _items[index] = _items[index].copyWith(text: first);
+      if (rest.isNotEmpty) {
+        // İşaretli bir maddeye yapıştırma: işaretsiz yeni maddeler işaretli
+        // bloğun ortasına giremez (bkz. _insertAfter'daki değişmez).
+        final at = (widget.showCheckboxes && target.checked)
+            ? _checkedStart
+            : index + 1;
+        _items.insertAll(at, rest);
+      }
+    });
+    // Alanın kendisi hâlâ çok satırlı metni gösteriyor; ilk satıra indirilir.
+    final controller = _controllers[target.id];
+    if (controller != null && controller.logicalText != first) {
+      controller.setLogical(first, first.length);
+    }
+    _commit();
+    // Donanım Enter'ı (kalan satırlar boş): yeni boş madde aç — yazılım
+    // klavyesindeki "İleri" ile aynı davranış.
+    if (rest.isEmpty && lines.length > 1) {
+      _insertAfter(target);
+      return;
+    }
+    if (rest.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focusFor(rest.last).requestFocus();
+      });
+    }
   }
 
   /// İşaretsizlerin bittiği (= ilk işaretlinin başladığı) konum. Hem yeni
@@ -487,11 +578,30 @@ class _ItemsEditorState extends State<ItemsEditor> {
     final index = _items.indexWhere((i) => i.id == after.id);
     if (index < 0) return;
     final item = NoteItem(id: _uuid.v4(), text: '');
-    setState(() => _items.insert(index + 1, item));
+    // İşaretli maddeden (footer bloğu) Enter: yeni İŞARETSİZ öğe işaretli
+    // bloğun ortasına giremez — "işaretsizler _items'ın başında" değişmezi
+    // bozulur ve sürükle-sırala görünenden BAŞKA öğeyi taşırdı. Yeni öğe
+    // işaretsizlerin sonuna girer.
+    final at = (widget.showCheckboxes && after.checked)
+        ? _checkedStart
+        : index + 1;
+    setState(() => _items.insert(at, item));
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
     });
+  }
+
+  /// Başlıktaki klavye "İleri" tuşu buraya düşer (liste notunda gövde alanı
+  /// yok): ilk işaretsiz maddeye odaklanır, hiç madde yoksa yeni açar.
+  void focusFirstItem() {
+    for (final item in _items) {
+      if (!item.checked) {
+        _focusFor(item).requestFocus();
+        return;
+      }
+    }
+    _addItem();
   }
 
   /// "Yeni öğe" düğmesiyle öğe ekler; işaretsizlerin sonuna girer.
@@ -506,10 +616,20 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   void _removeItem(NoteItem target) {
     setState(() => _items.removeWhere((i) => i.id == target.id));
-    _controllers.remove(target.id)?.dispose();
-    _focusNodes.remove(target.id)?.dispose();
+    _disposeRowFor(target.id);
     _checkedFrom.remove(target.id);
     _commit();
+  }
+
+  /// Satırın denetleyici/odak kaynaklarını bırakır; önce biçim çubuğuna
+  /// haber verir (bkz. [ItemsEditor.onFieldDisposed]).
+  void _disposeRowFor(String id) {
+    final controller = _controllers.remove(id);
+    if (controller != null) {
+      widget.onFieldDisposed?.call(controller);
+      controller.dispose();
+    }
+    _focusNodes.remove(id)?.dispose();
   }
 
   /// İşaretli tüm öğeleri tek seferde siler (madde 18 — Keep'teki gibi
@@ -527,8 +647,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
       ],
     );
     for (final item in removed) {
-      _controllers.remove(item.id)?.dispose();
-      _focusNodes.remove(item.id)?.dispose();
+      _disposeRowFor(item.id);
       _checkedFrom.remove(item.id);
     }
     _commit();
@@ -556,16 +675,19 @@ class _ItemsEditorState extends State<ItemsEditor> {
     _syncBar();
   }
 
-  /// Seçili maddeleri liste sırasıyla panoya kopyalar.
+  /// Seçili maddeleri liste sırasıyla panoya kopyalar. Metinler
+  /// [stripRichMarkers]'tan geçer: biçimli madde panoya `**süt al**` diye
+  /// işaretli gitmesin (Note.toPlainText ile aynı kural).
   Future<void> _copySelected() async {
     final buffer = StringBuffer();
     var order = 1;
     for (final item in _items) {
       if (!_selected.contains(item.id)) continue;
+      final text = stripRichMarkers(item.text);
       if (widget.showCheckboxes) {
-        buffer.writeln('${item.checked ? '[x]' : '[ ]'} ${item.text}');
+        buffer.writeln('${item.checked ? '[x]' : '[ ]'} $text');
       } else {
-        buffer.writeln('${order++}. ${item.text}');
+        buffer.writeln('${order++}. $text');
       }
     }
     await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
@@ -592,8 +714,7 @@ class _ItemsEditorState extends State<ItemsEditor> {
     });
     _syncBar();
     for (final item in removed) {
-      _controllers.remove(item.id)?.dispose();
-      _focusNodes.remove(item.id)?.dispose();
+      _disposeRowFor(item.id);
     }
     _commit();
   }
@@ -608,17 +729,28 @@ class _ItemsEditorState extends State<ItemsEditor> {
 
   /// Tüm not içeriğini panoya kopyalar ("Tümünü seç" seçeneği — ayrı
   /// TextField'lar arası gerçek seçim mümkün olmadığından pratik karşılığı).
+  ///
+  /// [ItemsEditor.wholeNoteText] verildiyse o kullanılır: "Tüm notu kopyala"
+  /// başlığı ve serbest gövde metnini de içermeli — eskiden yalnız maddeler
+  /// kopyalanıyor, karışık notta üstteki paragraf sessizce düşüyordu.
   Future<void> _copyAll() async {
-    final buffer = StringBuffer();
-    for (var i = 0; i < _items.length; i++) {
-      final text = _items[i].text;
-      if (widget.showCheckboxes) {
-        buffer.writeln('${_items[i].checked ? '[x]' : '[ ]'} $text');
-      } else {
-        buffer.writeln('${i + 1}. $text');
+    String text;
+    final whole = widget.wholeNoteText?.call();
+    if (whole != null && whole.trim().isNotEmpty) {
+      text = whole.trim();
+    } else {
+      final buffer = StringBuffer();
+      for (var i = 0; i < _items.length; i++) {
+        final line = stripRichMarkers(_items[i].text);
+        if (widget.showCheckboxes) {
+          buffer.writeln('${_items[i].checked ? '[x]' : '[ ]'} $line');
+        } else {
+          buffer.writeln('${i + 1}. $line');
+        }
       }
+      text = buffer.toString().trim();
     }
-    await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+    await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -639,7 +771,9 @@ class _ItemsEditorState extends State<ItemsEditor> {
   ) {
     final l10n = context.l10n;
     final buttonItems = <ContextMenuButtonItem>[
-      ...editableState.contextMenuButtonItems,
+      // Kes/Kopyala temiz-metin sürümü: varsayılanlar biçim işaretlerini ve
+      // sarma çapalarını panoya HAM yazıyordu (gövdeyle aynı gerekçe).
+      ...cleanClipboardMenuItems(editableState),
       // Biçim (kalın/italik/altı çizili/renk) — gövde metniyle aynı yol.
       if (!editableState.textEditingValue.selection.isCollapsed)
         ContextMenuButtonItem(

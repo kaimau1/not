@@ -146,6 +146,22 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/quick_note_widget_info" />
         </receiver>
+        <!-- "Eki kopyala" (pasteboard eklentisi): görseli cache'e yazıp
+             ${packageName}.provider yetkili FileProvider URI'siyle panoya
+             koyuyor. Bu provider OLMADAN getUriForFile her seferinde
+             IllegalArgumentException atıyor ve Android'de sistem panosuna
+             görsel kopyalama sessizce hiç çalışmıyordu (uygulama yine de
+             "kopyalandı" diyordu). Eklenti cacheDir'e yazdığı için yol
+             tanımı cache-path olmalı. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

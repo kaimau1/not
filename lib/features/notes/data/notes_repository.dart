@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
+import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
@@ -15,8 +18,13 @@ import '../domain/note_type.dart';
 
 /// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
 /// dokunmaz. Editör açılırken ekler, kapanırken çıkarır. Provider değil düz
-/// bir küme, çünkü değişimi hiçbir arayüzü yeniden çizmemeli.
-final openEditorNoteIds = <String>{};
+/// bir liste, çünkü değişimi hiçbir arayüzü yeniden çizmemeli.
+///
+/// LİSTE, küme değil: aynı not (geniş ekranda karta iki kez dokununca) üst
+/// üste İKİ editörde açılabiliyor. Kümede ilk kapanan editör id'yi düşürür ve
+/// hâlâ açık olan İKİNCİ editörün koruması kalkardı; listede her editör kendi
+/// kaydını düşürür, id son editör kapanana dek listede kalır.
+final openEditorNoteIds = <String>[];
 
 final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
@@ -232,8 +240,14 @@ class NotesRepository {
     return doc.id;
   }
 
-  void updateNote(Note note) {
-    unawaited(_notes.doc(note.id).set(note.toMap(), SetOptions(merge: true)));
+  /// Notun tamamını yazar. Dönen future SUNUCU onayında tamamlanır —
+  /// çevrimdışıyken hiç tamamlanmayabilir; olağan çağrılar bekletmeden
+  /// çalışır (çevrimdışı-önce), yalnız pencere kapanışı gibi "süreç ölmeden
+  /// diske insin" noktaları kısa bir zaman aşımıyla bekler.
+  Future<void> updateNote(Note note) {
+    final write = _notes.doc(note.id).set(note.toMap(), SetOptions(merge: true));
+    unawaited(write);
+    return write;
   }
 
   void updateFields(String noteId, Map<String, dynamic> fields) {
@@ -322,6 +336,24 @@ class NotesRepository {
               .delete()
               .catchError((Object _) {}),
     ]);
+    // Cihazdaki ek klasörü de gitsin: yalnız bulut temizliği, her kalıcı
+    // silmede `<destek>/attachments/<noteId>/` altında yetim dosya bırakıyor
+    // ve büyük PDF/görsellerle görünmez bir disk sızıntısına dönüşüyordu.
+    final base = appSupportPath;
+    if (base != null) {
+      final dir = Directory(p.join(base, 'attachments', note.id));
+      try {
+        if (dir.existsSync()) {
+          for (final f in dir.listSync()) {
+            forgetLocalFile(f.path);
+          }
+          dir.deleteSync(recursive: true);
+        }
+      } catch (_) {
+        // Dosya kilitli/erişilemez olabilir (Windows'ta açık görüntüleyici);
+        // silme bir sonraki kalıcı silmede yeniden denenir, veri riski yok.
+      }
+    }
     hardDelete(note.id);
   }
 
@@ -355,10 +387,33 @@ class NotesRepository {
       if (openEditorNoteIds.contains(note.id)) continue;
       final updated = note.updatedAt;
       if (note.isEmpty && updated != null && updated.isBefore(cutoff)) {
-        hardDelete(note.id);
+        try {
+          await _deleteIfStillEmpty(note.id, cutoff);
+        } catch (_) {
+          // Çevrimdışı (transaction ağ ister) ya da geçici hata: not kalır,
+          // sonraki turda yeniden denenir. Kalıcı silmede aceleye yer yok.
+        }
       }
     }
   }
+
+  /// Boş-not kararı bayat bir anlık görüntüyle verilmiş olabilir: başka
+  /// cihaz notu TAM BU SIRADA doldurduysa düz `delete()` içerikli notu
+  /// kalıcı götürürdü (çöpe bile uğramadan). Transaction sunucudaki güncel
+  /// hâli okuyup "hâlâ boş ve eski" önkoşulunu doğrular; koşul bozulduysa
+  /// silme sessizce vazgeçer.
+  Future<void> _deleteIfStillEmpty(String noteId, DateTime cutoff) =>
+      _firestore.runTransaction((tx) async {
+        final ref = _notes.doc(noteId);
+        final snapshot = await tx.get(ref);
+        if (!snapshot.exists) return;
+        final note = Note.fromDoc(snapshot);
+        final updated = note.updatedAt;
+        if (!note.isEmpty || updated == null || !updated.isBefore(cutoff)) {
+          return;
+        }
+        tx.delete(ref);
+      });
 
   /// Ek metadata'sındaki tek bir girişi günceller (yükleme kuyruğu kullanır).
   /// Yüklemesi biten ekin DEPO alanlarını yazar.

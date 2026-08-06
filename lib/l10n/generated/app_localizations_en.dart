@@ -98,6 +98,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get undo => 'Undo';
 
   @override
+  String get redo => 'Redo';
+
+  @override
   String get titleHint => 'Title';
 
   @override
@@ -655,6 +658,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get remindersPast => 'Past';
+
+  @override
+  String get reminderInPast =>
+      'The selected time is in the past — pick a future time.';
 
   @override
   String get newReminder => 'New reminder';
