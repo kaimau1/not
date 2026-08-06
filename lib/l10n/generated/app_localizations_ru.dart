@@ -98,6 +98,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get undo => 'Отменить';
 
   @override
+  String get redo => 'Повторить';
+
+  @override
   String get titleHint => 'Заголовок';
 
   @override
@@ -332,6 +335,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Длинные пункты переносятся на несколько строк и остаются полностью видимыми. Если выключено, пункт занимает одну строку и разворачивается по нажатию.';
 
   @override
+  String get quickCaptureRowSetting => 'Строка быстрой заметки';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Показывает строку «Новая заметка...» вверху экрана. Если выключено, используйте кнопку +.';
+
+  @override
   String get emptyTrash => 'Очистить корзину';
 
   @override
@@ -382,6 +392,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Вы действительно хотите выйти?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Вы используете локальный аккаунт: после выхода этот аккаунт и ВСЕ заметки станут навсегда недоступны — без резервной копии их не вернуть. Сначала привяжите аккаунт Google. Всё равно выйти?';
 
   @override
   String get deleteAccount => 'Удалить мой аккаунт и данные';
@@ -658,6 +672,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get remindersPast => 'Прошедшие';
+
+  @override
+  String get reminderInPast =>
+      'Выбранное время уже прошло — выберите время в будущем.';
 
   @override
   String get newReminder => 'Новое напоминание';

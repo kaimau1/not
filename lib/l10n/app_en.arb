@@ -27,6 +27,7 @@
   "selectedCount": "{count} selected",
   "deleteSelected": "Delete selected",
   "undo": "Undo",
+  "redo": "Redo",
   "titleHint": "Title",
   "bodyHint": "Note...",
   "newItemHint": "New item",
@@ -77,7 +78,9 @@
   "settingsSearchEmpty": "No setting matches «{query}»",
   "@settingsSearchEmpty": {
     "placeholders": {
-      "query": { "type": "String" }
+      "query": {
+        "type": "String"
+      }
     }
   },
   "settings": "Settings",
@@ -102,6 +105,8 @@
   "exportBackup": "Export backup (JSON)",
   "expandListItems": "Show list rows in full",
   "expandListItemsInfo": "Long list items wrap over several lines and stay fully visible. When off, a row stays on one line and expands when tapped.",
+  "quickCaptureRowSetting": "Quick note bar",
+  "quickCaptureRowInfo": "Shows a one-line \"New note...\" field at the top of the home screen. When off, use the + button.",
   "emptyTrash": "Empty bin",
   "emptyTrashConfirm": "{count} notes will be permanently deleted. This can't be undone. Are you sure?",
   "trashEmptied": "Bin emptied",
@@ -118,6 +123,7 @@
   "account": "Account",
   "signOut": "Sign out",
   "signOutConfirm": "Are you sure you want to sign out?",
+  "signOutAnonymousWarning": "You are on a local account: signing out makes this account and ALL its notes permanently inaccessible — without a backup they cannot be recovered. Link a Google account first to keep your notes. Sign out anyway?",
   "deleteAccount": "Delete my account and data",
   "deleteAccountWarning": "This can't be undone: all your notes, attachments and your account will be permanently deleted. Are you sure you want to continue?",
   "deleteAccountConfirm": "Delete permanently",
@@ -147,7 +153,9 @@
   "assistantDeleteConfirm": "The assistant wants to move the note \"{title}\" to the trash. Do you approve?",
   "@assistantDeleteConfirm": {
     "placeholders": {
-      "title": {"type": "String"}
+      "title": {
+        "type": "String"
+      }
     }
   },
   "recordAudio": "Voice recording",
@@ -209,6 +217,7 @@
   "remindersEmptyHint": "Add a reminder to a note, or create a new note with a reminder using the + button",
   "remindersUpcoming": "Upcoming",
   "remindersPast": "Past",
+  "reminderInPast": "The selected time is in the past — pick a future time.",
   "newReminder": "New reminder",
   "remindersUntitled": "Untitled note",
   "remindersEdit": "Change the time",
@@ -471,8 +480,12 @@
   "aiPointsOf": "{used} / {total}",
   "@aiPointsOf": {
     "placeholders": {
-      "used": { "type": "int" },
-      "total": { "type": "int" }
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "aiPointsRenew": "renews at midnight",
@@ -500,14 +513,18 @@
   "aiTaskTagUntaggedInfo": "{count} notes waiting for tags",
   "@aiTaskTagUntaggedInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "aiTaskSuggestTitles": "Suggest titles",
   "aiTaskSuggestTitlesInfo": "{count} notes have no title",
   "@aiTaskSuggestTitlesInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sectionPinnedShort": "PINNED",
@@ -583,7 +600,16 @@
   "linkGoogleAccount": "Link a Google account",
   "accountLinked": "Your Google account is linked. Your notes are backed up now.",
   "scanReviewPage": "Page {current} / {total}",
-  "@scanReviewPage": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@scanReviewPage": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanRotatePage": "Rotate page",
   "scanDeletePage": "Delete page",
   "scanLastPage": "The last page cannot be deleted",
@@ -599,7 +625,16 @@
   "scanAddAsImages": "Add as images",
   "scanBuildingPdf": "Preparing PDF…",
   "scanOcrProgress": "Recognizing text… {done}/{total}",
-  "@scanOcrProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@scanOcrProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "scanAutoDetect": "Auto-detect edges",
   "scanReset": "Reset",
   "scanDetecting": "Looking for edges…",
@@ -610,7 +645,13 @@
   "scanPdfAdded": "Scan added to the note as a PDF attachment",
   "premiumTitle": "Premium",
   "premiumStatusActive": "Premium active — until {date}",
-  "@premiumStatusActive": {"placeholders": {"date": {"type": "String"}}},
+  "@premiumStatusActive": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "premiumStatusFree": "You are using the free version",
   "premiumPerksTitle": "What changes with Premium?",
   "premiumPerkAi": "Daily AI points",

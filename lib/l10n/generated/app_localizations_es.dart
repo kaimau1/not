@@ -98,6 +98,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get undo => 'Deshacer';
 
   @override
+  String get redo => 'Rehacer';
+
+  @override
   String get titleHint => 'Título';
 
   @override
@@ -332,6 +335,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Los elementos largos se reparten en varias líneas y quedan totalmente visibles. Si está desactivado, la fila se queda en una línea y se despliega al tocarla.';
 
   @override
+  String get quickCaptureRowSetting => 'Barra de nota rápida';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Muestra un campo \"Nota nueva...\" de una línea arriba. Si está desactivado, usa el botón +.';
+
+  @override
   String get emptyTrash => 'Vaciar la papelera';
 
   @override
@@ -382,6 +392,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get signOutConfirm => '¿Seguro que quieres cerrar sesión?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Usas una cuenta local: al cerrar sesión, esta cuenta y TODAS sus notas quedarán inaccesibles para siempre — sin copia de seguridad no se pueden recuperar. Vincula antes una cuenta de Google. ¿Cerrar sesión igualmente?';
 
   @override
   String get deleteAccount => 'Eliminar mi cuenta y mis datos';
@@ -660,6 +674,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get remindersPast => 'Pasados';
+
+  @override
+  String get reminderInPast =>
+      'La hora seleccionada ya pasó — elige una hora futura.';
 
   @override
   String get newReminder => 'Nuevo recordatorio';

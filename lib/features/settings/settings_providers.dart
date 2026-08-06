@@ -301,6 +301,25 @@ class ExpandListItemsNotifier extends Notifier<bool> {
   }
 }
 
+/// Ana ekranın üstündeki tek satırlık "Yeni not..." hızlı yakalama alanı
+/// görünsün mü? Varsayılan GİZLİ (kullanıcı isteği 2026-08-06): satır dikey
+/// yer kaplıyor ve "+" menüsü aynı işi görüyor; isteyen Ayarlar'dan açar.
+final quickCaptureRowProvider = NotifierProvider<QuickCaptureRowNotifier, bool>(
+  QuickCaptureRowNotifier.new,
+);
+
+class QuickCaptureRowNotifier extends Notifier<bool> {
+  static const _key = 'quick_capture_row';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
 /// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
 /// yalnız dosyanın kendisi yüklenmez (kota/veri tasarrufu).

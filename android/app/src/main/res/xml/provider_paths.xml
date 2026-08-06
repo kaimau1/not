@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pano görselleri (pasteboard) cacheDir'e yazılıyor; FileProvider yalnız
+     oraya erişim verir. Daha genişi (files-path, external-path) gerekmedikçe
+     AÇILMAZ — provider tüm uygulamalara URI izniyle içerik sunuyor. -->
+<paths>
+    <cache-path name="cache" path="." />
+</paths>

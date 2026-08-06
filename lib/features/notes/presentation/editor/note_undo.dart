@@ -19,9 +19,11 @@ class NoteUndoStack {
   final Duration coalesceWindow;
 
   final _entries = <Note>[];
+  final _redo = <Note>[];
   DateTime? _lastPushAt;
 
   bool get canUndo => _entries.isNotEmpty;
+  bool get canRedo => _redo.isNotEmpty;
   int get length => _entries.length;
 
   /// Notun YAPI parmak izi. Değiştiyse değişiklik yazı değildir (madde
@@ -56,6 +58,9 @@ class NoteUndoStack {
   /// son kayıt [coalesceWindow] içinde) yeni bir adım açılmaz: dizinin
   /// başlangıcı zaten yığındadır.
   void push(Note before, Note after, {required DateTime now}) {
+    // Yeni bir değişiklik ileri (yinele) zincirini geçersiz kılar — geri
+    // alınan durumun üstüne yazıldı, artık "ilerisi" yok (Word/Docs kuralı).
+    _redo.clear();
     final structural = structureKey(before) != structureKey(after);
     final last = _lastPushAt;
     if (!structural &&
@@ -79,8 +84,30 @@ class NoteUndoStack {
     return _entries.isEmpty ? null : _entries.removeLast();
   }
 
+  /// Geri al: [current] (o anki not) yinele yığınına konur ve dönülecek
+  /// önceki durum çıkarılır. Yanlışlıkla basılan "Geri al" artık kayıp
+  /// değil — [redoStep] geri getirir.
+  Note? undo(Note current) {
+    if (_entries.isEmpty) return null;
+    _lastPushAt = null;
+    _redo.add(current);
+    return _entries.removeLast();
+  }
+
+  /// Yinele: [current] geri-al yığınına konur (yinelemenin kendisi de geri
+  /// alınabilsin) ve ileri durum çıkarılır. `push` DEĞİL doğrudan ekleme:
+  /// birleştirme penceresi/redo temizliği burada geçerli değil.
+  Note? redoStep(Note current) {
+    if (_redo.isEmpty) return null;
+    _lastPushAt = null;
+    _entries.add(current);
+    if (_entries.length > limit) _entries.removeAt(0);
+    return _redo.removeLast();
+  }
+
   void clear() {
     _entries.clear();
+    _redo.clear();
     _lastPushAt = null;
   }
 }

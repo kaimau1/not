@@ -98,6 +98,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get undo => '元に戻す';
 
   @override
+  String get redo => 'やり直す';
+
+  @override
   String get titleHint => 'タイトル';
 
   @override
@@ -328,6 +331,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '長い項目は複数行に折り返され、全体が見えたままになります。オフの場合、行は 1 行に収まり、タップすると展開します。';
 
   @override
+  String get quickCaptureRowSetting => 'クイックメモバー';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'ホーム画面上部に1行の「新しいメモ...」欄を表示します。オフの場合は+ボタンを使います。';
+
+  @override
   String get emptyTrash => 'ゴミ箱を空にする';
 
   @override
@@ -378,6 +388,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'ログアウトしてもよろしいですか？';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'ローカルアカウントを使用中です。サインアウトすると、このアカウントとすべてのメモに二度とアクセスできなくなります（バックアップがなければ復元不可）。先にGoogleアカウントを連携してください。それでもサインアウトしますか？';
 
   @override
   String get deleteAccount => 'アカウントとデータを削除';
@@ -645,6 +659,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get remindersPast => '過去';
+
+  @override
+  String get reminderInPast => '選択した時刻は過去です。未来の時刻を選んでください。';
 
   @override
   String get newReminder => '新しいリマインダー';

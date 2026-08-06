@@ -75,7 +75,14 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
     }
   }
 
+  /// Yeniden giriş kilidi: geri tuşu artık _stop'a bağlı ve _stop async —
+  /// hızlı iki geri basışı iki uçuşta _stop = iki Navigator.pop demekti,
+  /// ikincisi ALTTAKİ editörü kapatıyordu.
+  bool _stopping = false;
+
   Future<void> _stop({required bool save}) async {
+    if (_stopping) return;
+    _stopping = true;
     _ticker?.cancel();
     try {
       final path = await _recorder.stop();
@@ -105,7 +112,22 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return SafeArea(
+    // Sistem geri tuşu/jesti: `isDismissible: false` yalnız bariyer
+    // dokunuşunu engeller, GERİ tuşu levhayı yine kapatıyordu — dakikalarca
+    // süren kayıt tek yanlış jestle onaysız çöpe gidiyordu. Geri artık
+    // "durdur ve KAYDET" gibi davranır: yanlışlıkla kaydedilen ek tek
+    // dokunuşla silinebilir, kaybolan kayıt geri gelmez.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_error != null) {
+          Navigator.pop(context);
+        } else {
+          _stop(save: true);
+        }
+      },
+      child: SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -158,6 +180,7 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
             ],
           ],
         ),
+      ),
       ),
     );
   }

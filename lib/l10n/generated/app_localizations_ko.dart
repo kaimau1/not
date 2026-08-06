@@ -98,6 +98,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get undo => '실행 취소';
 
   @override
+  String get redo => '다시 실행';
+
+  @override
   String get titleHint => '제목';
 
   @override
@@ -328,6 +331,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '긴 항목은 여러 줄로 넘어가며 전체가 계속 보입니다. 끄면 한 줄로 유지되고 누르면 펼쳐집니다.';
 
   @override
+  String get quickCaptureRowSetting => '빠른 메모 줄';
+
+  @override
+  String get quickCaptureRowInfo =>
+      '홈 화면 상단에 한 줄 \"새 메모...\" 입력란을 표시합니다. 꺼져 있으면 + 버튼을 사용하세요.';
+
+  @override
   String get emptyTrash => '휴지통 비우기';
 
   @override
@@ -378,6 +388,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get signOutConfirm => '정말 로그아웃할까요?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      '로컬 계정을 사용 중입니다. 로그아웃하면 이 계정과 모든 메모에 다시는 접근할 수 없습니다(백업이 없으면 복구 불가). 먼저 Google 계정을 연결하세요. 그래도 로그아웃할까요?';
 
   @override
   String get deleteAccount => '내 계정과 데이터 삭제';
@@ -646,6 +660,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get remindersPast => '지난 알림';
+
+  @override
+  String get reminderInPast => '선택한 시간이 이미 지났습니다. 미래 시간을 선택하세요.';
 
   @override
   String get newReminder => '새 알림';

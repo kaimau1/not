@@ -369,6 +369,28 @@ class _AppliedChip extends StatelessWidget {
 class _FilterSheet extends ConsumerWidget {
   const _FilterSheet();
 
+  /// Süzgeç türlerinin simgeleri: salt metin çipleri birbirine karışıyordu,
+  /// simge göz gezdirirken tutamak veriyor ("0'dan tasarım" isteği).
+  static IconData _filterIcon(NoteFilter f) => switch (f) {
+    NoteFilter.all => Icons.apps,
+    NoteFilter.text => Icons.notes,
+    NoteFilter.checklist => Icons.check_box_outlined,
+    NoteFilter.ordered => Icons.format_list_numbered_rounded,
+    NoteFilter.pinned => Icons.push_pin_outlined,
+    NoteFilter.starred => Icons.star_outline,
+    NoteFilter.reminded => Icons.alarm,
+    NoteFilter.locked => Icons.lock_outline,
+    NoteFilter.others => Icons.category_outlined,
+  };
+
+  static IconData _sortIcon(NoteSort s) => switch (s) {
+    NoteSort.manual => Icons.pan_tool_alt_outlined,
+    NoteSort.updated => Icons.history,
+    NoteSort.created => Icons.fiber_new_outlined,
+    NoteSort.title => Icons.sort_by_alpha,
+    NoteSort.color => Icons.palette_outlined,
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -386,7 +408,7 @@ class _FilterSheet extends ConsumerWidget {
         if (!f.hidden || revealHidden) f,
     ];
     final tags = ref.watch(allTagsProvider);
-    final applied = appliedFilterCount(ref) > 0;
+    final appliedCount = appliedFilterCount(ref);
     final favorites = ref.watch(favoriteFiltersProvider);
     final favoritesNotifier = ref.read(favoriteFiltersProvider.notifier);
 
@@ -395,9 +417,9 @@ class _FilterSheet extends ConsumerWidget {
       // useSafeArea levhanın ALTINI korumaz, son bölüm çubuğun arkasında
       // kalıyordu.
       padding: EdgeInsets.fromLTRB(
-        14,
+        16,
         0,
-        14,
+        16,
         20 + MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Column(
@@ -405,36 +427,188 @@ class _FilterSheet extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  l10n.filterSheetTitle,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                l10n.filterSheetTitle,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              if (applied)
-                TextButton(
+              if (appliedCount > 0) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$appliedCount',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              if (appliedCount > 0)
+                TextButton.icon(
                   onPressed: () => resetFilters(ref),
-                  child: Text(l10n.filterReset),
+                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                  label: Text(l10n.filterReset),
                 ),
               // "Bitti": levhayı kapatmanın görünür yolu. Aşağı sürüklemek ya
               // da dışarı dokunmak da kapatır ama levha ekranı doldurduğunda
               // ikisi de akla gelmiyordu.
-              TextButton(
+              FilledButton.tonal(
                 onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                ),
                 child: Text(l10n.close),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
 
+          _Section(
+            icon: Icons.style_outlined,
+            title: l10n.filterSectionStatus,
+            child: _OptionWrap(
+              children: [
+                for (final f in NoteFilter.values)
+                  _Option(
+                    label: filterLabel(l10n, f),
+                    icon: _filterIcon(f),
+                    selected: filter == f,
+                    onTap: () => ref.read(noteFilterProvider.notifier).set(f),
+                    // "Tümü" favorilenemez: süzgeci KALDIRAN seçenek, ana
+                    // ekranda çip olarak durmasının anlamı yok.
+                    favorite: f == NoteFilter.all
+                        ? null
+                        : favorites.contains(filterFavoriteToken(f)),
+                    onToggleFavorite: () =>
+                        favoritesNotifier.toggle(filterFavoriteToken(f)),
+                  ),
+              ],
+            ),
+          ),
+
+          // Bölüm klasör YOKKEN de görünür: "+ Yeni klasör" ile klasör
+          // doğrudan buradan da oluşturulabilir. Seçili klasör çipinde ⋮
+          // düğmesi klasör YÖNETİMİNİ (yeniden adlandır / gizle / sil) açar —
+          // eski girişi (çip barına uzun basış) bar silinince kaybolmuştu ve
+          // klasör yönetimi tamamen erişilmez kalmıştı. Uzun basış da çalışır.
+          _Section(
+            icon: Icons.folder_outlined,
+            title: l10n.filterSectionFolder,
+            child: _OptionWrap(
+              children: [
+                for (final f in folders)
+                  _Option(
+                    label: f.name,
+                    icon: f.iconData,
+                    selected: folderId == f.id,
+                    // Seçili klasöre tekrar dokunmak seçimi KALDIRIR: levhada
+                    // ayrı bir "hepsi" satırı olmadan da geri dönülebilsin.
+                    onTap: () => ref
+                        .read(selectedFolderProvider.notifier)
+                        .set(folderId == f.id ? null : f.id),
+                    onLongPress: () => showFolderActionsSheet(context, ref, f),
+                    onManage: folderId == f.id
+                        ? () => showFolderActionsSheet(context, ref, f)
+                        : null,
+                    favorite: favorites.contains(folderFavoriteToken(f.id)),
+                    onToggleFavorite: () =>
+                        favoritesNotifier.toggle(folderFavoriteToken(f.id)),
+                  ),
+                _Option(
+                  label: l10n.newFolder,
+                  icon: Icons.add,
+                  selected: false,
+                  outlined: true,
+                  onTap: () async {
+                    final id = await showFolderEditorDialog(context, ref);
+                    // Yeni klasör hemen süzgeç olarak da seçilir: kullanıcı
+                    // "oluştu mu" diye aramasın, boş klasörünü görsün.
+                    if (id != null) {
+                      ref.read(selectedFolderProvider.notifier).set(id);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          if (tags.isNotEmpty)
+            _Section(
+              icon: Icons.tag,
+              title: l10n.filterSectionTag,
+              child: _OptionWrap(
+                children: [
+                  for (final t in tags)
+                    _Option(
+                      label: t,
+                      icon: Icons.tag,
+                      selected: tag == t,
+                      onTap: () => ref
+                          .read(selectedTagProvider.notifier)
+                          .set(tag == t ? null : t),
+                      favorite: favorites.contains(tagFavoriteToken(t)),
+                      onToggleFavorite: () =>
+                          favoritesNotifier.toggle(tagFavoriteToken(t)),
+                    ),
+                ],
+              ),
+            ),
+
+          _Section(
+            icon: Icons.swap_vert,
+            title: l10n.filterSectionSort,
+            // Elle sıralama kipi sıralama bölümünün İÇİNDE: sıralamayı arayan
+            // kullanıcı zaten burada. Yalnız süzgeçsiz görünümde anlamlı
+            // (alt kümede sıra bozulur), o yüzden koşullu.
+            trailing: appliedCount == 0
+                ? IconButton(
+                    tooltip: l10n.reorderNotes,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.open_with, size: 18),
+                    onPressed: () {
+                      ref.read(noteSortProvider.notifier).set(NoteSort.manual);
+                      ref.read(reorderModeProvider.notifier).set(true);
+                      Navigator.pop(context);
+                    },
+                  )
+                : null,
+            child: _OptionWrap(
+              children: [
+                for (final s in NoteSort.values)
+                  _Option(
+                    label: sortLabel(l10n, s),
+                    icon: _sortIcon(s),
+                    selected: sort == s,
+                    onTap: () => ref.read(noteSortProvider.notifier).set(s),
+                    favorite: favorites.contains(sortFavoriteToken(s)),
+                    onToggleFavorite: () =>
+                        favoritesNotifier.toggle(sortFavoriteToken(s)),
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
           // Yıldız ipucu: çipin sonundaki yıldızın ne işe yaradığı bir kez
-          // yazılı olmalı, yoksa süs sanılıyor.
+          // yazılı olmalı, yoksa süs sanılıyor. Sıralama ipucuyla birlikte
+          // levhanın dibinde, içerikten sonra.
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.star, size: 14, color: scheme.primary),
+              Icon(Icons.star, size: 13, color: scheme.primary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -447,115 +621,6 @@ class _FilterSheet extends ConsumerWidget {
               ),
             ],
           ),
-
-          _SectionLabel(l10n.filterSectionStatus),
-          _OptionWrap(
-            children: [
-              for (final f in NoteFilter.values)
-                _Option(
-                  label: filterLabel(l10n, f),
-                  selected: filter == f,
-                  onTap: () => ref.read(noteFilterProvider.notifier).set(f),
-                  // "Tümü" favorilenemez: süzgeci KALDIRAN seçenek, ana ekranda
-                  // çip olarak durmasının anlamı yok.
-                  favorite: f == NoteFilter.all
-                      ? null
-                      : favorites.contains(filterFavoriteToken(f)),
-                  onToggleFavorite: () => favoritesNotifier.toggle(
-                    filterFavoriteToken(f),
-                  ),
-                ),
-            ],
-          ),
-
-          // Bölüm klasör YOKKEN de görünür: "+ Yeni klasör" ile klasör
-          // doğrudan buradan da oluşturulabilir (eskiden tek yol notun kendi
-          // klasör seçicisiydi ve fark edilmiyordu).
-          _SectionLabel(l10n.filterSectionFolder),
-          _OptionWrap(
-            children: [
-              for (final f in folders)
-                _Option(
-                  label: f.name,
-                  selected: folderId == f.id,
-                  // Seçili klasöre tekrar dokunmak seçimi KALDIRIR: levhada
-                  // ayrı bir "hepsi" satırı olmadan da geri dönülebilsin.
-                  onTap: () => ref
-                      .read(selectedFolderProvider.notifier)
-                      .set(folderId == f.id ? null : f.id),
-                  favorite: favorites.contains(folderFavoriteToken(f.id)),
-                  onToggleFavorite: () => favoritesNotifier.toggle(
-                    folderFavoriteToken(f.id),
-                  ),
-                ),
-              _Option(
-                label: '+ ${l10n.newFolder}',
-                selected: false,
-                onTap: () async {
-                  final id = await showFolderEditorDialog(context, ref);
-                  // Yeni klasör hemen süzgeç olarak da seçilir: kullanıcı
-                  // "oluştu mu" diye aramasın, boş klasörünü karşısında görsün.
-                  if (id != null) {
-                    ref.read(selectedFolderProvider.notifier).set(id);
-                  }
-                },
-              ),
-            ],
-          ),
-
-          if (tags.isNotEmpty) ...[
-            _SectionLabel(l10n.filterSectionTag),
-            _OptionWrap(
-              children: [
-                for (final t in tags)
-                  _Option(
-                    label: t,
-                    selected: tag == t,
-                    onTap: () => ref
-                        .read(selectedTagProvider.notifier)
-                        .set(tag == t ? null : t),
-                    favorite: favorites.contains(tagFavoriteToken(t)),
-                    onToggleFavorite: () =>
-                        favoritesNotifier.toggle(tagFavoriteToken(t)),
-                  ),
-              ],
-            ),
-          ],
-
-          _SectionLabel(l10n.filterSectionSort),
-          _OptionWrap(
-            children: [
-              for (final s in NoteSort.values)
-                _Option(
-                  label: sortLabel(l10n, s),
-                  selected: sort == s,
-                  onTap: () => ref.read(noteSortProvider.notifier).set(s),
-                  favorite: favorites.contains(sortFavoriteToken(s)),
-                  onToggleFavorite: () =>
-                      favoritesNotifier.toggle(sortFavoriteToken(s)),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: 8),
-          // ELLE SIRALAMA buradan da açılır: sıralamayı düşünen kullanıcı bu
-          // levhayı açıyor, oysa kartları sürükleyerek dizme kipi yalnız ⋮
-          // menüsünde duruyordu ve kimse bulamıyordu. Yalnız süzgeçsiz
-          // görünümde anlamlı (alt kümede sıra bozulur), o yüzden koşullu.
-          if (!applied)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ref.read(noteSortProvider.notifier).set(NoteSort.manual);
-                  ref.read(reorderModeProvider.notifier).set(true);
-                  Navigator.pop(context);
-                },
-                icon: const Icon(Icons.swap_vert, size: 18),
-                label: Text(l10n.reorderNotes),
-              ),
-            ),
-
           const SizedBox(height: 4),
           Text(
             l10n.filterSheetSortHint,
@@ -588,24 +653,63 @@ String sortLabel(AppLocalizations l10n, NoteSort sort) => switch (sort) {
   NoteSort.color => l10n.sortColor,
 };
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+/// Bölüm kartı: simgeli başlık + içerik, yumuşak zeminli tek blok.
+///
+/// Eski levha bölümleri yalnız minik BÜYÜK HARF etiketlerle ayırıyordu;
+/// kenarlıklı çipler ekranı çizgi kalabalığına çeviriyordu. Kart zemini
+/// bölümü tek bakışta gruplarken çiplerin kenarlıksız (tonal) kalmasına
+/// izin veriyor — uygulamanın not kartlarıyla aynı dil.
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.icon,
+    required this.title,
+    required this.child,
+    this.trailing,
+  });
 
-  final String text;
+  final IconData icon;
+  final String title;
+  final Widget child;
+  final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(2, 14, 2, 8),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 11.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-        color: Theme.of(context).colorScheme.primary,
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
       ),
-    ),
-  );
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: scheme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
 }
 
 class _OptionWrap extends StatelessWidget {
@@ -615,7 +719,7 @@ class _OptionWrap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Wrap(spacing: 6, runSpacing: 6, children: children);
+      Wrap(spacing: 8, runSpacing: 8, children: children);
 }
 
 class _Option extends StatelessWidget {
@@ -623,13 +727,26 @@ class _Option extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.icon,
     this.favorite,
     this.onToggleFavorite,
+    this.onLongPress,
+    this.onManage,
+    this.outlined = false,
   });
 
   final String label;
+  final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  /// Dolu ise seçili çipte ⋮ görünür (klasör yönetimi girişi).
+  final VoidCallback? onManage;
+
+  /// "+ Yeni klasör" gibi eylem çipleri: dolgusuz, kesikli görünüm yerine
+  /// ince kenarlık.
+  final bool outlined;
 
   /// null = bu seçenek favorilenemez. Dolu ise çipin sonunda yıldız çıkar.
   final bool? favorite;
@@ -639,42 +756,54 @@ class _Option extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final star = favorite;
+    // Seçili çip dolgun (primary), seçilmemiş tonal — kenarlık çizgisi yok:
+    // eski tasarımda her çipin kenarlığı levhayı tel kafese çeviriyordu.
+    final background = selected
+        ? scheme.primary
+        : outlined
+        ? Colors.transparent
+        : scheme.surfaceContainerHigh;
+    final foreground = selected ? scheme.onPrimary : scheme.onSurface;
     return Material(
-      color: selected ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
+      color: background,
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Container(
-          height: 36,
-          padding: EdgeInsetsDirectional.only(start: 12, end: star == null ? 12 : 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected ? scheme.primary : scheme.outlineVariant,
-            ),
+          height: 38,
+          padding: EdgeInsetsDirectional.only(
+            start: 12,
+            end: (star == null && onManage == null) ? 12 : 4,
           ),
-          // KÖK NEDEN (levha kullanışsızdı): kutuda `alignment: center`
-          // vardı. Wrap çocuklarına GEVŞEK kısıt verir; hizalaması olan bir
-          // Container gevşek kısıtta eldeki EN GENİŞ ölçüyü alır — her seçenek
-          // satırın tamamını kaplıyor, dokuz süzgeç + klasörler + etiketler +
-          // sıralama alt alta uzayıp ekranlarca kaydırma gerektiriyordu.
-          // widthFactor: 1 olan Center, yüksekliği doldururken genişliği
-          // METNE göre verir; seçenekler yan yana çip gibi akar.
+          decoration: outlined
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: scheme.outlineVariant),
+                )
+              : null,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  size: 16,
+                  color: selected ? scheme.onPrimary : scheme.primary,
+                ),
+                const SizedBox(width: 6),
+              ],
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                  color: foreground,
                 ),
               ),
               // Yıldız çipin İÇİNDE ayrı bir dokunma hedefi: etikete dokunmak
               // süzgeci uygular, yıldıza dokunmak favorilere ekler/çıkarır.
-              // (Basılı tutma jesti seçilmedi — görünmez bir yetenek olurdu.)
               if (star != null)
                 InkWell(
                   borderRadius: BorderRadius.circular(20),
@@ -683,10 +812,25 @@ class _Option extends StatelessWidget {
                     padding: const EdgeInsets.all(6),
                     child: Icon(
                       star ? Icons.star : Icons.star_border,
-                      size: 16,
-                      color: star
+                      size: 15,
+                      color: selected
+                          ? scheme.onPrimary
+                          : star
                           ? scheme.primary
-                          : scheme.onSurfaceVariant.withValues(alpha: 0.55),
+                          : scheme.onSurfaceVariant.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ),
+              if (onManage != null)
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: onManage,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.more_vert,
+                      size: 16,
+                      color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
                     ),
                   ),
                 ),

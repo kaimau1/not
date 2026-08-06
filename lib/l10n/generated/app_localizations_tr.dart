@@ -98,6 +98,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get undo => 'Geri Al';
 
   @override
+  String get redo => 'Yinele';
+
+  @override
   String get titleHint => 'Başlık';
 
   @override
@@ -329,6 +332,13 @@ class AppLocalizationsTr extends AppLocalizations {
       'Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.';
 
   @override
+  String get quickCaptureRowSetting => 'Hızlı not satırı';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Ana ekranın üstünde tek satırlık \"Yeni not...\" alanı görünür. Kapalıyken yeni not \"+\" düğmesinden açılır.';
+
+  @override
   String get emptyTrash => 'Çöpü boşalt';
 
   @override
@@ -379,6 +389,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Çıkış yapmak istediğine emin misin?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Yerel hesaptasın: çıkış yaparsan bu hesaba ve TÜM notlarına bir daha ERİŞİLEMEZ — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?';
 
   @override
   String get deleteAccount => 'Hesabımı ve verilerimi sil';
@@ -653,6 +667,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get remindersPast => 'Geçmiş';
+
+  @override
+  String get reminderInPast =>
+      'Seçilen zaman geçmişte — gelecekte bir zaman seç.';
 
   @override
   String get newReminder => 'Yeni hatırlatıcı';

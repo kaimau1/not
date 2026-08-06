@@ -34,6 +34,11 @@ class _DrawingScreenState extends State<DrawingScreen> {
   final _canvasKey = GlobalKey();
   bool _saving = false;
 
+  /// Kayıt bir kez başarısız olduysa sonraki geri basışı KAYDETMEDEN çıkar:
+  /// kalıcı bir hatada (bellek/kodlama) geri tuşu sonsuza dek başarısız
+  /// kaydı yeniden dener, ekrandan çıkış yolu kalmazdı.
+  bool _saveFailed = false;
+
   @override
   void dispose() {
     _ink.dispose();
@@ -82,6 +87,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       // Sessizce yutulursa kullanıcı "Nota ekle"ye basar, ekran kapanmaz ve
       // neden olduğunu anlamaz.
       if (!mounted) return;
+      _saveFailed = true;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -94,7 +100,22 @@ class _DrawingScreenState extends State<DrawingScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Scaffold(
+    // Geri tuşu/jesti dakikalarca süren çizimi ONAYSIZ siliyordu (kaydetme
+    // yalnız "Nota ekle" düğmesindeydi; görüntü/PDF üstü çizim ise poplarken
+    // kaydediyor). Tuval boş değilse geri = kaydet-ve-çık: çizim nota ek
+    // olarak girer, istemeyen tek dokunuşla siler — kaybolan çizim geri
+    // gelmez.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop || _saving) return;
+        if (_saveFailed) {
+          Navigator.pop(context);
+          return;
+        }
+        _save();
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(l10n.drawingTitle),
         actions: [
@@ -122,6 +143,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
           // gerek yok (PDF üstü çizimle aynı düzen).
           InkToolbar(controller: _ink),
         ],
+      ),
       ),
     );
   }

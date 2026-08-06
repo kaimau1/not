@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../settings/settings_providers.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -232,7 +234,7 @@ class _AudioTileState extends State<_AudioTile> {
   }
 }
 
-class _AttachmentTile extends StatelessWidget {
+class _AttachmentTile extends ConsumerWidget {
   const _AttachmentTile({
     required this.attachment,
     required this.onRemove,
@@ -282,8 +284,14 @@ class _AttachmentTile extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
+    // Otomatik yükleme sınırının ÜSTÜNDE kalan ek hiç yüklenmeyecek (kuyruk
+    // atlıyor); "Yükleniyor" çarkı burada kalıcı bir yalan oluyordu. Onun
+    // yerine bulut-kapalı rozeti ve ayarın kendi açıklaması gösterilir.
+    final limitMb = ref.watch(syncLimitMbProvider);
+    final overSyncLimit =
+        limitMb > 0 && attachment.sizeBytes > limitMb * 1024 * 1024;
 
     Widget content;
     if (attachment.kind == AttachmentKind.audio) {
@@ -430,21 +438,29 @@ class _AttachmentTile extends StatelessWidget {
             start: 6,
             bottom: 6,
             child: Tooltip(
-              message: context.l10n.attachmentUploading,
+              message: overSyncLimit
+                  ? context.l10n.syncLimitInfo
+                  : context.l10n.attachmentUploading,
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   color: Colors.black54,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const SizedBox(
-                  width: 10,
-                  height: 10,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: Colors.white,
-                  ),
-                ),
+                child: overSyncLimit
+                    ? const Icon(
+                        Icons.cloud_off_outlined,
+                        size: 12,
+                        color: Colors.white,
+                      )
+                    : const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ),

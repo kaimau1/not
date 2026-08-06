@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import 'note_card.dart';
 import 'notes_providers.dart';
 
 /// Arşivlenen notlar. Karta dokununca editör açılır; menüden arşivden
@@ -54,18 +55,22 @@ class _ArchivedTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final preview = note.toPlainText();
+    // Kilitli notun başlığı/içeriği kimlik doğrulamasız yüzeylerde gösterilmez
+    // (ana ekran kartıyla aynı kural).
+    final preview = note.locked ? '' : note.toPlainText();
+    final title = note.locked
+        ? l10n.lockedNote
+        : (note.title.trim().isNotEmpty
+              ? note.displayTitle
+              : preview.split('\n').first);
     return ListTile(
       tileColor: scheme.surfaceContainerLow,
-      title: Text(
-        note.title.trim().isNotEmpty ? note.title : preview.split('\n').first,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      leading: note.locked ? const Icon(Icons.lock_outline) : null,
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: preview.isEmpty
           ? null
           : Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),
-      onTap: () => context.push('/note/${note.id}'),
+      onTap: () => openNoteRoute(context, note),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -78,8 +83,14 @@ class _ArchivedTile extends ConsumerWidget {
           IconButton(
             tooltip: l10n.delete,
             icon: const Icon(Icons.delete_outline),
-            onPressed: () =>
-                ref.read(notesRepositoryProvider)?.softDelete(note.id),
+            // Kilitli not doğrulamasız silinmesin (eylem levhasıyla aynı).
+            onPressed: () async {
+              if (note.locked &&
+                  !await authenticateForNote(l10n.unlockAuthReason)) {
+                return;
+              }
+              ref.read(notesRepositoryProvider)?.softDelete(note.id);
+            },
           ),
         ],
       ),

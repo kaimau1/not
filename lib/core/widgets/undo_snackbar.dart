@@ -62,6 +62,11 @@ void showUndoSnackBar(
             ),
           ],
         ),
+        // TUZAK: bu Flutter sürümünde aksiyonlu SnackBar varsayılan olarak
+        // `persist: true` — messenger zamanlayıcısı hiç kurulmuyor. Buradaki
+        // dairesel gösterge kapatmayı zaten kendisi yapıyor ama persist'i
+        // yine de kapatıyoruz ki iki mekanizma da aynı şeyi söylesin.
+        persist: false,
         action: SnackBarAction(label: undoLabel, onPressed: onUndo),
       ),
     );

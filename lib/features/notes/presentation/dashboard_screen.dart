@@ -56,7 +56,13 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  final _searchController = TextEditingController();
+  /// Metin provider'dan başlar: dar↔geniş kesme noktası geçişinde (tablet
+  /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
+  /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
+  /// süzülü kalırdı (searchQueryProvider global, kutu ise State'te).
+  late final _searchController = TextEditingController(
+    text: ref.read(searchQueryProvider),
+  );
   final _searchFocus = FocusNode();
 
   /// "+" menüsünün demirlendiği nokta: mikrofon + "+" sütununun tamamı.
@@ -149,10 +155,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   /// Seçilen notları çöp kutusuna taşır; tek dokunuşla geri alınabilir.
-  void _deleteSelected(Set<String> ids) {
+  Future<void> _deleteSelected(Set<String> ids) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null || ids.isEmpty) return;
     final l10n = context.l10n;
+    // Kilitli not toplu yoldan da doğrulamasız silinmesin (tekli eylem
+    // levhasıyla aynı kural).
+    if (_selectedNotes(ids).any((n) => n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
+    if (!mounted) return;
     for (final id in ids) {
       repo.softDelete(id);
     }
@@ -220,7 +233,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _joinSelected(Set<String> ids) {
     final parts = [
       for (final n in _selectedNotes(ids))
-        if (n.locked) n.title.trim() else n.toPlainText(),
+        // displayTitle: başlık biçimlendirilebiliyor, işaretler panoya sızmasın.
+        if (n.locked) n.displayTitle.trim() else n.toPlainText(),
     ];
     return parts.where((t) => t.trim().isNotEmpty).join('\n\n———\n\n');
   }
@@ -395,6 +409,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         SnackBar(
           content: Text(l10n.assistantNoteCreated),
           duration: const Duration(seconds: 3),
+          // TUZAK: bu Flutter sürümünde AKSİYONLU SnackBar'ın varsayılanı
+          // `persist: true` — zamanlayıcı hiç kurulmuyor ve "Not oluşturuldu"
+          // uyarısı elle kapatılana dek ekranda KALIYORDU. persist: false
+          // eski davranışı (süre dolunca kapan) geri getirir.
+          persist: false,
           action: SnackBarAction(
             label: l10n.openNote,
             onPressed: () => _openNew(id),
@@ -406,11 +425,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _createNote(NoteType type) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final id = await repo.createNote(type);
-    // Aktif bir klasör filtresi varsa yeni not o klasöre doğar.
-    final folderId = ref.read(selectedFolderProvider);
-    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    // Klasör TEK yazımda: createNote + ayrı updateFields arasında doküman bir
+    // an klasörsüz/boş kalıyordu (bkz. NotesRepository.createNote yorumu).
+    final id = await repo.createNote(
+      type,
+      folderId: ref.read(selectedFolderProvider),
+    );
     await _openNew(id);
+    // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
+    // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
+    // görünmüyordu) FAB yolunda açık kalmıştı. Klasör süzgeci kalır (not o
+    // klasöre doğdu); boş bırakılıp silinen not için süzgeçlere dokunulmaz.
+    if (!mounted) return;
+    // Kısa bekleme ŞART: push future'ı POP anında tamamlanır, editörün son
+    // yazımı ise dispose'daki _saveNow'da (çıkış animasyonundan sonra) düşer.
+    // Hemen bakılsaydı hızlı yazıp çıkan kullanıcının notu akışta hâlâ boş
+    // görünür ve süzgeçler temizlenmezdi — düzeltmenin hedeflediği senaryo.
+    await Future<void>.delayed(const Duration(milliseconds: 700));
+    if (!mounted) return;
+    final kept = ref.read(notesStreamProvider).value ?? const <Note>[];
+    final survives = kept.any((n) => n.id == id && !n.isEmpty);
+    if (!survives) return;
+    if (ref.read(noteFilterProvider) != NoteFilter.all) {
+      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
+    }
+    if (ref.read(selectedTagProvider) != null) {
+      ref.read(selectedTagProvider.notifier).set(null);
+    }
+    if (ref.read(searchQueryProvider).trim().isNotEmpty) {
+      _searchController.clear();
+      ref.read(searchQueryProvider.notifier).set('');
+    }
   }
 
   /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
@@ -477,22 +522,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       }
     }
 
+    // TEK yazımda kur: createNote + ayrı updateFields arasında doküman bir an
+    // boş/süzgeçsiz kalıyor ve o anki akış görüntüsünde listeden düşebiliyordu
+    // (hızlı yakalama satırında çözülen kök neden burada açık kalmıştı).
     final asList = result.action == VoiceCaptureAction.asList;
+    final folderId = ref.read(selectedFolderProvider);
     final id = await repo.createNote(
       asList ? NoteType.checklist : NoteType.text,
+      body: asList ? '' : (text.trim().isNotEmpty ? text : ''),
+      folderId: folderId,
     );
-    final folderId = ref.read(selectedFolderProvider);
-    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
     if (asList) {
       repo.updateFields(id, {
         'items': [
           for (final line in text.split('\n'))
             if (line.trim().isNotEmpty)
-              {'id': const Uuid().v4(), 'text': line.trim(), 'done': false},
+              // Şemanın anahtarı 'checked' ('done' yabancı alan olarak
+              // kalıyordu; fromMap onu hiç okumuyor).
+              {'id': const Uuid().v4(), 'text': line.trim(), 'checked': false},
         ],
       });
-    } else if (text.trim().isNotEmpty) {
-      repo.updateFields(id, {'body': text});
     }
     // Dökümü yapılamamış konuşma: kayıt nota SES EKİ olarak girer, böylece
     // yapay zekâ hiç çalışmasa da konuşma kaybolmaz.
@@ -674,8 +723,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final query = ref.watch(debouncedSearchQueryProvider);
     final semanticActive =
         ref.watch(semanticSearchEnabledProvider) && query.trim().length > 2;
+    // Anlamsal sonuçlara da uygulanmış süzgeçler (klasör/etiket/durum) uygulanır:
+    // eskiden "İş" klasörü seçiliyken anlam modu TÜM klasörlerden not getiriyor,
+    // üstteki çip ise hâlâ "İş" diyordu — metin/anlam modları sessizce farklı
+    // davranıyordu.
+    final semanticFolder = ref.watch(selectedFolderProvider);
+    final semanticTag = ref.watch(selectedTagProvider);
+    final semanticFilter = ref.watch(noteFilterProvider);
     final notesAsync = semanticActive
-        ? ref.watch(semanticSearchProvider(query.trim()))
+        ? ref
+              .watch(semanticSearchProvider(query.trim()))
+              .whenData(
+                (list) => [
+                  for (final n in list)
+                    if ((semanticFolder == null ||
+                            n.folderId == semanticFolder) &&
+                        (semanticTag == null ||
+                            n.tags.contains(semanticTag)) &&
+                        noteMatchesFilter(n, semanticFilter))
+                      n,
+                ],
+              )
         : ref.watch(filteredNotesProvider);
     final selectedIds = ref.watch(selectedNoteIdsProvider);
     final selectionActive = selectedIds.isNotEmpty;
@@ -1012,11 +1080,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         // satıra indirir. Tasarım bunu kaydırma akışının
                         // içine koyuyordu; sabit satırda tutuyorum ki liste
                         // aşağıdayken yukarı kaydırmadan da yazılabilsin.
-                        _QuickCaptureRow(
-                          onCreateChecklist: () =>
-                              _createNote(NoteType.checklist),
-                          onSaved: _afterQuickCapture,
-                        ),
+                        // Varsayılan GİZLİ (Ayarlar > "Hızlı not satırı"):
+                        // satır yer kaplıyordu, aynı iş "+" menüsünde de var.
+                        if (ref.watch(quickCaptureRowProvider))
+                          _QuickCaptureRow(
+                            onCreateChecklist: () =>
+                                _createNote(NoteType.checklist),
+                            onSaved: _afterQuickCapture,
+                          ),
                         Expanded(
                           // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez

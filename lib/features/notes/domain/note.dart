@@ -149,11 +149,15 @@ class Note {
   final DateTime? reminderAt;
   final AiSummary? aiSummary;
 
+  /// "Boş" not sessizce silinebilir (editör kapanışı + arka plan temizliği).
+  /// Hatırlatıcısı olan not boş SAYILMAZ: "sadece alarm" için metinsiz not
+  /// bırakmak meşru bir kullanım — silinirse kurulu hatırlatıcı da kaybolur.
   bool get isEmpty =>
       title.trim().isEmpty &&
       body.trim().isEmpty &&
       items.every((i) => i.text.trim().isEmpty) &&
-      attachments.isEmpty;
+      attachments.isEmpty &&
+      reminderAt == null;
 
   /// AI'ya gönderilecek düz metin temsili. Satır içi biçim işaretleri
   /// (`**kalın**` gibi) SÖKÜLÜR: modele, sesli okumaya ve paylaşıma giden
