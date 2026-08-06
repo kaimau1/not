@@ -192,6 +192,8 @@
   "exportBackup": "Yedeği dışa aktar (JSON)",
   "expandListItems": "Liste satırlarını tam göster",
   "expandListItemsInfo": "Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.",
+  "quickCaptureRowSetting": "Hızlı not satırı",
+  "quickCaptureRowInfo": "Ana ekranın üstünde tek satırlık \"Yeni not...\" alanı görünür. Kapalıyken yeni not \"+\" düğmesinden açılır.",
   "emptyTrash": "Çöpü boşalt",
   "emptyTrashConfirm": "{count} not kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?",
   "@emptyTrashConfirm": {
@@ -222,6 +224,7 @@
   "account": "Hesap",
   "signOut": "Çıkış yap",
   "signOutConfirm": "Çıkış yapmak istediğine emin misin?",
+  "signOutAnonymousWarning": "Yerel hesaptasın: çıkış yaparsan bu hesaba ve TÜM notlarına bir daha ERİŞİLEMEZ — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?",
   "deleteAccount": "Hesabımı ve verilerimi sil",
   "deleteAccountWarning": "Bu işlem geri alınamaz: tüm notların, eklerin ve hesabın kalıcı olarak silinir. Devam etmek istediğine emin misin?",
   "deleteAccountConfirm": "Kalıcı olarak sil",

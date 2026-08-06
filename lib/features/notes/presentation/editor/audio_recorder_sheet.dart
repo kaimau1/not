@@ -75,7 +75,14 @@ class _AudioRecorderSheetState extends State<_AudioRecorderSheet> {
     }
   }
 
+  /// Yeniden giriş kilidi: geri tuşu artık _stop'a bağlı ve _stop async —
+  /// hızlı iki geri basışı iki uçuşta _stop = iki Navigator.pop demekti,
+  /// ikincisi ALTTAKİ editörü kapatıyordu.
+  bool _stopping = false;
+
   Future<void> _stop({required bool save}) async {
+    if (_stopping) return;
+    _stopping = true;
     _ticker?.cancel();
     try {
       final path = await _recorder.stop();

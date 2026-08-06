@@ -334,6 +334,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Long list items wrap over several lines and stay fully visible. When off, a row stays on one line and expands when tapped.';
 
   @override
+  String get quickCaptureRowSetting => 'Quick note bar';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Shows a one-line \"New note...\" field at the top of the home screen. When off, use the + button.';
+
+  @override
   String get emptyTrash => 'Empty bin';
 
   @override
@@ -384,6 +391,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Are you sure you want to sign out?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'You are on a local account: signing out makes this account and ALL its notes permanently inaccessible — without a backup they cannot be recovered. Link a Google account first to keep your notes. Sign out anyway?';
 
   @override
   String get deleteAccount => 'Delete my account and data';

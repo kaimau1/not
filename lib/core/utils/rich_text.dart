@@ -299,7 +299,12 @@ String plainSelection(String text, int start, int end) {
   final plain = leaves.map((l) => l.text).join();
   final ps = _toPlain(leaves, from);
   final pe = _toPlain(leaves, to);
-  return plain.substring(ps.clamp(0, plain.length), pe.clamp(ps, plain.length));
+  return plain
+      .substring(ps.clamp(0, plain.length), pe.clamp(ps, plain.length))
+      // İçi boş işaret kutuları (`****`, `==3:==`) çözümleyicide düz metin
+      // sayılır ve kesite sızabilir; panoya gitmeden temizlenir
+      // (stripRichMarkers ile aynı kural).
+      .replaceAll(_emptyBoxPattern, '');
 }
 
 bool _hasMarker(String text) =>

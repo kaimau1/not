@@ -330,6 +330,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get expandListItemsInfo => '较长的条目会折行显示并始终完整可见。关闭后，每行只占一行，点按才展开。';
 
   @override
+  String get quickCaptureRowSetting => '快速笔记栏';
+
+  @override
+  String get quickCaptureRowInfo => '在主屏幕顶部显示单行\"新建笔记...\"输入框。关闭时请使用 + 按钮。';
+
+  @override
   String get emptyTrash => '清空回收站';
 
   @override
@@ -380,6 +386,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get signOutConfirm => '确定要退出登录吗？';
+
+  @override
+  String get signOutAnonymousWarning =>
+      '你正在使用本地账号：退出后此账号及其全部笔记将永久无法访问——没有备份就无法恢复。请先绑定 Google 账号。仍要退出吗？';
 
   @override
   String get deleteAccount => '删除我的账号和数据';

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
@@ -82,8 +83,14 @@ class _ArchivedTile extends ConsumerWidget {
           IconButton(
             tooltip: l10n.delete,
             icon: const Icon(Icons.delete_outline),
-            onPressed: () =>
-                ref.read(notesRepositoryProvider)?.softDelete(note.id),
+            // Kilitli not doğrulamasız silinmesin (eylem levhasıyla aynı).
+            onPressed: () async {
+              if (note.locked &&
+                  !await authenticateForNote(l10n.unlockAuthReason)) {
+                return;
+              }
+              ref.read(notesRepositoryProvider)?.softDelete(note.id);
+            },
           ),
         ],
       ),

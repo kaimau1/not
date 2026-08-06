@@ -62,14 +62,16 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    // İşaretsizler ÖNDE kalır ("işaretsizler _items'ın başında" değişmezi —
+    // sürükle-sırala buna dayanıyor); işaretli satır işaretli bloğa gider.
     expect(latest!.map((i) => i.text).toList(), [
       'başlık',
-      'bitti',
       'duruyor',
       'sıra',
+      'bitti',
     ]);
-    expect(latest![1].checked, isTrue);
-    expect(latest![2].checked, isFalse);
+    expect(latest!.last.checked, isTrue);
+    expect(latest![1].checked, isFalse);
   });
 
   testWidgets('donanım Enter satır sonunda YENİ boş madde açar', (

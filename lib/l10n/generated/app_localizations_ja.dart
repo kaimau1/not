@@ -331,6 +331,13 @@ class AppLocalizationsJa extends AppLocalizations {
       '長い項目は複数行に折り返され、全体が見えたままになります。オフの場合、行は 1 行に収まり、タップすると展開します。';
 
   @override
+  String get quickCaptureRowSetting => 'クイックメモバー';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'ホーム画面上部に1行の「新しいメモ...」欄を表示します。オフの場合は+ボタンを使います。';
+
+  @override
   String get emptyTrash => 'ゴミ箱を空にする';
 
   @override
@@ -381,6 +388,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'ログアウトしてもよろしいですか？';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'ローカルアカウントを使用中です。サインアウトすると、このアカウントとすべてのメモに二度とアクセスできなくなります（バックアップがなければ復元不可）。先にGoogleアカウントを連携してください。それでもサインアウトしますか？';
 
   @override
   String get deleteAccount => 'アカウントとデータを削除';

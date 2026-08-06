@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../data/notes_repository.dart';
+import 'notes_providers.dart';
 import '../domain/note.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
@@ -39,6 +41,11 @@ class TrashScreen extends ConsumerWidget {
       ),
     );
     if (!(confirmed ?? false)) return;
+    // İçlerinde kilitli not varsa toplu boşaltma da doğrulama ister.
+    if (notes.any((n) => n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     for (final note in notes) {
@@ -51,7 +58,15 @@ class TrashScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final trash = ref.watch(trashStreamProvider);
-    final notes = trash.value ?? const <Note>[];
+    // Gizli klasör bastırması: çöp, gizli notların içeriğini doğrulamasız
+    // sızdırıyordu (ana ekran kuralıyla aynı). Bastırılan not çöpte gizli
+    // kalır; 30 günlük otomatik boşaltma onu yine kapsar.
+    final suppressed = ref.watch(suppressedFolderIdsProvider);
+    List<Note> visible(List<Note> list) => [
+      for (final n in list)
+        if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+    ];
+    final notes = visible(trash.value ?? const <Note>[]);
 
     return Scaffold(
       appBar: AppBar(
@@ -71,7 +86,8 @@ class TrashScreen extends ConsumerWidget {
           icon: Icons.error_outline,
           title: l10n.genericError(e.toString()),
         ),
-        data: (notes) {
+        data: (raw) {
+          final notes = visible(raw);
           if (notes.isEmpty) {
             return EmptyState(
               icon: Icons.delete_outline,
@@ -110,6 +126,11 @@ class _TrashTile extends ConsumerWidget {
 
   Future<void> _deleteForever(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
+    // Kilitli notun KALICI silinmesi doğrulama ister (geri alınamaz).
+    if (note.locked && !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
+    if (!context.mounted) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

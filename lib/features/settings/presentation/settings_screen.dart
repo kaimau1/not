@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
@@ -140,6 +141,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _ExpandListItemsSwitch(),
             title: l10n.expandListItems,
             keywords: l10n.expandListItemsInfo,
+          ),
+          _SettingRow(
+            const _QuickCaptureRowSwitch(),
+            title: l10n.quickCaptureRowSetting,
+            keywords: l10n.quickCaptureRowInfo,
           ),
           _SettingRow(
             const _DashboardBackgroundTile(),
@@ -622,16 +628,25 @@ class _ProfileCard extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 6),
+                // Anonim hesapta "Senkronize edildi" YANILTICIYDI: veri başka
+                // cihazdan açılamaz ve hesap kaybolursa geri gelmez. Rozet
+                // gerçeği söyler; ayrıntısı alttaki yerel hesap kartında.
                 Row(
                   children: [
                     Icon(
-                      Icons.cloud_done_outlined,
+                      ref.watch(isAnonymousProvider)
+                          ? Icons.smartphone
+                          : Icons.cloud_done_outlined,
                       size: 14,
-                      color: scheme.primary,
+                      color: ref.watch(isAnonymousProvider)
+                          ? scheme.onSurfaceVariant
+                          : scheme.primary,
                     ),
                     const SizedBox(width: 5),
                     Text(
-                      l10n.synced,
+                      ref.watch(isAnonymousProvider)
+                          ? l10n.localAccountBadge
+                          : l10n.synced,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -1304,6 +1319,23 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
       value: ref.watch(expandListItemsProvider),
       onChanged: (value) =>
           ref.read(expandListItemsProvider.notifier).set(value),
+    );
+  }
+}
+
+class _QuickCaptureRowSwitch extends ConsumerWidget {
+  const _QuickCaptureRowSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.quickCaptureRowSetting),
+      subtitle: Text(l10n.quickCaptureRowInfo),
+      value: ref.watch(quickCaptureRowProvider),
+      onChanged: (value) =>
+          ref.read(quickCaptureRowProvider.notifier).set(value),
     );
   }
 }
@@ -2355,7 +2387,10 @@ class _BackupButton extends ConsumerWidget {
     ],
     'tags': n.tags,
     'color': n.color.id,
+    'frameColor': n.frameColor.id,
+    'folderId': n.folderId,
     'pinned': n.pinned,
+    'starred': n.starred,
     'locked': n.locked,
     'createdAt': n.createdAt?.toIso8601String(),
     'updatedAt': n.updatedAt?.toIso8601String(),
@@ -2478,6 +2513,16 @@ class _RestoreButton extends ConsumerWidget {
           continue;
         }
         final id = await repo.createNote(type);
+        // Yedekteki alanların OLABİLDİĞİNCE çoğu geri yazılır. Eskiden yalnız
+        // title/body/items/tags/pinned dönüyordu: kilitli notlar KİLİTSİZ
+        // (içerik açıkta!), arşivdekiler ana duvara, renk/hatırlatıcı/tarih
+        // kayıp geliyordu. Klasör geri yüklenmez (id başka hesapta anlamsız).
+        Timestamp? ts(String key) {
+          final v = map[key] as String?;
+          final parsed = v == null ? null : DateTime.tryParse(v);
+          return parsed == null ? null : Timestamp.fromDate(parsed);
+        }
+
         repo.updateFields(id, {
           'title': title,
           'body': body,
@@ -2487,6 +2532,17 @@ class _RestoreButton extends ConsumerWidget {
               t.toString(),
           ],
           'pinned': map['pinned'] as bool? ?? false,
+          'starred': map['starred'] as bool? ?? false,
+          'locked': map['locked'] as bool? ?? false,
+          if (map['color'] is String) 'color': map['color'],
+          if (map['frameColor'] is String) 'frameColor': map['frameColor'],
+          if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
+          if (ts('archivedAt') != null) 'archivedAt': ts('archivedAt'),
+          // Geçmişte kalmış hatırlatıcı geri kurulmaz (bildirim zaten
+          // planlanmaz, "Geçmiş" listesini şişirir).
+          if (ts('reminderAt') != null &&
+              ts('reminderAt')!.toDate().isAfter(DateTime.now()))
+            'reminderAt': ts('reminderAt'),
         });
         count++;
       }
@@ -2636,17 +2692,36 @@ class _AccountSection extends ConsumerWidget {
           icon: const Icon(Icons.logout),
           label: Text(l10n.signOut),
           onPressed: () async {
+            // Anonim (yerel) hesapta çıkış GERİ DÖNÜŞSÜZ veri kaybıdır: uid
+            // bir daha ele geçirilemez, "Yerel devam et" YENİ uid açar ve
+            // eski notların tamamı erişilmez kalır. Sıradan onay yetmez —
+            // diyalog açık uyarır ve silme düğmesi gibi kırmızı görünür.
+            final anonymous = ref.read(isAnonymousProvider);
             final confirmed = await showDialog<bool>(
               context: context,
               builder: (dialogContext) => AlertDialog(
                 title: Text(l10n.signOut),
-                content: Text(l10n.signOutConfirm),
+                content: Text(
+                  anonymous
+                      ? l10n.signOutAnonymousWarning
+                      : l10n.signOutConfirm,
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
                     child: Text(l10n.cancel),
                   ),
                   FilledButton(
+                    style: anonymous
+                        ? FilledButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              dialogContext,
+                            ).colorScheme.error,
+                            foregroundColor: Theme.of(
+                              dialogContext,
+                            ).colorScheme.onError,
+                          )
+                        : null,
                     onPressed: () => Navigator.pop(dialogContext, true),
                     child: Text(l10n.signOut),
                   ),

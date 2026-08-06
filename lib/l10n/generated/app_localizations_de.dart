@@ -339,6 +339,13 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lange Listeneinträge brechen über mehrere Zeilen um und bleiben ganz sichtbar. Ist die Option aus, bleibt eine Zeile einzeilig und klappt beim Antippen auf.';
 
   @override
+  String get quickCaptureRowSetting => 'Schnellnotiz-Leiste';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Zeigt oben ein einzeiliges \"Neue Notiz...\"-Feld. Wenn aus, nutze die +-Taste.';
+
+  @override
   String get emptyTrash => 'Papierkorb leeren';
 
   @override
@@ -389,6 +396,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Möchtest du dich wirklich abmelden?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Du nutzt ein lokales Konto: Nach dem Abmelden sind dieses Konto und ALLE Notizen dauerhaft unzugänglich — ohne Backup nicht wiederherstellbar. Verknüpfe zuerst ein Google-Konto. Trotzdem abmelden?';
 
   @override
   String get deleteAccount => 'Mein Konto und meine Daten löschen';

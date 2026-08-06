@@ -455,31 +455,45 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   void _splitMultiline(NoteItem target, int index, String text) {
     final lines = text.split('\n');
-    final first = lines.first;
-    final rest = <NoteItem>[];
+    // Hedef madde yapıştırmadan önce BOŞSA ilk satırın liste öneki de
+    // soyulur (sonraki satırlarla tutarlı); doluysa ilk satır kullanıcının
+    // yazmakta olduğu metnin devamıdır, dokunulmaz.
+    final wasEmpty = _items[index].text.trim().isEmpty;
+    var first = lines.first;
+    if (wasEmpty) {
+      // İşaret durumu ([x]) hedefe UYGULANMAZ: hedef yerinde kalır, yerinde
+      // işaretlenmesi "işaretsizler başta" değişmezini bozardı.
+      first = first.substring(_lineMarker.firstMatch(first)?.end ?? 0);
+    }
+    // İşaretsiz ve işaretli satırlar AYRI toplanır: "işaretsizler _items'ın
+    // başında" değişmezi (sürükle-sırala buna dayanıyor) karışık yapıştırmada
+    // da korunmalı — hepsi tek konuma basılsaydı işaretli satır işaretsiz
+    // bloğun ortasına girerdi.
+    final unchecked = <NoteItem>[];
+    final checkedRest = <NoteItem>[];
     for (var i = 1; i < lines.length; i++) {
       final match = _lineMarker.firstMatch(lines[i]);
       final body = lines[i].substring(match?.end ?? 0);
       if (body.trim().isEmpty) continue;
-      final checked = match?.group(1) != null &&
+      final checked =
+          widget.showCheckboxes &&
+          match?.group(1) != null &&
           match!.group(1)!.toLowerCase() == 'x';
-      rest.add(
-        NoteItem(
-          id: _uuid.v4(),
-          text: body,
-          checked: widget.showCheckboxes && checked,
-        ),
+      (checked ? checkedRest : unchecked).add(
+        NoteItem(id: _uuid.v4(), text: body, checked: checked),
       );
     }
     setState(() {
       _items[index] = _items[index].copyWith(text: first);
-      if (rest.isNotEmpty) {
-        // İşaretli bir maddeye yapıştırma: işaretsiz yeni maddeler işaretli
-        // bloğun ortasına giremez (bkz. _insertAfter'daki değişmez).
-        final at = (widget.showCheckboxes && target.checked)
+      if (unchecked.isNotEmpty) {
+        final at = (widget.showCheckboxes && _items[index].checked)
             ? _checkedStart
             : index + 1;
-        _items.insertAll(at, rest);
+        _items.insertAll(at, unchecked);
+      }
+      if (checkedRest.isNotEmpty) {
+        // İşaretliler işaretli bloğun başına girer (işaretsizlerin sonu).
+        _items.insertAll(_checkedStart, checkedRest);
       }
     });
     // Alanın kendisi hâlâ çok satırlı metni gösteriyor; ilk satıra indirilir.
@@ -490,13 +504,16 @@ class ItemsEditorState extends State<ItemsEditor> {
     _commit();
     // Donanım Enter'ı (kalan satırlar boş): yeni boş madde aç — yazılım
     // klavyesindeki "İleri" ile aynı davranış.
-    if (rest.isEmpty && lines.length > 1) {
+    if (unchecked.isEmpty && checkedRest.isEmpty && lines.length > 1) {
       _insertAfter(target);
       return;
     }
-    if (rest.isNotEmpty) {
+    final focusTarget = unchecked.isNotEmpty
+        ? unchecked.last
+        : (checkedRest.isNotEmpty ? checkedRest.last : null);
+    if (focusTarget != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _focusFor(rest.last).requestFocus();
+        if (mounted) _focusFor(focusTarget).requestFocus();
       });
     }
   }

@@ -335,6 +335,13 @@ class AppLocalizationsId extends AppLocalizations {
       'Item panjang dipenggal ke beberapa baris dan tetap terlihat seluruhnya. Bila dimatikan, satu baris tetap satu baris dan melebar saat diketuk.';
 
   @override
+  String get quickCaptureRowSetting => 'Bilah catatan cepat';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Menampilkan bidang \"Catatan baru...\" satu baris di atas. Jika mati, gunakan tombol +.';
+
+  @override
   String get emptyTrash => 'Kosongkan sampah';
 
   @override
@@ -385,6 +392,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Anda yakin ingin keluar?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Kamu memakai akun lokal: keluar akan membuat akun ini dan SEMUA catatan tidak dapat diakses selamanya — tanpa cadangan tidak bisa dipulihkan. Tautkan akun Google dulu. Tetap keluar?';
 
   @override
   String get deleteAccount => 'Hapus akun dan data saya';

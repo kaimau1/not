@@ -331,6 +331,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'تلتف العناصر الطويلة على عدة سطور وتبقى ظاهرة بالكامل. وعند الإيقاف يبقى العنصر في سطر واحد ويتوسّع عند لمسه.';
 
   @override
+  String get quickCaptureRowSetting => 'شريط الملاحظة السريعة';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'يعرض حقل \"ملاحظة جديدة...\" من سطر واحد أعلى الشاشة. عند الإيقاف استخدم زر +.';
+
+  @override
   String get emptyTrash => 'إفراغ سلة المحذوفات';
 
   @override
@@ -381,6 +388,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'هل تريد بالفعل تسجيل الخروج؟';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'أنت على حساب محلي: تسجيل الخروج سيجعل هذا الحساب وكل الملاحظات غير قابلة للوصول نهائيًا — وبدون نسخة احتياطية لا يمكن استعادتها. اربط حساب Google أولًا. هل تريد الخروج رغم ذلك؟';
 
   @override
   String get deleteAccount => 'حذف حسابي وبياناتي';

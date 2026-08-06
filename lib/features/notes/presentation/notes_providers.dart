@@ -210,7 +210,14 @@ final _trigramCacheProvider =
 /// boyu abone kalıyor ve kullanıcı BAŞKA bir notta yazarken bile her
 /// snapshot'ta O(n²) kopya taraması dönüyordu. Ekran kapanınca durur.
 final duplicateNotesProvider = Provider.autoDispose<List<List<Note>>>((ref) {
-  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  // Gizli klasör bastırması burada da geçerli: kopya kümeleri gizli notun
+  // başlığını/içeriğini doğrulamasız gösteriyordu ("Tümünü sil" onları çöpe
+  // de atabiliyordu).
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
+  final notes = [
+    for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
+      if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+  ];
   return duplicateNoteGroups(notes, trigramCache: ref.watch(_trigramCacheProvider));
 });
 
@@ -242,7 +249,7 @@ class HiddenFoldersRevealedNotifier extends Notifier<bool> {
 /// Ana ekranda görünmesi gereken (gizli olmayan ya da gizliliği o oturumda
 /// açılmış) notlar için süzgeç: kimliği bu kümede olan klasörün notları
 /// listelerden ve aramadan düşer.
-final _suppressedFolderIdsProvider = Provider<Set<String>>((ref) {
+final suppressedFolderIdsProvider = Provider<Set<String>>((ref) {
   if (ref.watch(hiddenFoldersRevealedProvider)) return const <String>{};
   return ref.watch(hiddenFolderIdsProvider);
 });
@@ -440,7 +447,7 @@ class SelectedTagNotifier extends Notifier<String?> {
 /// etiket, gizli notun varlığını ele verirdi.
 final allTagsProvider = Provider<List<String>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-  final suppressed = ref.watch(_suppressedFolderIdsProvider);
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
   final tags = <String>{
     for (final note in notes)
       if (note.archivedAt == null && !suppressed.contains(note.folderId))
@@ -454,13 +461,33 @@ final allTagsProvider = Provider<List<String>>((ref) {
 // tüketicisi çip satırıydı ("+N" arkasına gizlenen etiketleri sıralamak için).
 // Süz levhası etiketleri alfabetik listeliyor, sayıya ihtiyaç duymuyor.
 
-/// Arşivlenmiş notlar (arşiv ekranı için).
+/// Not, seçilen durum süzgecine uyuyor mu? Hem [filteredNotesProvider] hem
+/// anlamsal arama sonuçları (dashboard) aynı tanımı kullanır — iki mod
+/// sessizce farklı davranmasın.
+bool noteMatchesFilter(Note n, NoteFilter filter) => switch (filter) {
+  NoteFilter.all => true,
+  NoteFilter.text => n.type == NoteType.text,
+  NoteFilter.checklist => n.type == NoteType.checklist,
+  NoteFilter.ordered => n.type == NoteType.ordered,
+  NoteFilter.pinned => n.pinned,
+  NoteFilter.starred => n.starred,
+  NoteFilter.reminded => n.reminderAt != null,
+  NoteFilter.locked => n.locked,
+  // Düzene girmemiş notlar: ne klasörü ne etiketi var.
+  NoteFilter.others => n.folderId == null && n.tags.isEmpty,
+};
+
+/// Arşivlenmiş notlar (arşiv ekranı için). Gizli klasör bastırması burada da
+/// geçerli — arşiv, gizli notların içeriğini doğrulamasız sızdırıyordu.
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
   return notes.whenData(
     (list) => [
       for (final n in list)
-        if (n.archivedAt != null) n,
+        if (n.archivedAt != null &&
+            (n.folderId == null || !suppressed.contains(n.folderId)))
+          n,
     ],
   );
 });
@@ -475,7 +502,7 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final tag = ref.watch(selectedTagProvider);
   final folderId = ref.watch(selectedFolderProvider);
   final sort = ref.watch(noteSortProvider);
-  final suppressed = ref.watch(_suppressedFolderIdsProvider);
+  final suppressed = ref.watch(suppressedFolderIdsProvider);
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
@@ -503,42 +530,10 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
           if (n.tags.contains(tag)) n,
       ];
     }
-    result = switch (filter) {
-      NoteFilter.all => result,
-      NoteFilter.text => [
-        for (final n in result)
-          if (n.type == NoteType.text) n,
-      ],
-      NoteFilter.checklist => [
-        for (final n in result)
-          if (n.type == NoteType.checklist) n,
-      ],
-      NoteFilter.ordered => [
-        for (final n in result)
-          if (n.type == NoteType.ordered) n,
-      ],
-      NoteFilter.pinned => [
-        for (final n in result)
-          if (n.pinned) n,
-      ],
-      NoteFilter.starred => [
-        for (final n in result)
-          if (n.starred) n,
-      ],
-      NoteFilter.reminded => [
-        for (final n in result)
-          if (n.reminderAt != null) n,
-      ],
-      NoteFilter.locked => [
-        for (final n in result)
-          if (n.locked) n,
-      ],
-      // Düzene girmemiş notlar: ne klasörü ne etiketi var.
-      NoteFilter.others => [
-        for (final n in result)
-          if (n.folderId == null && n.tags.isEmpty) n,
-      ],
-    };
+    result = [
+      for (final n in result)
+        if (noteMatchesFilter(n, filter)) n,
+    ];
     if (query.isNotEmpty) {
       result = [
         for (final n in result)

@@ -10,6 +10,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
+import 'notes_providers.dart';
 
 /// Tüm hatırlatıcıların tek yerden görüldüğü ekran: yaklaşan ve geçmiş
 /// hatırlatıcılar listelenir; buradan düzenlenir, kaldırılır veya yeni
@@ -88,8 +89,9 @@ class RemindersScreen extends ConsumerWidget {
       DateTime.now().add(const Duration(hours: 1)),
     );
     if (picked == null || !context.mounted) return;
-    final id = await repo.createNote(NoteType.text);
-    repo.setReminder(id, picked);
+    // Hatırlatıcı TEK yazımda: createNote + ayrı setReminder arasında doküman
+    // bir an hatırlatıcısız kalıyordu (boş-doküman penceresi kuralı).
+    final id = await repo.createNote(NoteType.text, reminderAt: picked);
     if (context.mounted) await context.push(noteRoutePath(id));
   }
 
@@ -112,9 +114,14 @@ class RemindersScreen extends ConsumerWidget {
           title: l10n.genericError(e.toString()),
         ),
         data: (notes) {
+          // Gizli klasör bastırması: hatırlatıcılı gizli-klasör notu burada
+          // başlık+içerikle listeleniyordu (ana ekran kuralıyla aynı).
+          final suppressed = ref.watch(suppressedFolderIdsProvider);
           final withReminder = [
             for (final n in notes)
-              if (n.reminderAt != null) n,
+              if (n.reminderAt != null &&
+                  (n.folderId == null || !suppressed.contains(n.folderId)))
+                n,
           ]..sort((a, b) => a.reminderAt!.compareTo(b.reminderAt!));
           if (withReminder.isEmpty) {
             return EmptyState(

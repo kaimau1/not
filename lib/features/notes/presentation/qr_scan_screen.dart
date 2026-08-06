@@ -107,7 +107,15 @@ class _QrScanScreenState extends State<QrScanScreen>
       Navigator.of(context).pop();
       return;
     }
-    Navigator.of(context).pop(action == _QrAction.save ? code : null);
+    if (action == _QrAction.save) {
+      Navigator.of(context).pop(code);
+      return;
+    }
+    // Vazgeç: "bu kodu boş ver, taramaya devam et" demek — ekranı komple
+    // kapatmak değil. Kilit açılmazsa (_handled) bir daha hiçbir kod
+    // okunmuyordu; kullanıcı yanlış kodu okutup vazgeçince akışa baştan
+    // girmek zorunda kalıyordu.
+    _handled = false;
   }
 
   /// Adres bulundu penceresi. Kapatılamaz (isDismissible: false): yarım

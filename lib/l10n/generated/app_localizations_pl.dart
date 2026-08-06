@@ -337,6 +337,13 @@ class AppLocalizationsPl extends AppLocalizations {
       'Długie pozycje zawijają się na kilka wierszy i pozostają w całości widoczne. Po wyłączeniu wiersz mieści się w jednej linii i rozwija po dotknięciu.';
 
   @override
+  String get quickCaptureRowSetting => 'Pasek szybkiej notatki';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Pokazuje jednowierszowe pole „Nowa notatka...\" u góry. Gdy wyłączone, użyj przycisku +.';
+
+  @override
   String get emptyTrash => 'Opróżnij kosz';
 
   @override
@@ -387,6 +394,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Czy na pewno chcesz się wylogować?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Używasz konta lokalnego: po wylogowaniu to konto i WSZYSTKIE notatki będą trwale niedostępne — bez kopii zapasowej nie da się ich odzyskać. Najpierw połącz konto Google. Wylogować mimo to?';
 
   @override
   String get deleteAccount => 'Usuń moje konto i dane';

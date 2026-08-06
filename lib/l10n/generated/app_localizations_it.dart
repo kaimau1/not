@@ -336,6 +336,13 @@ class AppLocalizationsIt extends AppLocalizations {
       'Gli elementi lunghi vanno a capo su più righe e restano interamente visibili. Se disattivato, una riga resta su un solo rigo e si espande al tocco.';
 
   @override
+  String get quickCaptureRowSetting => 'Barra nota rapida';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Mostra un campo \"Nuova nota...\" in alto. Se disattivato, usa il pulsante +.';
+
+  @override
   String get emptyTrash => 'Svuota cestino';
 
   @override
@@ -386,6 +393,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Vuoi davvero uscire?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Stai usando un account locale: uscendo, questo account e TUTTE le note diventeranno inaccessibili per sempre — senza backup non si possono recuperare. Collega prima un account Google. Uscire comunque?';
 
   @override
   String get deleteAccount => 'Elimina il mio account e i miei dati';

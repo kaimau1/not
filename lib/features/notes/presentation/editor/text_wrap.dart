@@ -825,6 +825,21 @@ class WrapTextController extends TextEditingController {
     super.value = next;
   }
 
+  /// "Metin düz mü" taramasının önbelleği. buildTextSpan her çizimde çağrılır
+  /// ve klavye açılış animasyonu boyunca AYNI metin için kare başına tam
+  /// findLinks + stripRichMarkers taraması yapıyordu ("klavye açılırken
+  /// kasma"nın bir parçası). Metin değişmediyse sonuç yeniden kullanılır.
+  String? _scanText;
+  bool _scanHasLink = false;
+  bool _scanHasMarker = false;
+
+  void _scanPlainness() {
+    if (_scanText == text) return;
+    _scanText = text;
+    _scanHasLink = findLinks(text).isNotEmpty;
+    _scanHasMarker = stripRichMarkers(text) != text;
+  }
+
   @override
   TextSpan buildTextSpan({
     required BuildContext context,
@@ -839,8 +854,8 @@ class WrapTextController extends TextEditingController {
     if (_widths.isEmpty) {
       // Biçim işareti ya da bağlantı yoksa üst sınıfın span'i kullanılır
       // (IME davranışı olduğu gibi kalsın).
-      if ((linkColor == null || findLinks(text).isEmpty) &&
-          stripRichMarkers(text) == text) {
+      _scanPlainness();
+      if ((linkColor == null || !_scanHasLink) && !_scanHasMarker) {
         return super.buildTextSpan(
           context: context,
           style: style,

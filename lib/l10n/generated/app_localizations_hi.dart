@@ -334,6 +334,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'लंबे आइटम कई पंक्तियों में लिपटते हैं और पूरे दिखते रहते हैं। बंद होने पर पंक्ति एक ही लाइन में रहती है और छूने पर खुलती है।';
 
   @override
+  String get quickCaptureRowSetting => 'त्वरित नोट पट्टी';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'होम स्क्रीन के ऊपर एक-पंक्ति \"नया नोट...\" फ़ील्ड दिखाता है। बंद होने पर + बटन का उपयोग करें।';
+
+  @override
   String get emptyTrash => 'कचरा खाली करें';
 
   @override
@@ -384,6 +391,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'क्या आप वाकई साइन आउट करना चाहते हैं?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'आप स्थानीय खाते में हैं: साइन आउट करने पर यह खाता और सभी नोट्स हमेशा के लिए दुर्गम हो जाएँगे — बैकअप के बिना वापस नहीं आ सकते। पहले Google खाता जोड़ें। फिर भी साइन आउट करें?';
 
   @override
   String get deleteAccount => 'मेरा खाता और डेटा हटाएँ';

@@ -337,6 +337,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Les éléments longs passent à la ligne et restent entièrement visibles. Désactivé, une ligne tient sur un seul niveau et se déploie au toucher.';
 
   @override
+  String get quickCaptureRowSetting => 'Barre de note rapide';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Affiche un champ \"Nouvelle note...\" en haut de l\'écran. Sinon, utilise le bouton +.';
+
+  @override
   String get emptyTrash => 'Vider la corbeille';
 
   @override
@@ -387,6 +394,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Voulez-vous vraiment vous déconnecter ?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Tu utilises un compte local : la déconnexion rendra ce compte et TOUTES ses notes définitivement inaccessibles — sans sauvegarde, impossible de les récupérer. Associe d\'abord un compte Google. Se déconnecter quand même ?';
 
   @override
   String get deleteAccount => 'Supprimer mon compte et mes données';

@@ -714,6 +714,18 @@ abstract class AppLocalizations {
   /// **'Uzun liste/işaret öğeleri birkaç satıra sarılıp tamamen görünür. Kapalıyken satır tek satırda kalır, dokununca açılır.'**
   String get expandListItemsInfo;
 
+  /// No description provided for @quickCaptureRowSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı not satırı'**
+  String get quickCaptureRowSetting;
+
+  /// No description provided for @quickCaptureRowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranın üstünde tek satırlık \"Yeni not...\" alanı görünür. Kapalıyken yeni not \"+\" düğmesinden açılır.'**
+  String get quickCaptureRowInfo;
+
   /// No description provided for @emptyTrash.
   ///
   /// In tr, this message translates to:
@@ -809,6 +821,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Çıkış yapmak istediğine emin misin?'**
   String get signOutConfirm;
+
+  /// No description provided for @signOutAnonymousWarning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yerel hesaptasın: çıkış yaparsan bu hesaba ve TÜM notlarına bir daha ERİŞİLEMEZ — yedeğin yoksa geri getirilemezler. Notlarını korumak için önce Google hesabı bağla. Yine de çıkış yapılsın mı?'**
+  String get signOutAnonymousWarning;
 
   /// No description provided for @deleteAccount.
   ///

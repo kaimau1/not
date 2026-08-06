@@ -336,6 +336,13 @@ class AppLocalizationsNl extends AppLocalizations {
       'Lange items lopen door over meerdere regels en blijven volledig zichtbaar. Staat dit uit, dan blijft een regel op één regel en klapt hij open bij een tik.';
 
   @override
+  String get quickCaptureRowSetting => 'Snelle-notitiebalk';
+
+  @override
+  String get quickCaptureRowInfo =>
+      'Toont bovenaan een éénregelig \"Nieuwe notitie...\"-veld. Indien uit, gebruik de +-knop.';
+
+  @override
   String get emptyTrash => 'Prullenbak legen';
 
   @override
@@ -386,6 +393,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Weet je zeker dat je wilt uitloggen?';
+
+  @override
+  String get signOutAnonymousWarning =>
+      'Je gebruikt een lokaal account: na uitloggen zijn dit account en ALLE notities permanent ontoegankelijk — zonder back-up niet te herstellen. Koppel eerst een Google-account. Toch uitloggen?';
 
   @override
   String get deleteAccount => 'Mijn account en gegevens verwijderen';

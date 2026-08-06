@@ -510,12 +510,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
         // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
         // "Geri al" snackbar'ı zaten ekranda.
-        if (incoming.deletedAt != null && _note!.deletedAt == null) {
+        // `!_deleted` ŞART: editörün KENDİ silmesi de (softDelete + pop)
+        // gecikme telafisiyle buraya bir snapshot düşürür; bayrak olmadan
+        // dal ikinci kez tetiklenir ve context.pop() yığının tepesindeki
+        // ALTTAKİ rotayı (örn. Arşiv ekranını) düşürürdü.
+        if (incoming.deletedAt != null && _note!.deletedAt == null &&
+            !_deleted) {
           _deleted = true;
           _debouncer.cancel();
           if (mounted && context.canPop()) context.pop();
           return;
         }
+        if (_deleted) return;
         // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
         // gerisi uzaktan benimsenir:
         //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
@@ -553,6 +559,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             clearArchivedAt: incoming.archivedAt == null,
             reminderAt: incoming.reminderAt,
             clearReminderAt: incoming.reminderAt == null,
+            // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
+            // solda sürükle-sırala yapıldığında editörün tam-doküman kaydı
+            // orderIndex'i geri almasın.
+            orderIndex: incoming.orderIndex,
+            fontFamily: incoming.fontFamily,
+            clearFontFamily: incoming.fontFamily == null,
+            fontScale: incoming.fontScale,
+            textOpacity: incoming.textOpacity,
+            backgroundImageId: incoming.backgroundImageId,
+            clearBackgroundImage: incoming.backgroundImageId == null,
+            backgroundOpacity: incoming.backgroundOpacity,
           );
           if (pristine) {
             _note = _note!.copyWith(
@@ -628,7 +645,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // çevrimdışıyken sonsuza dek bekler; 2 sn yerel commit için yeterli.
     final write = _saveNow();
     if (write != null) {
-      await write.timeout(const Duration(seconds: 2), onTimeout: () {});
+      // Hata da yutulur: yazım 2 sn içinde reddedilirse (permission-denied)
+      // istisna buradan fırlayıp kapanış yanıtını asla döndürmezdi.
+      await write
+          .timeout(const Duration(seconds: 2), onTimeout: () {})
+          .catchError((_) {});
     }
     return super.didRequestAppExit();
   }
@@ -650,8 +671,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // İçi boş kalan not çıkarken sessizce silinir.
       _notesRepo?.hardDelete(note.id);
     } else if (!_deleted && note != null) {
-      if (note.tags.isEmpty) _autoTagInBackground(note);
-      if (note.title.trim().isEmpty) _autoTitleInBackground(note);
+      // İçerik denetimi isEmpty'den AYRI: yalnız hatırlatıcısı olan metinsiz
+      // not artık "boş" sayılmıyor (silinmesin diye) ama AI'ya gönderilecek
+      // içeriği de yok — boş içerikle model çağırmak puan yakar ve
+      // halüsinasyon başlık üretebilirdi.
+      final hasContent =
+          note.body.trim().isNotEmpty ||
+          note.items.any((i) => i.text.trim().isNotEmpty) ||
+          note.attachments.isNotEmpty;
+      if (hasContent) {
+        if (note.tags.isEmpty) _autoTagInBackground(note);
+        if (note.title.trim().isEmpty) _autoTitleInBackground(note);
+      }
     }
     _loadGuard?.cancel();
     _debouncer.dispose();
@@ -714,20 +745,61 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _restoring = false;
   }
 
+  /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
+  static bool _sameVisual(Note a, Note b) =>
+      identical(a.items, b.items) &&
+      identical(a.attachments, b.attachments) &&
+      identical(a.tags, b.tags) &&
+      identical(a.aiSummary, b.aiSummary) &&
+      a.type == b.type &&
+      a.color == b.color &&
+      a.frameColor == b.frameColor &&
+      a.pinned == b.pinned &&
+      a.starred == b.starred &&
+      a.locked == b.locked &&
+      a.folderId == b.folderId &&
+      a.fontFamily == b.fontFamily &&
+      a.fontScale == b.fontScale &&
+      a.textOpacity == b.textOpacity &&
+      a.backgroundImageId == b.backgroundImageId &&
+      a.backgroundOpacity == b.backgroundOpacity &&
+      a.orderIndex == b.orderIndex &&
+      a.deletedAt == b.deletedAt &&
+      a.archivedAt == b.archivedAt &&
+      a.reminderAt == b.reminderAt &&
+      // Tuval ipucu ve gövde alanı gövdenin BOŞLUĞUNA bakıyor; doluluk
+      // değişiyorsa çizim de değişmeli.
+      a.body.trim().isEmpty == b.body.trim().isEmpty;
+
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;
     if (note == null) return;
+    final wasUndo = _undoStack.canUndo;
+    final wasRedo = _undoStack.canRedo;
     // Tek boğaz noktası: sarma çapaları düzenleme tamponunda yaşar, nota
     // asla yazılmaz. Gövde hangi yoldan gelirse gelsin burada temizlenir —
     // her çağrı yerine ayrı koruma koymak yerine tek yerde.
-    setState(() {
-      final next = transform(note);
-      final clean = stripWrapAnchors(next.body);
-      _note = clean == next.body ? next : next.copyWith(body: clean);
-      if (!_restoring) {
-        _undoStack.push(note, _note!, now: DateTime.now());
-      }
-    });
+    final transformed = transform(note);
+    final clean = stripWrapAnchors(transformed.body);
+    final next = clean == transformed.body
+        ? transformed
+        : transformed.copyWith(body: clean);
+    if (!_restoring) {
+      _undoStack.push(note, next, now: DateTime.now());
+    }
+    // SAF YAZIM (yalnız başlık/gövde metni değişti, geri al düğmesinin durumu
+    // dahil görünür hiçbir parça etkilenmedi): 3700 satırlık build'i her tuş
+    // vuruşunda çalıştırmak "klavye açılırken kasıyor" şikayetinin başrolüydü
+    // — denetleyici metni zaten ekranda, ekran geneli setState atlanır.
+    final pureTyping =
+        _sameVisual(note, next) &&
+        _undoStack.canUndo == wasUndo &&
+        _undoStack.canRedo == wasRedo;
+    if (pureTyping) {
+      _note = next;
+    } else {
+      setState(() => _note = next);
+    }
     // KÖK NEDEN (bekleyen son kayıt yutuluyordu): bu kapanış `ref.read` ile
     // depoyu okuyordu, oysa `dispose()` içindeki `_debouncer.flush()` de aynı
     // kapanışı çalıştırır — ve `dispose` sırasında `ref` kullanmak istisna

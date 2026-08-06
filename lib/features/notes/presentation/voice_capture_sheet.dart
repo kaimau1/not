@@ -108,6 +108,12 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
+  // Bariyer dokunuşu levhayı KAPATMAZ: 10 dakikalık konuşmanın dökümü ve
+  // korunan ses kaydı, klavye açıkken yanlış bir dokunuşla onaysız çöpe
+  // gidiyordu. Kapanış yalnız levhanın kendi düğmelerinden ve (içerik varsa
+  // kaydederek çıkan) geri tuşundan — bkz. _VoiceCaptureSheet'teki PopScope.
+  isDismissible: false,
+  enableDrag: false,
   backgroundColor: Theme.of(context).colorScheme.surface,
   barrierColor: Colors.black.withValues(alpha: 0.32),
   shape: const RoundedRectangleBorder(
@@ -440,8 +446,31 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
   String _format(Duration d) =>
       '${d.inMinutes}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
 
+  /// İçerik varken geri tuşu KAYBETTİRMEZ: dinlemedeyken gözden geçirmeye
+  /// taşır, gözden geçirmede metni/kaydı olduğu gibi kaydederek çıkar.
+  /// (Editördeki ses kaydı ve çizim ekranıyla aynı ilke.)
+  bool get _hasContent =>
+      _phase == _Phase.listening && _text.trim().isNotEmpty ||
+      _phase == _Phase.ready &&
+          (_editController.text.trim().isNotEmpty || _readyAudioPath != null);
+
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_hasContent,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_phase == _Phase.listening) {
+          _finish();
+        } else if (_phase == _Phase.ready) {
+          _submit(VoiceCaptureAction.insert);
+        }
+      },
+      child: _body(context),
+    );
+  }
+
+  Widget _body(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final holdMode = ref.watch(voiceButtonModeProvider) == VoiceButtonMode.hold;

@@ -59,8 +59,20 @@ class AccountService {
       await user.delete();
     } on FirebaseAuthException catch (e) {
       if (e.code != 'requires-recent-login') rethrow;
+      // Anonim hesapta Google'a yönlendirme YANLIŞ hesabı siler: giriş yeni
+      // bir uid açar ve delete() o hesabı götürür (asıl anonim kayıt yetim
+      // kalır). Aynı risk, istemde FARKLI Google hesabı seçilirse de var —
+      // silmeden önce uid'in silinmek istenenle aynı olduğu doğrulanır.
+      if (user.isAnonymous) rethrow;
       await _auth.signInWithGoogle();
-      await FirebaseAuth.instance.currentUser?.delete();
+      final fresh = FirebaseAuth.instance.currentUser;
+      if (fresh == null || fresh.uid != uid) {
+        throw FirebaseAuthException(
+          code: 'user-mismatch',
+          message: 'Yeniden giriş farklı bir hesapla yapıldı; silme iptal.',
+        );
+      }
+      await fresh.delete();
     }
 
     // Yerel oturum kalıntısını temizle (google_sign_in oturumu vb.);

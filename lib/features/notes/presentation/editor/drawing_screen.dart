@@ -34,6 +34,11 @@ class _DrawingScreenState extends State<DrawingScreen> {
   final _canvasKey = GlobalKey();
   bool _saving = false;
 
+  /// Kayıt bir kez başarısız olduysa sonraki geri basışı KAYDETMEDEN çıkar:
+  /// kalıcı bir hatada (bellek/kodlama) geri tuşu sonsuza dek başarısız
+  /// kaydı yeniden dener, ekrandan çıkış yolu kalmazdı.
+  bool _saveFailed = false;
+
   @override
   void dispose() {
     _ink.dispose();
@@ -82,6 +87,7 @@ class _DrawingScreenState extends State<DrawingScreen> {
       // Sessizce yutulursa kullanıcı "Nota ekle"ye basar, ekran kapanmaz ve
       // neden olduğunu anlamaz.
       if (!mounted) return;
+      _saveFailed = true;
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -103,6 +109,10 @@ class _DrawingScreenState extends State<DrawingScreen> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop || _saving) return;
+        if (_saveFailed) {
+          Navigator.pop(context);
+          return;
+        }
         _save();
       },
       child: Scaffold(

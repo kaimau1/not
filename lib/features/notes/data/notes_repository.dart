@@ -222,6 +222,7 @@ class NotesRepository {
     double? orderIndex,
     String body = '',
     String? folderId,
+    DateTime? reminderAt,
   }) async {
     final doc = _notes.doc();
     final note = Note(
@@ -229,6 +230,7 @@ class NotesRepository {
       type: type,
       body: body,
       folderId: folderId,
+      reminderAt: reminderAt,
       items: type == NoteType.text
           ? const []
           : [NoteItem(id: _uuid.v4(), text: '')],
@@ -339,15 +341,17 @@ class NotesRepository {
     // Cihazdaki ek klasörü de gitsin: yalnız bulut temizliği, her kalıcı
     // silmede `<destek>/attachments/<noteId>/` altında yetim dosya bırakıyor
     // ve büyük PDF/görsellerle görünmez bir disk sızıntısına dönüşüyordu.
+    // ASYNC G/Ç: purgeOldTrash açılışta koşuyor; senkron listeleme/silme çok
+    // ekli çöpte açılış karesini kilitlerdi.
     final base = appSupportPath;
     if (base != null) {
       final dir = Directory(p.join(base, 'attachments', note.id));
       try {
-        if (dir.existsSync()) {
-          for (final f in dir.listSync()) {
+        if (await dir.exists()) {
+          await for (final f in dir.list()) {
             forgetLocalFile(f.path);
           }
-          dir.deleteSync(recursive: true);
+          await dir.delete(recursive: true);
         }
       } catch (_) {
         // Dosya kilitli/erişilemez olabilir (Windows'ta açık görüntüleyici);
