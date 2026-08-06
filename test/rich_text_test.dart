@@ -127,16 +127,17 @@ void main() {
       expect(r.text, 'not');
     });
 
-    test('seçim yokken imlece boş biçim kutusu açılır', () {
-      // Biçim düğmesine seçim olmadan basmak: kullanıcı yazmaya devam edince
-      // yazdığı biçimli çıksın diye işaretler açılır, imleç ARAYA konur.
+    test('seçim yokken METNE DOKUNULMAZ, biçim bekler', () {
+      // 2026-08-06: eskiden buraya boş kutu (`****`) yazılıyordu. Kullanıcı
+      // içine bir şey yazmazsa o işaretler notta ham markdown olarak kalıyor,
+      // italik/altı çizili kutuları gizleme kalıbında olmadığı için ekranda da
+      // görünüyordu. Artık biçim denetleyicide bekler, bir sonraki yazılan
+      // metin işaretlerin içine girer.
       final r = toggleFormat('merhaba ', 8, 8, RichFormat.bold);
-      expect(r.text, 'merhaba ****');
-      expect(r.start, 10);
-      expect(r.end, 10);
-      // İmlecin iki yanında işaretin yarısı kalır.
-      expect(r.text.substring(0, r.start), 'merhaba **');
-      expect(r.text.substring(r.end), '**');
+      expect(r.text, 'merhaba ');
+      expect(r.pending, RichFormat.bold);
+      expect(r.start, 8);
+      expect(r.end, 8);
     });
 
     test('imleç kalın bir parçanın İÇİNDEYKEN aynı düğme biçimi kaldırır', () {
@@ -216,8 +217,10 @@ void main() {
         RichFormat.highlight,
         colorIndex: 3,
       );
-      expect(r.text, 'not: ==3:==');
-      expect(r.text.substring(0, r.start), 'not: ==3:');
+      // Kademeli biçimde de metin değişmez; indeks bekleyen biçimle taşınır.
+      expect(r.text, 'not: ');
+      expect(r.pending, RichFormat.highlight);
+      expect(r.pendingIndex, 3);
     });
   });
 

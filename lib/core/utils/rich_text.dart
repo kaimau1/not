@@ -10,10 +10,14 @@
 /// şeması da değişirdi). İşaretli metin her yerde tek parça kalır; gösterime
 /// girmeyen yollarda [stripRichMarkers] ile temizlenir.
 ///
-/// Bedeli: işaretler düzenleyicide GÖRÜNÜR (sönük çizilir). Karakterleri
-/// gizlemek, imleç ve seçim konumlarını metinden ayırmak demek olurdu —
-/// sarma çapalarında (text_wrap.dart) ödenen bedelin aynısı, bu kez her
-/// biçim işareti için.
+/// Bedeli: işaret karakterleri metinde DURUR (çıkarılsalardı imleç/seçim
+/// konumları denetleyicinin metniyle ayrışırdı). Ama v1.0.175'ten beri
+/// ÇİZİLMEZLER: saydam renk + ~0 punto ile görünmez geçerler (bkz.
+/// [richTextSpans]'taki `markerStyle`), imleç de işaretin ortasına düşerse
+/// gerçek karaktere çekilir. Kullanıcı yalnız biçimli metni görür.
+///
+/// Bu yorum bir dönem "işaretler görünür/sönük çizilir" diyordu; kod onu
+/// geçmişti, 2026-08-06'da düzeltildi.
 ///
 /// KÖK NEDEN (v1.0.168) — biçim işlemleri önce METİN ÜZERİNDE, işaretleri
 /// elle keserek/yapıştırarak yapılıyordu. Kalın+renk gibi İKİ biçim üst üste
@@ -52,6 +56,10 @@ enum RichFormat {
   final String marker;
 }
 
+/// [_takesIndex]'in dışa açık hâli — bekleyen biçimi metne yazarken önekin
+/// `**` mi `##3:` mi olacağını denetleyici de bilmek zorunda.
+bool richFormatTakesIndex(RichFormat f) => _takesIndex(f);
+
 /// İndeks (1..9) alan biçimler: renk paleti, boyut ve opaklık kademeleri.
 /// İşarette `==2:metin==` gibi bir önekle taşınır.
 bool _takesIndex(RichFormat f) =>
@@ -78,16 +86,7 @@ const int kRichSizeDefault = 4;
 
 /// Satır içi opaklık kademeleri (`&&k:metin&&`, k = 1..8). Son kademe (1.0)
 /// notun kendi opaklığıdır; seçilince işaret yazılmaz.
-const List<double> kRichOpacitySteps = [
-  0.3,
-  0.4,
-  0.5,
-  0.6,
-  0.7,
-  0.8,
-  0.9,
-  1.0,
-];
+const List<double> kRichOpacitySteps = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 const int kRichOpacityDefault = 8;
 
 /// [value]'ya en yakın kademenin indeksi (1 tabanlı).
@@ -738,7 +737,8 @@ TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
   if (mark.italic) style = style.copyWith(fontStyle: FontStyle.italic);
   if (mark.size != null) {
     style = style.copyWith(
-      fontSize: (style.fontSize ?? 16) * richStepValue(kRichSizeSteps, mark.size),
+      fontSize:
+          (style.fontSize ?? 16) * richStepValue(kRichSizeSteps, mark.size),
     );
   }
   if (mark.color != null) {
@@ -791,7 +791,15 @@ Color _paletteColor(List<Color> palette, int? index) {
 /// Word mantığı: seçim yokken imleç biçimli bir parçanın içindeyse aynı düğme
 /// o parçanın biçimini KALDIRIR; değilse imlece boş bir biçim kutusu açılır
 /// (yazmaya devam edilince yazılan biçimli çıkar).
-({String text, int start, int end}) toggleFormat(
+/// [pending] doluysa METİN DEĞİŞMEZ: çağıran, bu biçmi "bir sonraki yazılan
+/// metne uygulanacak" olarak saklamalıdır (bkz. WrapTextController.pending…).
+/// Eskiden burada metne boş kutu (`~~`, `__`) yazılıyordu; kullanıcı içine bir
+/// şey yazmazsa o işaretler notta ham markdown olarak kalıyordu — italik ve
+/// altı çizili kutuları gizleme kalıbında olmadığı için EKRANDA da görünüyordu
+/// (kullanıcı: "bu tür markdownlar asla görünmemeli"). Kutuyu hiç yazmamak,
+/// hem çöpü hem de `__init__` gibi gerçek metni kırpma riskini bitirir.
+({String text, int start, int end, RichFormat? pending, int? pendingIndex})
+toggleFormat(
   String text,
   int start,
   int end,
@@ -799,7 +807,13 @@ Color _paletteColor(List<Color> palette, int? index) {
   int? colorIndex,
 }) {
   if (start < 0 || end > text.length || end < start) {
-    return (text: text, start: start, end: end);
+    return (
+      text: text,
+      start: start,
+      end: end,
+      pending: null,
+      pendingIndex: null,
+    );
   }
   final leaves = _parse(text);
   final segments = [
@@ -823,7 +837,13 @@ Color _paletteColor(List<Color> palette, int? index) {
       );
       final out = _serialize(updated);
       final caret = out.starts[ps.clamp(0, out.starts.length - 1)];
-      return (text: out.text, start: caret, end: caret);
+      return (
+        text: out.text,
+        start: caret,
+        end: caret,
+        pending: null,
+        pendingIndex: null,
+      );
     }
     // KÖK NEDEN (kullanıcı: "kelimenin içine tıklayıp işlem yapınca yine
     // markdown üretiliyor"): imleç bir kelimenin ORTASINDAyken boş kutu
@@ -850,20 +870,20 @@ Color _paletteColor(List<Color> palette, int? index) {
         text: out.text,
         start: out.starts[word.start.clamp(0, out.starts.length - 1)],
         end: out.ends[word.end.clamp(0, out.ends.length - 1)],
+        pending: null,
+        pendingIndex: null,
       );
     }
 
-    // Biçimsiz imleç: boş kutu açılır, imleç ARASINA konur.
-    final out = _serialize(segments);
-    final at = out.starts[ps.clamp(0, out.starts.length - 1)];
-    final marker = format.marker;
-    final prefix = _takesIndex(format) && colorIndex != null
-        ? '$marker$colorIndex:'
-        : marker;
+    // Biçimsiz imleç (kelime başı/sonu ya da boşluk): metne DOKUNULMAZ, biçim
+    // "bekleyen" olarak çağırana bildirilir; bir sonraki yazılan metin doğrudan
+    // işaretlerin içine girer.
     return (
-      text: out.text.replaceRange(at, at, '$prefix$marker'),
-      start: at + prefix.length,
-      end: at + prefix.length,
+      text: text,
+      start: start,
+      end: end,
+      pending: format,
+      pendingIndex: colorIndex,
     );
   }
 
@@ -879,6 +899,8 @@ Color _paletteColor(List<Color> palette, int? index) {
     text: out.text,
     start: out.starts[ps.clamp(0, out.starts.length - 1)],
     end: out.ends[pe.clamp(0, out.ends.length - 1)],
+    pending: null,
+    pendingIndex: null,
   );
 }
 
@@ -1100,7 +1122,10 @@ bool isMarkerOffset(String text, int index) {
     }
     final at = plainCaret - 1 - start;
     updated.add(
-      RichSegment(seg.text.substring(0, at) + seg.text.substring(at + 1), seg.mark),
+      RichSegment(
+        seg.text.substring(0, at) + seg.text.substring(at + 1),
+        seg.mark,
+      ),
     );
   }
   final out = _serialize(updated);

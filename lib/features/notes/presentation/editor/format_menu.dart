@@ -32,7 +32,20 @@ bool applyRichFormat(
     format,
     colorIndex: colorIndex,
   );
-  return _write(controller, logical, start, end, result);
+  // Biçimsiz imleç: metne boş kutu yazmak yerine biçim BEKLETİLİR, bir sonraki
+  // yazılan metin işaretlerin içine girer. Metin değişmediği için false döner
+  // (çağıranın notu kaydetmesine gerek yok).
+  final pending = result.pending;
+  if (pending != null) {
+    controller.setPendingFormat(pending, result.pendingIndex);
+    return false;
+  }
+  controller.clearPendingFormat();
+  return _write(controller, logical, start, end, (
+    text: result.text,
+    start: result.start,
+    end: result.end,
+  ));
 }
 
 /// Denetleyicinin o anki seçiminde (ya da imlecinde) ETKİN olan biçimler.

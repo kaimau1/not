@@ -60,21 +60,53 @@ void main() {
     });
   });
 
-  group('kelime KENARINDA imleç → eski davranış (boş kutu)', () {
-    test('kelime başında boş kutu açılır', () {
+  // 2026-08-06: kelime kenarında/boşlukta artık METNE HİÇ DOKUNULMAZ. Eskiden
+  // boş kutu (`****`, `~~`) yazılıyordu; içine bir şey yazılmazsa notta ham
+  // markdown kalıyor, italik/altı çizili kutuları ekranda da görünüyordu.
+  group('kelime KENARINDA imleç → metin değişmez, biçim BEKLER', () {
+    test('kelime başında', () {
       final r = toggleFormat('merhaba', 0, 0, RichFormat.bold);
-      expect(r.text, '****merhaba');
+      expect(r.text, 'merhaba');
+      expect(r.pending, RichFormat.bold);
     });
 
-    test('kelime sonunda boş kutu açılır', () {
+    test('kelime sonunda', () {
       final r = toggleFormat('merhaba', 7, 7, RichFormat.bold);
-      expect(r.text, 'merhaba****');
+      expect(r.text, 'merhaba');
+      expect(r.pending, RichFormat.bold);
     });
 
-    test('boşlukta boş kutu açılır', () {
+    test('boşlukta', () {
       final r = toggleFormat('bir iki', 4, 4, RichFormat.bold);
       // "bir " ile "iki" sınırı: solda boşluk var, kelime içi değil.
-      expect(r.text, 'bir ****iki');
+      expect(r.text, 'bir iki');
+      expect(r.pending, RichFormat.bold);
+    });
+
+    test('satır sonunda altı çizili — ham ~~ ÜRETİLMEZ', () {
+      final r = toggleFormat('Düzenleme', 9, 9, RichFormat.underline);
+      expect(r.text, 'Düzenleme');
+      expect(r.text.contains('~'), isFalse);
+      expect(r.pending, RichFormat.underline);
+    });
+
+    test('kademeli biçimde indeks de bekler', () {
+      final r = toggleFormat('bir iki', 4, 4, RichFormat.size, colorIndex: 6);
+      expect(r.text, 'bir iki');
+      expect(r.pending, RichFormat.size);
+      expect(r.pendingIndex, 6);
+    });
+  });
+
+  group('biçim uygulanan yollarda pending YOK', () {
+    test('kelime içi imleç kelimeye uygular', () {
+      final r = toggleFormat('merhaba', 4, 4, RichFormat.bold);
+      expect(r.pending, isNull);
+    });
+
+    test('seçim varsa seçime uygular', () {
+      final r = toggleFormat('merhaba', 0, 7, RichFormat.bold);
+      expect(r.pending, isNull);
     });
   });
 

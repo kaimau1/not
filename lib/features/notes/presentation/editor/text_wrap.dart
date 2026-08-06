@@ -643,10 +643,82 @@ class WrapTextController extends TextEditingController {
 
   /// Mantıksal metni doğrudan yazar (AI sonucu, geri alma, not yükleme...).
   @override
-  set text(String newText) => _reflow(newText, newText.length);
+  set text(String newText) {
+    clearPendingFormat();
+    _reflow(newText, newText.length);
+  }
+
+  // ---- Bekleyen biçim ---------------------------------------------------
+
+  /// Seçim yokken biçim düğmesine basıldığında metne DOKUNULMAZ; biçim burada
+  /// bekler ve bir sonraki yazılan metin işaretlerin İÇİNE girer.
+  ///
+  /// KÖK NEDEN (kullanıcı: "yine biçim verirken işaretler çıkıyor… boşluğa
+  /// veya satır sonuna yapınca"): eskiden metne boş kutu (`~~`, `__`) yazılıp
+  /// imleç arasına konuyordu. İçine bir şey yazılmazsa o işaretler notta ham
+  /// markdown olarak kalıyordu; üstelik gizleme kalıbı (`_emptyBoxPattern`)
+  /// yalnız `****`/`==:==` gibi kutuları tanıdığı için italik ve altı çizili
+  /// kutuları EKRANDA da görünüyordu. Kutuyu hiç yazmamak hem çöpü bitiriyor
+  /// hem de kalıbı genişletip `__init__` gibi gerçek metni kırpma riskini
+  /// doğurmuyor.
+  RichFormat? _pending;
+  int? _pendingIndex;
+  int? _pendingAt;
+
+  bool get hasPendingFormat => _pending != null;
+
+  void setPendingFormat(RichFormat format, int? index) {
+    _pending = format;
+    _pendingIndex = index;
+    _pendingAt = selection.baseOffset;
+  }
+
+  void clearPendingFormat() {
+    _pending = null;
+    _pendingIndex = null;
+    _pendingAt = null;
+  }
+
+  /// Bekleyen biçim varsa yazılan metni işaretlerin içine alır.
+  ///
+  /// IME oluşturma aralığı (Gboard'ın altı çizili tahmin metni) SÜRERKEN
+  /// metne işaret sokmak oluşturmayı bozar — bu yüzden sarma yalnız oluşturma
+  /// bittiğinde yapılır ve o ana kadar yazılan her şey birlikte sarılır
+  /// ("biçimli yazmaya devam et" davranışı, Word'deki gibi).
+  TextEditingValue? _wrapPending(TextEditingValue next) {
+    final format = _pending;
+    final at = _pendingAt;
+    if (format == null || at == null) return null;
+    if (next.composing.isValid && !next.composing.isCollapsed) return null;
+    final caret = next.selection.baseOffset;
+    // İmleç geri gitti, seçim yapıldı ya da metin kısaldı: niyet düştü.
+    if (!next.selection.isCollapsed ||
+        at > next.text.length ||
+        caret <= at ||
+        caret > next.text.length) {
+      clearPendingFormat();
+      return null;
+    }
+    final typed = next.text.substring(at, caret);
+    if (typed.isEmpty) return null;
+    final marker = format.marker;
+    final index = _pendingIndex;
+    final prefix = richFormatTakesIndex(format) && index != null
+        ? '$marker$index:'
+        : marker;
+    clearPendingFormat();
+    return TextEditingValue(
+      text: next.text.replaceRange(at, caret, '$prefix$typed$marker'),
+      // İmleç KAPANIŞ işaretinin önünde kalır: yazmaya devam etmek biçimi
+      // sürdürür, kutunun dışına düşmez.
+      selection: TextSelection.collapsed(offset: caret + prefix.length),
+    );
+  }
 
   @override
   set value(TextEditingValue newValue) {
+    final wrapped = _wrapPending(newValue);
+    if (wrapped != null) newValue = wrapped;
     if (_floats.isEmpty) {
       // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer —
       // yalnız imleç görünmez işaretin ortasına düşerse kenara çekilir ve
