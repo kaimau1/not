@@ -8,6 +8,7 @@ import '../../../core/l10n_ext.dart';
 import '../data/scan/doc_edges.dart';
 import '../data/scan/perspective.dart';
 import '../data/scan/scan_enhance.dart';
+import '../data/scan/scan_deskew.dart';
 import '../data/scan/scan_ocr.dart';
 import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
@@ -115,13 +116,32 @@ class _ScanReviewScreenState extends State<ScanReviewScreen> {
     super.dispose();
   }
 
-  /// Açılışta bütün sayfalar hazırlanır: (istenirse) otomatik kenar bulma +
-  /// perspektif düzeltme, ardından varsayılan netleştirme filtresi.
+  /// Açılışta bütün sayfalar hazırlanır: otomatik kenar bulma + perspektif
+  /// düzeltme, ardından varsayılan netleştirme filtresi.
+  ///
+  /// Ham fotoğrafta ([ScanReviewScreen.autoCrop]) kenar NE bulunursa
+  /// kırpılır; ML Kit çıktısında ise sayfa çoğunlukla kırpık gelir ama eğik
+  /// kalabilir — o yüzden **temkinli** kendiliğinden düzeltme koşar
+  /// ([ScanDeskew.worthApplying]; dosya-okuyucu 2026-08-06 bulgusu). Emin
+  /// değilse sayfaya dokunmaz, elle "Köşeleri ayarla" yolu hep açık.
   Future<void> _prepareAll() async {
     for (var i = 0; i < _pages.length; i++) {
       if (!mounted) return;
       setState(() => _preparing = i);
-      if (widget.autoCrop) await _autoCrop(i);
+      if (widget.autoCrop) {
+        await _autoCrop(i);
+      } else {
+        try {
+          final straightened = await ScanDeskew.autoStraighten(_sources[i]);
+          if (!mounted) return;
+          if (straightened != null) {
+            _sources[i] = straightened;
+            setState(() => _pages[i] = straightened);
+          }
+        } catch (_) {
+          // Düzeltme süs değil sigortadır: başarısızsa sayfa OLDUĞU GİBİ kalır.
+        }
+      }
       await _applyFilter(i, ScanFilter.auto, silent: true);
     }
     if (mounted) setState(() => _preparing = null);

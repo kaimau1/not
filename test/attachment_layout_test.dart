@@ -106,7 +106,7 @@ void main() {
     expect(Attachment.fromMap({...map}..remove('createdAt')).asFile, isTrue);
   });
 
-  test('floatsOnPage: gorsel olmayan ek sayfada yuzmez', () {
+  test('floatsOnPage: PDF sayfada yuzmez', () {
     const pdf = Attachment(
       id: 'p',
       kind: AttachmentKind.pdf,
@@ -115,5 +115,16 @@ void main() {
     );
     expect(pdf.floatsOnPage, isFalse);
     expect(_image('a').floatsOnPage, isTrue);
+  });
+
+  test('floatsOnPage: video da gorsel gibi yuzer, asFile ile serite iner', () {
+    const video = Attachment(
+      id: 'v',
+      kind: AttachmentKind.video,
+      fileName: 'v.mp4',
+      mimeType: 'video/mp4',
+    );
+    expect(video.floatsOnPage, isTrue);
+    expect(video.copyWith(asFile: true).floatsOnPage, isFalse);
   });
 }

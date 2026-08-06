@@ -253,8 +253,11 @@ class _AttachmentTile extends ConsumerWidget {
 
   bool get _hasLocal => localFileExists(attachment.localPath);
 
-  /// Yalnız "ek olarak" işaretlenmiş GÖRSEL sayfaya geri konabilir.
-  bool get _canPlaceOnPage => attachment.kind == AttachmentKind.image;
+  /// Yalnız "ek olarak" işaretlenmiş GÖRSEL ya da VİDEO sayfaya geri
+  /// konabilir (video da sayfada olduğu yerde oynar).
+  bool get _canPlaceOnPage =>
+      attachment.kind == AttachmentKind.image ||
+      attachment.kind == AttachmentKind.video;
 
   void _open(BuildContext context) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
