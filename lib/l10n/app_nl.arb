@@ -544,5 +544,12 @@
   "signInNetworkError": "Geen internetverbinding. Controleer je verbinding en probeer het opnieuw.",
   "signInCanceled": "Inloggen geannuleerd.",
   "cardRichPreview": "Opgemaakte tekst op kaarten",
-  "cardRichPreviewInfo": "Kleuren, markeringen, vet en onderstrepingen uit je notities zijn ook op de kaarten op het startscherm te zien. Uit: kaarten tonen platte tekst."
+  "cardRichPreviewInfo": "Kleuren, markeringen, vet en onderstrepingen uit je notities zijn ook op de kaarten op het startscherm te zien. Uit: kaarten tonen platte tekst.",
+  "fontSizeSmall": "Klein",
+  "fontSizeMedium": "Normaal",
+  "fontSizeLarge": "Groot",
+  "fontSizeXLarge": "Zeer groot",
+  "appFontSetting": "Lettertype",
+  "appFontInfo": "Het lettertype in de hele app. Het eigen lettertype van een notitie gaat voor. Alle lettertypen zitten in de app — geen internet nodig.",
+  "appFontDefaultSuffix": "standaard"
 }

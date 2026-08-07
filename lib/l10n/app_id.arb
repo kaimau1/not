@@ -544,5 +544,12 @@
   "signInNetworkError": "Tidak dapat terhubung ke internet. Periksa koneksimu lalu coba lagi.",
   "signInCanceled": "Masuk dibatalkan.",
   "cardRichPreview": "Teks berformat di kartu",
-  "cardRichPreviewInfo": "Warna, sorotan, tebal, dan garis bawah dari catatanmu juga tampil di kartu layar utama. Jika nonaktif, kartu menampilkan teks polos."
+  "cardRichPreviewInfo": "Warna, sorotan, tebal, dan garis bawah dari catatanmu juga tampil di kartu layar utama. Jika nonaktif, kartu menampilkan teks polos.",
+  "fontSizeSmall": "Kecil",
+  "fontSizeMedium": "Sedang",
+  "fontSizeLarge": "Besar",
+  "fontSizeXLarge": "Sangat besar",
+  "appFontSetting": "Font",
+  "appFontInfo": "Font yang dipakai di seluruh aplikasi. Font milik catatan lebih diutamakan. Semua font sudah menyatu dengan aplikasi — tak perlu internet.",
+  "appFontDefaultSuffix": "bawaan"
 }

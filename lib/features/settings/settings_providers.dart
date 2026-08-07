@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/utils/language_names.dart';
+import '../../core/utils/note_fonts.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 /// main() içinde gerçek örnekle override edilir.
@@ -85,7 +86,9 @@ class LocaleNotifier extends Notifier<Locale?> {
   /// `Locale('pt-BR')` dil kodunu 'pt-BR' sanır ve hiçbir çeviriyle eşleşmez.
   static Locale _parse(String tag) {
     final parts = tag.split(RegExp('[-_]'));
-    return parts.length > 1 ? Locale(parts.first, parts[1]) : Locale(parts.first);
+    return parts.length > 1
+        ? Locale(parts.first, parts[1])
+        : Locale(parts.first);
   }
 
   /// [code] null ise sistem diline dönülür.
@@ -100,7 +103,39 @@ class LocaleNotifier extends Notifier<Locale?> {
   }
 }
 
-/// Yazı boyutu çarpanı (0.85–1.4).
+/// Yazı boyutu kademeleri: Küçük · Orta · Büyük · Çok büyük.
+///
+/// KARAR (kullanıcı, 2026-08-07: "yazı boyutu ekmolarak küçük orta büyük çok
+/// büyük seçeneklerinde olsun"): eskiden 0.85–1.4 arası sürekli bir kaydırıcı
+/// vardı ve "%107" gibi değerler seçilebiliyordu — ne anlamı olan ne de
+/// hatırlanabilen bir sayı. Dört kademe hem tek dokunuşla seçiliyor hem de
+/// her cihazda AYNI dört görünümü veriyor.
+///
+/// Değerler eski aralığın içinde kalıyor: kaydırıcıdan gelen kayıtlı bir
+/// değer en yakın kademeye oturur ([nearestFontScaleStep]), kimse
+/// güncellemede boyut değişimi yaşamaz.
+enum FontScaleStep {
+  small(0.85),
+  medium(1),
+  large(1.15),
+  xlarge(1.35);
+
+  const FontScaleStep(this.scale);
+
+  final double scale;
+}
+
+/// [value]'ya en yakın kademe. Eski (kaydırıcı dönemi) değerler ve elle
+/// bozulmuş kayıtlar için tek giriş noktası.
+FontScaleStep nearestFontScaleStep(double value) {
+  var best = FontScaleStep.medium;
+  for (final step in FontScaleStep.values) {
+    if ((step.scale - value).abs() < (best.scale - value).abs()) best = step;
+  }
+  return best;
+}
+
+/// Yazı boyutu çarpanı. Sistem ayarının YERİNE geçer (bkz. `fixedTypography`).
 final fontScaleProvider = NotifierProvider<FontScaleNotifier, double>(
   FontScaleNotifier.new,
 );
@@ -114,6 +149,36 @@ class FontScaleNotifier extends Notifier<double> {
   void set(double value) {
     state = value;
     ref.read(sharedPreferencesProvider).setDouble(_key, value);
+  }
+
+  void setStep(FontScaleStep step) => set(step.scale);
+}
+
+/// Uygulamanın genel yazı tipi (Ayarlar → Görünüm → Yazı tipi).
+///
+/// Notun KENDİ yazı tipinden bağımsızdır: bu ayar arayüzü ve yazı tipi
+/// seçilmemiş notları etkiler, not başına seçim onun üstüne biner.
+/// Katalogdaki bütün yazı tipleri APK'ya gömülü olduğu için seçim
+/// çevrimdışı da anında uygulanır.
+final appFontProvider = NotifierProvider<AppFontNotifier, String>(
+  AppFontNotifier.new,
+);
+
+class AppFontNotifier extends Notifier<String> {
+  static const _key = 'app_font';
+
+  @override
+  String build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    // Kayıtta katalogdan çıkmış bir ad varsa varsayılana dönülür.
+    return stored != null && appFontIds.contains(stored)
+        ? stored
+        : kAppDefaultFont;
+  }
+
+  void set(String family) {
+    state = family;
+    ref.read(sharedPreferencesProvider).setString(_key, family);
   }
 }
 
@@ -455,11 +520,13 @@ final _clockProvider = StreamProvider.autoDispose<DateTime>((ref) {
   void arm() {
     final now = DateTime.now();
     // +1 sn tampon: tetik tam sınırda düşerse isDarkAt doğru tarafta kalsın.
-    timer = Timer(_nextBoundary(now, schedule).difference(now) +
-        const Duration(seconds: 1), () {
-      controller.add(DateTime.now());
-      arm();
-    });
+    timer = Timer(
+      _nextBoundary(now, schedule).difference(now) + const Duration(seconds: 1),
+      () {
+        controller.add(DateTime.now());
+        arm();
+      },
+    );
   }
 
   arm();

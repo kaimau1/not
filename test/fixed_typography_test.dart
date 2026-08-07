@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/app/app.dart';
@@ -11,9 +9,10 @@ import 'package:notlar/app/app.dart';
 /// İki ayrı kaynak var, ikisi de burada kilitleniyor:
 ///  - Sistemin yazı ölçeği / "kalın metin" ayarı → [fixedTypography] bunları
 ///    uygulamanın kendi değerleriyle DEĞİŞTİRİR.
-///  - Yazı tipi → Inter Tight APK'ya gömülü; `google_fonts` dosyayı
-///    varlıklarda bulamazsa ağdan indirmeye çalışır ve indiremediğinde metin
-///    CİHAZIN fontuyla çizilir (telefondan telefona değişen görünüm).
+///  - Yazı tipi → katalogun tamamı APK'ya gömülü; dosyaların gerçekten orada
+///    olduğunu `font_catalog_test.dart` doğrular (bulunamazsa `google_fonts`
+///    ağdan indirmeye çalışır ve indiremediğinde metin CİHAZIN fontuyla
+///    çizilir — telefondan telefona değişen görünüm).
 void main() {
   Future<MediaQueryData> pump(
     WidgetTester tester, {
@@ -72,21 +71,5 @@ void main() {
       fontScale: 1,
     );
     expect(data.boldText, isFalse);
-  });
-
-  test('Inter Tight dosyaları gömülü ve pubspec\'te bildirilmiş', () {
-    // Dosya adı `google_fonts`un aradığı kalıpta olmak ZORUNDA
-    // (`InterTight-<Ağırlık>.ttf`); adı değişirse paket sessizce indirmeye
-    // döner ve çevrimdışı cihazda sistem fontuna düşer.
-    final pubspec = File('pubspec.yaml').readAsStringSync();
-    for (final weight in const ['Regular', 'Medium']) {
-      final path = 'assets/google_fonts/InterTight-$weight.ttf';
-      expect(File(path).existsSync(), isTrue, reason: '$path yok');
-      expect(
-        pubspec,
-        contains(path),
-        reason: '$path pubspec varlıklarında yok',
-      );
-    }
   });
 }

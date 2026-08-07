@@ -544,5 +544,12 @@
   "signInNetworkError": "Internet est injoignable. Vérifie ta connexion et réessaie.",
   "signInCanceled": "Connexion annulée.",
   "cardRichPreview": "Texte mis en forme sur les cartes",
-  "cardRichPreviewInfo": "Les couleurs, surlignages, gras et soulignements de tes notes apparaissent aussi sur les cartes de l'écran d'accueil. Désactivé, les cartes affichent du texte brut."
+  "cardRichPreviewInfo": "Les couleurs, surlignages, gras et soulignements de tes notes apparaissent aussi sur les cartes de l'écran d'accueil. Désactivé, les cartes affichent du texte brut.",
+  "fontSizeSmall": "Petit",
+  "fontSizeMedium": "Moyen",
+  "fontSizeLarge": "Grand",
+  "fontSizeXLarge": "Très grand",
+  "appFontSetting": "Police",
+  "appFontInfo": "La police utilisée partout dans l'application. La police propre à une note a la priorité. Toutes les polices sont incluses — aucune connexion requise.",
+  "appFontDefaultSuffix": "par défaut"
 }

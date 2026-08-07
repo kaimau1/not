@@ -19,6 +19,7 @@ import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
+import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
@@ -137,7 +138,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'tema ${l10n.themeSystem} ${l10n.themeLight} '
                 '${l10n.themeDark} ${l10n.themePaper}',
           ),
-          _SettingRow(const _FontScaleSlider(), title: l10n.fontSize),
+          _SettingRow(const _FontScaleSelector(), title: l10n.fontSize),
+          _SettingRow(
+            const _AppFontSelector(),
+            title: l10n.appFontSetting,
+            keywords: '${l10n.appFontInfo} font yazi tipi',
+          ),
           _SettingRow(
             const _ExpandListItemsSwitch(),
             title: l10n.expandListItems,
@@ -194,9 +200,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               padding: const EdgeInsets.only(bottom: 4),
               child: Text(
                 l10n.speechVoiceAutoInfo,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
             // Bu satır bir AÇIKLAMA: üstündeki ses seçicilerle aynı sorgularda
@@ -367,9 +373,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     // Arama sirasinda eslesen alanlar acik gelir: kullanici
                     // buldugu seyi bir de elle acmak zorunda kalmasin.
                     open: query.isNotEmpty || _open == area.id,
-                    onTap: () => setState(
-                      () => _open = _open == area.id ? '' : area.id,
-                    ),
+                    onTap: () =>
+                        setState(() => _open = _open == area.id ? '' : area.id),
                   ),
             ],
           ),
@@ -388,8 +393,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       AppThemeChoice.dark => l10n.themeDark,
       AppThemeChoice.paper => l10n.themePaper,
     };
-    final scale = (ref.watch(fontScaleProvider) * 100).round();
-    return '$theme · $scale%';
+    // Yüzde yerine KADEME ADI: ayar artık dört adlı seçenekten ibaret,
+    // özet satırında "%107" görmek kullanıcıya hiçbir şey anlatmıyordu.
+    final size = switch (nearestFontScaleStep(ref.watch(fontScaleProvider))) {
+      FontScaleStep.small => l10n.fontSizeSmall,
+      FontScaleStep.medium => l10n.fontSizeMedium,
+      FontScaleStep.large => l10n.fontSizeLarge,
+      FontScaleStep.xlarge => l10n.fontSizeXLarge,
+    };
+    return '$theme · $size · ${ref.watch(appFontProvider)}';
   }
 
   /// Okuma HIZI ozete girmiyor: hiz motordan asenkron okunuyor
@@ -926,10 +938,8 @@ class _LanguageSelector extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) => _LanguageSheet(
-        languages: languages,
-        selected: selected,
-      ),
+      builder: (sheetContext) =>
+          _LanguageSheet(languages: languages, selected: selected),
     );
     if (choice == null) return;
     ref.read(localeProvider.notifier).set(choice == 'system' ? null : choice);
@@ -1236,27 +1246,32 @@ class _DashboardBackgroundTile extends ConsumerWidget {
   }
 }
 
-class _FontScaleSlider extends ConsumerStatefulWidget {
-  const _FontScaleSlider();
+/// Yazı boyutu: dört kademe (Küçük · Orta · Büyük · Çok büyük).
+///
+/// KÖK NEDEN — eskiden 0.85–1.4 arası sürekli bir KAYDIRICIydı: "%107" gibi
+/// hatırlanmayan değerler seçilebiliyor, iki cihazda aynı boyutu tutturmak
+/// imkânsız oluyordu (kullanıcı isteği 2026-08-07). Kademeler tek dokunuşla
+/// seçiliyor ve her cihazda aynı dört görünümü veriyor. Kaydırıcı döneminden
+/// kalan değer en yakın kademede görünür — kimsenin boyutu güncellemede
+/// kendiliğinden değişmez.
+class _FontScaleSelector extends ConsumerWidget {
+  const _FontScaleSelector();
+
+  static String _label(AppLocalizations l10n, FontScaleStep step) =>
+      switch (step) {
+        FontScaleStep.small => l10n.fontSizeSmall,
+        FontScaleStep.medium => l10n.fontSizeMedium,
+        FontScaleStep.large => l10n.fontSizeLarge,
+        FontScaleStep.xlarge => l10n.fontSizeXLarge,
+      };
 
   @override
-  ConsumerState<_FontScaleSlider> createState() => _FontScaleSliderState();
-}
-
-class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
-  static const _min = 0.85;
-  static const _max = 1.4;
-
-  /// Sürükleme sürerken geçerli olan değer; parmak kalkınca null'a döner ve
-  /// kaydırıcı yeniden sağlayıcıyı izler.
-  double? _dragging;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final double value = _dragging ?? ref.watch(fontScaleProvider);
-    final percent = '${(value * 100).round()}%';
+    final current = nearestFontScaleStep(ref.watch(fontScaleProvider));
     final bodyStyle = Theme.of(context).textTheme.bodyMedium;
+    // Seçicinin KENDİSİ ölçeklenmez: "Çok büyük" seçildiğinde düğmelerin de
+    // büyümesi satırı taşırıyordu. Önizleme metni ölçeği kendi uygular.
     return MediaQuery.withNoTextScaling(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1266,32 +1281,30 @@ class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
               const Icon(Icons.format_size, size: 18),
               const SizedBox(width: 8),
               Text(l10n.fontSize),
-              Expanded(
-                child: Slider(
-                  value: value,
-                  min: _min,
-                  max: _max,
-                  divisions: 11,
-                  label: percent,
-                  onChanged: (v) => setState(() => _dragging = v),
-                  onChangeEnd: (v) {
-                    ref.read(fontScaleProvider.notifier).set(v);
-                    setState(() => _dragging = null);
-                  },
-                ),
-              ),
-              // Sabit genişlik: "%85" ile "%140" arasındaki genişlik farkı
-              // kaydırıcıyı daraltıp genişletiyordu.
-              SizedBox(
-                width: 44,
-                child: Text(percent, textAlign: TextAlign.end),
-              ),
             ],
           ),
-          // Önizleme kutusu en büyük ölçeğe göre boyutlanır ki sürüklerken
-          // yüksekliği değişmesin.
+          const SizedBox(height: 10),
+          // Wrap: dört etiket dar ekranda tek satıra sığmayınca alta iner
+          // (SegmentedButton bu durumda etiketleri kırpardı).
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final step in FontScaleStep.values)
+                ChoiceChip(
+                  label: Text(_label(l10n, step)),
+                  selected: step == current,
+                  onSelected: (_) =>
+                      ref.read(fontScaleProvider.notifier).setStep(step),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Önizleme kutusu en büyük kademeye göre boyutlanır ki seçim
+          // değişince yüksekliği zıplamasın.
           SizedBox(
-            height: (bodyStyle?.fontSize ?? 14) * _max * 1.6,
+            height:
+                (bodyStyle?.fontSize ?? 14) * FontScaleStep.xlarge.scale * 1.6,
             width: double.infinity,
             child: Align(
               alignment: AlignmentDirectional.centerStart,
@@ -1299,7 +1312,7 @@ class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
                 l10n.fontSizePreview,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(value),
+                textScaler: TextScaler.linear(current.scale),
                 style: bodyStyle?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
@@ -1308,6 +1321,58 @@ class _FontScaleSliderState extends ConsumerState<_FontScaleSlider> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Uygulamanın genel yazı tipi. Her satır KENDİ yazı tipiyle yazılır —
+/// seçmeden önce nasıl duracağı görünür (biçim şeridindeki not yazı tipi
+/// menüsüyle aynı fikir).
+class _AppFontSelector extends ConsumerWidget {
+  const _AppFontSelector();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final current = ref.watch(appFontProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.font_download_outlined, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.appFontSetting)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          l10n.appFontInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final font in kCatalogFonts)
+              ChoiceChip(
+                label: Text(
+                  font.id == kAppDefaultFont
+                      ? '${font.label} · ${l10n.appFontDefaultSuffix}'
+                      : font.label,
+                  // Etiket kendi yazı tipiyle: seçici aynı zamanda örnektir.
+                  style: applyNoteFont(const TextStyle(fontSize: 14), font.id),
+                ),
+                selected: font.id == current,
+                onSelected: (_) =>
+                    ref.read(appFontProvider.notifier).set(font.id!),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -1402,9 +1467,7 @@ class _StorageUsage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            l10n.storageUsageValue(formatBytes(used), formatBytes(quota)),
-          ),
+          Text(l10n.storageUsageValue(formatBytes(used), formatBytes(quota))),
         ],
       ),
     );
@@ -2061,9 +2124,7 @@ class _ModelSelectors extends ConsumerWidget {
   /// yalnızca Gemini gibi ham kimlik dönen sağlayıcılarda güzelleştirilir.
   static String _friendlyModel(AiModel model) {
     if (model.label != model.id) return model.label;
-    var name = model.id
-        .replaceFirst('gemini-', '')
-        .replaceAll('-preview', '');
+    var name = model.id.replaceFirst('gemini-', '').replaceAll('-preview', '');
     final lower = name.toLowerCase();
     final hint = lower.contains('flash-lite')
         ? 'en hızlı'
@@ -2130,10 +2191,7 @@ class _ModelSelectors extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Flexible(
-            child: Text(
-              _friendlyModel(model),
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: Text(_friendlyModel(model), overflow: TextOverflow.ellipsis),
           ),
           if (model.recommended) ...[
             const SizedBox(width: 6),

@@ -1957,4 +1957,26 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Colori, evidenziazioni, grassetto e sottolineature delle tue note appaiono anche sulle schede della schermata principale. Se disattivato, le schede mostrano testo semplice.';
+
+  @override
+  String get fontSizeSmall => 'Piccolo';
+
+  @override
+  String get fontSizeMedium => 'Medio';
+
+  @override
+  String get fontSizeLarge => 'Grande';
+
+  @override
+  String get fontSizeXLarge => 'Molto grande';
+
+  @override
+  String get appFontSetting => 'Carattere';
+
+  @override
+  String get appFontInfo =>
+      'Il carattere usato in tutta l\'app. Il carattere scelto per una nota ha la precedenza. Tutti i caratteri sono inclusi nell\'app: non serve internet.';
+
+  @override
+  String get appFontDefaultSuffix => 'predefinito';
 }

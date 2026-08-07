@@ -1954,4 +1954,26 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Los colores, resaltados, negritas y subrayados de tus notas también se ven en las tarjetas de la pantalla principal. Si se desactiva, las tarjetas muestran texto sin formato.';
+
+  @override
+  String get fontSizeSmall => 'Pequeño';
+
+  @override
+  String get fontSizeMedium => 'Mediano';
+
+  @override
+  String get fontSizeLarge => 'Grande';
+
+  @override
+  String get fontSizeXLarge => 'Muy grande';
+
+  @override
+  String get appFontSetting => 'Fuente';
+
+  @override
+  String get appFontInfo =>
+      'La fuente usada en toda la app. La fuente propia de una nota tiene prioridad. Todas las fuentes vienen con la app: no hace falta internet.';
+
+  @override
+  String get appFontDefaultSuffix => 'predeterminada';
 }

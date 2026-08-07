@@ -1957,4 +1957,26 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'As cores, marcações, negrito e sublinhado das suas notas também aparecem nos cartões da tela inicial. Desativado, os cartões mostram texto simples.';
+
+  @override
+  String get fontSizeSmall => 'Pequeno';
+
+  @override
+  String get fontSizeMedium => 'Médio';
+
+  @override
+  String get fontSizeLarge => 'Grande';
+
+  @override
+  String get fontSizeXLarge => 'Muito grande';
+
+  @override
+  String get appFontSetting => 'Fonte';
+
+  @override
+  String get appFontInfo =>
+      'A fonte usada em todo o app. A fonte da própria nota tem prioridade. Todas as fontes vêm com o app — não precisa de internet.';
+
+  @override
+  String get appFontDefaultSuffix => 'padrão';
 }

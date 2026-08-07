@@ -1954,4 +1954,26 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Kolory, wyróżnienia, pogrubienia i podkreślenia z notatek widać też na kartach ekranu głównego. Po wyłączeniu karty pokazują zwykły tekst.';
+
+  @override
+  String get fontSizeSmall => 'Mała';
+
+  @override
+  String get fontSizeMedium => 'Średnia';
+
+  @override
+  String get fontSizeLarge => 'Duża';
+
+  @override
+  String get fontSizeXLarge => 'Bardzo duża';
+
+  @override
+  String get appFontSetting => 'Czcionka';
+
+  @override
+  String get appFontInfo =>
+      'Czcionka używana w całej aplikacji. Własna czcionka notatki ma pierwszeństwo. Wszystkie czcionki są w aplikacji — internet nie jest potrzebny.';
+
+  @override
+  String get appFontDefaultSuffix => 'domyślna';
 }

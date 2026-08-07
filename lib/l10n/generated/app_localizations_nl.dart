@@ -1955,4 +1955,26 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Kleuren, markeringen, vet en onderstrepingen uit je notities zijn ook op de kaarten op het startscherm te zien. Uit: kaarten tonen platte tekst.';
+
+  @override
+  String get fontSizeSmall => 'Klein';
+
+  @override
+  String get fontSizeMedium => 'Normaal';
+
+  @override
+  String get fontSizeLarge => 'Groot';
+
+  @override
+  String get fontSizeXLarge => 'Zeer groot';
+
+  @override
+  String get appFontSetting => 'Lettertype';
+
+  @override
+  String get appFontInfo =>
+      'Het lettertype in de hele app. Het eigen lettertype van een notitie gaat voor. Alle lettertypen zitten in de app — geen internet nodig.';
+
+  @override
+  String get appFontDefaultSuffix => 'standaard';
 }

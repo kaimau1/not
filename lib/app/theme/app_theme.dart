@@ -2,7 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import '../../core/utils/note_fonts.dart';
 
 /// Premium sade görünüm: tek tohum renk, ince kenarlıklar, gölgesiz yüzeyler,
 /// koyu temada siyaha yakın arka plan.
@@ -12,14 +13,21 @@ abstract final class AppTheme {
   /// Kağıt temasının tohum rengi: sıcak sepya; saman kağıdı yüzeylerle uyumlu.
   static const Color paperSeed = Color(0xFF8A6C3C);
 
-  static ThemeData light() => _base(Brightness.light);
+  /// [font] uygulamanın genel yazı tipi (Ayarlar → Görünüm → Yazı tipi);
+  /// null ise varsayılan ([kAppDefaultFont]) kullanılır.
+  static ThemeData light({String? font}) => _base(Brightness.light, font: font);
 
-  static ThemeData dark() => _base(Brightness.dark);
+  static ThemeData dark({String? font}) => _base(Brightness.dark, font: font);
 
   /// "Kağıt" teması: açık temanın hafif saman kağıdı renkli sürümü.
-  static ThemeData paper() => _base(Brightness.light, paper: true);
+  static ThemeData paper({String? font}) =>
+      _base(Brightness.light, paper: true, font: font);
 
-  static ThemeData _base(Brightness brightness, {bool paper = false}) {
+  static ThemeData _base(
+    Brightness brightness, {
+    bool paper = false,
+    String? font,
+  }) {
     final isDark = brightness == Brightness.dark;
     var scheme = ColorScheme.fromSeed(
       seedColor: paper ? paperSeed : seed,
@@ -47,15 +55,17 @@ abstract final class AppTheme {
       );
     }
 
-    // Uygulamanın tipografisi: Inter Tight. Dosyalar APK'ya GÖMÜLÜ
-    // (`assets/google_fonts/InterTight-*.ttf`), yani `google_fonts` burada
-    // ağa hiç çıkmaz ve yazı tipi her telefonda AYNI çizilir — indirme
-    // başarısız olduğunda cihazın sistem fontuna düşme davranışı bitti
-    // (bkz. pubspec'teki gerekçe). Gömülü ağırlıklar 400 ve 500 — paketin
-    // gövde temasına yüklediği ağırlıklar bunlar; daha kalın metinler bu iki
-    // yüzden türetiliyor (davranış değişmedi, yalnız ağ bağımlılığı gitti).
-    final textTheme = GoogleFonts.interTightTextTheme(
+    // Uygulamanın tipografisi: varsayılan Inter Tight, kullanıcı Ayarlar →
+    // Görünüm → Yazı tipi'nden katalogdaki her yazı tipine geçebilir.
+    // Dosyaların TAMAMI APK'ya GÖMÜLÜ (`assets/google_fonts/`), yani
+    // `google_fonts` burada ağa hiç çıkmaz ve yazı tipi her telefonda AYNI
+    // çizilir — indirme başarısız olduğunda cihazın sistem fontuna düşme
+    // davranışı bitti (bkz. pubspec'teki gerekçe). Gömülü ağırlıklar 400 ve
+    // 500: paketin gövde temasına yüklediği ağırlıklar bunlar, daha kalın
+    // metinler bu iki yüzden türetiliyor.
+    final textTheme = appFontTextTheme(
       ThemeData(brightness: brightness).textTheme,
+      font,
     );
 
     final desktop =

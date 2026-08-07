@@ -544,5 +544,12 @@
   "signInNetworkError": "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
   "signInCanceled": "Logowanie anulowane.",
   "cardRichPreview": "Sformatowany tekst na kartach",
-  "cardRichPreviewInfo": "Kolory, wyróżnienia, pogrubienia i podkreślenia z notatek widać też na kartach ekranu głównego. Po wyłączeniu karty pokazują zwykły tekst."
+  "cardRichPreviewInfo": "Kolory, wyróżnienia, pogrubienia i podkreślenia z notatek widać też na kartach ekranu głównego. Po wyłączeniu karty pokazują zwykły tekst.",
+  "fontSizeSmall": "Mała",
+  "fontSizeMedium": "Średnia",
+  "fontSizeLarge": "Duża",
+  "fontSizeXLarge": "Bardzo duża",
+  "appFontSetting": "Czcionka",
+  "appFontInfo": "Czcionka używana w całej aplikacji. Własna czcionka notatki ma pierwszeństwo. Wszystkie czcionki są w aplikacji — internet nie jest potrzebny.",
+  "appFontDefaultSuffix": "domyślna"
 }

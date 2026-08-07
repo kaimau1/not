@@ -1887,4 +1887,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cardRichPreviewInfo => '笔记中的颜色、高亮、加粗和下划线也会显示在主屏幕卡片上。关闭后，卡片只显示纯文本。';
+
+  @override
+  String get fontSizeSmall => '小';
+
+  @override
+  String get fontSizeMedium => '中';
+
+  @override
+  String get fontSizeLarge => '大';
+
+  @override
+  String get fontSizeXLarge => '超大';
+
+  @override
+  String get appFontSetting => '字体';
+
+  @override
+  String get appFontInfo => '应用中各处使用的字体。笔记自身的字体设置优先。所有字体都随应用内置，无需联网。';
+
+  @override
+  String get appFontDefaultSuffix => '默认';
 }

@@ -678,5 +678,12 @@
   "signInNetworkError": "Couldn't reach the internet. Check your connection and try again.",
   "signInCanceled": "Sign-in canceled.",
   "cardRichPreview": "Formatted text on cards",
-  "cardRichPreviewInfo": "Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text."
+  "cardRichPreviewInfo": "Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.",
+  "fontSizeSmall": "Small",
+  "fontSizeMedium": "Medium",
+  "fontSizeLarge": "Large",
+  "fontSizeXLarge": "Extra large",
+  "appFontSetting": "Font",
+  "appFontInfo": "The font used everywhere in the app. A note's own font choice overrides it. All fonts ship with the app — no internet needed.",
+  "appFontDefaultSuffix": "default"
 }

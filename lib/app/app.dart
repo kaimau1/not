@@ -35,8 +35,9 @@ Locale resolveLocale(List<Locale>? locales, Iterable<Locale> supported) {
 /// 2. **Kalın metin** (erişilebilirlik → "Bold text"): açık bırakılsa
 ///    telefonun her yerinde yazılar kalınlaşır ve ince/kalın ayrımına dayanan
 ///    başlık-gövde hiyerarşisi düzleşirdi.
-/// 3. **Yazı tipi**: cihazın sistem fontuna hiç düşülmemesi için Inter Tight
-///    APK'ya gömüldü (bkz. pubspec `assets/google_fonts/`).
+/// 3. **Yazı tipi**: cihazın sistem fontuna hiç düşülmemesi için yazı tipi
+///    kataloğunun tamamı APK'ya gömüldü (bkz. pubspec `assets/google_fonts/`);
+///    hangisinin kullanılacağı Ayarlar → Görünüm → Yazı tipi'nden seçilir.
 ///
 /// Android'in "Ekran boyutu" (yoğunluk) ayarı KAPSAM DIŞI: o metni değil tüm
 /// arayüzü ölçekler, uygulamadan bastırılamaz.
@@ -56,6 +57,7 @@ class NotlarApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(effectiveThemeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
+    final font = ref.watch(appFontProvider);
     final paper = ref.watch(themeChoiceProvider) == AppThemeChoice.paper;
 
     return MaterialApp.router(
@@ -63,8 +65,8 @@ class NotlarApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       routerConfig: router,
-      theme: paper ? AppTheme.paper() : AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: paper ? AppTheme.paper(font: font) : AppTheme.light(font: font),
+      darkTheme: AppTheme.dark(font: font),
       themeMode: themeMode,
       // null = sistem dilini kullan. Ayarlar'dan elle seçilirse o dil sabitlenir.
       locale: ref.watch(localeProvider),

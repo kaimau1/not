@@ -884,5 +884,12 @@
   "signInNetworkError": "İnternete ulaşılamadı. Bağlantını kontrol edip yeniden dene.",
   "signInCanceled": "Giriş iptal edildi.",
   "cardRichPreview": "Kartlarda biçimli metin",
-  "cardRichPreviewInfo": "Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir."
+  "cardRichPreviewInfo": "Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.",
+  "fontSizeSmall": "Küçük",
+  "fontSizeMedium": "Orta",
+  "fontSizeLarge": "Büyük",
+  "fontSizeXLarge": "Çok büyük",
+  "appFontSetting": "Yazı tipi",
+  "appFontInfo": "Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.",
+  "appFontDefaultSuffix": "varsayılan"
 }
