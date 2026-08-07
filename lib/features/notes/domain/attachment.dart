@@ -62,6 +62,89 @@ class InkStroke {
   };
 }
 
+/// PDF/slayt sayfasının üzerine bırakılan tek bir **not balonu**.
+///
+/// Kullanıcı belgenin istediği noktasına dokunup balon bırakır ve içine yazar:
+/// "burayı düzelt", "bu tabloyu sun", "kaynak?" gibi. Balon çizim değildir —
+/// metindir; açılıp kapanır (kapalıyken yalnız küçük bir tutamaç görünür ki
+/// sayfa okunmaya devam etsin), istenildiği kadar eklenebilir ve sürüklenerek
+/// taşınabilir.
+///
+/// Çizim ([InkStroke]) ile aynı ilkeler: PDF dosyasına GÖMÜLMEZ, ekin
+/// `bubbles` alanında sayfa oranlı (0–1) konumla saklanır ve not ile birlikte
+/// Firestore'a gider — her açılışta yeniden düzenlenebilir, silinebilir,
+/// cihazlar arasında senkronlanır.
+class PageBubble {
+  const PageBubble({
+    required this.id,
+    required this.page,
+    required this.x,
+    required this.y,
+    this.text = '',
+    this.color = 0xFFFFC107,
+    this.collapsed = false,
+  });
+
+  /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
+  /// hangi balonun hangisi olduğu buradan bilinir.
+  final String id;
+
+  /// 1 tabanlı sayfa/slayt numarası.
+  final int page;
+
+  /// Balonun UCUNUN (işaret ettiği noktanın) sayfa oranındaki konumu: 0–1.
+  /// Oran olduğu için yakınlaştırma, ekran boyutu ya da cihaz değişse de
+  /// balon aynı yere düşer.
+  final double x;
+  final double y;
+
+  final String text;
+
+  /// Balon rengi (ARGB). Konu ayırmak için: sarı "not", kırmızı "düzelt"...
+  final int color;
+
+  /// Kapalıysa yalnız küçük tutamaç görünür; dokununca açılır.
+  final bool collapsed;
+
+  PageBubble copyWith({
+    int? page,
+    double? x,
+    double? y,
+    String? text,
+    int? color,
+    bool? collapsed,
+  }) => PageBubble(
+    id: id,
+    page: page ?? this.page,
+    x: x ?? this.x,
+    y: y ?? this.y,
+    text: text ?? this.text,
+    color: color ?? this.color,
+    collapsed: collapsed ?? this.collapsed,
+  );
+
+  factory PageBubble.fromMap(Map<String, dynamic> map) => PageBubble(
+    id: map['i'] as String? ?? '',
+    page: (map['p'] as num?)?.toInt() ?? 1,
+    x: (map['x'] as num?)?.toDouble() ?? 0.5,
+    y: (map['y'] as num?)?.toDouble() ?? 0.5,
+    text: map['t'] as String? ?? '',
+    color: (map['c'] as num?)?.toInt() ?? 0xFFFFC107,
+    collapsed: map['k'] as bool? ?? false,
+  );
+
+  Map<String, dynamic> toMap() => {
+    'i': id,
+    'p': page,
+    'x': x,
+    'y': y,
+    't': text,
+    'c': color,
+    // Yalnız true iken yazılır: eski ekin şemasına gereksiz alan eklemez.
+    if (collapsed) 'k': true,
+  };
+}
+
 /// Görsel kırpılınca üstündeki çizimleri YENİ çerçeveye taşır.
 ///
 /// Noktalar görselin oranı (0–1) olarak tutulduğundan kırpma onları geçersiz
@@ -150,6 +233,7 @@ class Attachment {
     this.pageY,
     this.asFile = false,
     this.ink = const [],
+    this.bubbles = const [],
     this.pageIds = const [],
     this.createdAt,
   });
@@ -202,6 +286,10 @@ class Attachment {
 
   /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
   final List<InkStroke> ink;
+
+  /// PDF/slayt sayfalarının üzerine bırakılan not balonları (bkz.
+  /// [PageBubble]). Boş = balon yok.
+  final List<PageBubble> bubbles;
 
   /// PDF/sunum ekinde sayfa SIRASINA karşılık gelen kalıcı sayfa kimlikleri:
   /// dizi indeksi = sayfa sırası (0 tabanlı), değer = o sayfanın kimliği.
@@ -276,6 +364,7 @@ class Attachment {
     double? pageY,
     bool? asFile,
     List<InkStroke>? ink,
+    List<PageBubble>? bubbles,
     List<String>? pageIds,
   }) => Attachment(
     id: id,
@@ -295,6 +384,7 @@ class Attachment {
     pageY: pageY ?? this.pageY,
     asFile: asFile ?? this.asFile,
     ink: ink ?? this.ink,
+    bubbles: bubbles ?? this.bubbles,
     pageIds: pageIds ?? this.pageIds,
     createdAt: createdAt,
   );
@@ -323,6 +413,10 @@ class Attachment {
         ink: [
           for (final e in (map['ink'] as List?) ?? const [])
             InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+        ],
+        bubbles: [
+          for (final e in (map['bubbles'] as List?) ?? const [])
+            PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
         ],
         pageIds: [
           for (final e in (map['pageIds'] as List?) ?? const []) e.toString(),
@@ -368,6 +462,8 @@ class Attachment {
     // Yalnız true iken yazılır: eski notların şemasına yeni bir alan eklemez.
     if (asFile) 'asFile': true,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
+    // Çizimle aynı kural: yalnız doluysa yazılır, balonsuz ekin şeması büyümez.
+    if (bubbles.isNotEmpty) 'bubbles': [for (final b in bubbles) b.toMap()],
     // Yalnız atanmışsa yazılır: kimlik atanmamış ekte alan hiç oluşmaz
     // (türetilen `p<sayfaNo>` zaten aynı sonucu verir) ve eski notların
     // şeması büyümez.

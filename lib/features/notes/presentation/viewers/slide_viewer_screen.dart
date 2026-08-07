@@ -6,6 +6,7 @@ import '../../data/attachment_repository.dart';
 import '../../data/pptx_render.dart';
 import '../../data/slide_deck.dart';
 import '../../domain/attachment.dart';
+import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'slide_canvas.dart';
 
@@ -36,6 +37,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
         widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
+  );
+  late final BubbleController _bubbles = BubbleController(
+    initial: widget.attachment.bubbles,
+    onChanged: (list) =>
+        widget.onChanged?.call(widget.attachment.copyWith(bubbles: list)),
   );
   final _pages = PageController();
 
@@ -73,6 +79,19 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     setState(() {
       _editing = !_editing;
       _ink.setEditing(_editing);
+      // Çizim açılırken balon ekleme kipi kapanır: iki kip aynı parmağı ister.
+      if (_editing) _bubbles.setAdding(false);
+    });
+  }
+
+  void _toggleBubbleAdding() {
+    setState(() {
+      final next = !_bubbles.adding;
+      _bubbles.setAdding(next);
+      if (next && _editing) {
+        _editing = false;
+        _ink.setEditing(false);
+      }
     });
   }
 
@@ -95,6 +114,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   @override
   void dispose() {
     _ink.dispose();
+    _bubbles.dispose();
     _pages.dispose();
     _zoom.dispose();
     super.dispose();
@@ -104,7 +124,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return PopScope(
-      onPopInvokedWithResult: (_, _) => _ink.save(),
+      onPopInvokedWithResult: (_, _) {
+        _ink.save();
+        // Yazılmadan bırakılan balon slaytta anlamsız bir nokta kalmasın.
+        _bubbles.dropEmpty();
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -113,6 +137,17 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
+            if (widget.onChanged != null && (_slides?.isNotEmpty ?? false))
+              IconButton(
+                tooltip: _bubbles.adding ? l10n.bubbleAddDone : l10n.bubbleAdd,
+                isSelected: _bubbles.adding,
+                icon: Icon(
+                  _bubbles.adding
+                      ? Icons.chat_bubble
+                      : Icons.add_comment_outlined,
+                ),
+                onPressed: _toggleBubbleAdding,
+              ),
             if (widget.onChanged != null && (_slides?.isNotEmpty ?? false))
               IconButton(
                 tooltip: _editing ? l10n.annotateDone : l10n.annotate,
@@ -125,7 +160,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         body: _body(l10n),
         bottomNavigationBar: _editing
             ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
-            : null,
+            : (_bubbles.adding ? BubbleToolbar(controller: _bubbles) : null),
       ),
     );
   }
@@ -225,6 +260,13 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                                 child: InkPageLayer(
                                   controller: _ink,
                                   page: i + 1,
+                                ),
+                              ),
+                              Positioned.fill(
+                                child: BubblePageLayer(
+                                  controller: _bubbles,
+                                  page: i + 1,
+                                  readOnly: widget.onChanged == null,
                                 ),
                               ),
                             ],

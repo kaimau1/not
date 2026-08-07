@@ -1815,17 +1815,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final action = await showAttachSheet(
       context,
       isDesktop: _isDesktop,
-      textNote: _note?.type == NoteType.text,
+      pageNote: _note?.type.isPageNoteType ?? false,
       copiedAttachmentName: copied?.fileName,
     );
     if (!mounted) return;
     switch (action) {
-      // Karışık içerik: metin notuna checklist maddesi, liste notuna serbest
-      // metin. Eskiden alt çubukta ayrı bir segmentti (bkz. attach_sheet.dart).
+      // Karışık içerik: her not tipinde HEM serbest metin HEM madde listesi
+      // eklenebilir (bkz. attach_sheet.dart — eskiden tipe göre yalnız biri
+      // gösteriliyordu ve kullanıcı "liste ekle seçeneği yok" diyordu).
       case 'list-item':
         _addChecklistItem();
       case 'text-block':
-        setState(() => _listBodyOpen = true);
+        // Metin notunda gövde ZATEN görünür; yalnız odaklanmak yeter.
+        // Liste notunda gövde alanı gizliyse önce açılır.
+        if (!_listBodyOpen) setState(() => _listBodyOpen = true);
         WidgetsBinding.instance.addPostFrameCallback(
           (_) => _bodyFocus.requestFocus(),
         );

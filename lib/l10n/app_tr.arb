@@ -595,7 +595,7 @@
   "pdfFullScreen": "Tam ekran aç",
   "pdfNoDocument": "Bu notta henüz PDF yok",
   "pdfChooseDocument": "PDF seç",
-    "newSlidesNote": "Sunum ekle not al",
+  "newSlidesNote": "Sunum ekle not al",
   "slidesNoDocument": "Bu notta henüz sunum yok",
   "slidesChooseDocument": "Sunum seç",
   "pdfEditPages": "Sayfaları düzenle",
@@ -614,7 +614,7 @@
     }
   },
   "pdfInkBurned": "El yazısı belgeye gömüldü",
-"pdfAllPageNotes": "Tüm sayfa notları",
+  "pdfAllPageNotes": "Tüm sayfa notları",
   "pdfNoPageNotes": "Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.",
   "crop": "Kırp",
   "cropApply": "Kırpmayı uygula",
@@ -946,5 +946,41 @@
   "fontGroupSerif": "Kitap",
   "fontGroupMono": "Daktilo",
   "fontGroupHand": "El yazısı",
-  "appFontDefaultSuffix": "varsayılan"
+  "appFontDefaultSuffix": "varsayılan",
+  "pdfSelectOcrRunning": "Metin tanınıyor…",
+  "pdfSelectOcrNone": "Bu sayfada metin bulunamadı",
+  "pdfSelectCopied": "{n} karakter kopyalandı",
+  "@pdfSelectCopied": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "bubbleAdd": "Not balonu bırak",
+  "bubbleAddDone": "Balon bırakmayı bitir",
+  "bubbleCollapse": "Balonu küçült",
+  "bubbleHint": "Buraya notunu yaz…",
+  "bubbleTapToPlace": "Sayfada balonu bırakmak istediğin yere dokun",
+  "aiModelPodcast": "Podcast anlatısı",
+  "listenAiVoice": "Yapay zekâ sesiyle dinle",
+  "listenAiVoiceInfo": "Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.",
+  "listenAiVoiceFailed": "Yapay zekâ seslendirmesi başarısız oldu ({error}). Cihaz sesiyle okunuyor.",
+  "@listenAiVoiceFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsSectionTitle": "Seslendirme",
+  "ttsEngineDevice": "Cihaz sesi",
+  "ttsEngineAi": "Yapay zekâ",
+  "ttsEngineDeviceInfo": "Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.",
+  "ttsEngineAiInfo": "Gemini'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.",
+  "ttsModel": "Seslendirme modeli",
+  "ttsVoice": "Yapay zekâ sesi",
+  "shareAsNote": "Not olarak paylaş",
+  "shareAsNoteInfo": "Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.",
+  "shareAsNotePreparing": "Not paketi hazırlanıyor…"
 }

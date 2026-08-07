@@ -2080,4 +2080,78 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get appFontDefaultSuffix => 'padrão';
+
+  @override
+  String get pdfSelectOcrRunning => 'Metin tanınıyor…';
+
+  @override
+  String get pdfSelectOcrNone => 'Bu sayfada metin bulunamadı';
+
+  @override
+  String pdfSelectCopied(int n) {
+    return '$n karakter kopyalandı';
+  }
+
+  @override
+  String get bubbleAdd => 'Not balonu bırak';
+
+  @override
+  String get bubbleAddDone => 'Balon bırakmayı bitir';
+
+  @override
+  String get bubbleCollapse => 'Balonu küçült';
+
+  @override
+  String get bubbleHint => 'Buraya notunu yaz…';
+
+  @override
+  String get bubbleTapToPlace => 'Sayfada balonu bırakmak istediğin yere dokun';
+
+  @override
+  String get aiModelPodcast => 'Podcast anlatısı';
+
+  @override
+  String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
+
+  @override
+  String get listenAiVoiceInfo =>
+      'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.';
+
+  @override
+  String listenAiVoiceFailed(String error) {
+    return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
+  }
+
+  @override
+  String get ttsSectionTitle => 'Seslendirme';
+
+  @override
+  String get ttsEngineDevice => 'Cihaz sesi';
+
+  @override
+  String get ttsEngineAi => 'Yapay zekâ';
+
+  @override
+  String get ttsEngineDeviceInfo =>
+      'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
+
+  @override
+  String get ttsEngineAiInfo =>
+      'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+
+  @override
+  String get ttsModel => 'Seslendirme modeli';
+
+  @override
+  String get ttsVoice => 'Yapay zekâ sesi';
+
+  @override
+  String get shareAsNote => 'Not olarak paylaş';
+
+  @override
+  String get shareAsNoteInfo =>
+      'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.';
+
+  @override
+  String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 }

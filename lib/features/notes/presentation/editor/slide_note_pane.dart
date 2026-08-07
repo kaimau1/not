@@ -7,6 +7,7 @@ import '../../data/pptx_render.dart';
 import '../../data/slide_deck.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/slide_canvas.dart';
 import '../viewers/slide_viewer_screen.dart';
@@ -61,6 +62,14 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
         widget.onAttachmentChanged(widget.attachment.copyWith(ink: strokes)),
   );
 
+  /// Not balonları burada da düzenlenir (çizimden farkı: balon metindir,
+  /// küçük bölmede de tıklanıp yazılabilir).
+  late final BubbleController _bubbles = BubbleController(
+    initial: widget.attachment.bubbles,
+    onChanged: (list) =>
+        widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
+  );
+
   List<SlideVM>? _slides;
   Object? _error;
 
@@ -76,6 +85,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
     // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
     _ink.replace(widget.attachment.ink);
+    _bubbles.replace(widget.attachment.bubbles);
     // Dosya bu arada senkronlandıysa (başka cihazda eklenmiş sunum indi)
     // yeniden denenir; yoksa pano sonsuza dek "açılamadı" derdi.
     if (_slides == null &&
@@ -105,6 +115,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   @override
   void dispose() {
     _ink.dispose();
+    _bubbles.dispose();
     super.dispose();
   }
 
@@ -127,8 +138,13 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
-    viewerBuilder: (context, host) =>
-        _SlidePaneViewer(slides: _slides, error: _error, ink: _ink, host: host),
+    viewerBuilder: (context, host) => _SlidePaneViewer(
+      slides: _slides,
+      error: _error,
+      ink: _ink,
+      bubbles: _bubbles,
+      host: host,
+    ),
   );
 }
 
@@ -142,12 +158,14 @@ class _SlidePaneViewer extends StatefulWidget {
     required this.slides,
     required this.error,
     required this.ink,
+    required this.bubbles,
     required this.host,
   });
 
   final List<SlideVM>? slides;
   final Object? error;
   final InkController ink;
+  final BubbleController bubbles;
   final PageNoteHost host;
 
   @override
@@ -211,7 +229,8 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
         ),
       );
     }
-    return ColoredBox(
+    return _withBubbleButton(
+      ColoredBox(
       color: Colors.black,
       child: PageView.builder(
         controller: _pages,
@@ -232,12 +251,56 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
                   Positioned.fill(
                     child: InkPageLayer(controller: widget.ink, page: i + 1),
                   ),
+                  Positioned.fill(
+                    child: BubblePageLayer(
+                      controller: widget.bubbles,
+                      page: i + 1,
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
         ),
       ),
+      ),
     );
   }
+
+  /// Görüntüleyicinin üstüne "balon bırak" düğmesi (PDF panosuyla aynı).
+  Widget _withBubbleButton(Widget viewer) => Stack(
+    children: [
+      Positioned.fill(child: viewer),
+      Positioned(
+        top: 4,
+        right: 4,
+        child: AnimatedBuilder(
+          animation: widget.bubbles,
+          builder: (context, _) {
+            final adding = widget.bubbles.adding;
+            final scheme = Theme.of(context).colorScheme;
+            return Material(
+              color: adding
+                  ? scheme.primary
+                  : scheme.surface.withValues(alpha: 0.85),
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: IconButton(
+                tooltip: adding
+                    ? context.l10n.bubbleAddDone
+                    : context.l10n.bubbleAdd,
+                visualDensity: VisualDensity.compact,
+                onPressed: () => widget.bubbles.setAdding(!adding),
+                icon: Icon(
+                  adding ? Icons.chat_bubble : Icons.add_comment_outlined,
+                  size: 18,
+                  color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ],
+  );
 }

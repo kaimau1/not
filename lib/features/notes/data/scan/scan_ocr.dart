@@ -4,6 +4,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
+import '../pdf/ocr_page_text.dart' show OcrWordBox;
+
+export '../pdf/ocr_page_text.dart' show OcrWordBox;
+
 /// Cihaz-içi OCR (Google ML Kit, Latin alfabesi — Türkçe karakterler dahil).
 ///
 /// (dosya-okuyucu projesindeki `OcrService`ten uyarlandı.) İnternet gerekmez;
@@ -38,6 +42,36 @@ class ScanOcr {
           for (final line in block.lines)
             if (line.text.trim().isNotEmpty)
               OcrLine(line.text, line.boundingBox),
+      ];
+    } finally {
+      await recognizer.close();
+    }
+  }
+
+  /// Bir görselden metni SATIR SATIR ve satır içinde SÖZCÜK SÖZCÜK, her
+  /// sözcüğün resim piksel koordinatındaki kutusuyla tanır.
+  ///
+  /// [recognizeImageLines]'tan farkı çözünürlük: taranmış PDF sayfasında
+  /// METİN SEÇEBİLMEK için satır kutusu yetmez — parmağın altındaki kelimeyi
+  /// bulmak, seçimi kelime kelime büyütmek ve tutamacı doğru karaktere
+  /// oturtmak sözcük kutusu ister (bkz. `PdfPageOcr`, `buildOcrPageText`).
+  static Future<List<List<OcrWordBox>>> recognizeImageWordLines(
+    String path,
+  ) async {
+    if (!supported) return const [];
+    final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    try {
+      final result = await recognizer.processImage(
+        InputImage.fromFilePath(path),
+      );
+      return [
+        for (final block in result.blocks)
+          for (final line in block.lines)
+            [
+              for (final element in line.elements)
+                if (element.text.trim().isNotEmpty)
+                  OcrWordBox(element.text, element.boundingBox),
+            ],
       ];
     } finally {
       await recognizer.close();

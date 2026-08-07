@@ -8,6 +8,8 @@ import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
+import '../data/attachment_repository.dart';
+import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
@@ -69,6 +71,7 @@ class _ActionsGrid extends StatelessWidget {
         note.starred ? Icons.star : Icons.star_outline,
       ),
       ('share', l10n.share, Icons.share_outlined),
+      ('share-note', l10n.shareAsNote, Icons.ios_share),
       ('copy', l10n.copy, Icons.copy_outlined),
       ('select', l10n.select, Icons.check_circle_outline),
       ('folder', l10n.moveToFolder, Icons.folder_outlined),
@@ -213,6 +216,29 @@ Future<void> _runNoteAction(
               : note.displayTitle.trim(),
         ),
       );
+    // Notu BAŞKA BİR NOT KULLANICISINA gönderir: `.notpaket` dosyası notu
+    // ekleri, sayfa notları, çizimleri, PDF üzerindeki balonları ve
+    // görünümüyle taşır — alıcıda not aynı şekilde açılır (bkz. NoteShare).
+    case 'share-note':
+      if (!await unlockIfNeeded()) return;
+      if (!context.mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      final busy = l10n.shareAsNotePreparing;
+      messenger.showSnackBar(SnackBar(content: Text(busy)));
+      try {
+        await NoteShare.share(
+          note,
+          attachments: ref.read(attachmentRepositoryProvider),
+          fallbackName: l10n.appName,
+          shareSubject: note.displayTitle.trim().isEmpty
+              ? l10n.appName
+              : note.displayTitle.trim(),
+        );
+      } catch (e) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.genericError('$e'))),
+        );
+      }
     case 'listen':
       // Okuma cihazın TTS'i ile yapılır (model çağrısı yok). Kilitli notun
       // içeriği sesli de okunmasın.

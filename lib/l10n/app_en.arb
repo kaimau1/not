@@ -438,7 +438,7 @@
   "pdfFullScreen": "Open full screen",
   "pdfNoDocument": "This note has no PDF yet",
   "pdfChooseDocument": "Choose PDF",
-    "newSlidesNote": "Add slides, take notes",
+  "newSlidesNote": "Add slides, take notes",
   "slidesNoDocument": "This note has no presentation yet",
   "slidesChooseDocument": "Choose presentation",
   "pdfEditPages": "Edit pages",
@@ -457,7 +457,7 @@
     }
   },
   "pdfInkBurned": "Handwriting burned into the document",
-"pdfAllPageNotes": "All page notes",
+  "pdfAllPageNotes": "All page notes",
   "pdfNoPageNotes": "No page notes yet. Turn to a page and write in the field below.",
   "crop": "Crop",
   "cropApply": "Apply crop",
@@ -740,5 +740,41 @@
   "fontGroupSerif": "Serif",
   "fontGroupMono": "Monospace",
   "fontGroupHand": "Handwriting",
-  "appFontDefaultSuffix": "default"
+  "appFontDefaultSuffix": "default",
+  "pdfSelectOcrRunning": "Recognising text…",
+  "pdfSelectOcrNone": "No text found on this page",
+  "pdfSelectCopied": "{n} characters copied",
+  "@pdfSelectCopied": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "bubbleAdd": "Drop a note bubble",
+  "bubbleAddDone": "Done adding bubbles",
+  "bubbleCollapse": "Collapse bubble",
+  "bubbleHint": "Write your note here…",
+  "bubbleTapToPlace": "Tap the page where you want the bubble",
+  "aiModelPodcast": "Podcast narration",
+  "listenAiVoice": "Listen with AI voice",
+  "listenAiVoiceInfo": "Gemini narrates instead of the device voice: more natural, but each paragraph costs a model call.",
+  "listenAiVoiceFailed": "AI narration failed ({error}). Reading with the device voice.",
+  "@listenAiVoiceFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsSectionTitle": "Narration",
+  "ttsEngineDevice": "Device voice",
+  "ttsEngineAi": "AI",
+  "ttsEngineDeviceInfo": "The built-in device voice reads: free, offline and unlimited in length.",
+  "ttsEngineAiInfo": "Gemini's speech model reads: noticeably more natural, but each paragraph is a model call and it needs your own Gemini key.",
+  "ttsModel": "Speech model",
+  "ttsVoice": "AI voice",
+  "shareAsNote": "Share as note",
+  "shareAsNoteInfo": "Sends the note with its attachments, page notes, drawings and bubbles; the other side opens it exactly the same in the Not app.",
+  "shareAsNotePreparing": "Preparing note package…"
 }

@@ -2160,6 +2160,46 @@ class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
   }
 }
 
+/// Model açılır listesi: "Otomatik" + katalogdaki modeller. Metin modeli
+/// seçicileri ve seslendirme modeli seçicisi AYNI görünümü paylaşsın diye üst
+/// düzeyde durur.
+Widget _modelDropdown({
+  required BuildContext context,
+  required String label,
+  required List<AiModel> models,
+  required String? value,
+  required String autoLabel,
+  required String recommendedLabel,
+  required ValueChanged<String?> onChanged,
+}) {
+  // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
+  // değişmiş olabilir) yine göster; zincir zaten çalışan bir modele düşer.
+  final items = value != null && !models.any((m) => m.id == value)
+      ? [AiModel(id: value, label: value), ...models]
+      : models;
+  return DropdownButtonFormField<String?>(
+    initialValue: value,
+    isExpanded: true,
+    decoration: _aiFieldDecoration(context, label: label),
+    // Seçili öğe kapalı hâlde TEK satıra sığmalı: açık listedeki iki satırlı
+    // (ad + gerekçe) görünüm alana sığmayıp taşma çizgisi veriyordu.
+    selectedItemBuilder: (context) => [
+      Text(autoLabel, overflow: TextOverflow.ellipsis),
+      for (final m in items)
+        Text(_ModelSelectors._friendlyModel(m), overflow: TextOverflow.ellipsis),
+    ],
+    items: [
+      DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
+      for (final m in items)
+        DropdownMenuItem<String?>(
+          value: m.id,
+          child: _ModelSelectors._modelEntry(m, recommendedLabel),
+        ),
+    ],
+    onChanged: onChanged,
+  );
+}
+
 /// Kullanım alanı başına Gemini model seçimi. "Otomatik" = uygulamanın
 /// kendi sıralı zinciri; belirli model seçilirse o ilk sırada denenir.
 class _ModelSelectors extends ConsumerWidget {
@@ -2210,6 +2250,7 @@ class _ModelSelectors extends ConsumerWidget {
       switch (task) {
         AiTask.general => l10n.aiModelChat,
         AiTask.document => l10n.aiModelDocument,
+        AiTask.podcast => l10n.aiModelPodcast,
         AiTask.translate => l10n.aiModelTranslate,
         AiTask.voice => l10n.aiModelVoice,
       };
@@ -2236,43 +2277,6 @@ class _ModelSelectors extends ConsumerWidget {
         .map((p) => p.isEmpty ? p : '${p[0].toUpperCase()}${p.substring(1)}')
         .join(' ');
     return hint == null ? name : '$name — $hint';
-  }
-
-  Widget _modelDropdown({
-    required BuildContext context,
-    required String label,
-    required List<AiModel> models,
-    required String? value,
-    required String autoLabel,
-    required String recommendedLabel,
-    required ValueChanged<String?> onChanged,
-  }) {
-    // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
-    // değişmiş olabilir) yine göster; zincir zaten çalışan bir modele düşer.
-    final items = value != null && !models.any((m) => m.id == value)
-        ? [AiModel(id: value, label: value), ...models]
-        : models;
-    return DropdownButtonFormField<String?>(
-      initialValue: value,
-      isExpanded: true,
-      decoration: _aiFieldDecoration(context, label: label),
-      // Seçili öğe kapalı hâlde TEK satıra sığmalı: açık listedeki iki satırlı
-      // (ad + gerekçe) görünüm alana sığmayıp taşma çizgisi veriyordu.
-      selectedItemBuilder: (context) => [
-        Text(autoLabel, overflow: TextOverflow.ellipsis),
-        for (final m in items)
-          Text(_friendlyModel(m), overflow: TextOverflow.ellipsis),
-      ],
-      items: [
-        DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
-        for (final m in items)
-          DropdownMenuItem<String?>(
-            value: m.id,
-            child: _modelEntry(m, recommendedLabel),
-          ),
-      ],
-      onChanged: onChanged,
-    );
   }
 
   /// Liste satırı: ad + (varsa) ÖNERİLEN rozeti ve tek satırlık gerekçe.
@@ -2543,8 +2547,93 @@ class _AdvancedAiSection extends ConsumerWidget {
           _GeminiKeyEditor(),
           SizedBox(height: 14),
           _ModelSelectors(),
+          SizedBox(height: 14),
+          _TtsSelectors(),
         ],
       ),
+    );
+  }
+}
+
+
+/// Seslendirme (TTS) ayarları: okuma işini cihazın yerleşik sesi mi yoksa
+/// Gemini'nin seslendirme modeli mi yapsın, hangi model ve hangi sesle.
+///
+/// Metin modeli seçicilerinden AYRI bir bölüm: TTS başka bir model ailesidir
+/// (metin modelleri ses üretemez) ve "hangi modelle podcast METNİ yazılsın"
+/// ile "o metni hangi ses OKUSUN" birbirinden bağımsız iki karardır.
+class _TtsSelectors extends ConsumerWidget {
+  const _TtsSelectors();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final engine = ref.watch(ttsEngineProvider);
+    final models = ref.watch(availableTtsModelsProvider).value ?? const [];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.ttsSectionTitle,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 10),
+        SegmentedButton<TtsEngine>(
+          segments: [
+            ButtonSegment(
+              value: TtsEngine.device,
+              icon: const Icon(Icons.smartphone, size: 18),
+              label: Text(l10n.ttsEngineDevice),
+            ),
+            ButtonSegment(
+              value: TtsEngine.gemini,
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(l10n.ttsEngineAi),
+            ),
+          ],
+          selected: {engine},
+          onSelectionChanged: (value) =>
+              ref.read(ttsEngineProvider.notifier).set(value.first),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          engine == TtsEngine.gemini ? l10n.ttsEngineAiInfo : l10n.ttsEngineDeviceInfo,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        // Model ve ses YALNIZ yapay zekâ sesi seçiliyken anlamlı: cihaz
+        // sesinin modeli yok, sesi de sistemden geliyor (üstteki ses seçici).
+        if (engine == TtsEngine.gemini) ...[
+          const SizedBox(height: 14),
+          _modelDropdown(
+            context: context,
+            label: l10n.ttsModel,
+            models: models,
+            value: ref.watch(ttsModelProvider),
+            autoLabel: l10n.aiModelAuto,
+            recommendedLabel: l10n.recommendedModel,
+            onChanged: (value) =>
+                ref.read(ttsModelProvider.notifier).set(value),
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            initialValue: ref.watch(ttsVoiceProvider),
+            isExpanded: true,
+            decoration: _aiFieldDecoration(context, label: l10n.ttsVoice),
+            items: [
+              for (final voice in AppConstants.geminiTtsVoices)
+                DropdownMenuItem<String>(value: voice, child: Text(voice)),
+            ],
+            onChanged: (value) {
+              if (value != null) ref.read(ttsVoiceProvider.notifier).set(value);
+            },
+          ),
+        ],
+      ],
     );
   }
 }

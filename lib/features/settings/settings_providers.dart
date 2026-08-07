@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/constants.dart';
 import '../../core/utils/language_names.dart';
 import '../../core/utils/note_fonts.dart';
 import '../../l10n/generated/app_localizations.dart';
@@ -248,8 +249,14 @@ enum AiTask {
   /// Özet, başlık, etiket, iyileştirme, brifing, sohbet.
   general('model_chat'),
 
-  /// Podcast metni, PDF/not sohbeti — uzun bağlam.
+  /// PDF/not sohbeti — uzun bağlam.
   document('model_document'),
+
+  /// Podcast anlatısı. Belge sohbetinden AYRI: podcast tek seferde uzun ve
+  /// akıcı bir anlatı üretir (kullanıcı isteği — "podcast kısmında Gemini
+  /// modelini seçme ayarı ayrı olsun"), sohbet ise kısa turlarla ilerler;
+  /// biri için doğru olan model öbürü için pahalı ya da yetersiz kalıyor.
+  podcast('model_podcast'),
 
   /// Metin ve konuşma çevirisi.
   translate('model_translate'),
@@ -262,6 +269,85 @@ enum AiTask {
   /// SharedPreferences anahtarı. `general` ve `voice` eski tekil ayarların
   /// anahtarlarını KORUYOR — güncelleyen kullanıcının seçimi kaybolmasın.
   final String prefsKey;
+}
+
+/// Podcast/belge okuma SESLENDİRMESİNİ kim yapacak?
+enum TtsEngine {
+  /// Cihazın yerleşik TTS'i: bedava, çevrimdışı, anında, sınırsız uzunlukta.
+  device('device'),
+
+  /// Gemini'nin seslendirme modeli: belirgin daha doğal ama her paragraf bir
+  /// model çağrısıdır (kota harcar) ve kullanıcının KENDİ Gemini anahtarını
+  /// ister — dahili (Firebase) yol ses döndürmüyor.
+  gemini('gemini');
+
+  const TtsEngine(this.id);
+
+  final String id;
+
+  static TtsEngine fromId(String? id) =>
+      TtsEngine.values.firstWhere((e) => e.id == id, orElse: () => device);
+}
+
+/// Seslendirmeyi cihaz mı Gemini mi yapsın (varsayılan: cihaz — bedava).
+final ttsEngineProvider = NotifierProvider<TtsEngineNotifier, TtsEngine>(
+  TtsEngineNotifier.new,
+);
+
+class TtsEngineNotifier extends Notifier<TtsEngine> {
+  static const _key = 'tts_engine';
+
+  @override
+  TtsEngine build() =>
+      TtsEngine.fromId(ref.watch(sharedPreferencesProvider).getString(_key));
+
+  void set(TtsEngine value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(_key, value.id);
+  }
+}
+
+/// Kullanıcının seçtiği Gemini TTS modeli (null = uygulamanın yerleşik
+/// tercihi). Metin modellerinden AYRI tutulur: TTS ayrı bir model ailesi.
+final ttsModelProvider = NotifierProvider<TtsModelNotifier, String?>(
+  TtsModelNotifier.new,
+);
+
+class TtsModelNotifier extends Notifier<String?> {
+  static const _key = 'model_tts';
+
+  @override
+  String? build() => ref.watch(sharedPreferencesProvider).getString(_key);
+
+  void set(String? value) {
+    state = value;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (value == null) {
+      prefs.remove(_key);
+    } else {
+      prefs.setString(_key, value);
+    }
+  }
+}
+
+/// Gemini TTS'in hazır ses adı (ör. "Kore"). Cihaz TTS'inin ses seçimi ayrı
+/// tutulur (o dil başına saklanıyor, bkz. SpeechOutputController).
+final ttsVoiceProvider = NotifierProvider<TtsVoiceNotifier, String>(
+  TtsVoiceNotifier.new,
+);
+
+class TtsVoiceNotifier extends Notifier<String> {
+  static const _key = 'tts_gemini_voice';
+
+  @override
+  String build() =>
+      ref.watch(sharedPreferencesProvider).getString(_key) ??
+      AppConstants.geminiTtsVoices.first;
+
+  void set(String value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(_key, value);
+  }
 }
 
 /// Kullanıcının seçtiği Gemini modelleri (null = otomatik zincir).

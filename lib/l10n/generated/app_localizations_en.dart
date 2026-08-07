@@ -2063,4 +2063,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appFontDefaultSuffix => 'default';
+
+  @override
+  String get pdfSelectOcrRunning => 'Recognising text…';
+
+  @override
+  String get pdfSelectOcrNone => 'No text found on this page';
+
+  @override
+  String pdfSelectCopied(int n) {
+    return '$n characters copied';
+  }
+
+  @override
+  String get bubbleAdd => 'Drop a note bubble';
+
+  @override
+  String get bubbleAddDone => 'Done adding bubbles';
+
+  @override
+  String get bubbleCollapse => 'Collapse bubble';
+
+  @override
+  String get bubbleHint => 'Write your note here…';
+
+  @override
+  String get bubbleTapToPlace => 'Tap the page where you want the bubble';
+
+  @override
+  String get aiModelPodcast => 'Podcast narration';
+
+  @override
+  String get listenAiVoice => 'Listen with AI voice';
+
+  @override
+  String get listenAiVoiceInfo =>
+      'Gemini narrates instead of the device voice: more natural, but each paragraph costs a model call.';
+
+  @override
+  String listenAiVoiceFailed(String error) {
+    return 'AI narration failed ($error). Reading with the device voice.';
+  }
+
+  @override
+  String get ttsSectionTitle => 'Narration';
+
+  @override
+  String get ttsEngineDevice => 'Device voice';
+
+  @override
+  String get ttsEngineAi => 'AI';
+
+  @override
+  String get ttsEngineDeviceInfo =>
+      'The built-in device voice reads: free, offline and unlimited in length.';
+
+  @override
+  String get ttsEngineAiInfo =>
+      'Gemini\'s speech model reads: noticeably more natural, but each paragraph is a model call and it needs your own Gemini key.';
+
+  @override
+  String get ttsModel => 'Speech model';
+
+  @override
+  String get ttsVoice => 'AI voice';
+
+  @override
+  String get shareAsNote => 'Share as note';
+
+  @override
+  String get shareAsNoteInfo =>
+      'Sends the note with its attachments, page notes, drawings and bubbles; the other side opens it exactly the same in the Not app.';
+
+  @override
+  String get shareAsNotePreparing => 'Preparing note package…';
 }
