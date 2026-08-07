@@ -878,5 +878,11 @@
   "discoverAssistantBody": "Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9'da diş randevusu\" demen yeter.",
   "discoverLockBody": "Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget'a ve AI'a hiç sızmaz.",
   "discoverHiddenBody": "Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.",
-  "discoverExportBody": "Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde)."
+  "discoverExportBody": "Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).",
+  "guestSignInUnavailable": "Hesapsız giriş şu an kapalı: Firebase konsolunda Authentication → Sign-in method → Anonymous açık değil. Google ile giriş yapabilir ya da yönetici bu yöntemi açtıktan sonra yeniden deneyebilirsin.",
+  "googleSignInUnavailable": "Google ile giriş şu an kapalı: Firebase konsolunda Google oturum açma yöntemi etkin değil.",
+  "signInNetworkError": "İnternete ulaşılamadı. Bağlantını kontrol edip yeniden dene.",
+  "signInCanceled": "Giriş iptal edildi.",
+  "cardRichPreview": "Kartlarda biçimli metin",
+  "cardRichPreviewInfo": "Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir."
 }

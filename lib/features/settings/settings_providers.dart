@@ -320,6 +320,33 @@ class QuickCaptureRowNotifier extends Notifier<bool> {
   }
 }
 
+/// Ana ekrandaki kartlarda satır içi biçimlendirme (renk, vurgu, kalın,
+/// altı çizili, boyut) ÇİZİLSİN Mİ?
+///
+/// Varsayılan AÇIK (kullanıcı isteği 2026-08-07): kart önizlemesi eskiden
+/// biçimi [stripRichMarkers] ile söküyordu, yani editörde renklendirilen bir
+/// not ana ekranda düz metin görünüyordu. Kapatan kullanıcı eski, tamamen
+/// tek renk okunan önizlemeye döner (yoğun renkli notlarda ızgara alacalı
+/// görünebiliyor).
+///
+/// Ayar yalnız GÖSTERİMİ etkiler: metin her iki durumda da aynı, işaretli
+/// hâliyle saklanır.
+final cardRichPreviewProvider = NotifierProvider<CardRichPreviewNotifier, bool>(
+  CardRichPreviewNotifier.new,
+);
+
+class CardRichPreviewNotifier extends Notifier<bool> {
+  static const _key = 'card_rich_preview';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 /// Eklerin buluta otomatik senkronu (Storage'a yükleme) için boyut sınırı, MB.
 /// 0 = sınırsız. Sınırı aşan ek cihazda kalır; not metni yine senkronlanır,
 /// yalnız dosyanın kendisi yüklenmez (kota/veri tasarrufu).

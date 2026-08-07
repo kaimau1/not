@@ -538,5 +538,11 @@
   "localAccountInfo": "Twoje notatki pozostają wyłącznie na tym urządzeniu: nie otworzysz ich gdzie indziej, znikną po odinstalowaniu aplikacji, a wbudowane AI jest wyłączone. W każdej chwili możesz połączyć konto Google — notatki przejdą razem z Tobą.",
   "localAccountBadge": "Konto lokalne",
   "linkGoogleAccount": "Połącz konto Google",
-  "accountLinked": "Konto Google jest połączone. Twoje notatki mają teraz kopię zapasową."
+  "accountLinked": "Konto Google jest połączone. Twoje notatki mają teraz kopię zapasową.",
+  "guestSignInUnavailable": "Logowanie bez Google jest wyłączone: logowanie anonimowe nie jest włączone w konsoli Firebase. Zaloguj się przez Google lub spróbuj ponownie, gdy administrator je włączy.",
+  "googleSignInUnavailable": "Logowanie Google jest wyłączone: dostawca Google nie jest włączony w konsoli Firebase.",
+  "signInNetworkError": "Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.",
+  "signInCanceled": "Logowanie anulowane.",
+  "cardRichPreview": "Sformatowany tekst na kartach",
+  "cardRichPreviewInfo": "Kolory, wyróżnienia, pogrubienia i podkreślenia z notatek widać też na kartach ekranu głównego. Po wyłączeniu karty pokazują zwykły tekst."
 }

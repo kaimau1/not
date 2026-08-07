@@ -538,5 +538,11 @@
   "localAccountInfo": "Le tue note restano solo su questo dispositivo: non possono essere aperte altrove, spariscono se disinstalli l'app e l'IA integrata è disattivata. Puoi collegare un account Google in qualsiasi momento — le tue note verranno mantenute.",
   "localAccountBadge": "Account locale",
   "linkGoogleAccount": "Collega un account Google",
-  "accountLinked": "Il tuo account Google è collegato. Ora le tue note sono salvate."
+  "accountLinked": "Il tuo account Google è collegato. Ora le tue note sono salvate.",
+  "guestSignInUnavailable": "L'accesso senza Google è disattivato: l'accesso anonimo non è abilitato nella console Firebase. Accedi con Google o riprova quando un amministratore lo abiliterà.",
+  "googleSignInUnavailable": "L'accesso con Google è disattivato: il provider Google non è abilitato nella console Firebase.",
+  "signInNetworkError": "Impossibile raggiungere internet. Controlla la connessione e riprova.",
+  "signInCanceled": "Accesso annullato.",
+  "cardRichPreview": "Testo formattato sulle schede",
+  "cardRichPreviewInfo": "Colori, evidenziazioni, grassetto e sottolineature delle tue note appaiono anche sulle schede della schermata principale. Se disattivato, le schede mostrano testo semplice."
 }

@@ -1916,4 +1916,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Hesapsız giriş şu an kapalı: Firebase konsolunda Authentication → Sign-in method → Anonymous açık değil. Google ile giriş yapabilir ya da yönetici bu yöntemi açtıktan sonra yeniden deneyebilirsin.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google ile giriş şu an kapalı: Firebase konsolunda Google oturum açma yöntemi etkin değil.';
+
+  @override
+  String get signInNetworkError =>
+      'İnternete ulaşılamadı. Bağlantını kontrol edip yeniden dene.';
+
+  @override
+  String get signInCanceled => 'Giriş iptal edildi.';
+
+  @override
+  String get cardRichPreview => 'Kartlarda biçimli metin';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.';
 }

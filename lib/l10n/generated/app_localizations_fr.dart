@@ -1936,4 +1936,26 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'La connexion sans Google est désactivée : la connexion anonyme n\'est pas activée dans la console Firebase. Connecte-toi avec Google ou réessaie une fois qu\'un administrateur l\'aura activée.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'La connexion Google est désactivée : le fournisseur Google n\'est pas activé dans la console Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'Internet est injoignable. Vérifie ta connexion et réessaie.';
+
+  @override
+  String get signInCanceled => 'Connexion annulée.';
+
+  @override
+  String get cardRichPreview => 'Texte mis en forme sur les cartes';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Les couleurs, surlignages, gras et soulignements de tes notes apparaissent aussi sur les cartes de l\'écran d\'accueil. Désactivé, les cartes affichent du texte brut.';
 }

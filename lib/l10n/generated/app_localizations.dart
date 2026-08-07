@@ -3647,6 +3647,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).'**
   String get discoverExportBody;
+
+  /// No description provided for @guestSignInUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesapsız giriş şu an kapalı: Firebase konsolunda Authentication → Sign-in method → Anonymous açık değil. Google ile giriş yapabilir ya da yönetici bu yöntemi açtıktan sonra yeniden deneyebilirsin.'**
+  String get guestSignInUnavailable;
+
+  /// No description provided for @googleSignInUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google ile giriş şu an kapalı: Firebase konsolunda Google oturum açma yöntemi etkin değil.'**
+  String get googleSignInUnavailable;
+
+  /// No description provided for @signInNetworkError.
+  ///
+  /// In tr, this message translates to:
+  /// **'İnternete ulaşılamadı. Bağlantını kontrol edip yeniden dene.'**
+  String get signInNetworkError;
+
+  /// No description provided for @signInCanceled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giriş iptal edildi.'**
+  String get signInCanceled;
+
+  /// No description provided for @cardRichPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlarda biçimli metin'**
+  String get cardRichPreview;
+
+  /// No description provided for @cardRichPreviewInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.'**
+  String get cardRichPreviewInfo;
 }
 
 class _AppLocalizationsDelegate

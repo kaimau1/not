@@ -538,5 +538,11 @@
   "localAccountInfo": "メモはこの端末にのみ保存されます。他の端末では開けず、アプリを削除すると失われ、内蔵 AI は無効です。Google アカウントはいつでも連携でき、その際メモはそのまま引き継がれます。",
   "localAccountBadge": "ローカルアカウント",
   "linkGoogleAccount": "Google アカウントを連携",
-  "accountLinked": "Google アカウントを連携しました。これでメモはバックアップされます。"
+  "accountLinked": "Google アカウントを連携しました。これでメモはバックアップされます。",
+  "guestSignInUnavailable": "Google なしのログインは現在オフです: Firebase コンソールで匿名ログインが有効になっていません。Google でログインするか、管理者が有効にしてからもう一度お試しください。",
+  "googleSignInUnavailable": "Google ログインは現在オフです: Firebase コンソールで Google プロバイダが有効になっていません。",
+  "signInNetworkError": "インターネットに接続できませんでした。接続を確認してもう一度お試しください。",
+  "signInCanceled": "ログインをキャンセルしました。",
+  "cardRichPreview": "カードに書式付きテキストを表示",
+  "cardRichPreviewInfo": "メモの色・ハイライト・太字・下線がホーム画面のカードにも表示されます。オフにするとカードはプレーンテキストになります。"
 }

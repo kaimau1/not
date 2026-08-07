@@ -2,8 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../settings/settings_providers.dart';
 import '../data/auth_repository.dart';
+import 'auth_errors.dart';
 import 'auth_providers.dart';
+
+/// İLK AÇILIŞTA giriş ekranı GÖSTERİLMEZ (kullanıcı isteği 2026-08-07:
+/// "uygulama ilk açılışında ilk giriş itiyor onu kaldıralım").
+///
+/// Uygulama daha ilk karede sessizce yerel (anonim) oturum açar ve doğrudan
+/// notlara girer; Google hesabı isteyen sonradan Ayarlar → Hesap'tan bağlar
+/// (uid aynı kaldığı için notlar olduğu yerde kalır, bkz.
+/// [AuthRepository.linkWithGoogle]).
+///
+/// Bayrak prefs'te: sessiz giriş YALNIZ BİR KEZ denenir. Denemesi
+/// kaydedilmeseydi, hesabından çıkan kullanıcı giriş ekranına döner dönmez
+/// yeniden anonim oturuma sokulur, Google ile giremezdi.
+const _autoGuestTriedKey = 'auto_guest_signin_tried';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,11 +30,47 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _busy = false;
 
-  Future<void> _signIn() =>
-      _run((auth) => auth.signInWithGoogle());
+  /// Sessiz ilk giriş sürüyor: ekranda düğme yerine yalnız açılış göstergesi
+  /// durur. Başarılıysa bu ekran zaten bir sonraki karede kapanır.
+  bool _autoSigningIn = false;
+
+  /// Sessiz girişin (ya da elle denemenin) hatası; düğmelerin altında kalıcı
+  /// olarak yazar. SnackBar yetmiyordu: sessiz giriş başarısız olduğunda
+  /// kullanıcı ekrana yeni gelmiş oluyor ve mesaj o gelmeden kayboluyordu.
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeAutoGuestSignIn();
+  }
+
+  Future<void> _maybeAutoGuestSignIn() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (prefs.getBool(_autoGuestTriedKey) ?? false) return;
+    // Deneme, SONUCUNDAN bağımsız olarak işaretlenir: anonim giriş kapalıysa
+    // her açılışta yeniden denemek açılışı gereksiz yere geciktirirdi.
+    await prefs.setBool(_autoGuestTriedKey, true);
+    if (!mounted) return;
+    setState(() => _autoSigningIn = true);
+    try {
+      await ref.read(authRepositoryProvider).signInAnonymously();
+    } catch (e) {
+      // Sessiz giriş tutmadı (en sık: Firebase konsolunda "Anonymous"
+      // sağlayıcısı kapalı → admin-restricted-operation). Ekran normal giriş
+      // ekranı olarak açılır, sebep de altında yazar.
+      if (mounted) {
+        setState(() => _error = authErrorText(context.l10n, e, guest: true));
+      }
+    } finally {
+      if (mounted) setState(() => _autoSigningIn = false);
+    }
+  }
+
+  Future<void> _signIn() => _run((auth) => auth.signInWithGoogle());
 
   /// "Hesapsız devam et": Firebase anonim girişi. Google hesabı istemeden
-  /// anında not almaya başlanır; kısıtlar [_localAccountNote]'ta yazılı.
+  /// anında not almaya başlanır; kısıtlar [localAccountInfo]'da yazılı.
   ///
   /// Neden bu var: Play'de ilk açılışta hesap zorunluluğu en büyük kurulum
   /// kaybı sebeplerinden biri. Anonim giriş uid ürettiği için veri katmanı
@@ -27,17 +78,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   /// aynı uid gerçek hesaba yükseltilir ve notlar taşınmaya gerek kalmadan
   /// yerinde kalır.
   Future<void> _continueLocal() =>
-      _run((auth) => auth.signInAnonymously());
+      _run((auth) => auth.signInAnonymously(), guest: true);
 
-  Future<void> _run(Future<void> Function(AuthRepository) action) async {
-    setState(() => _busy = true);
+  Future<void> _run(
+    Future<void> Function(AuthRepository) action, {
+    bool guest = false,
+  }) async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       await action(ref.read(authRepositoryProvider));
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.loginError(e.toString()))),
-        );
+      // Hesap seçiciyi kapatmak hata değildir; sessizce geçilir.
+      if (mounted && !isSignInCancel(e)) {
+        setState(() => _error = authErrorText(context.l10n, e, guest: guest));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -50,65 +106,85 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = context.l10n;
 
     return Scaffold(
+      // Kaydırılabilir: hata satırı eklenince (ve küçük/yatay ekranlarda)
+      // sütun ekrana sığmıyor, taşma çizgileri çıkıyordu.
       body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 380),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(
-                  Icons.sticky_note_2_rounded,
-                  size: 64,
-                  color: scheme.primary,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  l10n.appName,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(
+                    Icons.sticky_note_2_rounded,
+                    size: 64,
+                    color: scheme.primary,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.loginTagline,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  const SizedBox(height: 20),
+                  Text(
+                    l10n.appName,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 40),
-                FilledButton.icon(
-                  onPressed: _busy ? null : _signIn,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.loginTagline,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
-                  icon: _busy
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.login_rounded),
-                  label: Text(l10n.signInWithGoogle),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _busy ? null : _continueLocal,
-                  child: Text(l10n.continueWithoutAccount),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.localAccountInfo,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+                  const SizedBox(height: 40),
+                  // Sessiz ilk giriş sürerken hiçbir düğme çizilmez: kullanıcı
+                  // bir an için görüp dokunamadığı bir giriş ekranı görmesin.
+                  if (_autoSigningIn)
+                    const Center(child: CircularProgressIndicator())
+                  else ...[
+                    FilledButton.icon(
+                      onPressed: _busy ? null : _signIn,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      icon: _busy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.login_rounded),
+                      label: Text(l10n.signInWithGoogle),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: _busy ? null : _continueLocal,
+                      child: Text(l10n.continueWithoutAccount),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.localAccountInfo,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        _error!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                      ),
+                    ],
+                  ],
+                ],
+              ),
             ),
           ),
         ),

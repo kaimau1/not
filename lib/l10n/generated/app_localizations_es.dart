@@ -1932,4 +1932,26 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'El acceso sin Google está desactivado: el inicio de sesión anónimo no está habilitado en la consola de Firebase. Inicia sesión con Google o inténtalo cuando un administrador lo habilite.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'El acceso con Google está desactivado: el proveedor de Google no está habilitado en la consola de Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'No se pudo conectar a internet. Comprueba tu conexión e inténtalo de nuevo.';
+
+  @override
+  String get signInCanceled => 'Inicio de sesión cancelado.';
+
+  @override
+  String get cardRichPreview => 'Texto con formato en las tarjetas';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Los colores, resaltados, negritas y subrayados de tus notas también se ven en las tarjetas de la pantalla principal. Si se desactiva, las tarjetas muestran texto sin formato.';
 }

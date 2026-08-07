@@ -1910,4 +1910,26 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'تسجيل الدخول بدون Google متوقف حاليًا: تسجيل الدخول المجهول غير مُفعَّل في وحدة تحكم Firebase. سجّل الدخول بحساب Google أو أعد المحاولة بعد تفعيله من المشرف.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'تسجيل الدخول بحساب Google متوقف حاليًا: مزوّد Google غير مُفعَّل في وحدة تحكم Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'تعذّر الوصول إلى الإنترنت. تحقّق من اتصالك وحاول مرة أخرى.';
+
+  @override
+  String get signInCanceled => 'تم إلغاء تسجيل الدخول.';
+
+  @override
+  String get cardRichPreview => 'نص منسّق على البطاقات';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'تظهر ألوان ملاحظاتك وتظليلها والخط العريض والتسطير على بطاقات الشاشة الرئيسية أيضًا. عند الإيقاف تعرض البطاقات نصًا عاديًا.';
 }
