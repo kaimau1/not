@@ -831,6 +831,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceCapturePlainNote => 'Обычная заметка';
 
   @override
+  String get voiceCloseTitle => 'Ваша запись сохранена';
+
+  @override
+  String get voiceCloseKeepTalking => 'Продолжить говорить';
+
+  @override
   String get voiceCaptureRestart => 'Записать снова';
 
   @override

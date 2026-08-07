@@ -812,6 +812,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get voiceCapturePlainNote => 'そのままメモ';
 
   @override
+  String get voiceCloseTitle => '入力した内容は残っています';
+
+  @override
+  String get voiceCloseKeepTalking => '話し続ける';
+
+  @override
   String get voiceCaptureRestart => '再録音';
 
   @override

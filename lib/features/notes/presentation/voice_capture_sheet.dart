@@ -108,12 +108,12 @@ Future<VoiceCaptureResult?> showVoiceCaptureSheet(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
-  // Bariyer dokunuşu levhayı KAPATMAZ: 10 dakikalık konuşmanın dökümü ve
-  // korunan ses kaydı, klavye açıkken yanlış bir dokunuşla onaysız çöpe
-  // gidiyordu. Kapanış yalnız levhanın kendi düğmelerinden ve (içerik varsa
-  // kaydederek çıkan) geri tuşundan — bkz. _VoiceCaptureSheet'teki PopScope.
-  isDismissible: false,
-  enableDrag: false,
+  // Karartıya dokunuş ve aşağı sürükleme AÇIK: levhanın tek çıkışı sol
+  // üstteki çarpı olduğu sürece kapatmak zahmetliydi. İçerik kaybı riski
+  // kapıları kilitleyerek değil, çıkarken SORARAK karşılanıyor — dört
+  // kapanış yolu da `_askBeforeClosing`'e düşüyor (bkz. PopScope).
+  isDismissible: true,
+  enableDrag: true,
   backgroundColor: Theme.of(context).colorScheme.surface,
   barrierColor: Colors.black.withValues(alpha: 0.32),
   shape: const RoundedRectangleBorder(
@@ -399,7 +399,84 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     ));
   }
 
+  /// Levhayı kapatma isteğinin ORTAK kapısı: sol üstteki çarpı, geri tuşu,
+  /// aşağı sürükleme ve karartıya dokunuş hepsi buraya düşer.
+  ///
+  /// KÖK NEDEN (kullanıcı: "sesle yazmanın edit sayfası sadece sol üstteki
+  /// çarpıdan kapanıyor, kullanışsız bu şekilde; ama yanlışlıkla kapatmaya da
+  /// çözüm bulmalıyız, kişi baştan söylemesin her şeyi"): levha
+  /// `isDismissible: false, enableDrag: false` ile açılıyordu ÇÜNKÜ tek
+  /// koruma buydu — 10 dakikalık bir dökümü yanlış bir dokunuşla kaybetmek
+  /// kabul edilemezdi. Ama bedeli, kapatmanın tek ve uzak bir düğmeye
+  /// bağlanmasıydı. Doğru çözüm kapıları KAPATMAK değil, kapıdan çıkarken
+  /// SORMAK: artık dört yoldan da kapanıyor ve içerik varsa ne olacağını
+  /// kullanıcı seçiyor — konuşulanlar hiçbir dalda sessizce çöpe gitmiyor.
+  Future<void> _askBeforeClosing() async {
+    final l10n = context.l10n;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Text(
+                l10n.voiceCloseTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.note_add_outlined),
+              title: Text(
+                widget.target == VoiceCaptureTarget.editor
+                    ? l10n.voiceCaptureAddToNote
+                    : l10n.voiceCapturePlainNote,
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'save'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.mic_none),
+              title: Text(l10n.voiceCloseKeepTalking),
+              onTap: () => Navigator.pop(sheetContext, 'stay'),
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(sheetContext).colorScheme.error,
+              ),
+              title: Text(
+                l10n.delete,
+                style: TextStyle(
+                  color: Theme.of(sheetContext).colorScheme.error,
+                ),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'discard'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!mounted) return;
+    switch (choice) {
+      case 'save':
+        _submit(VoiceCaptureAction.insert);
+      case 'discard':
+        await _teardown();
+        if (mounted) Navigator.pop(context);
+      // 'stay' ve levhayı kapatmak (null): hiçbir şey olmaz, metin durur.
+    }
+  }
+
   Future<void> _cancel() async {
+    // Çarpı da öteki kapanış yollarıyla AYNI kapıdan geçer: içerik varken
+    // sessizce silmez, yoksa hiç sormadan kapanır.
+    if (_hasContent && _phase == _Phase.ready) {
+      await _askBeforeClosing();
+      return;
+    }
     await _teardown();
     if (mounted) Navigator.pop(context);
   }
@@ -460,11 +537,13 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
       canPop: !_hasContent,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        // Dinlerken kapatma isteği önce DİNLEMEYİ bitirir: konuşulan metin
+        // gözden geçirmeye taşınır, hiçbir şey kaybolmaz.
         if (_phase == _Phase.listening) {
           _finish();
-        } else if (_phase == _Phase.ready) {
-          _submit(VoiceCaptureAction.insert);
+          return;
         }
+        if (_phase == _Phase.ready) _askBeforeClosing();
       },
       child: _body(context),
     );

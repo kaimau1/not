@@ -824,6 +824,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceCapturePlainNote => 'ملاحظة عادية';
 
   @override
+  String get voiceCloseTitle => 'ما أمليته لا يزال موجودًا';
+
+  @override
+  String get voiceCloseKeepTalking => 'متابعة التحدث';
+
+  @override
   String get voiceCaptureRestart => 'تسجيل مجددًا';
 
   @override

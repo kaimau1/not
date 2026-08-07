@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Utwórz nową notatkę",
   "voiceCaptureAiNote": "Notatka AI",
   "voiceCapturePlainNote": "Zwykła notatka",
+  "voiceCloseTitle": "Twoje dyktowanie jest zapisane",
+  "voiceCloseKeepTalking": "Mów dalej",
   "voiceCaptureRestart": "Nagrywaj ponownie",
   "voiceChipSummarizeAdd": "Dodaj jako podsumowanie",
   "voiceChipSummarizeSave": "Zapisz jako podsumowanie",

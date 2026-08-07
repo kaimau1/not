@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "إنشاء ملاحظة جديدة",
   "voiceCaptureAiNote": "ملاحظة ذكية",
   "voiceCapturePlainNote": "ملاحظة عادية",
+  "voiceCloseTitle": "ما أمليته لا يزال موجودًا",
+  "voiceCloseKeepTalking": "متابعة التحدث",
   "voiceCaptureRestart": "تسجيل مجددًا",
   "voiceChipSummarizeAdd": "إضافة كملخص",
   "voiceChipSummarizeSave": "حفظ كملخص",

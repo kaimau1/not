@@ -833,6 +833,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceCapturePlainNote => 'Catatan biasa';
 
   @override
+  String get voiceCloseTitle => 'Hasil dikte masih ada';
+
+  @override
+  String get voiceCloseKeepTalking => 'Lanjut bicara';
+
+  @override
   String get voiceCaptureRestart => 'Yeniden kaydet';
 
   @override

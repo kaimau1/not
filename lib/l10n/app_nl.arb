@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Create new note",
   "voiceCaptureAiNote": "AI-notitie",
   "voiceCapturePlainNote": "Gewone notitie",
+  "voiceCloseTitle": "Je dictaat staat er nog",
+  "voiceCloseKeepTalking": "Doorgaan met praten",
   "voiceCaptureRestart": "Record again",
   "voiceChipSummarizeAdd": "Add as summary",
   "voiceChipSummarizeSave": "Save as summary",

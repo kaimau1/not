@@ -673,21 +673,43 @@ class WrapTextController extends TextEditingController {
   /// kutuları EKRANDA da görünüyordu. Kutuyu hiç yazmamak hem çöpü bitiriyor
   /// hem de kalıbı genişletip `__init__` gibi gerçek metni kırpma riskini
   /// doğurmuyor.
-  RichFormat? _pending;
-  int? _pendingIndex;
+  /// BİRDEN ÇOK biçim aynı anda bekleyebilir (kullanıcı: "biçim alanı
+  /// Keep'teki gibi olmalı… birden çok açılabilmeli, açılanlarla yazmaya
+  /// devam etmeli"). Keep'te B, I ve U aynı anda basılı kalır ve yazılan
+  /// metin üçünü birden alır. Ekleme sırası KORUNUR (LinkedHashMap): önce
+  /// basılan biçim dışta sarar, böylece işaretler düzgün iç içe geçer.
+  final Map<RichFormat, int?> _pending = {};
   int? _pendingAt;
 
-  bool get hasPendingFormat => _pending != null;
+  bool get hasPendingFormat => _pending.isNotEmpty;
 
-  void setPendingFormat(RichFormat format, int? index) {
-    _pending = format;
-    _pendingIndex = index;
-    _pendingAt = selection.baseOffset;
+  /// Bekleyen biçimler — şerit hangi düğmeyi "basılı" göstereceğini buradan
+  /// da okur (metinden gelen biçimlerin YANINDA).
+  Map<RichFormat, int?> get pendingFormats => Map.unmodifiable(_pending);
+
+  /// Biçmi bekleyenlere ekler, zaten bekliyorsa KALDIRIR (aç/kapa).
+  ///
+  /// İmleç yer değiştirmişse önceki bekleyenler düşer: bekleme "buradan
+  /// itibaren yazılacak metin" demektir, imleç taşınınca niyet de biter.
+  void togglePendingFormat(RichFormat format, int? index) {
+    final caret = selection.baseOffset;
+    if (_pendingAt != caret) {
+      _pending.clear();
+      _pendingAt = caret;
+    }
+    if (_pending.containsKey(format) && _pending[format] == index) {
+      _pending.remove(format);
+    } else {
+      _pending[format] = index;
+    }
+    // Şerit denetleyiciyi dinliyor: basış ANINDA düğme yanmalı
+    // ("basınca direkt aktifleştiği belli olmalı").
+    notifyListeners();
   }
 
   void clearPendingFormat() {
-    _pending = null;
-    _pendingIndex = null;
+    if (_pending.isEmpty && _pendingAt == null) return;
+    _pending.clear();
     _pendingAt = null;
   }
 
@@ -698,9 +720,8 @@ class WrapTextController extends TextEditingController {
   /// bittiğinde yapılır ve o ana kadar yazılan her şey birlikte sarılır
   /// ("biçimli yazmaya devam et" davranışı, Word'deki gibi).
   TextEditingValue? _wrapPending(TextEditingValue next) {
-    final format = _pending;
     final at = _pendingAt;
-    if (format == null || at == null) return null;
+    if (_pending.isEmpty || at == null) return null;
     if (next.composing.isValid && !next.composing.isCollapsed) return null;
     final caret = next.selection.baseOffset;
     // İmleç geri gitti, seçim yapıldı ya da metin kısaldı: niyet düştü.
@@ -713,17 +734,24 @@ class WrapTextController extends TextEditingController {
     }
     final typed = next.text.substring(at, caret);
     if (typed.isEmpty) return null;
-    final marker = format.marker;
-    final index = _pendingIndex;
-    final prefix = richFormatTakesIndex(format) && index != null
-        ? '$marker$index:'
-        : marker;
+    // Bekleyenler İÇ İÇE sarılır; önce basılan en DIŞTA kalır. İmleç bütün
+    // kapanış işaretlerinin ÖNÜNDE durur: yazmaya devam etmek biçimlerin
+    // hepsini sürdürür (Keep davranışı), kutuların dışına düşmez.
+    var body = typed;
+    var prefixLength = 0;
+    for (final entry in _pending.entries.toList().reversed) {
+      final marker = entry.key.marker;
+      final index = entry.value;
+      final prefix = richFormatTakesIndex(entry.key) && index != null
+          ? '$marker$index:'
+          : marker;
+      body = '$prefix$body$marker';
+      prefixLength += prefix.length;
+    }
     clearPendingFormat();
     return TextEditingValue(
-      text: next.text.replaceRange(at, caret, '$prefix$typed$marker'),
-      // İmleç KAPANIŞ işaretinin önünde kalır: yazmaya devam etmek biçimi
-      // sürdürür, kutunun dışına düşmez.
-      selection: TextSelection.collapsed(offset: caret + prefix.length),
+      text: next.text.replaceRange(at, caret, body),
+      selection: TextSelection.collapsed(offset: caret + prefixLength),
     );
   }
 

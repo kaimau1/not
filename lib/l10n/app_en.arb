@@ -271,6 +271,8 @@
   "voiceCaptureCreateNote": "Create new note",
   "voiceCaptureAiNote": "AI note",
   "voiceCapturePlainNote": "Plain note",
+  "voiceCloseTitle": "Your dictation is still here",
+  "voiceCloseKeepTalking": "Keep talking",
   "voiceCaptureRestart": "Record again",
   "voiceChipSummarizeAdd": "Add as summary",
   "voiceChipSummarizeSave": "Save as summary",

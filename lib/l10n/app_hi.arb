@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "नया नोट बनाएं",
   "voiceCaptureAiNote": "AI नोट",
   "voiceCapturePlainNote": "सादा नोट",
+  "voiceCloseTitle": "आपका डिक्टेशन अब भी यहाँ है",
+  "voiceCloseKeepTalking": "बोलना जारी रखें",
   "voiceCaptureRestart": "फिर से रिकॉर्ड करें",
   "voiceChipSummarizeAdd": "सारांश के रूप में जोड़ें",
   "voiceChipSummarizeSave": "सारांश के रूप में सहेजें",

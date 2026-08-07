@@ -386,6 +386,8 @@
   "voiceCaptureCreateNote": "Yeni not oluştur",
   "voiceCaptureAiNote": "AI not",
   "voiceCapturePlainNote": "Düz not",
+  "voiceCloseTitle": "Konuştukların duruyor",
+  "voiceCloseKeepTalking": "Konuşmaya devam et",
   "voiceCaptureRestart": "Baştan dinle",
   "voiceChipSummarizeAdd": "Özetleyerek ekle",
   "voiceChipSummarizeSave": "Özetleyerek kaydet",

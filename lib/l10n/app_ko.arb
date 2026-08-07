@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "새 노트 생성",
   "voiceCaptureAiNote": "AI 노트",
   "voiceCapturePlainNote": "일반 메모",
+  "voiceCloseTitle": "받아쓴 내용이 남아 있습니다",
+  "voiceCloseKeepTalking": "계속 말하기",
   "voiceCaptureRestart": "다시 녹음",
   "voiceChipSummarizeAdd": "요약으로 추가",
   "voiceChipSummarizeSave": "요약으로 저장",

@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Yeni not oluştur",
   "voiceCaptureAiNote": "Catatan AI",
   "voiceCapturePlainNote": "Catatan biasa",
+  "voiceCloseTitle": "Hasil dikte masih ada",
+  "voiceCloseKeepTalking": "Lanjut bicara",
   "voiceCaptureRestart": "Yeniden kaydet",
   "voiceChipSummarizeAdd": "Özet olarak ekle",
   "voiceChipSummarizeSave": "Özet olarak kaydet",
