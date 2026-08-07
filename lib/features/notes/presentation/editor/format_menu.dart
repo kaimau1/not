@@ -19,6 +19,17 @@ bool applyRichFormat(
   RichFormat format, {
   int? colorIndex,
 }) {
+  if (!controller.selection.isValid) return false;
+  // KÖK NEDEN: bekleyen koşu ÖNCE metne işlenir (eskiden aşağıda
+  // `clearPendingFormat()` ile ÇÖPE ATILIYORDU). Kullanıcı "kalın"a basıp
+  // yazdıktan sonra bir parçayı seçip başka bir biçim verdiğinde, ekranda
+  // kalın gördüğü metin bir anda düzleşiyordu.
+  //
+  // Flush BURADA, konumlar okunmadan ÖNCE: sarma metni uzattığı için
+  // sonrasında okunan `start`/`end` işaretlerin içine düşerdi.
+  if (!controller.selection.isCollapsed && controller.hasPendingFormat) {
+    controller.flushPendingFormat();
+  }
   final selection = controller.selection;
   if (!selection.isValid) return false;
   final display = controller.text;

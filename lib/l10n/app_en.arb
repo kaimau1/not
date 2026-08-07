@@ -441,6 +441,22 @@
     "newSlidesNote": "Add slides, take notes",
   "slidesNoDocument": "This note has no presentation yet",
   "slidesChooseDocument": "Choose presentation",
+  "pdfEditPages": "Edit pages",
+  "pdfDeletePages": "Delete selected pages",
+  "pdfRotatePages": "Rotate",
+  "pdfBurnInk": "Burn handwriting into the document",
+  "pdfApplyChanges": "Apply changes",
+  "pdfCannotDeleteAllPages": "You can't delete every page",
+  "pdfPagesHint": "Tap a page to select it. Page notes travel with their page; a deleted page's note is hidden but kept in your data.",
+  "pdfEditFailed": "Couldn't edit the PDF: {error}",
+  "@pdfEditFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfInkBurned": "Handwriting burned into the document",
 "pdfAllPageNotes": "All page notes",
   "pdfNoPageNotes": "No page notes yet. Turn to a page and write in the field below.",
   "crop": "Crop",

@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+
+import '../../../../core/utils/local_file.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -23,6 +23,7 @@ class PdfNotePane extends StatefulWidget {
     required this.attachment,
     required this.onPageNoteChanged,
     required this.onAttachmentChanged,
+    this.onEditPages,
     this.textStyle,
     this.richTheme,
     this.onFieldFocused,
@@ -35,6 +36,10 @@ class PdfNotePane extends StatefulWidget {
 
   /// Tam ekran görüntüleyicide yapılan çizim ekle birlikte geri gelir.
   final ValueChanged<Attachment> onAttachmentChanged;
+
+  /// Sayfa yöneticisini açar (sil/döndür/sırala + çizimi belgeye gömme).
+  /// null = düzenleme kapalı.
+  final Future<void> Function(int pageCount)? onEditPages;
 
   final TextStyle? textStyle;
   final RichTextTheme? richTheme;
@@ -86,6 +91,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
 
   @override
   Widget build(BuildContext context) => PageNotePane(
+    onEditPages: widget.onEditPages,
     noteOf: widget.noteOf,
     attachment: widget.attachment,
     onPageNoteChanged: widget.onPageNoteChanged,
@@ -141,7 +147,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     final attachment = widget.attachment;
     final hasLocal =
         attachment.localPath.isNotEmpty &&
-        File(attachment.localPath).existsSync();
+        localFileExists(attachment.localPath);
     final params = PdfViewerParams(
       onPageChanged: (page) {
         if (page != null) widget.host.onPageChanged(page);

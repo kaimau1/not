@@ -2502,6 +2502,60 @@ abstract class AppLocalizations {
   /// **'Sunum seç'**
   String get slidesChooseDocument;
 
+  /// No description provided for @pdfEditPages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaları düzenle'**
+  String get pdfEditPages;
+
+  /// No description provided for @pdfDeletePages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili sayfaları sil'**
+  String get pdfDeletePages;
+
+  /// No description provided for @pdfRotatePages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Döndür'**
+  String get pdfRotatePages;
+
+  /// No description provided for @pdfBurnInk.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısını belgeye göm'**
+  String get pdfBurnInk;
+
+  /// No description provided for @pdfApplyChanges.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklikleri uygula'**
+  String get pdfApplyChanges;
+
+  /// No description provided for @pdfCannotDeleteAllPages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm sayfalar silinemez'**
+  String get pdfCannotDeleteAllPages;
+
+  /// No description provided for @pdfPagesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.'**
+  String get pdfPagesHint;
+
+  /// No description provided for @pdfEditFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF düzenlenemedi: {error}'**
+  String pdfEditFailed(String error);
+
+  /// No description provided for @pdfInkBurned.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı belgeye gömüldü'**
+  String get pdfInkBurned;
+
   /// No description provided for @pdfAllPageNotes.
   ///
   /// In tr, this message translates to:

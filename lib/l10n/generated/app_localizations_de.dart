@@ -1309,6 +1309,36 @@ class AppLocalizationsDe extends AppLocalizations {
   String get slidesChooseDocument => 'Sunum seç';
 
   @override
+  String get pdfEditPages => 'Sayfaları düzenle';
+
+  @override
+  String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfRotatePages => 'Döndür';
+
+  @override
+  String get pdfBurnInk => 'El yazısını belgeye göm';
+
+  @override
+  String get pdfApplyChanges => 'Değişiklikleri uygula';
+
+  @override
+  String get pdfCannotDeleteAllPages => 'Tüm sayfalar silinemez';
+
+  @override
+  String get pdfPagesHint =>
+      'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.';
+
+  @override
+  String pdfEditFailed(String error) {
+    return 'PDF düzenlenemedi: $error';
+  }
+
+  @override
+  String get pdfInkBurned => 'El yazısı belgeye gömüldü';
+
+  @override
   String get pdfAllPageNotes => 'Tüm sayfa notları';
 
   @override

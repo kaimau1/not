@@ -358,6 +358,45 @@ class AttachmentRepository {
     );
   }
 
+  /// VAR OLAN bir belgenin baytlarını yenisiyle değiştirir (PDF düzenleme:
+  /// sayfa sil/döndür/sırala, çizimi belgeye gömme).
+  ///
+  /// Kırpma yolunun ([cropImage]) aynısı: dosya aynı ek kimliğiyle yeniden
+  /// yazılır, bulut kopyası silinip yükleme kuyruğuna geri konur. Ek kimliği
+  /// KORUNUR — sayfa notlarının anahtarları ek kimliğine bağlı, değişseydi
+  /// bütün notlar sahipsiz kalırdı.
+  ///
+  /// [pageIds] verilirse sayfa kimlik listesi de güncellenir (sayfa silme/
+  /// sıralama sonrası); verilmezse (döndürme, çizim gömme) dokunulmaz.
+  Future<Attachment> replaceDocumentBytes({
+    required String noteId,
+    required Attachment attachment,
+    required Uint8List bytes,
+    List<String>? pageIds,
+  }) async {
+    if (bytes.length > maxBytes) throw const FileTooLargeException();
+    // Silme _store'dan ÖNCE: sonra olsaydı kuyruk yeni baytları yükledikten
+    // hemen sonra silme YENİ dosyayı götürebilirdi (kırpmadaki aynı yarış).
+    // Çevrimdışı silme hatası işlemi DÜŞÜRMEZ — dosya cihazda duruyor ve
+    // kuyruk aynı adrese yeniden yazacak.
+    try {
+      await deleteFromStorage(attachment);
+    } catch (_) {
+      // Çevrimdışı ya da geçici Storage hatası — yukarıdaki nota bak.
+    }
+    return _store(
+      noteId,
+      attachment.copyWith(
+        sizeBytes: bytes.length,
+        storagePath: '',
+        downloadUrl: '',
+        pageIds: pageIds,
+      ),
+      bytes,
+      freedBytes: attachment.sizeBytes,
+    );
+  }
+
   /// Sunum (PPTX) dosyasını eke dönüştürür. PDF gibi sıkıştırılmaz; metni
   /// yerelde çıkarılıp özetleneceği için baytlar olduğu gibi saklanır.
   Future<Attachment> prepareSlide({

@@ -767,8 +767,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               )
         : ref.watch(filteredNotesProvider);
-    final selectedIds = ref.watch(selectedNoteIdsProvider);
-    final selectionActive = selectedIds.isNotEmpty;
+    // KÖK NEDEN (kasma): burası TÜM seçim kümesini izliyordu. Küme her
+    // seçim değişiminde yeni bir `Set` olduğu için tek bir nota dokunmak
+    // dashboard'ın tamamını (ve önbellek payındaki bütün kartları) yeniden
+    // kuruyor, kartın kendi `select` optimizasyonunu boşa çıkarıyordu.
+    // Ekranın bilmesi gereken tek şey seçim modunun AÇIK olup olmadığı;
+    // kümenin kendisi yalnız toplu eylemlerde (ref.read ile) gerekiyor.
+    final selectionActive = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    );
     // Sıralama modu yalnız süzgeçsiz görünümde geçerlidir: kullanıcı mod
     // açıkken bir klasör/etiket çipine dokunursa mod kendiliğinden kapanır —
     // aksi hâlde şerit durur ama kartlar sürüklenmez, kullanıcı bozuk sanır.
@@ -868,91 +875,124 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           )
                         else if (selectionActive)
-                          AppBar(
-                            leading: IconButton(
-                              tooltip: l10n.cancel,
-                              icon: const Icon(Icons.close),
-                              onPressed: () => ref
-                                  .read(selectedNoteIdsProvider.notifier)
-                                  .clear(),
-                            ),
-                            title: Text(l10n.selectedCount(selectedIds.length)),
-                            // Kopyala/arşivle/sil ve diğer tüm not işlemleri
-                            // seçim yapılınca BURADA toplanır (madde 3): sık
-                            // kullanılanlar simge, gerisi taşma menüsünde.
-                            actions: [
-                              IconButton(
-                                tooltip: l10n.archive,
-                                icon: const Icon(Icons.archive_outlined),
-                                onPressed: () => _archiveSelected(selectedIds),
-                              ),
-                              IconButton(
-                                tooltip: l10n.copy,
-                                icon: const Icon(Icons.copy_outlined),
-                                onPressed: () => _copySelected(selectedIds),
-                              ),
-                              IconButton(
-                                tooltip: l10n.deleteSelected,
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () => _deleteSelected(selectedIds),
-                              ),
-                              PopupMenuButton<String>(
-                                tooltip: l10n.noteMetaMenu,
-                                onSelected: (action) {
-                                  switch (action) {
-                                    case 'pin':
-                                      _setPinnedSelected(selectedIds, true);
-                                    case 'unpin':
-                                      _setPinnedSelected(selectedIds, false);
-                                    case 'star':
-                                      _setStarredSelected(selectedIds, true);
-                                    case 'unstar':
-                                      _setStarredSelected(selectedIds, false);
-                                    case 'share':
-                                      _shareSelected(selectedIds);
-                                    case 'color':
-                                      _colorSelected(selectedIds, frame: false);
-                                    case 'frame':
-                                      _colorSelected(selectedIds, frame: true);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  _menuItem(
-                                    'pin',
-                                    Icons.push_pin_outlined,
-                                    l10n.pin,
+                          // Seçim kümesinin KENDİSİ yalnız burada gerekiyor;
+                          // abonelik bu çubuğa hapsedilir (bkz. yukarıdaki
+                          // `selectionActive` kök nedeni).
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final selectedIds = ref.watch(
+                                selectedNoteIdsProvider,
+                              );
+                              return AppBar(
+                                leading: IconButton(
+                                  tooltip: l10n.cancel,
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => ref
+                                      .read(selectedNoteIdsProvider.notifier)
+                                      .clear(),
+                                ),
+                                title: Text(
+                                  l10n.selectedCount(selectedIds.length),
+                                ),
+                                // Kopyala/arşivle/sil ve diğer tüm not işlemleri
+                                // seçim yapılınca BURADA toplanır (madde 3): sık
+                                // kullanılanlar simge, gerisi taşma menüsünde.
+                                actions: [
+                                  IconButton(
+                                    tooltip: l10n.archive,
+                                    icon: const Icon(Icons.archive_outlined),
+                                    onPressed: () =>
+                                        _archiveSelected(selectedIds),
                                   ),
-                                  _menuItem(
-                                    'unpin',
-                                    Icons.push_pin,
-                                    l10n.unpin,
+                                  IconButton(
+                                    tooltip: l10n.copy,
+                                    icon: const Icon(Icons.copy_outlined),
+                                    onPressed: () => _copySelected(selectedIds),
                                   ),
-                                  _menuItem(
-                                    'star',
-                                    Icons.star_outline,
-                                    l10n.star,
+                                  IconButton(
+                                    tooltip: l10n.deleteSelected,
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () =>
+                                        _deleteSelected(selectedIds),
                                   ),
-                                  _menuItem('unstar', Icons.star, l10n.unstar),
-                                  const PopupMenuDivider(),
-                                  _menuItem(
-                                    'color',
-                                    Icons.palette_outlined,
-                                    l10n.backgroundColor,
+                                  PopupMenuButton<String>(
+                                    tooltip: l10n.noteMetaMenu,
+                                    onSelected: (action) {
+                                      switch (action) {
+                                        case 'pin':
+                                          _setPinnedSelected(selectedIds, true);
+                                        case 'unpin':
+                                          _setPinnedSelected(
+                                            selectedIds,
+                                            false,
+                                          );
+                                        case 'star':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            true,
+                                          );
+                                        case 'unstar':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            false,
+                                          );
+                                        case 'share':
+                                          _shareSelected(selectedIds);
+                                        case 'color':
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: false,
+                                          );
+                                        case 'frame':
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: true,
+                                          );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      _menuItem(
+                                        'pin',
+                                        Icons.push_pin_outlined,
+                                        l10n.pin,
+                                      ),
+                                      _menuItem(
+                                        'unpin',
+                                        Icons.push_pin,
+                                        l10n.unpin,
+                                      ),
+                                      _menuItem(
+                                        'star',
+                                        Icons.star_outline,
+                                        l10n.star,
+                                      ),
+                                      _menuItem(
+                                        'unstar',
+                                        Icons.star,
+                                        l10n.unstar,
+                                      ),
+                                      const PopupMenuDivider(),
+                                      _menuItem(
+                                        'color',
+                                        Icons.palette_outlined,
+                                        l10n.backgroundColor,
+                                      ),
+                                      _menuItem(
+                                        'frame',
+                                        Icons.border_color_outlined,
+                                        l10n.frameColor,
+                                      ),
+                                      _menuItem(
+                                        'share',
+                                        Icons.share_outlined,
+                                        l10n.share,
+                                      ),
+                                    ],
                                   ),
-                                  _menuItem(
-                                    'frame',
-                                    Icons.border_color_outlined,
-                                    l10n.frameColor,
-                                  ),
-                                  _menuItem(
-                                    'share',
-                                    Icons.share_outlined,
-                                    l10n.share,
-                                  ),
+                                  const SizedBox(width: 4),
                                 ],
-                              ),
-                              const SizedBox(width: 4),
-                            ],
+                              );
+                            },
                           )
                         else
                           AppBar(
@@ -1812,10 +1852,14 @@ class _FocusHaloState extends State<_FocusHalo>
   /// Çerçevenin YANIP SÖNMESİ: sabit bir kenarlık uzun listede gözden
   /// kaçıyordu (kullanıcı: "notun çerçevesinden hafif yanıp sönmeli").
   /// Nefes alır gibi, göz yormayan bir ritim.
-  late final AnimationController _pulse = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 700),
-  );
+  /// TEMBEL: yalnız ODAKLI kartta kurulur (bkz. [_syncPulse] kök nedeni).
+  AnimationController? _pulse;
+
+  AnimationController _ensurePulse() =>
+      _pulse ??= AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 700),
+      );
 
   @override
   void didUpdateWidget(covariant _FocusHalo oldWidget) {
@@ -1832,19 +1876,23 @@ class _FocusHaloState extends State<_FocusHalo>
     _syncPulse();
   }
 
+  /// KÖK NEDEN (kasma): denetleyici ODAKLANMAMIŞ kartta da yaratılıyordu.
+  /// `_FocusHalo` her kartı sarıyor ve kaydırma önbelleği ~130 kartı canlı
+  /// tuttuğu için, tek bir notu vurgulamak uğruna 130 `AnimationController` +
+  /// 130 `Ticker` kuruluyor, kaydırdıkça sürekli kurulup yıkılıyordu.
   void _syncPulse() {
-    if (widget.focused) {
-      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
-    } else {
-      _pulse
-        ..stop()
-        ..value = 0;
+    if (!widget.focused) {
+      // Hiç kurulmadıysa kurma: odaklanmamış kart için denetleyiciye gerek yok.
+      _pulse?..stop()..value = 0;
+      return;
     }
+    final pulse = _ensurePulse();
+    if (!pulse.isAnimating) pulse.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _pulse?.dispose();
     super.dispose();
   }
 
@@ -1876,13 +1924,14 @@ class _FocusHaloState extends State<_FocusHalo>
         child: widget.child,
       );
     }
+    final pulse = _ensurePulse();
     return AnimatedBuilder(
-      animation: _pulse,
+      animation: pulse,
       builder: (context, child) => Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: scheme.primary.withValues(alpha: 0.35 + 0.65 * _pulse.value),
+            color: scheme.primary.withValues(alpha: 0.35 + 0.65 * pulse.value),
             width: 2,
           ),
         ),

@@ -35,9 +35,23 @@ void main() {
     test('işaretleri söker, metni korur', () {
       expect(stripRichMarkers('**kalın** ve _italik_'), 'kalın ve italik');
       expect(stripRichMarkers('~altı çizili~'), 'altı çizili');
-      expect(stripRichMarkers('==vurgu=='), 'vurgu');
+      expect(stripRichMarkers('==2:vurgu=='), 'vurgu');
       expect(stripRichMarkers('%%2:renkli%%'), 'renkli');
     });
+
+    test(
+      'ÖNEKSİZ == biçim değildir — kullanıcının yazdığı eşittirler kalır',
+      () {
+        // KÖK NEDEN (2026-08-07 / 14. tur): işaretler görünmez çizildiği için
+        // öneksiz `==` biçim sanılınca kullanıcının yazdığı eşittirler EKRANDAN
+        // kayboluyordu ("if (a == b && c == d)" → "if (a  b  c  d)").
+        // Uygulama vurguyu her zaman önekle yazar (`==2:`), yani şart hiçbir
+        // gerçek vurguyu kırmaz.
+        const code = 'if (a == b && c == d)';
+        expect(stripRichMarkers(code), code);
+        expect(stripRichMarkers('2**3**4'), '234');
+      },
+    );
 
     test('işaretsiz metne dokunmaz', () {
       const text = 'sıradan bir not, 2 * 3 = 6';
@@ -229,7 +243,13 @@ void main() {
       final r = setRangeFormat('merhaba dünya', 8, 13, RichFormat.size, 6);
       expect(r.text, 'merhaba ##6:dünya##');
       expect(r.text.substring(r.start, r.end), 'dünya');
-      final back = setRangeFormat(r.text, r.start, r.end, RichFormat.size, null);
+      final back = setRangeFormat(
+        r.text,
+        r.start,
+        r.end,
+        RichFormat.size,
+        null,
+      );
       expect(back.text, 'merhaba dünya');
     });
 
@@ -265,10 +285,7 @@ void main() {
     });
 
     test('aralığın ortak kademesi okunur', () {
-      expect(
-        rangeFormatIndex('##6:dünya##', 4, 9, RichFormat.size),
-        6,
-      );
+      expect(rangeFormatIndex('##6:dünya##', 4, 9, RichFormat.size), 6);
       expect(rangeFormatIndex('dünya', 0, 5, RichFormat.size), isNull);
     });
   });
@@ -356,6 +373,36 @@ void main() {
       final r = collapseEmptyMarkersAt(text, 2);
       expect(r.text, text);
       expect(r.caret, 2);
+    });
+  });
+
+  group('kelime sınırı — YAZAN ile OKUYAN aynı dilbilgisi', () {
+    // KÖK NEDEN (2026-08-07 / 14. tur): `_` ve `~` kalıpta "iki yanında
+    // harf/rakam olmasın" şartı taşıyor ama yazan taraf bunu gözetmiyordu.
+    // Kelimenin ORTASINDAN seçip italik yapmak `mer_haba` üretiyor, kalıp
+    // eşleştiremiyor ve alt çizgi EKRANDA HAM görünüyordu.
+    test('kelime ortasından seçilen italik kelimeye genişler', () {
+      final r = toggleFormat('merhaba dunya', 3, 10, RichFormat.italic);
+      expect(stripRichMarkers(r.text), 'merhaba dunya');
+      expect(r.text.contains('mer_'), isFalse);
+      expect(activeFormats(r.text, r.start + 1, r.end - 1).italic, isTrue);
+    });
+
+    test('altı çizili de genişler', () {
+      final r = toggleFormat('merhaba', 2, 5, RichFormat.underline);
+      expect(stripRichMarkers(r.text), 'merhaba');
+      expect(r.text, '~merhaba~');
+    });
+
+    test('kalın genişlemez (sınır şartı yok)', () {
+      final r = toggleFormat('merhaba', 2, 5, RichFormat.bold);
+      expect(r.text, 'me**rha**ba');
+      expect(stripRichMarkers(r.text), 'merhaba');
+    });
+
+    test('zaten sınırda olan seçim büyümez', () {
+      final r = toggleFormat('bir iki', 0, 3, RichFormat.italic);
+      expect(r.text, '_bir_ iki');
     });
   });
 }

@@ -822,35 +822,74 @@ class WrapTextController extends TextEditingController {
     final typed = next.text.substring(at, end);
     if (typed.isEmpty) return null;
     // Bekleyenler İÇ İÇE sarılır; önce basılan en DIŞTA kalır.
-    var body = typed;
-    var prefixLength = 0;
-    var suffixLength = 0;
-    for (final entry in _pending.entries.toList().reversed) {
-      final marker = entry.key.marker;
-      final index = entry.value;
-      final prefix = richFormatTakesIndex(entry.key) && index != null
-          ? '$marker$index:'
-          : marker;
-      body = '$prefix$body$marker';
-      prefixLength += prefix.length;
-      suffixLength += marker.length;
+    //
+    // KÖK NEDEN — SATIR SONU koşuyu BÖLER (2026-08-07 / 14. tur): biçim
+    // kalıbı satır sonuyla eşleşmiyor (`dotAll: false` — biçim satırda başlar,
+    // satırda biter). Koşu içinde Enter'a basılıp devam edildiğinde
+    // `**abc\ndef**` yazılıyordu; hiçbir eşleşme çıkmadığı için İKİ işaret de
+    // ham markdown olarak çiziliyor ve nota öyle kaydediliyordu. Her satır
+    // parçası artık AYRI sarılır: `**abc**\n**def**`.
+    //
+    // KÖK NEDEN — KELİME SINIRI: italik (`_`) ve altı çizili (`~`) işaretleri
+    // kalıpta "iki yanında harf/rakam olmasın" şartı taşıyor, ama YAZAN taraf
+    // bunu denetlemiyordu. Kelimenin ortasından başlayan bir koşu
+    // `_ilk_sonrasi` üretiyor, kalıp eşleştiremiyor ve alt çizgiler ham
+    // görünüyordu. Sarma artık gereken yerde kelime sınırına GENİŞLER.
+    final needsBoundary = _pending.keys.any(richFormatNeedsWordBoundary);
+    var from = at;
+    var to = end;
+    if (needsBoundary) {
+      while (from > 0 && isRichWordChar(next.text[from - 1])) {
+        from--;
+      }
+      while (to < next.text.length && isRichWordChar(next.text[to])) {
+        to++;
+      }
     }
+    final segment = next.text.substring(from, to);
+    final wrapped = StringBuffer();
+    var suffixLength = 0;
+    final lines = segment.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (i > 0) wrapped.write('\n');
+      final line = lines[i];
+      // Boş satır sarılmaz: `****` boş kutusu üretmenin âlemi yok.
+      if (line.isEmpty) continue;
+      var body = line;
+      var suffixOfLine = 0;
+      for (final entry in _pending.entries.toList().reversed) {
+        final marker = entry.key.marker;
+        final index = entry.value;
+        final prefix = richFormatTakesIndex(entry.key) && index != null
+            ? '$marker$index:'
+            : marker;
+        body = '$prefix$body$marker';
+        suffixOfLine += marker.length;
+      }
+      wrapped.write(body);
+      // İmleç eşlemesi SON satırın sonekine bakar: imleç koşunun sonunda,
+      // yani son satırın kapanış işaretlerinin önünde/ardında durur. Solunda
+      // kalan bütün işaretler `grown` içinde toplanır.
+      if (i == lines.length - 1) suffixLength = suffixOfLine;
+    }
+    final body = wrapped.toString();
+    if (body == segment) return null;
+    // Kaydırma: koşunun İÇİNE giren toplam işaret uzunluğu.
+    final grown = body.length - segment.length;
     // İmleç bütün kapanış işaretlerinin ÖNÜNDE durur: koşu bittiği için
     // gerekmez ama kullanıcı aynı yerden yazmaya devam ederse metin kutunun
-    // dışına düşmesin (Keep davranışı).
+    // dışına düşmesin (Keep davranışı). Biçim KAPATILDIĞINDA tam tersi
+    // gerekir: imleç kutunun dışına çıkar.
     final movedSelection = _shiftOffset(
       next.selection,
-      at: at,
-      end: end,
-      prefixLength: prefixLength,
-      // Kapanışların ÖNÜNDE durmak, aynı yerden yazmaya devam eden metni
-      // kutunun içinde tutar (Keep davranışı). Biçim KAPATILDIĞINDA tam tersi
-      // gerekir: imleç kutunun dışına çıkar.
+      at: from,
+      end: to,
+      prefixLength: grown - suffixLength,
       suffixLength: suffixLength,
       caretOutside: caretOutside,
     );
     return TextEditingValue(
-      text: next.text.replaceRange(at, end, body),
+      text: next.text.replaceRange(from, to, body),
       selection: movedSelection,
     );
   }
@@ -894,13 +933,26 @@ class WrapTextController extends TextEditingController {
     if (_pending.isEmpty || at == null) return null;
     final caret = next.selection.baseOffset;
     final end = _pendingEnd ?? at;
-    final inRun =
-        next.selection.isCollapsed && caret >= at && caret <= next.text.length;
+    // SAF DÜZENLEME: metin uzunluğundaki değişim ile imlecin hareketi BİREBİR
+    // aynıysa kullanıcı imlecin olduğu yerde yazıyor ya da siliyor demektir.
+    // (İmleç koşunun başının ALTINA da inebilir — geri silme; koşu oradan
+    // yeniden başlar.)
     final lengthDelta = next.text.length - text.length;
     final caretDelta = caret - end;
-    if (inRun && lengthDelta == caretDelta) {
+    final isEdit =
+        next.selection.isCollapsed &&
+        caret >= 0 &&
+        caret <= next.text.length &&
+        lengthDelta == caretDelta;
+    if (isEdit) {
       // Koşu sürüyor: tampona DOKUNULMAZ, yalnız uç güncellenir. (Geri silme
       // de buraya düşer; koşu kısalır ama biçim niyeti yaşamaya devam eder.)
+      //
+      // İmleç koşunun BAŞININ altına inerse (kullanıcı yazdıklarını silip
+      // daha da geriye gitti) koşu ORADAN yeniden başlar: yoksa uç bir daha
+      // başlangıcı geçemez, `_wrapRun` hep null döner ve düğme yanık dururken
+      // yazılan metin düz kaydedilirdi.
+      if (caret < at) _pendingAt = caret;
       _pendingEnd = caret;
       return null;
     }

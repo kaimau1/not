@@ -1,6 +1,6 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+
+import '../../../../core/utils/local_file.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -59,7 +59,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     final attachment = widget.attachment;
     final hasLocal =
         attachment.localPath.isNotEmpty &&
-        File(attachment.localPath).existsSync();
+        localFileExists(attachment.localPath);
 
     final params = PdfViewerParams(
       // Çizim modunda metin seçimi kapalı (seçim katmanı parmağı kapıyor).

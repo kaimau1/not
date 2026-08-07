@@ -1296,6 +1296,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get slidesChooseDocument => 'Choose presentation';
 
   @override
+  String get pdfEditPages => 'Edit pages';
+
+  @override
+  String get pdfDeletePages => 'Delete selected pages';
+
+  @override
+  String get pdfRotatePages => 'Rotate';
+
+  @override
+  String get pdfBurnInk => 'Burn handwriting into the document';
+
+  @override
+  String get pdfApplyChanges => 'Apply changes';
+
+  @override
+  String get pdfCannotDeleteAllPages => 'You can\'t delete every page';
+
+  @override
+  String get pdfPagesHint =>
+      'Tap a page to select it. Page notes travel with their page; a deleted page\'s note is hidden but kept in your data.';
+
+  @override
+  String pdfEditFailed(String error) {
+    return 'Couldn\'t edit the PDF: $error';
+  }
+
+  @override
+  String get pdfInkBurned => 'Handwriting burned into the document';
+
+  @override
   String get pdfAllPageNotes => 'All page notes';
 
   @override

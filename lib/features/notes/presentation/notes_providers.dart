@@ -445,7 +445,7 @@ class SelectedTagNotifier extends Notifier<String?> {
 /// Aktif (arşivlenmemiş) notlarda geçen tüm etiketler, alfabetik.
 /// Gizli klasördeki notların etiketleri sızmaz — çip barında görünen bir
 /// etiket, gizli notun varlığını ele verirdi.
-final allTagsProvider = Provider<List<String>>((ref) {
+final allTagsProvider = Provider.autoDispose<List<String>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
   final tags = <String>{

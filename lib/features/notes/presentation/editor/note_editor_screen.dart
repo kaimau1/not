@@ -48,11 +48,13 @@ import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
 import '../../data/notes_repository.dart';
+import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_title.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
+import '../../domain/page_notes.dart';
 import '../color_picker_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
@@ -72,6 +74,7 @@ import 'items_editor.dart';
 import 'note_images.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
+import 'pdf_pages_screen.dart';
 import 'slide_note_pane.dart';
 import '../viewers/image_crop.dart';
 import 'text_wrap.dart';
@@ -1558,7 +1561,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// gönderir ve yalnızca alan desteklediğini bildirirse gönderir. Bu yüzden
   /// yapılandırma hem gövdeye hem liste öğelerine verilir; olmadığında klavye
   /// görseli hiç iletmez ve yapıştır düğmesi sessizce hiçbir şey yapmaz.
-  ContentInsertionConfiguration get _keyboardImagePaste =>
+  // GETTER DEĞİL alan: her okumada yeni nesne üretmek `ItemsEditor`ı ve
+  // `EditableText`i "widget değişti" saydırıp gereksiz `didUpdateWidget`
+  // zincirleri tetikliyordu. Kapanış State'e bağlı, ömrü boyunca sabit.
+  late final ContentInsertionConfiguration _keyboardImagePaste =
       ContentInsertionConfiguration(
         allowedMimeTypes: const [
           'image/png',
@@ -3144,6 +3150,127 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // ---- Arayüz ---------------------------------------------------------
 
+  /// PDF sayfa yöneticisi: sil / döndür / sırala.
+  ///
+  /// Düzenleme yeni bir PDF BAYTI üretir (bkz. `data/pdf_edit.dart`); dosya
+  /// aynı ek kimliğiyle yeniden yazılır ve `Attachment.pageIds` yeni düzene
+  /// göre güncellenir — sayfa notları böylece sayfalarıyla BİRLİKTE taşınır.
+  Future<void> _editPdfPages(Attachment doc, int pageCount) =>
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PdfPagesScreen(
+            attachment: doc,
+            pageCount: pageCount,
+            onApply: (order, rotations) =>
+                _applyPdfEdits(doc, pageCount, order, rotations),
+            onBurnInk: () => _burnPdfInk(doc),
+          ),
+        ),
+      );
+
+  Future<void> _applyPdfEdits(
+    Attachment doc,
+    int pageCount,
+    List<int> order,
+    Map<int, int> rotations,
+  ) => _runPdfEdit(doc, (bytes) async {
+    var out = bytes;
+    // ÖNCE döndürme: indeksler ESKİ düzene göre verildi, sıralama sonrası
+    // uygulanırsa yanlış sayfalar döner.
+    final byTurns = <int, List<int>>{};
+    rotations.forEach((page, turns) {
+      if (turns % 4 != 0) (byTurns[turns % 4] ??= []).add(page);
+    });
+    for (final entry in byTurns.entries) {
+      out = await PdfEdit.rotatePagesInBackground(
+        out,
+        pageIndexes: entry.value,
+        quarterTurns: entry.key,
+      );
+    }
+    // SİLME ile SIRALAMA ayrı yollar: silme YERİNDE çalışır ve belgenin kendi
+    // annotation'larını korur, sıralama ise sayfaları kopyaladığı için onları
+    // kaybeder. Sıra değişmediyse ucuz ve kayıpsız olanı seçilir.
+    final identityOrder = [for (var i = 0; i < pageCount; i++) i];
+    final onlyDeleted =
+        order.length < pageCount &&
+        [for (final i in order) i].toString() ==
+            [
+              for (final i in identityOrder)
+                if (order.contains(i)) i,
+            ].toString();
+    if (order.length != pageCount || !onlyDeleted) {
+      if (onlyDeleted) {
+        out = await PdfEdit.deletePagesInBackground(out, [
+          for (final i in identityOrder)
+            if (!order.contains(i)) i,
+        ]);
+      } else {
+        out = await PdfEdit.reorderPagesInBackground(out, order);
+      }
+    }
+    // Sayfa kimlikleri: önce SOMUTLAŞTIRILIR (bugüne kadar boş tutuluyordu),
+    // sonra yeni düzene göre yeniden dizilir. Notların anahtarlarına
+    // dokunulmaz — bu yüzden 3. sayfanın notu, o sayfa nereye giderse oraya
+    // gider ve silinen sayfanın notu kayıtta kalır.
+    final ids = reorderPageIds(materializePageIds(doc, pageCount), order);
+    return (bytes: out, pageIds: ids);
+  });
+
+  /// El yazısını belgenin İÇİNE gömer: paylaşılan PDF'te de görünsün.
+  ///
+  /// Gömme sonrası ekin `ink` alanı BOŞALTILIR — yoksa çizim hem belgede hem
+  /// katmanda olur ve üst üste iki kez görünürdü.
+  Future<void> _burnPdfInk(Attachment doc) => _runPdfEdit(
+    doc,
+    (bytes) async {
+      final out = await PdfEdit.burnInkInBackground(bytes, doc.ink);
+      return (bytes: out, pageIds: null);
+    },
+    clearInk: true,
+    successMessage: true,
+  );
+
+  /// PDF düzenleme yollarının ortak gövdesi: baytları oku, işle, dosyayı
+  /// yeniden yaz, eki güncelle.
+  Future<void> _runPdfEdit(
+    Attachment doc,
+    Future<({Uint8List bytes, List<String>? pageIds})> Function(Uint8List)
+    work, {
+    bool clearInk = false,
+    bool successMessage = false,
+  }) async {
+    final repo = _attachmentRepo;
+    if (repo == null) return;
+    try {
+      final bytes = await repo.readBytes(doc);
+      if (bytes == null) {
+        if (mounted) _showSnack(context.l10n.attachmentNotSynced);
+        return;
+      }
+      final result = await work(bytes);
+      final stored = await repo.replaceDocumentBytes(
+        noteId: widget.noteId,
+        attachment: clearInk ? doc.copyWith(ink: const []) : doc,
+        bytes: result.bytes,
+        pageIds: result.pageIds,
+      );
+      if (!mounted) return;
+      // Dosya AYNI yola yeniden yazıldı; pdfrx'in ve Flutter'ın önbellekleri
+      // yolu anahtar olarak kullandığından temizlenmezse eski belge
+      // gösterilmeye devam ederdi (kırpma yolundaki aynı gerekçe).
+      PaintingBinding.instance.imageCache
+        ..clear()
+        ..clearLiveImages();
+      _updateAttachment(stored);
+      if (successMessage) _showSnack(context.l10n.pdfInkBurned);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.pdfEditFailed('$e'));
+    }
+  }
+
   /// Belge notunun (PDF / sunum) gövdesi: başlık + iki bölmeli sayfa/not
   /// ekranı.
   ///
@@ -3230,6 +3357,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         : PdfNotePane(
             key: ValueKey('pdf-pane-${doc.id}'),
             noteOf: () => _note ?? note,
+            onEditPages: (pageCount) => _editPdfPages(doc, pageCount),
             attachment: doc,
             textStyle: textStyle,
             richTheme: richTheme,
@@ -3241,7 +3369,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [header, Expanded(child: pane)],
+      children: [
+        header,
+        Expanded(child: pane),
+      ],
     );
   }
 
@@ -3286,8 +3417,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
 
-    final pending =
-        ref.watch(pendingWritesProvider(widget.noteId)).value ?? false;
     final background = NoteColors.surface(context, note.color);
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
@@ -3717,7 +3846,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             builder: (context, constraints) => SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 96),
               child: NotePageCanvas(
-                minHeight: constraints.maxHeight,
+                // KLAVYEDEN BAĞIMSIZ taban: `constraints.maxHeight` klavye
+                // animasyonunun her karesinde değişiyor ve sayfa tuvalini
+                // (yüzen görsellerin bantları, satır ölçümleri) kare kare
+                // yeniden hesaplatıyordu. Klavyenin yediği yüksekliği geri
+                // eklemek değeri SABİTLER: tuval "klavye kapalıyken ne kadar
+                // yer var" sorusunun cevabını kullanır, animasyon boyunca
+                // hiç değişmez. (Alt sınır zaten bir MİNİMUM; sayfa
+                // kaydırılabilir olduğu için fazlası görünmez.)
+                minHeight:
+                    constraints.maxHeight +
+                    MediaQuery.viewInsetsOf(context).bottom,
                 images: imageAttachments,
                 onRemove: _removeAttachment,
                 onChanged: _updateAttachment,
@@ -3812,10 +3951,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                         ),
                       ),
-                      if (note.pinned) ...[
-                        const SizedBox(width: 6),
-                        const Icon(Icons.push_pin, size: 14),
-                      ],
                       if (note.starred) ...[
                         const SizedBox(width: 6),
                         Icon(
@@ -3827,24 +3962,54 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     ],
                   ),
             actions: [
+              // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
+              // `pendingWrites` her kayıtta false→true→false gidiyor, yani
+              // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla
+              // 4000 satırlık editör build'i BAŞTAN koşuyordu — üstelik
+              // tetikleyici Riverpod olduğu için `_mutate`'in "saf yazım"
+              // kısayolu ve akış yankısı koruması ikisi de devreye giremiyordu.
+              // Abonelik artık yalnız BU İKONA ait.
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: 4),
-                child: Tooltip(
-                  message: pending ? l10n.syncPending : l10n.synced,
-                  child: Icon(
-                    pending
-                        ? Icons.cloud_upload_outlined
-                        : Icons.cloud_done_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant
-                        .withValues(alpha: pending ? 0.9 : 0.5),
-                  ),
+                child: Consumer(
+                  builder: (context, ref, _) {
+                    final pending =
+                        ref.watch(pendingWritesProvider(widget.noteId)).value ??
+                        false;
+                    return Tooltip(
+                      message: pending ? l10n.syncPending : l10n.synced,
+                      child: Icon(
+                        pending
+                            ? Icons.cloud_upload_outlined
+                            : Icons.cloud_done_outlined,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant
+                            .withValues(alpha: pending ? 0.9 : 0.5),
+                      ),
+                    );
+                  },
                 ),
               ),
               // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
               // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
               // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
               // oynamasın.
+              // SABİTLEME üst barda, AÇIK düğme olarak (kullanıcı isteği:
+              // "sabitleme butonunu açığa koy görülsün"). ⋯ menüsündeyken hem
+              // bulunması hem durumunun okunması iki dokunuş istiyordu;
+              // başlıktaki küçük raptiye göstergesi yalnız DURUMU söylüyor,
+              // dokunulabilir değil.
+              IconButton(
+                tooltip: note.pinned ? l10n.unpin : l10n.pin,
+                isSelected: note.pinned,
+                icon: Icon(
+                  note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                ),
+                onPressed: () => _mutate(
+                  (n) => n.copyWith(pinned: !n.pinned),
+                  immediate: true,
+                ),
+              ),
               IconButton(
                 tooltip: l10n.undo,
                 icon: const Icon(Icons.undo),
@@ -4066,212 +4231,238 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // kurdurup gözle görülür bir takılma yaratıyordu. Okuma artık bu
           // küçük Builder'ın içinde: klavye oynarken yalnız alt çubuk yeniden
           // kurulur.
-          bottomNavigationBar: Builder(
-            builder: (context) {
-              final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-              return Padding(
-                padding: EdgeInsets.only(bottom: keyboard),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
-                    // işaretli görsel/video) SAYFANIN DİBİNDE, kapanabilir bir
-                    // şeritte. Görseller ve videolar her not tipinde TAM SAYFA
-                    // serbest katmanda kalır (NotePageCanvas — yukarıda).
-                    // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
-                    // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
-                    if (keyboard == 0)
-                      AttachmentStrip(
-                        attachments: [
-                          for (final a in note.attachments)
-                            if (!a.floatsOnPage) a,
-                        ],
-                        onRemove: _removeAttachment,
-                        onChanged: _updateAttachment,
-                        onCopy: _copyAttachment,
-                        onPlaceOnPage: (a) => _setImageAsFile(a, false),
-                        onVideoToNote: _videoToNote,
-                        expanded: ref.watch(attachmentsExpandedProvider),
-                        onToggle: () => ref
-                            .read(attachmentsExpandedProvider.notifier)
-                            .toggle(),
+          //
+          // TİTREME (kullanıcı ekran görüntüsüyle: "klavye açılıp üste
+          // itilirken titriyor kasıyor"): buradaki `Builder` klavye yüksekliğini
+          // okumakla kalmıyor, çubuğun TÜM alt ağacını — ek şeridi, biçim
+          // çubuğu, BottomAppBar, AI ve mikrofon düğmeleri — klavyenin HER
+          // ANİMASYON KARESİNDE yeniden kuruyordu. [_KeyboardLift] yalnız
+          // dolguyu yeniler; çocuk AYNI widget örneği olduğu için Flutter alt
+          // ağacı hiç yeniden kurmaz.
+          bottomNavigationBar: _KeyboardLift(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
+                // işaretli görsel/video) SAYFANIN DİBİNDE, kapanabilir bir
+                // şeritte. Görseller ve videolar her not tipinde TAM SAYFA
+                // serbest katmanda kalır (NotePageCanvas — yukarıda).
+                // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
+                // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
+                // KÖK NEDEN: burada `if (keyboard == 0)` vardı.
+                // `AttachmentStrip` klavye kontrolünü ZATEN kendi içinde
+                // yapıyor (SizedBox.shrink döndürüyor); dıştaki koşul
+                // widget'ı ağaçtan tümüyle düşürüyor, bütün State'ler
+                // (ses oynatıcısı dahil) dispose ediliyor ve klavye
+                // kapanınca sıfırdan kuruluyordu — şeridin kaydırma
+                // konumu sıfırlanıyor, ÇALAN SES sessizce duruyordu.
+                AttachmentStrip(
+                  attachments: [
+                    for (final a in note.attachments)
+                      if (!a.floatsOnPage) a,
+                  ],
+                  onRemove: _removeAttachment,
+                  onChanged: _updateAttachment,
+                  onCopy: _copyAttachment,
+                  onPlaceOnPage: (a) => _setImageAsFile(a, false),
+                  onVideoToNote: _videoToNote,
+                  expanded: ref.watch(attachmentsExpandedProvider),
+                  onToggle: () =>
+                      ref.read(attachmentsExpandedProvider.notifier).toggle(),
+                ),
+                // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
+                // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
+                // açık kalabiliyordu.
+                if (_aiTask != null) _AiBanner(label: _aiTask!),
+                // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
+                // yerine kendi içinde kaydırılır (Flexible + kaydırma).
+                if (_formatBarOpen)
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: FormatBar(
+                        target: _formatTarget,
+                        onFormat: _applyFormat,
+                        onClearFormat: _clearFormat,
+                        fontFamily: _titleIsTarget
+                            ? note.titleFontFamily
+                            : note.fontFamily,
+                        fontScale: _titleIsTarget
+                            ? note.titleFontScale
+                            : note.fontScale,
+                        textOpacity: _titleIsTarget
+                            ? note.titleTextOpacity
+                            : note.textOpacity,
+                        hasSelection: _hasSelection,
+                        onOpacityChanged: (value) => _mutate(
+                          (n) => _titleIsTarget
+                              ? n.copyWith(titleTextOpacity: value)
+                              : n.copyWith(textOpacity: value),
+                        ),
+                        onOpacityEnd: (value) => _applyStepOrNote(
+                          RichFormat.opacity,
+                          kRichOpacitySteps,
+                          kRichOpacityDefault,
+                          value,
+                          (n) => _titleIsTarget
+                              ? n.copyWith(titleTextOpacity: value)
+                              : n.copyWith(textOpacity: value),
+                        ),
+                        onFontChanged: (family) => _mutate(
+                          (n) => _titleIsTarget
+                              ? (family == null
+                                    ? n.copyWith(clearTitleFontFamily: true)
+                                    : n.copyWith(titleFontFamily: family))
+                              : (family == null
+                                    ? n.copyWith(clearFontFamily: true)
+                                    : n.copyWith(fontFamily: family)),
+                          immediate: true,
+                        ),
+                        // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
+                        // Firestore'a yazmak boşuna trafik olurdu.
+                        onScaleChanged: (value) => _mutate(
+                          (n) => _titleIsTarget
+                              ? n.copyWith(titleFontScale: value)
+                              : n.copyWith(fontScale: value),
+                        ),
+                        onScaleEnd: (value) => _applyStepOrNote(
+                          RichFormat.size,
+                          kRichSizeSteps,
+                          kRichSizeDefault,
+                          value,
+                          (n) => _titleIsTarget
+                              ? n.copyWith(titleFontScale: value)
+                              : n.copyWith(fontScale: value),
+                        ),
+                        onClose: () => setState(() => _formatBarOpen = false),
                       ),
-                    // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
-                    // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
-                    // açık kalabiliyordu.
-                    if (_aiTask != null) _AiBanner(label: _aiTask!),
-                    // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
-                    // yerine kendi içinde kaydırılır (Flexible + kaydırma).
-                    if (_formatBarOpen)
-                      Flexible(
-                        child: SingleChildScrollView(
-                          child: FormatBar(
-                            target: _formatTarget,
-                            onFormat: _applyFormat,
-                            onClearFormat: _clearFormat,
-                            fontFamily: _titleIsTarget
-                                ? note.titleFontFamily
-                                : note.fontFamily,
-                            fontScale: _titleIsTarget
-                                ? note.titleFontScale
-                                : note.fontScale,
-                            textOpacity: _titleIsTarget
-                                ? note.titleTextOpacity
-                                : note.textOpacity,
-                            hasSelection: _hasSelection,
-                            onOpacityChanged: (value) => _mutate(
-                              (n) => _titleIsTarget
-                                  ? n.copyWith(titleTextOpacity: value)
-                                  : n.copyWith(textOpacity: value),
+                    ),
+                  ),
+                // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
+                // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
+                // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
+                // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
+                // "Ekle" açılırına taşındı.
+                BottomAppBar(
+                  color: background,
+                  height: 64,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(13),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _toolSegment(
+                              icon: Icons.text_format,
+                              label: l10n.formatTitle,
+                              active: _formatBarOpen,
+                              onTap: () => setState(
+                                () => _formatBarOpen = !_formatBarOpen,
+                              ),
                             ),
-                            onOpacityEnd: (value) => _applyStepOrNote(
-                              RichFormat.opacity,
-                              kRichOpacitySteps,
-                              kRichOpacityDefault,
-                              value,
-                              (n) => _titleIsTarget
-                                  ? n.copyWith(titleTextOpacity: value)
-                                  : n.copyWith(textOpacity: value),
+                            const SizedBox(width: 3),
+                            // "Metin ekle" / "Liste maddesi ekle" buradan
+                            // Ekle levhasının en üst bölümüne taşındı: çubuk
+                            // üç segmentle kalabalıktı ve ekleme işi iki ayrı
+                            // yere bölünmüştü (bkz. attach_sheet.dart).
+                            _addToolButton(l10n),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      Tooltip(
+                        message: l10n.aiTitle,
+                        child: SizedBox(
+                          height: 44,
+                          child: FilledButton.tonalIcon(
+                            onPressed: () => showAiSheet(
+                              context,
+                              note,
+                              onAppendText: _appendText,
+                              onReplaceText: _replaceText,
+                              onCreateNote: _createNoteFromText,
                             ),
-                            onFontChanged: (family) => _mutate(
-                              (n) => _titleIsTarget
-                                  ? (family == null
-                                        ? n.copyWith(clearTitleFontFamily: true)
-                                        : n.copyWith(titleFontFamily: family))
-                                  : (family == null
-                                        ? n.copyWith(clearFontFamily: true)
-                                        : n.copyWith(fontFamily: family)),
-                              immediate: true,
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(13),
+                              ),
                             ),
-                            // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
-                            // Firestore'a yazmak boşuna trafik olurdu.
-                            onScaleChanged: (value) => _mutate(
-                              (n) => _titleIsTarget
-                                  ? n.copyWith(titleFontScale: value)
-                                  : n.copyWith(fontScale: value),
-                            ),
-                            onScaleEnd: (value) => _applyStepOrNote(
-                              RichFormat.size,
-                              kRichSizeSteps,
-                              kRichSizeDefault,
-                              value,
-                              (n) => _titleIsTarget
-                                  ? n.copyWith(titleFontScale: value)
-                                  : n.copyWith(fontScale: value),
-                            ),
-                            onClose: () =>
-                                setState(() => _formatBarOpen = false),
+                            icon: const Icon(Icons.auto_awesome, size: 19),
+                            // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
+                            // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
+                            // dilde aynı okunur; tam adı ipucunda duruyor.
+                            label: const Text('AI'),
                           ),
                         ),
                       ),
-                    // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
-                    // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
-                    // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
-                    // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
-                    // "Ekle" açılırına taşındı.
-                    BottomAppBar(
-                      color: background,
-                      height: 64,
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surface,
-                              borderRadius: BorderRadius.circular(13),
-                              border: Border.all(
+                      const SizedBox(width: 8),
+                      // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
+                      // yakalama editörün en sık kullanılan girişi.
+                      Tooltip(
+                        message: l10n.liveDictation,
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Material(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(14),
+                            elevation: 2,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: _captureVoice,
+                              child: Icon(
+                                Icons.mic_none,
+                                size: 25,
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.outlineVariant,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _toolSegment(
-                                  icon: Icons.text_format,
-                                  label: l10n.formatTitle,
-                                  active: _formatBarOpen,
-                                  onTap: () => setState(
-                                    () => _formatBarOpen = !_formatBarOpen,
-                                  ),
-                                ),
-                                const SizedBox(width: 3),
-                                // "Metin ekle" / "Liste maddesi ekle" buradan
-                                // Ekle levhasının en üst bölümüne taşındı: çubuk
-                                // üç segmentle kalabalıktı ve ekleme işi iki ayrı
-                                // yere bölünmüştü (bkz. attach_sheet.dart).
-                                _addToolButton(l10n),
-                              ],
-                            ),
-                          ),
-                          const Spacer(),
-                          Tooltip(
-                            message: l10n.aiTitle,
-                            child: SizedBox(
-                              height: 44,
-                              child: FilledButton.tonalIcon(
-                                onPressed: () => showAiSheet(
-                                  context,
-                                  note,
-                                  onAppendText: _appendText,
-                                  onReplaceText: _replaceText,
-                                  onCreateNote: _createNoteFromText,
-                                ),
-                                style: FilledButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(13),
-                                  ),
-                                ),
-                                icon: const Icon(Icons.auto_awesome, size: 19),
-                                // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
-                                // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
-                                // dilde aynı okunur; tam adı ipucunda duruyor.
-                                label: const Text('AI'),
+                                ).colorScheme.onPrimaryContainer,
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
-                          // yakalama editörün en sık kullanılan girişi.
-                          Tooltip(
-                            message: l10n.liveDictation,
-                            child: SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Material(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(14),
-                                elevation: 2,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(14),
-                                  onTap: _captureVoice,
-                                  child: Icon(
-                                    Icons.mic_none,
-                                    size: 25,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Alt çubuğu klavyenin ÜSTÜNE kaldırır.
+///
+/// `Scaffold` bunu kendisi yapmaz: `bottomNavigationBar` her zaman ekranın
+/// dibine konur (`_ScaffoldLayout`: `bottom - bottomWidgetsHeight`), klavye
+/// yüksekliği hesaba katılmaz — yani çubuk klavyenin ALTINDA kalırdı.
+///
+/// Neden ayrı bir widget: klavye yüksekliği animasyon boyunca her karede
+/// değişiyor. Dolguyu çubuğun kendi ağacının içinde okumak, o ağacın tamamını
+/// kare kare yeniden kurduruyordu. Burada [child] dışarıdan hazır geliyor;
+/// yeniden kurulan tek şey [Padding], çocuk aynı örnek olduğu için atlanır.
+class _KeyboardLift extends StatelessWidget {
+  const _KeyboardLift({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+    child: child,
+  );
 }
 
 /// Klavyeden Kopyala/Kes'in temiz-metin sürümü.

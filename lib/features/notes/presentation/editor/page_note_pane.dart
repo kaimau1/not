@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../../domain/page_notes.dart';
 import 'pdf_notes_overview.dart';
 import 'text_wrap.dart';
 
@@ -56,6 +57,7 @@ class PageNotePane extends StatefulWidget {
     required this.onPageNoteChanged,
     required this.viewerBuilder,
     this.onFullScreen,
+    this.onEditPages,
     this.textStyle,
     this.richTheme,
     this.onFieldFocused,
@@ -81,6 +83,10 @@ class PageNotePane extends StatefulWidget {
 
   /// Tam ekran görüntüleyiciyi açar (çizim orada yapılır). null = düğme yok.
   final Future<void> Function()? onFullScreen;
+
+  /// Sayfa yöneticisini açar (yalnız PDF'te var; sunumda sayfa düzenleme yok).
+  /// Sayfa sayısı panonun bildiği tek yer olduğu için parametre olarak geçer.
+  final Future<void> Function(int pageCount)? onEditPages;
 
   final TextStyle? textStyle;
   final RichTextTheme? richTheme;
@@ -148,6 +154,14 @@ class _PageNotePaneState extends State<PageNotePane> {
 
   @override
   void dispose() {
+    // Bekleyen biçim koşusu burada da kapatılır: geri tuşuyla çıkışta
+    // `FocusNode.dispose`ın odak kaybı dinleyicisini tetikleyeceğine
+    // GÜVENİLEMEZ (sıra Flutter'da garanti değil) ve "kalın" yazılan satır düz
+    // kaydedilirdi.
+    if (_controller.hasPendingFormat) {
+      _controller.flushPendingFormat();
+      _commit();
+    }
     widget.onFieldDisposed?.call(_controller);
     _controller.dispose();
     _focus.dispose();
@@ -155,7 +169,23 @@ class _PageNotePaneState extends State<PageNotePane> {
   }
 
   /// Alandaki metni notun O ANKİ sayfasına yazar.
-  void _commit() => widget.onPageNoteChanged(_page, _controller.logicalText);
+  ///
+  /// BOŞ metin, o sayfanın kaydı HİÇ YOKSA yazılmaz: sayfa düğmeleriyle
+  /// gezinen kullanıcı yoksa her sayfa için boş bir anahtar oluşur ve doküman
+  /// boş yere şişerdi. (Var olan bir notu silmek başka: o BOŞ DİZGİ olarak
+  /// yazılmalı — bkz. `Note.pageNotes` merge tuzağı.)
+  void _commit() {
+    final text = _controller.logicalText;
+    if (text.isEmpty) {
+      final note = widget.noteOf();
+      if (!note.pageNotes.containsKey(
+        pageNoteKey(widget.attachment, _page),
+      )) {
+        return;
+      }
+    }
+    widget.onPageNoteChanged(_page, text);
+  }
 
   /// Sayfa değişti.
   ///
@@ -179,12 +209,25 @@ class _PageNotePaneState extends State<PageNotePane> {
 
   void _onPageCount(int count) {
     if (count == _pageCount || !mounted) return;
+    // Belge küçüldüyse (sayfa silinmiş ya da kullanıcı sayım gelmeden ileri
+    // sarmış) görünen sayfa dışarıda kalmasın.
+    //
+    // KÖK NEDEN (veri kaybı): sayfa kısılırken alan TAZELENMEZSE, ekranda
+    // eski sayfanın metni durur ve bir sonraki tuş vuruşu onu YENİ sayfanın
+    // üstüne yazar. Bu yüzden önce yazılmakta olan sayfa kesinleşir, sonra
+    // numara değişir, sonra alan yeniden doldurulur — `_setPage`'in aynısı.
+    final clamped = (count > 0 && _page > count) ? count : _page;
+    if (clamped != _page) {
+      if (_controller.hasPendingFormat) _controller.flushPendingFormat();
+      _commit();
+    }
     setState(() {
       _pageCount = count;
-      // Belge küçüldüyse (başka cihazda sayfa silinmiş) görünen sayfa dışarıda
-      // kalmasın.
-      if (_pageCount > 0 && _page > _pageCount) _page = _pageCount;
+      _page = clamped;
     });
+    if (clamped != _page || true) {
+      _controller.text = widget.noteOf().pageNote(widget.attachment, clamped);
+    }
   }
 
   /// Toplu görünüm: bütün sayfa notları tek akışta. Başlığa dokunulup bir
@@ -207,13 +250,28 @@ class _PageNotePaneState extends State<PageNotePane> {
       ),
     );
     if (!mounted) return;
-    // Toplu görünümde düzenlenen notlar panoya da yansımalı: dönülen sayfa
-    // aynı sayfa olsa bile alan tazelenir.
-    if (page != null && page != _page) {
-      _goTo(page);
-    } else {
-      _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
-    }
+    // KÖK NEDEN (veri kaybı): alan ÖNCE tazelenir, sayfa SONRA değişir.
+    // Ters sırada `_setPage` panonun elindeki BAYAT metni (toplu görünümde
+    // düzeltilmeden önceki hâli) eski sayfaya geri yazıyor ve kullanıcının az
+    // önce yaptığı düzeltme sessizce siliniyordu.
+    _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
+    if (page != null && page != _page) _goTo(page);
+  }
+
+  /// Sayfa yöneticisi. Belge değişeceği için alandaki son hâl önce
+  /// kesinleşir; dönüşte pano kendi sayfasını sınırlar içine çeker (sayfa
+  /// silinmiş olabilir).
+  Future<void> _openPageEditor(int pageCount) async {
+    final open = widget.onEditPages;
+    if (open == null) return;
+    if (_controller.hasPendingFormat) _controller.flushPendingFormat();
+    _commit();
+    await open(pageCount);
+    if (!mounted) return;
+    setState(() {
+      if (_pageCount > 0 && _page > _pageCount) _page = _pageCount;
+    });
+    _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
   }
 
   Future<void> _openFullScreen() async {
@@ -328,6 +386,17 @@ class _PageNotePaneState extends State<PageNotePane> {
             onPressed: _openOverview,
             icon: const Icon(Icons.subject),
           ),
+          if (widget.onEditPages != null)
+            IconButton(
+              tooltip: l10n.pdfEditPages,
+              visualDensity: VisualDensity.compact,
+              // Sayfa sayısı bilinmeden düzenleme açılmaz: yönetici sayfa
+              // ızgarasını ona göre kuruyor.
+              onPressed: _pageCount > 0
+                  ? () => _openPageEditor(_pageCount)
+                  : null,
+              icon: const Icon(Icons.auto_awesome_motion_outlined),
+            ),
           if (widget.onFullScreen != null)
             IconButton(
               tooltip: l10n.pdfFullScreen,

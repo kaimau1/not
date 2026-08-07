@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
+import '../../../../core/utils/local_file.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -45,7 +47,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
 
   Future<void> _open() async {
     final path = widget.attachment.localPath;
-    if (path.isEmpty || !File(path).existsSync()) {
+    if (path.isEmpty || !localFileExists(path)) {
       setState(() => _error = 'missing');
       return;
     }

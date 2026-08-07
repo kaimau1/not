@@ -230,4 +230,85 @@ void main() {
     expect(c.logicalText, '');
     expect(c.hasPendingFormat, isFalse);
   });
+
+  test('koşu içinde ENTER: her satır AYRI sarılır, ham işaret kalmaz', () {
+    // KÖK NEDEN: biçim kalıbı satır sonuyla eşleşmiyor (biçim satırda başlar,
+    // satırda biter). `**abc\ndef**` yazılınca hiçbir eşleşme çıkmıyor ve İKİ
+    // işaret de ham markdown olarak çiziliyordu.
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    type(c, 'abc\ndef');
+    c.flushPendingFormat();
+    expect(c.logicalText, '**abc**\n**def**');
+    expect(activeFormats(c.logicalText, 2, 5).bold, isTrue);
+    expect(activeFormats(c.logicalText, 10, 13).bold, isTrue);
+  });
+
+  test('boş satır sarılmaz (boş kutu üretilmez)', () {
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    type(c, 'abc\n\ndef');
+    c.flushPendingFormat();
+    expect(c.logicalText, '**abc**\n\n**def**');
+  });
+
+  test('italik kelime ORTASINDAN başlarsa kelime sınırına GENİŞLER', () {
+    // Kalıp `_`in iki yanında harf olmamasını şart koşuyor; yazan taraf bunu
+    // gözetmezse `_ilk_sonrasi` çıkar, hiç eşleşmez ve alt çizgiler EKRANDA
+    // ham görünür.
+    final c = controllerAt('sonrasi', 0);
+    applyRichFormat(c, RichFormat.italic);
+    type(c, 'ilk');
+    c.flushPendingFormat();
+    expect(c.logicalText, '_ilksonrasi_');
+    expect(activeFormats(c.logicalText, 1, 4).italic, isTrue);
+    // Ham alt çizgi kalmadı: metin kalıba tam oturuyor.
+    expect(stripRichMarkers(c.logicalText), 'ilksonrasi');
+  });
+
+  test('kalın kelime sınırı istemez, genişlemez', () {
+    final c = controllerAt('sonrasi', 0);
+    applyRichFormat(c, RichFormat.bold);
+    type(c, 'ilk');
+    c.flushPendingFormat();
+    expect(c.logicalText, '**ilk**sonrasi');
+  });
+
+  test('koşunun başının ALTINA silmek koşuyu oradan yeniden başlatır', () {
+    final c = controllerAt('abc', 3);
+    applyRichFormat(c, RichFormat.bold);
+    // Koşu 3'te başladı; kullanıcı iki harf sildi (imleç 1'e indi).
+    c.value = const TextEditingValue(
+      text: 'a',
+      selection: TextSelection.collapsed(offset: 1),
+    );
+    expect(c.hasPendingFormat, isTrue);
+    type(c, 'xy');
+    c.flushPendingFormat();
+    // Silinen yerden itibaren yazılan metin biçimlendi; niyet düşmedi.
+    expect(c.logicalText, 'a**xy**');
+  });
+
+  test('koşu sürerken SEÇİME biçim vermek koşuyu çöpe atmaz', () {
+    // Eskiden seçim dalı `clearPendingFormat()` çağırıyordu: kullanıcı
+    // ekranda kalın gördüğü metnin bir anda düzleştiğini görüyordu.
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    type(c, 'abc');
+    // Seçim değişimi koşuyu zaten kapatır (imleç koşunun dışına çıktı):
+    // metin '**abc**' olur, seçim işaretlerin içindeki 'bc'ye taşınır.
+    c.selection = const TextSelection(baseOffset: 1, extentOffset: 3);
+    expect(c.hasPendingFormat, isFalse);
+    expect(c.logicalText, '**abc**');
+
+    applyRichFormat(c, RichFormat.italic);
+    // Kalın KAYBOLMADI: üç harf de kalın, seçilen kısım ayrıca italik.
+    final text = c.logicalText;
+    expect(stripRichMarkers(text), 'abc');
+    final plainA = text.indexOf('a');
+    expect(activeFormats(text, plainA, plainA + 1).bold, isTrue);
+    final plainB = text.indexOf('bc');
+    expect(activeFormats(text, plainB, plainB + 2).bold, isTrue);
+    expect(activeFormats(text, plainB, plainB + 2).italic, isTrue);
+  });
 }

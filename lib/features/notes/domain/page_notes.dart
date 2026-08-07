@@ -57,6 +57,37 @@ int? pageNumberOfId(Attachment attachment, String pageId) {
   return (n != null && n >= 1) ? n : null;
 }
 
+/// Ekin sayfa kimlik listesini [pageCount] sayfa için SOMUTLAŞTIRIR.
+///
+/// Kimlik listesi bugüne kadar BOŞ tutuluyordu (kimlikler `p<N>` olarak
+/// türetiliyordu). PDF düzenleme ilk kez çalıştığında liste yazılmalı: yoksa
+/// sayfa silindiğinde kalan sayfaların türetilmiş kimlikleri kayar ve bütün
+/// notlar bir sayfa şaşardı.
+///
+/// **Somutlaştırma TÜRETİLEN kimliklerle yapılır** (`p1`, `p2`, …) — yeni
+/// rastgele kimlikler üretilseydi hâlihazırda `a1#p3` anahtarıyla kayıtlı
+/// notlar sahipsiz kalırdı.
+List<String> materializePageIds(Attachment attachment, int pageCount) {
+  if (pageCount <= 0) return const [];
+  final ids = attachment.pageIds;
+  return [
+    for (var i = 1; i <= pageCount; i++)
+      (i <= ids.length && ids[i - 1].isNotEmpty) ? ids[i - 1] : 'p$i',
+  ];
+}
+
+/// Sayfa düzeni değişince yeni kimlik listesi: [order] 0 tabanlı ESKİ sayfa
+/// indekslerini yeni sırayla verir (silme = indeksin listede olmaması).
+///
+/// Notların anahtarlarına DOKUNULMAZ; yalnız hangi kimliğin kaçıncı sayfa
+/// olduğu değişir. Silinen sayfanın kimliği listeden düşer ve notu
+/// `orderedPageNotes` tarafından gösterilmez — ama kayıtta DURUR: sayfa geri
+/// alınırsa (geri al) notu da geri gelir.
+List<String> reorderPageIds(List<String> ids, List<int> order) => [
+  for (final i in order)
+    if (i >= 0 && i < ids.length) ids[i],
+];
+
 /// [attachment]'e ait sayfa notları, SAYFA SIRASINA dizilmiş hâlde.
 /// Boş (silinmiş) notlar elenir — bkz. `Note.pageNotes` merge tuzağı.
 ///

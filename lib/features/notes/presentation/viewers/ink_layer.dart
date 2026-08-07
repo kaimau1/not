@@ -42,6 +42,21 @@ class InkController extends ChangeNotifier {
   /// Çizgiye yazılan renk: seçilen renk + kalemin saydamlığı.
   Color get penColor => pen.apply(color);
 
+  /// Çizgiler her değiştiğinde artan sayaç — [InkPainter.shouldRepaint]
+  /// bunun üzerinden karar verir (liste kimliğine bakmak yetmiyor: aynı liste
+  /// nesnesi yerinde uzatılıyor).
+  int _revision = 0;
+  int get revision => _revision;
+
+  /// Her bildirimde sayaç artar. Böylece boyayıcı "denetleyici gerçekten
+  /// değişti mi" sorusunu ucuza yanıtlar; üst ağacın yeniden kurulması tek
+  /// başına yeniden boyama SEBEBİ olmaz.
+  @override
+  void notifyListeners() {
+    _revision++;
+    super.notifyListeners();
+  }
+
   int _pointers = 0;
   InkStroke? _active;
   bool _dirty = false;
@@ -253,11 +268,19 @@ class InkPageLayer extends StatelessWidget {
             onPointerCancel: (_) => controller.pointerUp(),
             // Yalnız çizgiler değişince yeniden boyanır; görüntüleyici (PDF/slayt)
             // yeniden kurulmaz — bu yüzden çizim sırasında jest bozulmaz.
-            child: ListenableBuilder(
-              listenable: controller,
-              builder: (context, _) => CustomPaint(
-                painter: InkPainter(controller.ink, page),
-                size: Size.infinite,
+            // RepaintBoundary: tek bir çizgi uzarken üstteki PDF/slayt
+            // katmanının yeniden boyanmasına gerek yok.
+            child: RepaintBoundary(
+              child: ListenableBuilder(
+                listenable: controller,
+                builder: (context, _) => CustomPaint(
+                  painter: InkPainter(
+                    controller.ink,
+                    page,
+                    revision: controller.revision,
+                  ),
+                  size: Size.infinite,
+                ),
               ),
             ),
           );
@@ -584,15 +607,25 @@ class _InkNavLayerState extends State<InkNavLayer> {
 
 /// Bir sayfa/slaydın çizgilerini oranlardan ekran boyutuna ölçekleyerek çizer.
 class InkPainter extends CustomPainter {
-  InkPainter(this.strokes, this.page);
+  InkPainter(List<InkStroke> strokes, this.page, {this.revision = 0})
+    // SAYFA SÜZGECİ ÖNCEDEN: `paint` her karede TÜM belgenin çizgilerini
+    // geziyordu (başka sayfalarınkini de). Uzun bir çizim oturumunda her yeni
+    // nokta, o ana kadarki bütün noktaların yeniden taranması demekti —
+    // "kasma birikip artıyor" tarifinin çizim tarafındaki karşılığı.
+    : strokes = [
+        for (final s in strokes)
+          if (s.page == page) s,
+      ];
 
   final List<InkStroke> strokes;
   final int page;
 
+  /// Denetleyicinin değişim sayacı: [shouldRepaint] buna bakar.
+  final int revision;
+
   @override
   void paint(Canvas canvas, Size size) {
     for (final s in strokes) {
-      if (s.page != page) continue;
       final paint = inkPaint(Color(s.color), s.width * size.width);
       if (s.points.length == 2) {
         canvas.drawCircle(
@@ -611,6 +644,10 @@ class InkPainter extends CustomPainter {
     }
   }
 
+  /// KÖK NEDEN: burası KOŞULSUZ `true` döndürüyordu — çizgiler hiç
+  /// değişmemişken bile (görüntüleyicinin her yeniden çiziminde) tüm katman
+  /// yeniden rasterize ediliyordu.
   @override
-  bool shouldRepaint(covariant InkPainter oldDelegate) => true;
+  bool shouldRepaint(covariant InkPainter oldDelegate) =>
+      oldDelegate.revision != revision || oldDelegate.page != page;
 }

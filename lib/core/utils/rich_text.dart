@@ -60,6 +60,16 @@ enum RichFormat {
 /// `**` mi `##3:` mi olacağını denetleyici de bilmek zorunda.
 bool richFormatTakesIndex(RichFormat f) => _takesIndex(f);
 
+/// İşareti KELİME SINIRI şart koşan biçimler: italik (`_`) ve altı çizili
+/// (`~`). Kalıp bunların iki yanında harf/rakam olmamasını istiyor (yoksa
+/// "dosya_adi_uzun" italik sanılırdı); dolayısıyla YAZAN taraf da aynı şartı
+/// gözetmeli, yoksa ürettiği işaret hiç eşleşmez ve EKRANDA HAM görünür.
+bool richFormatNeedsWordBoundary(RichFormat f) =>
+    f == RichFormat.italic || f == RichFormat.underline;
+
+/// Kelime karakteri mi? (Unicode: Türkçe harfler dahil — bkz. [_wordChar].)
+bool isRichWordChar(String ch) => _wordChar.hasMatch(ch);
+
 /// İndeks (1..9) alan biçimler: renk paleti, boyut ve opaklık kademeleri.
 /// İşarette `==2:metin==` gibi bir önekle taşınır.
 bool _takesIndex(RichFormat f) =>
@@ -245,7 +255,13 @@ class RichSegment {
 /// eşleşmez: biçim satırda başlar, satırda biter.
 final RegExp _formatPattern = RegExp(
   r'\*\*(?:(\d):)?(.+?)\*\*'
-  r'|==(?:(\d):)?(.+?)=='
+  // Vurgu da ÖNEK ZORUNLU (`==2:`): öneksiz `==` düz metinde çok geçiyor
+  // ("if (a == b && c == d)") ve işaretler görünmez çizildiği için o
+  // eşittirler gözden KAYBOLUYORDU — koda ya da matematiğe not alan
+  // kullanıcı yazdığını ekranda bulamıyordu. Uygulama vurguyu her zaman
+  // önekle yazar (paleti indeksli), yani bu şart hiçbir gerçek vurguyu
+  // kırmaz; kırdığı tek şey kullanıcının KENDİ yazdığı `==` idi.
+  r'|==(\d):(.+?)=='
   r'|%%(?:(\d):)?(.+?)%%'
   // Boyut ve opaklık işaretleri KADEME ÖNEKİ ZORUNLU tutar (`##3:` gibi):
   // işaretler artık görünmez çizildiğinden, düz metindeki bir "## başlık ##"
@@ -268,7 +284,12 @@ final RegExp _formatPattern = RegExp(
 /// düğmesine basılıp hiç yazılmadığında geriye bunlar kalır. Gösterimde
 /// zararsız ama dışa aktarılan metinde görünmemeli.
 final RegExp _emptyBoxPattern = RegExp(
-  r'\*\*\*\*|==(?:\d:)?==|%%(?:\d:)?%%|##\d:##|&&\d:&&',
+  r'\*\*\*\*|==\d:==|%%(?:\d:)?%%|##\d:##|&&\d:&&'
+  // İtalik ve altı çizili boş kutuları da: bunlar kelime sınırı şartı
+  // yüzünden `_formatPattern`e hiç düşmez, dolayısıyla EKRANDA HAM görünürdü.
+  r'|(?<![\p{L}\p{N}_])__(?![\p{L}\p{N}_])'
+  r'|(?<![\p{L}\p{N}_])~~(?![\p{L}\p{N}_])',
+  unicode: true,
 );
 
 /// Metinden biçim işaretlerini söker (kart önizlemesi, dışa aktarma, AI,
@@ -959,17 +980,34 @@ toggleFormat(
   }
 
   final remove = _rangeHasFormat(segments, ps, pe, format, colorIndex);
+  // KELİME SINIRI (2026-08-07 / 14. tur): italik (`_`) ve altı çizili (`~`)
+  // işaretleri kalıpta "iki yanında harf/rakam olmasın" şartı taşıyor. Seçim
+  // bir kelimenin ORTASINDAN başlıyor ya da ortasında bitiyorsa yazılan
+  // işaret hiç EŞLEŞMEZ ve ekranda HAM alt çizgi/tilde olarak görünür
+  // ("mer_haba du_nya"). Uygulama aralığı kelime sınırına genişletir —
+  // Word'de de kelime ortasından seçip italik yapmak kelimeyi biçimler.
+  var from = ps;
+  var to = pe;
+  if (!remove && richFormatNeedsWordBoundary(format)) {
+    final plain = [for (final seg in segments) seg.text].join();
+    while (from > 0 && isRichWordChar(plain[from - 1])) {
+      from--;
+    }
+    while (to < plain.length && isRichWordChar(plain[to])) {
+      to++;
+    }
+  }
   final updated = _mapRange(
     segments,
-    ps,
-    pe,
+    from,
+    to,
     (m) => remove ? m.removed(format) : m.applied(format, colorIndex),
   );
   final out = _serialize(updated);
   return (
     text: out.text,
-    start: out.starts[ps.clamp(0, out.starts.length - 1)],
-    end: out.ends[pe.clamp(0, out.ends.length - 1)],
+    start: out.starts[from.clamp(0, out.starts.length - 1)],
+    end: out.ends[to.clamp(0, out.ends.length - 1)],
     pending: null,
     pendingIndex: null,
   );
