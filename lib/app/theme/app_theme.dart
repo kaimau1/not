@@ -13,15 +13,51 @@ abstract final class AppTheme {
   /// Kağıt temasının tohum rengi: sıcak sepya; saman kağıdı yüzeylerle uyumlu.
   static const Color paperSeed = Color(0xFF8A6C3C);
 
+  /// Kurulmuş temalar (anahtar: parlaklık + kağıt + yazı tipi).
+  ///
+  /// KÖK NEDEN (kasma — "font değişince kasıyor"): `NotlarApp.build` her
+  /// çalıştığında `theme:` ve `darkTheme:` için İKİ tam [ThemeData] sıfırdan
+  /// kuruluyordu. Her biri bir `ColorScheme.fromSeed` (Material'ın HCT renk
+  /// algoritması) ve bir `appFontTextTheme` (paketin on beş metin biçimini
+  /// tek tek kuran çağrısı) demek; ölçülebilir birkaç milisaniye. Kök widget
+  /// yalnız ayar değişince değil, yönlendirici/dil/tema kipi her
+  /// kıpırdadığında da yeniden kurulduğu için bu bedel kare bütçesine
+  /// giriyordu — ayarlardan yazı tipini değiştirmek gibi arka arkaya birkaç
+  /// build üreten işlemlerde de gözle görülür takılma yapıyordu.
+  ///
+  /// Ayrıca ÖNEMLİ bir ikinci kazanç: aynı ayarlar için AYNI nesne dönüyor.
+  /// `Theme.updateShouldNotify` temaları `==` ile karşılaştırır ve
+  /// [ThemeData]'nın `==`'i yüzlerce alanı dolaşır; kimlik eşitliği bu
+  /// karşılaştırmayı da bedavaya indirir ve tema değişmediğinde ağacın
+  /// tamamının yeniden çizilmesini önler.
+  ///
+  /// Önbellek SINIRSIZ DEĞİL: katalogda 19 yazı tipi × 3 tema = en çok 57
+  /// giriş, hepsi de kullanıcının gerçekten seçebildiği kombinasyonlar.
+  static final Map<String, ThemeData> _cache = {};
+
+  /// Testlerin (ve yazı tipi kataloğu değişirse çalışma anının) önbelleği
+  /// boşaltabilmesi için.
+  @visibleForTesting
+  static void clearCache() => _cache.clear();
+
   /// [font] uygulamanın genel yazı tipi (Ayarlar → Görünüm → Yazı tipi);
   /// null ise varsayılan ([kAppDefaultFont]) kullanılır.
-  static ThemeData light({String? font}) => _base(Brightness.light, font: font);
+  static ThemeData light({String? font}) => _cached(Brightness.light, font);
 
-  static ThemeData dark({String? font}) => _base(Brightness.dark, font: font);
+  static ThemeData dark({String? font}) => _cached(Brightness.dark, font);
 
   /// "Kağıt" teması: açık temanın hafif saman kağıdı renkli sürümü.
   static ThemeData paper({String? font}) =>
-      _base(Brightness.light, paper: true, font: font);
+      _cached(Brightness.light, font, paper: true);
+
+  static ThemeData _cached(
+    Brightness brightness,
+    String? font, {
+    bool paper = false,
+  }) => _cache.putIfAbsent(
+    '${brightness.name}|$paper|${font ?? ''}',
+    () => _base(brightness, paper: paper, font: font),
+  );
 
   static ThemeData _base(
     Brightness brightness, {

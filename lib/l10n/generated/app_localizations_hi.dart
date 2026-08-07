@@ -823,6 +823,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceCaptureCreateNote => 'नया नोट बनाएं';
 
   @override
+  String get voiceCaptureAiNote => 'AI नोट';
+
+  @override
+  String get voiceCapturePlainNote => 'सादा नोट';
+
+  @override
   String get voiceCaptureRestart => 'फिर से रिकॉर्ड करें';
 
   @override
@@ -1962,6 +1968,18 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appFontInfo =>
       'पूरे ऐप में इस्तेमाल होने वाला फ़ॉन्ट. नोट का अपना फ़ॉन्ट इस पर हावी रहता है. सभी फ़ॉन्ट ऐप के साथ आते हैं — इंटरनेट की ज़रूरत नहीं.';
+
+  @override
+  String get fontGroupSans => 'सैन्स';
+
+  @override
+  String get fontGroupSerif => 'सेरिफ़';
+
+  @override
+  String get fontGroupMono => 'मोनोस्पेस';
+
+  @override
+  String get fontGroupHand => 'हस्तलेख';
 
   @override
   String get appFontDefaultSuffix => 'डिफ़ॉल्ट';

@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · 自動句読点",
   "voiceCaptureAddToNote": "ノートに追加",
   "voiceCaptureCreateNote": "新規ノートを作成",
+  "voiceCaptureAiNote": "AIノート",
+  "voiceCapturePlainNote": "そのままメモ",
   "voiceCaptureRestart": "再録音",
   "voiceChipSummarizeAdd": "要約として追加",
   "voiceChipSummarizeSave": "要約として保存",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "特大",
   "appFontSetting": "フォント",
   "appFontInfo": "アプリ全体で使うフォントです。メモごとのフォント指定が優先されます。すべてのフォントはアプリに同梱されており、インターネットは不要です。",
+  "fontGroupSans": "ゴシック体",
+  "fontGroupSerif": "明朝体",
+  "fontGroupMono": "等幅",
+  "fontGroupHand": "手書き風",
   "appFontDefaultSuffix": "既定"
 }

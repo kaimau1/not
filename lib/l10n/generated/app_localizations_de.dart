@@ -831,6 +831,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Neue Notiz erstellen';
 
   @override
+  String get voiceCaptureAiNote => 'KI-Notiz';
+
+  @override
+  String get voiceCapturePlainNote => 'Einfache Notiz';
+
+  @override
   String get voiceCaptureRestart => 'Erneut aufnehmen';
 
   @override
@@ -1978,6 +1984,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Die Schriftart der ganzen App. Die eigene Schriftart einer Notiz hat Vorrang. Alle Schriftarten sind in der App enthalten — kein Internet nötig.';
+
+  @override
+  String get fontGroupSans => 'Serifenlos';
+
+  @override
+  String get fontGroupSerif => 'Serif';
+
+  @override
+  String get fontGroupMono => 'Monospace';
+
+  @override
+  String get fontGroupHand => 'Handschrift';
 
   @override
   String get appFontDefaultSuffix => 'Standard';

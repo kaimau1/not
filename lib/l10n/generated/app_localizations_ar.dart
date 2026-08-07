@@ -818,6 +818,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get voiceCaptureCreateNote => 'إنشاء ملاحظة جديدة';
 
   @override
+  String get voiceCaptureAiNote => 'ملاحظة ذكية';
+
+  @override
+  String get voiceCapturePlainNote => 'ملاحظة عادية';
+
+  @override
   String get voiceCaptureRestart => 'تسجيل مجددًا';
 
   @override
@@ -1951,6 +1957,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get appFontInfo =>
       'الخط المستخدم في كل أنحاء التطبيق. خط الملاحظة نفسها له الأولوية. جميع الخطوط مضمّنة في التطبيق — لا حاجة للإنترنت.';
+
+  @override
+  String get fontGroupSans => 'بلا زخارف';
+
+  @override
+  String get fontGroupSerif => 'بزخارف';
+
+  @override
+  String get fontGroupMono => 'ثابت العرض';
+
+  @override
+  String get fontGroupHand => 'خط اليد';
 
   @override
   String get appFontDefaultSuffix => 'افتراضي';

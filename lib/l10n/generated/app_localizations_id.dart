@@ -827,6 +827,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Yeni not oluştur';
 
   @override
+  String get voiceCaptureAiNote => 'Catatan AI';
+
+  @override
+  String get voiceCapturePlainNote => 'Catatan biasa';
+
+  @override
   String get voiceCaptureRestart => 'Yeniden kaydet';
 
   @override
@@ -1972,6 +1978,18 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Font yang dipakai di seluruh aplikasi. Font milik catatan lebih diutamakan. Semua font sudah menyatu dengan aplikasi — tak perlu internet.';
+
+  @override
+  String get fontGroupSans => 'Sans';
+
+  @override
+  String get fontGroupSerif => 'Serif';
+
+  @override
+  String get fontGroupMono => 'Monospace';
+
+  @override
+  String get fontGroupHand => 'Tulisan tangan';
 
   @override
   String get appFontDefaultSuffix => 'bawaan';

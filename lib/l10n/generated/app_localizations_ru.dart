@@ -825,6 +825,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Создать новую заметку';
 
   @override
+  String get voiceCaptureAiNote => 'ИИ-заметка';
+
+  @override
+  String get voiceCapturePlainNote => 'Обычная заметка';
+
+  @override
   String get voiceCaptureRestart => 'Записать снова';
 
   @override
@@ -1967,6 +1973,18 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Шрифт всего приложения. Собственный шрифт заметки имеет приоритет. Все шрифты входят в приложение — интернет не нужен.';
+
+  @override
+  String get fontGroupSans => 'Без засечек';
+
+  @override
+  String get fontGroupSerif => 'С засечками';
+
+  @override
+  String get fontGroupMono => 'Моноширинный';
+
+  @override
+  String get fontGroupHand => 'Рукописный';
 
   @override
   String get appFontDefaultSuffix => 'по умолчанию';

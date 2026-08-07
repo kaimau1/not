@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · automatyczna interpunkcja",
   "voiceCaptureAddToNote": "Dodaj do notatki",
   "voiceCaptureCreateNote": "Utwórz nową notatkę",
+  "voiceCaptureAiNote": "Notatka AI",
+  "voiceCapturePlainNote": "Zwykła notatka",
   "voiceCaptureRestart": "Nagrywaj ponownie",
   "voiceChipSummarizeAdd": "Dodaj jako podsumowanie",
   "voiceChipSummarizeSave": "Zapisz jako podsumowanie",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "Bardzo duża",
   "appFontSetting": "Czcionka",
   "appFontInfo": "Czcionka używana w całej aplikacji. Własna czcionka notatki ma pierwszeństwo. Wszystkie czcionki są w aplikacji — internet nie jest potrzebny.",
+  "fontGroupSans": "Bezszeryfowe",
+  "fontGroupSerif": "Szeryfowe",
+  "fontGroupMono": "Maszynowe",
+  "fontGroupHand": "Odręczne",
   "appFontDefaultSuffix": "domyślna"
 }

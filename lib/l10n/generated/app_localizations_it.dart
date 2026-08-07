@@ -828,6 +828,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Crea nuova nota';
 
   @override
+  String get voiceCaptureAiNote => 'Nota IA';
+
+  @override
+  String get voiceCapturePlainNote => 'Nota semplice';
+
+  @override
   String get voiceCaptureRestart => 'Registra di nuovo';
 
   @override
@@ -1976,6 +1982,18 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Il carattere usato in tutta l\'app. Il carattere scelto per una nota ha la precedenza. Tutti i caratteri sono inclusi nell\'app: non serve internet.';
+
+  @override
+  String get fontGroupSans => 'Senza grazie';
+
+  @override
+  String get fontGroupSerif => 'Serif';
+
+  @override
+  String get fontGroupMono => 'Monospazio';
+
+  @override
+  String get fontGroupHand => 'Corsivo';
 
   @override
   String get appFontDefaultSuffix => 'predefinito';

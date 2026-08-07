@@ -564,7 +564,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
 
   Widget _header(AppLocalizations l10n, ColorScheme scheme, bool listening) {
     final ready = _phase == _Phase.ready;
-    final language = languageLabel(Localizations.localeOf(context).languageCode);
+    final language = languageLabel(
+      Localizations.localeOf(context).languageCode,
+    );
     return SizedBox(
       height: 52,
       child: Row(
@@ -700,9 +702,7 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
               children: [
                 if (settled.isNotEmpty)
                   TextSpan(
-                    text: settledCount == words.length
-                        ? settled
-                        : '$settled ',
+                    text: settledCount == words.length ? settled : '$settled ',
                     style: style.copyWith(color: scheme.onSurface),
                   ),
                 if (pending.isNotEmpty)
@@ -732,6 +732,41 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     );
   }
 
+  /// Gözden geçirme evresinin bitiş düğmesi. İki düğme yan yana durduğunda
+  /// etiketler dar ekranda sığmayabilir: metin tek satırda kalır ve gerekirse
+  /// kısaltılır, ikon hangi düğme olduğunu etiket kırpılsa da anlatır.
+  Widget _readyButton({
+    required String label,
+    required IconData? icon,
+    required Color background,
+    required Color foreground,
+    required VoidCallback onPressed,
+  }) {
+    final style = FilledButton.styleFrom(
+      backgroundColor: background,
+      foregroundColor: foreground,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    );
+    final text = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontWeight: FontWeight.w600),
+    );
+    return SizedBox(
+      height: 54,
+      child: icon == null
+          ? FilledButton(onPressed: onPressed, style: style, child: text)
+          : FilledButton.icon(
+              onPressed: onPressed,
+              style: style,
+              icon: Icon(icon, size: 18),
+              label: text,
+            ),
+    );
+  }
+
   Widget _actions(
     AppLocalizations l10n,
     ColorScheme scheme,
@@ -739,6 +774,17 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
     bool listening,
   ) {
     if (_phase == _Phase.ready) {
+      // ANA EKRAN: notu kimin kuracağı iki eşit düğmeyle sorulur — "AI not"
+      // (asistan başlık/madde/hatırlatıcı çıkarır) ve "Düz not" (döküm olduğu
+      // gibi). Eskiden "Yeni not oluştur" tek başına buradaydı, asistan yolu
+      // ise altta çiplerin arasında ("Asistan oluştursun") kaybolmuştu;
+      // kullanıcı isteği ikisinin YAN YANA ve kısa adlarıyla durması.
+      //
+      // Döküm yapılamadığında (ses eki yolu) asistan düğmesi YOK: yapay zekâ
+      // zaten çağrılamıyor, tek yol kaydı düz notla saklamak.
+      final assistant =
+          widget.target == VoiceCaptureTarget.dashboard &&
+          _readyAudioPath == null;
       return Row(
         children: [
           SizedBox(
@@ -760,24 +806,29 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: SizedBox(
-              height: 54,
-              child: FilledButton(
-                onPressed: () => _submit(VoiceCaptureAction.insert),
-                style: FilledButton.styleFrom(
-                  backgroundColor: scheme.primaryContainer,
-                  foregroundColor: scheme.onPrimaryContainer,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Text(
-                  widget.target == VoiceCaptureTarget.editor
-                      ? l10n.voiceCaptureAddToNote
-                      : l10n.voiceCaptureCreateNote,
-                ),
+          if (assistant) ...[
+            Expanded(
+              child: _readyButton(
+                label: l10n.voiceCaptureAiNote,
+                icon: Icons.auto_awesome,
+                background: scheme.secondaryContainer,
+                foreground: scheme.onSecondaryContainer,
+                onPressed: () => _submit(VoiceCaptureAction.compose),
               ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Expanded(
+            child: _readyButton(
+              label: assistant
+                  ? l10n.voiceCapturePlainNote
+                  : widget.target == VoiceCaptureTarget.editor
+                  ? l10n.voiceCaptureAddToNote
+                  : l10n.voiceCaptureCreateNote,
+              icon: assistant ? Icons.notes : null,
+              background: scheme.primaryContainer,
+              foreground: scheme.onPrimaryContainer,
+              onPressed: () => _submit(VoiceCaptureAction.insert),
             ),
           ),
         ],
@@ -822,7 +873,9 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         icon: Icon(listening ? Icons.stop_circle : Icons.mic),
         label: Text(
           listening
-              ? (holdActive && _pressed ? l10n.voiceListening : l10n.voiceFinish)
+              ? (holdActive && _pressed
+                    ? l10n.voiceListening
+                    : l10n.voiceFinish)
               : (holdActive ? l10n.voiceModeHold : l10n.voiceModeTap),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -907,14 +960,15 @@ class _VoiceCaptureSheetState extends ConsumerState<_VoiceCaptureSheet> {
         editor ? VoiceCaptureAction.toItems : VoiceCaptureAction.asList,
       ),
       (l10n.voiceChipFix, VoiceCaptureAction.fix),
-      // Yalnız ana ekranda: asistanın notu kendi kurduğu akış.
-      if (!editor)
-        (l10n.voiceChipCompose, VoiceCaptureAction.compose),
+      // "Asistan oluştursun" ARTIK ÇİP DEĞİL: ana ekranda bitiş satırındaki
+      // "AI not" düğmesi oldu (bkz. _actions). Çipler arasında dururken hem
+      // öteki üçüyle aynı ağırlıkta görünüyor — oysa notu baştan sona o
+      // kuruyor — hem de asıl düğmeyle arasındaki seçim belirsiz kalıyordu.
     ];
     // ÇİPLER SATIRA SIĞAR: eskiden yatay kaydırılan bir liste vardı ve son çip
-    // ("Asistan oluştursun") ekranın dışında kalıyordu — kaydırılabildiği belli
-    // olmadığı için o seçenek yok sayılıyordu. Wrap taşanı ALT SATIRA indirir;
-    // hepsi tek bakışta görünür.
+    // ekranın dışında kalıyordu — kaydırılabildiği belli olmadığı için o
+    // seçenek yok sayılıyordu. Wrap taşanı ALT SATIRA indirir; hepsi tek
+    // bakışta görünür.
     return Wrap(
       spacing: 6,
       runSpacing: 6,

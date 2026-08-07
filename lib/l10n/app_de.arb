@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · Automatische Zeichensetzung",
   "voiceCaptureAddToNote": "Zu Notiz hinzufügen",
   "voiceCaptureCreateNote": "Neue Notiz erstellen",
+  "voiceCaptureAiNote": "KI-Notiz",
+  "voiceCapturePlainNote": "Einfache Notiz",
   "voiceCaptureRestart": "Erneut aufnehmen",
   "voiceChipSummarizeAdd": "Als Zusammenfassung hinzufügen",
   "voiceChipSummarizeSave": "Als Zusammenfassung speichern",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "Sehr groß",
   "appFontSetting": "Schriftart",
   "appFontInfo": "Die Schriftart der ganzen App. Die eigene Schriftart einer Notiz hat Vorrang. Alle Schriftarten sind in der App enthalten — kein Internet nötig.",
+  "fontGroupSans": "Serifenlos",
+  "fontGroupSerif": "Serif",
+  "fontGroupMono": "Monospace",
+  "fontGroupHand": "Handschrift",
   "appFontDefaultSuffix": "Standard"
 }

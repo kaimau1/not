@@ -384,6 +384,8 @@
   },
   "voiceCaptureAddToNote": "Nota ekle",
   "voiceCaptureCreateNote": "Yeni not oluştur",
+  "voiceCaptureAiNote": "AI not",
+  "voiceCapturePlainNote": "Düz not",
   "voiceCaptureRestart": "Baştan dinle",
   "voiceChipSummarizeAdd": "Özetleyerek ekle",
   "voiceChipSummarizeSave": "Özetleyerek kaydet",
@@ -891,5 +893,9 @@
   "fontSizeXLarge": "Çok büyük",
   "appFontSetting": "Yazı tipi",
   "appFontInfo": "Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.",
+  "fontGroupSans": "Sade",
+  "fontGroupSerif": "Kitap",
+  "fontGroupMono": "Daktilo",
+  "fontGroupHand": "El yazısı",
   "appFontDefaultSuffix": "varsayılan"
 }

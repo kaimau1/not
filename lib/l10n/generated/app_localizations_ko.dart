@@ -807,6 +807,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get voiceCaptureCreateNote => '새 노트 생성';
 
   @override
+  String get voiceCaptureAiNote => 'AI 노트';
+
+  @override
+  String get voiceCapturePlainNote => '일반 메모';
+
+  @override
   String get voiceCaptureRestart => '다시 녹음';
 
   @override
@@ -1926,6 +1932,18 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get appFontInfo =>
       '앱 전체에서 사용하는 글꼴입니다. 메모에 지정한 글꼴이 우선합니다. 모든 글꼴은 앱에 포함되어 있어 인터넷이 필요 없습니다.';
+
+  @override
+  String get fontGroupSans => '고딕';
+
+  @override
+  String get fontGroupSerif => '명조';
+
+  @override
+  String get fontGroupMono => '고정폭';
+
+  @override
+  String get fontGroupHand => '손글씨';
 
   @override
   String get appFontDefaultSuffix => '기본';

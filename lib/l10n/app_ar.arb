@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · ترقيم تلقائي",
   "voiceCaptureAddToNote": "إضافة إلى الملاحظة",
   "voiceCaptureCreateNote": "إنشاء ملاحظة جديدة",
+  "voiceCaptureAiNote": "ملاحظة ذكية",
+  "voiceCapturePlainNote": "ملاحظة عادية",
   "voiceCaptureRestart": "تسجيل مجددًا",
   "voiceChipSummarizeAdd": "إضافة كملخص",
   "voiceChipSummarizeSave": "حفظ كملخص",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "كبير جدًا",
   "appFontSetting": "الخط",
   "appFontInfo": "الخط المستخدم في كل أنحاء التطبيق. خط الملاحظة نفسها له الأولوية. جميع الخطوط مضمّنة في التطبيق — لا حاجة للإنترنت.",
+  "fontGroupSans": "بلا زخارف",
+  "fontGroupSerif": "بزخارف",
+  "fontGroupMono": "ثابت العرض",
+  "fontGroupHand": "خط اليد",
   "appFontDefaultSuffix": "افتراضي"
 }

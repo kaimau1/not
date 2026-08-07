@@ -806,6 +806,12 @@ class AppLocalizationsJa extends AppLocalizations {
   String get voiceCaptureCreateNote => '新規ノートを作成';
 
   @override
+  String get voiceCaptureAiNote => 'AIノート';
+
+  @override
+  String get voiceCapturePlainNote => 'そのままメモ';
+
+  @override
   String get voiceCaptureRestart => '再録音';
 
   @override
@@ -1924,6 +1930,18 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appFontInfo =>
       'アプリ全体で使うフォントです。メモごとのフォント指定が優先されます。すべてのフォントはアプリに同梱されており、インターネットは不要です。';
+
+  @override
+  String get fontGroupSans => 'ゴシック体';
+
+  @override
+  String get fontGroupSerif => '明朝体';
+
+  @override
+  String get fontGroupMono => '等幅';
+
+  @override
+  String get fontGroupHand => '手書き風';
 
   @override
   String get appFontDefaultSuffix => '既定';

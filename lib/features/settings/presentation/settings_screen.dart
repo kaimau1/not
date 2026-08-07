@@ -138,11 +138,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'tema ${l10n.themeSystem} ${l10n.themeLight} '
                 '${l10n.themeDark} ${l10n.themePaper}',
           ),
-          _SettingRow(const _FontScaleSelector(), title: l10n.fontSize),
+          // Yazı tipi + yazı boyutu TEK satırda: ikisi de "yazı nasıl
+          // görünsün" işidir ve ayrı kartlarda dururken (üstelik biri
+          // katalogdaki 19 yazı tipini çip çip serdiği için) Görünüm alanı
+          // okunmaz hâle geliyordu.
           _SettingRow(
-            const _AppFontSelector(),
-            title: l10n.appFontSetting,
-            keywords: '${l10n.appFontInfo} font yazi tipi',
+            const _TypographySection(),
+            title: '${l10n.appFontSetting} · ${l10n.fontSize}',
+            keywords:
+                '${l10n.appFontInfo} font yazi tipi boyut '
+                '${l10n.fontSizeSmall} ${l10n.fontSizeMedium} '
+                '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge}',
           ),
           _SettingRow(
             const _ExpandListItemsSwitch(),
@@ -1246,63 +1252,102 @@ class _DashboardBackgroundTile extends ConsumerWidget {
   }
 }
 
-/// Yazı boyutu: dört kademe (Küçük · Orta · Büyük · Çok büyük).
+/// TİPOGRAFİ TEK BLOKTA: yazı tipi + yazı boyutu + ORTAK önizleme.
 ///
-/// KÖK NEDEN — eskiden 0.85–1.4 arası sürekli bir KAYDIRICIydı: "%107" gibi
-/// hatırlanmayan değerler seçilebiliyor, iki cihazda aynı boyutu tutturmak
-/// imkânsız oluyordu (kullanıcı isteği 2026-08-07). Kademeler tek dokunuşla
-/// seçiliyor ve her cihazda aynı dört görünümü veriyor. Kaydırıcı döneminden
-/// kalan değer en yakın kademede görünür — kimsenin boyutu güncellemede
-/// kendiliğinden değişmez.
-class _FontScaleSelector extends ConsumerWidget {
-  const _FontScaleSelector();
-
-  static String _label(AppLocalizations l10n, FontScaleStep step) =>
-      switch (step) {
-        FontScaleStep.small => l10n.fontSizeSmall,
-        FontScaleStep.medium => l10n.fontSizeMedium,
-        FontScaleStep.large => l10n.fontSizeLarge,
-        FontScaleStep.xlarge => l10n.fontSizeXLarge,
-      };
+/// KÖK NEDEN (kullanıcı: "ayarlarda font seçimi vs çok dağınık"): Görünüm
+/// alanı iki ayrı kartla açılıyordu ve ikincisi katalogdaki **19 yazı tipini
+/// çip çip ekrana seriyordu** — tek başına dört-beş satır kaplayan, altındaki
+/// bütün ayarları (liste, hızlı not, kart önizlemesi, zemin, koyu tema
+/// zamanlaması) aşağı iten bir duvar. Üstelik her iki kartın da kendi
+/// önizlemesi/açıklaması vardı; "yazı" ile ilgili tek bir iş iki yere
+/// bölünmüştü.
+///
+/// Artık tek satır: yazı tipi bir SATIR (seçilen adı kendi yazı tipiyle
+/// gösterir, dokununca öbeklenmiş bir levha açar), yazı boyutu dört kademe,
+/// altta ikisini birlikte gösteren tek önizleme.
+class _TypographySection extends ConsumerWidget {
+  const _TypographySection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final current = nearestFontScaleStep(ref.watch(fontScaleProvider));
-    final bodyStyle = Theme.of(context).textTheme.bodyMedium;
-    // Seçicinin KENDİSİ ölçeklenmez: "Çok büyük" seçildiğinde düğmelerin de
-    // büyümesi satırı taşırıyordu. Önizleme metni ölçeği kendi uygular.
-    return MediaQuery.withNoTextScaling(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.format_size, size: 18),
-              const SizedBox(width: 8),
-              Text(l10n.fontSize),
-            ],
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final font = ref.watch(appFontProvider);
+    final step = nearestFontScaleStep(ref.watch(fontScaleProvider));
+    final bodyStyle = theme.textTheme.bodyMedium;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.text_fields, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.appFontSetting)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Yazı tipi satırı: seçili ad KENDİ yazı tipiyle yazılır.
+        InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _showAppFontSheet(context, ref),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    font,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: applyNoteFont(
+                      const TextStyle(fontSize: 15.5),
+                      font,
+                    ).copyWith(color: scheme.onSurface),
+                  ),
+                ),
+                Icon(
+                  Icons.unfold_more,
+                  size: 18,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          // Wrap: dört etiket dar ekranda tek satıra sığmayınca alta iner
-          // (SegmentedButton bu durumda etiketleri kırpardı).
-          Wrap(
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            const Icon(Icons.format_size, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.fontSize)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Seçicinin KENDİSİ ölçeklenmez: "Çok büyük" seçildiğinde düğmelerin
+        // de büyümesi satırı taşırıyordu. Önizleme ölçeği kendi uygular.
+        MediaQuery.withNoTextScaling(
+          child: Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final step in FontScaleStep.values)
+              for (final value in FontScaleStep.values)
                 ChoiceChip(
-                  label: Text(_label(l10n, step)),
-                  selected: step == current,
+                  label: Text(_fontScaleLabel(l10n, value)),
+                  selected: value == step,
                   onSelected: (_) =>
-                      ref.read(fontScaleProvider.notifier).setStep(step),
+                      ref.read(fontScaleProvider.notifier).setStep(value),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
-          // Önizleme kutusu en büyük kademeye göre boyutlanır ki seçim
-          // değişince yüksekliği zıplamasın.
-          SizedBox(
+        ),
+        const SizedBox(height: 10),
+        // ORTAK önizleme: seçilen yazı tipi VE boyut birlikte görünür.
+        // Kutu en büyük kademeye göre boyutlanır ki seçim değişince
+        // yüksekliği zıplamasın.
+        MediaQuery.withNoTextScaling(
+          child: SizedBox(
             height:
                 (bodyStyle?.fontSize ?? 14) * FontScaleStep.xlarge.scale * 1.6,
             width: double.infinity,
@@ -1312,70 +1357,120 @@ class _FontScaleSelector extends ConsumerWidget {
                 l10n.fontSizePreview,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                textScaler: TextScaler.linear(current.scale),
-                style: bodyStyle?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                textScaler: TextScaler.linear(step.scale),
+                style: applyNoteFont(
+                  bodyStyle ?? const TextStyle(),
+                  font,
+                ).copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Uygulamanın genel yazı tipi. Her satır KENDİ yazı tipiyle yazılır —
-/// seçmeden önce nasıl duracağı görünür (biçim şeridindeki not yazı tipi
-/// menüsüyle aynı fikir).
-class _AppFontSelector extends ConsumerWidget {
-  const _AppFontSelector();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final current = ref.watch(appFontProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.font_download_outlined, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(l10n.appFontSetting)),
-          ],
         ),
         const SizedBox(height: 4),
         Text(
           l10n.appFontInfo,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
           ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final font in kCatalogFonts)
-              ChoiceChip(
-                label: Text(
-                  font.id == kAppDefaultFont
-                      ? '${font.label} · ${l10n.appFontDefaultSuffix}'
-                      : font.label,
-                  // Etiket kendi yazı tipiyle: seçici aynı zamanda örnektir.
-                  style: applyNoteFont(const TextStyle(fontSize: 14), font.id),
-                ),
-                selected: font.id == current,
-                onSelected: (_) =>
-                    ref.read(appFontProvider.notifier).set(font.id!),
-              ),
-          ],
         ),
       ],
     );
   }
 }
+
+/// Yazı tipi seçme levhası: katalog ÖBEKLENMİŞ (sade / kitap / daktilo /
+/// el yazısı) ve her satır kendi yazı tipiyle yazılıyor.
+Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
+  final l10n = context.l10n;
+  String groupLabel(NoteFontGroup group) => switch (group) {
+    NoteFontGroup.sans => l10n.fontGroupSans,
+    NoteFontGroup.serif => l10n.fontGroupSerif,
+    NoteFontGroup.mono => l10n.fontGroupMono,
+    NoteFontGroup.hand => l10n.fontGroupHand,
+  };
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    builder: (sheetContext) {
+      final scheme = Theme.of(sheetContext).colorScheme;
+      return Consumer(
+        builder: (context, ref, _) {
+          final current = ref.watch(appFontProvider);
+          return ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: Text(
+                  l10n.appFontSetting,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              for (final group in NoteFontGroup.values) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                  child: Text(
+                    groupLabel(group),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.6,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                for (final font in kCatalogFonts)
+                  if (font.group == group)
+                    ListTile(
+                      dense: true,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      selected: font.id == current,
+                      title: Text(
+                        font.id == kAppDefaultFont
+                            ? '${font.label} · ${l10n.appFontDefaultSuffix}'
+                            : font.label,
+                        // Satır aynı zamanda ÖRNEK: seçmeden önce nasıl
+                        // duracağı görünür.
+                        style: applyNoteFont(
+                          const TextStyle(fontSize: 16),
+                          font.id,
+                        ),
+                      ),
+                      trailing: font.id == current
+                          ? Icon(Icons.check, size: 20, color: scheme.primary)
+                          : null,
+                      onTap: () =>
+                          ref.read(appFontProvider.notifier).set(font.id!),
+                    ),
+              ],
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+/// Yazı boyutu kademelerinin görünen adları.
+///
+/// KÖK NEDEN — eskiden 0.85–1.4 arası sürekli bir KAYDIRICIydı: "%107" gibi
+/// hatırlanmayan değerler seçilebiliyor, iki cihazda aynı boyutu tutturmak
+/// imkânsız oluyordu (kullanıcı isteği 2026-08-07). Kademeler tek dokunuşla
+/// seçiliyor ve her cihazda aynı dört görünümü veriyor. Kaydırıcı döneminden
+/// kalan değer en yakın kademede görünür — kimsenin boyutu güncellemede
+/// kendiliğinden değişmez.
+String _fontScaleLabel(AppLocalizations l10n, FontScaleStep step) =>
+    switch (step) {
+      FontScaleStep.small => l10n.fontSizeSmall,
+      FontScaleStep.medium => l10n.fontSizeMedium,
+      FontScaleStep.large => l10n.fontSizeLarge,
+      FontScaleStep.xlarge => l10n.fontSizeXLarge,
+    };
 
 class _ExpandListItemsSwitch extends ConsumerWidget {
   const _ExpandListItemsSwitch();
