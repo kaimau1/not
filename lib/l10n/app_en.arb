@@ -776,5 +776,18 @@
   "ttsVoice": "AI voice",
   "shareAsNote": "Share as note",
   "shareAsNoteInfo": "Sends the note with its attachments, page notes, drawings and bubbles; the other side opens it exactly the same in the Not app.",
-  "shareAsNotePreparing": "Preparing note package…"
+  "shareAsNotePreparing": "Preparing note package…",
+  "bubbleStar": "Star",
+  "bubbleEdit": "Edit bubble",
+  "bubbleStarredOnly": "Starred only",
+  "bubbleSearchHint": "Search bubbles…",
+  "bubblesOverviewTitle": "Bubbles",
+  "bubblesEmpty": "No bubbles yet. Select text in the document and highlight it, or drop a bubble on the page.",
+  "bubblesNoMatch": "No bubble matches your search.",
+  "bubbleNoText": "(empty bubble)",
+  "pdfHighlight": "Highlight",
+  "pdfHighlightWithNote": "Highlight + note",
+  "pageNotesShow": "Show page note",
+  "pageNotesHide": "Hide page note",
+  "bubbleSave": "Save"
 }

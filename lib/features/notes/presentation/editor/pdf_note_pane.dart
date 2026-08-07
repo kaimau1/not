@@ -8,15 +8,18 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/pdf_selection_bar.dart';
 import '../viewers/pdf_viewer_screen.dart';
+import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
 
-/// "PDF ekle not al" notunun gövdesi: ÜSTTE PDF sayfası, ALTTA o sayfanın
-/// notu.
+/// "PDF ekle not al" notunun gövdesi: ÜSTTE PDF sayfası, ALTTA (istenirse) o
+/// sayfanın notu.
 ///
-/// Not tarafının tamamı [PageNotePane]'dedir (slayt sürümüyle ortak); burada
-/// yalnız pdfrx görüntüleyicisi ve çizim katmanı yaşar.
+/// Asıl çalışma aracı sayfanın ÜZERİdir: metin seçilir, vurgulanır, balon
+/// bırakılır — hepsi tam ekrana geçmeden, bu bölmede. Alt not alanı varsayılan
+/// olarak kapalıdır (bkz. [PageNotePane]).
 class PdfNotePane extends StatefulWidget {
   const PdfNotePane({
     super.key,
@@ -35,7 +38,7 @@ class PdfNotePane extends StatefulWidget {
   final Attachment attachment;
   final void Function(int page, String text) onPageNoteChanged;
 
-  /// Tam ekran görüntüleyicide yapılan çizim ekle birlikte geri gelir.
+  /// Tam ekran görüntüleyicide yapılan çizim/balon ekle birlikte geri gelir.
   final ValueChanged<Attachment> onAttachmentChanged;
 
   /// Sayfa yöneticisini açar (sil/döndür/sırala + çizimi belgeye gömme).
@@ -66,14 +69,24 @@ class _PdfNotePaneState extends State<PdfNotePane> {
         widget.onAttachmentChanged(widget.attachment.copyWith(ink: strokes)),
   );
 
-  /// Not balonları BURADA da düzenlenebilir (çizimden farkı bu): balon metin
-  /// alanıdır, küçük bölmede de tıklanıp yazılabilir ve kullanıcı belgenin
-  /// üzerinde planını tam ekrana geçmeden kurabilir.
+  /// Balonlar BURADA da düzenlenir (çizimden farkı bu): balon metin alanıdır,
+  /// küçük bölmede de tıklanıp yazılabilir ve kullanıcı belgenin üzerinde
+  /// planını tam ekrana geçmeden kurar.
   late final BubbleController _bubbles = BubbleController(
     initial: widget.attachment.bubbles,
     onChanged: (list) =>
         widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
   );
+
+  /// Balon yazılırken alt not alanı gizlenir — iki bölme + klavye aynı anda
+  /// sığmıyor ve balon kartı bölmenin dışında kalıyordu.
+  final _bubbleEditing = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _bubbles.onEditingChanged = (editing) => _bubbleEditing.value = editing;
+  }
 
   @override
   void didUpdateWidget(PdfNotePane old) {
@@ -89,6 +102,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   void dispose() {
     _ink.dispose();
     _bubbles.dispose();
+    _bubbleEditing.dispose();
     super.dispose();
   }
 
@@ -112,6 +126,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
+    suppressNotes: _bubbleEditing,
     viewerBuilder: (context, host) => _PdfPaneViewer(
       attachment: widget.attachment,
       ink: _ink,
@@ -145,6 +160,15 @@ class _PdfPaneViewer extends StatefulWidget {
 
 class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   final _pdf = PdfViewerController();
+  final _selection = PdfSelectionState();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.bubbles.onDragChanged = (dragging) {
+      if (mounted) _selection.selecting.value = dragging;
+    };
+  }
 
   @override
   void didUpdateWidget(_PdfPaneViewer old) {
@@ -158,106 +182,146 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   }
 
   @override
+  void dispose() {
+    _selection.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openBubbles() async {
+    final target = await showBubblesOverview(context, widget.bubbles);
+    if (target == null || !mounted) return;
+    widget.host.onPageChanged(target.page);
+    if (_pdf.isReady) _pdf.goToPage(pageNumber: target.page);
+    widget.bubbles.openOnly(target.id);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final attachment = widget.attachment;
     final hasLocal =
         attachment.localPath.isNotEmpty &&
         localFileExists(attachment.localPath);
-    final params = PdfViewerParams(
-      onPageChanged: (page) {
-        if (page != null) widget.host.onPageChanged(page);
-      },
-      onViewerReady: (document, controller) {
-        widget.host.onPageCount(document.pages.length);
-        // Pano başka bir sayfadaysa (toplu görünümden gelindi) belge açılır
-        // açılmaz oraya gidilir.
-        if (widget.host.page > 1) {
-          controller.goToPage(pageNumber: widget.host.page);
-        }
-      },
-      // Çizimler görünür ama düzenlenmez (bkz. [_PdfNotePaneState._ink]);
-      // balonlar burada da açılır/yazılır/taşınır.
-      pageOverlaysBuilder: (context, pageRect, page) => [
-        Positioned.fill(
-          child: InkPageLayer(controller: widget.ink, page: page.pageNumber),
+    if (!hasLocal && !attachment.isUploaded) {
+      // Dosya ne cihazda ne bulutta: başka bir cihazda eklenmiş ve henüz
+      // senkronlanmamış olabilir. Notlar yine yazılabilsin diye ekran
+      // kilitlenmez.
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            context.l10n.attachmentNotSynced,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ),
-        Positioned.fill(
-          child: BubblePageLayer(
-            controller: widget.bubbles,
-            page: page.pageNumber,
+      );
+    }
+
+    // Katmanların tamamı (seçim, çizim, balon) tam ekran görüntüleyiciyle
+    // AYNI kurulumdan gelir: "tam ekran yapmadan da çalışsın" isteğinin tek
+    // kopyalı karşılığı (bkz. pdfLayerParams).
+    final viewer = ValueListenableBuilder<bool>(
+      valueListenable: _selection.selecting,
+      builder: (context, dragging, _) {
+        final params = pdfLayerParams(
+          selection: _selection,
+          bubbles: widget.bubbles,
+          editable: true,
+          dragging: dragging,
+          // Çizimler görünür ama panoda DÜZENLENMEZ (bkz. _PdfNotePaneState).
+          inkLayer: (page) => InkPageLayer(controller: widget.ink, page: page),
+          onPageChanged: (page) {
+            if (page != null) widget.host.onPageChanged(page);
+          },
+          onViewerReady: (document, controller) {
+            widget.host.onPageCount(document.pages.length);
+            // Pano başka bir sayfadaysa (toplu görünümden gelindi) belge
+            // açılır açılmaz oraya gidilir.
+            if (widget.host.page > 1) {
+              controller.goToPage(pageNumber: widget.host.page);
+            }
+          },
+        );
+        return hasLocal
+            ? PdfViewer.file(
+                attachment.localPath,
+                controller: _pdf,
+                params: params,
+              )
+            : PdfViewer.uri(
+                Uri.parse(attachment.downloadUrl),
+                controller: _pdf,
+                params: params,
+              );
+      },
+    );
+
+    return Stack(
+      children: [
+        Positioned.fill(child: viewer),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Column(children: [_bubbleButton(), _overviewButton()]),
+        ),
+        Positioned(
+          left: 8,
+          right: 8,
+          bottom: 8,
+          child: PdfSelectionBar(
+            selection: _selection,
+            bubbles: widget.bubbles,
+            compact: true,
           ),
         ),
       ],
     );
-    if (hasLocal) {
-      return _withBubbleButton(
-        PdfViewer.file(
-          attachment.localPath,
-          controller: _pdf,
-          params: params,
+  }
+
+  /// "Balon bırak" düğmesi. Pano bölmesi küçük olduğu için düğme küçük ve
+  /// köşede: sayfayı kapatmaz ama planlamaya tam ekrana geçmeden başlanır.
+  Widget _bubbleButton() => AnimatedBuilder(
+    animation: widget.bubbles,
+    builder: (context, _) {
+      final adding = widget.bubbles.adding;
+      final scheme = Theme.of(context).colorScheme;
+      return Material(
+        color: adding ? scheme.primary : scheme.surface.withValues(alpha: 0.85),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: IconButton(
+          tooltip: adding ? context.l10n.bubbleAddDone : context.l10n.bubbleAdd,
+          visualDensity: VisualDensity.compact,
+          onPressed: () => widget.bubbles.setAdding(!adding),
+          icon: Icon(
+            adding ? Icons.chat_bubble : Icons.add_comment_outlined,
+            size: 18,
+            color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+          ),
         ),
       );
-    }
-    if (attachment.isUploaded) {
-      return _withBubbleButton(
-        PdfViewer.uri(
-          Uri.parse(attachment.downloadUrl),
-          controller: _pdf,
-          params: params,
-        ),
-      );
-    }
-    // Dosya ne cihazda ne bulutta: başka bir cihazda eklenmiş ve henüz
-    // senkronlanmamış olabilir. Notlar yine yazılabilsin diye ekran
-    // kilitlenmez.
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          context.l10n.attachmentNotSynced,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall,
+    },
+  );
+
+  Widget _overviewButton() {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Material(
+        color: scheme.surface.withValues(alpha: 0.85),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: IconButton(
+          tooltip: context.l10n.bubblesOverviewTitle,
+          visualDensity: VisualDensity.compact,
+          onPressed: _openBubbles,
+          icon: Icon(
+            Icons.forum_outlined,
+            size: 18,
+            color: scheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
   }
-
-  /// Görüntüleyicinin üstüne "balon bırak" düğmesi koyar. Pano bölmesi küçük
-  /// olduğu için düğme küçük ve köşede: sayfayı kapatmaz ama planlamaya tam
-  /// ekrana geçmeden başlanabilir.
-  Widget _withBubbleButton(Widget viewer) => Stack(
-    children: [
-      Positioned.fill(child: viewer),
-      Positioned(
-        top: 4,
-        right: 4,
-        child: AnimatedBuilder(
-          animation: widget.bubbles,
-          builder: (context, _) {
-            final adding = widget.bubbles.adding;
-            final scheme = Theme.of(context).colorScheme;
-            return Material(
-              color: adding ? scheme.primary : scheme.surface.withValues(
-                alpha: 0.85,
-              ),
-              shape: const CircleBorder(),
-              elevation: 2,
-              child: IconButton(
-                tooltip: adding
-                    ? context.l10n.bubbleAddDone
-                    : context.l10n.bubbleAdd,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => widget.bubbles.setAdding(!adding),
-                icon: Icon(
-                  adding ? Icons.chat_bubble : Icons.add_comment_outlined,
-                  size: 18,
-                  color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    ],
-  );
 }

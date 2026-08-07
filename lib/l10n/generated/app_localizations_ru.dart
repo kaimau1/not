@@ -2145,4 +2145,44 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
+
+  @override
+  String get bubbleStar => 'Yıldızla';
+
+  @override
+  String get bubbleEdit => 'Balonu düzenle';
+
+  @override
+  String get bubbleStarredOnly => 'Yalnız yıldızlılar';
+
+  @override
+  String get bubbleSearchHint => 'Balonlarda ara…';
+
+  @override
+  String get bubblesOverviewTitle => 'Balonlar';
+
+  @override
+  String get bubblesEmpty =>
+      'Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.';
+
+  @override
+  String get bubblesNoMatch => 'Aramaya uyan balon yok.';
+
+  @override
+  String get bubbleNoText => '(boş balon)';
+
+  @override
+  String get pdfHighlight => 'Vurgula';
+
+  @override
+  String get pdfHighlightWithNote => 'Vurgula + not';
+
+  @override
+  String get pageNotesShow => 'Sayfa notunu göster';
+
+  @override
+  String get pageNotesHide => 'Sayfa notunu gizle';
+
+  @override
+  String get bubbleSave => 'Kaydet';
 }

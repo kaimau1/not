@@ -195,7 +195,57 @@ void main() {
         ),
       );
       await tester.pump();
+      // Alt not alani 2026-08-08'den beri GIZLI baslar (asil arac sayfanin
+      // uzerindeki balonlar). Bu grubun testleri not alanini sinadigi icin
+      // once acilir — dugmenin kendisi asagida ayrica kilitli.
+      await tester.tap(find.byIcon(Icons.edit_note_outlined));
+      await tester.pump();
     }
+
+    testWidgets('alt not alanı GİZLİ başlar, düğmeyle açılıp kapanır', (
+      tester,
+    ) async {
+      // Kullanıcı kararı 2026-08-08: asıl araç sayfanın üzerindeki balonlar;
+      // sayfa notu alanı ekranın yarısını kaplamak yerine istendiğinde açılır.
+      final attachment = pdf();
+      var note = Note(
+        id: 'n1',
+        type: NoteType.pdf,
+        attachments: [attachment],
+        pageNotes: const {'a1#p1': 'birinci sayfa'},
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: PdfNotePane(
+              noteOf: () => note,
+              attachment: attachment,
+              onPageNoteChanged: (page, text) =>
+                  note = note.withPageNote(attachment, page, text),
+              onAttachmentChanged: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Kapalı: not alanı YOK ama sayfa çubuğu duruyor.
+      expect(find.text('birinci sayfa'), findsNothing);
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('Sayfa 1'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.edit_note_outlined));
+      await tester.pump();
+      expect(find.text('birinci sayfa'), findsOneWidget);
+
+      // Yeniden dokunmak gizler.
+      await tester.tap(find.byIcon(Icons.edit_note));
+      await tester.pump();
+      expect(find.byType(TextField), findsNothing);
+    });
 
     testWidgets('sayfa çevrilince ALT BÖLME o sayfanın notunu gösterir', (
       tester,
@@ -389,6 +439,9 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
+      // Not alani gizli basliyor (PDF surumuyle ayni kural); acilir.
+      await tester.tap(find.byIcon(Icons.edit_note_outlined));
       await tester.pump();
     }
 

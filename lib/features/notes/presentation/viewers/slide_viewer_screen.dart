@@ -6,6 +6,7 @@ import '../../data/attachment_repository.dart';
 import '../../data/pptx_render.dart';
 import '../../data/slide_deck.dart';
 import '../../domain/attachment.dart';
+import '../editor/bubbles_overview.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'slide_canvas.dart';
@@ -84,6 +85,15 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     });
   }
 
+  /// Toplu balon listesi: "balona git" seçilirse o slayda gidip balonu açar.
+  Future<void> _openBubbles() async {
+    final target = await showBubblesOverview(context, _bubbles);
+    if (target == null || !mounted) return;
+    if (_pages.hasClients) _pages.jumpToPage(target.page - 1);
+    setState(() => _index = target.page - 1);
+    _bubbles.openOnly(target.id);
+  }
+
   void _toggleBubbleAdding() {
     setState(() {
       final next = !_bubbles.adding;
@@ -137,6 +147,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
             style: const TextStyle(fontSize: 14),
           ),
           actions: [
+            IconButton(
+              tooltip: l10n.bubblesOverviewTitle,
+              icon: const Icon(Icons.forum_outlined),
+              onPressed: _openBubbles,
+            ),
             if (widget.onChanged != null && (_slides?.isNotEmpty ?? false))
               IconButton(
                 tooltip: _bubbles.adding ? l10n.bubbleAddDone : l10n.bubbleAdd,
