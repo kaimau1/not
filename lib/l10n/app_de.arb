@@ -544,5 +544,12 @@
   "signInNetworkError": "Kein Internet erreichbar. Prüfe deine Verbindung und versuche es erneut.",
   "signInCanceled": "Anmeldung abgebrochen.",
   "cardRichPreview": "Formatierter Text auf Karten",
-  "cardRichPreviewInfo": "Farben, Hervorhebungen, Fett und Unterstreichungen deiner Notizen erscheinen auch auf den Karten der Startseite. Aus: Karten zeigen einfachen Text."
+  "cardRichPreviewInfo": "Farben, Hervorhebungen, Fett und Unterstreichungen deiner Notizen erscheinen auch auf den Karten der Startseite. Aus: Karten zeigen einfachen Text.",
+  "fontSizeSmall": "Klein",
+  "fontSizeMedium": "Mittel",
+  "fontSizeLarge": "Groß",
+  "fontSizeXLarge": "Sehr groß",
+  "appFontSetting": "Schriftart",
+  "appFontInfo": "Die Schriftart der ganzen App. Die eigene Schriftart einer Notiz hat Vorrang. Alle Schriftarten sind in der App enthalten — kein Internet nötig.",
+  "appFontDefaultSuffix": "Standard"
 }

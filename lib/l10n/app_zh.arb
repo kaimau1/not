@@ -544,5 +544,12 @@
   "signInNetworkError": "无法连接到网络。请检查网络后重试。",
   "signInCanceled": "已取消登录。",
   "cardRichPreview": "卡片显示格式化文本",
-  "cardRichPreviewInfo": "笔记中的颜色、高亮、加粗和下划线也会显示在主屏幕卡片上。关闭后，卡片只显示纯文本。"
+  "cardRichPreviewInfo": "笔记中的颜色、高亮、加粗和下划线也会显示在主屏幕卡片上。关闭后，卡片只显示纯文本。",
+  "fontSizeSmall": "小",
+  "fontSizeMedium": "中",
+  "fontSizeLarge": "大",
+  "fontSizeXLarge": "超大",
+  "appFontSetting": "字体",
+  "appFontInfo": "应用中各处使用的字体。笔记自身的字体设置优先。所有字体都随应用内置，无需联网。",
+  "appFontDefaultSuffix": "默认"
 }

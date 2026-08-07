@@ -544,5 +544,12 @@
   "signInNetworkError": "インターネットに接続できませんでした。接続を確認してもう一度お試しください。",
   "signInCanceled": "ログインをキャンセルしました。",
   "cardRichPreview": "カードに書式付きテキストを表示",
-  "cardRichPreviewInfo": "メモの色・ハイライト・太字・下線がホーム画面のカードにも表示されます。オフにするとカードはプレーンテキストになります。"
+  "cardRichPreviewInfo": "メモの色・ハイライト・太字・下線がホーム画面のカードにも表示されます。オフにするとカードはプレーンテキストになります。",
+  "fontSizeSmall": "小",
+  "fontSizeMedium": "中",
+  "fontSizeLarge": "大",
+  "fontSizeXLarge": "特大",
+  "appFontSetting": "フォント",
+  "appFontInfo": "アプリ全体で使うフォントです。メモごとのフォント指定が優先されます。すべてのフォントはアプリに同梱されており、インターネットは不要です。",
+  "appFontDefaultSuffix": "既定"
 }

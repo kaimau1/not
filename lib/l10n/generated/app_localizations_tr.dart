@@ -1938,4 +1938,26 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.';
+
+  @override
+  String get fontSizeSmall => 'Küçük';
+
+  @override
+  String get fontSizeMedium => 'Orta';
+
+  @override
+  String get fontSizeLarge => 'Büyük';
+
+  @override
+  String get fontSizeXLarge => 'Çok büyük';
+
+  @override
+  String get appFontSetting => 'Yazı tipi';
+
+  @override
+  String get appFontInfo =>
+      'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.';
+
+  @override
+  String get appFontDefaultSuffix => 'varsayılan';
 }

@@ -1959,4 +1959,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Farben, Hervorhebungen, Fett und Unterstreichungen deiner Notizen erscheinen auch auf den Karten der Startseite. Aus: Karten zeigen einfachen Text.';
+
+  @override
+  String get fontSizeSmall => 'Klein';
+
+  @override
+  String get fontSizeMedium => 'Mittel';
+
+  @override
+  String get fontSizeLarge => 'Groß';
+
+  @override
+  String get fontSizeXLarge => 'Sehr groß';
+
+  @override
+  String get appFontSetting => 'Schriftart';
+
+  @override
+  String get appFontInfo =>
+      'Die Schriftart der ganzen App. Die eigene Schriftart einer Notiz hat Vorrang. Alle Schriftarten sind in der App enthalten — kein Internet nötig.';
+
+  @override
+  String get appFontDefaultSuffix => 'Standard';
 }

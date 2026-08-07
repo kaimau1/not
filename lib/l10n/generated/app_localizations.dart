@@ -3683,6 +3683,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Notların rengi, vurgusu, kalın ve altı çizili yazıları ana ekrandaki kartlarda da görünür. Kapalıyken kartlar düz metin gösterir.'**
   String get cardRichPreviewInfo;
+
+  /// No description provided for @fontSizeSmall.
+  ///
+  /// In tr, this message translates to:
+  /// **'Küçük'**
+  String get fontSizeSmall;
+
+  /// No description provided for @fontSizeMedium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get fontSizeMedium;
+
+  /// No description provided for @fontSizeLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyük'**
+  String get fontSizeLarge;
+
+  /// No description provided for @fontSizeXLarge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çok büyük'**
+  String get fontSizeXLarge;
+
+  /// No description provided for @appFontSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı tipi'**
+  String get appFontSetting;
+
+  /// No description provided for @appFontInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.'**
+  String get appFontInfo;
+
+  /// No description provided for @appFontDefaultSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **'varsayılan'**
+  String get appFontDefaultSuffix;
 }
 
 class _AppLocalizationsDelegate

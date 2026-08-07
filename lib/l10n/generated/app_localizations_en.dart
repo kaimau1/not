@@ -1940,4 +1940,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.';
+
+  @override
+  String get fontSizeSmall => 'Small';
+
+  @override
+  String get fontSizeMedium => 'Medium';
+
+  @override
+  String get fontSizeLarge => 'Large';
+
+  @override
+  String get fontSizeXLarge => 'Extra large';
+
+  @override
+  String get appFontSetting => 'Font';
+
+  @override
+  String get appFontInfo =>
+      'The font used everywhere in the app. A note\'s own font choice overrides it. All fonts ship with the app — no internet needed.';
+
+  @override
+  String get appFontDefaultSuffix => 'default';
 }

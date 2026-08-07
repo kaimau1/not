@@ -1948,4 +1948,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Цвета, выделения, полужирный и подчёркивание из заметок видны и на карточках главного экрана. Если выключить, карточки показывают обычный текст.';
+
+  @override
+  String get fontSizeSmall => 'Мелкий';
+
+  @override
+  String get fontSizeMedium => 'Средний';
+
+  @override
+  String get fontSizeLarge => 'Крупный';
+
+  @override
+  String get fontSizeXLarge => 'Очень крупный';
+
+  @override
+  String get appFontSetting => 'Шрифт';
+
+  @override
+  String get appFontInfo =>
+      'Шрифт всего приложения. Собственный шрифт заметки имеет приоритет. Все шрифты входят в приложение — интернет не нужен.';
+
+  @override
+  String get appFontDefaultSuffix => 'по умолчанию';
 }

@@ -1943,4 +1943,26 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'आपके नोट्स के रंग, हाइलाइट, बोल्ड और अंडरलाइन होम स्क्रीन के कार्ड पर भी दिखते हैं. बंद होने पर कार्ड सादा टेक्स्ट दिखाते हैं.';
+
+  @override
+  String get fontSizeSmall => 'छोटा';
+
+  @override
+  String get fontSizeMedium => 'मध्यम';
+
+  @override
+  String get fontSizeLarge => 'बड़ा';
+
+  @override
+  String get fontSizeXLarge => 'बहुत बड़ा';
+
+  @override
+  String get appFontSetting => 'फ़ॉन्ट';
+
+  @override
+  String get appFontInfo =>
+      'पूरे ऐप में इस्तेमाल होने वाला फ़ॉन्ट. नोट का अपना फ़ॉन्ट इस पर हावी रहता है. सभी फ़ॉन्ट ऐप के साथ आते हैं — इंटरनेट की ज़रूरत नहीं.';
+
+  @override
+  String get appFontDefaultSuffix => 'डिफ़ॉल्ट';
 }

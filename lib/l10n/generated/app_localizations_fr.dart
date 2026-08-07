@@ -1958,4 +1958,26 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Les couleurs, surlignages, gras et soulignements de tes notes apparaissent aussi sur les cartes de l\'écran d\'accueil. Désactivé, les cartes affichent du texte brut.';
+
+  @override
+  String get fontSizeSmall => 'Petit';
+
+  @override
+  String get fontSizeMedium => 'Moyen';
+
+  @override
+  String get fontSizeLarge => 'Grand';
+
+  @override
+  String get fontSizeXLarge => 'Très grand';
+
+  @override
+  String get appFontSetting => 'Police';
+
+  @override
+  String get appFontInfo =>
+      'La police utilisée partout dans l\'application. La police propre à une note a la priorité. Toutes les polices sont incluses — aucune connexion requise.';
+
+  @override
+  String get appFontDefaultSuffix => 'par défaut';
 }

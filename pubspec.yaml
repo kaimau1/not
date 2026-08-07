@@ -127,7 +127,7 @@ flutter:
     # WinAnsi kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk
     # çıkıyordu. PT Sans (OFL) Türkçe'nin tamamını taşıyor.
     - assets/fonts/PTSans-Regular.ttf
-    # UYGULAMANIN KENDİ YAZI TİPİ (Inter Tight) APK'ya GÖMÜLÜ.
+    # YAZI TİPİ KATALOĞUNUN TAMAMI APK'ya GÖMÜLÜ (bkz. `note_fonts.dart`).
     #
     # KÖK NEDEN (kullanıcı, 2026-08-07: "yazı boyutu ve fontumuz tüm
     # telefonlarda sabit olmalı"): `google_fonts` yazı tipini ÇALIŞMA ANINDA
@@ -136,22 +136,22 @@ flutter:
     # çizilir — Samsung One UI Sans, MIUI Sans, Roboto... hepsi başka metrik,
     # yani uygulama telefondan telefona başka görünür. Dosyalar burada
     # olduğunda paket İNDİRME YAPMADAN bunları kullanır (asset adı
-    # `InterTight-<Ağırlık>.ttf` olmak ZORUNDA, paket manifesti bu ada göre
-    # tarıyor). Bedeli ~0,6 MB APK.
+    # `<Aile>-<Ağırlık>.ttf` olmak ZORUNDA, paket manifesti bu ada göre
+    # tarıyor). 19 aile × 400/500 ağırlık ≈ 5,3 MB APK; karşılığında hem
+    # uygulamanın hem notların yazı tipi seçimi çevrimdışı çalışıyor ve her
+    # telefonda birebir aynı görünüyor.
     #
-    # YALNIZ 400 (Regular) ve 500 (Medium): `interTightTextTheme` gövde
+    # YALNIZ 400 (Regular) ve 500 (Medium): `...TextTheme` çağrıları gövde
     # temasındaki ağırlıkları yükler, Material 3 tipografisi de yalnız bu
     # ikisini kullanır. Arayüzdeki w600/w700 metinler bu iki yüzden
-    # KALINLAŞTIRILARAK çiziliyor (bugün de öyle çalışıyor) — 600/700
-    # dosyalarını gömmek 0,6 MB daha yer kaplar, hiçbir yerde yüklenmezdi.
-    # Yeni bir ağırlık gerçekten gerekirse hem burada hem `GoogleFonts`
-    # çağrısında karşılığı olmalı.
+    # KALINLAŞTIRILARAK çiziliyor. Bir ailede 500 yoksa (Lato, PT Serif,
+    # Merriweather, Patrick Hand) paket 400'e düşer — o yüzden tek dosyaları
+    # var. Ağırlık eklemek gerekirse dosyayı EKLEMEK yetmez, `GoogleFonts`
+    # çağrısında da karşılığı olmalı.
     #
-    # Notların KENDİ yazı tipi seçenekleri (Lora, Caveat…) hâlâ indirilir:
-    # onlar isteğe bağlı, not başına seçiliyor ve hepsini gömmek APK'yı
-    # gereksiz şişirirdi.
-    - assets/google_fonts/InterTight-Regular.ttf
-    - assets/google_fonts/InterTight-Medium.ttf
+    # Klasör bütün olarak bildirilir: yeni yazı tipi eklemek dosyayı buraya
+    # koyup katalog haritalarına satır eklemekten ibaret olsun.
+    - assets/google_fonts/
 
 # Uygulama ikonu: assets/icon/ altındaki görsellerden üretilir.
 # Yenilemek için: dart run flutter_launcher_icons

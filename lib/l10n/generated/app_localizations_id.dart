@@ -1953,4 +1953,26 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'Warna, sorotan, tebal, dan garis bawah dari catatanmu juga tampil di kartu layar utama. Jika nonaktif, kartu menampilkan teks polos.';
+
+  @override
+  String get fontSizeSmall => 'Kecil';
+
+  @override
+  String get fontSizeMedium => 'Sedang';
+
+  @override
+  String get fontSizeLarge => 'Besar';
+
+  @override
+  String get fontSizeXLarge => 'Sangat besar';
+
+  @override
+  String get appFontSetting => 'Font';
+
+  @override
+  String get appFontInfo =>
+      'Font yang dipakai di seluruh aplikasi. Font milik catatan lebih diutamakan. Semua font sudah menyatu dengan aplikasi — tak perlu internet.';
+
+  @override
+  String get appFontDefaultSuffix => 'bawaan';
 }

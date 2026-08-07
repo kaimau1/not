@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Notun kendi yazı tipi seçenekleri.
+/// Yazı tipi katalogu: hem UYGULAMANIN genel yazı tipi (Ayarlar → Görünüm)
+/// hem de NOTUN kendi yazı tipi (biçim şeridi) buradan beslenir.
 ///
 /// İki kaynak var: sistemin GENEL aileleri (`serif`, `monospace`) ve Google
-/// Fonts katalogu. Genel aileler her koşulda çalışır — çevrimdışı bile;
-/// katalog yazı tipleri ilk kullanımda indirilir ve önbelleğe alınır.
-/// Uygulamanın kendi tipografisi zaten aynı yolla geliyor (bkz. app_theme:
-/// `GoogleFonts.interTightTextTheme`), yani yeni bir bağımlılık ya da yeni bir
-/// çevrimdışı riski doğmuyor: indirilemeyen yazı tipinde metin varsayılanla
-/// çizilir, içerik kaybı olmaz.
+/// Fonts katalogu. Katalogdaki her yazı tipinin dosyaları APK'ya GÖMÜLÜ
+/// (`assets/google_fonts/`), yani seçim çevrimdışı da, ilk açılışta da
+/// çalışır ve her telefonda AYNI görünür — indirme yolu tamamen kapandı
+/// (bkz. pubspec'teki gerekçe ve `test/font_catalog_test.dart`).
 ///
-/// Liste bilerek kısa ve KARAKTER OLARAK AYRIK tutuldu; birbirine benzeyen on
-/// yazı tipi arasından seçmek, üç seçenekten seçmekten daha zor.
+/// Liste KARAKTER OLARAK AYRIK tutuldu: her ailenin bir işi var (sistem
+/// arayüzü, kitap, ekran/başlık, daktilo, el yazısı); birbirinin kopyası iki
+/// yazı tipi eklemek seçimi zorlaştırmaktan başka işe yaramaz.
 @immutable
 class NoteFontOption {
   const NoteFontOption(this.id, this.label, {this.google = false});
@@ -28,17 +28,41 @@ class NoteFontOption {
   final bool google;
 }
 
-/// Seçilebilir yazı tipleri. İlk üçü çevrimdışı da garanti.
+/// Gömülü katalog yazı tipleri (uygulama geneli ve not başına ORTAK).
+///
+/// Sıra bilinçli: önce arayüz/gövde için sade sans'lar, sonra kitap serif'i,
+/// sonra daktilo ve en sonda el yazısı. Yeni bir yazı tipi eklerken üç yer
+/// birlikte güncellenmeli — bu liste, [_googleBuilders], [_googleTextThemes]
+/// ve dosyaların kendisi (`assets/google_fonts/`); test dördünün örtüştüğünü
+/// doğrular.
+const List<NoteFontOption> kCatalogFonts = [
+  NoteFontOption('Inter Tight', 'Inter Tight', google: true),
+  NoteFontOption('Roboto', 'Roboto', google: true),
+  NoteFontOption('Open Sans', 'Open Sans', google: true),
+  NoteFontOption('Lato', 'Lato', google: true),
+  NoteFontOption('Source Sans 3', 'Source Sans', google: true),
+  NoteFontOption('Work Sans', 'Work Sans', google: true),
+  NoteFontOption('Rubik', 'Rubik', google: true),
+  NoteFontOption('Nunito', 'Nunito', google: true),
+  NoteFontOption('Montserrat', 'Montserrat', google: true),
+  NoteFontOption('Poppins', 'Poppins', google: true),
+  NoteFontOption('Lora', 'Lora', google: true),
+  NoteFontOption('Merriweather', 'Merriweather', google: true),
+  NoteFontOption('PT Serif', 'PT Serif', google: true),
+  NoteFontOption('EB Garamond', 'EB Garamond', google: true),
+  NoteFontOption('Playfair Display', 'Playfair', google: true),
+  NoteFontOption('Roboto Mono', 'Roboto Mono', google: true),
+  NoteFontOption('JetBrains Mono', 'JetBrains Mono', google: true),
+  NoteFontOption('Caveat', 'Caveat', google: true),
+  NoteFontOption('Patrick Hand', 'Patrick Hand', google: true),
+];
+
+/// Notun yazı tipi seçenekleri: varsayılan + iki sistem ailesi + katalog.
 const List<NoteFontOption> kNoteFonts = [
   NoteFontOption(null, 'Varsayılan'),
   NoteFontOption('serif', 'Kitap'),
   NoteFontOption('monospace', 'Daktilo'),
-  NoteFontOption('Lora', 'Lora', google: true),
-  NoteFontOption('Merriweather', 'Merriweather', google: true),
-  NoteFontOption('Playfair Display', 'Playfair', google: true),
-  NoteFontOption('Nunito', 'Nunito', google: true),
-  NoteFontOption('Caveat', 'Caveat', google: true),
-  NoteFontOption('Roboto Mono', 'Roboto Mono', google: true),
+  ...kCatalogFonts,
 ];
 
 /// [family] yazı tipini [base] stiline uygular.
@@ -73,21 +97,75 @@ TextStyle applyNoteOpacity(TextStyle base, double opacity, Color fallback) {
   return base.copyWith(color: color.withValues(alpha: opacity.clamp(0.1, 1)));
 }
 
-/// Katalog yazı tiplerinin ÇAĞRILARI. Her biri doğrudan adıyla yazılır;
-/// böylece derleyici yalnız bu altısını tutar (bkz. yukarıdaki tuzak).
+/// Katalog yazı tiplerinin TEK STİL çağrıları (not metni, seçici satırları).
+/// Her biri doğrudan adıyla yazılır; böylece derleyici yalnız bunları tutar
+/// (bkz. yukarıdaki tuzak).
 final Map<String, TextStyle Function(TextStyle)> _googleBuilders = {
+  'Inter Tight': (base) => GoogleFonts.interTight(textStyle: base),
+  'Roboto': (base) => GoogleFonts.roboto(textStyle: base),
+  'Open Sans': (base) => GoogleFonts.openSans(textStyle: base),
+  'Lato': (base) => GoogleFonts.lato(textStyle: base),
+  'Source Sans 3': (base) => GoogleFonts.sourceSans3(textStyle: base),
+  'Work Sans': (base) => GoogleFonts.workSans(textStyle: base),
+  'Rubik': (base) => GoogleFonts.rubik(textStyle: base),
+  'Nunito': (base) => GoogleFonts.nunito(textStyle: base),
+  'Montserrat': (base) => GoogleFonts.montserrat(textStyle: base),
+  'Poppins': (base) => GoogleFonts.poppins(textStyle: base),
   'Lora': (base) => GoogleFonts.lora(textStyle: base),
   'Merriweather': (base) => GoogleFonts.merriweather(textStyle: base),
+  'PT Serif': (base) => GoogleFonts.ptSerif(textStyle: base),
+  'EB Garamond': (base) => GoogleFonts.ebGaramond(textStyle: base),
   'Playfair Display': (base) => GoogleFonts.playfairDisplay(textStyle: base),
-  'Nunito': (base) => GoogleFonts.nunito(textStyle: base),
-  'Caveat': (base) => GoogleFonts.caveat(textStyle: base),
   'Roboto Mono': (base) => GoogleFonts.robotoMono(textStyle: base),
+  'JetBrains Mono': (base) => GoogleFonts.jetBrainsMono(textStyle: base),
+  'Caveat': (base) => GoogleFonts.caveat(textStyle: base),
+  'Patrick Hand': (base) => GoogleFonts.patrickHand(textStyle: base),
 };
+
+/// Aynı yazı tiplerinin TÜM METİN TEMASI çağrıları — uygulamanın genel yazı
+/// tipi ayarı (Ayarlar → Görünüm → Yazı tipi) bunu kullanır.
+///
+/// Ayrı bir harita gerekiyor: tek tek stil kurmak, temanın on beş metin
+/// biçimini (başlık/gövde/etiket) elle dolaşmak demekti; paketin kendi
+/// `...TextTheme` çağrısı bunu doğru harflerle ve doğru ağırlıklarla yapar.
+final Map<String, TextTheme Function(TextTheme)> _googleTextThemes = {
+  'Inter Tight': GoogleFonts.interTightTextTheme,
+  'Roboto': GoogleFonts.robotoTextTheme,
+  'Open Sans': GoogleFonts.openSansTextTheme,
+  'Lato': GoogleFonts.latoTextTheme,
+  'Source Sans 3': GoogleFonts.sourceSans3TextTheme,
+  'Work Sans': GoogleFonts.workSansTextTheme,
+  'Rubik': GoogleFonts.rubikTextTheme,
+  'Nunito': GoogleFonts.nunitoTextTheme,
+  'Montserrat': GoogleFonts.montserratTextTheme,
+  'Poppins': GoogleFonts.poppinsTextTheme,
+  'Lora': GoogleFonts.loraTextTheme,
+  'Merriweather': GoogleFonts.merriweatherTextTheme,
+  'PT Serif': GoogleFonts.ptSerifTextTheme,
+  'EB Garamond': GoogleFonts.ebGaramondTextTheme,
+  'Playfair Display': GoogleFonts.playfairDisplayTextTheme,
+  'Roboto Mono': GoogleFonts.robotoMonoTextTheme,
+  'JetBrains Mono': GoogleFonts.jetBrainsMonoTextTheme,
+  'Caveat': GoogleFonts.caveatTextTheme,
+  'Patrick Hand': GoogleFonts.patrickHandTextTheme,
+};
+
+/// Uygulamanın genel yazı tipi. [family] null / bilinmiyorsa varsayılan
+/// ([kAppDefaultFont]) uygulanır — kayıtta bozuk bir ad kalsa bile uygulama
+/// yazısız kalmaz.
+TextTheme appFontTextTheme(TextTheme base, String? family) =>
+    (_googleTextThemes[family] ?? _googleTextThemes[kAppDefaultFont]!)(base);
+
+/// Uygulamanın varsayılan yazı tipi. Ayar hiç ellenmediğinde bu geçerlidir.
+const String kAppDefaultFont = 'Inter Tight';
 
 /// Çağrısı yazılmış katalog yazı tipleri. [kNoteFonts] ile bunun ayrışması,
 /// seçeneğin listede görünüp varsayılanla çizilmesi demek olurdu; test bu iki
 /// listenin örtüştüğünü doğrular (yazı tipini YÜKLEMEDEN — ağ gerekmez).
 Set<String> get googleNoteFontIds => _googleBuilders.keys.toSet();
+
+/// Metin teması çağrısı yazılmış yazı tipleri (aynı sebeple test edilir).
+Set<String> get appFontIds => _googleTextThemes.keys.toSet();
 
 /// Genel ailelerin etiketleri çeviriden gelir (bu katman l10n bilmez);
 /// katalog yazı tipleri kendi adlarıyla görünür.

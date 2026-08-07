@@ -1932,4 +1932,26 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'تظهر ألوان ملاحظاتك وتظليلها والخط العريض والتسطير على بطاقات الشاشة الرئيسية أيضًا. عند الإيقاف تعرض البطاقات نصًا عاديًا.';
+
+  @override
+  String get fontSizeSmall => 'صغير';
+
+  @override
+  String get fontSizeMedium => 'متوسط';
+
+  @override
+  String get fontSizeLarge => 'كبير';
+
+  @override
+  String get fontSizeXLarge => 'كبير جدًا';
+
+  @override
+  String get appFontSetting => 'الخط';
+
+  @override
+  String get appFontInfo =>
+      'الخط المستخدم في كل أنحاء التطبيق. خط الملاحظة نفسها له الأولوية. جميع الخطوط مضمّنة في التطبيق — لا حاجة للإنترنت.';
+
+  @override
+  String get appFontDefaultSuffix => 'افتراضي';
 }

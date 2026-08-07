@@ -544,5 +544,12 @@
   "signInNetworkError": "Sem acesso à internet. Verifique sua conexão e tente novamente.",
   "signInCanceled": "Login cancelado.",
   "cardRichPreview": "Texto formatado nos cartões",
-  "cardRichPreviewInfo": "As cores, marcações, negrito e sublinhado das suas notas também aparecem nos cartões da tela inicial. Desativado, os cartões mostram texto simples."
+  "cardRichPreviewInfo": "As cores, marcações, negrito e sublinhado das suas notas também aparecem nos cartões da tela inicial. Desativado, os cartões mostram texto simples.",
+  "fontSizeSmall": "Pequeno",
+  "fontSizeMedium": "Médio",
+  "fontSizeLarge": "Grande",
+  "fontSizeXLarge": "Muito grande",
+  "appFontSetting": "Fonte",
+  "appFontInfo": "A fonte usada em todo o app. A fonte da própria nota tem prioridade. Todas as fontes vêm com o app — não precisa de internet.",
+  "appFontDefaultSuffix": "padrão"
 }

@@ -1907,4 +1907,26 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       '메모의 색상, 형광펜, 굵게, 밑줄이 홈 화면 카드에도 표시됩니다. 끄면 카드에 일반 텍스트만 나옵니다.';
+
+  @override
+  String get fontSizeSmall => '작게';
+
+  @override
+  String get fontSizeMedium => '보통';
+
+  @override
+  String get fontSizeLarge => '크게';
+
+  @override
+  String get fontSizeXLarge => '아주 크게';
+
+  @override
+  String get appFontSetting => '글꼴';
+
+  @override
+  String get appFontInfo =>
+      '앱 전체에서 사용하는 글꼴입니다. 메모에 지정한 글꼴이 우선합니다. 모든 글꼴은 앱에 포함되어 있어 인터넷이 필요 없습니다.';
+
+  @override
+  String get appFontDefaultSuffix => '기본';
 }

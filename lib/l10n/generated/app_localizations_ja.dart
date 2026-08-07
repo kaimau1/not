@@ -1905,4 +1905,26 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get cardRichPreviewInfo =>
       'メモの色・ハイライト・太字・下線がホーム画面のカードにも表示されます。オフにするとカードはプレーンテキストになります。';
+
+  @override
+  String get fontSizeSmall => '小';
+
+  @override
+  String get fontSizeMedium => '中';
+
+  @override
+  String get fontSizeLarge => '大';
+
+  @override
+  String get fontSizeXLarge => '特大';
+
+  @override
+  String get appFontSetting => 'フォント';
+
+  @override
+  String get appFontInfo =>
+      'アプリ全体で使うフォントです。メモごとのフォント指定が優先されます。すべてのフォントはアプリに同梱されており、インターネットは不要です。';
+
+  @override
+  String get appFontDefaultSuffix => '既定';
 }
