@@ -825,6 +825,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceCapturePlainNote => 'Düz not';
 
   @override
+  String get voiceCloseTitle => 'Konuştukların duruyor';
+
+  @override
+  String get voiceCloseKeepTalking => 'Konuşmaya devam et';
+
+  @override
   String get voiceCaptureRestart => 'Baştan dinle';
 
   @override

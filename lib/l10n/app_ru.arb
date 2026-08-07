@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Создать новую заметку",
   "voiceCaptureAiNote": "ИИ-заметка",
   "voiceCapturePlainNote": "Обычная заметка",
+  "voiceCloseTitle": "Ваша запись сохранена",
+  "voiceCloseKeepTalking": "Продолжить говорить",
   "voiceCaptureRestart": "Записать снова",
   "voiceChipSummarizeAdd": "Добавить как резюме",
   "voiceChipSummarizeSave": "Сохранить как резюме",

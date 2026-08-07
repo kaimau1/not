@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Neue Notiz erstellen",
   "voiceCaptureAiNote": "KI-Notiz",
   "voiceCapturePlainNote": "Einfache Notiz",
+  "voiceCloseTitle": "Dein Diktat ist noch da",
+  "voiceCloseKeepTalking": "Weiter sprechen",
   "voiceCaptureRestart": "Erneut aufnehmen",
   "voiceChipSummarizeAdd": "Als Zusammenfassung hinzufügen",
   "voiceChipSummarizeSave": "Als Zusammenfassung speichern",

@@ -802,6 +802,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceCapturePlainNote => '普通笔记';
 
   @override
+  String get voiceCloseTitle => '你的口述内容还在';
+
+  @override
+  String get voiceCloseKeepTalking => '继续说';
+
+  @override
   String get voiceCaptureRestart => '重新录音';
 
   @override

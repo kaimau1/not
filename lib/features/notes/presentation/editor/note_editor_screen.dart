@@ -106,6 +106,75 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
   return true;
 }
 
+/// İki not EKRANDA aynı mı çizilir?
+///
+/// KÖK NEDEN (kasma — "yeni öğe eklemesem bile kasma devam ediyor"):
+/// Firestore'un gecikme telafisi, editörün KENDİ kaydını da anında bir anlık
+/// görüntü olarak geri gönderir. Akış dinleyicisi bunu koşulsuz `setState`
+/// ile karşılıyordu, yani yazarken (debounce 0,5 sn / en geç 3 sn) düzenli
+/// aralıklarla editörün tamamı — sayfa tuvali, sarma ölçümü, bütün madde
+/// satırları — boşuna yeniden kuruluyordu. Yankıda çizimi değiştiren hiçbir
+/// şey olmadığı için bu karşılaştırma o build'i tümden atlar.
+///
+/// Metnin KENDİSİ bilerek dışarıda: onu satırların/alanların kendi
+/// denetleyicileri çiziyor (bkz. [sameItemsVisually]). Eklerde de yalnız
+/// YERLEŞİMİ ve durumu etkileyen alanlar bakılır.
+@visibleForTesting
+bool sameRenderedNote(Note a, Note b) {
+  if (identical(a, b)) return true;
+  if (!sameItemsVisually(a.items, b.items)) return false;
+  if (a.type != b.type ||
+      a.color != b.color ||
+      a.frameColor != b.frameColor ||
+      a.pinned != b.pinned ||
+      a.starred != b.starred ||
+      a.locked != b.locked ||
+      a.folderId != b.folderId ||
+      a.fontFamily != b.fontFamily ||
+      a.fontScale != b.fontScale ||
+      a.textOpacity != b.textOpacity ||
+      a.titleFontFamily != b.titleFontFamily ||
+      a.titleFontScale != b.titleFontScale ||
+      a.titleTextOpacity != b.titleTextOpacity ||
+      a.backgroundImageId != b.backgroundImageId ||
+      a.backgroundOpacity != b.backgroundOpacity ||
+      a.orderIndex != b.orderIndex ||
+      a.deletedAt != b.deletedAt ||
+      a.archivedAt != b.archivedAt ||
+      a.reminderAt != b.reminderAt ||
+      a.updatedAt != b.updatedAt ||
+      a.aiSummary != b.aiSummary ||
+      a.title != b.title ||
+      // Gövdenin DOLULUĞU tuval ipucunu ve gövde alanının varlığını belirler.
+      a.body.trim().isEmpty != b.body.trim().isEmpty) {
+    return false;
+  }
+  if (a.tags.length != b.tags.length) return false;
+  for (var i = 0; i < a.tags.length; i++) {
+    if (a.tags[i] != b.tags[i]) return false;
+  }
+  if (a.attachments.length != b.attachments.length) return false;
+  for (var i = 0; i < a.attachments.length; i++) {
+    final x = a.attachments[i];
+    final y = b.attachments[i];
+    if (x.id != y.id ||
+        x.kind != y.kind ||
+        x.floatsOnPage != y.floatsOnPage ||
+        x.x != y.x ||
+        x.pageY != y.pageY ||
+        x.y != y.y ||
+        x.displayWidth != y.displayWidth ||
+        x.width != y.width ||
+        x.height != y.height ||
+        x.downloadUrl != y.downloadUrl ||
+        x.fileName != y.fileName ||
+        !identical(x.ink, y.ink)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /// Bir liste satırının başındaki işaretleri ayıklar: madde imi (-, •, *),
 /// numara (1. / 1)) ve onay kutusu ([ ], [x]). Onay kutusu doluysa
 /// [checked] true döner. AI çıktısı / yapıştırılan metin nota geri
@@ -599,8 +668,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             !_debouncer.hasPending &&
             localTitle == _note!.title &&
             localBody == _note!.body;
-        setState(() {
-          _note = _note!.copyWith(
+        // KÖK NEDEN (kasma): burada KOŞULSUZ `setState` vardı. Firestore
+        // gecikme telafisi yüzünden editörün KENDİ kaydı da anında bir
+        // anlık görüntü olarak geri düşer; yani yazarken (debounce 0,5 sn,
+        // en geç 3 sn) düzenli aralıklarla 4000 satırlık editör build'i —
+        // sayfa tuvali, sarma ölçümü, bütün madde satırları — boşuna
+        // yeniden koşuyordu. Oysa o yankıda çizimi değiştiren HİÇBİR ŞEY
+        // yok: alanlar zaten yerelden geldiği gibi. Artık yeni not nesnesi
+        // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
+        // (denetleyiciler ve `_note` yine güncel kalır).
+        final previous = _note!;
+        Note merged;
+        {
+          merged = previous.copyWith(
             attachments: mergeAttachmentLayout(
               local: _note!.attachments,
               incoming: incoming.attachments,
@@ -635,7 +715,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             backgroundOpacity: incoming.backgroundOpacity,
           );
           if (pristine) {
-            _note = _note!.copyWith(
+            merged = merged.copyWith(
               title: incoming.title,
               body: incoming.body,
               items: incoming.items,
@@ -647,7 +727,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               _bodyController.text = incoming.body;
             }
           }
-        });
+        }
+        _note = merged;
+        if (!sameRenderedNote(previous, merged)) setState(() {});
       }
     }, fireImmediately: true);
   }

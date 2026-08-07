@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "新規ノートを作成",
   "voiceCaptureAiNote": "AIノート",
   "voiceCapturePlainNote": "そのままメモ",
+  "voiceCloseTitle": "入力した内容は残っています",
+  "voiceCloseKeepTalking": "話し続ける",
   "voiceCaptureRestart": "再録音",
   "voiceChipSummarizeAdd": "要約として追加",
   "voiceChipSummarizeSave": "要約として保存",

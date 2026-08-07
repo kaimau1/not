@@ -1626,6 +1626,18 @@ abstract class AppLocalizations {
   /// **'Düz not'**
   String get voiceCapturePlainNote;
 
+  /// No description provided for @voiceCloseTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuştukların duruyor'**
+  String get voiceCloseTitle;
+
+  /// No description provided for @voiceCloseKeepTalking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konuşmaya devam et'**
+  String get voiceCloseKeepTalking;
+
   /// No description provided for @voiceCaptureRestart.
   ///
   /// In tr, this message translates to:

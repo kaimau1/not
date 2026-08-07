@@ -813,6 +813,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get voiceCapturePlainNote => '일반 메모';
 
   @override
+  String get voiceCloseTitle => '받아쓴 내용이 남아 있습니다';
+
+  @override
+  String get voiceCloseKeepTalking => '계속 말하기';
+
+  @override
   String get voiceCaptureRestart => '다시 녹음';
 
   @override

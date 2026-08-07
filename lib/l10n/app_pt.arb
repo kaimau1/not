@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "Create new note",
   "voiceCaptureAiNote": "Nota IA",
   "voiceCapturePlainNote": "Nota simples",
+  "voiceCloseTitle": "O seu ditado continua aqui",
+  "voiceCloseKeepTalking": "Continuar a falar",
   "voiceCaptureRestart": "Record again",
   "voiceChipSummarizeAdd": "Add as summary",
   "voiceChipSummarizeSave": "Save as summary",

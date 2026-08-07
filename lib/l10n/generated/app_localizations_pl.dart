@@ -834,6 +834,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceCapturePlainNote => 'Zwykła notatka';
 
   @override
+  String get voiceCloseTitle => 'Twoje dyktowanie jest zapisane';
+
+  @override
+  String get voiceCloseKeepTalking => 'Mów dalej';
+
+  @override
   String get voiceCaptureRestart => 'Nagrywaj ponownie';
 
   @override

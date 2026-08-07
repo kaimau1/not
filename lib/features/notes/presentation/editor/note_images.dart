@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
@@ -38,6 +40,113 @@ void openImageViewer(
       ),
     ),
   );
+}
+
+/// Sayfayı en az [minHeight] kadar uzatır ama bu değeri ÇOCUĞA GEÇİRMEZ.
+///
+/// KÖK NEDEN (kullanıcı: "yeni öğe ekleyince klavye açılırken kasma devam
+/// ediyor ve kasma birikip artıyor sanki"): burada eskiden
+/// `ConstrainedBox(minHeight: …)` vardı. `ConstrainedBox` en az yüksekliği
+/// çocuğun KISITINA yazar; çocuk da bütün not sayfası (başlık, gövde ve
+/// `shrinkWrap` olduğu için TEK TEK YERLEŞTİRİLEN her madde satırı).
+///
+/// Sayfanın en az yüksekliği gövdenin görünür yüksekliğidir ve klavye
+/// açılırken bu değer her karede değişir (alt çubuk klavye kadar büyüdüğü
+/// için gövde kısalır). Yani klavyenin her animasyon karesinde madde
+/// listesinin TAMAMI yeniden yerleşiyordu: 20 maddelik bir notta kare başına
+/// 20 `TextField` yerleşimi. "Birikip artıyor" hissi de buradan — bedel
+/// madde sayısıyla doğru orantılı, her yeni madde klavyeyi bir tık daha
+/// ağırlaştırıyordu.
+///
+/// Bu kutu çocuğu kendi doğal yüksekliğinde ölçer (kısıt DEĞİŞMEZ, yerleşim
+/// atlanır) ve yalnız KENDİ boyunu büyütür. Sayfanın dokunulabilir alanı ve
+/// kaydırma uzunluğu aynı kalır.
+class PageMinHeight extends SingleChildRenderObjectWidget {
+  const PageMinHeight({super.key, required this.minHeight, super.child});
+
+  final double minHeight;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderPageMinHeight(minHeight);
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) =>
+      (renderObject as _RenderPageMinHeight).minHeight = minHeight;
+}
+
+class _RenderPageMinHeight extends RenderProxyBox {
+  _RenderPageMinHeight(this._minHeight);
+
+  double _minHeight;
+  set minHeight(double value) {
+    if (_minHeight == value) return;
+    _minHeight = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.constrain(Size(0, _minHeight));
+      return;
+    }
+    // Çocuğa GELEN kısıt olduğu gibi verilir: `_minHeight` değişse de çocuğun
+    // kısıtı değişmez, kirli değilse yerleşimi tümden atlanır.
+    child.layout(constraints, parentUsesSize: true);
+    size = constraints.constrain(
+      Size(child.size.width, math.max(child.size.height, _minHeight)),
+    );
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      math.max(super.computeMinIntrinsicHeight(width), _minHeight);
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      math.max(super.computeMaxIntrinsicHeight(width), _minHeight);
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) return constraints.constrain(Size(0, _minHeight));
+    final childSize = child.getDryLayout(constraints);
+    return constraints.constrain(
+      Size(childSize.width, math.max(childSize.height, _minHeight)),
+    );
+  }
+}
+
+/// Çözdürme genişliğinin YUVARLANDIĞI adım (px). Bkz. [decodeWidthBucket].
+const int kDecodeWidthStep = 256;
+
+/// Görselin kaç piksel genişliğinde çözdürüleceği — kutunun genişliğinden
+/// hesaplanır ama [kDecodeWidthStep]'in katına YUVARLANIR.
+///
+/// KÖK NEDEN (kullanıcı: "görsel ekleyince sayfaya kasma artıyor", "kasma
+/// birikip artıyor sanki"): `cacheWidth` doğrudan `kutuGenişliği × dpr`
+/// idi, yani kutu bir piksel bile değişse BAŞKA bir değer çıkıyordu. O değer
+/// görsel önbelleğinin anahtarının parçası: her yeni değer için dosya
+/// DİSKTEN yeniden çözülüyor ve önbelleğe AYRI bir kopya olarak giriyordu.
+///
+/// Sonuçları tam olarak kullanıcının tarif ettiği gibi:
+/// - Görseli köşesinden boyutlandırmak kare başına bir tam çözdürme demekti.
+/// - Aynı görselin onlarca kopyası önbelleği (varsayılan 100 MB) dolduruyor,
+///   dolan önbellek başka görselleri atıyor, onlar da yeniden çözülüyordu —
+///   yani kasma kullandıkça BİRİKİYORDU.
+/// - Anahtar her değiştiğinde kare boşa düşüyor, görsel bir an kayboluyordu.
+///
+/// 256 px'lik adımlarla boyutlandırma boyunca anahtar sabit kalır (aynı bitmap
+/// yeniden kullanılır) ve önbellekte görsel başına birkaç kopya olur. Adım
+/// kalitede fark yaratmaz: `BoxFit` zaten ölçekliyor ve yukarı yuvarlandığı
+/// için çözünürlük gösterilen boyuttan asla düşük kalmaz.
+int? decodeWidthBucket(double boxWidth, double devicePixelRatio) {
+  if (!boxWidth.isFinite || boxWidth <= 0) return null;
+  final pixels = boxWidth * devicePixelRatio;
+  final buckets = (pixels / kDecodeWidthStep).ceil();
+  return math.max(1, buckets) * kDecodeWidthStep;
 }
 
 /// Görsel ekin içeriği: yerel dosya → indirme adresi → yer tutucu sırasıyla.
@@ -78,9 +187,7 @@ class _ImageBox extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final dpr = MediaQuery.devicePixelRatioOf(context);
-        final targetWidth = constraints.maxWidth.isFinite
-            ? (constraints.maxWidth * dpr).round()
-            : null;
+        final targetWidth = decodeWidthBucket(constraints.maxWidth, dpr);
         if (hasLocal) {
           return Image.file(
             File(img.localPath),
@@ -145,9 +252,7 @@ class _VideoBoxState extends State<_VideoBox> {
   Future<void> _init() async {
     // Dosya yoksa denemeye gerek yok: yer tutucu kalır.
     if (!localFileExists(widget.video.localPath)) return;
-    final controller = VideoPlayerController.file(
-      File(widget.video.localPath),
-    );
+    final controller = VideoPlayerController.file(File(widget.video.localPath));
     _controller = controller;
     try {
       await controller.initialize();
@@ -699,10 +804,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: widget.onTapEmpty,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: widget.minHeight),
-          child: widget.child,
-        ),
+        child: PageMinHeight(minHeight: widget.minHeight, child: widget.child),
       );
     }
     // Geri tuşu önce ÖNİZLEMEYİ, sonra görsel seçimini kapatır; not ancak
@@ -760,12 +862,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     widget.onTapEmpty?.call();
                   }
                 },
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: maxBottom > widget.minHeight
-                        ? maxBottom
-                        : widget.minHeight,
-                  ),
+                child: PageMinHeight(
+                  minHeight: maxBottom > widget.minHeight
+                      ? maxBottom
+                      : widget.minHeight,
                   child: widget.child,
                 ),
               ),
@@ -855,9 +955,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               height: h,
               child: Stack(
                 children: [
-                  Positioned.fill(
-                    child: _boxFor(img, fit: BoxFit.contain),
-                  ),
+                  Positioned.fill(child: _boxFor(img, fit: BoxFit.contain)),
                   Positioned(
                     right: 4,
                     top: 4,
@@ -896,6 +994,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       height: r.h,
       child: GestureDetector(
         onTap: () => _select(img.id),
+        // ÇİFT DOKUNUŞ = büyük önizleme (kullanıcı isteği). Aynı iş sağ-alt
+        // köşedeki tutamağa dokunarak da yapılıyor ama o tutamak YALNIZ
+        // görsel seçiliyken var: önizlemeye ulaşmak için önce seçmek, sonra
+        // küçük bir köşeyi bulmak gerekiyordu. Çift dokunuş görselin her
+        // yerinden, seçmeden çalışır.
+        onDoubleTap: () => _togglePreview(img.id),
         // Taşıma TEK jestte: basılı tut, parmağını kaldırmadan sürükle.
         // (Önce seçip sonra sürüklemek gerekiyordu — kullanımı zordu.)
         // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık
@@ -938,9 +1042,16 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                           color: scheme.outlineVariant.withValues(alpha: 0.5),
                         ),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _boxFor(img),
+                // RepaintBoundary: görsel kendi katmanına çizilir. Sayfada
+                // yazarken/kaydırırken imleç ve satırlar sık sık yeniden
+                // çiziliyor; sınır olmadan her seferinde görselin rasterı da
+                // yeniden çiziliyordu (birkaç görselli notta kare bütçesinin
+                // görünür bir dilimi).
+                child: RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: _boxFor(img),
+                  ),
                 ),
               ),
             ),

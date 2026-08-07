@@ -248,6 +248,8 @@
   "voiceCaptureCreateNote": "创建新笔记",
   "voiceCaptureAiNote": "AI 笔记",
   "voiceCapturePlainNote": "普通笔记",
+  "voiceCloseTitle": "你的口述内容还在",
+  "voiceCloseKeepTalking": "继续说",
   "voiceCaptureRestart": "重新录音",
   "voiceChipSummarizeAdd": "添加为摘要",
   "voiceChipSummarizeSave": "保存为摘要",

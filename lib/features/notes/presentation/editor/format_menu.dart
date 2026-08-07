@@ -35,9 +35,13 @@ bool applyRichFormat(
   // Biçimsiz imleç: metne boş kutu yazmak yerine biçim BEKLETİLİR, bir sonraki
   // yazılan metin işaretlerin içine girer. Metin değişmediği için false döner
   // (çağıranın notu kaydetmesine gerek yok).
+  //
+  // AÇ/KAPA ve ÇOKLU: aynı düğmeye yeniden basmak bekleyeni kaldırır, başka
+  // bir düğme onun YANINA eklenir — Keep'te B, I, U aynı anda basılı kalıp
+  // yazılan metnin üçünü birden alması gibi.
   final pending = result.pending;
   if (pending != null) {
-    controller.setPendingFormat(pending, result.pendingIndex);
+    controller.togglePendingFormat(pending, result.pendingIndex);
     return false;
   }
   controller.clearPendingFormat();
@@ -58,11 +62,19 @@ RichMark activeRichFormats(WrapTextController controller) {
   final selection = controller.selection;
   if (!selection.isValid) return RichMark.none;
   final display = controller.text;
-  return activeFormats(
+  var active = activeFormats(
     stripWrapAnchors(display),
     wrapToLogicalOffset(display, selection.start),
     wrapToLogicalOffset(display, selection.end),
   );
+  // BEKLEYEN biçimler de "basılı" sayılır (kullanıcı: "basınca direkt
+  // aktifleştiği belli olmalı"). Metinde henüz bir karşılığı yok — işaretler
+  // ancak yazmaya başlayınca oluşuyor — ama kullanıcı açısından biçim O AN
+  // açıldı; düğme yanmazsa basıp basmadığı anlaşılmıyordu.
+  for (final entry in controller.pendingFormats.entries) {
+    active = active.applied(entry.key, entry.value);
+  }
+  return active;
 }
 
 /// SEÇİLİ metne boyut ya da opaklık kademesi yazar (aç/kapa değil: kaydırıcı

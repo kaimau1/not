@@ -829,6 +829,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get voiceCapturePlainNote => 'सादा नोट';
 
   @override
+  String get voiceCloseTitle => 'आपका डिक्टेशन अब भी यहाँ है';
+
+  @override
+  String get voiceCloseKeepTalking => 'बोलना जारी रखें';
+
+  @override
   String get voiceCaptureRestart => 'फिर से रिकॉर्ड करें';
 
   @override

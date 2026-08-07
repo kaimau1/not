@@ -832,6 +832,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get voiceCapturePlainNote => 'Gewone notitie';
 
   @override
+  String get voiceCloseTitle => 'Je dictaat staat er nog';
+
+  @override
+  String get voiceCloseKeepTalking => 'Doorgaan met praten';
+
+  @override
   String get voiceCaptureRestart => 'Record again';
 
   @override
