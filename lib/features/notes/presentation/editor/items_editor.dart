@@ -452,13 +452,20 @@ class ItemsEditorState extends State<ItemsEditor> {
     // güncellenir (bkz. [_focusFlags]).
     node.addListener(() {
       if (!mounted) return;
+      final controller = _controllerFor(item);
       if (node.hasFocus) {
-        final controller = _controllerFor(item);
         widget.onFieldFocused?.call(
           controller,
           node,
           () => _updateText(item, controller.logicalText),
         );
+      } else if (controller.hasPendingFormat) {
+        // Satır odaktan çıkıyor: bekleyen biçim metne YAZILIR. Yoksa "kalın"a
+        // basıp tek kelime yazan ve başka yere dokunan kullanıcı biçmi
+        // sessizce kaybederdi (sarma normalde kelime sınırında yapılıyor —
+        // bkz. WrapTextController._wrapPending).
+        controller.flushPendingFormat();
+        _updateText(item, controller.logicalText);
       }
       _focusFlagFor(item.id).value = node.hasFocus;
     });

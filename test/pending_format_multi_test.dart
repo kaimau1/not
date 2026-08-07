@@ -33,8 +33,11 @@ void main() {
       // Metne HENÜZ dokunulmadı: ham işaret ekranda görünmez.
       expect(c.text, '');
 
+      // Kelime SINIRINA kadar tampona dokunulmaz (IME'yi bozmamak icin).
       type(c, 'merhaba');
-      expect(c.logicalText, '**merhaba**');
+      expect(c.logicalText, 'merhaba');
+      type(c, ' ');
+      expect(c.logicalText, '**merhaba **');
     },
   );
 
@@ -49,9 +52,9 @@ void main() {
       RichFormat.underline,
     ]);
 
-    type(c, 'merhaba');
+    type(c, 'merhaba ');
     // Önce basılan en DIŞTA sarar (** = kalın, _ = italik, ~ = altı çizili).
-    expect(c.logicalText, '**_~merhaba~_**');
+    expect(c.logicalText, '**_~merhaba ~_**');
     // Üçü de metinde etkin.
     final active = activeFormats(c.logicalText, 4, 11);
     expect(active.bold, isTrue);
@@ -66,8 +69,8 @@ void main() {
     applyRichFormat(c, RichFormat.bold);
     expect(c.pendingFormats.keys, [RichFormat.italic]);
 
-    type(c, 'merhaba');
-    expect(c.logicalText, '_merhaba_');
+    type(c, 'merhaba ');
+    expect(c.logicalText, '_merhaba _');
   });
 
   test('bekleyen biçim düğmeyi HEMEN yakar (metin daha yazılmadan)', () {
@@ -105,20 +108,63 @@ void main() {
     final c = controllerAt('', 0);
     applyRichFormat(c, RichFormat.bold);
     applyRichFormat(c, RichFormat.italic);
-    type(c, 'mer');
-    expect(c.logicalText, '**_mer_**');
+    type(c, 'mer ');
+    expect(c.logicalText, '**_mer _**');
 
-    // İkinci tuş: imleç hâlâ kutunun içinde, metin aynı kutuya ekleniyor.
+    // İmleç kutunun İÇİNDE kaldı: sonraki kelime aynı kutuya ekleniyor ve
+    // tampona bir daha HİÇ dokunulmuyor (koşu başına tek müdahale).
     type(c, 'haba');
-    expect(c.logicalText, '**_merhaba_**');
+    expect(c.logicalText, '**_mer haba_**');
   });
 
   test('renk gibi indeksli biçimler de birlikte bekleyebilir', () {
     final c = controllerAt('', 0);
     applyRichFormat(c, RichFormat.bold);
     applyRichFormat(c, RichFormat.color, colorIndex: 2);
-    type(c, 'merhaba');
-    expect(c.logicalText, '**%%2:merhaba%%**');
+    type(c, 'merhaba ');
+    expect(c.logicalText, '**%%2:merhaba %%**');
     expect(activeFormats(c.logicalText, 7, 14).color, 2);
+  });
+
+  // KÖK NEDEN (kullanıcı iki ekran görüntüsüyle: "biçimli yazarken hâlâ
+  // problemler mevcut"): `merhaba` yazarken ekranda `me` düz, `rh` kalın ve
+  // ardından HAM `_aba_` çıkıyordu. Sarma "IME oluşturma aralığı bitti"
+  // anında yapılıyordu; oysa Gboard bir kelimeyi yazarken o aralığı arada bir
+  // kapatıp yeniden açıyor. Tam o anda tampona işaret sokmak klavyenin kendi
+  // metin modelindeki konumları kaydırıyor, sonraki tuş işaretleri kelimenin
+  // ortasına dağıtıyor ve eşi kalmayan işaret ham karakter olarak çiziliyordu.
+  test('kelimenin ORTASINDA tampona DOKUNULMAZ (IME bozulmasın)', () {
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    for (final ch in 'merhaba'.split('')) {
+      type(c, ch);
+      expect(
+        c.logicalText.contains('*'),
+        isFalse,
+        reason: '"$ch" sonrası tamponda işaret belirdi',
+      );
+    }
+    // Biçim hâlâ bekliyor: düğme yanık kalır, kaybolmaz.
+    expect(c.hasPendingFormat, isTrue);
+    expect(activeRichFormats(c).bold, isTrue);
+  });
+
+  test('alan odaktan çıkarken bekleyen biçim METNE YAZILIR', () {
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    type(c, 'merhaba');
+    expect(c.logicalText, 'merhaba');
+
+    c.flushPendingFormat();
+    expect(c.logicalText, '**merhaba**');
+    expect(c.hasPendingFormat, isFalse);
+  });
+
+  test('flush yazılacak bir şey yoksa yalnız beklemeyi düşürür', () {
+    final c = controllerAt('', 0);
+    applyRichFormat(c, RichFormat.bold);
+    c.flushPendingFormat();
+    expect(c.logicalText, '');
+    expect(c.hasPendingFormat, isFalse);
   });
 }

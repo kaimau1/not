@@ -2436,15 +2436,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     final frame = target == 'frame';
-    final picked = await showNoteColorPicker(
+    // Editörde şerit CANLI çalışır: dokunulan renk anında sayfaya uygulanır
+    // ve şerit açık kalır (Keep davranışı). Kart menüsü/toplu işlem eski
+    // "seç ve kapan" yolunu kullanmaya devam ediyor — orada önizlenecek bir
+    // sayfa yok.
+    await showNoteColorPicker(
       context,
       frame: frame,
       current: frame ? note.frameColor : note.color,
-    );
-    if (picked == null || !mounted) return;
-    _mutate(
-      (n) => frame ? n.copyWith(frameColor: picked) : n.copyWith(color: picked),
-      immediate: true,
+      onChanged: (picked) {
+        if (!mounted) return;
+        _mutate(
+          (n) => frame
+              ? n.copyWith(frameColor: picked)
+              : n.copyWith(color: picked),
+          immediate: true,
+        );
+      },
     );
   }
 

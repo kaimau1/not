@@ -713,13 +713,42 @@ class WrapTextController extends TextEditingController {
     _pendingAt = null;
   }
 
+  /// Kelime SINIRI mı? Sarma yalnız burada yapılır (bkz. [_wrapPending]).
+  static bool _isBoundary(String ch) =>
+      ch == ' ' || ch == '\n' || ch == '\t' || ch == ' ';
+
+  /// Bekleyen biçimi metne YAZAR (alan odaktan çıkıyor, imleç taşınıyor ya da
+  /// not kaydediliyor). Yazacak bir şey yoksa yalnız beklemeyi düşürür.
+  void flushPendingFormat() {
+    final wrapped = _wrapPending(value, atRunEnd: true);
+    if (wrapped != null) {
+      super.value = _snapped(wrapped);
+    } else {
+      clearPendingFormat();
+    }
+  }
+
   /// Bekleyen biçim varsa yazılan metni işaretlerin içine alır.
   ///
-  /// IME oluşturma aralığı (Gboard'ın altı çizili tahmin metni) SÜRERKEN
-  /// metne işaret sokmak oluşturmayı bozar — bu yüzden sarma yalnız oluşturma
-  /// bittiğinde yapılır ve o ana kadar yazılan her şey birlikte sarılır
-  /// ("biçimli yazmaya devam et" davranışı, Word'deki gibi).
-  TextEditingValue? _wrapPending(TextEditingValue next) {
+  /// KÖK NEDEN (kullanıcı iki ekran görüntüsüyle: "biçimli yazarken hâlâ
+  /// problemler mevcut" — `merhaba` yazarken ekranda `me` düz, `rh` kalın ve
+  /// ardından HAM `_aba_` çıkıyordu): sarma "IME oluşturma aralığı bitti"
+  /// anında yapılıyordu. Ama Gboard bir kelimeyi yazarken oluşturma aralığını
+  /// arada bir KAPATIP yeniden açıyor (otomatik düzeltme, tahmin, imleç
+  /// güncellemesi). O aralıkta tampona işaret sokmak, klavyenin kendi metin
+  /// modelindeki konumları KAYDIRIR: Gboard bir sonraki tuşta kendi (artık
+  /// bayat) konumlarına göre yazınca işaretler kelimenin ortasına dağılıyor,
+  /// eşi kalmayan işaret de ham karakter olarak çiziliyordu.
+  ///
+  /// Artık sarma yalnız KELİME SINIRINDA (boşluk/satır sonu) ya da satır
+  /// bittiğinde ([flushPendingFormat]) yapılıyor — Gboard'ın kelimeyi
+  /// kesinlikle bıraktığı an. Boşluk da işaretlerin İÇİNDE kalır: imleç
+  /// kapanışların önünde durduğu için sonraki kelimeler aynı kutuya eklenir
+  /// ve bir daha yeniden yazma GEREKMEZ (koşu başına tek müdahale).
+  TextEditingValue? _wrapPending(
+    TextEditingValue next, {
+    bool atRunEnd = false,
+  }) {
     final at = _pendingAt;
     if (_pending.isEmpty || at == null) return null;
     if (next.composing.isValid && !next.composing.isCollapsed) return null;
@@ -734,6 +763,10 @@ class WrapTextController extends TextEditingController {
     }
     final typed = next.text.substring(at, caret);
     if (typed.isEmpty) return null;
+    // Kelimenin ORTASINDA tampona dokunulmaz (yukarıdaki kök neden).
+    if (!atRunEnd && !_isBoundary(typed.substring(typed.length - 1))) {
+      return null;
+    }
     // Bekleyenler İÇ İÇE sarılır; önce basılan en DIŞTA kalır. İmleç bütün
     // kapanış işaretlerinin ÖNÜNDE durur: yazmaya devam etmek biçimlerin
     // hepsini sürdürür (Keep davranışı), kutuların dışına düşmez.
