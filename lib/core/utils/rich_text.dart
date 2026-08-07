@@ -729,6 +729,77 @@ List<InlineSpan> richSpans(
   return spans;
 }
 
+/// [span] ağacındaki `[start, end)` karakter aralığına [restyle] uygular.
+///
+/// BEKLEYEN biçimin canlı önizlemesi için: kullanıcı "kalın"a basıp yazmaya
+/// başladığında tamponda henüz işaret YOKTUR (işaretler koşu bitince yazılır —
+/// bkz. `WrapTextController._wrapRun`), ama harfler ekranda kalın görünmelidir.
+/// Burada yalnız ÇİZİM stili değişir, metne dokunulmaz.
+///
+/// Düz metin uzunluğu DEĞİŞMEZ; bu şarttır, imleç ve seçim konumları
+/// `buildTextSpan`in ürettiği düz metnin uzunluğuna bağlıdır (bkz.
+/// text_wrap.dart dosya başlığı). Aralığa denk gelen parçalar BÖLÜNÜR, hiçbir
+/// karakter atılmaz ya da eklenmez.
+InlineSpan restyleRange(
+  InlineSpan span,
+  int start,
+  int end,
+  TextStyle Function(TextStyle? current) restyle,
+) {
+  if (end <= start) return span;
+  var cursor = 0;
+
+  InlineSpan walk(InlineSpan node) {
+    if (node is! TextSpan) {
+      // Widget/yer tutucu parçalar: uzunlukları 1 sayılır, stilleri yok.
+      cursor += 1;
+      return node;
+    }
+    final text = node.text;
+    final children = node.children;
+    if (text == null) {
+      return TextSpan(
+        style: node.style,
+        children: children == null ? null : [for (final c in children) walk(c)],
+        recognizer: node.recognizer,
+        semanticsLabel: node.semanticsLabel,
+      );
+    }
+    final from = cursor;
+    final to = cursor + text.length;
+    cursor = to;
+    // Aralıkla hiç kesişmiyor: olduğu gibi kalsın (yeni nesne bile üretme).
+    if (to <= start || from >= end) {
+      if (children == null) return node;
+      return TextSpan(
+        text: text,
+        style: node.style,
+        children: [for (final c in children) walk(c)],
+        recognizer: node.recognizer,
+        semanticsLabel: node.semanticsLabel,
+      );
+    }
+    final hitStart = start.clamp(from, to) - from;
+    final hitEnd = end.clamp(from, to) - from;
+    final parts = <InlineSpan>[
+      if (hitStart > 0)
+        TextSpan(text: text.substring(0, hitStart), style: node.style),
+      TextSpan(
+        text: text.substring(hitStart, hitEnd),
+        style: restyle(node.style),
+      ),
+      if (hitEnd < text.length)
+        TextSpan(text: text.substring(hitEnd), style: node.style),
+      if (children != null) ...[for (final c in children) walk(c)],
+    ];
+    // Stil parçalara TAŞINDI: sarmalayıcıya yeniden verilirse iç stil dıştaki
+    // tarafından ezilmez ama gereksiz yere iki kez uygulanır.
+    return TextSpan(children: parts);
+  }
+
+  return walk(span);
+}
+
 /// [mark] biçimlerinin tümünü [base] stiline uygular (iç içe biçim = stil
 /// birikimi).
 TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {

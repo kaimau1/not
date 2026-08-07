@@ -451,6 +451,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Silinen madde satırının denetleyicisi hedefteyse hedef bırakılır —
   /// biçim çubuğu dispose edilmiş denetleyiciye yazmasın.
+  /// Alan odaktan çıkarken bekleyen biçmi metne yazar ve sonucu nota işler.
+  ///
+  /// Bekleyen biçim tampona koşu boyunca DOKUNMAZ (IME yarışının kök nedeni,
+  /// bkz. `WrapTextController._wrapRun`); işaretler ancak burada girdiği için
+  /// yazımın nota işlenmesi de burada zorlanır.
+  void _flushPending(WrapTextController controller) {
+    if (!controller.hasPendingFormat) return;
+    controller.flushPendingFormat();
+    if (!mounted) return;
+    if (controller == _titleController) {
+      _mutate(
+        (n) => n.copyWith(title: _titleController.logicalText),
+        immediate: true,
+      );
+    } else if (controller == _bodyController) {
+      _mutate(
+        (n) => n.copyWith(body: _bodyController.logicalText),
+        immediate: true,
+      );
+    }
+  }
+
   void _clearFormatTargetFor(WrapTextController controller) {
     if (_formatTarget?.controller != controller) return;
     _formatTarget = null;
@@ -592,7 +614,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Biçim çubuğu son odaklanan alana yazar; gövde odağı burada bildirilir
     // (maddeler ItemsEditor'dan bildirir).
     _titleFocus.addListener(() {
-      if (!_titleFocus.hasFocus) return;
+      if (!_titleFocus.hasFocus) {
+        // KÖK NEDEN ("kalın butonuna basıp kalın yazamıyorum"): bekleyen biçim
+        // koşu bitince metne yazılır ve koşuyu bitiren en yaygın olay ODAK
+        // KAYBIDIR. Bu kapanış yalnız liste satırlarında (ItemsEditor) vardı;
+        // gövde ve başlıkta "kalın"a basıp yazan, sonra başka yere dokunan
+        // kullanıcının biçmi SESSİZCE kayboluyordu.
+        _flushPending(_titleController);
+        return;
+      }
       _setFormatTarget(
         _titleController,
         _titleFocus,
@@ -603,7 +633,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     });
     _bodyFocus.addListener(() {
-      if (!_bodyFocus.hasFocus) return;
+      if (!_bodyFocus.hasFocus) {
+        _flushPending(_bodyController);
+        return;
+      }
       _setFormatTarget(
         _bodyController,
         _bodyFocus,
@@ -781,6 +814,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // gelmemiş olabilir. Gövde/başlık için tek gerçek kaynak denetleyicidir —
     // nota dışarıdan yazan her yol (dikte, AI, yapıştırma) denetleyiciyi de
     // günceller, o yüzden burada geri alma riski yok.
+    // Bekleyen biçim koşusu de burada kesinleşir: işaretler tampona ancak koşu
+    // bitince giriyor, uygulama arka plana alınıp öldürülürse koşu hiç
+    // bitmeyecekti ve kullanıcının "kalın" yazdığı satır düz kaydedilirdi.
+    _titleController.flushPendingFormat();
+    _bodyController.flushPendingFormat();
     final title = _titleController.logicalText;
     final body = _bodyController.logicalText;
     final drifted = title != note.title || body != note.body;

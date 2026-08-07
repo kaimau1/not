@@ -103,7 +103,15 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     super.initState();
     _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
     _focus.addListener(() {
-      if (!_focus.hasFocus) return;
+      if (!_focus.hasFocus) {
+        // Bekleyen biçim koşusu odak kaybında metne yazılır (gövde/başlık ve
+        // liste satırlarıyla aynı kural — bkz. WrapTextController._wrapRun).
+        if (_controller.hasPendingFormat) {
+          _controller.flushPendingFormat();
+          _commit();
+        }
+        return;
+      }
       widget.onFieldFocused?.call(_controller, _focus, _commit);
     });
   }
@@ -146,6 +154,9 @@ class _PdfNotePaneState extends State<PdfNotePane> {
 
   void _setPage(int next) {
     if (next == _page || next < 1) return;
+    // Bekleyen biçim koşusu sayfa değişimiyle biter: işaretler ESKİ sayfanın
+    // notuna yazılmalı, yenisine değil.
+    if (_controller.hasPendingFormat) _controller.flushPendingFormat();
     _commit();
     setState(() => _page = next);
     _controller.text = widget.noteOf().pageNote(widget.attachment, next);
