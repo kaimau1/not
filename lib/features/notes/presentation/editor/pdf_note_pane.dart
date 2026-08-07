@@ -69,9 +69,9 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   void didUpdateWidget(PdfNotePane old) {
     super.didUpdateWidget(old);
     // Tam ekranda çizim yapılıp dönüldüyse pano da tazelenir.
-    if (!identical(old.attachment.ink, widget.attachment.ink)) {
-      _ink.replace(widget.attachment.ink);
-    }
+    // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
+    // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
+    _ink.replace(widget.attachment.ink);
   }
 
   @override
@@ -100,11 +100,8 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
-    viewerBuilder: (context, host) => _PdfPaneViewer(
-      attachment: widget.attachment,
-      ink: _ink,
-      host: host,
-    ),
+    viewerBuilder: (context, host) =>
+        _PdfPaneViewer(attachment: widget.attachment, ink: _ink, host: host),
   );
 }
 

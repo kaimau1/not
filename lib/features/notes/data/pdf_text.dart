@@ -30,11 +30,35 @@ class PdfText {
     }
   }
 
+  /// Belgede METİN KATMANI var mı? (Yoksa çağıran OCR'a düşer.)
+  ///
+  /// KÖK NEDEN (donma): bu soru için ÖNCE tüm belgenin metni çıkarılıyordu —
+  /// 300 sayfalık bir PDF'te 300 `loadText()` çağrısı ve megabaytlarca String
+  /// birikimi, hem de UI izolatında. Oysa sorulan tek şey "40 karakterden
+  /// fazla metin var mı". İlk birkaç sayfa yeter; eşik dolunca çıkılır.
+  ///
+  /// Kapak sayfası görsel olan ama içi metinli belgeler için tek sayfa
+  /// yetmiyor; sınır bilerek biraz cömert.
+  static const _textProbePages = 6;
+
   static Future<bool> hasTextLayer(String path) async {
     final file = File(path);
     if (!file.existsSync()) return false;
-    final text = await extract(path);
-    return text.trim().length > 40;
+    final document = await PdfDocument.openFile(path);
+    try {
+      var seen = 0;
+      final limit = document.pages.length < _textProbePages
+          ? document.pages.length
+          : _textProbePages;
+      for (var i = 0; i < limit; i++) {
+        final page = await document.pages[i].loadText();
+        seen += page.fullText.trim().length;
+        if (seen > 40) return true;
+      }
+      return false;
+    } finally {
+      await document.dispose();
+    }
   }
 
   /// Metni sesli okumaya uygun hale getirir.

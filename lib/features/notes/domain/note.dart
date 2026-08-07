@@ -60,6 +60,31 @@ class AiSummary {
   };
 }
 
+/// Eski sürümün `text`e düşürdüğü belge notunu geri yükseltir.
+///
+/// KÖK NEDEN: eski sürüm `type` alanını KOŞULSUZ yazıyor ve tanımadığı
+/// `pdf`/`slides` kimliğini [NoteType.fromId] ile `text`e düşürüp öyle GERİ
+/// KAYDEDİYOR. O andan sonra not yeni sürümde de düz metin notu olarak
+/// açılırdı: sayfa notları dokümanda DURUR ama arayüzden erişilemez —
+/// pratikte kalıcı kayıp. Eski sürümü düzeltmek mümkün olmadığından telafi
+/// okuma tarafında yapılıyor.
+///
+/// Ölçüt dar tutuldu: SAYFA NOTU olan VE belge eki taşıyan bir "text" notu
+/// başka türlü oluşmaz. Yalnız PDF eki olan düz metin notu meşrudur, ona
+/// dokunulmaz.
+NoteType repairNoteType(
+  NoteType stored, {
+  required List<String?> attachmentKinds,
+  required bool hasPageNotes,
+}) {
+  if (stored != NoteType.text || !hasPageNotes) return stored;
+  for (final kind in attachmentKinds) {
+    if (kind == AttachmentKind.pdf.id) return NoteType.pdf;
+    if (kind == AttachmentKind.slide.id) return NoteType.slides;
+  }
+  return stored;
+}
+
 /// Bir not — tüm içerik tek Firestore dokümanında tutulur (atomik ve
 /// offline dostu). İkili veriler (görsel/PDF) Storage'dadır.
 class Note {
@@ -204,15 +229,28 @@ class Note {
       title.trim().isEmpty &&
       body.trim().isEmpty &&
       items.every((i) => i.text.trim().isEmpty) &&
-      // Sayfa notu yazılmış bir PDF notu boş SAYILMAZ; PDF eki silinse bile
-      // (kullanıcı belgeyi değiştirmek istiyor olabilir) yazdığı notlar
-      // "boş not temizliği"nde sessizce silinmemeli.
+      // Sayfa notu yazılmış bir belge notu boş SAYILMAZ — belgesi silinmiş
+      // olsa bile. Burada BİLEREK [hasPageNotes] kullanılmıyor: o yalnız
+      // MEVCUT eklerin notlarını sayıyor, oysa arka plan temizliği "boş"
+      // gördüğü notu SESSİZCE siler. Kullanıcı belgeyi değiştirmek için
+      // silmiş olabilir; yazdıkları o aralıkta yok edilmemeli. Görünürde boş
+      // kalan notu kullanıcı listeden kendisi silebilir.
       pageNotes.values.every((v) => v.trim().isEmpty) &&
       attachments.isEmpty &&
       reminderAt == null;
 
-  /// Sayfa notu taşıyan PDF/sunum ekleri var mı? (Boş dizgiler sayılmaz.)
-  bool get hasPageNotes => pageNotes.values.any((v) => v.trim().isNotEmpty);
+  /// MEVCUT eklerin sayfa notu var mı? (Boş dizgiler sayılmaz; belgesi
+  /// silinmiş eskiden kalma anahtarlar sayılmaz.)
+  bool get hasPageNotes {
+    if (pageNotes.isEmpty) return false;
+    for (final attachment in attachments) {
+      for (final entry in pageNotes.entries) {
+        if (entry.value.trim().isEmpty) continue;
+        if (isPageNoteKeyOf(entry.key, attachment.id)) return true;
+      }
+    }
+    return false;
+  }
 
   /// [attachment]'in [pageNumber] sayfası için kayıtlı not (yoksa boş dizgi).
   String pageNote(Attachment attachment, int pageNumber) =>
@@ -409,9 +447,26 @@ class Note {
     // değişir. (Yalnız bekleyen yazımda: eski kayıtların tarihi uydurulmaz.)
     final pending = doc.metadata.hasPendingWrites;
     final localNow = pending ? DateTime.now() : null;
+    // GERİYE DÖNÜK ONARIM: eski sürüm `type` alanını KOŞULSUZ yazıyor ve
+    // tanımadığı `pdf`/`slides` kimliğini `text`e düşürüp öyle geri
+    // kaydediyor. O andan sonra not yeni sürümde de düz metin notu olarak
+    // açılır, sayfa notları dokümanda DURUR ama arayüzden erişilemez —
+    // pratikte kalıcı kayıp. Belgesi ve sayfa notu olan bir "text" notu
+    // aslında bir belge notudur; tipi geri yükseltiliyor.
+    final storedType = NoteType.fromId(map['type'] as String?);
+    final rawAttachments = (map['attachments'] as List<dynamic>? ?? const []);
+    final rawPageNotes =
+        (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {});
+    final type = repairNoteType(
+      storedType,
+      attachmentKinds: [
+        for (final raw in rawAttachments) (raw as Map)['kind']?.toString(),
+      ],
+      hasPageNotes: rawPageNotes.isNotEmpty,
+    );
     return Note(
       id: doc.id,
-      type: NoteType.fromId(map['type'] as String?),
+      type: type,
       title: map['title'] as String? ?? '',
       body: map['body'] as String? ?? '',
       items: [

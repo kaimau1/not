@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
@@ -232,7 +233,8 @@ class GeminiService {
         'elle seçebilirsin.',
       );
     }
-    final first = prefer != null && (candidates.isEmpty || candidates.contains(prefer))
+    final first =
+        prefer != null && (candidates.isEmpty || candidates.contains(prefer))
         ? prefer
         : _activeModel;
     final ordered = [?first, ...candidates.where((m) => m != first)];
@@ -266,6 +268,23 @@ class GeminiService {
     jsonOutput: jsonOutput,
     preferModel: preferModel,
   );
+
+  /// Baytları base64'e çevirir; büyükse ARKA PLANDA.
+  ///
+  /// KÖK NEDEN (donma): `base64Encode` doğrudan UI izolatında çağrılıyordu.
+  /// 20 MB'lık bir PDF ~27 MB'lık bir String demek — tek bir "PDF'i özetle"
+  /// isteğinde yüzlerce ms kilitlenme ve anlık bellek sıçraması. Görsel
+  /// sıkıştırma zaten `compute`'a taşınmışken en büyük bayt yığını olan bu
+  /// yol taşınmamıştı.
+  ///
+  /// Küçük yükler (ör. kısa ses, küçük görsel) izolat kurmanın maliyetini
+  /// hak etmiyor; eşiğin altında yerinde çevrilir.
+  static const _base64BackgroundThreshold = 256 * 1024;
+
+  static Future<String> _encodeBase64(Uint8List bytes) =>
+      bytes.length < _base64BackgroundThreshold
+      ? Future.value(base64Encode(bytes))
+      : compute(base64Encode, bytes);
 
   Future<String> _generateFromContents(
     List<Map<String, dynamic>> contents, {
@@ -357,11 +376,11 @@ class GeminiService {
     Uint8List bytes,
     String fileName, {
     bool detailed = false,
-  }) => _generate([
+  }) async => _generate([
     {
       'inline_data': {
         'mime_type': 'application/pdf',
-        'data': base64Encode(bytes),
+        'data': await _encodeBase64(bytes),
       },
     },
     {
@@ -386,12 +405,14 @@ class GeminiService {
     },
   ]);
 
-
   /// Görseldeki metni çıkarır (OCR) ve düzenli bir not metnine dönüştürür.
-  Future<String> extractTextFromImage(Uint8List bytes, String mimeType) =>
+  Future<String> extractTextFromImage(Uint8List bytes, String mimeType) async =>
       _generate([
         {
-          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+          'inline_data': {
+            'mime_type': mimeType,
+            'data': await _encodeBase64(bytes),
+          },
         },
         {
           'text':
@@ -406,9 +427,15 @@ class GeminiService {
   /// Görüntülü nottan (video: görüntü + ses birlikte) detaylı bir not çıkarır.
   /// Modele videonun tamamı gider; süre sınırı çağıran tarafta uygulanır
   /// (satır içi gönderim boyutu sınırlıdır).
-  Future<String> noteFromVideo(Uint8List bytes, String mimeType) => _generate([
+  Future<String> noteFromVideo(
+    Uint8List bytes,
+    String mimeType,
+  ) async => _generate([
     {
-      'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+      'inline_data': {
+        'mime_type': mimeType,
+        'data': await _encodeBase64(bytes),
+      },
     },
     {
       'text':
@@ -430,10 +457,13 @@ class GeminiService {
   ]).then(stripMarkdown);
 
   /// Ses kaydını yazıya döker.
-  Future<String> transcribeAudio(Uint8List bytes, String mimeType) =>
+  Future<String> transcribeAudio(Uint8List bytes, String mimeType) async =>
       _generate([
         {
-          'inline_data': {'mime_type': mimeType, 'data': base64Encode(bytes)},
+          'inline_data': {
+            'mime_type': mimeType,
+            'data': await _encodeBase64(bytes),
+          },
         },
         {
           'text':
@@ -480,10 +510,10 @@ class GeminiService {
           '- Tablo ve şekilleri cümleye çevir; okunamayanları atla.\n'
           '- Dipnot, sayfa numarası, kaynakça atıflarını çıkar.\n'
           '${summarize ? '- ÖZET anlat: yalnızca ana fikirleri ve sonuçları '
-                'al, ayrıntıyı, örnekleri ve tekrarları at. Hedef uzunluk '
-                'belgenin beşte biri kadar olsun.\n' : '- Belgenin kendi '
-                'sırasını ve TÜM ana fikirlerini koru; özet değil, '
-                'dinlenebilir tam anlatım istiyorum.\n'}'
+                    'al, ayrıntıyı, örnekleri ve tekrarları at. Hedef uzunluk '
+                    'belgenin beşte biri kadar olsun.\n' : '- Belgenin kendi '
+                    'sırasını ve TÜM ana fikirlerini koru; özet değil, '
+                    'dinlenebilir tam anlatım istiyorum.\n'}'
           '- Kısa cümleler kur; uzun cümle sesli dinlemede takip edilemiyor.\n'
           '- Sonunda tek cümlelik kapanış yap.\n'
           'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
@@ -564,7 +594,7 @@ class GeminiService {
     required Uint8List bytes,
     required String fileName,
     required List<ChatTurn> history,
-  }) {
+  }) async {
     final contents = <Map<String, dynamic>>[
       {
         'role': 'user',
@@ -572,7 +602,7 @@ class GeminiService {
           {
             'inline_data': {
               'mime_type': 'application/pdf',
-              'data': base64Encode(bytes),
+              'data': await _encodeBase64(bytes),
             },
           },
           {
@@ -610,7 +640,7 @@ class GeminiService {
     required List<({Uint8List bytes, String mimeType, String fileName})>
     attachments,
     required List<ChatTurn> history,
-  }) {
+  }) async {
     final title = note.displayTitle.trim();
     final contents = <Map<String, dynamic>>[
       {
@@ -620,7 +650,7 @@ class GeminiService {
             {
               'inline_data': {
                 'mime_type': a.mimeType,
-                'data': base64Encode(a.bytes),
+                'data': await _encodeBase64(a.bytes),
               },
             },
           {
@@ -814,7 +844,7 @@ class GeminiService {
             {
               'inline_data': {
                 'mime_type': mimeType ?? 'audio/mp4',
-                'data': base64Encode(audioBytes!),
+                'data': await _encodeBase64(audioBytes!),
               },
             },
             {'text': 'Bu ses kaydındaki konuşmadan $task'},
@@ -1122,5 +1152,4 @@ class GeminiService {
       },
     },
   ];
-
 }

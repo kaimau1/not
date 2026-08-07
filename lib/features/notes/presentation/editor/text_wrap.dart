@@ -914,7 +914,13 @@ class WrapTextController extends TextEditingController {
     }
 
     final base = selection.baseOffset;
-    if (base < 0) return selection;
+    if (base < 0) {
+      // Geçersiz seçim: metin DEĞİŞTİ ama imleç -1 kalırsa alana odak
+      // dönünce imlecin yeri belirsiz olur. Sarmanın sonuna konur.
+      return TextSelection.collapsed(
+        offset: end + prefixLength + (caretOutside ? suffixLength : 0),
+      );
+    }
     final extent = selection.extentOffset < 0 ? base : selection.extentOffset;
     return TextSelection(baseOffset: move(base), extentOffset: move(extent));
   }
@@ -1097,6 +1103,58 @@ class WrapTextController extends TextEditingController {
     );
   }
 
+  /// Son sarma planının önbelleği.
+  ///
+  /// KÖK NEDEN (kasma — "görsel ekleyince sayfaya kasma artıyor"nun çözdürme
+  /// fırtınası kapatıldıktan sonra KALAN yarısı): [planTextWrap] satır satır
+  /// ilerlerken her turda TAM bir `TextPainter.layout` + tam biçim ayrıştırması
+  /// yapıyor — maliyeti O(satır × metin). Bu, yalnız yazarken değil `set
+  /// value`yu tetikleyen HER ŞEYDE (imleci taşımak, metne dokunmak, seçim
+  /// değişimi) koşuyordu; oysa plan yalnız METİN ya da yerleşim girdileri
+  /// değişince değişir. İmleç hareketinde artık hiç hesaplanmıyor.
+  String? _planKeyLogical;
+  TextStyle? _planKeyStyle;
+  double _planKeyWidth = 0;
+  double _planKeyScale = 1;
+  TextDirection? _planKeyDirection;
+  RichTextTheme? _planKeyRich;
+  List<FloatBox>? _planKeyFloats;
+  WrapPlan? _planCache;
+
+  WrapPlan _planFor(String logical, TextStyle style) {
+    if (_planCache != null &&
+        _planKeyLogical == logical &&
+        _planKeyStyle == style &&
+        _planKeyWidth == _columnWidth &&
+        _planKeyScale == _textScale &&
+        _planKeyDirection == _direction &&
+        _planKeyRich == _rich &&
+        _planKeyFloats != null &&
+        sameFloatList(_planKeyFloats!, _floats)) {
+      return _planCache!;
+    }
+    final plan = planTextWrap(
+      logical: logical,
+      style: style,
+      columnWidth: _columnWidth,
+      floats: _floats,
+      textScaleFactor: _textScale,
+      direction: _direction,
+      rich: _rich,
+    );
+    _planKeyLogical = logical;
+    _planKeyStyle = style;
+    _planKeyWidth = _columnWidth;
+    _planKeyScale = _textScale;
+    _planKeyDirection = _direction;
+    _planKeyRich = _rich;
+    // Bantlar YERİNDE değişebiliyor (görsel sürüklenirken aynı liste
+    // güncelleniyor); kopyası saklanır, yoksa önbellek bayat kalır.
+    _planKeyFloats = List.of(_floats);
+    _planCache = plan;
+    return plan;
+  }
+
   void _reflow(String logical, int logicalCaret, [int? logicalExtent]) {
     final style = _style;
     // Aynı değeri yeniden yazmak seçim katmanını (tutamaklar, araç çubuğu)
@@ -1117,15 +1175,7 @@ class WrapTextController extends TextEditingController {
       );
       return;
     }
-    final plan = planTextWrap(
-      logical: logical,
-      style: style,
-      columnWidth: _columnWidth,
-      floats: _floats,
-      textScaleFactor: _textScale,
-      direction: _direction,
-      rich: _rich,
-    );
+    final plan = _planFor(logical, style);
     _widths = plan.widths;
     final caret = wrapToDisplayOffset(
       plan.display,
@@ -1161,6 +1211,46 @@ class WrapTextController extends TextEditingController {
   bool _scanHasLink = false;
   bool _scanHasMarker = false;
 
+  /// Üretilmiş span ağacının önbelleği.
+  ///
+  /// KÖK NEDEN (kasma): `buildTextSpan` HER ÇİZİMDE çağrılıyor ve metinde bir
+  /// tane bile biçim işareti varsa `richSpans` tüm metni özyinelemeli olarak
+  /// gezip yüzlerce `TextSpan` üretiyordu. Önbellek yalnız "metin düz mü"
+  /// sorusunu kapsıyordu; asıl pahalı iş her karede yeniden yapılıyordu.
+  /// Girdiler değişmediyse AYNI ağaç döndürülür.
+  String? _spanKeyText;
+  TextStyle? _spanKeyStyle;
+  Color? _spanKeyLinkColor;
+  RichTextTheme? _spanKeyRich;
+  List<double>? _spanKeyWidths;
+  TextSpan? _spanCache;
+
+  TextSpan _cachedSpan(
+    String text,
+    List<double> widths,
+    TextStyle? style,
+    Color? linkColor,
+  ) {
+    if (_spanCache != null &&
+        _spanKeyText == text &&
+        _spanKeyStyle == style &&
+        _spanKeyLinkColor == linkColor &&
+        _spanKeyRich == _rich &&
+        identical(_spanKeyWidths, widths)) {
+      return _spanCache!;
+    }
+    final span =
+        buildWrapSpan(text, widths, style, linkColor: linkColor, rich: _rich)
+            as TextSpan;
+    _spanKeyText = text;
+    _spanKeyStyle = style;
+    _spanKeyLinkColor = linkColor;
+    _spanKeyRich = _rich;
+    _spanKeyWidths = widths;
+    _spanCache = span;
+    return span;
+  }
+
   void _scanPlainness() {
     if (_scanText == text) return;
     _scanText = text;
@@ -1191,22 +1281,12 @@ class WrapTextController extends TextEditingController {
           withComposing: withComposing,
         );
       } else {
-        span =
-            buildWrapSpan(
-                  text,
-                  const [],
-                  style,
-                  linkColor: linkColor,
-                  rich: _rich,
-                )
-                as TextSpan;
+        span = _cachedSpan(text, const [], style, linkColor);
       }
     } else {
       // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
       // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
-      span =
-          buildWrapSpan(text, _widths, style, linkColor: linkColor, rich: _rich)
-              as TextSpan;
+      span = _cachedSpan(text, _widths, style, linkColor);
     }
     return _withPendingPreview(span, style);
   }

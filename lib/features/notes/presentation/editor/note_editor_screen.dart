@@ -104,7 +104,7 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
     final y = b[i];
     if (x.id != y.id ||
         x.checked != y.checked ||
-        x.text.trim().isEmpty != y.text.trim().isEmpty) {
+        isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
   }
@@ -125,6 +125,23 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
 /// denetleyicileri çiziyor (bkz. [sameItemsVisually]). Eklerde de yalnız
 /// YERLEŞİMİ ve durumu etkileyen alanlar bakılır.
 @visibleForTesting
+/// TAHSİSSİZ "boş mu" denetimi.
+///
+/// KÖK NEDEN (GC baskısı): `text.trim().isEmpty` her çağrıda yeni bir dizgi
+/// ayırıyor. Bu denetim HER TUŞ VURUŞUNDA madde sayısı kadar koşuyordu; 50
+/// maddelik bir notta tuş başına 100 gereksiz dizgi. Tek başına takılma
+/// yaratmaz, ama kare bütçesini diğer maliyetlerle birlikte aşırıyordu.
+bool isBlankText(String s) {
+  for (var i = 0; i < s.length; i++) {
+    final c = s.codeUnitAt(i);
+    // Boşluk, sekme, satır sonu ve NBSP — `trim()`in kırptığı yaygın küme.
+    if (c != 0x20 && c != 0x09 && c != 0x0A && c != 0x0D && c != 0xA0) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool sameRenderedNote(Note a, Note b) {
   if (identical(a, b)) return true;
   if (!sameItemsVisually(a.items, b.items)) return false;
@@ -151,7 +168,7 @@ bool sameRenderedNote(Note a, Note b) {
       a.aiSummary != b.aiSummary ||
       a.title != b.title ||
       // Gövdenin DOLULUĞU tuval ipucunu ve gövde alanının varlığını belirler.
-      a.body.trim().isEmpty != b.body.trim().isEmpty) {
+      isBlankText(a.body) != isBlankText(b.body)) {
     return false;
   }
   if (a.tags.length != b.tags.length) return false;
@@ -489,7 +506,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _clearFormatTargetFor(WrapTextController controller) {
     if (_formatTarget?.controller != controller) return;
     _formatTarget = null;
-    if (_formatBarOpen && mounted) setState(() {});
+    if (!_formatBarOpen) return;
+    // KÖK NEDEN (çökme): bu kapanış alanın `dispose`undan geliyor ve bir
+    // widget BUILD FAZINDA da unmount edilebiliyor (belge/tip değişince
+    // pano anahtarı değişir). `mounted` yalnız "dispose edildi mi"yi
+    // korur, "build içindeyiz"i korumaz — `setState() called during build`
+    // istisnası buradan çıkar. Çizim tazelemesi bir kareye ertelenir.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _formatBarOpen) setState(() {});
+    });
   }
 
   void _setFormatTarget(
@@ -833,6 +858,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // bitmeyecekti ve kullanıcının "kalın" yazdığı satır düz kaydedilirdi.
     _titleController.flushPendingFormat();
     _bodyController.flushPendingFormat();
+    // Odaktaki alan madde satırı ya da sayfa notu olabilir; biçim çubuğunun
+    // hedefi tam olarak o alandır. Yoksa "kalın"a basıp bir madde satırına
+    // yazan ve uygulamayı görev listesinden kapatan kullanıcı biçmi
+    // kaybediyordu (gövde/başlık için kapatılan deliğin aynısı).
+    final target = _formatTarget;
+    if (target != null && target.controller.hasPendingFormat) {
+      target.controller.flushPendingFormat();
+      target.commit();
+    }
     final title = _titleController.logicalText;
     final body = _bodyController.logicalText;
     final drifted = title != note.title || body != note.body;
@@ -959,6 +993,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _redo() {
     final note = _note;
     if (note == null) return;
+    if (note.type.isPageNoteType) FocusManager.instance.primaryFocus?.unfocus();
     final next = _undoStack.redoStep(note);
     if (next == null) return;
     _restoring = true;
@@ -995,7 +1030,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.reminderAt == b.reminderAt &&
       // Tuval ipucu ve gövde alanı gövdenin BOŞLUĞUNA bakıyor; doluluk
       // değişiyorsa çizim de değişmeli.
-      a.body.trim().isEmpty == b.body.trim().isEmpty;
+      isBlankText(a.body) == isBlankText(b.body);
 
   void _mutate(Note Function(Note) transform, {bool immediate = false}) {
     final note = _note;

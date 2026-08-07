@@ -243,6 +243,17 @@ class _VideoBoxState extends State<_VideoBox> {
   bool _playing = false;
   bool _sizeReported = false;
 
+  /// TARTILDI, TEMBELLEŞTİRİLMEDİ: oynatıcı `initState`te kurulur.
+  ///
+  /// Tembel kurulum (ilk dokunuşta) platform çözücüsünü geciktirirdi — çok
+  /// videolu notta eşzamanlı çözücü sınırını zorlamamak açısından iyi olurdu.
+  /// Ama kutunun İLK KARESİ oynatıcıdan geliyor: tembel kurulumda kullanıcı
+  /// dokunana kadar videonun yerinde genel bir kamera simgesi duruyor. Bir
+  /// videolu (yaygın) durumda görünür bir gerileme, dört videolu (nadir)
+  /// durumda kazanç — takas kabul edilmedi. Küçük resim ayrıca üretilirse
+  /// tembel kurulum yeniden düşünülebilir.
+  bool _initStarted = false;
+
   @override
   void initState() {
     super.initState();
@@ -250,6 +261,8 @@ class _VideoBoxState extends State<_VideoBox> {
   }
 
   Future<void> _init() async {
+    if (_initStarted) return;
+    _initStarted = true;
     // Dosya yoksa denemeye gerek yok: yer tutucu kalır.
     if (!localFileExists(widget.video.localPath)) return;
     final controller = VideoPlayerController.file(File(widget.video.localPath));
@@ -286,6 +299,7 @@ class _VideoBoxState extends State<_VideoBox> {
       _controller?.dispose();
       _controller = null;
       _failed = false;
+      _initStarted = false;
       _init();
     }
   }
@@ -298,6 +312,11 @@ class _VideoBoxState extends State<_VideoBox> {
   }
 
   Future<void> _toggle() async {
+    // İlk dokunuşta oynatıcı burada kurulur (bkz. [_initStarted]).
+    if (!_initStarted) {
+      await _init();
+      if (!mounted) return;
+    }
     final controller = _controller;
     if (controller == null || !controller.value.isInitialized) return;
     if (controller.value.isPlaying) {

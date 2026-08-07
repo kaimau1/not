@@ -178,9 +178,7 @@ class _PageNotePaneState extends State<PageNotePane> {
     final text = _controller.logicalText;
     if (text.isEmpty) {
       final note = widget.noteOf();
-      if (!note.pageNotes.containsKey(
-        pageNoteKey(widget.attachment, _page),
-      )) {
+      if (!note.pageNotes.containsKey(pageNoteKey(widget.attachment, _page))) {
         return;
       }
     }
@@ -330,6 +328,14 @@ class _PageNotePaneState extends State<PageNotePane> {
                   minLines: null,
                   textAlignVertical: TextAlignVertical.top,
                   keyboardType: TextInputType.multiline,
+                  // Kes/Kopyala TEMİZ metin verir: gövde, başlık ve madde
+                  // alanlarıyla aynı kural. Bu alanda eksikti — panoya
+                  // `**kalın**` işaretleri ham gidiyordu.
+                  contextMenuBuilder: (menuContext, state) =>
+                      AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: state.contextMenuAnchors,
+                        buttonItems: cleanClipboardMenuItems(state),
+                      ),
                   decoration: InputDecoration(
                     hintText: l10n.pdfPageNoteHint,
                     filled: false,

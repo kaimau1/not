@@ -133,9 +133,30 @@ class InkController extends ChangeNotifier {
   /// yolu tetiklenmez — bu bir kullanıcı çizimi değil, zaten kaydedilmiş
   /// çizimin kopyalanmasıdır.
   void replace(List<InkStroke> strokes) {
+    // İÇERİK karşılaştırması: çağıranlar liste KİMLİĞİNE bakıyordu, ama
+    // `Note.fromDoc` her anlık görüntüde yeni liste kuruyor — yani her
+    // Firestore yankısında (kendi yazımımızınki dahil) katman boşuna
+    // tazeleniyordu.
+    if (_sameStrokes(_ink, strokes)) return;
     _dirty = false;
     _ink = [...strokes];
     notifyListeners();
+  }
+
+  static bool _sameStrokes(List<InkStroke> a, List<InkStroke> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      final x = a[i];
+      final y = b[i];
+      if (x.page != y.page ||
+          x.color != y.color ||
+          x.width != y.width ||
+          x.points.length != y.points.length) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// İki parmak gezinme başladı: başlamış çizgiyi geri al, çizimi askıya al.

@@ -156,6 +156,12 @@ class _PdfNotesOverviewScreenState extends State<PdfNotesOverviewScreen> {
                       ),
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
+                      // Temiz Kes/Kopyala (bkz. page_note_pane).
+                      contextMenuBuilder: (menuContext, state) =>
+                          AdaptiveTextSelectionToolbar.buttonItems(
+                            anchors: state.contextMenuAnchors,
+                            buttonItems: cleanClipboardMenuItems(state),
+                          ),
                       decoration: const InputDecoration(
                         filled: false,
                         border: InputBorder.none,

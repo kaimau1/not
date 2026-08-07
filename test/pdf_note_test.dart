@@ -120,7 +120,13 @@ void main() {
       expect(bare.isEmpty, isTrue);
       final written = bare.withPageNote(attachment, 1, 'not');
       expect(written.isEmpty, isFalse);
-      expect(written.hasPageNotes, isTrue);
+      // `hasPageNotes` ile `isEmpty` BİLEREK farklı sorular soruyor:
+      // birincisi "GÖSTERİLECEK not var mı" (yalnız mevcut eklerinki),
+      // ikincisi "sessizce silinebilir mi" (hiçbir yazı yoksa). Belgesi
+      // silinmiş bir notun yazıları gösterilmez ama temizlik de onu yok
+      // edemez — kullanıcı listeden kendisi siler.
+      expect(written.hasPageNotes, isFalse);
+      expect(written.copyWith(attachments: [attachment]).hasPageNotes, isTrue);
       // Yalnız boş dizgiler kaldıysa not yine boştur.
       expect(written.withPageNote(attachment, 1, '').isEmpty, isTrue);
     });

@@ -120,9 +120,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Odak değişince aksiyon butonlarını gizle/göster (dar ekranlarda arama
-    // alanına yer açmak için).
-    _searchFocus.addListener(() => setState(() {}));
+    // KÖK NEDEN (kasma): burada `_searchFocus.addListener(() => setState(...))`
+    // vardı — arama alanına her dokunuş EKRANIN TAMAMINI (ve önbellek
+    // payındaki ~130 kartı) yeniden kuruyordu. Odak artık yalnız arama
+    // çubuğunu saran `ListenableBuilder` tarafından dinleniyor.
     // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
     // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
     // sonra kontrol et; take() varsa asistanı başlatır.
@@ -750,9 +751,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // eskiden "İş" klasörü seçiliyken anlam modu TÜM klasörlerden not getiriyor,
     // üstteki çip ise hâlâ "İş" diyordu — metin/anlam modları sessizce farklı
     // davranıyordu.
-    final semanticFolder = ref.watch(selectedFolderProvider);
-    final semanticTag = ref.watch(selectedTagProvider);
-    final semanticFilter = ref.watch(noteFilterProvider);
+    // Bu üçü YALNIZ anlam modu açıkken gerekli; koşulsuz izlenince anlam modu
+    // kapalıyken bile üç sağlayıcıya abone olup ekranı yeniden kurduruyorlardı.
+    final semanticFolder = semanticActive
+        ? ref.watch(selectedFolderProvider)
+        : null;
+    final semanticTag = semanticActive ? ref.watch(selectedTagProvider) : null;
+    final semanticFilter = semanticActive
+        ? ref.watch(noteFilterProvider)
+        : NoteFilter.all;
     final notesAsync = semanticActive
         ? ref
               .watch(semanticSearchProvider(query.trim()))
@@ -792,7 +799,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
     // Gizli klasör durumu ⋮ menüsünde kullanılır; sağlayıcılar BURADA (build
     // içinde) okunur — itemBuilder menü açılınca, yani build dışında çalışır.
-    final hasHiddenFolders = ref.watch(hiddenFolderIdsProvider).isNotEmpty;
+    // Kümenin KENDİSİ değil yalnız "gizli klasör var mı" izlenir: klasör
+    // akışının her yayınında yeni bir `Set` geliyor ve ekranın tamamı boşuna
+    // yeniden kuruluyordu.
+    final hasHiddenFolders = ref.watch(
+      hiddenFolderIdsProvider.select((s) => s.isNotEmpty),
+    );
     // Elle sıralama yalnız süzgeçsiz görünümde anlamlı (alt kümede sıra
     // bozulur); aksi hâlde menü maddesi hiç görünmez ki kullanıcı tıklayıp
     // "neden olmuyor" demesin.
@@ -802,11 +814,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.watch(selectedFolderProvider) == null &&
         ref.watch(selectedTagProvider) == null;
     final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final searchExpanded =
-        _searchFocus.hasFocus &&
-        keyboardOpen &&
-        MediaQuery.sizeOf(context).width < 600;
 
     final page = CallbackShortcuts(
       bindings: {
@@ -995,144 +1002,170 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             },
                           )
                         else
-                          AppBar(
-                            titleSpacing: searchExpanded ? 0 : 12,
-                            // Genişkenken geri oku: odağı bırakır, bar daralır.
-                            leading: searchExpanded
-                                ? IconButton(
-                                    tooltip: l10n.close,
-                                    icon: const Icon(Icons.arrow_back),
-                                    onPressed: _searchFocus.unfocus,
-                                  )
-                                : null,
-                            automaticallyImplyLeading: false,
-                            title: _SearchField(
-                              controller: _searchController,
-                              focusNode: _searchFocus,
-                            ),
-                            actions: searchExpanded
-                                ? const [SizedBox(width: 4)]
-                                : [
-                                    // Yapay Zeka yeniden KENDİ düğmesi oldu.
-                                    // Bir süre ⋮ menüsünde durmuştu çünkü arama
-                                    // alanının içindeki ✨ (akıllı arama) ile
-                                    // karışıyordu; o ✨ artık Metin/Anlam
-                                    // segmenti olduğundan karışıklık kalktı.
-                                    Tooltip(
-                                      message: l10n.aiHubTitle,
-                                      child: SizedBox(
-                                        width: 44,
-                                        height: 44,
-                                        child: Material(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                          // KÖK NEDEN (kasma): `keyboardOpen`/`searchExpanded`
+                          // ekranın ANA build'inde okunuyordu. `viewInsets`
+                          // klavye animasyonunun HER KARESİNDE değişiyor, yani
+                          // arama kutusuna dokunmak 250 ms boyunca ızgaranın
+                          // tamamını 15–30 kez yeniden kurduruyordu. Okuma
+                          // artık yalnız bu çubuğu kapsıyor.
+                          ListenableBuilder(
+                            listenable: _searchFocus,
+                            builder: (context, _) {
+                              final searchExpanded =
+                                  _searchFocus.hasFocus &&
+                                  MediaQuery.viewInsetsOf(context).bottom > 0 &&
+                                  MediaQuery.sizeOf(context).width < 600;
+                              return AppBar(
+                                titleSpacing: searchExpanded ? 0 : 12,
+                                // Genişkenken geri oku: odağı bırakır, bar daralır.
+                                leading: searchExpanded
+                                    ? IconButton(
+                                        tooltip: l10n.close,
+                                        icon: const Icon(Icons.arrow_back),
+                                        onPressed: _searchFocus.unfocus,
+                                      )
+                                    : null,
+                                automaticallyImplyLeading: false,
+                                title: _SearchField(
+                                  controller: _searchController,
+                                  focusNode: _searchFocus,
+                                ),
+                                actions: searchExpanded
+                                    ? const [SizedBox(width: 4)]
+                                    : [
+                                        // Yapay Zeka yeniden KENDİ düğmesi oldu.
+                                        // Bir süre ⋮ menüsünde durmuştu çünkü arama
+                                        // alanının içindeki ✨ (akıllı arama) ile
+                                        // karışıyordu; o ✨ artık Metin/Anlam
+                                        // segmenti olduğundan karışıklık kalktı.
+                                        Tooltip(
+                                          message: l10n.aiHubTitle,
+                                          child: SizedBox(
+                                            width: 44,
+                                            height: 44,
+                                            child: Material(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                onTap: () =>
+                                                    context.push('/ai'),
+                                                child: Icon(
+                                                  Icons.auto_awesome,
+                                                  size: 22,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSecondaryContainer,
+                                                ),
+                                              ),
                                             ),
-                                            onTap: () => context.push('/ai'),
-                                            child: Icon(
-                                              Icons.auto_awesome,
-                                              size: 22,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondaryContainer,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        PopupMenuButton<String>(
+                                          // Menü ekranın altına taşıp sistem gezinme
+                                          // çubuğunun arkasında kalıyordu; yükseklik
+                                          // sınırlanınca içerik kaydırılabilir olur.
+                                          constraints: BoxConstraints(
+                                            maxHeight:
+                                                MediaQuery.sizeOf(
+                                                  context,
+                                                ).height *
+                                                0.55,
+                                          ),
+                                          onSelected: (action) =>
+                                              switch (action) {
+                                                'hidden' =>
+                                                  _toggleHiddenFolders(),
+                                                'reorder' =>
+                                                  ref
+                                                      .read(
+                                                        reorderModeProvider
+                                                            .notifier,
+                                                      )
+                                                      .set(true),
+                                                'reminders' => context.push(
+                                                  '/reminders',
+                                                ),
+                                                'archive' => context.push(
+                                                  '/archive',
+                                                ),
+                                                'trash' => context.push(
+                                                  '/trash',
+                                                ),
+                                                'settings' => context.push(
+                                                  '/settings',
+                                                ),
+                                                _ => null,
+                                              },
+                                          // Tasarım bu menüyü dörde indiriyor
+                                          // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
+                                          // Sıralama Süz levhasına taşındı; elle
+                                          // sıralama ve gizli klasörler tasarımda
+                                          // hiç yok ama başka girişi olmadığı için
+                                          // burada KALDI — kaldırsaydım iki özellik
+                                          // erişilemez olurdu.
+                                          itemBuilder: (context) => [
+                                            // Elle sıralama yalnız süzgeçsiz
+                                            // görünümde anlamlı (alt kümede sıra
+                                            // bozulur); aksi hâlde madde hiç
+                                            // görünmez ki kullanıcı tıklayıp
+                                            // "neden olmuyor" demesin.
+                                            if (reorderAvailable)
+                                              _menuItem(
+                                                'reorder',
+                                                Icons.swap_vert,
+                                                l10n.reorderNotes,
+                                              ),
+                                            // Gizli klasörler yalnız gizli klasörü
+                                            // OLAN kullanıcıda görünür: yoksa
+                                            // menüde ölü bir madde durmaz.
+                                            if (hasHiddenFolders)
+                                              _menuItem(
+                                                'hidden',
+                                                hiddenRevealed
+                                                    ? Icons
+                                                          .visibility_off_outlined
+                                                    : Icons.visibility_outlined,
+                                                l10n.hiddenFoldersMenu,
+                                              ),
+                                            // Ayırıcı yalnız üstünde madde VARSA:
+                                            // ikisi de gizliyken menü bir çizgiyle
+                                            // başlıyordu, bozuk görünüyordu.
+                                            if (reorderAvailable ||
+                                                hasHiddenFolders)
+                                              const PopupMenuDivider(),
+                                            _menuItem(
+                                              'reminders',
+                                              Icons.alarm_outlined,
+                                              l10n.remindersTitle,
                                             ),
-                                          ),
+                                            _menuItem(
+                                              'archive',
+                                              Icons.archive_outlined,
+                                              l10n.archiveTitle,
+                                            ),
+                                            _menuItem(
+                                              'trash',
+                                              Icons.delete_outline,
+                                              l10n.trashTitle,
+                                            ),
+                                            const PopupMenuDivider(),
+                                            _menuItem(
+                                              'settings',
+                                              Icons.settings_outlined,
+                                              l10n.settings,
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    PopupMenuButton<String>(
-                                      // Menü ekranın altına taşıp sistem gezinme
-                                      // çubuğunun arkasında kalıyordu; yükseklik
-                                      // sınırlanınca içerik kaydırılabilir olur.
-                                      constraints: BoxConstraints(
-                                        maxHeight:
-                                            MediaQuery.sizeOf(context).height *
-                                            0.55,
-                                      ),
-                                      onSelected: (action) => switch (action) {
-                                        'hidden' => _toggleHiddenFolders(),
-                                        'reorder' =>
-                                          ref
-                                              .read(
-                                                reorderModeProvider.notifier,
-                                              )
-                                              .set(true),
-                                        'reminders' => context.push(
-                                          '/reminders',
-                                        ),
-                                        'archive' => context.push('/archive'),
-                                        'trash' => context.push('/trash'),
-                                        'settings' => context.push('/settings'),
-                                        _ => null,
-                                      },
-                                      // Tasarım bu menüyü dörde indiriyor
-                                      // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
-                                      // Sıralama Süz levhasına taşındı; elle
-                                      // sıralama ve gizli klasörler tasarımda
-                                      // hiç yok ama başka girişi olmadığı için
-                                      // burada KALDI — kaldırsaydım iki özellik
-                                      // erişilemez olurdu.
-                                      itemBuilder: (context) => [
-                                        // Elle sıralama yalnız süzgeçsiz
-                                        // görünümde anlamlı (alt kümede sıra
-                                        // bozulur); aksi hâlde madde hiç
-                                        // görünmez ki kullanıcı tıklayıp
-                                        // "neden olmuyor" demesin.
-                                        if (reorderAvailable)
-                                          _menuItem(
-                                            'reorder',
-                                            Icons.swap_vert,
-                                            l10n.reorderNotes,
-                                          ),
-                                        // Gizli klasörler yalnız gizli klasörü
-                                        // OLAN kullanıcıda görünür: yoksa
-                                        // menüde ölü bir madde durmaz.
-                                        if (hasHiddenFolders)
-                                          _menuItem(
-                                            'hidden',
-                                            hiddenRevealed
-                                                ? Icons.visibility_off_outlined
-                                                : Icons.visibility_outlined,
-                                            l10n.hiddenFoldersMenu,
-                                          ),
-                                        // Ayırıcı yalnız üstünde madde VARSA:
-                                        // ikisi de gizliyken menü bir çizgiyle
-                                        // başlıyordu, bozuk görünüyordu.
-                                        if (reorderAvailable ||
-                                            hasHiddenFolders)
-                                          const PopupMenuDivider(),
-                                        _menuItem(
-                                          'reminders',
-                                          Icons.alarm_outlined,
-                                          l10n.remindersTitle,
-                                        ),
-                                        _menuItem(
-                                          'archive',
-                                          Icons.archive_outlined,
-                                          l10n.archiveTitle,
-                                        ),
-                                        _menuItem(
-                                          'trash',
-                                          Icons.delete_outline,
-                                          l10n.trashTitle,
-                                        ),
-                                        const PopupMenuDivider(),
-                                        _menuItem(
-                                          'settings',
-                                          Icons.settings_outlined,
-                                          l10n.settings,
-                                        ),
+                                        const SizedBox(width: 4),
                                       ],
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
+                              );
+                            },
                           ),
                         // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
                         // dokuz artı çipli bar (dashboard_chips.dart) ve ona
@@ -1855,11 +1888,10 @@ class _FocusHaloState extends State<_FocusHalo>
   /// TEMBEL: yalnız ODAKLI kartta kurulur (bkz. [_syncPulse] kök nedeni).
   AnimationController? _pulse;
 
-  AnimationController _ensurePulse() =>
-      _pulse ??= AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 700),
-      );
+  AnimationController _ensurePulse() => _pulse ??= AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
 
   @override
   void didUpdateWidget(covariant _FocusHalo oldWidget) {
@@ -1883,7 +1915,9 @@ class _FocusHaloState extends State<_FocusHalo>
   void _syncPulse() {
     if (!widget.focused) {
       // Hiç kurulmadıysa kurma: odaklanmamış kart için denetleyiciye gerek yok.
-      _pulse?..stop()..value = 0;
+      _pulse
+        ?..stop()
+        ..value = 0;
       return;
     }
     final pulse = _ensurePulse();

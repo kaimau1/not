@@ -384,8 +384,30 @@ class _Leaf {
   final int markedStart;
 }
 
+/// Son ayrıştırmanın önbelleği (TEK giriş).
+///
+/// KÖK NEDEN (kasma): [_parse] saf bir işlev ama on ayrı yerden çağrılıyor —
+/// biçim şeridi her tuş vuruşunda ve HER İMLEÇ HAREKETİNDE `activeFormats`
+/// üzerinden tüm metni yeniden ayrıştırıyordu, `stripRichMarkers` arama
+/// süzgecinde not başına koşuyordu, çizim yolu ayrıca. Aynı metin için
+/// sonuç değişmediğinden tek girişlik bir önbellek bu tekrarların neredeyse
+/// tamamını siliyor: ardışık çağrılar hep AYNI metinle geliyor.
+///
+/// Liste DIŞARIYA verildiği için değiştirilebilir olmamalı; çağıranların
+/// hiçbiri yazmıyor, yine de önbellek `List.unmodifiable` ile korunuyor.
+String? _parseCacheKey;
+List<_Leaf>? _parseCacheValue;
+
 /// İşaretli metni yapraklarına ayırır (iç içe biçimler dahil).
 List<_Leaf> _parse(String marked) {
+  if (_parseCacheKey == marked) return _parseCacheValue!;
+  final result = _parseUncached(marked);
+  _parseCacheKey = marked;
+  _parseCacheValue = result;
+  return result;
+}
+
+List<_Leaf> _parseUncached(String marked) {
   final out = <_Leaf>[];
   void walk(String part, int base, RichMark mark) {
     var cursor = 0;
@@ -410,7 +432,7 @@ List<_Leaf> _parse(String marked) {
   }
 
   walk(marked, 0, RichMark.none);
-  return out;
+  return List.unmodifiable(out);
 }
 
 /// İşaretli metindeki konumu DÜZ metindeki konuma çevirir.
@@ -813,9 +835,13 @@ InlineSpan restyleRange(
         TextSpan(text: text.substring(hitEnd), style: node.style),
       if (children != null) ...[for (final c in children) walk(c)],
     ];
-    // Stil parçalara TAŞINDI: sarmalayıcıya yeniden verilirse iç stil dıştaki
-    // tarafından ezilmez ama gereksiz yere iki kez uygulanır.
-    return TextSpan(children: parts);
+    // Stil sarmalayıcıda DA kalır: metin parçaları kendi stillerini zaten
+    // taşıyor, ama `children` (varsa) mirasla besleniyor — sarmalayıcıya
+    // verilmezse hem metni hem çocuğu olan bir düğümün ALT parçaları stilini
+    // kaybederdi. Bugünkü span ağacında bu şekil oluşmuyor; yine de doğru
+    // olan yazılıyor ki ileride bir çağrı yeri onu üretirse sessizce
+    // bozulmasın.
+    return TextSpan(style: node.style, children: parts);
   }
 
   return walk(span);

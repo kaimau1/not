@@ -73,9 +73,9 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   @override
   void didUpdateWidget(SlideNotePane old) {
     super.didUpdateWidget(old);
-    if (!identical(old.attachment.ink, widget.attachment.ink)) {
-      _ink.replace(widget.attachment.ink);
-    }
+    // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
+    // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
+    _ink.replace(widget.attachment.ink);
     // Dosya bu arada senkronlandıysa (başka cihazda eklenmiş sunum indi)
     // yeniden denenir; yoksa pano sonsuza dek "açılamadı" derdi.
     if (_slides == null &&
@@ -127,12 +127,8 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
-    viewerBuilder: (context, host) => _SlidePaneViewer(
-      slides: _slides,
-      error: _error,
-      ink: _ink,
-      host: host,
-    ),
+    viewerBuilder: (context, host) =>
+        _SlidePaneViewer(slides: _slides, error: _error, ink: _ink, host: host),
   );
 }
 
@@ -159,27 +155,32 @@ class _SlidePaneViewer extends StatefulWidget {
 }
 
 class _SlidePaneViewerState extends State<_SlidePaneViewer> {
-  PageController? _pages;
+  /// Denetleyici `initState`te kurulur: build içinde `??=` ile kurmak
+  /// `didUpdateWidget`in ilk sayfa atlamasını sessizce yutuyordu ve sunum
+  /// yeniden yüklenip slayt sayısı düşerse denetleyici aralık dışında
+  /// kalabiliyordu.
+  final PageController _pages = PageController();
 
   @override
   void didUpdateWidget(_SlidePaneViewer old) {
     super.didUpdateWidget(old);
-    if (old.slides == null && widget.slides != null) {
-      widget.host.onPageCount(widget.slides!.length);
+    final slides = widget.slides;
+    if (slides != null && old.slides?.length != slides.length) {
+      widget.host.onPageCount(slides.length);
     }
     // Pano başka bir slayda geçti (düğme ya da toplu görünüm): görüntüleyici
     // oraya kayar. `hasClients` şart — sunum henüz çizilmemiş olabilir.
-    final controller = _pages;
-    if (old.host.page != widget.host.page &&
-        controller != null &&
-        controller.hasClients) {
-      controller.jumpToPage(widget.host.page - 1);
+    if (old.host.page != widget.host.page && _pages.hasClients) {
+      final target = slides == null
+          ? widget.host.page - 1
+          : (widget.host.page - 1).clamp(0, slides.length - 1);
+      _pages.jumpToPage(target);
     }
   }
 
   @override
   void dispose() {
-    _pages?.dispose();
+    _pages.dispose();
     super.dispose();
   }
 
@@ -210,8 +211,6 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
         ),
       );
     }
-    final index = (widget.host.page - 1).clamp(0, slides.length - 1);
-    _pages ??= PageController(initialPage: index);
     return ColoredBox(
       color: Colors.black,
       child: PageView.builder(
