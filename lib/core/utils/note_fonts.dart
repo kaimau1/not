@@ -126,13 +126,28 @@ const List<NoteFontOption> kNoteFonts = [
 /// derlemeye hiç girmez. Yeni bir yazı tipi eklerken hem [kNoteFonts]'a hem
 /// buraya satır eklenmeli — ikisi ayrışırsa seçenek listede görünür ama
 /// varsayılanla çizilir.
+/// Uygulanmış yazı tiplerinin sınırlı önbelleği.
+///
+/// KÖK NEDEN (kasma): ana ekranda önbellek payı ~130 kartı canlı tutuyor ve
+/// her kart bu işlevi en az iki kez (gövde + başlık) çağırıyor; her çağrı bir
+/// katalog araması ve yeni bir [TextStyle] demek. Girdi çifti (taban stil +
+/// aile) kartlar arasında neredeyse hep AYNI.
+const _fontCacheLimit = 128;
+final Map<(TextStyle, String), TextStyle> _fontCache = {};
+
 TextStyle applyNoteFont(TextStyle base, String? family) {
   if (family == null || family.isEmpty) return base;
   if (family == 'serif' || family == 'monospace') {
     return base.copyWith(fontFamily: family);
   }
+  final key = (base, family);
+  final cached = _fontCache[key];
+  if (cached != null) return cached;
   final builder = _googleBuilders[family];
-  return builder == null ? base : builder(base);
+  final applied = builder == null ? base : builder(base);
+  if (_fontCache.length >= _fontCacheLimit) _fontCache.clear();
+  _fontCache[key] = applied;
+  return applied;
 }
 
 /// Notun şeffaflık ayarını [base] stiline uygular.

@@ -1066,6 +1066,88 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// Tek öğe satırı. [reorderIndex] verilirse satır sürüklenebilir;
   /// footer'daki işaretli öğelerde tutamak yoktur (sıraları zaten sabit).
   /// [orderNumber] sıralı listede gösterilen numaradır.
+  /// Satır widget'larının önbelleği: madde kimliği → (anahtar, widget).
+  ///
+  /// KÖK NEDEN (kasma — "kasma birikip artıyor"): liste `shrinkWrap: true` ile
+  /// bir `SingleChildScrollView`'ın içinde. `ShrinkWrappingViewport` kendi
+  /// boyunu bulmak için BÜTÜN çocukları kurmak zorunda, yani 60 maddelik bir
+  /// notta ekranda 8 satır görünse bile 60 `TextField` + 60 `EditableText`
+  /// **her build'de** yeniden kuruluyor ve yeniden yerleşiyordu. Editörün her
+  /// yeniden kurulumunun bedeli madde sayısıyla doğru orantılıydı.
+  ///
+  /// Çözüm önbellek: girdileri değişmemiş satır için AYNI widget örneği
+  /// döndürülür. Flutter `updateChild`te birebir aynı widget'ı görünce alt
+  /// ağacı hiç kurmaz — ve kurulmayan bir `RenderObject` "kirli"
+  /// işaretlenmediği için `layout()` da erken döner. Yani hem yeniden kurulum
+  /// hem yerleşim kalkar.
+  ///
+  /// Yan etki (bilerek): `_FloatRow.build` içindeki kare-sonu ölçüm planlaması
+  /// da yalnız satır GERÇEKTEN değiştiğinde kuruluyor; eskiden her build'de
+  /// satır sayısı kadar geri çağrı sıraya giriyordu.
+  ///
+  /// TUZAK: önbellekteki widget ESKİ `NoteItem` örneğini kapanışlarında
+  /// tutuyor. Güvenli, çünkü satır geri çağrılarının hepsi (`_updateText`,
+  /// `_toggleItem`, `_removeItem`, `_insertAfter`, `_toggleSelection`) öğeyi
+  /// KİMLİĞİYLE arıyor, nesne kimliğiyle değil.
+  final Map<String, (Object, Widget)> _rowCache = {};
+
+  /// Önbelleği tümden geçersiz kılan LİSTE DÜZEYİ girdiler.
+  Object? _rowCacheEnv;
+  List<FloatBox> _rowCacheFloats = const [];
+
+  /// Satır düzeyi girdiler değişmediyse önbellekten döndürür.
+  Widget _cachedItemRow(
+    NoteItem item, {
+    int? reorderIndex,
+    int? orderNumber,
+  }) {
+    // Kayıt (record) yapısal eşitlik kullanır — hash çakışması yok, yani
+    // bayat satır dönme riski de yok.
+    final key = (
+      item.text,
+      item.checked,
+      reorderIndex,
+      orderNumber,
+      _selected.contains(item.id),
+    );
+    final hit = _rowCache[item.id];
+    if (hit != null && hit.$1 == key) return hit.$2;
+    final row = _itemRow(
+      item,
+      reorderIndex: reorderIndex,
+      orderNumber: orderNumber,
+    );
+    _rowCache[item.id] = (key, row);
+    return row;
+  }
+
+  /// Liste düzeyi bir girdi değiştiyse önbelleği tümden düşürür; silinen
+  /// maddelerin bayat girdilerini de ayıklar.
+  void _syncRowCache(ThemeData theme, AppLocalizations l10n) {
+    final env = (
+      theme.colorScheme,
+      widget.textStyle,
+      widget.richTheme,
+      widget.showCheckboxes,
+      widget.expandItems,
+      _selectionMode,
+      l10n.localeName,
+      widget.contentInsertion,
+    );
+    if (env != _rowCacheEnv || !sameFloatList(_rowCacheFloats, widget.floats)) {
+      _rowCache.clear();
+      _rowCacheEnv = env;
+      // Bantlar YERİNDE değişebiliyor (görsel sürüklenirken aynı liste
+      // güncelleniyor); kopyası saklanır, yoksa karşılaştırma hep eşit çıkar.
+      _rowCacheFloats = List.of(widget.floats);
+      return;
+    }
+    if (_rowCache.length > _items.length) {
+      final live = {for (final i in _items) i.id};
+      _rowCache.removeWhere((id, _) => !live.contains(id));
+    }
+  }
+
   Widget _itemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -1307,9 +1389,12 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final l10n = context.l10n;
     final showChecks = widget.showCheckboxes;
+    // Satır önbelleğinin liste düzeyi girdileri (bkz. [_rowCache]).
+    _syncRowCache(theme, l10n);
 
     // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da
     // ayrı bir blok olarak durur (Keep'in "tamamlananlar" bölümü gibi).
@@ -1403,7 +1488,7 @@ class ItemsEditorState extends State<ItemsEditor> {
           _adoptIncomingItems();
         }
       },
-      itemBuilder: (context, index) => _itemRow(
+      itemBuilder: (context, index) => _cachedItemRow(
         listItems[index],
         reorderIndex: index,
         orderNumber: index + 1,

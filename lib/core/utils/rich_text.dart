@@ -691,6 +691,23 @@ RichMark activeFormats(String text, int start, int end) {
 /// ÖLÇÜM yolundayız demektir: renk/alt çizgi satır genişliğini değiştirmez,
 /// ama KALIN ve İTALİK değiştirir — bu yüzden ölçüm ve çizim AYNI işlevden
 /// geçer, yoksa ikisi ayrışıp imleç kayardı.
+/// Üretilmiş span listelerinin sınırlı önbelleği.
+///
+/// KÖK NEDEN (kasma): kart önizlemesi HER BUILD'de `richSpans` çağırıyor ve
+/// işlev metni `_formatPattern` ile ÖZYİNELEMELİ gezip yeni bir span ağacı
+/// kuruyor. Ana ekranda önbellek payı ~130 kartı canlı tuttuğu için ekranın
+/// her yeniden kurulumu bu işi kart (ve madde) sayısı kadar tekrarlıyordu.
+/// Girdiler değişmedikçe sonuç da değişmez.
+///
+/// Sınır: en fazla [_spanCacheLimit] girdi; dolunca tümü atılır (LRU tutmanın
+/// muhasebesi bu boyutta kazançtan çok yer tutar).
+const _spanCacheLimit = 256;
+final Map<
+  (String, TextStyle?, Color?, List<Color>, Color),
+  List<InlineSpan>
+>
+_spanCache = {};
+
 List<InlineSpan> richSpans(
   String text,
   TextStyle? style, {
@@ -700,6 +717,31 @@ List<InlineSpan> richSpans(
 }) {
   if (text.isEmpty) return [TextSpan(text: text, style: style)];
   if (!_hasMarker(text)) return linkSpans(text, style, linkColor);
+  final cacheKey = (text, style, linkColor, palette, markerColor);
+  final cached = _spanCache[cacheKey];
+  if (cached != null) return cached;
+  final built = _richSpansUncached(
+    text,
+    style,
+    linkColor: linkColor,
+    palette: palette,
+    markerColor: markerColor,
+  );
+  if (_spanCache.length >= _spanCacheLimit) _spanCache.clear();
+  // Değiştirilemez: liste artık PAYLAŞILIYOR, bir çağıranın onu yerinde
+  // değiştirmesi başka bir kartın çizimini bozardı.
+  final shared = List<InlineSpan>.unmodifiable(built);
+  _spanCache[cacheKey] = shared;
+  return shared;
+}
+
+List<InlineSpan> _richSpansUncached(
+  String text,
+  TextStyle? style, {
+  Color? linkColor,
+  required List<Color> palette,
+  required Color markerColor,
+}) {
 
   final base = style ?? const TextStyle();
   // İŞARETLER GÖRÜNMEZ (v1.0.175). Karakterler metinde DURUR — çıkarılsalardı
