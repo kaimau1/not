@@ -84,15 +84,31 @@ class UploadQueue {
   ProviderSubscription<int>? _limitSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
+  /// KÖK NEDEN (kasma): not akışı HER TUŞ VURUŞUNDA anlık görüntü üretiyor
+  /// (dosyanın başındaki nota bak) ve [_process] her seferinde tüm notlar ×
+  /// tüm ekler üzerinde küme kurup haritalar tahsis ediyordu. Yazarken bu,
+  /// karakter başına binlerce dizgi birleştirme ve GC baskısı demekti.
+  /// Tarama artık geciktiriliyor: yükleme birkaç saniye sonra başlasa da
+  /// kullanıcı bunu görmez, kare kaçırmayı ise görür.
+  Timer? _processDebounce;
+
+  void _scheduleProcess(List<Note> notes) {
+    _processDebounce?.cancel();
+    _processDebounce = Timer(const Duration(seconds: 2), () {
+      _process(notes);
+    });
+  }
+
   void start() {
     _notesSub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
-      if (notes != null) _process(notes);
+      if (notes != null) _scheduleProcess(notes);
     }, fireImmediately: true);
 
     // Sınır yükseltilince bekleyen büyük ekler hemen sıraya girsin (yoksa bir
     // sonraki not değişikliğine kadar cihazda beklerlerdi).
     _limitSub = _ref.listen(syncLimitMbProvider, (previous, next) {
+      // Sınır değişimi kullanıcı eylemidir, geciktirilmez.
       final notes = _ref.read(notesStreamProvider).value;
       if (notes != null) _process(notes);
     });
@@ -177,6 +193,7 @@ class UploadQueue {
   }
 
   void dispose() {
+    _processDebounce?.cancel();
     _notesSub?.close();
     _limitSub?.close();
     _connectivitySub?.cancel();

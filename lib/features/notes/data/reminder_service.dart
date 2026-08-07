@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -144,10 +145,21 @@ class ReminderService {
 
   static const _briefingNotificationId = 999001;
 
+  /// Hatırlatıcı eşitlemesi de geciktirilir (yükleme kuyruğuyla aynı gerekçe):
+  /// not akışı her tuş vuruşunda yayın yapıyor ve `_syncReminders` her
+  /// seferinde tüm notları gezip platform kanalına iptal/planlama çağrıları
+  /// yapıyordu. Birkaç saniyelik gecikme kullanıcıya görünmez.
+  Timer? _syncDebounce;
+
   void start() {
     _sub = _ref.listen(notesStreamProvider, (previous, next) {
       final notes = next.value;
-      if (notes != null) _syncReminders(notes);
+      if (notes == null) return;
+      _syncDebounce?.cancel();
+      _syncDebounce = Timer(
+        const Duration(seconds: 3),
+        () => _syncReminders(notes),
+      );
     }, fireImmediately: true);
 
     // Günlük brifing ayarını izle ve bildirimi buna göre planla/iptal et.
@@ -312,6 +324,7 @@ class ReminderService {
   }
 
   void dispose() {
+    _syncDebounce?.cancel();
     _sub?.close();
     _briefingSub?.close();
   }

@@ -2430,6 +2430,144 @@ abstract class AppLocalizations {
   /// **'Yazmayı bitir'**
   String get annotateDone;
 
+  /// No description provided for @newPdfNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF ekle not al'**
+  String get newPdfNote;
+
+  /// No description provided for @pdfPageNoteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfanın notu…'**
+  String get pdfPageNoteHint;
+
+  /// No description provided for @pdfPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {page}'**
+  String pdfPage(int page);
+
+  /// No description provided for @pdfPageOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {page} / {total}'**
+  String pdfPageOf(int page, int total);
+
+  /// No description provided for @pdfPreviousPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki sayfa'**
+  String get pdfPreviousPage;
+
+  /// No description provided for @pdfNextPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki sayfa'**
+  String get pdfNextPage;
+
+  /// No description provided for @pdfFullScreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran aç'**
+  String get pdfFullScreen;
+
+  /// No description provided for @pdfNoDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta henüz PDF yok'**
+  String get pdfNoDocument;
+
+  /// No description provided for @pdfChooseDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF seç'**
+  String get pdfChooseDocument;
+
+  /// No description provided for @newSlidesNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum ekle not al'**
+  String get newSlidesNote;
+
+  /// No description provided for @slidesNoDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta henüz sunum yok'**
+  String get slidesNoDocument;
+
+  /// No description provided for @slidesChooseDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum seç'**
+  String get slidesChooseDocument;
+
+  /// No description provided for @pdfEditPages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaları düzenle'**
+  String get pdfEditPages;
+
+  /// No description provided for @pdfDeletePages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili sayfaları sil'**
+  String get pdfDeletePages;
+
+  /// No description provided for @pdfRotatePages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Döndür'**
+  String get pdfRotatePages;
+
+  /// No description provided for @pdfBurnInk.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısını belgeye göm'**
+  String get pdfBurnInk;
+
+  /// No description provided for @pdfApplyChanges.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklikleri uygula'**
+  String get pdfApplyChanges;
+
+  /// No description provided for @pdfCannotDeleteAllPages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm sayfalar silinemez'**
+  String get pdfCannotDeleteAllPages;
+
+  /// No description provided for @pdfPagesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.'**
+  String get pdfPagesHint;
+
+  /// No description provided for @pdfEditFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF düzenlenemedi: {error}'**
+  String pdfEditFailed(String error);
+
+  /// No description provided for @pdfInkBurned.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı belgeye gömüldü'**
+  String get pdfInkBurned;
+
+  /// No description provided for @pdfAllPageNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm sayfa notları'**
+  String get pdfAllPageNotes;
+
+  /// No description provided for @pdfNoPageNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.'**
+  String get pdfNoPageNotes;
+
   /// No description provided for @crop.
   ///
   /// In tr, this message translates to:

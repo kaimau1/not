@@ -569,6 +569,53 @@
   "hubReadInfo": "PDF/Word belgesini sesli dinle",
   "annotate": "Üzerine yaz",
   "annotateDone": "Yazmayı bitir",
+  "newPdfNote": "PDF ekle not al",
+  "pdfPageNoteHint": "Bu sayfanın notu…",
+  "pdfPage": "Sayfa {page}",
+  "@pdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPageOf": "Sayfa {page} / {total}",
+  "@pdfPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPreviousPage": "Önceki sayfa",
+  "pdfNextPage": "Sonraki sayfa",
+  "pdfFullScreen": "Tam ekran aç",
+  "pdfNoDocument": "Bu notta henüz PDF yok",
+  "pdfChooseDocument": "PDF seç",
+    "newSlidesNote": "Sunum ekle not al",
+  "slidesNoDocument": "Bu notta henüz sunum yok",
+  "slidesChooseDocument": "Sunum seç",
+  "pdfEditPages": "Sayfaları düzenle",
+  "pdfDeletePages": "Seçili sayfaları sil",
+  "pdfRotatePages": "Döndür",
+  "pdfBurnInk": "El yazısını belgeye göm",
+  "pdfApplyChanges": "Değişiklikleri uygula",
+  "pdfCannotDeleteAllPages": "Tüm sayfalar silinemez",
+  "pdfPagesHint": "Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.",
+  "pdfEditFailed": "PDF düzenlenemedi: {error}",
+  "@pdfEditFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfInkBurned": "El yazısı belgeye gömüldü",
+"pdfAllPageNotes": "Tüm sayfa notları",
+  "pdfNoPageNotes": "Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.",
   "crop": "Kırp",
   "cropApply": "Kırpmayı uygula",
   "cropReset": "Seçimi sıfırla",

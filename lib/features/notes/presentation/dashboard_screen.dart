@@ -120,9 +120,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Odak değişince aksiyon butonlarını gizle/göster (dar ekranlarda arama
-    // alanına yer açmak için).
-    _searchFocus.addListener(() => setState(() {}));
+    // KÖK NEDEN (kasma): burada `_searchFocus.addListener(() => setState(...))`
+    // vardı — arama alanına her dokunuş EKRANIN TAMAMINI (ve önbellek
+    // payındaki ~130 kartı) yeniden kuruyordu. Odak artık yalnız arama
+    // çubuğunu saran `ListenableBuilder` tarafından dinleniyor.
     // Widget/derin bağlantı bu ekran mount olmadan önce bas-başlat istemiş
     // olabilir (uygulama kapalıyken ya da başka ekrandayken). İlk kareden
     // sonra kontrol et; take() varsa asistanı başlatır.
@@ -638,6 +639,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _openNew(id, query: '?scan=1');
   }
 
+  /// "PDF ekle not al": PDF tipinde not oluşturulur ve editör açılır açılmaz
+  /// dosya seçici gelir; seçilen belge notun içine gömülür, ekran ÜSTTE sayfa
+  /// ALTTA o sayfanın notu olacak şekilde ikiye bölünür. Seçim iptal edilirse
+  /// boş not çıkışta kendiliğinden silinir (fotoğraf/tarama yollarının aynısı).
+  Future<void> _createPdfNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.pdf);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    await _openNew(id, query: '?pdf=1');
+  }
+
+  /// "Sunum ekle not al": PDF yolunun slayt eşi.
+  Future<void> _createSlidesNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.slides);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    await _openNew(id, query: '?slides=1');
+  }
+
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
   /// oluşturulur — iptal edilirse ortada boş not kalmaz.
   Future<void> _createQrNote() async {
@@ -727,9 +751,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // eskiden "İş" klasörü seçiliyken anlam modu TÜM klasörlerden not getiriyor,
     // üstteki çip ise hâlâ "İş" diyordu — metin/anlam modları sessizce farklı
     // davranıyordu.
-    final semanticFolder = ref.watch(selectedFolderProvider);
-    final semanticTag = ref.watch(selectedTagProvider);
-    final semanticFilter = ref.watch(noteFilterProvider);
+    // Bu üçü YALNIZ anlam modu açıkken gerekli; koşulsuz izlenince anlam modu
+    // kapalıyken bile üç sağlayıcıya abone olup ekranı yeniden kurduruyorlardı.
+    final semanticFolder = semanticActive
+        ? ref.watch(selectedFolderProvider)
+        : null;
+    final semanticTag = semanticActive ? ref.watch(selectedTagProvider) : null;
+    final semanticFilter = semanticActive
+        ? ref.watch(noteFilterProvider)
+        : NoteFilter.all;
     final notesAsync = semanticActive
         ? ref
               .watch(semanticSearchProvider(query.trim()))
@@ -744,8 +774,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ],
               )
         : ref.watch(filteredNotesProvider);
-    final selectedIds = ref.watch(selectedNoteIdsProvider);
-    final selectionActive = selectedIds.isNotEmpty;
+    // KÖK NEDEN (kasma): burası TÜM seçim kümesini izliyordu. Küme her
+    // seçim değişiminde yeni bir `Set` olduğu için tek bir nota dokunmak
+    // dashboard'ın tamamını (ve önbellek payındaki bütün kartları) yeniden
+    // kuruyor, kartın kendi `select` optimizasyonunu boşa çıkarıyordu.
+    // Ekranın bilmesi gereken tek şey seçim modunun AÇIK olup olmadığı;
+    // kümenin kendisi yalnız toplu eylemlerde (ref.read ile) gerekiyor.
+    final selectionActive = ref.watch(
+      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
+    );
     // Sıralama modu yalnız süzgeçsiz görünümde geçerlidir: kullanıcı mod
     // açıkken bir klasör/etiket çipine dokunursa mod kendiliğinden kapanır —
     // aksi hâlde şerit durur ama kartlar sürüklenmez, kullanıcı bozuk sanır.
@@ -762,7 +799,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // odak sürse bile bar kendiliğinden daralır — viewInsets bunu izler.
     // Gizli klasör durumu ⋮ menüsünde kullanılır; sağlayıcılar BURADA (build
     // içinde) okunur — itemBuilder menü açılınca, yani build dışında çalışır.
-    final hasHiddenFolders = ref.watch(hiddenFolderIdsProvider).isNotEmpty;
+    // Kümenin KENDİSİ değil yalnız "gizli klasör var mı" izlenir: klasör
+    // akışının her yayınında yeni bir `Set` geliyor ve ekranın tamamı boşuna
+    // yeniden kuruluyordu.
+    final hasHiddenFolders = ref.watch(
+      hiddenFolderIdsProvider.select((s) => s.isNotEmpty),
+    );
     // Elle sıralama yalnız süzgeçsiz görünümde anlamlı (alt kümede sıra
     // bozulur); aksi hâlde menü maddesi hiç görünmez ki kullanıcı tıklayıp
     // "neden olmuyor" demesin.
@@ -772,11 +814,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ref.watch(selectedFolderProvider) == null &&
         ref.watch(selectedTagProvider) == null;
     final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final searchExpanded =
-        _searchFocus.hasFocus &&
-        keyboardOpen &&
-        MediaQuery.sizeOf(context).width < 600;
 
     final page = CallbackShortcuts(
       bindings: {
@@ -845,231 +882,290 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             ],
                           )
                         else if (selectionActive)
-                          AppBar(
-                            leading: IconButton(
-                              tooltip: l10n.cancel,
-                              icon: const Icon(Icons.close),
-                              onPressed: () => ref
-                                  .read(selectedNoteIdsProvider.notifier)
-                                  .clear(),
-                            ),
-                            title: Text(l10n.selectedCount(selectedIds.length)),
-                            // Kopyala/arşivle/sil ve diğer tüm not işlemleri
-                            // seçim yapılınca BURADA toplanır (madde 3): sık
-                            // kullanılanlar simge, gerisi taşma menüsünde.
-                            actions: [
-                              IconButton(
-                                tooltip: l10n.archive,
-                                icon: const Icon(Icons.archive_outlined),
-                                onPressed: () => _archiveSelected(selectedIds),
-                              ),
-                              IconButton(
-                                tooltip: l10n.copy,
-                                icon: const Icon(Icons.copy_outlined),
-                                onPressed: () => _copySelected(selectedIds),
-                              ),
-                              IconButton(
-                                tooltip: l10n.deleteSelected,
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () => _deleteSelected(selectedIds),
-                              ),
-                              PopupMenuButton<String>(
-                                tooltip: l10n.noteMetaMenu,
-                                onSelected: (action) {
-                                  switch (action) {
-                                    case 'pin':
-                                      _setPinnedSelected(selectedIds, true);
-                                    case 'unpin':
-                                      _setPinnedSelected(selectedIds, false);
-                                    case 'star':
-                                      _setStarredSelected(selectedIds, true);
-                                    case 'unstar':
-                                      _setStarredSelected(selectedIds, false);
-                                    case 'share':
-                                      _shareSelected(selectedIds);
-                                    case 'color':
-                                      _colorSelected(selectedIds, frame: false);
-                                    case 'frame':
-                                      _colorSelected(selectedIds, frame: true);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  _menuItem(
-                                    'pin',
-                                    Icons.push_pin_outlined,
-                                    l10n.pin,
+                          // Seçim kümesinin KENDİSİ yalnız burada gerekiyor;
+                          // abonelik bu çubuğa hapsedilir (bkz. yukarıdaki
+                          // `selectionActive` kök nedeni).
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final selectedIds = ref.watch(
+                                selectedNoteIdsProvider,
+                              );
+                              return AppBar(
+                                leading: IconButton(
+                                  tooltip: l10n.cancel,
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () => ref
+                                      .read(selectedNoteIdsProvider.notifier)
+                                      .clear(),
+                                ),
+                                title: Text(
+                                  l10n.selectedCount(selectedIds.length),
+                                ),
+                                // Kopyala/arşivle/sil ve diğer tüm not işlemleri
+                                // seçim yapılınca BURADA toplanır (madde 3): sık
+                                // kullanılanlar simge, gerisi taşma menüsünde.
+                                actions: [
+                                  IconButton(
+                                    tooltip: l10n.archive,
+                                    icon: const Icon(Icons.archive_outlined),
+                                    onPressed: () =>
+                                        _archiveSelected(selectedIds),
                                   ),
-                                  _menuItem(
-                                    'unpin',
-                                    Icons.push_pin,
-                                    l10n.unpin,
+                                  IconButton(
+                                    tooltip: l10n.copy,
+                                    icon: const Icon(Icons.copy_outlined),
+                                    onPressed: () => _copySelected(selectedIds),
                                   ),
-                                  _menuItem(
-                                    'star',
-                                    Icons.star_outline,
-                                    l10n.star,
+                                  IconButton(
+                                    tooltip: l10n.deleteSelected,
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () =>
+                                        _deleteSelected(selectedIds),
                                   ),
-                                  _menuItem('unstar', Icons.star, l10n.unstar),
-                                  const PopupMenuDivider(),
-                                  _menuItem(
-                                    'color',
-                                    Icons.palette_outlined,
-                                    l10n.backgroundColor,
+                                  PopupMenuButton<String>(
+                                    tooltip: l10n.noteMetaMenu,
+                                    onSelected: (action) {
+                                      switch (action) {
+                                        case 'pin':
+                                          _setPinnedSelected(selectedIds, true);
+                                        case 'unpin':
+                                          _setPinnedSelected(
+                                            selectedIds,
+                                            false,
+                                          );
+                                        case 'star':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            true,
+                                          );
+                                        case 'unstar':
+                                          _setStarredSelected(
+                                            selectedIds,
+                                            false,
+                                          );
+                                        case 'share':
+                                          _shareSelected(selectedIds);
+                                        case 'color':
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: false,
+                                          );
+                                        case 'frame':
+                                          _colorSelected(
+                                            selectedIds,
+                                            frame: true,
+                                          );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      _menuItem(
+                                        'pin',
+                                        Icons.push_pin_outlined,
+                                        l10n.pin,
+                                      ),
+                                      _menuItem(
+                                        'unpin',
+                                        Icons.push_pin,
+                                        l10n.unpin,
+                                      ),
+                                      _menuItem(
+                                        'star',
+                                        Icons.star_outline,
+                                        l10n.star,
+                                      ),
+                                      _menuItem(
+                                        'unstar',
+                                        Icons.star,
+                                        l10n.unstar,
+                                      ),
+                                      const PopupMenuDivider(),
+                                      _menuItem(
+                                        'color',
+                                        Icons.palette_outlined,
+                                        l10n.backgroundColor,
+                                      ),
+                                      _menuItem(
+                                        'frame',
+                                        Icons.border_color_outlined,
+                                        l10n.frameColor,
+                                      ),
+                                      _menuItem(
+                                        'share',
+                                        Icons.share_outlined,
+                                        l10n.share,
+                                      ),
+                                    ],
                                   ),
-                                  _menuItem(
-                                    'frame',
-                                    Icons.border_color_outlined,
-                                    l10n.frameColor,
-                                  ),
-                                  _menuItem(
-                                    'share',
-                                    Icons.share_outlined,
-                                    l10n.share,
-                                  ),
+                                  const SizedBox(width: 4),
                                 ],
-                              ),
-                              const SizedBox(width: 4),
-                            ],
+                              );
+                            },
                           )
                         else
-                          AppBar(
-                            titleSpacing: searchExpanded ? 0 : 12,
-                            // Genişkenken geri oku: odağı bırakır, bar daralır.
-                            leading: searchExpanded
-                                ? IconButton(
-                                    tooltip: l10n.close,
-                                    icon: const Icon(Icons.arrow_back),
-                                    onPressed: _searchFocus.unfocus,
-                                  )
-                                : null,
-                            automaticallyImplyLeading: false,
-                            title: _SearchField(
-                              controller: _searchController,
-                              focusNode: _searchFocus,
-                            ),
-                            actions: searchExpanded
-                                ? const [SizedBox(width: 4)]
-                                : [
-                                    // Yapay Zeka yeniden KENDİ düğmesi oldu.
-                                    // Bir süre ⋮ menüsünde durmuştu çünkü arama
-                                    // alanının içindeki ✨ (akıllı arama) ile
-                                    // karışıyordu; o ✨ artık Metin/Anlam
-                                    // segmenti olduğundan karışıklık kalktı.
-                                    Tooltip(
-                                      message: l10n.aiHubTitle,
-                                      child: SizedBox(
-                                        width: 44,
-                                        height: 44,
-                                        child: Material(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondaryContainer,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                          // KÖK NEDEN (kasma): `keyboardOpen`/`searchExpanded`
+                          // ekranın ANA build'inde okunuyordu. `viewInsets`
+                          // klavye animasyonunun HER KARESİNDE değişiyor, yani
+                          // arama kutusuna dokunmak 250 ms boyunca ızgaranın
+                          // tamamını 15–30 kez yeniden kurduruyordu. Okuma
+                          // artık yalnız bu çubuğu kapsıyor.
+                          ListenableBuilder(
+                            listenable: _searchFocus,
+                            builder: (context, _) {
+                              final searchExpanded =
+                                  _searchFocus.hasFocus &&
+                                  MediaQuery.viewInsetsOf(context).bottom > 0 &&
+                                  MediaQuery.sizeOf(context).width < 600;
+                              return AppBar(
+                                titleSpacing: searchExpanded ? 0 : 12,
+                                // Genişkenken geri oku: odağı bırakır, bar daralır.
+                                leading: searchExpanded
+                                    ? IconButton(
+                                        tooltip: l10n.close,
+                                        icon: const Icon(Icons.arrow_back),
+                                        onPressed: _searchFocus.unfocus,
+                                      )
+                                    : null,
+                                automaticallyImplyLeading: false,
+                                title: _SearchField(
+                                  controller: _searchController,
+                                  focusNode: _searchFocus,
+                                ),
+                                actions: searchExpanded
+                                    ? const [SizedBox(width: 4)]
+                                    : [
+                                        // Yapay Zeka yeniden KENDİ düğmesi oldu.
+                                        // Bir süre ⋮ menüsünde durmuştu çünkü arama
+                                        // alanının içindeki ✨ (akıllı arama) ile
+                                        // karışıyordu; o ✨ artık Metin/Anlam
+                                        // segmenti olduğundan karışıklık kalktı.
+                                        Tooltip(
+                                          message: l10n.aiHubTitle,
+                                          child: SizedBox(
+                                            width: 44,
+                                            height: 44,
+                                            child: Material(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.secondaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              child: InkWell(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                onTap: () =>
+                                                    context.push('/ai'),
+                                                child: Icon(
+                                                  Icons.auto_awesome,
+                                                  size: 22,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onSecondaryContainer,
+                                                ),
+                                              ),
                                             ),
-                                            onTap: () => context.push('/ai'),
-                                            child: Icon(
-                                              Icons.auto_awesome,
-                                              size: 22,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSecondaryContainer,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        PopupMenuButton<String>(
+                                          // Menü ekranın altına taşıp sistem gezinme
+                                          // çubuğunun arkasında kalıyordu; yükseklik
+                                          // sınırlanınca içerik kaydırılabilir olur.
+                                          constraints: BoxConstraints(
+                                            maxHeight:
+                                                MediaQuery.sizeOf(
+                                                  context,
+                                                ).height *
+                                                0.55,
+                                          ),
+                                          onSelected: (action) =>
+                                              switch (action) {
+                                                'hidden' =>
+                                                  _toggleHiddenFolders(),
+                                                'reorder' =>
+                                                  ref
+                                                      .read(
+                                                        reorderModeProvider
+                                                            .notifier,
+                                                      )
+                                                      .set(true),
+                                                'reminders' => context.push(
+                                                  '/reminders',
+                                                ),
+                                                'archive' => context.push(
+                                                  '/archive',
+                                                ),
+                                                'trash' => context.push(
+                                                  '/trash',
+                                                ),
+                                                'settings' => context.push(
+                                                  '/settings',
+                                                ),
+                                                _ => null,
+                                              },
+                                          // Tasarım bu menüyü dörde indiriyor
+                                          // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
+                                          // Sıralama Süz levhasına taşındı; elle
+                                          // sıralama ve gizli klasörler tasarımda
+                                          // hiç yok ama başka girişi olmadığı için
+                                          // burada KALDI — kaldırsaydım iki özellik
+                                          // erişilemez olurdu.
+                                          itemBuilder: (context) => [
+                                            // Elle sıralama yalnız süzgeçsiz
+                                            // görünümde anlamlı (alt kümede sıra
+                                            // bozulur); aksi hâlde madde hiç
+                                            // görünmez ki kullanıcı tıklayıp
+                                            // "neden olmuyor" demesin.
+                                            if (reorderAvailable)
+                                              _menuItem(
+                                                'reorder',
+                                                Icons.swap_vert,
+                                                l10n.reorderNotes,
+                                              ),
+                                            // Gizli klasörler yalnız gizli klasörü
+                                            // OLAN kullanıcıda görünür: yoksa
+                                            // menüde ölü bir madde durmaz.
+                                            if (hasHiddenFolders)
+                                              _menuItem(
+                                                'hidden',
+                                                hiddenRevealed
+                                                    ? Icons
+                                                          .visibility_off_outlined
+                                                    : Icons.visibility_outlined,
+                                                l10n.hiddenFoldersMenu,
+                                              ),
+                                            // Ayırıcı yalnız üstünde madde VARSA:
+                                            // ikisi de gizliyken menü bir çizgiyle
+                                            // başlıyordu, bozuk görünüyordu.
+                                            if (reorderAvailable ||
+                                                hasHiddenFolders)
+                                              const PopupMenuDivider(),
+                                            _menuItem(
+                                              'reminders',
+                                              Icons.alarm_outlined,
+                                              l10n.remindersTitle,
                                             ),
-                                          ),
+                                            _menuItem(
+                                              'archive',
+                                              Icons.archive_outlined,
+                                              l10n.archiveTitle,
+                                            ),
+                                            _menuItem(
+                                              'trash',
+                                              Icons.delete_outline,
+                                              l10n.trashTitle,
+                                            ),
+                                            const PopupMenuDivider(),
+                                            _menuItem(
+                                              'settings',
+                                              Icons.settings_outlined,
+                                              l10n.settings,
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    PopupMenuButton<String>(
-                                      // Menü ekranın altına taşıp sistem gezinme
-                                      // çubuğunun arkasında kalıyordu; yükseklik
-                                      // sınırlanınca içerik kaydırılabilir olur.
-                                      constraints: BoxConstraints(
-                                        maxHeight:
-                                            MediaQuery.sizeOf(context).height *
-                                            0.55,
-                                      ),
-                                      onSelected: (action) => switch (action) {
-                                        'hidden' => _toggleHiddenFolders(),
-                                        'reorder' =>
-                                          ref
-                                              .read(
-                                                reorderModeProvider.notifier,
-                                              )
-                                              .set(true),
-                                        'reminders' => context.push(
-                                          '/reminders',
-                                        ),
-                                        'archive' => context.push('/archive'),
-                                        'trash' => context.push('/trash'),
-                                        'settings' => context.push('/settings'),
-                                        _ => null,
-                                      },
-                                      // Tasarım bu menüyü dörde indiriyor
-                                      // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
-                                      // Sıralama Süz levhasına taşındı; elle
-                                      // sıralama ve gizli klasörler tasarımda
-                                      // hiç yok ama başka girişi olmadığı için
-                                      // burada KALDI — kaldırsaydım iki özellik
-                                      // erişilemez olurdu.
-                                      itemBuilder: (context) => [
-                                        // Elle sıralama yalnız süzgeçsiz
-                                        // görünümde anlamlı (alt kümede sıra
-                                        // bozulur); aksi hâlde madde hiç
-                                        // görünmez ki kullanıcı tıklayıp
-                                        // "neden olmuyor" demesin.
-                                        if (reorderAvailable)
-                                          _menuItem(
-                                            'reorder',
-                                            Icons.swap_vert,
-                                            l10n.reorderNotes,
-                                          ),
-                                        // Gizli klasörler yalnız gizli klasörü
-                                        // OLAN kullanıcıda görünür: yoksa
-                                        // menüde ölü bir madde durmaz.
-                                        if (hasHiddenFolders)
-                                          _menuItem(
-                                            'hidden',
-                                            hiddenRevealed
-                                                ? Icons.visibility_off_outlined
-                                                : Icons.visibility_outlined,
-                                            l10n.hiddenFoldersMenu,
-                                          ),
-                                        // Ayırıcı yalnız üstünde madde VARSA:
-                                        // ikisi de gizliyken menü bir çizgiyle
-                                        // başlıyordu, bozuk görünüyordu.
-                                        if (reorderAvailable ||
-                                            hasHiddenFolders)
-                                          const PopupMenuDivider(),
-                                        _menuItem(
-                                          'reminders',
-                                          Icons.alarm_outlined,
-                                          l10n.remindersTitle,
-                                        ),
-                                        _menuItem(
-                                          'archive',
-                                          Icons.archive_outlined,
-                                          l10n.archiveTitle,
-                                        ),
-                                        _menuItem(
-                                          'trash',
-                                          Icons.delete_outline,
-                                          l10n.trashTitle,
-                                        ),
-                                        const PopupMenuDivider(),
-                                        _menuItem(
-                                          'settings',
-                                          Icons.settings_outlined,
-                                          l10n.settings,
-                                        ),
+                                        const SizedBox(width: 4),
                                       ],
-                                    ),
-                                    const SizedBox(width: 4),
-                                  ],
+                              );
+                            },
                           ),
                         // "Süz" düğmesi + yalnız UYGULANMIŞ süzgeçler. Eski
                         // dokuz artı çipli bar (dashboard_chips.dart) ve ona
@@ -1268,6 +1364,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onVideoNote: _createVideoNote,
                           onPhotoNote: _createPhotoNote,
                           onScanNote: _createScanNote,
+                          onPdfNote: _createPdfNote,
+                          onSlidesNote: _createSlidesNote,
                           onQrNote: _createQrNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,
@@ -1787,7 +1885,10 @@ class _FocusHaloState extends State<_FocusHalo>
   /// Çerçevenin YANIP SÖNMESİ: sabit bir kenarlık uzun listede gözden
   /// kaçıyordu (kullanıcı: "notun çerçevesinden hafif yanıp sönmeli").
   /// Nefes alır gibi, göz yormayan bir ritim.
-  late final AnimationController _pulse = AnimationController(
+  /// TEMBEL: yalnız ODAKLI kartta kurulur (bkz. [_syncPulse] kök nedeni).
+  AnimationController? _pulse;
+
+  AnimationController _ensurePulse() => _pulse ??= AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
   );
@@ -1807,19 +1908,25 @@ class _FocusHaloState extends State<_FocusHalo>
     _syncPulse();
   }
 
+  /// KÖK NEDEN (kasma): denetleyici ODAKLANMAMIŞ kartta da yaratılıyordu.
+  /// `_FocusHalo` her kartı sarıyor ve kaydırma önbelleği ~130 kartı canlı
+  /// tuttuğu için, tek bir notu vurgulamak uğruna 130 `AnimationController` +
+  /// 130 `Ticker` kuruluyor, kaydırdıkça sürekli kurulup yıkılıyordu.
   void _syncPulse() {
-    if (widget.focused) {
-      if (!_pulse.isAnimating) _pulse.repeat(reverse: true);
-    } else {
+    if (!widget.focused) {
+      // Hiç kurulmadıysa kurma: odaklanmamış kart için denetleyiciye gerek yok.
       _pulse
-        ..stop()
+        ?..stop()
         ..value = 0;
+      return;
     }
+    final pulse = _ensurePulse();
+    if (!pulse.isAnimating) pulse.repeat(reverse: true);
   }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _pulse?.dispose();
     super.dispose();
   }
 
@@ -1851,13 +1958,14 @@ class _FocusHaloState extends State<_FocusHalo>
         child: widget.child,
       );
     }
+    final pulse = _ensurePulse();
     return AnimatedBuilder(
-      animation: _pulse,
+      animation: pulse,
       builder: (context, child) => Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: scheme.primary.withValues(alpha: 0.35 + 0.65 * _pulse.value),
+            color: scheme.primary.withValues(alpha: 0.35 + 0.65 * pulse.value),
             width: 2,
           ),
         ),

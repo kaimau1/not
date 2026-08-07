@@ -78,6 +78,10 @@ class _AiResultSheetState extends State<_AiResultSheet> {
       NoteType.ordered => [
         for (var i = 0; i < lines.length; i++) '${i + 1}. ${lines[i]}',
       ].join('\n'),
+      // PDF notu bu levhada bir BİÇİM seçeneği değil (aşağıdaki seçici yalnız
+      // üç liste biçimini sunar); yine de switch tam olsun diye metin biçimine
+      // eşitlenir — buraya düşülse bile satırlar olduğu gibi kalır.
+      NoteType.pdf || NoteType.slides => lines.join('\n'),
     };
     setState(() {
       _format = type;
@@ -92,9 +96,7 @@ class _AiResultSheetState extends State<_AiResultSheet> {
     // Klavye açıkken alan daralmasın: sayfa görünür yüksekliğin %85'ine kadar.
     final maxHeight = MediaQuery.sizeOf(context).height * 0.85;
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: SafeArea(

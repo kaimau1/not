@@ -1256,6 +1256,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get annotateDone => 'Finish annotating';
 
   @override
+  String get newPdfNote => 'Add PDF, take notes';
+
+  @override
+  String get pdfPageNoteHint => 'Note for this page…';
+
+  @override
+  String pdfPage(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String pdfPageOf(int page, int total) {
+    return 'Page $page / $total';
+  }
+
+  @override
+  String get pdfPreviousPage => 'Previous page';
+
+  @override
+  String get pdfNextPage => 'Next page';
+
+  @override
+  String get pdfFullScreen => 'Open full screen';
+
+  @override
+  String get pdfNoDocument => 'This note has no PDF yet';
+
+  @override
+  String get pdfChooseDocument => 'Choose PDF';
+
+  @override
+  String get newSlidesNote => 'Add slides, take notes';
+
+  @override
+  String get slidesNoDocument => 'This note has no presentation yet';
+
+  @override
+  String get slidesChooseDocument => 'Choose presentation';
+
+  @override
+  String get pdfEditPages => 'Edit pages';
+
+  @override
+  String get pdfDeletePages => 'Delete selected pages';
+
+  @override
+  String get pdfRotatePages => 'Rotate';
+
+  @override
+  String get pdfBurnInk => 'Burn handwriting into the document';
+
+  @override
+  String get pdfApplyChanges => 'Apply changes';
+
+  @override
+  String get pdfCannotDeleteAllPages => 'You can\'t delete every page';
+
+  @override
+  String get pdfPagesHint =>
+      'Tap a page to select it. Page notes travel with their page; a deleted page\'s note is hidden but kept in your data.';
+
+  @override
+  String pdfEditFailed(String error) {
+    return 'Couldn\'t edit the PDF: $error';
+  }
+
+  @override
+  String get pdfInkBurned => 'Handwriting burned into the document';
+
+  @override
+  String get pdfAllPageNotes => 'All page notes';
+
+  @override
+  String get pdfNoPageNotes =>
+      'No page notes yet. Turn to a page and write in the field below.';
+
+  @override
   String get crop => 'Crop';
 
   @override

@@ -182,12 +182,8 @@ class _Xf {
   const _Xf([this.dx = 0, this.dy = 0, this.sx = 1, this.sy = 1]);
   double px(double v) => dx + v * sx;
   double py(double v) => dy + v * sy;
-  _Xf then(_Xf inner) => _Xf(
-        dx + inner.dx * sx,
-        dy + inner.dy * sy,
-        sx * inner.sx,
-        sy * inner.sy,
-      );
+  _Xf then(_Xf inner) =>
+      _Xf(dx + inner.dx * sx, dy + inner.dy * sy, sx * inner.sx, sy * inner.sy);
 }
 
 class _TextDefaults {
@@ -260,17 +256,38 @@ class PptxRender {
     // Çizim sırası: asıl slayt -> düzen -> slayt (üstte).
     final showMaster = doc.rootElement.getAttribute('showMasterSp') != '0';
     if (showMaster && masterDoc != null && masterFile != null) {
-      _collect(masterDoc, masterFile, shapes, theme, clrMap, defaults,
-          skipPlaceholders: true);
+      _collect(
+        masterDoc,
+        masterFile,
+        shapes,
+        theme,
+        clrMap,
+        defaults,
+        skipPlaceholders: true,
+      );
     }
     if (layoutDoc != null && layoutFile != null) {
-      _collect(layoutDoc, layoutFile, shapes, theme, clrMap, defaults,
-          skipPlaceholders: true);
+      _collect(
+        layoutDoc,
+        layoutFile,
+        shapes,
+        theme,
+        clrMap,
+        defaults,
+        skipPlaceholders: true,
+      );
     }
-    _collect(doc, slideFile, shapes, theme, clrMap, defaults,
-        skipPlaceholders: false,
-        placeholderSource: [layoutDoc, masterDoc],
-        editable: true);
+    _collect(
+      doc,
+      slideFile,
+      shapes,
+      theme,
+      clrMap,
+      defaults,
+      skipPlaceholders: false,
+      placeholderSource: [layoutDoc, masterDoc],
+      editable: true,
+    );
 
     return SlideVM(
       widthPt: slideW,
@@ -312,9 +329,7 @@ class PptxRender {
         final rg = _firstDeep(tgt, 'p:pRg') ?? _firstDeep(tgt, 'a:pRg');
         final from = int.tryParse(rg?.getAttribute('st') ?? '');
         final to = int.tryParse(rg?.getAttribute('end') ?? '') ?? from;
-        final t = from == null
-            ? AnimTarget(spid)
-            : AnimTarget(spid, from, to);
+        final t = from == null ? AnimTarget(spid) : AnimTarget(spid, from, to);
         if (!targets.contains(t)) targets.add(t);
       }
       if (targets.isNotEmpty) steps.add(targets);
@@ -337,10 +352,18 @@ class PptxRender {
   }) {
     final tree = _first(_first(doc.rootElement, 'p:cSld'), 'p:spTree');
     if (tree == null) return;
-    _walk(tree, const _Xf(), file, out, theme, clrMap, defaults,
-        skipPlaceholders: skipPlaceholders,
-        placeholderSource: placeholderSource,
-        editable: editable);
+    _walk(
+      tree,
+      const _Xf(),
+      file,
+      out,
+      theme,
+      clrMap,
+      defaults,
+      skipPlaceholders: skipPlaceholders,
+      placeholderSource: placeholderSource,
+      editable: editable,
+    );
   }
 
   void _walk(
@@ -361,16 +384,33 @@ class PptxRender {
         case 'p:pic':
           final ph = _placeholder(el);
           if (skipPlaceholders && ph != null) continue;
-          final shape = _shape(el, xf, file, theme, clrMap, defaults, ph,
-              placeholderSource, editable);
+          final shape = _shape(
+            el,
+            xf,
+            file,
+            theme,
+            clrMap,
+            defaults,
+            ph,
+            placeholderSource,
+            editable,
+          );
           if (shape != null) out.add(shape);
           break;
         case 'p:grpSp':
           final grpXf = _groupXf(el);
-          _walk(el, xf.then(grpXf), file, out, theme, clrMap, defaults,
-              skipPlaceholders: skipPlaceholders,
-              placeholderSource: placeholderSource,
-              editable: editable);
+          _walk(
+            el,
+            xf.then(grpXf),
+            file,
+            out,
+            theme,
+            clrMap,
+            defaults,
+            skipPlaceholders: skipPlaceholders,
+            placeholderSource: placeholderSource,
+            editable: editable,
+          );
           break;
         case 'p:graphicFrame':
           _table(el, xf, out, theme, clrMap, defaults, editable);
@@ -396,8 +436,12 @@ class PptxRender {
     if (cw == 0 || ch == 0) return const _Xf();
     final sx = (_pt(ext.getAttribute('cx')) ?? 0) / cw;
     final sy = (_pt(ext.getAttribute('cy')) ?? 0) / ch;
-    final dx = (_pt(off.getAttribute('x')) ?? 0) - (_pt(chOff.getAttribute('x')) ?? 0) * sx;
-    final dy = (_pt(off.getAttribute('y')) ?? 0) - (_pt(chOff.getAttribute('y')) ?? 0) * sy;
+    final dx =
+        (_pt(off.getAttribute('x')) ?? 0) -
+        (_pt(chOff.getAttribute('x')) ?? 0) * sx;
+    final dy =
+        (_pt(off.getAttribute('y')) ?? 0) -
+        (_pt(chOff.getAttribute('y')) ?? 0) * sy;
     return _Xf(dx, dy, sx, sy);
   }
 
@@ -420,10 +464,14 @@ class PptxRender {
     if (off == null) return;
     final x0 = xf.px(_pt(off.getAttribute('x')) ?? 0);
     final y0 = xf.py(_pt(off.getAttribute('y')) ?? 0);
-    final frameId = int.tryParse(
-            _first(_first(frame, 'p:nvGraphicFramePr'), 'p:cNvPr')
-                    ?.getAttribute('id') ??
-                '') ??
+    final frameId =
+        int.tryParse(
+          _first(
+                _first(frame, 'p:nvGraphicFramePr'),
+                'p:cNvPr',
+              )?.getAttribute('id') ??
+              '',
+        ) ??
         0;
 
     final widths = <double>[];
@@ -447,7 +495,8 @@ class PptxRender {
         for (var i = col; i < col + span && i < widths.length; i++) {
           w += widths[i];
         }
-        final merged = cell.getAttribute('hMerge') == '1' ||
+        final merged =
+            cell.getAttribute('hMerge') == '1' ||
             cell.getAttribute('vMerge') == '1';
         final tcPr = _first(cell, 'a:tcPr');
         final body = _first(cell, 'a:txBody');
@@ -455,20 +504,22 @@ class PptxRender {
           final ln = tcPr == null
               ? null
               : (_first(tcPr, 'a:lnB') ?? _first(tcPr, 'a:lnT'));
-          out.add(ShapeVM(
-            id: frameId,
-            x: x,
-            y: y,
-            w: w,
-            h: rowH,
-            fill: tcPr == null ? null : _solidFill(tcPr, theme, clrMap),
-            stroke: ln == null ? null : _solidFill(ln, theme, clrMap),
-            strokeWidth: ln == null ? 0 : ((_pt(ln.getAttribute('w')) ?? 1)),
-            vAnchor: tcPr?.getAttribute('anchor') ?? 'ctr',
-            paragraphs: body == null
-                ? const []
-                : _paragraphs(body, theme, clrMap, defaults, null, editable),
-          ));
+          out.add(
+            ShapeVM(
+              id: frameId,
+              x: x,
+              y: y,
+              w: w,
+              h: rowH,
+              fill: tcPr == null ? null : _solidFill(tcPr, theme, clrMap),
+              stroke: ln == null ? null : _solidFill(ln, theme, clrMap),
+              strokeWidth: ln == null ? 0 : ((_pt(ln.getAttribute('w')) ?? 1)),
+              vAnchor: tcPr?.getAttribute('anchor') ?? 'ctr',
+              paragraphs: body == null
+                  ? const []
+                  : _paragraphs(body, theme, clrMap, defaults, null, editable),
+            ),
+          );
         }
         x += w;
         col += span;
@@ -513,7 +564,8 @@ class PptxRender {
 
     final rot = (int.tryParse(xfrm.getAttribute('rot') ?? '') ?? 0) / 60000.0;
     final nv = _first(el, 'p:nvSpPr') ?? _first(el, 'p:nvPicPr');
-    final id = int.tryParse(_first(nv, 'p:cNvPr')?.getAttribute('id') ?? '') ?? 0;
+    final id =
+        int.tryParse(_first(nv, 'p:cNvPr')?.getAttribute('id') ?? '') ?? 0;
 
     final prst = _first(spPr, 'a:prstGeom')?.getAttribute('prst') ?? 'rect';
     final isEllipse = prst == 'ellipse' || prst == 'chord' || prst == 'pie';
@@ -602,10 +654,10 @@ class PptxRender {
     _Ph? ph,
     bool editable,
   ) {
-    final isTitle = ph != null &&
-        (ph.type == 'title' || ph.type == 'ctrTitle');
+    final isTitle = ph != null && (ph.type == 'title' || ph.type == 'ctrTitle');
     final def = isTitle ? defaults['title']! : defaults['body']!;
-    final wantsBullet = ph != null &&
+    final wantsBullet =
+        ph != null &&
         (ph.type == 'body' || ph.type == 'subTitle' || ph.type == null);
 
     final out = <ParaVM>[];
@@ -627,16 +679,19 @@ class PptxRender {
         final size = double.tryParse(rPr?.getAttribute('sz') ?? '');
         final defRPr = pPr == null ? null : _first(pPr, 'a:defRPr');
         final defSize = double.tryParse(defRPr?.getAttribute('sz') ?? '');
-        runs.add(RunVM(
-          text: t.innerText,
-          sizePt: (size ?? defSize ?? def.size * 100) / 100,
-          bold: (rPr?.getAttribute('b') ?? (def.bold ? '1' : '0')) == '1',
-          italic: rPr?.getAttribute('i') == '1',
-          underline: (rPr?.getAttribute('u') ?? 'none') != 'none',
-          color: (rPr == null ? null : _solidFill(rPr, theme, clrMap)) ??
-              (defRPr == null ? null : _solidFill(defRPr, theme, clrMap)) ??
-              def.color,
-        ));
+        runs.add(
+          RunVM(
+            text: t.innerText,
+            sizePt: (size ?? defSize ?? def.size * 100) / 100,
+            bold: (rPr?.getAttribute('b') ?? (def.bold ? '1' : '0')) == '1',
+            italic: rPr?.getAttribute('i') == '1',
+            underline: (rPr?.getAttribute('u') ?? 'none') != 'none',
+            color:
+                (rPr == null ? null : _solidFill(rPr, theme, clrMap)) ??
+                (defRPr == null ? null : _solidFill(defRPr, theme, clrMap)) ??
+                def.color,
+          ),
+        );
       }
       if (runs.isEmpty) {
         out.add(ParaVM(runs: const [], source: editable ? p : null));
@@ -655,20 +710,30 @@ class PptxRender {
         }
       }
 
-      final lnSpc = _first(_first(pPr, 'a:lnSpc'), 'a:spcPct')?.getAttribute('val');
-      final spcBef = _first(_first(pPr, 'a:spcBef'), 'a:spcPts')?.getAttribute('val');
+      final lnSpc = _first(
+        _first(pPr, 'a:lnSpc'),
+        'a:spcPct',
+      )?.getAttribute('val');
+      final spcBef = _first(
+        _first(pPr, 'a:spcBef'),
+        'a:spcPts',
+      )?.getAttribute('val');
 
-      out.add(ParaVM(
-        runs: runs,
-        align: _align(pPr?.getAttribute('algn')),
-        indentPt: (_pt(pPr?.getAttribute('marL')) ?? lvl * 28.8),
-        bullet: bullet,
-        lineHeight: lnSpc == null
-            ? 1.2
-            : ((double.tryParse(lnSpc) ?? 100000) / 100000).clamp(0.5, 3.0),
-        spaceBeforePt: spcBef == null ? 0 : (double.tryParse(spcBef) ?? 0) / 100,
-        source: editable ? p : null,
-      ));
+      out.add(
+        ParaVM(
+          runs: runs,
+          align: _align(pPr?.getAttribute('algn')),
+          indentPt: (_pt(pPr?.getAttribute('marL')) ?? lvl * 28.8),
+          bullet: bullet,
+          lineHeight: lnSpc == null
+              ? 1.2
+              : ((double.tryParse(lnSpc) ?? 100000) / 100000).clamp(0.5, 3.0),
+          spaceBeforePt: spcBef == null
+              ? 0
+              : (double.tryParse(spcBef) ?? 0) / 100,
+          source: editable ? p : null,
+        ),
+      );
     }
     return out;
   }
@@ -715,7 +780,10 @@ class PptxRender {
   // ---------------------------------------------------------------- renk
 
   Color? _solidFill(
-      XmlElement parent, Map<String, Color> theme, Map<String, String> clrMap) {
+    XmlElement parent,
+    Map<String, Color> theme,
+    Map<String, String> clrMap,
+  ) {
     final fill = _first(parent, 'a:solidFill');
     if (fill == null) return null;
     return _colorOf(fill, theme, clrMap);
@@ -727,7 +795,10 @@ class PptxRender {
   // ponytail: açı yaklaşık uygulanır (ekran y-ekseni aşağı → PowerPoint saat yönü
   // ile uyumlu); durak konumları pos/100000. Renk lumMod/tint _colorOf ile.
   Gradient? _gradFill(
-      XmlElement parent, Map<String, Color> theme, Map<String, String> clrMap) {
+    XmlElement parent,
+    Map<String, Color> theme,
+    Map<String, String> clrMap,
+  ) {
     final grad = _first(parent, 'a:gradFill');
     if (grad == null) return null;
     final gsLst = _first(grad, 'a:gsLst');
@@ -736,7 +807,8 @@ class PptxRender {
     final entries = <(double, Color)>[];
     for (final gs in gsLst.childElements) {
       if (gs.name.qualified != 'a:gs') continue;
-      final pos = (double.tryParse(gs.getAttribute('pos') ?? '') ?? 0) / 100000.0;
+      final pos =
+          (double.tryParse(gs.getAttribute('pos') ?? '') ?? 0) / 100000.0;
       final c = _colorOf(gs, theme, clrMap);
       if (c != null) entries.add((pos.clamp(0.0, 1.0), c));
     }
@@ -752,7 +824,8 @@ class PptxRender {
 
     // Doğrusal: açıyı yön vektörüne çevir (y aşağı pozitif → saat yönü).
     final lin = _first(grad, 'a:lin');
-    final ang = (double.tryParse(lin?.getAttribute('ang') ?? '') ?? 0) / 60000.0;
+    final ang =
+        (double.tryParse(lin?.getAttribute('ang') ?? '') ?? 0) / 60000.0;
     final rad = ang * math.pi / 180.0;
     final dx = math.cos(rad);
     final dy = math.sin(rad);
@@ -772,7 +845,10 @@ class PptxRender {
   }
 
   Color? _colorOf(
-      XmlElement holder, Map<String, Color> theme, Map<String, String> clrMap) {
+    XmlElement holder,
+    Map<String, Color> theme,
+    Map<String, String> clrMap,
+  ) {
     XmlElement? node = _first(holder, 'a:srgbClr');
     Color? base;
     if (node != null) {
@@ -812,7 +888,10 @@ class PptxRender {
   }
 
   Color? _bgColor(
-      XmlElement bg, Map<String, Color> theme, Map<String, String> clrMap) {
+    XmlElement bg,
+    Map<String, Color> theme,
+    Map<String, String> clrMap,
+  ) {
     final pr = _first(bg, 'p:bgPr');
     if (pr != null) return _solidFill(pr, theme, clrMap);
     final ref = _first(bg, 'p:bgRef');
@@ -868,7 +947,26 @@ class PptxRender {
 
   // --------------------------------------------------------------- arşiv
 
+  /// Aynı yolun baytları TEK kopya olarak paylaşılır.
+  ///
+  /// KÖK NEDEN (bellek): her çağrı `Uint8List.fromList` ile YENİ bir kopya
+  /// üretiyordu ve `MemoryImage` eşitliği bayt listesi REFERANSI üzerinden
+  /// çalışır — 30 slaytta tekrarlayan bir logo, 30 ayrı kopya ve Flutter
+  /// görsel önbelleğinde 30 ayrı çözülmüş bitmap demekti.
+  final Map<String, Uint8List?> _imageCache = {};
+
+  /// Arşiv dosyalarının ad→içerik dizini: `_bytes` her çağrıda tüm arşivi
+  /// doğrusal tarıyordu.
+  Map<String, List<int>>? _archiveIndex;
+
   Uint8List? _imageBytes(String path) {
+    if (_imageCache.containsKey(path)) return _imageCache[path];
+    final result = _imageBytesUncached(path);
+    _imageCache[path] = result;
+    return result;
+  }
+
+  Uint8List? _imageBytesUncached(String path) {
     final lower = path.toLowerCase();
     if (!(lower.endsWith('.png') ||
         lower.endsWith('.jpg') ||
@@ -883,10 +981,10 @@ class PptxRender {
   }
 
   List<int>? _bytes(String name) {
-    for (final f in _archive.files) {
-      if (f.name == name) return f.content as List<int>;
-    }
-    return null;
+    final index = _archiveIndex ??= {
+      for (final f in _archive.files) f.name: f.content as List<int>,
+    };
+    return index[name];
   }
 
   XmlDocument? _xml(String name) {

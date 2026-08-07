@@ -1257,6 +1257,83 @@ class AppLocalizationsHi extends AppLocalizations {
   String get annotateDone => 'टिप्पणी समाप्त करें';
 
   @override
+  String get newPdfNote => 'PDF ekle not al';
+
+  @override
+  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+
+  @override
+  String pdfPage(int page) {
+    return 'Sayfa $page';
+  }
+
+  @override
+  String pdfPageOf(int page, int total) {
+    return 'Sayfa $page / $total';
+  }
+
+  @override
+  String get pdfPreviousPage => 'Önceki sayfa';
+
+  @override
+  String get pdfNextPage => 'Sonraki sayfa';
+
+  @override
+  String get pdfFullScreen => 'Tam ekran aç';
+
+  @override
+  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+
+  @override
+  String get pdfChooseDocument => 'PDF seç';
+
+  @override
+  String get newSlidesNote => 'Sunum ekle not al';
+
+  @override
+  String get slidesNoDocument => 'Bu notta henüz sunum yok';
+
+  @override
+  String get slidesChooseDocument => 'Sunum seç';
+
+  @override
+  String get pdfEditPages => 'Sayfaları düzenle';
+
+  @override
+  String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfRotatePages => 'Döndür';
+
+  @override
+  String get pdfBurnInk => 'El yazısını belgeye göm';
+
+  @override
+  String get pdfApplyChanges => 'Değişiklikleri uygula';
+
+  @override
+  String get pdfCannotDeleteAllPages => 'Tüm sayfalar silinemez';
+
+  @override
+  String get pdfPagesHint =>
+      'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.';
+
+  @override
+  String pdfEditFailed(String error) {
+    return 'PDF düzenlenemedi: $error';
+  }
+
+  @override
+  String get pdfInkBurned => 'El yazısı belgeye gömüldü';
+
+  @override
+  String get pdfAllPageNotes => 'Tüm sayfa notları';
+
+  @override
+  String get pdfNoPageNotes =>
+      'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.';
+
+  @override
   String get crop => 'काटें';
 
   @override

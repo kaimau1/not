@@ -54,11 +54,17 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   static String _contentOf(Note note) => stripRichMarkers(switch (note.type) {
     NoteType.text => note.body.trimRight(),
     NoteType.checklist => [
-      for (final item in note.items) '[${item.checked ? 'x' : ' '}] ${item.text}',
+      for (final item in note.items)
+        '[${item.checked ? 'x' : ' '}] ${item.text}',
     ].join('\n'),
     NoteType.ordered => [
-      for (var i = 0; i < note.items.length; i++) '${i + 1}. ${note.items[i].text}',
+      for (var i = 0; i < note.items.length; i++)
+        '${i + 1}. ${note.items[i].text}',
     ].join('\n'),
+    // PDF notu dışa aktarılırken KAYNAK BELGE değil, kullanıcının sayfa
+    // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
+    // dışa aktarma metin + görsel üretiyor).
+    NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
   });
 
   @override

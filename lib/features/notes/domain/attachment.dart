@@ -150,6 +150,7 @@ class Attachment {
     this.pageY,
     this.asFile = false,
     this.ink = const [],
+    this.pageIds = const [],
     this.createdAt,
   });
 
@@ -201,6 +202,18 @@ class Attachment {
 
   /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
   final List<InkStroke> ink;
+
+  /// PDF/sunum ekinde sayfa SIRASINA karşılık gelen kalıcı sayfa kimlikleri:
+  /// dizi indeksi = sayfa sırası (0 tabanlı), değer = o sayfanın kimliği.
+  /// Boş = kimlik henüz atanmamış; kimlik `p<sayfaNo>` olarak TÜRETİLİR
+  /// (bkz. `page_notes.dart` / [pageIdFor]).
+  ///
+  /// Neden var: sayfa notları doğrudan sayfa NUMARASINA bağlansaydı, PDF
+  /// düzenleme (sayfa silme/ekleme/sıralama) gelir gelmez bütün notlar bir
+  /// sayfa kayardı — 3. sayfanın notu 2. sayfanın altında belirirdi. Kimlik
+  /// sayfayla birlikte taşınır: sayfa düzeni değişince YALNIZ bu liste
+  /// yeniden yazılır, `Note.pageNotes` anahtarlarına dokunulmaz.
+  final List<String> pageIds;
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
@@ -263,6 +276,7 @@ class Attachment {
     double? pageY,
     bool? asFile,
     List<InkStroke>? ink,
+    List<String>? pageIds,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -281,38 +295,40 @@ class Attachment {
     pageY: pageY ?? this.pageY,
     asFile: asFile ?? this.asFile,
     ink: ink ?? this.ink,
+    pageIds: pageIds ?? this.pageIds,
     createdAt: createdAt,
   );
 
   /// [noteId] verilirse yerel yol cihazda TÜRETİLİR (bkz.
   /// [derivedAttachmentPath]); belgedeki `localPath` yalnız eski kayıtlar
   /// için yedek olarak okunur — yeni yazımlar bu alanı hiç içermez.
-  factory Attachment.fromMap(
-    Map<String, dynamic> map, {
-    String? noteId,
-  }) => Attachment(
-    id: map['id'] as String? ?? '',
-    kind: AttachmentKind.fromId(map['kind'] as String?),
-    fileName: map['fileName'] as String? ?? '',
-    mimeType: map['mimeType'] as String? ?? '',
-    storagePath: map['storagePath'] as String? ?? '',
-    downloadUrl: map['downloadUrl'] as String? ?? '',
-    localPath: _resolveLocalPath(map, noteId),
-    sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
-    width: (map['width'] as num?)?.toInt(),
-    height: (map['height'] as num?)?.toInt(),
-    displayWidth: (map['displayWidth'] as num?)?.toDouble(),
-    align: map['align'] as String? ?? 'center',
-    x: (map['x'] as num?)?.toDouble(),
-    y: (map['y'] as num?)?.toDouble(),
-    pageY: (map['pageY'] as num?)?.toDouble(),
-    asFile: map['asFile'] as bool? ?? false,
-    ink: [
-      for (final e in (map['ink'] as List?) ?? const [])
-        InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
-    ],
-    createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
-  );
+  factory Attachment.fromMap(Map<String, dynamic> map, {String? noteId}) =>
+      Attachment(
+        id: map['id'] as String? ?? '',
+        kind: AttachmentKind.fromId(map['kind'] as String?),
+        fileName: map['fileName'] as String? ?? '',
+        mimeType: map['mimeType'] as String? ?? '',
+        storagePath: map['storagePath'] as String? ?? '',
+        downloadUrl: map['downloadUrl'] as String? ?? '',
+        localPath: _resolveLocalPath(map, noteId),
+        sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
+        width: (map['width'] as num?)?.toInt(),
+        height: (map['height'] as num?)?.toInt(),
+        displayWidth: (map['displayWidth'] as num?)?.toDouble(),
+        align: map['align'] as String? ?? 'center',
+        x: (map['x'] as num?)?.toDouble(),
+        y: (map['y'] as num?)?.toDouble(),
+        pageY: (map['pageY'] as num?)?.toDouble(),
+        asFile: map['asFile'] as bool? ?? false,
+        ink: [
+          for (final e in (map['ink'] as List?) ?? const [])
+            InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+        ],
+        pageIds: [
+          for (final e in (map['pageIds'] as List?) ?? const []) e.toString(),
+        ],
+        createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      );
 
   /// Cihazdaki dosyanın var olup olmadığına bakılmaksızın beklenen yerel yol;
   /// eski belgelerdeki `localPath` alanı yalnız türetilemediğinde kullanılır
@@ -352,6 +368,10 @@ class Attachment {
     // Yalnız true iken yazılır: eski notların şemasına yeni bir alan eklemez.
     if (asFile) 'asFile': true,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
+    // Yalnız atanmışsa yazılır: kimlik atanmamış ekte alan hiç oluşmaz
+    // (türetilen `p<sayfaNo>` zaten aynı sonucu verir) ve eski notların
+    // şeması büyümez.
+    if (pageIds.isNotEmpty) 'pageIds': pageIds,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

@@ -692,16 +692,29 @@ class WrapTextController extends TextEditingController {
   /// İmleç yer değiştirmişse önceki bekleyenler düşer: bekleme "buradan
   /// itibaren yazılacak metin" demektir, imleç taşınınca niyet de biter.
   void togglePendingFormat(RichFormat format, int? index) {
-    final caret = selection.baseOffset;
-    if (_pendingAt != caret) {
-      _pending.clear();
-      _pendingAt = caret;
-    }
-    if (_pending.containsKey(format) && _pending[format] == index) {
-      _pending.remove(format);
+    // Aç/kapa kararı flush'tan ÖNCE verilir: flush bekleyenleri temizlediği
+    // için sonra bakılsaydı kapatılan biçim yeniden açılırdı.
+    final wasPending =
+        _pending.containsKey(format) && _pending[format] == index;
+    final carry = <RichFormat, int?>{..._pending};
+    if (wasPending) {
+      carry.remove(format);
     } else {
-      _pending[format] = index;
+      carry[format] = index;
     }
+    // KOŞU ORTASINDA biçim değişimi (Word'de "kalın yaz, kalını kapat, düz
+    // devam et"): o ana kadar yazılmış metin ÖNCE işaretlerine kavuşur, imleç
+    // kutunun DIŞINA çıkar, KALAN biçimler yeni koşuda sürer. Yoksa kapatılan
+    // biçim yazılan metne hiç uygulanmaz — kullanıcı "kalın yazamıyorum" derdi.
+    if (pendingRange != null) {
+      flushPendingFormat(caretOutside: true);
+    }
+    final caret = selection.baseOffset;
+    _pending
+      ..clear()
+      ..addAll(carry);
+    _pendingAt = caret;
+    _pendingEnd = caret;
     // Şerit denetleyiciyi dinliyor: basış ANINDA düğme yanmalı
     // ("basınca direkt aktifleştiği belli olmalı").
     notifyListeners();
@@ -711,86 +724,262 @@ class WrapTextController extends TextEditingController {
     if (_pending.isEmpty && _pendingAt == null) return;
     _pending.clear();
     _pendingAt = null;
+    _pendingEnd = null;
   }
 
-  /// Kelime SINIRI mı? Sarma yalnız burada yapılır (bkz. [_wrapPending]).
-  static bool _isBoundary(String ch) =>
-      ch == ' ' || ch == '\n' || ch == '\t' || ch == ' ';
+  /// Koşunun O ANA KADAR yazılmış son ucu ([_pendingAt] başı, bu sonu).
+  ///
+  /// İmleç koşunun dışına taşındığında (kullanıcı metnin başka bir yerine
+  /// dokundu) sarılacak aralık buradan okunur; yoksa o ana kadar yazılmış
+  /// metin biçimsiz kalırdı.
+  int? _pendingEnd;
 
-  /// Bekleyen biçimi metne YAZAR (alan odaktan çıkıyor, imleç taşınıyor ya da
-  /// not kaydediliyor). Yazacak bir şey yoksa yalnız beklemeyi düşürür.
-  void flushPendingFormat() {
-    final wrapped = _wrapPending(value, atRunEnd: true);
+  /// Bekleyen biçimin CANLI aralığı: `[başlangıç, imleç)`. Bu aralık tamponda
+  /// İŞARETSİZ durur ama EKRANDA biçimli çizilir (bkz. [buildTextSpan]).
+  ///
+  /// KULLANICI İSTEĞİ ("kalın butonuna basıp kalın yazamıyorum... Word'deki
+  /// gibi olmalı"): eskiden yazılan harfler işaretler tampona girene kadar DÜZ
+  /// görünüyor, biçim ancak kelime bitince beliriyordu. Artık biçim basılır
+  /// basılmaz ekranda: tampona hiç dokunulmadan, yalnız çizim stiliyle.
+  (int, int)? get pendingRange {
+    final at = _pendingAt;
+    if (_pending.isEmpty || at == null) return null;
+    final sel = selection;
+    if (!sel.isValid || !sel.isCollapsed) return null;
+    final caret = sel.baseOffset;
+    if (at < 0 || caret <= at || at > text.length || caret > text.length) {
+      return null;
+    }
+    return (at, caret);
+  }
+
+  /// Bekleyen biçimlerin birikmiş hâli (canlı önizlemenin stili).
+  RichMark get pendingMark {
+    var mark = RichMark.none;
+    for (final entry in _pending.entries) {
+      mark = mark.applied(entry.key, entry.value);
+    }
+    return mark;
+  }
+
+  /// Bekleyen biçimi metne YAZAR — koşu BİTTİĞİNDE.
+  ///
+  /// Çağrı yerleri: alan odaktan çıkıyor, imleç koşunun dışına taşındı, biçim
+  /// kümesi değişti ya da not kaydediliyor. Yazacak bir şey yoksa yalnız
+  /// beklemeyi düşürür.
+  /// [caretOutside] true ise imleç KAPANIŞ işaretlerinin ARDINA konur.
+  /// Biçmi KAPATAN kullanıcı bunu ister: "kalın yaz, kalını kapat, düz devam
+  /// et"te imleç kutunun içinde kalsaydı sonraki metin de kalın olurdu.
+  void flushPendingFormat({bool caretOutside = false}) {
+    final wrapped = _wrapRun(value, caretOutside: caretOutside);
     if (wrapped != null) {
       super.value = _snapped(wrapped);
+      clearPendingFormat();
+      notifyListeners();
     } else {
       clearPendingFormat();
     }
   }
 
-  /// Bekleyen biçim varsa yazılan metni işaretlerin içine alır.
+  /// Koşuyu (`[_pendingAt, imleç)`) işaretlerin içine alır.
   ///
-  /// KÖK NEDEN (kullanıcı iki ekran görüntüsüyle: "biçimli yazarken hâlâ
-  /// problemler mevcut" — `merhaba` yazarken ekranda `me` düz, `rh` kalın ve
-  /// ardından HAM `_aba_` çıkıyordu): sarma "IME oluşturma aralığı bitti"
-  /// anında yapılıyordu. Ama Gboard bir kelimeyi yazarken oluşturma aralığını
-  /// arada bir KAPATIP yeniden açıyor (otomatik düzeltme, tahmin, imleç
-  /// güncellemesi). O aralıkta tampona işaret sokmak, klavyenin kendi metin
-  /// modelindeki konumları KAYDIRIR: Gboard bir sonraki tuşta kendi (artık
-  /// bayat) konumlarına göre yazınca işaretler kelimenin ortasına dağılıyor,
-  /// eşi kalmayan işaret de ham karakter olarak çiziliyordu.
+  /// KÖK NEDEN — TAMPONA KOŞU BOYUNCA HİÇ DOKUNULMAZ (2026-08-07 / 12. tur;
+  /// kullanıcı: "yine markdownlar çıkıyor, kalın butonuna basıp kalın
+  /// yazamıyorum"):
   ///
-  /// Artık sarma yalnız KELİME SINIRINDA (boşluk/satır sonu) ya da satır
-  /// bittiğinde ([flushPendingFormat]) yapılıyor — Gboard'ın kelimeyi
-  /// kesinlikle bıraktığı an. Boşluk da işaretlerin İÇİNDE kalır: imleç
-  /// kapanışların önünde durduğu için sonraki kelimeler aynı kutuya eklenir
-  /// ve bir daha yeniden yazma GEREKMEZ (koşu başına tek müdahale).
-  TextEditingValue? _wrapPending(
+  /// Sarma önce "IME oluşturma aralığı bitti" anında, sonra KELİME SINIRINDA
+  /// yapılıyordu. İkisi de aynı hataya düşüyor: Gboard bir koşu boyunca kendi
+  /// metin modelini tutar ve oluşturma aralığını arada bir kapatıp yeniden
+  /// açar (otomatik düzeltme, tahmin, imleç güncellemesi, boşluk sonrası
+  /// yeniden açılış). Tampona o anlarda işaret sokmak klavyenin konumlarını
+  /// KAYDIRIR; Gboard bir sonraki tuşta bayat konumuna yazınca işaretler
+  /// metnin ortasına dağılır ve EŞİ KALMAYAN işaret ham markdown olarak
+  /// çizilir (`richSpans` eşleşmeyen işareti düz karakter sayar).
+  ///
+  /// Artık işaret, kullanıcı koşuyu BİTİRENE kadar hiç yazılmaz — yazdığı
+  /// metin ekranda [pendingRange] sayesinde zaten biçimli görünür. Yani
+  /// tamponda koşu başına TEK müdahale kalır ve o da klavyenin koşuyu
+  /// bıraktığı andan sonradır.
+  /// [endOverride] verilirse koşunun sonu ORADAN okunur. Koşuyu bitiren olay
+  /// imleci koşunun DIŞINA taşımış olabilir (kullanıcı metnin ilerisine
+  /// dokundu); o zaman gelen imleç koşunun sonu DEĞİLDİR ve aradaki metin
+  /// yanlışlıkla biçimin içine alınırdı.
+  TextEditingValue? _wrapRun(
     TextEditingValue next, {
-    bool atRunEnd = false,
+    int? endOverride,
+    bool caretOutside = false,
   }) {
     final at = _pendingAt;
     if (_pending.isEmpty || at == null) return null;
-    if (next.composing.isValid && !next.composing.isCollapsed) return null;
+    if (at < 0 || at > next.text.length) return null;
+    // Koşunun sonu: imleç hâlâ koşunun içindeyse oradan, dışına taşındıysa
+    // en son bilinen uçtan (bkz. [_pendingEnd]).
     final caret = next.selection.baseOffset;
-    // İmleç geri gitti, seçim yapıldı ya da metin kısaldı: niyet düştü.
-    if (!next.selection.isCollapsed ||
-        at > next.text.length ||
-        caret <= at ||
-        caret > next.text.length) {
+    final inRun =
+        next.selection.isCollapsed && caret > at && caret <= next.text.length;
+    final end = endOverride ?? (inRun ? caret : (_pendingEnd ?? at));
+    if (end <= at || end > next.text.length) return null;
+    final typed = next.text.substring(at, end);
+    if (typed.isEmpty) return null;
+    // Bekleyenler İÇ İÇE sarılır; önce basılan en DIŞTA kalır.
+    //
+    // KÖK NEDEN — SATIR SONU koşuyu BÖLER (2026-08-07 / 14. tur): biçim
+    // kalıbı satır sonuyla eşleşmiyor (`dotAll: false` — biçim satırda başlar,
+    // satırda biter). Koşu içinde Enter'a basılıp devam edildiğinde
+    // `**abc\ndef**` yazılıyordu; hiçbir eşleşme çıkmadığı için İKİ işaret de
+    // ham markdown olarak çiziliyor ve nota öyle kaydediliyordu. Her satır
+    // parçası artık AYRI sarılır: `**abc**\n**def**`.
+    //
+    // KÖK NEDEN — KELİME SINIRI: italik (`_`) ve altı çizili (`~`) işaretleri
+    // kalıpta "iki yanında harf/rakam olmasın" şartı taşıyor, ama YAZAN taraf
+    // bunu denetlemiyordu. Kelimenin ortasından başlayan bir koşu
+    // `_ilk_sonrasi` üretiyor, kalıp eşleştiremiyor ve alt çizgiler ham
+    // görünüyordu. Sarma artık gereken yerde kelime sınırına GENİŞLER.
+    final needsBoundary = _pending.keys.any(richFormatNeedsWordBoundary);
+    var from = at;
+    var to = end;
+    if (needsBoundary) {
+      while (from > 0 && isRichWordChar(next.text[from - 1])) {
+        from--;
+      }
+      while (to < next.text.length && isRichWordChar(next.text[to])) {
+        to++;
+      }
+    }
+    final segment = next.text.substring(from, to);
+    final wrapped = StringBuffer();
+    var suffixLength = 0;
+    final lines = segment.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (i > 0) wrapped.write('\n');
+      final line = lines[i];
+      // Boş satır sarılmaz: `****` boş kutusu üretmenin âlemi yok.
+      if (line.isEmpty) continue;
+      var body = line;
+      var suffixOfLine = 0;
+      for (final entry in _pending.entries.toList().reversed) {
+        final marker = entry.key.marker;
+        final index = entry.value;
+        final prefix = richFormatTakesIndex(entry.key) && index != null
+            ? '$marker$index:'
+            : marker;
+        body = '$prefix$body$marker';
+        suffixOfLine += marker.length;
+      }
+      wrapped.write(body);
+      // İmleç eşlemesi SON satırın sonekine bakar: imleç koşunun sonunda,
+      // yani son satırın kapanış işaretlerinin önünde/ardında durur. Solunda
+      // kalan bütün işaretler `grown` içinde toplanır.
+      if (i == lines.length - 1) suffixLength = suffixOfLine;
+    }
+    final body = wrapped.toString();
+    if (body == segment) return null;
+    // Kaydırma: koşunun İÇİNE giren toplam işaret uzunluğu.
+    final grown = body.length - segment.length;
+    // İmleç bütün kapanış işaretlerinin ÖNÜNDE durur: koşu bittiği için
+    // gerekmez ama kullanıcı aynı yerden yazmaya devam ederse metin kutunun
+    // dışına düşmesin (Keep davranışı). Biçim KAPATILDIĞINDA tam tersi
+    // gerekir: imleç kutunun dışına çıkar.
+    final movedSelection = _shiftOffset(
+      next.selection,
+      at: from,
+      end: to,
+      prefixLength: grown - suffixLength,
+      suffixLength: suffixLength,
+      caretOutside: caretOutside,
+    );
+    return TextEditingValue(
+      text: next.text.replaceRange(from, to, body),
+      selection: movedSelection,
+    );
+  }
+
+  /// Sarma sonrası imleci/seçimi yeni metne taşır: koşudan ÖNCEKİ konumlar
+  /// yerinde kalır, koşunun İÇİ önek kadar, SONRASI önek+sonek kadar kayar.
+  static TextSelection _shiftOffset(
+    TextSelection selection, {
+    required int at,
+    required int end,
+    required int prefixLength,
+    required int suffixLength,
+    bool caretOutside = false,
+  }) {
+    int move(int o) {
+      if (o <= at) return o;
+      if (o < end) return o + prefixLength;
+      if (o == end) {
+        return o + prefixLength + (caretOutside ? suffixLength : 0);
+      }
+      return o + prefixLength + suffixLength;
+    }
+
+    final base = selection.baseOffset;
+    if (base < 0) {
+      // Geçersiz seçim: metin DEĞİŞTİ ama imleç -1 kalırsa alana odak
+      // dönünce imlecin yeri belirsiz olur. Sarmanın sonuna konur.
+      return TextSelection.collapsed(
+        offset: end + prefixLength + (caretOutside ? suffixLength : 0),
+      );
+    }
+    final extent = selection.extentOffset < 0 ? base : selection.extentOffset;
+    return TextSelection(baseOffset: move(base), extentOffset: move(extent));
+  }
+
+  /// Yeni bir değer gelirken koşunun durumunu günceller; koşu BİTTİYSE
+  /// işaretleri yazar.
+  ///
+  /// Koşu SÜRÜYOR sayılması için değişimin imleçte yapılmış saf bir
+  /// ekleme/silme olması gerekir: metin uzunluğundaki değişim ile imlecin
+  /// hareketi BİREBİR aynı olmalı. Bu ölçüt, "kullanıcı yazmaya devam etti"
+  /// ile "kullanıcı başka bir yere dokundu / uzağa yapıştırdı" durumlarını
+  /// ayırır — ayırmasaydı metnin ilerisine dokunmak aradaki bütün metni
+  /// koşunun içine alır ve hepsi kalın olurdu.
+  TextEditingValue? _trackPendingRun(TextEditingValue next) {
+    final at = _pendingAt;
+    if (_pending.isEmpty || at == null) return null;
+    final caret = next.selection.baseOffset;
+    final end = _pendingEnd ?? at;
+    // SAF DÜZENLEME: metin uzunluğundaki değişim ile imlecin hareketi BİREBİR
+    // aynıysa kullanıcı imlecin olduğu yerde yazıyor ya da siliyor demektir.
+    // (İmleç koşunun başının ALTINA da inebilir — geri silme; koşu oradan
+    // yeniden başlar.)
+    final lengthDelta = next.text.length - text.length;
+    final caretDelta = caret - end;
+    final isEdit =
+        next.selection.isCollapsed &&
+        caret >= 0 &&
+        caret <= next.text.length &&
+        lengthDelta == caretDelta;
+    if (isEdit) {
+      // Koşu sürüyor: tampona DOKUNULMAZ, yalnız uç güncellenir. (Geri silme
+      // de buraya düşer; koşu kısalır ama biçim niyeti yaşamaya devam eder.)
+      //
+      // İmleç koşunun BAŞININ altına inerse (kullanıcı yazdıklarını silip
+      // daha da geriye gitti) koşu ORADAN yeniden başlar: yoksa uç bir daha
+      // başlangıcı geçemez, `_wrapRun` hep null döner ve düğme yanık dururken
+      // yazılan metin düz kaydedilirdi.
+      if (caret < at) _pendingAt = caret;
+      _pendingEnd = caret;
+      return null;
+    }
+    // Koşu bitti. Metin de değiştiyse (uzağa yapıştırma, toplu silme) sarma
+    // güvenle yapılamaz: niyet düşer ve yazılan metin biçimsiz kalır —
+    // yanlış yere işaret sokup eşi olmayan ham markdown üretmekten yeğdir.
+    if (end <= at || end > text.length || next.text != text) {
       clearPendingFormat();
       return null;
     }
-    final typed = next.text.substring(at, caret);
-    if (typed.isEmpty) return null;
-    // Kelimenin ORTASINDA tampona dokunulmaz (yukarıdaki kök neden).
-    if (!atRunEnd && !_isBoundary(typed.substring(typed.length - 1))) {
-      return null;
-    }
-    // Bekleyenler İÇ İÇE sarılır; önce basılan en DIŞTA kalır. İmleç bütün
-    // kapanış işaretlerinin ÖNÜNDE durur: yazmaya devam etmek biçimlerin
-    // hepsini sürdürür (Keep davranışı), kutuların dışına düşmez.
-    var body = typed;
-    var prefixLength = 0;
-    for (final entry in _pending.entries.toList().reversed) {
-      final marker = entry.key.marker;
-      final index = entry.value;
-      final prefix = richFormatTakesIndex(entry.key) && index != null
-          ? '$marker$index:'
-          : marker;
-      body = '$prefix$body$marker';
-      prefixLength += prefix.length;
-    }
-    clearPendingFormat();
-    return TextEditingValue(
-      text: next.text.replaceRange(at, caret, body),
-      selection: TextSelection.collapsed(offset: caret + prefixLength),
+    final wrapped = _wrapRun(
+      TextEditingValue(text: text, selection: next.selection),
+      endOverride: end,
     );
+    clearPendingFormat();
+    return wrapped;
   }
 
   @override
   set value(TextEditingValue newValue) {
-    final wrapped = _wrapPending(newValue);
+    final wrapped = _trackPendingRun(newValue);
     if (wrapped != null) newValue = wrapped;
     if (_floats.isEmpty) {
       // Sarma yokken tampon kullanıcının metnidir; IME dokunulmadan geçer —
@@ -914,6 +1103,58 @@ class WrapTextController extends TextEditingController {
     );
   }
 
+  /// Son sarma planının önbelleği.
+  ///
+  /// KÖK NEDEN (kasma — "görsel ekleyince sayfaya kasma artıyor"nun çözdürme
+  /// fırtınası kapatıldıktan sonra KALAN yarısı): [planTextWrap] satır satır
+  /// ilerlerken her turda TAM bir `TextPainter.layout` + tam biçim ayrıştırması
+  /// yapıyor — maliyeti O(satır × metin). Bu, yalnız yazarken değil `set
+  /// value`yu tetikleyen HER ŞEYDE (imleci taşımak, metne dokunmak, seçim
+  /// değişimi) koşuyordu; oysa plan yalnız METİN ya da yerleşim girdileri
+  /// değişince değişir. İmleç hareketinde artık hiç hesaplanmıyor.
+  String? _planKeyLogical;
+  TextStyle? _planKeyStyle;
+  double _planKeyWidth = 0;
+  double _planKeyScale = 1;
+  TextDirection? _planKeyDirection;
+  RichTextTheme? _planKeyRich;
+  List<FloatBox>? _planKeyFloats;
+  WrapPlan? _planCache;
+
+  WrapPlan _planFor(String logical, TextStyle style) {
+    if (_planCache != null &&
+        _planKeyLogical == logical &&
+        _planKeyStyle == style &&
+        _planKeyWidth == _columnWidth &&
+        _planKeyScale == _textScale &&
+        _planKeyDirection == _direction &&
+        _planKeyRich == _rich &&
+        _planKeyFloats != null &&
+        sameFloatList(_planKeyFloats!, _floats)) {
+      return _planCache!;
+    }
+    final plan = planTextWrap(
+      logical: logical,
+      style: style,
+      columnWidth: _columnWidth,
+      floats: _floats,
+      textScaleFactor: _textScale,
+      direction: _direction,
+      rich: _rich,
+    );
+    _planKeyLogical = logical;
+    _planKeyStyle = style;
+    _planKeyWidth = _columnWidth;
+    _planKeyScale = _textScale;
+    _planKeyDirection = _direction;
+    _planKeyRich = _rich;
+    // Bantlar YERİNDE değişebiliyor (görsel sürüklenirken aynı liste
+    // güncelleniyor); kopyası saklanır, yoksa önbellek bayat kalır.
+    _planKeyFloats = List.of(_floats);
+    _planCache = plan;
+    return plan;
+  }
+
   void _reflow(String logical, int logicalCaret, [int? logicalExtent]) {
     final style = _style;
     // Aynı değeri yeniden yazmak seçim katmanını (tutamaklar, araç çubuğu)
@@ -934,15 +1175,7 @@ class WrapTextController extends TextEditingController {
       );
       return;
     }
-    final plan = planTextWrap(
-      logical: logical,
-      style: style,
-      columnWidth: _columnWidth,
-      floats: _floats,
-      textScaleFactor: _textScale,
-      direction: _direction,
-      rich: _rich,
-    );
+    final plan = _planFor(logical, style);
     _widths = plan.widths;
     final caret = wrapToDisplayOffset(
       plan.display,
@@ -978,6 +1211,46 @@ class WrapTextController extends TextEditingController {
   bool _scanHasLink = false;
   bool _scanHasMarker = false;
 
+  /// Üretilmiş span ağacının önbelleği.
+  ///
+  /// KÖK NEDEN (kasma): `buildTextSpan` HER ÇİZİMDE çağrılıyor ve metinde bir
+  /// tane bile biçim işareti varsa `richSpans` tüm metni özyinelemeli olarak
+  /// gezip yüzlerce `TextSpan` üretiyordu. Önbellek yalnız "metin düz mü"
+  /// sorusunu kapsıyordu; asıl pahalı iş her karede yeniden yapılıyordu.
+  /// Girdiler değişmediyse AYNI ağaç döndürülür.
+  String? _spanKeyText;
+  TextStyle? _spanKeyStyle;
+  Color? _spanKeyLinkColor;
+  RichTextTheme? _spanKeyRich;
+  List<double>? _spanKeyWidths;
+  TextSpan? _spanCache;
+
+  TextSpan _cachedSpan(
+    String text,
+    List<double> widths,
+    TextStyle? style,
+    Color? linkColor,
+  ) {
+    if (_spanCache != null &&
+        _spanKeyText == text &&
+        _spanKeyStyle == style &&
+        _spanKeyLinkColor == linkColor &&
+        _spanKeyRich == _rich &&
+        identical(_spanKeyWidths, widths)) {
+      return _spanCache!;
+    }
+    final span =
+        buildWrapSpan(text, widths, style, linkColor: linkColor, rich: _rich)
+            as TextSpan;
+    _spanKeyText = text;
+    _spanKeyStyle = style;
+    _spanKeyLinkColor = linkColor;
+    _spanKeyRich = _rich;
+    _spanKeyWidths = widths;
+    _spanCache = span;
+    return span;
+  }
+
   void _scanPlainness() {
     if (_scanText == text) return;
     _scanText = text;
@@ -996,35 +1269,45 @@ class WrapTextController extends TextEditingController {
     // oturunca link rengi zaten gelir.
     final composing = withComposing && value.isComposingRangeValid;
     final linkColor = composing ? null : Theme.of(context).colorScheme.primary;
+    TextSpan span;
     if (_widths.isEmpty) {
       // Biçim işareti ya da bağlantı yoksa üst sınıfın span'i kullanılır
       // (IME davranışı olduğu gibi kalsın).
       _scanPlainness();
       if ((linkColor == null || !_scanHasLink) && !_scanHasMarker) {
-        return super.buildTextSpan(
+        span = super.buildTextSpan(
           context: context,
           style: style,
           withComposing: withComposing,
         );
+      } else {
+        span = _cachedSpan(text, const [], style, linkColor);
       }
-      return buildWrapSpan(
-            text,
-            const [],
-            style,
-            linkColor: linkColor,
-            rich: _rich,
-          )
-          as TextSpan;
+    } else {
+      // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
+      // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
+      span = _cachedSpan(text, _widths, style, linkColor);
     }
-    // Oluşturma aralığı (IME altı çizgisi) sarma sırasında atlanır: çapalar
-    // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
-    return buildWrapSpan(
-          text,
-          _widths,
-          style,
-          linkColor: linkColor,
-          rich: _rich,
-        )
-        as TextSpan;
+    return _withPendingPreview(span, style);
+  }
+
+  /// BEKLEYEN biçimin canlı önizlemesi: koşunun aralığı ekranda biçimli
+  /// çizilir, tampona hiç dokunulmadan (bkz. [pendingRange]).
+  ///
+  /// Önizleme çizim uzayında yapılır; sarma çapalı tamponda da aynı uzay
+  /// geçerlidir (çapalar gerçek karakterlerdir, uzunluk korunur).
+  TextSpan _withPendingPreview(TextSpan span, TextStyle? style) {
+    final range = pendingRange;
+    if (range == null) return span;
+    final palette = _rich?.palette ?? const <Color>[];
+    final mark = pendingMark;
+    final restyled = restyleRange(
+      span,
+      range.$1,
+      range.$2,
+      (current) =>
+          markStyle(current ?? style ?? const TextStyle(), mark, palette),
+    );
+    return restyled is TextSpan ? restyled : span;
   }
 }

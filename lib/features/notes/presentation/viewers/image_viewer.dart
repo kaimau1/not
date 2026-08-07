@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/local_file.dart';
+import '../editor/note_images.dart';
+
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import 'image_crop.dart';
@@ -74,7 +77,10 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
     );
     if (rect == null || !mounted) return;
     // Tüm görsel bir kez daha seçildiyse dosyayı boşuna yeniden yazma.
-    if (rect.left <= 0 && rect.top <= 0 && rect.right >= 1 && rect.bottom >= 1) {
+    if (rect.left <= 0 &&
+        rect.top <= 0 &&
+        rect.right >= 1 &&
+        rect.bottom >= 1) {
       Navigator.of(context).pop();
       return;
     }
@@ -86,7 +92,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   /// kaynağı kullanır ki seçilen alan gösterilenle birebir örtüşsün.
   ImageProvider _provider() {
     final a = widget.attachment;
-    if (a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
+    if (a.localPath.isNotEmpty && localFileExists(a.localPath)) {
       return FileImage(File(a.localPath));
     }
     return CachedNetworkImageProvider(a.downloadUrl);
@@ -97,8 +103,18 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
     final l10n = context.l10n;
     final a = widget.attachment;
     Widget image;
-    if (a.localPath.isNotEmpty && File(a.localPath).existsSync()) {
-      image = Image.file(File(a.localPath), fit: BoxFit.contain);
+    if (a.localPath.isNotEmpty && localFileExists(a.localPath)) {
+      // Çözünürlük kovası: ekler 1600 px'e kadar olabiliyor ve tam
+      // çözünürlük çözmek ~10 MB'lık bir bitmap demek. Yakınlaştırma için pay
+      // bırakılır (2×), gerisi boşuna bellek.
+      image = Image.file(
+        File(a.localPath),
+        fit: BoxFit.contain,
+        cacheWidth: decodeWidthBucket(
+          MediaQuery.sizeOf(context).width * 2,
+          MediaQuery.devicePixelRatioOf(context),
+        ),
+      );
     } else if (a.isUploaded) {
       image = CachedNetworkImage(
         imageUrl: a.downloadUrl,

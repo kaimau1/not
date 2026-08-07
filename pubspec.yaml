@@ -95,6 +95,23 @@ dependencies:
   pdf: ^3.13.0
   archive: ^4.0.9
   xml: ^7.0.1
+  # PDF'e YAZMA (sayfa sil/döndür/sırala, çizimi belgeye gömme). Görüntüleme
+  # pdfrx/pdfium'da KALIR — pdfrx salt-render, `pdf` paketi ise VAR OLAN bir
+  # belgeyi açamıyor (yalnız sıfırdan üretiyor). Var olan PDF'i düzenlemenin
+  # tek yolu bu; "dosya okuyucu" uygulamasında da 2026-07-23'ten beri aynı
+  # ayrım var ve port oradan geldi.
+  #
+  # LİSANS: Syncfusion Community (birey/küçük ekip ücretsiz). PDF
+  # kütüphanesi çalışma anında banner GÖSTERMEZ (o, SfPdfViewer gibi UI
+  # widget'larına özgü) — biz yalnız bayt üreten API'yi kullanıyoruz.
+  #
+  # SÜRÜM TUZAĞI: 33.2.13'ten ESKİ seriler `xml ^6.5.0` istiyor, bizim
+  # `xml ^7.0.1` ile çakışıyor (pptx/docx yolları xml 7 kullanıyor) —
+  # "dosya okuyucu"daki 31.1.19 pini oradaki eski Flutter'a özgü, buraya
+  # taşınamaz. İkisi BİRLİKTE yükseltilir: `pdf`in kısıtı core'u ayrı bir
+  # seriye çekerse çözümleme sessizce ayrışır.
+  syncfusion_flutter_pdf: ^33.2.13
+  syncfusion_flutter_core: ^33.2.13
 
 dev_dependencies:
   flutter_test:

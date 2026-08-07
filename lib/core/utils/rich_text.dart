@@ -60,6 +60,16 @@ enum RichFormat {
 /// `**` mi `##3:` mi olacağını denetleyici de bilmek zorunda.
 bool richFormatTakesIndex(RichFormat f) => _takesIndex(f);
 
+/// İşareti KELİME SINIRI şart koşan biçimler: italik (`_`) ve altı çizili
+/// (`~`). Kalıp bunların iki yanında harf/rakam olmamasını istiyor (yoksa
+/// "dosya_adi_uzun" italik sanılırdı); dolayısıyla YAZAN taraf da aynı şartı
+/// gözetmeli, yoksa ürettiği işaret hiç eşleşmez ve EKRANDA HAM görünür.
+bool richFormatNeedsWordBoundary(RichFormat f) =>
+    f == RichFormat.italic || f == RichFormat.underline;
+
+/// Kelime karakteri mi? (Unicode: Türkçe harfler dahil — bkz. [_wordChar].)
+bool isRichWordChar(String ch) => _wordChar.hasMatch(ch);
+
 /// İndeks (1..9) alan biçimler: renk paleti, boyut ve opaklık kademeleri.
 /// İşarette `==2:metin==` gibi bir önekle taşınır.
 bool _takesIndex(RichFormat f) =>
@@ -245,7 +255,13 @@ class RichSegment {
 /// eşleşmez: biçim satırda başlar, satırda biter.
 final RegExp _formatPattern = RegExp(
   r'\*\*(?:(\d):)?(.+?)\*\*'
-  r'|==(?:(\d):)?(.+?)=='
+  // Vurgu da ÖNEK ZORUNLU (`==2:`): öneksiz `==` düz metinde çok geçiyor
+  // ("if (a == b && c == d)") ve işaretler görünmez çizildiği için o
+  // eşittirler gözden KAYBOLUYORDU — koda ya da matematiğe not alan
+  // kullanıcı yazdığını ekranda bulamıyordu. Uygulama vurguyu her zaman
+  // önekle yazar (paleti indeksli), yani bu şart hiçbir gerçek vurguyu
+  // kırmaz; kırdığı tek şey kullanıcının KENDİ yazdığı `==` idi.
+  r'|==(\d):(.+?)=='
   r'|%%(?:(\d):)?(.+?)%%'
   // Boyut ve opaklık işaretleri KADEME ÖNEKİ ZORUNLU tutar (`##3:` gibi):
   // işaretler artık görünmez çizildiğinden, düz metindeki bir "## başlık ##"
@@ -268,7 +284,12 @@ final RegExp _formatPattern = RegExp(
 /// düğmesine basılıp hiç yazılmadığında geriye bunlar kalır. Gösterimde
 /// zararsız ama dışa aktarılan metinde görünmemeli.
 final RegExp _emptyBoxPattern = RegExp(
-  r'\*\*\*\*|==(?:\d:)?==|%%(?:\d:)?%%|##\d:##|&&\d:&&',
+  r'\*\*\*\*|==\d:==|%%(?:\d:)?%%|##\d:##|&&\d:&&'
+  // İtalik ve altı çizili boş kutuları da: bunlar kelime sınırı şartı
+  // yüzünden `_formatPattern`e hiç düşmez, dolayısıyla EKRANDA HAM görünürdü.
+  r'|(?<![\p{L}\p{N}_])__(?![\p{L}\p{N}_])'
+  r'|(?<![\p{L}\p{N}_])~~(?![\p{L}\p{N}_])',
+  unicode: true,
 );
 
 /// Metinden biçim işaretlerini söker (kart önizlemesi, dışa aktarma, AI,
@@ -363,8 +384,30 @@ class _Leaf {
   final int markedStart;
 }
 
+/// Son ayrıştırmanın önbelleği (TEK giriş).
+///
+/// KÖK NEDEN (kasma): [_parse] saf bir işlev ama on ayrı yerden çağrılıyor —
+/// biçim şeridi her tuş vuruşunda ve HER İMLEÇ HAREKETİNDE `activeFormats`
+/// üzerinden tüm metni yeniden ayrıştırıyordu, `stripRichMarkers` arama
+/// süzgecinde not başına koşuyordu, çizim yolu ayrıca. Aynı metin için
+/// sonuç değişmediğinden tek girişlik bir önbellek bu tekrarların neredeyse
+/// tamamını siliyor: ardışık çağrılar hep AYNI metinle geliyor.
+///
+/// Liste DIŞARIYA verildiği için değiştirilebilir olmamalı; çağıranların
+/// hiçbiri yazmıyor, yine de önbellek `List.unmodifiable` ile korunuyor.
+String? _parseCacheKey;
+List<_Leaf>? _parseCacheValue;
+
 /// İşaretli metni yapraklarına ayırır (iç içe biçimler dahil).
 List<_Leaf> _parse(String marked) {
+  if (_parseCacheKey == marked) return _parseCacheValue!;
+  final result = _parseUncached(marked);
+  _parseCacheKey = marked;
+  _parseCacheValue = result;
+  return result;
+}
+
+List<_Leaf> _parseUncached(String marked) {
   final out = <_Leaf>[];
   void walk(String part, int base, RichMark mark) {
     var cursor = 0;
@@ -389,7 +432,7 @@ List<_Leaf> _parse(String marked) {
   }
 
   walk(marked, 0, RichMark.none);
-  return out;
+  return List.unmodifiable(out);
 }
 
 /// İşaretli metindeki konumu DÜZ metindeki konuma çevirir.
@@ -729,6 +772,81 @@ List<InlineSpan> richSpans(
   return spans;
 }
 
+/// [span] ağacındaki `[start, end)` karakter aralığına [restyle] uygular.
+///
+/// BEKLEYEN biçimin canlı önizlemesi için: kullanıcı "kalın"a basıp yazmaya
+/// başladığında tamponda henüz işaret YOKTUR (işaretler koşu bitince yazılır —
+/// bkz. `WrapTextController._wrapRun`), ama harfler ekranda kalın görünmelidir.
+/// Burada yalnız ÇİZİM stili değişir, metne dokunulmaz.
+///
+/// Düz metin uzunluğu DEĞİŞMEZ; bu şarttır, imleç ve seçim konumları
+/// `buildTextSpan`in ürettiği düz metnin uzunluğuna bağlıdır (bkz.
+/// text_wrap.dart dosya başlığı). Aralığa denk gelen parçalar BÖLÜNÜR, hiçbir
+/// karakter atılmaz ya da eklenmez.
+InlineSpan restyleRange(
+  InlineSpan span,
+  int start,
+  int end,
+  TextStyle Function(TextStyle? current) restyle,
+) {
+  if (end <= start) return span;
+  var cursor = 0;
+
+  InlineSpan walk(InlineSpan node) {
+    if (node is! TextSpan) {
+      // Widget/yer tutucu parçalar: uzunlukları 1 sayılır, stilleri yok.
+      cursor += 1;
+      return node;
+    }
+    final text = node.text;
+    final children = node.children;
+    if (text == null) {
+      return TextSpan(
+        style: node.style,
+        children: children == null ? null : [for (final c in children) walk(c)],
+        recognizer: node.recognizer,
+        semanticsLabel: node.semanticsLabel,
+      );
+    }
+    final from = cursor;
+    final to = cursor + text.length;
+    cursor = to;
+    // Aralıkla hiç kesişmiyor: olduğu gibi kalsın (yeni nesne bile üretme).
+    if (to <= start || from >= end) {
+      if (children == null) return node;
+      return TextSpan(
+        text: text,
+        style: node.style,
+        children: [for (final c in children) walk(c)],
+        recognizer: node.recognizer,
+        semanticsLabel: node.semanticsLabel,
+      );
+    }
+    final hitStart = start.clamp(from, to) - from;
+    final hitEnd = end.clamp(from, to) - from;
+    final parts = <InlineSpan>[
+      if (hitStart > 0)
+        TextSpan(text: text.substring(0, hitStart), style: node.style),
+      TextSpan(
+        text: text.substring(hitStart, hitEnd),
+        style: restyle(node.style),
+      ),
+      if (hitEnd < text.length)
+        TextSpan(text: text.substring(hitEnd), style: node.style),
+      if (children != null) ...[for (final c in children) walk(c)],
+    ];
+    // Stil sarmalayıcıda DA kalır: metin parçaları kendi stillerini zaten
+    // taşıyor, ama `children` (varsa) mirasla besleniyor — sarmalayıcıya
+    // verilmezse hem metni hem çocuğu olan bir düğümün ALT parçaları stilini
+    // kaybederdi. Bugünkü span ağacında bu şekil oluşmuyor; yine de doğru
+    // olan yazılıyor ki ileride bir çağrı yeri onu üretirse sessizce
+    // bozulmasın.
+    return TextSpan(style: node.style, children: parts);
+  }
+
+  return walk(span);
+}
+
 /// [mark] biçimlerinin tümünü [base] stiline uygular (iç içe biçim = stil
 /// birikimi).
 TextStyle markStyle(TextStyle base, RichMark mark, List<Color> palette) {
@@ -888,17 +1006,34 @@ toggleFormat(
   }
 
   final remove = _rangeHasFormat(segments, ps, pe, format, colorIndex);
+  // KELİME SINIRI (2026-08-07 / 14. tur): italik (`_`) ve altı çizili (`~`)
+  // işaretleri kalıpta "iki yanında harf/rakam olmasın" şartı taşıyor. Seçim
+  // bir kelimenin ORTASINDAN başlıyor ya da ortasında bitiyorsa yazılan
+  // işaret hiç EŞLEŞMEZ ve ekranda HAM alt çizgi/tilde olarak görünür
+  // ("mer_haba du_nya"). Uygulama aralığı kelime sınırına genişletir —
+  // Word'de de kelime ortasından seçip italik yapmak kelimeyi biçimler.
+  var from = ps;
+  var to = pe;
+  if (!remove && richFormatNeedsWordBoundary(format)) {
+    final plain = [for (final seg in segments) seg.text].join();
+    while (from > 0 && isRichWordChar(plain[from - 1])) {
+      from--;
+    }
+    while (to < plain.length && isRichWordChar(plain[to])) {
+      to++;
+    }
+  }
   final updated = _mapRange(
     segments,
-    ps,
-    pe,
+    from,
+    to,
     (m) => remove ? m.removed(format) : m.applied(format, colorIndex),
   );
   final out = _serialize(updated);
   return (
     text: out.text,
-    start: out.starts[ps.clamp(0, out.starts.length - 1)],
-    end: out.ends[pe.clamp(0, out.ends.length - 1)],
+    start: out.starts[from.clamp(0, out.starts.length - 1)],
+    end: out.ends[to.clamp(0, out.ends.length - 1)],
     pending: null,
     pendingIndex: null,
   );

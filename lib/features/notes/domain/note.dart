@@ -4,6 +4,7 @@ import '../../../core/utils/rich_text.dart';
 import 'attachment.dart';
 import 'note_item.dart';
 import 'note_type.dart';
+import 'page_notes.dart';
 
 /// Renk belirteci — tema tarafında gerçek renklere çözülür.
 /// Notun zemin rengi. Sıra ve tonlar Keep'in paletiyle aynı (kullanıcı
@@ -59,6 +60,31 @@ class AiSummary {
   };
 }
 
+/// Eski sürümün `text`e düşürdüğü belge notunu geri yükseltir.
+///
+/// KÖK NEDEN: eski sürüm `type` alanını KOŞULSUZ yazıyor ve tanımadığı
+/// `pdf`/`slides` kimliğini [NoteType.fromId] ile `text`e düşürüp öyle GERİ
+/// KAYDEDİYOR. O andan sonra not yeni sürümde de düz metin notu olarak
+/// açılırdı: sayfa notları dokümanda DURUR ama arayüzden erişilemez —
+/// pratikte kalıcı kayıp. Eski sürümü düzeltmek mümkün olmadığından telafi
+/// okuma tarafında yapılıyor.
+///
+/// Ölçüt dar tutuldu: SAYFA NOTU olan VE belge eki taşıyan bir "text" notu
+/// başka türlü oluşmaz. Yalnız PDF eki olan düz metin notu meşrudur, ona
+/// dokunulmaz.
+NoteType repairNoteType(
+  NoteType stored, {
+  required List<String?> attachmentKinds,
+  required bool hasPageNotes,
+}) {
+  if (stored != NoteType.text || !hasPageNotes) return stored;
+  for (final kind in attachmentKinds) {
+    if (kind == AttachmentKind.pdf.id) return NoteType.pdf;
+    if (kind == AttachmentKind.slide.id) return NoteType.slides;
+  }
+  return stored;
+}
+
 /// Bir not — tüm içerik tek Firestore dokümanında tutulur (atomik ve
 /// offline dostu). İkili veriler (görsel/PDF) Storage'dadır.
 class Note {
@@ -68,6 +94,7 @@ class Note {
     this.title = '',
     this.body = '',
     this.items = const [],
+    this.pageNotes = const {},
     this.attachments = const [],
     this.tags = const [],
     this.folderId,
@@ -102,6 +129,23 @@ class Note {
 
   /// Yalnızca liste tiplerinde kullanılır; sıra = dizi indeksi.
   final List<NoteItem> items;
+
+  /// [NoteType.pdf] notlarında SAYFA BAŞINA tutulan notlar.
+  /// Anahtar `"<ekId>#<sayfaKimliği>"` (bkz. `page_notes.dart`).
+  ///
+  /// Neden [body]/[items] değil: gövde tek bir akış, maddeler ise SIRALI bir
+  /// liste — ikisi de "3. sayfanın notu" diye adreslenemez. Firestore'da
+  /// LİSTE değil HARİTA olarak durur; liste olsaydı araya sayfa eklemek tüm
+  /// indeksleri kaydırır ve iki cihazın aynı anda yazması listenin tamamını
+  /// çakıştırırdı, harita anahtarları ise birbirinden bağımsız birleşir.
+  ///
+  /// **TUZAK — silinen sayfa notu boş dizgi olarak yazılır, anahtar
+  /// KALDIRILMAZ.** Belgeler `set(..., merge: true)` ile güncelleniyor ve
+  /// merge haritaları DERİN birleştirir: anahtar haritadan düşürülürse
+  /// Firestore'daki eski değer olduğu gibi kalır, yani kullanıcının sildiği
+  /// not not sonraki açılışta geri gelirdi (renk/şeffaflık alanlarındaki aynı
+  /// tuzağın haritalı hâli). Boş dizgi taşıyan anahtar "notu yok" demektir.
+  final Map<String, String> pageNotes;
   final List<Attachment> attachments;
 
   /// Serbest etiketler ("iş", "ev"...). '#' işareti olmadan saklanır.
@@ -185,8 +229,41 @@ class Note {
       title.trim().isEmpty &&
       body.trim().isEmpty &&
       items.every((i) => i.text.trim().isEmpty) &&
+      // Sayfa notu yazılmış bir belge notu boş SAYILMAZ — belgesi silinmiş
+      // olsa bile. Burada BİLEREK [hasPageNotes] kullanılmıyor: o yalnız
+      // MEVCUT eklerin notlarını sayıyor, oysa arka plan temizliği "boş"
+      // gördüğü notu SESSİZCE siler. Kullanıcı belgeyi değiştirmek için
+      // silmiş olabilir; yazdıkları o aralıkta yok edilmemeli. Görünürde boş
+      // kalan notu kullanıcı listeden kendisi silebilir.
+      pageNotes.values.every((v) => v.trim().isEmpty) &&
       attachments.isEmpty &&
       reminderAt == null;
+
+  /// MEVCUT eklerin sayfa notu var mı? (Boş dizgiler sayılmaz; belgesi
+  /// silinmiş eskiden kalma anahtarlar sayılmaz.)
+  bool get hasPageNotes {
+    if (pageNotes.isEmpty) return false;
+    for (final attachment in attachments) {
+      for (final entry in pageNotes.entries) {
+        if (entry.value.trim().isEmpty) continue;
+        if (isPageNoteKeyOf(entry.key, attachment.id)) return true;
+      }
+    }
+    return false;
+  }
+
+  /// [attachment]'in [pageNumber] sayfası için kayıtlı not (yoksa boş dizgi).
+  String pageNote(Attachment attachment, int pageNumber) =>
+      pageNotes[pageNoteKey(attachment, pageNumber)] ?? '';
+
+  /// [attachment]'in [pageNumber] sayfasının notunu değiştirmiş kopya.
+  ///
+  /// Boş metin anahtarı SİLMEZ, boş dizgi yazar: `set(merge: true)` derin
+  /// birleştirmede eksik anahtarı "değişmedi" sayar (bkz. [pageNotes]).
+  Note withPageNote(Attachment attachment, int pageNumber, String text) =>
+      copyWith(
+        pageNotes: {...pageNotes, pageNoteKey(attachment, pageNumber): text},
+      );
 
   /// AI'ya gönderilecek düz metin temsili. Satır içi biçim işaretleri
   /// (`**kalın**` gibi) SÖKÜLÜR: modele, sesli okumaya ve paylaşıma giden
@@ -222,8 +299,34 @@ class Note {
         for (var i = 0; i < items.length; i++) {
           buffer.writeln('${i + 1}. ${items[i].text}');
         }
+      case NoteType.pdf:
+      case NoteType.slides:
+        // PDF/sunum notunun metni SAYFA NOTLARIDIR. Sayfa numarası olmadan
+        // gönderilirse paylaşılan metin de AI bağlamı da hangi notun hangi
+        // sayfaya ait olduğunu kaybeder; başlık işareti dile bağlı olmayan
+        // `#3` biçiminde (ekranda görünen "Sayfa 3" başlığı l10n'den gelir).
+        if (body.trim().isNotEmpty) buffer.writeln(body);
+        buffer.write(pageNotesText());
     }
     return stripRichMarkers(buffer.toString().trim());
+  }
+
+  /// Sayfa notlarının düz metin dökümü: her ek için sayfa sırasına dizilmiş,
+  /// `#<sayfa>` başlıklı bloklar. Sayfası çözülemeyen (silinmiş sayfaya ait)
+  /// notlar atlanır — bkz. [orderedPageNotes].
+  String pageNotesText() {
+    final buffer = StringBuffer();
+    for (final attachment in attachments) {
+      for (final entry in orderedPageNotes(
+        attachment: attachment,
+        pageNotes: pageNotes,
+      )) {
+        buffer
+          ..writeln('#${entry.page}')
+          ..writeln(entry.text.trim());
+      }
+    }
+    return buffer.toString();
   }
 
   /// AI ile "geliştir/düzelt" için notun İÇERİĞİ — başlık ve liste işaretleri
@@ -252,6 +355,14 @@ class Note {
         for (final item in items)
           if (include(item)) item.text.trim(),
       ].join('\n'),
+      // PDF notunda AI'ya giden içerik sayfa notlarıdır; `#<sayfa>` başlığı
+      // BURADA da durur, çünkü "geliştir/çevir" sonucu sayfalara geri
+      // dağıtılabilmeli — başlıksız dönen metinde hangi paragrafın hangi
+      // sayfaya ait olduğu kaybolurdu.
+      NoteType.pdf || NoteType.slides => [
+        if (body.trim().isNotEmpty) body.trim(),
+        pageNotesText().trim(),
+      ].where((s) => s.isNotEmpty).join('\n'),
     });
   }
 
@@ -260,6 +371,7 @@ class Note {
     String? title,
     String? body,
     List<NoteItem>? items,
+    Map<String, String>? pageNotes,
     List<Attachment>? attachments,
     List<String>? tags,
     String? folderId,
@@ -294,6 +406,7 @@ class Note {
     title: title ?? this.title,
     body: body ?? this.body,
     items: items ?? this.items,
+    pageNotes: pageNotes ?? this.pageNotes,
     attachments: attachments ?? this.attachments,
     tags: tags ?? this.tags,
     folderId: clearFolderId ? null : (folderId ?? this.folderId),
@@ -334,15 +447,37 @@ class Note {
     // değişir. (Yalnız bekleyen yazımda: eski kayıtların tarihi uydurulmaz.)
     final pending = doc.metadata.hasPendingWrites;
     final localNow = pending ? DateTime.now() : null;
+    // GERİYE DÖNÜK ONARIM: eski sürüm `type` alanını KOŞULSUZ yazıyor ve
+    // tanımadığı `pdf`/`slides` kimliğini `text`e düşürüp öyle geri
+    // kaydediyor. O andan sonra not yeni sürümde de düz metin notu olarak
+    // açılır, sayfa notları dokümanda DURUR ama arayüzden erişilemez —
+    // pratikte kalıcı kayıp. Belgesi ve sayfa notu olan bir "text" notu
+    // aslında bir belge notudur; tipi geri yükseltiliyor.
+    final storedType = NoteType.fromId(map['type'] as String?);
+    final rawAttachments = (map['attachments'] as List<dynamic>? ?? const []);
+    final rawPageNotes =
+        (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {});
+    final type = repairNoteType(
+      storedType,
+      attachmentKinds: [
+        for (final raw in rawAttachments) (raw as Map)['kind']?.toString(),
+      ],
+      hasPageNotes: rawPageNotes.isNotEmpty,
+    );
     return Note(
       id: doc.id,
-      type: NoteType.fromId(map['type'] as String?),
+      type: type,
       title: map['title'] as String? ?? '',
       body: map['body'] as String? ?? '',
       items: [
         for (final raw in (map['items'] as List<dynamic>? ?? const []))
           NoteItem.fromMap(Map<String, dynamic>.from(raw as Map)),
       ],
+      pageNotes: {
+        for (final e
+            in (map['pageNotes'] as Map<dynamic, dynamic>? ?? const {}).entries)
+          e.key.toString(): e.value?.toString() ?? '',
+      },
       attachments: [
         for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
@@ -401,6 +536,10 @@ class Note {
     'title': title,
     'body': body,
     'items': [for (final i in items) i.toMap()],
+    // Yalnız doluysa yazılır: PDF olmayan notların şemasında bu alan hiç
+    // oluşmaz. Dolduğunda anahtarlar tek tek birleşir — merge derin
+    // birleştirdiği için başka cihazın yazdığı BAŞKA sayfanın notu ezilmez.
+    if (pageNotes.isNotEmpty) 'pageNotes': pageNotes,
     'attachments': [for (final a in attachments) a.toMap()],
     'tags': tags,
     'folderId': folderId,

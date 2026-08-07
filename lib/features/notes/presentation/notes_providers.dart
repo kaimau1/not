@@ -218,7 +218,10 @@ final duplicateNotesProvider = Provider.autoDispose<List<List<Note>>>((ref) {
     for (final n in ref.watch(notesStreamProvider).value ?? const <Note>[])
       if (n.folderId == null || !suppressed.contains(n.folderId)) n,
   ];
-  return duplicateNoteGroups(notes, trigramCache: ref.watch(_trigramCacheProvider));
+  return duplicateNoteGroups(
+    notes,
+    trigramCache: ref.watch(_trigramCacheProvider),
+  );
 });
 
 /// Gizli klasörlerin kimlikleri (bkz. [NoteFolder.hidden]).
@@ -384,8 +387,9 @@ class SemanticSearchEnabledNotifier extends Notifier<bool> {
 /// kullanılır. Asistan "ekledim" diyor ama hangi nota eklediği görünmüyordu.
 ///
 /// Vurgu kendiliğinden söner: kullanıcı kapatmakla uğraşmasın.
-final focusedNoteProvider =
-    NotifierProvider<FocusedNoteNotifier, String?>(FocusedNoteNotifier.new);
+final focusedNoteProvider = NotifierProvider<FocusedNoteNotifier, String?>(
+  FocusedNoteNotifier.new,
+);
 
 class FocusedNoteNotifier extends Notifier<String?> {
   static const _duration = Duration(seconds: 4);
@@ -445,7 +449,7 @@ class SelectedTagNotifier extends Notifier<String?> {
 /// Aktif (arşivlenmemiş) notlarda geçen tüm etiketler, alfabetik.
 /// Gizli klasördeki notların etiketleri sızmaz — çip barında görünen bir
 /// etiket, gizli notun varlığını ele verirdi.
-final allTagsProvider = Provider<List<String>>((ref) {
+final allTagsProvider = Provider.autoDispose<List<String>>((ref) {
   final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
   final suppressed = ref.watch(suppressedFolderIdsProvider);
   final tags = <String>{
@@ -586,16 +590,39 @@ List<Note> _sortedNotes(List<Note> notes, NoteSort sort) {
   return list;
 }
 
+/// Not başına "aranabilir gövde" önbelleği: `<notId> → (updatedAt, düz metin)`.
+///
+/// KÖK NEDEN (kasma): [_matches] her notun gövdesini ve HER MADDESİNİ
+/// `stripRichMarkers`'tan geçiriyordu; o da işaret varsa metnin tamamını
+/// ayrıştırıyor. Süzgeç, sorgu yazılı olduğu sürece HER Firestore anlık
+/// görüntüsünde (yani editörde yazarken de) tüm notlar için baştan koşuyordu.
+/// Debounce yalnız tuş vuruşunu bastırıyor, snapshot'ı bastırmıyor.
+///
+/// Anahtar `updatedAt`: not değişmedikçe yeniden ayrıştırma yok, bayatlama da
+/// yok. Küresel ve sınırsız DEĞİL — girdi sayısı not sayısıyla sınırlı.
+final Map<String, (DateTime?, String)> _searchBodyCache = {};
+
+String _searchableBody(Note note) {
+  final cached = _searchBodyCache[note.id];
+  if (cached != null && cached.$1 == note.updatedAt) return cached.$2;
+  final buffer = StringBuffer(stripRichMarkers(note.body));
+  for (final item in note.items) {
+    buffer
+      ..write('\n')
+      ..write(stripRichMarkers(item.text));
+  }
+  final text = buffer.toString().toLowerCase();
+  _searchBodyCache[note.id] = (note.updatedAt, text);
+  return text;
+}
+
 bool _matches(Note note, String query) {
   if (note.title.toLowerCase().contains(query)) return true;
   // Kilitli notun içeriği aramaya sızmasın; yalnızca başlıktan bulunur.
   if (note.locked) return false;
   // Arama biçim İŞARETLERİNİ görmez: "558" araması `**558**` yazan notu da
   // bulmalı (işaret metnin içinde taşınıyor, bkz. rich_text.dart).
-  if (stripRichMarkers(note.body).toLowerCase().contains(query)) return true;
-  for (final item in note.items) {
-    if (stripRichMarkers(item.text).toLowerCase().contains(query)) return true;
-  }
+  if (_searchableBody(note).contains(query)) return true;
   for (final attachment in note.attachments) {
     if (attachment.fileName.toLowerCase().contains(query)) return true;
   }

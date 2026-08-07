@@ -412,6 +412,53 @@
   "hubReadInfo": "Listen to a PDF or Word document",
   "annotate": "Annotate",
   "annotateDone": "Finish annotating",
+  "newPdfNote": "Add PDF, take notes",
+  "pdfPageNoteHint": "Note for this page…",
+  "pdfPage": "Page {page}",
+  "@pdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPageOf": "Page {page} / {total}",
+  "@pdfPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPreviousPage": "Previous page",
+  "pdfNextPage": "Next page",
+  "pdfFullScreen": "Open full screen",
+  "pdfNoDocument": "This note has no PDF yet",
+  "pdfChooseDocument": "Choose PDF",
+    "newSlidesNote": "Add slides, take notes",
+  "slidesNoDocument": "This note has no presentation yet",
+  "slidesChooseDocument": "Choose presentation",
+  "pdfEditPages": "Edit pages",
+  "pdfDeletePages": "Delete selected pages",
+  "pdfRotatePages": "Rotate",
+  "pdfBurnInk": "Burn handwriting into the document",
+  "pdfApplyChanges": "Apply changes",
+  "pdfCannotDeleteAllPages": "You can't delete every page",
+  "pdfPagesHint": "Tap a page to select it. Page notes travel with their page; a deleted page's note is hidden but kept in your data.",
+  "pdfEditFailed": "Couldn't edit the PDF: {error}",
+  "@pdfEditFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfInkBurned": "Handwriting burned into the document",
+"pdfAllPageNotes": "All page notes",
+  "pdfNoPageNotes": "No page notes yet. Turn to a page and write in the field below.",
   "crop": "Crop",
   "cropApply": "Apply crop",
   "cropReset": "Reset selection",

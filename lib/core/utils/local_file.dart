@@ -14,10 +14,16 @@ import 'package:path/path.dart' as p;
 ///   yeniden çizimde görünsün (negatif önbellek bayat kalırdı).
 final _existsCache = <String>{};
 
+/// Önbelleğin üst sınırı: yalnız POZİTİF sonuçlar saklanıyor ve girdi sayısı
+/// pratikte ek sayısıyla sınırlı, ama uzun oturumda (çok not açıp kapatan
+/// kullanıcı) sınırsız büyümesin.
+const _maxExistsCache = 512;
+
 bool localFileExists(String path) {
   if (path.isEmpty) return false;
   if (_existsCache.contains(path)) return true;
   if (File(path).existsSync()) {
+    if (_existsCache.length >= _maxExistsCache) _existsCache.clear();
     _existsCache.add(path);
     return true;
   }

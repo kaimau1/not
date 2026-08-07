@@ -94,7 +94,10 @@ class SlideCanvas extends StatelessWidget {
     );
     if (animated) child = _Reveal(visible: shapeVisible, child: child);
     if (s.rotationDeg != 0) {
-      child = Transform.rotate(angle: s.rotationDeg * math.pi / 180, child: child);
+      child = Transform.rotate(
+        angle: s.rotationDeg * math.pi / 180,
+        child: child,
+      );
     }
     if (editing) {
       // Aktif kutuyu çerçeveyle belirt; dokunuşlar içteki TextField'lara gitsin
@@ -154,7 +157,11 @@ class _ShapeBody extends StatelessWidget {
   /// Canlı düzenleme denetleyicileri (paragraf indeksiyle hizalı). null = statik.
   final List<TextEditingController?>? editControllers;
 
-  const _ShapeBody({required this.shape, this.paraVisible, this.editControllers});
+  const _ShapeBody({
+    required this.shape,
+    this.paraVisible,
+    this.editControllers,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -227,15 +234,22 @@ class _ShapeBody extends StatelessWidget {
             for (var i = 0; i < s.paragraphs.length; i++)
               if (_editCtrl(i) != null)
                 // Canlı düzenleme: kutunun yerinde, aynı ölçekte TextField.
-                _paragraph(s.paragraphs[i], scale, s.lnSpcReduction,
-                    edit: _editCtrl(i))
+                _paragraph(
+                  s.paragraphs[i],
+                  scale,
+                  s.lnSpcReduction,
+                  edit: _editCtrl(i),
+                )
               else if (s.paragraphs[i].plainText.isNotEmpty)
                 paraVisible == null
                     ? _paragraph(s.paragraphs[i], scale, s.lnSpcReduction)
                     : _Reveal(
                         visible: paraVisible![i],
-                        child:
-                            _paragraph(s.paragraphs[i], scale, s.lnSpcReduction),
+                        child: _paragraph(
+                          s.paragraphs[i],
+                          scale,
+                          s.lnSpcReduction,
+                        ),
                       ),
           ],
         ),
@@ -243,8 +257,29 @@ class _ShapeBody extends StatelessWidget {
     );
   }
 
+  /// Sığdırma ölçeğinin önbelleği: (şekil, taban ölçek) → ek ölçek.
+  ///
+  /// KÖK NEDEN (kasma): [_fitScale] `_ShapeBody.build()` içinden çağrılıyordu
+  /// ve HİÇBİR önbelleği yoktu; her çağrıda paragraf başına bir `TextPainter`
+  /// kurup `layout()` koşuyor, üstelik bunu İKİ KEZ yapıyordu. Slaytta bir
+  /// yere dokunmak (parmak sayacı `setState` ediyor) 20 metin kutulu bir
+  /// slaytta ~40 tam metin yerleşimi demekti. Girdiler (şeklin ölçüleri,
+  /// paragrafları, taban ölçek) build'ler arası değişmiyor.
+  static final Map<(ShapeVM, double), double> _fitCache = {};
+
   /// Kutuya sığması için gereken ek ölçek (1 = küçültme gerekmez).
   double _fitScale(ShapeVM s, double baseScale) {
+    final cached = _fitCache[(s, baseScale)];
+    if (cached != null) return cached;
+    final computed = _fitScaleUncached(s, baseScale);
+    // Önbellek sınırsız büyümesin: sunum kapanınca girdiler ölür ama uzun
+    // oturumda birçok sunum açılabilir.
+    if (_fitCache.length > 512) _fitCache.clear();
+    _fitCache[(s, baseScale)] = computed;
+    return computed;
+  }
+
+  double _fitScaleUncached(ShapeVM s, double baseScale) {
     final availW = s.w - s.inset.horizontal;
     final availH = s.h - s.inset.vertical;
     if (availW <= 0 || availH <= 0) return 1;
@@ -253,13 +288,17 @@ class _ShapeBody extends StatelessWidget {
       var total = 0.0;
       for (final p in s.paragraphs) {
         if (p.plainText.isEmpty) continue;
-        final tp = TextPainter(
-          text: _span(p, sc, s.lnSpcReduction),
-          textAlign: p.align,
-          textDirection: TextDirection.ltr,
-        )..layout(
-            maxWidth: math.max(
-                1, availW - p.indentPt - (p.bullet.isEmpty ? 0 : 14)));
+        final tp =
+            TextPainter(
+              text: _span(p, sc, s.lnSpcReduction),
+              textAlign: p.align,
+              textDirection: TextDirection.ltr,
+            )..layout(
+              maxWidth: math.max(
+                1,
+                availW - p.indentPt - (p.bullet.isEmpty ? 0 : 14),
+              ),
+            );
         total += tp.height + p.spaceBeforePt;
         tp.dispose();
       }
@@ -288,8 +327,9 @@ class _ShapeBody extends StatelessWidget {
               fontSize: r.sizePt * fontScale,
               fontWeight: r.bold ? FontWeight.bold : FontWeight.normal,
               fontStyle: r.italic ? FontStyle.italic : FontStyle.normal,
-              decoration:
-                  r.underline ? TextDecoration.underline : TextDecoration.none,
+              decoration: r.underline
+                  ? TextDecoration.underline
+                  : TextDecoration.none,
               color: r.color,
               height: p.lineHeight * (1 - lnSpcReduction),
             ),
@@ -300,11 +340,15 @@ class _ShapeBody extends StatelessWidget {
 
   TextEditingController? _editCtrl(int i) =>
       editControllers != null && i < editControllers!.length
-          ? editControllers![i]
-          : null;
+      ? editControllers![i]
+      : null;
 
-  Widget _paragraph(ParaVM p, double fontScale, double lnSpcReduction,
-      {TextEditingController? edit}) {
+  Widget _paragraph(
+    ParaVM p,
+    double fontScale,
+    double lnSpcReduction, {
+    TextEditingController? edit,
+  }) {
     final first = p.runs.isEmpty ? null : p.runs.first;
     final Widget body = edit == null
         ? Text.rich(_span(p, fontScale, lnSpcReduction), textAlign: p.align)
@@ -316,8 +360,12 @@ class _ShapeBody extends StatelessWidget {
             cursorColor: const Color(0xFF2962FF),
             style: TextStyle(
               fontSize: (first?.sizePt ?? 18) * fontScale,
-              fontWeight: first?.bold == true ? FontWeight.bold : FontWeight.normal,
-              fontStyle: first?.italic == true ? FontStyle.italic : FontStyle.normal,
+              fontWeight: first?.bold == true
+                  ? FontWeight.bold
+                  : FontWeight.normal,
+              fontStyle: first?.italic == true
+                  ? FontStyle.italic
+                  : FontStyle.normal,
               decoration: first?.underline == true
                   ? TextDecoration.underline
                   : TextDecoration.none,
