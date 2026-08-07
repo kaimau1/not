@@ -46,6 +46,16 @@ import 'voice_capture_sheet.dart';
 /// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
 /// içinde ölçülmesi istenir (bkz. [_DashboardScreenState.build]). ~10 bin px,
 /// iki sütunlu düzende yüzden fazla nota karşılık gelir.
+///
+/// **2026-08-07 (16. tur) — DÜŞÜRÜLMEDİ, BİLEREK.** Denetimde "bu pay her
+/// yeniden kurulumun çarpanı" diye işaretlenmişti: ~130 kart canlı duruyor ve
+/// her biri biçim ayrıştırması + yazı tipi kurulumu yapıyordu. Doğru sıra
+/// önce ÇARPANI DEĞİL BİRİM MALİYETİ düşürmekti; `richSpans` ve
+/// `applyNoteFont` artık önbellekli, kart başına iş neredeyse sıfır. Payı
+/// ayrıca düşürmek, belgelenmiş ve kullanıcı tarafından bildirilmiş bir hatayı
+/// ("aşağı kaydırırken liste yukarı sıçrıyor") geri getirme riski taşıyor —
+/// masonry uzunluğu yeniden TAHMİN olurdu. Ölçmeden düşürmek kazançtan çok
+/// gerileme getirir; cihazda ölçüm yapılabildiğinde yeniden değerlendirilsin.
 const double _kGridCacheExtent = 10000;
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -1480,32 +1490,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         final note = items[index];
-        // Consumer + select: vurgu/seçim değişince yalnız İLGİLİ satır
-        // yeniden çizilsin — ekranın ref'i izleseydi 4 sn'lik vurgu döngüsü
-        // ve her seçim tüm dashboard'u yeniden kurar (eskiden kuruyordu).
-        return Consumer(
-          builder: (context, cellRef, _) {
-            final focused = cellRef.watch(
-              focusedNoteProvider.select((id) => id == note.id),
-            );
-            final selected = cellRef.watch(
-              selectedNoteIdsProvider.select((s) => s.contains(note.id)),
-            );
-            return _FocusHalo(
-              focused: focused,
-              noteId: note.id,
-              child: GestureDetector(
-                onLongPress: () => cellRef
-                    .read(selectedNoteIdsProvider.notifier)
-                    .toggle(note.id),
-                child: NoteListRow(
-                  note: note,
-                  selected: selected,
-                  selectionActive: selectionActive,
-                ),
-              ),
-            );
-          },
+        // ANAHTAR ŞART: anahtarsız satırlarda bir not silinince ya da sıra
+        // değişince `_FocusHaloState` YANLIŞ nota bağlanır — vurgu başka
+        // satırda yanıp söner ve state boşuna taşınır. Izgarada zaten var,
+        // liste görünümünde eksikti.
+        //
+        // RepaintBoundary: tek satırın vurgusu değişince görünen listenin
+        // TAMAMI yeniden boyanıyordu.
+        return KeyedSubtree(
+          key: ValueKey(note.id),
+          child: RepaintBoundary(
+            child: Consumer(
+              builder: (context, cellRef, _) {
+                final focused = cellRef.watch(
+                  focusedNoteProvider.select((id) => id == note.id),
+                );
+                final selected = cellRef.watch(
+                  selectedNoteIdsProvider.select((s) => s.contains(note.id)),
+                );
+                return _FocusHalo(
+                  focused: focused,
+                  noteId: note.id,
+                  child: GestureDetector(
+                    onLongPress: () => cellRef
+                        .read(selectedNoteIdsProvider.notifier)
+                        .toggle(note.id),
+                    child: NoteListRow(
+                      note: note,
+                      selected: selected,
+                      selectionActive: selectionActive,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         );
       },
     );
