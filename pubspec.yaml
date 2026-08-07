@@ -127,6 +127,31 @@ flutter:
     # WinAnsi kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk
     # çıkıyordu. PT Sans (OFL) Türkçe'nin tamamını taşıyor.
     - assets/fonts/PTSans-Regular.ttf
+    # UYGULAMANIN KENDİ YAZI TİPİ (Inter Tight) APK'ya GÖMÜLÜ.
+    #
+    # KÖK NEDEN (kullanıcı, 2026-08-07: "yazı boyutu ve fontumuz tüm
+    # telefonlarda sabit olmalı"): `google_fonts` yazı tipini ÇALIŞMA ANINDA
+    # fonts.gstatic.com'dan indirir. İndirilemediğinde (ilk açılış çevrimdışı,
+    # ağ kısıtlı, kurumsal DNS) metin sessizce CİHAZIN varsayılan yazı tipiyle
+    # çizilir — Samsung One UI Sans, MIUI Sans, Roboto... hepsi başka metrik,
+    # yani uygulama telefondan telefona başka görünür. Dosyalar burada
+    # olduğunda paket İNDİRME YAPMADAN bunları kullanır (asset adı
+    # `InterTight-<Ağırlık>.ttf` olmak ZORUNDA, paket manifesti bu ada göre
+    # tarıyor). Bedeli ~0,6 MB APK.
+    #
+    # YALNIZ 400 (Regular) ve 500 (Medium): `interTightTextTheme` gövde
+    # temasındaki ağırlıkları yükler, Material 3 tipografisi de yalnız bu
+    # ikisini kullanır. Arayüzdeki w600/w700 metinler bu iki yüzden
+    # KALINLAŞTIRILARAK çiziliyor (bugün de öyle çalışıyor) — 600/700
+    # dosyalarını gömmek 0,6 MB daha yer kaplar, hiçbir yerde yüklenmezdi.
+    # Yeni bir ağırlık gerçekten gerekirse hem burada hem `GoogleFonts`
+    # çağrısında karşılığı olmalı.
+    #
+    # Notların KENDİ yazı tipi seçenekleri (Lora, Caveat…) hâlâ indirilir:
+    # onlar isteğe bağlı, not başına seçiliyor ve hepsini gömmek APK'yı
+    # gereksiz şişirirdi.
+    - assets/google_fonts/InterTight-Regular.ttf
+    - assets/google_fonts/InterTight-Medium.ttf
 
 # Uygulama ikonu: assets/icon/ altındaki görsellerden üretilir.
 # Yenilemek için: dart run flutter_launcher_icons

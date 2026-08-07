@@ -47,6 +47,13 @@ abstract final class AppTheme {
       );
     }
 
+    // Uygulamanın tipografisi: Inter Tight. Dosyalar APK'ya GÖMÜLÜ
+    // (`assets/google_fonts/InterTight-*.ttf`), yani `google_fonts` burada
+    // ağa hiç çıkmaz ve yazı tipi her telefonda AYNI çizilir — indirme
+    // başarısız olduğunda cihazın sistem fontuna düşme davranışı bitti
+    // (bkz. pubspec'teki gerekçe). Gömülü ağırlıklar 400 ve 500 — paketin
+    // gövde temasına yüklediği ağırlıklar bunlar; daha kalın metinler bu iki
+    // yüzden türetiliyor (davranış değişmedi, yalnız ağ bağımlılığı gitti).
     final textTheme = GoogleFonts.interTightTextTheme(
       ThemeData(brightness: brightness).textTheme,
     );

@@ -25,6 +25,29 @@ Locale resolveLocale(List<Locale>? locales, Iterable<Locale> supported) {
   return const Locale('tr');
 }
 
+/// TİPOGRAFİ CİHAZDAN BAĞIMSIZ (kullanıcı, 2026-08-07: "yazı boyutu ve
+/// fontumuz tüm telefonlarda sabit olmalı sadece uygulama içerisinden
+/// değiştirilebilmeli"). Sistemin yazı ayarları uygulamanınkiyle DEĞİŞTİRİLİR:
+///
+/// 1. **Yazı boyutu**: `TextScaler.linear(fontScale)` sistem ölçeğiyle
+///    ÇARPMAZ, onun YERİNE geçer — Ayarlar → Görünüm → Yazı boyutu tek söz
+///    sahibi. (Bu zaten böyleydi; kural artık yazılı ve testli.)
+/// 2. **Kalın metin** (erişilebilirlik → "Bold text"): açık bırakılsa
+///    telefonun her yerinde yazılar kalınlaşır ve ince/kalın ayrımına dayanan
+///    başlık-gövde hiyerarşisi düzleşirdi.
+/// 3. **Yazı tipi**: cihazın sistem fontuna hiç düşülmemesi için Inter Tight
+///    APK'ya gömüldü (bkz. pubspec `assets/google_fonts/`).
+///
+/// Android'in "Ekran boyutu" (yoğunluk) ayarı KAPSAM DIŞI: o metni değil tüm
+/// arayüzü ölçekler, uygulamadan bastırılamaz.
+Widget fixedTypography(BuildContext context, Widget child, double fontScale) =>
+    MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(fontScale), boldText: false),
+      child: child,
+    );
+
 class NotlarApp extends ConsumerWidget {
   const NotlarApp({super.key});
 
@@ -57,11 +80,10 @@ class NotlarApp extends ConsumerWidget {
         // dilin tarih sembollerini zaten yüklüyor, ayrıca bir başlatma
         // (initializeDateFormatting) gerekmiyor.
         Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
-        return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(fontScale)),
-          child: child ?? const SizedBox.shrink(),
+        return fixedTypography(
+          context,
+          child ?? const SizedBox.shrink(),
+          fontScale,
         );
       },
     );
