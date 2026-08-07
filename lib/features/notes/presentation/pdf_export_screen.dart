@@ -64,7 +64,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     // PDF notu dışa aktarılırken KAYNAK BELGE değil, kullanıcının sayfa
     // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
     // dışa aktarma metin + görsel üretiyor).
-    NoteType.pdf => note.pageNotesText().trimRight(),
+    NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
   });
 
   @override

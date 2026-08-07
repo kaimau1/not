@@ -1242,3 +1242,9 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **Mimari kararda değişiklik YOK**: biçim hâlâ metnin içinde işaretle taşınıyor (span modeline geçilmedi) — depolama biçimi, eski notlar, arama/AI/dışa aktarma yolları aynen duruyor. Word hissi ÇİZİM katmanından geldi.
   **AÇIK KALAN**: eski notlarda geçmiş hatadan kalmış eşsiz işaretler hâlâ ham görünür; bu tur onları temizlemiyor (metinde gerçekten yazılmış `**` ile ayırt edilemez, otomatik temizlik kullanıcının yazdığını yiyebilir).
   Doğrulama: analyze temiz, 598/598 test yeşil (+10; canlı önizlemenin gerçekten çizildiği, koşu boyunca tampona dokunulmadığı, koşu dışına dokunmanın metni yutmadığı, kapatınca imlecin dışarı çıktığı harf harf kilitlendi). **Cihazda doğrulanmadı.**
+
+- 2026-08-07 (13. tur): **PDF not tipi 3/4 — SLAYT sürümü (`NoteType.slides`, "Sunum ekle not al").**
+  Not tarafının TAMAMI ortak: `PageNotePane` (sayfa çubuğu, bölme tutamağı, alan, toplu görünüm, bekleyen biçim flush'ı) tek kopya; PDF ve slayt yalnız ÜST BÖLMEDEKİ görüntüleyicide ayrışıyor (`PdfNotePane` / `SlideNotePane` ince sarmalayıcılar). Sayfa durumu PANODA tutulur, görüntüleyicide değil — `PageNoteHost` ile konuşuyorlar; alt bölmenin hangi sayfanın notunu göstereceği tek yerden belirleniyor ve iki sürüm birebir aynı davranıyor.
+  **Veri modeli AYNI**: slayt notu da `Note.pageNotes` + `"<ekId>#<sayfaKimliği>"`. Yani toplu görünüm, kart önizlemesi, paylaşım/AI metni ve dışa aktarma hiç değişmeden slaytlarda da çalışıyor. `NoteType.isPageNoteType` iki tipi tek dalda topluyor.
+  **Panoda yakınlaştırma/çizim jesti YOK** (tam ekran sürümünde var): bölme küçük ve altında bir yazı alanı duruyor; iki parmak jestleri klavye açılıp kapanırken kazara tetikleniyordu. Çizim tam ekran görüntüleyicide, panoya `InkController.replace` ile yansıyor.
+  Doğrulama: analyze temiz, 601/601 test yeşil (+3). **Cihazda doğrulanmadı.**

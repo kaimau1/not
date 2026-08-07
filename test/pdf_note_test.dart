@@ -4,7 +4,9 @@ import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/domain/page_notes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notlar/features/notes/presentation/editor/pdf_note_pane.dart';
+import 'package:notlar/features/notes/presentation/editor/slide_note_pane.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// "PDF ekle not al" not tipi: PDF notun İÇİNE gömülü, ekran iki bölme —
@@ -27,13 +29,24 @@ void main() {
       );
 
   group('not tipi', () {
-    test('pdf kimliği çözülür', () {
+    test('pdf ve slides kimlikleri çözülür', () {
       expect(NoteType.fromId('pdf'), NoteType.pdf);
+      expect(NoteType.fromId('slides'), NoteType.slides);
     });
 
     test('bilinmeyen tip düz metne düşer — eski sürümde not kaybolmaz', () {
-      expect(NoteType.fromId('slides'), NoteType.text);
+      expect(NoteType.fromId('mindmap'), NoteType.text);
       expect(NoteType.fromId(null), NoteType.text);
+    });
+
+    test('belge tipleri sayfa notu tutar, diğerleri tutmaz', () {
+      // İkisi de aynı veri modelini ve aynı iki bölmeli ekranı kullanır;
+      // editör dalı bu bayrağa bakar.
+      expect(NoteType.pdf.isPageNoteType, isTrue);
+      expect(NoteType.slides.isPageNoteType, isTrue);
+      expect(NoteType.text.isPageNoteType, isFalse);
+      expect(NoteType.checklist.isPageNoteType, isFalse);
+      expect(NoteType.ordered.isPageNoteType, isFalse);
     });
   });
 
@@ -333,6 +346,98 @@ void main() {
         ),
       );
       expect(back.onPressed, isNull);
+    });
+  });
+
+  group('SlideNotePane', () {
+    Attachment slide({String id = 'a1'}) => Attachment(
+      id: id,
+      kind: AttachmentKind.slide,
+      fileName: 'sunum.pptx',
+      mimeType:
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    );
+
+    /// Sunum baytları OKUNAMAZ (ek deposu yok): üst bölme "açılamadı" der ama
+    /// not tarafı çalışmalı — PDF sürümündeki kuralın aynısı.
+    Future<void> pump(
+      WidgetTester tester, {
+      required Note Function() noteOf,
+      required Attachment attachment,
+      required void Function(int page, String text) onChanged,
+    }) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            locale: const Locale('tr'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SlideNotePane(
+                noteOf: noteOf,
+                attachment: attachment,
+                onPageNoteChanged: onChanged,
+                onAttachmentChanged: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+    }
+
+    testWidgets('slayt notu PDF ile AYNI veri modelini kullanır', (
+      tester,
+    ) async {
+      final attachment = slide();
+      var note = Note(
+        id: 'n1',
+        type: NoteType.slides,
+        attachments: [attachment],
+        pageNotes: const {'a1#p1': 'birinci slayt', 'a1#p2': 'ikinci slayt'},
+      );
+      await pump(
+        tester,
+        noteOf: () => note,
+        attachment: attachment,
+        onChanged: (page, text) =>
+            note = note.withPageNote(attachment, page, text),
+      );
+
+      expect(find.text('birinci slayt'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.chevron_right));
+      await tester.pump();
+
+      // Alt bölmenin YERİ sabit, İÇERİĞİ slaytla değişir.
+      expect(find.text('ikinci slayt'), findsOneWidget);
+      expect(find.text('birinci slayt'), findsNothing);
+
+      await tester.enterText(find.byType(TextField), 'duzeltildi');
+      await tester.pump();
+      expect(note.pageNote(attachment, 2), 'duzeltildi');
+      expect(note.pageNote(attachment, 1), 'birinci slayt');
+    });
+
+    testWidgets('toplu görünüm slaytlarda da açılır', (tester) async {
+      final attachment = slide();
+      var note = Note(
+        id: 'n1',
+        type: NoteType.slides,
+        attachments: [attachment],
+        pageNotes: const {'a1#p3': 'ucuncu slayt'},
+      );
+      await pump(
+        tester,
+        noteOf: () => note,
+        attachment: attachment,
+        onChanged: (page, text) =>
+            note = note.withPageNote(attachment, page, text),
+      );
+      await tester.tap(find.byIcon(Icons.subject));
+      await tester.pumpAndSettle();
+      expect(find.text('Sayfa 3'), findsOneWidget);
+      expect(find.text('ucuncu slayt'), findsOneWidget);
     });
   });
 }

@@ -262,7 +262,8 @@ class Note {
           buffer.writeln('${i + 1}. ${items[i].text}');
         }
       case NoteType.pdf:
-        // PDF notunun metni SAYFA NOTLARIDIR. Sayfa numarası olmadan
+      case NoteType.slides:
+        // PDF/sunum notunun metni SAYFA NOTLARIDIR. Sayfa numarası olmadan
         // gönderilirse paylaşılan metin de AI bağlamı da hangi notun hangi
         // sayfaya ait olduğunu kaybeder; başlık işareti dile bağlı olmayan
         // `#3` biçiminde (ekranda görünen "Sayfa 3" başlığı l10n'den gelir).
@@ -320,7 +321,7 @@ class Note {
       // BURADA da durur, çünkü "geliştir/çevir" sonucu sayfalara geri
       // dağıtılabilmeli — başlıksız dönen metinde hangi paragrafın hangi
       // sayfaya ait olduğu kaybolurdu.
-      NoteType.pdf => [
+      NoteType.pdf || NoteType.slides => [
         if (body.trim().isNotEmpty) body.trim(),
         pageNotesText().trim(),
       ].where((s) => s.isNotEmpty).join('\n'),

@@ -1292,6 +1292,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pdfChooseDocument => 'PDF seç';
 
   @override
+  String get newSlidesNote => 'Sunum ekle not al';
+
+  @override
+  String get slidesNoDocument => 'Bu notta henüz sunum yok';
+
+  @override
+  String get slidesChooseDocument => 'Sunum seç';
+
+  @override
   String get pdfAllPageNotes => 'Tüm sayfa notları';
 
   @override

@@ -2484,6 +2484,24 @@ abstract class AppLocalizations {
   /// **'PDF seç'**
   String get pdfChooseDocument;
 
+  /// No description provided for @newSlidesNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum ekle not al'**
+  String get newSlidesNote;
+
+  /// No description provided for @slidesNoDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta henüz sunum yok'**
+  String get slidesNoDocument;
+
+  /// No description provided for @slidesChooseDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum seç'**
+  String get slidesChooseDocument;
+
   /// No description provided for @pdfAllPageNotes.
   ///
   /// In tr, this message translates to:

@@ -651,6 +651,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _openNew(id, query: '?pdf=1');
   }
 
+  /// "Sunum ekle not al": PDF yolunun slayt eşi.
+  Future<void> _createSlidesNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.slides);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    await _openNew(id, query: '?slides=1');
+  }
+
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
   /// oluşturulur — iptal edilirse ortada boş not kalmaz.
   Future<void> _createQrNote() async {
@@ -1282,6 +1292,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onPhotoNote: _createPhotoNote,
                           onScanNote: _createScanNote,
                           onPdfNote: _createPdfNote,
+                          onSlidesNote: _createSlidesNote,
                           onQrNote: _createQrNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,

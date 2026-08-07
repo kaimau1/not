@@ -1287,6 +1287,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfChooseDocument => 'Choose PDF';
 
   @override
+  String get newSlidesNote => 'Add slides, take notes';
+
+  @override
+  String get slidesNoDocument => 'This note has no presentation yet';
+
+  @override
+  String get slidesChooseDocument => 'Choose presentation';
+
+  @override
   String get pdfAllPageNotes => 'All page notes';
 
   @override

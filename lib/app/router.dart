@@ -95,6 +95,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
               // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
               startPdf: state.uri.queryParameters['pdf'] == '1',
+              // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
+              startSlides: state.uri.queryParameters['slides'] == '1',
             ),
           ),
         ],

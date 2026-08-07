@@ -72,6 +72,7 @@ import 'items_editor.dart';
 import 'note_images.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
+import 'slide_note_pane.dart';
 import '../viewers/image_crop.dart';
 import 'text_wrap.dart';
 
@@ -212,6 +213,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startPhoto = false,
     this.startScan = false,
     this.startPdf = false,
+    this.startSlides = false,
   });
 
   final String noteId;
@@ -239,6 +241,9 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// PDF notun içine gömülür ve iki bölmeli sayfa-notu ekranı kurulur. Seçim
   /// iptal edilirse boş not çıkışta kendiliğinden silinir.
   final bool startPdf;
+
+  /// (+) menüsündeki "Sunum ekle not al": PDF yolunun slayt eşi.
+  final bool startSlides;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -321,6 +326,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingPhoto = false;
   bool _pendingScan = false;
   bool _pendingPdf = false;
+  bool _pendingSlides = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -347,6 +353,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingPdf) {
       _pendingPdf = false;
       _pickPdf();
+    }
+    if (_pendingSlides) {
+      _pendingSlides = false;
+      _pickSlide();
     }
   }
 
@@ -670,6 +680,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingPhoto = widget.startPhoto;
     _pendingScan = widget.startScan;
     _pendingPdf = widget.startPdf;
+    _pendingSlides = widget.startSlides;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
@@ -3133,22 +3144,25 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // ---- Arayüz ---------------------------------------------------------
 
-  /// PDF notunun gövdesi: başlık + iki bölmeli sayfa/not ekranı.
+  /// Belge notunun (PDF / sunum) gövdesi: başlık + iki bölmeli sayfa/not
+  /// ekranı.
   ///
   /// Belge notun İÇİNDE yaşar (görseller gibi), sayfa geçişi notun içinde
-  /// yapılır — ek şeridine gidip tam ekran açmak gerekmez. Not tipi PDF olup
+  /// yapılır — ek şeridine gidip tam ekran açmak gerekmez. Not tipi belge olup
   /// da belgesi olmayan tek durum, dosya seçicinin iptal edilmesidir; o zaman
-  /// da ekran kilitlenmez, "PDF seç" düğmesi durur (not zaten boşsa çıkışta
+  /// da ekran kilitlenmez, "seç" düğmesi durur (not zaten boşsa çıkışta
   /// kendiliğinden silinir).
-  Widget _pdfBody(
+  Widget _pageNoteBody(
     Note note,
     Widget header,
     RichTextTheme richTheme,
     TextStyle textStyle,
   ) {
+    final isSlides = note.type == NoteType.slides;
+    final wanted = isSlides ? AttachmentKind.slide : AttachmentKind.pdf;
     Attachment? document;
     for (final a in note.attachments) {
-      if (a.kind == AttachmentKind.pdf) {
+      if (a.kind == wanted) {
         document = a;
         break;
       }
@@ -3164,16 +3178,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.picture_as_pdf_outlined,
+                    isSlides
+                        ? Icons.slideshow_outlined
+                        : Icons.picture_as_pdf_outlined,
                     size: 40,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(height: 12),
-                  Text(context.l10n.pdfNoDocument),
+                  Text(
+                    isSlides
+                        ? context.l10n.slidesNoDocument
+                        : context.l10n.pdfNoDocument,
+                  ),
                   const SizedBox(height: 12),
                   FilledButton.tonal(
-                    onPressed: _pickPdf,
-                    child: Text(context.l10n.pdfChooseDocument),
+                    onPressed: isSlides ? _pickSlide : _pickPdf,
+                    child: Text(
+                      isSlides
+                          ? context.l10n.slidesChooseDocument
+                          : context.l10n.pdfChooseDocument,
+                    ),
                   ),
                 ],
               ),
@@ -3182,32 +3206,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ],
       );
     }
-    final pdf = document;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        header,
-        Expanded(
-          // Anahtar EK KİMLİĞİ: belge değiştirilirse pano durumu (sayfa
-          // numarası, alandaki metin) sıfırdan kurulmalı, yoksa eski belgenin
-          // 7. sayfasının notu yeni belgenin 7. sayfasına yazılırdı.
-          child: PdfNotePane(
-            key: ValueKey('pdf-pane-${pdf.id}'),
-            // Anlık görüntü değil canlı okuyucu: sayfa notuna yazmak "saf
-            // yazım" sayıldığı için ekran geneli setState atlanır ve buraya
-            // geçirilen bir `Note` bayat kalırdı (bkz. PdfNotePane.noteOf).
+    final doc = document;
+    // Anahtar EK KİMLİĞİ: belge değiştirilirse pano durumu (sayfa numarası,
+    // alandaki metin) sıfırdan kurulmalı, yoksa eski belgenin 7. sayfasının
+    // notu yeni belgenin 7. sayfasına yazılırdı.
+    //
+    // `noteOf`: anlık görüntü değil CANLI okuyucu — sayfa notuna yazmak "saf
+    // yazım" sayıldığı için ekran geneli setState atlanır ve buraya geçirilen
+    // bir `Note` bayat kalırdı (bkz. PageNotePane.noteOf).
+    final pane = isSlides
+        ? SlideNotePane(
+            key: ValueKey('slide-pane-${doc.id}'),
             noteOf: () => _note ?? note,
-            attachment: pdf,
+            attachment: doc,
             textStyle: textStyle,
             richTheme: richTheme,
             onPageNoteChanged: (page, text) =>
-                _mutate((n) => n.withPageNote(pdf, page, text)),
+                _mutate((n) => n.withPageNote(doc, page, text)),
             onAttachmentChanged: _updateAttachment,
             onFieldFocused: _setFormatTarget,
             onFieldDisposed: _clearFormatTargetFor,
-          ),
-        ),
-      ],
+          )
+        : PdfNotePane(
+            key: ValueKey('pdf-pane-${doc.id}'),
+            noteOf: () => _note ?? note,
+            attachment: doc,
+            textStyle: textStyle,
+            richTheme: richTheme,
+            onPageNoteChanged: (page, text) =>
+                _mutate((n) => n.withPageNote(doc, page, text)),
+            onAttachmentChanged: _updateAttachment,
+            onFieldFocused: _setFormatTarget,
+            onFieldDisposed: _clearFormatTargetFor,
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [header, Expanded(child: pane)],
     );
   }
 
@@ -3591,8 +3625,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // görseller (el yazısı çizimleri dahil) tüm sayfanın üzerinde serbest
     // katmanda yüzer, metnin sağına/soluna sürüklenir ve metin etrafından akar.
     final Widget pageContent;
-    if (note.type == NoteType.pdf) {
-      // PDF notunda sayfa tuvali (yüzen görseller + metin sarma) YOK: gövde
+    if (note.type.isPageNoteType) {
+      // Belge notunda sayfa tuvali (yüzen görseller + metin sarma) YOK: gövde
       // iki sabit bölmeye ayrılır, bu yüzden `body` aşağıda ayrı kurulur ve
       // buradaki tuval içeriği kullanılmaz.
       pageContent = const SizedBox.shrink();
@@ -3677,8 +3711,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _listBodyOpen;
     // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
     //
-    final body = note.type == NoteType.pdf
-        ? _pdfBody(note, keyedHeader, richTheme, noteBodyStyle)
+    final body = note.type.isPageNoteType
+        ? _pageNoteBody(note, keyedHeader, richTheme, noteBodyStyle)
         : LayoutBuilder(
             builder: (context, constraints) => SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 96),

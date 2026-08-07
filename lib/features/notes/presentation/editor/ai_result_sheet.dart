@@ -81,7 +81,7 @@ class _AiResultSheetState extends State<_AiResultSheet> {
       // PDF notu bu levhada bir BİÇİM seçeneği değil (aşağıdaki seçici yalnız
       // üç liste biçimini sunar); yine de switch tam olsun diye metin biçimine
       // eşitlenir — buraya düşülse bile satırlar olduğu gibi kalır.
-      NoteType.pdf => lines.join('\n'),
+      NoteType.pdf || NoteType.slides => lines.join('\n'),
     };
     setState(() {
       _format = type;

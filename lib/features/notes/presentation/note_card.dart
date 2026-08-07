@@ -740,6 +740,7 @@ class _NotePreview extends StatelessWidget {
           ],
         );
       case NoteType.pdf:
+      case NoteType.slides:
         // Kartta belgenin kendisi değil, KULLANICININ YAZDIĞI görünür: sayfa
         // notları sayfa numarasıyla, sırayla. (Belge zaten alttaki ek
         // önizlemesinde PDF rozetiyle duruyor.)
@@ -943,6 +944,7 @@ class NoteListRow extends ConsumerWidget {
       NoteType.checklist => Icons.checklist,
       NoteType.ordered => Icons.format_list_numbered,
       NoteType.pdf => Icons.picture_as_pdf_outlined,
+      NoteType.slides => Icons.slideshow_outlined,
       NoteType.text => Icons.notes,
     };
   }
