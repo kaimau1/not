@@ -2137,4 +2137,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareAsNotePreparing => 'Preparing note package…';
+
+  @override
+  String get bubbleStar => 'Star';
+
+  @override
+  String get bubbleEdit => 'Edit bubble';
+
+  @override
+  String get bubbleStarredOnly => 'Starred only';
+
+  @override
+  String get bubbleSearchHint => 'Search bubbles…';
+
+  @override
+  String get bubblesOverviewTitle => 'Bubbles';
+
+  @override
+  String get bubblesEmpty =>
+      'No bubbles yet. Select text in the document and highlight it, or drop a bubble on the page.';
+
+  @override
+  String get bubblesNoMatch => 'No bubble matches your search.';
+
+  @override
+  String get bubbleNoText => '(empty bubble)';
+
+  @override
+  String get pdfHighlight => 'Highlight';
+
+  @override
+  String get pdfHighlightWithNote => 'Highlight + note';
+
+  @override
+  String get pageNotesShow => 'Show page note';
+
+  @override
+  String get pageNotesHide => 'Hide page note';
+
+  @override
+  String get bubbleSave => 'Save';
 }

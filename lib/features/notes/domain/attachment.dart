@@ -83,6 +83,8 @@ class PageBubble {
     this.text = '',
     this.color = 0xFFFFC107,
     this.collapsed = false,
+    this.starred = false,
+    this.rects = const [],
   });
 
   /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
@@ -106,6 +108,27 @@ class PageBubble {
   /// Kapalıysa yalnız küçük tutamaç görünür; dokununca açılır.
   final bool collapsed;
 
+  /// Yıldızlı balon: toplu listede en üste çıkar ve süzülebilir. "Bunu
+  /// unutma" demenin en ucuz yolu — renk konu ayırır, yıldız ÖNEM ayırır.
+  final bool starred;
+
+  /// Balonun bağlı olduğu METNİN sayfa üzerindeki dikdörtgenleri (vurgu).
+  /// Boş = serbest balon (sayfanın boş bir yerine bırakılmış).
+  ///
+  /// Vurgu ile balon AYRI iki şey DEĞİL (kullanıcı isteği: "balonu vurguyla
+  /// birleştirme olmalı, vurguya tıklayınca balon açılmalı"): metin seçilip
+  /// vurgulandığında bir balon oluşur, dikdörtgenleri burada durur ve balonun
+  /// rengiyle boyanır. Vurguya dokunmak o balonu açar. Tek veri modeli olduğu
+  /// için toplu liste, arama, senkron ve paylaşım da tek yoldan çalışır.
+  ///
+  /// Koordinatlar sayfa boyutunun ORANI (0–1), sol-üst köşe orijinli — çizim
+  /// ([InkStroke]) ile aynı uzay, yani yakınlaştırma ve cihaz değişse de vurgu
+  /// metnin üstünde kalır.
+  final List<PageBubbleRect> rects;
+
+  /// Bu balon bir METİN vurgusu mu (yoksa serbest balon mu)?
+  bool get isHighlight => rects.isNotEmpty;
+
   PageBubble copyWith({
     int? page,
     double? x,
@@ -113,6 +136,8 @@ class PageBubble {
     String? text,
     int? color,
     bool? collapsed,
+    bool? starred,
+    List<PageBubbleRect>? rects,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
@@ -121,6 +146,8 @@ class PageBubble {
     text: text ?? this.text,
     color: color ?? this.color,
     collapsed: collapsed ?? this.collapsed,
+    starred: starred ?? this.starred,
+    rects: rects ?? this.rects,
   );
 
   factory PageBubble.fromMap(Map<String, dynamic> map) => PageBubble(
@@ -131,6 +158,11 @@ class PageBubble {
     text: map['t'] as String? ?? '',
     color: (map['c'] as num?)?.toInt() ?? 0xFFFFC107,
     collapsed: map['k'] as bool? ?? false,
+    starred: map['s'] as bool? ?? false,
+    rects: [
+      for (final e in (map['r'] as List?) ?? const [])
+        PageBubbleRect.fromList((e as List).cast<num>()),
+    ],
   );
 
   Map<String, dynamic> toMap() => {
@@ -142,7 +174,35 @@ class PageBubble {
     'c': color,
     // Yalnız true iken yazılır: eski ekin şemasına gereksiz alan eklemez.
     if (collapsed) 'k': true,
+    if (starred) 's': true,
+    if (rects.isNotEmpty) 'r': [for (final r in rects) r.toList()],
   };
+}
+
+/// Vurgunun tek bir SATIRINI kaplayan dikdörtgen; sayfa oranı (0–1),
+/// sol-üst köşe orijinli.
+///
+/// Neden `Rect` değil kendi tipimiz: bu kayıt Firestore'a gidiyor ve dört
+/// sayılık düz DİZİ olarak yazılıyor (`[l, t, r, b]`) — sayfa başına onlarca
+/// satır olabildiği için alan adlı harita gereksiz yere büyütürdü.
+class PageBubbleRect {
+  const PageBubbleRect(this.left, this.top, this.right, this.bottom);
+
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  factory PageBubbleRect.fromList(List<num> v) => v.length < 4
+      ? const PageBubbleRect(0, 0, 0, 0)
+      : PageBubbleRect(
+          v[0].toDouble(),
+          v[1].toDouble(),
+          v[2].toDouble(),
+          v[3].toDouble(),
+        );
+
+  List<double> toList() => [left, top, right, bottom];
 }
 
 /// Görsel kırpılınca üstündeki çizimleri YENİ çerçeveye taşır.

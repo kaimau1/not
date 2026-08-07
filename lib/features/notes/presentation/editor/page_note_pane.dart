@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -62,7 +63,15 @@ class PageNotePane extends StatefulWidget {
     this.richTheme,
     this.onFieldFocused,
     this.onFieldDisposed,
+    this.suppressNotes,
   });
+
+  /// true olduğunda alt not alanı GEÇİCİ olarak gizlenir — kullanıcı bir
+  /// balonun içine yazarken. Kök neden (2026-08-08 bulgusu: "balona not
+  /// yazarken klavye, sayfa hepsi kayıyor"): klavye açılınca ekranın altı
+  /// yarıya iner, iki bölme + klavye aynı anda sığmaz ve balon kartı bölmenin
+  /// dışında kalır. Balon yazarken belge tam alanı kullanır.
+  final ValueListenable<bool>? suppressNotes;
 
   /// Notun O ANKİ hâlini veren okuyucu.
   ///
@@ -105,6 +114,10 @@ class PageNotePane extends StatefulWidget {
   State<PageNotePane> createState() => _PageNotePaneState();
 }
 
+/// [PageNotePane.suppressNotes] verilmediğinde kullanılan sabit "hiç
+/// bastırma" kaynağı — builder'ın null denetimiyle dolmaması için.
+final ValueNotifier<bool> _neverSuppressed = ValueNotifier<bool>(false);
+
 class _PageNotePaneState extends State<PageNotePane> {
   /// Sayfa notu alanı, gövde/madde alanlarıyla AYNI denetleyiciyi kullanır:
   /// satır içi biçimlendirme (kalın, renk, boyut) burada da çalışsın diye.
@@ -115,6 +128,13 @@ class _PageNotePaneState extends State<PageNotePane> {
   /// Görünen sayfa (1 tabanlı) ve belgenin sayfa sayısı (0 = henüz açılmadı).
   int _page = 1;
   int _pageCount = 0;
+
+  /// Alt NOT alanı açık mı? **Varsayılan KAPALI** (kullanıcı kararı
+  /// 2026-08-08: "alttaki not sayfası alanı gizli başlasın ve göster gizlesi
+  /// olsun"). Artık asıl çalışma aracı sayfanın üzerindeki balonlar; sayfa
+  /// notu alanı ekranın yarısını kaplamak yerine istendiğinde açılıyor.
+  /// Ekranda tutulur, kayda yazılmaz — o anki okuma tercihidir.
+  bool _notesOpen = false;
 
   /// Üst bölmenin yükseklik payı (0–1). Ekranda tutulur, kayda YAZILMAZ —
   /// notun içeriği değil, o anki okuma tercihidir.
@@ -291,27 +311,35 @@ class _PageNotePaneState extends State<PageNotePane> {
       onPageChanged: _setPage,
       onPageCount: _onPageCount,
     );
-    return LayoutBuilder(
+    // Balon yazılırken not alanı zorla kapanır; kullanıcının açtığı alan
+    // kaybolmasın diye kip bitince eski hâline döner (bkz. suppressNotes).
+    return ValueListenableBuilder<bool>(
+      valueListenable: widget.suppressNotes ?? _neverSuppressed,
+      builder: (context, suppressed, _) {
+        final notesOpen = _notesOpen && !suppressed;
+        return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.maxHeight;
         return Column(
           children: [
             Expanded(
-              flex: (_split * 1000).round(),
+              flex: notesOpen ? (_split * 1000).round() : 1000,
               child: widget.viewerBuilder(context, host),
             ),
-            _SplitHandle(
-              onDrag: (dy) {
-                if (height <= 0) return;
-                setState(
-                  () => _split = (_split + dy / height).clamp(
-                    _minSplit,
-                    _maxSplit,
-                  ),
-                );
-              },
-            ),
-            _pageBar(context, l10n),
+            if (notesOpen)
+              _SplitHandle(
+                onDrag: (dy) {
+                  if (height <= 0) return;
+                  setState(
+                    () => _split = (_split + dy / height).clamp(
+                      _minSplit,
+                      _maxSplit,
+                    ),
+                  );
+                },
+              ),
+            _pageBar(context, l10n, notesOpen),
+            if (notesOpen)
             Expanded(
               flex: ((1 - _split) * 1000).round(),
               child: Padding(
@@ -348,10 +376,23 @@ class _PageNotePaneState extends State<PageNotePane> {
           ],
         );
       },
+        );
+      },
     );
   }
 
-  Widget _pageBar(BuildContext context, AppLocalizations l10n) {
+  /// Alt not alanını açıp kapatır. Kapatırken alandaki son hâl kesinleşir ve
+  /// klavye düşer: gizlenen bir alanın odakta kalması klavyeyi ayakta tutar.
+  void _toggleNotes() {
+    if (_notesOpen) {
+      if (_controller.hasPendingFormat) _controller.flushPendingFormat();
+      _commit();
+      _focus.unfocus();
+    }
+    setState(() => _notesOpen = !_notesOpen);
+  }
+
+  Widget _pageBar(BuildContext context, AppLocalizations l10n, bool notesOpen) {
     final scheme = Theme.of(context).colorScheme;
     final label = _pageCount > 0
         ? l10n.pdfPageOf(_page, _pageCount)
@@ -385,6 +426,15 @@ class _PageNotePaneState extends State<PageNotePane> {
                 ? () => _goTo(_page + 1)
                 : null,
             icon: const Icon(Icons.chevron_right),
+          ),
+          IconButton(
+            tooltip: notesOpen ? l10n.pageNotesHide : l10n.pageNotesShow,
+            visualDensity: VisualDensity.compact,
+            isSelected: notesOpen,
+            onPressed: _toggleNotes,
+            icon: Icon(
+              notesOpen ? Icons.edit_note : Icons.edit_note_outlined,
+            ),
           ),
           IconButton(
             tooltip: l10n.pdfAllPageNotes,

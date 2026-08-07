@@ -982,5 +982,18 @@
   "ttsVoice": "Yapay zekâ sesi",
   "shareAsNote": "Not olarak paylaş",
   "shareAsNoteInfo": "Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.",
-  "shareAsNotePreparing": "Not paketi hazırlanıyor…"
+  "shareAsNotePreparing": "Not paketi hazırlanıyor…",
+  "bubbleStar": "Yıldızla",
+  "bubbleEdit": "Balonu düzenle",
+  "bubbleStarredOnly": "Yalnız yıldızlılar",
+  "bubbleSearchHint": "Balonlarda ara…",
+  "bubblesOverviewTitle": "Balonlar",
+  "bubblesEmpty": "Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.",
+  "bubblesNoMatch": "Aramaya uyan balon yok.",
+  "bubbleNoText": "(boş balon)",
+  "pdfHighlight": "Vurgula",
+  "pdfHighlightWithNote": "Vurgula + not",
+  "pageNotesShow": "Sayfa notunu göster",
+  "pageNotesHide": "Sayfa notunu gizle",
+  "bubbleSave": "Kaydet"
 }

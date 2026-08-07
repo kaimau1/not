@@ -4043,6 +4043,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not paketi hazırlanıyor…'**
   String get shareAsNotePreparing;
+
+  /// No description provided for @bubbleStar.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıldızla'**
+  String get bubbleStar;
+
+  /// No description provided for @bubbleEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonu düzenle'**
+  String get bubbleEdit;
+
+  /// No description provided for @bubbleStarredOnly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız yıldızlılar'**
+  String get bubbleStarredOnly;
+
+  /// No description provided for @bubbleSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlarda ara…'**
+  String get bubbleSearchHint;
+
+  /// No description provided for @bubblesOverviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlar'**
+  String get bubblesOverviewTitle;
+
+  /// No description provided for @bubblesEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.'**
+  String get bubblesEmpty;
+
+  /// No description provided for @bubblesNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramaya uyan balon yok.'**
+  String get bubblesNoMatch;
+
+  /// No description provided for @bubbleNoText.
+  ///
+  /// In tr, this message translates to:
+  /// **'(boş balon)'**
+  String get bubbleNoText;
+
+  /// No description provided for @pdfHighlight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vurgula'**
+  String get pdfHighlight;
+
+  /// No description provided for @pdfHighlightWithNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vurgula + not'**
+  String get pdfHighlightWithNote;
+
+  /// No description provided for @pageNotesShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa notunu göster'**
+  String get pageNotesShow;
+
+  /// No description provided for @pageNotesHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa notunu gizle'**
+  String get pageNotesHide;
+
+  /// No description provided for @bubbleSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get bubbleSave;
 }
 
 class _AppLocalizationsDelegate

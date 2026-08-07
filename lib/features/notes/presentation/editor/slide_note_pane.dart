@@ -11,6 +11,7 @@ import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/slide_canvas.dart';
 import '../viewers/slide_viewer_screen.dart';
+import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
 
@@ -70,12 +71,17 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
         widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
   );
 
+  /// Balon yazılırken alt not alanı gizlenir (PDF panosuyla aynı gerekçe:
+  /// iki bölme + klavye sığmıyor).
+  final _bubbleEditing = ValueNotifier<bool>(false);
+
   List<SlideVM>? _slides;
   Object? _error;
 
   @override
   void initState() {
     super.initState();
+    _bubbles.onEditingChanged = (editing) => _bubbleEditing.value = editing;
     _load();
   }
 
@@ -116,6 +122,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   void dispose() {
     _ink.dispose();
     _bubbles.dispose();
+    _bubbleEditing.dispose();
     super.dispose();
   }
 
@@ -138,6 +145,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
+    suppressNotes: _bubbleEditing,
     viewerBuilder: (context, host) => _SlidePaneViewer(
       slides: _slides,
       error: _error,
@@ -234,6 +242,11 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
       color: Colors.black,
       child: PageView.builder(
         controller: _pages,
+        // Balon taşınırken slayt geçişi KİLİTLİ: parmak balonu sürüklerken
+        // sayfanın da kayması taşımayı imkânsız kılıyordu.
+        physics: widget.bubbles.dragging != null
+            ? const NeverScrollableScrollPhysics()
+            : null,
         itemCount: slides.length,
         onPageChanged: (i) => widget.host.onPageChanged(i + 1),
         itemBuilder: (context, i) => Padding(
@@ -267,40 +280,75 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     );
   }
 
-  /// Görüntüleyicinin üstüne "balon bırak" düğmesi (PDF panosuyla aynı).
+  Future<void> _openBubbles() async {
+    final target = await showBubblesOverview(context, widget.bubbles);
+    if (target == null || !mounted) return;
+    widget.host.onPageChanged(target.page);
+    if (_pages.hasClients) _pages.jumpToPage(target.page - 1);
+    widget.bubbles.openOnly(target.id);
+  }
+
+  /// Görüntüleyicinin üstüne "balon bırak" ve "balon listesi" düğmeleri
+  /// (PDF panosuyla aynı).
   Widget _withBubbleButton(Widget viewer) => Stack(
     children: [
       Positioned.fill(child: viewer),
       Positioned(
         top: 4,
         right: 4,
-        child: AnimatedBuilder(
-          animation: widget.bubbles,
-          builder: (context, _) {
-            final adding = widget.bubbles.adding;
-            final scheme = Theme.of(context).colorScheme;
-            return Material(
-              color: adding
-                  ? scheme.primary
-                  : scheme.surface.withValues(alpha: 0.85),
-              shape: const CircleBorder(),
-              elevation: 2,
-              child: IconButton(
-                tooltip: adding
-                    ? context.l10n.bubbleAddDone
-                    : context.l10n.bubbleAdd,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => widget.bubbles.setAdding(!adding),
-                icon: Icon(
-                  adding ? Icons.chat_bubble : Icons.add_comment_outlined,
-                  size: 18,
-                  color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+        child: Column(
+          children: [
+            _addButton(),
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Material(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.85),
+                shape: const CircleBorder(),
+                elevation: 2,
+                child: IconButton(
+                  tooltip: context.l10n.bubblesOverviewTitle,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _openBubbles,
+                  icon: Icon(
+                    Icons.forum_outlined,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     ],
   );
+
+  Widget _addButton() => AnimatedBuilder(
+        animation: widget.bubbles,
+        builder: (context, _) {
+          final adding = widget.bubbles.adding;
+          final scheme = Theme.of(context).colorScheme;
+          return Material(
+            color: adding
+                ? scheme.primary
+                : scheme.surface.withValues(alpha: 0.85),
+            shape: const CircleBorder(),
+            elevation: 2,
+            child: IconButton(
+              tooltip: adding
+                  ? context.l10n.bubbleAddDone
+                  : context.l10n.bubbleAdd,
+              visualDensity: VisualDensity.compact,
+              onPressed: () => widget.bubbles.setAdding(!adding),
+              icon: Icon(
+                adding ? Icons.chat_bubble : Icons.add_comment_outlined,
+                size: 18,
+                color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        },
+      );
 }

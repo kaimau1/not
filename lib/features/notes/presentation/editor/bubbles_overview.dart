@@ -1,0 +1,230 @@
+import 'package:flutter/material.dart';
+
+import '../../../../core/l10n_ext.dart';
+import '../../domain/attachment.dart';
+import '../viewers/bubble_layer.dart';
+
+/// Belgedeki BÜTÜN not balonlarının tek listesi: arama, yıldız süzgeci,
+/// "balona git", düzenleme ve silme.
+///
+/// Neden ayrı bir ekran: balonlar sayfaya dağılmış durumda ve asıl çalışma
+/// aracı onlar. Dört sayfada bıraktığın altı notu görmek için sayfa sayfa
+/// dolaşmak gerekiyordu; burada hepsi bir arada, hangi sayfada oldukları
+/// yazıyor ve dokununca o sayfaya gidilip balon açılıyor.
+///
+/// Dönen değer: gidilecek balon (null = kullanıcı yalnız baktı/düzenledi).
+/// Düzenleme ve silme ANINDA [BubbleController] üzerinden uygulanır — liste
+/// denetleyiciyi dinlediği için ekran kendiliğinden tazelenir.
+Future<PageBubble?> showBubblesOverview(
+  BuildContext context,
+  BubbleController controller,
+) => Navigator.of(context).push<PageBubble>(
+  MaterialPageRoute<PageBubble>(
+    builder: (_) => _BubblesOverviewScreen(controller: controller),
+  ),
+);
+
+class _BubblesOverviewScreen extends StatefulWidget {
+  const _BubblesOverviewScreen({required this.controller});
+
+  final BubbleController controller;
+
+  @override
+  State<_BubblesOverviewScreen> createState() => _BubblesOverviewScreenState();
+}
+
+class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
+  final _search = TextEditingController();
+  bool _onlyStarred = false;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Süzülmüş ve sıralanmış liste. Sıra: önce YILDIZLILAR (önem), sonra sayfa
+  /// numarası, sonra sayfa içindeki dikey konum — yani belgeyi okurken
+  /// karşılaşacağın sıra.
+  List<PageBubble> _visible() {
+    final query = _search.text.trim().toLowerCase();
+    final out = [
+      for (final b in widget.controller.bubbles)
+        if (!_onlyStarred || b.starred)
+          if (query.isEmpty || b.text.toLowerCase().contains(query)) b,
+    ];
+    out.sort((a, b) {
+      if (a.starred != b.starred) return a.starred ? -1 : 1;
+      if (a.page != b.page) return a.page.compareTo(b.page);
+      return a.y.compareTo(b.y);
+    });
+    return out;
+  }
+
+  Future<void> _edit(PageBubble bubble) async {
+    final controller = TextEditingController(text: bubble.text);
+    final saved = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.bubbleEdit),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLines: null,
+          decoration: InputDecoration(hintText: context.l10n.bubbleHint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: Text(context.l10n.bubbleSave),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (saved == null) return;
+    widget.controller
+      ..update(bubble.copyWith(text: saved))
+      ..save();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.bubblesOverviewTitle),
+        actions: [
+          IconButton(
+            tooltip: l10n.bubbleStarredOnly,
+            isSelected: _onlyStarred,
+            icon: Icon(_onlyStarred ? Icons.star : Icons.star_border),
+            onPressed: () => setState(() => _onlyStarred = !_onlyStarred),
+          ),
+        ],
+      ),
+      body: AnimatedBuilder(
+        animation: widget.controller,
+        builder: (context, _) {
+          final items = _visible();
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                child: TextField(
+                  controller: _search,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.search),
+                    hintText: l10n.bubbleSearchHint,
+                    isDense: true,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: _search.text.isEmpty
+                        ? null
+                        : IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _search.clear();
+                              setState(() {});
+                            },
+                          ),
+                  ),
+                ),
+              ),
+              if (items.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        widget.controller.bubbles.isEmpty
+                            ? l10n.bubblesEmpty
+                            : l10n.bubblesNoMatch,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: scheme.onSurfaceVariant),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final bubble = items[index];
+                      final text = bubble.text.trim();
+                      return ListTile(
+                        // "Balona git": ekran kapanır, çağıran o sayfaya gidip
+                        // balonu açar (bkz. showBubblesOverview dönüş değeri).
+                        onTap: () => Navigator.pop(context, bubble),
+                        leading: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: Color(bubble.color),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            bubble.isHighlight
+                                ? Icons.format_color_text
+                                : Icons.chat_bubble_outline,
+                            size: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        title: Text(
+                          text.isEmpty ? l10n.bubbleNoText : text,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontStyle: text.isEmpty ? FontStyle.italic : null,
+                            color: text.isEmpty ? scheme.onSurfaceVariant : null,
+                          ),
+                        ),
+                        subtitle: Text(l10n.pdfPage(bubble.page)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: l10n.bubbleStar,
+                              visualDensity: VisualDensity.compact,
+                              icon: Icon(
+                                bubble.starred ? Icons.star : Icons.star_border,
+                                color: bubble.starred ? Colors.amber : null,
+                              ),
+                              onPressed: () =>
+                                  widget.controller.toggleStar(bubble.id),
+                            ),
+                            IconButton(
+                              tooltip: l10n.bubbleEdit,
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => _edit(bubble),
+                            ),
+                            IconButton(
+                              tooltip: l10n.delete,
+                              visualDensity: VisualDensity.compact,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () =>
+                                  widget.controller.remove(bubble.id),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 
 import 'package:pdfrx/pdfrx.dart';
 
+import '../../domain/attachment.dart';
+
 /// PDF sayfasındaki seçim/vurgu GEOMETRİSİ (dosya-okuyucu projesindeki
 /// `selection_rects.dart`ten alındı — iki uygulamada seçim aynı görünmeli).
 ///
@@ -68,4 +70,29 @@ List<PdfRect> mergeSameLineRects(List<PdfRect> rects) {
     if (!merged) out.add(r);
   }
   return out;
+}
+
+/// Seçim dikdörtgenlerini **sayfa oranına** (0–1, sol-üst köşe orijinli)
+/// çevirir — vurgu balonunun sakladığı uzay ([PageBubbleRect]).
+///
+/// Neden çeviri gerekiyor: pdfium PDF PUNTOSU ve sol-ALT orijin kullanır
+/// (`top > bottom`), çizim/balon katmanı ise ekranla aynı yönde (sol-üst,
+/// y aşağı) oranlı koordinat kullanır. Ham `PdfRect` saklansaydı vurgu, sayfa
+/// boyutu farklı bir belgede ya da sayfa döndürüldüğünde bambaşka bir yere
+/// düşerdi. Saf fonksiyon → birim testli.
+List<PageBubbleRect> normalizedPageRects(
+  List<PdfRect> rects, {
+  required double pageWidth,
+  required double pageHeight,
+}) {
+  if (pageWidth <= 0 || pageHeight <= 0) return const [];
+  return [
+    for (final r in rects)
+      PageBubbleRect(
+        (r.left / pageWidth).clamp(0.0, 1.0),
+        (1 - r.top / pageHeight).clamp(0.0, 1.0),
+        (r.right / pageWidth).clamp(0.0, 1.0),
+        (1 - r.bottom / pageHeight).clamp(0.0, 1.0),
+      ),
+  ];
 }
