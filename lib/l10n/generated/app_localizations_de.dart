@@ -1937,4 +1937,26 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Anmeldung ohne Google ist derzeit deaktiviert: In der Firebase-Konsole ist die anonyme Anmeldung nicht aktiviert. Melde dich mit Google an oder versuche es erneut, sobald ein Administrator sie aktiviert.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google-Anmeldung ist derzeit deaktiviert: Der Google-Anbieter ist in der Firebase-Konsole nicht aktiviert.';
+
+  @override
+  String get signInNetworkError =>
+      'Kein Internet erreichbar. Prüfe deine Verbindung und versuche es erneut.';
+
+  @override
+  String get signInCanceled => 'Anmeldung abgebrochen.';
+
+  @override
+  String get cardRichPreview => 'Formatierter Text auf Karten';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Farben, Hervorhebungen, Fett und Unterstreichungen deiner Notizen erscheinen auch auf den Karten der Startseite. Aus: Karten zeigen einfachen Text.';
 }

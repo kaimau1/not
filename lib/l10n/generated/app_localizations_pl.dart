@@ -1932,4 +1932,26 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Logowanie bez Google jest wyłączone: logowanie anonimowe nie jest włączone w konsoli Firebase. Zaloguj się przez Google lub spróbuj ponownie, gdy administrator je włączy.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Logowanie Google jest wyłączone: dostawca Google nie jest włączony w konsoli Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.';
+
+  @override
+  String get signInCanceled => 'Logowanie anulowane.';
+
+  @override
+  String get cardRichPreview => 'Sformatowany tekst na kartach';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Kolory, wyróżnienia, pogrubienia i podkreślenia z notatek widać też na kartach ekranu głównego. Po wyłączeniu karty pokazują zwykły tekst.';
 }

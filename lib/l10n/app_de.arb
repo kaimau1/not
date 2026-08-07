@@ -538,5 +538,11 @@
   "localAccountInfo": "Deine Notizen bleiben nur auf diesem Gerät: kein Zugriff von anderen Geräten, weg beim Deinstallieren, und die interne KI ist aus. Du kannst jederzeit ein Google-Konto verknüpfen — deine Notizen bleiben erhalten.",
   "localAccountBadge": "Lokales Konto",
   "linkGoogleAccount": "Google-Konto verknüpfen",
-  "accountLinked": "Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert."
+  "accountLinked": "Dein Google-Konto ist verknüpft. Deine Notizen werden jetzt gesichert.",
+  "guestSignInUnavailable": "Anmeldung ohne Google ist derzeit deaktiviert: In der Firebase-Konsole ist die anonyme Anmeldung nicht aktiviert. Melde dich mit Google an oder versuche es erneut, sobald ein Administrator sie aktiviert.",
+  "googleSignInUnavailable": "Google-Anmeldung ist derzeit deaktiviert: Der Google-Anbieter ist in der Firebase-Konsole nicht aktiviert.",
+  "signInNetworkError": "Kein Internet erreichbar. Prüfe deine Verbindung und versuche es erneut.",
+  "signInCanceled": "Anmeldung abgebrochen.",
+  "cardRichPreview": "Formatierter Text auf Karten",
+  "cardRichPreviewInfo": "Farben, Hervorhebungen, Fett und Unterstreichungen deiner Notizen erscheinen auch auf den Karten der Startseite. Aus: Karten zeigen einfachen Text."
 }

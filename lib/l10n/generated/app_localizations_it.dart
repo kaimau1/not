@@ -1935,4 +1935,26 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'L\'accesso senza Google è disattivato: l\'accesso anonimo non è abilitato nella console Firebase. Accedi con Google o riprova quando un amministratore lo abiliterà.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'L\'accesso con Google è disattivato: il provider Google non è abilitato nella console Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'Impossibile raggiungere internet. Controlla la connessione e riprova.';
+
+  @override
+  String get signInCanceled => 'Accesso annullato.';
+
+  @override
+  String get cardRichPreview => 'Testo formattato sulle schede';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Colori, evidenziazioni, grassetto e sottolineature delle tue note appaiono anche sulle schede della schermata principale. Se disattivato, le schede mostrano testo semplice.';
 }

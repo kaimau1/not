@@ -28,6 +28,7 @@ import '../../ai/data/model_catalog.dart';
 import '../../ai/data/firebase_ai_client.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
+import '../../auth/presentation/auth_errors.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
@@ -146,6 +147,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _QuickCaptureRowSwitch(),
             title: l10n.quickCaptureRowSetting,
             keywords: l10n.quickCaptureRowInfo,
+          ),
+          _SettingRow(
+            const _CardRichPreviewSwitch(),
+            title: l10n.cardRichPreview,
+            keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
           ),
           _SettingRow(
             const _DashboardBackgroundTile(),
@@ -1336,6 +1342,25 @@ class _QuickCaptureRowSwitch extends ConsumerWidget {
       value: ref.watch(quickCaptureRowProvider),
       onChanged: (value) =>
           ref.read(quickCaptureRowProvider.notifier).set(value),
+    );
+  }
+}
+
+/// Ana ekrandaki kartlarda satır içi biçim (renk, vurgu, kalın, altı çizili)
+/// çizilsin mi? Varsayılan açık; kapatan kullanıcı düz metin önizlemeye döner.
+class _CardRichPreviewSwitch extends ConsumerWidget {
+  const _CardRichPreviewSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.cardRichPreview),
+      subtitle: Text(l10n.cardRichPreviewInfo),
+      value: ref.watch(cardRichPreviewProvider),
+      onChanged: (value) =>
+          ref.read(cardRichPreviewProvider.notifier).set(value),
     );
   }
 }
@@ -2634,9 +2659,9 @@ class _AccountSection extends ConsumerWidget {
       // En sık hata: seçilen Google hesabı BAŞKA bir hesaba zaten bağlı
       // (credential-already-in-use). Bu durumda birleştirme yapılamaz —
       // Firebase iki uid'i tek başına birleştiremez.
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.loginError(e.toString()))),
-      );
+      // Hesap seçiciyi kapatmak hata değil: sessizce geçilir.
+      if (isSignInCancel(e)) return;
+      messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
     }
   }
 

@@ -1886,4 +1886,25 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Google 없이 로그인이 현재 꺼져 있습니다: Firebase 콘솔에서 익명 로그인이 사용 설정되지 않았습니다. Google로 로그인하거나 관리자가 사용 설정한 뒤 다시 시도하세요.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google 로그인이 현재 꺼져 있습니다: Firebase 콘솔에서 Google 제공업체가 사용 설정되지 않았습니다.';
+
+  @override
+  String get signInNetworkError => '인터넷에 연결할 수 없습니다. 연결을 확인한 뒤 다시 시도하세요.';
+
+  @override
+  String get signInCanceled => '로그인이 취소되었습니다.';
+
+  @override
+  String get cardRichPreview => '카드에 서식 있는 텍스트 표시';
+
+  @override
+  String get cardRichPreviewInfo =>
+      '메모의 색상, 형광펜, 굵게, 밑줄이 홈 화면 카드에도 표시됩니다. 끄면 카드에 일반 텍스트만 나옵니다.';
 }

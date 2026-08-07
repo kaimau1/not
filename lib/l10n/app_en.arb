@@ -672,5 +672,11 @@
   "discoverAssistantBody": "The microphone on the home screen turns your speech into notes, lists and reminders by itself — just say \"dentist tomorrow at 9\".",
   "discoverLockBody": "You can lock a note with fingerprint/face: its content never leaks into search, widgets or AI.",
   "discoverHiddenBody": "Notes in a hidden folder never appear on the home screen or in search; revealing the folder requires authentication.",
-  "discoverExportBody": "Every note can be exported as PDF or Word, images included (in the share menu)."
+  "discoverExportBody": "Every note can be exported as PDF or Word, images included (in the share menu).",
+  "guestSignInUnavailable": "Signing in without Google is currently off: Anonymous sign-in is not enabled in the Firebase console (Authentication → Sign-in method). Sign in with Google, or try again once an admin enables it.",
+  "googleSignInUnavailable": "Google sign-in is currently off: the Google provider is not enabled in the Firebase console.",
+  "signInNetworkError": "Couldn't reach the internet. Check your connection and try again.",
+  "signInCanceled": "Sign-in canceled.",
+  "cardRichPreview": "Formatted text on cards",
+  "cardRichPreviewInfo": "Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text."
 }

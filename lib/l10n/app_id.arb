@@ -538,5 +538,11 @@
   "localAccountInfo": "Catatan Anda hanya ada di perangkat ini: tidak bisa dibuka di tempat lain, hilang jika aplikasi dicopot, dan AI bawaan dimatikan. Anda bisa menautkan akun Google kapan saja — catatan Anda ikut terbawa.",
   "localAccountBadge": "Akun lokal",
   "linkGoogleAccount": "Tautkan akun Google",
-  "accountLinked": "Akun Google Anda tertaut. Catatan Anda kini dicadangkan."
+  "accountLinked": "Akun Google Anda tertaut. Catatan Anda kini dicadangkan.",
+  "guestSignInUnavailable": "Masuk tanpa Google sedang nonaktif: login anonim belum diaktifkan di konsol Firebase. Masuk dengan Google atau coba lagi setelah admin mengaktifkannya.",
+  "googleSignInUnavailable": "Masuk dengan Google sedang nonaktif: penyedia Google belum diaktifkan di konsol Firebase.",
+  "signInNetworkError": "Tidak dapat terhubung ke internet. Periksa koneksimu lalu coba lagi.",
+  "signInCanceled": "Masuk dibatalkan.",
+  "cardRichPreview": "Teks berformat di kartu",
+  "cardRichPreviewInfo": "Warna, sorotan, tebal, dan garis bawah dari catatanmu juga tampil di kartu layar utama. Jika nonaktif, kartu menampilkan teks polos."
 }

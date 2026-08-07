@@ -538,5 +538,11 @@
   "localAccountInfo": "Vos notes restent uniquement sur cet appareil : elles ne peuvent pas être ouvertes ailleurs, elles disparaissent si vous désinstallez l'application, et l'IA intégrée est désactivée. Vous pouvez associer un compte Google à tout moment — vos notes seront conservées.",
   "localAccountBadge": "Compte local",
   "linkGoogleAccount": "Associer un compte Google",
-  "accountLinked": "Votre compte Google est associé. Vos notes sont désormais sauvegardées."
+  "accountLinked": "Votre compte Google est associé. Vos notes sont désormais sauvegardées.",
+  "guestSignInUnavailable": "La connexion sans Google est désactivée : la connexion anonyme n'est pas activée dans la console Firebase. Connecte-toi avec Google ou réessaie une fois qu'un administrateur l'aura activée.",
+  "googleSignInUnavailable": "La connexion Google est désactivée : le fournisseur Google n'est pas activé dans la console Firebase.",
+  "signInNetworkError": "Internet est injoignable. Vérifie ta connexion et réessaie.",
+  "signInCanceled": "Connexion annulée.",
+  "cardRichPreview": "Texte mis en forme sur les cartes",
+  "cardRichPreviewInfo": "Les couleurs, surlignages, gras et soulignements de tes notes apparaissent aussi sur les cartes de l'écran d'accueil. Désactivé, les cartes affichent du texte brut."
 }

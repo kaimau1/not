@@ -1931,4 +1931,26 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Masuk tanpa Google sedang nonaktif: login anonim belum diaktifkan di konsol Firebase. Masuk dengan Google atau coba lagi setelah admin mengaktifkannya.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Masuk dengan Google sedang nonaktif: penyedia Google belum diaktifkan di konsol Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'Tidak dapat terhubung ke internet. Periksa koneksimu lalu coba lagi.';
+
+  @override
+  String get signInCanceled => 'Masuk dibatalkan.';
+
+  @override
+  String get cardRichPreview => 'Teks berformat di kartu';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Warna, sorotan, tebal, dan garis bawah dari catatanmu juga tampil di kartu layar utama. Jika nonaktif, kartu menampilkan teks polos.';
 }

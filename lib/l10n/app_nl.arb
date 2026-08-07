@@ -538,5 +538,11 @@
   "localAccountInfo": "Je notities blijven alleen op dit apparaat: ze zijn nergens anders te openen, ze zijn weg als je de app verwijdert, en de ingebouwde AI staat uit. Je kunt op elk moment een Google-account koppelen — je notities gaan gewoon mee.",
   "localAccountBadge": "Lokaal account",
   "linkGoogleAccount": "Google-account koppelen",
-  "accountLinked": "Je Google-account is gekoppeld. Je notities hebben nu een back-up."
+  "accountLinked": "Je Google-account is gekoppeld. Je notities hebben nu een back-up.",
+  "guestSignInUnavailable": "Inloggen zonder Google staat uit: anoniem inloggen is niet ingeschakeld in de Firebase-console. Log in met Google of probeer het opnieuw zodra een beheerder het inschakelt.",
+  "googleSignInUnavailable": "Inloggen met Google staat uit: de Google-provider is niet ingeschakeld in de Firebase-console.",
+  "signInNetworkError": "Geen internetverbinding. Controleer je verbinding en probeer het opnieuw.",
+  "signInCanceled": "Inloggen geannuleerd.",
+  "cardRichPreview": "Opgemaakte tekst op kaarten",
+  "cardRichPreviewInfo": "Kleuren, markeringen, vet en onderstrepingen uit je notities zijn ook op de kaarten op het startscherm te zien. Uit: kaarten tonen platte tekst."
 }

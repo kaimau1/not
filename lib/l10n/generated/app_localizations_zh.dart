@@ -1867,4 +1867,24 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      '当前无法在不使用 Google 的情况下登录：Firebase 控制台中未启用匿名登录。请使用 Google 登录，或在管理员启用后重试。';
+
+  @override
+  String get googleSignInUnavailable =>
+      '当前无法使用 Google 登录：Firebase 控制台中未启用 Google 登录方式。';
+
+  @override
+  String get signInNetworkError => '无法连接到网络。请检查网络后重试。';
+
+  @override
+  String get signInCanceled => '已取消登录。';
+
+  @override
+  String get cardRichPreview => '卡片显示格式化文本';
+
+  @override
+  String get cardRichPreviewInfo => '笔记中的颜色、高亮、加粗和下划线也会显示在主屏幕卡片上。关闭后，卡片只显示纯文本。';
 }

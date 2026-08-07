@@ -1933,4 +1933,26 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Inloggen zonder Google staat uit: anoniem inloggen is niet ingeschakeld in de Firebase-console. Log in met Google of probeer het opnieuw zodra een beheerder het inschakelt.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Inloggen met Google staat uit: de Google-provider is niet ingeschakeld in de Firebase-console.';
+
+  @override
+  String get signInNetworkError =>
+      'Geen internetverbinding. Controleer je verbinding en probeer het opnieuw.';
+
+  @override
+  String get signInCanceled => 'Inloggen geannuleerd.';
+
+  @override
+  String get cardRichPreview => 'Opgemaakte tekst op kaarten';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Kleuren, markeringen, vet en onderstrepingen uit je notities zijn ook op de kaarten op het startscherm te zien. Uit: kaarten tonen platte tekst.';
 }

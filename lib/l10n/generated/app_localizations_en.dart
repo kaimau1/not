@@ -1918,4 +1918,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Every note can be exported as PDF or Word, images included (in the share menu).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Signing in without Google is currently off: Anonymous sign-in is not enabled in the Firebase console (Authentication → Sign-in method). Sign in with Google, or try again once an admin enables it.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google sign-in is currently off: the Google provider is not enabled in the Firebase console.';
+
+  @override
+  String get signInNetworkError =>
+      'Couldn\'t reach the internet. Check your connection and try again.';
+
+  @override
+  String get signInCanceled => 'Sign-in canceled.';
+
+  @override
+  String get cardRichPreview => 'Formatted text on cards';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Colors, highlights, bold and underline from your notes also show on the home screen cards. When off, cards show plain text.';
 }

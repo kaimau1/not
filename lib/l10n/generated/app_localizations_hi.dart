@@ -1921,4 +1921,26 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Google के बिना साइन-इन अभी बंद है: Firebase कंसोल में अनाम साइन-इन चालू नहीं है. Google से साइन इन करें या व्यवस्थापक के चालू करने के बाद फिर कोशिश करें.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google से साइन-इन अभी बंद है: Firebase कंसोल में Google प्रदाता चालू नहीं है.';
+
+  @override
+  String get signInNetworkError =>
+      'इंटरनेट से कनेक्ट नहीं हो सका. अपना कनेक्शन जाँचकर फिर कोशिश करें.';
+
+  @override
+  String get signInCanceled => 'साइन-इन रद्द किया गया.';
+
+  @override
+  String get cardRichPreview => 'कार्ड पर फ़ॉर्मैट किया गया टेक्स्ट';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'आपके नोट्स के रंग, हाइलाइट, बोल्ड और अंडरलाइन होम स्क्रीन के कार्ड पर भी दिखते हैं. बंद होने पर कार्ड सादा टेक्स्ट दिखाते हैं.';
 }

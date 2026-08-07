@@ -1926,4 +1926,26 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Вход без Google отключён: анонимный вход не включён в консоли Firebase. Войдите через Google или повторите попытку, когда администратор его включит.';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Вход через Google отключён: провайдер Google не включён в консоли Firebase.';
+
+  @override
+  String get signInNetworkError =>
+      'Нет доступа к интернету. Проверьте соединение и повторите попытку.';
+
+  @override
+  String get signInCanceled => 'Вход отменён.';
+
+  @override
+  String get cardRichPreview => 'Форматированный текст на карточках';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'Цвета, выделения, полужирный и подчёркивание из заметок видны и на карточках главного экрана. Если выключить, карточки показывают обычный текст.';
 }

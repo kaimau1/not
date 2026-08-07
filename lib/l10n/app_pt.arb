@@ -538,5 +538,11 @@
   "localAccountInfo": "As suas notas ficam apenas neste dispositivo: não podem ser abertas noutro lado, desaparecem se desinstalar a aplicação, e a IA integrada está desligada. Pode associar uma conta Google a qualquer momento — as suas notas são mantidas.",
   "localAccountBadge": "Conta local",
   "linkGoogleAccount": "Associar uma conta Google",
-  "accountLinked": "A sua conta Google está associada. As suas notas estão agora protegidas por cópia de segurança."
+  "accountLinked": "A sua conta Google está associada. As suas notas estão agora protegidas por cópia de segurança.",
+  "guestSignInUnavailable": "O acesso sem Google está desativado: o login anônimo não está ativado no console do Firebase. Entre com o Google ou tente de novo quando um administrador ativar.",
+  "googleSignInUnavailable": "O login com Google está desativado: o provedor Google não está ativado no console do Firebase.",
+  "signInNetworkError": "Sem acesso à internet. Verifique sua conexão e tente novamente.",
+  "signInCanceled": "Login cancelado.",
+  "cardRichPreview": "Texto formatado nos cartões",
+  "cardRichPreviewInfo": "As cores, marcações, negrito e sublinhado das suas notas também aparecem nos cartões da tela inicial. Desativado, os cartões mostram texto simples."
 }

@@ -538,5 +538,11 @@
   "localAccountInfo": "Tus notas se quedan solo en este dispositivo: no se abren en otro, se pierden si desinstalas la app y la IA integrada está desactivada. Puedes vincular una cuenta de Google cuando quieras; tus notas se conservan.",
   "localAccountBadge": "Cuenta local",
   "linkGoogleAccount": "Vincular cuenta de Google",
-  "accountLinked": "Tu cuenta de Google está vinculada. Tus notas ya se respaldan."
+  "accountLinked": "Tu cuenta de Google está vinculada. Tus notas ya se respaldan.",
+  "guestSignInUnavailable": "El acceso sin Google está desactivado: el inicio de sesión anónimo no está habilitado en la consola de Firebase. Inicia sesión con Google o inténtalo cuando un administrador lo habilite.",
+  "googleSignInUnavailable": "El acceso con Google está desactivado: el proveedor de Google no está habilitado en la consola de Firebase.",
+  "signInNetworkError": "No se pudo conectar a internet. Comprueba tu conexión e inténtalo de nuevo.",
+  "signInCanceled": "Inicio de sesión cancelado.",
+  "cardRichPreview": "Texto con formato en las tarjetas",
+  "cardRichPreviewInfo": "Los colores, resaltados, negritas y subrayados de tus notas también se ven en las tarjetas de la pantalla principal. Si se desactiva, las tarjetas muestran texto sin formato."
 }

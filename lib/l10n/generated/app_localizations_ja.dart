@@ -1884,4 +1884,25 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get discoverExportBody =>
       'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+
+  @override
+  String get guestSignInUnavailable =>
+      'Google なしのログインは現在オフです: Firebase コンソールで匿名ログインが有効になっていません。Google でログインするか、管理者が有効にしてからもう一度お試しください。';
+
+  @override
+  String get googleSignInUnavailable =>
+      'Google ログインは現在オフです: Firebase コンソールで Google プロバイダが有効になっていません。';
+
+  @override
+  String get signInNetworkError => 'インターネットに接続できませんでした。接続を確認してもう一度お試しください。';
+
+  @override
+  String get signInCanceled => 'ログインをキャンセルしました。';
+
+  @override
+  String get cardRichPreview => 'カードに書式付きテキストを表示';
+
+  @override
+  String get cardRichPreviewInfo =>
+      'メモの色・ハイライト・太字・下線がホーム画面のカードにも表示されます。オフにするとカードはプレーンテキストになります。';
 }

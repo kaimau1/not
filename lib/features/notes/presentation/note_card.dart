@@ -16,6 +16,7 @@ import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/undo_snackbar.dart';
+import '../../settings/settings_providers.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -66,6 +67,47 @@ Future<void> openNoteRoute(BuildContext context, Note note) async {
   } finally {
     _openingNoteId = null;
   }
+}
+
+/// Kart önizlemesinde notun SATIR İÇİ biçimi (renk, vurgu, kalın, italik,
+/// altı çizili, boyut) çizilsin mi? Ayarlar → Görünüm'den kapatılabilir.
+///
+/// Arama sürerken biçim ÇİZİLMEZ: eşleşmenin sarı vurgusu ile notun kendi
+/// renk/vurgu biçimi üst üste binince hangisinin arama sonucu olduğu
+/// okunmuyordu. Sorgu boşalınca biçimli görünüm geri gelir.
+Widget noteBodyText(
+  BuildContext context,
+  String text,
+  String query, {
+  required bool rich,
+  TextStyle? style,
+  int? maxLines,
+}) {
+  if (!rich || query.isNotEmpty) {
+    // Biçim işaretleri (**kalın**, %%2:renk%%) ham hâlleriyle GÖSTERİLMEZ.
+    return highlightedText(
+      context,
+      stripRichMarkers(text),
+      query,
+      style: style,
+      maxLines: maxLines,
+    );
+  }
+  return Text.rich(
+    TextSpan(
+      style: style,
+      children: richSpans(
+        text,
+        style,
+        // Kart bir editör değil: bağlantılar tıklanamadığı için ayrıca
+        // renklendirilmez (linkColor null = ölçüm yolundaki davranış).
+        palette: NoteColors.richPalette,
+        markerColor: const Color(0x00000000),
+      ),
+    ),
+    maxLines: maxLines,
+    overflow: maxLines != null ? TextOverflow.ellipsis : TextOverflow.clip,
+  );
 }
 
 /// Aranan kelimeyi kalın ve renkli vurgulayan metin parçaları üretir.
@@ -244,6 +286,7 @@ class NoteCard extends ConsumerWidget {
     final selected = ref.watch(
       selectedNoteIdsProvider.select((s) => s.contains(note.id)),
     );
+    final richPreview = ref.watch(cardRichPreviewProvider);
 
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
@@ -279,10 +322,13 @@ class NoteCard extends ConsumerWidget {
               // Sağdaki 22px köşedeki üç nokta / seçim kutusuna yer açar; uzun
               // başlık düğmenin altına girmeden kısalır (…).
               padding: const EdgeInsetsDirectional.only(bottom: 6, end: 22),
-              child: highlightedText(
+              child: noteBodyText(
                 context,
-                note.displayTitle,
+                // Biçimli başlık kartta da biçimli görünür; ayar kapalıyken
+                // (ya da arama sürerken) düz `displayTitle` çizilir.
+                note.title,
                 highlightQuery,
+                rich: richPreview,
                 maxLines: 2,
                 // Başlık kartta da KENDİ yazı tipini kullanır (gövdeninkini
                 // değil): başlığın yazı tipi artık gövdeden bağımsız.
@@ -312,7 +358,11 @@ class NoteCard extends ConsumerWidget {
               ],
             )
           else ...[
-            _NotePreview(note: note, highlightQuery: highlightQuery),
+            _NotePreview(
+              note: note,
+              highlightQuery: highlightQuery,
+              rich: richPreview,
+            ),
             // Zemin görseli ek DEĞİLDİR: kartta küçük resim olarak
             // görünmemeli (notun arkasında duvar kâğıdı olarak duruyor).
             if (note.attachments.any(
@@ -472,10 +522,17 @@ class NoteCard extends ConsumerWidget {
 // satırı artık düz simge + metin, ayrı bir zemin kutusu taşımıyor.
 
 class _NotePreview extends StatelessWidget {
-  const _NotePreview({required this.note, this.highlightQuery = ''});
+  const _NotePreview({
+    required this.note,
+    required this.rich,
+    this.highlightQuery = '',
+  });
 
   final Note note;
   final String highlightQuery;
+
+  /// Satır içi biçim çizilsin mi (Ayarlar → Görünüm).
+  final bool rich;
 
   @override
   Widget build(BuildContext context) {
@@ -527,12 +584,11 @@ class _NotePreview extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (hasBody)
-              highlightedText(
+              noteBodyText(
                 context,
-                // Kartta biçim işaretleri (**kalın** gibi) gösterilmez:
-                // önizleme okunabilir kalmalı.
-                stripRichMarkers(note.body),
+                note.body,
                 highlightQuery,
+                rich: rich,
                 maxLines: items.isEmpty ? 4 : 2,
                 style: bodyStyle,
               ),
@@ -558,10 +614,15 @@ class _NotePreview extends StatelessWidget {
                         ),
                       ),
                       Expanded(
-                        child: Text(
-                          stripRichMarkers(item.text),
+                        child: noteBodyText(
+                          context,
+                          item.text,
+                          highlightQuery,
+                          // İşaretli madde ÜSTÜ ÇİZİLİ ve soluk çizilir; o
+                          // stil satır içi biçimin üstünde kalmalı, bu yüzden
+                          // biçimli çizim yalnız işaretsiz maddede.
+                          rich: rich && !item.checked,
                           maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                           style: item.checked
                               ? bodyStyle.copyWith(
                                   decoration: TextDecoration.lineThrough,
@@ -637,14 +698,20 @@ class _NotePreview extends StatelessWidget {
                         child: Text('${i + 1}.', style: bodyStyle),
                       ),
                     Expanded(
-                      child: Text(
-                        // Kartta biçim işaretleri (**kalın**, %%2:renk%%)
-                        // gösterilmez — metin notunda olduğu gibi. KÖK NEDEN:
-                        // bu dal atlanmıştı, liste notlarının önizlemesinde
-                        // ham işaretler görünüyordu.
-                        stripRichMarkers(shown[i].text),
+                      child: noteBodyText(
+                        context,
+                        // Ham biçim işaretleri (**kalın**, %%2:renk%%) HİÇBİR
+                        // durumda görünmez: ayar kapalıyken sökülür, açıkken
+                        // görünmez çizilip yerine biçim uygulanır. KÖK NEDEN:
+                        // bu dal bir dönem atlanmıştı, liste notlarının
+                        // önizlemesinde ham işaretler görünüyordu.
+                        shown[i].text,
+                        highlightQuery,
+                        rich:
+                            rich &&
+                            !(shown[i].checked &&
+                                note.type == NoteType.checklist),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                         style:
                             shown[i].checked && note.type == NoteType.checklist
                             ? bodyStyle.copyWith(
@@ -826,9 +893,13 @@ class NoteListRow extends ConsumerWidget {
   /// Tek satırlık önizleme. Kilitli notta içerik SIZDIRILMAZ.
   String _preview(BuildContext context) {
     if (note.locked) return context.l10n.lockedNote;
+    // Biçim işaretleri BURADA da sökülür: satır önizlemesi tek satırda 46
+    // karakterde kesiliyor, işaretli metin hem ham `**` gösteriyor hem de
+    // kesme işaretin ortasına düşebiliyordu (kart önizlemesi bunu çoktan
+    // yapıyordu, satır dalı atlanmıştı).
     final source = note.body.trim().isNotEmpty
-        ? note.body
-        : [for (final i in note.items) i.text].join(' · ');
+        ? stripRichMarkers(note.body)
+        : [for (final i in note.items) stripRichMarkers(i.text)].join(' · ');
     final flat = source.replaceAll('\n', ' ').trim();
     // 46 karakter: iki satırlık bir cümlenin başı. Daha uzunu zaten
     // ellipsize edilirdi, kısaltmak ölçümü ucuzlatıyor.
