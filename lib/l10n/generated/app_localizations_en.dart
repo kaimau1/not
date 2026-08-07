@@ -1256,6 +1256,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get annotateDone => 'Finish annotating';
 
   @override
+  String get newPdfNote => 'Add PDF, take notes';
+
+  @override
+  String get pdfPageNoteHint => 'Note for this page…';
+
+  @override
+  String pdfPage(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String pdfPageOf(int page, int total) {
+    return 'Page $page / $total';
+  }
+
+  @override
+  String get pdfPreviousPage => 'Previous page';
+
+  @override
+  String get pdfNextPage => 'Next page';
+
+  @override
+  String get pdfFullScreen => 'Open full screen';
+
+  @override
+  String get pdfNoDocument => 'This note has no PDF yet';
+
+  @override
+  String get pdfChooseDocument => 'Choose PDF';
+
+  @override
   String get crop => 'Crop';
 
   @override

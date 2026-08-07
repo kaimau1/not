@@ -2430,6 +2430,60 @@ abstract class AppLocalizations {
   /// **'Yazmayı bitir'**
   String get annotateDone;
 
+  /// No description provided for @newPdfNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF ekle not al'**
+  String get newPdfNote;
+
+  /// No description provided for @pdfPageNoteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfanın notu…'**
+  String get pdfPageNoteHint;
+
+  /// No description provided for @pdfPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {page}'**
+  String pdfPage(int page);
+
+  /// No description provided for @pdfPageOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {page} / {total}'**
+  String pdfPageOf(int page, int total);
+
+  /// No description provided for @pdfPreviousPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki sayfa'**
+  String get pdfPreviousPage;
+
+  /// No description provided for @pdfNextPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki sayfa'**
+  String get pdfNextPage;
+
+  /// No description provided for @pdfFullScreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tam ekran aç'**
+  String get pdfFullScreen;
+
+  /// No description provided for @pdfNoDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta henüz PDF yok'**
+  String get pdfNoDocument;
+
+  /// No description provided for @pdfChooseDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF seç'**
+  String get pdfChooseDocument;
+
   /// No description provided for @crop.
   ///
   /// In tr, this message translates to:

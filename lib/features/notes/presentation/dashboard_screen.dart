@@ -638,6 +638,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     await _openNew(id, query: '?scan=1');
   }
 
+  /// "PDF ekle not al": PDF tipinde not oluşturulur ve editör açılır açılmaz
+  /// dosya seçici gelir; seçilen belge notun içine gömülür, ekran ÜSTTE sayfa
+  /// ALTTA o sayfanın notu olacak şekilde ikiye bölünür. Seçim iptal edilirse
+  /// boş not çıkışta kendiliğinden silinir (fotoğraf/tarama yollarının aynısı).
+  Future<void> _createPdfNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.pdf);
+    final folderId = ref.read(selectedFolderProvider);
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    await _openNew(id, query: '?pdf=1');
+  }
+
   /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
   /// oluşturulur — iptal edilirse ortada boş not kalmaz.
   Future<void> _createQrNote() async {
@@ -1268,6 +1281,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onVideoNote: _createVideoNote,
                           onPhotoNote: _createPhotoNote,
                           onScanNote: _createScanNote,
+                          onPdfNote: _createPdfNote,
                           onQrNote: _createQrNote,
                           anchor: _fabColumnLink,
                           onCreate: _createNote,

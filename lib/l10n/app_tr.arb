@@ -569,6 +569,32 @@
   "hubReadInfo": "PDF/Word belgesini sesli dinle",
   "annotate": "Üzerine yaz",
   "annotateDone": "Yazmayı bitir",
+  "newPdfNote": "PDF ekle not al",
+  "pdfPageNoteHint": "Bu sayfanın notu…",
+  "pdfPage": "Sayfa {page}",
+  "@pdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPageOf": "Sayfa {page} / {total}",
+  "@pdfPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPreviousPage": "Önceki sayfa",
+  "pdfNextPage": "Sonraki sayfa",
+  "pdfFullScreen": "Tam ekran aç",
+  "pdfNoDocument": "Bu notta henüz PDF yok",
+  "pdfChooseDocument": "PDF seç",
   "crop": "Kırp",
   "cropApply": "Kırpmayı uygula",
   "cropReset": "Seçimi sıfırla",

@@ -1257,6 +1257,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String get annotateDone => 'टिप्पणी समाप्त करें';
 
   @override
+  String get newPdfNote => 'PDF ekle not al';
+
+  @override
+  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+
+  @override
+  String pdfPage(int page) {
+    return 'Sayfa $page';
+  }
+
+  @override
+  String pdfPageOf(int page, int total) {
+    return 'Sayfa $page / $total';
+  }
+
+  @override
+  String get pdfPreviousPage => 'Önceki sayfa';
+
+  @override
+  String get pdfNextPage => 'Sonraki sayfa';
+
+  @override
+  String get pdfFullScreen => 'Tam ekran aç';
+
+  @override
+  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+
+  @override
+  String get pdfChooseDocument => 'PDF seç';
+
+  @override
   String get crop => 'काटें';
 
   @override

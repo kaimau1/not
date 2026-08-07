@@ -71,6 +71,7 @@ import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
 import 'note_undo.dart';
+import 'pdf_note_pane.dart';
 import '../viewers/image_crop.dart';
 import 'text_wrap.dart';
 
@@ -153,6 +154,14 @@ bool sameRenderedNote(Note a, Note b) {
   for (var i = 0; i < a.tags.length; i++) {
     if (a.tags[i] != b.tags[i]) return false;
   }
+  // Sayfa notları çizimi ETKİLER (PDF notunun alt bölmesi ve kart önizlemesi).
+  // Metnin kendisi burada karşılaştırılır — gövdeden farklı olarak sayfa notu
+  // alanı sayfa değişiminde yeniden doldurulduğu için "denetleyici zaten
+  // ekranda" muafiyeti geçerli değil.
+  if (a.pageNotes.length != b.pageNotes.length) return false;
+  for (final entry in a.pageNotes.entries) {
+    if (b.pageNotes[entry.key] != entry.value) return false;
+  }
   if (a.attachments.length != b.attachments.length) return false;
   for (var i = 0; i < a.attachments.length; i++) {
     final x = a.attachments[i];
@@ -202,6 +211,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startVideo = false,
     this.startPhoto = false,
     this.startScan = false,
+    this.startPdf = false,
   });
 
   final String noteId;
@@ -224,6 +234,11 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "Belge tara not al": açılışta belge tarayıcı başlar,
   /// düzeltilmiş sayfalar nota girer ve istenirse yazıları tanınır.
   final bool startScan;
+
+  /// (+) menüsündeki "PDF ekle not al": açılışta dosya seçici açılır, seçilen
+  /// PDF notun içine gömülür ve iki bölmeli sayfa-notu ekranı kurulur. Seçim
+  /// iptal edilirse boş not çıkışta kendiliğinden silinir.
+  final bool startPdf;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -305,6 +320,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingVideo = false;
   bool _pendingPhoto = false;
   bool _pendingScan = false;
+  bool _pendingPdf = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -327,6 +343,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingScan) {
       _pendingScan = false;
       _scanDocument();
+    }
+    if (_pendingPdf) {
+      _pendingPdf = false;
+      _pickPdf();
     }
   }
 
@@ -616,6 +636,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingVideo = widget.startVideo;
     _pendingPhoto = widget.startPhoto;
     _pendingScan = widget.startScan;
+    _pendingPdf = widget.startPdf;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
       previous,
@@ -719,6 +740,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               title: incoming.title,
               body: incoming.body,
               items: incoming.items,
+              // Sayfa notları da içerik: bu oturumda hiç yazılmadıysa ikinci
+              // cihazın yazdığı sayfa notu canlı görünür. Yazılmışsa YEREL
+              // esastır (pristine false) — yankı gelen bayat harita, henüz
+              // kaydedilmemiş tuş vuruşlarını geri almasın.
+              pageNotes: incoming.pageNotes,
             );
             if (incoming.title != localTitle) {
               _titleController.text = incoming.title;
@@ -3069,6 +3095,81 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   // ---- Arayüz ---------------------------------------------------------
 
+  /// PDF notunun gövdesi: başlık + iki bölmeli sayfa/not ekranı.
+  ///
+  /// Belge notun İÇİNDE yaşar (görseller gibi), sayfa geçişi notun içinde
+  /// yapılır — ek şeridine gidip tam ekran açmak gerekmez. Not tipi PDF olup
+  /// da belgesi olmayan tek durum, dosya seçicinin iptal edilmesidir; o zaman
+  /// da ekran kilitlenmez, "PDF seç" düğmesi durur (not zaten boşsa çıkışta
+  /// kendiliğinden silinir).
+  Widget _pdfBody(
+    Note note,
+    Widget header,
+    RichTextTheme richTheme,
+    TextStyle textStyle,
+  ) {
+    Attachment? document;
+    for (final a in note.attachments) {
+      if (a.kind == AttachmentKind.pdf) {
+        document = a;
+        break;
+      }
+    }
+    if (document == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          header,
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.picture_as_pdf_outlined,
+                    size: 40,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(context.l10n.pdfNoDocument),
+                  const SizedBox(height: 12),
+                  FilledButton.tonal(
+                    onPressed: _pickPdf,
+                    child: Text(context.l10n.pdfChooseDocument),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    final pdf = document;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        header,
+        Expanded(
+          // Anahtar EK KİMLİĞİ: belge değiştirilirse pano durumu (sayfa
+          // numarası, alandaki metin) sıfırdan kurulmalı, yoksa eski belgenin
+          // 7. sayfasının notu yeni belgenin 7. sayfasına yazılırdı.
+          child: PdfNotePane(
+            key: ValueKey('pdf-pane-${pdf.id}'),
+            note: note,
+            attachment: pdf,
+            textStyle: textStyle,
+            richTheme: richTheme,
+            onPageNoteChanged: (page, text) =>
+                _mutate((n) => n.withPageNote(pdf, page, text)),
+            onAttachmentChanged: _updateAttachment,
+            onFieldFocused: _setFormatTarget,
+            onFieldDisposed: _clearFormatTargetFor,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
@@ -3449,7 +3550,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // görseller (el yazısı çizimleri dahil) tüm sayfanın üzerinde serbest
     // katmanda yüzer, metnin sağına/soluna sürüklenir ve metin etrafından akar.
     final Widget pageContent;
-    if (note.type == NoteType.text && note.items.isEmpty) {
+    if (note.type == NoteType.pdf) {
+      // PDF notunda sayfa tuvali (yüzen görseller + metin sarma) YOK: gövde
+      // iki sabit bölmeye ayrılır, bu yüzden `body` aşağıda ayrı kurulur ve
+      // buradaki tuval içeriği kullanılmaz.
+      pageContent = const SizedBox.shrink();
+    } else if (note.type == NoteType.text && note.items.isEmpty) {
       pageContent = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3530,46 +3636,52 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _listBodyOpen;
     // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
     //
-    final body = LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
-        padding: const EdgeInsets.only(bottom: 96),
-        child: NotePageCanvas(
-          minHeight: constraints.maxHeight,
-          images: imageAttachments,
-          onRemove: _removeAttachment,
-          onChanged: _updateAttachment,
-          onCrop: _cropImage,
-          onExtractText: _ocrImage,
-          onCopy: _copyAttachment,
-          onDetach: (a) => _setImageAsFile(a, true),
-          onVideoToNote: _videoToNote,
-          topLimit: _bodyTop,
-          hintLineHeight: hintLineHeight,
-          hint: useCanvasHint
-              ? Padding(
-                  // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz
-                  // dikey dolgusu da eklenir ki ipucu metnin tam yerine otursun.
-                  padding: const EdgeInsets.fromLTRB(_kGutter, 16, _kGutter, 0),
-                  child: Text(
-                    l10n.bodyHint,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).hintColor,
-                    ),
-                  ),
-                )
-              : null,
-          onFloats: _applyFloats,
-          // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
-          // aşağıya dokunmak yeterli. Listede gövde alanı yok.
-          onTapEmpty: hasBodyField
-              ? () {
-                  if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-                }
-              : null,
-          child: KeyedSubtree(key: _pageKey, child: pageContent),
-        ),
-      ),
-    );
+    final body = note.type == NoteType.pdf
+        ? _pdfBody(note, keyedHeader, richTheme, noteBodyStyle)
+        : LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 96),
+              child: NotePageCanvas(
+                minHeight: constraints.maxHeight,
+                images: imageAttachments,
+                onRemove: _removeAttachment,
+                onChanged: _updateAttachment,
+                onCrop: _cropImage,
+                onExtractText: _ocrImage,
+                onCopy: _copyAttachment,
+                onDetach: (a) => _setImageAsFile(a, true),
+                onVideoToNote: _videoToNote,
+                topLimit: _bodyTop,
+                hintLineHeight: hintLineHeight,
+                hint: useCanvasHint
+                    ? Padding(
+                        // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz
+                        // dikey dolgusu da eklenir ki ipucu metnin tam yerine otursun.
+                        padding: const EdgeInsets.fromLTRB(
+                          _kGutter,
+                          16,
+                          _kGutter,
+                          0,
+                        ),
+                        child: Text(
+                          l10n.bodyHint,
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(color: Theme.of(context).hintColor),
+                        ),
+                      )
+                    : null,
+                onFloats: _applyFloats,
+                // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
+                // aşağıya dokunmak yeterli. Listede gövde alanı yok.
+                onTapEmpty: hasBodyField
+                    ? () {
+                        if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+                      }
+                    : null,
+                child: KeyedSubtree(key: _pageKey, child: pageContent),
+              ),
+            ),
+          );
 
     return Actions(
       actions: {

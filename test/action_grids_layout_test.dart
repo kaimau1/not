@@ -74,6 +74,7 @@ void main() {
                 onVideoNote: () {},
                 onPhotoNote: () {},
                 onScanNote: () {},
+                onPdfNote: () {},
                 onQrNote: () {},
               ),
             ),

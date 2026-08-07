@@ -44,6 +44,7 @@ class QuickAddFab extends StatefulWidget {
     required this.onVideoNote,
     required this.onPhotoNote,
     required this.onScanNote,
+    required this.onPdfNote,
     required this.onQrNote,
   });
 
@@ -68,6 +69,10 @@ class QuickAddFab extends StatefulWidget {
   /// "Belge tara not al": belge tarayıcı açılır (kenar tespiti + perspektif
   /// düzeltme), düzeltilmiş sayfalar yeni notun içine girer.
   final VoidCallback onScanNote;
+
+  /// "PDF ekle not al": dosya seçici açılır, seçilen PDF yeni notun içine
+  /// gömülür ve sayfa başına not tutulan iki bölmeli ekran açılır.
+  final VoidCallback onPdfNote;
 
   /// QR kod okuyup içeriğini yeni nota yazar.
   final VoidCallback onQrNote;
@@ -150,6 +155,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
                     context.l10n.newScanNote,
                     widget.onScanNote,
                   ),
+                (
+                  Icons.picture_as_pdf_outlined,
+                  context.l10n.newPdfNote,
+                  widget.onPdfNote,
+                ),
                 (
                   Icons.draw_outlined,
                   context.l10n.newHandwriting,

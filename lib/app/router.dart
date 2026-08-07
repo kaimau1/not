@@ -32,7 +32,6 @@ import 'split_shell.dart';
 /// Tek yer, tek test: `test/note_route_test.dart`.
 String noteRoutePath(String id, {String query = ''}) => '/note/$id$query';
 
-
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   final refresh = _RefreshNotifier(repo.authStateChanges());
@@ -93,6 +92,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               startPhoto: state.uri.queryParameters['photo'] == '1',
               // ?scan=1: belge tara not al — belge tarayıcı açılır.
               startScan: state.uri.queryParameters['scan'] == '1',
+              // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
+              // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
+              startPdf: state.uri.queryParameters['pdf'] == '1',
             ),
           ),
         ],

@@ -110,6 +110,19 @@ class InkController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Çizgileri DIŞARIDAN gelen listeyle değiştirir ([onChanged] tetiklenmez).
+  ///
+  /// Aynı ekin iki ayrı görüntüleyicide açık olduğu durum için: PDF notunun
+  /// panosu çizimleri salt gösterir, düzenleme tam ekranda yapılır ve oradan
+  /// dönen yeni liste panonun kendi denetleyicisine buradan işlenir. Kaydetme
+  /// yolu tetiklenmez — bu bir kullanıcı çizimi değil, zaten kaydedilmiş
+  /// çizimin kopyalanmasıdır.
+  void replace(List<InkStroke> strokes) {
+    _dirty = false;
+    _ink = [...strokes];
+    notifyListeners();
+  }
+
   /// İki parmak gezinme başladı: başlamış çizgiyi geri al, çizimi askıya al.
   void beginNav() {
     if (_nav) return;

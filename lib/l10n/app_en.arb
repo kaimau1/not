@@ -412,6 +412,32 @@
   "hubReadInfo": "Listen to a PDF or Word document",
   "annotate": "Annotate",
   "annotateDone": "Finish annotating",
+  "newPdfNote": "Add PDF, take notes",
+  "pdfPageNoteHint": "Note for this page…",
+  "pdfPage": "Page {page}",
+  "@pdfPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPageOf": "Page {page} / {total}",
+  "@pdfPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pdfPreviousPage": "Previous page",
+  "pdfNextPage": "Next page",
+  "pdfFullScreen": "Open full screen",
+  "pdfNoDocument": "This note has no PDF yet",
+  "pdfChooseDocument": "Choose PDF",
   "crop": "Crop",
   "cropApply": "Apply crop",
   "cropReset": "Reset selection",

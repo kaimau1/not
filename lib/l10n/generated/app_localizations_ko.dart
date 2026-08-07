@@ -1234,6 +1234,37 @@ class AppLocalizationsKo extends AppLocalizations {
   String get annotateDone => '주석 마치기';
 
   @override
+  String get newPdfNote => 'PDF ekle not al';
+
+  @override
+  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+
+  @override
+  String pdfPage(int page) {
+    return 'Sayfa $page';
+  }
+
+  @override
+  String pdfPageOf(int page, int total) {
+    return 'Sayfa $page / $total';
+  }
+
+  @override
+  String get pdfPreviousPage => 'Önceki sayfa';
+
+  @override
+  String get pdfNextPage => 'Sonraki sayfa';
+
+  @override
+  String get pdfFullScreen => 'Tam ekran aç';
+
+  @override
+  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+
+  @override
+  String get pdfChooseDocument => 'PDF seç';
+
+  @override
   String get crop => '자르기';
 
   @override

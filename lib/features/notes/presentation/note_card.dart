@@ -21,6 +21,7 @@ import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
+import '../domain/page_notes.dart';
 import 'note_actions_sheet.dart';
 import 'notes_providers.dart';
 
@@ -738,6 +739,61 @@ class _NotePreview extends StatelessWidget {
               ),
           ],
         );
+      case NoteType.pdf:
+        // Kartta belgenin kendisi değil, KULLANICININ YAZDIĞI görünür: sayfa
+        // notları sayfa numarasıyla, sırayla. (Belge zaten alttaki ek
+        // önizlemesinde PDF rozetiyle duruyor.)
+        final pages = [
+          for (final a in note.attachments)
+            ...orderedPageNotes(attachment: a, pageNotes: note.pageNotes),
+        ];
+        if (pages.isEmpty) return const SizedBox.shrink();
+        final shownPages = pages.take(5).toList();
+        final morePages = pages.length - shownPages.length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final entry in shownPages)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 6),
+                      child: Text(
+                        '${entry.page}.',
+                        style: bodyStyle.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: noteBodyText(
+                        context,
+                        entry.text,
+                        highlightQuery,
+                        rich: rich,
+                        maxLines: 1,
+                        style: bodyStyle,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (morePages > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  context.l10n.moreItemsCount(morePages),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+          ],
+        );
     }
   }
 }
@@ -886,6 +942,7 @@ class NoteListRow extends ConsumerWidget {
     return switch (note.type) {
       NoteType.checklist => Icons.checklist,
       NoteType.ordered => Icons.format_list_numbered,
+      NoteType.pdf => Icons.picture_as_pdf_outlined,
       NoteType.text => Icons.notes,
     };
   }
