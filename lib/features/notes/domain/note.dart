@@ -6,13 +6,26 @@ import 'note_item.dart';
 import 'note_type.dart';
 
 /// Renk belirteci — tema tarafında gerçek renklere çözülür.
+/// Notun zemin rengi. Sıra ve tonlar Keep'in paletiyle aynı (kullanıcı
+/// isteği): mercandan tebeşire, sıcaktan soğuğa.
+///
+/// **İlk beş kimlik ASLA değişmez** (`red`, `amber`, `green`, `blue`,
+/// `purple`): Firestore'da bu dizgilerle kayıtlı notlar var. Yeni tonlar
+/// yeni kimliklerle eklendi; eski sürüm bilmediği bir kimliği görürse
+/// [fromId] onu varsayılana düşürür — not kaybı olmaz, yalnız rengi solar.
 enum NoteColor {
   none('default'),
   red('red'),
+  peach('peach'),
   amber('amber'),
   green('green'),
+  sage('sage'),
   blue('blue'),
-  purple('purple');
+  storm('storm'),
+  purple('purple'),
+  blossom('blossom'),
+  clay('clay'),
+  chalk('chalk');
 
   const NoteColor(this.id);
 

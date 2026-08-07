@@ -4,63 +4,94 @@ import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../domain/note.dart';
 
-/// Not zemini ya da çerçevesi için renk seçen ortak alt sayfa. Hem editör,
+/// Not zemini ya da çerçevesi için renk seçen ortak alt şerit. Hem editör,
 /// hem kart üç-nokta menüsü, hem de çoklu seçim toplu işlemi kullanır —
 /// böylece renk/çerçeve seçimi tek yerde tanımlı kalır.
 ///
 /// [frame] true ise renkler halka (çerçeve) olarak önizlenir; false ise dolu
-/// zemin olarak. Seçilen [NoteColor] döner; sayfa kapatılırsa null.
+/// zemin olarak.
+///
+/// [onChanged] verilirse şerit **Keep gibi** davranır (kullanıcı isteği:
+/// "seçici alt şeride insin"): dokunulan renk ANINDA uygulanır ve şerit AÇIK
+/// kalır, kullanıcı tonlar arasında gezinip sayfayı canlı görebilir. Şerit
+/// kapanınca son seçilen renk yine döner. [onChanged] yoksa eski davranış
+/// sürer: seçilen renk döndürülür ve şerit kapanır (kart menüsü ve toplu
+/// işlem böyle kullanıyor — orada canlı önizlenecek bir sayfa yok).
 Future<NoteColor?> showNoteColorPicker(
   BuildContext context, {
   required bool frame,
   NoteColor? current,
+  ValueChanged<NoteColor>? onChanged,
 }) {
   return showModalBottomSheet<NoteColor>(
     context: context,
     showDragHandle: true,
+    // Canlı seçimde karartı YOK ve levha dar: kullanıcı rengi seçerken
+    // sayfanın gerçek hâlini görmeli, karartılmış hâlini değil.
+    barrierColor: onChanged == null ? null : Colors.transparent,
     builder: (sheetContext) {
-      final scheme = Theme.of(sheetContext).colorScheme;
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14, left: 2),
-                child: Text(
-                  frame
-                      ? sheetContext.l10n.frameColor
-                      : sheetContext.l10n.backgroundColor,
-                  style: Theme.of(sheetContext).textTheme.titleSmall,
-                ),
-              ),
-              Wrap(
-                spacing: 14,
-                runSpacing: 14,
+      var picked = current;
+      return StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final scheme = Theme.of(sheetContext).colorScheme;
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final color in NoteColor.values)
-                    _ColorDot(
-                      color: color,
-                      frame: frame,
-                      selected: current == color,
-                      onTap: () => Navigator.pop(sheetContext, color),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                    child: Text(
+                      frame
+                          ? sheetContext.l10n.frameColor
+                          : sheetContext.l10n.backgroundColor,
+                      style: Theme.of(sheetContext).textTheme.titleSmall,
                     ),
+                  ),
+                  // TEK SATIR, yatay kaydırmalı: on iki ton dar ekranda alt
+                  // alta sarılınca şerit bir pencereye dönüşüyordu.
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        for (final color in NoteColor.values)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 5),
+                            child: _ColorDot(
+                              color: color,
+                              frame: frame,
+                              selected: picked == color,
+                              onTap: () {
+                                if (onChanged == null) {
+                                  Navigator.pop(sheetContext, color);
+                                  return;
+                                }
+                                setSheetState(() => picked = color);
+                                onChanged(color);
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                    child: Text(
+                      frame
+                          ? sheetContext.l10n.frameColorInfo
+                          : sheetContext.l10n.backgroundColorInfo,
+                      style: Theme.of(sheetContext).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                frame
-                    ? sheetContext.l10n.frameColorInfo
-                    : sheetContext.l10n.backgroundColorInfo,
-                style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       );
     },
   );
