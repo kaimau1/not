@@ -595,6 +595,8 @@
   "pdfFullScreen": "Tam ekran aç",
   "pdfNoDocument": "Bu notta henüz PDF yok",
   "pdfChooseDocument": "PDF seç",
+  "pdfAllPageNotes": "Tüm sayfa notları",
+  "pdfNoPageNotes": "Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.",
   "crop": "Kırp",
   "cropApply": "Kırpmayı uygula",
   "cropReset": "Seçimi sıfırla",

@@ -156,7 +156,7 @@ void main() {
     /// notunu yazabilsin).
     Future<void> pump(
       WidgetTester tester, {
-      required Note note,
+      required Note Function() noteOf,
       required Attachment attachment,
       required void Function(int page, String text) onChanged,
     }) async {
@@ -167,7 +167,7 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: PdfNotePane(
-              note: note,
+              noteOf: noteOf,
               attachment: attachment,
               onPageNoteChanged: onChanged,
               onAttachmentChanged: (_) {},
@@ -190,7 +190,7 @@ void main() {
       );
       await pump(
         tester,
-        note: note,
+        noteOf: () => note,
         attachment: attachment,
         onChanged: (page, text) =>
             note = note.withPageNote(attachment, page, text),
@@ -215,7 +215,7 @@ void main() {
       var note = Note(id: 'n1', type: NoteType.pdf, attachments: [attachment]);
       await pump(
         tester,
-        note: note,
+        noteOf: () => note,
         attachment: attachment,
         onChanged: (page, text) =>
             note = note.withPageNote(attachment, page, text),
@@ -236,11 +236,93 @@ void main() {
       expect(note.pageNote(attachment, 2), 'ikinci not');
     });
 
+    testWidgets('toplu görünüm açılır, başlığa dokunmak o sayfaya götürür', (
+      tester,
+    ) async {
+      final attachment = pdf();
+      var note = Note(
+        id: 'n1',
+        type: NoteType.pdf,
+        attachments: [attachment],
+        pageNotes: const {'a1#p1': 'birinci sayfa', 'a1#p4': 'dorduncu sayfa'},
+      );
+      await pump(
+        tester,
+        noteOf: () => note,
+        attachment: attachment,
+        onChanged: (page, text) =>
+            note = note.withPageNote(attachment, page, text),
+      );
+
+      await tester.tap(find.byIcon(Icons.subject));
+      await tester.pumpAndSettle();
+
+      // Tek akış: notu OLAN sayfalar, sayfa numarası başlıklı, sırayla.
+      expect(find.text('Tüm sayfa notları'), findsOneWidget);
+      expect(find.text('Sayfa 1'), findsOneWidget);
+      expect(find.text('Sayfa 4'), findsOneWidget);
+      expect(find.text('birinci sayfa'), findsOneWidget);
+      expect(find.text('dorduncu sayfa'), findsOneWidget);
+
+      await tester.tap(find.text('Sayfa 4'));
+      await tester.pumpAndSettle();
+
+      // Pano dönen sayfaya gitti ve alt bölme o sayfanın notunu gösteriyor.
+      expect(find.text('Sayfa 4'), findsOneWidget);
+      expect(find.text('dorduncu sayfa'), findsOneWidget);
+      expect(find.text('birinci sayfa'), findsNothing);
+    });
+
+    testWidgets('toplu görünümde düzenlenen not doğru sayfaya yazılır', (
+      tester,
+    ) async {
+      final attachment = pdf();
+      var note = Note(
+        id: 'n1',
+        type: NoteType.pdf,
+        attachments: [attachment],
+        pageNotes: const {'a1#p1': 'bir', 'a1#p3': 'uc'},
+      );
+      await pump(
+        tester,
+        noteOf: () => note,
+        attachment: attachment,
+        onChanged: (page, text) =>
+            note = note.withPageNote(attachment, page, text),
+      );
+
+      await tester.tap(find.byIcon(Icons.subject));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.text('uc'), 'uc duzeltildi');
+      await tester.pump();
+
+      expect(note.pageNote(attachment, 3), 'uc duzeltildi');
+      expect(note.pageNote(attachment, 1), 'bir');
+    });
+
+    testWidgets('sayfa notu yokken toplu görünüm boş durumu gösterir', (
+      tester,
+    ) async {
+      final attachment = pdf();
+      await pump(
+        tester,
+        noteOf: () =>
+            Note(id: 'n1', type: NoteType.pdf, attachments: [attachment]),
+        attachment: attachment,
+        onChanged: (_, _) {},
+      );
+      await tester.tap(find.byIcon(Icons.subject));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Henüz sayfa notu yok'), findsOneWidget);
+    });
+
     testWidgets('ilk sayfada "önceki" düğmesi pasiftir', (tester) async {
       final attachment = pdf();
       await pump(
         tester,
-        note: Note(id: 'n1', type: NoteType.pdf, attachments: [attachment]),
+        noteOf: () =>
+            Note(id: 'n1', type: NoteType.pdf, attachments: [attachment]),
         attachment: attachment,
         onChanged: (_, _) {},
       );

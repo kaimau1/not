@@ -9,6 +9,7 @@ import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_viewer_screen.dart';
+import 'pdf_notes_overview.dart';
 import 'text_wrap.dart';
 
 /// "PDF ekle not al" notunun gövdesi: ÜSTTE belgenin sayfası, ALTTA O
@@ -25,7 +26,7 @@ import 'text_wrap.dart';
 class PdfNotePane extends StatefulWidget {
   const PdfNotePane({
     super.key,
-    required this.note,
+    required this.noteOf,
     required this.attachment,
     required this.onPageNoteChanged,
     required this.onAttachmentChanged,
@@ -35,7 +36,15 @@ class PdfNotePane extends StatefulWidget {
     this.onFieldDisposed,
   });
 
-  final Note note;
+  /// Notun O ANKİ hâlini veren okuyucu.
+  ///
+  /// Neden anlık görüntü (`Note`) DEĞİL: sayfa notuna yazmak editörde "saf
+  /// yazım" sayılır ve ekran geneli `setState` bilerek ATLANIR (bkz.
+  /// note_editor_screen `_sameVisual` — kasma kök nedeni). Yani pano bir
+  /// `Note` alanı taşısaydı, kullanıcı yazdıktan sonra o alan BAYAT kalır ve
+  /// toplu görünümden dönüşte alan eski metinle doldurulurdu. Kapanış her
+  /// seferinde canlı notu okur.
+  final Note Function() noteOf;
 
   /// Notun birincil PDF eki (ilk PDF).
   final Attachment attachment;
@@ -92,7 +101,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   @override
   void initState() {
     super.initState();
-    _controller.text = widget.note.pageNote(widget.attachment, _page);
+    _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
     _focus.addListener(() {
       if (!_focus.hasFocus) return;
       widget.onFieldFocused?.call(_controller, _focus, _commit);
@@ -111,7 +120,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     // altından çekmek imlecin yerini kaybettirir ve IME'yi bozar (gövde
     // alanında da aynı kural: bkz. note_editor_screen "pristine").
     if (_focus.hasFocus) return;
-    final incoming = widget.note.pageNote(widget.attachment, _page);
+    final incoming = widget.noteOf().pageNote(widget.attachment, _page);
     if (incoming != _controller.logicalText) _controller.text = incoming;
   }
 
@@ -139,7 +148,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     if (next == _page || next < 1) return;
     _commit();
     setState(() => _page = next);
-    _controller.text = widget.note.pageNote(widget.attachment, next);
+    _controller.text = widget.noteOf().pageNote(widget.attachment, next);
   }
 
   /// Sayfa düğmeleri: alt bölme ÖNCE geçer, görüntüleyici ardından kaydırılır.
@@ -154,6 +163,34 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     if (page < 1 || (_pageCount > 0 && page > _pageCount)) return;
     _setPage(page);
     if (_pdf.isReady) _pdf.goToPage(pageNumber: page);
+  }
+
+  /// Toplu görünüm: bütün sayfa notları tek akışta. Başlığa dokunulursa o
+  /// sayfa numarası dönerse pano oraya gider.
+  Future<void> _openOverview() async {
+    // Alandaki son hâl önce kesinleşir: toplu görünüm notu EKRAN AÇILIRKEN
+    // dondurup kendi denetleyicilerine kopyalıyor, bekleyen tuş vuruşları
+    // orada eksik görünmesin.
+    _commit();
+    final page = await Navigator.of(context).push<int>(
+      MaterialPageRoute<int>(
+        builder: (_) => PdfNotesOverviewScreen(
+          note: widget.noteOf(),
+          attachment: widget.attachment,
+          onPageNoteChanged: widget.onPageNoteChanged,
+          textStyle: widget.textStyle,
+          richTheme: widget.richTheme,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    // Toplu görünümde düzenlenen notlar panoya da yansımalı: dönülen sayfa
+    // aynı sayfa olsa bile alan tazelenir.
+    if (page != null && page != _page) {
+      _goTo(page);
+    } else {
+      _controller.text = widget.noteOf().pageNote(widget.attachment, _page);
+    }
   }
 
   Future<void> _openFullScreen() async {
@@ -303,6 +340,12 @@ class _PdfNotePaneState extends State<PdfNotePane> {
                 ? () => _goTo(_page + 1)
                 : null,
             icon: const Icon(Icons.chevron_right),
+          ),
+          IconButton(
+            tooltip: l10n.pdfAllPageNotes,
+            visualDensity: VisualDensity.compact,
+            onPressed: _openOverview,
+            icon: const Icon(Icons.subject),
           ),
           IconButton(
             tooltip: l10n.pdfFullScreen,

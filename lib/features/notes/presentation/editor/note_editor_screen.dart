@@ -3155,7 +3155,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // 7. sayfasının notu yeni belgenin 7. sayfasına yazılırdı.
           child: PdfNotePane(
             key: ValueKey('pdf-pane-${pdf.id}'),
-            note: note,
+            // Anlık görüntü değil canlı okuyucu: sayfa notuna yazmak "saf
+            // yazım" sayıldığı için ekran geneli setState atlanır ve buraya
+            // geçirilen bir `Note` bayat kalırdı (bkz. PdfNotePane.noteOf).
+            noteOf: () => _note ?? note,
             attachment: pdf,
             textStyle: textStyle,
             richTheme: richTheme,

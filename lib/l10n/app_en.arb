@@ -438,6 +438,8 @@
   "pdfFullScreen": "Open full screen",
   "pdfNoDocument": "This note has no PDF yet",
   "pdfChooseDocument": "Choose PDF",
+  "pdfAllPageNotes": "All page notes",
+  "pdfNoPageNotes": "No page notes yet. Turn to a page and write in the field below.",
   "crop": "Crop",
   "cropApply": "Apply crop",
   "cropReset": "Reset selection",

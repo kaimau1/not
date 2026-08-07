@@ -2484,6 +2484,18 @@ abstract class AppLocalizations {
   /// **'PDF seç'**
   String get pdfChooseDocument;
 
+  /// No description provided for @pdfAllPageNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm sayfa notları'**
+  String get pdfAllPageNotes;
+
+  /// No description provided for @pdfNoPageNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.'**
+  String get pdfNoPageNotes;
+
   /// No description provided for @crop.
   ///
   /// In tr, this message translates to:

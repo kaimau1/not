@@ -1287,6 +1287,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfChooseDocument => 'Choose PDF';
 
   @override
+  String get pdfAllPageNotes => 'All page notes';
+
+  @override
+  String get pdfNoPageNotes =>
+      'No page notes yet. Turn to a page and write in the field below.';
+
+  @override
   String get crop => 'Crop';
 
   @override

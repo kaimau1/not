@@ -1264,6 +1264,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get pdfChooseDocument => 'PDF seç';
 
   @override
+  String get pdfAllPageNotes => 'Tüm sayfa notları';
+
+  @override
+  String get pdfNoPageNotes =>
+      'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.';
+
+  @override
   String get crop => '切り抜き';
 
   @override
