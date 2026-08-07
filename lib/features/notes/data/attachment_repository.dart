@@ -539,6 +539,31 @@ class AttachmentRepository {
     );
   }
 
+  /// **Not paketinden** gelen eki bu cihazda kalıcı hâle getirir: baytlar
+  /// yerel kopyaya yazılır, yükleme kuyruğa kalır.
+  ///
+  /// [meta] paketten çözülmüş ek — kimliği, adı ve DÜZEN alanları (konum,
+  /// boyut, çizim, balon, sayfa kimlikleri) olduğu gibi korunur. Kimliğin
+  /// korunması ŞART: sayfa notlarının anahtarı (`<ekId>#<sayfaKimliği>`) ve
+  /// notun zemin görseli ek kimliğine bağlıdır; yeni bir kimlik verilseydi
+  /// paketten gelen not açılırken sayfa notları ve zemini kaybolurdu.
+  /// (Kimlikler UUID; iki kullanıcının aynı kimliği üretmesi söz konusu
+  /// değil, üstelik depo yolu not kimliğiyle ayrışıyor.)
+  Future<Attachment> importAttachment({
+    required String noteId,
+    required Attachment meta,
+    required Uint8List bytes,
+  }) {
+    if (meta.kind != AttachmentKind.video && bytes.length > maxBytes) {
+      throw const FileTooLargeException();
+    }
+    return _store(
+      noteId,
+      meta.copyWith(sizeBytes: bytes.length),
+      bytes,
+    );
+  }
+
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
   /// indirme adresiyle birlikte güncellenmiş metadata'yı döner.
   Future<Attachment?> upload(String noteId, Attachment attachment) async {

@@ -379,7 +379,10 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   /// Metni okunabilir parçalara böler. Cümle sonu yoksa (madde listeleri,
   /// başlıklar) satır sonu da ayraç sayılır; çok uzun parçalar TTS motorunda
   /// kesilebildiği için ayrıca kırpılır.
-  @visibleForTesting
+  ///
+  /// Dışarı AÇIK (eskiden yalnız testlere görünürdü): yapay zekâ seslendirmesi
+  /// de metni aynı kurallarla bölmek zorunda — iki motorun cümle sınırı
+  /// ayrışırsa aynı metin iki farklı yerde duraklar. Bkz. `AiSpeechController`.
   static List<String> splitSentences(String text) {
     const maxChunk = 300;
     final chunks = <String>[];

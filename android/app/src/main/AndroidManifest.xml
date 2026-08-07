@@ -81,6 +81,36 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="image/*"/>
             </intent-filter>
+            <!-- NOT PAKETİ (.notpaket): başka bir Not kullanıcısının gönderdiği
+                 not; ekleri, sayfa notları, çizimleri ve PDF balonlarıyla
+                 birlikte açılır (bkz. note_package.dart).
+
+                 İki filtre gerekiyor çünkü paket iki yoldan gelebiliyor:
+                 * VIEW + pathPattern — dosya yöneticisinden/indirilenlerden
+                   "birlikte aç". Uzantıya bakar, MIME'a değil: .notpaket'in
+                   kayıtlı bir MIME türü yok.
+                 * SEND + application/zip — paylaş menüsünden. YALNIZ zip:
+                   `application/octet-stream` yazılsaydı Notlar TANIMSIZ HER
+                   dosya türünde paylaş menüsünde çıkardı (yukarıdaki `*/*`
+                   uyarısının aynısı). Paket zaten zip olarak paylaşılıyor.
+
+                 Dosya gerçekten paket değilse çalışma anında anlaşılır ve
+                 normal paylaşım yoluna düşülür (bkz. share_intake.dart). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:host="*"/>
+                <data android:mimeType="*/*"/>
+                <data android:pathPattern=".*\\.notpaket"/>
+                <data android:pathPattern=".*\\..*\\.notpaket"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:mimeType="application/zip"/>
+            </intent-filter>
             <meta-data android:name="android.app.shortcuts"
                 android:resource="@xml/app_shortcuts" />
         </activity>

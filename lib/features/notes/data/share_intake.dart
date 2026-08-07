@@ -13,6 +13,8 @@ import '../../../app/router.dart';
 import '../domain/attachment.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
+import 'note_package.dart';
+import 'note_share.dart';
 import 'notes_repository.dart';
 
 /// Paylaş menüsünden gelen içerikleri nota çevirir: başka bir uygulamada
@@ -71,6 +73,31 @@ final shareIntakeProvider = Provider<void>((ref) {
       }
     }
 
+    // NOT PAKETİ (.notpaket) önce denenir: başka bir Not kullanıcısının
+    // gönderdiği dosya ham bir ek değil, notun KENDİSİdir — ekleri, sayfa
+    // notları, çizimleri, balonları ve görünümüyle birlikte açılır.
+    // Eşleşirse buradan çıkılır; aynı dosya ayrıca eke çevrilmemeli.
+    for (final f in files) {
+      if (!f.path.toLowerCase().endsWith(NotePackage.fileExtension)) continue;
+      if (!safeToRead(f.path)) continue;
+      try {
+        final package = readNotePackage(await File(f.path).readAsBytes());
+        final noteId = await NoteShare.import(
+          package,
+          notes: repo,
+          attachments: ref.read(attachmentRepositoryProvider),
+        );
+        ReceiveSharingIntent.instance.reset();
+        try {
+          ref.read(routerProvider).push(noteRoutePath(noteId));
+        } catch (_) {}
+        return;
+      } catch (_) {
+        // Bozuk ya da bize ait olmayan bir .notpaket: aşağıdaki normal
+        // paylaşım yolu devam etsin (dosya yine de bir ek olabilir).
+      }
+    }
+
     final bodyParts = <String>[];
     final docs = <SharedMediaFile>[];
     for (final f in files) {
@@ -82,6 +109,14 @@ final shareIntakeProvider = Provider<void>((ref) {
       if (f.path.trimLeft().startsWith('notlar://')) continue;
       if (shareAttachmentKind(f) != null) {
         docs.add(f);
+        continue;
+      }
+      // Arşiv dosyası (paket filtresi yüzünden buraya kadar gelen ama not
+      // paketi ÇIKMAYAN bir zip) metin sayılmaz: ikili baytları gövdeye
+      // yazmak okunamaz bir çöp not üretirdi.
+      final lower = f.path.toLowerCase();
+      if (lower.endsWith('.zip') ||
+          lower.endsWith(NotePackage.fileExtension)) {
         continue;
       }
       // Metin girdisi iki şey olabilir: paylaşılan yazının KENDİSİ ya da bir

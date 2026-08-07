@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
+import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
+import '../data/ai_speech.dart';
 import '../data/gemini_service.dart';
 
 /// Bir belgeyi sesli dinleme ekranı. Üç mod var:
@@ -14,6 +16,11 @@ import '../data/gemini_service.dart';
 ///   Bir model çağrısı harcar ama dinlenebilirliği asıl bu sağlar — ham belge
 ///   metni sesli okunduğunda tablo kırıntıları ve dipnotlar da okunur.
 /// - **Özet podcast**: aynı çağrı, "kısalt" talimatıyla.
+///
+/// Seslendirmeyi kim yapacağı ayrı bir tercihtir: cihazın yerleşik TTS'i
+/// (bedava, çevrimdışı) ya da **AI ile dinle** — Gemini'nin seslendirme
+/// modeli (belirgin daha doğal, her paragraf bir model çağrısı). Varsayılan
+/// Ayarlar'dan gelir; bu ekrandaki anahtar o okumaya özel değiştirir.
 ///
 /// Ekran metnin nereden geldiğini bilmez; [loadText] ne verirse onu okur.
 /// PDF, Word, PowerPoint ve düz metin aynı ekranı kullanıyor.
@@ -48,6 +55,13 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   bool _fromCache = false;
   bool _lastSummarize = false;
 
+  /// Bu okumada YAPAY ZEKÂ sesi kullanılsın mı? Başlangıç değeri Ayarlar'daki
+  /// tercih; kullanıcı ekrandaki anahtarla o okuma için değiştirebilir.
+  bool? _aiVoice;
+
+  bool get _useAiVoice =>
+      _aiVoice ?? (ref.read(ttsEngineProvider) == TtsEngine.gemini);
+
   @override
   void initState() {
     super.initState();
@@ -55,14 +69,48 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   }
 
   /// dispose'da `ref` kullanılamaz (Riverpod "widget unmounted" hatası atar ve
-  /// okuma DURMAZ); denetleyici build'de alana alınır.
+  /// okuma DURMAZ); denetleyiciler build'de alana alınır.
   SpeechOutputController? _speech;
+  AiSpeechController? _aiSpeech;
 
   @override
   void dispose() {
-    // Ekrandan çıkınca okuma sürmesin.
+    // Ekrandan çıkınca okuma sürmesin (hangisi konuşuyorsa o dursun).
     _speech?.stop();
+    _aiSpeech?.stop();
     super.dispose();
+  }
+
+  /// Oynat/duraklat/devam düğmesi. Yapay zekâ sesinde model çağrısı
+  /// başarısız olursa (kota, anahtar, ağ) hata gösterilir ve okuma CİHAZ
+  /// sesiyle sürer — sessizce hiçbir şey olmaması en kötü sonuç olurdu.
+  Future<void> _togglePlay(SpeechOutputState speech, String text) async {
+    final aiVoice = _useAiVoice;
+    final device = ref.read(speechOutputProvider.notifier);
+    final ai = ref.read(aiSpeechProvider.notifier);
+    if (speech.state == SpeechState.speaking) {
+      await (aiVoice ? ai.pause() : device.pause());
+      return;
+    }
+    if (speech.state == SpeechState.paused) {
+      await (aiVoice ? ai.resume() : device.resume());
+      return;
+    }
+    if (!aiVoice) {
+      await device.speak(text);
+      return;
+    }
+    try {
+      await ai.speak(text);
+    } catch (e) {
+      if (!mounted) return;
+      final message = e is GeminiException ? e.message : '$e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.listenAiVoiceFailed(message))),
+      );
+      setState(() => _aiVoice = false);
+      await device.speak(text);
+    }
   }
 
   Future<void> _loadDocument() async {
@@ -105,6 +153,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     final source = _original;
     if (source == null) return;
     await ref.read(speechOutputProvider.notifier).stop();
+    await ref.read(aiSpeechProvider.notifier).stop();
 
     // Aynı belgeyi ikinci kez açmak binlerce token'a mal olmasın: üretilen
     // metin içerik özetine göre saklanıyor, belge değişirse anahtar da değişir.
@@ -163,6 +212,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
 
   Future<void> _showOriginal() async {
     await ref.read(speechOutputProvider.notifier).stop();
+    await ref.read(aiSpeechProvider.notifier).stop();
     if (!mounted) return;
     setState(() {
       _text = _original;
@@ -175,9 +225,16 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final speech = ref.watch(speechOutputProvider);
+    // Hangi ses konuşuyorsa ONUN durumu izlenir: oynat/duraklat düğmesi ve
+    // ilerleme çubuğu iki motorda da aynı `SpeechOutputState`i okur.
+    final aiVoice = _useAiVoice;
+    final aiAvailable = ref.read(aiSpeechProvider.notifier).isAvailable;
+    final speech = aiVoice
+        ? ref.watch(aiSpeechProvider)
+        : ref.watch(speechOutputProvider);
     final controller = ref.read(speechOutputProvider.notifier);
     _speech = controller;
+    _aiSpeech = ref.read(aiSpeechProvider.notifier);
     final text = _text;
 
     return Scaffold(
@@ -270,16 +327,8 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                                 style: FilledButton.styleFrom(
                                   minimumSize: const Size.fromHeight(52),
                                 ),
-                                onPressed: () {
-                                  if (speech.state == SpeechState.speaking) {
-                                    controller.pause();
-                                  } else if (speech.state ==
-                                      SpeechState.paused) {
-                                    controller.resume();
-                                  } else {
-                                    controller.speak(text ?? '');
-                                  }
-                                },
+                                onPressed: () =>
+                                    _togglePlay(speech, text ?? ''),
                                 icon: Icon(switch (speech.state) {
                                   SpeechState.speaking => Icons.pause,
                                   SpeechState.paused => Icons.play_arrow,
@@ -296,12 +345,43 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                               const SizedBox(width: 8),
                               IconButton.filledTonal(
                                 tooltip: l10n.speechStop,
-                                onPressed: controller.stop,
+                                onPressed: aiVoice
+                                    ? ref.read(aiSpeechProvider.notifier).stop
+                                    : controller.stop,
                                 icon: const Icon(Icons.stop),
                               ),
                             ],
                           ],
                         ),
+                        // "AI ile dinle": okumayı cihaz sesi yerine Gemini'nin
+                        // seslendirme modeline yaptırır. Kendi Gemini anahtarı
+                        // yoksa seçenek gösterilmez — dahili yol ses
+                        // döndürmüyor, açık bir düğmenin hep hata vermesi
+                        // yanıltıcı olurdu.
+                        if (aiAvailable)
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                            value: aiVoice,
+                            title: Text(
+                              l10n.listenAiVoice,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            subtitle: Text(
+                              l10n.listenAiVoiceInfo,
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                            onChanged: (value) async {
+                              // Motor değişiyor: konuşan varsa sussun, yoksa
+                              // iki ses üst üste biner.
+                              await ref
+                                  .read(speechOutputProvider.notifier)
+                                  .stop();
+                              await ref.read(aiSpeechProvider.notifier).stop();
+                              if (mounted) setState(() => _aiVoice = value);
+                            },
+                          ),
                         if (!_isPodcast) ...[
                           const SizedBox(height: 10),
                           Text(

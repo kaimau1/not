@@ -37,6 +37,30 @@ abstract final class AppConstants {
   /// kalır (model geçişleri böyle optimize edilir).
   static const String voiceAssistantModel = 'gemini-3.5-flash';
 
+  /// Gemini SESLENDİRME (TTS) modelleri — model listesi çekilemezse kullanılan
+  /// yedek. Ayarlardaki seçici katalogdan "tts" içeren kimlikleri süzer;
+  /// katalog gelmezse bu liste gösterilir.
+  ///
+  /// TTS ayrı bir model ailesidir: metin modelleri ses ÜRETEMEZ, bu yüzden
+  /// podcast modeliyle aynı seçiciye konamaz (bkz. AiTask, ttsModelProvider).
+  static const List<String> geminiTtsModelPreference = [
+    'gemini-2.5-flash-preview-tts',
+    'gemini-2.5-pro-preview-tts',
+  ];
+
+  /// Gemini TTS'in hazır ses adları. Tümü çok dilli (Türkçe dahil); liste
+  /// bilerek kısa tutuldu — otuz sesin hepsini göstermek seçimi kolaylaştırmaz.
+  static const List<String> geminiTtsVoices = [
+    'Kore',
+    'Puck',
+    'Zephyr',
+    'Charon',
+    'Aoede',
+    'Leda',
+    'Orus',
+    'Fenrir',
+  ];
+
   /// Dahili AI günlük bütçesi PUAN olarak sayılır, çağrı olarak değil:
   /// 100 sayfalık bir PDF özeti ile bir başlık üretiminin maliyeti arasında
   /// iki mertebe fark var; ikisini "1 hak" saymak faturayı öngörülemez

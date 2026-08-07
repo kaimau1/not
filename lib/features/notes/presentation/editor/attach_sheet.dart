@@ -19,11 +19,12 @@ import '../qr_scan_screen.dart';
 /// "Metin ekle" / "Liste maddesi ekle" de BURADA (en üstteki bölüm): eskiden
 /// alt çubukta kendi segmentleri vardı, çubuk üç segmentle kalabalıktı ve
 /// "ekleme" işi iki ayrı yere bölünmüştü. Artık eklenen her şey tek kapıdan
-/// geçiyor, çubukta yalnız "Biçim" ve "Ekle" kaldı.
+/// geçiyor, çubukta yalnız "Biçim" ve "Ekle" kaldı. İkisi de not tipinden
+/// BAĞIMSIZ görünür (bkz. build).
 Future<String?> showAttachSheet(
   BuildContext context, {
   required bool isDesktop,
-  required bool textNote,
+  bool pageNote = false,
   String? copiedAttachmentName,
 }) => showModalBottomSheet<String>(
   context: context,
@@ -38,7 +39,7 @@ Future<String?> showAttachSheet(
   ),
   builder: (sheetContext) => _AttachSheet(
     isDesktop: isDesktop,
-    textNote: textNote,
+    pageNote: pageNote,
     copiedAttachmentName: copiedAttachmentName,
   ),
 );
@@ -49,16 +50,17 @@ typedef _Entry = (String, IconData, String, String?);
 class _AttachSheet extends StatelessWidget {
   const _AttachSheet({
     required this.isDesktop,
-    required this.textNote,
+    required this.pageNote,
     this.copiedAttachmentName,
   });
 
   final bool isDesktop;
 
-  /// Metin notu mu (true) yoksa liste notu mu — "not içeriği" bölümündeki tek
-  /// seçenek buna göre değişir: metin notuna liste maddesi, liste notuna
-  /// serbest metin eklenir.
-  final bool textNote;
+  /// Belge (PDF/sunum) notu mu? Öyleyse "not içeriği" bölümü HİÇ gösterilmez:
+  /// o ekranda gövde metni de madde listesi de çizilmiyor (içerik sayfa
+  /// başına tutulan notlarda), seçenek gösterip hiçbir şey olmaması
+  /// kullanıcıyı yanıltırdı.
+  final bool pageNote;
 
   final String? copiedAttachmentName;
 
@@ -68,12 +70,20 @@ class _AttachSheet extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final copied = copiedAttachmentName;
 
-    // Notun KENDİ içeriğine eklenenler (ek dosya değil): en üstte, tek satır.
+    // Notun KENDİ içeriğine eklenenler (ek dosya değil): en üstte.
+    //
+    // İKİSİ DE HER ZAMAN görünür (kullanıcı bulgusu: "liste ekle seçeneği
+    // yok"). Eskiden not tipine göre yalnız biri gösteriliyordu — metin
+    // notunda "Liste maddesi", liste/belge notunda "Metin". Oysa not tipleri
+    // KARIŞIK içerik taşıyabiliyor: metin notunun altına madde listesi,
+    // liste notunun başına serbest metin girebiliyor. Tek seçenek göstermek
+    // var olan bir yeteneği ekranda yokmuş gibi gösteriyordu; artık kullanıcı
+    // hangi nottayken ne eklemek isterse onu seçiyor.
     final content = <_Entry>[
-      if (textNote)
-        ('list-item', Icons.checklist, l10n.editorToolList, null)
-      else
+      if (!pageNote) ...[
         ('text-block', Icons.notes, l10n.addTextBlock, null),
+        ('list-item', Icons.checklist, l10n.editorToolList, null),
+      ],
     ];
 
     // GÖRSEL bölümü ile BELGE/DİĞER bölümü ayrı başlıklar altında: on üç
@@ -155,8 +165,10 @@ class _AttachSheet extends StatelessWidget {
               ),
             ],
           ),
-          _SectionLabel(l10n.attachNoteContent),
-          _Grid(entries: content, scheme: scheme),
+          if (content.isNotEmpty) ...[
+            _SectionLabel(l10n.attachNoteContent),
+            _Grid(entries: content, scheme: scheme),
+          ],
           _SectionLabel(l10n.quickAddCapture),
           _Grid(entries: visual, scheme: scheme),
           _SectionLabel(l10n.aiSectionAttachments),

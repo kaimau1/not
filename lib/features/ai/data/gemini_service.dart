@@ -14,6 +14,7 @@ import 'ai_provider.dart';
 import 'api_key_store.dart';
 import 'firebase_ai_client.dart';
 import 'model_catalog.dart';
+import 'pcm_wav.dart';
 import 'provider_chat.dart';
 
 final geminiServiceProvider = Provider<GeminiService>(
@@ -41,6 +42,12 @@ final geminiServiceProvider = Provider<GeminiService>(
 /// zıplıyordu (madde 3).
 final availableModelsProvider = FutureProvider<List<AiModel>>(
   (ref) => ref.watch(geminiServiceProvider).availableModels(),
+);
+
+/// Kullanılabilir SESLENDİRME modelleri — ayarlardaki TTS model seçicisi
+/// bunu izler (metin modelleriyle aynı önbellekleme gerekçesi).
+final availableTtsModelsProvider = FutureProvider<List<AiModel>>(
+  (ref) => ref.watch(geminiServiceProvider).availableTtsModels(),
 );
 
 class GeminiException implements Exception {
@@ -518,7 +525,88 @@ class GeminiService {
           '- Sonunda tek cümlelik kapanış yap.\n'
           'Yalnızca anlatı metnini yaz.\n\n---\n$documentText',
     },
-  ], preferModel: _taskModel(AiTask.document));
+  ], preferModel: _taskModel(AiTask.podcast) ?? _taskModel(AiTask.document));
+
+
+  /// Metni Gemini'nin SESLENDİRME modeliyle okur ve çalınabilir WAV baytları
+  /// döndürür.
+  ///
+  /// Neden ayrı bir yol (metin üretimiyle aynı `_generate` değil): TTS ayrı
+  /// bir model ailesidir ve yanıtı METİN değil `inline_data` içinde ham PCM
+  /// verir; ayrıca istek `responseModalities: ["AUDIO"]` ve bir ses ayarı
+  /// ister. Yanıt WAV başlığı taşımadığı için başlığı biz yazarız (bkz.
+  /// [pcmToWav]) — yoksa hiçbir oynatıcı çalmaz.
+  ///
+  /// KISIT: yalnız kullanıcının KENDİ Gemini anahtarıyla çalışır. Dahili
+  /// (Firebase AI Logic) yol metin döndürüyor, ses döndürmüyor; anahtarsız
+  /// kullanıcıya bunu sessizce yutmak yerine söylemek gerekiyor.
+  Future<Uint8List> speech(
+    String text, {
+    required String voice,
+    String? model,
+  }) async {
+    _requireGemini('Yapay zekâ seslendirmesi');
+    final key = await _apiKey();
+    final ttsModel = model ?? AppConstants.geminiTtsModelPreference.first;
+    final Response<Map<String, dynamic>> response;
+    try {
+      response = await _dio.post<Map<String, dynamic>>(
+        '/models/$ttsModel:generateContent',
+        options: Options(headers: _provider.authHeaders(key)),
+        data: {
+          'contents': [
+            {
+              'parts': [
+                {'text': text},
+              ],
+            },
+          ],
+          'generationConfig': {
+            'responseModalities': ['AUDIO'],
+            'speechConfig': {
+              'voiceConfig': {
+                'prebuiltVoiceConfig': {'voiceName': voice},
+              },
+            },
+          },
+        },
+      );
+    } on DioException catch (e) {
+      throw _mapDioError(e);
+    }
+    final parts =
+        (((response.data?['candidates'] as List?)?.firstOrNull
+                    as Map?)?['content']
+                as Map?)?['parts']
+            as List?;
+    for (final part in parts ?? const []) {
+      final inline = (part as Map)['inlineData'] ?? part['inline_data'];
+      if (inline is! Map) continue;
+      final data = inline['data'] as String?;
+      if (data == null || data.isEmpty) continue;
+      final mime = (inline['mimeType'] ?? inline['mime_type'] ?? '') as String;
+      return pcmToWav(base64Decode(data), sampleRate: pcmSampleRate(mime));
+    }
+    throw const GeminiException('Seslendirme modeli ses döndürmedi');
+  }
+
+  /// Kullanılabilir SESLENDİRME modelleri. Katalogdan "tts" içeren kimlikler
+  /// süzülür; katalog gelmezse (anahtar yok, ağ yok) yerleşik tercih listesi.
+  Future<List<AiModel>> availableTtsModels() async {
+    final stored = await _keyStore.read(_provider);
+    if (_provider == AiProvider.gemini && (stored?.isNotEmpty ?? false)) {
+      final catalog = _catalog ??= await _fetchCatalog(stored!);
+      final tts = [
+        for (final model in catalog)
+          if (model.id.toLowerCase().contains('tts')) model,
+      ];
+      if (tts.isNotEmpty) return tts;
+    }
+    return [
+      for (final id in AppConstants.geminiTtsModelPreference)
+        AiModel(id: id, label: id, recommended: true),
+    ];
+  }
 
   /// Ham brifing verisini (hatırlatıcılar, notlar) samimi ve kısa bir günlük
   /// brifinge dönüştürür.

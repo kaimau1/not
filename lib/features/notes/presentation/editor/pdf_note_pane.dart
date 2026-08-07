@@ -6,6 +6,7 @@ import 'package:pdfrx/pdfrx.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import 'page_note_pane.dart';
@@ -65,18 +66,29 @@ class _PdfNotePaneState extends State<PdfNotePane> {
         widget.onAttachmentChanged(widget.attachment.copyWith(ink: strokes)),
   );
 
+  /// Not balonları BURADA da düzenlenebilir (çizimden farkı bu): balon metin
+  /// alanıdır, küçük bölmede de tıklanıp yazılabilir ve kullanıcı belgenin
+  /// üzerinde planını tam ekrana geçmeden kurabilir.
+  late final BubbleController _bubbles = BubbleController(
+    initial: widget.attachment.bubbles,
+    onChanged: (list) =>
+        widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
+  );
+
   @override
   void didUpdateWidget(PdfNotePane old) {
     super.didUpdateWidget(old);
-    // Tam ekranda çizim yapılıp dönüldüyse pano da tazelenir.
+    // Tam ekranda çizim/balon eklenip dönüldüyse pano da tazelenir.
     // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
     // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
     _ink.replace(widget.attachment.ink);
+    _bubbles.replace(widget.attachment.bubbles);
   }
 
   @override
   void dispose() {
     _ink.dispose();
+    _bubbles.dispose();
     super.dispose();
   }
 
@@ -100,8 +112,12 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     onFieldFocused: widget.onFieldFocused,
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
-    viewerBuilder: (context, host) =>
-        _PdfPaneViewer(attachment: widget.attachment, ink: _ink, host: host),
+    viewerBuilder: (context, host) => _PdfPaneViewer(
+      attachment: widget.attachment,
+      ink: _ink,
+      bubbles: _bubbles,
+      host: host,
+    ),
   );
 }
 
@@ -114,11 +130,13 @@ class _PdfPaneViewer extends StatefulWidget {
   const _PdfPaneViewer({
     required this.attachment,
     required this.ink,
+    required this.bubbles,
     required this.host,
   });
 
   final Attachment attachment;
   final InkController ink;
+  final BubbleController bubbles;
   final PageNoteHost host;
 
   @override
@@ -157,25 +175,36 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           controller.goToPage(pageNumber: widget.host.page);
         }
       },
-      // Çizimler görünür ama düzenlenmez (bkz. [_PdfNotePaneState._ink]).
+      // Çizimler görünür ama düzenlenmez (bkz. [_PdfNotePaneState._ink]);
+      // balonlar burada da açılır/yazılır/taşınır.
       pageOverlaysBuilder: (context, pageRect, page) => [
         Positioned.fill(
           child: InkPageLayer(controller: widget.ink, page: page.pageNumber),
         ),
+        Positioned.fill(
+          child: BubblePageLayer(
+            controller: widget.bubbles,
+            page: page.pageNumber,
+          ),
+        ),
       ],
     );
     if (hasLocal) {
-      return PdfViewer.file(
-        attachment.localPath,
-        controller: _pdf,
-        params: params,
+      return _withBubbleButton(
+        PdfViewer.file(
+          attachment.localPath,
+          controller: _pdf,
+          params: params,
+        ),
       );
     }
     if (attachment.isUploaded) {
-      return PdfViewer.uri(
-        Uri.parse(attachment.downloadUrl),
-        controller: _pdf,
-        params: params,
+      return _withBubbleButton(
+        PdfViewer.uri(
+          Uri.parse(attachment.downloadUrl),
+          controller: _pdf,
+          params: params,
+        ),
       );
     }
     // Dosya ne cihazda ne bulutta: başka bir cihazda eklenmiş ve henüz
@@ -192,4 +221,43 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
       ),
     );
   }
+
+  /// Görüntüleyicinin üstüne "balon bırak" düğmesi koyar. Pano bölmesi küçük
+  /// olduğu için düğme küçük ve köşede: sayfayı kapatmaz ama planlamaya tam
+  /// ekrana geçmeden başlanabilir.
+  Widget _withBubbleButton(Widget viewer) => Stack(
+    children: [
+      Positioned.fill(child: viewer),
+      Positioned(
+        top: 4,
+        right: 4,
+        child: AnimatedBuilder(
+          animation: widget.bubbles,
+          builder: (context, _) {
+            final adding = widget.bubbles.adding;
+            final scheme = Theme.of(context).colorScheme;
+            return Material(
+              color: adding ? scheme.primary : scheme.surface.withValues(
+                alpha: 0.85,
+              ),
+              shape: const CircleBorder(),
+              elevation: 2,
+              child: IconButton(
+                tooltip: adding
+                    ? context.l10n.bubbleAddDone
+                    : context.l10n.bubbleAdd,
+                visualDensity: VisualDensity.compact,
+                onPressed: () => widget.bubbles.setAdding(!adding),
+                icon: Icon(
+                  adding ? Icons.chat_bubble : Icons.add_comment_outlined,
+                  size: 18,
+                  color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ],
+  );
 }

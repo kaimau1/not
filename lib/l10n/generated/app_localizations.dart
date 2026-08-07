@@ -3911,6 +3911,138 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'varsayılan'**
   String get appFontDefaultSuffix;
+
+  /// No description provided for @pdfSelectOcrRunning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin tanınıyor…'**
+  String get pdfSelectOcrRunning;
+
+  /// No description provided for @pdfSelectOcrNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfada metin bulunamadı'**
+  String get pdfSelectOcrNone;
+
+  /// No description provided for @pdfSelectCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'{n} karakter kopyalandı'**
+  String pdfSelectCopied(int n);
+
+  /// No description provided for @bubbleAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not balonu bırak'**
+  String get bubbleAdd;
+
+  /// No description provided for @bubbleAddDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balon bırakmayı bitir'**
+  String get bubbleAddDone;
+
+  /// No description provided for @bubbleCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonu küçült'**
+  String get bubbleCollapse;
+
+  /// No description provided for @bubbleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Buraya notunu yaz…'**
+  String get bubbleHint;
+
+  /// No description provided for @bubbleTapToPlace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfada balonu bırakmak istediğin yere dokun'**
+  String get bubbleTapToPlace;
+
+  /// No description provided for @aiModelPodcast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast anlatısı'**
+  String get aiModelPodcast;
+
+  /// No description provided for @listenAiVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ sesiyle dinle'**
+  String get listenAiVoice;
+
+  /// No description provided for @listenAiVoiceInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.'**
+  String get listenAiVoiceInfo;
+
+  /// No description provided for @listenAiVoiceFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ seslendirmesi başarısız oldu ({error}). Cihaz sesiyle okunuyor.'**
+  String listenAiVoiceFailed(String error);
+
+  /// No description provided for @ttsSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seslendirme'**
+  String get ttsSectionTitle;
+
+  /// No description provided for @ttsEngineDevice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihaz sesi'**
+  String get ttsEngineDevice;
+
+  /// No description provided for @ttsEngineAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ'**
+  String get ttsEngineAi;
+
+  /// No description provided for @ttsEngineDeviceInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.'**
+  String get ttsEngineDeviceInfo;
+
+  /// No description provided for @ttsEngineAiInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.'**
+  String get ttsEngineAiInfo;
+
+  /// No description provided for @ttsModel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seslendirme modeli'**
+  String get ttsModel;
+
+  /// No description provided for @ttsVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ sesi'**
+  String get ttsVoice;
+
+  /// No description provided for @shareAsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not olarak paylaş'**
+  String get shareAsNote;
+
+  /// No description provided for @shareAsNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.'**
+  String get shareAsNoteInfo;
+
+  /// No description provided for @shareAsNotePreparing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not paketi hazırlanıyor…'**
+  String get shareAsNotePreparing;
 }
 
 class _AppLocalizationsDelegate
