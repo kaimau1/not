@@ -1614,6 +1614,18 @@ abstract class AppLocalizations {
   /// **'Yeni not oluştur'**
   String get voiceCaptureCreateNote;
 
+  /// No description provided for @voiceCaptureAiNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI not'**
+  String get voiceCaptureAiNote;
+
+  /// No description provided for @voiceCapturePlainNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz not'**
+  String get voiceCapturePlainNote;
+
   /// No description provided for @voiceCaptureRestart.
   ///
   /// In tr, this message translates to:
@@ -3719,6 +3731,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.'**
   String get appFontInfo;
+
+  /// No description provided for @fontGroupSans.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sade'**
+  String get fontGroupSans;
+
+  /// No description provided for @fontGroupSerif.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kitap'**
+  String get fontGroupSerif;
+
+  /// No description provided for @fontGroupMono.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daktilo'**
+  String get fontGroupMono;
+
+  /// No description provided for @fontGroupHand.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı'**
+  String get fontGroupHand;
 
   /// No description provided for @appFontDefaultSuffix.
   ///

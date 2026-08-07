@@ -269,6 +269,8 @@
   },
   "voiceCaptureAddToNote": "Add to note",
   "voiceCaptureCreateNote": "Create new note",
+  "voiceCaptureAiNote": "AI note",
+  "voiceCapturePlainNote": "Plain note",
   "voiceCaptureRestart": "Record again",
   "voiceChipSummarizeAdd": "Add as summary",
   "voiceChipSummarizeSave": "Save as summary",
@@ -685,5 +687,9 @@
   "fontSizeXLarge": "Extra large",
   "appFontSetting": "Font",
   "appFontInfo": "The font used everywhere in the app. A note's own font choice overrides it. All fonts ship with the app — no internet needed.",
+  "fontGroupSans": "Sans",
+  "fontGroupSerif": "Serif",
+  "fontGroupMono": "Monospace",
+  "fontGroupHand": "Handwriting",
   "appFontDefaultSuffix": "default"
 }

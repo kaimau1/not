@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · автопунктуация",
   "voiceCaptureAddToNote": "Добавить в заметку",
   "voiceCaptureCreateNote": "Создать новую заметку",
+  "voiceCaptureAiNote": "ИИ-заметка",
+  "voiceCapturePlainNote": "Обычная заметка",
   "voiceCaptureRestart": "Записать снова",
   "voiceChipSummarizeAdd": "Добавить как резюме",
   "voiceChipSummarizeSave": "Сохранить как резюме",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "Очень крупный",
   "appFontSetting": "Шрифт",
   "appFontInfo": "Шрифт всего приложения. Собственный шрифт заметки имеет приоритет. Все шрифты входят в приложение — интернет не нужен.",
+  "fontGroupSans": "Без засечек",
+  "fontGroupSerif": "С засечками",
+  "fontGroupMono": "Моноширинный",
+  "fontGroupHand": "Рукописный",
   "appFontDefaultSuffix": "по умолчанию"
 }

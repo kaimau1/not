@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · 自动标点",
   "voiceCaptureAddToNote": "添加到笔记",
   "voiceCaptureCreateNote": "创建新笔记",
+  "voiceCaptureAiNote": "AI 笔记",
+  "voiceCapturePlainNote": "普通笔记",
   "voiceCaptureRestart": "重新录音",
   "voiceChipSummarizeAdd": "添加为摘要",
   "voiceChipSummarizeSave": "保存为摘要",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "超大",
   "appFontSetting": "字体",
   "appFontInfo": "应用中各处使用的字体。笔记自身的字体设置优先。所有字体都随应用内置，无需联网。",
+  "fontGroupSans": "无衬线",
+  "fontGroupSerif": "衬线",
+  "fontGroupMono": "等宽",
+  "fontGroupHand": "手写",
   "appFontDefaultSuffix": "默认"
 }

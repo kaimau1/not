@@ -796,6 +796,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get voiceCaptureCreateNote => '创建新笔记';
 
   @override
+  String get voiceCaptureAiNote => 'AI 笔记';
+
+  @override
+  String get voiceCapturePlainNote => '普通笔记';
+
+  @override
   String get voiceCaptureRestart => '重新录音';
 
   @override
@@ -1905,6 +1911,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get appFontInfo => '应用中各处使用的字体。笔记自身的字体设置优先。所有字体都随应用内置，无需联网。';
+
+  @override
+  String get fontGroupSans => '无衬线';
+
+  @override
+  String get fontGroupSerif => '衬线';
+
+  @override
+  String get fontGroupMono => '等宽';
+
+  @override
+  String get fontGroupHand => '手写';
 
   @override
   String get appFontDefaultSuffix => '默认';

@@ -515,13 +515,25 @@ class WrapFieldMeasure extends StatefulWidget {
 }
 
 class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
+  /// Bu kare için ölçüm zaten sıraya girdi mi (bkz. aşağıdaki `idle`).
+  bool _scheduled = false;
+
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    // Sarma yalnız görsel varken (ya da tamponda temizlenecek çapa kalmışken)
+    // iş yapar; ikisi de yoksa kare-sonu geri çağrısı hiç kurulmaz. Alan
+    // başına kare başına bir kapanış, uzun bir madde listesinde satır sayısı
+    // kadar boş iş demekti.
+    final idle = widget.floats.isEmpty && widget.controller.isPlain;
+    if (!_scheduled && !idle) {
+      _scheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    }
     return widget.child;
   }
 
   void _measure() {
+    _scheduled = false;
     if (!mounted) return;
     // Görsel yok ve tampon zaten temiz: hiçbir şey ölçme. (Görsel silinince
     // bir kez daha ölçülür ki kalan çapalar temizlensin.)

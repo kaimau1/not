@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · otomatik noktalama",
   "voiceCaptureAddToNote": "Nota ekle",
   "voiceCaptureCreateNote": "Yeni not oluştur",
+  "voiceCaptureAiNote": "Catatan AI",
+  "voiceCapturePlainNote": "Catatan biasa",
   "voiceCaptureRestart": "Yeniden kaydet",
   "voiceChipSummarizeAdd": "Özet olarak ekle",
   "voiceChipSummarizeSave": "Özet olarak kaydet",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "Sangat besar",
   "appFontSetting": "Font",
   "appFontInfo": "Font yang dipakai di seluruh aplikasi. Font milik catatan lebih diutamakan. Semua font sudah menyatu dengan aplikasi — tak perlu internet.",
+  "fontGroupSans": "Sans",
+  "fontGroupSerif": "Serif",
+  "fontGroupMono": "Monospace",
+  "fontGroupHand": "Tulisan tangan",
   "appFontDefaultSuffix": "bawaan"
 }

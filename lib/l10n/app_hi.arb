@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · स्वचालित विराम चिह्न",
   "voiceCaptureAddToNote": "नोट में जोड़ें",
   "voiceCaptureCreateNote": "नया नोट बनाएं",
+  "voiceCaptureAiNote": "AI नोट",
+  "voiceCapturePlainNote": "सादा नोट",
   "voiceCaptureRestart": "फिर से रिकॉर्ड करें",
   "voiceChipSummarizeAdd": "सारांश के रूप में जोड़ें",
   "voiceChipSummarizeSave": "सारांश के रूप में सहेजें",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "बहुत बड़ा",
   "appFontSetting": "फ़ॉन्ट",
   "appFontInfo": "पूरे ऐप में इस्तेमाल होने वाला फ़ॉन्ट. नोट का अपना फ़ॉन्ट इस पर हावी रहता है. सभी फ़ॉन्ट ऐप के साथ आते हैं — इंटरनेट की ज़रूरत नहीं.",
+  "fontGroupSans": "सैन्स",
+  "fontGroupSerif": "सेरिफ़",
+  "fontGroupMono": "मोनोस्पेस",
+  "fontGroupHand": "हस्तलेख",
   "appFontDefaultSuffix": "डिफ़ॉल्ट"
 }

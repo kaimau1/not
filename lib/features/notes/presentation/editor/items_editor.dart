@@ -39,6 +39,49 @@ int uncheckRestoreIndex({
   return rememberedIndex.clamp(0, uncheckedCount);
 }
 
+/// Madde listesini "işaretsizler önce, işaretliler sonra" düzenine getirir;
+/// iki blok da kendi içindeki sırayı KORUR (kararlı bölme).
+///
+/// KÖK NEDEN (kullanıcı: "madde sıralamasını değiştiremiyorum iptal oluyor",
+/// "yeni öğe alta eklenmiyor / yanlış yere gidiyor"): editörün bütün konum
+/// hesabı "işaretsizler listenin başında" DEĞİŞMEZİNE dayanıyordu ama bu
+/// değişmez hiçbir yerde ZORLANMIYORDU — yalnızca umuluyordu. Bozulması da
+/// kolay: bir madde işaretlendiğinde görünüm animasyonu bitene kadar (220 ms)
+/// öğe listede YERİNDE kalır ve o hâliyle bir kez kaydedilir; kullanıcı o
+/// aralıkta editörden çıkarsa nota "işaretli madde ortada" diye yazılır.
+/// Aynı şey başka cihazdan/eski sürümden gelen ya da yapay zekânın kurduğu
+/// listelerde de olabiliyor.
+///
+/// Değişmez bozulunca iki şey birden kırılıyordu:
+/// - "Yeni öğe" `_checkedStart`e giriyordu; o da artık ilk işaretlinin (yani
+///   listenin ORTASININ) konumuydu → madde yanlış yere düşüyordu.
+/// - Sürükle-sırala, ekrandaki satır sırasını `_items` sırasıyla BİREBİR
+///   eşleşiyor sayıyordu → sürüklenen satır yerine başka bir madde taşınıyor,
+///   kullanıcıya sıralama "tutmuyor / geri alınıyor" gibi görünüyordu.
+///
+/// Artık liste dışarıdan her benimsendiğinde buradan geçiyor (bozuk kayıt
+/// açılışta onarılır) ve konum hesapları da düzene GÜVENMİYOR (bkz.
+/// `_ItemsEditorState._uncheckedInsertIndex`, `_reorder`).
+List<NoteItem> normalizeItems(List<NoteItem> items) {
+  var seenChecked = false;
+  var ordered = true;
+  for (final item in items) {
+    if (item.checked) {
+      seenChecked = true;
+    } else if (seenChecked) {
+      ordered = false;
+      break;
+    }
+  }
+  if (ordered) return List.of(items);
+  return [
+    for (final i in items)
+      if (!i.checked) i,
+    for (final i in items)
+      if (i.checked) i,
+  ];
+}
+
 /// Sürükleyerek sıralarken parmağın konumuna göre kare başına kaç piksel
 /// kaydırılacağı. Negatif = yukarı, pozitif = aşağı, 0 = kaydırma yok.
 ///
@@ -57,7 +100,8 @@ double reorderAutoScrollStep({
   final effective = math.min(band, (bottom - top) / 2);
   if (effective <= 0) return 0;
   if (pointerY < top + effective) {
-    return -maxStep * ((top + effective - pointerY) / effective).clamp(0.0, 1.0);
+    return -maxStep *
+        ((top + effective - pointerY) / effective).clamp(0.0, 1.0);
   }
   if (pointerY > bottom - effective) {
     return maxStep *
@@ -160,6 +204,31 @@ class ItemsEditorState extends State<ItemsEditor> {
   final _controllers = <String, WrapTextController>{};
   final _focusNodes = <String, FocusNode>{};
 
+  /// Satır başına "odaklı mı" bayrağı.
+  ///
+  /// KÖK NEDEN (kasma): odak dinleyicisi eskiden `setState(() {})` çağırıyordu
+  /// ve odak SATIRDAN SATIRA her dokunuşta iki kez değiştiği için (biri
+  /// bırakan, biri alan satır) listenin TAMAMI — her satırın TextField'ı,
+  /// taşma ölçümü, sarma kutusu — iki kez yeniden kuruluyordu. Odağın
+  /// değiştirdiği tek şey o satırın kendi görünümü (imleç, "×" düğmesi, tek
+  /// satır kipinde yükseklik); artık yalnız o satır yeniden çiziliyor.
+  final _focusFlags = <String, ValueNotifier<bool>>{};
+
+  /// Bayrak, düğümün O ANKİ hâliyle doğar: satır ilk kez çizilmeden önce
+  /// odaklanmış olabilir (başlıktaki "İleri" tuşu → [focusFirstItem]).
+  /// Değer build SIRASINDA yazılmaz — yazılsaydı dinleyici çizim ortasında
+  /// tetiklenirdi.
+  ValueNotifier<bool> _focusFlagFor(String id) => _focusFlags.putIfAbsent(
+    id,
+    () => ValueNotifier(_focusNodes[id]?.hasFocus ?? false),
+  );
+
+  /// En son benimsenen DIŞ liste (nesne kimliğiyle). Gelen liste düzensizse
+  /// [normalizeItems]'tan geçmiş hâli benimseniyor; bu alan olmasa aynı bozuk
+  /// liste her üst build'de yeniden "farklı" görünür ve boşuna setState
+  /// çağrılırdı.
+  List<NoteItem>? _adoptedFrom;
+
   /// Toplu işlem için seçilen öğeler.
   /// Metin alanları ayrı TextField olduğundan sistemin metin seçimi
   /// satırlar arasına geçemez; toplu kopyalama/silme bu modla yapılır.
@@ -199,8 +268,20 @@ class ItemsEditorState extends State<ItemsEditor> {
   @override
   void initState() {
     super.initState();
-    _items = List.of(widget.items);
+    _adoptedFrom = widget.items;
+    _items = _adopt(widget.items);
   }
+
+  /// Dışarıdan gelen listeyi yerel duruma alır: checklist'te "işaretsizler
+  /// önce" düzenine getirilir (bkz. [normalizeItems] — bozuk kayıt burada
+  /// onarılır). Sıralı listede işaret kavramı yok, sıra olduğu gibi kalır.
+  ///
+  /// Onarım nota HEMEN yazılmaz (yalnız yerel): açılışta kaydetmek her eski
+  /// notun `updatedAt`ini boşuna tazeler ve ana ekranın sıralamasını
+  /// karıştırırdı. Kullanıcı ilk düzenlemesini yaptığı anda düzeltilmiş sıra
+  /// zaten kaydedilir.
+  List<NoteItem> _adopt(List<NoteItem> incoming) =>
+      widget.showCheckboxes ? normalizeItems(incoming) : List.of(incoming);
 
   /// Dıştaki sayfa kaydırıcısı ([ItemsEditor.shrinkWrap] kipinde liste kendi
   /// kaydırmasını yapmaz). Sürükleyerek sıralarken kenar kaydırması bunun
@@ -269,6 +350,24 @@ class ItemsEditorState extends State<ItemsEditor> {
   @override
   void didUpdateWidget(covariant ItemsEditor oldWidget) {
     super.didUpdateWidget(oldWidget);
+    _adoptIncomingItems();
+  }
+
+  /// Sürükleme SÜRERKEN gelen listeyi benimseme, bırakılınca benimse.
+  ///
+  /// KÖK NEDEN (kullanıcı: "sıralamayı değiştiremiyorum iptal oluyor"):
+  /// `SliverReorderableList` öğe SAYISI değişir değişmez sürüklemeyi iptal
+  /// eder (`didUpdateWidget` → `cancelReorder`). Editör bu sırada arka planda
+  /// kaydediyor; Firestore'dan (ya da başka bir cihazdan) dönen anlık görüntü
+  /// tam sürükleme ortasında listeyi tazelerse hareket sessizce düşüyordu —
+  /// parmak hâlâ ekrandayken satır eski yerine geri atlıyor.
+  bool _adoptDeferred = false;
+
+  void _adoptIncomingItems() {
+    if (_reordering) {
+      _adoptDeferred = true;
+      return;
+    }
     // Gelen liste yerelden farklıysa benimse. ESKİDEN yalnızca kimliklerin
     // TAMAMEN değiştiği durumda yenileniyordu; dikte/hesap makinesi/AI bir
     // öğe eklediğinde eski kimlikler durduğundan koşul tutmuyor ve eklenen
@@ -277,8 +376,14 @@ class ItemsEditorState extends State<ItemsEditor> {
     // Yerel yazımda döngü riski yok: onChanged çağıran taraf durumu aynı
     // karede günceller, dönen liste yerelle birebir aynı olur ve buradaki
     // karşılaştırma false kalır.
-    if (!_sameItems(_items, widget.items)) {
-      setState(() => _items = List.of(widget.items));
+    // `identical` süzgeci: gelen liste düzensizse yerel kopya ONARILMIŞ hâli
+    // tutar, yani `_sameItems` bir daha asla tutmaz. O listeyi bir kez
+    // benimsedikten sonra her üst build'de yeniden benimsemek boşuna
+    // setState demek olurdu.
+    if (!identical(widget.items, _adoptedFrom) &&
+        !_sameItems(_items, widget.items)) {
+      _adoptedFrom = widget.items;
+      setState(() => _items = _adopt(widget.items));
       // Denetleyici metinleri de SENKRONLANMALI: controller yalnız ilk
       // kurulumda maddenin metnini alıyor. Metin dışarıdan değişince (Geri
       // al, AI "Değiştir"in kimlik koruyan yolu) alan eski metni göstermeye
@@ -321,6 +426,9 @@ class ItemsEditorState extends State<ItemsEditor> {
     for (final f in _focusNodes.values) {
       f.dispose();
     }
+    for (final f in _focusFlags.values) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -339,7 +447,9 @@ class ItemsEditorState extends State<ItemsEditor> {
   FocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
     final node = FocusNode();
     // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
-    // silme "x" düğmesinin görünürlüğü değişir; her iki durumda çiz.
+    // silme "x" düğmesinin görünürlüğü değişir; ikisi de YALNIZ o satırı
+    // ilgilendirir — bu yüzden listenin tamamı değil, satırın kendi bayrağı
+    // güncellenir (bkz. [_focusFlags]).
     node.addListener(() {
       if (!mounted) return;
       if (node.hasFocus) {
@@ -350,7 +460,7 @@ class ItemsEditorState extends State<ItemsEditor> {
           () => _updateText(item, controller.logicalText),
         );
       }
-      setState(() {});
+      _focusFlagFor(item.id).value = node.hasFocus;
     });
     return node;
   });
@@ -437,9 +547,24 @@ class ItemsEditorState extends State<ItemsEditor> {
   ///
   /// [reserved] satırın metne ayrılamayan payıdır; sarma kararı bu pay
   /// düşülerek verilir (bkz. [_FloatRow.reserved]).
+  ///
+  /// KÖK NEDEN (kullanıcı: "yeni öğe görselin yanına ilk defa eklendiğinde
+  /// yanıp sönen imleç çıkmıyor") — sarmalayıcı eskiden `floats.isEmpty`
+  /// olduğunda HİÇ kurulmuyordu. Bantlar çalışma anında doluyor (tuval
+  /// görsellerin yerini ilk çizimden SONRA ölçüp bildiriyor, görsel eklenip
+  /// silinince de değişiyor): o anda satırın ağacına araya bir katman girip
+  /// çıkıyor, TextField başka bir konuma düşüyor ve state'i (içindeki
+  /// EditableText ile birlikte) SIFIRDAN kuruluyordu. Yeni state odağı zaten
+  /// almış bir düğümle açıldığı için "odak değişti" olayı gelmiyor, imlecin
+  /// yanıp sönme zamanlayıcısı hiç başlamıyordu — imleç ancak ilk harfte
+  /// beliriyordu. (Aynı kök neden 2026-08-06'da odak için bulunmuştu; kural
+  /// odakla sınırlı değil: ağacın ŞEKLİ çalışma anında hiç değişmemeli.)
+  ///
+  /// Bant yokken bedel sıfır: [_FloatRow] boş bant listesinde ölçüm bile
+  /// planlamaz, yalnız 0 dolgulu bir [Padding] çizer.
   Widget _floatRow(Widget child, {String? id, double reserved = 0}) {
     final pageBox = widget.pageBox;
-    if (pageBox == null || widget.floats.isEmpty) return child;
+    if (pageBox == null) return child;
     return _FloatRow(
       floats: widget.floats,
       pageBox: pageBox,
@@ -537,7 +662,7 @@ class ItemsEditorState extends State<ItemsEditor> {
       _items[index] = _items[index].copyWith(text: first);
       if (unchecked.isNotEmpty) {
         final at = (widget.showCheckboxes && _items[index].checked)
-            ? _checkedStart
+            ? _uncheckedInsertIndex(_uncheckedCount)
             : index + 1;
         _items.insertAll(at, unchecked);
       }
@@ -568,13 +693,43 @@ class ItemsEditorState extends State<ItemsEditor> {
     }
   }
 
-  /// İşaretsizlerin bittiği (= ilk işaretlinin başladığı) konum. Hem yeni
-  /// öğe hem de işareti değişen öğe buraya girer:
-  /// - işaretlenen öğe → işaretli bloğun EN ÜSTÜne (en son işaretlenen üstte)
-  /// - işareti kalkan öğe → işaretsizlerin sonuna
+  /// İşaretli bloğun EN ÜSTÜ (= ilk işaretlinin konumu). İşaretlenen öğe
+  /// buraya girer; en son işaretlenen en üstte durur.
   int get _checkedStart {
     final first = _items.indexWhere((i) => i.checked);
     return first < 0 ? _items.length : first;
+  }
+
+  /// Listedeki işaretsiz öğe sayısı.
+  int get _uncheckedCount {
+    if (!widget.showCheckboxes) return _items.length;
+    var count = 0;
+    for (final i in _items) {
+      if (!i.checked) count++;
+    }
+    return count;
+  }
+
+  /// İŞARETSİZ bloğun [position]'ıncı sırasına denk gelen [_items] ekleme
+  /// konumu. [position] blok uzunluğuna eşitse öğe bloğun sonuna girer.
+  ///
+  /// Sayarak bulunur, "işaretsizler başta" düzenine GÜVENİLMEZ: liste
+  /// dışarıdan bozuk sırayla gelmiş olabilir (bkz. [normalizeItems]). Düzen
+  /// bozukken bile ekranda görülen sıra işaretsizlerin KENDİ aralarındaki
+  /// sırasıdır; ekleme de o sıraya göre yapılmalı.
+  int _uncheckedInsertIndex(int position) {
+    if (!widget.showCheckboxes) {
+      return position.clamp(0, _items.length);
+    }
+    var seen = 0;
+    var afterLast = 0;
+    for (var i = 0; i < _items.length; i++) {
+      if (_items[i].checked) continue;
+      if (seen == position) return i;
+      seen++;
+      afterLast = i + 1;
+    }
+    return afterLast;
   }
 
   /// İşareti yeni değişmiş öğeler: id → YERLEŞİMDE kullanılacak eski durum.
@@ -627,12 +782,14 @@ class ItemsEditorState extends State<ItemsEditor> {
         }
         final memory = _checkedFrom.remove(item.id);
         _items.insert(
-          uncheckRestoreIndex(
-            uncheckedCount: _checkedStart,
-            rememberedIndex: memory?.index,
-            sinceChecked: memory == null
-                ? null
-                : DateTime.now().difference(memory.at),
+          _uncheckedInsertIndex(
+            uncheckRestoreIndex(
+              uncheckedCount: _uncheckedCount,
+              rememberedIndex: memory?.index,
+              sinceChecked: memory == null
+                  ? null
+                  : DateTime.now().difference(memory.at),
+            ),
           ),
           item,
         );
@@ -650,7 +807,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     // bozulur ve sürükle-sırala görünenden BAŞKA öğeyi taşırdı. Yeni öğe
     // işaretsizlerin sonuna girer.
     final at = (widget.showCheckboxes && after.checked)
-        ? _checkedStart
+        ? _uncheckedInsertIndex(_uncheckedCount)
         : index + 1;
     setState(() => _items.insert(at, item));
     _commit();
@@ -671,10 +828,11 @@ class ItemsEditorState extends State<ItemsEditor> {
     _addItem();
   }
 
-  /// "Yeni öğe" düğmesiyle öğe ekler; işaretsizlerin sonuna girer.
+  /// "Yeni öğe" düğmesiyle öğe ekler; işaretsizlerin SONUNA girer — düğme
+  /// zaten işaretsiz bloğun hemen altında durur.
   void _addItem() {
     final item = NoteItem(id: _uuid.v4(), text: '');
-    setState(() => _items.insert(_checkedStart, item));
+    setState(() => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item));
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
@@ -697,6 +855,7 @@ class ItemsEditorState extends State<ItemsEditor> {
       controller.dispose();
     }
     _focusNodes.remove(id)?.dispose();
+    _focusFlags.remove(id)?.dispose();
   }
 
   /// İşaretli tüm öğeleri tek seferde siler (madde 18 — Keep'teki gibi
@@ -786,13 +945,41 @@ class ItemsEditorState extends State<ItemsEditor> {
     _commit();
   }
 
+  /// Sürükle-bırak sonucu. Gelen indeksler EKRANDAKİ (sürüklenebilir) listeye
+  /// aittir; [_items] ise işaretli ve "yerleşmekte olan" öğeleri de taşır.
+  ///
+  /// KÖK NEDEN (kullanıcı: "sıralamayı değiştiremiyorum iptal oluyor"):
+  /// eskiden bu iki indeks BİREBİR aynı sayılıyordu ("işaretsizler _items'ın
+  /// başında" değişmezine dayanarak). Değişmez bozulduğu anda (bkz.
+  /// [normalizeItems]) sürüklenen satır yerine listedeki BAŞKA bir madde
+  /// taşınıyordu: ekranda sürüklenen satır eski yerine geri dönüyor, hareket
+  /// "iptal oldu" gibi görünüyordu. Artık eşleme öğenin kendisi üzerinden
+  /// yapılır ve görünmeyen öğeler kendi konumlarında kalır.
   void _reorder(int oldIndex, int newIndex) {
+    final visible = _visibleItems();
+    if (oldIndex < 0 || oldIndex >= visible.length) return;
+    final moved = visible.removeAt(oldIndex);
+    visible.insert(newIndex.clamp(0, visible.length), moved);
     setState(() {
-      final item = _items.removeAt(oldIndex);
-      _items.insert(newIndex, item);
+      var next = 0;
+      _items = [
+        for (final item in _items)
+          if (_isVisibleRow(item)) visible[next++] else item,
+      ];
     });
     _commit();
   }
+
+  /// Satır sürüklenebilir listede mi çiziliyor (işaretliler footer'da ayrı
+  /// blokta durur, sıraları sabittir).
+  bool _isVisibleRow(NoteItem item) =>
+      !widget.showCheckboxes || !_placedAsChecked(item);
+
+  /// Sürüklenebilir listenin gösterdiği öğeler — `itemBuilder` ile AYNI sıra.
+  List<NoteItem> _visibleItems() => [
+    for (final i in _items)
+      if (_isVisibleRow(i)) i,
+  ];
 
   /// Tüm not içeriğini panoya kopyalar ("Tümünü seç" seçeneği — ayrı
   /// TextField'lar arası gerçek seçim mümkün olmadığından pratik karşılığı).
@@ -880,8 +1067,10 @@ class ItemsEditorState extends State<ItemsEditor> {
     final baseStyle =
         widget.textStyle ?? theme.textTheme.bodyLarge ?? const TextStyle();
     final checked = widget.showCheckboxes && item.checked;
-    final focused = _focusFor(item).hasFocus;
     final selected = _selected.contains(item.id);
+    // Odak durumu SATIRIN KENDİ dinleyicisinden gelir (bkz. [_focusFlags]).
+    _focusFor(item);
+    final focusFlag = _focusFlagFor(item.id);
 
     // Sürükleme tutamacı YALNIZ "Seç" modunda görünür.
     //
@@ -948,6 +1137,143 @@ class ItemsEditorState extends State<ItemsEditor> {
       ),
     );
 
+    Widget rowBody(bool focused) => Container(
+      color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
+      // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
+      // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
+      // yarım çizgi animasyonu için satırı yeniden çizmek gerekirdi.
+      child: AnimatedOpacity(
+        opacity: checked ? 0.55 : 1,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: Row(
+          children: [
+            ?dragHandle,
+            leading,
+            Expanded(
+              // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
+              child: GestureDetector(
+                onTap: _selectionMode ? () => _toggleSelection(item) : null,
+                child: AbsorbPointer(
+                  absorbing: _selectionMode,
+                  child: _wrapped(
+                    controller,
+                    baseStyle,
+                    Builder(
+                      builder: (context) {
+                        // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
+                        // burada alfa verilirse iki kez soluyor.
+                        final fieldStyle = checked
+                            ? baseStyle.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                color: scheme.onSurfaceVariant,
+                              )
+                            : baseStyle;
+                        final field = TextField(
+                          controller: controller,
+                          focusNode: _focusFor(item),
+                          onChanged: (_) =>
+                              _updateText(item, controller.logicalText),
+                          contextMenuBuilder: (context, editableState) =>
+                              _contextMenu(context, editableState, item),
+                          contentInsertionConfiguration:
+                              widget.contentInsertion,
+                          // Varsayılan "next" davranışı odağı metin dışı bir
+                          // öğeye taşıyıp klavyeyi kapatıp açıyordu;
+                          // onEditingComplete onu bastırır, odak doğrudan
+                          // yeni öğeye geçer.
+                          onEditingComplete: () => _insertAfter(item),
+                          textInputAction: TextInputAction.next,
+                          // Tam göster modunda satır sarılıp büyür; "dokununca
+                          // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
+                          maxLines: widget.expandItems || focused ? null : 1,
+                          // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                          // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                          // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
+                          style: fieldStyle,
+                          decoration: InputDecoration(
+                            hintText: l10n.newItemHint,
+                            filled: false,
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                            ),
+                          ),
+                        );
+                        // Tek satır kipinde taşan metnin "devamı var"
+                        // göstergesi: TextField kırpar ama üç nokta koyamaz
+                        // (kaydırılabilir alan), kullanıcı metnin bittiğini
+                        // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
+                        // sağına "…" konur; odaklanınca satır zaten açılır.
+                        //
+                        // KÖK NEDEN (imleç görünmüyordu) — ağacın ŞEKLİ
+                        // odakla DEĞİŞMEMELİ: eskiden odaksızken
+                        // `LayoutBuilder > Row > Expanded > TextField`,
+                        // odaklanınca çıplak `TextField` dönüyordu. Dokunuş
+                        // odağı verir, gelen yeniden çizimde alanın öğesi
+                        // BAŞKA bir konuma düştüğü için TextField'ın state'i
+                        // (ve içindeki EditableText) sıfırdan kuruluyordu;
+                        // yeni state odağı ZATEN almış bir düğümle açıldığı
+                        // için "odak değişti" olayı hiç gelmiyor ve imlecin
+                        // yanıp sönme zamanlayıcısı başlamıyordu — imleç
+                        // ancak ilk harfte beliriyordu. Yalnız "tam göster"
+                        // (odaktan bağımsız) sarmalayıcıyı belirler; odak
+                        // artık yalnız "…"in görünürlüğünü değiştirir.
+                        if (widget.expandItems) return field;
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            final overflowing =
+                                !focused &&
+                                constraints.maxWidth.isFinite &&
+                                _overflowsLine(
+                                  context,
+                                  item.id,
+                                  controller.text,
+                                  fieldStyle,
+                                  constraints.maxWidth,
+                                );
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Expanded(child: field),
+                                if (overflowing)
+                                  Text(
+                                    '…',
+                                    style: fieldStyle.copyWith(
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
+            // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
+            // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
+            if (focused && !_selectionMode)
+              IconButton(
+                tooltip: l10n.removeItem,
+                icon: const Icon(Icons.close, size: 18),
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                onPressed: () => _removeItem(item),
+              )
+            else
+              const SizedBox(width: 48),
+          ],
+        ),
+      ),
+    );
+
     return KeyedSubtree(
       key: ValueKey(item.id),
       child: _floatRow(
@@ -955,146 +1281,18 @@ class ItemsEditorState extends State<ItemsEditor> {
         // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
         // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
         // verilmeli (bkz. _FloatRow.reserved).
-        reserved: _kRowPadding + (dragHandle == null ? 0 : _kHandleWidth) +
-            _kLeadingWidth + _kTrailingWidth,
-        Container(
-          color: selected
-              ? scheme.primaryContainer.withValues(alpha: 0.4)
-              : null,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
-          // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
-          // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
-          // yarım çizgi animasyonu için satırı yeniden çizmek gerekirdi.
-          child: AnimatedOpacity(
-            opacity: checked ? 0.55 : 1,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            child: Row(
-              children: [
-                ?dragHandle,
-                leading,
-                Expanded(
-                  // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-                  child: GestureDetector(
-                    onTap: _selectionMode ? () => _toggleSelection(item) : null,
-                    child: AbsorbPointer(
-                      absorbing: _selectionMode,
-                      child: _wrapped(
-                        controller,
-                        baseStyle,
-                        Builder(
-                          builder: (context) {
-                            // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
-                            // burada alfa verilirse iki kez soluyor.
-                            final fieldStyle = checked
-                                ? baseStyle.copyWith(
-                                    decoration: TextDecoration.lineThrough,
-                                    color: scheme.onSurfaceVariant,
-                                  )
-                                : baseStyle;
-                            final field = TextField(
-                              controller: controller,
-                              focusNode: _focusFor(item),
-                              onChanged: (_) =>
-                                  _updateText(item, controller.logicalText),
-                              contextMenuBuilder: (context, editableState) =>
-                                  _contextMenu(context, editableState, item),
-                              contentInsertionConfiguration:
-                                  widget.contentInsertion,
-                              // Varsayılan "next" davranışı odağı metin dışı bir
-                              // öğeye taşıyıp klavyeyi kapatıp açıyordu;
-                              // onEditingComplete onu bastırır, odak doğrudan
-                              // yeni öğeye geçer.
-                              onEditingComplete: () => _insertAfter(item),
-                              textInputAction: TextInputAction.next,
-                              // Tam göster modunda satır sarılıp büyür; "dokununca
-                              // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
-                              maxLines: widget.expandItems || focused ? null : 1,
-                              // Sarma planı bu stille hesaplanır; TextField'ın örtük
-                              // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
-                              // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
-                              style: fieldStyle,
-                              decoration: InputDecoration(
-                                hintText: l10n.newItemHint,
-                                filled: false,
-                                border: InputBorder.none,
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                              ),
-                            );
-                            // Tek satır kipinde taşan metnin "devamı var"
-                            // göstergesi: TextField kırpar ama üç nokta koyamaz
-                            // (kaydırılabilir alan), kullanıcı metnin bittiğini
-                            // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
-                            // sağına "…" konur; odaklanınca satır zaten açılır.
-                            //
-                            // KÖK NEDEN (imleç görünmüyordu) — ağacın ŞEKLİ
-                            // odakla DEĞİŞMEMELİ: eskiden odaksızken
-                            // `LayoutBuilder > Row > Expanded > TextField`,
-                            // odaklanınca çıplak `TextField` dönüyordu. Dokunuş
-                            // odağı verir, gelen yeniden çizimde alanın öğesi
-                            // BAŞKA bir konuma düştüğü için TextField'ın state'i
-                            // (ve içindeki EditableText) sıfırdan kuruluyordu;
-                            // yeni state odağı ZATEN almış bir düğümle açıldığı
-                            // için "odak değişti" olayı hiç gelmiyor ve imlecin
-                            // yanıp sönme zamanlayıcısı başlamıyordu — imleç
-                            // ancak ilk harfte beliriyordu. Yalnız "tam göster"
-                            // (odaktan bağımsız) sarmalayıcıyı belirler; odak
-                            // artık yalnız "…"in görünürlüğünü değiştirir.
-                            if (widget.expandItems) return field;
-                            return LayoutBuilder(
-                              builder: (context, constraints) {
-                                final overflowing =
-                                    !focused &&
-                                    constraints.maxWidth.isFinite &&
-                                    _overflowsLine(
-                                      context,
-                                      item.id,
-                                      controller.text,
-                                      fieldStyle,
-                                      constraints.maxWidth,
-                                    );
-                                return Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Expanded(child: field),
-                                    if (overflowing)
-                                      Text(
-                                        '…',
-                                        style: fieldStyle.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
-                // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
-                // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
-                if (focused && !_selectionMode)
-                  IconButton(
-                    tooltip: l10n.removeItem,
-                    icon: const Icon(Icons.close, size: 18),
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    onPressed: () => _removeItem(item),
-                  )
-                else
-                  const SizedBox(width: 48),
-              ],
-            ),
-          ),
+        reserved:
+            _kRowPadding +
+            (dragHandle == null ? 0 : _kHandleWidth) +
+            _kLeadingWidth +
+            _kTrailingWidth,
+        // Odak DEĞİŞİMİ yalnız bu satırı yeniden çizer (bkz. [_focusFlags]).
+        // Sarmalayıcı KOŞULSUZ duruyor: ağacın şekli odakla değişemez —
+        // değişirse TextField'ın state'i sıfırdan kurulur ve imleç ilk harfe
+        // kadar yanıp sönmez (aşağıdaki kök neden notu).
+        ValueListenableBuilder<bool>(
+          valueListenable: focusFlag,
+          builder: (context, focused, _) => rowBody(focused),
         ),
       ),
     );
@@ -1118,12 +1316,8 @@ class ItemsEditorState extends State<ItemsEditor> {
               if (_placedAsChecked(i)) i,
           ]
         : const <NoteItem>[];
-    final listItems = showChecks
-        ? [
-            for (final i in _items)
-              if (!_placedAsChecked(i)) i,
-          ]
-        : _items;
+    // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
+    final listItems = _visibleItems();
 
     final addButton = _floatRow(
       reserved: _kButtonRowWidth,
@@ -1192,6 +1386,15 @@ class ItemsEditorState extends State<ItemsEditor> {
       onReorderEnd: (_) {
         _reordering = false;
         _stopAutoScroll();
+        // Sürükleme sırasında ertelenen dış güncelleme varsa şimdi uygulanır
+        // (bkz. [_adoptIncomingItems]). `_reorder` bu çağrıdan ÖNCE koştuğu
+        // için kullanıcının taşıması kaybolmaz: yeni sıra zaten kaydedildi,
+        // gelen liste ondan farklıysa gerçekten dışarıdan bir değişiklik var
+        // demektir.
+        if (_adoptDeferred) {
+          _adoptDeferred = false;
+          _adoptIncomingItems();
+        }
       },
       itemBuilder: (context, index) => _itemRow(
         listItems[index],
@@ -1235,13 +1438,17 @@ class ItemsEditorState extends State<ItemsEditor> {
   Widget _selectionBar(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
-    final media = MediaQuery.of(context);
+    // `MediaQuery.of` DEĞİL: o, MediaQuery'nin HERHANGİ bir alanı değişince
+    // (yönelim, metin ölçeği, erişilebilirlik…) çubuğu yeniden kurar. Çubuğun
+    // ihtiyacı yalnız iki ölçü.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final systemBar = MediaQuery.viewPaddingOf(context).bottom;
     final allSelected = _items.isNotEmpty && _selected.length == _items.length;
     final hasSelection = _selected.isNotEmpty;
     return Positioned(
       left: 8,
       right: 8,
-      bottom: 8 + media.viewInsets.bottom + media.viewPadding.bottom,
+      bottom: 8 + keyboard + systemBar,
       child: Material(
         color: scheme.primaryContainer,
         elevation: 6,
@@ -1344,9 +1551,20 @@ class _FloatRowState extends State<_FloatRow> {
   late double _end = widget.initial?.end ?? 0;
   late double _top = widget.initial?.top ?? 0;
 
+  /// Bu kare için ölçüm zaten sıraya girdi mi. Satır bir karede birden çok
+  /// kez kurulabiliyor (odak, seçim, tema); her kuruluşta ayrı bir kare-sonu
+  /// geri çağrısı biriktirmenin anlamı yok — hepsi aynı sonucu ölçer.
+  bool _scheduled = false;
+
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    // Bant yoksa ve dolgular zaten sıfırsa ölçülecek bir şey de yok: madde
+    // listelerinin ezici çoğunluğu (görselsiz notlar) buradan bedelsiz geçer.
+    final idle = widget.floats.isEmpty && _start == 0 && _end == 0 && _top == 0;
+    if (!_scheduled && !idle) {
+      _scheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    }
     return Padding(
       // BİLEREK FİZİKSEL (Directional DEĞİL): bu boşluklar sayfaya konmuş
       // yüzen görsellerin ÖLÇÜLEN x koordinatlarından hesaplanıyor
@@ -1358,7 +1576,20 @@ class _FloatRowState extends State<_FloatRow> {
   }
 
   void _measure() {
+    _scheduled = false;
     if (!mounted) return;
+    // Son görsel silindi: dolguları sıfırla, ölçüme hiç girme.
+    if (widget.floats.isEmpty) {
+      if (_start != 0 || _end != 0 || _top != 0) {
+        widget.onMeasured?.call((start: 0, end: 0, top: 0));
+        setState(() {
+          _start = 0;
+          _end = 0;
+          _top = 0;
+        });
+      }
+      return;
+    }
     final box = context.findRenderObject();
     final page = widget.pageBox();
     if (box is! RenderBox || !box.hasSize || page == null || !page.hasSize) {

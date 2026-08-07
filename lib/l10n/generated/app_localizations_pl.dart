@@ -828,6 +828,12 @@ class AppLocalizationsPl extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Utwórz nową notatkę';
 
   @override
+  String get voiceCaptureAiNote => 'Notatka AI';
+
+  @override
+  String get voiceCapturePlainNote => 'Zwykła notatka';
+
+  @override
   String get voiceCaptureRestart => 'Nagrywaj ponownie';
 
   @override
@@ -1973,6 +1979,18 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Czcionka używana w całej aplikacji. Własna czcionka notatki ma pierwszeństwo. Wszystkie czcionki są w aplikacji — internet nie jest potrzebny.';
+
+  @override
+  String get fontGroupSans => 'Bezszeryfowe';
+
+  @override
+  String get fontGroupSerif => 'Szeryfowe';
+
+  @override
+  String get fontGroupMono => 'Maszynowe';
+
+  @override
+  String get fontGroupHand => 'Odręczne';
 
   @override
   String get appFontDefaultSuffix => 'domyślna';

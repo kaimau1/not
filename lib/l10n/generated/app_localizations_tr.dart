@@ -819,6 +819,12 @@ class AppLocalizationsTr extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Yeni not oluştur';
 
   @override
+  String get voiceCaptureAiNote => 'AI not';
+
+  @override
+  String get voiceCapturePlainNote => 'Düz not';
+
+  @override
   String get voiceCaptureRestart => 'Baştan dinle';
 
   @override
@@ -1957,6 +1963,18 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Uygulamanın her yerinde kullanılan yazı tipi. Notun kendi yazı tipi seçimi bunun üstüne biner. Tüm yazı tipleri uygulamayla birlikte geliyor — internet gerekmez.';
+
+  @override
+  String get fontGroupSans => 'Sade';
+
+  @override
+  String get fontGroupSerif => 'Kitap';
+
+  @override
+  String get fontGroupMono => 'Daktilo';
+
+  @override
+  String get fontGroupHand => 'El yazısı';
 
   @override
   String get appFontDefaultSuffix => 'varsayılan';

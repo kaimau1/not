@@ -820,6 +820,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Create new note';
 
   @override
+  String get voiceCaptureAiNote => 'AI note';
+
+  @override
+  String get voiceCapturePlainNote => 'Plain note';
+
+  @override
   String get voiceCaptureRestart => 'Record again';
 
   @override
@@ -1959,6 +1965,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appFontInfo =>
       'The font used everywhere in the app. A note\'s own font choice overrides it. All fonts ship with the app — no internet needed.';
+
+  @override
+  String get fontGroupSans => 'Sans';
+
+  @override
+  String get fontGroupSerif => 'Serif';
+
+  @override
+  String get fontGroupMono => 'Monospace';
+
+  @override
+  String get fontGroupHand => 'Handwriting';
 
   @override
   String get appFontDefaultSuffix => 'default';

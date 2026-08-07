@@ -826,6 +826,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get voiceCaptureCreateNote => 'Create new note';
 
   @override
+  String get voiceCaptureAiNote => 'AI-notitie';
+
+  @override
+  String get voiceCapturePlainNote => 'Gewone notitie';
+
+  @override
   String get voiceCaptureRestart => 'Record again';
 
   @override
@@ -1974,6 +1980,18 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get appFontInfo =>
       'Het lettertype in de hele app. Het eigen lettertype van een notitie gaat voor. Alle lettertypen zitten in de app — geen internet nodig.';
+
+  @override
+  String get fontGroupSans => 'Schreefloos';
+
+  @override
+  String get fontGroupSerif => 'Schreef';
+
+  @override
+  String get fontGroupMono => 'Monospace';
+
+  @override
+  String get fontGroupHand => 'Handschrift';
 
   @override
   String get appFontDefaultSuffix => 'standaard';

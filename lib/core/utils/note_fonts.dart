@@ -13,9 +13,23 @@ import 'package:google_fonts/google_fonts.dart';
 /// Liste KARAKTER OLARAK AYRIK tutuldu: her ailenin bir işi var (sistem
 /// arayüzü, kitap, ekran/başlık, daktilo, el yazısı); birbirinin kopyası iki
 /// yazı tipi eklemek seçimi zorlaştırmaktan başka işe yaramaz.
+/// Katalog yazı tiplerinin öbeği. Seçici uzun bir liste yerine öbek öbek
+/// gösterir: 19 ad tek yığın hâlinde okunmuyordu ("ayarlarda font seçimi çok
+/// dağınık"), oysa kullanıcı zaten "sade mi, kitap mı, daktilo mu, el yazısı
+/// mı" diye seçiyor.
+enum NoteFontGroup { sans, serif, mono, hand }
+
 @immutable
 class NoteFontOption {
-  const NoteFontOption(this.id, this.label, {this.google = false});
+  const NoteFontOption(
+    this.id,
+    this.label, {
+    this.google = false,
+    this.group = NoteFontGroup.sans,
+  });
+
+  /// Seçicideki öbeği (yalnız katalog yazı tipleri için anlamlı).
+  final NoteFontGroup group;
 
   /// Nota yazılan değer. null = uygulamanın varsayılan tipografisi.
   final String? id;
@@ -46,15 +60,50 @@ const List<NoteFontOption> kCatalogFonts = [
   NoteFontOption('Nunito', 'Nunito', google: true),
   NoteFontOption('Montserrat', 'Montserrat', google: true),
   NoteFontOption('Poppins', 'Poppins', google: true),
-  NoteFontOption('Lora', 'Lora', google: true),
-  NoteFontOption('Merriweather', 'Merriweather', google: true),
-  NoteFontOption('PT Serif', 'PT Serif', google: true),
-  NoteFontOption('EB Garamond', 'EB Garamond', google: true),
-  NoteFontOption('Playfair Display', 'Playfair', google: true),
-  NoteFontOption('Roboto Mono', 'Roboto Mono', google: true),
-  NoteFontOption('JetBrains Mono', 'JetBrains Mono', google: true),
-  NoteFontOption('Caveat', 'Caveat', google: true),
-  NoteFontOption('Patrick Hand', 'Patrick Hand', google: true),
+  NoteFontOption('Lora', 'Lora', google: true, group: NoteFontGroup.serif),
+  NoteFontOption(
+    'Merriweather',
+    'Merriweather',
+    google: true,
+    group: NoteFontGroup.serif,
+  ),
+  NoteFontOption(
+    'PT Serif',
+    'PT Serif',
+    google: true,
+    group: NoteFontGroup.serif,
+  ),
+  NoteFontOption(
+    'EB Garamond',
+    'EB Garamond',
+    google: true,
+    group: NoteFontGroup.serif,
+  ),
+  NoteFontOption(
+    'Playfair Display',
+    'Playfair',
+    google: true,
+    group: NoteFontGroup.serif,
+  ),
+  NoteFontOption(
+    'Roboto Mono',
+    'Roboto Mono',
+    google: true,
+    group: NoteFontGroup.mono,
+  ),
+  NoteFontOption(
+    'JetBrains Mono',
+    'JetBrains Mono',
+    google: true,
+    group: NoteFontGroup.mono,
+  ),
+  NoteFontOption('Caveat', 'Caveat', google: true, group: NoteFontGroup.hand),
+  NoteFontOption(
+    'Patrick Hand',
+    'Patrick Hand',
+    google: true,
+    group: NoteFontGroup.hand,
+  ),
 ];
 
 /// Notun yazı tipi seçenekleri: varsayılan + iki sistem ailesi + katalog.

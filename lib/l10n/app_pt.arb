@@ -246,6 +246,8 @@
   "voiceCapturePunctuation": "{language} · automatic punctuation",
   "voiceCaptureAddToNote": "Add to note",
   "voiceCaptureCreateNote": "Create new note",
+  "voiceCaptureAiNote": "Nota IA",
+  "voiceCapturePlainNote": "Nota simples",
   "voiceCaptureRestart": "Record again",
   "voiceChipSummarizeAdd": "Add as summary",
   "voiceChipSummarizeSave": "Save as summary",
@@ -551,5 +553,9 @@
   "fontSizeXLarge": "Muito grande",
   "appFontSetting": "Fonte",
   "appFontInfo": "A fonte usada em todo o app. A fonte da própria nota tem prioridade. Todas as fontes vêm com o app — não precisa de internet.",
+  "fontGroupSans": "Sem serifa",
+  "fontGroupSerif": "Serifada",
+  "fontGroupMono": "Monoespaçada",
+  "fontGroupHand": "Manuscrita",
   "appFontDefaultSuffix": "padrão"
 }

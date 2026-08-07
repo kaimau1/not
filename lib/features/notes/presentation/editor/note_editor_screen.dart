@@ -290,6 +290,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Başlık bloğunun yüksekliğini ölçüp [_bodyTop]'u tazeler. Yükseklik
   /// yalnız başlık/çipler değişince oynar (sarma onu etkilemez), bu yüzden
   /// ölçüm yakınsar ve tek setState'te durur.
+  /// Bu kare için başlık ölçümü zaten sıraya girdi mi. Editörün build'i bir
+  /// karede birden çok kez koşabiliyor (klavye açılışı, odak, tema); her
+  /// kuruluşta ayrı bir kare-sonu geri çağrısı biriktirmenin anlamı yok,
+  /// hepsi aynı yüksekliği ölçer.
+  bool _bodyTopScheduled = false;
+
+  void _scheduleBodyTopMeasure() {
+    if (_bodyTopScheduled) return;
+    _bodyTopScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bodyTopScheduled = false;
+      if (mounted) _measureBodyTop();
+    });
+  }
+
   void _measureBodyTop() {
     final box = _bodyTopKey.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
@@ -3418,7 +3433,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _measureBodyTop());
+    _scheduleBodyTopMeasure();
     final hasBodyField =
         note.type == NoteType.text ||
         note.body.trim().isNotEmpty ||
