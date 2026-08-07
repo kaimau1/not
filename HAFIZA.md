@@ -1145,3 +1145,41 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **TUZAK — IME:** Gboard kelimeyi oluşturma aralığında (`composing`) tutarken metne işaret sokmak oluşturmayı bozar. Sarma yalnız `composing` geçersiz/boşken yapılıyor, o ana kadar yazılan her şey birlikte sarılıyor ("biçimli yazmaya devam et", Word davranışı). İmleç geri giderse / seçim yapılırsa / metin kısalırsa bekleme düşüyor.
   **BAYAT YORUM DÜZELTİLDİ:** `rich_text.dart` başlığı "işaretler düzenleyicide GÖRÜNÜR (sönük çizilir)" diyordu; oysa v1.0.175'ten beri saydam renk + ~0 punto ile tamamen görünmezler. Bu yorum yüzünden kullanıcıya önce "bu bilinçli tasarım" diye yanlış bilgi verildi. Ders: davranış iddiası yorumdan değil koddan doğrulanmalı.
   Eski davranışı sabitleyen 5 test güncellendi (rich_text_test 2, format_caret_in_word_test 3) + pending için 6 yeni durum. Doğrulama: analyze temiz, 521/521 yeşil. **Cihazda doğrulanmadı**: gerçek klavyeyle biçim düğmesine basıp yazmak.
+
+## 2026-08-07 — CI kırmızıydı: iki AYRI arıza var, karıştırma
+
+Kullanıcı "CI kırmızı sorunu bu repoda da var" dedi (kardeş repo `ezan-vakti`
+üzerinden). İncelendi: **aynı arıza DEĞİL.** İki imza birbirinden 10 saniyede
+ayrılıyor, ayırmadan hata aramak boşa zaman.
+
+**İmza A — iş akışı dosyası geçersiz (bu repoda YOK).**
+`ezan-vakti`'de bir adımın `if:`'inde `secrets` bağlamı kullanılmıştı. `secrets`
+adım düzeyindeki `if:` içinde KULLANILAMAZ (orada izin verilenler: github, needs,
+strategy, matrix, job, runner, env, vars, steps, inputs). Tanımsız bağlam ifadeyi
+`false` yapmaz, TÜM dosyayı ayrıştırma anında düşürür. Belirti: koşu **0 job** ile
+anında kırmızı, **hiç log yok**. Orada 10 koşu boyunca herkes Gradle'da hata aradı.
+Bu repodaki `build.yml` ve `translate.yml` denetlendi: `secrets` yalnızca `env:` ve
+`with:` içinde geçiyor, adım `if:`'lerinde yok. **Bu arıza burada yok, tekrar arama.**
+
+**İmza B — platform işi iptal ediyor (BU repodaki arıza).**
+`Analiz + Test` işi main'de **tam ~15 dakika** sonra `conclusion: cancelled` ile
+bitiyor ve iş logu API'den **404** dönüyor (yani adımlar hiç log üretmemiş).
+Aynı iş DALLARDA 3–5 dakikada yeşil geçiyor — kod ve testler sağlam.
+Etkilenen koşular: 31117241569, 31118062692, 31119986348, 31128396228
+(2026-08-06 15:44 → 21:34 UTC).
+
+Bunun bizim dosyamız olmadığının kanıtı: kardeş repo `dosya-okuyucu` **aynı gün,
+aynı saatlerde, tamamen farklı bir iş akışıyla** birebir aynı imzayı verdi
+(31118376313, 31118555699, 31118582733 — hepsi ~15:02'de `cancelled`), sonra
+23:01'deki koşusu **hiçbir değişiklik yapılmadan** 10 dakikada yeşile döndü.
+`dosya-okuyucu`'nun APK işinde `timeout-minutes: 30` var, yani 15 dk onun kendi
+zaman aşımı da değil. İki ayrı repo + iki ayrı iş akışı + aynı sabit 15 dk =
+runner tarafı.
+
+**Ne yapılmalı:** koda dokunmadan koşuyu yeniden çalıştır (Actions → ilgili koşu →
+Re-run jobs). Yeşile dönerse konu kapanır. Dönmezse ancak o zaman kod aranır.
+
+**Tuzak:** `conclusion: cancelled` olan işler `failed_only=true` ile listelenmez —
+"başarısız iş yok" cevabı gelir ve arıza görünmez olur. Koşu kırmızı ama
+`failed_jobs: 0` ise işlerin `conclusion`'ına tek tek bak (`list_workflow_jobs`);
+`cancelled` ise İmza B, `total_jobs: 0` ise İmza A.

@@ -2,6 +2,15 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## CI
+- [ ] **main'deki son koşu hâlâ kırmızı — yeniden çalıştır** (31128396228,
+  2026-08-06 21:34). `Analiz + Test` ~15 dk sonra platform tarafından iptal
+  ediliyor, iş logu 404; dallarda aynı iş 3-5 dk'da yeşil. Kardeş repo
+  `dosya-okuyucu` aynı imzayı verip 23:01'de kendiliğinden düzeldi, yani kodda
+  arıza beklenmiyor. Gerekçe ve iki arıza imzasının ayrımı: HAFIZA 2026-08-07.
+  Actions → koşu → **Re-run jobs**; yeşilse madde silinir. (Bu oturumda
+  yeniden çalıştırma denendi, entegrasyonun izni yok: HTTP 403.)
+
 ## 2026-08-06 genel kullanım denetiminden kalan (bilinçli ertelenen küçük uçlar)
 - [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
   kutusu senkronu çözüldü; scroll paylaşımı split-shell refaktörü ister).
