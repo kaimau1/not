@@ -1435,3 +1435,27 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **Geometri tek kopya** (`domain/arrow.dart`, saf Dart): ekran katmanı ile PDF damgası aynı hesabı kullanıyor — iki yerde ayrı yazılsaydı paylaşılan PDF'teki ok ekrandakinden başka türlü çıkardı. Gövde başlığın dibinde biter (kalın kalemde çizgi ucun sivriliğini bozuyordu) ve başlık okun yarısından uzun olamaz (kısa okta uç gövdeyi yutmamalı).
 
   Doğrulama: analyze temiz, testler yeşil (+9: ok kaydı, kırpma, geometri, jest, silgi, PDF damgasında gidiş-dönüş). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (25. tur): **Vurgu hiç kaydedilmiyormuş — Firestore iç içe dizi almıyor.** (Kullanıcı maddeleri: balon kaydolmuyor / fosforlu görüntü kötü / dışa aktarmada maddeler ve biçim yok / PDF sesli oku çalışmıyor / AI sesi çalışmıyor, çok ayar var / ekler satırı alta gelsin / kalem alt çubukta olsun / sayfa sil-boş sayfa ekle / başlık satırı + etiketler / görsel notu modu.)
+
+  **1) KÖK NEDEN — "metin seçip balon koyunca kaydolmuyor, geri gidince kayboluyor".** `PageBubble.toMap` vurgu dikdörtgenlerini `[[l,t,r,b], ...]` yani **dizi içinde dizi** olarak yazıyordu. **Firestore iç içe dizi kabul etmez**: o notun yazımı TÜMÜYLE reddediliyordu — yani yalnız vurgu değil, vurgu eklendikten sonraki her değişiklik de kaydedilmiyordu (sessizce, çünkü yazım `unawaited`). Artık düz liste (`[l,t,r,b,l,t,r,b,...]`, çizimin `points`'i ile aynı kural); okuma iki biçimi de anlıyor. **Kural: Firestore'a giden hiçbir alan dizi içinde dizi olamaz.**
+
+  **2) Fosforlu vurgu yeniden yazıldı.** İki katman vardı (soluk zemin + ortasından geçen KOYU kalın bant); üst üste binince satırın ortası, yani harflerin gövdesi, en koyu yer oluyordu — "yazıyı okunmaz hâle getiriyor". Şimdi tek ve düzgün %28 dolgu; PDF damgası da aynı (paylaşılan dosya ekranın fotoğrafı olmalı). Balon tutamacı da yarı saydam (%72) — kapalıyken altındaki yazı okunuyor, taşınırken/açıkken opak.
+
+  **3) Balondan vurgulanan metne OK.** Balon sürüklendikçe ok uzuyor, kısalıyor, yöneliyor: ok yalnız kendi katmanında (`_LeaderPainter`) ve `dragDelta` adlı ayrı bir `ValueNotifier`ı dinliyor — denetleyiciyi uyandırmak sayfanın bütün balon katmanını kare kare yeniden kurardı (kasmanın bilinen kök nedeni).
+
+  **4) Dışa aktarma iki yerde birden kırıktı.** (a) **Maddeler yazılmıyordu**: metin notunun gövdesi alınıyor, aynı nottaki onay kutuları/maddeler atlanıyordu. (b) **Biçim gitmiyordu**: işaretler yalnız SÖKÜLÜYORDU, üstelik alanlarda HAM görünüyordu (`##5:**_~ezan vakti~_**##`). Artık alanlarda temiz metin, çıktıda gerçek biçim var: `richSegments` (ayrıştırıcının tek kopyası) → `pw.RichText`. **PT Sans kalın ve italik kesimleri eklendi**: `pdf` paketi bu kesimleri sentezlemez, dosyası verilmezse kalın metin düz çıkar.
+
+  **5) "PDF sesli oku çalışmıyor" — kök neden.** Okuma ekranına notun DÜZ METNİ veriliyordu; PDF notunun düz metni sayfa notlarıdır ve çoğu notta boştur, ekran da "okunabilir metin çıkmadı" diyordu — oysa metin belgenin içindeydi. `noteSpeechText` artık belgenin kendi metnini de çıkarıyor (yerel kopya yoksa buluttan geçici dosyaya yazıp).
+
+  **6) Seslendirme ayarı TEK yerde.** Motor seçimi "Gelişmiş AI" bölümünde, sesler/hızlar "Ses" bölümündeydi; okuma ekranında da ayrı bir anahtar vardı ve ayarda yapay zekâ seçiliyken bile kapalı kalabiliyordu ("AI seçince çalışmıyor, hâlâ android sesiyle okuyor"). Ekrandaki anahtar kalktı, her şey Ses bölümünde ve **yapay zekâ sesi kullanılamıyorsa sebebi yazıyor** (kendi Gemini anahtarı gerekiyor). Model etiketleri de düzeltildi: iki ayrı ayar "podcast" diyordu.
+
+  **7) Alt çubuk iki iş kazandı.** "Ekler (1) · Göster" satırı kalktı, aç/kapa alt çubuktaki ek düğmesine taşındı (kapalıyken artık HİÇ yer kaplamıyor). PDF/sunum notunda **kalem alt çubukta**: tam ekrana geçmeden bölmede çizim — açıkken tek parmak çizer, iki parmak gezinir, kalem çubuğu bölmenin dibinde.
+
+  **8) Sayfaları düzenle**: boş sayfa ekleme (`PdfEdit.blankPage` = -1, sıralamada beyaz sayfa doğurur; kimliği yeni uuid, yoksa sonraki sayfaların notları kayardı) ve silme artık her zaman görünür.
+
+  **9) Görsel notu modu — yeni TİP AÇILMADI.** Seçilen görseller `ScanPdf` ile tek belgeye diziliyor ve PDF notu olarak açılıyor: sayfa notu, balon, vurgu, ok, kalem, sayfa ekle/sil, paylaşım, dışa aktarma hepsi bedava geliyor. Ayrı bir tip aynı ekranların ikinci kopyasını doğururdu.
+
+  **10) Başlık satırı.** Başlık artık TEK satır; etiket/klasör/hatırlatıcı çipleri ve "+" düğmesi başlığın SAĞINDA, iki sütuna sığan dar bir alanda (çip etiketleri kısaltılıyor — dar alanda `Chip` taşma hatası verir).
+
+  Doğrulama: analyze temiz, testler yeşil. **Cihazda doğrulanmadı — APK CI'da.**

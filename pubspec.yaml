@@ -144,6 +144,12 @@ flutter:
     # WinAnsi kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk
     # çıkıyordu. PT Sans (OFL) Türkçe'nin tamamını taşıyor.
     - assets/fonts/PTSans-Regular.ttf
+    # KALIN ve İTALİK kesimler (aynı aile, OFL). Dışa aktarmada notun satır içi
+    # biçimi de taşınsın diye eklendi (kullanıcı bulgusu 2026-08-08: "yazı
+    # biçimi de aktarılmıyor"): `pdf` paketi kalın/italik'i SENTEZLEMEZ, o
+    # kesimin kendi dosyası verilmezse metin düz çıkar.
+    - assets/fonts/PTSans-Bold.ttf
+    - assets/fonts/PTSans-Italic.ttf
     # YAZI TİPİ KATALOĞUNUN TAMAMI APK'ya GÖMÜLÜ (bkz. `note_fonts.dart`).
     #
     # KÖK NEDEN (kullanıcı, 2026-08-07: "yazı boyutu ve fontumuz tüm

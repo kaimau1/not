@@ -7,6 +7,8 @@ import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
+import '../data/attachment_repository.dart';
+import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
@@ -222,8 +224,10 @@ Future<void> _runNoteAction(
             title: title.isEmpty ? l10n.appName : title,
             // Kilitli notun podcast metni de diske yazılmasın.
             allowCache: !note.locked,
-            // toPlainText değil: başlık ve `- [x]` işaretleri sesli okunmasın.
-            loadText: () async => note.toContentText(),
+            // BELGE notunda belgenin kendi metni de okunur (bkz.
+            // noteSpeechText) — sayfa notları boşsa okuma boş kalmasın.
+            loadText: () =>
+                noteSpeechText(note, ref.read(attachmentRepositoryProvider)),
           ),
         ),
       );

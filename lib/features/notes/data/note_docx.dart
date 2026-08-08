@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/utils/rich_text.dart';
 import 'note_pdf.dart';
 
 /// Notu Word (.docx) belgesine çevirir — YENİ BAĞIMLILIK YOK: .docx bir zip
@@ -96,7 +97,12 @@ abstract final class NoteDocx {
         body.write(_imageParagraph(images[placed[next]], placed[next] + 1));
         next++;
       }
-      final line = lines[index];
+      // Word tarafı satır içi biçimi TAŞIMIYOR: işaretler burada sökülür,
+      // yoksa belgeye ham `**kalın**` inerdi. (PDF yolu biçimi uyguluyor —
+      // bkz. `NotePdf._rich`; docx run'ları ayrı bir iş.)
+      final raw = lines[index];
+      final line = PdfLine(raw.kind, stripRichMarkers(raw.text),
+          marker: raw.marker);
       body.write(switch (line.kind) {
         PdfLineKind.blank => _p(''),
         PdfLineKind.paragraph => _p(_r(line.text)),

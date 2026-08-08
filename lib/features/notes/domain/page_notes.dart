@@ -83,10 +83,21 @@ List<String> materializePageIds(Attachment attachment, int pageCount) {
 /// olduğu değişir. Silinen sayfanın kimliği listeden düşer ve notu
 /// `orderedPageNotes` tarafından gösterilmez — ama kayıtta DURUR: sayfa geri
 /// alınırsa (geri al) notu da geri gelir.
-List<String> reorderPageIds(List<String> ids, List<int> order) => [
-  for (final i in order)
-    if (i >= 0 && i < ids.length) ids[i],
+/// [blankId] BOŞ SAYFA (order içinde -1) için yeni kimlik üretir: boş sayfanın
+/// kendi kimliği olmalı, yoksa ondan sonraki sayfaların notları bir kayar.
+List<String> reorderPageIds(
+  List<String> ids,
+  List<int> order, {
+  String Function(int position)? blankId,
+}) => [
+  for (var position = 0; position < order.length; position++)
+    if (order[position] < 0)
+      (blankId ?? _defaultBlankId)(position)
+    else if (order[position] < ids.length)
+      ids[order[position]],
 ];
+
+String _defaultBlankId(int position) => 'blank$position';
 
 /// [attachment]'e ait sayfa notları, SAYFA SIRASINA dizilmiş hâlde.
 /// Boş (silinmiş) notlar elenir — bkz. `Note.pageNotes` merge tuzağı.

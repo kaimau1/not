@@ -2436,6 +2436,18 @@ abstract class AppLocalizations {
   /// **'PDF ekle not al'**
   String get newPdfNote;
 
+  /// No description provided for @imageNotePreparing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller belgeye diziliyor…'**
+  String get imageNotePreparing;
+
+  /// No description provided for @newImageNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel ekle not al'**
+  String get newImageNote;
+
   /// No description provided for @pdfPageNoteHint.
   ///
   /// In tr, this message translates to:
@@ -2513,6 +2525,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Seçili sayfaları sil'**
   String get pdfDeletePages;
+
+  /// No description provided for @pdfAddBlankPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş sayfa ekle'**
+  String get pdfAddBlankPage;
 
   /// No description provided for @pdfRotatePages.
   ///
@@ -4019,6 +4037,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.'**
   String get ttsEngineAiInfo;
+
+  /// No description provided for @ttsEngineAiUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ sesi kendi Gemini anahtarını ister. Anahtar eklenene kadar okuma cihaz sesiyle yapılır.'**
+  String get ttsEngineAiUnavailable;
 
   /// No description provided for @ttsModel.
   ///

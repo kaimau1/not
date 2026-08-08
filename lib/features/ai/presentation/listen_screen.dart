@@ -55,12 +55,24 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   bool _fromCache = false;
   bool _lastSummarize = false;
 
-  /// Bu okumada YAPAY ZEKÂ sesi kullanılsın mı? Başlangıç değeri Ayarlar'daki
-  /// tercih; kullanıcı ekrandaki anahtarla o okuma için değiştirebilir.
+  /// Bu okumada YAPAY ZEKÂ sesi kullanılsın mı?
+  ///
+  /// Karar TEK yerden gelir: Ayarlar → Ses → Seslendirme (kullanıcı isteği
+  /// 2026-08-08: "1 özellik 1 ayara bağlanmalı, çok ayar karışıklık
+  /// yapıyor"). Bu ekranda ayrıca bir anahtar VARDI; ayarda yapay zekâ
+  /// seçiliyken bile burada kapalı kalabiliyor ve okuma sessizce cihaz
+  /// sesiyle yapılıyordu ("AI seçince çalışmıyor, hâlâ android sesiyle
+  /// okuyor"). Anahtar kaldırıldı.
+  ///
+  /// Yapay zekâ sesi kullanıcının KENDİ Gemini anahtarını ister; yoksa
+  /// okuma cihaz sesiyle yapılır ve sebebi ekranda YAZAR.
   bool? _aiVoice;
 
+  bool get _aiAvailable => ref.read(aiSpeechProvider.notifier).isAvailable;
+
   bool get _useAiVoice =>
-      _aiVoice ?? (ref.read(ttsEngineProvider) == TtsEngine.gemini);
+      _aiAvailable &&
+      (_aiVoice ?? (ref.read(ttsEngineProvider) == TtsEngine.gemini));
 
   @override
   void initState() {
@@ -228,7 +240,6 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     // Hangi ses konuşuyorsa ONUN durumu izlenir: oynat/duraklat düğmesi ve
     // ilerleme çubuğu iki motorda da aynı `SpeechOutputState`i okur.
     final aiVoice = _useAiVoice;
-    final aiAvailable = ref.read(aiSpeechProvider.notifier).isAvailable;
     final speech = aiVoice
         ? ref.watch(aiSpeechProvider)
         : ref.watch(speechOutputProvider);
@@ -353,35 +364,38 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                             ],
                           ],
                         ),
-                        // "AI ile dinle": okumayı cihaz sesi yerine Gemini'nin
-                        // seslendirme modeline yaptırır. Kendi Gemini anahtarı
-                        // yoksa seçenek gösterilmez — dahili yol ses
-                        // döndürmüyor, açık bir düğmenin hep hata vermesi
-                        // yanıltıcı olurdu.
-                        if (aiAvailable)
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            dense: true,
-                            value: aiVoice,
-                            title: Text(
-                              l10n.listenAiVoice,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            subtitle: Text(
-                              l10n.listenAiVoiceInfo,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                            onChanged: (value) async {
-                              // Motor değişiyor: konuşan varsa sussun, yoksa
-                              // iki ses üst üste biner.
-                              await ref
-                                  .read(speechOutputProvider.notifier)
-                                  .stop();
-                              await ref.read(aiSpeechProvider.notifier).stop();
-                              if (mounted) setState(() => _aiVoice = value);
-                            },
+                        // Hangi sesin okuduğu TEK satırda; seçim Ayarlar'da
+                        // (bkz. _useAiVoice). Ayarda yapay zekâ seçili ama
+                        // anahtar yoksa sebebi burada yazar.
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(
+                            children: [
+                              Icon(
+                                aiVoice ? Icons.auto_awesome : Icons.smartphone,
+                                size: 15,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  aiVoice
+                                      ? l10n.listenAiVoice
+                                      : (ref.read(ttsEngineProvider) ==
+                                                TtsEngine.gemini
+                                            ? l10n.ttsEngineAiUnavailable
+                                            : l10n.ttsEngineDevice),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
                         if (!_isPodcast) ...[
                           const SizedBox(height: 10),
                           Text(

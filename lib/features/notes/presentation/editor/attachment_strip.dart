@@ -68,50 +68,14 @@ class AttachmentStrip extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final scheme = Theme.of(context).colorScheme;
+    // BAŞLIK SATIRI YOK: "Ekler (1) · Göster" satırı alt çubuktaki ek
+    // düğmesine taşındı (kullanıcı isteği 2026-08-08 — "bir satır alan
+    // kurtarmış oluruz"). Şerit kapalıyken hiç yer kaplamaz.
+    if (!expanded) return const SizedBox.shrink();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        InkWell(
-          onTap: onToggle,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.attach_file,
-                  size: 16,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    context.l10n.attachmentsCount(attachments.length),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                Icon(
-                  expanded
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_up,
-                  size: 20,
-                  color: scheme.onSurfaceVariant,
-                ),
-                Text(
-                  expanded
-                      ? context.l10n.hideAttachments
-                      : context.l10n.showAttachments,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: scheme.primary),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
-          ),
-        ),
         if (expanded)
           SizedBox(
             height: 110,

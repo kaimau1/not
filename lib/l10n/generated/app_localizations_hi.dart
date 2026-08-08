@@ -695,13 +695,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get aiModelChat => 'सारांश, शीर्षक, टैग और बातचीत';
 
   @override
-  String get aiModelDocument => 'पॉडकास्ट और दस्तावेज़ से बातचीत';
+  String get aiModelDocument => 'दस्तावेज़ चैट और PDF सारांश';
 
   @override
   String get aiModelTranslate => 'अनुवाद';
 
   @override
-  String get aiModelVoice => 'आवाज़ नोट';
+  String get aiModelVoice => 'वॉइस नोट सहायक';
 
   @override
   String get aiModelAuto => 'स्वचालित (अनुशंसित)';
@@ -1260,6 +1260,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
+  String get imageNotePreparing =>
+      'इमेज को दस्तावेज़ में लगाया जा रहा है…';
+
+  @override
+  String get newImageNote =>
+      'इमेज जोड़ें, नोट लें';
+
+  @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
 
   @override
@@ -1301,6 +1309,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfAddBlankPage => 'खाली पेज जोड़ें';
 
   @override
   String get pdfRotatePages => 'Döndür';
@@ -2127,6 +2138,10 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get ttsEngineAiInfo =>
       'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+
+  @override
+  String get ttsEngineAiUnavailable =>
+      'AI आवाज़ के लिए आपकी अपनी Gemini कुंजी चाहिए। तब तक पढ़ना डिवाइस की आवाज़ से होगा।';
 
   @override
   String get ttsModel => 'Seslendirme modeli';

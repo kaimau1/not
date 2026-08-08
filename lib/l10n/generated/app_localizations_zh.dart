@@ -677,13 +677,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiModelChat => '摘要、标题、标签和对话';
 
   @override
-  String get aiModelDocument => '播客与文档对话';
+  String get aiModelDocument => '文档对话与 PDF 摘要';
 
   @override
   String get aiModelTranslate => '翻译';
 
   @override
-  String get aiModelVoice => '语音笔记';
+  String get aiModelVoice => '语音笔记助手';
 
   @override
   String get aiModelAuto => '自动（推荐）';
@@ -1222,6 +1222,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
+  String get imageNotePreparing =>
+      '正在把图片整理成文档…';
+
+  @override
+  String get newImageNote =>
+      '添加图片并记笔记';
+
+  @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
 
   @override
@@ -1263,6 +1271,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfAddBlankPage => '添加空白页';
 
   @override
   String get pdfRotatePages => 'Döndür';
@@ -2070,6 +2081,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get ttsEngineAiInfo =>
       'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+
+  @override
+  String get ttsEngineAiUnavailable =>
+      'AI 语音需要你自己的 Gemini 密钥。在此之前将使用设备语音朗读。';
 
   @override
   String get ttsModel => 'Seslendirme modeli';

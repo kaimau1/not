@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
@@ -36,11 +37,20 @@ class PdfExportScreen extends ConsumerStatefulWidget {
 }
 
 class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
+  /// Notun İŞARETLİ (biçim taşıyan) hâlleri. Alanlarda TEMİZ metin gösterilir
+  /// ama dışa aktarmaya — kullanıcı elle değiştirmediyse — işaretli hâl gider:
+  /// böylece çıktı nottaki gibi kalın/renkli/büyük çıkar.
+  ///
+  /// KÖK NEDEN (kullanıcı ekran görüntüsü 2026-08-08): alanlara HAM metin
+  /// konuyordu ve başlık `##5:**_~ezan vakti~_**##` olarak görünüyordu.
+  late final String _markedTitle = widget.note.title.trim();
+  late final String _markedContent = _contentOf(widget.note);
+
   late final TextEditingController _title = TextEditingController(
-    text: widget.note.title.trim(),
+    text: stripRichMarkers(_markedTitle),
   );
   late final TextEditingController _content = TextEditingController(
-    text: _contentOf(widget.note),
+    text: stripRichMarkers(_markedContent),
   );
   bool _includeDate = true;
   bool _includeImages = true;
@@ -49,15 +59,29 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   bool get _hasImages =>
       widget.note.attachments.any((a) => a.kind == AttachmentKind.image);
 
-  /// Dışa aktarılan metin: satır içi biçim işaretleri sökülür (PDF/Word
-  /// çıktısında "**kalın**" görünmemeli).
-  static String _contentOf(Note note) => stripRichMarkers(switch (note.type) {
-    NoteType.text => note.body.trimRight(),
+  /// Dışa aktarılacak metin — biçim İŞARETLERİYLE (çözümlemeyi `NotePdf`
+  /// yapıyor, bkz. `NotePdf._rich`).
+  ///
+  /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-08: "maddeler, veriler
+  /// yazılmıyor").** Metin notunun MADDELERİ buraya hiç girmiyordu: gövde
+  /// alınıyor, aynı notun içindeki onay kutuları/maddeler atlanıyordu. Karışık
+  /// içerik (gövde + maddeler) uygulamada olağan — `Note.toPlainText` zaten
+  /// ikisini de yazıyor, burası yazmıyordu. Artık üç liste türünde de gövde ve
+  /// maddeler birlikte gider.
+  static String _contentOf(Note note) => switch (note.type) {
+    NoteType.text => [
+      if (note.body.trim().isNotEmpty) note.body.trimRight(),
+      for (final item in note.items)
+        if (item.text.trim().isNotEmpty)
+          '[${item.checked ? 'x' : ' '}] ${item.text}',
+    ].join('\n'),
     NoteType.checklist => [
+      if (note.body.trim().isNotEmpty) note.body.trimRight(),
       for (final item in note.items)
         '[${item.checked ? 'x' : ' '}] ${item.text}',
     ].join('\n'),
     NoteType.ordered => [
+      if (note.body.trim().isNotEmpty) note.body.trimRight(),
       for (var i = 0; i < note.items.length; i++)
         '${i + 1}. ${note.items[i].text}',
     ].join('\n'),
@@ -65,7 +89,13 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
     // dışa aktarma metin + görsel üretiyor).
     NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
-  });
+  };
+
+  /// Alandaki metin kullanıcı tarafından DEĞİŞTİRİLMEDİYSE işaretli özgün
+  /// hâli döner (biçim korunur); değiştirildiyse kullanıcının yazdığı düz
+  /// metin gider.
+  static String _exported(String marked, String edited) =>
+      stripRichMarkers(marked).trim() == edited.trim() ? marked : edited;
 
   @override
   void dispose() {
@@ -164,10 +194,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     try {
       final title = _title.text.trim();
       final bytes = await NotePdf.build(
-        title: title,
-        content: _content.text,
+        title: _exported(_markedTitle, title),
+        content: _exported(_markedContent, _content.text),
         date: _date,
         images: await _loadImages(),
+        palette: NoteColors.richPalette,
       );
       return await NotePdf.writeTemp(bytes, title);
     } catch (e) {
@@ -185,7 +216,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       final title = _title.text.trim();
       final bytes = await NoteDocx.build(
         title: title,
-        content: _content.text,
+        content: _exported(_markedContent, _content.text),
         date: _date,
         images: await _loadImages(),
       );
