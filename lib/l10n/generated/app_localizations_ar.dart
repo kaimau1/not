@@ -1354,6 +1354,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get eraser => 'ممحاة';
 
   @override
+  String get inkArrow => 'سهم';
+
+  @override
   String get clearInk => 'مسح التعليقات';
 
   @override
@@ -2143,7 +2146,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sharePdfWithBubbles => 'كملف PDF مع الفقاعات';
 
   @override
-  String get sharePdfWithBubblesInfo => 'تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ لا يحتاج المستلم إلى تطبيق Not.';
+  String get sharePdfWithBubblesInfo =>
+      'تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ يمكن لأي شخص فتحه، وفي تطبيق Not يُفتح قابلاً للتحرير.';
 
   @override
   String get sharePdfWithBubblesNone => 'لا يوجد في هذه الملاحظة ملف PDF يحمل فقاعات أو رسومات.';

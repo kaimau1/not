@@ -391,6 +391,7 @@
   "penMarker": "मार्कर",
   "penHighlighter": "हाइलाइटर",
   "eraser": "रबर",
+  "inkArrow": "तीर",
   "clearInk": "टिप्पणियाँ मिटाएँ",
   "inkTwoFingerHint": "एक उँगली बनाती है · दो उँगलियाँ खिसकाती और ज़ूम करती हैं",
   "slideOpenFailed": "प्रस्तुति नहीं खोली जा सकी",
@@ -564,7 +565,7 @@
   "shareAsTextInfo": "नोट का टेक्स्ट और पेज नोट्स किसी भी ऐप को भेजता है।",
   "shareAsTextEmpty": "इस नोट में साझा करने लायक कोई टेक्स्ट नहीं है।",
   "sharePdfWithBubbles": "बबल वाली PDF के रूप में",
-  "sharePdfWithBubblesInfo": "बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; पाने वाले को Not ऐप की ज़रूरत नहीं।",
+  "sharePdfWithBubblesInfo": "बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; कोई भी खोल सकता है और Not में यह संपादन योग्य खुलता है।",
   "sharePdfWithBubblesNone": "इस नोट में बबल या ड्रॉइंग वाली कोई PDF नहीं है।",
   "sharePdfWithBubblesPreparing": "बबल वाली PDF तैयार हो रही है…",
   "sharePdfWithBubblesSuffix": " (बबल सहित)"

@@ -1323,6 +1323,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get eraser => '橡皮擦';
 
   @override
+  String get inkArrow => '箭头';
+
+  @override
   String get clearInk => '清除批注';
 
   @override
@@ -2097,7 +2100,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharePdfWithBubbles => '以带气泡的 PDF 形式';
 
   @override
-  String get sharePdfWithBubblesInfo => '气泡、高亮和手写会印进 PDF；对方不需要安装 Not 应用。';
+  String get sharePdfWithBubblesInfo =>
+      '气泡、高亮和手写会印进 PDF；任何人都能打开，在 Not 中则以可编辑状态打开。';
 
   @override
   String get sharePdfWithBubblesNone => '这条笔记中没有带气泡或手写的 PDF。';

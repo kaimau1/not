@@ -1373,6 +1373,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get eraser => 'Borracha';
 
   @override
+  String get inkArrow => 'Seta';
+
+  @override
   String get clearInk => 'Limpar as anotações';
 
   @override
@@ -2168,7 +2171,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sharePdfWithBubbles => 'Como PDF com balões';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Balões, destaques e desenhos são gravados dentro do PDF; quem recebe não precisa do app Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Balões, destaques e desenhos são gravados dentro do PDF; qualquer um pode abrir e no Not ele abre editável.';
 
   @override
   String get sharePdfWithBubblesNone => 'Esta nota não tem PDF com balões ou desenhos.';

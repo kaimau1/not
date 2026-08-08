@@ -1369,6 +1369,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get eraser => 'Gum';
 
   @override
+  String get inkArrow => 'Pijl';
+
+  @override
   String get clearInk => 'Aantekeningen wissen';
 
   @override
@@ -2166,7 +2169,8 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sharePdfWithBubbles => 'Als pdf met ballonnen';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Ballonnen, markeringen en tekeningen worden in de pdf gebrand; de ontvanger heeft de Not-app niet nodig.';
+  String get sharePdfWithBubblesInfo =>
+      'Ballonnen, markeringen en tekeningen worden in de pdf gebrand; iedereen kan hem openen en in Not opent hij bewerkbaar.';
 
   @override
   String get sharePdfWithBubblesNone => 'Deze notitie heeft geen pdf met ballonnen of tekeningen.';

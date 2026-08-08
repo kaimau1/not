@@ -391,6 +391,7 @@
   "penMarker": "马克笔",
   "penHighlighter": "荧光笔",
   "eraser": "橡皮擦",
+  "inkArrow": "箭头",
   "clearInk": "清除批注",
   "inkTwoFingerHint": "单指绘制 · 双指平移和缩放",
   "slideOpenFailed": "无法打开该演示文稿",
@@ -564,7 +565,7 @@
   "shareAsTextInfo": "把笔记正文和页面笔记发送到任意应用。",
   "shareAsTextEmpty": "这条笔记没有可分享的文字。",
   "sharePdfWithBubbles": "以带气泡的 PDF 形式",
-  "sharePdfWithBubblesInfo": "气泡、高亮和手写会印进 PDF；对方不需要安装 Not 应用。",
+  "sharePdfWithBubblesInfo": "气泡、高亮和手写会印进 PDF；任何人都能打开，在 Not 中则以可编辑状态打开。",
   "sharePdfWithBubblesNone": "这条笔记中没有带气泡或手写的 PDF。",
   "sharePdfWithBubblesPreparing": "正在准备带气泡的 PDF…",
   "sharePdfWithBubblesSuffix": "（带气泡）"

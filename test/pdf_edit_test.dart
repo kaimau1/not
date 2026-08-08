@@ -207,7 +207,7 @@ void main() {
     });
   });
 
-  group('burnBubbles', () {
+  group('burnForSharing / readSharedPdf', () {
     // Font ANA izolede okunur (uygulamada rootBundle, testte diskten): hazır
     // Helvetica WinAnsi kodlu ve içinde ı ğ ş İ yok.
     final font = Uint8List.fromList(
@@ -230,13 +230,19 @@ void main() {
       rects: rects,
     );
 
+    Uint8List burn(Uint8List bytes, List<PageBubble> bubbles) =>
+        PdfEdit.burnForSharing(
+          bytes,
+          bubbles: bubbles,
+          ink: const [],
+          fontBytes: font,
+        );
+
     test('balonun yazısı BELGENİN İÇİNE girer (Türkçe harfler bozulmadan)', () {
-      final before = sample(2);
-      final after = PdfEdit.burnBubbles(
-        before,
-        [bubble(), bubble(page: 2, title: 'Sunum', text: 'şunu göster')],
-        fontBytes: font,
-      );
+      final after = burn(sample(2), [
+        bubble(),
+        bubble(page: 2, title: 'Sunum', text: 'şunu göster'),
+      ]);
       expect(PdfEdit.pageCount(after), 2);
       final texts = pageTexts(after);
       // Sayfanın kendi metni yerinde: damga içeriğin ÜZERİNE basılır.
@@ -250,17 +256,13 @@ void main() {
 
     test('vurgu (yazısız) da basılır — bayt büyür, metin bozulmaz', () {
       final before = sample(1);
-      final after = PdfEdit.burnBubbles(
-        before,
-        [
-          bubble(
-            title: '',
-            text: '',
-            rects: const [PageBubbleRect(0.1, 0.2, 0.9, 0.24)],
-          ),
-        ],
-        fontBytes: font,
-      );
+      final after = burn(before, [
+        bubble(
+          title: '',
+          text: '',
+          rects: const [PageBubbleRect(0.1, 0.2, 0.9, 0.24)],
+        ),
+      ]);
       expect(after.length, greaterThan(before.length));
       expect(pageTexts(after), ['P1']);
     });
@@ -268,20 +270,15 @@ void main() {
     test('boş balon ve olmayan sayfa atlanır', () {
       // Yazısı ve vurgusu olmayan serbest balon: basılacak bir şeyi yok.
       expect(
-        () => PdfEdit.burnBubbles(sample(1), [
-          bubble(title: '', text: ''),
-        ], fontBytes: font),
+        () => burn(sample(1), [bubble(title: '', text: '')]),
         throwsA(isA<PdfEditException>()),
       );
       expect(
-        () => PdfEdit.burnBubbles(sample(1), const [], fontBytes: font),
+        () => burn(sample(1), const []),
         throwsA(isA<PdfEditException>()),
       );
       // Belgede olmayan sayfanın balonu işi düşürmez.
-      final out = PdfEdit.burnBubbles(sample(1), [
-        bubble(),
-        bubble(page: 9, title: 'Yok'),
-      ], fontBytes: font);
+      final out = burn(sample(1), [bubble(), bubble(page: 9, title: 'Yok')]);
       expect(pageTexts(out).single, isNot(contains('Yok')));
     });
 
@@ -291,9 +288,61 @@ void main() {
         pageIndexes: [0],
         quarterTurns: 1,
       );
-      final out = PdfEdit.burnBubbles(rotated, [bubble()], fontBytes: font);
+      final out = burn(rotated, [bubble()]);
       expect(PdfEdit.pageCount(out), 1);
       expect(rotationOf(out, 0), 1);
+    });
+
+    // ASIL KİLİT: paylaşılan dosya Notlar'da DÜZENLENEBİLİR açılmalı. Damga
+    // katmanı sökülünce sayfa ilk hâline döner ve balonlar veriden gelir;
+    // sökülmeseydi balonlar iki kez (basılı + canlı) görünürdü.
+    test('gidiş-dönüş: katman sökülür, balonlar veri olarak geri gelir', () {
+      final source = sample(2);
+      final shared = PdfEdit.burnForSharing(
+        source,
+        bubbles: [bubble(), bubble(page: 2, title: 'Sunum', text: 'şunu')],
+        ink: const [
+          InkStroke(
+            page: 1,
+            color: 0xFFEF5350,
+            width: 0.01,
+            points: [0.1, 0.1, 0.5, 0.5, 0.9, 0.2],
+          ),
+          // OK da damgalanır (gövde + dolu başlık) ve okluğu geri gelir.
+          InkStroke(
+            page: 2,
+            color: 0xFF1E88E5,
+            width: 0.006,
+            points: [0.2, 0.8, 0.7, 0.3],
+            arrow: true,
+          ),
+        ],
+        fontBytes: font,
+      );
+      expect(pageTexts(shared)[0], contains('Kaynak?'));
+
+      final back = PdfEdit.readSharedPdf(shared)!;
+      expect(back.bubbles, hasLength(2));
+      expect(back.bubbles.first.title, 'Kaynak?');
+      expect(back.bubbles.first.text, contains('ışığı'));
+      expect(back.bubbles.last.page, 2);
+      expect(back.ink, hasLength(2));
+      expect(back.ink.first.color, 0xFFEF5350);
+      expect(back.ink.first.points, hasLength(6));
+      expect(back.ink.first.arrow, isFalse);
+      expect(back.ink.last.arrow, isTrue);
+      // Damga sayfadan KALKMIŞ olmalı; belgenin kendi metni durmalı.
+      final cleaned = pageTexts(back.bytes);
+      expect(cleaned[0], contains('P1'));
+      expect(cleaned[1], contains('P2'));
+      expect(cleaned[0], isNot(contains('Kaynak?')));
+      expect(cleaned[1], isNot(contains('şunu')));
+      // Veri de sökülür: aynı dosya ikinci kez okunursa balonlar çiftlenmesin.
+      expect(PdfEdit.readSharedPdf(back.bytes), isNull);
+    });
+
+    test('sıradan PDF null döner (normal ek yolu)', () {
+      expect(PdfEdit.readSharedPdf(sample(1)), isNull);
     });
   });
 

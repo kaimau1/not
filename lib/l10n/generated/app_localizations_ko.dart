@@ -1338,6 +1338,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get eraser => '지우개';
 
   @override
+  String get inkArrow => '화살표';
+
+  @override
   String get clearInk => '주석 지우기';
 
   @override
@@ -2118,7 +2121,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharePdfWithBubbles => '말풍선 포함 PDF로';
 
   @override
-  String get sharePdfWithBubblesInfo => '말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 받는 사람에게 Not 앱이 필요 없습니다.';
+  String get sharePdfWithBubblesInfo =>
+      '말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 누구나 열 수 있고 Not에서는 편집 가능한 상태로 열립니다.';
 
   @override
   String get sharePdfWithBubblesNone => '이 메모에는 말풍선이나 필기가 있는 PDF가 없습니다.';

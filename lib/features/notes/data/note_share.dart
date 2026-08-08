@@ -48,9 +48,13 @@ class NoteShare {
 
   /// Notun PDF eklerini **balonlarıyla birlikte** paylaşır.
   ///
-  /// [share] Not uygulaması olan bir alıcı içindir (balonlar DÜZENLENEBİLİR
-  /// gelir); bu yol ise herkese açılabilen bir PDF üretir: balonlar, vurgular
-  /// ve el yazısı belgenin İÇİNE basılır (bkz. [PdfEdit.burnBubbles]).
+  /// [share] bütün notu gönderir (`.notpaket`); bu yol ise **belgeyi** gönderir:
+  /// balonlar, vurgular ve el yazısı PDF'in içine basılır, yani dosya herhangi
+  /// bir PDF okuyucuda olduğu gibi görünür.
+  ///
+  /// Alıcının Notlar'ı varsa dosya orada **düzenlenebilir** açılır: damga
+  /// adlandırılmış bir katmana çizilir ve balon verisi PDF'e ek dosya olarak
+  /// iliştirilir (bkz. [PdfEdit.burnForSharing] / [PdfEdit.readSharedPdf]).
   ///
   /// Ekin kendisine DOKUNULMAZ: damgalı kopya geçici klasöre yazılır, uygulama
   /// içindeki belge katmanlı (yani hâlâ düzenlenebilir) kalır.
@@ -71,17 +75,12 @@ class NoteShare {
       if (attachment.bubbles.isEmpty && attachment.ink.isEmpty) continue;
       final bytes = await attachments.readBytes(attachment);
       if (bytes == null) continue;
-      var out = bytes;
-      if (attachment.ink.isNotEmpty) {
-        out = await PdfEdit.burnInkInBackground(out, attachment.ink);
-      }
-      if (attachment.bubbles.isNotEmpty) {
-        out = await PdfEdit.burnBubblesInBackground(
-          out,
-          attachment.bubbles,
-          fontBytes: fontBytes,
-        );
-      }
+      final out = await PdfEdit.burnForSharingInBackground(
+        bytes,
+        bubbles: attachment.bubbles,
+        ink: attachment.ink,
+        fontBytes: fontBytes,
+      );
       final base = p.basenameWithoutExtension(attachment.fileName);
       final file = File(p.join(dir.path, '$base$fileSuffix.pdf'));
       await file.writeAsBytes(out, flush: true);

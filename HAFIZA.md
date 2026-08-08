@@ -1409,3 +1409,29 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **5) "3 noktaya basınca klavye kapanıyor" — kök neden.** `PopupMenuButton` bir ROTA iter; itilen rota kendi odak kapsamını alır, `TextField` odağı düşer ve klavye kapanır (menü kapansa da geri gelmez). Odak düşünce `editing` false olduğu için gizlenen çubuklar da geri gelip ekran zıplıyordu. Renk seçici de aynı sebeple (modal levha) suçluydu. Eylemler (yıldız/acil/renk/sil) ve renk şeridi artık KARTIN İÇİNDE açılıyor, `TextFieldTapRegion` + `ExcludeFocus` ile: hiçbir düğme odağı istemez, yazı alanı odakta kalır, klavye açık kalır. **Kural: metin yazılırken açılan hiçbir yardımcı arayüz rota itmemeli.**
 
   Doğrulama: analyze temiz, testler yeşil (+6: balonun PDF'e basılması ve kart içi eylemlerin odağı düşürmemesi). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (23. tur): **Paylaşılan PDF artık Notlar'da DÜZENLENEBİLİR açılıyor** (kullanıcı: "gönderilen PDF'yi PDF görüntüleyicilerde açabiliyorum ama notlar uygulaması çıkmıyor; notlarda açıp aynı şekilde düzenlemeye devam edebilmek istiyorum").
+
+  **1) Damga artık GERİ ALINABİLİR.** 22. turda balonlar sayfanın içeriğine düzleştiriliyordu: dosya her okuyucuda doğru görünüyor ama karşı tarafta balon taşınamaz/silinemez hâle geliyordu. Çözüm iki parça ve ikisi de aynı dosyada:
+  * Damga, adlandırılmış bir **PDF katmanına** (optional content group, `PdfEdit.shareLayerName`) çizilir. Her okuyucu normal içerik gibi gösterir; Notlar `layers.remove(isRemoveGraphicalContent: true)` ile katmanı grafiğiyle söker.
+  * Balonların/çizimlerin KENDİ verisi PDF'e **ek dosya** olarak iliştirilir (`notlar-balonlar.json`). Başka programlar için görünmez bir eklenti, Notlar için notun kaynağı.
+  Böylece belgenin İKİ kopyası taşınmıyor (dosya boyutu iki katına çıkmıyor) ve alıcıda balonlar ilk günkü gibi düzenlenebiliyor. Okuma sırasında hem katman hem veri sökülür: aynı dosya ikinci kez alınırsa balonlar ÇİFTLENMEZ.
+  **TUZAK**: bir `PdfLayer` grafiğini İLK sayfa için kurup önbelleğe alıyor; aynı katman ikinci sayfada kullanılırsa çizim yanlış sayfaya gider. Her sayfaya AYNI ADLA ayrı katman açılıyor — silme ada göre çalıştığı için hepsi tek çağrıda kalkıyor.
+
+  **2) "Notlar açılacaklar listesinde çıkmıyordu" — kök neden.** Manifest'te PDF için yalnız **SEND** (paylaş menüsü) filtresi vardı; dosya yöneticisinden, indirilenlerden ya da bir sohbet uygulamasının ekinden gelen **ACTION_VIEW** ("birlikte aç") filtresi yoktu. PDF ve sunum için VIEW filtresi eklendi (BROWSABLE yok — bir web bağlantısı uygulamayı açıp not oluşturamamalı; tür listesi dar, `*/*` Notlar'ı her dosyada çıkarırdı). `receive_sharing_intent` VIEW'ı zaten SEND ile aynı yoldan veriyor.
+
+  **3) Paylaşılan belge artık BELGE NOTU olarak doğuyor.** Gelen tek bir PDF/sunum, metin notuna iliştirilmiş bir ek olarak açılıyordu (belge yalnız bir rozetti). Artık not `NoteType.pdf`/`slides` tipinde oluşuyor, yani editör üstte sayfa altta o sayfanın notu olarak açılıyor ve balon bırakılabiliyor.
+
+  **4) Geri yükleme İKİ kapıda birden**: paylaşım/aç yolunda (`share_intake`) ve nota elle PDF eklerken (`_pickPdf`) — kullanıcı dosyayı indirip sonra uygulamadan seçerse de balonlar geri gelir. Sıradan PDF'te `readSharedPdf` null döner ve dosya olduğu gibi eklenir (belge yalnız açılır, kaydedilmez: maliyet sıfıra yakın).
+
+  Doğrulama: analyze temiz, testler yeşil (+2: gidiş-dönüşte katmanın sökülüp balonların veri olarak dönmesi, sıradan PDF'in null dönmesi). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (24. tur): **OK aracı.** (Kullanıcı: "bir de ok işareti çekme istiyorum.")
+
+  Ok, ayrı bir veri tipi DEĞİL: `InkStroke.arrow` bayrağı taşıyan iki noktalı bir çizgi (ilk nokta kuyruk, ikinci uç). Böylece kaydetme, senkron, geri al, silgi, `.notpaket` ve paylaşılan PDF damgası tek yoldan çalışıyor; ayrı model yazılsaydı hepsi ikişer kez yazılacaktı. Alan yalnız TRUE iken kayda giriyor — eski çizimlerin şeması büyümüyor. Kalem türü (`InkPen`) SAYDAMLIKTAN okunuyor ama ok kalemin bir türü değil (her kalem ve renkle çizilebilir), bu yüzden aynı numara ona uygulanamazdı.
+
+  **Jest**: ok kipinde parmak serbest çizmez — basılan yer kuyruk, sürüklenen uç. `pointerMove` nokta EKLEMEZ, ucu taşır; sürüklenmeden bırakılan (yönü olmayan) ok atılır. Silgi için okun gövdesi boyunca örnek noktalar üretiliyor: iki uçlu bir çizgi yalnız uçlarından yakalanırdı.
+
+  **Geometri tek kopya** (`domain/arrow.dart`, saf Dart): ekran katmanı ile PDF damgası aynı hesabı kullanıyor — iki yerde ayrı yazılsaydı paylaşılan PDF'teki ok ekrandakinden başka türlü çıkardı. Gövde başlığın dibinde biter (kalın kalemde çizgi ucun sivriliğini bozuyordu) ve başlık okun yarısından uzun olamaz (kısa okta uç gövdeyi yutmamalı).
+
+  Doğrulama: analyze temiz, testler yeşil (+9: ok kaydı, kırpma, geometri, jest, silgi, PDF damgasında gidiş-dönüş). **Cihazda doğrulanmadı — APK CI'da.**

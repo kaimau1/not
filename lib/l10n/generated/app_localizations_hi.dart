@@ -1362,6 +1362,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get eraser => 'रबर';
 
   @override
+  String get inkArrow => 'तीर';
+
+  @override
   String get clearInk => 'टिप्पणियाँ मिटाएँ';
 
   @override
@@ -2154,7 +2157,8 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sharePdfWithBubbles => 'बबल वाली PDF के रूप में';
 
   @override
-  String get sharePdfWithBubblesInfo => 'बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; पाने वाले को Not ऐप की ज़रूरत नहीं।';
+  String get sharePdfWithBubblesInfo =>
+      'बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; कोई भी खोल सकता है और Not में यह संपादन योग्य खुलता है।';
 
   @override
   String get sharePdfWithBubblesNone => 'इस नोट में बबल या ड्रॉइंग वाली कोई PDF नहीं है।';

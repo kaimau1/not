@@ -391,6 +391,7 @@
   "penMarker": "Marqueur",
   "penHighlighter": "Surligneur",
   "eraser": "Gomme",
+  "inkArrow": "Flèche",
   "clearInk": "Effacer les annotations",
   "inkTwoFingerHint": "Un doigt dessine · deux doigts déplacent et zooment",
   "slideOpenFailed": "La présentation n'a pas pu être ouverte",
@@ -564,7 +565,7 @@
   "shareAsTextInfo": "Envoie le texte de la note et les notes de page vers n'importe quelle application.",
   "shareAsTextEmpty": "Cette note n'a aucun texte à partager.",
   "sharePdfWithBubbles": "En PDF avec bulles",
-  "sharePdfWithBubblesInfo": "Les bulles, surlignages et dessins sont imprimés dans le PDF ; le destinataire n'a pas besoin de l'application Not.",
+  "sharePdfWithBubblesInfo": "Les bulles, surlignages et dessins sont imprimés dans le PDF ; tout le monde peut l'ouvrir, et dans Not il s'ouvre modifiable.",
   "sharePdfWithBubblesNone": "Cette note ne contient aucun PDF avec bulles ou dessins.",
   "sharePdfWithBubblesPreparing": "Préparation du PDF avec bulles…",
   "sharePdfWithBubblesSuffix": " (avec bulles)"

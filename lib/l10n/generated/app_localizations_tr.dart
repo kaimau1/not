@@ -1358,6 +1358,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get eraser => 'Silgi';
 
   @override
+  String get inkArrow => 'Ok';
+
+  @override
   String get clearInk => 'Çizimleri temizle';
 
   @override
@@ -2149,7 +2152,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sharePdfWithBubbles => 'Balonlu PDF olarak';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Balonlar, vurgular ve çizimler PDF\'in içine basılır; alıcının Not uygulaması olması gerekmez.';
+  String get sharePdfWithBubblesInfo =>
+      'Balonlar, vurgular ve çizimler PDF\'in içine basılır; herkes açabilir, Notlar\'da ise düzenlenebilir açılır.';
 
   @override
   String get sharePdfWithBubblesNone => 'Bu notta balon ya da çizim taşıyan PDF yok.';

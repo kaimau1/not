@@ -1374,6 +1374,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get eraser => 'Radiergummi';
 
   @override
+  String get inkArrow => 'Pfeil';
+
+  @override
   String get clearInk => 'Beschriftungen löschen';
 
   @override
@@ -2170,7 +2173,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sharePdfWithBubbles => 'Als PDF mit Sprechblasen';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; die Gegenseite braucht die Not-App nicht.';
+  String get sharePdfWithBubblesInfo =>
+      'Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; jeder kann sie öffnen, in Not öffnet sie sich bearbeitbar.';
 
   @override
   String get sharePdfWithBubblesNone => 'In dieser Notiz gibt es keine PDF mit Sprechblasen oder Zeichnungen.';

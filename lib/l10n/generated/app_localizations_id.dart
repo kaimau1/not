@@ -1370,6 +1370,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get eraser => 'Penghapus';
 
   @override
+  String get inkArrow => 'Panah';
+
+  @override
   String get clearInk => 'Hapus semua coretan';
 
   @override
@@ -2164,7 +2167,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get sharePdfWithBubbles => 'Sebagai PDF bergelembung';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Gelembung, sorotan, dan coretan dicetak ke dalam PDF; penerima tidak perlu aplikasi Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Gelembung, sorotan, dan coretan dicetak ke dalam PDF; siapa pun bisa membukanya, dan di Not terbuka bisa diedit.';
 
   @override
   String get sharePdfWithBubblesNone => 'Catatan ini tidak punya PDF bergelembung atau bercoretan.';

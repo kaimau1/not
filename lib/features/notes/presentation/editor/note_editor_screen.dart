@@ -1507,13 +1507,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {
+      // Başka bir Not kullanıcısının gönderdiği "balonlu PDF" ise damga
+      // katmanı sökülür ve balonlar/çizimler DÜZENLENEBİLİR olarak geri
+      // yüklenir (bkz. PdfEdit.readSharedPdf). Sıradan PDF'te null döner.
+      final restored = await PdfEdit.readSharedPdfInBackground(bytes);
       final attachment = await repo.preparePdf(
         noteId: widget.noteId,
-        bytes: bytes,
+        bytes: restored == null ? bytes : restored['bytes'] as Uint8List,
         fileName: file.name,
       );
+      final stored = restored == null
+          ? attachment
+          : attachment.copyWith(
+              bubbles: [
+                for (final e in (restored['b'] as List?) ?? const [])
+                  PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
+              ],
+              ink: [
+                for (final e in (restored['i'] as List?) ?? const [])
+                  InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+              ],
+            );
       _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, attachment]),
+        (n) => n.copyWith(attachments: [...n.attachments, stored]),
         immediate: true,
       );
     } on FileTooLargeException catch (e) {

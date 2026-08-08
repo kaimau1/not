@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -5,6 +6,7 @@ import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import '../domain/arrow.dart';
 import '../domain/attachment.dart';
 
 /// PDF **yazma** yolu: sayfa sil / döndür / sırala ve çizimi belgeye GÖM.
@@ -124,80 +126,6 @@ class PdfEdit {
         final page = doc.pages[i];
         final next = (page.rotation.index + quarterTurns) % 4;
         page.rotation = PdfPageRotateAngle.values[next];
-      }
-      return Uint8List.fromList(doc.saveSync());
-    } finally {
-      doc.dispose();
-    }
-  }
-
-  /// Not balonlarını ve vurguları belgenin İÇİNE basar (düzleştirme).
-  ///
-  /// Neden gerekli (kullanıcı isteği 2026-08-08: "PDF modunda balonlu PDF'yi
-  /// balonlarıyla beraber atabilmeliyim"): balonlar ekin `bubbles` alanında
-  /// yaşıyor, yani PDF dosyası olduğu gibi paylaşıldığında karşı taraf boş
-  /// belgeyi görüyordu. Not uygulaması olan bir alıcıya `.notpaket` gönderilir
-  /// (balonlar DÜZENLENEBİLİR gelir); bu yol ise **herkese** açılabilen bir PDF
-  /// üretir — balon ve vurgular sayfaya çizilmiş olarak.
-  ///
-  /// Ekranla aynı görüntü: vurgu = soluk zemin + ortasından geçen uçları
-  /// yuvarlak kalın iz (fosforlu kalem), balon = ucundaki renkli nokta + not
-  /// kutusu (belge rengi zemin, solda balonun renginde şerit). Kutu tasarımı
-  /// uygulamadaki yazma kartıyla (BubbleDock) aynı dili konuşur.
-  ///
-  /// [fontBytes] gömülecek TTF: `pdf` paketindeki gibi burada da hazır
-  /// Helvetica WinAnsi kodludur ve içinde ı ğ ş İ YOKTUR — Türkçe not olduğu
-  /// gibi bozuk çıkardı. Font baytları ANA izolede okunur (rootBundle izolede
-  /// yok, bkz. NotePdf).
-  ///
-  /// [bubbles] koordinatları SAYFA ORANIDIR (0–1, sol-ÜST orijinli); sayfa
-  /// `/Rotate` taşıyorsa damga [stampTransform] ile sayfanın GÖRÜNEN hâline
-  /// çevrilir — çizimlerdeki kuralın aynısı.
-  static Uint8List burnBubbles(
-    Uint8List bytes,
-    List<PageBubble> bubbles, {
-    required Uint8List fontBytes,
-  }) {
-    if (bubbles.isEmpty) throw const PdfEditException('no-bubbles');
-    final doc = PdfDocument(inputBytes: bytes);
-    try {
-      final byPage = <int, List<PageBubble>>{};
-      for (final b in bubbles) {
-        final index = b.page - 1;
-        if (index < 0 || index >= doc.pages.count) continue;
-        if (!b.isHighlight && b.text.trim().isEmpty && b.title.trim().isEmpty) {
-          continue; // boş serbest balon: sayfada gösterecek bir şeyi yok
-        }
-        (byPage[index] ??= []).add(b);
-      }
-      if (byPage.isEmpty) throw const PdfEditException('no-bubbles');
-      final title = PdfTrueTypeFont(fontBytes, 9, style: PdfFontStyle.bold);
-      final body = PdfTrueTypeFont(fontBytes, 8.5);
-      for (final entry in byPage.entries) {
-        final page = doc.pages[entry.key];
-        final turns = page.rotation.index;
-        final t = stampTransform(page.size, turns);
-        final visible = turns.isOdd
-            ? Size(page.size.height, page.size.width)
-            : page.size;
-        final g = page.graphics;
-        final state = g.save();
-        try {
-          if (t.angle != 0) {
-            g.translateTransform(t.translate.dx, t.translate.dy);
-            g.rotateTransform(t.angle);
-          }
-          for (final bubble in entry.value) {
-            _drawHighlight(g, bubble, visible);
-          }
-          // Kutular vurguların ÜSTÜNE çizilir: iki balon aynı satırdaysa yazı
-          // fosforlu izin altında kalmasın.
-          for (final bubble in entry.value) {
-            _drawBubbleNote(g, bubble, visible, title: title, body: body);
-          }
-        } finally {
-          g.restore(state);
-        }
       }
       return Uint8List.fromList(doc.saveSync());
     } finally {
@@ -388,34 +316,7 @@ class PdfEdit {
             g.translateTransform(t.translate.dx, t.translate.dy);
             g.rotateTransform(t.angle);
           }
-          for (final stroke in entry.value) {
-            final color = stroke.color;
-            final pen = PdfPen(
-              PdfColor(
-                (color >> 16) & 0xFF,
-                (color >> 8) & 0xFF,
-                color & 0xFF,
-                // Fosforlu kalemin saydamlığı çizgide taşınıyor; PdfColor
-                // alfayı destekliyor, düz renge indirgemek fosforluyu opak
-                // yapardı ve altındaki metni kapatırdı.
-                (color >> 24) & 0xFF,
-              ),
-              width: (stroke.width * visible.width).clamp(0.1, 100.0),
-              lineCap: PdfLineCap.round,
-              lineJoin: PdfLineJoin.round,
-            );
-            final path = PdfPath()..startFigure();
-            Offset at(int i) => Offset(
-              stroke.points[i] * visible.width,
-              stroke.points[i + 1] * visible.height,
-            );
-            // Nokta nokta `addLine`: `addPolygon` şekli KAPATIR (son noktadan
-            // ilkine çizgi çeker), el yazısında yanlış olur.
-            for (var i = 0; i + 3 < stroke.points.length; i += 2) {
-              path.addLine(at(i), at(i + 2));
-            }
-            g.drawPath(path, pen: pen);
-          }
+          _drawStrokes(g, entry.value, visible);
         } finally {
           g.restore(state);
         }
@@ -423,6 +324,227 @@ class PdfEdit {
       return Uint8List.fromList(doc.saveSync());
     } finally {
       doc.dispose();
+    }
+  }
+
+  static void _drawStrokes(
+    PdfGraphics g,
+    List<InkStroke> strokes,
+    Size visible,
+  ) {
+    for (final stroke in strokes) {
+      if (stroke.points.length < 4) continue;
+      final color = stroke.color;
+      final width = (stroke.width * visible.width).clamp(0.1, 100.0);
+      final pdfColor = PdfColor(
+        (color >> 16) & 0xFF,
+        (color >> 8) & 0xFF,
+        color & 0xFF,
+        // Fosforlu kalemin saydamlığı çizgide taşınıyor; PdfColor alfayı
+        // destekliyor, düz renge indirgemek fosforluyu opak yapardı ve
+        // altındaki metni kapatırdı.
+        (color >> 24) & 0xFF,
+      );
+      final pen = PdfPen(
+        pdfColor,
+        width: width,
+        lineCap: PdfLineCap.round,
+        lineJoin: PdfLineJoin.round,
+      );
+      Offset at(int i) => Offset(
+        stroke.points[i] * visible.width,
+        stroke.points[i + 1] * visible.height,
+      );
+      // OK: gövde + ucundaki DOLU başlık. Geometri ekrandakiyle tek kopya
+      // (bkz. arrowBody) — paylaşılan PDF'teki ok ekrandakinin aynısı olmalı.
+      if (stroke.arrow) {
+        final tail = at(0);
+        final head = at(2);
+        final geo = arrowGeometry(tail, head, width);
+        g
+          ..drawLine(pen, tail, geo.lineEnd)
+          ..drawPath(
+            PdfPath()
+              ..startFigure()
+              ..addPolygon([head, geo.left, geo.right]),
+            brush: PdfSolidBrush(pdfColor),
+          );
+        continue;
+      }
+      final path = PdfPath()..startFigure();
+      // Nokta nokta `addLine`: `addPolygon` şekli KAPATIR (son noktadan
+      // ilkine çizgi çeker), el yazısında yanlış olur — okun başlığında ise
+      // kapanması TAM İSTENEN şeydir (üçgen dolu boyanır).
+      for (var i = 0; i + 3 < stroke.points.length; i += 2) {
+        path.addLine(at(i), at(i + 2));
+      }
+      g.drawPath(path, pen: pen);
+    }
+  }
+
+  /// Paylaşılan PDF'te damganın konduğu KATMANIN adı.
+  ///
+  /// Damga sayfanın kendi içeriğine değil, adlandırılmış bir PDF katmanına
+  /// (optional content group) çizilir: başka bir görüntüleyici onu normal
+  /// içerik gibi gösterir, Notlar ise açarken katmanı SÖKÜP atabilir (bkz.
+  /// [readSharedPdf]).
+  static const shareLayerName = 'Notlar balonlari';
+
+  /// Balon/çizim verisinin PDF'e iliştirildiği dosya adı.
+  static const sharePayloadName = 'notlar-balonlar.json';
+
+  /// **Paylaşılabilir ama Notlar'da DÜZENLENEBİLİR kalan** PDF üretir.
+  ///
+  /// Kullanıcı isteği (2026-08-08): "gönderilen PDF'yi PDF görüntüleyicilerde
+  /// açabiliyorum ama Notlar'da açıp aynı şekilde düzenlemeye devam etmek
+  /// istiyorum." Damgalanmış (düzleştirilmiş) bir PDF'te balonlar sayfanın
+  /// içeriğine karışır, yani karşı tarafta artık taşınamaz/silinemezdi.
+  ///
+  /// Çözüm İKİ parça:
+  /// * Damga adlandırılmış bir **katmana** çizilir ([shareLayerName]) — her
+  ///   PDF okuyucu görür, Notlar ise katmanı grafiğiyle birlikte kaldırabilir.
+  /// * Balonların ve çizimlerin KENDİ VERİSİ, PDF'e **ek dosya** olarak
+  ///   iliştirilir ([sharePayloadName], JSON) — başka programlar için görünmez
+  ///   bir eklentidir, Notlar için notun kaynağıdır.
+  ///
+  /// Alıcı Notlar'da açınca: katman silinir, veri okunur ve balonlar ilk
+  /// günkü gibi düzenlenebilir olarak geri gelir. Alıcının Notlar'ı yoksa
+  /// dosya sıradan bir PDF'tir. Bu yüzden belgenin İKİ kopyası taşınmaz
+  /// (dosya boyutu iki katına çıkmaz).
+  ///
+  /// **TUZAK**: bir `PdfLayer` grafiğini İLK sayfa için kurup önbelleğe
+  /// alıyor; aynı katman ikinci sayfada kullanılırsa çizim yanlış sayfaya
+  /// gider. Bu yüzden her sayfaya AYNI ADLA ayrı bir katman açılıyor —
+  /// silme de ada göre çalıştığı için hepsi tek çağrıda kalkıyor.
+  static Uint8List burnForSharing(
+    Uint8List bytes, {
+    required List<PageBubble> bubbles,
+    required List<InkStroke> ink,
+    required Uint8List fontBytes,
+  }) {
+    final doc = PdfDocument(inputBytes: bytes);
+    try {
+      final bubblesByPage = <int, List<PageBubble>>{};
+      for (final b in bubbles) {
+        final index = b.page - 1;
+        if (index < 0 || index >= doc.pages.count) continue;
+        if (!b.isHighlight && b.text.trim().isEmpty && b.title.trim().isEmpty) {
+          continue;
+        }
+        (bubblesByPage[index] ??= []).add(b);
+      }
+      final inkByPage = <int, List<InkStroke>>{};
+      for (final s in ink) {
+        if (s.points.length < 4) continue;
+        final index = s.page - 1;
+        if (index < 0 || index >= doc.pages.count) continue;
+        (inkByPage[index] ??= []).add(s);
+      }
+      final pages = {...bubblesByPage.keys, ...inkByPage.keys}.toList()..sort();
+      if (pages.isEmpty) throw const PdfEditException('no-layers');
+
+      final title = PdfTrueTypeFont(fontBytes, 9, style: PdfFontStyle.bold);
+      final body = PdfTrueTypeFont(fontBytes, 8.5);
+      for (final index in pages) {
+        final page = doc.pages[index];
+        final turns = page.rotation.index;
+        final t = stampTransform(page.size, turns);
+        final visible = turns.isOdd
+            ? Size(page.size.height, page.size.width)
+            : page.size;
+        final layer = doc.layers.add(name: shareLayerName, visible: true);
+        final g = layer.createGraphics(page);
+        final state = g.save();
+        try {
+          if (t.angle != 0) {
+            g.translateTransform(t.translate.dx, t.translate.dy);
+            g.rotateTransform(t.angle);
+          }
+          _drawStrokes(g, inkByPage[index] ?? const [], visible);
+          for (final bubble in bubblesByPage[index] ?? const <PageBubble>[]) {
+            _drawHighlight(g, bubble, visible);
+          }
+          for (final bubble in bubblesByPage[index] ?? const <PageBubble>[]) {
+            _drawBubbleNote(g, bubble, visible, title: title, body: body);
+          }
+        } finally {
+          g.restore(state);
+        }
+      }
+
+      doc.attachments.add(
+        PdfAttachment(
+          sharePayloadName,
+          utf8.encode(
+            jsonEncode({
+              'v': 1,
+              'b': [for (final b in bubbles) b.toMap()],
+              'i': [for (final s in ink) s.toMap()],
+            }),
+          ),
+          mimeType: 'application/json',
+          description: 'Notlar balon ve çizim verisi',
+        ),
+      );
+      return Uint8List.fromList(doc.saveSync());
+    } finally {
+      doc.dispose();
+    }
+  }
+
+  /// Notlar'ın ürettiği bir paylaşım PDF'ini **düzenlenebilir hâline** çevirir.
+  ///
+  /// Damga katmanı grafiğiyle birlikte silinir, iliştirilen veri okunur ve
+  /// temizlenmiş belge + balonlar/çizimler döner. Payload yoksa `null` döner:
+  /// dosya sıradan bir PDF'tir, olduğu gibi eklenir.
+  ///
+  /// Katman silinmeseydi balonlar İKİ KEZ görünürdü — bir kez sayfaya basılmış
+  /// damga, bir kez de üstteki canlı katman olarak.
+  static ({Uint8List bytes, List<PageBubble> bubbles, List<InkStroke> ink})?
+  readSharedPdf(Uint8List bytes) {
+    PdfDocument? doc;
+    try {
+      doc = PdfDocument(inputBytes: bytes);
+      final attachments = doc.attachments;
+      var found = -1;
+      for (var i = 0; i < attachments.count; i++) {
+        if (attachments[i].fileName == sharePayloadName) {
+          found = i;
+          break;
+        }
+      }
+      if (found < 0) return null;
+      final map =
+          jsonDecode(utf8.decode(attachments[found].data)) as Map<String, dynamic>;
+      final parsed = (
+        bubbles: [
+          for (final e in (map['b'] as List?) ?? const [])
+            PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
+        ],
+        ink: [
+          for (final e in (map['i'] as List?) ?? const [])
+            InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+        ],
+      );
+      attachments.removeAt(found);
+      try {
+        doc.layers.remove(
+          name: shareLayerName,
+          isRemoveGraphicalContent: true,
+        );
+      } catch (_) {
+        // Katman bulunamazsa (elle düzenlenmiş dosya) veri yine de kurtarılır.
+      }
+      return (
+        bytes: Uint8List.fromList(doc.saveSync()),
+        bubbles: parsed.bubbles,
+        ink: parsed.ink,
+      );
+    } catch (_) {
+      // Bozuk/şifreli PDF paylaşımı düşürmez: normal ek yoluna dönülür.
+      return null;
+    } finally {
+      doc?.dispose();
     }
   }
 
@@ -475,20 +597,45 @@ class PdfEdit {
     );
   }
 
-  /// Balonları gömer. [PageBubble] de çizgi gibi düz veriye çevrilip izoleye
-  /// geçer (bkz. [burnInkInBackground]).
-  static Future<Uint8List> burnBubblesInBackground(
-    Uint8List bytes,
-    List<PageBubble> bubbles, {
+  /// [burnForSharing]'in arka plan sürümü.
+  static Future<Uint8List> burnForSharingInBackground(
+    Uint8List bytes, {
+    required List<PageBubble> bubbles,
+    required List<InkStroke> ink,
     required Uint8List fontBytes,
   }) {
-    final maps = [for (final b in bubbles) b.toMap()];
+    final bubbleMaps = [for (final b in bubbles) b.toMap()];
+    final inkMaps = [for (final s in ink) s.toMap()];
     return _bg(
-      () => burnBubbles(bytes, [
-        for (final m in maps) PageBubble.fromMap(Map<String, dynamic>.from(m)),
-      ], fontBytes: fontBytes),
+      () => burnForSharing(
+        bytes,
+        bubbles: [
+          for (final m in bubbleMaps)
+            PageBubble.fromMap(Map<String, dynamic>.from(m)),
+        ],
+        ink: [
+          for (final m in inkMaps)
+            InkStroke.fromMap(Map<String, dynamic>.from(m)),
+        ],
+        fontBytes: fontBytes,
+      ),
     );
   }
+
+  /// [readSharedPdf]'in arka plan sürümü. Sonuç düz haritayla döner: isolate
+  /// sınırından yalnız sade veri geçirmek (çizim/balon nesneleri değil) bu
+  /// dosyadaki genel kural.
+  static Future<Map<String, dynamic>?> readSharedPdfInBackground(
+    Uint8List bytes,
+  ) => Isolate.run(() {
+    final result = readSharedPdf(bytes);
+    if (result == null) return null;
+    return <String, dynamic>{
+      'bytes': result.bytes,
+      'b': [for (final b in result.bubbles) b.toMap()],
+      'i': [for (final s in result.ink) s.toMap()],
+    };
+  });
 
   static Future<Uint8List> _bg(Uint8List Function() task) =>
       Isolate.run(() {

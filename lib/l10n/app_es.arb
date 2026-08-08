@@ -391,6 +391,7 @@
   "penMarker": "Rotulador",
   "penHighlighter": "Marcador fluorescente",
   "eraser": "Goma de borrar",
+  "inkArrow": "Flecha",
   "clearInk": "Borrar las anotaciones",
   "inkTwoFingerHint": "Un dedo dibuja · dos dedos desplazan y hacen zoom",
   "slideOpenFailed": "No se ha podido abrir la presentación",
@@ -564,7 +565,7 @@
   "shareAsTextInfo": "Envía el texto de la nota y las notas de página a cualquier aplicación.",
   "shareAsTextEmpty": "Esta nota no tiene texto para compartir.",
   "sharePdfWithBubbles": "Como PDF con globos",
-  "sharePdfWithBubblesInfo": "Los globos, resaltados y dibujos se estampan dentro del PDF; quien lo reciba no necesita la app Not.",
+  "sharePdfWithBubblesInfo": "Los globos, resaltados y dibujos se estampan dentro del PDF; cualquiera puede abrirlo y en Not se abre editable.",
   "sharePdfWithBubblesNone": "Esta nota no tiene ningún PDF con globos o dibujos.",
   "sharePdfWithBubblesPreparing": "Preparando el PDF con globos…",
   "sharePdfWithBubblesSuffix": " (con globos)"

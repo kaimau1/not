@@ -1361,6 +1361,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eraser => 'Eraser';
 
   @override
+  String get inkArrow => 'Arrow';
+
+  @override
   String get clearInk => 'Clear annotations';
 
   @override
@@ -2151,7 +2154,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharePdfWithBubbles => 'As PDF with bubbles';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Bubbles, highlights and drawings are stamped into the PDF; the recipient does not need the Not app.';
+  String get sharePdfWithBubblesInfo =>
+      'Bubbles, highlights and drawings are stamped into the PDF; anyone can open it, and in Not it opens editable.';
 
   @override
   String get sharePdfWithBubblesNone => 'This note has no PDF carrying bubbles or drawings.';

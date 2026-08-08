@@ -391,6 +391,7 @@
   "penMarker": "Marker",
   "penHighlighter": "Markeerstift",
   "eraser": "Gum",
+  "inkArrow": "Pijl",
   "clearInk": "Aantekeningen wissen",
   "inkTwoFingerHint": "Eén vinger tekent · twee vingers verschuiven en zoomen",
   "slideOpenFailed": "De presentatie kon niet worden geopend",
@@ -564,7 +565,7 @@
   "shareAsTextInfo": "Stuurt de tekst van de notitie en de paginanotities naar een willekeurige app.",
   "shareAsTextEmpty": "Deze notitie heeft geen tekst om te delen.",
   "sharePdfWithBubbles": "Als pdf met ballonnen",
-  "sharePdfWithBubblesInfo": "Ballonnen, markeringen en tekeningen worden in de pdf gebrand; de ontvanger heeft de Not-app niet nodig.",
+  "sharePdfWithBubblesInfo": "Ballonnen, markeringen en tekeningen worden in de pdf gebrand; iedereen kan hem openen en in Not opent hij bewerkbaar.",
   "sharePdfWithBubblesNone": "Deze notitie heeft geen pdf met ballonnen of tekeningen.",
   "sharePdfWithBubblesPreparing": "Pdf met ballonnen wordt voorbereid…",
   "sharePdfWithBubblesSuffix": " (met ballonnen)"
