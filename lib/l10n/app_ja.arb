@@ -391,6 +391,7 @@
   "penMarker": "マーカー",
   "penHighlighter": "蛍光ペン",
   "eraser": "消しゴム",
+  "inkArrow": "矢印",
   "clearInk": "書き込みを消去",
   "inkTwoFingerHint": "1 本指で描く・2 本指で移動と拡大縮小",
   "slideOpenFailed": "プレゼンテーションを開けませんでした",

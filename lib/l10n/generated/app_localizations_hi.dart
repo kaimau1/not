@@ -1362,6 +1362,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get eraser => 'रबर';
 
   @override
+  String get inkArrow => 'तीर';
+
+  @override
   String get clearInk => 'टिप्पणियाँ मिटाएँ';
 
   @override

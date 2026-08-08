@@ -1373,6 +1373,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get eraser => 'Gomme';
 
   @override
+  String get inkArrow => 'Flèche';
+
+  @override
   String get clearInk => 'Effacer les annotations';
 
   @override

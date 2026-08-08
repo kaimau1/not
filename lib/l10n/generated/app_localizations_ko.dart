@@ -1338,6 +1338,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get eraser => '지우개';
 
   @override
+  String get inkArrow => '화살표';
+
+  @override
   String get clearInk => '주석 지우기';
 
   @override

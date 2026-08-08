@@ -1366,6 +1366,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get eraser => 'Ластик';
 
   @override
+  String get inkArrow => 'Стрелка';
+
+  @override
   String get clearInk => 'Стереть пометки';
 
   @override

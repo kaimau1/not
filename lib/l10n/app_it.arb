@@ -391,6 +391,7 @@
   "penMarker": "Pennarello",
   "penHighlighter": "Evidenziatore",
   "eraser": "Gomma",
+  "inkArrow": "Freccia",
   "clearInk": "Cancella le annotazioni",
   "inkTwoFingerHint": "Un dito disegna · due dita spostano e ingrandiscono",
   "slideOpenFailed": "Non è stato possibile aprire la presentazione",

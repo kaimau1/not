@@ -391,6 +391,7 @@
   "penMarker": "Rotulador",
   "penHighlighter": "Marcador fluorescente",
   "eraser": "Goma de borrar",
+  "inkArrow": "Flecha",
   "clearInk": "Borrar las anotaciones",
   "inkTwoFingerHint": "Un dedo dibuja · dos dedos desplazan y hacen zoom",
   "slideOpenFailed": "No se ha podido abrir la presentación",

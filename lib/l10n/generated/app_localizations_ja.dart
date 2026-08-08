@@ -1337,6 +1337,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get eraser => '消しゴム';
 
   @override
+  String get inkArrow => '矢印';
+
+  @override
   String get clearInk => '書き込みを消去';
 
   @override

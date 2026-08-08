@@ -1374,6 +1374,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get eraser => 'Radiergummi';
 
   @override
+  String get inkArrow => 'Pfeil';
+
+  @override
   String get clearInk => 'Beschriftungen löschen';
 
   @override

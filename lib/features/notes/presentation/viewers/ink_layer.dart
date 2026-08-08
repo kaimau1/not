@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 import 'ink_pen.dart';
 
@@ -27,6 +28,11 @@ class InkController extends ChangeNotifier {
 
   bool editing = false;
   bool eraser = false;
+
+  /// **OK** aracı seçili mi? Açıkken parmak serbest çizmez: bastığı yer okun
+  /// KUYRUĞU, kaldırdığı yer UCU olur (kullanıcı isteği 2026-08-08: "bir de ok
+  /// işareti çekme istiyorum"). Elle çizilen ok hiçbir zaman düz çıkmıyor.
+  bool arrow = false;
 
   /// Kullanıcının seçtiği renk — SAYDAMLIKSIZ hâli. Çizgiye yazılırken
   /// kalemin saydamlığı uygulanır ([penColor]).
@@ -78,6 +84,16 @@ class InkController extends ChangeNotifier {
 
   void setEraser(bool value) {
     eraser = value;
+    if (value) arrow = false;
+    notifyListeners();
+  }
+
+  /// Ok aracını açar/kapatır. Kalem türü ve renk AYNEN geçerli kalır: ok da
+  /// bir çizgidir, yalnız ucuna başlık çizilir.
+  void setArrow(bool value) {
+    if (arrow == value) return;
+    arrow = value;
+    if (value) eraser = false;
     notifyListeners();
   }
 
@@ -90,10 +106,11 @@ class InkController extends ChangeNotifier {
   /// Kalem türünü değiştirir. Kalınlık türün kendi aralığına taşınır:
   /// fosforluya geçip 3 px'te kalmak "fosforlu çalışmıyor" izlenimi veriyordu.
   void setPen(InkPen value) {
-    if (pen == value && !eraser) return;
+    if (pen == value && !eraser && !arrow) return;
     final wasDefault = widthPx == pen.defaultWidth;
     pen = value;
     eraser = false;
+    arrow = false;
     widthPx = wasDefault ? value.defaultWidth : value.clampWidth(widthPx);
     notifyListeners();
   }
@@ -152,6 +169,7 @@ class InkController extends ChangeNotifier {
       if (x.page != y.page ||
           x.color != y.color ||
           x.width != y.width ||
+          x.arrow != y.arrow ||
           x.points.length != y.points.length) {
         return false;
       }
@@ -191,11 +209,15 @@ class InkController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    final x = local.dx / size.width;
+    final y = local.dy / size.height;
     final stroke = InkStroke(
       page: page,
       color: penColor.toARGB32(),
       width: widthPx / size.width,
-      points: [local.dx / size.width, local.dy / size.height],
+      // Ok İKİ noktayla doğar (kuyruk + uç); uç parmakla birlikte taşınır.
+      points: arrow ? [x, y, x, y] : [x, y],
+      arrow: arrow,
     );
     _dirty = true;
     _active = stroke;
@@ -214,6 +236,13 @@ class InkController extends ChangeNotifier {
     if (active == null) return;
     final x = local.dx / size.width;
     final y = local.dy / size.height;
+    // OK: nokta EKLENMEZ, ucu taşınır — parmak nereye giderse ok oraya bakar.
+    if (active.arrow) {
+      active.points[2] = x;
+      active.points[3] = y;
+      notifyListeners();
+      return;
+    }
     // Çok yakın noktalar atlanır: çizim yumuşar, Firestore'a giden liste şişmez.
     final n = active.points.length;
     if (math.max(
@@ -233,6 +262,16 @@ class InkController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    // Ok aracıyla yalnız DOKUNULDUYSA (sürüklenmediyse) ortada yönü olmayan
+    // bir kırıntı kalır: atılır.
+    final active = _active;
+    if (active != null && active.arrow) {
+      final dx = active.points[2] - active.points[0];
+      final dy = active.points[3] - active.points[1];
+      if (dx.abs() < 0.01 && dy.abs() < 0.01) {
+        _ink = [..._ink]..remove(active);
+      }
+    }
     _active = null;
     save();
     notifyListeners();
@@ -245,9 +284,14 @@ class InkController extends ChangeNotifier {
     for (final s in _ink) {
       var hit = false;
       if (s.page == page) {
-        for (var i = 0; i < s.points.length; i += 2) {
-          if ((s.points[i] - x).abs() < _eraseRadius &&
-              (s.points[i + 1] - y).abs() < _eraseRadius) {
+        // OK yalnız İKİ nokta taşır; gövdesine dokunmak da silmeli, yoksa
+        // yalnız uçlarından yakalanan bir çizgi olurdu.
+        final samples = s.arrow && s.points.length >= 4
+            ? _arrowSamples(s)
+            : s.points;
+        for (var i = 0; i < samples.length; i += 2) {
+          if ((samples[i] - x).abs() < _eraseRadius &&
+              (samples[i + 1] - y).abs() < _eraseRadius) {
             hit = true;
             break;
           }
@@ -258,6 +302,19 @@ class InkController extends ChangeNotifier {
     if (kept.length == _ink.length) return;
     _dirty = true;
     _ink = kept;
+  }
+
+  /// Okun gövdesi boyunca örnek noktalar (silgi için).
+  static List<double> _arrowSamples(InkStroke s) {
+    const steps = 24;
+    final out = <double>[];
+    for (var i = 0; i <= steps; i++) {
+      final t = i / steps;
+      out
+        ..add(s.points[0] + (s.points[2] - s.points[0]) * t)
+        ..add(s.points[1] + (s.points[3] - s.points[1]) * t);
+    }
+    return out;
   }
 }
 
@@ -342,7 +399,8 @@ class InkToolbar extends StatelessWidget {
     String label,
   ) {
     final scheme = Theme.of(context).colorScheme;
-    final selected = !controller.eraser && controller.pen == pen;
+    final selected =
+        !controller.eraser && !controller.arrow && controller.pen == pen;
     return IconButton(
       tooltip: label,
       isSelected: selected,
@@ -392,6 +450,20 @@ class InkToolbar extends StatelessWidget {
                     InkPen.highlighter,
                     Icons.format_color_fill,
                     l10n.penHighlighter,
+                  ),
+                  // OK: kalem türünden bağımsız bir AÇMA/KAPAMA. Seçili
+                  // kalemle ve seçili renkle çizilir; ucuna dolu başlık gelir.
+                  IconButton(
+                    tooltip: l10n.inkArrow,
+                    isSelected: controller.arrow,
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      Icons.north_east,
+                      color: controller.arrow
+                          ? controller.penColor
+                          : scheme.onSurfaceVariant,
+                    ),
+                    onPressed: () => controller.setArrow(!controller.arrow),
                   ),
                   IconButton(
                     tooltip: l10n.eraser,
@@ -648,6 +720,30 @@ class InkPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final s in strokes) {
       final paint = inkPaint(Color(s.color), s.width * size.width);
+      if (s.arrow && s.points.length >= 4) {
+        final tail = Offset(
+          s.points[0] * size.width,
+          s.points[1] * size.height,
+        );
+        final head = Offset(
+          s.points[2] * size.width,
+          s.points[3] * size.height,
+        );
+        final geo = arrowGeometry(tail, head, s.width * size.width);
+        canvas
+          ..drawLine(tail, geo.lineEnd, paint)
+          ..drawPath(
+            Path()
+              ..moveTo(head.dx, head.dy)
+              ..lineTo(geo.left.dx, geo.left.dy)
+              ..lineTo(geo.right.dx, geo.right.dy)
+              ..close(),
+            Paint()
+              ..color = Color(s.color)
+              ..style = PaintingStyle.fill,
+          );
+        continue;
+      }
       if (s.points.length == 2) {
         canvas.drawCircle(
           Offset(s.points[0] * size.width, s.points[1] * size.height),
@@ -672,3 +768,4 @@ class InkPainter extends CustomPainter {
   bool shouldRepaint(covariant InkPainter oldDelegate) =>
       oldDelegate.revision != revision || oldDelegate.page != page;
 }
+

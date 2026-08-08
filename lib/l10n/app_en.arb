@@ -468,6 +468,7 @@
   "penMarker": "Marker",
   "penHighlighter": "Highlighter",
   "eraser": "Eraser",
+  "inkArrow": "Arrow",
   "clearInk": "Clear annotations",
   "inkTwoFingerHint": "One finger draws · two fingers pan and zoom",
   "slideOpenFailed": "The presentation couldn't be opened",

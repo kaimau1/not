@@ -1369,6 +1369,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get eraser => 'Gum';
 
   @override
+  String get inkArrow => 'Pijl';
+
+  @override
   String get clearInk => 'Aantekeningen wissen';
 
   @override

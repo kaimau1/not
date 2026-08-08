@@ -1354,6 +1354,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get eraser => 'ممحاة';
 
   @override
+  String get inkArrow => 'سهم';
+
+  @override
   String get clearInk => 'مسح التعليقات';
 
   @override

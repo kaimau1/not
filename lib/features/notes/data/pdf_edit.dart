@@ -6,6 +6,7 @@ import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import '../domain/arrow.dart';
 import '../domain/attachment.dart';
 
 /// PDF **yazma** yolu: sayfa sil / döndür / sırala ve çizimi belgeye GÖM.
@@ -334,27 +335,46 @@ class PdfEdit {
     for (final stroke in strokes) {
       if (stroke.points.length < 4) continue;
       final color = stroke.color;
+      final width = (stroke.width * visible.width).clamp(0.1, 100.0);
+      final pdfColor = PdfColor(
+        (color >> 16) & 0xFF,
+        (color >> 8) & 0xFF,
+        color & 0xFF,
+        // Fosforlu kalemin saydamlığı çizgide taşınıyor; PdfColor alfayı
+        // destekliyor, düz renge indirgemek fosforluyu opak yapardı ve
+        // altındaki metni kapatırdı.
+        (color >> 24) & 0xFF,
+      );
       final pen = PdfPen(
-        PdfColor(
-          (color >> 16) & 0xFF,
-          (color >> 8) & 0xFF,
-          color & 0xFF,
-          // Fosforlu kalemin saydamlığı çizgide taşınıyor; PdfColor alfayı
-          // destekliyor, düz renge indirgemek fosforluyu opak yapardı ve
-          // altındaki metni kapatırdı.
-          (color >> 24) & 0xFF,
-        ),
-        width: (stroke.width * visible.width).clamp(0.1, 100.0),
+        pdfColor,
+        width: width,
         lineCap: PdfLineCap.round,
         lineJoin: PdfLineJoin.round,
       );
-      final path = PdfPath()..startFigure();
       Offset at(int i) => Offset(
         stroke.points[i] * visible.width,
         stroke.points[i + 1] * visible.height,
       );
+      // OK: gövde + ucundaki DOLU başlık. Geometri ekrandakiyle tek kopya
+      // (bkz. arrowBody) — paylaşılan PDF'teki ok ekrandakinin aynısı olmalı.
+      if (stroke.arrow) {
+        final tail = at(0);
+        final head = at(2);
+        final geo = arrowGeometry(tail, head, width);
+        g
+          ..drawLine(pen, tail, geo.lineEnd)
+          ..drawPath(
+            PdfPath()
+              ..startFigure()
+              ..addPolygon([head, geo.left, geo.right]),
+            brush: PdfSolidBrush(pdfColor),
+          );
+        continue;
+      }
+      final path = PdfPath()..startFigure();
       // Nokta nokta `addLine`: `addPolygon` şekli KAPATIR (son noktadan
-      // ilkine çizgi çeker), el yazısında yanlış olur.
+      // ilkine çizgi çeker), el yazısında yanlış olur — okun başlığında ise
+      // kapanması TAM İSTENEN şeydir (üçgen dolu boyanır).
       for (var i = 0; i + 3 < stroke.points.length; i += 2) {
         path.addLine(at(i), at(i + 2));
       }

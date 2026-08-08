@@ -308,6 +308,14 @@ void main() {
             width: 0.01,
             points: [0.1, 0.1, 0.5, 0.5, 0.9, 0.2],
           ),
+          // OK da damgalanır (gövde + dolu başlık) ve okluğu geri gelir.
+          InkStroke(
+            page: 2,
+            color: 0xFF1E88E5,
+            width: 0.006,
+            points: [0.2, 0.8, 0.7, 0.3],
+            arrow: true,
+          ),
         ],
         fontBytes: font,
       );
@@ -318,8 +326,11 @@ void main() {
       expect(back.bubbles.first.title, 'Kaynak?');
       expect(back.bubbles.first.text, contains('ışığı'));
       expect(back.bubbles.last.page, 2);
-      expect(back.ink.single.color, 0xFFEF5350);
-      expect(back.ink.single.points, hasLength(6));
+      expect(back.ink, hasLength(2));
+      expect(back.ink.first.color, 0xFFEF5350);
+      expect(back.ink.first.points, hasLength(6));
+      expect(back.ink.first.arrow, isFalse);
+      expect(back.ink.last.arrow, isTrue);
       // Damga sayfadan KALKMIŞ olmalı; belgenin kendi metni durmalı.
       final cleaned = pageTexts(back.bytes);
       expect(cleaned[0], contains('P1'));

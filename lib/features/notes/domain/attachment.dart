@@ -31,6 +31,7 @@ class InkStroke {
     required this.color,
     required this.width,
     required this.points,
+    this.arrow = false,
   });
 
   /// 1 tabanlı sayfa numarası.
@@ -45,6 +46,18 @@ class InkStroke {
   /// Düzleştirilmiş nokta listesi: [x1, y1, x2, y2, ...], her biri 0–1.
   final List<double> points;
 
+  /// **OK** mu? true ise çizgi serbest bir el yazısı değil, iki uçlu bir
+  /// oktur: ilk nokta kuyruk, SON nokta uçtur ve ucuna dolu bir başlık
+  /// çizilir (kullanıcı isteği 2026-08-08: "bir de ok işareti çekme
+  /// istiyorum" — "şuraya bak" demenin en kısa yolu, elle çizilen ok hep
+  /// eğri çıkıyordu).
+  ///
+  /// Neden [InkPen] gibi renge gömülmedi: kalem türü SAYDAMLIKTAN okunuyor
+  /// (bkz. ink_pen.dart) ama ok, kalemin bir türü değil — her kalemle ve her
+  /// renkle çizilebilir. Alan yalnız TRUE iken kayda yazılır: eski çizimlerin
+  /// şeması büyümez.
+  final bool arrow;
+
   factory InkStroke.fromMap(Map<String, dynamic> map) => InkStroke(
     page: (map['p'] as num?)?.toInt() ?? 1,
     color: (map['c'] as num?)?.toInt() ?? 0xFF000000,
@@ -52,6 +65,7 @@ class InkStroke {
     points: [
       for (final v in (map['d'] as List?) ?? const []) (v as num).toDouble(),
     ],
+    arrow: map['a'] as bool? ?? false,
   );
 
   Map<String, dynamic> toMap() => {
@@ -59,6 +73,7 @@ class InkStroke {
     'c': color,
     'w': width,
     'd': points,
+    if (arrow) 'a': true,
   };
 }
 
@@ -266,6 +281,7 @@ List<InkStroke> cropInk(
         // Kalınlık görsel GENİŞLİĞİNİN oranı; çerçeve daraldıkça oran büyür.
         width: s.width / w,
         points: points,
+        arrow: s.arrow,
       ),
     );
   }

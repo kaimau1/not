@@ -1373,6 +1373,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get eraser => 'Borracha';
 
   @override
+  String get inkArrow => 'Seta';
+
+  @override
   String get clearInk => 'Limpar as anotações';
 
   @override

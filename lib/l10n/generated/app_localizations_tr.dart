@@ -1358,6 +1358,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get eraser => 'Silgi';
 
   @override
+  String get inkArrow => 'Ok';
+
+  @override
   String get clearInk => 'Çizimleri temizle';
 
   @override

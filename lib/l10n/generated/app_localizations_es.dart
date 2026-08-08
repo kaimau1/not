@@ -1370,6 +1370,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get eraser => 'Goma de borrar';
 
   @override
+  String get inkArrow => 'Flecha';
+
+  @override
   String get clearInk => 'Borrar las anotaciones';
 
   @override

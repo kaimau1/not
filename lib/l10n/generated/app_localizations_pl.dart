@@ -1371,6 +1371,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get eraser => 'Gumka';
 
   @override
+  String get inkArrow => 'Strzałka';
+
+  @override
   String get clearInk => 'Wyczyść adnotacje';
 
   @override

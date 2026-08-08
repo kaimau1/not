@@ -2622,6 +2622,12 @@ abstract class AppLocalizations {
   /// **'Silgi'**
   String get eraser;
 
+  /// No description provided for @inkArrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ok'**
+  String get inkArrow;
+
   /// No description provided for @clearInk.
   ///
   /// In tr, this message translates to:

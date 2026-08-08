@@ -1323,6 +1323,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get eraser => '橡皮擦';
 
   @override
+  String get inkArrow => '箭头';
+
+  @override
   String get clearInk => '清除批注';
 
   @override

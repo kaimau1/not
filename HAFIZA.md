@@ -1425,3 +1425,13 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **4) Geri yükleme İKİ kapıda birden**: paylaşım/aç yolunda (`share_intake`) ve nota elle PDF eklerken (`_pickPdf`) — kullanıcı dosyayı indirip sonra uygulamadan seçerse de balonlar geri gelir. Sıradan PDF'te `readSharedPdf` null döner ve dosya olduğu gibi eklenir (belge yalnız açılır, kaydedilmez: maliyet sıfıra yakın).
 
   Doğrulama: analyze temiz, testler yeşil (+2: gidiş-dönüşte katmanın sökülüp balonların veri olarak dönmesi, sıradan PDF'in null dönmesi). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (24. tur): **OK aracı.** (Kullanıcı: "bir de ok işareti çekme istiyorum.")
+
+  Ok, ayrı bir veri tipi DEĞİL: `InkStroke.arrow` bayrağı taşıyan iki noktalı bir çizgi (ilk nokta kuyruk, ikinci uç). Böylece kaydetme, senkron, geri al, silgi, `.notpaket` ve paylaşılan PDF damgası tek yoldan çalışıyor; ayrı model yazılsaydı hepsi ikişer kez yazılacaktı. Alan yalnız TRUE iken kayda giriyor — eski çizimlerin şeması büyümüyor. Kalem türü (`InkPen`) SAYDAMLIKTAN okunuyor ama ok kalemin bir türü değil (her kalem ve renkle çizilebilir), bu yüzden aynı numara ona uygulanamazdı.
+
+  **Jest**: ok kipinde parmak serbest çizmez — basılan yer kuyruk, sürüklenen uç. `pointerMove` nokta EKLEMEZ, ucu taşır; sürüklenmeden bırakılan (yönü olmayan) ok atılır. Silgi için okun gövdesi boyunca örnek noktalar üretiliyor: iki uçlu bir çizgi yalnız uçlarından yakalanırdı.
+
+  **Geometri tek kopya** (`domain/arrow.dart`, saf Dart): ekran katmanı ile PDF damgası aynı hesabı kullanıyor — iki yerde ayrı yazılsaydı paylaşılan PDF'teki ok ekrandakinden başka türlü çıkardı. Gövde başlığın dibinde biter (kalın kalemde çizgi ucun sivriliğini bozuyordu) ve başlık okun yarısından uzun olamaz (kısa okta uç gövdeyi yutmamalı).
+
+  Doğrulama: analyze temiz, testler yeşil (+9: ok kaydı, kırpma, geometri, jest, silgi, PDF damgasında gidiş-dönüş). **Cihazda doğrulanmadı — APK CI'da.**

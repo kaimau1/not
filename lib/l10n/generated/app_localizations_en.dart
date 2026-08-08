@@ -1361,6 +1361,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get eraser => 'Eraser';
 
   @override
+  String get inkArrow => 'Arrow';
+
+  @override
   String get clearInk => 'Clear annotations';
 
   @override

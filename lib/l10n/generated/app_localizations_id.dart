@@ -1370,6 +1370,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get eraser => 'Penghapus';
 
   @override
+  String get inkArrow => 'Panah';
+
+  @override
   String get clearInk => 'Hapus semua coretan';
 
   @override

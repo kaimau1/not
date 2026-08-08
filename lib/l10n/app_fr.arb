@@ -391,6 +391,7 @@
   "penMarker": "Marqueur",
   "penHighlighter": "Surligneur",
   "eraser": "Gomme",
+  "inkArrow": "Flèche",
   "clearInk": "Effacer les annotations",
   "inkTwoFingerHint": "Un doigt dessine · deux doigts déplacent et zooment",
   "slideOpenFailed": "La présentation n'a pas pu être ouverte",
