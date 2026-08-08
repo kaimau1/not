@@ -995,5 +995,7 @@
   "pdfHighlightWithNote": "Vurgula + not",
   "pageNotesShow": "Sayfa notunu göster",
   "pageNotesHide": "Sayfa notunu gizle",
-  "bubbleSave": "Kaydet"
+  "bubbleSave": "Kaydet",
+  "bubbleTitleHint": "Başlık",
+  "bubbleUrgent": "Acil (yanıp söner)"
 }

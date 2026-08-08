@@ -789,5 +789,7 @@
   "pdfHighlightWithNote": "Highlight + note",
   "pageNotesShow": "Show page note",
   "pageNotesHide": "Hide page note",
-  "bubbleSave": "Save"
+  "bubbleSave": "Save",
+  "bubbleTitleHint": "Title",
+  "bubbleUrgent": "Urgent (blinks)"
 }

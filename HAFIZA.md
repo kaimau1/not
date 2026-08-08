@@ -1336,3 +1336,30 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **7) Diğerleri**: renk paleti 5'ten 12'ye çıktı, yıldız eklendi (renk KONU ayırır, yıldız ÖNEM); açık balon varken sayfanın boşluğuna dokunmak kapatır (`collapseAll`; yalnız TAP dinlenir, kaydırma/yakınlaştırma alta geçer); `dropEmpty` boş SERBEST balonu atar ama boş VURGUYU korur (vurgunun kendi başına anlamı var); slaytta da hepsi var (balon taşınırken `PageView` kilitleniyor).
 
   Doğrulama: analyze temiz, 704/704 test yeşil (+17). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (19. tur): **Cihaz denemesinden çıkan 12 + 4 madde** — sürüklemenin gerçek kök nedeni, fosforlu vurgu, balonun yeniden tasarımı, slayt zoom'u, ana ekran çipleri ve üç kasma kaynağı.
+
+  **1) SÜRÜKLEMENİN ASIL KÖK NEDENİ (18. turda yarım kalmıştı).** Uzun basışa geçmek yetmedi; iki şey kalmıştı:
+  (a) **Pan kilidi jesti öldürüyordu.** Taşıma başlarken `selection.selecting` true yapılıyor, o da `PdfViewerParams`ı değiştirip **`PdfViewer`'ı jestin ORTASINDA yeniden kuruyor** ve başlamış uzun basışı iptal ediyordu. Kilide GEREK YOK: uzun basış arenayı kazandığı an pdfrx'in kaydırma/ölçek tanıyıcıları zaten eleniyor. Kilit yalnız METİN SEÇİMİNDE şart — o katman arenaya hiç girmeyen bir `Listener` kullanıyor.
+  (b) **Süre.** Flutter'ın uzun basışı 500 ms; `GestureDetector` süreyi dışarı açmıyor. `RawGestureDetector` + `LongPressGestureRecognizer(duration: 220ms)` ile yeni bir `BubbleDragArea` yazıldı — "tut ve taşı" tek akış oldu. Kartın TAMAMI tutamaç.
+
+  **2) Vurgu artık FOSFORLU KALEM.** Tek düz dikdörtgen "seçim vurgusu" gibi duruyordu. Şimdi iki katman: satırın tamamını kaplayan soluk zemin (%20) + ortasından geçen, uçları yuvarlak KALIN iz (%42, satır yüksekliğinin %58'i). Vurgunun rengi balon renginden AYRI (`highlightColor`, varsayılan fosforlu kırmızı): balon rengi KONU ayırır, vurgu göze çarpmak için vardır.
+
+  **3) Balon yeniden tasarlandı.** Üst şerit 26 px'e indi (simgeler 15 px) — eski şerit kartın yarısını yiyordu. **Başlık alanı şeridin İÇİNDE** (ayrı satır kartı bir kat daha büyütürdü), en çok 12 karakter. Başlık doluysa balon KAPALIYKEN yuvarlak nokta yerine **başlığı yazan küçük etiket** görünür — sayfaya bakınca açmadan ne dediği anlaşılır. **Ünlem** (acil) eklendi: kapalı balon yanıp söner. Yanıp sönme denetleyicisi YALNIZ acil+kapalı balonda kurulur; her balon için sürekli dönen bir animasyon kare kare yeniden boyama demekti.
+
+  **4) ÜÇ KASMA KAYNAĞI kapatıldı.**
+  * `note_editor_screen`: sayfa tuvalinin alt sınırı `constraints.maxHeight + viewInsets.bottom` idi. Değer doğruydu ama `viewInsetsOf` BAĞIMLILIK kurar — klavye animasyonunun her karesinde (~15 kare) tuval, yüzen görsel bantları ve satır ölçümleriyle yeniden kuruluyordu. Artık MediaQuery'ye hiç dokunulmuyor: görülen EN BÜYÜK yükseklik saklanıyor (`_stableCanvasHeight`), genişlik değişince sıfırlanıyor.
+  * Balon metni/başlığı `updateText`/`updateTitle` ile dinleyicileri UYANDIRMADAN yazılıyor (TextField zaten gösteriyor).
+  * Pan kilidi kaldırıldığı için taşıma sırasında görüntüleyici hiç yeniden kurulmuyor.
+
+  **5) Balona yazarken ekran boşaltılıyor.** Klavye ekranın yarısını alıyor: alt not alanı (18. tur), **sayfa çubuğu** ve **editörün alt çubuğu** (Biçim/Ekle/AI + ek şeridi) gizleniyor. Sonuncusu panodan editöre `onImmersiveChanged` ile bildiriliyor. Ayrıca balon odağa gelince ekran dikdörtgeni ölçülüp belge yukarı itiliyor (`ensureVisible`) — kart klavyenin altında kalmıyor. **Ölçüm 320 ms GECİKMELİ**: klavye animasyonu bitmeden ölçülen dikdörtgen "klavye yokmuş gibi" çıkar, kaydırma hesabı sıfırlanırdı.
+
+  **6) Seçim çubuğu telefon tuşlarının altında kalıyordu**: `Scaffold` gövdesi `bottomNavigationBar` yokken sistem payını eklemiyor; çubuğa `viewPadding.bottom` eklendi.
+
+  **7) Slaytta zoom** (`ZoomBox`): çift dokunuş DOKUNULAN NOKTAYA yakınlaşır, ikinci çift dokunuş sığdırır, arada iki parmakla serbest gezinme. Yakınken `PageView` kilitli — yatay sürükleme büyütülmüş sayfada gezinmektir, slayt değiştirmek değil. Slayt öğeleri `RepaintBoundary` içinde.
+
+  **8) Ana ekran.** Kullanıcının ETİKETLERİ artık Süz'ün yanında **varsayılan** çip (önce yıldızlananlar, sonra kalanlar); yatay çekiş de aynı kümeyi geziyor (süzgeç → klasör → etiket). Eskiden etiketin çip olması için önce "favorile" adımı gerekiyordu — gereksiz bir kapıydı.
+
+  **9) İki parmakla sütun değişimi KÖK NEDEN.** `GestureDetector.onScaleUpdate`, altındaki kaydırma görünümünün dikey sürükleme tanıyıcısıyla aynı arenada yarışıyor ve sürükleme İLK parmakta kabul edildiği için çoğu zaman önce kazanıyordu. Arenaya hiç girmeyen `Listener` tabanlı `_PinchColumns` yazıldı (aynı çözüm PDF seçim katmanında da var). **TUZAK**: adım atıldıktan sonra taban uzaklık şimdiki değere çekilmeli; çekilmezse oran eşiğin üstünde kaldığı sürece her karede bir adım daha atılır ve tek jestte en uca fırlanır.
+
+  Doğrulama: analyze temiz, 708/708 test yeşil (+4). **Cihazda doğrulanmadı — APK CI'da.**

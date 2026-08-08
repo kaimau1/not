@@ -15,10 +15,12 @@ void main() {
         page: 3,
         x: 0.25,
         y: 0.75,
+        title: 'Duzelt',
         text: 'burayi duzelt',
         color: 0xFFEF5350,
         collapsed: true,
         starred: true,
+        urgent: true,
         rects: [PageBubbleRect(0.1, 0.2, 0.9, 0.24)],
       );
       final back = PageBubble.fromMap(source.toMap());
@@ -28,6 +30,8 @@ void main() {
       expect(back.color, 0xFFEF5350);
       expect(back.collapsed, isTrue);
       expect(back.starred, isTrue);
+      expect(back.title, 'Duzelt');
+      expect(back.urgent, isTrue);
       expect(back.rects.single.left, 0.1);
       expect(back.rects.single.bottom, 0.24);
       expect(back.isHighlight, isTrue);
@@ -38,6 +42,8 @@ void main() {
       final map = plain.toMap();
       expect(map.containsKey('k'), isFalse); // collapsed
       expect(map.containsKey('s'), isFalse); // starred
+      expect(map.containsKey('h'), isFalse); // title
+      expect(map.containsKey('u'), isFalse); // urgent
       expect(map.containsKey('r'), isFalse); // rects
       expect(PageBubble.fromMap(map).isHighlight, isFalse);
     });
@@ -194,6 +200,47 @@ void main() {
       expect(notified, 0);
       // Kaydetme yine de yapilabilmeli.
       c.save();
+    });
+
+    test('baslik 12 karaktere KIRPILIR — etiket sayfayi kapatmasin', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],
+      );
+      c.updateTitle('a', 'cok uzun bir baslik yazdim');
+      expect(c.byId('a')!.title.length, PageBubble.maxTitle);
+      expect(c.byId('a')!.title, 'cok uzun bir');
+    });
+
+    test('updateTitle de dinleyicileri UYANDIRMAZ (yazarken kasma)', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],
+      );
+      var notified = 0;
+      c.addListener(() => notified++);
+      c.updateTitle('a', 'Not');
+      expect(c.byId('a')!.title, 'Not');
+      expect(notified, 0);
+    });
+
+    test('unlem (acil) ac/kapa', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],
+      );
+      c.toggleUrgent('a');
+      expect(c.byId('a')!.urgent, isTrue);
+      c.toggleUrgent('a');
+      expect(c.byId('a')!.urgent, isFalse);
+    });
+
+    test('vurgu FOSFORLU renkle dogar, balon rengiyle degil', () {
+      final c = build()
+        ..setColor(BubbleController.palette[3])
+        ..addHighlight(
+          page: 1,
+          rects: const [PageBubbleRect(0, 0, 1, 0.1)],
+          open: false,
+        );
+      expect(c.bubbles.single.color, BubbleController.highlightPalette.first);
     });
 
     test('yildiz ac/kapa', () {

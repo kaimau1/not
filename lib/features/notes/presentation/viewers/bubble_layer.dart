@@ -1,3 +1,5 @@
+import 'package:flutter/gestures.dart'
+    show LongPressGestureRecognizer, TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:uuid/uuid.dart';
@@ -24,8 +26,17 @@ import '../../domain/attachment.dart';
 /// tanıyıcısı çoğu zaman önce kazanır — parmak balonu değil sayfayı çekerdi.
 /// Şimdi taşıma UZUN BASIŞLA başlıyor (`onLongPressStart`): uzun basış
 /// arenayı kesin kazanır, titreşimle "aldım" der ve `onLongPressMoveUpdate`
-/// parmakla birebir gider. Ek olarak taşıma sürerken üst katman
-/// [onDragChanged] ile görüntüleyicinin pan'ını kilitler.
+/// parmakla birebir gider.
+///
+/// **İKİNCİ tur düzeltmesi (2026-08-08, "hâlâ çok zor").** İki şey kalmıştı:
+/// (a) Basılı tutma süresi Flutter'ın 500 ms varsayılanıydı; artık 220 ms
+/// (bkz. [BubbleDragArea]) — "tut ve taşı" tek akışta hissediliyor.
+/// (b) Taşıma başlarken görüntüleyicinin pan'ı kilitleniyordu; o kilit
+/// `PdfViewerParams`ı değiştirip **jestin ortasında `PdfViewer`'ı yeniden
+/// kuruyor** ve başlamış uzun basışı iptal ediyordu. Kilide GEREK YOK: uzun
+/// basış arenayı kazandığı an pdfrx'in kaydırma/ölçek tanıyıcıları zaten
+/// eleniyor. (Metin seçiminde kilit ŞART kalır — o katman arenaya hiç
+/// girmeyen bir `Listener` kullanıyor.)
 class BubbleController extends ChangeNotifier {
   BubbleController({required List<PageBubble> initial, required this.onChanged})
     : _bubbles = [...initial];
@@ -63,6 +74,28 @@ class BubbleController extends ChangeNotifier {
   /// Yeni bırakılacak balonun rengi.
   int color = palette.first;
 
+  /// **Vurgunun** rengi — balon renginden AYRI. Varsayılan fosforlu kırmızı:
+  /// kullanıcı isteği "seçilen metnin üzeri kırmızı fosforlu kalemle
+  /// çizilmiş gibi olsun". Balon rengi konu ayırmak için (sarı not, mavi
+  /// soru...), vurgu ise metnin üstünde göze çarpmak için var.
+  int highlightColor = highlightPalette.first;
+
+  /// Vurgu için fosforlu tonlar (metnin üstünde okunurluğu bozmayan,
+  /// doygunluğu yüksek renkler).
+  static const highlightPalette = <int>[
+    0xFFFF1744, // fosforlu kırmızı (varsayılan)
+    0xFFFFEA00, // fosforlu sarı
+    0xFF00E676, // fosforlu yeşil
+    0xFF00B0FF, // fosforlu mavi
+    0xFFFF9100, // fosforlu turuncu
+    0xFFD500F9, // fosforlu mor
+  ];
+
+  void setHighlightColor(int value) {
+    highlightColor = value;
+    notifyListeners();
+  }
+
   /// Az önce eklenen balon: katman onu açık ve klavyesi odaklanmış getirir.
   String? justAdded;
 
@@ -78,8 +111,19 @@ class BubbleController extends ChangeNotifier {
   /// [editing] her değiştiğinde çağrılır — bölmeyi daraltan üst katman için.
   ValueChanged<bool>? onEditingChanged;
 
-  /// Taşıma başlayıp bitince çağrılır (pan kilidi).
+  /// Taşıma başlayıp bitince çağrılır (yalnız bilgi amaçlı: pan kilidi
+  /// ARTIK KURULMUYOR — bkz. sınıf açıklamasındaki ikinci tur düzeltmesi).
   ValueChanged<bool>? onDragChanged;
+
+  /// Açılan/odaklanan balonun EKRAN dikdörtgeni; üst katman gerekiyorsa
+  /// belgeyi kaydırıp balonu klavyenin üstüne getirir.
+  ///
+  /// Kök neden (2026-08-08 bulgusu: "klavye açılınca balonlar altta kalıyor,
+  /// odak sorunu var"): balon sayfa koordinatında duruyor, klavye açılınca
+  /// görünür alan yarıya iniyor ve sayfanın alt yarısındaki balon klavyenin
+  /// altında kalıyordu. Kart kendi yerini bilemez — hangi kadar kaydırılacağı
+  /// görüntüleyicinin işi.
+  void Function(Rect globalRect)? ensureVisible;
 
   bool _dirty = false;
 
@@ -179,7 +223,7 @@ class BubbleController extends ChangeNotifier {
         page: page,
         x: ((last.left + last.right) / 2).clamp(0.0, 1.0),
         y: last.bottom.clamp(0.0, 1.0),
-        color: color,
+        color: highlightColor,
         collapsed: !open,
         rects: rects,
       ),
@@ -212,6 +256,25 @@ class BubbleController extends ChangeNotifier {
   /// `notifyListeners` çağırıyor, o da sayfadaki BÜTÜN balon katmanını (ve
   /// vurgu boyamasını) yeniden kuruyordu. Yazılan metni zaten `TextField`
   /// kendi gösteriyor; dışarıya haber vermenin tek gerekli anı kaydetmedir.
+  void updateTitle(String id, String title) {
+    final index = _bubbles.indexWhere((b) => b.id == id);
+    if (index < 0) return;
+    final clipped = title.characters.length > PageBubble.maxTitle
+        ? title.characters.take(PageBubble.maxTitle).toString()
+        : title;
+    _bubbles = [..._bubbles]..[index] = _bubbles[index].copyWith(
+      title: clipped,
+    );
+    _dirty = true;
+  }
+
+  void toggleUrgent(String id) {
+    final bubble = byId(id);
+    if (bubble == null) return;
+    update(bubble.copyWith(urgent: !bubble.urgent));
+    save();
+  }
+
   void updateText(String id, String text) {
     final index = _bubbles.indexWhere((b) => b.id == id);
     if (index < 0) return;
@@ -438,24 +501,43 @@ class _HighlightPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final bubble in bubbles) {
       if (bubble.rects.isEmpty) continue;
-      final path = Path();
+      // FOSFORLU KALEM izi: satırın tamamını kaplayan soluk bir zemin +
+      // ortasından geçen daha koyu, uçları yuvarlak KALIN bir iz. İkisi
+      // birlikte "üzeri kalemle çizilmiş" görüntüsü verir; tek düz
+      // dikdörtgen düz bir seçim vurgusu gibi duruyordu (kullanıcı isteği
+      // 2026-08-08).
+      final color = Color(bubble.color);
+      final wash = Path();
+      final stroke = Path();
       for (final r in bubble.rects) {
-        path.addRRect(
+        final rect = Rect.fromLTRB(
+          r.left * size.width,
+          r.top * size.height,
+          r.right * size.width,
+          r.bottom * size.height,
+        );
+        if (rect.width <= 0 || rect.height <= 0) continue;
+        wash.addRRect(
+          RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        );
+        // İz satır yüksekliğinin %58'i, dikeyde ortalanmış.
+        final band = rect.height * 0.58;
+        final center = rect.center.dy;
+        stroke.addRRect(
           RRect.fromRectAndRadius(
             Rect.fromLTRB(
-              r.left * size.width,
-              r.top * size.height,
-              r.right * size.width,
-              r.bottom * size.height,
+              rect.left,
+              center - band / 2,
+              rect.right,
+              center + band / 2,
             ),
-            const Radius.circular(2),
+            Radius.circular(band / 2),
           ),
         );
       }
-      canvas.drawPath(
-        path,
-        Paint()..color = Color(bubble.color).withValues(alpha: 0.34),
-      );
+      canvas
+        ..drawPath(wash, Paint()..color = color.withValues(alpha: 0.20))
+        ..drawPath(stroke, Paint()..color = color.withValues(alpha: 0.42));
     }
   }
 
@@ -468,6 +550,82 @@ class _HighlightPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_HighlightPainter old) => true;
+}
+
+
+/// Balonu (kart ya da tutamaç) **basılı tutup sürüklenebilir** yapan sarmalayıcı.
+///
+/// Neden `GestureDetector` değil `RawGestureDetector`: `GestureDetector` uzun
+/// basış SÜRESİNİ dışarı açmıyor ve Flutter'ın varsayılanı 500 ms — kullanıcı
+/// "hâlâ çok zor sürükleniyor" derken tarif ettiği şey buydu. Burada süre
+/// 220 ms; yarım saniye beklemek yerine "tut ve taşı" tek akışta oluyor.
+///
+/// Uzun basış arenayı kazandığı an pdfrx'in kaydırma/ölçek tanıyıcıları
+/// elenir, yani sayfa altta kaymaz — ayrıca bir pan kilidine gerek yoktur.
+class BubbleDragArea extends StatelessWidget {
+  const BubbleDragArea({
+    super.key,
+    required this.child,
+    required this.onDragStart,
+    required this.onDragDelta,
+    required this.onDragEnd,
+    this.onTap,
+    this.enabled = true,
+  });
+
+  final Widget child;
+  final VoidCallback onDragStart;
+  final ValueChanged<Offset> onDragDelta;
+  final VoidCallback onDragEnd;
+  final VoidCallback? onTap;
+  final bool enabled;
+
+  static const _pressDuration = Duration(milliseconds: 220);
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) {
+      return onTap == null
+          ? child
+          : GestureDetector(onTap: onTap, child: child);
+    }
+    // Uzun basış TOPLAM kaymayı verir; kare farkı için son değer saklanır.
+    // (Fark alınmazsa balon parmaktan kat kat hızlı uçar.)
+    var last = Offset.zero;
+    return RawGestureDetector(
+      behavior: HitTestBehavior.opaque,
+      gestures: <Type, GestureRecognizerFactory>{
+        if (onTap != null)
+          TapGestureRecognizer:
+              GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                TapGestureRecognizer.new,
+                (instance) => instance.onTap = onTap,
+              ),
+        LongPressGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer(duration: _pressDuration),
+              (instance) => instance
+                ..onLongPressStart = (_) {
+                  last = Offset.zero;
+                  onDragStart();
+                }
+                ..onLongPressMoveUpdate = (d) {
+                  onDragDelta(d.offsetFromOrigin - last);
+                  last = d.offsetFromOrigin;
+                }
+                ..onLongPressEnd = (_) {
+                  last = Offset.zero;
+                  onDragEnd();
+                }
+                ..onLongPressCancel = () {
+                  last = Offset.zero;
+                  onDragEnd();
+                },
+            ),
+      },
+      child: child,
+    );
+  }
 }
 
 class _Bubble extends StatefulWidget {
@@ -490,11 +648,20 @@ class _Bubble extends StatefulWidget {
   State<_Bubble> createState() => _BubbleState();
 }
 
-class _BubbleState extends State<_Bubble> {
+class _BubbleState extends State<_Bubble>
+    with SingleTickerProviderStateMixin {
   late final TextEditingController _text = TextEditingController(
     text: widget.bubble.text,
   );
+  late final TextEditingController _title = TextEditingController(
+    text: widget.bubble.title,
+  );
   final _focus = FocusNode();
+
+  /// ACİL balonun yanıp sönmesi. Denetleyici YALNIZ gerektiğinde koşar:
+  /// sürekli dönen bir animasyon, sayfadaki her balon için kare kare yeniden
+  /// boyama demek olurdu (kasma).
+  AnimationController? _blink;
 
   /// Açık balonun en büyük genişliği.
   static const _maxWidth = 260.0;
@@ -512,7 +679,14 @@ class _BubbleState extends State<_Bubble> {
       // yazmamak için: `update` belleği, `save` diski tazeler).
       if (!_focus.hasFocus) widget.controller.save();
       widget.controller.setEditing(_focus.hasFocus);
+      if (_focus.hasFocus) _requestVisible();
     });
+    _titleFocus.addListener(() {
+      if (!_titleFocus.hasFocus) widget.controller.save();
+      widget.controller.setEditing(_focus.hasFocus || _titleFocus.hasFocus);
+      if (_titleFocus.hasFocus) _requestVisible();
+    });
+    _syncBlink();
     if (widget.autofocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !widget.readOnly) _focus.requestFocus();
@@ -528,6 +702,10 @@ class _BubbleState extends State<_Bubble> {
     if (widget.bubble.text != _text.text && !_focus.hasFocus) {
       _text.text = widget.bubble.text;
     }
+    if (widget.bubble.title != _title.text && !_titleFocus.hasFocus) {
+      _title.text = widget.bubble.title;
+    }
+    _syncBlink();
     // Toplu listeden "balona git" ile açıldıysa klavye hazır gelsin.
     if (old.autofocus != widget.autofocus &&
         widget.autofocus &&
@@ -542,10 +720,48 @@ class _BubbleState extends State<_Bubble> {
   @override
   void dispose() {
     if (_focus.hasFocus) widget.controller.setEditing(false);
+    _blink?.dispose();
     _text.dispose();
+    _title.dispose();
     _focus.dispose();
+    _titleFocus.dispose();
     super.dispose();
   }
+
+  /// Yanıp sönme yalnız ACİL ve KAPALI balonda koşar; açık kartta ya da
+  /// ünlem kalkınca durur (boşa kare harcanmaz).
+  void _syncBlink() {
+    final wanted = widget.bubble.urgent && widget.bubble.collapsed;
+    if (wanted && _blink == null) {
+      _blink =
+          AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 700),
+          )..repeat(reverse: true);
+    } else if (!wanted && _blink != null) {
+      _blink!.dispose();
+      _blink = null;
+    }
+  }
+
+  /// Klavye açıldıktan SONRA kartın ekran dikdörtgenini üst katmana bildirir;
+  /// o da gerekiyorsa belgeyi kaydırıp kartı klavyenin üstüne getirir.
+  ///
+  /// Gecikme ŞART: klavye animasyonu ~250 ms sürer ve o bitmeden ölçülen
+  /// dikdörtgen "klavye yokmuş gibi" çıkar — kaydırma hesabı sıfır olurdu.
+  void _requestVisible() {
+    final notify = widget.controller.ensureVisible;
+    if (notify == null) return;
+    Future<void>.delayed(const Duration(milliseconds: 320), () {
+      if (!mounted || !_focus.hasFocus) return;
+      final box = _cardKey.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) return;
+      notify(box.localToGlobal(Offset.zero) & box.size);
+    });
+  }
+
+  final _cardKey = GlobalKey();
+  final _titleFocus = FocusNode();
 
   double get _width =>
       (widget.pageSize.width * 0.62).clamp(140.0, _maxWidth).toDouble();
@@ -570,7 +786,7 @@ class _BubbleState extends State<_Bubble> {
   // Uzun basış jest arenasını KESİN kazanır (pan/scale tanıyıcıları elenir),
   // bu yüzden parmak balonu değil sayfayı çekme sorunu ortadan kalkar. Başlama
   // anında titreşim var: kullanıcı "tuttum" hissini duyar.
-  void _dragStart(Offset _) {
+  void _dragStart() {
     if (widget.readOnly) return;
     HapticFeedback.mediumImpact();
     setState(() => _lifted = true);
@@ -606,78 +822,131 @@ class _BubbleState extends State<_Bubble> {
     final at = _topLeft(width, collapsed: false);
     final scheme = Theme.of(context).colorScheme;
     return Positioned(
+      key: _cardKey,
       left: at.dx,
       top: at.dy,
       width: width,
       child: AnimatedScale(
         scale: _lifted ? 1.06 : 1,
         duration: const Duration(milliseconds: 120),
-        child: GestureDetector(
-          // Kartın TAMAMI taşıma tutamacıdır: uzun basıp sürükle. Kısa
-          // dokunuş yazı alanına gider (uzun basış onu iptal etmez).
-          onLongPressStart: (d) => _dragStart(d.localPosition),
-          onLongPressMoveUpdate: (d) {
-            _dragMove(d.offsetFromOrigin - _last);
-            _last = d.offsetFromOrigin;
-          },
-          onLongPressEnd: (_) {
-            _last = Offset.zero;
-            _dragEnd();
-          },
-          onLongPressCancel: () {
-            _last = Offset.zero;
-            _dragEnd();
-          },
+        child: BubbleDragArea(
+          // Kartın TAMAMI taşıma tutamacıdır: kısa basıp sürükle (220 ms).
+          // Kısa dokunuş yazı alanına gider — uzun basış onu iptal etmez.
+          enabled: !widget.readOnly,
+          onDragStart: _dragStart,
+          onDragDelta: _dragMove,
+          onDragEnd: _dragEnd,
           child: Material(
             color: color.withValues(alpha: 0.97),
             elevation: _lifted ? 10 : 3,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(12),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 2, 4, 6),
+              padding: const EdgeInsets.fromLTRB(8, 0, 2, 4),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.drag_indicator,
-                        size: 16,
-                        color: Colors.black45,
-                      ),
-                      const Spacer(),
-                      if (!widget.readOnly)
-                        _iconButton(
-                          icon: bubble.starred ? Icons.star : Icons.star_border,
-                          tooltip: context.l10n.bubbleStar,
-                          onPressed: () =>
-                              widget.controller.toggleStar(bubble.id),
+                  // KOMPAKT üst şerit (kullanıcı: "üst sarı alan çok yüksek
+                  // yer kaplıyor"): 26 px, simgeler 15 px. Başlık alanı da bu
+                  // şeridin İÇİNDE — ayrı bir satır kartı bir kat daha
+                  // büyütürdü.
+                  SizedBox(
+                    height: 26,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.drag_indicator,
+                          size: 14,
+                          color: Colors.black38,
                         ),
-                      if (!widget.readOnly)
-                        _iconButton(
-                          icon: Icons.palette_outlined,
-                          tooltip: context.l10n.color,
-                          onPressed: () => _pickColor(context),
+                        Expanded(
+                          child: widget.readOnly
+                              ? Text(
+                                  bubble.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black87,
+                                  ),
+                                )
+                              : TextField(
+                                  controller: _title,
+                                  focusNode: _titleFocus,
+                                  maxLines: 1,
+                                  maxLength: PageBubble.maxTitle,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.black87,
+                                  ),
+                                  cursorColor: scheme.onSurface,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    counterText: '',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 4,
+                                    ),
+                                    border: InputBorder.none,
+                                    hintText: context.l10n.bubbleTitleHint,
+                                    hintStyle: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black26,
+                                    ),
+                                  ),
+                                  onChanged: (value) => widget.controller
+                                      .updateTitle(bubble.id, value),
+                                ),
                         ),
-                      _iconButton(
-                        icon: Icons.close_fullscreen,
-                        tooltip: context.l10n.bubbleCollapse,
-                        onPressed: () {
-                          _focus.unfocus();
-                          widget.controller.setCollapsed(bubble.id, true);
-                        },
-                      ),
-                      if (!widget.readOnly)
+                        if (!widget.readOnly)
+                          _iconButton(
+                            icon: Icons.priority_high,
+                            tooltip: context.l10n.bubbleUrgent,
+                            active: bubble.urgent,
+                            onPressed: () =>
+                                widget.controller.toggleUrgent(bubble.id),
+                          ),
+                        if (!widget.readOnly)
+                          _iconButton(
+                            icon: bubble.starred
+                                ? Icons.star
+                                : Icons.star_border,
+                            tooltip: context.l10n.bubbleStar,
+                            active: bubble.starred,
+                            onPressed: () =>
+                                widget.controller.toggleStar(bubble.id),
+                          ),
+                        if (!widget.readOnly)
+                          _iconButton(
+                            icon: Icons.palette_outlined,
+                            tooltip: context.l10n.color,
+                            onPressed: () => _pickColor(context),
+                          ),
                         _iconButton(
-                          icon: Icons.delete_outline,
-                          tooltip: context.l10n.delete,
-                          onPressed: () => widget.controller.remove(bubble.id),
+                          icon: Icons.close_fullscreen,
+                          tooltip: context.l10n.bubbleCollapse,
+                          onPressed: () {
+                            _focus.unfocus();
+                            _titleFocus.unfocus();
+                            widget.controller.setCollapsed(bubble.id, true);
+                          },
                         ),
-                    ],
+                        if (!widget.readOnly)
+                          _iconButton(
+                            icon: Icons.delete_outline,
+                            tooltip: context.l10n.delete,
+                            onPressed: () =>
+                                widget.controller.remove(bubble.id),
+                          ),
+                      ],
+                    ),
                   ),
                   if (widget.readOnly)
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(2, 2, 4, 2),
+                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
                       child: Text(
                         bubble.text,
                         style: const TextStyle(
@@ -698,6 +967,7 @@ class _BubbleState extends State<_Bubble> {
                       cursorColor: scheme.onSurface,
                       decoration: InputDecoration(
                         isDense: true,
+                        contentPadding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
                         border: InputBorder.none,
                         hintText: context.l10n.bubbleHint,
                         hintStyle: const TextStyle(
@@ -717,77 +987,142 @@ class _BubbleState extends State<_Bubble> {
     );
   }
 
-  /// Uzun basış sürüklemesi TOPLAM kaymayı verir; iki olay arasındaki FARKI
-  /// bulmak için son değer saklanır.
-  Offset _last = Offset.zero;
-
+  /// KAPALI balon. Başlık varsa yuvarlak nokta yerine başlığı yazan küçük bir
+  /// ETİKET çizilir (kullanıcı isteği 2026-08-08: "12 karaktere kadar başlık
+  /// olursa metin kutusu yerine başlığı ile görülmeli kapanınca") — sayfaya
+  /// bakınca balonu açmadan ne dediği anlaşılır. Başlık yoksa eski nokta.
+  ///
+  /// ACİL balon yanıp söner: dikkat çeken tek şey hareket.
   Widget _pin(Color color) {
     final bubble = widget.bubble;
-    final at = _topLeft(_pinSize, collapsed: true);
+    final hasTitle = bubble.title.trim().isNotEmpty;
+    final child = hasTitle ? _titleChip(color) : _dot(color);
+    final at = hasTitle
+        ? Offset(
+            (bubble.x * widget.pageSize.width - 20).clamp(
+              0.0,
+              widget.pageSize.width - 40,
+            ),
+            bubble.y * widget.pageSize.height - _pinSize / 2,
+          )
+        : _topLeft(_pinSize, collapsed: true);
+    final blink = _blink;
     return Positioned(
       left: at.dx,
       top: at.dy,
       child: AnimatedScale(
         scale: _lifted ? 1.25 : 1,
         duration: const Duration(milliseconds: 120),
-        child: GestureDetector(
+        child: BubbleDragArea(
+          enabled: !widget.readOnly,
           onTap: () => widget.controller.openOnly(bubble.id),
-          onLongPressStart: (d) => _dragStart(d.localPosition),
-          onLongPressMoveUpdate: (d) {
-            _dragMove(d.offsetFromOrigin - _last);
-            _last = d.offsetFromOrigin;
-          },
-          onLongPressEnd: (_) {
-            _last = Offset.zero;
-            _dragEnd();
-          },
-          onLongPressCancel: () {
-            _last = Offset.zero;
-            _dragEnd();
-          },
+          onDragStart: _dragStart,
+          onDragDelta: _dragMove,
+          onDragEnd: _dragEnd,
           child: Tooltip(
-            message: bubble.text,
-            child: Container(
-              width: _pinSize,
-              height: _pinSize,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
-                    blurRadius: _lifted ? 10 : 4,
+            message: bubble.text.trim().isEmpty ? bubble.title : bubble.text,
+            child: blink == null
+                ? child
+                : FadeTransition(
+                    opacity: Tween<double>(
+                      begin: 1,
+                      end: 0.35,
+                    ).animate(blink),
+                    child: child,
                   ),
-                ],
-              ),
-              child: Icon(
-                bubble.starred
-                    ? Icons.star
-                    : (bubble.text.trim().isEmpty
-                          ? Icons.format_color_text
-                          : Icons.chat_bubble_outline),
-                size: 15,
-                color: Colors.black87,
-              ),
-            ),
           ),
         ),
       ),
     );
   }
 
+  /// Başlıksız kapalı balon: küçük yuvarlak nokta.
+  Widget _dot(Color color) => Container(
+    width: _pinSize,
+    height: _pinSize,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 2),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
+          blurRadius: _lifted ? 10 : 4,
+        ),
+      ],
+    ),
+    child: Icon(
+      widget.bubble.urgent
+          ? Icons.priority_high
+          : (widget.bubble.starred
+                ? Icons.star
+                : (widget.bubble.text.trim().isEmpty
+                      ? Icons.format_color_text
+                      : Icons.chat_bubble_outline)),
+      size: 15,
+      color: Colors.black87,
+    ),
+  );
+
+  /// Başlıklı kapalı balon: başlığı yazan küçük etiket.
+  Widget _titleChip(Color color) {
+    final bubble = widget.bubble;
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 160),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: Colors.white, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
+            blurRadius: _lifted ? 10 : 4,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (bubble.urgent)
+            const Icon(Icons.priority_high, size: 13, color: Colors.black87),
+          if (bubble.starred)
+            const Icon(Icons.star, size: 13, color: Colors.black87),
+          Flexible(
+            child: Text(
+              bubble.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Şeritteki küçük düğme. [active] işaretli seçenekleri (yıldız, ünlem)
+  /// koyu gösterir — kompakt şeritte renk değişimi tek okunur ipucu.
   Widget _iconButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback onPressed,
+    bool active = false,
   }) => IconButton(
     tooltip: tooltip,
     onPressed: onPressed,
-    icon: Icon(icon, size: 16, color: Colors.black54),
+    icon: Icon(
+      icon,
+      size: 15,
+      color: active ? Colors.black : Colors.black45,
+    ),
     visualDensity: VisualDensity.compact,
     padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
   );
 
   Future<void> _pickColor(BuildContext context) async {

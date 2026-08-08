@@ -32,7 +32,12 @@ class PdfNotePane extends StatefulWidget {
     this.richTheme,
     this.onFieldFocused,
     this.onFieldDisposed,
+    this.onImmersiveChanged,
   });
+
+  /// Balona yazılırken true: editör kendi alt çubuğunu (Biçim/Ekle/AI) ve ek
+  /// şeridini gizler. Klavye + iki bölme + iki çubuk aynı anda sığmıyor.
+  final ValueChanged<bool>? onImmersiveChanged;
 
   final Note Function() noteOf;
   final Attachment attachment;
@@ -85,7 +90,10 @@ class _PdfNotePaneState extends State<PdfNotePane> {
   @override
   void initState() {
     super.initState();
-    _bubbles.onEditingChanged = (editing) => _bubbleEditing.value = editing;
+    _bubbles.onEditingChanged = (editing) {
+      _bubbleEditing.value = editing;
+      widget.onImmersiveChanged?.call(editing);
+    };
   }
 
   @override
@@ -165,9 +173,22 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   @override
   void initState() {
     super.initState();
-    widget.bubbles.onDragChanged = (dragging) {
-      if (mounted) _selection.selecting.value = dragging;
-    };
+    // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması);
+    // klavye açılınca kart görünür alanın altında kalırsa belge yukarı itilir.
+    widget.bubbles.ensureVisible = _ensureBubbleVisible;
+  }
+
+  void _ensureBubbleVisible(Rect globalRect) {
+    if (!mounted || !_pdf.isReady) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final viewportBottom = box.localToGlobal(Offset.zero).dy + box.size.height;
+    final overflow = globalRect.bottom + 8 - viewportBottom;
+    if (overflow <= 0) return;
+    try {
+      _pdf.value = _pdf.value.clone()
+        ..leftTranslateByDouble(0, -overflow, 0, 1);
+    } catch (_) {}
   }
 
   @override

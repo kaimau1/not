@@ -2177,4 +2177,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleSave => 'Save';
+
+  @override
+  String get bubbleTitleHint => 'Title';
+
+  @override
+  String get bubbleUrgent => 'Urgent (blinks)';
 }

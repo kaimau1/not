@@ -1803,6 +1803,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
+  /// Sayfa tuvalinin alt sınırı: gövde alanının GÖRÜLEN EN BÜYÜK yüksekliği.
+  ///
+  /// KÖK NEDEN (2026-08-08 kullanıcı bulgusu: "klavye açılırken titreme kasma
+  /// oluyor"): burada eskiden `constraints.maxHeight + viewInsets.bottom`
+  /// yazıyordu. Değer doğruydu ama `viewInsetsOf` bir BAĞIMLILIK kurar —
+  /// klavye animasyonunun HER karesinde (≈15 kare) sayfa tuvali, yüzen görsel
+  /// bantları ve satır ölçümleriyle birlikte yeniden kuruluyordu. Titreme
+  /// buydu.
+  ///
+  /// Şimdi MediaQuery'ye hiç dokunulmuyor: klavye kapalıyken ölçülen en büyük
+  /// yükseklik saklanıyor ve taban o. Genişlik değişirse (yönelim, pencere)
+  /// taban sıfırlanıp yeniden ölçülür. Alt sınır zaten bir MİNİMUM — fazlası
+  /// görünmez, eksiği tuvali sıçratır.
+  double _stableCanvasHeight(BoxConstraints constraints) {
+    if (constraints.maxWidth != _canvasBaseWidth) {
+      _canvasBaseWidth = constraints.maxWidth;
+      _canvasBaseHeight = 0;
+    }
+    if (constraints.maxHeight.isFinite &&
+        constraints.maxHeight > _canvasBaseHeight) {
+      _canvasBaseHeight = constraints.maxHeight;
+    }
+    return _canvasBaseHeight;
+  }
+
+  double _canvasBaseWidth = 0;
+  double _canvasBaseHeight = 0;
+
+  /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
+  bool _immersiveBubble = false;
+
+  void _setImmersiveBubble(bool value) {
+    if (_immersiveBubble == value || !mounted) return;
+    setState(() => _immersiveBubble = value);
+  }
+
   /// "Ekle" levhası: TEK sayfa, iki sütunlu ızgara (bkz. attach_sheet.dart).
   /// Eski iki katmanlı yapı (küçük açılır menü + ayrı "tüm ekler" levhası)
   /// kaldırıldı; her seçenek tek dokunuşla görünür.
@@ -3391,6 +3427,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onAttachmentChanged: _updateAttachment,
             onFieldFocused: _setFormatTarget,
             onFieldDisposed: _clearFormatTargetFor,
+            onImmersiveChanged: _setImmersiveBubble,
           )
         : PdfNotePane(
             key: ValueKey('pdf-pane-${doc.id}'),
@@ -3404,6 +3441,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onAttachmentChanged: _updateAttachment,
             onFieldFocused: _setFormatTarget,
             onFieldDisposed: _clearFormatTargetFor,
+            onImmersiveChanged: _setImmersiveBubble,
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3884,17 +3922,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             builder: (context, constraints) => SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 96),
               child: NotePageCanvas(
-                // KLAVYEDEN BAĞIMSIZ taban: `constraints.maxHeight` klavye
-                // animasyonunun her karesinde değişiyor ve sayfa tuvalini
-                // (yüzen görsellerin bantları, satır ölçümleri) kare kare
-                // yeniden hesaplatıyordu. Klavyenin yediği yüksekliği geri
-                // eklemek değeri SABİTLER: tuval "klavye kapalıyken ne kadar
-                // yer var" sorusunun cevabını kullanır, animasyon boyunca
-                // hiç değişmez. (Alt sınır zaten bir MİNİMUM; sayfa
-                // kaydırılabilir olduğu için fazlası görünmez.)
-                minHeight:
-                    constraints.maxHeight +
-                    MediaQuery.viewInsetsOf(context).bottom,
+                // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
+                minHeight: _stableCanvasHeight(constraints),
                 images: imageAttachments,
                 onRemove: _removeAttachment,
                 onChanged: _updateAttachment,
@@ -4277,7 +4306,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // ANİMASYON KARESİNDE yeniden kuruyordu. [_KeyboardLift] yalnız
           // dolguyu yeniler; çocuk AYNI widget örneği olduğu için Flutter alt
           // ağacı hiç yeniden kurmaz.
-          bottomNavigationBar: _KeyboardLift(
+          // Balona yazılırken alt çubuk TÜMÜYLE gizlenir: klavye + belge
+          // bölmesi + iki çubuk aynı ekrana sığmıyor ve balon kartı altta
+          // kalıyordu (kullanıcı isteği 2026-08-08). Kip bitince geri gelir.
+          bottomNavigationBar: _immersiveBubble
+              ? null
+              : _KeyboardLift(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

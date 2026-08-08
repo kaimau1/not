@@ -4121,6 +4121,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kaydet'**
   String get bubbleSave;
+
+  /// No description provided for @bubbleTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get bubbleTitleHint;
+
+  /// No description provided for @bubbleUrgent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil (yanıp söner)'**
+  String get bubbleUrgent;
 }
 
 class _AppLocalizationsDelegate

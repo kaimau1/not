@@ -1,0 +1,115 @@
+import 'package:flutter/material.dart';
+
+/// İçeriği **çift dokunuşla** yakınlaştıran, sonra iki parmakla serbestçe
+/// yakınlaştırıp uzaklaştırılabilen kutu.
+///
+/// Slaytlarda kullanılıyor: sunum sayfası ekrana sığdırılmış hâlde geliyor ve
+/// küçük yazılar okunmuyordu (kullanıcı isteği 2026-08-08: "sayfalara zoom
+/// yapamıyorum; çift tıklayınca zoom yapsın, sonra iki parmakla zoom in/out
+/// olsun").
+///
+/// Çift dokunuş DOKUNULAN NOKTAYA yakınlaşır (ekranın ortasına değil):
+/// okunmak istenen yer parmağın altındaki yerdir. İkinci çift dokunuş sığdır
+/// hâline döner. Geçiş animasyonlu — ani sıçrama nerede olduğunu kaybettirir.
+///
+/// [onZoomChanged] yakınlaşma durumu değişince bildirir; slayt görüntüleyicisi
+/// bununla `PageView`i kilitler — yakınken yatay sürükleme slayt değiştirmek
+/// değil, büyütülmüş sayfada gezinmektir.
+class ZoomBox extends StatefulWidget {
+  const ZoomBox({
+    super.key,
+    required this.child,
+    this.onZoomChanged,
+    this.maxScale = 5,
+    this.doubleTapScale = 2.5,
+  });
+
+  final Widget child;
+  final ValueChanged<bool>? onZoomChanged;
+  final double maxScale;
+
+  /// Çift dokunuşun götürdüğü ölçek.
+  final double doubleTapScale;
+
+  @override
+  State<ZoomBox> createState() => _ZoomBoxState();
+}
+
+class _ZoomBoxState extends State<ZoomBox> with SingleTickerProviderStateMixin {
+  final _controller = TransformationController();
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  Animation<Matrix4>? _tween;
+
+  bool _zoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_onMatrixChanged);
+    _anim.addListener(() {
+      final tween = _tween;
+      if (tween != null) _controller.value = tween.value;
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _anim.dispose();
+    super.dispose();
+  }
+
+  void _onMatrixChanged() {
+    final zoomed = _controller.value.getMaxScaleOnAxis() > 1.02;
+    if (zoomed == _zoomed) return;
+    _zoomed = zoomed;
+    widget.onZoomChanged?.call(zoomed);
+    // Yalnız durum DEĞİŞİNCE yeniden çizilir: her ölçek karesinde setState
+    // çağırmak yakınlaştırmayı takılmalı gösterirdi.
+    setState(() {});
+  }
+
+  void _animateTo(Matrix4 target) {
+    _tween = Matrix4Tween(begin: _controller.value, end: target).animate(
+      CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic),
+    );
+    _anim.forward(from: 0);
+  }
+
+  void _handleDoubleTap(TapDownDetails details) {
+    if (_zoomed) {
+      _animateTo(Matrix4.identity());
+      return;
+    }
+    // Dokunulan nokta sabit kalacak şekilde ölçekle: önce noktaya taşı,
+    // ölçekle, sonra geri taşı.
+    final scale = widget.doubleTapScale;
+    final position = details.localPosition;
+    _animateTo(
+      Matrix4.identity()
+        ..translateByDouble(position.dx, position.dy, 0, 1)
+        ..scaleByDouble(scale, scale, scale, 1)
+        ..translateByDouble(-position.dx, -position.dy, 0, 1),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    // Çift dokunuşun KONUMU gerekiyor; `onDoubleTap` konum vermiyor, bu
+    // yüzden `onDoubleTapDown` ile yakalanıp burada saklanıyor.
+    onDoubleTapDown: _handleDoubleTap,
+    onDoubleTap: () {},
+    child: InteractiveViewer(
+      transformationController: _controller,
+      minScale: 1,
+      maxScale: widget.maxScale,
+      // Yakın değilken kaydırma KAPALI: sığdırılmış slaytta tek parmak
+      // hareketi slayt geçişi olmalı, boşlukta gezinme değil.
+      panEnabled: _zoomed,
+      child: widget.child,
+    ),
+  );
+}

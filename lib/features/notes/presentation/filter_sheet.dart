@@ -199,16 +199,22 @@ class DashboardFilterRow extends ConsumerWidget {
   }
 }
 
-/// "Süz" düğmesinin sağındaki FAVORİ kısayolları.
+/// "Süz" düğmesinin sağındaki kısayol çipleri.
 ///
 /// Süz levhasında yıldızlanan seçenekler burada tek dokunuşluk çip olur:
-/// dokunmak süzgeci uygular, ikinci dokunuş kaldırır (sıralamada kaldırma yok,
-/// bir sıralama her zaman seçilidir). ZATEN UYGULANMIŞ olan favori çizilmez —
-/// solundaki kaldırılabilir çip onu zaten gösteriyor, ikisi yan yana aynı
-/// etiketi iki kez yazardı.
+/// dokunmak süzgeci uygular. ZATEN UYGULANMIŞ olan çizilmez — solundaki
+/// kaldırılabilir çip onu zaten gösteriyor, ikisi yan yana aynı etiketi iki
+/// kez yazardı.
+///
+/// **Kullanıcının KENDİ ETİKETLERİ varsayılan olarak burada** (istek
+/// 2026-08-08: "Süz'ün yanında benim eklediklerim varsayılan ekli olsun").
+/// Eskiden etiketin çip olarak görünmesi için önce Süz levhasından
+/// yıldızlanması gerekiyordu; oysa etiketler zaten kullanıcının kendi
+/// eklediği şeyler — ayrıca "favorile" adımı istemek gereksiz bir kapıydı.
+/// Yıldızlananlar önce gelir (kullanıcı sırayı böyle seçmiş), kalan etiketler
+/// arkadan; yinelenen çizilmez.
 List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
   final favorites = ref.watch(favoriteFiltersProvider);
-  if (favorites.isEmpty) return const [];
   final l10n = context.l10n;
   final filter = ref.watch(noteFilterProvider);
   final folderId = ref.watch(selectedFolderProvider);
@@ -269,6 +275,23 @@ List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
           ),
         );
     }
+  }
+
+  // Yıldızlanmamış etiketler: kullanıcının kendi eklediği her etiket tek
+  // dokunuşla süzgeç olur. Zaten uygulanmış olan ve yukarıda favori olarak
+  // çizilmiş olan atlanır.
+  final favoriteTags = {
+    for (final token in favorites)
+      if (token.startsWith('tag:')) token.substring(4),
+  };
+  for (final name in tags) {
+    if (name == tag || favoriteTags.contains(name)) continue;
+    chips.add(
+      _FavoriteChip(
+        label: '#$name',
+        onTap: () => ref.read(selectedTagProvider.notifier).set(name),
+      ),
+    );
   }
   return chips;
 }

@@ -2185,4 +2185,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get bubbleSave => 'Kaydet';
+
+  @override
+  String get bubbleTitleHint => 'Başlık';
+
+  @override
+  String get bubbleUrgent => 'Acil (yanıp söner)';
 }
