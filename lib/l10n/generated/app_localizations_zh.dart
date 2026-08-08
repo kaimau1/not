@@ -2085,6 +2085,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => '以纯文本形式';
+
+  @override
+  String get shareAsTextInfo => '把笔记正文和页面笔记发送到任意应用。';
+
+  @override
+  String get shareAsTextEmpty => '这条笔记没有可分享的文字。';
+
+  @override
+  String get sharePdfWithBubbles => '以带气泡的 PDF 形式';
+
+  @override
+  String get sharePdfWithBubblesInfo => '气泡、高亮和手写会印进 PDF；对方不需要安装 Not 应用。';
+
+  @override
+  String get sharePdfWithBubblesNone => '这条笔记中没有带气泡或手写的 PDF。';
+
+  @override
+  String get sharePdfWithBubblesPreparing => '正在准备带气泡的 PDF…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => '（带气泡）';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

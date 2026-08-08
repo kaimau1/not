@@ -2104,6 +2104,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'プレーンテキストとして';
+
+  @override
+  String get shareAsTextInfo => 'メモの本文とページメモを任意のアプリへ送ります。';
+
+  @override
+  String get shareAsTextEmpty => 'このメモには共有できるテキストがありません。';
+
+  @override
+  String get sharePdfWithBubbles => '吹き出し入りPDFとして';
+
+  @override
+  String get sharePdfWithBubblesInfo => '吹き出し・ハイライト・手書きがPDFに焼き込まれます。相手にNotアプリは不要です。';
+
+  @override
+  String get sharePdfWithBubblesNone => 'このメモには吹き出しや手書きのあるPDFがありません。';
+
+  @override
+  String get sharePdfWithBubblesPreparing => '吹き出し入りPDFを準備しています…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => '（吹き出し入り）';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

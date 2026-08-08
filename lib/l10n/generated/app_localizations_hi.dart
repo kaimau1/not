@@ -2142,6 +2142,30 @@ class AppLocalizationsHi extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'सादे टेक्स्ट के रूप में';
+
+  @override
+  String get shareAsTextInfo => 'नोट का टेक्स्ट और पेज नोट्स किसी भी ऐप को भेजता है।';
+
+  @override
+  String get shareAsTextEmpty => 'इस नोट में साझा करने लायक कोई टेक्स्ट नहीं है।';
+
+  @override
+  String get sharePdfWithBubbles => 'बबल वाली PDF के रूप में';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; पाने वाले को Not ऐप की ज़रूरत नहीं।';
+
+  @override
+  String get sharePdfWithBubblesNone => 'इस नोट में बबल या ड्रॉइंग वाली कोई PDF नहीं है।';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'बबल वाली PDF तैयार हो रही है…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (बबल सहित)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

@@ -2147,6 +2147,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Обычным текстом';
+
+  @override
+  String get shareAsTextInfo => 'Отправляет текст заметки и заметки к страницам в любое приложение.';
+
+  @override
+  String get shareAsTextEmpty => 'В этой заметке нет текста для отправки.';
+
+  @override
+  String get sharePdfWithBubbles => 'PDF с выносками';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Выноски, выделения и рисунки впечатываются в PDF; получателю не нужно приложение Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'В этой заметке нет PDF с выносками или рисунками.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Готовится PDF с выносками…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (с выносками)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

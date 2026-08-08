@@ -18,7 +18,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/router.dart';
@@ -60,6 +59,7 @@ import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
 import '../scan_review_screen.dart';
+import '../share_sheet.dart';
 import '../voice_capture_sheet.dart';
 import 'ai_result_sheet.dart';
 import 'attach_sheet.dart';
@@ -2170,20 +2170,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// Paylaş levhası: düz metin / not paketi (`.notpaket`) / balonlu PDF.
+  ///
+  /// Eskiden menüdeki "Paylaş" doğrudan düz metni gönderiyordu; PDF notunun
+  /// düz metni çoğu zaman boş olduğu için düğme sessizce hiçbir şey yapmıyor,
+  /// belgenin üzerindeki balonlar da hiçbir yoldan karşı tarafa gitmiyordu
+  /// (kullanıcı bulgusu 2026-08-08). Bekleyen yazım önce kesinleşir: paylaşılan
+  /// paket/PDF son hâli taşımalı.
   Future<void> _share() async {
     final note = _note;
     if (note == null) return;
-    final text = note.toPlainText();
-    if (text.isEmpty) return;
-    await SharePlus.instance.share(
-      ShareParams(
-        text: text,
-        // Başlık biçimlendirilebiliyor: paylaşım konusuna işaretsiz hâli gider.
-        subject: note.displayTitle.trim().isEmpty
-            ? 'Not'
-            : note.displayTitle.trim(),
-      ),
-    );
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    if (!mounted) return;
+    await showNoteShareSheet(context, ref, _note ?? note);
   }
 
   /// Notu cihazın TTS'iyle sesli okur (model çağrısı yok). Kilitli notta

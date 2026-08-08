@@ -559,5 +559,13 @@
   "fontGroupSerif": "衬线",
   "fontGroupMono": "等宽",
   "fontGroupHand": "手写",
-  "appFontDefaultSuffix": "默认"
+  "appFontDefaultSuffix": "默认",
+  "shareAsText": "以纯文本形式",
+  "shareAsTextInfo": "把笔记正文和页面笔记发送到任意应用。",
+  "shareAsTextEmpty": "这条笔记没有可分享的文字。",
+  "sharePdfWithBubbles": "以带气泡的 PDF 形式",
+  "sharePdfWithBubblesInfo": "气泡、高亮和手写会印进 PDF；对方不需要安装 Not 应用。",
+  "sharePdfWithBubblesNone": "这条笔记中没有带气泡或手写的 PDF。",
+  "sharePdfWithBubblesPreparing": "正在准备带气泡的 PDF…",
+  "sharePdfWithBubblesSuffix": "（带气泡）"
 }

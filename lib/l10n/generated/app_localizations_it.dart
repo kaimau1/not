@@ -2156,6 +2156,30 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Come testo semplice';
+
+  @override
+  String get shareAsTextInfo => 'Invia il testo della nota e le note di pagina a qualsiasi app.';
+
+  @override
+  String get shareAsTextEmpty => 'Questa nota non ha testo da condividere.';
+
+  @override
+  String get sharePdfWithBubbles => 'Come PDF con fumetti';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chi lo riceve non ha bisogno dell\'app Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Questa nota non ha PDF con fumetti o disegni.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Preparazione del PDF con fumetti…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (con fumetti)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

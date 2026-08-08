@@ -559,5 +559,13 @@
   "fontGroupSerif": "С засечками",
   "fontGroupMono": "Моноширинный",
   "fontGroupHand": "Рукописный",
-  "appFontDefaultSuffix": "по умолчанию"
+  "appFontDefaultSuffix": "по умолчанию",
+  "shareAsText": "Обычным текстом",
+  "shareAsTextInfo": "Отправляет текст заметки и заметки к страницам в любое приложение.",
+  "shareAsTextEmpty": "В этой заметке нет текста для отправки.",
+  "sharePdfWithBubbles": "PDF с выносками",
+  "sharePdfWithBubblesInfo": "Выноски, выделения и рисунки впечатываются в PDF; получателю не нужно приложение Not.",
+  "sharePdfWithBubblesNone": "В этой заметке нет PDF с выносками или рисунками.",
+  "sharePdfWithBubblesPreparing": "Готовится PDF с выносками…",
+  "sharePdfWithBubblesSuffix": " (с выносками)"
 }

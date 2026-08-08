@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -201,6 +202,96 @@ void main() {
         quarterTurns: 1,
       );
       final out = PdfEdit.burnInk(rotated, [stroke()]);
+      expect(PdfEdit.pageCount(out), 1);
+      expect(rotationOf(out, 0), 1);
+    });
+  });
+
+  group('burnBubbles', () {
+    // Font ANA izolede okunur (uygulamada rootBundle, testte diskten): hazır
+    // Helvetica WinAnsi kodlu ve içinde ı ğ ş İ yok.
+    final font = Uint8List.fromList(
+      File('assets/fonts/PTSans-Regular.ttf').readAsBytesSync(),
+    );
+
+    PageBubble bubble({
+      int page = 1,
+      String title = 'Kaynak?',
+      String text = 'burayı düzelt: ışığı göster',
+      List<PageBubbleRect> rects = const [],
+    }) => PageBubble(
+      id: 'b$page$title',
+      page: page,
+      x: 0.5,
+      y: 0.4,
+      title: title,
+      text: text,
+      color: 0xFF66BB6A,
+      rects: rects,
+    );
+
+    test('balonun yazısı BELGENİN İÇİNE girer (Türkçe harfler bozulmadan)', () {
+      final before = sample(2);
+      final after = PdfEdit.burnBubbles(
+        before,
+        [bubble(), bubble(page: 2, title: 'Sunum', text: 'şunu göster')],
+        fontBytes: font,
+      );
+      expect(PdfEdit.pageCount(after), 2);
+      final texts = pageTexts(after);
+      // Sayfanın kendi metni yerinde: damga içeriğin ÜZERİNE basılır.
+      expect(texts[0], contains('P1'));
+      expect(texts[0], contains('Kaynak?'));
+      expect(texts[0], contains('ışığı'));
+      expect(texts[1], contains('şunu'));
+      // Balon YALNIZ kendi sayfasına basılır.
+      expect(texts[0], isNot(contains('şunu')));
+    });
+
+    test('vurgu (yazısız) da basılır — bayt büyür, metin bozulmaz', () {
+      final before = sample(1);
+      final after = PdfEdit.burnBubbles(
+        before,
+        [
+          bubble(
+            title: '',
+            text: '',
+            rects: const [PageBubbleRect(0.1, 0.2, 0.9, 0.24)],
+          ),
+        ],
+        fontBytes: font,
+      );
+      expect(after.length, greaterThan(before.length));
+      expect(pageTexts(after), ['P1']);
+    });
+
+    test('boş balon ve olmayan sayfa atlanır', () {
+      // Yazısı ve vurgusu olmayan serbest balon: basılacak bir şeyi yok.
+      expect(
+        () => PdfEdit.burnBubbles(sample(1), [
+          bubble(title: '', text: ''),
+        ], fontBytes: font),
+        throwsA(isA<PdfEditException>()),
+      );
+      expect(
+        () => PdfEdit.burnBubbles(sample(1), const [], fontBytes: font),
+        throwsA(isA<PdfEditException>()),
+      );
+      // Belgede olmayan sayfanın balonu işi düşürmez.
+      final out = PdfEdit.burnBubbles(sample(1), [
+        bubble(),
+        bubble(page: 9, title: 'Yok'),
+      ], fontBytes: font);
+      expect(pageTexts(out).single, isNot(contains('Yok')));
+    });
+
+    test('döndürülmüş sayfada da çalışır (damga dönüşümü uygulanır)', () {
+      final rotated = PdfEdit.rotatePages(
+        sample(1),
+        pageIndexes: [0],
+        quarterTurns: 1,
+      );
+      final out = PdfEdit.burnBubbles(rotated, [bubble()], fontBytes: font);
       expect(PdfEdit.pageCount(out), 1);
       expect(rotationOf(out, 0), 1);
     });

@@ -261,9 +261,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Future<void> _shareSelected(Set<String> ids) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
     final text = _joinSelected(ids);
     ref.read(selectedNoteIdsProvider.notifier).clear();
-    if (text.trim().isEmpty) return;
+    // Sessiz kapanmak YOK: yalnız belge notu seçildiyse (düz metni boştur)
+    // düğmenin neden bir şey yapmadığı söylenir.
+    if (text.trim().isEmpty) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.shareAsTextEmpty)));
+      return;
+    }
     await SharePlus.instance.share(ShareParams(text: text));
   }
 

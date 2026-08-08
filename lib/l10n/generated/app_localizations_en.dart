@@ -2139,6 +2139,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareAsNotePreparing => 'Preparing note package…';
 
   @override
+  String get shareAsText => 'As plain text';
+
+  @override
+  String get shareAsTextInfo => 'Sends the note\'s text and page notes to any app.';
+
+  @override
+  String get shareAsTextEmpty => 'This note has no text to share.';
+
+  @override
+  String get sharePdfWithBubbles => 'As PDF with bubbles';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Bubbles, highlights and drawings are stamped into the PDF; the recipient does not need the Not app.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'This note has no PDF carrying bubbles or drawings.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Preparing PDF with bubbles…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (with bubbles)';
+
+  @override
   String get bubbleStar => 'Star';
 
   @override
