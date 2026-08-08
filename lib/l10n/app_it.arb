@@ -559,5 +559,13 @@
   "fontGroupSerif": "Serif",
   "fontGroupMono": "Monospazio",
   "fontGroupHand": "Corsivo",
-  "appFontDefaultSuffix": "predefinito"
+  "appFontDefaultSuffix": "predefinito",
+  "shareAsText": "Come testo semplice",
+  "shareAsTextInfo": "Invia il testo della nota e le note di pagina a qualsiasi app.",
+  "shareAsTextEmpty": "Questa nota non ha testo da condividere.",
+  "sharePdfWithBubbles": "Come PDF con fumetti",
+  "sharePdfWithBubblesInfo": "Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chi lo riceve non ha bisogno dell'app Not.",
+  "sharePdfWithBubblesNone": "Questa nota non ha PDF con fumetti o disegni.",
+  "sharePdfWithBubblesPreparing": "Preparazione del PDF con fumetti…",
+  "sharePdfWithBubblesSuffix": " (con fumetti)"
 }

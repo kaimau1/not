@@ -2131,6 +2131,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'كنص عادي';
+
+  @override
+  String get shareAsTextInfo => 'يرسل نص الملاحظة وملاحظات الصفحات إلى أي تطبيق.';
+
+  @override
+  String get shareAsTextEmpty => 'لا يوجد نص في هذه الملاحظة لمشاركته.';
+
+  @override
+  String get sharePdfWithBubbles => 'كملف PDF مع الفقاعات';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ لا يحتاج المستلم إلى تطبيق Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'لا يوجد في هذه الملاحظة ملف PDF يحمل فقاعات أو رسومات.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'يجري تجهيز ملف PDF مع الفقاعات…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (مع الفقاعات)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

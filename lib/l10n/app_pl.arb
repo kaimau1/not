@@ -559,5 +559,13 @@
   "fontGroupSerif": "Szeryfowe",
   "fontGroupMono": "Maszynowe",
   "fontGroupHand": "Odręczne",
-  "appFontDefaultSuffix": "domyślna"
+  "appFontDefaultSuffix": "domyślna",
+  "shareAsText": "Jako zwykły tekst",
+  "shareAsTextInfo": "Wysyła tekst notatki i notatki stron do dowolnej aplikacji.",
+  "shareAsTextEmpty": "Ta notatka nie ma tekstu do udostępnienia.",
+  "sharePdfWithBubbles": "Jako PDF z dymkami",
+  "sharePdfWithBubblesInfo": "Dymki, zakreślenia i rysunki są wypalane w pliku PDF; odbiorca nie potrzebuje aplikacji Not.",
+  "sharePdfWithBubblesNone": "Ta notatka nie zawiera pliku PDF z dymkami ani rysunkami.",
+  "sharePdfWithBubblesPreparing": "Przygotowywanie pliku PDF z dymkami…",
+  "sharePdfWithBubblesSuffix": " (z dymkami)"
 }

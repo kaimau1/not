@@ -559,5 +559,13 @@
   "fontGroupSerif": "Serif",
   "fontGroupMono": "Monospace",
   "fontGroupHand": "Tulisan tangan",
-  "appFontDefaultSuffix": "bawaan"
+  "appFontDefaultSuffix": "bawaan",
+  "shareAsText": "Sebagai teks biasa",
+  "shareAsTextInfo": "Mengirim teks catatan dan catatan halaman ke aplikasi mana pun.",
+  "shareAsTextEmpty": "Catatan ini tidak punya teks untuk dibagikan.",
+  "sharePdfWithBubbles": "Sebagai PDF bergelembung",
+  "sharePdfWithBubblesInfo": "Gelembung, sorotan, dan coretan dicetak ke dalam PDF; penerima tidak perlu aplikasi Not.",
+  "sharePdfWithBubblesNone": "Catatan ini tidak punya PDF bergelembung atau bercoretan.",
+  "sharePdfWithBubblesPreparing": "Menyiapkan PDF bergelembung…",
+  "sharePdfWithBubblesSuffix": " (bergelembung)"
 }

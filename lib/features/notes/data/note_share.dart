@@ -10,6 +10,7 @@ import '../domain/note.dart';
 import 'attachment_repository.dart';
 import 'note_package.dart';
 import 'notes_repository.dart';
+import 'pdf_edit.dart';
 
 /// Notu **başka bir Not kullanıcısına** gönderme ve gelen paketi açma.
 ///
@@ -43,6 +44,54 @@ class NoteShare {
         subject: shareSubject,
       ),
     );
+  }
+
+  /// Notun PDF eklerini **balonlarıyla birlikte** paylaşır.
+  ///
+  /// [share] Not uygulaması olan bir alıcı içindir (balonlar DÜZENLENEBİLİR
+  /// gelir); bu yol ise herkese açılabilen bir PDF üretir: balonlar, vurgular
+  /// ve el yazısı belgenin İÇİNE basılır (bkz. [PdfEdit.burnBubbles]).
+  ///
+  /// Ekin kendisine DOKUNULMAZ: damgalı kopya geçici klasöre yazılır, uygulama
+  /// içindeki belge katmanlı (yani hâlâ düzenlenebilir) kalır.
+  ///
+  /// Paylaşılan dosya sayısını döner; 0 = notta damgalanacak PDF yok.
+  static Future<int> shareAnnotatedPdfs(
+    Note note, {
+    required AttachmentRepository? attachments,
+    required Uint8List fontBytes,
+    required String fileSuffix,
+    required String shareSubject,
+  }) async {
+    if (attachments == null) return 0;
+    final files = <XFile>[];
+    final dir = await getTemporaryDirectory();
+    for (final attachment in note.attachments) {
+      if (attachment.kind != AttachmentKind.pdf) continue;
+      if (attachment.bubbles.isEmpty && attachment.ink.isEmpty) continue;
+      final bytes = await attachments.readBytes(attachment);
+      if (bytes == null) continue;
+      var out = bytes;
+      if (attachment.ink.isNotEmpty) {
+        out = await PdfEdit.burnInkInBackground(out, attachment.ink);
+      }
+      if (attachment.bubbles.isNotEmpty) {
+        out = await PdfEdit.burnBubblesInBackground(
+          out,
+          attachment.bubbles,
+          fontBytes: fontBytes,
+        );
+      }
+      final base = p.basenameWithoutExtension(attachment.fileName);
+      final file = File(p.join(dir.path, '$base$fileSuffix.pdf'));
+      await file.writeAsBytes(out, flush: true);
+      files.add(XFile(file.path, mimeType: 'application/pdf'));
+    }
+    if (files.isEmpty) return 0;
+    await SharePlus.instance.share(
+      ShareParams(files: files, subject: shareSubject),
+    );
+    return files.length;
   }
 
   /// Notun paket baytları (paylaşmadan; testler ve yedekleme için ayrı).

@@ -2157,6 +2157,30 @@ class AppLocalizationsFr extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'En texte brut';
+
+  @override
+  String get shareAsTextInfo => 'Envoie le texte de la note et les notes de page vers n\'importe quelle application.';
+
+  @override
+  String get shareAsTextEmpty => 'Cette note n\'a aucun texte à partager.';
+
+  @override
+  String get sharePdfWithBubbles => 'En PDF avec bulles';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Les bulles, surlignages et dessins sont imprimés dans le PDF ; le destinataire n\'a pas besoin de l\'application Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Cette note ne contient aucun PDF avec bulles ou dessins.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Préparation du PDF avec bulles…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (avec bulles)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

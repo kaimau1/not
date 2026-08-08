@@ -559,5 +559,13 @@
   "fontGroupSerif": "Serif",
   "fontGroupMono": "Monoespaciada",
   "fontGroupHand": "Manuscrita",
-  "appFontDefaultSuffix": "predeterminada"
+  "appFontDefaultSuffix": "predeterminada",
+  "shareAsText": "Como texto sin formato",
+  "shareAsTextInfo": "Envía el texto de la nota y las notas de página a cualquier aplicación.",
+  "shareAsTextEmpty": "Esta nota no tiene texto para compartir.",
+  "sharePdfWithBubbles": "Como PDF con globos",
+  "sharePdfWithBubblesInfo": "Los globos, resaltados y dibujos se estampan dentro del PDF; quien lo reciba no necesita la app Not.",
+  "sharePdfWithBubblesNone": "Esta nota no tiene ningún PDF con globos o dibujos.",
+  "sharePdfWithBubblesPreparing": "Preparando el PDF con globos…",
+  "sharePdfWithBubblesSuffix": " (con globos)"
 }

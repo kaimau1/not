@@ -1,6 +1,7 @@
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' show Offset, Size;
+import 'dart:ui' show Offset, Rect, Size;
 
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
@@ -130,6 +131,222 @@ class PdfEdit {
     }
   }
 
+  /// Not balonlarını ve vurguları belgenin İÇİNE basar (düzleştirme).
+  ///
+  /// Neden gerekli (kullanıcı isteği 2026-08-08: "PDF modunda balonlu PDF'yi
+  /// balonlarıyla beraber atabilmeliyim"): balonlar ekin `bubbles` alanında
+  /// yaşıyor, yani PDF dosyası olduğu gibi paylaşıldığında karşı taraf boş
+  /// belgeyi görüyordu. Not uygulaması olan bir alıcıya `.notpaket` gönderilir
+  /// (balonlar DÜZENLENEBİLİR gelir); bu yol ise **herkese** açılabilen bir PDF
+  /// üretir — balon ve vurgular sayfaya çizilmiş olarak.
+  ///
+  /// Ekranla aynı görüntü: vurgu = soluk zemin + ortasından geçen uçları
+  /// yuvarlak kalın iz (fosforlu kalem), balon = ucundaki renkli nokta + not
+  /// kutusu (belge rengi zemin, solda balonun renginde şerit). Kutu tasarımı
+  /// uygulamadaki yazma kartıyla (BubbleDock) aynı dili konuşur.
+  ///
+  /// [fontBytes] gömülecek TTF: `pdf` paketindeki gibi burada da hazır
+  /// Helvetica WinAnsi kodludur ve içinde ı ğ ş İ YOKTUR — Türkçe not olduğu
+  /// gibi bozuk çıkardı. Font baytları ANA izolede okunur (rootBundle izolede
+  /// yok, bkz. NotePdf).
+  ///
+  /// [bubbles] koordinatları SAYFA ORANIDIR (0–1, sol-ÜST orijinli); sayfa
+  /// `/Rotate` taşıyorsa damga [stampTransform] ile sayfanın GÖRÜNEN hâline
+  /// çevrilir — çizimlerdeki kuralın aynısı.
+  static Uint8List burnBubbles(
+    Uint8List bytes,
+    List<PageBubble> bubbles, {
+    required Uint8List fontBytes,
+  }) {
+    if (bubbles.isEmpty) throw const PdfEditException('no-bubbles');
+    final doc = PdfDocument(inputBytes: bytes);
+    try {
+      final byPage = <int, List<PageBubble>>{};
+      for (final b in bubbles) {
+        final index = b.page - 1;
+        if (index < 0 || index >= doc.pages.count) continue;
+        if (!b.isHighlight && b.text.trim().isEmpty && b.title.trim().isEmpty) {
+          continue; // boş serbest balon: sayfada gösterecek bir şeyi yok
+        }
+        (byPage[index] ??= []).add(b);
+      }
+      if (byPage.isEmpty) throw const PdfEditException('no-bubbles');
+      final title = PdfTrueTypeFont(fontBytes, 9, style: PdfFontStyle.bold);
+      final body = PdfTrueTypeFont(fontBytes, 8.5);
+      for (final entry in byPage.entries) {
+        final page = doc.pages[entry.key];
+        final turns = page.rotation.index;
+        final t = stampTransform(page.size, turns);
+        final visible = turns.isOdd
+            ? Size(page.size.height, page.size.width)
+            : page.size;
+        final g = page.graphics;
+        final state = g.save();
+        try {
+          if (t.angle != 0) {
+            g.translateTransform(t.translate.dx, t.translate.dy);
+            g.rotateTransform(t.angle);
+          }
+          for (final bubble in entry.value) {
+            _drawHighlight(g, bubble, visible);
+          }
+          // Kutular vurguların ÜSTÜNE çizilir: iki balon aynı satırdaysa yazı
+          // fosforlu izin altında kalmasın.
+          for (final bubble in entry.value) {
+            _drawBubbleNote(g, bubble, visible, title: title, body: body);
+          }
+        } finally {
+          g.restore(state);
+        }
+      }
+      return Uint8List.fromList(doc.saveSync());
+    } finally {
+      doc.dispose();
+    }
+  }
+
+  /// Vurgu izleri: soluk zemin + ortasından geçen kalın iz (uçları yuvarlak).
+  /// Ekrandaki `_HighlightPainter` ile aynı oranlar (%20 / %42, satırın %58'i).
+  static void _drawHighlight(PdfGraphics g, PageBubble bubble, Size page) {
+    if (bubble.rects.isEmpty) return;
+    final wash = _brush(bubble.color, 0.20);
+    final stroke = _brush(bubble.color, 0.42);
+    for (final r in bubble.rects) {
+      final rect = Rect.fromLTRB(
+        r.left * page.width,
+        r.top * page.height,
+        r.right * page.width,
+        r.bottom * page.height,
+      );
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      g.drawRectangle(brush: wash, bounds: rect);
+      final band = rect.height * 0.58;
+      final top = rect.center.dy - band / 2;
+      g.drawRectangle(
+        brush: stroke,
+        bounds: Rect.fromLTWH(rect.left, top, rect.width, band),
+      );
+      // Uçlardaki yarım daireler: "kalem izi" hissi düz dikdörtgende kayboluyor.
+      for (final cx in [rect.left, rect.right]) {
+        g.drawEllipse(
+          Rect.fromLTWH(cx - band / 2, top, band, band),
+          brush: stroke,
+        );
+      }
+    }
+  }
+
+  /// Balonun notu: ucundaki renkli nokta + kâğıda iliştirilmiş fiş görünümlü
+  /// kutu. Kutu sayfanın içine KISTIRILIR — kenardaki balonun notu sayfanın
+  /// dışına taşıp görünmez olmasın.
+  static void _drawBubbleNote(
+    PdfGraphics g,
+    PageBubble bubble,
+    Size page, {
+    required PdfFont title,
+    required PdfFont body,
+  }) {
+    final anchorX = (bubble.x * page.width).clamp(0.0, page.width);
+    final anchorY = (bubble.y * page.height).clamp(0.0, page.height);
+    // Ucundaki nokta her balonda var: not kutusu kaydırılsa bile balonun
+    // sayfada NEREYİ gösterdiği belli olsun.
+    g.drawEllipse(
+      Rect.fromLTWH(anchorX - 3, anchorY - 3, 6, 6),
+      brush: _brush(bubble.color, 1),
+      pen: PdfPen(PdfColor(255, 255, 255), width: 0.8),
+    );
+
+    final head = bubble.title.trim();
+    // Çok uzun not sayfanın yarısını kaplayan bir kutuya dönüşürdü: damgaya
+    // ilk 400 karakter girer, tamamı uygulamada (ve `.notpaket` paylaşımında)
+    // durmaya devam eder.
+    final full = bubble.text.trim();
+    // Kesme RUNE sınırında: `substring` çok baytlı bir karakterin ortasından
+    // kesip yarım bir kod noktası bırakabilir.
+    final runes = full.runes.toList();
+    final text = runes.length > 400
+        ? '${String.fromCharCodes(runes.take(400))}…'
+        : full;
+    if (head.isEmpty && text.isEmpty) return;
+
+    const pad = 5.0;
+    final width = math.min(200.0, math.max(90.0, page.width * 0.42));
+    final inner = width - pad * 2 - 4; // 4 = soldaki renk şeridi
+    final headHeight = head.isEmpty ? 0.0 : _blockHeight(title, head, inner);
+    final bodyHeight = text.isEmpty ? 0.0 : _blockHeight(body, text, inner);
+    final height =
+        pad * 2 +
+        headHeight +
+        (head.isEmpty || text.isEmpty ? 0 : 2) +
+        bodyHeight;
+
+    // Kutu balonun ucunun ALTINA açılır; sığmıyorsa üstüne alınır.
+    var left = anchorX - width / 2;
+    var top = anchorY + 8;
+    if (top + height > page.height) top = anchorY - 8 - height;
+    left = left.clamp(0.0, math.max(0.0, page.width - width));
+    top = top.clamp(0.0, math.max(0.0, page.height - height));
+    final box = Rect.fromLTWH(left, top, width, height);
+
+    g
+      ..drawRectangle(
+        brush: PdfSolidBrush(PdfColor(255, 255, 255, 242)),
+        pen: PdfPen(_color(bubble.color, 0.45), width: 0.6),
+        bounds: box,
+      )
+      // Soldaki renk şeridi (uygulamadaki yazma kartının aynısı).
+      ..drawRectangle(
+        brush: _brush(bubble.color, 1),
+        bounds: Rect.fromLTWH(box.left, box.top, 4, box.height),
+      );
+
+    var y = box.top + pad;
+    if (head.isNotEmpty) {
+      g.drawString(
+        head,
+        title,
+        brush: PdfSolidBrush(PdfColor(20, 20, 20)),
+        bounds: Rect.fromLTWH(box.left + 4 + pad, y, inner, headHeight),
+      );
+      y += headHeight + (text.isEmpty ? 0 : 2);
+    }
+    if (text.isNotEmpty) {
+      g.drawString(
+        text,
+        body,
+        brush: PdfSolidBrush(PdfColor(35, 35, 35)),
+        bounds: Rect.fromLTWH(box.left + 4 + pad, y, inner, bodyHeight),
+      );
+    }
+  }
+
+  /// [width] genişliğine sarılan metnin yüksekliği.
+  ///
+  /// Syncfusion'ın sarmalı `drawString` içinde yapılıyor ama ölçümü dışarıya
+  /// yalnız tek satır olarak veriyor; kutu yüksekliğini önceden bilmek
+  /// gerektiği için satır sayısı buradan çıkarılır. Ölçüm KABA (kelime kırma
+  /// noktasını birebir bilmiyoruz) olduğundan bir satır PAY bırakılır — eksik
+  /// hesap son satırı kırpardı, fazlası yalnız birkaç boş piksel demek.
+  static double _blockHeight(PdfFont font, String text, double width) {
+    final line = font.measureString('Ag').height;
+    var lines = 0;
+    for (final paragraph in text.split('\n')) {
+      final w = font.measureString(paragraph).width;
+      lines += math.max(1, (w / width).ceil());
+    }
+    return (lines + 0.5) * line;
+  }
+
+  static PdfColor _color(int argb, double alpha) => PdfColor(
+    (argb >> 16) & 0xFF,
+    (argb >> 8) & 0xFF,
+    argb & 0xFF,
+    (((argb >> 24) & 0xFF) * alpha).round().clamp(0, 255),
+  );
+
+  static PdfBrush _brush(int argb, double alpha) =>
+      PdfSolidBrush(_color(argb, alpha));
+
   /// El yazısı çizimlerini belgenin İÇİNE **vektör olarak** basar.
   ///
   /// Bugüne kadar çizimler yalnız ekin `ink` alanında yaşıyordu: uygulamada
@@ -255,6 +472,21 @@ class PdfEdit {
         for (final m in maps)
           InkStroke.fromMap(Map<String, dynamic>.from(m as Map)),
       ]),
+    );
+  }
+
+  /// Balonları gömer. [PageBubble] de çizgi gibi düz veriye çevrilip izoleye
+  /// geçer (bkz. [burnInkInBackground]).
+  static Future<Uint8List> burnBubblesInBackground(
+    Uint8List bytes,
+    List<PageBubble> bubbles, {
+    required Uint8List fontBytes,
+  }) {
+    final maps = [for (final b in bubbles) b.toMap()];
+    return _bg(
+      () => burnBubbles(bytes, [
+        for (final m in maps) PageBubble.fromMap(Map<String, dynamic>.from(m)),
+      ], fontBytes: fontBytes),
     );
   }
 

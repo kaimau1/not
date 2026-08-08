@@ -4044,6 +4044,54 @@ abstract class AppLocalizations {
   /// **'Not paketi hazırlanıyor…'**
   String get shareAsNotePreparing;
 
+  /// No description provided for @shareAsText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz metin olarak'**
+  String get shareAsText;
+
+  /// No description provided for @shareAsTextInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısını ve sayfa notlarını herhangi bir uygulamaya gönderir.'**
+  String get shareAsTextInfo;
+
+  /// No description provided for @shareAsTextEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta paylaşılacak yazı yok.'**
+  String get shareAsTextEmpty;
+
+  /// No description provided for @sharePdfWithBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu PDF olarak'**
+  String get sharePdfWithBubbles;
+
+  /// No description provided for @sharePdfWithBubblesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlar, vurgular ve çizimler PDF\'in içine basılır; alıcının Not uygulaması olması gerekmez.'**
+  String get sharePdfWithBubblesInfo;
+
+  /// No description provided for @sharePdfWithBubblesNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta balon ya da çizim taşıyan PDF yok.'**
+  String get sharePdfWithBubblesNone;
+
+  /// No description provided for @sharePdfWithBubblesPreparing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu PDF hazırlanıyor…'**
+  String get sharePdfWithBubblesPreparing;
+
+  /// No description provided for @sharePdfWithBubblesSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **' (balonlu)'**
+  String get sharePdfWithBubblesSuffix;
+
   /// No description provided for @bubbleStar.
   ///
   /// In tr, this message translates to:

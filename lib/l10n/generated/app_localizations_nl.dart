@@ -2154,6 +2154,30 @@ class AppLocalizationsNl extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Als platte tekst';
+
+  @override
+  String get shareAsTextInfo => 'Stuurt de tekst van de notitie en de paginanotities naar een willekeurige app.';
+
+  @override
+  String get shareAsTextEmpty => 'Deze notitie heeft geen tekst om te delen.';
+
+  @override
+  String get sharePdfWithBubbles => 'Als pdf met ballonnen';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Ballonnen, markeringen en tekeningen worden in de pdf gebrand; de ontvanger heeft de Not-app niet nodig.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Deze notitie heeft geen pdf met ballonnen of tekeningen.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Pdf met ballonnen wordt voorbereid…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (met ballonnen)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

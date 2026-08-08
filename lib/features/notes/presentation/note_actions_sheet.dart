@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
-import '../data/attachment_repository.dart';
-import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
+import 'share_sheet.dart';
 
 /// Nota basılı tutunca açılan hızlı işlem menüsü: paylaş, kopyala,
 /// arşivle, kilitle, seç, sil. Kilitli notun içeriği kimlik doğrulaması
@@ -70,8 +68,10 @@ class _ActionsGrid extends StatelessWidget {
         note.starred ? l10n.unstar : l10n.star,
         note.starred ? Icons.star : Icons.star_outline,
       ),
+      // Tek "Paylaş": düz metin / not paketi / balonlu PDF seçimi levhada
+      // yapılır (bkz. showNoteShareSheet). Eskiden ızgarada iki ayrı kutu
+      // vardı ve "Paylaş" PDF notunda sessizce hiçbir şey yapmıyordu.
       ('share', l10n.share, Icons.share_outlined),
-      ('share-note', l10n.shareAsNote, Icons.ios_share),
       ('copy', l10n.copy, Icons.copy_outlined),
       ('select', l10n.select, Icons.check_circle_outline),
       ('folder', l10n.moveToFolder, Icons.folder_outlined),
@@ -204,41 +204,12 @@ Future<void> _runNoteAction(
       repo.setPinned(note.id, !note.pinned);
     case 'star':
       repo.setStarred(note.id, !note.starred);
+    // Üç yol tek levhada: düz metin, `.notpaket` (başka bir Not kullanıcısına,
+    // balonlar düzenlenebilir gelir) ve balonlu PDF (herkes açabilir).
     case 'share':
       if (!await unlockIfNeeded()) return;
-      final text = note.toPlainText();
-      if (text.isEmpty) return;
-      await SharePlus.instance.share(
-        ShareParams(
-          text: text,
-          subject: note.displayTitle.trim().isEmpty
-              ? l10n.appName
-              : note.displayTitle.trim(),
-        ),
-      );
-    // Notu BAŞKA BİR NOT KULLANICISINA gönderir: `.notpaket` dosyası notu
-    // ekleri, sayfa notları, çizimleri, PDF üzerindeki balonları ve
-    // görünümüyle taşır — alıcıda not aynı şekilde açılır (bkz. NoteShare).
-    case 'share-note':
-      if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
-      final messenger = ScaffoldMessenger.of(context);
-      final busy = l10n.shareAsNotePreparing;
-      messenger.showSnackBar(SnackBar(content: Text(busy)));
-      try {
-        await NoteShare.share(
-          note,
-          attachments: ref.read(attachmentRepositoryProvider),
-          fallbackName: l10n.appName,
-          shareSubject: note.displayTitle.trim().isEmpty
-              ? l10n.appName
-              : note.displayTitle.trim(),
-        );
-      } catch (e) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.genericError('$e'))),
-        );
-      }
+      await showNoteShareSheet(context, ref, note);
     case 'listen':
       // Okuma cihazın TTS'i ile yapılır (model çağrısı yok). Kilitli notun
       // içeriği sesli de okunmasın.

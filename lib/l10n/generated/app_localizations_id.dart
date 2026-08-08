@@ -2152,6 +2152,30 @@ class AppLocalizationsId extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Sebagai teks biasa';
+
+  @override
+  String get shareAsTextInfo => 'Mengirim teks catatan dan catatan halaman ke aplikasi mana pun.';
+
+  @override
+  String get shareAsTextEmpty => 'Catatan ini tidak punya teks untuk dibagikan.';
+
+  @override
+  String get sharePdfWithBubbles => 'Sebagai PDF bergelembung';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Gelembung, sorotan, dan coretan dicetak ke dalam PDF; penerima tidak perlu aplikasi Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Catatan ini tidak punya PDF bergelembung atau bercoretan.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Menyiapkan PDF bergelembung…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (bergelembung)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

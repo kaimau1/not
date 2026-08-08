@@ -2137,6 +2137,30 @@ class AppLocalizationsTr extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Düz metin olarak';
+
+  @override
+  String get shareAsTextInfo => 'Notun yazısını ve sayfa notlarını herhangi bir uygulamaya gönderir.';
+
+  @override
+  String get shareAsTextEmpty => 'Bu notta paylaşılacak yazı yok.';
+
+  @override
+  String get sharePdfWithBubbles => 'Balonlu PDF olarak';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Balonlar, vurgular ve çizimler PDF\'in içine basılır; alıcının Not uygulaması olması gerekmez.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Bu notta balon ya da çizim taşıyan PDF yok.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Balonlu PDF hazırlanıyor…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (balonlu)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

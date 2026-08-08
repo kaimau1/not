@@ -2158,6 +2158,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Als reiner Text';
+
+  @override
+  String get shareAsTextInfo => 'Sendet den Text der Notiz und die Seitennotizen an eine beliebige App.';
+
+  @override
+  String get shareAsTextEmpty => 'Diese Notiz enthält keinen Text zum Teilen.';
+
+  @override
+  String get sharePdfWithBubbles => 'Als PDF mit Sprechblasen';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; die Gegenseite braucht die Not-App nicht.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'In dieser Notiz gibt es keine PDF mit Sprechblasen oder Zeichnungen.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'PDF mit Sprechblasen wird vorbereitet…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (mit Sprechblasen)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

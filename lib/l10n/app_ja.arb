@@ -559,5 +559,13 @@
   "fontGroupSerif": "明朝体",
   "fontGroupMono": "等幅",
   "fontGroupHand": "手書き風",
-  "appFontDefaultSuffix": "既定"
+  "appFontDefaultSuffix": "既定",
+  "shareAsText": "プレーンテキストとして",
+  "shareAsTextInfo": "メモの本文とページメモを任意のアプリへ送ります。",
+  "shareAsTextEmpty": "このメモには共有できるテキストがありません。",
+  "sharePdfWithBubbles": "吹き出し入りPDFとして",
+  "sharePdfWithBubblesInfo": "吹き出し・ハイライト・手書きがPDFに焼き込まれます。相手にNotアプリは不要です。",
+  "sharePdfWithBubblesNone": "このメモには吹き出しや手書きのあるPDFがありません。",
+  "sharePdfWithBubblesPreparing": "吹き出し入りPDFを準備しています…",
+  "sharePdfWithBubblesSuffix": "（吹き出し入り）"
 }

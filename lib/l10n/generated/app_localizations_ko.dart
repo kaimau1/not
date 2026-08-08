@@ -2106,6 +2106,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => '일반 텍스트로';
+
+  @override
+  String get shareAsTextInfo => '메모의 글과 페이지 메모를 다른 앱으로 보냅니다.';
+
+  @override
+  String get shareAsTextEmpty => '이 메모에는 공유할 글이 없습니다.';
+
+  @override
+  String get sharePdfWithBubbles => '말풍선 포함 PDF로';
+
+  @override
+  String get sharePdfWithBubblesInfo => '말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 받는 사람에게 Not 앱이 필요 없습니다.';
+
+  @override
+  String get sharePdfWithBubblesNone => '이 메모에는 말풍선이나 필기가 있는 PDF가 없습니다.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => '말풍선 포함 PDF를 준비하는 중…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (말풍선 포함)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override

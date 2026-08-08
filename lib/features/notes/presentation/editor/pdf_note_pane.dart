@@ -174,6 +174,19 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
 
   Timer? _centerTimer;
 
+  /// Görüntüleyicinin KENDİ gösterdiği sayfa (1 tabanlı).
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-08: "PDF sayfa geçişleri düzgün
+  /// değil, zıplamalar oluyor"): kullanıcı parmağıyla kaydırdığında pdfrx
+  /// `onPageChanged` ile panoya haber veriyor, pano `setState` ile yeni bir
+  /// [PageNoteHost] kuruyor ve buradaki `didUpdateWidget` "pano sayfa
+  /// değiştirmiş" sanıp `goToPage` çağırıyordu — yani kaydırmanın ORTASINDA
+  /// belge sayfa başına sıçratılıyordu. Pano sayfası bizim bildirdiğimizle
+  /// aynıysa sıçratma YAPILMAZ; sıçratma yalnız DIŞARIDAN gelen sayfa
+  /// değişimlerinde (sayfa okları, toplu görünüm, balona git) çalışır.
+  /// Aynı tuzak ve aynı çözüm slayt bölmesinde de var (bkz. slide_note_pane).
+  int _page = 1;
+
   @override
   void initState() {
     super.initState();
@@ -195,7 +208,11 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     // Pano başka bir sayfaya geçti: belge oraya kayar. Görüntüleyici hazır
     // değilse (dosya hâlâ iniyor) atlanır — pano zaten kendi sayfasını
     // gösteriyor, kullanıcı notunu beklemeden yazabilir.
-    if (old.host.page != widget.host.page && _pdf.isReady) {
+    //
+    // Panonun sayfası ZATEN bizim bildirdiğimizse dokunulmaz: yoksa
+    // kullanıcının kendi kaydırması geri sıçratılır (bkz. [_page]).
+    if (widget.host.page != _page && _pdf.isReady) {
+      _page = widget.host.page;
       _pdf.goToPage(pageNumber: widget.host.page);
     }
   }
@@ -210,6 +227,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   Future<void> _openBubbles() async {
     final target = await showBubblesOverview(context, widget.bubbles);
     if (target == null || !mounted) return;
+    _page = target.page;
     widget.host.onPageChanged(target.page);
     if (_pdf.isReady) _pdf.goToPage(pageNumber: target.page);
     widget.bubbles.openOnly(target.id);
@@ -251,13 +269,18 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           // Çizimler görünür ama panoda DÜZENLENMEZ (bkz. _PdfNotePaneState).
           inkLayer: (page) => InkPageLayer(controller: widget.ink, page: page),
           onPageChanged: (page) {
-            if (page != null) widget.host.onPageChanged(page);
+            if (page == null || page == _page) return;
+            // Önce KENDİ sayfamız işaretlenir: pano bu haberi işleyip geri
+            // geldiğinde `didUpdateWidget` sıçratmasın (bkz. [_page]).
+            _page = page;
+            widget.host.onPageChanged(page);
           },
           onViewerReady: (document, controller) {
             widget.host.onPageCount(document.pages.length);
             // Pano başka bir sayfadaysa (toplu görünümden gelindi) belge
             // açılır açılmaz oraya gidilir.
             if (widget.host.page > 1) {
+              _page = widget.host.page;
               controller.goToPage(pageNumber: widget.host.page);
             }
           },

@@ -2153,6 +2153,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
 
   @override
+  String get shareAsText => 'Jako zwykły tekst';
+
+  @override
+  String get shareAsTextInfo => 'Wysyła tekst notatki i notatki stron do dowolnej aplikacji.';
+
+  @override
+  String get shareAsTextEmpty => 'Ta notatka nie ma tekstu do udostępnienia.';
+
+  @override
+  String get sharePdfWithBubbles => 'Jako PDF z dymkami';
+
+  @override
+  String get sharePdfWithBubblesInfo => 'Dymki, zakreślenia i rysunki są wypalane w pliku PDF; odbiorca nie potrzebuje aplikacji Not.';
+
+  @override
+  String get sharePdfWithBubblesNone => 'Ta notatka nie zawiera pliku PDF z dymkami ani rysunkami.';
+
+  @override
+  String get sharePdfWithBubblesPreparing => 'Przygotowywanie pliku PDF z dymkami…';
+
+  @override
+  String get sharePdfWithBubblesSuffix => ' (z dymkami)';
+
+  @override
   String get bubbleStar => 'Yıldızla';
 
   @override
