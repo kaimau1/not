@@ -1377,3 +1377,21 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **4) Balona yazarken not BAŞLIĞI da gizleniyor** (18-19. turlarda not alanı, sayfa çubuğu ve editör alt çubuğu gizlenmişti). Klavye ekranın yarısını alıyor; kalan alan belgeye ve karta gidiyor.
 
   Doğrulama: analyze temiz, 709/709 test yeşil (+1). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (21. tur): **Balonda OKU/YAZ ayrımı, yazma kartı klavyenin üstüne indi, slaytlar PDF gibi dikey aktı.**
+
+  **1) İki kip: OKUMA ve YAZMA** (`BubbleController.editMode`). Yazılmış bir balonun tutamacına dokunmak artık klavye açmıyor — not, sayfanın üzerinde durduğu yerde küçük bir balonda (`_BubbleReadCard`) okunuyor; yazmak için "Düzenle" deniyor. Boş balon (yeni bırakılan, vurgudan doğan) doğrudan yazmaya açılıyor: orada okunacak bir şey yok. Kullanıcı isteği: "not yazıldıktan sonra küçük simgesine tıklandığında sadece not orada balon olarak görülsün, düzenleme için düzenle butonu olsun."
+
+  **2) Yazma kartı ÜSTTEN ALTA taşındı** — bir tur önce üste demirlenmişti (20. tur), kullanıcı "güzel değil, 2.ss'teki alana al" dedi. Kart görüntüleyicinin ALT kenarında: `Scaffold` klavye kadar daraldığı için "alt kenar" = klavyenin hemen üstü. Göz ve parmak zaten orada; üstteyken bakış sayfanın bir ucundan öbürüne gidip geliyordu. Tasarım da değişti: zemin balonun rengiyle dolu koca bant değil, **belge rengi (yüzey) + solda 5 px renk şeridi**.
+
+  **3) "Tıklanan balon klavye ile ekranın üstü arasında ortalanmalı".** Balon açılınca (`onOpened`) belge kaydırılıp balon, **kartın üstünde kalan** alanın ortasına getiriliyor. PDF'te `PdfViewerController.calcMatrixFor(nokta, viewSize: Size(w, serbestYükseklik))` — küçültülmüş `viewSize` vermek tam olarak bu işi yapıyor. Slaytta aynı hesap `SlideStripMetrics.centerOffset`. Kartın yüksekliğini kartın kendisi bildiriyor (`dockHeight`). **340 ms gecikme ŞART**: klavye ~250 ms'de açılıyor, hemen ortalamak klavye kapalıyken doğru olan yere kaydırıyor.
+
+  **4) Sürüklemenin İKİNCİ kök nedeni: "parmağımdan geride kalıyor".** 20. turda fırlama düzeldi ama gecikme kaldı. Neden: her hareket `controller.update` → `notifyListeners` → sayfanın BÜTÜN balon katmanı (vurgu boyaması, vurgu dokunma alanları, tüm tutamaçlar) yeniden kuruluyordu. Kare başına bir tam yeniden kurulum = parmağın gerisi. Artık kayma tutamacın kendi `ValueNotifier`ında birikiyor, tek bir `Transform.translate`i besliyor; **model taşıma BİTİNCE bir kez** yazılıyor. Ayrıca tutamaçtaki `Tooltip` kaldırıldı — kendi uzun basış tanıyıcısını arenaya sokup taşımayla yarışıyordu.
+
+  **5) Başlık CANLI.** `updateTitle/updateText` hâlâ dinleyicileri uyandırmıyor (kasma) ama `revision` sayacını artırıyor; **yalnız AÇIK balonun** tutamacı onu dinliyor. Böylece etiket harf harf güncelleniyor, öbür balonlar hiç tazelenmiyor.
+
+  **6) Slaytlar PDF gibi: dikey, kesintisiz, boşluksuz** (`SlideStripMetrics` + `ListView.itemExtentBuilder`). Yatay `PageView` bırakıldı. Yükseklikler oranlardan önceden hesaplandığı için liste ölçmeden kuruluyor, "balona git" tam yere gidiyor ve kaydırma konumundan slayt numarası doğrudan çıkıyor. **TUZAK**: kaydırma → panoya sayfa bildir → pano geri sıçrat döngüsü; bildirilen sayfa kendi `_page`'imizle karşılaştırılmadan sıçratma yapılmamalı.
+
+  **7) Kaydırmadaki takılmalar.** `_HighlightPainter.shouldRepaint` hep `true` idi — katman her tazelendiğinde bütün vurgu yolları baştan çiziliyordu; artık içerik karşılaştırılıyor. Vurgu boyası ve sayfa katmanlarının tamamı `RepaintBoundary` içine alındı.
+
+  Doğrulama: analyze temiz, 722/722 test yeşil (+13). **Cihazda doğrulanmadı — APK CI'da.**

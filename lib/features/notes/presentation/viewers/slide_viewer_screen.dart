@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,8 @@ import '../editor/bubbles_overview.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'slide_canvas.dart';
+import 'slide_scroll.dart';
+import 'zoom_box.dart';
 
 /// Sunum (.pptx) ekini gerçek tasarımıyla slayt slayt gösterir. PDF'teki gibi
 /// üzerine elle yazılabilir: çizim slayt oranlı vektör olarak ekin `ink`
@@ -44,21 +48,19 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     onChanged: (list) =>
         widget.onChanged?.call(widget.attachment.copyWith(bubbles: list)),
   );
-  final _pages = PageController();
+  /// Slaytlar PDF gibi ALT ALTA, boşluksuz kayar (kullanıcı isteği
+  /// 2026-08-08). Yatay `PageView` bırakıldı — bkz. [SlideStripMetrics].
+  final _scroll = ScrollController();
+  SlideStripMetrics? _metrics;
+  double _viewport = 0;
+  Timer? _centerTimer;
 
-  /// Geçerli slaydın yakınlaştırma dönüşümü. Yalnız görünen slayda bağlanır;
-  /// yakınken (ölçek > 1) slayt geçişi kilitlenir, slayt değişince sıfırlanır.
-  final _zoom = TransformationController();
+  /// Görünen slayt yakınlaştırılmış mı? Yakınken liste kilitlenir.
   bool _zoomed = false;
 
   /// Çizim modu ekran durumu (görüntüleyiciyi çizgi başına yeniden kurmamak
   /// için; çizgiler InkPageLayer içinde bağımsız tazelenir).
   bool _editing = false;
-
-  /// Ekrandaki parmak sayısı (üst düzey Listener sayar). İki parmak inince
-  /// PageView kilitlenir → pinch sırasında slayt sağa/sola KAYMAZ (bildirilen
-  /// hata buydu). Yalnız çizim kapalıyken güncellenir; çizimde zaten kilitli.
-  int _touch = 0;
 
   List<SlideVM>? _slides;
   Object? _error;
@@ -67,29 +69,48 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   @override
   void initState() {
     super.initState();
-    _zoom.addListener(_onZoomChanged);
+    _scroll.addListener(_onScroll);
+    _bubbles.onOpened = _centerOn;
     _load();
   }
 
-  void _onZoomChanged() {
-    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.02;
-    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+  void _onScroll() {
+    final metrics = _metrics;
+    if (metrics == null || !_scroll.hasClients) return;
+    final page = metrics.pageAt(_scroll.offset, _viewport);
+    if (page - 1 != _index) setState(() => _index = page - 1);
   }
 
-  /// Çift dokunuş: DOKUNULAN NOKTAYA yakınlaşır, ikinci çift dokunuş sığdırır.
-  /// (Kullanıcı isteği 2026-08-08: "çift tıkladığında zoom yapsın, sonra iki
-  /// parmakla zoom in/out olsun".) Ortaya değil parmağın altına yakınlaşmak
-  /// şart: okunmak istenen yer orası.
-  void _handleDoubleTap(Offset at) {
-    if (_zoomed) {
-      _zoom.value = Matrix4.identity();
-      return;
-    }
-    const scale = 2.5;
-    _zoom.value = Matrix4.identity()
-      ..translateByDouble(at.dx, at.dy, 0, 1)
-      ..scaleByDouble(scale, scale, scale, 1)
-      ..translateByDouble(-at.dx, -at.dy, 0, 1);
+  void _goToPage(int page) {
+    final metrics = _metrics;
+    if (metrics == null || !_scroll.hasClients) return;
+    _scroll.jumpTo(
+      metrics.startOf(page).clamp(0.0, _scroll.position.maxScrollExtent),
+    );
+  }
+
+  /// Açılan balonu, yazma kartının üstünde kalan alanın ortasına getirir
+  /// ("tıklanan balon klavye ile ekranın üstü arasında ortalanmalı").
+  void _centerOn(PageBubble bubble) {
+    _centerTimer?.cancel();
+    _centerTimer = Timer(const Duration(milliseconds: 340), () {
+      final metrics = _metrics;
+      if (!mounted || metrics == null || !_scroll.hasClients) return;
+      final free = (_viewport - _bubbles.dockHeight.value - 24).clamp(
+        80.0,
+        _viewport <= 0 ? 80.0 : _viewport,
+      );
+      _scroll.animateTo(
+        metrics.centerOffset(
+          page: bubble.page,
+          y: bubble.y,
+          free: free,
+          maxScroll: _scroll.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   void _toggleEditing() {
@@ -105,7 +126,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   Future<void> _openBubbles() async {
     final target = await showBubblesOverview(context, _bubbles);
     if (target == null || !mounted) return;
-    if (_pages.hasClients) _pages.jumpToPage(target.page - 1);
+    _goToPage(target.page);
     setState(() => _index = target.page - 1);
     _bubbles.openOnly(target.id);
   }
@@ -139,10 +160,10 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
 
   @override
   void dispose() {
+    _centerTimer?.cancel();
     _ink.dispose();
     _bubbles.dispose();
-    _pages.dispose();
-    _zoom.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
@@ -194,10 +215,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
             Positioned(
               left: 0,
               right: 0,
-              top: 0,
+              bottom: 0,
               child: BubbleDock(
                 controller: _bubbles,
                 readOnly: widget.onChanged == null,
+                bottomPadding: MediaQuery.paddingOf(context).bottom,
               ),
             ),
           ],
@@ -230,114 +252,65 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         ),
       );
     }
-    // Slayt geçişi kilitli: çizerken (o parmak çiziyor), yakınken ya da iki
-    // parmak inince (pinch) — böylece yakınlaştırırken slayt sağa/sola KAYMAZ.
-    final lockPage = _editing || _zoomed || _touch >= 2;
-    return Listener(
-      // Üst düzey, hep aktif parmak sayacı: pinch'i (2 parmak) yakalayıp
-      // PageView'ı kilitler. Çizimde güncelleme gereksiz (zaten kilitli) —
-      // çizgi başına yeniden kurmayı önlemek için yalnız çizim kapalıyken
-      // setState edilir.
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) {
-        _touch++;
-        if (!_editing) setState(() {});
-      },
-      onPointerUp: (_) {
-        _touch = _touch > 0 ? _touch - 1 : 0;
-        if (!_editing) setState(() {});
-      },
-      onPointerCancel: (_) {
-        _touch = _touch > 0 ? _touch - 1 : 0;
-        if (!_editing) setState(() {});
-      },
-      child: Column(
-        children: [
-          Expanded(
-            child: PageView.builder(
-              controller: _pages,
-              physics: lockPage
-                  ? const NeverScrollableScrollPhysics()
-                  : const PageScrollPhysics(),
-              itemCount: slides.length,
-              onPageChanged: (i) => setState(() {
-                _index = i;
-                _zoom.value = Matrix4.identity(); // yeni slayt tam ekrandan
-              }),
-              itemBuilder: (context, i) {
-                final isCurrent = i == _index;
-                return Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Center(
-                    // Slaytın kendi en-boy oranıyla çizilir; çizim katmanı da
-                    // aynı kutuyu kaplar → oranlar zoom'da bile hizalı kalır
-                    // (katman InteractiveViewer'ın İÇİNDE, birlikte ölçeklenir).
-                    child: AspectRatio(
-                      aspectRatio: slides[i].heightPt == 0
-                          ? 16 / 9
-                          : slides[i].widthPt / slides[i].heightPt,
-                      // Çizimde IV'nin kendi jestleri tamamen kapalı: tek
-                      // parmak çizer, iki parmak yakınlaştırma+kaydırmayı
-                      // InkNavLayer _zoom matrisine uygular (IV iki parmağın
-                      // birlikte hareketini "pan" sayıp panEnabled:false'ta
-                      // yutuyordu). Normalde yakınken kaydır.
-                      child: InkNavLayer(
-                        enabled: _editing && isCurrent,
-                        controller: _ink,
-                        getMatrix: () => _zoom.value,
-                        setMatrix: (m) => _zoom.value = m,
-                        minScale: 1,
-                        maxScale: 5,
-                        clampToBounds: true,
-                        child: GestureDetector(
-                          onDoubleTapDown: isCurrent && !_editing
-                              ? (d) => _handleDoubleTap(d.localPosition)
-                              : null,
-                          onDoubleTap: isCurrent && !_editing ? () {} : null,
-                          child: InteractiveViewer(
-                          transformationController: isCurrent ? _zoom : null,
-                          minScale: 1,
-                          maxScale: 5,
-                          panEnabled: !_editing && isCurrent && _zoomed,
-                          scaleEnabled: !_editing,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: SlideCanvas(slide: slides[i]),
-                              ),
-                              Positioned.fill(
-                                child: InkPageLayer(
-                                  controller: _ink,
-                                  page: i + 1,
-                                ),
-                              ),
-                              Positioned.fill(
-                                child: BubblePageLayer(
-                                  controller: _bubbles,
-                                  page: i + 1,
-                                  readOnly: widget.onChanged == null,
-                                ),
-                              ),
-                            ],
-                          ),
+    // Liste kilitli: çizerken (o parmak çiziyor) ya da slayt yakınken.
+    final locked = _editing || _zoomed || _bubbles.dragging != null;
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final metrics = SlideStripMetrics.forWidth(
+                [for (final s in slides) slideAspect(s)],
+                constraints.maxWidth,
+              );
+              _metrics = metrics;
+              _viewport = constraints.maxHeight;
+              return ListView.builder(
+                controller: _scroll,
+                physics: locked
+                    ? const NeverScrollableScrollPhysics()
+                    : const ClampingScrollPhysics(),
+                itemCount: slides.length,
+                itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
+                itemBuilder: (context, i) => RepaintBoundary(
+                  child: ZoomBox(
+                    // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
+                    // çizer, önceden yapılmış yakınlaştırma kaybolmaz.
+                    enabled: !_editing,
+                    onZoomChanged: (value) {
+                      if (mounted && _zoomed != value) {
+                        setState(() => _zoomed = value);
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: SlideCanvas(slide: slides[i])),
+                        Positioned.fill(
+                          child: InkPageLayer(controller: _ink, page: i + 1),
+                        ),
+                        Positioned.fill(
+                          child: BubblePageLayer(
+                            controller: _bubbles,
+                            page: i + 1,
+                            readOnly: widget.onChanged == null,
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8, top: 4),
-            child: Text(
-              '${_index + 1} / ${slides.length}',
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8, top: 4),
+          child: Text(
+            '${_index + 1} / ${slides.length}',
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
