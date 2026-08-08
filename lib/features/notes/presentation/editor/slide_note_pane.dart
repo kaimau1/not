@@ -11,6 +11,7 @@ import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/slide_canvas.dart';
 import '../viewers/slide_viewer_screen.dart';
+import '../viewers/zoom_box.dart';
 import 'bubbles_overview.dart';
 import 'page_note_pane.dart';
 import 'text_wrap.dart';
@@ -33,7 +34,11 @@ class SlideNotePane extends ConsumerStatefulWidget {
     this.richTheme,
     this.onFieldFocused,
     this.onFieldDisposed,
+    this.onImmersiveChanged,
   });
+
+  /// Balona yazılırken true (PDF panosuyla aynı sözleşme).
+  final ValueChanged<bool>? onImmersiveChanged;
 
   final Note Function() noteOf;
   final Attachment attachment;
@@ -81,7 +86,10 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   @override
   void initState() {
     super.initState();
-    _bubbles.onEditingChanged = (editing) => _bubbleEditing.value = editing;
+    _bubbles.onEditingChanged = (editing) {
+      _bubbleEditing.value = editing;
+      widget.onImmersiveChanged?.call(editing);
+    };
     _load();
   }
 
@@ -181,6 +189,10 @@ class _SlidePaneViewer extends StatefulWidget {
 }
 
 class _SlidePaneViewerState extends State<_SlidePaneViewer> {
+  /// Görünen slayt YAKINLAŞTIRILMIŞ mı? Yakınken slayt geçişi kilitlenir —
+  /// yatay sürükleme büyütülmüş sayfada gezinmektir, slayt değiştirmek değil.
+  bool _zoomed = false;
+
   /// Denetleyici `initState`te kurulur: build içinde `??=` ile kurmak
   /// `didUpdateWidget`in ilk sayfa atlamasını sessizce yutuyordu ve sunum
   /// yeniden yüklenip slayt sayısı düşerse denetleyici aralık dışında
@@ -244,21 +256,30 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
         controller: _pages,
         // Balon taşınırken slayt geçişi KİLİTLİ: parmak balonu sürüklerken
         // sayfanın da kayması taşımayı imkânsız kılıyordu.
-        physics: widget.bubbles.dragging != null
+        // Balon taşınırken ya da slayt yakınlaştırılmışken geçiş KİLİTLİ.
+        physics: (widget.bubbles.dragging != null || _zoomed)
             ? const NeverScrollableScrollPhysics()
-            : null,
+            : const PageScrollPhysics(parent: ClampingScrollPhysics()),
         itemCount: slides.length,
         onPageChanged: (i) => widget.host.onPageChanged(i + 1),
-        itemBuilder: (context, i) => Padding(
+        itemBuilder: (context, i) => RepaintBoundary(
+          child: Padding(
           padding: const EdgeInsets.all(8),
           child: Center(
             // Slaydın kendi en-boy oranıyla çizilir; çizim katmanı da aynı
-            // kutuyu kaplar → oranlar hizalı kalır.
+            // kutuyu kaplar → oranlar hizalı kalır. Çift dokunuş yakınlaştırır,
+            // sonra iki parmakla serbestçe gezilir (bkz. ZoomBox).
             child: AspectRatio(
               aspectRatio: slides[i].heightPt == 0
                   ? 16 / 9
                   : slides[i].widthPt / slides[i].heightPt,
-              child: Stack(
+              child: ZoomBox(
+                onZoomChanged: (value) {
+                  if (mounted && _zoomed != value) {
+                    setState(() => _zoomed = value);
+                  }
+                },
+                child: Stack(
                 children: [
                   Positioned.fill(child: SlideCanvas(slide: slides[i])),
                   Positioned.fill(
@@ -271,8 +292,10 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
                     ),
                   ),
                 ],
+                ),
               ),
             ),
+          ),
           ),
         ),
       ),

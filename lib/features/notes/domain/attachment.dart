@@ -80,10 +80,12 @@ class PageBubble {
     required this.page,
     required this.x,
     required this.y,
+    this.title = '',
     this.text = '',
     this.color = 0xFFFFC107,
     this.collapsed = false,
     this.starred = false,
+    this.urgent = false,
     this.rects = const [],
   });
 
@@ -100,6 +102,15 @@ class PageBubble {
   final double x;
   final double y;
 
+  /// KISA başlık (en çok [maxTitle] karakter). Doluysa balon KAPALIYKEN
+  /// yuvarlak nokta yerine başlığı yazan küçük bir etiket görünür — sayfaya
+  /// bakınca balonu açmadan ne dediği anlaşılır (kullanıcı isteği 2026-08-08).
+  final String title;
+
+  /// Başlığın karakter sınırı. Uzun başlık sayfayı kapatır; 12 karakter
+  /// "Fatura", "Kaynak?", "Düzelt" gibi bir etikete yeter.
+  static const maxTitle = 12;
+
   final String text;
 
   /// Balon rengi (ARGB). Konu ayırmak için: sarı "not", kırmızı "düzelt"...
@@ -111,6 +122,10 @@ class PageBubble {
   /// Yıldızlı balon: toplu listede en üste çıkar ve süzülebilir. "Bunu
   /// unutma" demenin en ucuz yolu — renk konu ayırır, yıldız ÖNEM ayırır.
   final bool starred;
+
+  /// ACİL balon: kapalı hâli yanıp söner, gözden kaçmaz. Yıldız "sonra
+  /// bakılacak", ünlem "şimdi bakılacak" demektir.
+  final bool urgent;
 
   /// Balonun bağlı olduğu METNİN sayfa üzerindeki dikdörtgenleri (vurgu).
   /// Boş = serbest balon (sayfanın boş bir yerine bırakılmış).
@@ -133,20 +148,24 @@ class PageBubble {
     int? page,
     double? x,
     double? y,
+    String? title,
     String? text,
     int? color,
     bool? collapsed,
     bool? starred,
+    bool? urgent,
     List<PageBubbleRect>? rects,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
     x: x ?? this.x,
     y: y ?? this.y,
+    title: title ?? this.title,
     text: text ?? this.text,
     color: color ?? this.color,
     collapsed: collapsed ?? this.collapsed,
     starred: starred ?? this.starred,
+    urgent: urgent ?? this.urgent,
     rects: rects ?? this.rects,
   );
 
@@ -155,10 +174,12 @@ class PageBubble {
     page: (map['p'] as num?)?.toInt() ?? 1,
     x: (map['x'] as num?)?.toDouble() ?? 0.5,
     y: (map['y'] as num?)?.toDouble() ?? 0.5,
+    title: map['h'] as String? ?? '',
     text: map['t'] as String? ?? '',
     color: (map['c'] as num?)?.toInt() ?? 0xFFFFC107,
     collapsed: map['k'] as bool? ?? false,
     starred: map['s'] as bool? ?? false,
+    urgent: map['u'] as bool? ?? false,
     rects: [
       for (final e in (map['r'] as List?) ?? const [])
         PageBubbleRect.fromList((e as List).cast<num>()),
@@ -172,9 +193,11 @@ class PageBubble {
     'y': y,
     't': text,
     'c': color,
-    // Yalnız true iken yazılır: eski ekin şemasına gereksiz alan eklemez.
+    // Yalnız DOLU/true iken yazılır: eski ekin şemasına gereksiz alan eklemez.
+    if (title.isNotEmpty) 'h': title,
     if (collapsed) 'k': true,
     if (starred) 's': true,
+    if (urgent) 'u': true,
     if (rects.isNotEmpty) 'r': [for (final r in rects) r.toList()],
   };
 }

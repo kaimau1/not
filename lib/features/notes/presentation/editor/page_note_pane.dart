@@ -338,7 +338,10 @@ class _PageNotePaneState extends State<PageNotePane> {
                   );
                 },
               ),
-            _pageBar(context, l10n, notesOpen),
+            // Balona yazılırken sayfa çubuğu da gizlenir: klavye ekranın
+            // yarısını alıyor, "Sayfa 1 / 4" satırı o anda hiçbir işe
+            // yaramıyor (kullanıcı isteği 2026-08-08).
+            if (!suppressed) _pageBar(context, l10n, notesOpen),
             if (notesOpen)
             Expanded(
               flex: ((1 - _split) * 1000).round(),

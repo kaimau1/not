@@ -72,11 +72,29 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   void initState() {
     super.initState();
-    // Balon taşınırken sayfa kaymasın: pan kilidi seçimle AYNI bayrağı
-    // kullanır (ikisi de "parmak bir şeyi sürüklüyor" durumu).
-    _bubbles.onDragChanged = (dragging) {
-      if (mounted) _selection.selecting.value = dragging;
-    };
+    // Balon taşımasında pan KİLİTLENMEZ: kilit `PdfViewerParams`ı değiştirip
+    // jestin ortasında görüntüleyiciyi yeniden kuruyor ve başlamış uzun
+    // basışı iptal ediyordu ("hâlâ çok zor sürükleniyor"). Uzun basış jest
+    // arenasını zaten kazanıyor, sayfa altta kaymıyor.
+    _bubbles.ensureVisible = _ensureBubbleVisible;
+  }
+
+  /// Klavye açılınca balon kartı ekranın altında kalıyorsa belgeyi yukarı
+  /// iter. Kart görünür alanın içine girecek kadar — fazlası okunan yeri
+  /// gereksiz kaydırır.
+  void _ensureBubbleVisible(Rect globalRect) {
+    if (!mounted || !_pdf.isReady) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.hasSize) return;
+    final viewportBottom = box.localToGlobal(Offset.zero).dy + box.size.height;
+    final overflow = globalRect.bottom + 12 - viewportBottom;
+    if (overflow <= 0) return;
+    try {
+      _pdf.value = _pdf.value.clone()
+        ..leftTranslateByDouble(0, -overflow, 0, 1);
+    } catch (_) {
+      // Görüntüleyici hazır değilse sessizce atlanır.
+    }
   }
 
   @override
@@ -251,10 +269,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             child: Stack(
               children: [
                 Positioned.fill(child: viewer),
+                // Alt gezinme çubuğunun (telefon tuşları) ALTINDA kalmasın:
+                // Scaffold gövdesi bottomNavigationBar yokken sistem payını
+                // eklemiyor, çubuk tuşların üstüne biniyordu.
                 Positioned(
                   left: 8,
                   right: 8,
-                  bottom: 16,
+                  bottom: 16 + MediaQuery.viewPaddingOf(context).bottom,
                   child: PdfSelectionBar(
                     selection: _selection,
                     bubbles: _bubbles,

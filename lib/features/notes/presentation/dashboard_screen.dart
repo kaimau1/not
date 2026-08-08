@@ -89,30 +89,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   /// İki parmakla açma/kapama hareketini sütun sayısına çevirir: parmaklar
   /// açılınca (scale > 1) kartlar büyür → sütun AZALIR, kapanınca artar.
+  /// 1 ↔ 2 ↔ 3 ↔ 4 sütun arasında gezilir.
   ///
   /// Eşik neden 1.25: her karede oran biraz oynadığından ham yuvarlama sütunu
   /// ileri geri titretiyordu. Bir adım için parmak arasının en az %25
   /// değişmesi istenir; adım atıldıktan sonra taban güncellenir ki aynı jestle
   /// 1 → 4 arası gezilebilsin.
-  void _handleZoom(ScaleUpdateDetails details, int columns) {
-    if (details.pointerCount < 2) return;
+  bool _applyZoom(double scale, int columns) {
     const threshold = 1.25;
-    final scale = details.scale;
-    if (scale <= 0) return;
+    if (scale <= 0) return false;
     final int target;
     if (scale >= threshold) {
       target = _zoomBaseColumns - 1;
     } else if (scale <= 1 / threshold) {
       target = _zoomBaseColumns + 1;
     } else {
-      return;
+      return false;
     }
     final clamped = target.clamp(
       GridColumnsNotifier.minColumns,
       GridColumnsNotifier.maxColumns,
     );
     _zoomBaseColumns = clamped;
-    if (clamped == columns) return;
+    if (clamped == columns) return true;
     ref.read(gridColumnsProvider.notifier).set(clamped);
     HapticFeedback.selectionClick();
     // Yeni düzen kaç sütun oldu — kısa bir bildirim, jest "bir şey yaptı" mı
@@ -125,6 +124,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           duration: const Duration(milliseconds: 900),
         ),
       );
+    return true;
   }
 
   @override
@@ -330,24 +330,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           in ref.read(foldersStreamProvider).value ?? const <NoteFolder>[])
         if (!f.hidden || revealHidden) f,
     ];
-    final segments = <(NoteFilter, String?)>[
-      for (final f in NoteFilter.values) (f, null),
-      for (final folder in folders) (NoteFilter.all, folder.id),
+    // ETİKETLER de gezilir (istek 2026-08-08: "sayfayı sağa sola kaydırınca
+    // onlara geçsin"): çipler artık kullanıcının etiketlerini varsayılan
+    // gösterdiğine göre çekiş de aynı kümeyi dolaşmalı, yoksa ekranda görünen
+    // kısayollarla jestin gezdiği yerler ayrışırdı.
+    final tags = ref.read(allTagsProvider);
+    final segments = <(NoteFilter, String?, String?)>[
+      for (final f in NoteFilter.values) (f, null, null),
+      for (final folder in folders) (NoteFilter.all, folder.id, null),
+      for (final tag in tags) (NoteFilter.all, null, tag),
     ];
     if (segments.length < 2) return;
     final curFilter = ref.read(noteFilterProvider);
     final curFolder = ref.read(selectedFolderProvider);
+    final curTag = ref.read(selectedTagProvider);
     var index = segments.indexWhere(
-      (s) => s.$1 == curFilter && s.$2 == curFolder,
+      (s) => s.$1 == curFilter && s.$2 == curFolder && s.$3 == curTag,
     );
     if (index < 0) index = 0;
     var next = (index + direction) % segments.length;
     if (next < 0) next += segments.length;
-    final (filter, folderId) = segments[next];
+    final (filter, folderId, tag) = segments[next];
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
     ref.read(noteFilterProvider.notifier).set(filter);
     ref.read(selectedFolderProvider.notifier).set(folderId);
+    ref.read(selectedTagProvider.notifier).set(tag);
     HapticFeedback.selectionClick();
   }
 
@@ -1199,10 +1207,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
                           // (pointerCount kontrolü), böylece içteki yatay
                           // çekiş ve dikey kaydırma olduğu gibi çalışır.
-                          child: GestureDetector(
-                            onScaleStart: (_) => _zoomBaseColumns = columns,
-                            onScaleUpdate: (details) =>
-                                _handleZoom(details, columns),
+                          child: _PinchColumns(
+                            onStart: () => _zoomBaseColumns = columns,
+                            onScale: (scale) => _applyZoom(scale, columns),
                             child: GestureDetector(
                               // Yatay çekişle filtreler/klasörler arasında
                               // gezin. Dikey kaydırma CustomScrollView'de
@@ -2157,5 +2164,85 @@ class _QuickCaptureIcon extends StatelessWidget {
         ),
       ),
     ),
+  );
+}
+
+/// İki parmak "sıkıştırma" hareketini ARENAYA GİRMEDEN ölçen sarmalayıcı.
+///
+/// KÖK NEDEN (kullanıcı 2026-08-08: ana ekranda iki parmakla sütun değişimi
+/// çalışmıyordu): eskiden bir `GestureDetector.onScaleUpdate` kullanılıyordu.
+/// O tanıyıcı, altındaki kaydırma görünümünün dikey sürükleme tanıyıcısıyla
+/// AYNI jest arenasında yarışır ve sürükleme İLK parmakta kabul edildiği için
+/// çoğu zaman önce kazanır — ikinci parmak indiğinde iş işten geçmiş olur.
+///
+/// `Listener` arenaya hiç girmez: işaretçileri sessizce dinler, kaydırmayı
+/// bozmaz ve iki parmak arasındaki uzaklık yeterince değişince haber verir.
+/// (Aynı çözüm PDF metin seçim katmanında da kullanılıyor.)
+class _PinchColumns extends StatefulWidget {
+  const _PinchColumns({
+    required this.child,
+    required this.onStart,
+    required this.onScale,
+  });
+
+  final Widget child;
+
+  /// İkinci parmak indi: çağıran o anki sütun sayısını taban alır.
+  final VoidCallback onStart;
+
+  /// Taban uzaklığa göre O ANKİ oran (>1 = parmaklar açılıyor).
+  /// **true dönerse bir adım atıldı** ve taban uzaklık şimdiki değere
+  /// çekilir; yoksa oran eşiğin üstünde kaldığı sürece her karede bir adım
+  /// daha atılır ve tek jestte en uca fırlanırdı.
+  final bool Function(double scale) onScale;
+
+  @override
+  State<_PinchColumns> createState() => _PinchColumnsState();
+}
+
+class _PinchColumnsState extends State<_PinchColumns> {
+  final _points = <int, Offset>{};
+
+  /// İki parmak indiği andaki uzaklık; oran buna göre ölçülür. Çağıran bir
+  /// adım attığında sıfırlanır ki aynı jestle 1 → 4 arası gezilebilsin.
+  double _base = 0;
+
+  void _recompute() {
+    if (_points.length != 2) {
+      _base = 0;
+      return;
+    }
+    final values = _points.values.toList();
+    final distance = (values[0] - values[1]).distance;
+    if (_base == 0) {
+      if (distance < 24) return; // parmaklar üst üste: ölçüm anlamsız
+      _base = distance;
+      widget.onStart();
+      return;
+    }
+    if (widget.onScale(distance / _base)) _base = distance;
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (e) {
+      _points[e.pointer] = e.position;
+      _recompute();
+    },
+    onPointerMove: (e) {
+      if (!_points.containsKey(e.pointer)) return;
+      _points[e.pointer] = e.position;
+      _recompute();
+    },
+    onPointerUp: (e) {
+      _points.remove(e.pointer);
+      _base = 0;
+    },
+    onPointerCancel: (e) {
+      _points.remove(e.pointer);
+      _base = 0;
+    },
+    child: widget.child,
   );
 }

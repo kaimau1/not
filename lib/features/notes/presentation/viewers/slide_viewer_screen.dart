@@ -76,6 +76,22 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
   }
 
+  /// Çift dokunuş: DOKUNULAN NOKTAYA yakınlaşır, ikinci çift dokunuş sığdırır.
+  /// (Kullanıcı isteği 2026-08-08: "çift tıkladığında zoom yapsın, sonra iki
+  /// parmakla zoom in/out olsun".) Ortaya değil parmağın altına yakınlaşmak
+  /// şart: okunmak istenen yer orası.
+  void _handleDoubleTap(Offset at) {
+    if (_zoomed) {
+      _zoom.value = Matrix4.identity();
+      return;
+    }
+    const scale = 2.5;
+    _zoom.value = Matrix4.identity()
+      ..translateByDouble(at.dx, at.dy, 0, 1)
+      ..scaleByDouble(scale, scale, scale, 1)
+      ..translateByDouble(-at.dx, -at.dy, 0, 1);
+  }
+
   void _toggleEditing() {
     setState(() {
       _editing = !_editing;
@@ -260,7 +276,12 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                         minScale: 1,
                         maxScale: 5,
                         clampToBounds: true,
-                        child: InteractiveViewer(
+                        child: GestureDetector(
+                          onDoubleTapDown: isCurrent && !_editing
+                              ? (d) => _handleDoubleTap(d.localPosition)
+                              : null,
+                          onDoubleTap: isCurrent && !_editing ? () {} : null,
+                          child: InteractiveViewer(
                           transformationController: isCurrent ? _zoom : null,
                           minScale: 1,
                           maxScale: 5,
@@ -285,6 +306,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                                 ),
                               ),
                             ],
+                          ),
                           ),
                         ),
                       ),
