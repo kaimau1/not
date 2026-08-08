@@ -37,6 +37,45 @@ void main() {
       expect(back.isHighlight, isTrue);
     });
 
+    test('vurgu dikdortgenleri DUZ liste yazilir (Firestore ic ice dizi almaz)',
+        () {
+      // KOK NEDEN (2026-08-08): dikdortgenler [[l,t,r,b]] olarak yaziliyordu;
+      // Firestore ic ice dizi kabul etmez ve o notun YAZIMI TUMUYLE
+      // reddediliyordu — kullanici "metin secip balon koyunca kaydolmuyor,
+      // geri gidince kayboluyor" dedi. Artik duz liste yaziliyor.
+      const bubble = PageBubble(
+        id: 'b',
+        page: 1,
+        x: 0.5,
+        y: 0.5,
+        rects: [
+          PageBubbleRect(0.1, 0.2, 0.9, 0.24),
+          PageBubbleRect(0.1, 0.26, 0.6, 0.30),
+        ],
+      );
+      final raw = bubble.toMap()['r'] as List;
+      expect(raw.every((v) => v is num), isTrue, reason: 'ic ice dizi olmamali');
+      expect(raw, hasLength(8));
+      final back = PageBubble.fromMap(bubble.toMap());
+      expect(back.rects, hasLength(2));
+      expect(back.rects.first.left, 0.1);
+      expect(back.rects.last.bottom, 0.30);
+    });
+
+    test('ESKI ic ice bicim de okunur (eski kayitlar kaybolmasin)', () {
+      final back = PageBubble.fromMap({
+        'i': 'b',
+        'p': 2,
+        'x': 0.3,
+        'y': 0.4,
+        'r': [
+          [0.1, 0.2, 0.9, 0.24],
+        ],
+      });
+      expect(back.rects.single.right, 0.9);
+      expect(back.isHighlight, isTrue);
+    });
+
     test('varsayilan alanlar kayda YAZILMAZ — eski sema buyumesin', () {
       const plain = PageBubble(id: 'b', page: 1, x: 0, y: 0);
       final map = plain.toMap();

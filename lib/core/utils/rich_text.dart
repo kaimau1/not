@@ -302,6 +302,24 @@ String stripRichMarkers(String text) {
   return _parse(cleaned).map((leaf) => leaf.text).join();
 }
 
+/// İşaretli metni **biçim parçalarına** ayırır: her parça düz metin + üzerine
+/// uygulanacak [RichMark].
+///
+/// Ekranda `richSpans` bu işi Flutter'ın `InlineSpan`larıyla yapıyor; PDF ve
+/// Word dışa aktarması ise Flutter türlerini KULLANAMAZ (kendi metin
+/// parçaları var). Kök neden (kullanıcı bulgusu 2026-08-08: "yazı biçimi de
+/// aktarılmıyor"): dışa aktarma yolu işaretleri yalnız SÖKÜYORDU, yani kalın
+/// yazılmış bir satır PDF'e düz iniyordu. Ayrıştırmanın tek kopyası burada
+/// kalsın diye çözümleyici dışarıya bu biçimde açıldı.
+List<RichSegment> richSegments(String text) {
+  if (text.isEmpty) return const [];
+  if (!_hasMarker(text)) return [RichSegment(text, RichMark.none)];
+  final cleaned = text.replaceAll(_emptyBoxPattern, '');
+  return _merge([
+    for (final leaf in _parse(cleaned)) RichSegment(leaf.text, leaf.mark),
+  ]);
+}
+
 /// Seçilen [start, end) aralığının PANOYA gidecek düz karşılığı: biçim
 /// işaretleri sökülür, işaretin ORTASINA düşen uçlar en yakın gerçek
 /// karaktere hizalanır (yarım `%%1:` panoya sızmaz).

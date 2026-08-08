@@ -72,6 +72,12 @@ class PdfEdit {
     }
   }
 
+  /// [order] içinde bu değer BOŞ SAYFA demektir (kullanıcı isteği
+  /// 2026-08-08: "sayfaları düzenle kısmında boş sayfa ekleme olsun").
+  /// Kaynakta karşılığı yok; belgeye komşu sayfayla aynı boyutta beyaz bir
+  /// sayfa eklenir — üzerine balon bırakılıp yazılabilir.
+  static const blankPage = -1;
+
   /// Sayfaları [order] sırasıyla yeni bir belgeye alır (sıralama).
   ///
   /// **KAYIP UYARISI:** sayfalar `createTemplate()` ile KOPYALANIR;
@@ -79,6 +85,8 @@ class PdfEdit {
   /// çizimler PDF'in içinde değil ekin `ink` alanında durduğu için kullanıcının
   /// el yazısı bu yoldan etkilenmez — ama belgenin KENDİ vurguları giderse
   /// bu bilinçli bedeldir. Yalnız silmek için [deletePages] kullanılır.
+  ///
+  /// [order] içinde [blankPage] (-1) BOŞ SAYFA demektir.
   static Uint8List reorderPages(Uint8List bytes, List<int> order) {
     if (order.isEmpty) throw const PdfEditException('empty-selection');
     final src = PdfDocument(inputBytes: bytes);
@@ -86,14 +94,27 @@ class PdfEdit {
     try {
       final count = src.pages.count;
       for (final i in order) {
+        if (i == blankPage) continue;
         if (i < 0 || i >= count) throw const PdfEditException('out-of-range');
+      }
+      if (order.every((i) => i == blankPage)) {
+        throw const PdfEditException('empty-selection');
       }
       // Varsayılan kenar boşluğu SIFIRLANIR: şablon sayfanın tamamını
       // kaplamalı, yoksa her sayfa küçülüp ortalanmış görünür.
       out.pageSettings.margins.all = 0;
+      // Boş sayfanın ölçüsü: bir önceki gerçek sayfa (yoksa ilk gerçek
+      // sayfa). Karışık boyutlu belgede boş sayfa komşusuna benzesin.
+      var lastSize = src.pages[order.firstWhere((i) => i != blankPage)].size;
       for (final i in order) {
+        if (i == blankPage) {
+          out.pageSettings.size = lastSize;
+          out.pages.add();
+          continue;
+        }
         final page = src.pages[i];
         final size = page.size;
+        lastSize = size;
         out.pageSettings.size = size;
         out.pages.add().graphics.drawPdfTemplate(
           page.createTemplate(),
@@ -133,12 +154,16 @@ class PdfEdit {
     }
   }
 
-  /// Vurgu izleri: soluk zemin + ortasından geçen kalın iz (uçları yuvarlak).
-  /// Ekrandaki `_HighlightPainter` ile aynı oranlar (%20 / %42, satırın %58'i).
+  /// Vurgu izleri — ekrandaki `_HighlightPainter` ile AYNI görünüm: satır
+  /// boyunca tek ve düzgün, %28 yoğunlukta bir dolgu.
+  ///
+  /// Eskiden iki katman vardı (soluk zemin + ortasından geçen koyu kalın
+  /// bant); satırın ortası, yani harflerin gövdesi en koyu yer oluyordu ve
+  /// kullanıcı "yazıyı okunmaz hâle getiriyor" dedi (2026-08-08). Damga ile
+  /// ekran aynı görünmeli: paylaşılan PDF uygulamadakinin fotoğrafıdır.
   static void _drawHighlight(PdfGraphics g, PageBubble bubble, Size page) {
     if (bubble.rects.isEmpty) return;
-    final wash = _brush(bubble.color, 0.20);
-    final stroke = _brush(bubble.color, 0.42);
+    final brush = _brush(bubble.color, 0.28);
     for (final r in bubble.rects) {
       final rect = Rect.fromLTRB(
         r.left * page.width,
@@ -147,20 +172,7 @@ class PdfEdit {
         r.bottom * page.height,
       );
       if (rect.width <= 0 || rect.height <= 0) continue;
-      g.drawRectangle(brush: wash, bounds: rect);
-      final band = rect.height * 0.58;
-      final top = rect.center.dy - band / 2;
-      g.drawRectangle(
-        brush: stroke,
-        bounds: Rect.fromLTWH(rect.left, top, rect.width, band),
-      );
-      // Uçlardaki yarım daireler: "kalem izi" hissi düz dikdörtgende kayboluyor.
-      for (final cx in [rect.left, rect.right]) {
-        g.drawEllipse(
-          Rect.fromLTWH(cx - band / 2, top, band, band),
-          brush: stroke,
-        );
-      }
+      g.drawRectangle(brush: brush, bounds: rect.inflate(0.5));
     }
   }
 

@@ -118,6 +118,24 @@ void main() {
     });
   });
 
+  group('bos sayfa', () {
+    test('reorderPages -1 icin BOS sayfa ekler, digerleri yerinde kalir', () {
+      final out = PdfEdit.reorderPages(sample(2), [0, PdfEdit.blankPage, 1]);
+      expect(PdfEdit.pageCount(out), 3);
+      final texts = pageTexts(out);
+      expect(texts[0], 'P1');
+      expect(texts[1], isEmpty, reason: 'eklenen sayfa bos olmali');
+      expect(texts[2], 'P2');
+    });
+
+    test('yalniz bos sayfa istenirse reddedilir', () {
+      expect(
+        () => PdfEdit.reorderPages(sample(1), [PdfEdit.blankPage]),
+        throwsA(isA<PdfEditException>()),
+      );
+    });
+  });
+
   group('rotatePages', () {
     test('yalnız seçili sayfayı döndürür ve mevcut açıya EKLER', () {
       final once = PdfEdit.rotatePages(

@@ -693,13 +693,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiModelChat => 'Summaries, titles, tags and chat';
 
   @override
-  String get aiModelDocument => 'Podcasts and document chat';
+  String get aiModelDocument => 'Document chat and PDF summary';
 
   @override
   String get aiModelTranslate => 'Translation';
 
   @override
-  String get aiModelVoice => 'Voice notes';
+  String get aiModelVoice => 'Voice note assistant';
 
   @override
   String get aiModelAuto => 'Automatic (recommended)';
@@ -1259,6 +1259,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPdfNote => 'Add PDF, take notes';
 
   @override
+  String get imageNotePreparing =>
+      'Arranging images into a document…';
+
+  @override
+  String get newImageNote =>
+      'Add image, take notes';
+
+  @override
   String get pdfPageNoteHint => 'Note for this page…';
 
   @override
@@ -1300,6 +1308,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfDeletePages => 'Delete selected pages';
+
+  @override
+  String get pdfAddBlankPage => 'Add blank page';
 
   @override
   String get pdfRotatePages => 'Rotate';
@@ -2124,6 +2135,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ttsEngineAiInfo =>
       'Gemini\'s speech model reads: noticeably more natural, but each paragraph is a model call and it needs your own Gemini key.';
+
+  @override
+  String get ttsEngineAiUnavailable =>
+      'The AI voice needs your own Gemini key. Until you add one, reading uses the device voice.';
 
   @override
   String get ttsModel => 'Speech model';

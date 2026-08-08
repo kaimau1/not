@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../data/pdf_edit.dart';
 import '../../domain/attachment.dart';
 
 /// PDF sayfa yöneticisi: sayfaları seç, sil, döndür, sırala.
@@ -51,6 +52,7 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
   bool _busy = false;
 
   bool get _dirty =>
+      _order.contains(PdfEdit.blankPage) ||
       _order.length != widget.pageCount ||
       _rotations.values.any((t) => t % 4 != 0) ||
       // Sıra değişti mi?
@@ -79,6 +81,25 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
     });
   }
 
+  /// Seçili sayfadan SONRA (seçim yoksa belgenin sonuna) boş bir sayfa
+  /// ekler. Kullanıcı isteği 2026-08-08: "boş sayfa ekleme olsun" — belgeye
+  /// kendi notunu, çizimini, balonunu koyacağı temiz bir alan.
+  void _addBlank() {
+    setState(() {
+      if (_selected.isEmpty) {
+        _order = [..._order, PdfEdit.blankPage];
+        return;
+      }
+      final out = <int>[];
+      for (final page in _order) {
+        out.add(page);
+        if (_selected.contains(page)) out.add(PdfEdit.blankPage);
+      }
+      _order = out;
+      _selected.clear();
+    });
+  }
+
   void _rotateSelected() {
     final targets = _selected.isEmpty ? _order : _selected.toList();
     setState(() {
@@ -88,14 +109,16 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
     });
   }
 
-  void _move(int page, int delta) {
-    final at = _order.indexOf(page);
-    final to = at + delta;
-    if (at < 0 || to < 0 || to >= _order.length) return;
+  /// Sayfayı KONUMUNA göre taşır.
+  ///
+  /// Değerine göre (`indexOf`) taşımak boş sayfalarla ÇALIŞMAZ: hepsinin
+  /// değeri -1'dir ve ilk bulunanı taşınırdı.
+  void _moveAt(int position, int delta) {
+    final to = position + delta;
+    if (to < 0 || to >= _order.length) return;
     setState(() {
-      _order
-        ..removeAt(at)
-        ..insert(to, page);
+      final page = _order.removeAt(position);
+      _order.insert(to, page);
     });
   }
 
@@ -129,12 +152,19 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
       appBar: AppBar(
         title: Text(l10n.pdfEditPages),
         actions: [
-          if (_selected.isNotEmpty)
-            IconButton(
-              tooltip: l10n.pdfDeletePages,
-              onPressed: _busy ? null : _deleteSelected,
-              icon: const Icon(Icons.delete_outline),
-            ),
+          // Boş sayfa ve silme HER ZAMAN görünür (silme eskiden yalnız seçim
+          // varken beliriyordu ve bulunamıyordu): seçim yokken sönük durur,
+          // ne yapılacağı ipucundan anlaşılır.
+          IconButton(
+            tooltip: l10n.pdfAddBlankPage,
+            onPressed: _busy ? null : _addBlank,
+            icon: const Icon(Icons.note_add_outlined),
+          ),
+          IconButton(
+            tooltip: l10n.pdfDeletePages,
+            onPressed: (_busy || _selected.isEmpty) ? null : _deleteSelected,
+            icon: const Icon(Icons.delete_outline),
+          ),
           IconButton(
             tooltip: l10n.pdfRotatePages,
             onPressed: _busy ? null : _rotateSelected,
@@ -178,17 +208,23 @@ class _PdfPagesScreenState extends State<PdfPagesScreen> {
                 itemCount: _order.length,
                 itemBuilder: (context, position) {
                   final page = _order[position];
+                  final blank = page == PdfEdit.blankPage;
                   return _PageTile(
                     document: document,
                     // pdfrx 1 tabanlı sayfa numarası bekler.
-                    pageNumber: page + 1,
+                    pageNumber: blank ? 0 : page + 1,
+                    blank: blank,
                     label: '${position + 1}',
-                    selected: _selected.contains(page),
-                    quarterTurns: _rotations[page] ?? 0,
-                    onTap: () => _toggle(page),
-                    onLeft: position > 0 ? () => _move(page, -1) : null,
+                    selected: !blank && _selected.contains(page),
+                    quarterTurns: blank ? 0 : (_rotations[page] ?? 0),
+                    // Boş sayfa seçilemez (döndürme/silme onun için anlamsız);
+                    // yerini değiştirmek için oklar yine çalışır.
+                    onTap: blank ? null : () => _toggle(page),
+                    onLeft: position > 0
+                        ? () => _moveAt(position, -1)
+                        : null,
                     onRight: position < _order.length - 1
-                        ? () => _move(page, 1)
+                        ? () => _moveAt(position, 1)
                         : null,
                   );
                 },
@@ -219,6 +255,7 @@ class _PageTile extends StatelessWidget {
     required this.onTap,
     required this.onLeft,
     required this.onRight,
+    this.blank = false,
   });
 
   final PdfDocument? document;
@@ -226,7 +263,11 @@ class _PageTile extends StatelessWidget {
   final String label;
   final bool selected;
   final int quarterTurns;
-  final VoidCallback onTap;
+
+  /// Kaynakta karşılığı olmayan BOŞ sayfa: küçük resim yerine kesik çizgili
+  /// bir yer tutucu çizilir.
+  final bool blank;
+  final VoidCallback? onTap;
   final VoidCallback? onLeft;
   final VoidCallback? onRight;
 
@@ -254,16 +295,26 @@ class _PageTile extends StatelessWidget {
                 children: [
                   // Bekleyen döndürme küçük resimde de görünür: kullanıcı
                   // uygulamadan önce sonucu görebilmeli.
-                  RotatedBox(
-                    quarterTurns: quarterTurns,
-                    child: PdfPageView(
-                      document: document,
-                      pageNumber: pageNumber,
-                      // Küçük resim: yüksek DPI hem yavaş hem gereksiz bellek.
-                      maximumDpi: 72,
-                      decoration: const BoxDecoration(color: Colors.white),
+                  if (blank)
+                    Center(
+                      child: Icon(
+                        Icons.note_add_outlined,
+                        size: 28,
+                        color: scheme.outline,
+                      ),
+                    )
+                  else
+                    RotatedBox(
+                      quarterTurns: quarterTurns,
+                      child: PdfPageView(
+                        document: document,
+                        pageNumber: pageNumber,
+                        // Küçük resim: yüksek DPI hem yavaş hem gereksiz
+                        // bellek.
+                        maximumDpi: 72,
+                        decoration: const BoxDecoration(color: Colors.white),
+                      ),
                     ),
-                  ),
                   if (selected)
                     Positioned(
                       top: 4,

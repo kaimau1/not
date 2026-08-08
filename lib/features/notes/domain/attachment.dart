@@ -195,11 +195,35 @@ class PageBubble {
     collapsed: map['k'] as bool? ?? false,
     starred: map['s'] as bool? ?? false,
     urgent: map['u'] as bool? ?? false,
-    rects: [
-      for (final e in (map['r'] as List?) ?? const [])
-        PageBubbleRect.fromList((e as List).cast<num>()),
-    ],
+    rects: _rectsFromMap(map),
   );
+
+  /// Vurgu dikdörtgenlerini kayıttan okur.
+  ///
+  /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-08: "metin seçip üzerine balon
+  /// koyunca o balon kaydolmuyor, geri gidince kayboluyor").** Dikdörtgenler
+  /// `[[l,t,r,b], [l,t,r,b]]` yani DİZİ İÇİNDE DİZİ olarak yazılıyordu;
+  /// **Firestore iç içe dizi kabul etmez** ve o notun yazımı tümüyle
+  /// reddediliyordu. Yani yalnız vurgu değil, vurgu eklendikten sonraki her
+  /// değişiklik de kaydedilmiyordu. Artık DÜZ liste yazılıyor
+  /// (`[l,t,r,b,l,t,r,b,...]` — çizimdeki [InkStroke.points] ile aynı kural).
+  ///
+  /// Okuma İKİ biçimi de anlar: elde eski biçimde kalmış bir kayıt (paket
+  /// dosyası, yerel anlık görüntü) sessizce kaybolmasın.
+  static List<PageBubbleRect> _rectsFromMap(Map<String, dynamic> map) {
+    final raw = map['r'] as List?;
+    if (raw == null || raw.isEmpty) return const [];
+    if (raw.first is List) {
+      return [
+        for (final e in raw) PageBubbleRect.fromList((e as List).cast<num>()),
+      ];
+    }
+    final flat = [for (final v in raw) (v as num).toDouble()];
+    return [
+      for (var i = 0; i + 3 < flat.length; i += 4)
+        PageBubbleRect(flat[i], flat[i + 1], flat[i + 2], flat[i + 3]),
+    ];
+  }
 
   Map<String, dynamic> toMap() => {
     'i': id,
@@ -213,7 +237,11 @@ class PageBubble {
     if (collapsed) 'k': true,
     if (starred) 's': true,
     if (urgent) 'u': true,
-    if (rects.isNotEmpty) 'r': [for (final r in rects) r.toList()],
+    // DÜZ liste: Firestore iç içe dizi kabul etmiyor (bkz. [_rectsFromMap]).
+    if (rects.isNotEmpty)
+      'r': [
+        for (final r in rects) ...[r.left, r.top, r.right, r.bottom],
+      ],
   };
 }
 

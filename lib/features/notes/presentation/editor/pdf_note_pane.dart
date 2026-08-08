@@ -35,7 +35,16 @@ class PdfNotePane extends StatefulWidget {
     this.onFieldFocused,
     this.onFieldDisposed,
     this.onImmersiveChanged,
+    this.penMode = false,
+    this.onPenModeChanged,
   });
+
+  /// Sayfanın ÜZERİNE yazma kipi (editörün alt çubuğundaki kalem düğmesi).
+  /// Açıkken bölmede tek parmak çizer, iki parmak gezinir ve bölmenin altında
+  /// kalem çubuğu belirir — tam ekrana geçmeye gerek kalmaz (kullanıcı isteği
+  /// 2026-08-08: "pdf üzerine yazma kalemini gösterdiğim alana al").
+  final bool penMode;
+  final ValueChanged<bool>? onPenModeChanged;
 
   /// Balona yazılırken true: editör kendi alt çubuğunu (Biçim/Ekle/AI) ve ek
   /// şeridini gizler. Klavye + iki bölme + iki çubuk aynı anda sığmıyor.
@@ -67,9 +76,11 @@ class PdfNotePane extends StatefulWidget {
 }
 
 class _PdfNotePaneState extends State<PdfNotePane> {
-  /// Çizimler pano üzerinde de görünür ama BURADA düzenlenmez: küçük bölmede
-  /// tek parmakla çizim, sayfayı kaydırmayı imkânsız kılıyordu. Düzenleme tam
-  /// ekran görüntüleyicide (kalem düğmesi) yapılır.
+  /// Çizimler bölmede de DÜZENLENİR (kalem kipi açıkken). Eskiden yalnız tam
+  /// ekranda düzenlenebiliyordu; gerekçe "küçük bölmede tek parmakla çizim
+  /// sayfayı kaydırmayı imkânsız kılıyor" idi. Artık çizim açık bir KİPTİR:
+  /// açıkken tek parmak çizer, iki parmak gezinir; kapalıyken sayfa eskisi
+  /// gibi kayar. Kullanıcı kalemi kendisi açtığı için sürpriz yok.
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
@@ -142,6 +153,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
       ink: _ink,
       bubbles: _bubbles,
       host: host,
+      penMode: widget.penMode,
     ),
   );
 }
@@ -157,12 +169,14 @@ class _PdfPaneViewer extends StatefulWidget {
     required this.ink,
     required this.bubbles,
     required this.host,
+    required this.penMode,
   });
 
   final Attachment attachment;
   final InkController ink;
   final BubbleController bubbles;
   final PageNoteHost host;
+  final bool penMode;
 
   @override
   State<_PdfPaneViewer> createState() => _PdfPaneViewerState();
@@ -190,6 +204,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   @override
   void initState() {
     super.initState();
+    if (widget.penMode) widget.ink.setEditing(true);
     // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması).
     // Açılan balon, yazma kartının üstünde kalan alanın ortasına getirilir.
     widget.bubbles.onOpened = (bubble) => centerPdfOnBubble(
@@ -205,6 +220,12 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   @override
   void didUpdateWidget(_PdfPaneViewer old) {
     super.didUpdateWidget(old);
+    if (old.penMode != widget.penMode) {
+      // Kalem açılırken balon bırakma kipi kapanır: iki kip aynı parmağı
+      // ister (tam ekran görüntüleyicideki kuralın aynısı).
+      widget.ink.setEditing(widget.penMode);
+      if (widget.penMode) widget.bubbles.setAdding(false);
+    }
     // Pano başka bir sayfaya geçti: belge oraya kayar. Görüntüleyici hazır
     // değilse (dosya hâlâ iniyor) atlanır — pano zaten kendi sayfasını
     // gösteriyor, kullanıcı notunu beklemeden yazabilir.
@@ -266,7 +287,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           bubbles: widget.bubbles,
           editable: true,
           dragging: dragging,
-          // Çizimler görünür ama panoda DÜZENLENMEZ (bkz. _PdfNotePaneState).
+          inkEditing: widget.penMode,
           inkLayer: (page) => InkPageLayer(controller: widget.ink, page: page),
           onPageChanged: (page) {
             if (page == null || page == _page) return;
@@ -285,7 +306,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
             }
           },
         );
-        return hasLocal
+        final viewer = hasLocal
             ? PdfViewer.file(
                 attachment.localPath,
                 controller: _pdf,
@@ -296,6 +317,18 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
                 controller: _pdf,
                 params: params,
               );
+        // Kalem açıkken İKİ PARMAK gezinir: çizim katmanı tek parmağı aldığı
+        // için yakınlaştırma/kaydırma bu katmandan yapılır (tam ekran
+        // görüntüleyicideki kurulumun aynısı).
+        return InkNavLayer(
+          enabled: widget.penMode,
+          controller: widget.ink,
+          getMatrix: () => _pdf.isReady ? _pdf.value : null,
+          setMatrix: (m) => _pdf.value = m,
+          minScale: 0.1,
+          maxScale: 8,
+          child: viewer,
+        );
       },
     );
 
@@ -314,6 +347,14 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           right: 4,
           child: Column(children: [_bubbleButton(), _overviewButton()]),
         ),
+        // Kalem çubuğu bölmenin DİBİNDE: renk, kalınlık, silgi, ok, geri al.
+        if (widget.penMode)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: InkToolbar(controller: widget.ink),
+          ),
         // Yazma kartı açıkken çubuk onun üstüne çıkar (üst üste binmesin).
         ValueListenableBuilder<double>(
           valueListenable: widget.bubbles.dockHeight,

@@ -702,13 +702,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get aiModelChat => 'Résumés, titres, étiquettes et discussion';
 
   @override
-  String get aiModelDocument => 'Podcasts et discussion sur documents';
+  String get aiModelDocument => 'Chat document et résumé PDF';
 
   @override
   String get aiModelTranslate => 'Traduction';
 
   @override
-  String get aiModelVoice => 'Notes vocales';
+  String get aiModelVoice => 'Assistant de note vocale';
 
   @override
   String get aiModelAuto => 'Automatique (recommandé)';
@@ -1271,6 +1271,14 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
+  String get imageNotePreparing =>
+      'Assemblage des images en un document…';
+
+  @override
+  String get newImageNote =>
+      'Ajouter une image et prendre des notes';
+
+  @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
 
   @override
@@ -1312,6 +1320,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfAddBlankPage => 'Ajouter une page vierge';
 
   @override
   String get pdfRotatePages => 'Döndür';
@@ -2142,6 +2153,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get ttsEngineAiInfo =>
       'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+
+  @override
+  String get ttsEngineAiUnavailable =>
+      'La voix IA nécessite votre propre clé Gemini. En attendant, la lecture utilise la voix de l\'appareil.';
 
   @override
   String get ttsModel => 'Seslendirme modeli';

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
@@ -25,6 +27,7 @@ import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
+import '../data/scan/scan_pdf.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -677,6 +680,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final folderId = ref.read(selectedFolderProvider);
     if (folderId != null) repo.updateFields(id, {'folderId': folderId});
     await _openNew(id, query: '?pdf=1');
+  }
+
+  /// "Görsel ekle not al": seçilen görseller TEK BELGEYE (PDF) dizilir ve
+  /// PDF notunun aynısı açılır.
+  ///
+  /// Neden yeni bir not TİPİ değil (kullanıcı isteği 2026-08-08: "PDF not al
+  /// modu güzel, aynı şekilde görsel notu modu yapalım"): görsel notunun
+  /// istediği HER ŞEY — sayfa başına not, balon, vurgu, ok, el yazısı, sayfa
+  /// ekle/sil, paylaşım, dışa aktarma — PDF notunda zaten var ve tek kopya
+  /// hâlinde çalışıyor. Görseller belgeye çevrilince bunların hepsi bedava
+  /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını
+  /// (ve ikinci bir hata kaynağını) doğururdu.
+  Future<void> _createImageNote() async {
+    final l10n = context.l10n;
+    const group = XTypeGroup(
+      label: 'Görsel',
+      extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    );
+    final files = await openFiles(acceptedTypeGroups: const [group]);
+    if (files.isEmpty || !mounted) return;
+    final repo = ref.read(notesRepositoryProvider);
+    final attachments = ref.read(attachmentRepositoryProvider);
+    if (repo == null || attachments == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
+    try {
+      final bytes = await ScanPdf.build([for (final f in files) f.path]);
+      final id = await repo.createNote(NoteType.pdf);
+      final folderId = ref.read(selectedFolderProvider);
+      if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+      final attachment = await attachments.preparePdf(
+        noteId: id,
+        bytes: bytes,
+        fileName: '${l10n.newImageNote}.pdf',
+      );
+      repo.updateFields(id, {
+        'attachments': FieldValue.arrayUnion([attachment.toMap()]),
+      });
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      await _openNew(id);
+    } catch (e) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+    }
   }
 
   /// "Sunum ekle not al": PDF yolunun slayt eşi.
@@ -1391,6 +1441,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onPhotoNote: _createPhotoNote,
                           onScanNote: _createScanNote,
                           onPdfNote: _createPdfNote,
+                          onImageNote: _createImageNote,
                           onSlidesNote: _createSlidesNote,
                           onQrNote: _createQrNote,
                           anchor: _fabColumnLink,

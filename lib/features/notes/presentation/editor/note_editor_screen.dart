@@ -46,6 +46,7 @@ import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
+import '../../data/note_speech.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_title.dart';
@@ -1850,6 +1851,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
   bool _immersiveBubble = false;
 
+  /// PDF/sunum sayfasının ÜZERİNE yazma kipi (alt çubuktaki kalem düğmesi).
+  /// Tam ekrana geçmeden bölmede çizim yapılır; kip açıkken tek parmak çizer,
+  /// iki parmak gezinir (kullanıcı isteği 2026-08-08).
+  bool _penMode = false;
+
   void _setImmersiveBubble(bool value) {
     if (_immersiveBubble == value || !mounted) return;
     setState(() => _immersiveBubble = value);
@@ -2202,8 +2208,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     await showNoteShareSheet(context, ref, _note ?? note);
   }
 
-  /// Notu cihazın TTS'iyle sesli okur (model çağrısı yok). Kilitli notta
-  /// ayrıca doğrulama yok — editör zaten açılırken doğruluyor.
+  /// Notu sesli okur. Kilitli notta ayrıca doğrulama yok — editör zaten
+  /// açılırken doğruluyor.
+  ///
+  /// **BELGE notunda notun kendi metni yetmez** (kullanıcı bulgusu
+  /// 2026-08-08: "PDF sesli oku çalışmıyor"): PDF/sunum notunun düz metni
+  /// SAYFA NOTLARIDIR ve çoğu notta boştur — okuma ekranı "okunabilir metin
+  /// çıkmadı" diyip duruyordu. Artık belgenin KENDİ metni de okunuyor; sayfa
+  /// notları varsa önce onlar gider (kullanıcının kendi yazdığı önce).
   Future<void> _listen() async {
     final note = _note;
     if (note == null) return;
@@ -2215,7 +2227,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Kilitli notun podcast metni de diske yazılmasın.
           allowCache: !note.locked,
           // toPlainText değil: başlık ve `- [x]` işaretleri okunmasın.
-          loadText: () async => note.toContentText(),
+          loadText: () => noteSpeechText(note, ref.read(attachmentRepositoryProvider)),
         ),
       ),
     );
@@ -2987,6 +2999,74 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Eski hâli iki katmanlıydı — küçük bir açılır menü (madde/görsel/PDF/renk)
   /// ve onun içinden açılan ikinci bir "tüm ekler" levhası. Aynı seçenek iki
   /// yerde duruyor, "Ekle" adı üç kez geçiyordu. Artık tek dokunuş, tek sayfa.
+  /// Ek şeridini açıp kapatan düğme (sayı rozetli). Şeridin kendi başlık
+  /// satırı kaldırıldı: kapalıyken artık HİÇ yer kaplamıyor.
+  Widget _attachmentsToggle(AppLocalizations l10n, int count) {
+    final scheme = Theme.of(context).colorScheme;
+    final open = ref.watch(attachmentsExpandedProvider);
+    return Tooltip(
+      message: open ? l10n.hideAttachments : l10n.showAttachments,
+      child: Material(
+        color: open ? scheme.secondaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () =>
+              ref.read(attachmentsExpandedProvider.notifier).toggle(),
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 9),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.attach_file, size: 17, color: scheme.onSurface),
+                const SizedBox(width: 4),
+                Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// PDF/sunum sayfasının ÜZERİNE yazma kalemi. Açıkken bölmede tek parmak
+  /// çizer, iki parmak gezinir; renk/kalınlık/silgi/ok çubuğu bölmenin
+  /// altında belirir (bkz. PdfNotePane.penMode).
+  Widget _penToolButton(AppLocalizations l10n) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: _penMode ? l10n.annotateDone : l10n.annotate,
+      child: SizedBox(
+        height: 44,
+        width: 46,
+        child: Material(
+          color: _penMode
+              ? scheme.primary
+              : scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(13),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(13),
+            onTap: () => setState(() => _penMode = !_penMode),
+            child: Icon(
+              _penMode ? Icons.edit : Icons.edit_outlined,
+              size: 20,
+              color: _penMode ? scheme.onPrimary : scheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _addToolButton(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
@@ -3282,14 +3362,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // annotation'larını korur, sıralama ise sayfaları kopyaladığı için onları
     // kaybeder. Sıra değişmediyse ucuz ve kayıpsız olanı seçilir.
     final identityOrder = [for (var i = 0; i < pageCount; i++) i];
+    // BOŞ SAYFA eklenmişse "yalnız silindi" kısayolu geçersizdir: yeni sayfa
+    // ancak sıralama yolundan (yeniden kurma) doğar.
+    final hasBlank = order.contains(PdfEdit.blankPage);
     final onlyDeleted =
+        !hasBlank &&
         order.length < pageCount &&
         [for (final i in order) i].toString() ==
             [
               for (final i in identityOrder)
                 if (order.contains(i)) i,
             ].toString();
-    if (order.length != pageCount || !onlyDeleted) {
+    if (hasBlank || order.length != pageCount || !onlyDeleted) {
       if (onlyDeleted) {
         out = await PdfEdit.deletePagesInBackground(out, [
           for (final i in identityOrder)
@@ -3303,7 +3387,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // sonra yeni düzene göre yeniden dizilir. Notların anahtarlarına
     // dokunulmaz — bu yüzden 3. sayfanın notu, o sayfa nereye giderse oraya
     // gider ve silinen sayfanın notu kayıtta kalır.
-    final ids = reorderPageIds(materializePageIds(doc, pageCount), order);
+    // Boş sayfaya KENDİ kimliği verilir (uuid): kimliksiz bırakılsaydı
+    // ondan sonraki sayfaların notları bir kayardı.
+    final ids = reorderPageIds(
+      materializePageIds(doc, pageCount),
+      order,
+      blankId: (_) => const Uuid().v4(),
+    );
     return (bytes: out, pageIds: ids);
   });
 
@@ -3458,6 +3548,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onFieldFocused: _setFormatTarget,
             onFieldDisposed: _clearFormatTargetFor,
             onImmersiveChanged: _setImmersiveBubble,
+            penMode: _penMode,
+            onPenModeChanged: (value) => setState(() => _penMode = value),
           );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3477,6 +3569,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _cacheDeps();
     final l10n = context.l10n;
     final note = _note;
+    // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
+    // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
+    final fileAttachments = [
+      for (final a in (note?.attachments ?? const <Attachment>[]))
+        if (!a.floatsOnPage) a,
+    ];
+    final isDocumentNote =
+        note != null &&
+        (note.type == NoteType.pdf || note.type == NoteType.slides);
 
     if (note == null) {
       return Scaffold(
@@ -3570,7 +3671,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           note.titleTextOpacity,
           theme.colorScheme.onSurface,
         ),
-        maxLines: null,
+        // TEK SATIR (kullanıcı isteği 2026-08-08: "başlık tek satırdan
+        // taşmasın"): uzun başlık alanın içinde yatay kayar, sayfa düzenini
+        // aşağı itmez.
+        maxLines: 1,
         textInputAction: TextInputAction.next,
         // Varsayılan `next` odak sırasındaki bir SONRAKİ öğeye gider — metin
         // olmayan bir öğeye düşerse klavye kapanıyordu. "İleri" doğrudan
@@ -3711,7 +3815,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (note.reminderAt != null)
         InputChip(
           avatar: const Icon(Icons.alarm, size: 14),
-          label: Text(DateFormat('d MMM HH:mm').format(note.reminderAt!)),
+          // Dar alanda çip etiketleri KISALTILIR (`...`): sığmayan bir metin
+          // `Chip` içinde taşma hatası verir.
+          label: Text(
+            DateFormat('d MMM HH:mm').format(note.reminderAt!),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           labelStyle: chipLabelStyle,
           padding: _kChipPadding,
           visualDensity: _kChipDensity,
@@ -3724,7 +3834,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       if (noteFolder != null)
         InputChip(
           avatar: Icon(noteFolder.iconData, size: 14),
-          label: Text(noteFolder.name),
+          label: Text(
+            noteFolder.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           labelStyle: chipLabelStyle,
           padding: _kChipPadding,
           visualDensity: _kChipDensity,
@@ -3736,7 +3850,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ),
       for (final tag in note.tags)
         InputChip(
-          label: Text('#$tag'),
+          label: Text(
+            '#$tag',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           labelStyle: chipLabelStyle,
           padding: _kChipPadding,
           visualDensity: _kChipDensity,
@@ -3755,17 +3873,30 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // punto tarih + ikonlar) olduğu için altında kullanılmayan bir şerit
     // kalıyordu. Çipler oraya sıkıştırıldığı ve başlığın altındaki satır
     // kapandığı için başlık bloğu UZAMAZ, kısalır.
-    final metaChips = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+    // Çipler ve "+" düğmesi BAŞLIK SATIRININ SAĞINDA, iki sütuna sığan dar bir
+    // alanda (kullanıcı isteği 2026-08-08: "artı butonunu başlık satırının en
+    // sağına bir alan yap, etiketler de oraya gelsin, orayı 2 sütun yap").
+    // Eskiden başlığın ÜSTÜNDE yatay kayan bir şeritti: bir satır yer yiyor,
+    // etiketler de ancak kaydırılarak görünüyordu.
+    //
+    // Taşma yok: her çipin genişliği sınırlı ve alan `Wrap` — sığmayan çip alt
+    // satıra düşer, satır büyümez çünkü alanın kendisi başlıkla aynı yüksekliği
+    // paylaşır.
+    final metaChips = ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 168),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(0, 2, 10, 0),
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 2,
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            for (var i = 0; i < metaChildren.length; i++) ...[
-              if (i > 0) const SizedBox(width: 4),
-              metaChildren[i],
-            ],
+            for (final chip in metaChildren)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 80),
+                child: chip,
+              ),
           ],
         ),
       ),
@@ -3810,9 +3941,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Son güncelleme zamanı artık ÜST BARDA (başlık yerinde) duruyor: gövdenin
     // içinde her açılışta bir satır yer kaplıyordu ve "Düzenlendi:" öneki
     // tarihin kendisinden uzundu. Üst barda önek olmadan okunuyor.
-    final header = Column(
+    final header = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [metaChips, titleField],
+      children: [
+        Expanded(child: titleField),
+        metaChips,
+      ],
     );
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
@@ -4465,10 +4599,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             // üç segmentle kalabalıktı ve ekleme işi iki ayrı
                             // yere bölünmüştü (bkz. attach_sheet.dart).
                             _addToolButton(l10n),
+                            // EKLER düğmesi: şeridin kendi başlık satırı
+                            // kalktı, aç/kapa buraya taşındı (kullanıcı
+                            // isteği 2026-08-08 — "ekler yazısı ve göster
+                            // gizlesi alt alana gelsin, bir satır alan
+                            // kurtarmış oluruz").
+                            if (fileAttachments.isNotEmpty) ...[
+                              const SizedBox(width: 3),
+                              _attachmentsToggle(l10n, fileAttachments.length),
+                            ],
                           ],
                         ),
                       ),
                       const Spacer(),
+                      // PDF/sunum notunda KALEM alt çubukta: tam ekrana
+                      // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
+                      // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
+                      // boşluk).
+                      if (isDocumentNote) ...[
+                        _penToolButton(l10n),
+                        const SizedBox(width: 8),
+                      ],
                       Tooltip(
                         message: l10n.aiTitle,
                         child: SizedBox(

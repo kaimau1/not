@@ -683,13 +683,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get aiModelChat => '要約・タイトル・タグ・チャット';
 
   @override
-  String get aiModelDocument => 'ポッドキャストと文書チャット';
+  String get aiModelDocument => 'ドキュメントチャットとPDF要約';
 
   @override
   String get aiModelTranslate => '翻訳';
 
   @override
-  String get aiModelVoice => '音声メモ';
+  String get aiModelVoice => '音声メモアシスタント';
 
   @override
   String get aiModelAuto => '自動（推奨）';
@@ -1236,6 +1236,14 @@ class AppLocalizationsJa extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
+  String get imageNotePreparing =>
+      '画像をドキュメントにまとめています…';
+
+  @override
+  String get newImageNote =>
+      '画像を追加してメモ';
+
+  @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
 
   @override
@@ -1277,6 +1285,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pdfDeletePages => 'Seçili sayfaları sil';
+
+  @override
+  String get pdfAddBlankPage => '空白ページを追加';
 
   @override
   String get pdfRotatePages => 'Döndür';
@@ -2089,6 +2100,10 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get ttsEngineAiInfo =>
       'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+
+  @override
+  String get ttsEngineAiUnavailable =>
+      'AI音声にはご自身のGeminiキーが必要です。設定するまでは端末の音声で読み上げます。';
 
   @override
   String get ttsModel => 'Seslendirme modeli';

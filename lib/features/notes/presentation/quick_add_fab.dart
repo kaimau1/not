@@ -45,6 +45,7 @@ class QuickAddFab extends StatefulWidget {
     required this.onPhotoNote,
     required this.onScanNote,
     required this.onPdfNote,
+    required this.onImageNote,
     required this.onSlidesNote,
     required this.onQrNote,
   });
@@ -74,6 +75,12 @@ class QuickAddFab extends StatefulWidget {
   /// "PDF ekle not al": dosya seçici açılır, seçilen PDF yeni notun içine
   /// gömülür ve sayfa başına not tutulan iki bölmeli ekran açılır.
   final VoidCallback onPdfNote;
+
+  /// "Görsel ekle not al": seçilen görseller TEK BELGEYE dizilir ve PDF
+  /// notunun aynısı açılır — üstte görsel, altta o görselin notu; üzerine
+  /// balon, vurgu, ok ve el yazısı konabilir (kullanıcı isteği 2026-08-08:
+  /// "PDF not al modu güzel, aynı şekilde görsel notu modu yapalım").
+  final VoidCallback onImageNote;
 
   /// "Sunum ekle not al": PDF yolunun slayt eşi (üstte slayt, altta o slaydın
   /// notu).
@@ -164,6 +171,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   Icons.picture_as_pdf_outlined,
                   context.l10n.newPdfNote,
                   widget.onPdfNote,
+                ),
+                (
+                  Icons.photo_library_outlined,
+                  context.l10n.newImageNote,
+                  widget.onImageNote,
                 ),
                 (
                   Icons.slideshow_outlined,

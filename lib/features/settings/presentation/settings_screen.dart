@@ -23,6 +23,7 @@ import '../../../core/utils/note_fonts.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/ai_speech.dart';
 import '../../ai/data/ai_provider.dart';
 import '../../ai/data/api_key_store.dart';
 import '../../ai/data/model_catalog.dart';
@@ -187,6 +188,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         summary: _soundSummary(l10n),
         keywords: 'mikrofon ses okuma hiz dil basili tut',
         rows: [
+          // SESLENDİRME TEK YERDE: motor (cihaz/yapay zekâ) seçimi eskiden
+          // "Gelişmiş AI" bölümünde, sesler ve hızlar buradaydı; kullanıcı
+          // "1 özellik 1 ayara bağlanmalı, çok ayar karışıklık yapıyor"
+          // dedi (2026-08-08). Artık okuma ile ilgili her ayar bu alanda.
+          _SettingRow(
+            const _TtsSelectors(),
+            title: l10n.ttsSectionTitle,
+            keywords: 'seslendirme motor yapay zeka cihaz sesi tts',
+          ),
           _SettingRow(
             const _VoiceModeSelector(),
             title: l10n.voiceModeSetting,
@@ -2547,8 +2557,6 @@ class _AdvancedAiSection extends ConsumerWidget {
           _GeminiKeyEditor(),
           SizedBox(height: 14),
           _ModelSelectors(),
-          SizedBox(height: 14),
-          _TtsSelectors(),
         ],
       ),
     );
@@ -2600,11 +2608,29 @@ class _TtsSelectors extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          engine == TtsEngine.gemini ? l10n.ttsEngineAiInfo : l10n.ttsEngineDeviceInfo,
+          engine == TtsEngine.gemini
+              ? l10n.ttsEngineAiInfo
+              : l10n.ttsEngineDeviceInfo,
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
+        // KULLANILABİLİR Mİ: yapay zekâ sesi kullanıcının KENDİ Gemini
+        // anahtarını ister (dahili yol ses döndürmüyor). Eskiden ayar
+        // seçilebiliyor ama okuma sessizce cihaz sesiyle yapılıyordu —
+        // kullanıcı "AI seçince çalışmıyor, hâlâ android sesiyle okuyor"
+        // dedi. Artık sebebi burada yazıyor.
+        if (engine == TtsEngine.gemini &&
+            !ref.read(aiSpeechProvider.notifier).isAvailable)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              l10n.ttsEngineAiUnavailable,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.error),
+            ),
+          ),
         // Model ve ses YALNIZ yapay zekâ sesi seçiliyken anlamlı: cihaz
         // sesinin modeli yok, sesi de sistemden geliyor (üstteki ses seçici).
         if (engine == TtsEngine.gemini) ...[

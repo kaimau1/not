@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../domain/arrow.dart';
 import '../../domain/attachment.dart';
 
 /// PDF ve slayt görüntüleyicilerinin ortak **not balonu** katmanı — uygulamanın
@@ -129,6 +130,14 @@ class BubbleController extends ChangeNotifier {
   /// Klavyenin üstündeki kartın yüksekliği — belgeyi kaydırıp açık balonu
   /// kartın ÜSTÜNDE ortalayan görüntüleyiciler bunu kullanır.
   final dockHeight = ValueNotifier<double>(0);
+
+  /// ŞU AN taşınan balonun jest başından beri biriken kayması (piksel).
+  ///
+  /// Balonu vurguladığı metne bağlayan ok bunu dinler: taşırken ok parmakla
+  /// birlikte uzar/kısalır ve yönelir. Ayrı bir `ValueNotifier` olması şart —
+  /// denetleyiciyi her karede uyandırmak sayfanın bütün balon katmanını
+  /// yeniden kurardı (kasmanın kök nedeni, bkz. `_BubblePinState._drag`).
+  final dragDelta = ValueNotifier<Offset>(Offset.zero);
 
   /// Bir balon açıldığında (ya da düzenlemeye geçildiğinde) çağrılır:
   /// görüntüleyici belgeyi kaydırıp balonu görünür alanın ortasına alır.
@@ -333,6 +342,7 @@ class BubbleController extends ChangeNotifier {
   void dispose() {
     revision.dispose();
     dockHeight.dispose();
+    dragDelta.dispose();
     super.dispose();
   }
 
@@ -494,6 +504,25 @@ class BubblePageLayer extends StatelessWidget {
                 ),
               ),
             ),
+            // Balonu vurguladığı metne bağlayan OK. Balon sürüklendikçe ok
+            // uzar/kısalır ve yönünü değiştirir (kullanıcı isteği 2026-08-08):
+            // yalnız bu katman tazelenir, sürükleme kare başına tam bir
+            // yeniden kurulum yapmaz.
+            IgnorePointer(
+              child: RepaintBoundary(
+                child: ValueListenableBuilder<Offset>(
+                  valueListenable: controller.dragDelta,
+                  builder: (context, drag, _) => CustomPaint(
+                    size: size,
+                    painter: _LeaderPainter(
+                      bubbles: bubbles,
+                      draggingId: controller.dragging,
+                      drag: drag,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             // Vurguya dokunmak balonu AÇAR (kullanıcı isteği). Görünmez
             // dokunma alanları yalnız vurgunun satırlarını kaplar.
             for (final bubble in bubbles)
@@ -570,23 +599,30 @@ class BubblePageLayer extends StatelessWidget {
 
 /// Vurgu dikdörtgenlerini balonun rengiyle boyar. Yarı saydam ve TEK yol:
 /// üst üste binen satırlarda renk koyulaşmasın.
+///
+/// **Görünüm yeniden yazıldı** (kullanıcı bulgusu 2026-08-08: "fosforlu kalem
+/// görüntüsü çok çok kötü, ortası kalın kenarlar sönük, yazıyı okunmaz hâle
+/// getiriyor"). Eskiden iki katman vardı: satırın tamamını kaplayan soluk bir
+/// zemin + ortasından geçen KOYU kalın bir bant. İki katman üst üste binince
+/// satırın ortası (yani harflerin gövdesi) en koyu yer oluyordu — tam da
+/// okunması gereken kısım. Şimdi TEK ve DÜZGÜN bir dolgu var: satır boyunca
+/// aynı yoğunlukta, hafif yuvarlatılmış ve harflerin okunmasına izin verecek
+/// kadar saydam. Metnin üstü işaretli görünür ama metin hep okunur.
 class _HighlightPainter extends CustomPainter {
   _HighlightPainter({required this.bubbles});
 
   final List<PageBubble> bubbles;
 
+  /// Vurgunun yoğunluğu. 0.28 gözle görünür ama altındaki 12 punto metni
+  /// kapatmıyor; 0.42'lik eski bant koyu renklerde yazıyı yutuyordu.
+  static const _alpha = 0.28;
+
   @override
   void paint(Canvas canvas, Size size) {
     for (final bubble in bubbles) {
       if (bubble.rects.isEmpty) continue;
-      // FOSFORLU KALEM izi: satırın tamamını kaplayan soluk bir zemin +
-      // ortasından geçen daha koyu, uçları yuvarlak KALIN bir iz. İkisi
-      // birlikte "üzeri kalemle çizilmiş" görüntüsü verir; tek düz
-      // dikdörtgen düz bir seçim vurgusu gibi duruyordu (kullanıcı isteği
-      // 2026-08-08).
       final color = Color(bubble.color);
-      final wash = Path();
-      final stroke = Path();
+      final path = Path();
       for (final r in bubble.rects) {
         final rect = Rect.fromLTRB(
           r.left * size.width,
@@ -595,27 +631,18 @@ class _HighlightPainter extends CustomPainter {
           r.bottom * size.height,
         );
         if (rect.width <= 0 || rect.height <= 0) continue;
-        wash.addRRect(
-          RRect.fromRectAndRadius(rect, const Radius.circular(2)),
-        );
-        // İz satır yüksekliğinin %58'i, dikeyde ortalanmış.
-        final band = rect.height * 0.58;
-        final center = rect.center.dy;
-        stroke.addRRect(
+        // Satırın tamamı: kalem izi gibi hafifçe taşar (üstte/altta 1 px),
+        // böylece harflerin çıkıntıları da işaretin içinde kalır.
+        path.addRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTRB(
-              rect.left,
-              center - band / 2,
-              rect.right,
-              center + band / 2,
-            ),
-            Radius.circular(band / 2),
+            rect.inflate(0.5),
+            const Radius.circular(2.5),
           ),
         );
       }
-      canvas
-        ..drawPath(wash, Paint()..color = color.withValues(alpha: 0.20))
-        ..drawPath(stroke, Paint()..color = color.withValues(alpha: 0.42));
+      // TEK yol, TEK boya: `Path` üst üste binen satırları birleştirdiği için
+      // kesişimlerde renk koyulaşmaz.
+      canvas.drawPath(path, Paint()..color = color.withValues(alpha: _alpha));
     }
   }
 
@@ -643,6 +670,107 @@ class _HighlightPainter extends CustomPainter {
             a.rects[j].bottom != b.rects[j].bottom) {
           return true;
         }
+      }
+    }
+    return false;
+  }
+}
+
+/// Balonu, vurguladığı METNE bağlayan ince ok.
+///
+/// Kullanıcı isteği (2026-08-08): "metin seçip balon koyunca ... yazının
+/// merkezine bağlı ok işareti olsun, balonun hareketiyle o da otomatik
+/// uzasın, kısalsın, yönelsin." Vurgu sayfanın bir yerinde, balon başka bir
+/// yerinde durabiliyor; hangi balonun hangi satırı işaret ettiği ancak bu
+/// bağla anlaşılıyor.
+///
+/// Taşınan balonda ok CANLI: [drag] o balonun jest başından beri biriken
+/// kaymasıdır (bkz. [BubbleController.dragDelta]) ve yalnız bu katman
+/// yeniden çizilir.
+class _LeaderPainter extends CustomPainter {
+  _LeaderPainter({
+    required this.bubbles,
+    required this.draggingId,
+    required this.drag,
+  });
+
+  final List<PageBubble> bubbles;
+  final String? draggingId;
+  final Offset drag;
+
+  /// Balon zaten metnin üstündeyse ok çizilmez: kısa bir çizgi hem çirkin
+  /// hem de yönü okunmaz olurdu.
+  static const _minLength = 26.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final bubble in bubbles) {
+      if (bubble.rects.isEmpty) continue;
+      final target = _center(bubble, size);
+      if (target == null) continue;
+      var tail = Offset(bubble.x * size.width, bubble.y * size.height);
+      if (bubble.id == draggingId) tail += drag;
+      final delta = target - tail;
+      if (delta.distance < _minLength) continue;
+      final color = Color(bubble.color);
+      // Ok metnin ORTASINA değil, kenarına kadar gider: ucu harflerin üstünü
+      // kapatmasın.
+      final head = target - delta / delta.distance * 6;
+      final geo = arrowGeometry(tail, head, 2);
+      final paint = Paint()
+        ..color = color.withValues(alpha: 0.85)
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+      canvas
+        ..drawLine(tail, geo.lineEnd, paint)
+        ..drawPath(
+          Path()
+            ..moveTo(head.dx, head.dy)
+            ..lineTo(geo.left.dx, geo.left.dy)
+            ..lineTo(geo.right.dx, geo.right.dy)
+            ..close(),
+          Paint()..color = color.withValues(alpha: 0.85),
+        );
+    }
+  }
+
+  /// Vurgunun (bütün satırlarının) ortası — okun işaret ettiği nokta.
+  Offset? _center(PageBubble bubble, Size size) {
+    var left = double.infinity;
+    var top = double.infinity;
+    var right = -double.infinity;
+    var bottom = -double.infinity;
+    for (final r in bubble.rects) {
+      left = math.min(left, r.left);
+      top = math.min(top, r.top);
+      right = math.max(right, r.right);
+      bottom = math.max(bottom, r.bottom);
+    }
+    if (left > right || top > bottom) return null;
+    return Offset(
+      (left + right) / 2 * size.width,
+      (top + bottom) / 2 * size.height,
+    );
+  }
+
+  @override
+  bool hitTest(Offset position) => false;
+
+  @override
+  bool shouldRepaint(_LeaderPainter old) =>
+      old.drag != drag ||
+      old.draggingId != draggingId ||
+      old.bubbles.length != bubbles.length ||
+      _moved(old.bubbles, bubbles);
+
+  static bool _moved(List<PageBubble> a, List<PageBubble> b) {
+    for (var i = 0; i < b.length && i < a.length; i++) {
+      if (a[i].x != b[i].x ||
+          a[i].y != b[i].y ||
+          a[i].color != b[i].color ||
+          a[i].rects.length != b[i].rects.length) {
+        return true;
       }
     }
     return false;
@@ -978,12 +1106,16 @@ class _BubblePinState extends State<_BubblePin>
   void _dragMove(Offset delta) {
     if (widget.readOnly || !_lifted) return;
     _drag.value += delta;
+    // Vurguya giden ok da parmakla birlikte uzasın/yönelsin: yalnız ok
+    // katmanı dinliyor, denetleyici uyandırılmıyor (bkz. dragDelta).
+    widget.controller.dragDelta.value = _drag.value;
   }
 
   void _dragEnd() {
     if (!_lifted) return;
     final moved = _drag.value;
     _drag.value = Offset.zero;
+    widget.controller.dragDelta.value = Offset.zero;
     setState(() => _lifted = false);
     final b = widget.bubble;
     widget.controller
@@ -1013,7 +1145,12 @@ class _BubblePinState extends State<_BubblePin>
         );
 
   Widget _pin(BuildContext context, PageBubble bubble) {
-    final color = Color(bubble.color);
+    // Tutamaç YARI SAYDAM: sayfanın üstünde duruyor ve altındaki yazının
+    // okunmasını engellememeli (kullanıcı isteği 2026-08-08 — "yarı saydam,
+    // yazının arkasında kalan balon"). Taşınırken ve açıkken tam opak olur:
+    // o an ilgilenilen balon net görünmeli.
+    final opaque = _lifted || !bubble.collapsed;
+    final color = Color(bubble.color).withValues(alpha: opaque ? 1 : 0.72);
     final hasTitle = bubble.title.trim().isNotEmpty;
     final child = hasTitle ? _titleChip(bubble, color) : _dot(bubble, color);
     final point = Offset(
