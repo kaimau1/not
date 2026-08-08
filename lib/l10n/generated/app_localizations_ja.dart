@@ -2116,7 +2116,8 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sharePdfWithBubbles => '吹き出し入りPDFとして';
 
   @override
-  String get sharePdfWithBubblesInfo => '吹き出し・ハイライト・手書きがPDFに焼き込まれます。相手にNotアプリは不要です。';
+  String get sharePdfWithBubblesInfo =>
+      '吹き出し・ハイライト・手書きがPDFに焼き込まれます。誰でも開けて、Notでは編集可能な状態で開きます。';
 
   @override
   String get sharePdfWithBubblesNone => 'このメモには吹き出しや手書きのあるPDFがありません。';

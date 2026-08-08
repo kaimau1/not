@@ -564,7 +564,7 @@
   "shareAsTextInfo": "Envia o texto da nota e as notas de página para qualquer aplicativo.",
   "shareAsTextEmpty": "Esta nota não tem texto para compartilhar.",
   "sharePdfWithBubbles": "Como PDF com balões",
-  "sharePdfWithBubblesInfo": "Balões, destaques e desenhos são gravados dentro do PDF; quem recebe não precisa do app Not.",
+  "sharePdfWithBubblesInfo": "Balões, destaques e desenhos são gravados dentro do PDF; qualquer um pode abrir e no Not ele abre editável.",
   "sharePdfWithBubblesNone": "Esta nota não tem PDF com balões ou desenhos.",
   "sharePdfWithBubblesPreparing": "Preparando o PDF com balões…",
   "sharePdfWithBubblesSuffix": " (com balões)"

@@ -564,7 +564,7 @@
   "shareAsTextInfo": "メモの本文とページメモを任意のアプリへ送ります。",
   "shareAsTextEmpty": "このメモには共有できるテキストがありません。",
   "sharePdfWithBubbles": "吹き出し入りPDFとして",
-  "sharePdfWithBubblesInfo": "吹き出し・ハイライト・手書きがPDFに焼き込まれます。相手にNotアプリは不要です。",
+  "sharePdfWithBubblesInfo": "吹き出し・ハイライト・手書きがPDFに焼き込まれます。誰でも開けて、Notでは編集可能な状態で開きます。",
   "sharePdfWithBubblesNone": "このメモには吹き出しや手書きのあるPDFがありません。",
   "sharePdfWithBubblesPreparing": "吹き出し入りPDFを準備しています…",
   "sharePdfWithBubblesSuffix": "（吹き出し入り）"

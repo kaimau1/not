@@ -564,7 +564,7 @@
   "shareAsTextInfo": "메모의 글과 페이지 메모를 다른 앱으로 보냅니다.",
   "shareAsTextEmpty": "이 메모에는 공유할 글이 없습니다.",
   "sharePdfWithBubbles": "말풍선 포함 PDF로",
-  "sharePdfWithBubblesInfo": "말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 받는 사람에게 Not 앱이 필요 없습니다.",
+  "sharePdfWithBubblesInfo": "말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 누구나 열 수 있고 Not에서는 편집 가능한 상태로 열립니다.",
   "sharePdfWithBubblesNone": "이 메모에는 말풍선이나 필기가 있는 PDF가 없습니다.",
   "sharePdfWithBubblesPreparing": "말풍선 포함 PDF를 준비하는 중…",
   "sharePdfWithBubblesSuffix": " (말풍선 포함)"

@@ -2168,7 +2168,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sharePdfWithBubbles => 'Come PDF con fumetti';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chi lo riceve non ha bisogno dell\'app Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chiunque può aprirlo e in Not si apre modificabile.';
 
   @override
   String get sharePdfWithBubblesNone => 'Questa nota non ha PDF con fumetti o disegni.';

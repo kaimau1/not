@@ -564,7 +564,7 @@
   "shareAsTextInfo": "Wysyła tekst notatki i notatki stron do dowolnej aplikacji.",
   "shareAsTextEmpty": "Ta notatka nie ma tekstu do udostępnienia.",
   "sharePdfWithBubbles": "Jako PDF z dymkami",
-  "sharePdfWithBubblesInfo": "Dymki, zakreślenia i rysunki są wypalane w pliku PDF; odbiorca nie potrzebuje aplikacji Not.",
+  "sharePdfWithBubblesInfo": "Dymki, zakreślenia i rysunki są wypalane w pliku PDF; każdy może go otworzyć, a w Not otwiera się z możliwością edycji.",
   "sharePdfWithBubblesNone": "Ta notatka nie zawiera pliku PDF z dymkami ani rysunkami.",
   "sharePdfWithBubblesPreparing": "Przygotowywanie pliku PDF z dymkami…",
   "sharePdfWithBubblesSuffix": " (z dymkami)"

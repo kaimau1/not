@@ -781,7 +781,7 @@
   "shareAsTextInfo": "Sends the note's text and page notes to any app.",
   "shareAsTextEmpty": "This note has no text to share.",
   "sharePdfWithBubbles": "As PDF with bubbles",
-  "sharePdfWithBubblesInfo": "Bubbles, highlights and drawings are stamped into the PDF; the recipient does not need the Not app.",
+  "sharePdfWithBubblesInfo": "Bubbles, highlights and drawings are stamped into the PDF; anyone can open it, and in Not it opens editable.",
   "sharePdfWithBubblesNone": "This note has no PDF carrying bubbles or drawings.",
   "sharePdfWithBubblesPreparing": "Preparing PDF with bubbles…",
   "sharePdfWithBubblesSuffix": " (with bubbles)",

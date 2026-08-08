@@ -564,7 +564,7 @@
   "shareAsTextInfo": "Sendet den Text der Notiz und die Seitennotizen an eine beliebige App.",
   "shareAsTextEmpty": "Diese Notiz enthält keinen Text zum Teilen.",
   "sharePdfWithBubbles": "Als PDF mit Sprechblasen",
-  "sharePdfWithBubblesInfo": "Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; die Gegenseite braucht die Not-App nicht.",
+  "sharePdfWithBubblesInfo": "Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; jeder kann sie öffnen, in Not öffnet sie sich bearbeitbar.",
   "sharePdfWithBubblesNone": "In dieser Notiz gibt es keine PDF mit Sprechblasen oder Zeichnungen.",
   "sharePdfWithBubblesPreparing": "PDF mit Sprechblasen wird vorbereitet…",
   "sharePdfWithBubblesSuffix": " (mit Sprechblasen)"

@@ -76,6 +76,27 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="image/*"/>
             </intent-filter>
+            <!-- "Birlikte aç" (ACTION_VIEW) ile PDF/sunum açma. SEND filtresi
+                 yalnız PAYLAŞ menüsünde çıkarıyordu; dosya yöneticisinden,
+                 indirilenlerden ya da bir sohbet uygulamasının eki üzerinden
+                 açarken Notlar listede görünmüyordu (kullanıcı bulgusu
+                 2026-08-08: "PDF'yi PDF görüntüleyicilerde açabiliyorum ama
+                 Notlar çıkmıyor"). Notlar'ın gönderdiği belge böylece karşı
+                 tarafta doğrudan Notlar'da, balonlarıyla açılabiliyor
+                 (bkz. PdfEdit.readSharedPdf).
+
+                 BROWSABLE YOK: bir web sayfasının bağlantısı uygulamayı
+                 açıp not oluşturamamalı (notlar:// filtresindeki aynı gerekçe).
+                 Tür listesi dar tutuluyor — `*/*` Notlar'ı her dosyada
+                 çıkarırdı. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="application/pdf"/>
+                <data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation"/>
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND_MULTIPLE"/>
                 <category android:name="android.intent.category.DEFAULT"/>

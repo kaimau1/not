@@ -564,7 +564,7 @@
   "shareAsTextInfo": "يرسل نص الملاحظة وملاحظات الصفحات إلى أي تطبيق.",
   "shareAsTextEmpty": "لا يوجد نص في هذه الملاحظة لمشاركته.",
   "sharePdfWithBubbles": "كملف PDF مع الفقاعات",
-  "sharePdfWithBubblesInfo": "تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ لا يحتاج المستلم إلى تطبيق Not.",
+  "sharePdfWithBubblesInfo": "تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ يمكن لأي شخص فتحه، وفي تطبيق Not يُفتح قابلاً للتحرير.",
   "sharePdfWithBubblesNone": "لا يوجد في هذه الملاحظة ملف PDF يحمل فقاعات أو رسومات.",
   "sharePdfWithBubblesPreparing": "يجري تجهيز ملف PDF مع الفقاعات…",
   "sharePdfWithBubblesSuffix": " (مع الفقاعات)"

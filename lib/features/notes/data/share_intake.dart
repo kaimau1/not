@@ -16,6 +16,7 @@ import 'attachment_repository.dart';
 import 'note_package.dart';
 import 'note_share.dart';
 import 'notes_repository.dart';
+import 'pdf_edit.dart';
 
 /// Paylaş menüsünden gelen içerikleri nota çevirir: başka bir uygulamada
 /// Paylaşılan dosyanın hangi ek türü olduğunu söyler; `null` ise dosya değil
@@ -149,7 +150,19 @@ final shareIntakeProvider = Provider<void>((ref) {
     // an boş kalıyor ve o anki akış anlık görüntüsünde not süzgeçten
     // düşebiliyordu (bkz. NotesRepository.createNote yorumu).
     final body = bodyParts.join('\n').trim();
-    final id = await repo.createNote(NoteType.text, body: body);
+    // Yalnız BİR belge paylaşıldıysa not "PDF/sunum ekle not al" tipinde
+    // doğar: editör üstte sayfa, altta o sayfanın notu olacak şekilde açılır
+    // ve belgenin üzerine balon bırakılabilir. Metin notu tipinde açılsaydı
+    // belge yalnız bir ek rozeti olurdu (kullanıcı isteği 2026-08-08: "notlarda
+    // açıp aynı şekilde düzenlemeye devam edebilmek").
+    final type = body.isEmpty && docs.length == 1
+        ? switch (shareAttachmentKind(docs.first)) {
+            AttachmentKind.pdf => NoteType.pdf,
+            AttachmentKind.slide => NoteType.slides,
+            _ => NoteType.text,
+          }
+        : NoteType.text;
+    final id = await repo.createNote(type, body: body);
 
     final attachRepo = ref.read(attachmentRepositoryProvider);
     if (attachRepo != null) {
@@ -170,10 +183,21 @@ final shareIntakeProvider = Provider<void>((ref) {
               _ => '.jpg',
             };
           }
+          // NOTLAR'IN ÜRETTİĞİ PAYLAŞIM PDF'i: balon/çizim verisi dosyanın
+          // içinde ek olarak geliyor. Damga katmanı sökülür ve veriler ekin
+          // kendi alanlarına konur — balonlar gönderendeki gibi taşınabilir,
+          // renklenebilir, silinebilir olur. Sıradan bir PDF'te `restored`
+          // null döner ve dosya olduğu gibi eklenir.
+          final restored = kind == AttachmentKind.pdf
+              ? await PdfEdit.readSharedPdfInBackground(bytes)
+              : null;
+          final docBytes = restored == null
+              ? bytes
+              : restored['bytes'] as Uint8List;
           final attachment = switch (kind) {
             AttachmentKind.pdf => await attachRepo.preparePdf(
               noteId: id,
-              bytes: bytes,
+              bytes: docBytes,
               fileName: name,
             ),
             AttachmentKind.slide => await attachRepo.prepareSlide(
@@ -187,8 +211,22 @@ final shareIntakeProvider = Provider<void>((ref) {
               fileName: name,
             ),
           };
+          // Balonlar/çizimler ekin alanlarına: not artık gönderendeki gibi
+          // düzenlenebilir (bkz. yukarıdaki `restored`).
+          final stored = restored == null
+              ? attachment
+              : attachment.copyWith(
+                  bubbles: [
+                    for (final e in (restored['b'] as List?) ?? const [])
+                      PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
+                  ],
+                  ink: [
+                    for (final e in (restored['i'] as List?) ?? const [])
+                      InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+                  ],
+                );
           repo.updateFields(id, {
-            'attachments': FieldValue.arrayUnion([attachment.toMap()]),
+            'attachments': FieldValue.arrayUnion([stored.toMap()]),
           });
         } catch (_) {
           // Tek dosya okunamazsa/çok büyükse not yine oluşsun.

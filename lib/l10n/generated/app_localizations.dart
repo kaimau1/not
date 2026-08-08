@@ -4071,7 +4071,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharePdfWithBubblesInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Balonlar, vurgular ve çizimler PDF\'in içine basılır; alıcının Not uygulaması olması gerekmez.'**
+  /// **'Balonlar, vurgular ve çizimler PDF\'in içine basılır; herkes açabilir, Notlar\'da ise düzenlenebilir açılır.'**
   String get sharePdfWithBubblesInfo;
 
   /// No description provided for @sharePdfWithBubblesNone.

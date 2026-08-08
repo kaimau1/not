@@ -564,7 +564,7 @@
   "shareAsTextInfo": "Mengirim teks catatan dan catatan halaman ke aplikasi mana pun.",
   "shareAsTextEmpty": "Catatan ini tidak punya teks untuk dibagikan.",
   "sharePdfWithBubbles": "Sebagai PDF bergelembung",
-  "sharePdfWithBubblesInfo": "Gelembung, sorotan, dan coretan dicetak ke dalam PDF; penerima tidak perlu aplikasi Not.",
+  "sharePdfWithBubblesInfo": "Gelembung, sorotan, dan coretan dicetak ke dalam PDF; siapa pun bisa membukanya, dan di Not terbuka bisa diedit.",
   "sharePdfWithBubblesNone": "Catatan ini tidak punya PDF bergelembung atau bercoretan.",
   "sharePdfWithBubblesPreparing": "Menyiapkan PDF bergelembung…",
   "sharePdfWithBubblesSuffix": " (bergelembung)"

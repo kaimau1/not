@@ -2165,7 +2165,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get sharePdfWithBubbles => 'Jako PDF z dymkami';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Dymki, zakreślenia i rysunki są wypalane w pliku PDF; odbiorca nie potrzebuje aplikacji Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Dymki, zakreślenia i rysunki są wypalane w pliku PDF; każdy może go otworzyć, a w Not otwiera się z możliwością edycji.';
 
   @override
   String get sharePdfWithBubblesNone => 'Ta notatka nie zawiera pliku PDF z dymkami ani rysunkami.';

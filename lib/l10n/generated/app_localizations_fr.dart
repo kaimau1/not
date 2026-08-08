@@ -2169,7 +2169,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sharePdfWithBubbles => 'En PDF avec bulles';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Les bulles, surlignages et dessins sont imprimés dans le PDF ; le destinataire n\'a pas besoin de l\'application Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Les bulles, surlignages et dessins sont imprimés dans le PDF ; tout le monde peut l\'ouvrir, et dans Not il s\'ouvre modifiable.';
 
   @override
   String get sharePdfWithBubblesNone => 'Cette note ne contient aucun PDF avec bulles ou dessins.';

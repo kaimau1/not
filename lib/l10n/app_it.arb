@@ -564,7 +564,7 @@
   "shareAsTextInfo": "Invia il testo della nota e le note di pagina a qualsiasi app.",
   "shareAsTextEmpty": "Questa nota non ha testo da condividere.",
   "sharePdfWithBubbles": "Come PDF con fumetti",
-  "sharePdfWithBubblesInfo": "Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chi lo riceve non ha bisogno dell'app Not.",
+  "sharePdfWithBubblesInfo": "Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chiunque può aprirlo e in Not si apre modificabile.",
   "sharePdfWithBubblesNone": "Questa nota non ha PDF con fumetti o disegni.",
   "sharePdfWithBubblesPreparing": "Preparazione del PDF con fumetti…",
   "sharePdfWithBubblesSuffix": " (con fumetti)"

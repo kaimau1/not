@@ -2159,7 +2159,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sharePdfWithBubbles => 'PDF с выносками';
 
   @override
-  String get sharePdfWithBubblesInfo => 'Выноски, выделения и рисунки впечатываются в PDF; получателю не нужно приложение Not.';
+  String get sharePdfWithBubblesInfo =>
+      'Выноски, выделения и рисунки впечатываются в PDF; открыть может любой, а в Not файл открывается редактируемым.';
 
   @override
   String get sharePdfWithBubblesNone => 'В этой заметке нет PDF с выносками или рисунками.';
