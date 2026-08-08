@@ -317,6 +317,12 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     children: [
       Positioned.fill(child: viewer),
       Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        child: BubbleDock(controller: widget.bubbles),
+      ),
+      Positioned(
         top: 4,
         right: 4,
         child: Column(

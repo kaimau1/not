@@ -222,6 +222,24 @@ void main() {
       expect(notified, 0);
     });
 
+    test('openBubble tek acik balonu verir, yoksa null', () {
+      final c = build(
+        initial: const [
+          PageBubble(id: 'a', page: 1, x: 0, y: 0, collapsed: true),
+          PageBubble(id: 'b', page: 2, x: 0, y: 0, collapsed: true),
+        ],
+      );
+      expect(c.openBubble, isNull);
+      c.openOnly('b');
+      expect(c.openBubble!.id, 'b');
+      // Ustteki kart hangi balonu duzenledigini buradan biliyor: iki balon
+      // ayni anda ACIK OLAMAZ.
+      c.openOnly('a');
+      expect(c.openBubble!.id, 'a');
+      c.collapseAll();
+      expect(c.openBubble, isNull);
+    });
+
     test('unlem (acil) ac/kapa', () {
       final c = build(
         initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],

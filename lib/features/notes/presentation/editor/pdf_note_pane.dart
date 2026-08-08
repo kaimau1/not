@@ -173,22 +173,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   @override
   void initState() {
     super.initState();
-    // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması);
-    // klavye açılınca kart görünür alanın altında kalırsa belge yukarı itilir.
-    widget.bubbles.ensureVisible = _ensureBubbleVisible;
-  }
-
-  void _ensureBubbleVisible(Rect globalRect) {
-    if (!mounted || !_pdf.isReady) return;
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null || !box.hasSize) return;
-    final viewportBottom = box.localToGlobal(Offset.zero).dy + box.size.height;
-    final overflow = globalRect.bottom + 8 - viewportBottom;
-    if (overflow <= 0) return;
-    try {
-      _pdf.value = _pdf.value.clone()
-        ..leftTranslateByDouble(0, -overflow, 0, 1);
-    } catch (_) {}
+    // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması).
   }
 
   @override
@@ -280,6 +265,13 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     return Stack(
       children: [
         Positioned.fill(child: viewer),
+        // Açık balonun içeriği bölmenin en üstünde (bkz. BubbleDock).
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: BubbleDock(controller: widget.bubbles),
+        ),
         Positioned(
           top: 4,
           right: 4,
