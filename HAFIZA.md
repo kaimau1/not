@@ -1363,3 +1363,17 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **9) İki parmakla sütun değişimi KÖK NEDEN.** `GestureDetector.onScaleUpdate`, altındaki kaydırma görünümünün dikey sürükleme tanıyıcısıyla aynı arenada yarışıyor ve sürükleme İLK parmakta kabul edildiği için çoğu zaman önce kazanıyordu. Arenaya hiç girmeyen `Listener` tabanlı `_PinchColumns` yazıldı (aynı çözüm PDF seçim katmanında da var). **TUZAK**: adım atıldıktan sonra taban uzaklık şimdiki değere çekilmeli; çekilmezse oran eşiğin üstünde kaldığı sürece her karede bir adım daha atılır ve tek jestte en uca fırlanır.
 
   Doğrulama: analyze temiz, 708/708 test yeşil (+4). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-08 (20. tur): **Sürüklemenin GERÇEK kök nedeni + balon içeriği sayfadan ÜST KARTA taşındı.**
+
+  **1) "Sürüklemeye başlayınca kenarlara fırlıyor" — KÖK NEDEN.** `BubbleDragArea` içindeki `last` (son bildirilen toplam kayma) **`build()` içinde YEREL bir değişkendi**. Taşıma sırasında her hareket denetleyiciyi güncelliyor, denetleyici katmanı yeniden kuruyor, `build()` yeniden koşuyor ve değişken SIFIRLANIYORDU. Bir sonraki olayda fark, kare farkı yerine jestin BAŞINDAN itibaren toplam kayma olarak uygulanıyor — balon parmaktan kat kat hızlı fırlıyordu. Değer `State`e taşındı. **Kural: jest sırasında biriken hiçbir değer `build()` içinde yaşayamaz.**
+
+  **2) Açık balonun İÇERİĞİ artık sayfada DEĞİL, görüntüleyicinin üstüne demirlenmiş kartta** (`BubbleDock`). Kullanıcının kendi önerisi; PDF yorum araçlarının da yolu.
+  Neden: kart sayfa koordinatındayken klavye açılınca görünür alan yarıya iniyor ve sayfanın alt yarısındaki kart klavyenin ALTINDA kalıyordu. Bir önceki turda belgeyi kaydırarak telafi denendi (`ensureVisible`) — okunan yeri kaçırdığı ve klavye animasyonuyla yarıştığı için yetmedi. Şimdi sayfada YALNIZ tutamaç (nokta/başlık etiketi) ve vurgu var; içerik hep en üstte, klavye ne kadar yer alırsa alsın görünür. Yan faydalar: kart artık sayfa kenarına taşmıyor, iki kart üst üste binmiyor, konum hesabı ve kıstırma kodu tümüyle kalktı.
+  Açık balonun tutamacı KOYU halkayla işaretli: üstteki kartın sayfada nereye ait olduğu görünüyor.
+
+  **3) "Başlık kısmı hiç görülmüyor" — kök neden.** Başlık alanı, beş simgeyle AYNI şeritte `Expanded` idi; dar sayfada (pano bölmesi) simgeler 130 px alıp başlığa birkaç piksel bırakıyordu. Şeritte artık yalnız **kapat** ve **taşma menüsü (⋮)** var; yıldız, ünlem, renk ve silme menüde. Başlık şeridin geri kalanını alıyor.
+
+  **4) Balona yazarken not BAŞLIĞI da gizleniyor** (18-19. turlarda not alanı, sayfa çubuğu ve editör alt çubuğu gizlenmişti). Klavye ekranın yarısını alıyor; kalan alan belgeye ve karta gidiyor.
+
+  Doğrulama: analyze temiz, 709/709 test yeşil (+1). **Cihazda doğrulanmadı — APK CI'da.**

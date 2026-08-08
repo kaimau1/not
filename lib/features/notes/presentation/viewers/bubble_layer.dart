@@ -115,15 +115,21 @@ class BubbleController extends ChangeNotifier {
   /// ARTIK KURULMUYOR — bkz. sınıf açıklamasındaki ikinci tur düzeltmesi).
   ValueChanged<bool>? onDragChanged;
 
-  /// Açılan/odaklanan balonun EKRAN dikdörtgeni; üst katman gerekiyorsa
-  /// belgeyi kaydırıp balonu klavyenin üstüne getirir.
+  /// ŞU AN açık olan balon (yoksa null). Açık balonun içeriği sayfada değil,
+  /// görüntüleyicinin ÜSTÜNDEKİ sabit kartta ([BubbleDock]) düzenlenir.
   ///
-  /// Kök neden (2026-08-08 bulgusu: "klavye açılınca balonlar altta kalıyor,
-  /// odak sorunu var"): balon sayfa koordinatında duruyor, klavye açılınca
-  /// görünür alan yarıya iniyor ve sayfanın alt yarısındaki balon klavyenin
-  /// altında kalıyordu. Kart kendi yerini bilemez — hangi kadar kaydırılacağı
-  /// görüntüleyicinin işi.
-  void Function(Rect globalRect)? ensureVisible;
+  /// KÖK NEDEN (2026-08-08: "yazı yazmaya başlayınca balon yine altta
+  /// kalıyor"): kart sayfa koordinatındaydı; klavye açılınca görünür alan
+  /// yarıya iniyor ve sayfanın alt yarısındaki kart klavyenin altında
+  /// kalıyordu. Belgeyi kaydırarak telafi etmek de okunan yeri kaçırıyordu.
+  /// Artık sayfada YALNIZ tutamaç/vurgu var; içerik hep en üstte, klavyenin
+  /// üstünde. (Kullanıcının kendi önerisi; PDF yorum araçlarının da yolu.)
+  PageBubble? get openBubble {
+    for (final b in _bubbles) {
+      if (!b.collapsed) return b;
+    }
+    return null;
+  }
 
   bool _dirty = false;
 
@@ -415,7 +421,7 @@ class BubblePageLayer extends StatelessWidget {
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         final bubbles = controller.forPage(page);
-        final anyOpen = bubbles.any((b) => !b.collapsed);
+        final anyOpen = controller.openBubble != null;
         return Stack(
           clipBehavior: Clip.none,
           children: [
@@ -430,7 +436,7 @@ class BubblePageLayer extends StatelessWidget {
             // Vurguya dokunmak balonu AÇAR (kullanıcı isteği). Görünmez
             // dokunma alanları yalnız vurgunun satırlarını kaplar.
             for (final bubble in bubbles)
-              if (bubble.collapsed && bubble.isHighlight)
+              if (bubble.isHighlight)
                 for (final rect in bubble.rects)
                   Positioned(
                     left: rect.left * size.width,
@@ -474,14 +480,15 @@ class BubblePageLayer extends StatelessWidget {
                   child: const SizedBox.expand(),
                 ),
               ),
+            // Sayfada YALNIZ tutamaç/etiket durur; açık balonun içeriği
+            // görüntüleyicinin üstündeki sabit kartta ([BubbleDock]).
             for (final bubble in bubbles)
-              _Bubble(
+              _BubblePin(
                 key: ValueKey(bubble.id),
                 controller: controller,
                 bubble: bubble,
                 pageSize: size,
                 readOnly: readOnly,
-                autofocus: controller.justAdded == bubble.id,
               ),
           ],
         );
@@ -562,7 +569,7 @@ class _HighlightPainter extends CustomPainter {
 ///
 /// Uzun basış arenayı kazandığı an pdfrx'in kaydırma/ölçek tanıyıcıları
 /// elenir, yani sayfa altta kaymaz — ayrıca bir pan kilidine gerek yoktur.
-class BubbleDragArea extends StatelessWidget {
+class BubbleDragArea extends StatefulWidget {
   const BubbleDragArea({
     super.key,
     required this.child,
@@ -583,155 +590,118 @@ class BubbleDragArea extends StatelessWidget {
   static const _pressDuration = Duration(milliseconds: 220);
 
   @override
+  State<BubbleDragArea> createState() => _BubbleDragAreaState();
+}
+
+class _BubbleDragAreaState extends State<BubbleDragArea> {
+  /// Son bildirilen TOPLAM kayma. **STATE'te durmak zorunda.**
+  ///
+  /// KÖK NEDEN (2026-08-08 kullanıcı bulgusu: "sürüklemeye başladığım anda
+  /// kenarlara fırlıyor, kontrolsüz hareket ediyor"): bu değer `build()`
+  /// içinde YEREL bir değişkendi. Taşıma sırasında her hareket denetleyiciyi
+  /// güncelliyor, o da katmanı yeniden kuruyor ve `build()` yeniden koştuğu
+  /// için değişken SIFIRLANIYORDU. Bir sonraki olayda fark, kare farkı yerine
+  /// jestin BAŞINDAN itibaren toplam kayma olarak uygulanıyor ve balon
+  /// parmaktan kat kat hızlı fırlıyordu.
+  Offset _last = Offset.zero;
+
+  @override
   Widget build(BuildContext context) {
-    if (!enabled) {
-      return onTap == null
-          ? child
-          : GestureDetector(onTap: onTap, child: child);
+    if (!widget.enabled) {
+      return widget.onTap == null
+          ? widget.child
+          : GestureDetector(onTap: widget.onTap, child: widget.child);
     }
-    // Uzun basış TOPLAM kaymayı verir; kare farkı için son değer saklanır.
-    // (Fark alınmazsa balon parmaktan kat kat hızlı uçar.)
-    var last = Offset.zero;
     return RawGestureDetector(
       behavior: HitTestBehavior.opaque,
       gestures: <Type, GestureRecognizerFactory>{
-        if (onTap != null)
+        if (widget.onTap != null)
           TapGestureRecognizer:
               GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
                 TapGestureRecognizer.new,
-                (instance) => instance.onTap = onTap,
+                (instance) => instance.onTap = widget.onTap,
               ),
         LongPressGestureRecognizer:
             GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-              () => LongPressGestureRecognizer(duration: _pressDuration),
+              () => LongPressGestureRecognizer(
+                duration: BubbleDragArea._pressDuration,
+              ),
               (instance) => instance
                 ..onLongPressStart = (_) {
-                  last = Offset.zero;
-                  onDragStart();
+                  _last = Offset.zero;
+                  widget.onDragStart();
                 }
                 ..onLongPressMoveUpdate = (d) {
-                  onDragDelta(d.offsetFromOrigin - last);
-                  last = d.offsetFromOrigin;
+                  widget.onDragDelta(d.offsetFromOrigin - _last);
+                  _last = d.offsetFromOrigin;
                 }
                 ..onLongPressEnd = (_) {
-                  last = Offset.zero;
-                  onDragEnd();
+                  _last = Offset.zero;
+                  widget.onDragEnd();
                 }
                 ..onLongPressCancel = () {
-                  last = Offset.zero;
-                  onDragEnd();
+                  _last = Offset.zero;
+                  widget.onDragEnd();
                 },
             ),
       },
-      child: child,
+      child: widget.child,
     );
   }
 }
 
-class _Bubble extends StatefulWidget {
-  const _Bubble({
+/// Sayfadaki TUTAMAÇ: kapalıysa nokta ya da başlık etiketi, açıksa aynı
+/// tutamacın vurgulanmış hâli. İçerik burada DEĞİL — [BubbleDock]'ta.
+class _BubblePin extends StatefulWidget {
+  const _BubblePin({
     super.key,
     required this.controller,
     required this.bubble,
     required this.pageSize,
     required this.readOnly,
-    required this.autofocus,
   });
 
   final BubbleController controller;
   final PageBubble bubble;
   final Size pageSize;
   final bool readOnly;
-  final bool autofocus;
 
   @override
-  State<_Bubble> createState() => _BubbleState();
+  State<_BubblePin> createState() => _BubblePinState();
 }
 
-class _BubbleState extends State<_Bubble>
+class _BubblePinState extends State<_BubblePin>
     with SingleTickerProviderStateMixin {
-  late final TextEditingController _text = TextEditingController(
-    text: widget.bubble.text,
-  );
-  late final TextEditingController _title = TextEditingController(
-    text: widget.bubble.title,
-  );
-  final _focus = FocusNode();
-
-  /// ACİL balonun yanıp sönmesi. Denetleyici YALNIZ gerektiğinde koşar:
-  /// sürekli dönen bir animasyon, sayfadaki her balon için kare kare yeniden
-  /// boyama demek olurdu (kasma).
-  AnimationController? _blink;
-
-  /// Açık balonun en büyük genişliği.
-  static const _maxWidth = 260.0;
   static const _pinSize = 30.0;
 
-  /// Sürüklerken parmağın balonu "kaldırdığı" hissi: kart büyür ve gölgesi
-  /// derinleşir (Material'ın sürükleme dili).
+  /// Sürüklerken parmağın balonu "kaldırdığı" hissi.
   bool _lifted = false;
+
+  /// ACİL balonun yanıp sönmesi. Denetleyici YALNIZ gerektiğinde koşar:
+  /// sayfadaki her balon için sürekli dönen bir animasyon, kare kare yeniden
+  /// boyama demek olurdu (kasma).
+  AnimationController? _blink;
 
   @override
   void initState() {
     super.initState();
-    _focus.addListener(() {
-      // Odak düşünce yazılan metin kalıcılaşır (her tuşta Firestore'a
-      // yazmamak için: `update` belleği, `save` diski tazeler).
-      if (!_focus.hasFocus) widget.controller.save();
-      widget.controller.setEditing(_focus.hasFocus);
-      if (_focus.hasFocus) _requestVisible();
-    });
-    _titleFocus.addListener(() {
-      if (!_titleFocus.hasFocus) widget.controller.save();
-      widget.controller.setEditing(_focus.hasFocus || _titleFocus.hasFocus);
-      if (_titleFocus.hasFocus) _requestVisible();
-    });
     _syncBlink();
-    if (widget.autofocus) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !widget.readOnly) _focus.requestFocus();
-      });
-    }
   }
 
   @override
-  void didUpdateWidget(_Bubble old) {
+  void didUpdateWidget(_BubblePin old) {
     super.didUpdateWidget(old);
-    // Dışarıdan (senkron ya da toplu listeden düzenleme) değişen metni
-    // benimse — kullanıcı o an yazmıyorsa.
-    if (widget.bubble.text != _text.text && !_focus.hasFocus) {
-      _text.text = widget.bubble.text;
-    }
-    if (widget.bubble.title != _title.text && !_titleFocus.hasFocus) {
-      _title.text = widget.bubble.title;
-    }
     _syncBlink();
-    // Toplu listeden "balona git" ile açıldıysa klavye hazır gelsin.
-    if (old.autofocus != widget.autofocus &&
-        widget.autofocus &&
-        !widget.bubble.collapsed &&
-        !widget.readOnly) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _focus.requestFocus();
-      });
-    }
   }
 
   @override
   void dispose() {
-    if (_focus.hasFocus) widget.controller.setEditing(false);
     _blink?.dispose();
-    _text.dispose();
-    _title.dispose();
-    _focus.dispose();
-    _titleFocus.dispose();
     super.dispose();
   }
 
-  /// Yanıp sönme yalnız ACİL ve KAPALI balonda koşar; açık kartta ya da
-  /// ünlem kalkınca durur (boşa kare harcanmaz).
   void _syncBlink() {
-    final wanted = widget.bubble.urgent && widget.bubble.collapsed;
+    final wanted = widget.bubble.urgent;
     if (wanted && _blink == null) {
       _blink =
           AnimationController(
@@ -744,48 +714,6 @@ class _BubbleState extends State<_Bubble>
     }
   }
 
-  /// Klavye açıldıktan SONRA kartın ekran dikdörtgenini üst katmana bildirir;
-  /// o da gerekiyorsa belgeyi kaydırıp kartı klavyenin üstüne getirir.
-  ///
-  /// Gecikme ŞART: klavye animasyonu ~250 ms sürer ve o bitmeden ölçülen
-  /// dikdörtgen "klavye yokmuş gibi" çıkar — kaydırma hesabı sıfır olurdu.
-  void _requestVisible() {
-    final notify = widget.controller.ensureVisible;
-    if (notify == null) return;
-    Future<void>.delayed(const Duration(milliseconds: 320), () {
-      if (!mounted || !_focus.hasFocus) return;
-      final box = _cardKey.currentContext?.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) return;
-      notify(box.localToGlobal(Offset.zero) & box.size);
-    });
-  }
-
-  final _cardKey = GlobalKey();
-  final _titleFocus = FocusNode();
-
-  double get _width =>
-      (widget.pageSize.width * 0.62).clamp(140.0, _maxWidth).toDouble();
-
-  /// Balonun sol-üst köşesinin sayfadaki piksel konumu. Uç noktası (x,y)
-  /// sayfanın sağ/alt kenarına yakınsa kart içeri alınır ki taşmasın.
-  Offset _topLeft(double width, {required bool collapsed}) {
-    final point = Offset(
-      widget.bubble.x * widget.pageSize.width,
-      widget.bubble.y * widget.pageSize.height,
-    );
-    if (collapsed) {
-      return point - const Offset(_pinSize / 2, _pinSize / 2);
-    }
-    final maxLeft = widget.pageSize.width - width;
-    final left = maxLeft <= 0 ? 0.0 : (point.dx - width / 2).clamp(0.0, maxLeft);
-    return Offset(left, point.dy + _pinSize / 2);
-  }
-
-  // ── Taşıma: UZUN BASIŞ + sürükle ─────────────────────────────────────────
-  //
-  // Uzun basış jest arenasını KESİN kazanır (pan/scale tanıyıcıları elenir),
-  // bu yüzden parmak balonu değil sayfayı çekme sorunu ortadan kalkar. Başlama
-  // anında titreşim var: kullanıcı "tuttum" hissini duyar.
   void _dragStart() {
     if (widget.readOnly) return;
     HapticFeedback.mediumImpact();
@@ -816,196 +744,23 @@ class _BubbleState extends State<_Bubble>
   Widget build(BuildContext context) {
     final bubble = widget.bubble;
     final color = Color(bubble.color);
-    if (bubble.collapsed) return _pin(color);
-
-    final width = _width;
-    final at = _topLeft(width, collapsed: false);
-    final scheme = Theme.of(context).colorScheme;
-    return Positioned(
-      key: _cardKey,
-      left: at.dx,
-      top: at.dy,
-      width: width,
-      child: AnimatedScale(
-        scale: _lifted ? 1.06 : 1,
-        duration: const Duration(milliseconds: 120),
-        child: BubbleDragArea(
-          // Kartın TAMAMI taşıma tutamacıdır: kısa basıp sürükle (220 ms).
-          // Kısa dokunuş yazı alanına gider — uzun basış onu iptal etmez.
-          enabled: !widget.readOnly,
-          onDragStart: _dragStart,
-          onDragDelta: _dragMove,
-          onDragEnd: _dragEnd,
-          child: Material(
-            color: color.withValues(alpha: 0.97),
-            elevation: _lifted ? 10 : 3,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 2, 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // KOMPAKT üst şerit (kullanıcı: "üst sarı alan çok yüksek
-                  // yer kaplıyor"): 26 px, simgeler 15 px. Başlık alanı da bu
-                  // şeridin İÇİNDE — ayrı bir satır kartı bir kat daha
-                  // büyütürdü.
-                  SizedBox(
-                    height: 26,
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.drag_indicator,
-                          size: 14,
-                          color: Colors.black38,
-                        ),
-                        Expanded(
-                          child: widget.readOnly
-                              ? Text(
-                                  bubble.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
-                                  ),
-                                )
-                              : TextField(
-                                  controller: _title,
-                                  focusNode: _titleFocus,
-                                  maxLines: 1,
-                                  maxLength: PageBubble.maxTitle,
-                                  textCapitalization:
-                                      TextCapitalization.sentences,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.black87,
-                                  ),
-                                  cursorColor: scheme.onSurface,
-                                  decoration: InputDecoration(
-                                    isDense: true,
-                                    counterText: '',
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    border: InputBorder.none,
-                                    hintText: context.l10n.bubbleTitleHint,
-                                    hintStyle: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.black26,
-                                    ),
-                                  ),
-                                  onChanged: (value) => widget.controller
-                                      .updateTitle(bubble.id, value),
-                                ),
-                        ),
-                        if (!widget.readOnly)
-                          _iconButton(
-                            icon: Icons.priority_high,
-                            tooltip: context.l10n.bubbleUrgent,
-                            active: bubble.urgent,
-                            onPressed: () =>
-                                widget.controller.toggleUrgent(bubble.id),
-                          ),
-                        if (!widget.readOnly)
-                          _iconButton(
-                            icon: bubble.starred
-                                ? Icons.star
-                                : Icons.star_border,
-                            tooltip: context.l10n.bubbleStar,
-                            active: bubble.starred,
-                            onPressed: () =>
-                                widget.controller.toggleStar(bubble.id),
-                          ),
-                        if (!widget.readOnly)
-                          _iconButton(
-                            icon: Icons.palette_outlined,
-                            tooltip: context.l10n.color,
-                            onPressed: () => _pickColor(context),
-                          ),
-                        _iconButton(
-                          icon: Icons.close_fullscreen,
-                          tooltip: context.l10n.bubbleCollapse,
-                          onPressed: () {
-                            _focus.unfocus();
-                            _titleFocus.unfocus();
-                            widget.controller.setCollapsed(bubble.id, true);
-                          },
-                        ),
-                        if (!widget.readOnly)
-                          _iconButton(
-                            icon: Icons.delete_outline,
-                            tooltip: context.l10n.delete,
-                            onPressed: () =>
-                                widget.controller.remove(bubble.id),
-                          ),
-                      ],
-                    ),
-                  ),
-                  if (widget.readOnly)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
-                      child: Text(
-                        bubble.text,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    )
-                  else
-                    TextField(
-                      controller: _text,
-                      focusNode: _focus,
-                      maxLines: null,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.black87,
-                      ),
-                      cursorColor: scheme.onSurface,
-                      decoration: InputDecoration(
-                        isDense: true,
-                        contentPadding: const EdgeInsets.fromLTRB(4, 2, 4, 2),
-                        border: InputBorder.none,
-                        hintText: context.l10n.bubbleHint,
-                        hintStyle: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.black38,
-                        ),
-                      ),
-                      onChanged: (value) =>
-                          widget.controller.updateText(bubble.id, value),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// KAPALI balon. Başlık varsa yuvarlak nokta yerine başlığı yazan küçük bir
-  /// ETİKET çizilir (kullanıcı isteği 2026-08-08: "12 karaktere kadar başlık
-  /// olursa metin kutusu yerine başlığı ile görülmeli kapanınca") — sayfaya
-  /// bakınca balonu açmadan ne dediği anlaşılır. Başlık yoksa eski nokta.
-  ///
-  /// ACİL balon yanıp söner: dikkat çeken tek şey hareket.
-  Widget _pin(Color color) {
-    final bubble = widget.bubble;
     final hasTitle = bubble.title.trim().isNotEmpty;
     final child = hasTitle ? _titleChip(color) : _dot(color);
+    final point = Offset(
+      bubble.x * widget.pageSize.width,
+      bubble.y * widget.pageSize.height,
+    );
+    // Etiket genişliği bilinmiyor; sol kenarı noktadan 20 px sola alıp sayfaya
+    // kıstırmak yeterli — etiket kısa (en çok 12 karakter).
     final at = hasTitle
         ? Offset(
-            (bubble.x * widget.pageSize.width - 20).clamp(
+            (point.dx - 20).clamp(
               0.0,
-              widget.pageSize.width - 40,
+              (widget.pageSize.width - 40).clamp(0.0, double.infinity),
             ),
-            bubble.y * widget.pageSize.height - _pinSize / 2,
+            point.dy - _pinSize / 2,
           )
-        : _topLeft(_pinSize, collapsed: true);
+        : point - const Offset(_pinSize / 2, _pinSize / 2);
     final blink = _blink;
     return Positioned(
       left: at.dx,
@@ -1024,10 +779,7 @@ class _BubbleState extends State<_Bubble>
             child: blink == null
                 ? child
                 : FadeTransition(
-                    opacity: Tween<double>(
-                      begin: 1,
-                      end: 0.35,
-                    ).animate(blink),
+                    opacity: Tween<double>(begin: 1, end: 0.35).animate(blink),
                     child: child,
                   ),
           ),
@@ -1036,14 +788,20 @@ class _BubbleState extends State<_Bubble>
     );
   }
 
-  /// Başlıksız kapalı balon: küçük yuvarlak nokta.
+  /// Açık balonun tutamacı beyaz halkayla işaretlenir: üstteki karttaki notun
+  /// sayfada NEREYE ait olduğu görünsün.
+  BoxBorder get _border => Border.all(
+    color: widget.bubble.collapsed ? Colors.white : Colors.black87,
+    width: widget.bubble.collapsed ? 2 : 2.5,
+  );
+
   Widget _dot(Color color) => Container(
     width: _pinSize,
     height: _pinSize,
     decoration: BoxDecoration(
       color: color,
       shape: BoxShape.circle,
-      border: Border.all(color: Colors.white, width: 2),
+      border: _border,
       boxShadow: [
         BoxShadow(
           color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
@@ -1064,16 +822,15 @@ class _BubbleState extends State<_Bubble>
     ),
   );
 
-  /// Başlıklı kapalı balon: başlığı yazan küçük etiket.
   Widget _titleChip(Color color) {
     final bubble = widget.bubble;
     return Container(
-      constraints: const BoxConstraints(maxWidth: 160),
+      constraints: const BoxConstraints(maxWidth: 170),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: Colors.white, width: 1.5),
+        border: _border,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
@@ -1104,33 +861,287 @@ class _BubbleState extends State<_Bubble>
       ),
     );
   }
+}
 
-  /// Şeritteki küçük düğme. [active] işaretli seçenekleri (yıldız, ünlem)
-  /// koyu gösterir — kompakt şeritte renk değişimi tek okunur ipucu.
-  Widget _iconButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-    bool active = false,
-  }) => IconButton(
-    tooltip: tooltip,
-    onPressed: onPressed,
-    icon: Icon(
-      icon,
-      size: 15,
-      color: active ? Colors.black : Colors.black45,
-    ),
-    visualDensity: VisualDensity.compact,
-    padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+
+/// Açık balonun İÇERİĞİ — görüntüleyicinin ÜST kenarına demirlenmiş kart.
+///
+/// Neden sayfada değil (kullanıcı isteği 2026-08-08, kendi önerisi): balon
+/// sayfa koordinatındayken klavye açılınca görünür alan yarıya iniyor ve
+/// sayfanın alt yarısındaki kart klavyenin ALTINDA kalıyordu. Belgeyi
+/// kaydırarak telafi etmek okunan yeri kaçırıyor. Sayfada yalnız tutamaç ve
+/// vurgu kalıyor, içerik hep en üstte — klavye ne kadar yer alırsa alsın kart
+/// görünür. (PDF yorum araçlarının da yolu budur.)
+///
+/// Başlık alanı şeridin İÇİNDE ve GENİŞ: eski kompakt şeritte beş simgeyle
+/// yan yanaydı ve dar sayfada birkaç piksele iniyordu ("başlık kısmı hiç
+/// görülmüyor"). Şimdi şeritte yalnız kapat + taşma menüsü var; yıldız,
+/// ünlem, renk ve silme menüde.
+class BubbleDock extends StatefulWidget {
+  const BubbleDock({super.key, required this.controller, this.readOnly = false});
+
+  final BubbleController controller;
+  final bool readOnly;
+
+  @override
+  State<BubbleDock> createState() => _BubbleDockState();
+}
+
+class _BubbleDockState extends State<BubbleDock> {
+  final _title = TextEditingController();
+  final _text = TextEditingController();
+  final _titleFocus = FocusNode();
+  final _textFocus = FocusNode();
+
+  /// Alanları hangi balon için doldurduk? Balon değişince (başka bir
+  /// tutamaca dokunuldu) alanlar yeniden yüklenir.
+  String? _loadedId;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_sync);
+    for (final focus in [_titleFocus, _textFocus]) {
+      focus.addListener(() {
+        final editing = _titleFocus.hasFocus || _textFocus.hasFocus;
+        if (!editing) widget.controller.save();
+        widget.controller.setEditing(editing);
+      });
+    }
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_sync);
+    _title.dispose();
+    _text.dispose();
+    _titleFocus.dispose();
+    _textFocus.dispose();
+    super.dispose();
+  }
+
+  void _sync() {
+    final open = widget.controller.openBubble;
+    if (open == null) {
+      if (_loadedId != null) {
+        _loadedId = null;
+        _titleFocus.unfocus();
+        _textFocus.unfocus();
+      }
+      return;
+    }
+    if (open.id == _loadedId) return;
+    _loadedId = open.id;
+    _title.text = open.title;
+    _text.text = open.text;
+    // Yeni bırakılan balonda klavye hazır gelsin; var olana dokunulduğunda
+    // gelmesin (kullanıcı önce okumak isteyebilir).
+    if (widget.controller.justAdded == open.id && !widget.readOnly) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _textFocus.requestFocus();
+      });
+    }
+  }
+
+  void _close() {
+    final open = widget.controller.openBubble;
+    _titleFocus.unfocus();
+    _textFocus.unfocus();
+    if (open != null) widget.controller.setCollapsed(open.id, true);
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: widget.controller,
+    builder: (context, _) {
+      final bubble = widget.controller.openBubble;
+      if (bubble == null) return const SizedBox.shrink();
+      final color = Color(bubble.color);
+      final scheme = Theme.of(context).colorScheme;
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+        child: Material(
+          color: color.withValues(alpha: 0.97),
+          elevation: 6,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 2, 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  height: 30,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: widget.readOnly
+                            ? Text(
+                                bubble.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _titleStyle,
+                              )
+                            : TextField(
+                                controller: _title,
+                                focusNode: _titleFocus,
+                                maxLines: 1,
+                                maxLength: PageBubble.maxTitle,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                style: _titleStyle,
+                                cursorColor: scheme.onSurface,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  counterText: '',
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                  hintText: context.l10n.bubbleTitleHint,
+                                  hintStyle: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black26,
+                                  ),
+                                ),
+                                onChanged: (value) => widget.controller
+                                    .updateTitle(bubble.id, value),
+                              ),
+                      ),
+                      if (bubble.urgent)
+                        const Icon(
+                          Icons.priority_high,
+                          size: 16,
+                          color: Colors.black54,
+                        ),
+                      if (bubble.starred)
+                        const Icon(
+                          Icons.star,
+                          size: 16,
+                          color: Colors.black54,
+                        ),
+                      IconButton(
+                        tooltip: context.l10n.bubbleCollapse,
+                        onPressed: _close,
+                        icon: const Icon(
+                          Icons.close_fullscreen,
+                          size: 17,
+                          color: Colors.black54,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
+                        ),
+                      ),
+                      if (!widget.readOnly) _menu(context, bubble),
+                    ],
+                  ),
+                ),
+                if (widget.readOnly)
+                  Text(bubble.text, style: _bodyStyle)
+                else
+                  TextField(
+                    controller: _text,
+                    focusNode: _textFocus,
+                    maxLines: 6,
+                    minLines: 1,
+                    style: _bodyStyle,
+                    cursorColor: scheme.onSurface,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      contentPadding: const EdgeInsets.only(bottom: 2),
+                      border: InputBorder.none,
+                      hintText: context.l10n.bubbleHint,
+                      hintStyle: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black38,
+                      ),
+                    ),
+                    onChanged: (value) =>
+                        widget.controller.updateText(bubble.id, value),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
   );
 
-  Future<void> _pickColor(BuildContext context) async {
-    final picked = await showBubbleColorSheet(context, widget.bubble.color);
-    if (picked == null) return;
-    widget.controller
-      ..update(widget.bubble.copyWith(color: picked))
-      ..save();
+  static const _titleStyle = TextStyle(
+    fontSize: 13,
+    fontWeight: FontWeight.w700,
+    color: Colors.black87,
+  );
+  static const _bodyStyle = TextStyle(fontSize: 13, color: Colors.black87);
+
+  /// Yıldız, ünlem, renk ve silme TAŞMA MENÜSÜNDE: şeritte yan yana
+  /// dizildiklerinde başlık alanına yer kalmıyordu.
+  Widget _menu(BuildContext context, PageBubble bubble) {
+    final l10n = context.l10n;
+    return PopupMenuButton<String>(
+      tooltip: '',
+      icon: const Icon(Icons.more_vert, size: 18, color: Colors.black54),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 180),
+      onSelected: (value) async {
+        switch (value) {
+          case 'star':
+            widget.controller.toggleStar(bubble.id);
+          case 'urgent':
+            widget.controller.toggleUrgent(bubble.id);
+          case 'color':
+            final picked = await showBubbleColorSheet(context, bubble.color);
+            if (picked == null) return;
+            widget.controller
+              ..update(bubble.copyWith(color: picked))
+              ..save();
+          case 'delete':
+            _titleFocus.unfocus();
+            _textFocus.unfocus();
+            widget.controller.remove(bubble.id);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'star',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(bubble.starred ? Icons.star : Icons.star_border),
+            title: Text(l10n.bubbleStar),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'urgent',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.priority_high),
+            title: Text(l10n.bubbleUrgent),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'color',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.palette_outlined),
+            title: Text(l10n.color),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.delete_outline),
+            title: Text(l10n.delete),
+          ),
+        ),
+      ],
+    );
   }
 }
 

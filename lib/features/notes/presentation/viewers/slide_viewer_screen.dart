@@ -188,7 +188,20 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
               ),
           ],
         ),
-        body: _body(l10n),
+        body: Stack(
+          children: [
+            Positioned.fill(child: _body(l10n)),
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: BubbleDock(
+                controller: _bubbles,
+                readOnly: widget.onChanged == null,
+              ),
+            ),
+          ],
+        ),
         bottomNavigationBar: _editing
             ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
             : (_bubbles.adding ? BubbleToolbar(controller: _bubbles) : null),

@@ -3446,7 +3446,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        header,
+        // Balona yazılırken not başlığı da gizlenir: klavye ekranın yarısını
+        // alıyor, o alan belgeye ve balon kartına lazım (kullanıcı isteği
+        // 2026-08-08 — ekran görüntüsünde işaretlenen bölge).
+        if (!_immersiveBubble) header,
         Expanded(child: pane),
       ],
     );
