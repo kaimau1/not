@@ -240,6 +240,58 @@ void main() {
       expect(c.openBubble, isNull);
     });
 
+    test('YAZILI balona dokunmak OKUMA kipinde acar — klavye gelmez', () {
+      final c = build(
+        initial: const [
+          PageBubble(id: 'a', page: 1, x: 0, y: 0, text: 'yazili', collapsed: true),
+        ],
+      );
+      c.openOnly('a');
+      expect(c.openBubble!.id, 'a');
+      expect(c.editMode, isFalse);
+      // "Duzenle" denince yazmaya gecilir.
+      c.beginEdit();
+      expect(c.editMode, isTrue);
+    });
+
+    test('BOS balonda okunacak sey yok — dogrudan yazmaya acilir', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0, collapsed: true)],
+      );
+      c.openOnly('a');
+      expect(c.editMode, isTrue);
+    });
+
+    test('yeni balon yazmaya acilir, kapaninca duzenleme biter', () {
+      final c = build();
+      c.add(1, 0.5, 0.5);
+      expect(c.editMode, isTrue);
+      c.collapseAll();
+      expect(c.editMode, isFalse);
+    });
+
+    test('acilan balon bildirilir — goruntuleyici onu ortalayabilsin', () {
+      final opened = <String>[];
+      final c = build(
+        initial: const [
+          PageBubble(id: 'a', page: 4, x: 0, y: 0, text: 'x', collapsed: true),
+        ],
+      )..onOpened = (b) => opened.add(b.id);
+      c.openOnly('a');
+      c.beginEdit();
+      expect(opened, ['a', 'a']);
+    });
+
+    test('yazarken revision artar — sayfadaki etiket CANLI degissin', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],
+      );
+      final before = c.revision.value;
+      c.updateTitle('a', 'Not');
+      c.updateText('a', 'metin');
+      expect(c.revision.value, before + 2);
+    });
+
     test('unlem (acil) ac/kapa', () {
       final c = build(
         initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],

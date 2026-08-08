@@ -76,10 +76,22 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     // jestin ortasında görüntüleyiciyi yeniden kuruyor ve başlamış uzun
     // basışı iptal ediyordu ("hâlâ çok zor sürükleniyor"). Uzun basış jest
     // arenasını zaten kazanıyor, sayfa altta kaymıyor.
+    _bubbles.onOpened = (bubble) => centerPdfOnBubble(
+      controller: _pdf,
+      bubble: bubble,
+      timer: (t) => _centerTimer = t,
+      previous: _centerTimer,
+      freeBelow: () => _bubbles.dockHeight.value,
+      alive: () => mounted,
+    );
   }
+
+  /// Açık balonu ortalama zamanlayıcısı (klavye açılma animasyonunu bekler).
+  Timer? _centerTimer;
 
   @override
   void dispose() {
+    _centerTimer?.cancel();
     _edgeTimer?.cancel();
     _ink.dispose();
     _bubbles.dispose();
@@ -250,21 +262,32 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             child: Stack(
               children: [
                 Positioned.fill(child: viewer),
-                // Açık balonun İÇERİĞİ hep en üstte: klavye ne kadar yer
-                // alırsa alsın görünür kalır (bkz. BubbleDock).
+                // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
+                // daraldığı için "alt kenar" = klavyenin üstü (bkz. BubbleDock).
                 Positioned(
                   left: 0,
                   right: 0,
-                  top: 0,
-                  child: BubbleDock(controller: _bubbles, readOnly: !editable),
+                  bottom: 0,
+                  child: BubbleDock(
+                    controller: _bubbles,
+                    readOnly: !editable,
+                    bottomPadding: MediaQuery.paddingOf(context).bottom,
+                  ),
                 ),
                 // Alt gezinme çubuğunun (telefon tuşları) ALTINDA kalmasın:
                 // Scaffold gövdesi bottomNavigationBar yokken sistem payını
                 // eklemiyor, çubuk tuşların üstüne biniyordu.
-                Positioned(
-                  left: 8,
-                  right: 8,
-                  bottom: 16 + MediaQuery.viewPaddingOf(context).bottom,
+                // Yazma kartı açıkken çubuk onun ÜSTÜNE çıkar: ikisi de alt
+                // kenarda duruyor, üst üste binmesinler.
+                ValueListenableBuilder<double>(
+                  valueListenable: _bubbles.dockHeight,
+                  builder: (context, dock, child) => Positioned(
+                    left: 8,
+                    right: 8,
+                    bottom:
+                        16 + MediaQuery.viewPaddingOf(context).bottom + dock,
+                    child: child!,
+                  ),
                   child: PdfSelectionBar(
                     selection: _selection,
                     bubbles: _bubbles,
@@ -285,6 +308,51 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       ),
     );
   }
+}
+
+/// Açık balonu, klavye ve yazma kartının ÜSTÜNDE kalan alanın ortasına
+/// getirir (kullanıcı isteği 2026-08-08: "tıklanan balon klavye ile ekranın
+/// üstü arasında ortalanmalı").
+///
+/// Gecikme şart: klavye ~250 ms'de açılıyor ve görünür alan o sırada
+/// daralıyor; hemen ortalamak klavye kapalıyken doğru olan yere kaydırırdı.
+/// Tam ekran görüntüleyici ile pano bölmesi aynı kodu kullansın diye burada.
+void centerPdfOnBubble({
+  required PdfViewerController controller,
+  required PageBubble bubble,
+  required void Function(Timer) timer,
+  required Timer? previous,
+  required double Function() freeBelow,
+  required bool Function() alive,
+}) {
+  previous?.cancel();
+  timer(
+    Timer(const Duration(milliseconds: 340), () {
+      if (!alive() || !controller.isReady) return;
+      try {
+        // pdfrx 1.3.x'te sayfa ölçüsüne tek erişim bu; `useDocument` eşleniği
+        // 2.x ile geliyor ve o sürüm bu projede kullanılamıyor.
+        // ignore: deprecated_member_use
+        final page = controller.pages[bubble.page - 1];
+        // Balonun sayfa oranlı konumu → PDF puntosu (sol-ALT orijin).
+        final x = bubble.x * page.width;
+        final y = (1 - bubble.y) * page.height;
+        final at = controller
+            .calcRectForRectInsidePage(
+              pageNumber: bubble.page,
+              rect: PdfRect(x - 1, y + 1, x + 1, y - 1),
+            )
+            .center;
+        final view = controller.viewSize;
+        final free = (view.height - freeBelow() - 24).clamp(80.0, view.height);
+        controller.goTo(
+          controller.calcMatrixFor(at, viewSize: Size(view.width, free)),
+        );
+      } catch (_) {
+        // Belge henüz hazır değilse (yarış) ortalama sessizce atlanır.
+      }
+    }),
+  );
 }
 
 /// Seçim + balon + (varsa) çizim katmanlarını taşıyan `PdfViewerParams`.
@@ -324,8 +392,11 @@ PdfViewerParams pdfLayerParams({
     //
     // `selection.page` de dinlenir ki seçim başka bir sayfaya geçince bu
     // sayfanın katmanı kendi vurgusunu bıraksın (tek etkin seçim).
+    // `RepaintBoundary`: sayfa kaydırılırken katmanların çizimi belgenin
+    // kendi katmanına karışmasın — kaydırmadaki takılmanın paylarından biri.
     Positioned.fill(
-      child: ValueListenableBuilder<int>(
+      child: RepaintBoundary(
+        child: ValueListenableBuilder<int>(
         valueListenable: selection.page,
         builder: (context, activePage, _) => AnimatedBuilder(
         animation: bubbles,
@@ -359,6 +430,7 @@ PdfViewerParams pdfLayerParams({
           ],
         ),
         ),
+      ),
       ),
     ),
   ],

@@ -22,11 +22,16 @@ class ZoomBox extends StatefulWidget {
     this.onZoomChanged,
     this.maxScale = 5,
     this.doubleTapScale = 2.5,
+    this.enabled = true,
   });
 
   final Widget child;
   final ValueChanged<bool>? onZoomChanged;
   final double maxScale;
+
+  /// false ise jestler kapalı ama ölçek KORUNUR — çizim kipinde tek parmak
+  /// çizmeli, yakınlaştırma da kaybolmamalı.
+  final bool enabled;
 
   /// Çift dokunuşun götürdüğü ölçek.
   final double doubleTapScale;
@@ -100,15 +105,16 @@ class _ZoomBoxState extends State<ZoomBox> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) => GestureDetector(
     // Çift dokunuşun KONUMU gerekiyor; `onDoubleTap` konum vermiyor, bu
     // yüzden `onDoubleTapDown` ile yakalanıp burada saklanıyor.
-    onDoubleTapDown: _handleDoubleTap,
-    onDoubleTap: () {},
+    onDoubleTapDown: widget.enabled ? _handleDoubleTap : null,
+    onDoubleTap: widget.enabled ? () {} : null,
     child: InteractiveViewer(
       transformationController: _controller,
       minScale: 1,
       maxScale: widget.maxScale,
       // Yakın değilken kaydırma KAPALI: sığdırılmış slaytta tek parmak
-      // hareketi slayt geçişi olmalı, boşlukta gezinme değil.
-      panEnabled: _zoomed,
+      // hareketi listeyi kaydırmalı, boşlukta gezinme değil.
+      panEnabled: widget.enabled && _zoomed,
+      scaleEnabled: widget.enabled,
       child: widget.child,
     ),
   );

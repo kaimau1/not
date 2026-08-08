@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,7 @@ import '../../domain/note.dart';
 import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/slide_canvas.dart';
+import '../viewers/slide_scroll.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/zoom_box.dart';
 import 'bubbles_overview.dart';
@@ -189,15 +192,32 @@ class _SlidePaneViewer extends StatefulWidget {
 }
 
 class _SlidePaneViewerState extends State<_SlidePaneViewer> {
-  /// Görünen slayt YAKINLAŞTIRILMIŞ mı? Yakınken slayt geçişi kilitlenir —
-  /// yatay sürükleme büyütülmüş sayfada gezinmektir, slayt değiştirmek değil.
+  /// Görünen slayt YAKINLAŞTIRILMIŞ mı? Yakınken liste kilitlenir — tek parmak
+  /// büyütülmüş slaytta gezinmektir, kaydırmak değil.
   bool _zoomed = false;
 
-  /// Denetleyici `initState`te kurulur: build içinde `??=` ile kurmak
-  /// `didUpdateWidget`in ilk sayfa atlamasını sessizce yutuyordu ve sunum
-  /// yeniden yüklenip slayt sayısı düşerse denetleyici aralık dışında
-  /// kalabiliyordu.
-  final PageController _pages = PageController();
+  /// Slaytlar PDF gibi ALT ALTA kayar (bkz. [SlideStripMetrics]); yatay
+  /// `PageView` bırakıldı.
+  final _scroll = ScrollController();
+
+  /// Son çizimdeki ölçüler ve görünür yükseklik — kaydırma konumundan slayt
+  /// numarası (ve tersi) bunlarla hesaplanır.
+  SlideStripMetrics? _metrics;
+  double _viewport = 0;
+
+  /// Kaydırmayla varılan slayt. Panodan gelen istek bununla karşılaştırılır:
+  /// aksi hâlde "kaydır → panoyu haberdar et → pano geri sıçrat" döngüsü olur.
+  int _page = 1;
+
+  bool _positioned = false;
+  Timer? _centerTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+    widget.bubbles.onOpened = _centerOn;
+  }
 
   @override
   void didUpdateWidget(_SlidePaneViewer old) {
@@ -206,20 +226,59 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     if (slides != null && old.slides?.length != slides.length) {
       widget.host.onPageCount(slides.length);
     }
-    // Pano başka bir slayda geçti (düğme ya da toplu görünüm): görüntüleyici
-    // oraya kayar. `hasClients` şart — sunum henüz çizilmemiş olabilir.
-    if (old.host.page != widget.host.page && _pages.hasClients) {
-      final target = slides == null
-          ? widget.host.page - 1
-          : (widget.host.page - 1).clamp(0, slides.length - 1);
-      _pages.jumpToPage(target);
-    }
+    // Pano başka bir slayda geçti (düğme ya da toplu görünüm): liste oraya
+    // kayar. Kaydırmanın KENDİ bildirdiği sayfa için sıçratma yapılmaz.
+    if (widget.host.page != _page) _goToPage(widget.host.page);
   }
 
   @override
   void dispose() {
-    _pages.dispose();
+    _centerTimer?.cancel();
+    _scroll.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final metrics = _metrics;
+    if (metrics == null || !_scroll.hasClients) return;
+    final page = metrics.pageAt(_scroll.offset, _viewport);
+    if (page == _page) return;
+    _page = page;
+    widget.host.onPageChanged(page);
+  }
+
+  void _goToPage(int page) {
+    final metrics = _metrics;
+    if (metrics == null || !_scroll.hasClients) return;
+    _page = page;
+    _scroll.jumpTo(
+      metrics.startOf(page).clamp(0.0, _scroll.position.maxScrollExtent),
+    );
+  }
+
+  /// Açılan balonu, yazma kartının üstünde kalan alanın ortasına getirir.
+  /// Gecikme klavye animasyonu içindir (PDF'teki `centerPdfOnBubble` ile aynı
+  /// gerekçe).
+  void _centerOn(PageBubble bubble) {
+    _centerTimer?.cancel();
+    _centerTimer = Timer(const Duration(milliseconds: 340), () {
+      final metrics = _metrics;
+      if (!mounted || metrics == null || !_scroll.hasClients) return;
+      final free = (_viewport - widget.bubbles.dockHeight.value - 24).clamp(
+        80.0,
+        _viewport <= 0 ? 80.0 : _viewport,
+      );
+      _scroll.animateTo(
+        metrics.centerOffset(
+          page: bubble.page,
+          y: bubble.y,
+          free: free,
+          maxScroll: _scroll.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   @override
@@ -251,54 +310,65 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     }
     return _withBubbleButton(
       ColoredBox(
-      color: Colors.black,
-      child: PageView.builder(
-        controller: _pages,
-        // Balon taşınırken slayt geçişi KİLİTLİ: parmak balonu sürüklerken
-        // sayfanın da kayması taşımayı imkânsız kılıyordu.
-        // Balon taşınırken ya da slayt yakınlaştırılmışken geçiş KİLİTLİ.
-        physics: (widget.bubbles.dragging != null || _zoomed)
-            ? const NeverScrollableScrollPhysics()
-            : const PageScrollPhysics(parent: ClampingScrollPhysics()),
-        itemCount: slides.length,
-        onPageChanged: (i) => widget.host.onPageChanged(i + 1),
-        itemBuilder: (context, i) => RepaintBoundary(
-          child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            // Slaydın kendi en-boy oranıyla çizilir; çizim katmanı da aynı
-            // kutuyu kaplar → oranlar hizalı kalır. Çift dokunuş yakınlaştırır,
-            // sonra iki parmakla serbestçe gezilir (bkz. ZoomBox).
-            child: AspectRatio(
-              aspectRatio: slides[i].heightPt == 0
-                  ? 16 / 9
-                  : slides[i].widthPt / slides[i].heightPt,
-              child: ZoomBox(
-                onZoomChanged: (value) {
-                  if (mounted && _zoomed != value) {
-                    setState(() => _zoomed = value);
-                  }
-                },
-                child: Stack(
-                children: [
-                  Positioned.fill(child: SlideCanvas(slide: slides[i])),
-                  Positioned.fill(
-                    child: InkPageLayer(controller: widget.ink, page: i + 1),
-                  ),
-                  Positioned.fill(
-                    child: BubblePageLayer(
-                      controller: widget.bubbles,
-                      page: i + 1,
+        color: Colors.black,
+        child: AnimatedBuilder(
+          animation: widget.bubbles,
+          builder: (context, _) => LayoutBuilder(
+            builder: (context, constraints) {
+              final metrics = SlideStripMetrics.forWidth(
+                [for (final s in slides) slideAspect(s)],
+                constraints.maxWidth,
+              );
+              _metrics = metrics;
+              _viewport = constraints.maxHeight;
+              if (!_positioned && widget.host.page > 1) {
+                _positioned = true;
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _goToPage(widget.host.page),
+                );
+              }
+              return ListView.builder(
+                controller: _scroll,
+                // Balon taşınırken ya da slayt yakınlaştırılmışken kaydırma
+                // KİLİTLİ: parmak balonu sürüklerken listenin de kayması
+                // taşımayı imkânsız kılıyordu.
+                physics: (widget.bubbles.dragging != null || _zoomed)
+                    ? const NeverScrollableScrollPhysics()
+                    : const ClampingScrollPhysics(),
+                itemCount: slides.length,
+                // Yükseklikler önceden biliniyor: liste ölçmeden kurulur,
+                // "balona git" tam yere gider.
+                itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
+                itemBuilder: (context, i) => RepaintBoundary(
+                  child: ZoomBox(
+                    onZoomChanged: (value) {
+                      if (mounted && _zoomed != value) {
+                        setState(() => _zoomed = value);
+                      }
+                    },
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: SlideCanvas(slide: slides[i])),
+                        Positioned.fill(
+                          child: InkPageLayer(
+                            controller: widget.ink,
+                            page: i + 1,
+                          ),
+                        ),
+                        Positioned.fill(
+                          child: BubblePageLayer(
+                            controller: widget.bubbles,
+                            page: i + 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
                 ),
-              ),
-            ),
-          ),
+              );
+            },
           ),
         ),
-      ),
       ),
     );
   }
@@ -307,7 +377,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     final target = await showBubblesOverview(context, widget.bubbles);
     if (target == null || !mounted) return;
     widget.host.onPageChanged(target.page);
-    if (_pages.hasClients) _pages.jumpToPage(target.page - 1);
+    _goToPage(target.page);
     widget.bubbles.openOnly(target.id);
   }
 
@@ -319,7 +389,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
       Positioned(
         left: 0,
         right: 0,
-        top: 0,
+        bottom: 0,
         child: BubbleDock(controller: widget.bubbles),
       ),
       Positioned(

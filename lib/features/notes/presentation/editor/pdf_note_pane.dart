@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/local_file.dart';
@@ -170,10 +172,21 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   final _pdf = PdfViewerController();
   final _selection = PdfSelectionState();
 
+  Timer? _centerTimer;
+
   @override
   void initState() {
     super.initState();
     // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması).
+    // Açılan balon, yazma kartının üstünde kalan alanın ortasına getirilir.
+    widget.bubbles.onOpened = (bubble) => centerPdfOnBubble(
+      controller: _pdf,
+      bubble: bubble,
+      timer: (t) => _centerTimer = t,
+      previous: _centerTimer,
+      freeBelow: () => widget.bubbles.dockHeight.value,
+      alive: () => mounted,
+    );
   }
 
   @override
@@ -189,6 +202,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
 
   @override
   void dispose() {
+    _centerTimer?.cancel();
     _selection.dispose();
     super.dispose();
   }
@@ -265,11 +279,11 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     return Stack(
       children: [
         Positioned.fill(child: viewer),
-        // Açık balonun içeriği bölmenin en üstünde (bkz. BubbleDock).
+        // Yazma kartı bölmenin ALT kenarında — klavye açıkken tam onun üstü.
         Positioned(
           left: 0,
           right: 0,
-          top: 0,
+          bottom: 0,
           child: BubbleDock(controller: widget.bubbles),
         ),
         Positioned(
@@ -277,10 +291,15 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           right: 4,
           child: Column(children: [_bubbleButton(), _overviewButton()]),
         ),
-        Positioned(
-          left: 8,
-          right: 8,
-          bottom: 8,
+        // Yazma kartı açıkken çubuk onun üstüne çıkar (üst üste binmesin).
+        ValueListenableBuilder<double>(
+          valueListenable: widget.bubbles.dockHeight,
+          builder: (context, dock, child) => Positioned(
+            left: 8,
+            right: 8,
+            bottom: 8 + dock,
+            child: child!,
+          ),
           child: PdfSelectionBar(
             selection: _selection,
             bubbles: widget.bubbles,
