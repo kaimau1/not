@@ -2217,4 +2217,38 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => '移除';
+
+  @override
+  String get exportTitle => '导出';
+
+  @override
+  String get exportNotesOption => '笔记文本（PDF / Word）';
+
+  @override
+  String get exportNotesOptionInfo => '笔记的文字与图片；不含气泡批注。';
+
+  @override
+  String get captureNoteTitle => '笔记标题（可选）';
+
+  @override
+  String get captureNoteTitleHint => '新建的文档也会使用此名称';
+
+  @override
+  String get imageOcrTitle => '识别图片中的文字';
+
+  @override
+  String get imageOcrNone => '未在此图片中找到文字。';
+
+  @override
+  String imageOcrHint(int count) {
+    return '识别到 $count 行 · 点按选择';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '已选择 $count 行';
+  }
 }

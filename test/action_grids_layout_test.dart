@@ -88,17 +88,16 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // YAZ bölümü: üç seçenek ALT ALTA, tam genişlik satırlar. (Eskiden üçü
-    // yan yana üç sütundu; hepsi aynı boyda küçük kutu olduğu için gözle
-    // ayırt edilemiyorlardı.)
+    // YAZ bölümü de ÜÇ SÜTUNLU IZGARA (kullanıcı isteği 2026-08-09: "metin /
+    // liste / sıralı liste de grid kart olsun, altrakiler gibi"): iki bölüm
+    // arasında iki ayrı düğme dili vardı.
     final text = tester.getRect(find.text('Metin notu'));
     final list = tester.getRect(find.text('Liste'));
     final ordered = tester.getRect(find.text('Sıralı liste'));
-    expect(text.center.dy, lessThan(list.center.dy));
-    expect(list.center.dy, lessThan(ordered.center.dy));
-    // Aynı sol kenardan başlarlar — satır, ızgara hücresi değil.
-    expect(text.left, closeTo(list.left, 1));
-    expect(list.left, closeTo(ordered.left, 1));
+    expect(text.center.dy, closeTo(list.center.dy, 1));
+    expect(list.center.dy, closeTo(ordered.center.dy, 1));
+    expect(text.center.dx, lessThan(list.center.dx));
+    expect(list.center.dx, lessThan(ordered.center.dx));
 
     // Bölüm başlıkları görünür ve YAKALA, YAZ'ın altındadır.
     expect(find.text('YAZ'), findsOneWidget);

@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "बबल, हाइलाइट और ड्रॉइंग PDF के अंदर छाप दिए जाते हैं; कोई भी खोल सकता है और Not में यह संपादन योग्य खुलता है।",
   "sharePdfWithBubblesNone": "इस नोट में बबल या ड्रॉइंग वाली कोई PDF नहीं है।",
   "sharePdfWithBubblesPreparing": "बबल वाली PDF तैयार हो रही है…",
-  "sharePdfWithBubblesSuffix": " (बबल सहित)"
+  "sharePdfWithBubblesSuffix": " (बबल सहित)",
+  "formatRemove": "हटाएं",
+  "exportTitle": "निर्यात करें",
+  "exportNotesOption": "नोट का टेक्स्ट (PDF / Word)",
+  "exportNotesOptionInfo": "नोट का टेक्स्ट और चित्र; बबल शामिल नहीं हैं।",
+  "captureNoteTitle": "नोट का शीर्षक (वैकल्पिक)",
+  "captureNoteTitleHint": "नए दस्तावेज़ को भी यही नाम मिलेगा",
+  "imageOcrTitle": "चित्र में टेक्स्ट पहचानें",
+  "imageOcrNone": "इस चित्र में कोई टेक्स्ट नहीं मिला।",
+  "imageOcrHint": "{count} पंक्तियाँ पहचानी गईं · चुनने के लिए टैप करें",
+  "imageOcrSelected": "{count} पंक्तियाँ चुनी गईं"
 }

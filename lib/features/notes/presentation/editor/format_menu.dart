@@ -114,6 +114,57 @@ bool applyRichStep(
   );
 }
 
+/// Seçimden (ya da imlecin bulunduğu biçimli parçadan) **tek bir biçmi**
+/// kaldırır — renk/vurgu paletindeki "Kaldır" bunu çağırır.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "biçim alanında seçiyorum geri
+/// bırakamıyorum"): renk ve vurgu için geri dönüşün TEK yolu, paletten AYNI
+/// rengi ikinci kez seçmekti ([toggleFormat] o durumda kaldırıyor). Hiçbir
+/// yerde yazmadığı için bulunamıyordu; kullanıcının bildiği tek çıkış
+/// "Biçimi temizle" idi, o da kalın/italik dahil HER ŞEYİ siliyordu. Artık
+/// palet kendi "Kaldır"ını taşıyor ve yalnız o biçmi düşürüyor.
+///
+/// Bekleyen (henüz metne yazılmamış) biçim de düşer: kullanıcı renk seçip
+/// hiç yazmadan vazgeçmiş olabilir.
+bool removeRichFormat(WrapTextController controller, RichFormat format) {
+  final selection = controller.selection;
+  if (!selection.isValid) return false;
+  var changedPending = false;
+  if (controller.pendingFormats.containsKey(format)) {
+    controller.togglePendingFormat(
+      format,
+      controller.pendingFormats[format],
+    );
+    changedPending = true;
+  }
+  final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  if (start == end) {
+    // İmleç: biçim gerçekten oradaysa [toggleFormat] o kesintisiz parçadan
+    // kaldırır. Değilse metne dokunmaz (ve boş kutu da açmaz — bekleyen
+    // biçim yukarıda zaten temizlendi).
+    if (!activeFormats(logical, start, end).has(format)) return changedPending;
+    final result = toggleFormat(logical, start, end, format);
+    if (result.pending != null) return changedPending;
+    return _write(controller, logical, start, end, (
+          text: result.text,
+          start: result.start,
+          end: result.end,
+        )) ||
+        changedPending;
+  }
+  return _write(
+        controller,
+        logical,
+        start,
+        end,
+        setRangeFormat(logical, start, end, format, null),
+      ) ||
+      changedPending;
+}
+
 /// Seçimdeki (ya da imlecin içinde bulunduğu parçadaki) TÜM biçimleri siler.
 bool clearRichFormat(WrapTextController controller) {
   final selection = controller.selection;

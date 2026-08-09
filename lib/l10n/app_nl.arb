@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Ballonnen, markeringen en tekeningen worden in de pdf gebrand; iedereen kan hem openen en in Not opent hij bewerkbaar.",
   "sharePdfWithBubblesNone": "Deze notitie heeft geen pdf met ballonnen of tekeningen.",
   "sharePdfWithBubblesPreparing": "Pdf met ballonnen wordt voorbereid…",
-  "sharePdfWithBubblesSuffix": " (met ballonnen)"
+  "sharePdfWithBubblesSuffix": " (met ballonnen)",
+  "formatRemove": "Verwijderen",
+  "exportTitle": "Exporteren",
+  "exportNotesOption": "Notitietekst (PDF / Word)",
+  "exportNotesOptionInfo": "Tekst en afbeeldingen van de notitie; ballonnen niet inbegrepen.",
+  "captureNoteTitle": "Notitietitel (optioneel)",
+  "captureNoteTitleHint": "Het nieuwe document krijgt deze naam ook",
+  "imageOcrTitle": "Tekst in afbeelding herkennen",
+  "imageOcrNone": "Geen tekst gevonden in deze afbeelding.",
+  "imageOcrHint": "{count} regels herkend · tik om te selecteren",
+  "imageOcrSelected": "{count} regels geselecteerd"
 }

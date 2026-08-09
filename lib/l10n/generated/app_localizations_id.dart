@@ -2288,4 +2288,38 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'Hapus';
+
+  @override
+  String get exportTitle => 'Ekspor';
+
+  @override
+  String get exportNotesOption => 'Teks catatan (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'Teks dan gambar catatan; balon tidak disertakan.';
+
+  @override
+  String get captureNoteTitle => 'Judul catatan (opsional)';
+
+  @override
+  String get captureNoteTitleHint => 'Dokumen baru juga memakai nama ini';
+
+  @override
+  String get imageOcrTitle => 'Kenali teks pada gambar';
+
+  @override
+  String get imageOcrNone => 'Tidak ada teks pada gambar ini.';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count baris dikenali · ketuk untuk memilih';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count baris dipilih';
+  }
 }

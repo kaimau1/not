@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Выноски, выделения и рисунки впечатываются в PDF; открыть может любой, а в Not файл открывается редактируемым.",
   "sharePdfWithBubblesNone": "В этой заметке нет PDF с выносками или рисунками.",
   "sharePdfWithBubblesPreparing": "Готовится PDF с выносками…",
-  "sharePdfWithBubblesSuffix": " (с выносками)"
+  "sharePdfWithBubblesSuffix": " (с выносками)",
+  "formatRemove": "Убрать",
+  "exportTitle": "Экспорт",
+  "exportNotesOption": "Текст заметки (PDF / Word)",
+  "exportNotesOptionInfo": "Текст и изображения заметки; выноски не включены.",
+  "captureNoteTitle": "Заголовок заметки (необязательно)",
+  "captureNoteTitleHint": "Новый документ получит это же имя",
+  "imageOcrTitle": "Распознать текст на изображении",
+  "imageOcrNone": "На этом изображении текст не найден.",
+  "imageOcrHint": "Распознано строк: {count} · нажмите, чтобы выбрать",
+  "imageOcrSelected": "Выбрано строк: {count}"
 }

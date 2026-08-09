@@ -126,9 +126,11 @@ class _QuickAddFabState extends State<QuickAddFab> {
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
             child: _QuickAddPanel(
-              // YAZ: boş bir not açan üç seçenek. Tam genişlik satır, çünkü
-              // en sık kullanılanlar bunlar ve ızgarada üçü de aynı boyda
-              // küçük kutulara dönüşüp gözde ayırt edilemiyordu.
+              // YAZ: boş bir not açan üç seçenek. Bunlar da YAKALA bölümüyle
+              // AYNI ızgara kartlarında durur (kullanıcı isteği 2026-08-09:
+              // "metin/liste/sıralı liste de grid kart olsun, altrakiler
+              // gibi"): iki bölüm arasında iki ayrı düğme dili vardı, göz
+              // her açılışta yeniden alışıyordu.
               writeOptions: [
                 (
                   Icons.notes,
@@ -370,13 +372,23 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _SectionLabel(l10n.quickAddWrite),
-            for (final (icon, label, action) in widget.writeOptions)
-              _WriteRow(
-                icon: icon,
-                label: label,
-                onTap: () => widget.onSelected(action),
-              ),
-            const SizedBox(height: 6),
+            Wrap(
+              spacing: _gap,
+              runSpacing: _gap,
+              children: [
+                for (final (icon, label, action) in widget.writeOptions)
+                  SizedBox(
+                    width: cellWidth,
+                    height: _cellHeight,
+                    child: _PanelButton(
+                      icon: icon,
+                      label: label,
+                      onTap: () => widget.onSelected(action),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
             Divider(height: 1, color: scheme.outlineVariant),
             _SectionLabel(l10n.quickAddCapture),
             Wrap(
@@ -442,53 +454,6 @@ class _SectionLabel extends StatelessWidget {
       ),
     ),
   );
-}
-
-/// YAZ bölümünün tam genişlik satırı.
-class _WriteRow extends StatelessWidget {
-  const _WriteRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: SizedBox(
-          height: 44,
-          child: Row(
-            children: [
-              const SizedBox(width: 4),
-              Icon(icon, size: 20, color: scheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// Panel hücresi: üstte simge, altında etiket. Tonal zemin dokunulabilir

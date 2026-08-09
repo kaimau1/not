@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "气泡、高亮和手写会印进 PDF；任何人都能打开，在 Not 中则以可编辑状态打开。",
   "sharePdfWithBubblesNone": "这条笔记中没有带气泡或手写的 PDF。",
   "sharePdfWithBubblesPreparing": "正在准备带气泡的 PDF…",
-  "sharePdfWithBubblesSuffix": "（带气泡）"
+  "sharePdfWithBubblesSuffix": "（带气泡）",
+  "formatRemove": "移除",
+  "exportTitle": "导出",
+  "exportNotesOption": "笔记文本（PDF / Word）",
+  "exportNotesOptionInfo": "笔记的文字与图片；不含气泡批注。",
+  "captureNoteTitle": "笔记标题（可选）",
+  "captureNoteTitleHint": "新建的文档也会使用此名称",
+  "imageOcrTitle": "识别图片中的文字",
+  "imageOcrNone": "未在此图片中找到文字。",
+  "imageOcrHint": "识别到 {count} 行 · 点按选择",
+  "imageOcrSelected": "已选择 {count} 行"
 }

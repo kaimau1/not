@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chiunque può aprirlo e in Not si apre modificabile.",
   "sharePdfWithBubblesNone": "Questa nota non ha PDF con fumetti o disegni.",
   "sharePdfWithBubblesPreparing": "Preparazione del PDF con fumetti…",
-  "sharePdfWithBubblesSuffix": " (con fumetti)"
+  "sharePdfWithBubblesSuffix": " (con fumetti)",
+  "formatRemove": "Rimuovi",
+  "exportTitle": "Esporta",
+  "exportNotesOption": "Testo della nota (PDF / Word)",
+  "exportNotesOptionInfo": "Testo e immagini della nota; i fumetti non sono inclusi.",
+  "captureNoteTitle": "Titolo della nota (facoltativo)",
+  "captureNoteTitleHint": "Anche il nuovo documento avrà questo nome",
+  "imageOcrTitle": "Riconosci il testo nell’immagine",
+  "imageOcrNone": "Nessun testo trovato in questa immagine.",
+  "imageOcrHint": "{count} righe riconosciute · tocca per selezionare",
+  "imageOcrSelected": "{count} righe selezionate"
 }

@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "말풍선, 형광펜, 필기가 PDF 안에 새겨집니다. 누구나 열 수 있고 Not에서는 편집 가능한 상태로 열립니다.",
   "sharePdfWithBubblesNone": "이 메모에는 말풍선이나 필기가 있는 PDF가 없습니다.",
   "sharePdfWithBubblesPreparing": "말풍선 포함 PDF를 준비하는 중…",
-  "sharePdfWithBubblesSuffix": " (말풍선 포함)"
+  "sharePdfWithBubblesSuffix": " (말풍선 포함)",
+  "formatRemove": "제거",
+  "exportTitle": "내보내기",
+  "exportNotesOption": "메모 텍스트(PDF / Word)",
+  "exportNotesOptionInfo": "메모의 글과 이미지. 말풍선은 포함되지 않습니다.",
+  "captureNoteTitle": "메모 제목(선택)",
+  "captureNoteTitleHint": "새로 만들어지는 문서에도 같은 이름이 붙습니다",
+  "imageOcrTitle": "이미지 속 문자 인식",
+  "imageOcrNone": "이 이미지에서 문자를 찾지 못했습니다.",
+  "imageOcrHint": "{count}줄 인식됨 · 탭하여 선택",
+  "imageOcrSelected": "{count}줄 선택됨"
 }

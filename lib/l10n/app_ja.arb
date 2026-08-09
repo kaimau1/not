@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "吹き出し・ハイライト・手書きがPDFに焼き込まれます。誰でも開けて、Notでは編集可能な状態で開きます。",
   "sharePdfWithBubblesNone": "このメモには吹き出しや手書きのあるPDFがありません。",
   "sharePdfWithBubblesPreparing": "吹き出し入りPDFを準備しています…",
-  "sharePdfWithBubblesSuffix": "（吹き出し入り）"
+  "sharePdfWithBubblesSuffix": "（吹き出し入り）",
+  "formatRemove": "解除",
+  "exportTitle": "書き出す",
+  "exportNotesOption": "メモの本文（PDF / Word）",
+  "exportNotesOptionInfo": "メモの本文と画像（吹き出しは含まれません）。",
+  "captureNoteTitle": "メモのタイトル（任意）",
+  "captureNoteTitleHint": "作成される書類にも同じ名前が付きます",
+  "imageOcrTitle": "画像内の文字を認識",
+  "imageOcrNone": "この画像から文字が見つかりませんでした。",
+  "imageOcrHint": "{count} 行を認識 · タップで選択",
+  "imageOcrSelected": "{count} 行を選択中"
 }

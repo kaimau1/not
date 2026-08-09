@@ -60,41 +60,54 @@ class AttachmentStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (attachments.isEmpty) return const SizedBox.shrink();
-    // Klavye açıkken şerit hiç çizilmez: yazarken ekler için yer ayırmak
-    // metin alanını gereksiz daraltıyordu. Bu MediaQuery bağımlılığı bilerek
-    // BURADA duruyor — editörün kendi build'ine konsa klavye animasyonunun
-    // her karesinde tüm editör yeniden kurulurdu.
-    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
-      return const SizedBox.shrink();
-    }
     final scheme = Theme.of(context).colorScheme;
     // BAŞLIK SATIRI YOK: "Ekler (1) · Göster" satırı alt çubuktaki ek
     // düğmesine taşındı (kullanıcı isteği 2026-08-08 — "bir satır alan
     // kurtarmış oluruz"). Şerit kapalıyken hiç yer kaplamaz.
-    if (!expanded) return const SizedBox.shrink();
-    return Column(
+    final content = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.5)),
-        if (expanded)
-          SizedBox(
-            height: 110,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              itemCount: attachments.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, index) => _AttachmentTile(
-                attachment: attachments[index],
-                onRemove: () => onRemove(attachments[index]),
-                onChanged: onChanged,
-                onCopy: onCopy,
-                onPlaceOnPage: onPlaceOnPage,
-                onVideoToNote: onVideoToNote,
-              ),
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            itemCount: attachments.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) => _AttachmentTile(
+              attachment: attachments[index],
+              onRemove: () => onRemove(attachments[index]),
+              onChanged: onChanged,
+              onCopy: onCopy,
+              onPlaceOnPage: onPlaceOnPage,
+              onVideoToNote: onVideoToNote,
             ),
           ),
+        ),
       ],
+    );
+
+    // Klavye açıkken şerit gizlenir: yazarken ekler için yer ayırmak metin
+    // alanını gereksiz daraltıyordu. Bu MediaQuery bağımlılığı bilerek
+    // BURADA duruyor — editörün kendi build'ine konsa klavye animasyonunun
+    // her karesinde tüm editör yeniden kurulurdu.
+    //
+    // KASMA — `Offstage` + YAKALANMIŞ çocuk (kullanıcı bulgusu 2026-08-09:
+    // "nota görsel eklendiğinde klavye açılırken klavye titreyerek kasarak
+    // açılıyor hâlâ"): burada eskiden `return const SizedBox.shrink()` vardı,
+    // yani klavyenin İLK karesinde şeridin bütün alt ağacı (karolar, görsel
+    // çözdürmeleri, ses oynatıcısının State'i) ağaçtan DÜŞÜYOR, klavye
+    // kapanınca da sıfırdan kuruluyordu — yeni eklenmiş bir görselde bu,
+    // animasyonun tam ortasına denk gelen bir çözdürme demek. `Offstage`
+    // çocuğu ağaçta TUTAR ama yerleşim ve boyama yapmaz; `content` build
+    // dışında yakalandığı için de Builder'ın her karedeki yeniden çalışması
+    // alt ağacı hiç yeniden kurmaz (aynı örnek → Flutter atlar).
+    return Builder(
+      builder: (context) => Offstage(
+        offstage: !expanded || MediaQuery.viewInsetsOf(context).bottom > 0,
+        child: content,
+      ),
     );
   }
 }

@@ -60,6 +60,13 @@ class NoteShare {
   /// içindeki belge katmanlı (yani hâlâ düzenlenebilir) kalır.
   ///
   /// Paylaşılan dosya sayısını döner; 0 = notta damgalanacak PDF yok.
+  ///
+  /// **Dosya adı NOTUN BAŞLIĞINDAN** gelir (kullanıcı isteği 2026-08-09:
+  /// "balonlu notlarda notun başlığı, oluşturulan yeni PDF'ye ad olarak
+  /// verilmeli"). Görselden/fotoğraftan kurulan balonlu notlarda belgeye
+  /// yakalama kipinin adı veriliyordu ("Foto çek not al.pdf"); paylaşılan
+  /// dosya da o adla gidiyor, alıcıda hangi not olduğu anlaşılmıyordu.
+  /// Başlık boşsa ekin kendi adına düşülür — adsız dosya üretilmez.
   static Future<int> shareAnnotatedPdfs(
     Note note, {
     required AttachmentRepository? attachments,
@@ -70,6 +77,9 @@ class NoteShare {
     if (attachments == null) return 0;
     final files = <XFile>[];
     final dir = await getTemporaryDirectory();
+    final titleBase = safePdfBaseName(note.displayTitle);
+    // Aynı notta birden çok damgalı belge varsa adlar çakışmasın.
+    var stamped = 0;
     for (final attachment in note.attachments) {
       if (attachment.kind != AttachmentKind.pdf) continue;
       if (attachment.bubbles.isEmpty && attachment.ink.isEmpty) continue;
@@ -81,8 +91,11 @@ class NoteShare {
         ink: attachment.ink,
         fontBytes: fontBytes,
       );
-      final base = p.basenameWithoutExtension(attachment.fileName);
-      final file = File(p.join(dir.path, '$base$fileSuffix.pdf'));
+      stamped++;
+      final fallback = p.basenameWithoutExtension(attachment.fileName);
+      final base = titleBase ?? fallback;
+      final suffixed = stamped > 1 ? '$base-$stamped' : base;
+      final file = File(p.join(dir.path, '$suffixed$fileSuffix.pdf'));
       await file.writeAsBytes(out, flush: true);
       files.add(XFile(file.path, mimeType: 'application/pdf'));
     }
@@ -179,4 +192,20 @@ class NoteShare {
     );
     return id;
   }
+}
+
+/// Not başlığından **dosya adı** üretir: dosya sisteminde sorun çıkaran
+/// karakterler atılır, uzunluk sınırlanır. Kullanılabilir bir ad çıkmazsa
+/// (başlık boş ya da tamamen işaretten ibaret) null döner — çağıran o zaman
+/// kendi yedek adına düşer.
+String? safePdfBaseName(String title) {
+  final cleaned = title
+      .trim()
+      // Windows ve Android'in kabul etmediği karakterler + kontrol karakteri.
+      .replaceAll(RegExp(r'[\\/:*?"<>|]'), ' ')
+      .replaceAll(RegExp(r'[\x00-\x1f]'), ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  if (cleaned.isEmpty) return null;
+  return cleaned.length > 60 ? cleaned.substring(0, 60).trim() : cleaned;
 }

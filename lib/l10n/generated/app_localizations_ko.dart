@@ -2239,4 +2239,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => '제거';
+
+  @override
+  String get exportTitle => '내보내기';
+
+  @override
+  String get exportNotesOption => '메모 텍스트(PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => '메모의 글과 이미지. 말풍선은 포함되지 않습니다.';
+
+  @override
+  String get captureNoteTitle => '메모 제목(선택)';
+
+  @override
+  String get captureNoteTitleHint => '새로 만들어지는 문서에도 같은 이름이 붙습니다';
+
+  @override
+  String get imageOcrTitle => '이미지 속 문자 인식';
+
+  @override
+  String get imageOcrNone => '이 이미지에서 문자를 찾지 못했습니다.';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count줄 인식됨 · 탭하여 선택';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count줄 선택됨';
+  }
 }

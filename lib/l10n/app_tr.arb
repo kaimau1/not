@@ -1025,5 +1025,29 @@
   "bubbleArrowHide": "Oku gizle",
   "bubbleArrowShow": "Oku göster",
   "speechPitch": "Ses tonu",
-  "speechVoicePickerTitle": "Ses seçimi"
+  "speechVoicePickerTitle": "Ses seçimi",
+  "formatRemove": "Kaldır",
+  "exportTitle": "Dışa aktar",
+  "exportNotesOption": "Not metni (PDF / Word)",
+  "exportNotesOptionInfo": "Notun yazısı ve görselleri; balonlar dahil değil.",
+  "captureNoteTitle": "Not başlığı (isteğe bağlı)",
+  "captureNoteTitleHint": "Oluşacak belgeye de bu ad verilir",
+  "imageOcrTitle": "Görseldeki metni tanı",
+  "imageOcrNone": "Bu görselde metin bulunamadı.",
+  "imageOcrHint": "{count} satır tanındı · dokunarak seç",
+  "@imageOcrHint": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "imageOcrSelected": "{count} satır seçildi",
+  "@imageOcrSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

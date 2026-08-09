@@ -2282,4 +2282,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'Убрать';
+
+  @override
+  String get exportTitle => 'Экспорт';
+
+  @override
+  String get exportNotesOption => 'Текст заметки (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'Текст и изображения заметки; выноски не включены.';
+
+  @override
+  String get captureNoteTitle => 'Заголовок заметки (необязательно)';
+
+  @override
+  String get captureNoteTitleHint => 'Новый документ получит это же имя';
+
+  @override
+  String get imageOcrTitle => 'Распознать текст на изображении';
+
+  @override
+  String get imageOcrNone => 'На этом изображении текст не найден.';
+
+  @override
+  String imageOcrHint(int count) {
+    return 'Распознано строк: $count · нажмите, чтобы выбрать';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return 'Выбрано строк: $count';
+  }
 }

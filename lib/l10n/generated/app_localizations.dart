@@ -4301,6 +4301,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Ses seçimi'**
   String get speechVoicePickerTitle;
+
+  /// No description provided for @formatRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaldır'**
+  String get formatRemove;
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dışa aktar'**
+  String get exportTitle;
+
+  /// No description provided for @exportNotesOption.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not metni (PDF / Word)'**
+  String get exportNotesOption;
+
+  /// No description provided for @exportNotesOptionInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısı ve görselleri; balonlar dahil değil.'**
+  String get exportNotesOptionInfo;
+
+  /// No description provided for @captureNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not başlığı (isteğe bağlı)'**
+  String get captureNoteTitle;
+
+  /// No description provided for @captureNoteTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluşacak belgeye de bu ad verilir'**
+  String get captureNoteTitleHint;
+
+  /// No description provided for @imageOcrTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseldeki metni tanı'**
+  String get imageOcrTitle;
+
+  /// No description provided for @imageOcrNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu görselde metin bulunamadı.'**
+  String get imageOcrNone;
+
+  /// No description provided for @imageOcrHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır tanındı · dokunarak seç'**
+  String imageOcrHint(int count);
+
+  /// No description provided for @imageOcrSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} satır seçildi'**
+  String imageOcrSelected(int count);
 }
 
 class _AppLocalizationsDelegate

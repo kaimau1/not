@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Les bulles, surlignages et dessins sont imprimés dans le PDF ; tout le monde peut l'ouvrir, et dans Not il s'ouvre modifiable.",
   "sharePdfWithBubblesNone": "Cette note ne contient aucun PDF avec bulles ou dessins.",
   "sharePdfWithBubblesPreparing": "Préparation du PDF avec bulles…",
-  "sharePdfWithBubblesSuffix": " (avec bulles)"
+  "sharePdfWithBubblesSuffix": " (avec bulles)",
+  "formatRemove": "Supprimer",
+  "exportTitle": "Exporter",
+  "exportNotesOption": "Texte de la note (PDF / Word)",
+  "exportNotesOptionInfo": "Texte et images de la note ; bulles non incluses.",
+  "captureNoteTitle": "Titre de la note (facultatif)",
+  "captureNoteTitleHint": "Le nouveau document portera ce nom",
+  "imageOcrTitle": "Reconnaître le texte de l’image",
+  "imageOcrNone": "Aucun texte trouvé dans cette image.",
+  "imageOcrHint": "{count} lignes reconnues · appuyez pour sélectionner",
+  "imageOcrSelected": "{count} lignes sélectionnées"
 }

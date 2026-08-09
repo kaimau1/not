@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Balões, destaques e desenhos são gravados dentro do PDF; qualquer um pode abrir e no Not ele abre editável.",
   "sharePdfWithBubblesNone": "Esta nota não tem PDF com balões ou desenhos.",
   "sharePdfWithBubblesPreparing": "Preparando o PDF com balões…",
-  "sharePdfWithBubblesSuffix": " (com balões)"
+  "sharePdfWithBubblesSuffix": " (com balões)",
+  "formatRemove": "Remover",
+  "exportTitle": "Exportar",
+  "exportNotesOption": "Texto da nota (PDF / Word)",
+  "exportNotesOptionInfo": "Texto e imagens da nota; balões não incluídos.",
+  "captureNoteTitle": "Título da nota (opcional)",
+  "captureNoteTitleHint": "O novo documento também recebe este nome",
+  "imageOcrTitle": "Reconhecer o texto da imagem",
+  "imageOcrNone": "Nenhum texto encontrado nesta imagem.",
+  "imageOcrHint": "{count} linhas reconhecidas · toque para selecionar",
+  "imageOcrSelected": "{count} linhas selecionadas"
 }
