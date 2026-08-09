@@ -210,16 +210,15 @@ class GeminiService {
         final response = await _dio.get<Map<String, dynamic>>(
           '/models',
           queryParameters: _provider == AiProvider.gemini
-              ? {
-                  'pageSize': 1000,
-                  if (pageToken != null) 'pageToken': pageToken,
-                }
+              ? {'pageSize': 1000, 'pageToken': ?pageToken}
               : null,
           options: Options(headers: _provider.authHeaders(key)),
         );
         raw.addAll(parseModelList(_provider, response.data));
+        // PARANTEZ ŞART: `x as String?` hemen ardından `:` gelince çözümleyici
+        // `?`yi üçlü işlecin başlangıcı sanıyor ve dosya ayrıştırılamıyor.
         final next = _provider == AiProvider.gemini
-            ? response.data?['nextPageToken'] as String?
+            ? (response.data?['nextPageToken'] as String?)
             : null;
         // Aynı belirteç geri geldiyse dur: ilerleme yok demektir.
         pageToken = (next == null || next.isEmpty || next == pageToken)
