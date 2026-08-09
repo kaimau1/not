@@ -53,7 +53,9 @@ void main() {
       reason: 'tutamaç normal kipte satır başında yer kaplıyor',
     );
 
-    await tester.tap(find.byIcon(Icons.checklist));
+    // "Seç" artık editör ekranının alt çubuğunda (bkz. note_editor_screen);
+    // düzenleyicinin genel giriş noktası aynı.
+    tester.state<ItemsEditorState>(find.byType(ItemsEditor)).startSelection();
     await tester.pumpAndSettle();
 
     // Seç modunda her sıralanabilir satır tutamacını gösterir.
