@@ -1545,3 +1545,13 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **6) İki düzeltme.** "Yeni öğe"/"Seç" tam genişlik bir şeritti, altındaki maddeyi örtüyordu → iki küçük yüzen düğme (`TextButton` KALDI: testler bu tipi arıyor, görünüm `style` ile veriliyor). Ana ekranda seçili kartı ikinci basışla sürükleme çalışmıyordu: **bırakma hedefi yalnız seçili kartlardı**, yani bırakacak yer yoktu; artık hedef tüm kartlar, sürükleyen seçili olan.
 
   Doğrulama: Flutter SDK bu oturumda YOK; `analyze`/`test` CI'da. Elle yakalanan iki analiz hatası (eksik `dart:math`, kullanımdan kalkmış Radio API) daha push'tan önce düzeltildi.
+
+- 2026-08-09 (30. tur): **"Seç" alt çubuğa, "Yeni öğe" eski yerine** (dal: `claude/ui-fixes-feature-updates-q3vl88`).
+
+  **KÖK NEDEN — yüzen düğmeler alt paneli örtüyordu.** 28. turda "seç ve yeni öğe hep görülmeli" isteğiyle iki düğme `OverlayPortal`a alınıp `bottom: 8 + klavye + sistem çubuğu` ile ekranın dibine demirlenmişti. O konumda ekranın dibinde ZATEN başka şeyler var: ek şeridi ve `BottomAppBar` (Biçim / Ekle / AI / mikrofon). Yüzen katman onların üstüne biniyor, kullanıcı alt çubuğa dokunamıyordu (kullanıcı: "alttaki seç ve yeni öğe satırı alt paneli kapatmış"). Ders: ekranın dibi Scaffold'ın `bottomNavigationBar`ına ait; oraya Overlay ile bir şey demirlemek her zaman çakışır — kalıcı olması gereken eylem alt çubuğun KENDİ segmenti olmalı.
+
+  **Yeni yer.** "Seç" alt çubuktaki kapsülün segmenti (Biçim · Ekle · **Seç** · Ekler); `ItemsEditorState.startSelection()` genel giriş noktasıyla `GlobalKey` üzerinden çağrılır, yalnız notta madde varken görünür. "Yeni öğe" listenin footer'ında, eski yerinde. Kapsül artık `Expanded` + yatay `SingleChildScrollView`: segment sayısı nota göre değiştiği için (dördü birden) dar ekranda taşıyordu; `Spacer` kalktı, boşluğu kaydırma görünümü sağlıyor.
+
+  **TUZAK — testler.** Üç widget testi seçim kipini `find.text('Seç')`e dokunarak açıyordu; düğme artık düzenleyicinin İÇİNDE olmadığı için hepsi `tester.state<ItemsEditorState>(...).startSelection()` çağırıyor.
+
+  Not: 3c22920'nin APK işi runner geri alınması yüzünden İPTAL oldu (analiz+test yeşildi) — o turun APK'sı çıkmadı, bu turun derlemesi ikisini birden taşıyor.

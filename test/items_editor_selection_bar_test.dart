@@ -29,21 +29,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Seçim kipini açar. "Seç" düğmesi artık düzenleyicinin İÇİNDE değil,
+  /// editör ekranının alt çubuğunda (bkz. note_editor_screen); buradan aynı
+  /// genel giriş noktası çağrılır.
+  Future<void> startSelection(WidgetTester tester) async {
+    tester.state<ItemsEditorState>(find.byType(ItemsEditor)).startSelection();
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('seçim çubuğu listenin İÇİNDE değil, ekranın dibindedir', (
     tester,
   ) async {
     await pumpEditor(tester);
-
-    // "Seç" düğmesi listenin dibindedir; görünür olması için sona kaydır.
-    // Kaydırıcı açıkça verilir: her madde TextField'ı da kendi içinde bir
-    // Scrollable taşıyor, varsayılan arama "birden çok" diye patlıyor.
-    await tester.scrollUntilVisible(
-      find.text('Seç'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Seç'));
-    await tester.pumpAndSettle();
+    await startSelection(tester);
 
     final copy = find.byTooltip('Kopyala');
     expect(copy, findsOneWidget);
@@ -60,13 +58,7 @@ void main() {
 
   testWidgets('liste başa kaydırılsa da çubuk yerinde kalır', (tester) async {
     await pumpEditor(tester);
-    await tester.scrollUntilVisible(
-      find.text('Seç'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Seç'));
-    await tester.pumpAndSettle();
+    await startSelection(tester);
     final before = tester.getCenter(find.byTooltip('Kopyala'));
 
     // Listeyi yukarı (başa) kaydır: çubuk kaymamalı.
@@ -79,13 +71,7 @@ void main() {
 
   testWidgets('"Tümünü seç" bütün maddeleri seçer', (tester) async {
     await pumpEditor(tester);
-    await tester.scrollUntilVisible(
-      find.text('Seç'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.tap(find.text('Seç'));
-    await tester.pumpAndSettle();
+    await startSelection(tester);
 
     await tester.tap(find.byTooltip('Tümünü seç'));
     await tester.pumpAndSettle();
