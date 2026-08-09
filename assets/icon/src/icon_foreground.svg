@@ -1,9 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Notlar — adaptive on plan katmani (i1)</title>
-<desc>Android adaptive icon on plani. Zemin saydam; zemin rengi artik duz renk oldugu icin PNG degil, pubspec'teki adaptive_icon_background hex'inden (#F5EDD8) geliyor. Isaret 108dp tuvalin merkezinde ve kosegeni 66dp guvenli daireye oturuyor, bu yuzden daire/kare/squircle maskede kirpilmiyor. Olcek 7.48 (kaynak 76 birimlik viewBox, isaret kutusu 50x67, merkez 38/40.5) — eski 0.845 mantiginin aynisi: launcher 108dp tuvalin yalnizca merkezdeki 72dp'sini gosteriyor, ustune flutter_launcher_icons uretilen XML'e android:inset="16%" ekliyor. XML'i elle duzeltmeye kalkma, arac her calismada yeniden yaziyor. Kat ucgeni OYULMUS degil, zemin rengiyle BOYANMISTIR — saydam on planda kat cizgisi gorunsun diye; zemin rengi degisirse kat ve satir dolgulari da guncellenmeli.</desc>
-<g transform="translate(512,512) scale(7.48) translate(-38,-40.5)">
+<title>Notlar — adaptive on plan katmani (i2, ortak simge dili)</title>
+<desc>Android adaptive icon on plani. Zemin saydam; zemin rengi pubspec'teki
+adaptive_icon_background hex'inden (#FFFFFF) ve values/colors.xml'deki
+ic_launcher_background'dan gelir.
+
+BOYUT (ortak dilin 3. maddesi): isaretin uzun kenari, EKRANA BASILDIGINDA
+66dp / 108dp tuval olmali — gorunur 72dp'lik alanin %92'si. Ama ic_launcher.xml
+on plani android:inset="16%" ile sariyor, yani bu PNG %68'e kuculerek basiliyor.
+Bu yuzden burada ONCEDEN TELAFI edilir:
+    olcek = (66/108 * 1024) / 0.68 / 67 = 13.7352
+(kaynak isaret kutusu 50x67, merkez 38/40.5). Basilan yukseklik 920 px = 97,0dp,
+inset sonrasi 66,0dp. Inset'i XML'den silmeye kalkma: flutter_launcher_icons
+her calismada dosyayi bastan yaziyor ve inset'i geri koyuyor — telafi burada
+durursa arac calissa da olcu bozulmaz.
+
+NEDEN 66: maskeler 72dp'lik alana uygulanir ama hepsi KARE degil. Bu belge
+oraniyla (50x67, kose 5) MIUI'nin squircle maskesine sigan en buyuk olcu
+67,8dp; 66 secildi ki pay kalsin. Daire maskesi (Pixel) bu olcude koseleri
+hafifce tirasliyor — sigmasi icin 60,6dp'ye inmek gerekirdi, yani bilincli
+bir odunc (hedef cihaz MIUI, ucu simge de ayni kurali kullaniyor).
+
+Kat ucgeni ve satirlar OYULMUS degil, zemin rengiyle BOYANMISTIR; zemin rengi
+degisirse o iki dolgu da guncellenmeli.</desc>
+<g transform="translate(512,512) scale(13.7352) translate(-38,-40.5)">
 <path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="#7D5703"/>
-<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#F5EDD8"/>
-<path d="M25 35h26M25 47h26M25 59h15" stroke="#F5EDD8" stroke-width="5.4" stroke-linecap="round"/>
+<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#FFFFFF"/>
+<path d="M25 35h26M25 47h26M25 59h15" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round"/>
 </g>
 </svg>

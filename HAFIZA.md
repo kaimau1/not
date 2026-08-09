@@ -1479,3 +1479,17 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **8) "Görsel eklendiğinde direk ekrana".** `_placeNewImage` imleç ölçülemediğinde görseli var olan BÜTÜN eklerin altına yığıyordu; uzun notta bu ekranın metrelerce aşağısı demekti, kullanıcı "eklenmedi" sanıyordu. Artık imleç yoksa **görünen alanın tepesi** çapa (sayfa tuvaline `ScrollController` bağlandı).
 
   Doğrulama: `flutter analyze` temiz, 745 test yeşil (+3: ok kaydı ve aç/kapa). **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-09 (27. tur): **Üç uygulama tek simge dili** (dal: `claude/app-icons-settings-4mmer4`). Kullanıcı: *"3 uygulamanın simgelerini aynı dile getirelim; dosya okumanın boyutu güzel, ezan vaktinin çerçeve rengi güzel."* Notlar · Dosya Okuyucu · Ezan Vakti aynı ana ekranda duruyor, üçü üç ayrı dil konuşuyordu.
+
+  **Ortak dilin dört kuralı** (üç depoda da aynı, karşılıkları: burada `assets/icon/src/*.svg`, Dosya Okuyucu'da `tool/gen_icon.py`, Ezan Vakti'nde `res/drawable/ic_launcher_*.xml`): (1) zemin düz **beyaz** `#FFFFFF`, gradyan/gölge/doku yok — Ezan Vakti'nden; (2) işaret tek renk **dolu silüet**, ayrıntılar zeminden oyuk; (3) işaretin uzun kenarı **66dp / 108dp** tuval, kare/dairesel işaretler keyline kuralıyla ×0,95; (4) sınır kutusu tuvalin merkezinde.
+
+  **Notlar'da değişen üç şey.** Zemin `#F5EDD8` → `#FFFFFF` (`pubspec.yaml` + `values/colors.xml#ic_launcher_background`; widget paleti KAĞIT KALDI, o ayrı bir yüzey). Kat üçgeni ve satır dolguları zemin rengiyle boyandığı için onlar da beyaza döndü. Ölçek 7.48 → **13.7352**: belge, basıldığında görünür 72dp'lik alanın yalnız %50'sini kaplıyordu, artık %92'sini.
+
+  **TUZAK — `android:inset="16%"` ölçeği DIŞARIDAN küçültüyor.** `ic_launcher.xml` ön planı inset ile sarıyor, yani PNG %68'e inerek basılıyor; SVG'deki ölçek bunu **önceden telafi ediyor** (`66/108*1024 / 0,68 / 67`). Inset'i XML'den silmek çözüm DEĞİL — `flutter_launcher_icons` dosyayı her koşuda baştan yazıp geri koyuyor (aynı sebeple `<monochrome>` de elle geri ekleniyor). Telafi kaynakta durduğu sürece araç çalışsa da ölçü bozulmuyor.
+
+  **TUZAK — 66dp'nin nedeni: "güvenli alan" KARE DEĞİL.** Maskeler 108dp tuvalin ortadaki 72dp'sine uygulanıyor ama hepsi kare değil. Belge oranıyla (50×67, köşe 5) MIUI'nin squircle'ına sığan en büyük ölçü 67,8dp, Pixel'in dairesine 60,6dp. 66 seçildi: squircle TAM, daire köşeleri hafifçe tıraşlıyor — kullanıcının "boyutu güzel" dediği ölçüden %14 küçülmemek için bilinçli ödünç (hedef cihaz MIUI, üç simge de aynı kuralı kullanıyor). Piksel piksel sınandı.
+
+  **TUZAK — headless Chrome'un görünen alanı `--window-size`'dan ~88 px kısa.** PNG tam boyda çıkıyor ama alt şerit kırpık geliyor; belgenin alt köşeleri düz kesikti ve bu ancak sınır kutusu ölçülünce fark edildi. SVG→PNG çevirirken **fazladan pay ile çekip sol-üstten kırp**. (`pubspec.yaml`'daki çevirme komutu bu yüzden tek başına yeterli değil.)
+
+  Doğrulama: PNG'ler yeniden üretildi (assets + mipmap/drawable tüm yoğunluklar + monochrome), sınır kutuları ve üç maske piksel piksel sınandı. Kod değişmedi. **Cihazda doğrulanmadı — APK CI'da.**
