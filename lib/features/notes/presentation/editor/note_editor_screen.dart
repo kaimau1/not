@@ -4699,50 +4699,83 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
                         child: Row(
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
-                                borderRadius: BorderRadius.circular(13),
-                                border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.outlineVariant,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _toolSegment(
-                                    icon: Icons.text_format,
-                                    label: l10n.formatTitle,
-                                    active: _formatBarOpen,
-                                    onTap: () => setState(
-                                      () => _formatBarOpen = !_formatBarOpen,
+                            // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
+                            // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
+                            // Seç) ve dar ekranda dördü birden taşıyordu.
+                            // Kaydırılabilir olunca taşma yerine kayıyor; boş
+                            // kalan yer de AI/mikrofonu sağa itmeye yarıyor
+                            // (eski `Spacer`ın işi).
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(13),
+                                    border: Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
                                     ),
                                   ),
-                                  const SizedBox(width: 3),
-                                  // "Metin ekle" / "Liste maddesi ekle" buradan
-                                  // Ekle levhasının en üst bölümüne taşındı: çubuk
-                                  // üç segmentle kalabalıktı ve ekleme işi iki ayrı
-                                  // yere bölünmüştü (bkz. attach_sheet.dart).
-                                  _addToolButton(l10n),
-                                  // EKLER düğmesi: şeridin kendi başlık satırı
-                                  // kalktı, aç/kapa buraya taşındı (kullanıcı
-                                  // isteği 2026-08-08 — "ekler yazısı ve göster
-                                  // gizlesi alt alana gelsin, bir satır alan
-                                  // kurtarmış oluruz").
-                                  if (fileAttachments.isNotEmpty) ...[
-                                    const SizedBox(width: 3),
-                                    _attachmentsToggle(
-                                      l10n,
-                                      fileAttachments.length,
-                                    ),
-                                  ],
-                                ],
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _toolSegment(
+                                        icon: Icons.text_format,
+                                        label: l10n.formatTitle,
+                                        active: _formatBarOpen,
+                                        onTap: () => setState(
+                                          () =>
+                                              _formatBarOpen = !_formatBarOpen,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      // "Metin ekle" / "Liste maddesi ekle" buradan
+                                      // Ekle levhasının en üst bölümüne taşındı: çubuk
+                                      // üç segmentle kalabalıktı ve ekleme işi iki ayrı
+                                      // yere bölünmüştü (bkz. attach_sheet.dart).
+                                      _addToolButton(l10n),
+                                      // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
+                                      // "seç burada olsun, yeni öğe eski yerinde"):
+                                      // toplu kopyalama/silme girişi bir tur ekranın
+                                      // dibinde yüzen bir düğmeydi ve alt paneli
+                                      // örtüyordu. Alt çubuğun segmenti olunca hem
+                                      // sayfanın neresinde olursak olalım görünür
+                                      // kalıyor hem hiçbir şeyi kapatmıyor.
+                                      // Madde yoksa gizli: seçilecek bir şey yok.
+                                      if (!note.type.isPageNoteType &&
+                                          note.items.isNotEmpty) ...[
+                                        const SizedBox(width: 3),
+                                        _toolSegment(
+                                          icon: Icons.checklist,
+                                          label: l10n.select,
+                                          onTap: () => _itemsEditorKey
+                                              .currentState
+                                              ?.startSelection(),
+                                        ),
+                                      ],
+                                      // EKLER düğmesi: şeridin kendi başlık satırı
+                                      // kalktı, aç/kapa buraya taşındı (kullanıcı
+                                      // isteği 2026-08-08 — "ekler yazısı ve göster
+                                      // gizlesi alt alana gelsin, bir satır alan
+                                      // kurtarmış oluruz").
+                                      if (fileAttachments.isNotEmpty) ...[
+                                        const SizedBox(width: 3),
+                                        _attachmentsToggle(
+                                          l10n,
+                                          fileAttachments.length,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             // PDF/sunum notunda KALEM alt çubukta: tam ekrana
                             // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
                             // isteği 2026-08-08 — ekran görüntüsünde işaretlenen

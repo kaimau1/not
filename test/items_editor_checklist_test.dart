@@ -130,7 +130,9 @@ void main() {
     )));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Seç'));
+    // "Seç" düğmesi artık editör ekranının alt çubuğunda (bkz.
+    // note_editor_screen); düzenleyicinin genel giriş noktası aynı.
+    tester.state<ItemsEditorState>(find.byType(ItemsEditor)).startSelection();
     await tester.pumpAndSettle();
 
     // Seçim modunda satıra dokunmak düzenlemeye değil seçime gider: dokunuş
@@ -144,8 +146,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(copied.single, '[ ] Süt');
-    // Kopyaladıktan sonra mod kapanır.
-    expect(find.text('Seç'), findsOneWidget);
+    // Kopyaladıktan sonra mod kapanır: seçim çubuğu kalkar.
+    expect(find.byTooltip('Kopyala'), findsNothing);
   });
 
   testWidgets('hemen geri alınan işaret öğeyi ESKİ sırasına döndürür',

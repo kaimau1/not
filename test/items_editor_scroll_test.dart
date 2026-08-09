@@ -91,7 +91,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.drag_indicator), findsNothing);
-    await tester.tap(find.text('Seç'));
+    // "Seç" artık editör ekranının alt çubuğunda (bkz. note_editor_screen).
+    tester.state<ItemsEditorState>(find.byType(ItemsEditor)).startSelection();
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.drag_indicator), findsNWidgets(2));
 

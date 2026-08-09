@@ -242,25 +242,36 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   bool get _selectionMode => _selectMode || _selected.isNotEmpty;
 
-  /// Alt çubuğu ekranın DİBİNE demirleyen katman denetleyicisi.
+  /// Seçim çubuğunu ekranın DİBİNE demirleyen katman denetleyicisi.
   ///
   /// Çubuk eskiden listenin header'ındaydı ve listeyle birlikte kayıyordu:
   /// uzun bir listede aşağıdaki maddeleri seçtikten sonra kopyalamak için
   /// başa dönmek gerekiyordu. Overlay'e taşınınca çubuk sayfa neresinde
   /// olursa olsun görünür kalır.
   ///
-  /// **Artık "Yeni öğe" ve "Seç" de burada** (kullanıcı isteği 2026-08-09:
-  /// "seç ve yeni öğe hep görülmeli, sayfanın neresinde olursak olalım").
-  /// İkisi listenin FOOTER'ındaydı, yani en altında: elli maddelik bir notta
-  /// madde eklemek ya da toplu seçime girmek için önce dibe kadar kaydırmak
-  /// gerekiyordu. Katman tek: seçim kipinde seçim çubuğu, dışında ekleme
-  /// çubuğu çizilir — ikisi aynı yerde, hiç üst üste binmeden.
+  /// Katmanda YALNIZ seçim çubuğu var. Bir ara "Yeni öğe" ve "Seç" de yüzen
+  /// düğmeler olarak buraya alınmıştı; ekranın dibindeki alt paneli (ek şeridi
+  /// + alt çubuk) örttüğü için geri alındı (kullanıcı isteği 2026-08-09: "seç
+  /// burada olsun, yeni öğe eski yerinde"). Artık "Seç" alt çubuğun bir
+  /// segmenti (bkz. note_editor_screen `_selectToolButton` → [startSelection]),
+  /// "Yeni öğe" ise yine listenin footer'ında.
   final _barController = OverlayPortalController();
 
-  /// Çubuk liste düzenleyici ekrandayken HER ZAMAN durur; içeriği kipe göre
-  /// değişir (seçim çubuğu ↔ ekleme çubuğu).
+  /// Çubuk yalnız seçim kipinde görünür.
   void _syncBar() {
-    if (!_barController.isShowing) _barController.show();
+    if (_selectionMode) {
+      if (!_barController.isShowing) _barController.show();
+    } else if (_barController.isShowing) {
+      _barController.hide();
+    }
+  }
+
+  /// Alt çubuktaki "Seç" segmentinin girişi (bkz. note_editor_screen).
+  /// Liste boşken seçilecek bir şey yok, kip açılmaz.
+  void startSelection() {
+    if (_items.isEmpty || _selectionMode) return;
+    setState(() => _selectMode = true);
+    _syncBar();
   }
 
   void _exitSelection() {
@@ -276,11 +287,6 @@ class ItemsEditorState extends State<ItemsEditor> {
     super.initState();
     _adoptedFrom = widget.items;
     _items = _adopt(widget.items);
-    // Katman ilk kareden SONRA gösterilir: OverlayPortal henüz ağaca
-    // bağlanmadan `show()` çağırmak denetleyiciyi boşa harcar.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _syncBar();
-    });
   }
 
   /// Dışarıdan gelen listeyi yerel duruma alır: checklist'te "işaretsizler
@@ -1422,14 +1428,31 @@ class ItemsEditorState extends State<ItemsEditor> {
     // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
     final listItems = _visibleItems();
 
-    // "Yeni öğe" ve "Seç" BURADA DEĞİL, ekranın dibine demirlenmiş çubukta
-    // (bkz. [_addBar]) — kullanıcı isteği 2026-08-09: "seç ve yeni öğe hep
-    // görülmeli, sayfanın neresinde olursak olalım". Footer'da oldukları
-    // sürece elli maddelik bir notta madde eklemek için önce dibe kadar
-    // kaydırmak gerekiyordu.
+    // "Yeni öğe" LİSTENİN İÇİNDE, işaretsizlerin hemen altında (eski yeri).
+    // Bir tur ekranın dibinde yüzen bir düğmeye alınmıştı; oradaki alt paneli
+    // (ek şeridi + alt çubuk) örttüğü için geri kondu — kullanıcı isteği
+    // 2026-08-09: "seç burada olsun, yeni öğe eski yerinde". "Seç" ise alt
+    // çubuğun segmenti oldu (bkz. [startSelection]); footer'da tekrarlanmaz.
+    final addButton = _floatRow(
+      reserved: _kButtonRowWidth,
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            TextButton.icon(
+              onPressed: _addItem,
+              icon: const Icon(Icons.add, size: 20),
+              label: Text(l10n.newItemHint),
+            ),
+          ],
+        ),
+      ),
+    );
+
     final footer = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        addButton,
         for (final item in checkedItems) _itemRow(item),
         if (checkedItems.isNotEmpty)
           _floatRow(
@@ -1506,94 +1529,8 @@ class ItemsEditorState extends State<ItemsEditor> {
       },
       child: OverlayPortal(
         controller: _barController,
-        overlayChildBuilder: (context) =>
-            _selectionMode ? _selectionBar(context) : _addBar(context),
+        overlayChildBuilder: _selectionBar,
         child: scrollableList,
-      ),
-    );
-  }
-
-  /// Ekranın dibine demirlenmiş **"Yeni öğe" / "Seç"** çubuğu.
-  ///
-  /// Seçim çubuğuyla AYNI konumda ve aynı katmanda; ikisi birbirini dışlar
-  /// (bkz. [_barController]). Odak İSTEMEZ: düğmeye dokunmak yazılan
-  /// maddenin odağını düşürseydi klavye kapanır, hemen ardından yeni madde
-  /// odağı isteyince tekrar açılır ve ekran zıplardı.
-  Widget _addBar(BuildContext context) {
-    final l10n = context.l10n;
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    final systemBar = MediaQuery.viewPaddingOf(context).bottom;
-    return Positioned(
-      left: 8,
-      right: 8,
-      bottom: 8 + keyboard + systemBar,
-      child: TextFieldTapRegion(
-        child: Focus(
-          canRequestFocus: false,
-          descendantsAreFocusable: false,
-          // ŞERİT YOK (kullanıcı isteği 2026-08-09: "yeni öğe ve seç bir
-          // satır kaplamamalı, sadece butonlar olacak, şeriti olmasın"):
-          // önce tam genişlikte bir kart vardı ve altındaki maddeyi örten
-          // kalın bir bant gibi duruyordu. Artık yalnız iki küçük düğme;
-          // aralarındaki alan boş ve DOKUNUŞ GEÇİRİR (`IgnorePointer` değil,
-          // Row'un kendisi saydam) — arkadaki maddeye dokunulabilir.
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _floatingAction(
-                context,
-                icon: Icons.add,
-                label: l10n.newItemHint,
-                onTap: _addItem,
-              ),
-              // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor ama
-              // görünmez olduğundan bulunamıyordu.
-              if (_items.isNotEmpty)
-                _floatingAction(
-                  context,
-                  icon: Icons.checklist,
-                  label: l10n.select,
-                  onTap: () {
-                    setState(() => _selectMode = true);
-                    _syncBar();
-                  },
-                )
-              else
-                const SizedBox.shrink(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Sayfanın üstünde yüzen tek düğme: kendi küçük zemini var (metnin
-  /// üzerinde okunur kalsın diye) ama satır kaplamaz.
-  ///
-  /// `TextButton.icon` KALIYOR (elle çizilmiş bir InkWell değil): görünüm
-  /// düğmenin `style`ıyla veriliyor, böylece dokunma hedefi ve erişilebilirlik
-  /// anlamı Material'ın kendisinden geliyor.
-  Widget _floatingAction(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final scheme = Theme.of(context).colorScheme;
-    return TextButton.icon(
-      onPressed: onTap,
-      icon: Icon(icon, size: 18),
-      label: Text(label),
-      style: TextButton.styleFrom(
-        visualDensity: VisualDensity.compact,
-        backgroundColor: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
-        foregroundColor: scheme.onSurface,
-        iconColor: scheme.primary,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
     );
   }
