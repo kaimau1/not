@@ -1237,12 +1237,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
-  String get imageNotePreparing =>
-      '이미지를 문서로 정리하는 중…';
+  String get imageNotePreparing => '이미지를 문서로 정리하는 중…';
 
   @override
-  String get newImageNote =>
-      '이미지 추가 후 메모';
+  String get newImageNote => '이미지 추가 후 메모';
 
   @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
@@ -2193,4 +2191,52 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get bubbleUrgent => 'Acil (yanıp söner)';
+
+  @override
+  String get captureModeQuestion => 'Notu nasıl açalım?';
+
+  @override
+  String get captureModeBubbles => 'Balonlu';
+
+  @override
+  String get captureModeBubblesInfo =>
+      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+
+  @override
+  String get captureModeClassic => 'Klasik';
+
+  @override
+  String get captureModeClassicInfo =>
+      'Düz metin notu; içerik ek olarak girer.';
+
+  @override
+  String get captureModeNew => 'YENİ';
+
+  @override
+  String get imagePrepareTitle => 'Görselleri düzelt';
+
+  @override
+  String get imagePrepareDone => 'Devam';
+
+  @override
+  String get imageRotateLeft => 'Sola döndür';
+
+  @override
+  String get imageRotateRight => 'Sağa döndür';
+
+  @override
+  String get videoFrameFailed =>
+      'Videodan kare alınamadı; not klasik açılıyor.';
+
+  @override
+  String get bubbleArrowHide => 'Oku gizle';
+
+  @override
+  String get bubbleArrowShow => 'Oku göster';
+
+  @override
+  String get speechPitch => 'Ses tonu';
+
+  @override
+  String get speechVoicePickerTitle => 'Ses seçimi';
 }

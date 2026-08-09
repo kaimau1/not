@@ -804,5 +804,20 @@
   "pageNotesHide": "Hide page note",
   "bubbleSave": "Save",
   "bubbleTitleHint": "Title",
-  "bubbleUrgent": "Urgent (blinks)"
+  "bubbleUrgent": "Urgent (blinks)",
+  "captureModeQuestion": "How should the note open?",
+  "captureModeBubbles": "Bubbles",
+  "captureModeBubblesInfo": "Content becomes a document page: bubbles, highlights and pen.",
+  "captureModeClassic": "Classic",
+  "captureModeClassicInfo": "Plain text note; content goes in as an attachment.",
+  "captureModeNew": "NEW",
+  "imagePrepareTitle": "Adjust images",
+  "imagePrepareDone": "Continue",
+  "imageRotateLeft": "Rotate left",
+  "imageRotateRight": "Rotate right",
+  "videoFrameFailed": "Couldn't grab a frame from the video; opening a classic note.",
+  "bubbleArrowHide": "Hide arrow",
+  "bubbleArrowShow": "Show arrow",
+  "speechPitch": "Voice pitch",
+  "speechVoicePickerTitle": "Voice selection"
 }

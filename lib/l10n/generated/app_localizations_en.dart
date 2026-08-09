@@ -1259,12 +1259,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newPdfNote => 'Add PDF, take notes';
 
   @override
-  String get imageNotePreparing =>
-      'Arranging images into a document…';
+  String get imageNotePreparing => 'Arranging images into a document…';
 
   @override
-  String get newImageNote =>
-      'Add image, take notes';
+  String get newImageNote => 'Add image, take notes';
 
   @override
   String get pdfPageNoteHint => 'Note for this page…';
@@ -2160,7 +2158,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareAsText => 'As plain text';
 
   @override
-  String get shareAsTextInfo => 'Sends the note\'s text and page notes to any app.';
+  String get shareAsTextInfo =>
+      'Sends the note\'s text and page notes to any app.';
 
   @override
   String get shareAsTextEmpty => 'This note has no text to share.';
@@ -2173,7 +2172,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bubbles, highlights and drawings are stamped into the PDF; anyone can open it, and in Not it opens editable.';
 
   @override
-  String get sharePdfWithBubblesNone => 'This note has no PDF carrying bubbles or drawings.';
+  String get sharePdfWithBubblesNone =>
+      'This note has no PDF carrying bubbles or drawings.';
 
   @override
   String get sharePdfWithBubblesPreparing => 'Preparing PDF with bubbles…';
@@ -2226,4 +2226,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleUrgent => 'Urgent (blinks)';
+
+  @override
+  String get captureModeQuestion => 'How should the note open?';
+
+  @override
+  String get captureModeBubbles => 'Bubbles';
+
+  @override
+  String get captureModeBubblesInfo =>
+      'Content becomes a document page: bubbles, highlights and pen.';
+
+  @override
+  String get captureModeClassic => 'Classic';
+
+  @override
+  String get captureModeClassicInfo =>
+      'Plain text note; content goes in as an attachment.';
+
+  @override
+  String get captureModeNew => 'NEW';
+
+  @override
+  String get imagePrepareTitle => 'Adjust images';
+
+  @override
+  String get imagePrepareDone => 'Continue';
+
+  @override
+  String get imageRotateLeft => 'Rotate left';
+
+  @override
+  String get imageRotateRight => 'Rotate right';
+
+  @override
+  String get videoFrameFailed =>
+      'Couldn\'t grab a frame from the video; opening a classic note.';
+
+  @override
+  String get bubbleArrowHide => 'Hide arrow';
+
+  @override
+  String get bubbleArrowShow => 'Show arrow';
+
+  @override
+  String get speechPitch => 'Voice pitch';
+
+  @override
+  String get speechVoicePickerTitle => 'Voice selection';
 }

@@ -1274,8 +1274,7 @@ class AppLocalizationsIt extends AppLocalizations {
       'Composizione delle immagini in un documento…';
 
   @override
-  String get newImageNote =>
-      'Aggiungi immagine e prendi appunti';
+  String get newImageNote => 'Aggiungi immagine e prendi appunti';
 
   @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
@@ -2177,7 +2176,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get shareAsText => 'Come testo semplice';
 
   @override
-  String get shareAsTextInfo => 'Invia il testo della nota e le note di pagina a qualsiasi app.';
+  String get shareAsTextInfo =>
+      'Invia il testo della nota e le note di pagina a qualsiasi app.';
 
   @override
   String get shareAsTextEmpty => 'Questa nota non ha testo da condividere.';
@@ -2190,10 +2190,12 @@ class AppLocalizationsIt extends AppLocalizations {
       'Fumetti, evidenziazioni e disegni vengono impressi nel PDF; chiunque può aprirlo e in Not si apre modificabile.';
 
   @override
-  String get sharePdfWithBubblesNone => 'Questa nota non ha PDF con fumetti o disegni.';
+  String get sharePdfWithBubblesNone =>
+      'Questa nota non ha PDF con fumetti o disegni.';
 
   @override
-  String get sharePdfWithBubblesPreparing => 'Preparazione del PDF con fumetti…';
+  String get sharePdfWithBubblesPreparing =>
+      'Preparazione del PDF con fumetti…';
 
   @override
   String get sharePdfWithBubblesSuffix => ' (con fumetti)';
@@ -2243,4 +2245,52 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get bubbleUrgent => 'Acil (yanıp söner)';
+
+  @override
+  String get captureModeQuestion => 'Notu nasıl açalım?';
+
+  @override
+  String get captureModeBubbles => 'Balonlu';
+
+  @override
+  String get captureModeBubblesInfo =>
+      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+
+  @override
+  String get captureModeClassic => 'Klasik';
+
+  @override
+  String get captureModeClassicInfo =>
+      'Düz metin notu; içerik ek olarak girer.';
+
+  @override
+  String get captureModeNew => 'YENİ';
+
+  @override
+  String get imagePrepareTitle => 'Görselleri düzelt';
+
+  @override
+  String get imagePrepareDone => 'Devam';
+
+  @override
+  String get imageRotateLeft => 'Sola döndür';
+
+  @override
+  String get imageRotateRight => 'Sağa döndür';
+
+  @override
+  String get videoFrameFailed =>
+      'Videodan kare alınamadı; not klasik açılıyor.';
+
+  @override
+  String get bubbleArrowHide => 'Oku gizle';
+
+  @override
+  String get bubbleArrowShow => 'Oku göster';
+
+  @override
+  String get speechPitch => 'Ses tonu';
+
+  @override
+  String get speechVoicePickerTitle => 'Ses seçimi';
 }

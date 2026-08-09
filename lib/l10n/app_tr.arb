@@ -1010,5 +1010,20 @@
   "pageNotesHide": "Sayfa notunu gizle",
   "bubbleSave": "Kaydet",
   "bubbleTitleHint": "Başlık",
-  "bubbleUrgent": "Acil (yanıp söner)"
+  "bubbleUrgent": "Acil (yanıp söner)",
+  "captureModeQuestion": "Notu nasıl açalım?",
+  "captureModeBubbles": "Balonlu",
+  "captureModeBubblesInfo": "İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.",
+  "captureModeClassic": "Klasik",
+  "captureModeClassicInfo": "Düz metin notu; içerik ek olarak girer.",
+  "captureModeNew": "YENİ",
+  "imagePrepareTitle": "Görselleri düzelt",
+  "imagePrepareDone": "Devam",
+  "imageRotateLeft": "Sola döndür",
+  "imageRotateRight": "Sağa döndür",
+  "videoFrameFailed": "Videodan kare alınamadı; not klasik açılıyor.",
+  "bubbleArrowHide": "Oku gizle",
+  "bubbleArrowShow": "Oku göster",
+  "speechPitch": "Ses tonu",
+  "speechVoicePickerTitle": "Ses seçimi"
 }

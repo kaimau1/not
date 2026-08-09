@@ -7,6 +7,7 @@ enum AttachmentKind {
   pdf('pdf'),
   audio('audio'),
   slide('slide'),
+
   /// Görüntülü not. YALNIZCA CİHAZDA kalır — Storage'a hiç yüklenmez
   /// (bkz. UploadQueue), bu yüzden cihazlar arasında senkronlanmaz.
   video('video');
@@ -102,6 +103,7 @@ class PageBubble {
     this.starred = false,
     this.urgent = false,
     this.rects = const [],
+    this.arrow = true,
   });
 
   /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
@@ -156,6 +158,14 @@ class PageBubble {
   /// metnin üstünde kalır.
   final List<PageBubbleRect> rects;
 
+  /// Balonu vurguladığı metne bağlayan OK çizilsin mi?
+  ///
+  /// Kullanıcı isteği (2026-08-09): "ok işaretini kaldırma seçeneği olmalı."
+  /// Sık sık vurgu yapılan bir sayfada oklar birbirini kesip belgeyi okunmaz
+  /// hâle getirebiliyor; balon başına kapatılabilir. Varsayılan AÇIK — eski
+  /// kayıtlarda alan yok ve okun kaybolması sürpriz olurdu.
+  final bool arrow;
+
   /// Bu balon bir METİN vurgusu mu (yoksa serbest balon mu)?
   bool get isHighlight => rects.isNotEmpty;
 
@@ -170,6 +180,7 @@ class PageBubble {
     bool? starred,
     bool? urgent,
     List<PageBubbleRect>? rects,
+    bool? arrow,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
@@ -182,6 +193,7 @@ class PageBubble {
     starred: starred ?? this.starred,
     urgent: urgent ?? this.urgent,
     rects: rects ?? this.rects,
+    arrow: arrow ?? this.arrow,
   );
 
   factory PageBubble.fromMap(Map<String, dynamic> map) => PageBubble(
@@ -196,6 +208,8 @@ class PageBubble {
     starred: map['s'] as bool? ?? false,
     urgent: map['u'] as bool? ?? false,
     rects: _rectsFromMap(map),
+    // Alan YOKSA ok çizilir: eski kayıtlarda ok vardı, okuma onu düşürmemeli.
+    arrow: map['a'] as bool? ?? true,
   );
 
   /// Vurgu dikdörtgenlerini kayıttan okur.
@@ -237,6 +251,8 @@ class PageBubble {
     if (collapsed) 'k': true,
     if (starred) 's': true,
     if (urgent) 'u': true,
+    // Yalnız KAPATILDIYSA yazılır (varsayılan açık — bkz. [arrow]).
+    if (!arrow) 'a': false,
     // DÜZ liste: Firestore iç içe dizi kabul etmiyor (bkz. [_rectsFromMap]).
     if (rects.isNotEmpty)
       'r': [
@@ -296,7 +312,9 @@ List<InkStroke> cropInk(
       final x = (s.points[i] - left) / w;
       final y = (s.points[i + 1] - top) / h;
       if (x >= 0 && x <= 1 && y >= 0 && y <= 1) anyInside = true;
-      points..add(x)..add(y);
+      points
+        ..add(x)
+        ..add(y);
     }
     // Hiçbir noktası yeni çerçeveye düşmeyen çizgi atılır; kısmen taşan çizgi
     // korunur (çizim katmanı zaten kırpar) — yoksa kenardaki bir imza
@@ -437,8 +455,7 @@ class Attachment {
   /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF/ses/sunum
   /// hiçbir zaman yüzmez.
   bool get floatsOnPage =>
-      (kind == AttachmentKind.image || kind == AttachmentKind.video) &&
-      !asFile;
+      (kind == AttachmentKind.image || kind == AttachmentKind.video) && !asFile;
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
   /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.
