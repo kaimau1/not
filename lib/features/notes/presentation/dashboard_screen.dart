@@ -2151,7 +2151,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 class _HeaderSeparator extends StatelessWidget {
   const _HeaderSeparator({required this.scrolled});
 
-  final ValueListenable<bool> scrolled;
+  final ValueNotifier<bool> scrolled;
 
   @override
   Widget build(BuildContext context) {
