@@ -101,7 +101,15 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
+            // Alt dolguya sistem gezinme çubuğu EKLENİR: "gece yarısı
+            // yenilenir" satırı listenin en altındaydı ve çubuğun arkasında
+            // yarım kalıyordu (kullanıcı ekran görüntüsü 2026-08-09).
+            padding: EdgeInsets.fromLTRB(
+              14,
+              8,
+              14,
+              24 + MediaQuery.viewPaddingOf(context).bottom,
+            ),
             children: [
               // Puan çubuğuna dokunmak Premium sayfasını açar: "puan nedir,
               // nasıl artar" sorusunun cevabı artık bir dokunuş uzakta.
@@ -130,6 +138,19 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                 title: l10n.briefingTitle,
                 subtitle: l10n.hubBriefingInfo,
                 onTap: () => context.push('/briefing'),
+              ),
+              const SizedBox(height: 8),
+              // "Belge oku" bu satırın YANINDA durur. Eskiden sayfanın en
+              // altında, "SON İŞLEMLER" listesinin hemen ardındaydı: geçmiş
+              // kayıtlarının son maddesi gibi okunuyor, üstelik listede kaç
+              // kayıt varsa o kadar aşağı kayıyordu (kullanıcı ekran
+              // görüntüsü 2026-08-09: "altta kalan kısım yanlış"). İkisi de
+              // aynı iş — bir ekran açan kısayol — bu yüzden aynı bantta.
+              _HubRow(
+                icon: Icons.headphones_outlined,
+                title: l10n.readDocument,
+                subtitle: l10n.hubReadInfo,
+                onTap: () => pickAndReadDocument(context),
               ),
               const SizedBox(height: 16),
               _SectionLabel(l10n.aiOnYourNotes),
@@ -214,13 +235,6 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
                 const SizedBox(height: 4),
                 _HistoryCard(entries: history),
               ],
-              const SizedBox(height: 16),
-              _HubRow(
-                icon: Icons.headphones_outlined,
-                title: l10n.readDocument,
-                subtitle: l10n.hubReadInfo,
-                onTap: () => pickAndReadDocument(context),
-              ),
               const SizedBox(height: 20),
               Text(
                 l10n.aiPointsRenew,

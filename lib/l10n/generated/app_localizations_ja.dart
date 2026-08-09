@@ -2237,4 +2237,38 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => '解除';
+
+  @override
+  String get exportTitle => '書き出す';
+
+  @override
+  String get exportNotesOption => 'メモの本文（PDF / Word）';
+
+  @override
+  String get exportNotesOptionInfo => 'メモの本文と画像（吹き出しは含まれません）。';
+
+  @override
+  String get captureNoteTitle => 'メモのタイトル（任意）';
+
+  @override
+  String get captureNoteTitleHint => '作成される書類にも同じ名前が付きます';
+
+  @override
+  String get imageOcrTitle => '画像内の文字を認識';
+
+  @override
+  String get imageOcrNone => 'この画像から文字が見つかりませんでした。';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count 行を認識 · タップで選択';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count 行を選択中';
+  }
 }

@@ -2266,4 +2266,38 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'إزالة';
+
+  @override
+  String get exportTitle => 'تصدير';
+
+  @override
+  String get exportNotesOption => 'نص الملاحظة (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'نص الملاحظة وصورها؛ الفقاعات غير مضمّنة.';
+
+  @override
+  String get captureNoteTitle => 'عنوان الملاحظة (اختياري)';
+
+  @override
+  String get captureNoteTitleHint => 'سيحمل المستند الجديد الاسم نفسه';
+
+  @override
+  String get imageOcrTitle => 'التعرّف على النص في الصورة';
+
+  @override
+  String get imageOcrNone => 'لم يُعثر على نص في هذه الصورة.';
+
+  @override
+  String imageOcrHint(int count) {
+    return 'تم التعرّف على $count سطرًا · اضغط للتحديد';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return 'تم تحديد $count سطرًا';
+  }
 }

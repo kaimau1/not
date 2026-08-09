@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Los globos, resaltados y dibujos se estampan dentro del PDF; cualquiera puede abrirlo y en Not se abre editable.",
   "sharePdfWithBubblesNone": "Esta nota no tiene ningún PDF con globos o dibujos.",
   "sharePdfWithBubblesPreparing": "Preparando el PDF con globos…",
-  "sharePdfWithBubblesSuffix": " (con globos)"
+  "sharePdfWithBubblesSuffix": " (con globos)",
+  "formatRemove": "Quitar",
+  "exportTitle": "Exportar",
+  "exportNotesOption": "Texto de la nota (PDF / Word)",
+  "exportNotesOptionInfo": "Texto e imágenes de la nota; los globos no se incluyen.",
+  "captureNoteTitle": "Título de la nota (opcional)",
+  "captureNoteTitleHint": "El nuevo documento recibirá este nombre",
+  "imageOcrTitle": "Reconocer el texto de la imagen",
+  "imageOcrNone": "No se encontró texto en esta imagen.",
+  "imageOcrHint": "{count} líneas reconocidas · toca para seleccionar",
+  "imageOcrSelected": "{count} líneas seleccionadas"
 }

@@ -1493,3 +1493,37 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **TUZAK — headless Chrome'un görünen alanı `--window-size`'dan ~88 px kısa.** PNG tam boyda çıkıyor ama alt şerit kırpık geliyor; belgenin alt köşeleri düz kesikti ve bu ancak sınır kutusu ölçülünce fark edildi. SVG→PNG çevirirken **fazladan pay ile çekip sol-üstten kırp**. (`pubspec.yaml`'daki çevirme komutu bu yüzden tek başına yeterli değil.)
 
   Doğrulama: PNG'ler yeniden üretildi (assets + mipmap/drawable tüm yoğunluklar + monochrome), sınır kutuları ve üç maske piksel piksel sınandı. Kod değişmedi. **Cihazda doğrulanmadı — APK CI'da.**
+
+- 2026-08-09 (28. tur): **Arayüz düzeltme paketi + görselde metin tanıma** (dal: `claude/ui-fixes-feature-updates-q3vl88`). Kullanıcının ekran görüntüleriyle bildirdiği dokuz madde ve bir yeni özellik.
+
+  **1) ⋮ menüsü levhaya döndü, "PDF olarak dışa aktar" → "Dışa aktar".** Editörün ⋮'ü on maddelik tek sütunlu bir `PopupMenu` idi ve sayfanın ortasına inen bir sütun kaplıyordu; ana ekranın kart menüsü ([showNoteActionsSheet]) aynı işi çoktandır iki sütunlu levhada yapıyordu — editör de artık aynı dili konuşuyor (`editor/note_menu_sheet.dart`). **KÖK NEDEN — "dışa aktar eskide kaldı":** madde her not tipinde tek bir ekrana, `PdfExportScreen`e gidiyordu; o ekran BELGE (balonlu) notunda yalnız sayfa notlarının METNİNİ yazıyor, belgenin kendisini, balonları, vurguları ve el yazısını hiç almıyordu — yani PDF notunu "PDF olarak dışa aktar"mak çoğu zaman boş/yarım dosya üretiyordu. Balonları belgeye basan yol (`NoteShare.shareAnnotatedPdfs`) ZATEN vardı, sadece Paylaş levhasının içine gömülüydü. Artık damgalanabilir belge varsa hangi çıktının istendiği soruluyor (`showExportChoiceSheet`); aynı düzeltme kart menüsüne de uygulandı.
+
+  **2) Yapay Zeka sayfasında "Belge oku" yukarı taşındı.** Satır sayfanın en altında, "SON İŞLEMLER" listesinin hemen ardındaydı: geçmiş kayıtlarının son maddesi gibi okunuyor, üstelik listede kaç kayıt varsa o kadar aşağı kayıyordu. Artık Günlük Brifing'in yanında. Alt dolguya sistem gezinme çubuğu eklendi ("gece yarısı yenilenir" satırı çubuğun arkasında yarım kalıyordu).
+
+  **3) Sabit başlık ile kayan ızgara arasına SINIR.** Başlık bloğu (arama çubuğu + süzgeç çipleri) zaten kaydırma görünümünün dışındaydı ama arkası saydam, altında hiçbir sınır yoktu; kartlar bloğun dibinden kırpılarak geçtiği için yarım kalan kart çiplerin devamı gibi okunuyor, göz başlığın da kaydığını sanıyordu. Kaydırma başlar başlamaz beliren gölgeli ayırıcı (`_HeaderSeparator`, `ValueNotifier` ile — bildirim ekranın tamamını değil yalnız o çizgiyi çizsin).
+
+  **4) "+" panelinde YAZ bölümü de ızgara.** Metin/Liste/Sıralı liste tam genişlik satırlardı, YAKALA ise ızgara — iki bölüm iki ayrı düğme dili konuşuyordu.
+
+  **5) KÖK NEDEN — "renk seçiyorum geri bırakamıyorum".** Yazı rengi ve vurgu için geri dönüşün TEK yolu paletten AYNI rengi ikinci kez seçmekti (`toggleFormat` o durumda kaldırıyor); hiçbir yerde yazmadığı için bulunamıyordu, kullanıcının bildiği tek çıkış "Biçimi temizle" idi, o da kalın/italik dahil her şeyi siliyordu. Palet artık kendi **"Kaldır"** düğmesini taşıyor (`removeRichFormat` — yalnız o biçmi düşürür, bekleyen biçim de dahil), etkin renk **tikli** çiziliyor ve "Biçimi temizle" biçimsiz metinde SOLUK/tıklanamaz duruyor.
+
+  **6a) KÖK NEDEN — "seçerken kaymalar oluyor".** `Ink`, dekorasyonun kenarlığını çocuğa DOLGU olarak ekliyor (`BoxDecoration.padding == border.dimensions`). Seçince kenarlık 1 → 2 px olunca kart 2 px uzuyor; masonry ızgarada bir kartın 2 px'i altındaki bütün sütunu kaydırıyor, arka arkaya seçimde liste gözle görülür biçimde zıplıyordu. Seçim çerçevesi artık yerleşimi hiç etkilemeyen ayrı bir BOYA katmanı (`Positioned.fill` + `IgnorePointer`).
+
+  **6b) Seçili kart ikinci uzun basışta sürüklenir** — ayrı bir sıralama moduna girmeden. Süzgeç/arama açıkken kapalı: alt kümede taşımak asıl sırayı bozar.
+
+  **6c) Çoklu ek.** Görsel ve PDF seçicileri tek dosyayla sınırlıydı; artık `pickMultiImage` / `DocPicker.pickMany`. Ekler SIRAYLA işleniyor (paralel değil): her ek notu yazıyor ve sayfadaki yerini bir öncekine göre hesaplıyor, aynı anda koşsalardı hepsi aynı noktaya binerdi.
+
+  **6d) Balonlu notun adı.** Fotoğraf/görselden kurulan balonlu notta belgeye yakalama kipinin adı veriliyordu ("Foto çek not al.pdf") — ana ekran aynı adla dolup notlar ayırt edilemiyordu. Ad artık **yakalama levhasında**, kip seçilmeden önce alınıyor (`CaptureChoice.noteTitle`): hem notun başlığı hem üretilen belgenin dosya adı oluyor; boş bırakılırsa eski varsayılana düşülüyor. Paylaşılan damgalı PDF de not başlığını alıyor (`safePdfBaseName`).
+
+  **6e) Bir satır kazanıldı.** Çip şeridi HER NOTTA 34 dp yükseklikte duruyordu — içinde tek bir "+" olsa bile. "+" başlığın sağına taşındı; şerit ancak gerçekten bir çip (hatırlatıcı/klasör/etiket) varsa kuruluyor.
+
+  **6f) "Yeni öğe" ve "Seç" hep görünür.** İkisi madde listesinin FOOTER'ındaydı: elli maddelik notta madde eklemek için önce dibe kadar kaydırmak gerekiyordu. Seçim çubuğunun kullandığı `OverlayPortal` katmanına taşındılar — tek katman, seçim kipinde seçim çubuğu, dışında ekleme çubuğu (ikisi hiç üst üste binmez).
+
+  **6g) Ataç rozeti yeni ek gelince yanıp söner.** Şerit kapalıyken ek eklemek ekranda hiçbir iz bırakmıyordu.
+
+  **6h) KÖK NEDEN — "görsel eklenince klavye kasarak açılıyor" (kalıntı).** `AttachmentStrip`, klavyenin İLK karesinde `SizedBox.shrink()` dönüyordu; şeridin bütün alt ağacı (karolar, görsel çözdürmeleri, ses oynatıcısının State'i) ağaçtan düşüyor, klavye kapanınca sıfırdan kuruluyordu — yeni eklenmiş bir görselde bu, animasyonun tam ortasına denk gelen bir çözdürme demek. Artık `Offstage` + build dışında YAKALANMIŞ çocuk: ağaçta kalır, yerleşim/boyama yapılmaz, alt ağaç hiç yeniden kurulmaz.
+
+  **YENİ — görseldeki metni tanı (Lens tarzı).** Tam ekran görselde bir düğme; tanınan satırlar görselin üstünde kutu kutu beliriyor, dokunulan satır seçiliyor, seçim panoya kopyalanıyor (`ImageViewerScreen` + `_OcrTextLayer`). Tamamen **cihaz içi** (ML Kit, `ScanOcr.recognizeImageLines`): internet gerekmez, **AI puanı harcamaz**. Var olan tek yol notun gövdesine OCR metni yazdıran "Metni al" idi — model çağırıyor, puan yakıyor ve sonucu notun İÇİNE döküyordu. Kutular GÖRSEL PİKSEL uzayında geldiği için katman `InteractiveViewer`'ın çocuğu: yakınlaştırınca kutular yazının üstünde kalır. Düğme yalnız yerel kopyası olan ve piksel ölçüsü bilinen ekte görünür.
+
+  **YAPILMADI:** "notlarda seç yaparken görsellerde seçilebilsin" — tekil görsel zaten seçilip ⋮ → Kopyala ile hem uygulama hem sistem panosuna gidiyor; madde listesiyle BİRLİKTE çoklu görsel seçimi yapılmadı, çünkü ek panosu (`attachmentClipboardProvider`) tek yuvalı.
+
+  Doğrulama: bu oturumda Flutter SDK YOK — `flutter analyze` / `flutter test` **çalıştırılamadı**, doğrulama CI'a bırakıldı. Etkilenen test güncellendi (`action_grids_layout_test.dart`: YAZ bölümü artık ızgara).

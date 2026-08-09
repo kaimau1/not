@@ -2274,4 +2274,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Voice selection';
+
+  @override
+  String get formatRemove => 'Remove';
+
+  @override
+  String get exportTitle => 'Export';
+
+  @override
+  String get exportNotesOption => 'Note text (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'The note’s text and images; bubbles not included.';
+
+  @override
+  String get captureNoteTitle => 'Note title (optional)';
+
+  @override
+  String get captureNoteTitleHint => 'The new document gets this name too';
+
+  @override
+  String get imageOcrTitle => 'Recognize text in image';
+
+  @override
+  String get imageOcrNone => 'No text found in this image.';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count lines found · tap to select';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count lines selected';
+  }
 }

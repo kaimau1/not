@@ -30,6 +30,7 @@ class FormatBar extends StatefulWidget {
     super.key,
     required this.onFormat,
     required this.onClearFormat,
+    required this.onRemoveFormat,
     required this.fontFamily,
     required this.fontScale,
     required this.textOpacity,
@@ -53,6 +54,9 @@ class FormatBar extends StatefulWidget {
 
   /// Seçimdeki tüm biçimleri siler.
   final VoidCallback onClearFormat;
+
+  /// Paletteki "Kaldır": YALNIZ o biçmi (yazı rengi ya da vurgu) düşürür.
+  final ValueChanged<RichFormat> onRemoveFormat;
 
   final String? fontFamily;
   final double fontScale;
@@ -213,28 +217,37 @@ class _FormatBarState extends State<FormatBar> {
                       _ColorPicker(
                         icon: Icons.format_color_text,
                         tooltip: l10n.formatTextColor,
+                        removeLabel: l10n.formatRemove,
                         activeIndex: _active.color,
                         onPick: (i) =>
                             widget.onFormat(RichFormat.color, colorIndex: i),
+                        onRemove: () =>
+                            widget.onRemoveFormat(RichFormat.color),
                       ),
                       _ColorPicker(
                         icon: Icons.format_color_fill,
                         tooltip: l10n.formatHighlight,
+                        removeLabel: l10n.formatRemove,
                         filled: true,
                         activeIndex: _active.highlight,
                         onPick: (i) => widget.onFormat(
                           RichFormat.highlight,
                           colorIndex: i,
                         ),
+                        onRemove: () =>
+                            widget.onRemoveFormat(RichFormat.highlight),
                       ),
                       const SizedBox(width: 8),
                       // Biçimi temizle: seçimdeki (ya da imlecin bulunduğu
                       // parçadaki) her biçim tek dokunuşta gider — düğmeleri
-                      // tek tek geri basmak gerekmez.
+                      // tek tek geri basmak gerekmez. Biçimsiz metinde SOLUK
+                      // ve tıklanamaz: eskiden her zaman etkin görünüyor ama
+                      // çoğu zaman hiçbir şey yapmıyordu, kullanıcı da
+                      // düğmenin çalışıp çalışmadığını anlayamıyordu.
                       _Btn(
                         icon: Icons.format_clear,
                         tooltip: l10n.formatClear,
-                        onTap: widget.onClearFormat,
+                        onTap: _active.isEmpty ? null : widget.onClearFormat,
                       ),
                       const SizedBox(width: 4),
                       _FontMenu(
@@ -379,7 +392,9 @@ class _Btn extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onTap;
+
+  /// null ise düğme SOLUK ve tıklanamaz (yapacak işi yok).
+  final VoidCallback? onTap;
 
   /// İmleçteki/seçimdeki biçim bu düğmeninki mi — basılı görünür.
   final bool active;
@@ -387,6 +402,7 @@ class _Btn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
     return Tooltip(
       message: tooltip,
       child: InkWell(
@@ -402,7 +418,11 @@ class _Btn extends StatelessWidget {
           child: Icon(
             icon,
             size: 22,
-            color: active ? scheme.onPrimaryContainer : null,
+            color: active
+                ? scheme.onPrimaryContainer
+                : enabled
+                ? null
+                : scheme.onSurface.withValues(alpha: 0.35),
           ),
         ),
       ),
@@ -411,18 +431,38 @@ class _Btn extends StatelessWidget {
 }
 
 /// Renk düğmesi: dokununca paletten seçtirir (menü, odak istemez).
+///
+/// **Palet yeniden yazıldı** (kullanıcı bulgusu 2026-08-09: "biçim alanında
+/// işaretlediğim şeyler tam olarak doğru değil; seçiyorum geri bırakamıyorum,
+/// çalıştığını anlayamıyorum, iptal etmek ve yapmak zor"). Üç eksik vardı:
+/// 1. **Geri dönüş yoktu.** Rengi kaldırmanın tek yolu paletten AYNI rengi
+///    ikinci kez seçmekti; hiçbir yerde yazmıyordu. Artık paletin başında
+///    kendi "Kaldır" düğmesi var (bkz. [removeRichFormat]).
+/// 2. **Hangi renk seçili görünmüyordu.** Palet dizisi hepsini eşit
+///    gösteriyordu; şimdi etkin renk TİKLİ ve kalın halkalı.
+/// 3. **Uygulandı mı belli değildi.** Şeritteki düğme zaten renk şeridi
+///    çiziyordu ama menü kapanınca göz oraya gitmiyordu; tik menünün
+///    içindeyken de aynı bilgiyi verir.
 class _ColorPicker extends StatelessWidget {
   const _ColorPicker({
     required this.icon,
     required this.tooltip,
+    required this.removeLabel,
     required this.onPick,
+    required this.onRemove,
     this.filled = false,
     this.activeIndex,
   });
 
   final IconData icon;
   final String tooltip;
+
+  /// "Kaldır" düğmesinin etiketi (ipucu + erişilebilirlik).
+  final String removeLabel;
   final ValueChanged<int> onPick;
+
+  /// Biçmi tümüyle düşürür.
+  final VoidCallback onRemove;
   final bool filled;
 
   /// İmleçteki/seçimdeki renk indeksi (1..n), yoksa null. Dolu olduğunda
@@ -463,18 +503,51 @@ class _ColorPicker extends StatelessWidget {
       style: index == null
           ? null
           : IconButton.styleFrom(backgroundColor: scheme.primaryContainer),
-      onSelected: onPick,
-      itemBuilder: (context) => [
+      // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok).
+      onSelected: (value) {
+        if (value == 0) {
+          onRemove();
+        } else {
+          onPick(value);
+        }
+      },
+      itemBuilder: (menuContext) => [
         PopupMenuItem<int>(
           enabled: false,
           height: 44,
           child: Row(
             children: [
+              // "Kaldır" HER ZAMAN görünür (biçim yokken de): düğmenin
+              // yerinin sabit olması, "bir renk verdim, nasıl geri alırım"
+              // sorusunun cevabını her açılışta aynı yerde tutar.
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 12),
+                child: Tooltip(
+                  message: removeLabel,
+                  child: InkWell(
+                    onTap: () => Navigator.pop(menuContext, 0),
+                    customBorder: const CircleBorder(),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.outline, width: 2),
+                      ),
+                      child: Icon(
+                        Icons.format_color_reset,
+                        size: 16,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               for (var i = 0; i < palette.length; i++)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: 10),
                   child: InkWell(
-                    onTap: () => Navigator.pop(context, i + 1),
+                    onTap: () => Navigator.pop(menuContext, i + 1),
                     customBorder: const CircleBorder(),
                     child: Container(
                       width: 30,
@@ -484,8 +557,16 @@ class _ColorPicker extends StatelessWidget {
                         color: filled
                             ? palette[i].withValues(alpha: 0.45)
                             : Colors.transparent,
-                        border: Border.all(color: palette[i], width: 3),
+                        border: Border.all(
+                          color: palette[i],
+                          width: index == i + 1 ? 4 : 3,
+                        ),
                       ),
+                      // Seçili renk TİKLİ: hangisinin uygulandığı menüde de
+                      // görünsün.
+                      child: index == i + 1
+                          ? Icon(Icons.check, size: 15, color: palette[i])
+                          : null,
                     ),
                   ),
                 ),

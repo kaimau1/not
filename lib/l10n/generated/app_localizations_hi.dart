@@ -2278,4 +2278,38 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'हटाएं';
+
+  @override
+  String get exportTitle => 'निर्यात करें';
+
+  @override
+  String get exportNotesOption => 'नोट का टेक्स्ट (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'नोट का टेक्स्ट और चित्र; बबल शामिल नहीं हैं।';
+
+  @override
+  String get captureNoteTitle => 'नोट का शीर्षक (वैकल्पिक)';
+
+  @override
+  String get captureNoteTitleHint => 'नए दस्तावेज़ को भी यही नाम मिलेगा';
+
+  @override
+  String get imageOcrTitle => 'चित्र में टेक्स्ट पहचानें';
+
+  @override
+  String get imageOcrNone => 'इस चित्र में कोई टेक्स्ट नहीं मिला।';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count पंक्तियाँ पहचानी गईं · चुनने के लिए टैप करें';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count पंक्तियाँ चुनी गईं';
+  }
 }

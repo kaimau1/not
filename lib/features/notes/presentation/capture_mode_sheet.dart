@@ -14,6 +14,17 @@ enum CaptureMode {
   classic,
 }
 
+/// Levhadan dönen seçim: hangi kip ve (isteğe bağlı) notun adı.
+@immutable
+class CaptureChoice {
+  const CaptureChoice({required this.mode, required this.noteTitle});
+
+  final CaptureMode mode;
+
+  /// Kullanıcının yazdığı başlık; boş olabilir.
+  final String noteTitle;
+}
+
 /// Not tipi seçildiğinde çıkan İKİ SEÇENEKLİ levha — her seçeneğin küçük bir
 /// ÖRNEK ÖNİZLEMESİ var (kullanıcı isteği 2026-08-09: "bu tür not seçenekleri
 /// seçildiğinde 2 seçenek çıkmalı ve örnek ön izlemeleri olmalı; 1.si yeni
@@ -22,26 +33,60 @@ enum CaptureMode {
 /// Önizlemeler ÇİZİLİR (varlık dosyası yok): tema renklerini kullandıkları
 /// için açık/koyu/kağıt temada da doğru görünürler ve APK'yı büyütmezler.
 ///
+/// **BAŞLIK ALANI** (kullanıcı isteği 2026-08-09: "balonlu notlarda notun
+/// başlığı olmalı, oluşturulan yeni PDF'ye ad olarak verilmeli"): balonlu
+/// kipte fotoğraflar/görseller YENİ bir PDF'e diziliyor ve o belgeye şimdiye
+/// dek yakalama kipinin adı veriliyordu — ana ekran "Foto çek not al.pdf",
+/// "Görsel ekle not al.pdf" diye sıralanıyor, notlar birbirinden ayırt
+/// edilemiyordu. Ad artık burada, kip seçilmeden önce, tek satırda alınır:
+/// hem notun başlığı hem de üretilen belgenin dosya adı olur. Boş bırakmak
+/// serbest — eski davranışa (varsayılan ad) düşülür.
+///
 /// İptalde null döner — çağıran hiçbir şey oluşturmaz.
-Future<CaptureMode?> showCaptureModeSheet(
+Future<CaptureChoice?> showCaptureModeSheet(
   BuildContext context, {
   required String title,
-}) => showModalBottomSheet<CaptureMode>(
+}) => showModalBottomSheet<CaptureChoice>(
   context: context,
   isScrollControlled: true,
   showDragHandle: true,
-  builder: (sheetContext) => _CaptureModeSheet(title: title),
+  builder: (sheetContext) => Padding(
+    // Klavye açılınca levha yukarı kalkar; başlık alanı örtülmesin.
+    padding: EdgeInsets.only(
+      bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+    ),
+    child: _CaptureModeSheet(title: title),
+  ),
 );
 
-class _CaptureModeSheet extends StatelessWidget {
+class _CaptureModeSheet extends StatefulWidget {
   const _CaptureModeSheet({required this.title});
 
   final String title;
 
   @override
+  State<_CaptureModeSheet> createState() => _CaptureModeSheetState();
+}
+
+class _CaptureModeSheetState extends State<_CaptureModeSheet> {
+  final _titleController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  void _pick(CaptureMode mode) => Navigator.pop(
+    context,
+    CaptureChoice(mode: mode, noteTitle: _titleController.text.trim()),
+  );
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final theme = Theme.of(context);
+    final title = widget.title;
     return SafeArea(
       top: false,
       child: Padding(
@@ -56,14 +101,26 @@ class _CaptureModeSheet extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _titleController,
+              textCapitalization: TextCapitalization.sentences,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                isDense: true,
+                labelText: l10n.captureNoteTitle,
+                hintText: l10n.captureNoteTitleHint,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
               l10n.captureModeQuestion,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             // İki kart YAN YANA: karar tek bakışta verilsin diye önizlemeler
             // karşılaştırmalı duruyor.
             Row(
@@ -75,7 +132,7 @@ class _CaptureModeSheet extends StatelessWidget {
                     info: l10n.captureModeBubblesInfo,
                     preview: const _BubblePreview(),
                     badge: l10n.captureModeNew,
-                    onTap: () => Navigator.pop(context, CaptureMode.bubbles),
+                    onTap: () => _pick(CaptureMode.bubbles),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -84,7 +141,7 @@ class _CaptureModeSheet extends StatelessWidget {
                     title: l10n.captureModeClassic,
                     info: l10n.captureModeClassicInfo,
                     preview: const _ClassicPreview(),
-                    onTap: () => Navigator.pop(context, CaptureMode.classic),
+                    onTap: () => _pick(CaptureMode.classic),
                   ),
                 ),
               ],

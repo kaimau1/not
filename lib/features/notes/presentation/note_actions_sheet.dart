@@ -80,7 +80,9 @@ class _ActionsGrid extends StatelessWidget {
       ('color', l10n.backgroundColor, Icons.palette_outlined),
       ('frame', l10n.frameColor, Icons.border_color_outlined),
       ('listen', l10n.listenToNote, Icons.headphones_outlined),
-      ('pdf', l10n.exportPdf, Icons.picture_as_pdf_outlined),
+      // "PDF olarak dışa aktar" DEĞİL: belge notunda çıktı balonlu PDF de
+      // olabiliyor, metin notunda Word de üretiliyor (bkz. `_runNoteAction`).
+      ('pdf', l10n.exportTitle, Icons.ios_share_outlined),
       (
         'archive',
         note.archivedAt != null ? l10n.unarchive : l10n.archive,
@@ -235,6 +237,20 @@ Future<void> _runNoteAction(
       // Kilitli notun içeriği PDF'e de kimlik doğrulaması olmadan çıkmasın.
       if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
+      // Balonlu/çizimli belge taşıyan notta hangi çıktının istendiği
+      // SORULUR: dışa aktarma eskiden her tipte aynı ekrana gidiyor ve
+      // belge notunda yalnız sayfa notlarının metnini yazıyordu — belgenin
+      // kendisi, balonlar ve el yazısı hiç çıkmıyordu (bkz. editördeki
+      // `_export`, aynı kök neden).
+      if (countStampablePdfs(note) > 0) {
+        final choice = await showExportChoiceSheet(context);
+        if (choice == null || !context.mounted) return;
+        if (choice == 'document') {
+          await runNoteShare(context, ref, note, 'pdf');
+          return;
+        }
+        if (!context.mounted) return;
+      }
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => PdfExportScreen(note: note)),
       );

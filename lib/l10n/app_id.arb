@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Gelembung, sorotan, dan coretan dicetak ke dalam PDF; siapa pun bisa membukanya, dan di Not terbuka bisa diedit.",
   "sharePdfWithBubblesNone": "Catatan ini tidak punya PDF bergelembung atau bercoretan.",
   "sharePdfWithBubblesPreparing": "Menyiapkan PDF bergelembung…",
-  "sharePdfWithBubblesSuffix": " (bergelembung)"
+  "sharePdfWithBubblesSuffix": " (bergelembung)",
+  "formatRemove": "Hapus",
+  "exportTitle": "Ekspor",
+  "exportNotesOption": "Teks catatan (PDF / Word)",
+  "exportNotesOptionInfo": "Teks dan gambar catatan; balon tidak disertakan.",
+  "captureNoteTitle": "Judul catatan (opsional)",
+  "captureNoteTitleHint": "Dokumen baru juga memakai nama ini",
+  "imageOcrTitle": "Kenali teks pada gambar",
+  "imageOcrNone": "Tidak ada teks pada gambar ini.",
+  "imageOcrHint": "{count} baris dikenali · ketuk untuk memilih",
+  "imageOcrSelected": "{count} baris dipilih"
 }

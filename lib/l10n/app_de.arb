@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Sprechblasen, Markierungen und Zeichnungen werden in die PDF eingebrannt; jeder kann sie öffnen, in Not öffnet sie sich bearbeitbar.",
   "sharePdfWithBubblesNone": "In dieser Notiz gibt es keine PDF mit Sprechblasen oder Zeichnungen.",
   "sharePdfWithBubblesPreparing": "PDF mit Sprechblasen wird vorbereitet…",
-  "sharePdfWithBubblesSuffix": " (mit Sprechblasen)"
+  "sharePdfWithBubblesSuffix": " (mit Sprechblasen)",
+  "formatRemove": "Entfernen",
+  "exportTitle": "Exportieren",
+  "exportNotesOption": "Notiztext (PDF / Word)",
+  "exportNotesOptionInfo": "Text und Bilder der Notiz; Sprechblasen nicht enthalten.",
+  "captureNoteTitle": "Notiztitel (optional)",
+  "captureNoteTitleHint": "Das neue Dokument erhält denselben Namen",
+  "imageOcrTitle": "Text im Bild erkennen",
+  "imageOcrNone": "In diesem Bild wurde kein Text gefunden.",
+  "imageOcrHint": "{count} Zeilen erkannt · zum Auswählen tippen",
+  "imageOcrSelected": "{count} Zeilen ausgewählt"
 }

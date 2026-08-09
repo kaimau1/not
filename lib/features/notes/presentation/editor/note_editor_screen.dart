@@ -74,6 +74,7 @@ import 'format_bar.dart';
 import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
+import 'note_menu_sheet.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
@@ -272,8 +273,31 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 }
 
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   Note? _note;
+
+  /// Ataç rozetinin "yeni ek geldi" yanıp sönmesi (bkz.
+  /// [_attachmentsToggle]). Değer 0 → 1 → 0 gider; iki tur döner.
+  late final AnimationController _attachPulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 320),
+  );
+
+  /// En son çizilen ek sayısı — artışı yakalamak için (silme yanıp sönmez).
+  int? _lastAttachmentCount;
+
+  /// Ek sayısı arttıysa rozeti iki kez yakar.
+  void _pulseAttachBadge(int count) {
+    final previous = _lastAttachmentCount;
+    _lastAttachmentCount = count;
+    // İlk çizim referans alınır: notu AÇMAK yanıp sönmeyi tetiklemesin.
+    if (previous == null || count <= previous) return;
+    // Sistemde "hareketi azalt" açıksa animasyon yok.
+    if (MediaQuery.disableAnimationsOf(context)) return;
+    _attachPulse
+      ..reset()
+      ..repeat(reverse: true, count: 4);
+  }
 
   /// LİSTE notunda serbest metin alanı açık mı? (Kullanıcı isteği: "liste
   /// notlarına metin notu ekleme seçeneği lazım.") Notun gövdesi doluysa alan
@@ -542,6 +566,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Seçimdeki tüm biçimleri siler.
   void _clearFormat() => _runOnTarget(clearRichFormat);
+
+  /// Renk/vurgu paletindeki "Kaldır": yalnız o biçmi düşürür (bkz.
+  /// [removeRichFormat] — geri dönüşün keşfedilebilir tek yolu).
+  void _removeFormat(RichFormat format) =>
+      _runOnTarget((c) => removeRichFormat(c, format));
 
   /// Biçim çubuğunun hedefinde SEÇİLİ metin var mı?
   bool _hasSelection() {
@@ -951,6 +980,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.dispose();
     _bodyFocus.dispose();
     _pageScroll.dispose();
+    _attachPulse.dispose();
     super.dispose();
   }
 
@@ -1239,26 +1269,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   /// [asFile] true ise seçilen görsel sayfaya değil ek şeridine girer.
+  ///
+  /// **ÇOKLU SEÇİM** (kullanıcı isteği 2026-08-09: "aynı anda birden fazla ek
+  /// yüklenebilsin"): seçici tek dosyayla sınırlıydı; beş fotoğraf eklemek
+  /// için "Ekle → Görsel" yolunu beş kez yürümek gerekiyordu. Seçilenler
+  /// SIRAYLA eklenir (paralel değil): her ek notu yazıyor ve sayfadaki yerini
+  /// bir öncekine göre hesaplıyor (bkz. [_placeNewImage]) — aynı anda
+  /// koşsalardı hepsi aynı noktaya biner, üstelik büyük görsellerin
+  /// sıkıştırması aynı anda belleğe yığılırdı.
   Future<void> _pickImage({bool asFile = false}) async {
     if (_isDesktop) {
       const group = XTypeGroup(
         label: 'Görseller',
         extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       );
-      final file = await openFile(acceptedTypeGroups: const [group]);
-      if (file == null) return;
-      await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
+      final files = await openFiles(acceptedTypeGroups: const [group]);
+      for (final file in files) {
+        if (!mounted) return;
+        await _addImageBytes(
+          await file.readAsBytes(),
+          file.name,
+          asFile: asFile,
+        );
+      }
     } else {
       // Boyut tavanı platform tarafında uygulanır: 48 MP'lik bir fotoğrafın
       // ~20 MB'ı ana izoleye okunup sıkıştırma izolesine kopyalanıyordu;
       // ek zaten 1600 px'e küçültülüyor (bkz. _compressImage), kalite kaybı yok.
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
+      final files = await ImagePicker().pickMultiImage(
         maxWidth: 2400,
         maxHeight: 2400,
       );
-      if (file == null) return;
-      await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
+      for (final file in files) {
+        if (!mounted) return;
+        await _addImageBytes(
+          await file.readAsBytes(),
+          file.name,
+          asFile: asFile,
+        );
+      }
     }
   }
 
@@ -1488,14 +1537,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// **ÇOKLU SEÇİM** (kullanıcı isteği 2026-08-09: "aynı anda birden fazla ek
+  /// yüklenebilsin"): seçilen belgeler sırayla eklenir; biri hata verse
+  /// (tavanı aşan dosya, okunamayan içerik) kalanlar yine girer.
   Future<void> _pickPdf() async {
     const group = XTypeGroup(
       label: 'PDF',
       extensions: ['pdf'],
       mimeTypes: ['application/pdf'],
     );
-    final file = await DocPicker.pickOne(group);
-    if (file == null) return;
+    for (final file in await DocPicker.pickMany(group)) {
+      if (!mounted) return;
+      await _addPdfFile(file);
+    }
+  }
+
+  Future<void> _addPdfFile(XFile file) async {
     final bytes = await file.readAsBytes();
     // PDF sıkıştırılamaz (görsel ve ses küçültülüyor, bu küçültülemiyor) —
     // büyük dosya Firebase Storage kotasına doğrudan gider. Engellemek yerine
@@ -2223,6 +2280,102 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _flushPending(_bodyController);
     if (!mounted) return;
     await showNoteShareSheet(context, ref, _note ?? note);
+  }
+
+  /// Üst bardaki ⋮ — iki sütunlu levha (bkz. note_menu_sheet.dart).
+  Future<void> _openNoteMenu() async {
+    final note = _note;
+    if (note == null) return;
+    // Levha metin alanı taşımıyor; klavye açık kalırsa levhanın yarısını
+    // örter (alt bardaki diğer levhalarla aynı kural).
+    _dismissKeyboard();
+    final action = await showNoteEditorMenu(
+      context,
+      pinned: note.pinned,
+      starred: note.starred,
+      locked: note.locked,
+      archived: note.archivedAt != null,
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case 'pin':
+        _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
+      case 'star':
+        _mutate((n) => n.copyWith(starred: !n.starred), immediate: true);
+      case 'share':
+        await _share();
+      case 'export':
+        await _export();
+      case 'listen':
+        await _listen();
+      case 'lock':
+        await _toggleLock();
+      case 'archive':
+        _toggleArchive();
+      case 'clear':
+        await _clearContent();
+      case 'settings':
+        if (mounted) context.push('/settings');
+      case 'delete':
+        _delete();
+    }
+  }
+
+  /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "PDF olarak dışa aktar eskide
+  /// kaldı"): madde her not tipinde tek bir ekrana, `PdfExportScreen`e
+  /// gidiyordu. O ekran BELGE (balonlu) notunda yalnız sayfa notlarının
+  /// METNİNİ yazıyor; belgenin kendisini, üzerindeki balonları, vurguları ve
+  /// el yazısını hiç almıyordu. Yani PDF notunu "PDF olarak dışa aktar"mak
+  /// çoğu zaman boş ya da yarım bir dosya üretiyordu — oysa balonları belgeye
+  /// basan yol (bkz. NoteShare.shareAnnotatedPdfs) ZATEN vardı, sadece
+  /// Paylaş levhasının içine gömülüydü.
+  ///
+  /// Artık: notta balonlu/çizimli bir belge varsa hangi çıktının istendiği
+  /// SORULUR; yoksa doğrudan metin/görsel dışa aktarma ekranı açılır.
+  Future<void> _export() async {
+    final note = _note;
+    if (note == null) return;
+    // Bekleyen yazım önce kesinleşsin: çıktı son hâli taşımalı.
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    if (!mounted) return;
+    final current = _note ?? note;
+
+    if (countStampablePdfs(current) == 0) {
+      _openNotesExport(current);
+      return;
+    }
+    final choice = await showExportChoiceSheet(context);
+    if (choice == null || !mounted) return;
+    if (choice == 'notes') {
+      _openNotesExport(current);
+      return;
+    }
+    await runNoteShare(context, ref, current, 'pdf');
+  }
+
+  /// Not metnini (+ görselleri) PDF/Word'e aktarma ekranı.
+  void _openNotesExport(Note current) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PdfExportScreen(
+          note: current,
+          // Sayfa ölçüleri: görseller dışa aktarmada da nottaki yerlerinde
+          // çıksın.
+          layout: () {
+            final box = _pageBox();
+            if (box == null) return null;
+            return (
+              bodyTop: _bodyTop,
+              pageWidth: box.size.width,
+              pageHeight: box.size.height,
+            );
+          }(),
+        ),
+      ),
+    );
   }
 
   /// Notu sesli okur. Kilitli notta ayrıca doğrulama yok — editör zaten
@@ -3019,38 +3172,64 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// yerde duruyor, "Ekle" adı üç kez geçiyordu. Artık tek dokunuş, tek sayfa.
   /// Ek şeridini açıp kapatan düğme (sayı rozetli). Şeridin kendi başlık
   /// satırı kaldırıldı: kapalıyken artık HİÇ yer kaplamıyor.
+  ///
+  /// **Yeni ek geldiğinde YANIP SÖNER** (kullanıcı isteği 2026-08-09: "ek
+  /// eklendiğinde alttaki ataç kısmı renklenmeli ve hafif yanıp sönmeli"):
+  /// şerit kapalıyken (varsayılan) ek eklemek ekranda hiçbir iz bırakmıyordu —
+  /// dosya gerçekten girdi mi, kullanıcı ancak ataca basıp bakınca
+  /// anlıyordu. Sayı artınca düğme iki kez vurgu rengine yanar
+  /// (bkz. [_attachPulse]).
   Widget _attachmentsToggle(AppLocalizations l10n, int count) {
     final scheme = Theme.of(context).colorScheme;
     final open = ref.watch(attachmentsExpandedProvider);
     return Tooltip(
       message: open ? l10n.hideAttachments : l10n.showAttachments,
-      child: Material(
-        color: open ? scheme.secondaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: () => ref.read(attachmentsExpandedProvider.notifier).toggle(),
-          child: Container(
-            height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 9),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.attach_file, size: 17, color: scheme.onSurface),
-                const SizedBox(width: 4),
-                Text(
-                  '$count',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: scheme.onSurface,
-                  ),
+      child: AnimatedBuilder(
+        animation: _attachPulse,
+        builder: (context, child) {
+          // 0 → 1 → 0 iki kez: yanıp sönme. Renk ve metin rengi birlikte
+          // döner ki rozet okunur kalsın.
+          final t = _attachPulse.value;
+          final glow = Color.lerp(
+            open ? scheme.secondaryContainer : Colors.transparent,
+            scheme.primary,
+            t,
+          )!;
+          final ink = Color.lerp(
+            scheme.onSurface,
+            scheme.onPrimary,
+            t,
+          )!;
+          return Material(
+            color: glow,
+            borderRadius: BorderRadius.circular(10),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () =>
+                  ref.read(attachmentsExpandedProvider.notifier).toggle(),
+              child: Container(
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: 9),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.attach_file, size: 17, color: ink),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: ink,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -3595,6 +3774,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final isDocumentNote =
         note != null &&
         (note.type == NoteType.pdf || note.type == NoteType.slides);
+    // Ataç rozeti: sayı ARTTIYSA yanıp söner (bkz. [_pulseAttachBadge]).
+    // Build sırasında animasyon başlatmak güvenli değil — bir kareye
+    // ertelenir.
+    if (note != null) {
+      final count = fileAttachments.length;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _pulseAttachBadge(count);
+      });
+    }
 
     if (note == null) {
       return Scaffold(
@@ -3664,7 +3852,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Üstündeki çip satırına yapışık: aradaki 8 dp, çipler başlığın ALTINDAYKEN
     // üst barla başlığı ayırmak içindi; artık o işi çip satırı görüyor.
     final titleField = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 2, 4, 0),
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
@@ -3889,35 +4077,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     //
     // Şimdi çipler başlığın ALTINDA, sayfa boyunca uzanan TEK satırlık yatay
     // bir şeritte: genişlik sınırı yok (etiket adı tam okunur), hepsi aynı
-    // taban çizgisine hizalı ve sığmayanlar kaydırılarak görülür. "+" düğmesi
-    // şeridin dışında, sağ kenarda SABİT durur — kaydırma onu götürmez.
-    // Blok yalnız BİR satır yükselir; başlığın sağındaki dar kutu kapandığı
-    // için başlık da tam genişliğe kavuşur.
-    final metaChips = SizedBox(
-      height: metaChildren.isEmpty ? 34 : 36,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: metaChildren.isEmpty
-                ? const SizedBox.shrink()
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: _kGutter),
-                    itemCount: metaChildren.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 6),
-                    itemBuilder: (context, i) => Align(
-                      alignment: Alignment.center,
-                      child: metaChildren[i],
-                    ),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 4, right: 10),
-            child: actionsMenu,
-          ),
-        ],
-      ),
+    // taban çizgisine hizalı ve sığmayanlar kaydırılarak görülür.
+    // **BİR SATIR KAZANILDI** (kullanıcı isteği 2026-08-09: "etiket ve klasör
+    // için olan artı butonu başlık satırında olsun; etiket yoksa etiket satırı
+    // oluşmasın, eklenirse oluşsun"). Eskiden çip şeridi HER NOTTA 34 dp
+    // yükseklikte duruyordu — içinde tek bir "+" düğmesi olsa bile. "+" artık
+    // başlığın sağında; şerit ancak gerçekten bir çip (hatırlatıcı, klasör,
+    // etiket) varsa kuruluyor, boş notta hiç yer kaplamıyor.
+    final metaChips = metaChildren.isEmpty
+        ? const SizedBox.shrink()
+        : SizedBox(
+            height: 36,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: _kGutter),
+              itemCount: metaChildren.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, i) =>
+                  Align(alignment: Alignment.center, child: metaChildren[i]),
+            ),
+          );
+
+    // Başlık satırı: alan + sağ kenarda "+" (ekleme/öneri menüsü).
+    final titleRow = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(child: titleField),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(end: 10),
+          child: actionsMenu,
+        ),
+      ],
     );
 
     // Sayfada yüzen görseller ve videolar: "ek olarak" işaretlenenler buraya
@@ -3962,7 +4152,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: [titleField, metaChips],
+      children: [titleRow, metaChips],
     );
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
@@ -4270,164 +4460,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ),
               // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
               // barın başlık alanındaki göstergelerden okunuyor.
-              PopupMenuButton<String>(
-                onSelected: (action) {
-                  switch (action) {
-                    case 'pin':
-                      _mutate(
-                        (n) => n.copyWith(pinned: !n.pinned),
-                        immediate: true,
-                      );
-                    case 'star':
-                      _mutate(
-                        (n) => n.copyWith(starred: !n.starred),
-                        immediate: true,
-                      );
-                    case 'share':
-                      _share();
-                    case 'pdf':
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => PdfExportScreen(
-                            note: note,
-                            // Sayfa ölçüleri: görseller dışa aktarmada da
-                            // nottaki yerlerinde çıksın.
-                            layout: () {
-                              final box = _pageBox();
-                              if (box == null) return null;
-                              return (
-                                bodyTop: _bodyTop,
-                                pageWidth: box.size.width,
-                                pageHeight: box.size.height,
-                              );
-                            }(),
-                          ),
-                        ),
-                      );
-                    case 'listen':
-                      _listen();
-                    case 'lock':
-                      _toggleLock();
-                    case 'archive':
-                      _toggleArchive();
-                    case 'clear':
-                      _clearContent();
-                    case 'settings':
-                      context.push('/settings');
-                    case 'delete':
-                      _delete();
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'pin',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-                      ),
-                      title: Text(note.pinned ? l10n.unpin : l10n.pin),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'star',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        note.starred ? Icons.star : Icons.star_outline,
-                        color: note.starred ? Colors.amber.shade600 : null,
-                      ),
-                      title: Text(note.starred ? l10n.unstar : l10n.star),
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 'share',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.share_outlined),
-                      title: Text(l10n.share),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'pdf',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.picture_as_pdf_outlined),
-                      title: Text(l10n.exportPdf),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'listen',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.headphones_outlined),
-                      title: Text(l10n.listenToNote),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'lock',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        note.locked
-                            ? Icons.lock_open_outlined
-                            : Icons.lock_outline,
-                      ),
-                      title: Text(
-                        note.locked ? l10n.unlockNote : l10n.lockNote,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'archive',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: Icon(
-                        note.archivedAt != null
-                            ? Icons.unarchive_outlined
-                            : Icons.archive_outlined,
-                      ),
-                      title: Text(
-                        note.archivedAt != null ? l10n.unarchive : l10n.archive,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'clear',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.backspace_outlined),
-                      title: Text(l10n.clearNote),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'settings',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.settings_outlined),
-                      title: Text(l10n.settings),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.delete_outline),
-                      title: Text(l10n.delete),
-                    ),
-                  ),
-                ],
+              // ⋮ artık açılır menü değil, iki sütunlu levha açar
+              // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
+              IconButton(
+                tooltip: l10n.noteMetaMenu,
+                icon: const Icon(Icons.more_vert),
+                onPressed: _openNoteMenu,
               ),
             ],
           ),
@@ -4526,6 +4564,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               target: _formatTarget,
                               onFormat: _applyFormat,
                               onClearFormat: _clearFormat,
+                              onRemoveFormat: _removeFormat,
                               fontFamily: _titleIsTarget
                                   ? note.titleFontFamily
                                   : note.fontFamily,

@@ -435,18 +435,22 @@ class NoteCard extends ConsumerWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            // Öncelik: seçim > renkli çerçeve > ince varsayılan kenarlık.
+            // SEÇİM BURADA DEĞİL: seçili kenarlık ayrı bir katman olarak
+            // kartın ÜZERİNE çizilir (aşağıdaki Positioned.fill).
+            //
+            // KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "ana ekranda notları
+            // basılı tutup seçerken kaymalar oluyor"): `Ink`, dekorasyonun
+            // kenarlığını çocuğa DOLGU olarak ekler
+            // (`BoxDecoration.padding == border.dimensions`). Seçince kenarlık
+            // 1 → 2 px olunca kart 2 px uzuyordu; masonry ızgarada bir kartın
+            // 2 px'i altındaki bütün sütunu kaydırıyor, arka arkaya seçimde
+            // liste gözle görülür biçimde zıplıyordu. Kenarlık artık sabit
+            // kalınlıkta; seçim yalnız BOYA katmanı, yerleşimi hiç etkilemez.
             border: Border.all(
-              color: selected
-                  ? scheme.primary
-                  : note.frameColor != NoteColor.none
+              color: note.frameColor != NoteColor.none
                   ? NoteColors.swatch(note.frameColor)
                   : scheme.outlineVariant.withValues(alpha: 0.5),
-              width: selected
-                  ? 2
-                  : note.frameColor != NoteColor.none
-                  ? 2.5
-                  : 1,
+              width: note.frameColor != NoteColor.none ? 2.5 : 1,
             ),
           ),
           // Notun ZEMİN görseli kartta da görünür (kullanıcı isteği: "her
@@ -495,6 +499,20 @@ class NoteCard extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
+            // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
+            // kartın tamamını kapladığı için dokunuşu yutardı.
+            if (selected)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: scheme.primary, width: 2),
                     ),
                   ),
                 ),

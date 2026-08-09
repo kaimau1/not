@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "Dymki, zakreślenia i rysunki są wypalane w pliku PDF; każdy może go otworzyć, a w Not otwiera się z możliwością edycji.",
   "sharePdfWithBubblesNone": "Ta notatka nie zawiera pliku PDF z dymkami ani rysunkami.",
   "sharePdfWithBubblesPreparing": "Przygotowywanie pliku PDF z dymkami…",
-  "sharePdfWithBubblesSuffix": " (z dymkami)"
+  "sharePdfWithBubblesSuffix": " (z dymkami)",
+  "formatRemove": "Usuń",
+  "exportTitle": "Eksportuj",
+  "exportNotesOption": "Tekst notatki (PDF / Word)",
+  "exportNotesOptionInfo": "Tekst i obrazy notatki; dymki nie są uwzględnione.",
+  "captureNoteTitle": "Tytuł notatki (opcjonalnie)",
+  "captureNoteTitleHint": "Nowy dokument otrzyma tę samą nazwę",
+  "imageOcrTitle": "Rozpoznaj tekst na obrazie",
+  "imageOcrNone": "Nie znaleziono tekstu na tym obrazie.",
+  "imageOcrHint": "Rozpoznano {count} wierszy · dotknij, aby zaznaczyć",
+  "imageOcrSelected": "Zaznaczono {count} wierszy"
 }

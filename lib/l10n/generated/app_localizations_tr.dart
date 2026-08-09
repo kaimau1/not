@@ -2272,4 +2272,38 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'Kaldır';
+
+  @override
+  String get exportTitle => 'Dışa aktar';
+
+  @override
+  String get exportNotesOption => 'Not metni (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'Notun yazısı ve görselleri; balonlar dahil değil.';
+
+  @override
+  String get captureNoteTitle => 'Not başlığı (isteğe bağlı)';
+
+  @override
+  String get captureNoteTitleHint => 'Oluşacak belgeye de bu ad verilir';
+
+  @override
+  String get imageOcrTitle => 'Görseldeki metni tanı';
+
+  @override
+  String get imageOcrNone => 'Bu görselde metin bulunamadı.';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count satır tanındı · dokunarak seç';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count satır seçildi';
+  }
 }

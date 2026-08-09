@@ -34,6 +34,7 @@ import '../data/attachment_repository.dart';
 import '../data/document_scan.dart';
 import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
+import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
@@ -171,10 +172,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
   }
 
+  /// Not ızgarası kaydırıldı mı — başlık bloğunun (arama çubuğu + süzgeç
+  /// çipleri) altındaki AYIRICI bunu izler.
+  ///
+  /// KÖK NEDEN (kullanıcı ekran görüntüsü 2026-08-09: "üst işaretli alan
+  /// kayarken beraber kaymasın, görüntüyü bozuyor"): başlık bloğu zaten
+  /// kaydırma görünümünün DIŞINDA sabit duruyor, ama arkası saydam ve altında
+  /// hiçbir sınır yoktu. Kartlar bloğun dibinden kırpılarak geçtiği için
+  /// yarım kalan kart çiplerin devamı gibi okunuyor, göz başlığın da kaydığını
+  /// sanıyordu. Kaydırma başlar başlamaz beliren gölgeli ayırıcı iki katmanı
+  /// birbirinden ayırır.
+  ///
+  /// `ValueNotifier`: kaydırma bildirimi ekranın TAMAMINI değil yalnız bu
+  /// ince çizgiyi yeniden çizsin (ızgara önbelleğinde ~130 kart var).
+  final _gridScrolled = ValueNotifier(false);
+
+  /// Kaydırma bildirimini ayırıcıya bağlar; `false` dönerek bildirimi
+  /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
+  bool _onGridScroll(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    final scrolled = notification.metrics.pixels > 2;
+    if (_gridScrolled.value != scrolled) _gridScrolled.value = scrolled;
+    return false;
+  }
+
   @override
   void dispose() {
     _searchController.dispose();
     _searchFocus.dispose();
+    _gridScrolled.dispose();
     super.dispose();
   }
 
@@ -656,12 +682,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _createVideoNote() async {
     // Kapak karesi yalnız Android'de çıkarılabiliyor: masaüstünde seçenek hiç
     // SORULMAZ — sorup sonra sessizce klasiğe düşmek, seçimi yok saymak olurdu.
-    final mode = VideoFrame.supported
+    final choice = VideoFrame.supported
         ? await _askCaptureMode(context.l10n.newVideoNote)
-        : CaptureMode.classic;
-    if (mode == null || !mounted) return;
-    if (mode == CaptureMode.classic) {
-      await _openBlankNote(NoteType.text, query: '?video=1');
+        : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
+    if (choice == null || !mounted) return;
+    if (choice.mode == CaptureMode.classic) {
+      await _openBlankNote(
+        NoteType.text,
+        query: '?video=1',
+        title: choice.noteTitle,
+      );
       return;
     }
     final l10n = context.l10n;
@@ -679,12 +709,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // Kare çıkarılamadı: kip sessizce düşürülmez, klasik nota bağlanır ki
       // çekilen video kaybolmasın.
       _showSnack(l10n.videoFrameFailed);
-      await _openBlankNote(NoteType.text, query: '?video=1');
+      await _openBlankNote(
+        NoteType.text,
+        query: '?video=1',
+        title: choice.noteTitle,
+      );
       return;
     }
     await _buildPageNote(
       pageBytes: [frame],
-      fileName: '${l10n.newVideoNote}.pdf',
+      fallbackName: l10n.newVideoNote,
+      noteTitle: choice.noteTitle,
       extraVideoPath: picked.path,
     );
   }
@@ -693,10 +728,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// gömülür ve kullanıcı hemen yazmaya başlar; balonlu kipte kare bir belge
   /// sayfası olur ve üzerine balon/vurgu/kalem konabilir.
   Future<void> _createPhotoNote() async {
-    final mode = await _askCaptureMode(context.l10n.newPhotoNote);
-    if (mode == null || !mounted) return;
-    if (mode == CaptureMode.classic) {
-      await _openBlankNote(NoteType.text, query: '?photo=1');
+    final choice = await _askCaptureMode(context.l10n.newPhotoNote);
+    if (choice == null || !mounted) return;
+    if (choice.mode == CaptureMode.classic) {
+      await _openBlankNote(
+        NoteType.text,
+        query: '?photo=1',
+        title: choice.noteTitle,
+      );
       return;
     }
     final l10n = context.l10n;
@@ -716,7 +755,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // yamuk ya da yan çekilmiş bir kare, not kurulduktan sonra düzeltilemiyor.
     final prepared = await ImagePrepareScreen.open(context, [picked.path]);
     if (prepared == null || prepared.isEmpty || !mounted) return;
-    await _buildPageNoteFromPaths(prepared, '${l10n.newPhotoNote}.pdf');
+    await _buildPageNoteFromPaths(
+      prepared,
+      fallbackName: l10n.newPhotoNote,
+      noteTitle: choice.noteTitle,
+    );
   }
 
   /// "Belge tara not al": belge tarayıcı açılır (kenar tespiti + perspektif
@@ -728,12 +771,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Future<void> _createScanNote() async {
     // Belge tarayıcı yoksa (masaüstü) balonlu kip kurulamaz: seçenek
     // sorulmaz, editördeki eski yol (fotoğraflardan tarama) açılır.
-    final mode = DocumentScan.supported
+    final choice = DocumentScan.supported
         ? await _askCaptureMode(context.l10n.newScanNote)
-        : CaptureMode.classic;
-    if (mode == null || !mounted) return;
-    if (mode == CaptureMode.classic) {
-      await _openBlankNote(NoteType.text, query: '?scan=1');
+        : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
+    if (choice == null || !mounted) return;
+    if (choice.mode == CaptureMode.classic) {
+      await _openBlankNote(
+        NoteType.text,
+        query: '?scan=1',
+        title: choice.noteTitle,
+      );
       return;
     }
     final l10n = context.l10n;
@@ -759,13 +806,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (pdfBytes != null) {
       await _createPageNoteWithPdf(
         pdfBytes,
-        scanFileName(result.title, DateTime.now()),
+        // `.pdf` uzantısı aşağıda ekleniyor; ad uzantısız verilir.
+        fallbackName: p.basenameWithoutExtension(
+          scanFileName(result.title, DateTime.now()),
+        ),
+        noteTitle: choice.noteTitle,
       );
       return;
     }
     final paths = result.imagePaths ?? const <String>[];
     if (paths.isEmpty) return;
-    await _buildPageNoteFromPaths(paths, '${l10n.newScanNote}.pdf');
+    await _buildPageNoteFromPaths(
+      paths,
+      fallbackName: l10n.newScanNote,
+      noteTitle: choice.noteTitle,
+    );
   }
 
   /// "PDF ekle not al": dosya seçici gelir, seçilen belge notun içine gömülür.
@@ -774,11 +829,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// ikiye bölünür; klasik kipte PDF sıradan bir ek olur ve not düz metin
   /// notudur. Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
   Future<void> _createPdfNote() async {
-    final mode = await _askCaptureMode(context.l10n.newPdfNote);
-    if (mode == null || !mounted) return;
+    final choice = await _askCaptureMode(context.l10n.newPdfNote);
+    if (choice == null || !mounted) return;
     await _openBlankNote(
-      mode == CaptureMode.bubbles ? NoteType.pdf : NoteType.text,
+      choice.mode == CaptureMode.bubbles ? NoteType.pdf : NoteType.text,
       query: '?pdf=1',
+      title: choice.noteTitle,
     );
   }
 
@@ -793,8 +849,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını
   /// (ve ikinci bir hata kaynağını) doğururdu.
   Future<void> _createImageNote() async {
-    final mode = await _askCaptureMode(context.l10n.newImageNote);
-    if (mode == null || !mounted) return;
+    final choice = await _askCaptureMode(context.l10n.newImageNote);
+    if (choice == null || !mounted) return;
     final l10n = context.l10n;
     const group = XTypeGroup(
       label: 'Görsel',
@@ -809,45 +865,63 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       for (final f in files) f.path,
     ]);
     if (prepared == null || prepared.isEmpty || !mounted) return;
-    if (mode == CaptureMode.classic) {
-      await _createImageAttachmentNote(prepared);
+    if (choice.mode == CaptureMode.classic) {
+      await _createImageAttachmentNote(prepared, choice.noteTitle);
       return;
     }
-    await _buildPageNoteFromPaths(prepared, '${l10n.newImageNote}.pdf');
+    await _buildPageNoteFromPaths(
+      prepared,
+      fallbackName: l10n.newImageNote,
+      noteTitle: choice.noteTitle,
+    );
   }
 
   /// "Sunum ekle not al": PDF yolunun slayt eşi.
   Future<void> _createSlidesNote() async {
-    final mode = await _askCaptureMode(context.l10n.newSlidesNote);
-    if (mode == null || !mounted) return;
+    final choice = await _askCaptureMode(context.l10n.newSlidesNote);
+    if (choice == null || !mounted) return;
     await _openBlankNote(
-      mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
+      choice.mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
       query: '?slides=1',
+      title: choice.noteTitle,
     );
   }
 
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
   /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).
-  Future<CaptureMode?> _askCaptureMode(String title) =>
+  Future<CaptureChoice?> _askCaptureMode(String title) =>
       showCaptureModeSheet(context, title: title);
 
   /// Boş bir not kurup editörü [query] açılış niyetiyle açar (klasör süzgeci
   /// varsa nota da yazılır). Altı yakalama yolunun ortak kuyruğu.
-  Future<void> _openBlankNote(NoteType type, {String query = ''}) async {
+  ///
+  /// [title] yakalama levhasında yazılan addır (boş olabilir): klasik kipte
+  /// de kullanılır, böylece "başlığı önce yaz" alışkanlığı iki kipte de aynı
+  /// çalışır.
+  Future<void> _openBlankNote(
+    NoteType type, {
+    String query = '',
+    String title = '',
+  }) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
     final id = await repo.createNote(
       type,
       folderId: ref.read(selectedFolderProvider),
     );
+    if (title.isNotEmpty) repo.updateFields(id, {'title': title});
     await _openNew(id, query: query);
   }
 
   /// Görselleri TEK BELGEYE dizip balonlu (sayfa notlu) bir not kurar.
+  ///
+  /// Belgenin adı [noteTitle]'dan gelir; boşsa [fallbackName] kullanılır
+  /// (bkz. `capture_mode_sheet.dart` — dosya adı kök nedeni).
   Future<void> _buildPageNoteFromPaths(
-    List<String> paths,
-    String fileName,
-  ) async {
+    List<String> paths, {
+    required String fallbackName,
+    required String noteTitle,
+  }) async {
     if (paths.isEmpty) return;
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -856,7 +930,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       final bytes = await ScanPdf.build(paths);
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
-      await _createPageNoteWithPdf(bytes, fileName);
+      await _createPageNoteWithPdf(
+        bytes,
+        fallbackName: fallbackName,
+        noteTitle: noteTitle,
+      );
     } catch (e) {
       messenger
         ..hideCurrentSnackBar()
@@ -867,7 +945,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// Baytları belge sayfası olarak taşıyan PDF notunu kurar.
   Future<void> _buildPageNote({
     required List<Uint8List> pageBytes,
-    required String fileName,
+    required String fallbackName,
+    required String noteTitle,
     String? extraVideoPath,
   }) async {
     final l10n = context.l10n;
@@ -896,7 +975,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       messenger.hideCurrentSnackBar();
       await _createPageNoteWithPdf(
         bytes,
-        fileName,
+        fallbackName: fallbackName,
+        noteTitle: noteTitle,
         extraVideoPath: extraVideoPath,
       );
     } catch (e) {
@@ -916,8 +996,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını (ve ikinci
   /// bir hata kaynağını) doğururdu.
   Future<void> _createPageNoteWithPdf(
-    Uint8List pdfBytes,
-    String fileName, {
+    Uint8List pdfBytes, {
+    required String fallbackName,
+    required String noteTitle,
     String? extraVideoPath,
   }) async {
     final repo = ref.read(notesRepositoryProvider);
@@ -930,10 +1011,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         folderId: ref.read(selectedFolderProvider),
       );
       final maps = <Map<String, dynamic>>[];
+      // Belgenin adı NOTUN BAŞLIĞI (bkz. capture_mode_sheet.dart): başlık
+      // boşsa yakalama kipinin varsayılan adına düşülür.
       final attachment = await attachments.preparePdf(
         noteId: id,
         bytes: pdfBytes,
-        fileName: fileName,
+        fileName: '${safePdfBaseName(noteTitle) ?? fallbackName}.pdf',
       );
       maps.add(attachment.toMap());
       // Görüntülü notta kaydın kendisi de nota bağlanır: sayfa yalnız kapak
@@ -946,7 +1029,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         );
         maps.add(video.copyWith(asFile: true).toMap());
       }
-      repo.updateFields(id, {'attachments': FieldValue.arrayUnion(maps)});
+      repo.updateFields(id, {
+        'attachments': FieldValue.arrayUnion(maps),
+        if (noteTitle.isNotEmpty) 'title': noteTitle,
+      });
       if (!mounted) return;
       await _openNew(id);
     } catch (e) {
@@ -955,7 +1041,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   /// Klasik görsel notu: seçilen görseller sıradan ek olarak nota girer.
-  Future<void> _createImageAttachmentNote(List<String> paths) async {
+  Future<void> _createImageAttachmentNote(
+    List<String> paths,
+    String noteTitle,
+  ) async {
     final repo = ref.read(notesRepositoryProvider);
     final attachments = ref.read(attachmentRepositoryProvider);
     if (repo == null || attachments == null) return;
@@ -995,7 +1084,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             : 1.0;
         top += pageWidth * displayWidth / aspect + 16;
       }
-      repo.updateFields(id, {'attachments': FieldValue.arrayUnion(maps)});
+      repo.updateFields(id, {
+        'attachments': FieldValue.arrayUnion(maps),
+        if (noteTitle.isNotEmpty) 'title': noteTitle,
+      });
       if (!mounted) return;
       messenger.hideCurrentSnackBar();
       await _openNew(id);
@@ -1528,6 +1620,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 _createNote(NoteType.checklist),
                             onSaved: _afterQuickCapture,
                           ),
+                        // Sabit başlık ile kayan ızgara arasındaki SINIR
+                        // (bkz. [_gridScrolled]).
+                        _HeaderSeparator(scrolled: _gridScrolled),
                         Expanded(
                           // İki parmakla zoom: 1 → 2 → 3 → 4 sütun arasında
                           // geçiş. Ölçek jesti tek parmakta hiç tepki vermez
@@ -1536,7 +1631,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           child: _PinchColumns(
                             onStart: () => _zoomBaseColumns = columns,
                             onScale: (scale) => _applyZoom(scale, columns),
-                            child: GestureDetector(
+                            child: NotificationListener<ScrollNotification>(
+                              onNotification: _onGridScroll,
+                              child: GestureDetector(
                               // Yatay çekişle filtreler/klasörler arasında
                               // gezin. Dikey kaydırma CustomScrollView'de
                               // kalır; eksenler farklı olduğundan çakışmaz.
@@ -1634,6 +1731,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                             ),
                           ),
+                        ),
                         ),
                       ],
                     );
@@ -1816,6 +1914,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final listView = ref.watch(noteListViewProvider);
 
+    // Elle taşımanın anlamlı olduğu görünüm: süzgeçsiz, aramasız, tam liste.
+    // (Aynı koşul ⋮ menüsündeki "Notları sırala" maddesinde de var.)
+    final manualReorderAllowed =
+        !searchActive &&
+        ref.read(noteFilterProvider) == NoteFilter.all &&
+        ref.read(selectedFolderProvider) == null &&
+        ref.read(selectedTagProvider) == null;
+
     /// Liste görünümü: tek sütun, kompakt satır. Sürükle-sırala BURADA yok —
     /// o mod ızgaraya özgü (hücre genişliğiyle çalışıyor); liste görünümünde
     /// ⋮ menüsündeki sıralama maddesi zaten görünmüyor.
@@ -1888,11 +1994,39 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         );
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
-        // Olağan hâl: uzun basış toplu seçime girer.
+        // Olağan hâl: uzun basış toplu seçime girer. SEÇİLİ bir kartta ise
+        // İKİNCİ uzun basış sürüklemeyi başlatır (kullanıcı isteği
+        // 2026-08-09: "basılı tutup notu seçince, tekrar basılı tutarsak
+        // sıralama için sürüklenebilsin") — böylece ayrı bir sıralama moduna
+        // girmeden tek not yerinden alınıp taşınabilir. Süzgeç/arama açıkken
+        // kapalı: alt kümede taşımak asıl sırayı bozar (⋮ menüsündeki
+        // sıralama maddesi de aynı gerekçeyle o hâlde gizleniyor).
         if (!reorderEnabled) {
           return KeyedSubtree(
             key: ValueKey(note.id),
-            child: GestureDetector(onLongPress: select, child: card),
+            child: Consumer(
+              builder: (context, cellRef, _) {
+                final isSelected = cellRef.watch(
+                  selectedNoteIdsProvider.select((s) => s.contains(note.id)),
+                );
+                if (!isSelected || !manualReorderAllowed) {
+                  return GestureDetector(onLongPress: select, child: card);
+                }
+                return _ReorderableNoteCell(
+                  noteId: note.id,
+                  index: index,
+                  cellWidth: cellWidth,
+                  inSection: (id) => items.any((n) => n.id == id),
+                  onReorder: (draggedId, to) =>
+                      _reorderSection(items, draggedId, to),
+                  feedback: SizedBox(
+                    width: cellWidth,
+                    child: NoteCard(note: note, highlightQuery: query),
+                  ),
+                  child: card,
+                );
+              },
+            ),
           );
         }
         return _ReorderableNoteCell(
@@ -2004,6 +2138,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ],
     ];
+  }
+}
+
+/// Sabit başlık (arama çubuğu + süzgeç çipleri) ile kayan not ızgarası
+/// arasındaki sınır çizgisi.
+///
+/// Liste tepedeyken görünmez: sayfa duruyorken bir çizgi çekmek gereksiz bir
+/// bölme yaratır. Kaydırma başlar başlamaz belirir ve altına yumuşak bir gölge
+/// düşürür — kartlar artık başlığın "ALTINDAN" geçtiği belli olur
+/// (bkz. [_DashboardScreenState._gridScrolled]).
+class _HeaderSeparator extends StatelessWidget {
+  const _HeaderSeparator({required this.scrolled});
+
+  final ValueListenable<bool> scrolled;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<bool>(
+      valueListenable: scrolled,
+      builder: (context, on, _) => AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        height: 1,
+        margin: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: on ? scheme.outlineVariant : Colors.transparent,
+          boxShadow: on
+              ? [
+                  BoxShadow(
+                    color: scheme.shadow.withValues(alpha: 0.12),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : const [],
+        ),
+      ),
+    );
   }
 }
 

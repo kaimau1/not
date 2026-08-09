@@ -572,5 +572,15 @@
   "sharePdfWithBubblesInfo": "تُطبع الفقاعات والتظليلات والرسومات داخل ملف PDF؛ يمكن لأي شخص فتحه، وفي تطبيق Not يُفتح قابلاً للتحرير.",
   "sharePdfWithBubblesNone": "لا يوجد في هذه الملاحظة ملف PDF يحمل فقاعات أو رسومات.",
   "sharePdfWithBubblesPreparing": "يجري تجهيز ملف PDF مع الفقاعات…",
-  "sharePdfWithBubblesSuffix": " (مع الفقاعات)"
+  "sharePdfWithBubblesSuffix": " (مع الفقاعات)",
+  "formatRemove": "إزالة",
+  "exportTitle": "تصدير",
+  "exportNotesOption": "نص الملاحظة (PDF / Word)",
+  "exportNotesOptionInfo": "نص الملاحظة وصورها؛ الفقاعات غير مضمّنة.",
+  "captureNoteTitle": "عنوان الملاحظة (اختياري)",
+  "captureNoteTitleHint": "سيحمل المستند الجديد الاسم نفسه",
+  "imageOcrTitle": "التعرّف على النص في الصورة",
+  "imageOcrNone": "لم يُعثر على نص في هذه الصورة.",
+  "imageOcrHint": "تم التعرّف على {count} سطرًا · اضغط للتحديد",
+  "imageOcrSelected": "تم تحديد {count} سطرًا"
 }

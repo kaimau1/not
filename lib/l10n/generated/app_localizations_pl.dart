@@ -2289,4 +2289,38 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'Usuń';
+
+  @override
+  String get exportTitle => 'Eksportuj';
+
+  @override
+  String get exportNotesOption => 'Tekst notatki (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'Tekst i obrazy notatki; dymki nie są uwzględnione.';
+
+  @override
+  String get captureNoteTitle => 'Tytuł notatki (opcjonalnie)';
+
+  @override
+  String get captureNoteTitleHint => 'Nowy dokument otrzyma tę samą nazwę';
+
+  @override
+  String get imageOcrTitle => 'Rozpoznaj tekst na obrazie';
+
+  @override
+  String get imageOcrNone => 'Nie znaleziono tekstu na tym obrazie.';
+
+  @override
+  String imageOcrHint(int count) {
+    return 'Rozpoznano $count wierszy · dotknij, aby zaznaczyć';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return 'Zaznaczono $count wierszy';
+  }
 }

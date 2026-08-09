@@ -2293,4 +2293,38 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get speechVoicePickerTitle => 'Ses seçimi';
+
+  @override
+  String get formatRemove => 'Rimuovi';
+
+  @override
+  String get exportTitle => 'Esporta';
+
+  @override
+  String get exportNotesOption => 'Testo della nota (PDF / Word)';
+
+  @override
+  String get exportNotesOptionInfo => 'Testo e immagini della nota; i fumetti non sono inclusi.';
+
+  @override
+  String get captureNoteTitle => 'Titolo della nota (facoltativo)';
+
+  @override
+  String get captureNoteTitleHint => 'Anche il nuovo documento avrà questo nome';
+
+  @override
+  String get imageOcrTitle => 'Riconosci il testo nell’immagine';
+
+  @override
+  String get imageOcrNone => 'Nessun testo trovato in questa immagine.';
+
+  @override
+  String imageOcrHint(int count) {
+    return '$count righe riconosciute · tocca per selezionare';
+  }
+
+  @override
+  String imageOcrSelected(int count) {
+    return '$count righe selezionate';
+  }
 }

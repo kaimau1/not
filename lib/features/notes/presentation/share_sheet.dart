@@ -73,6 +73,46 @@ Future<void> showNoteShareSheet(
   await runNoteShare(context, ref, note, choice);
 }
 
+/// **Dışa aktarma yolu seçimi** — yalnız balonlu/çizimli belge taşıyan
+/// notlarda sorulur (bkz. not editöründeki `_export`).
+///
+/// İki çıktı birbirinin yerine geçmez:
+/// * `document` — belgenin KENDİSİ, balonlar/vurgular/el yazısı içine
+///   basılmış hâlde (herhangi bir PDF okuyucu açar).
+/// * `notes` — notun YAZISI (+ görselleri) PDF ya da Word olarak.
+///
+/// İptalde null.
+Future<String?> showExportChoiceSheet(BuildContext context) {
+  final l10n = context.l10n;
+  return showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _tile(
+            sheetContext,
+            value: 'document',
+            icon: Icons.picture_as_pdf_outlined,
+            title: l10n.sharePdfWithBubbles,
+            subtitle: l10n.sharePdfWithBubblesInfo,
+            enabled: true,
+          ),
+          _tile(
+            sheetContext,
+            value: 'notes',
+            icon: Icons.notes_outlined,
+            title: l10n.exportNotesOption,
+            subtitle: l10n.exportNotesOptionInfo,
+            enabled: true,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Notta damgalanabilecek (balonu ya da çizimi olan) PDF eki sayısı.
 int countStampablePdfs(Note note) => note.attachments
     .where(
