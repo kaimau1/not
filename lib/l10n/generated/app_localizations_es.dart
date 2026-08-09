@@ -2396,4 +2396,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count líneas';
   }
+
+  @override
+  String get aiModelShowAll => 'Mostrar todos';
+
+  @override
+  String get aiModelShowAllInfo => 'También muestra modelos que la app no usa.';
 }

@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "Выбрано символов: {count}",
   "imagesSelectedCount": "Выбрано изображений: {count}",
   "attachmentsCopiedCount": "Вложений: {count}",
-  "exportImageLineOf": "/ {count} строк"
+  "exportImageLineOf": "/ {count} строк",
+  "aiModelShowAll": "Показать все",
+  "aiModelShowAllInfo": "Показывает и модели, которые приложение не использует."
 }

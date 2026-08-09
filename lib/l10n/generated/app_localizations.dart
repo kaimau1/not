@@ -4493,6 +4493,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'/ {count} satır'**
   String exportImageLineOf(int count);
+
+  /// No description provided for @aiModelShowAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü göster'**
+  String get aiModelShowAll;
+
+  /// No description provided for @aiModelShowAllInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulamanın kullanmadığı modeller de listelenir.'**
+  String get aiModelShowAllInfo;
 }
 
 class _AppLocalizationsDelegate

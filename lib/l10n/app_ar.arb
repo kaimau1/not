@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "تم تحديد {count} حرفًا",
   "imagesSelectedCount": "تم تحديد {count} صورة",
   "attachmentsCopiedCount": "{count} مرفقات",
-  "exportImageLineOf": "/ {count} سطرًا"
+  "exportImageLineOf": "/ {count} سطرًا",
+  "aiModelShowAll": "إظهار الكل",
+  "aiModelShowAllInfo": "يعرض أيضًا النماذج التي لا يستخدمها التطبيق."
 }

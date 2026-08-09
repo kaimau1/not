@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count} tekens geselecteerd",
   "imagesSelectedCount": "{count} afbeeldingen geselecteerd",
   "attachmentsCopiedCount": "{count} bijlagen",
-  "exportImageLineOf": "/ {count} regels"
+  "exportImageLineOf": "/ {count} regels",
+  "aiModelShowAll": "Alles tonen",
+  "aiModelShowAllInfo": "Toont ook modellen die de app niet gebruikt."
 }

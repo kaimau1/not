@@ -2347,4 +2347,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count줄';
   }
+
+  @override
+  String get aiModelShowAll => '전체 보기';
+
+  @override
+  String get aiModelShowAllInfo => '앱이 사용하지 않는 모델도 함께 보여줍니다.';
 }

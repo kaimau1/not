@@ -2345,4 +2345,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count 行';
   }
+
+  @override
+  String get aiModelShowAll => 'すべて表示';
+
+  @override
+  String get aiModelShowAllInfo => 'アプリが使わないモデルも表示します。';
 }

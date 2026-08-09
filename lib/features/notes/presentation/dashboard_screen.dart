@@ -411,20 +411,62 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// (madde 1) çağrılır: [draggedId] notunu [toIndex] konumuna taşır ve yeni
   /// sırayı kalıcılaştırır. Elle sıra görünsün diye sıralama ölçütü manuel'e
   /// alınır.
-  void _reorderSection(List<Note> section, String draggedId, int toIndex) {
-    final from = section.indexWhere((n) => n.id == draggedId);
+  // ── SÜRÜKLEYEREK SIRALAMA: CANLI ÖNİZLEME ───────────────────────────────
+  // KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "notları sıralada doğru
+  // çalışmıyor, istediğim yere koyamıyorum; elimle gezdirirken notun nasıl
+  // olacağı canlı olarak görülmeli"): sürükleme boyunca ızgara HİÇ
+  // değişmiyordu — yalnız üzerine gelinen kartın kenarı vurgulanıyordu.
+  // Masonry'de kartlar farklı boyda olduğu için o ince çerçeve "nereye
+  // düşeceğini" anlatmıyor; kullanıcı bırakana kadar sonucu göremiyor,
+  // yanlış yere düşünce de baştan deniyordu.
+  //
+  // Artık sürükleme başında bölümün sırası anlık görüntüye alınır, parmak
+  // gezdikçe not o sıranın içinde YERİNİ DEĞİŞTİRİR ve ızgara gerçekten
+  // yeniden dizilir; bırakınca görünen sıra olduğu gibi kaydedilir.
+
+  /// Sürüklenen notun kimliği (null = sürükleme yok).
+  String? _dragNoteId;
+
+  /// O an ÖNİZLENEN bölüm sırası — ızgara bunu çizer.
+  List<Note>? _dragOrder;
+
+  void _startCardDrag(String id, List<Note> section) {
+    setState(() {
+      _dragNoteId = id;
+      _dragOrder = List.of(section);
+    });
+  }
+
+  /// Parmak [toIndex] hücresinin üzerinde: notu oraya taşıyıp yeniden çiz.
+  void _previewCardDrop(int toIndex) {
+    final order = _dragOrder;
+    final id = _dragNoteId;
+    if (order == null || id == null) return;
+    final from = order.indexWhere((n) => n.id == id);
     if (from < 0 || from == toIndex) return;
+    final next = List.of(order);
+    final item = next.removeAt(from);
+    next.insert(toIndex.clamp(0, next.length), item);
+    setState(() => _dragOrder = next);
+    HapticFeedback.selectionClick();
+  }
+
+  /// Parmak kalktı: GÖRÜNEN sıra kaydedilir. Bırakma bir kartın üstünde
+  /// olmasa bile önizlenen sıra korunur — kullanıcı zaten onu görüyordu.
+  void _endCardDrag() {
+    final order = _dragOrder;
+    final id = _dragNoteId;
+    setState(() {
+      _dragNoteId = null;
+      _dragOrder = null;
+    });
+    if (order == null || id == null) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final list = [...section];
-    final item = list.removeAt(from);
-    var target = toIndex;
-    if (from < target) target -= 1;
-    list.insert(target, item);
     if (ref.read(noteSortProvider) != NoteSort.manual) {
       ref.read(noteSortProvider.notifier).set(NoteSort.manual);
     }
-    repo.reorderNotes(list);
+    repo.reorderNotes(order);
     HapticFeedback.mediumImpact();
   }
 
@@ -1969,7 +2011,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       },
     );
 
-    Widget grid(List<Note> items) => SliverMasonryGrid.count(
+    Widget grid(List<Note> section) {
+      // Sürükleme sürerken ızgara ÖNİZLENEN sırayı çizer (bkz.
+      // [_startCardDrag]) — kullanıcı notun nereye düşeceğini canlı görür.
+      // Uzunluk denetimi: akış sürükleme ortasında yeni bir liste
+      // yayınlarsa bayat önizlemeye düşmeyelim.
+      final preview = _dragOrder;
+      final items =
+          (preview != null &&
+              preview.length == section.length &&
+              _dragNoteId != null &&
+              section.any((n) => n.id == _dragNoteId))
+          ? preview
+          : section;
+      return SliverMasonryGrid.count(
       crossAxisCount: columns,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
@@ -2027,13 +2082,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 );
                 return _ReorderableNoteCell(
                   noteId: note.id,
-                  index: index,
                   cellWidth: cellWidth,
                   draggable: isSelected,
                   onLongPress: select,
                   inSection: (id) => items.any((n) => n.id == id),
-                  onReorder: (draggedId, to) =>
-                      _reorderSection(items, draggedId, to),
+                  onDragStart: () => _startCardDrag(note.id, items),
+                  onHover: () => _previewCardDrop(index),
+                  onDragEnd: _endCardDrag,
                   feedback: SizedBox(
                     width: cellWidth,
                     child: NoteCard(note: note, highlightQuery: query),
@@ -2047,10 +2102,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         return _ReorderableNoteCell(
           key: ValueKey(note.id),
           noteId: note.id,
-          index: index,
           cellWidth: cellWidth,
           inSection: (id) => items.any((n) => n.id == id),
-          onReorder: (draggedId, to) => _reorderSection(items, draggedId, to),
+          onDragStart: () => _startCardDrag(note.id, items),
+          onHover: () => _previewCardDrop(index),
+          onDragEnd: _endCardDrag,
           feedback: SizedBox(
             width: cellWidth,
             child: NoteCard(note: note, highlightQuery: query),
@@ -2058,7 +2114,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           child: card,
         );
       },
-    );
+      );
+    }
 
     // Başlık metni ZATEN büyük harfli anahtarlardan gelir; kodda
     // `toUpperCase()` çağırmıyoruz — Türkçe'de "Etiket" → "ETIKET" olur
@@ -2195,22 +2252,23 @@ class _HeaderSeparator extends StatelessWidget {
 }
 
 /// Bir not kartını basılı tutup sürükleyerek yeniden sıralamayı sağlayan
-/// sarmalayıcı. YALNIZCA sıralama modunda kullanılır ([reorderModeProvider]):
-/// uzun basış sürüklemeyi başlatır, başka bir kartın üzerine bırakılınca
-/// [onReorder] çağrılır. Sürükleme aynı bölümle sınırlıdır ([inSection]) —
-/// sabitliler ile diğerleri karışmaz.
+/// sarmalayıcı. Sıralama modunda ([reorderModeProvider]) ve seçim kipinde
+/// SEÇİLİ kartlarda kullanılır: uzun basış sürüklemeyi başlatır, parmak
+/// gezdikçe üst katman sırayı CANLI önizler ([onHover]), parmak kalkınca
+/// görünen sıra kaydedilir ([onDragEnd]). Sürükleme aynı bölümle sınırlıdır
+/// ([inSection]) — sabitliler ile diğerleri karışmaz.
 ///
-/// Uzun basış artık seçim YAPMAZ; mod dışında seçim zaten sade bir
-/// GestureDetector ile yapılıyor. (Eskiden tek jest ikisine birden hizmet
-/// ediyordu ve kullanıcı seçmek isterken kartı kazara taşıyordu.)
+/// Sürüklenemeyen hücreler yalnız BIRAKMA HEDEFİDİR; onlarda uzun basış
+/// seçim yapar ([onLongPress]).
 class _ReorderableNoteCell extends StatelessWidget {
   const _ReorderableNoteCell({
     super.key,
     required this.noteId,
-    required this.index,
     required this.cellWidth,
     required this.inSection,
-    required this.onReorder,
+    required this.onDragStart,
+    required this.onHover,
+    required this.onDragEnd,
     required this.feedback,
     required this.child,
     this.draggable = true,
@@ -2218,10 +2276,17 @@ class _ReorderableNoteCell extends StatelessWidget {
   });
 
   final String noteId;
-  final int index;
   final double cellWidth;
   final bool Function(String draggedId) inSection;
-  final void Function(String draggedId, int toIndex) onReorder;
+
+  /// Bu karttan sürükleme başladı.
+  final VoidCallback onDragStart;
+
+  /// Sürüklenen kart BU hücrenin üzerinde: üst katman sırayı önizler.
+  final VoidCallback onHover;
+
+  /// Parmak kalktı (kabul edilsin edilmesin): görünen sıra kaydedilir.
+  final VoidCallback onDragEnd;
   final Widget feedback;
   final Widget child;
 
@@ -2238,7 +2303,10 @@ class _ReorderableNoteCell extends StatelessWidget {
     return DragTarget<String>(
       onWillAcceptWithDetails: (details) =>
           details.data != noteId && inSection(details.data),
-      onAcceptWithDetails: (details) => onReorder(details.data, index),
+      // Parmak bu hücrenin üzerine geldi: sıra CANLI önizlenir. Bırakma
+      // (`onAccept`) beklenmez — kullanıcı sonucu sürüklerken görmeli.
+      onMove: (_) => onHover(),
+      onAcceptWithDetails: (_) {},
       builder: (context, candidate, rejected) {
         final hovering = candidate.isNotEmpty;
         // Üzerine bırakılmak üzere olan hücre vurgulanır; kenarlık HER ZAMAN
@@ -2259,11 +2327,21 @@ class _ReorderableNoteCell extends StatelessWidget {
         }
         return LongPressDraggable<String>(
           data: noteId,
+          onDragStarted: onDragStart,
+          // Nereye bırakılırsa bırakılsın (kartın üstü, boşluk, ekran dışı)
+          // önizlenen sıra kaydedilir; kullanıcı zaten onu görüyordu.
+          onDragEnd: (_) => onDragEnd(),
+          onDraggableCanceled: (_, _) => onDragEnd(),
           feedback: Material(
             color: Colors.transparent,
-            child: SizedBox(width: cellWidth, child: feedback),
+            child: Opacity(
+              opacity: 0.9,
+              child: SizedBox(width: cellWidth, child: feedback),
+            ),
           ),
-          childWhenDragging: Opacity(opacity: 0.3, child: child),
+          // Kart önizlemede zaten YENİ yerinde duruyor; burada soluk bir
+          // hayalet bırakmak "gideceği yer" hissini tamamlıyor.
+          childWhenDragging: Opacity(opacity: 0.25, child: child),
           child: framed,
         );
       },

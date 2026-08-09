@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count} karakter dipilih",
   "imagesSelectedCount": "{count} gambar dipilih",
   "attachmentsCopiedCount": "{count} lampiran",
-  "exportImageLineOf": "/ {count} baris"
+  "exportImageLineOf": "/ {count} baris",
+  "aiModelShowAll": "Tampilkan semua",
+  "aiModelShowAllInfo": "Juga menampilkan model yang tidak dipakai aplikasi."
 }

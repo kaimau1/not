@@ -50,6 +50,13 @@ final availableTtsModelsProvider = FutureProvider<List<AiModel>>(
   (ref) => ref.watch(geminiServiceProvider).availableTtsModels(),
 );
 
+/// Sağlayıcının TÜM modelleri — seçicideki "Tümünü göster" bunu izler
+/// (kullanıcı isteği 2026-08-09: "tüm modeller çekilmeli"). Aynı önbellekten
+/// beslenir, ikinci bir ağ isteği yapmaz.
+final allModelsProvider = FutureProvider<List<AiModel>>(
+  (ref) => ref.watch(geminiServiceProvider).availableModels(includeAll: true),
+);
+
 class GeminiException implements Exception {
   const GeminiException(this.message, {this.isAuthError = false});
 
@@ -186,19 +193,41 @@ class GeminiService {
   /// listesine düşülür; diğer sağlayıcılarda sabit liste yoktur (model
   /// kimlikleri sık değişiyor), o yüzden boş döner ve kullanıcı model
   /// seçimini elle yapabilir.
+  /// Gemini'nin `/models` ucu SAYFALI. En çok kaç sayfa izlenir — sonsuz
+  /// döngüye karşı emniyet (bozuk bir yanıt aynı belirteci geri verirse).
+  static const _maxModelPages = 20;
+
   Future<List<AiModel>> _fetchCatalog(String key) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/models',
-        queryParameters: _provider == AiProvider.gemini
-            ? {'pageSize': 1000}
-            : null,
-        options: Options(headers: _provider.authHeaders(key)),
-      );
-      final list = rankModels(
-        _provider,
-        parseModelList(_provider, response.data),
-      );
+      final raw = <String, String?>{};
+      // SAYFALAMA (kullanıcı bulgusu 2026-08-09: "gemini modelleri de eksik
+      // çekiliyor, bazı modeller yok"): tek istek atılıp `nextPageToken`
+      // yok sayılıyordu. Sunucu `pageSize`ı kendi tavanına kırpınca liste
+      // ilk sayfayla sınırlı kalıyor, kalan modeller hiç görünmüyordu.
+      String? pageToken;
+      var page = 0;
+      do {
+        final response = await _dio.get<Map<String, dynamic>>(
+          '/models',
+          queryParameters: _provider == AiProvider.gemini
+              ? {
+                  'pageSize': 1000,
+                  if (pageToken != null) 'pageToken': pageToken,
+                }
+              : null,
+          options: Options(headers: _provider.authHeaders(key)),
+        );
+        raw.addAll(parseModelList(_provider, response.data));
+        final next = _provider == AiProvider.gemini
+            ? response.data?['nextPageToken'] as String?
+            : null;
+        // Aynı belirteç geri geldiyse dur: ilerleme yok demektir.
+        pageToken = (next == null || next.isEmpty || next == pageToken)
+            ? null
+            : next;
+        page++;
+      } while (pageToken != null && page < _maxModelPages);
+      final list = rankModels(_provider, raw);
       if (list.isNotEmpty) return list;
     } on DioException {
       // Liste çekilemedi; aşağıdaki yedeğe düşülür.
@@ -547,64 +576,109 @@ class GeminiService {
   }) async {
     _requireGemini('Yapay zekâ seslendirmesi');
     final key = await _apiKey();
-    final ttsModel = model ?? AppConstants.geminiTtsModelPreference.first;
-    final Response<Map<String, dynamic>> response;
-    try {
-      response = await _dio.post<Map<String, dynamic>>(
-        '/models/$ttsModel:generateContent',
-        options: Options(headers: _provider.authHeaders(key)),
-        data: {
-          'contents': [
-            {
-              'parts': [
-                {'text': text},
-              ],
-            },
-          ],
-          'generationConfig': {
-            'responseModalities': ['AUDIO'],
-            'speechConfig': {
-              'voiceConfig': {
-                'prebuiltVoiceConfig': {'voiceName': voice},
+    // ADAY ZİNCİRİ (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma
+    // çalışmıyor"): eskiden tek bir kimlik denenirdi — kullanıcının seçtiği
+    // ya da sabit tercih listesinin ilki. O kimlik hesapta yoksa istek 404
+    // dönüyor ve seslendirme sessizce ölüyordu. Artık metin yolundaki
+    // davranışın aynısı: seçilen model → katalogdaki gerçek TTS modelleri →
+    // yerleşik tercih listesi; "bu model yok" hatasında bir sonrakine geçilir.
+    final candidates = <String>[];
+    void addCandidate(String? id) {
+      final value = id?.trim() ?? '';
+      if (value.isNotEmpty && !candidates.contains(value)) {
+        candidates.add(value);
+      }
+    }
+
+    addCandidate(model);
+    for (final m in await availableTtsModels()) {
+      addCandidate(m.id);
+    }
+    for (final id in AppConstants.geminiTtsModelPreference) {
+      addCandidate(id);
+    }
+
+    GeminiException? lastMissing;
+    for (final ttsModel in candidates) {
+      final Response<Map<String, dynamic>> response;
+      try {
+        response = await _dio.post<Map<String, dynamic>>(
+          '/models/$ttsModel:generateContent',
+          options: Options(headers: _provider.authHeaders(key)),
+          data: {
+            'contents': [
+              {
+                'parts': [
+                  {'text': text},
+                ],
+              },
+            ],
+            'generationConfig': {
+              'responseModalities': ['AUDIO'],
+              'speechConfig': {
+                'voiceConfig': {
+                  'prebuiltVoiceConfig': {'voiceName': voice},
+                },
               },
             },
           },
-        },
-      );
-    } on DioException catch (e) {
-      throw _mapDioError(e);
+        );
+      } on DioException catch (e) {
+        // 404 = model bu hesapta yok, 400 = model bu isteği desteklemiyor.
+        // İkisi de "sonraki adayı dene" demek; başka her hata (kota, ağ,
+        // yetki) zinciri KESER — hepsini denemek kullanıcıyı bekletirdi.
+        final status = e.response?.statusCode ?? 0;
+        if (status == 404 || status == 400) {
+          lastMissing = _mapDioError(e);
+          continue;
+        }
+        throw _mapDioError(e);
+      }
+      final parts =
+          (((response.data?['candidates'] as List?)?.firstOrNull
+                      as Map?)?['content']
+                  as Map?)?['parts']
+              as List?;
+      for (final part in parts ?? const []) {
+        final inline = (part as Map)['inlineData'] ?? part['inline_data'];
+        if (inline is! Map) continue;
+        final data = inline['data'] as String?;
+        if (data == null || data.isEmpty) continue;
+        final mime =
+            (inline['mimeType'] ?? inline['mime_type'] ?? '') as String;
+        return pcmToWav(base64Decode(data), sampleRate: pcmSampleRate(mime));
+      }
+      // Model yanıt verdi ama ses yok: başka bir modelde şansımızı deneriz.
+      lastMissing = const GeminiException('Seslendirme modeli ses döndürmedi');
     }
-    final parts =
-        (((response.data?['candidates'] as List?)?.firstOrNull
-                    as Map?)?['content']
-                as Map?)?['parts']
-            as List?;
-    for (final part in parts ?? const []) {
-      final inline = (part as Map)['inlineData'] ?? part['inline_data'];
-      if (inline is! Map) continue;
-      final data = inline['data'] as String?;
-      if (data == null || data.isEmpty) continue;
-      final mime = (inline['mimeType'] ?? inline['mime_type'] ?? '') as String;
-      return pcmToWav(base64Decode(data), sampleRate: pcmSampleRate(mime));
-    }
-    throw const GeminiException('Seslendirme modeli ses döndürmedi');
+    throw lastMissing ??
+        const GeminiException('Seslendirme modeli bulunamadı');
   }
 
-  /// Kullanılabilir SESLENDİRME modelleri. Katalogdan "tts" içeren kimlikler
-  /// süzülür; katalog gelmezse (anahtar yok, ağ yok) yerleşik tercih listesi.
+  /// Kullanılabilir SESLENDİRME modelleri.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma
+  /// çalışmıyor"): katalog kurulurken seslendirme modelleri ELENİYORDU
+  /// (bkz. `rankModels` — `tts` deseni "sohbete uygun değil" sayılıyordu),
+  /// bu yüzden buradaki süzgeç HER ZAMAN boş dönüyor ve iki sabit önizleme
+  /// kimliğine düşülüyordu. O kimlikler kullanıcının anahtarında yoksa
+  /// `/models/...:generateContent` 404 veriyor ve seslendirme hiç
+  /// çalışmıyordu. Katalog artık modelleri atmıyor, sınıflandırıyor.
+  ///
+  /// Yerleşik tercih listesi yalnız SON ÇARE (anahtar yok / ağ yok).
   Future<List<AiModel>> availableTtsModels() async {
     final stored = await _keyStore.read(_provider);
     if (_provider == AiProvider.gemini && (stored?.isNotEmpty ?? false)) {
       final catalog = _catalog ??= await _fetchCatalog(stored!);
       final tts = [
         for (final model in catalog)
-          if (model.id.toLowerCase().contains('tts')) model,
+          if (model.kind == AiModelKind.tts) model,
       ];
       if (tts.isNotEmpty) return tts;
     }
     return [
       for (final id in AppConstants.geminiTtsModelPreference)
-        AiModel(id: id, label: id, recommended: true),
+        AiModel(id: id, label: id, recommended: true, kind: AiModelKind.tts),
     ];
   }
 
@@ -1002,7 +1076,11 @@ class GeminiService {
   ///
   /// Anahtar yoksa dahili AI (Firebase AI Logic) kullanılıyor demektir; o yol
   /// Gemini modelleriyle çalıştığından sabit tercih listesi gösterilir.
-  Future<List<AiModel>> availableModels() async {
+  /// [includeAll] true ise uygulamanın kullanmadığı modeller de döner
+  /// (kullanıcı isteği 2026-08-09: "tüm modeller çekilmeli"). Varsayılan
+  /// listede yalnız METİN modelleri var — seslendirme modelleri kendi
+  /// seçicisinde ([availableTtsModels]).
+  Future<List<AiModel>> availableModels({bool includeAll = false}) async {
     final key = await _keyStore.read(_provider);
     if (key == null || key.isEmpty) {
       return [
@@ -1010,7 +1088,12 @@ class GeminiService {
           AiModel(id: id, label: id, recommended: true),
       ];
     }
-    return _catalog ??= await _fetchCatalog(key);
+    final catalog = _catalog ??= await _fetchCatalog(key);
+    if (includeAll) return catalog;
+    return [
+      for (final model in catalog)
+        if (model.kind == AiModelKind.chat) model,
+    ];
   }
 
   /// Araç çağrısı döngüsü: model araç isterse çalıştırılır, sonuç geri

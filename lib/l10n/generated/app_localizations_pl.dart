@@ -2397,4 +2397,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count wierszy';
   }
+
+  @override
+  String get aiModelShowAll => 'Pokaż wszystkie';
+
+  @override
+  String get aiModelShowAllInfo => 'Pokazuje też modele, których aplikacja nie używa.';
 }

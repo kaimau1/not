@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count} अक्षर चुने गए",
   "imagesSelectedCount": "{count} चित्र चुने गए",
   "attachmentsCopiedCount": "{count} अनुलग्नक",
-  "exportImageLineOf": "/ {count} पंक्तियाँ"
+  "exportImageLineOf": "/ {count} पंक्तियाँ",
+  "aiModelShowAll": "सभी दिखाएँ",
+  "aiModelShowAllInfo": "ऐप जिन मॉडलों का उपयोग नहीं करता, वे भी दिखते हैं।"
 }

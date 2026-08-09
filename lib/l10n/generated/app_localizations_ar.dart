@@ -2374,4 +2374,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count سطرًا';
   }
+
+  @override
+  String get aiModelShowAll => 'إظهار الكل';
+
+  @override
+  String get aiModelShowAllInfo => 'يعرض أيضًا النماذج التي لا يستخدمها التطبيق.';
 }

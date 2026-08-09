@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count} 文字を選択中",
   "imagesSelectedCount": "{count} 件の画像を選択中",
   "attachmentsCopiedCount": "{count} 件の添付",
-  "exportImageLineOf": "/ {count} 行"
+  "exportImageLineOf": "/ {count} 行",
+  "aiModelShowAll": "すべて表示",
+  "aiModelShowAllInfo": "アプリが使わないモデルも表示します。"
 }

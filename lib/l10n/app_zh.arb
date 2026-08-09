@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "已选择 {count} 个字符",
   "imagesSelectedCount": "已选择 {count} 张图片",
   "attachmentsCopiedCount": "{count} 个附件",
-  "exportImageLineOf": "/ 共 {count} 行"
+  "exportImageLineOf": "/ 共 {count} 行",
+  "aiModelShowAll": "显示全部",
+  "aiModelShowAllInfo": "同时列出应用未使用的模型。"
 }

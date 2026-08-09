@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count}자 선택됨",
   "imagesSelectedCount": "이미지 {count}개 선택됨",
   "attachmentsCopiedCount": "첨부 {count}개",
-  "exportImageLineOf": "/ {count}줄"
+  "exportImageLineOf": "/ {count}줄",
+  "aiModelShowAll": "전체 보기",
+  "aiModelShowAllInfo": "앱이 사용하지 않는 모델도 함께 보여줍니다."
 }

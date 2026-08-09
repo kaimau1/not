@@ -2390,4 +2390,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count строк';
   }
+
+  @override
+  String get aiModelShowAll => 'Показать все';
+
+  @override
+  String get aiModelShowAllInfo => 'Показывает и модели, которые приложение не использует.';
 }

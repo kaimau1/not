@@ -2396,4 +2396,10 @@ class AppLocalizationsId extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count baris';
   }
+
+  @override
+  String get aiModelShowAll => 'Tampilkan semua';
+
+  @override
+  String get aiModelShowAllInfo => 'Juga menampilkan model yang tidak dipakai aplikasi.';
 }

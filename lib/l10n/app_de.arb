@@ -604,5 +604,7 @@
   "imageOcrCharsSelected": "{count} Zeichen ausgewählt",
   "imagesSelectedCount": "{count} Bilder ausgewählt",
   "attachmentsCopiedCount": "{count} Anhänge",
-  "exportImageLineOf": "/ {count} Zeilen"
+  "exportImageLineOf": "/ {count} Zeilen",
+  "aiModelShowAll": "Alle anzeigen",
+  "aiModelShowAllInfo": "Listet auch Modelle auf, die die App nicht verwendet."
 }

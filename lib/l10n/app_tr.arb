@@ -1099,5 +1099,7 @@
         "type": "int"
       }
     }
-  }
+  },
+  "aiModelShowAll": "Tümünü göster",
+  "aiModelShowAllInfo": "Uygulamanın kullanmadığı modeller de listelenir."
 }

@@ -2399,4 +2399,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count regels';
   }
+
+  @override
+  String get aiModelShowAll => 'Alles tonen';
+
+  @override
+  String get aiModelShowAllInfo => 'Toont ook modellen die de app niet gebruikt.';
 }

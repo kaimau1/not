@@ -2380,4 +2380,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ $count satır';
   }
+
+  @override
+  String get aiModelShowAll => 'Tümünü göster';
+
+  @override
+  String get aiModelShowAllInfo => 'Uygulamanın kullanmadığı modeller de listelenir.';
 }

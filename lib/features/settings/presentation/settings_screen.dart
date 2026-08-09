@@ -2129,6 +2129,7 @@ Widget _modelPickerTile({
   required String autoLabel,
   required String recommendedLabel,
   required ValueChanged<String?> onChanged,
+  bool allowShowAll = false,
 }) {
   final scheme = Theme.of(context).colorScheme;
   // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
@@ -2163,6 +2164,7 @@ Widget _modelPickerTile({
               value: value,
               autoLabel: autoLabel,
               recommendedLabel: recommendedLabel,
+              allowShowAll: allowShowAll,
             ),
           );
           if (picked != null) onChanged(picked.id);
@@ -2218,13 +2220,14 @@ class _ModelChoice {
 }
 
 /// Model seçim levhası: arama + "Önerilen" / "Diğer" grupları.
-class _ModelPickerSheet extends StatefulWidget {
+class _ModelPickerSheet extends ConsumerStatefulWidget {
   const _ModelPickerSheet({
     required this.title,
     required this.models,
     required this.value,
     required this.autoLabel,
     required this.recommendedLabel,
+    this.allowShowAll = false,
   });
 
   final String title;
@@ -2233,13 +2236,21 @@ class _ModelPickerSheet extends StatefulWidget {
   final String autoLabel;
   final String recommendedLabel;
 
+  /// "Tümünü göster" anahtarı çizilsin mi? Yalnız METİN seçicisinde: orada
+  /// liste uygulamanın kullandığı sohbet modelleriyle sınırlı, kullanıcı
+  /// sağlayıcısında ne varsa görmek isteyebilir (kullanıcı isteği
+  /// 2026-08-09: "tüm modeller çekilmeli"). Seslendirme seçicisi zaten
+  /// kendi türünü gösteriyor.
+  final bool allowShowAll;
+
   @override
-  State<_ModelPickerSheet> createState() => _ModelPickerSheetState();
+  ConsumerState<_ModelPickerSheet> createState() => _ModelPickerSheetState();
 }
 
-class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
   final _search = TextEditingController();
   String _query = '';
+  bool _showAll = false;
 
   @override
   void dispose() {
@@ -2259,8 +2270,13 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // "Tümünü göster" açıksa katalogtaki HER model listelenir (aynı
+    // önbellekten gelir, ikinci bir ağ isteği yok).
+    final source = _showAll
+        ? (ref.watch(allModelsProvider).value ?? widget.models)
+        : widget.models;
     final shown = [
-      for (final m in widget.models)
+      for (final m in source)
         if (_matches(m)) m,
     ];
     final recommended = [
@@ -2349,6 +2365,15 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
               ),
             ),
           ),
+          if (widget.allowShowAll)
+            SwitchListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+              title: Text(l10n.aiModelShowAll),
+              subtitle: Text(l10n.aiModelShowAllInfo),
+              value: _showAll,
+              onChanged: (v) => setState(() => _showAll = v),
+            ),
           Flexible(
             child: RadioGroup<String?>(
               groupValue: widget.value,
@@ -2417,6 +2442,7 @@ class _ModelSelectors extends ConsumerWidget {
             value: selected[task],
             autoLabel: l10n.aiModelAuto,
             recommendedLabel: l10n.recommendedModel,
+            allowShowAll: true,
             onChanged: (v) =>
                 ref.read(aiTaskModelsProvider.notifier).set(task, v),
           ),

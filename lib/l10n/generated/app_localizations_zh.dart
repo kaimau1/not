@@ -2325,4 +2325,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String exportImageLineOf(int count) {
     return '/ 共 $count 行';
   }
+
+  @override
+  String get aiModelShowAll => '显示全部';
+
+  @override
+  String get aiModelShowAllInfo => '同时列出应用未使用的模型。';
 }
