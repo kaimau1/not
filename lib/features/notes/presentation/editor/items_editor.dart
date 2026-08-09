@@ -1569,6 +1569,10 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   /// Sayfanın üstünde yüzen tek düğme: kendi küçük zemini var (metnin
   /// üzerinde okunur kalsın diye) ama satır kaplamaz.
+  ///
+  /// `TextButton.icon` KALIYOR (elle çizilmiş bir InkWell değil): görünüm
+  /// düğmenin `style`ıyla veriliyor, böylece dokunma hedefi ve erişilebilirlik
+  /// anlamı Material'ın kendisinden geliyor.
   Widget _floatingAction(
     BuildContext context, {
     required IconData icon,
@@ -1576,31 +1580,20 @@ class ItemsEditorState extends State<ItemsEditor> {
     required VoidCallback onTap,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
-      elevation: 2,
-      borderRadius: BorderRadius.circular(20),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: scheme.primary),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurface,
-                ),
-              ),
-            ],
-          ),
+    return TextButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        backgroundColor: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
+        foregroundColor: scheme.onSurface,
+        iconColor: scheme.primary,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
         ),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
       ),
     );
   }
