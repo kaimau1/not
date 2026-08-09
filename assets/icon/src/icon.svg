@@ -1,15 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Notlar — tam ikon (i1)</title>
-<desc>Windows .ico ve API 26 oncesi Android icin tam kompozisyon. Kose yuvarlatmasi burada gomulu cunku bu katmana maske uygulanmiyor. Kagit temasi paleti: zemin #F5EDD8 (surface), sayfa #7D5703 (primary). Kat ucgeni ve satirlar ZEMIN RENGIYLE boyanmistir, oyulmus degil; zemin rengi degisirse o iki dolgu da guncellenmeli.</desc>
+<title>Notlar — tam ikon (i2, ortak simge dili)</title>
+<desc>Windows .ico ve API 26 oncesi Android icin tam kompozisyon; maske uygulanmadigi icin kose yuvarlatmasi (rx=180 = %17,6) burada gomulu.
+
+ORTAK SIMGE DILI (2026-08-09) — Dosya Okuyucu / Notlar / Ezan Vakti ucunde ayni:
+  1. Zemin duz BEYAZ (#FFFFFF), gradyan/golge/doku yok (Ezan Vakti'nden).
+  2. Isaret tek renk dolu siluet; ayrintilar zemin rengiyle OYULUR.
+  3. Adaptive on planda isaretin uzun kenari 69dp / 108dp tuval (gorunur
+     72dp'lik alanin %96'si) — Dosya Okuyucu'nun olcusu.
+  4. Isaretin sinir kutusu tuvalin merkezine oturur.
+  5. Eski tam ikonda isaret tuval yuksekliginin %82'si (bu dosya).
+Karsiliklari: Dosya Okuyucu tool/gen_icon.py, Ezan Vakti
+app/src/main/res/drawable/ic_launcher_foreground.xml.
+
+Olcek 12.5373 = 0.82 * 1024 / 67 (kaynak isaret kutusu 50x67, merkez 38/40.5).
+Kat ucgeni ve satirlar ZEMIN RENGIYLE boyanmistir, oyulmus degil; zemin rengi
+degisirse o iki dolgu da guncellenmeli.</desc>
 <defs>
 <clipPath id="kose"><rect width="1024" height="1024" rx="180"/></clipPath>
 </defs>
 <g clip-path="url(#kose)">
-<rect width="1024" height="1024" fill="#F5EDD8"/>
-<g transform="translate(512,512) scale(8.6) translate(-38,-40.5)">
+<rect width="1024" height="1024" fill="#FFFFFF"/>
+<g transform="translate(512,512) scale(12.5373) translate(-38,-40.5)">
 <path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="#7D5703"/>
-<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#F5EDD8"/>
-<path d="M25 35h26M25 47h26M25 59h15" stroke="#F5EDD8" stroke-width="5.4" stroke-linecap="round"/>
+<path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#FFFFFF"/>
+<path d="M25 35h26M25 47h26M25 59h15" stroke="#FFFFFF" stroke-width="5.4" stroke-linecap="round"/>
 </g>
 </g>
 </svg>

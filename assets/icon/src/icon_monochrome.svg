@@ -1,9 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
-<title>Notlar — monokrom katman (Android 13+ temali simge)</title>
-<desc>Android bu katmanin RENGINI YOK SAYAR, yalnizca ALFA kanalini kullanip duvar kagidindan turetilen tonu basar. Bu yuzden kat ucgeni ve satirlar burada boyanmaz, OYULUR (mask ile saydam delik) — dolu boyansalardi tintlendikten sonra hepsi tek blob olur, satirlar kaybolurdu. On plandaki (icon_foreground.svg) ayni geometri, ayni 7.48 olcek; ic_launcher.xml'de ayni android:inset="16%" ile sarilir. Buradaki #1F1B16 sadece dosyayi tarayicida gorebilmek icin; uretimde etkisi yok.</desc>
+<title>Notlar — monokrom katman (i2, Android 13+ temali simge)</title>
+<desc>Android bu katmanin RENGINI YOK SAYAR, yalnizca ALFA kanalini kullanip
+duvar kagidindan turetilen tonu basar. Bu yuzden kat ucgeni ve satirlar burada
+boyanmaz, OYULUR (mask ile saydam delik) — dolu boyansalardi tintlendikten sonra
+hepsi tek blob olur, satirlar kaybolurdu.
+
+On plandaki (icon_foreground.svg) ayni geometri, ayni 13.7352 olcek (ortak simge
+dilinin 66dp'si, android:inset="16%" icin onceden telafili). Ikisi birlikte
+degismeli. Buradaki #1F1B16 sadece dosyayi tarayicida gorebilmek icin;
+uretimde etkisi yok.</desc>
 <defs>
 <mask id="oyuk" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
-<g transform="translate(512,512) scale(7.48) translate(-38,-40.5)">
+<g transform="translate(512,512) scale(13.7352) translate(-38,-40.5)">
 <path d="M13 7h33.5L63 23.5V69a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V12a5 5 0 0 1 5-5z" fill="#FFFFFF"/>
 <path d="M46.5 7L63 23.5H50.5a4 4 0 0 1-4-4V7z" fill="#000000"/>
 <path d="M25 35h26M25 47h26M25 59h15" stroke="#000000" stroke-width="5.4" stroke-linecap="round"/>
