@@ -2272,11 +2272,12 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
         if (!m.recommended) m,
     ];
 
+    // `RadioListTile.groupValue`/`onChanged` KULLANILMAZ (kullanımdan kalktı):
+    // seçili değer ve geri çağrı dıştaki [RadioGroup]'tan gelir — dil
+    // seçicisiyle aynı desen.
     Widget tile(AiModel m) => RadioListTile<String?>(
       value: m.id,
-      groupValue: widget.value,
       dense: true,
-      onChanged: (v) => Navigator.pop(context, _ModelChoice(v)),
       title: Row(
         children: [
           Flexible(
@@ -2349,33 +2350,34 @@ class _ModelPickerSheetState extends State<_ModelPickerSheet> {
             ),
           ),
           Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.only(bottom: 12),
-              children: [
-                RadioListTile<String?>(
-                  value: null,
-                  groupValue: widget.value,
-                  dense: true,
-                  onChanged: (v) =>
-                      Navigator.pop(context, const _ModelChoice(null)),
-                  title: Text(widget.autoLabel),
-                  subtitle: Text(l10n.aiModelAutoInfo),
-                ),
-                if (recommended.isNotEmpty) ...[
-                  header(widget.recommendedLabel),
-                  for (final m in recommended) tile(m),
-                ],
-                if (others.isNotEmpty) ...[
-                  header(l10n.aiModelOthers),
-                  for (final m in others) tile(m),
-                ],
-                if (shown.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Center(child: Text(l10n.aiModelNoMatch)),
+            child: RadioGroup<String?>(
+              groupValue: widget.value,
+              onChanged: (v) => Navigator.pop(context, _ModelChoice(v)),
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.only(bottom: 12),
+                children: [
+                  RadioListTile<String?>(
+                    value: null,
+                    dense: true,
+                    title: Text(widget.autoLabel),
+                    subtitle: Text(l10n.aiModelAutoInfo),
                   ),
-              ],
+                  if (recommended.isNotEmpty) ...[
+                    header(widget.recommendedLabel),
+                    for (final m in recommended) tile(m),
+                  ],
+                  if (others.isNotEmpty) ...[
+                    header(l10n.aiModelOthers),
+                    for (final m in others) tile(m),
+                  ],
+                  if (shown.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Center(child: Text(l10n.aiModelNoMatch)),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
