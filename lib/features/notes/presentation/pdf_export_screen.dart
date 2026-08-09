@@ -184,7 +184,11 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       _options.add(
         _ImageOption(
           attachment: a,
-          line: _lineFor(a),
+          // Düzen bilgisi yoksa görsel metnin SONUNA konur; `null` yerine
+          // gerçek satır sayısı yazılır ki "konum" düğmeleri ile gösterilen
+          // sayı birbirini tutsun (null'da eksi düğmesi kapalıyken sayı
+          // sondaki satırı gösteriyordu).
+          line: _lineFor(a) ?? _lineCount,
           widthFraction: (a.displayWidth ?? 1).clamp(0.15, 1.0).toDouble(),
           align: _alignFor(a),
         ),
