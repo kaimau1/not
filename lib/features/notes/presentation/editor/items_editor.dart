@@ -1520,7 +1520,6 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// maddenin odağını düşürseydi klavye kapanır, hemen ardından yeni madde
   /// odağı isteyince tekrar açılır ve ekran zıplardı.
   Widget _addBar(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final systemBar = MediaQuery.viewPaddingOf(context).bottom;
@@ -1532,35 +1531,74 @@ class ItemsEditorState extends State<ItemsEditor> {
         child: Focus(
           canRequestFocus: false,
           descendantsAreFocusable: false,
-          child: Material(
-            color: scheme.surfaceContainerHigh,
-            elevation: 4,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Row(
-                children: [
-                  TextButton.icon(
-                    onPressed: _addItem,
-                    icon: const Icon(Icons.add, size: 20),
-                    label: Text(l10n.newItemHint),
-                  ),
-                  const Spacer(),
-                  // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor
-                  // ama görünmez olduğundan bulunamıyordu.
-                  if (_items.isNotEmpty)
-                    TextButton.icon(
-                      onPressed: () {
-                        setState(() => _selectMode = true);
-                        _syncBar();
-                      },
-                      icon: const Icon(Icons.checklist, size: 20),
-                      label: Text(l10n.select),
-                    ),
-                ],
+          // ŞERİT YOK (kullanıcı isteği 2026-08-09: "yeni öğe ve seç bir
+          // satır kaplamamalı, sadece butonlar olacak, şeriti olmasın"):
+          // önce tam genişlikte bir kart vardı ve altındaki maddeyi örten
+          // kalın bir bant gibi duruyordu. Artık yalnız iki küçük düğme;
+          // aralarındaki alan boş ve DOKUNUŞ GEÇİRİR (`IgnorePointer` değil,
+          // Row'un kendisi saydam) — arkadaki maddeye dokunulabilir.
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _floatingAction(
+                context,
+                icon: Icons.add,
+                label: l10n.newItemHint,
+                onTap: _addItem,
               ),
-            ),
+              // Toplu kopyalama/silme girişi. Uzun basış hâlâ çalışıyor ama
+              // görünmez olduğundan bulunamıyordu.
+              if (_items.isNotEmpty)
+                _floatingAction(
+                  context,
+                  icon: Icons.checklist,
+                  label: l10n.select,
+                  onTap: () {
+                    setState(() => _selectMode = true);
+                    _syncBar();
+                  },
+                )
+              else
+                const SizedBox.shrink(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Sayfanın üstünde yüzen tek düğme: kendi küçük zemini var (metnin
+  /// üzerinde okunur kalsın diye) ama satır kaplamaz.
+  Widget _floatingAction(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surfaceContainerHigh.withValues(alpha: 0.94),
+      elevation: 2,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: scheme.primary),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
           ),
         ),
       ),

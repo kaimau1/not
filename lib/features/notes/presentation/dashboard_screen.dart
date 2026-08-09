@@ -2002,6 +2002,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         // kapalı: alt kümede taşımak asıl sırayı bozar (⋮ menüsündeki
         // sıralama maddesi de aynı gerekçeyle o hâlde gizleniyor).
         if (!reorderEnabled) {
+          // Seçim KAPALIYKEN sade davranış: uzun basış seçer.
+          if (!selectionActive || !manualReorderAllowed) {
+            return KeyedSubtree(
+              key: ValueKey(note.id),
+              child: GestureDetector(onLongPress: select, child: card),
+            );
+          }
+          // Seçim AÇIKKEN her hücre bir BIRAKMA HEDEFİ olur; sürüklemeyi
+          // yalnız SEÇİLİ kart başlatır.
+          //
+          // KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "tekrar basılı tutup
+          // sürükleme doğru çalışmıyor"): önce yalnız seçili kart
+          // `_ReorderableNoteCell` ile sarılıyordu. `DragTarget` de o
+          // sarmalayıcının içinde olduğundan seçilmemiş kartlar hedef
+          // DEĞİLDİ — sürüklenen kartı bırakacak yer yoktu, jest hiçbir şey
+          // yapmadan bitiyordu. Artık hedef hepsi, sürükleyen seçili olan.
           return KeyedSubtree(
             key: ValueKey(note.id),
             child: Consumer(
@@ -2009,13 +2025,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 final isSelected = cellRef.watch(
                   selectedNoteIdsProvider.select((s) => s.contains(note.id)),
                 );
-                if (!isSelected || !manualReorderAllowed) {
-                  return GestureDetector(onLongPress: select, child: card);
-                }
                 return _ReorderableNoteCell(
                   noteId: note.id,
                   index: index,
                   cellWidth: cellWidth,
+                  draggable: isSelected,
+                  onLongPress: select,
                   inSection: (id) => items.any((n) => n.id == id),
                   onReorder: (draggedId, to) =>
                       _reorderSection(items, draggedId, to),
@@ -2198,6 +2213,8 @@ class _ReorderableNoteCell extends StatelessWidget {
     required this.onReorder,
     required this.feedback,
     required this.child,
+    this.draggable = true,
+    this.onLongPress,
   });
 
   final String noteId;
@@ -2208,6 +2225,13 @@ class _ReorderableNoteCell extends StatelessWidget {
   final Widget feedback;
   final Widget child;
 
+  /// Bu hücre sürüklenebilir mi? false ise yalnız BIRAKMA HEDEFİ olur —
+  /// seçim kipinde yalnız seçili kart taşınır, ötekiler hedeftir.
+  final bool draggable;
+
+  /// Sürüklenemeyen hücrede uzun basış (seçime al/çıkar).
+  final VoidCallback? onLongPress;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -2217,6 +2241,22 @@ class _ReorderableNoteCell extends StatelessWidget {
       onAcceptWithDetails: (details) => onReorder(details.data, index),
       builder: (context, candidate, rejected) {
         final hovering = candidate.isNotEmpty;
+        // Üzerine bırakılmak üzere olan hücre vurgulanır; kenarlık HER ZAMAN
+        // 2 px (saydam) — kalınlığı değiştirmek yerleşimi oynatırdı.
+        final framed = AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: hovering ? scheme.primary : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: child,
+        );
+        if (!draggable) {
+          return GestureDetector(onLongPress: onLongPress, child: framed);
+        }
         return LongPressDraggable<String>(
           data: noteId,
           feedback: Material(
@@ -2224,17 +2264,7 @@ class _ReorderableNoteCell extends StatelessWidget {
             child: SizedBox(width: cellWidth, child: feedback),
           ),
           childWhenDragging: Opacity(opacity: 0.3, child: child),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: hovering ? scheme.primary : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: child,
-          ),
+          child: framed,
         );
       },
     );

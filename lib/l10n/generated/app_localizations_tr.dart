@@ -2306,4 +2306,78 @@ class AppLocalizationsTr extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count satır seçildi';
   }
+
+  @override
+  String get imageOcrShort => 'Metni tanı';
+
+  @override
+  String get imageOcrWorking => 'Metin tanınıyor…';
+
+  @override
+  String get imageOcrSelectHint => 'Dokun: kelime · Basılı tut ve sürükle: harf harf';
+
+  @override
+  String get imageOcrInsert => 'Nota ekle';
+
+  @override
+  String get imageOcrZoomIn => 'Yakınlaştır';
+
+  @override
+  String get imageOcrZoomOut => 'Uzaklaştır';
+
+  @override
+  String get selectImages => 'Görselleri seç';
+
+  @override
+  String get exportImages => 'Görseller';
+
+  @override
+  String get exportImagesInfo => 'Sola ya da sağa yaslı dar görsellerin yanından metin akar; ortalanan görsel tam genişlik olur.';
+
+  @override
+  String get exportAlignLeft => 'Sol';
+
+  @override
+  String get exportAlignCenter => 'Orta';
+
+  @override
+  String get exportAlignRight => 'Sağ';
+
+  @override
+  String get exportImageWidth => 'Genişlik';
+
+  @override
+  String get exportImageLine => 'Konum';
+
+  @override
+  String get aiModelSearch => 'Model ara';
+
+  @override
+  String get aiModelOthers => 'DİĞER MODELLER';
+
+  @override
+  String get aiModelNoMatch => 'Eşleşen model yok.';
+
+  @override
+  String get aiModelAutoInfo => 'Uygulama sırayla en uygun modeli dener.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count karakter seçildi';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count görsel seçildi';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count ek';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count satır';
+  }
 }

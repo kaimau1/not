@@ -2271,4 +2271,78 @@ class AppLocalizationsJa extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count 行を選択中';
   }
+
+  @override
+  String get imageOcrShort => '文字認識';
+
+  @override
+  String get imageOcrWorking => '文字を認識しています…';
+
+  @override
+  String get imageOcrSelectHint => 'タップ：単語 · 長押しドラッグ：一文字ずつ';
+
+  @override
+  String get imageOcrInsert => 'メモに追加';
+
+  @override
+  String get imageOcrZoomIn => '拡大';
+
+  @override
+  String get imageOcrZoomOut => '縮小';
+
+  @override
+  String get selectImages => '画像を選択';
+
+  @override
+  String get exportImages => '画像';
+
+  @override
+  String get exportImagesInfo => '左右に寄せた幅の狭い画像の横には本文が回り込みます。中央寄せの画像は全幅になります。';
+
+  @override
+  String get exportAlignLeft => '左';
+
+  @override
+  String get exportAlignCenter => '中央';
+
+  @override
+  String get exportAlignRight => '右';
+
+  @override
+  String get exportImageWidth => '幅';
+
+  @override
+  String get exportImageLine => '位置';
+
+  @override
+  String get aiModelSearch => 'モデルを検索';
+
+  @override
+  String get aiModelOthers => 'その他のモデル';
+
+  @override
+  String get aiModelNoMatch => '一致するモデルがありません。';
+
+  @override
+  String get aiModelAutoInfo => 'アプリが適したモデルを順に試します。';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count 文字を選択中';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count 件の画像を選択中';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count 件の添付';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count 行';
+  }
 }

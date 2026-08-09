@@ -400,6 +400,7 @@ class _ImageTools extends StatelessWidget {
     required this.onRemove,
     this.onExtractText,
     this.onCopy,
+    this.onSelectMany,
     this.onDetach,
     this.onVideoToNote,
   });
@@ -414,6 +415,10 @@ class _ImageTools extends StatelessWidget {
 
   /// Görseli panoya kopyalar (uygulama içi ek panosu + sistem panosu).
   final VoidCallback? onCopy;
+
+  /// ÇOKLU seçim kipini açar (birden çok görseli birlikte kopyala/sil).
+  /// Sayfada tek görsel varsa gösterilmez — seçecek ikinci bir şey yok.
+  final VoidCallback? onSelectMany;
 
   /// Görseli sayfadan alıp alt şeritte DOSYA eki yapar.
   final VoidCallback? onDetach;
@@ -465,6 +470,7 @@ class _ImageTools extends StatelessWidget {
             // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
             if (onExtractText != null ||
                 onCopy != null ||
+                onSelectMany != null ||
                 onDetach != null ||
                 onVideoToNote != null)
               PopupMenuButton<String>(
@@ -476,6 +482,8 @@ class _ImageTools extends StatelessWidget {
                       onExtractText?.call();
                     case 'copy':
                       onCopy?.call();
+                    case 'selectMany':
+                      onSelectMany?.call();
                     case 'detach':
                       onDetach?.call();
                     case 'videoToNote':
@@ -511,6 +519,16 @@ class _ImageTools extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.copy_outlined),
                         title: Text(l10n.copy),
+                      ),
+                    ),
+                  if (onSelectMany != null)
+                    PopupMenuItem(
+                      value: 'selectMany',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.checklist),
+                        title: Text(l10n.selectImages),
                       ),
                     ),
                   if (onDetach != null)
@@ -573,6 +591,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onCrop,
     this.onExtractText,
     this.onCopy,
+    this.onCopyMany,
     this.onDetach,
     this.onVideoToNote,
     this.onTapEmpty,
@@ -621,6 +640,11 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Görseli panoya kopyalar; null ise menüde görünmez.
   final ValueChanged<Attachment>? onCopy;
+
+  /// ÇOKLU seçimde: seçilen eklerin tamamını panoya alır (kullanıcı isteği
+  /// 2026-08-09: "görsellerde çoklu seçim ve kopyalama"). null ise çoklu
+  /// seçim girişi hiç gösterilmez.
+  final ValueChanged<List<Attachment>>? onCopyMany;
 
   /// Görseli sayfadan alıp ek şeridine taşır; null ise menüde görünmez.
   final ValueChanged<Attachment>? onDetach;
@@ -682,6 +706,52 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   void _deselect() {
     if (_selectedId != null) setState(() => _selectedId = null);
   }
+
+  // ── ÇOKLU SEÇİM ─────────────────────────────────────────────────────────
+  // Sayfadaki görseller tek tek seçilip ⋮ menüsünden kopyalanabiliyordu ama
+  // ikisini birden almanın yolu yoktu (kullanıcı isteği 2026-08-09).
+  // "Görselleri seç" tek görselin araç panelinden açılır; sonrasında her
+  // dokunuş bir görseli işaretler, işlem çubuğu ekranın dibinde durur.
+
+  /// Çoklu seçim açık mı ve hangi ekler işaretli.
+  final _multi = <String>{};
+  bool _multiMode = false;
+
+  /// İşlem çubuğunu ekranın DİBİNE demirleyen katman (madde listesindeki
+  /// seçim çubuğuyla aynı desen — sayfa nerede olursa olsun görünür).
+  final _multiBar = OverlayPortalController();
+
+  void _startMulti(String id) {
+    setState(() {
+      _multiMode = true;
+      _selectedId = null;
+      _multi
+        ..clear()
+        ..add(id);
+    });
+    if (!_multiBar.isShowing) _multiBar.show();
+  }
+
+  void _toggleMulti(String id) {
+    setState(() {
+      if (!_multi.remove(id)) _multi.add(id);
+    });
+    if (_multi.isEmpty) _endMulti();
+  }
+
+  void _endMulti() {
+    setState(() {
+      _multiMode = false;
+      _multi.clear();
+    });
+    if (_multiBar.isShowing) _multiBar.hide();
+  }
+
+  /// İşaretli ekler — sayfa sırasıyla.
+  List<Attachment> get _multiSelected => [
+    for (final img in widget.images)
+      if (_multi.contains(img.id)) img,
+  ];
 
   /// Büyük önizlemede duran görselin kimliği (null = kapalı).
   ///
@@ -830,16 +900,21 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     // ikisi de kapalıyken kapanır (madde: "geri butonu direk anasayfaya
     // dönmesin bu tür durumlarda").
     return PopScope(
-      canPop: _previewId == null && _selectedId == null,
+      canPop: _previewId == null && _selectedId == null && !_multiMode,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         if (_previewId != null) {
           _closePreview();
+        } else if (_multiMode) {
+          _endMulti();
         } else {
           _deselect();
         }
       },
-      child: LayoutBuilder(
+      child: OverlayPortal(
+        controller: _multiBar,
+        overlayChildBuilder: _multiToolbar,
+        child: LayoutBuilder(
         builder: (context, constraints) {
           final cw = constraints.maxWidth;
           _reportFloats(cw);
@@ -928,6 +1003,78 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             child: content,
           );
         },
+        ),
+      ),
+    );
+  }
+
+  /// Çoklu seçim işlem çubuğu — ekranın dibinde, kaydırmadan bağımsız.
+  Widget _multiToolbar(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final systemBar = MediaQuery.viewPaddingOf(context).bottom;
+    final chosen = _multiSelected;
+    return Positioned(
+      left: 8,
+      right: 8,
+      bottom: 8 + keyboard + systemBar,
+      child: Material(
+        color: scheme.primaryContainer,
+        elevation: 6,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: l10n.cancel,
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: _endMulti,
+              ),
+              Expanded(
+                child: Text(
+                  l10n.imagesSelectedCount(chosen.length),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge,
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.selectAllItems,
+                icon: const Icon(Icons.select_all, size: 20),
+                onPressed: () => setState(
+                  () => _multi
+                    ..clear()
+                    ..addAll(widget.images.map((i) => i.id)),
+                ),
+              ),
+              IconButton(
+                tooltip: l10n.copy,
+                icon: const Icon(Icons.copy_outlined, size: 20),
+                onPressed: chosen.isEmpty
+                    ? null
+                    : () {
+                        widget.onCopyMany?.call(chosen);
+                        _endMulti();
+                      },
+              ),
+              IconButton(
+                tooltip: l10n.delete,
+                icon: const Icon(Icons.delete_outline, size: 20),
+                onPressed: chosen.isEmpty
+                    ? null
+                    : () {
+                        for (final img in chosen) {
+                          widget.onRemove(img);
+                        }
+                        _endMulti();
+                      },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1005,6 +1152,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   ) {
     final scheme = Theme.of(context).colorScheme;
     final editing = _selectedId == img.id;
+    final checked = _multiMode && _multi.contains(img.id);
     final r = _resolve(img, index, cw);
     return Positioned(
       left: r.left,
@@ -1012,7 +1160,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       width: r.w,
       height: r.h,
       child: GestureDetector(
-        onTap: () => _select(img.id),
+        onTap: () =>
+            _multiMode ? _toggleMulti(img.id) : _select(img.id),
         // ÇİFT DOKUNUŞ = büyük önizleme (kullanıcı isteği). Aynı iş sağ-alt
         // köşedeki tutamağa dokunarak da yapılıyor ama o tutamak YALNIZ
         // görsel seçiliyken var: önizlemeye ulaşmak için önce seçmek, sonra
@@ -1024,6 +1173,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık
         // sürüklemeyle başlar, taşıma ise basılı tutmayı bekler.
         onLongPressStart: (d) {
+          // Çoklu seçim açıkken taşıma kapalı: parmak işaretlemek için
+          // geziyor, kazara görsel sürüklenmesin.
+          if (_multiMode) {
+            _toggleMulti(img.id);
+            return;
+          }
           HapticFeedback.selectionClick();
           setState(() {
             _selectedId = img.id;
@@ -1055,7 +1210,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: editing
+                  border: editing || checked
                       ? Border.all(color: scheme.primary, width: 2)
                       : Border.all(
                           color: scheme.outlineVariant.withValues(alpha: 0.5),
@@ -1074,8 +1229,26 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 ),
               ),
             ),
+            // Çoklu seçim rozeti: işaretliyse dolu tik, değilse boş halka.
+            if (_multiMode)
+              Positioned(
+                left: 4,
+                top: 4,
+                child: Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: checked ? scheme.primary : Colors.black45,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                  child: checked
+                      ? Icon(Icons.check, size: 14, color: scheme.onPrimary)
+                      : null,
+                ),
+              ),
             // Sağ-alt köşe tutamağı: serbest boyutlandırma (yalnız seçiliyken).
-            if (editing)
+            if (editing && !_multiMode)
               Positioned(
                 right: 2,
                 bottom: 2,
@@ -1168,6 +1341,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onCopy: widget.onCopy == null || isVideo
             ? null
             : () => widget.onCopy!(img),
+        onSelectMany: widget.onCopyMany == null || widget.images.length < 2
+            ? null
+            : () => _startMulti(img.id),
         onVideoToNote: widget.onVideoToNote == null || !isVideo
             ? null
             : () => widget.onVideoToNote!(img),

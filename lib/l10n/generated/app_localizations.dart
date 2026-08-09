@@ -4361,6 +4361,138 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} satır seçildi'**
   String imageOcrSelected(int count);
+
+  /// No description provided for @imageOcrShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni tanı'**
+  String get imageOcrShort;
+
+  /// No description provided for @imageOcrWorking.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin tanınıyor…'**
+  String get imageOcrWorking;
+
+  /// No description provided for @imageOcrSelectHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dokun: kelime · Basılı tut ve sürükle: harf harf'**
+  String get imageOcrSelectHint;
+
+  /// No description provided for @imageOcrInsert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get imageOcrInsert;
+
+  /// No description provided for @imageOcrZoomIn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakınlaştır'**
+  String get imageOcrZoomIn;
+
+  /// No description provided for @imageOcrZoomOut.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uzaklaştır'**
+  String get imageOcrZoomOut;
+
+  /// No description provided for @selectImages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görselleri seç'**
+  String get selectImages;
+
+  /// No description provided for @exportImages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller'**
+  String get exportImages;
+
+  /// No description provided for @exportImagesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sola ya da sağa yaslı dar görsellerin yanından metin akar; ortalanan görsel tam genişlik olur.'**
+  String get exportImagesInfo;
+
+  /// No description provided for @exportAlignLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sol'**
+  String get exportAlignLeft;
+
+  /// No description provided for @exportAlignCenter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get exportAlignCenter;
+
+  /// No description provided for @exportAlignRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağ'**
+  String get exportAlignRight;
+
+  /// No description provided for @exportImageWidth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genişlik'**
+  String get exportImageWidth;
+
+  /// No description provided for @exportImageLine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum'**
+  String get exportImageLine;
+
+  /// No description provided for @aiModelSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Model ara'**
+  String get aiModelSearch;
+
+  /// No description provided for @aiModelOthers.
+  ///
+  /// In tr, this message translates to:
+  /// **'DİĞER MODELLER'**
+  String get aiModelOthers;
+
+  /// No description provided for @aiModelNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen model yok.'**
+  String get aiModelNoMatch;
+
+  /// No description provided for @aiModelAutoInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama sırayla en uygun modeli dener.'**
+  String get aiModelAutoInfo;
+
+  /// No description provided for @imageOcrCharsSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} karakter seçildi'**
+  String imageOcrCharsSelected(int count);
+
+  /// No description provided for @imagesSelectedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} görsel seçildi'**
+  String imagesSelectedCount(int count);
+
+  /// No description provided for @attachmentsCopiedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek'**
+  String attachmentsCopiedCount(int count);
+
+  /// No description provided for @exportImageLineOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'/ {count} satır'**
+  String exportImageLineOf(int count);
 }
 
 class _AppLocalizationsDelegate

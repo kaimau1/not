@@ -2322,4 +2322,78 @@ class AppLocalizationsId extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count baris dipilih';
   }
+
+  @override
+  String get imageOcrShort => 'Kenali teks';
+
+  @override
+  String get imageOcrWorking => 'Mengenali teks…';
+
+  @override
+  String get imageOcrSelectHint => 'Ketuk: kata · Tahan dan seret: huruf per huruf';
+
+  @override
+  String get imageOcrInsert => 'Tambahkan ke catatan';
+
+  @override
+  String get imageOcrZoomIn => 'Perbesar';
+
+  @override
+  String get imageOcrZoomOut => 'Perkecil';
+
+  @override
+  String get selectImages => 'Pilih gambar';
+
+  @override
+  String get exportImages => 'Gambar';
+
+  @override
+  String get exportImagesInfo => 'Teks mengalir di samping gambar sempit yang rata kiri atau kanan; gambar tengah memakai lebar penuh.';
+
+  @override
+  String get exportAlignLeft => 'Kiri';
+
+  @override
+  String get exportAlignCenter => 'Tengah';
+
+  @override
+  String get exportAlignRight => 'Kanan';
+
+  @override
+  String get exportImageWidth => 'Lebar';
+
+  @override
+  String get exportImageLine => 'Posisi';
+
+  @override
+  String get aiModelSearch => 'Cari model';
+
+  @override
+  String get aiModelOthers => 'MODEL LAINNYA';
+
+  @override
+  String get aiModelNoMatch => 'Tidak ada model yang cocok.';
+
+  @override
+  String get aiModelAutoInfo => 'Aplikasi mencoba model paling sesuai secara berurutan.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count karakter dipilih';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count gambar dipilih';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count lampiran';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count baris';
+  }
 }

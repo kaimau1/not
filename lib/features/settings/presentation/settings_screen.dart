@@ -2109,10 +2109,19 @@ class _AiDiagnosticsTileState extends State<_AiDiagnosticsTile> {
   }
 }
 
-/// Model açılır listesi: "Otomatik" + katalogdaki modeller. Metin modeli
-/// seçicileri ve seslendirme modeli seçicisi AYNI görünümü paylaşsın diye üst
-/// düzeyde durur.
-Widget _modelDropdown({
+/// Model seçimi: **satır + tam boy seçim levhası**.
+///
+/// KÖK NEDEN (kullanıcı üç kez bildirdi, 2026-08-09: "ayarlarda model seçim
+/// ekranını 3. kez yazıyorum, hâlâ değişen bir şey yok"): burada beş tane
+/// `DropdownButtonFormField` alt alta duruyordu. Her biri sağlayıcının
+/// ONLARCA modelini iki satırlık (ad + gerekçe) öğelerle listeliyor; telefonda
+/// açılan menü ekranı kaplıyor, aranan model ancak uzun uzun kaydırarak
+/// bulunuyor ve beş kutu üst üste gelince bölüm bir duvara dönüşüyordu.
+///
+/// Şimdi her kullanım alanı TEK SATIR: solda işin adı, altında o an seçili
+/// model. Dokununca arama kutulu, "Önerilen" ve "Diğer" diye ayrılmış bir
+/// levha açılır — model adı yazılarak bulunur, seçilince levha kapanır.
+Widget _modelPickerTile({
   required BuildContext context,
   required String label,
   required List<AiModel> models,
@@ -2121,35 +2130,258 @@ Widget _modelDropdown({
   required String recommendedLabel,
   required ValueChanged<String?> onChanged,
 }) {
+  final scheme = Theme.of(context).colorScheme;
   // Kayıtlı model artık listede yoksa (kaldırılmış olabilir ya da sağlayıcı
   // değişmiş olabilir) yine göster; zincir zaten çalışan bir modele düşer.
   final items = value != null && !models.any((m) => m.id == value)
       ? [AiModel(id: value, label: value), ...models]
       : models;
-  return DropdownButtonFormField<String?>(
-    initialValue: value,
-    isExpanded: true,
-    decoration: _aiFieldDecoration(context, label: label),
-    // Seçili öğe kapalı hâlde TEK satıra sığmalı: açık listedeki iki satırlı
-    // (ad + gerekçe) görünüm alana sığmayıp taşma çizgisi veriyordu.
-    selectedItemBuilder: (context) => [
-      Text(autoLabel, overflow: TextOverflow.ellipsis),
-      for (final m in items)
-        Text(
-          _ModelSelectors._friendlyModel(m),
-          overflow: TextOverflow.ellipsis,
+  final current = value == null
+      ? autoLabel
+      : _ModelSelectors._friendlyModel(
+          items.firstWhere(
+            (m) => m.id == value,
+            orElse: () => AiModel(id: value, label: value),
+          ),
+        );
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () async {
+          final picked = await showModalBottomSheet<_ModelChoice>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            showDragHandle: true,
+            builder: (_) => _ModelPickerSheet(
+              title: label,
+              models: items,
+              value: value,
+              autoLabel: autoLabel,
+              recommendedLabel: recommendedLabel,
+            ),
+          );
+          if (picked != null) onChanged(picked.id);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: scheme.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      current,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.expand_more, color: scheme.onSurfaceVariant),
+            ],
+          ),
         ),
-    ],
-    items: [
-      DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
-      for (final m in items)
-        DropdownMenuItem<String?>(
-          value: m.id,
-          child: _ModelSelectors._modelEntry(m, recommendedLabel),
-        ),
-    ],
-    onChanged: onChanged,
+      ),
+    ),
   );
+}
+
+/// Levhadan dönen seçim. `null` DEĞERİ "Otomatik" demek olduğu için levhanın
+/// "iptal" ile "otomatik"i ayırt edebilmesi gerekiyor — sarmalayıcı tip bunu
+/// sağlar (iptalde levha null döner, "Otomatik"te `_ModelChoice(null)`).
+class _ModelChoice {
+  const _ModelChoice(this.id);
+
+  final String? id;
+}
+
+/// Model seçim levhası: arama + "Önerilen" / "Diğer" grupları.
+class _ModelPickerSheet extends StatefulWidget {
+  const _ModelPickerSheet({
+    required this.title,
+    required this.models,
+    required this.value,
+    required this.autoLabel,
+    required this.recommendedLabel,
+  });
+
+  final String title;
+  final List<AiModel> models;
+  final String? value;
+  final String autoLabel;
+  final String recommendedLabel;
+
+  @override
+  State<_ModelPickerSheet> createState() => _ModelPickerSheetState();
+}
+
+class _ModelPickerSheetState extends State<_ModelPickerSheet> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(AiModel m) {
+    if (_query.isEmpty) return true;
+    final q = _query.toLowerCase();
+    return m.id.toLowerCase().contains(q) ||
+        m.label.toLowerCase().contains(q) ||
+        _ModelSelectors._friendlyModel(m).toLowerCase().contains(q);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final shown = [
+      for (final m in widget.models)
+        if (_matches(m)) m,
+    ];
+    final recommended = [
+      for (final m in shown)
+        if (m.recommended) m,
+    ];
+    final others = [
+      for (final m in shown)
+        if (!m.recommended) m,
+    ];
+
+    Widget tile(AiModel m) => RadioListTile<String?>(
+      value: m.id,
+      groupValue: widget.value,
+      dense: true,
+      onChanged: (v) => Navigator.pop(context, _ModelChoice(v)),
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(
+              _ModelSelectors._friendlyModel(m),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (m.recommended) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                widget.recommendedLabel,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: scheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      subtitle: m.note == null ? null : Text(m.note!),
+    );
+
+    Widget header(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Text(
+              widget.title,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              controller: _search,
+              onChanged: (v) => setState(() => _query = v.trim()),
+              decoration: InputDecoration(
+                isDense: true,
+                prefixIcon: const Icon(Icons.search, size: 20),
+                hintText: l10n.aiModelSearch,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.only(bottom: 12),
+              children: [
+                RadioListTile<String?>(
+                  value: null,
+                  groupValue: widget.value,
+                  dense: true,
+                  onChanged: (v) =>
+                      Navigator.pop(context, const _ModelChoice(null)),
+                  title: Text(widget.autoLabel),
+                  subtitle: Text(l10n.aiModelAutoInfo),
+                ),
+                if (recommended.isNotEmpty) ...[
+                  header(widget.recommendedLabel),
+                  for (final m in recommended) tile(m),
+                ],
+                if (others.isNotEmpty) ...[
+                  header(l10n.aiModelOthers),
+                  for (final m in others) tile(m),
+                ],
+                if (shown.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Center(child: Text(l10n.aiModelNoMatch)),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Kullanım alanı başına Gemini model seçimi. "Otomatik" = uygulamanın
@@ -2176,7 +2408,7 @@ class _ModelSelectors extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (final task in AiTask.values) ...[
-          _modelDropdown(
+          _modelPickerTile(
             context: context,
             label: _taskLabel(l10n, task),
             models: models,
@@ -2186,8 +2418,8 @@ class _ModelSelectors extends ConsumerWidget {
             onChanged: (v) =>
                 ref.read(aiTaskModelsProvider.notifier).set(task, v),
           ),
-          const SizedBox(height: 10),
         ],
+        const SizedBox(height: 4),
         Text(
           l10n.aiModelsInfo,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -2231,58 +2463,6 @@ class _ModelSelectors extends ConsumerWidget {
     return hint == null ? name : '$name — $hint';
   }
 
-  /// Liste satırı: ad + (varsa) ÖNERİLEN rozeti ve tek satırlık gerekçe.
-  /// Kullanıcı sağlayıcının onlarca modeli arasından hangisinin not almaya
-  /// uygun olduğunu tahmin etmek zorunda kalmasın.
-  static Widget _modelEntry(AiModel model, String recommendedLabel) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(_friendlyModel(model), overflow: TextOverflow.ellipsis),
-          ),
-          if (model.recommended) ...[
-            const SizedBox(width: 6),
-            Builder(
-              builder: (context) {
-                final scheme = Theme.of(context).colorScheme;
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: scheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    recommendedLabel,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: scheme.onPrimaryContainer,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ],
-        ],
-      ),
-      if (model.note != null)
-        Builder(
-          builder: (context) => Text(
-            model.note!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-    ],
-  );
 }
 
 class _BriefingEditor extends ConsumerWidget {
@@ -2580,7 +2760,7 @@ class _VoiceSection extends ConsumerWidget {
         // sesinin modeli yok, sesi de sistemden gelir (aşağıdaki menü).
         if (engine == TtsEngine.gemini) ...[
           const SizedBox(height: 14),
-          _modelDropdown(
+          _modelPickerTile(
             context: context,
             label: l10n.ttsModel,
             models: models,

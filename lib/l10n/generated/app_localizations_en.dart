@@ -2308,4 +2308,78 @@ class AppLocalizationsEn extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count lines selected';
   }
+
+  @override
+  String get imageOcrShort => 'Recognize text';
+
+  @override
+  String get imageOcrWorking => 'Recognizing text…';
+
+  @override
+  String get imageOcrSelectHint => 'Tap: word · Hold and drag: letter by letter';
+
+  @override
+  String get imageOcrInsert => 'Add to note';
+
+  @override
+  String get imageOcrZoomIn => 'Zoom in';
+
+  @override
+  String get imageOcrZoomOut => 'Zoom out';
+
+  @override
+  String get selectImages => 'Select images';
+
+  @override
+  String get exportImages => 'Images';
+
+  @override
+  String get exportImagesInfo => 'Text flows beside narrow images aligned left or right; centred images take the full width.';
+
+  @override
+  String get exportAlignLeft => 'Left';
+
+  @override
+  String get exportAlignCenter => 'Centre';
+
+  @override
+  String get exportAlignRight => 'Right';
+
+  @override
+  String get exportImageWidth => 'Width';
+
+  @override
+  String get exportImageLine => 'Position';
+
+  @override
+  String get aiModelSearch => 'Search models';
+
+  @override
+  String get aiModelOthers => 'OTHER MODELS';
+
+  @override
+  String get aiModelNoMatch => 'No matching model.';
+
+  @override
+  String get aiModelAutoInfo => 'The app tries the most suitable models in order.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count characters selected';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count images selected';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count attachments';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count lines';
+  }
 }

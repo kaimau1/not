@@ -2326,4 +2326,78 @@ class AppLocalizationsFr extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count lignes sélectionnées';
   }
+
+  @override
+  String get imageOcrShort => 'Reconnaître';
+
+  @override
+  String get imageOcrWorking => 'Reconnaissance du texte…';
+
+  @override
+  String get imageOcrSelectHint => 'Toucher : mot · Maintenir et glisser : lettre par lettre';
+
+  @override
+  String get imageOcrInsert => 'Ajouter à la note';
+
+  @override
+  String get imageOcrZoomIn => 'Zoom avant';
+
+  @override
+  String get imageOcrZoomOut => 'Zoom arrière';
+
+  @override
+  String get selectImages => 'Sélectionner des images';
+
+  @override
+  String get exportImages => 'Images';
+
+  @override
+  String get exportImagesInfo => 'Le texte s’écoule à côté des images étroites alignées à gauche ou à droite ; les images centrées occupent toute la largeur.';
+
+  @override
+  String get exportAlignLeft => 'Gauche';
+
+  @override
+  String get exportAlignCenter => 'Centre';
+
+  @override
+  String get exportAlignRight => 'Droite';
+
+  @override
+  String get exportImageWidth => 'Largeur';
+
+  @override
+  String get exportImageLine => 'Position';
+
+  @override
+  String get aiModelSearch => 'Rechercher un modèle';
+
+  @override
+  String get aiModelOthers => 'AUTRES MODÈLES';
+
+  @override
+  String get aiModelNoMatch => 'Aucun modèle correspondant.';
+
+  @override
+  String get aiModelAutoInfo => 'L’application essaie les modèles les plus adaptés dans l’ordre.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count caractères sélectionnés';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count images sélectionnées';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count pièces jointes';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count lignes';
+  }
 }

@@ -50,6 +50,7 @@ import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
+import '../../data/scan/scan_ocr.dart';
 import '../../data/scan/scan_title.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
@@ -80,6 +81,7 @@ import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
 import 'slide_note_pane.dart';
 import '../viewers/image_crop.dart';
+import '../viewers/text_recognize_screen.dart';
 import 'text_wrap.dart';
 
 bool get _isDesktop =>
@@ -1782,16 +1784,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Uygulama içi pano şart: sistem panosunun PDF/sunum/ses için karşılığı yok
   /// ve görselde bile ekin çizimi ile boyutu taşınmaz (bkz.
   /// attachment_clipboard.dart).
-  Future<void> _copyAttachment(Attachment attachment) async {
+  Future<void> _copyAttachment(Attachment attachment) =>
+      _copyAttachments([attachment]);
+
+  /// Bir ya da daha çok eki panoya alır (kullanıcı isteği 2026-08-09:
+  /// "görsellerde çoklu seçim ve kopyalama").
+  ///
+  /// Uygulama içi pano hepsini taşır; SİSTEM panosu ise tek görsel taşıyabilir
+  /// (masaüstünde dosya listesi mümkün). Çoklu seçimde bu yüzden sisteme
+  /// yalnız ilk görsel yazılır — uygulama içi yapıştırma hepsini getirir.
+  Future<void> _copyAttachments(List<Attachment> attachments) async {
+    if (attachments.isEmpty) return;
     final l10n = context.l10n;
-    ref.read(attachmentClipboardProvider.notifier).copy(attachment);
+    ref.read(attachmentClipboardProvider.notifier).copyAll(attachments);
     final repo = ref.read(attachmentRepositoryProvider);
+    final attachment = attachments.first;
     try {
       if (attachment.kind == AttachmentKind.image) {
         final bytes = await repo?.readBytes(attachment);
         if (bytes != null) await Pasteboard.writeImage(bytes);
-      } else if (_isDesktop && attachment.localPath.isNotEmpty) {
-        await Pasteboard.writeFiles([attachment.localPath]);
+      } else if (_isDesktop) {
+        final paths = [
+          for (final a in attachments)
+            if (a.localPath.isNotEmpty) a.localPath,
+        ];
+        if (paths.isNotEmpty) await Pasteboard.writeFiles(paths);
       }
     } catch (_) {
       // Sistem panosuna yazmak her platformda mümkün değil (ör. masaüstünde
@@ -1803,20 +1820,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Panodaki eki bu nota kopyalar (baytlar yeniden yazılır, yeni kimlik alır).
   Future<void> _pasteAttachment() async {
-    final source = ref.read(attachmentClipboardProvider);
+    final sources = ref.read(attachmentClipboardProvider);
     final repo = ref.read(attachmentRepositoryProvider);
-    if (source == null || repo == null) return;
+    if (sources.isEmpty || repo == null) return;
     try {
-      final copy = await repo.duplicate(noteId: widget.noteId, source: source);
-      _mutate(
-        (n) => n.copyWith(
-          attachments: [
-            ...n.attachments,
-            if (copy.floatsOnPage) _placeNewImage(copy, n) else copy,
-          ],
-        ),
-        immediate: true,
-      );
+      // SIRAYLA: her kopya sayfadaki yerini bir öncekine göre hesaplıyor
+      // (bkz. [_placeNewImage]); aynı anda koşsalardı üst üste binerlerdi.
+      for (final source in sources) {
+        final copy = await repo.duplicate(
+          noteId: widget.noteId,
+          source: source,
+        );
+        if (!mounted) return;
+        _mutate(
+          (n) => n.copyWith(
+            attachments: [
+              ...n.attachments,
+              if (copy.floatsOnPage) _placeNewImage(copy, n) else copy,
+            ],
+          ),
+          immediate: true,
+        );
+      }
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } on AttachmentMissingException {
@@ -1948,7 +1973,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       context,
       isDesktop: _isDesktop,
       pageNote: _note?.type.isPageNoteType ?? false,
-      copiedAttachmentName: copied?.fileName,
+      // Birden çok ek kopyalandıysa ad yerine sayı yazılır.
+      copiedAttachmentName: copied.isEmpty
+          ? null
+          : copied.length == 1
+          ? copied.first.fileName
+          : context.l10n.attachmentsCopiedCount(copied.length),
     );
     if (!mounted) return;
     switch (action) {
@@ -2642,10 +2672,44 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Resmin araç çubuğundaki "Metni al" düğmesi: görseldeki metni çıkarır
   /// (OCR) ve nota ekler (madde 3). AI sayfasına girmeden doğrudan resimden
   /// erişilir; sonuç [_appendText] ile gövdeye/öğelere eklenir.
+  /// **Metni tanı** — görseldeki yazıyı ortak tanıma ekranında açar.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "not içi metni tanı dendiğinde
+  /// direkt tüm metni nota kopyalıyor, böyle olmaz — yine metni tanı ekranı
+  /// gelmeli"): bu yol modele gidip dönen metni SORMADAN notun gövdesine
+  /// ekliyordu. Kullanıcı yalnız bir telefon numarası isterken notun altına
+  /// sayfanın tamamı düşüyor, üstelik her seferinde AI puanı yanıyordu.
+  /// Artık [TextRecognizeScreen] açılır: metin cihazda tanınır, kullanıcı
+  /// harf harf seçer ve kopyalar ya da "Nota ekle" der.
+  ///
+  /// ML Kit'in olmadığı yerde (masaüstü) eski model yolu KORUNUR — özellik
+  /// büsbütün kaybolmasın.
   Future<void> _ocrImage(Attachment image) async {
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     final l10n = context.l10n;
+    if (ScanOcr.supported) {
+      final path = await recognizableImagePath(image, repo);
+      if (!mounted) return;
+      if (path == null) {
+        _showSnack(l10n.attachmentNotSynced);
+        return;
+      }
+      final inserted = await Navigator.of(context).push<String>(
+        MaterialPageRoute<String>(
+          builder: (_) => TextRecognizeScreen(
+            imagePath: path,
+            imageWidth: image.width ?? 0,
+            imageHeight: image.height ?? 0,
+            title: image.fileName,
+            canInsert: true,
+          ),
+        ),
+      );
+      if (!mounted || inserted == null || inserted.trim().isEmpty) return;
+      _appendText(inserted.trim());
+      return;
+    }
     final bytes = await repo.readBytes(image);
     if (!mounted) return;
     if (bytes == null) {
@@ -2661,6 +2725,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _appendText(text);
     });
   }
+
 
   /// Görüntülü not: kamerayla video çeker ve nota ek yapar. Video buluta
   /// GİTMEZ, yalnızca cihazda kalır (kullanıcı isteği). Süre sınırı, videonun
@@ -4290,6 +4355,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 onCrop: _cropImage,
                 onExtractText: _ocrImage,
                 onCopy: _copyAttachment,
+                onCopyMany: _copyAttachments,
                 onDetach: (a) => _setImageAsFile(a, true),
                 onVideoToNote: _videoToNote,
                 topLimit: _bodyTop,

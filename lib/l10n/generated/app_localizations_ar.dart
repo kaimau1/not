@@ -2300,4 +2300,78 @@ class AppLocalizationsAr extends AppLocalizations {
   String imageOcrSelected(int count) {
     return 'تم تحديد $count سطرًا';
   }
+
+  @override
+  String get imageOcrShort => 'التعرّف على النص';
+
+  @override
+  String get imageOcrWorking => 'جارٍ التعرّف على النص…';
+
+  @override
+  String get imageOcrSelectHint => 'انقر: كلمة · اضغط مطوّلاً واسحب: حرفًا حرفًا';
+
+  @override
+  String get imageOcrInsert => 'إضافة إلى الملاحظة';
+
+  @override
+  String get imageOcrZoomIn => 'تكبير';
+
+  @override
+  String get imageOcrZoomOut => 'تصغير';
+
+  @override
+  String get selectImages => 'تحديد الصور';
+
+  @override
+  String get exportImages => 'الصور';
+
+  @override
+  String get exportImagesInfo => 'يلتفّ النص حول الصور الضيّقة المحاذاة يمينًا أو يسارًا؛ أما المتوسّطة فتأخذ العرض كاملاً.';
+
+  @override
+  String get exportAlignLeft => 'يسار';
+
+  @override
+  String get exportAlignCenter => 'وسط';
+
+  @override
+  String get exportAlignRight => 'يمين';
+
+  @override
+  String get exportImageWidth => 'العرض';
+
+  @override
+  String get exportImageLine => 'الموضع';
+
+  @override
+  String get aiModelSearch => 'البحث عن نموذج';
+
+  @override
+  String get aiModelOthers => 'نماذج أخرى';
+
+  @override
+  String get aiModelNoMatch => 'لا يوجد نموذج مطابق.';
+
+  @override
+  String get aiModelAutoInfo => 'يجرّب التطبيق أنسب النماذج بالترتيب.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return 'تم تحديد $count حرفًا';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return 'تم تحديد $count صورة';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count مرفقات';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count سطرًا';
+  }
 }
