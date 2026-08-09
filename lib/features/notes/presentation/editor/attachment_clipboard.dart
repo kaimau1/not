@@ -14,14 +14,24 @@ import '../../domain/attachment.dart';
 /// Pano yalnız bellekte durur: uygulama kapanınca boşalır. Kaynak dosya
 /// silinirse yapıştırma "dosya bulunamadı" ile biter — kalıcı bir kopya
 /// tutmak, kullanıcı hiç yapıştırmadığında yer israfı olurdu.
+///
+/// **ÇOKLU** (kullanıcı isteği 2026-08-09: "görsellerde çoklu seçim ve
+/// kopyalama"): pano tek yuvalıydı, sayfadan iki görsel seçip kopyalamak
+/// mümkün değildi. Artık sıralı bir liste tutar; tek ek kopyalamak da aynı
+/// yoldan geçer (tek elemanlı liste).
 final attachmentClipboardProvider =
-    NotifierProvider<AttachmentClipboard, Attachment?>(AttachmentClipboard.new);
+    NotifierProvider<AttachmentClipboard, List<Attachment>>(
+      AttachmentClipboard.new,
+    );
 
-class AttachmentClipboard extends Notifier<Attachment?> {
+class AttachmentClipboard extends Notifier<List<Attachment>> {
   @override
-  Attachment? build() => null;
+  List<Attachment> build() => const [];
 
-  void copy(Attachment attachment) => state = attachment;
+  void copy(Attachment attachment) => state = [attachment];
 
-  void clear() => state = null;
+  void copyAll(List<Attachment> attachments) =>
+      state = List.unmodifiable(attachments);
+
+  void clear() => state = const [];
 }

@@ -2273,4 +2273,84 @@ class AppLocalizationsKo extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count줄 선택됨';
   }
+
+  @override
+  String get imageOcrShort => '문자 인식';
+
+  @override
+  String get imageOcrWorking => '문자를 인식하는 중…';
+
+  @override
+  String get imageOcrSelectHint => '탭: 단어 · 길게 눌러 드래그: 글자 단위';
+
+  @override
+  String get imageOcrInsert => '메모에 추가';
+
+  @override
+  String get imageOcrZoomIn => '확대';
+
+  @override
+  String get imageOcrZoomOut => '축소';
+
+  @override
+  String get selectImages => '이미지 선택';
+
+  @override
+  String get exportImages => '이미지';
+
+  @override
+  String get exportImagesInfo => '왼쪽이나 오른쪽으로 정렬한 좁은 이미지 옆으로 글이 흐릅니다. 가운데 정렬은 전체 너비를 씁니다.';
+
+  @override
+  String get exportAlignLeft => '왼쪽';
+
+  @override
+  String get exportAlignCenter => '가운데';
+
+  @override
+  String get exportAlignRight => '오른쪽';
+
+  @override
+  String get exportImageWidth => '너비';
+
+  @override
+  String get exportImageLine => '위치';
+
+  @override
+  String get aiModelSearch => '모델 검색';
+
+  @override
+  String get aiModelOthers => '다른 모델';
+
+  @override
+  String get aiModelNoMatch => '일치하는 모델이 없습니다.';
+
+  @override
+  String get aiModelAutoInfo => '앱이 가장 알맞은 모델을 순서대로 시도합니다.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count자 선택됨';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '이미지 $count개 선택됨';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '첨부 $count개';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count줄';
+  }
+
+  @override
+  String get aiModelShowAll => '전체 보기';
+
+  @override
+  String get aiModelShowAllInfo => '앱이 사용하지 않는 모델도 함께 보여줍니다.';
 }

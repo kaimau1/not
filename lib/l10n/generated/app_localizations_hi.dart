@@ -2312,4 +2312,84 @@ class AppLocalizationsHi extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count पंक्तियाँ चुनी गईं';
   }
+
+  @override
+  String get imageOcrShort => 'टेक्स्ट पहचानें';
+
+  @override
+  String get imageOcrWorking => 'टेक्स्ट पहचाना जा रहा है…';
+
+  @override
+  String get imageOcrSelectHint => 'टैप: शब्द · दबाकर खींचें: अक्षर दर अक्षर';
+
+  @override
+  String get imageOcrInsert => 'नोट में जोड़ें';
+
+  @override
+  String get imageOcrZoomIn => 'ज़ूम इन';
+
+  @override
+  String get imageOcrZoomOut => 'ज़ूम आउट';
+
+  @override
+  String get selectImages => 'चित्र चुनें';
+
+  @override
+  String get exportImages => 'चित्र';
+
+  @override
+  String get exportImagesInfo => 'बाएँ या दाएँ संरेखित सँकरे चित्रों के बगल से टेक्स्ट बहता है; केंद्रित चित्र पूरी चौड़ाई लेते हैं।';
+
+  @override
+  String get exportAlignLeft => 'बाएँ';
+
+  @override
+  String get exportAlignCenter => 'मध्य';
+
+  @override
+  String get exportAlignRight => 'दाएँ';
+
+  @override
+  String get exportImageWidth => 'चौड़ाई';
+
+  @override
+  String get exportImageLine => 'स्थान';
+
+  @override
+  String get aiModelSearch => 'मॉडल खोजें';
+
+  @override
+  String get aiModelOthers => 'अन्य मॉडल';
+
+  @override
+  String get aiModelNoMatch => 'कोई मेल खाता मॉडल नहीं।';
+
+  @override
+  String get aiModelAutoInfo => 'ऐप क्रम से सबसे उपयुक्त मॉडल आज़माता है।';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count अक्षर चुने गए';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count चित्र चुने गए';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count अनुलग्नक';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count पंक्तियाँ';
+  }
+
+  @override
+  String get aiModelShowAll => 'सभी दिखाएँ';
+
+  @override
+  String get aiModelShowAllInfo => 'ऐप जिन मॉडलों का उपयोग नहीं करता, वे भी दिखते हैं।';
 }

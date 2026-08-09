@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/local_file.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
@@ -34,6 +37,32 @@ class PdfExportScreen extends ConsumerStatefulWidget {
 
   @override
   ConsumerState<PdfExportScreen> createState() => _PdfExportScreenState();
+}
+
+/// Dışa aktarmaya girecek TEK görselin ayarları — kullanıcı düzenleyebilir
+/// (kullanıcı isteği 2026-08-09: "dışa aktarmada görsellerin yeri ve boyutu
+/// da düzenlenebilmeli").
+class _ImageOption {
+  _ImageOption({
+    required this.attachment,
+    required this.line,
+    required this.widthFraction,
+    required this.align,
+  });
+
+  final Attachment attachment;
+
+  /// Metnin kaçıncı satırından ÖNCE gelecek (null = en sona).
+  int? line;
+
+  /// Sayfa genişliğine oranı.
+  double widthFraction;
+
+  /// Yatay hiza — sol/sağ olanlar metnin YANINA akar (bkz. NotePdf).
+  ExportAlign align;
+
+  /// Bu görsel belgeye girsin mi?
+  bool include = true;
 }
 
 class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
@@ -112,8 +141,9 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return const [];
     final out = <ExportImage>[];
-    for (final a in widget.note.attachments) {
-      if (a.kind != AttachmentKind.image) continue;
+    for (final option in _options) {
+      if (!option.include) continue;
+      final a = option.attachment;
       try {
         final bytes = await repo.readBytes(a);
         if (bytes == null) continue;
@@ -123,9 +153,9 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             width: a.width ?? 0,
             height: a.height ?? 0,
             mimeType: a.mimeType,
-            line: _lineFor(a),
-            widthFraction: widget.layout == null ? null : a.displayWidth,
-            align: _alignFor(a),
+            line: option.line,
+            widthFraction: option.widthFraction,
+            align: option.align,
           ),
         );
       } catch (_) {
@@ -134,6 +164,42 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     }
     return out;
   }
+
+  /// Görsel ayarları — nottaki düzenden türetilir, sonra kullanıcı oynar.
+  ///
+  /// `didChangeDependencies`te BİR KEZ kurulur: [_lineFor] metni ölçmek için
+  /// temaya (yazı stiline) ihtiyaç duyuyor, yani `initState`te hesaplanamaz;
+  /// her build'de yeniden kurulsaydı da kullanıcının değişiklikleri silinirdi.
+  final _options = <_ImageOption>[];
+  var _optionsReady = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_optionsReady) return;
+    _optionsReady = true;
+    for (final a in widget.note.attachments) {
+      if (a.kind != AttachmentKind.image) continue;
+      if (a.id == widget.note.backgroundImageId) continue;
+      _options.add(
+        _ImageOption(
+          attachment: a,
+          // Düzen bilgisi yoksa görsel metnin SONUNA konur; `null` yerine
+          // gerçek satır sayısı yazılır ki "konum" düğmeleri ile gösterilen
+          // sayı birbirini tutsun (null'da eksi düğmesi kapalıyken sayı
+          // sondaki satırı gösteriyordu).
+          line: _lineFor(a) ?? _lineCount,
+          widthFraction: (a.displayWidth ?? 1).clamp(0.15, 1.0).toDouble(),
+          align: _alignFor(a),
+        ),
+      );
+    }
+  }
+
+  /// İçerik alanındaki satır sayısı — "konum" ayarının üst sınırı.
+  int get _lineCount => _content.text.isEmpty
+      ? 0
+      : '\n'.allMatches(_content.text).length + 1;
 
   /// Görselin nottaki dikey yerini, dışa aktarılan metnin satır sırasına
   /// çevirir. Metin notunda konum BİREBİR hesaplanır: ekrandaki sütun
@@ -279,6 +345,153 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     );
   }
 
+  /// Tek görselin ayar kartı: küçük önizleme + hiza + genişlik + konum.
+  Widget _imageCard(AppLocalizations l10n, _ImageOption option) {
+    final scheme = Theme.of(context).colorScheme;
+    final a = option.attachment;
+    final hasFile = a.localPath.isNotEmpty && localFileExists(a.localPath);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: hasFile
+                        ? Image.file(
+                            File(a.localPath),
+                            fit: BoxFit.cover,
+                            cacheWidth: 120,
+                          )
+                        : ColoredBox(
+                            color: scheme.surfaceContainerHighest,
+                            child: const Icon(Icons.image_outlined, size: 20),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    a.fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+                Switch(
+                  value: option.include,
+                  onChanged: (v) => setState(() => option.include = v),
+                ),
+              ],
+            ),
+            if (option.include) ...[
+              const SizedBox(height: 4),
+              SegmentedButton<ExportAlign>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                ),
+                segments: [
+                  ButtonSegment(
+                    value: ExportAlign.left,
+                    icon: const Icon(Icons.format_align_left, size: 18),
+                    label: Text(l10n.exportAlignLeft),
+                  ),
+                  ButtonSegment(
+                    value: ExportAlign.center,
+                    icon: const Icon(Icons.format_align_center, size: 18),
+                    label: Text(l10n.exportAlignCenter),
+                  ),
+                  ButtonSegment(
+                    value: ExportAlign.right,
+                    icon: const Icon(Icons.format_align_right, size: 18),
+                    label: Text(l10n.exportAlignRight),
+                  ),
+                ],
+                selected: {option.align},
+                onSelectionChanged: (v) =>
+                    setState(() => option.align = v.first),
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 74,
+                    child: Text(
+                      l10n.exportImageWidth,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  Expanded(
+                    child: Slider(
+                      value: option.widthFraction,
+                      min: 0.15,
+                      max: 1,
+                      onChanged: (v) =>
+                          setState(() => option.widthFraction = v),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 42,
+                    child: Text(
+                      '%${(option.widthFraction * 100).round()}',
+                      textAlign: TextAlign.end,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 74,
+                    child: Text(
+                      l10n.exportImageLine,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.remove, size: 18),
+                    onPressed: (option.line ?? 0) <= 0
+                        ? null
+                        : () => setState(() => option.line = option.line! - 1),
+                  ),
+                  Text(
+                    '${(option.line ?? _lineCount) + 1}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.add, size: 18),
+                    onPressed: (option.line ?? _lineCount) >= _lineCount
+                        ? null
+                        : () => setState(
+                            () => option.line = (option.line ?? 0) + 1,
+                          ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    l10n.exportImageLineOf(_lineCount),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -321,13 +534,34 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
               value: _includeDate,
               onChanged: (v) => setState(() => _includeDate = v),
             ),
-            if (_hasImages)
+            if (_hasImages) ...[
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(l10n.exportIncludeImages),
                 value: _includeImages,
                 onChanged: (v) => setState(() => _includeImages = v),
               ),
+              // GÖRSEL AYARLARI: her görselin yeri, hizası ve boyutu burada
+              // düzenlenir. Sol/sağ hizalı ve dar görsellerin YANINDAN metin
+              // akar (bkz. NotePdf._withImages) — "orta" tam genişlik blok
+              // demektir, ipucu bunu söylüyor.
+              if (_includeImages && _options.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  l10n.exportImages,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.exportImagesInfo,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                for (final option in _options) _imageCard(l10n, option),
+              ],
+            ],
           ],
         ),
       ),

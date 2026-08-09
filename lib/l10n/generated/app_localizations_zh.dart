@@ -2251,4 +2251,84 @@ class AppLocalizationsZh extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '已选择 $count 行';
   }
+
+  @override
+  String get imageOcrShort => '识别文字';
+
+  @override
+  String get imageOcrWorking => '正在识别文字…';
+
+  @override
+  String get imageOcrSelectHint => '点按：单词 · 长按拖动：逐字';
+
+  @override
+  String get imageOcrInsert => '添加到笔记';
+
+  @override
+  String get imageOcrZoomIn => '放大';
+
+  @override
+  String get imageOcrZoomOut => '缩小';
+
+  @override
+  String get selectImages => '选择图片';
+
+  @override
+  String get exportImages => '图片';
+
+  @override
+  String get exportImagesInfo => '靠左或靠右的窄图片旁会有文字环绕；居中的图片占满整行。';
+
+  @override
+  String get exportAlignLeft => '左';
+
+  @override
+  String get exportAlignCenter => '居中';
+
+  @override
+  String get exportAlignRight => '右';
+
+  @override
+  String get exportImageWidth => '宽度';
+
+  @override
+  String get exportImageLine => '位置';
+
+  @override
+  String get aiModelSearch => '搜索模型';
+
+  @override
+  String get aiModelOthers => '其他模型';
+
+  @override
+  String get aiModelNoMatch => '没有匹配的模型。';
+
+  @override
+  String get aiModelAutoInfo => '应用会按顺序尝试最合适的模型。';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '已选择 $count 个字符';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '已选择 $count 张图片';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count 个附件';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ 共 $count 行';
+  }
+
+  @override
+  String get aiModelShowAll => '显示全部';
+
+  @override
+  String get aiModelShowAllInfo => '同时列出应用未使用的模型。';
 }

@@ -2327,4 +2327,84 @@ class AppLocalizationsIt extends AppLocalizations {
   String imageOcrSelected(int count) {
     return '$count righe selezionate';
   }
+
+  @override
+  String get imageOcrShort => 'Riconosci testo';
+
+  @override
+  String get imageOcrWorking => 'Riconoscimento del testo…';
+
+  @override
+  String get imageOcrSelectHint => 'Tocca: parola · Tieni premuto e trascina: lettera per lettera';
+
+  @override
+  String get imageOcrInsert => 'Aggiungi alla nota';
+
+  @override
+  String get imageOcrZoomIn => 'Ingrandisci';
+
+  @override
+  String get imageOcrZoomOut => 'Riduci';
+
+  @override
+  String get selectImages => 'Seleziona immagini';
+
+  @override
+  String get exportImages => 'Immagini';
+
+  @override
+  String get exportImagesInfo => 'Il testo scorre accanto alle immagini strette allineate a sinistra o a destra; quelle centrate occupano tutta la larghezza.';
+
+  @override
+  String get exportAlignLeft => 'Sinistra';
+
+  @override
+  String get exportAlignCenter => 'Centro';
+
+  @override
+  String get exportAlignRight => 'Destra';
+
+  @override
+  String get exportImageWidth => 'Larghezza';
+
+  @override
+  String get exportImageLine => 'Posizione';
+
+  @override
+  String get aiModelSearch => 'Cerca modelli';
+
+  @override
+  String get aiModelOthers => 'ALTRI MODELLI';
+
+  @override
+  String get aiModelNoMatch => 'Nessun modello corrispondente.';
+
+  @override
+  String get aiModelAutoInfo => 'L’app prova in ordine i modelli più adatti.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return '$count caratteri selezionati';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return '$count immagini selezionate';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return '$count allegati';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count righe';
+  }
+
+  @override
+  String get aiModelShowAll => 'Mostra tutti';
+
+  @override
+  String get aiModelShowAllInfo => 'Elenca anche i modelli che l’app non usa.';
 }

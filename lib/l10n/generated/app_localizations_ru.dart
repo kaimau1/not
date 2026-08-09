@@ -2316,4 +2316,84 @@ class AppLocalizationsRu extends AppLocalizations {
   String imageOcrSelected(int count) {
     return 'Выбрано строк: $count';
   }
+
+  @override
+  String get imageOcrShort => 'Распознать текст';
+
+  @override
+  String get imageOcrWorking => 'Распознавание текста…';
+
+  @override
+  String get imageOcrSelectHint => 'Нажатие — слово · Удержание и перетаскивание — по буквам';
+
+  @override
+  String get imageOcrInsert => 'Добавить в заметку';
+
+  @override
+  String get imageOcrZoomIn => 'Приблизить';
+
+  @override
+  String get imageOcrZoomOut => 'Отдалить';
+
+  @override
+  String get selectImages => 'Выбрать изображения';
+
+  @override
+  String get exportImages => 'Изображения';
+
+  @override
+  String get exportImagesInfo => 'Текст обтекает узкие изображения, выровненные влево или вправо; центрированные занимают всю ширину.';
+
+  @override
+  String get exportAlignLeft => 'Слева';
+
+  @override
+  String get exportAlignCenter => 'По центру';
+
+  @override
+  String get exportAlignRight => 'Справа';
+
+  @override
+  String get exportImageWidth => 'Ширина';
+
+  @override
+  String get exportImageLine => 'Положение';
+
+  @override
+  String get aiModelSearch => 'Поиск моделей';
+
+  @override
+  String get aiModelOthers => 'ДРУГИЕ МОДЕЛИ';
+
+  @override
+  String get aiModelNoMatch => 'Подходящих моделей нет.';
+
+  @override
+  String get aiModelAutoInfo => 'Приложение по очереди пробует наиболее подходящие модели.';
+
+  @override
+  String imageOcrCharsSelected(int count) {
+    return 'Выбрано символов: $count';
+  }
+
+  @override
+  String imagesSelectedCount(int count) {
+    return 'Выбрано изображений: $count';
+  }
+
+  @override
+  String attachmentsCopiedCount(int count) {
+    return 'Вложений: $count';
+  }
+
+  @override
+  String exportImageLineOf(int count) {
+    return '/ $count строк';
+  }
+
+  @override
+  String get aiModelShowAll => 'Показать все';
+
+  @override
+  String get aiModelShowAllInfo => 'Показывает и модели, которые приложение не использует.';
 }

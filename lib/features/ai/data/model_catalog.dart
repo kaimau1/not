@@ -1,5 +1,28 @@
 import 'ai_provider.dart';
 
+/// Modelin NE İŞE yaradığı.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma çalışmıyor,
+/// ayrıca başka modeller olmasına rağmen listede eksik gösteriliyor"):
+/// katalog kurulurken sohbete uygun OLMAYAN her model listeden büsbütün
+/// ATILIYORDU. Seslendirme modelleri de o elemeye takılıyordu (`tts`), yani
+/// "Seslendirme modeli" seçicisi katalogdan HİÇBİR ŞEY bulamıyor ve iki
+/// sabit önizleme kimliğine düşüyordu; o kimlikler kullanıcının anahtarında
+/// yoksa istek 404 dönüyor ve seslendirme hiç çalışmıyordu. Model artık
+/// atılmıyor, SINIFLANDIRILIYOR: her seçici kendi türünü süzüyor.
+enum AiModelKind {
+  /// Metin/görsel işleri (sohbet, özet, başlık…).
+  chat,
+
+  /// Seslendirme (TTS).
+  tts,
+
+  /// Uygulamanın hiçbir yolunda kullanılmayan modeller (embedding, görsel
+  /// üretimi, canlı ses…). Listede gizli durur; "Tümünü göster" açılırsa
+  /// görünür — kullanıcı sağlayıcısında ne varsa görebilmeli.
+  other,
+}
+
 /// Sağlayıcıdan çekilen tek bir model.
 class AiModel {
   const AiModel({
@@ -7,6 +30,7 @@ class AiModel {
     required this.label,
     this.recommended = false,
     this.note,
+    this.kind = AiModelKind.chat,
   });
 
   /// API'ye gönderilen kimlik (ör. `gemini-3.1-flash`, `openai/gpt-5-mini`).
@@ -21,31 +45,43 @@ class AiModel {
   /// Rozetin altındaki tek satırlık gerekçe ("hızlı ve ucuz", "ücretsiz"...).
   final String? note;
 
+  /// Modelin türü — hangi seçicide görüneceğini belirler.
+  final AiModelKind kind;
+
   @override
   bool operator ==(Object other) =>
       other is AiModel &&
       other.id == id &&
       other.label == label &&
       other.recommended == recommended &&
-      other.note == note;
+      other.note == note &&
+      other.kind == kind;
 
   @override
-  int get hashCode => Object.hash(id, label, recommended, note);
+  int get hashCode => Object.hash(id, label, recommended, note, kind);
 
   @override
   String toString() => 'AiModel($id, recommended: $recommended)';
 }
 
-/// Modellerin ELENME kuralı — her sağlayıcıda ortak.
+/// SESLENDİRME modelleri. Ayrı desen: bunlar "sohbete uygun değil" ama
+/// uygulamanın SES yolunda birinci sınıf vatandaş.
+final RegExp _ttsPattern = RegExp(
+  r'tts|text-to-speech',
+  caseSensitive: false,
+);
+
+/// Sohbete uygun OLMAYAN modeller — her sağlayıcıda ortak.
 ///
 /// Sağlayıcıların `/models` uç noktaları sohbet dışı her şeyi de döndürüyor
 /// (embedding, konuşma tanıma, görsel üretimi, moderasyon, canlı ses).
-/// Kullanıcıya ham liste gösterilirse "gemini-embedding-001" seçip her AI
-/// özelliğinin bozulmasına yol açabilir; bu yüzden liste sunulmadan önce
-/// süzülür. Elemenin sohbet modellerini yanlışlıkla yutmaması için desenler
-/// dar tutuldu (ör. `audio` var ama `auto` yok).
+/// Metin seçicisinde "gemini-embedding-001" seçip her AI özelliğini bozmak
+/// mümkün olmasın diye bunlar [AiModelKind.other] işaretlenir ve seçicide
+/// varsayılan olarak GİZLENİR (silinmez — "Tümünü göster" ile görünür).
+/// Desenler dar tutuldu ki sohbet modellerini yanlışlıkla yutmasın
+/// (ör. `audio` var ama `auto` yok).
 final RegExp _notForChat = RegExp(
-  r'embed|embedding|tts|text-to-speech|whisper|transcribe|moderation|'
+  r'embed|embedding|whisper|transcribe|moderation|'
   r'dall-e|stable-diffusion|image-generation|imagen|sora|veo|'
   r'realtime|:?live|guard|rerank|davinci|babbage|curie|ada-00',
   caseSensitive: false,
@@ -83,25 +119,39 @@ const _recommendations = <AiProvider, List<(String, String)>>{
 /// Sağlayıcının ham model listesini uygulamaya uygun sıraya sokar.
 ///
 /// [raw] anahtarı model kimliği, değeri sağlayıcının verdiği görünen addır
-/// (yoksa null). Dönen liste: önce ÖNERİLENLER (desen sırasına göre, aynı
-/// desen içinde yeniden eskiye), sonra kalan sohbet modelleri (yeniden
-/// eskiye). Sohbet dışı modeller hiç dönmez.
+/// (yoksa null). Dönen liste: önce ÖNERİLEN sohbet modelleri (desen sırasına
+/// göre, aynı desen içinde yeniden eskiye), sonra kalan sohbet modelleri,
+/// sonra SESLENDİRME modelleri, en sonda uygulamanın kullanmadığı modeller.
+///
+/// **Hiçbir model ATILMAZ** — sınıflandırılır (bkz. [AiModelKind]). Çağıran
+/// kendi türünü süzer; kullanıcı "Tümünü göster" derse gerisi de görünür.
 List<AiModel> rankModels(AiProvider provider, Map<String, String?> raw) {
   final patterns = _recommendations[provider] ?? const [];
   final recommended = <int, List<AiModel>>{};
-  final others = <AiModel>[];
+  final chat = <AiModel>[];
+  final tts = <AiModel>[];
+  final other = <AiModel>[];
 
   for (final entry in raw.entries) {
     final id = entry.key.trim();
-    if (id.isEmpty || _notForChat.hasMatch(id)) continue;
+    if (id.isEmpty) continue;
     final label = (entry.value ?? '').trim();
+    final kind = _ttsPattern.hasMatch(id)
+        ? AiModelKind.tts
+        : _notForChat.hasMatch(id)
+        ? AiModelKind.other
+        : AiModelKind.chat;
+    // Öneri rozeti yalnız SOHBET modellerinde anlamlı: desenler
+    // ("flash", "mini") ses ve embedding kimliklerine de çarpabiliyor.
     var rank = -1;
     String? note;
-    for (var i = 0; i < patterns.length; i++) {
-      if (RegExp(patterns[i].$1, caseSensitive: false).hasMatch(id)) {
-        rank = i;
-        note = patterns[i].$2;
-        break;
+    if (kind == AiModelKind.chat) {
+      for (var i = 0; i < patterns.length; i++) {
+        if (RegExp(patterns[i].$1, caseSensitive: false).hasMatch(id)) {
+          rank = i;
+          note = patterns[i].$2;
+          break;
+        }
       }
     }
     final model = AiModel(
@@ -109,11 +159,19 @@ List<AiModel> rankModels(AiProvider provider, Map<String, String?> raw) {
       label: label.isEmpty ? id : label,
       recommended: rank >= 0,
       note: note,
+      kind: kind,
     );
-    if (rank >= 0) {
-      (recommended[rank] ??= []).add(model);
-    } else {
-      others.add(model);
+    switch (kind) {
+      case AiModelKind.tts:
+        tts.add(model);
+      case AiModelKind.other:
+        other.add(model);
+      case AiModelKind.chat:
+        if (rank >= 0) {
+          (recommended[rank] ??= []).add(model);
+        } else {
+          chat.add(model);
+        }
     }
   }
 
@@ -123,7 +181,9 @@ List<AiModel> rankModels(AiProvider provider, Map<String, String?> raw) {
   final ranks = recommended.keys.toList()..sort();
   return [
     for (final rank in ranks) ...(recommended[rank]!..sort(newestFirst)),
-    ...others..sort(newestFirst),
+    ...chat..sort(newestFirst),
+    ...tts..sort(newestFirst),
+    ...other..sort(newestFirst),
   ];
 }
 
@@ -149,10 +209,15 @@ Map<String, String?> parseModelList(AiProvider provider, Object? body) {
       if (raw is! Map) continue;
       // `generateContent` desteklemeyenler (yalnız embedding/sayaç uçları)
       // listeye hiç girmemeli.
-      final methods = raw['supportedGenerationMethods'];
-      if (methods is! List || !methods.contains('generateContent')) continue;
       final name = (raw['name'] as String? ?? '').replaceFirst('models/', '');
       if (name.isEmpty) continue;
+      // `generateContent` desteklemeyenler (yalnız embedding/sayaç uçları)
+      // listeye girmemeli. SESLENDİRME modelleri istisna: bazı sürümlerde bu
+      // alanı bildirmiyorlar ama `generateContent` ile ses üretiyorlar —
+      // eleseydik seslendirme seçicisi yine boş kalırdı.
+      final methods = raw['supportedGenerationMethods'];
+      final generates = methods is List && methods.contains('generateContent');
+      if (!generates && !_ttsPattern.hasMatch(name)) continue;
       result[name] = raw['displayName'] as String?;
     }
     return result;

@@ -9,9 +9,11 @@ import '../../notes/data/attachment_repository.dart';
 import '../../notes/data/doc_text.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/data/pdf_text.dart';
+import '../../notes/data/scan/scan_ocr.dart';
 import '../../notes/domain/attachment.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../notes/presentation/viewers/text_recognize_screen.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_gate.dart';
@@ -455,6 +457,39 @@ class _AiSheetState extends ConsumerState<AiSheet> {
     );
   }
 
+  /// Ortak tanıma ekranını açar; "Nota ekle" denirse metin notun gövdesine
+  /// eklenir. Levha önce kapanır — ekran tam sayfa açılıyor.
+  Future<void> _recognizeImageText(Attachment image) async {
+    final append = widget.onAppendText;
+    final messenger = ScaffoldMessenger.of(context);
+    final notSynced = context.l10n.attachmentNotSynced;
+    final navigator = Navigator.of(context);
+    final path = await recognizableImagePath(
+      image,
+      ref.read(attachmentRepositoryProvider),
+    );
+    if (!mounted) return;
+    if (path == null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(notSynced)));
+      return;
+    }
+    navigator.pop();
+    final text = await navigator.push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => TextRecognizeScreen(
+          imagePath: path,
+          imageWidth: image.width ?? 0,
+          imageHeight: image.height ?? 0,
+          title: image.fileName,
+          canInsert: append != null,
+        ),
+      ),
+    );
+    if (text != null && text.trim().isNotEmpty) append?.call(text.trim());
+  }
+
   Future<String> _extractImageText(
     GeminiService service,
     Attachment image,
@@ -843,6 +878,11 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                     ),
                   // Görsel ve seste tek işlem var: açılır satır gereksiz,
                   // işlem alt yazıda duruyor.
+                  // GÖRSELDE METİN: cihaz içi tanıma varsa ortak "Metni Tanı"
+                  // ekranı açılır (bkz. text_recognize_screen.dart) —
+                  // uygulamada metin tanımanın TEK bir görünümü olsun
+                  // (kullanıcı isteği 2026-08-09). ML Kit yoksa (masaüstü)
+                  // eski model yolu sürer.
                   for (final image in images)
                     ListTile(
                       leading: const Icon(Icons.document_scanner_outlined),
@@ -852,7 +892,9 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       subtitle: Text(l10n.extractText),
-                      onTap: () => _run((s) => _extractImageText(s, image)),
+                      onTap: () => ScanOcr.supported
+                          ? _recognizeImageText(image)
+                          : _run((s) => _extractImageText(s, image)),
                     ),
                   for (final audio in audios)
                     ListTile(

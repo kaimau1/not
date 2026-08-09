@@ -1049,5 +1049,57 @@
         "type": "int"
       }
     }
-  }
+  },
+  "imageOcrShort": "Metni tanı",
+  "imageOcrWorking": "Metin tanınıyor…",
+  "imageOcrSelectHint": "Dokun: kelime · Basılı tut ve sürükle: harf harf",
+  "imageOcrInsert": "Nota ekle",
+  "imageOcrZoomIn": "Yakınlaştır",
+  "imageOcrZoomOut": "Uzaklaştır",
+  "selectImages": "Görselleri seç",
+  "exportImages": "Görseller",
+  "exportImagesInfo": "Sola ya da sağa yaslı dar görsellerin yanından metin akar; ortalanan görsel tam genişlik olur.",
+  "exportAlignLeft": "Sol",
+  "exportAlignCenter": "Orta",
+  "exportAlignRight": "Sağ",
+  "exportImageWidth": "Genişlik",
+  "exportImageLine": "Konum",
+  "aiModelSearch": "Model ara",
+  "aiModelOthers": "DİĞER MODELLER",
+  "aiModelNoMatch": "Eşleşen model yok.",
+  "aiModelAutoInfo": "Uygulama sırayla en uygun modeli dener.",
+  "imageOcrCharsSelected": "{count} karakter seçildi",
+  "@imageOcrCharsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "imagesSelectedCount": "{count} görsel seçildi",
+  "@imagesSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attachmentsCopiedCount": "{count} ek",
+  "@attachmentsCopiedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "exportImageLineOf": "/ {count} satır",
+  "@exportImageLineOf": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiModelShowAll": "Tümünü göster",
+  "aiModelShowAllInfo": "Uygulamanın kullanmadığı modeller de listelenir."
 }

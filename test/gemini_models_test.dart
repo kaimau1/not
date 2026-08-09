@@ -9,6 +9,15 @@ Map<String, String?> _ids(List<String> ids) => {for (final id in ids) id: null};
 List<String> _rank(AiProvider provider, List<String> ids) =>
     [for (final m in rankModels(provider, _ids(ids))) m.id];
 
+/// Yalnız SOHBET modelleri — ayarlardaki metin seçicisinin gördüğü liste.
+List<String> _chat(AiProvider provider, List<String> ids) => [
+  for (final m in rankModels(provider, _ids(ids)))
+    if (m.kind == AiModelKind.chat) m.id,
+];
+
+AiModelKind _kindOf(AiProvider provider, String id) =>
+    rankModels(provider, _ids([id])).single.kind;
+
 void main() {
   group('AiTask ayar anahtarları', () {
     test('her görev ayrı anahtar kullanır', () {
@@ -24,10 +33,13 @@ void main() {
     });
   });
 
-  group('rankModels — eleme', () {
-    test('tts/embed/görsel/canlı modeller hiç dönmez', () {
+  // Modeller artık ATILMIYOR, sınıflandırılıyor: seslendirme seçicisi
+  // katalogdan kendi modellerini bulabilsin diye (bkz. AiModelKind — TTS
+  // elenince "gemini TTS'den okuma çalışmıyor" hatası çıkıyordu).
+  group('rankModels — sınıflandırma', () {
+    test('metin seçicisi yalnız sohbet modellerini görür', () {
       expect(
-        _rank(AiProvider.gemini, [
+        _chat(AiProvider.gemini, [
           'gemini-3.5-flash',
           'gemini-2.5-flash-preview-tts',
           'gemini-3.5-flash-live',
@@ -38,9 +50,43 @@ void main() {
       );
     });
 
-    test('OpenAI sohbet dışı modelleri elenir', () {
+    test('sohbet dışı modeller listede KALIR (türleriyle)', () {
+      final ids = _rank(AiProvider.gemini, [
+        'gemini-3.5-flash',
+        'gemini-2.5-flash-preview-tts',
+        'gemini-embedding-001',
+      ]);
+      expect(ids, contains('gemini-2.5-flash-preview-tts'));
+      expect(ids, contains('gemini-embedding-001'));
+      // Sohbet modeli her zaman başta.
+      expect(ids.first, 'gemini-3.5-flash');
+    });
+
+    test('tür doğru atanır', () {
       expect(
-        _rank(AiProvider.openai, [
+        _kindOf(AiProvider.gemini, 'gemini-2.5-flash-preview-tts'),
+        AiModelKind.tts,
+      );
+      expect(_kindOf(AiProvider.openai, 'tts-1-hd'), AiModelKind.tts);
+      expect(
+        _kindOf(AiProvider.gemini, 'gemini-embedding-001'),
+        AiModelKind.other,
+      );
+      expect(_kindOf(AiProvider.openai, 'gpt-5-mini'), AiModelKind.chat);
+    });
+
+    test('seslendirme modeli ÖNERİLEN rozeti almaz', () {
+      // Öneri desenleri ("flash", "mini") ses kimliklerine de çarpıyordu.
+      final tts = rankModels(
+        AiProvider.gemini,
+        _ids(['gemini-2.5-flash-preview-tts']),
+      ).single;
+      expect(tts.recommended, isFalse);
+    });
+
+    test('OpenAI sohbet seçicisi yalnız sohbet modellerini görür', () {
+      expect(
+        _chat(AiProvider.openai, [
           'gpt-5-mini',
           'whisper-1',
           'tts-1-hd',

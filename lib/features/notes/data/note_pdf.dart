@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'dart:ui' show Color;
 
@@ -126,8 +127,32 @@ abstract final class NotePdf {
     return doc.save();
   }
 
+  /// Satır yüksekliği (punto + satır aralığı) — bir görselin YANINA kaç satır
+  /// sığdığı bununla hesaplanır.
+  static const _lineHeight = 16.0;
+
   /// Satırları ve görselleri nottaki sıraya göre birleştirir: her görsel,
   /// [ExportImage.line] ile verilen satırdan ÖNCE gelir.
+  ///
+  /// **METİN GÖRSELİN YANINDAN AKAR** (kullanıcı isteği 2026-08-09: "dışa
+  /// aktarırken not içinde sarılan görseller aynı bulunduğu yerde olmalı,
+  /// yanında metin olanın ayrı bir sayfa olarak değil").
+  ///
+  /// KÖK NEDEN: görsel HER ZAMAN tam genişlik bir blok olarak iki satırın
+  /// arasına konuyordu. Notta görselin yanından akan metin, dışa aktarmada
+  /// görselin ALTINA düşüyor; yarım sayfa boş kalıyor, uzun görselde de
+  /// metin bir sonraki sayfaya kayıyordu — belge nottaki düzene hiç
+  /// benzemiyordu.
+  ///
+  /// Çözüm sayfanın kendi düzenini taklit eder: sayfa genişliğinin en çok
+  /// %70'ini kaplayan ve bir kenara yaslı bir görsel FLOAT sayılır; yüksekliği
+  /// kadar satır (bkz. [_lineHeight]) onun yanına, bir `Row`un öbür gözüne
+  /// dizilir. Ortalanmış ya da geniş görsel eskisi gibi tam genişlik blok
+  /// kalır — yanına anlamlı bir metin sütunu sığmaz.
+  ///
+  /// SAYFA TAŞMASI: `MultiPage` tek bir `Row`u ikiye bölemez. Görsel sayfanın
+  /// yarısından uzunsa float'tan vazgeçilir (blok olarak konur), yanına
+  /// konacak satır sayısı da sayfaya sığacak kadarla sınırlanır.
   static List<pw.Widget> _withImages(
     List<PdfLine> lines,
     List<ExportImage> images,
@@ -142,13 +167,60 @@ abstract final class NotePdf {
       for (final i in images)
         if (i.line == null) i,
     ];
+    final contentWidth = format.width - 52 - 52;
+    final maxHeight = format.height - 56 - 44 - 24;
     final out = <pw.Widget>[];
     var next = 0;
-    for (var index = 0; index < lines.length; index++) {
-      while (next < placed.length && placed[next].line! <= index) {
-        out.add(_imageWidget(placed[next++], format));
+    var index = 0;
+    while (index < lines.length) {
+      if (next < placed.length && placed[next].line! <= index) {
+        final image = placed[next++];
+        final size = _imageSize(image, contentWidth, maxHeight);
+        final float = _floatSide(image);
+        // Yanına kaç satır sığar: görselin yüksekliği kadar, ama sayfanın
+        // yarısını aşmayacak biçimde.
+        final capacity = math.min(
+          (size.h / _lineHeight).floor(),
+          (maxHeight * 0.5 / _lineHeight).floor(),
+        );
+        final beside = <PdfLine>[];
+        if (float != null && capacity > 0) {
+          while (beside.length < capacity && index < lines.length) {
+            // Araya başka bir görsel giriyorsa sarma orada biter.
+            if (next < placed.length && placed[next].line! <= index) break;
+            beside.add(lines[index++]);
+          }
+        }
+        if (beside.isEmpty) {
+          out.add(_imageWidget(image, format));
+          continue;
+        }
+        final column = pw.Expanded(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [for (final l in beside) _lineWidget(l, palette)],
+          ),
+        );
+        final picture = pw.SizedBox(
+          width: size.w,
+          height: size.h,
+          child: pw.Image(pw.MemoryImage(image.bytes), fit: pw.BoxFit.contain),
+        );
+        out.add(
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(vertical: 6),
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: float == ExportAlign.left
+                  ? [picture, pw.SizedBox(width: 12), column]
+                  : [column, pw.SizedBox(width: 12), picture],
+            ),
+          ),
+        );
+        continue;
       }
       out.add(_lineWidget(lines[index], palette));
+      index++;
     }
     for (; next < placed.length; next++) {
       out.add(_imageWidget(placed[next], format));
@@ -157,11 +229,24 @@ abstract final class NotePdf {
     return out;
   }
 
-  /// Görseli nottaki oranıyla ölçekler; sayfadan taşmasın diye yükseklik de
-  /// sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
-  static pw.Widget _imageWidget(ExportImage image, PdfPageFormat format) {
-    final contentWidth = format.width - 52 - 52;
-    final maxHeight = format.height - 56 - 44 - 24;
+  /// Görsel metnin YANINA konabilir mi, konacaksa hangi kenara?
+  /// Ortalanmış ya da genişliğin %70'inden büyük görsel float OLMAZ.
+  static ExportAlign? _floatSide(ExportImage image) {
+    final frac = (image.widthFraction ?? 1).clamp(0.1, 1.0);
+    if (frac > 0.7) return null;
+    return switch (image.align) {
+      ExportAlign.left => ExportAlign.left,
+      ExportAlign.right => ExportAlign.right,
+      ExportAlign.center => null,
+    };
+  }
+
+  /// Görselin sayfadaki ölçüsü (oran korunur, sayfaya sığdırılır).
+  static ({double w, double h}) _imageSize(
+    ExportImage image,
+    double contentWidth,
+    double maxHeight,
+  ) {
     final iw = image.width <= 0 ? 480.0 : image.width.toDouble();
     final ih = image.height <= 0 ? 360.0 : image.height.toDouble();
     var w = contentWidth * (image.widthFraction ?? 1).clamp(0.1, 1.0);
@@ -170,6 +255,17 @@ abstract final class NotePdf {
       h = maxHeight;
       w = h * iw / ih;
     }
+    return (w: w, h: h);
+  }
+
+  /// Görseli nottaki oranıyla ölçekler; sayfadan taşmasın diye yükseklik de
+  /// sınırlanır (MultiPage taşan tek parçayı bölemez, hata verirdi).
+  static pw.Widget _imageWidget(ExportImage image, PdfPageFormat format) {
+    final contentWidth = format.width - 52 - 52;
+    final maxHeight = format.height - 56 - 44 - 24;
+    final size = _imageSize(image, contentWidth, maxHeight);
+    final w = size.w;
+    final h = size.h;
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 6),
       child: pw.Align(
