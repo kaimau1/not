@@ -17,6 +17,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/note_fonts.dart';
@@ -45,17 +46,17 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  /// Ses secicisi cizilecek diller: uygulamanin o anki dili + tr/en.
-  static List<String> _voiceLanguages(BuildContext context) {
-    final supported = supportedLanguages.keys.toSet();
-    return <String>{
-      Localizations.localeOf(context).toLanguageTag(),
-      'tr',
-      'en',
-    }.where(supported.contains).toList();
-  }
+/// Ses secicisinin gosterdigi diller: uygulamanin o anki dili + tr/en.
+List<String> _voiceLanguages(BuildContext context) {
+  final supported = supportedLanguages.keys.toSet();
+  return <String>{
+    Localizations.localeOf(context).toLanguageTag(),
+    'tr',
+    'en',
+  }.where(supported.contains).toList();
+}
 
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
   /// aranan ayara ulasmak icin ekranlarca kaydirmak gerekiyordu.
   /// Kalici DEGIL - her acilista "Gorunum" acik gelir (en sik dokunulan).
@@ -188,47 +189,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         summary: _soundSummary(l10n),
         keywords: 'mikrofon ses okuma hiz dil basili tut',
         rows: [
-          // SESLENDİRME TEK YERDE: motor (cihaz/yapay zekâ) seçimi eskiden
-          // "Gelişmiş AI" bölümünde, sesler ve hızlar buradaydı; kullanıcı
-          // "1 özellik 1 ayara bağlanmalı, çok ayar karışıklık yapıyor"
-          // dedi (2026-08-08). Artık okuma ile ilgili her ayar bu alanda.
+          // SESLENDİRME TEK BLOKTA (kullanıcı isteği 2026-08-09: "sesli okuma
+          // ayarları ve ai ayarları düzenlenmeli ve birleştirilmeli; ai ve
+          // cihaz seçimleri tek yerden yapılabilmeli, ses seçimleri tek menüde
+          // olmalı").
+          //
+          // Eskiden: motor seçimi bir satırda, uygulamanın DİLİ BAŞINA ayrı
+          // birer ses açılır listesi (2–3 satır), bunların açıklaması ayrı bir
+          // satır, hızlar ayrı iki satır — okuma ayarı aramak altı satır
+          // gezmek demekti ve "AI sesi" ile "cihaz sesi" ekranın iki ayrı
+          // yerinde seçiliyordu. Şimdi hepsi [_VoiceSection]'da: motor, model,
+          // ses ve deneme tek yerde; cihaz sesleri TEK menüde (dil seç → ses
+          // seç) toplanıyor.
           _SettingRow(
-            const _TtsSelectors(),
+            const _VoiceSection(),
             title: l10n.ttsSectionTitle,
-            keywords: 'seslendirme motor yapay zeka cihaz sesi tts',
-          ),
-          _SettingRow(
-            const _VoiceModeSelector(),
-            title: l10n.voiceModeSetting,
-            keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
-          ),
-          for (final code in _voiceLanguages(context))
-            _SettingRow(
-              _SpeechVoiceSelector(
-                language: code,
-                title: l10n.speechVoiceLanguage(languageLabel(code)),
-              ),
-              title: l10n.speechVoiceLanguage(languageLabel(code)),
-              keywords: 'ses tipi seslendirme',
-            ),
-          _SettingRow(
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                l10n.speechVoiceAutoInfo,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ),
-            // Bu satır bir AÇIKLAMA: üstündeki ses seçicilerle aynı sorgularda
-            // görünsün ki seçiciler süzülünce açıklaması da gelsin.
-            keywords: '${l10n.speechVoiceAutoInfo} ses tipi seslendirme',
+            keywords:
+                'seslendirme motor yapay zeka cihaz sesi tts ses tipi '
+                '${l10n.speechVoicePickerTitle} ${l10n.speechVoiceAutoInfo}',
           ),
           _SettingRow(const _SpeechRateSlider(), title: l10n.speechRate),
           _SettingRow(
             const _ForeignSpeechRateSlider(),
             title: l10n.speechRateForeign,
+          ),
+          _SettingRow(const _SpeechPitchSlider(), title: l10n.speechPitch),
+          _SettingRow(
+            const _VoiceModeSelector(),
+            title: l10n.voiceModeSetting,
+            keywords: '${l10n.voiceModeHold} ${l10n.voiceModeTap} mikrofon',
           ),
           _SettingRow(
             const _LanguageSelector(),
@@ -1609,108 +1598,6 @@ class _SyncLimitSelector extends ConsumerWidget {
   }
 }
 
-/// Bir dilin sesli okuma sesi. Yalnız Türkçe ve İngilizce kullanıcıya
-/// sorulur; kalan diller otomatik erkek sesiyle okunur. Liste cihazdan gelir
-/// (kurulu TTS motoruna göre değişir), bu yüzden sabit katalog tutulmuyor.
-class _SpeechVoiceSelector extends ConsumerStatefulWidget {
-  const _SpeechVoiceSelector({required this.language, required this.title});
-
-  final String language;
-  final String title;
-
-  @override
-  ConsumerState<_SpeechVoiceSelector> createState() =>
-      _SpeechVoiceSelectorState();
-}
-
-class _SpeechVoiceSelectorState extends ConsumerState<_SpeechVoiceSelector> {
-  List<SpeechVoice>? _voices;
-  SpeechVoice? _selected;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final controller = ref.read(speechOutputProvider.notifier);
-    final voices = await controller.voices(language: widget.language);
-    final selected = await controller.selectedVoice(widget.language);
-    if (!mounted) return;
-    setState(() {
-      _voices = voices;
-      _selected = selected;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final voices = _voices;
-    if (voices == null) {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(widget.title),
-        trailing: const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(strokeWidth: 2),
-        ),
-      );
-    }
-    if (voices.isEmpty) {
-      return ListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(widget.title),
-        subtitle: Text(l10n.speechNoVoices),
-      );
-    }
-    final current = _selected;
-    final value = current != null && voices.any((v) => v.id == current.id)
-        ? current.id
-        : null;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(widget.title),
-      trailing: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 190),
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Text(l10n.speechSystemDefault),
-          items: [
-            for (final voice in voices)
-              DropdownMenuItem(
-                value: voice.id,
-                child: Text(
-                  voice.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-          ],
-          onChanged: (id) async {
-            final picked = voices.firstWhere((v) => v.id == id);
-            final controller = ref.read(speechOutputProvider.notifier);
-            await controller.setVoice(widget.language, picked);
-            if (!mounted) return;
-            setState(() => _selected = picked);
-            // Seçilen ses hemen duyulsun: adından anlaşılmıyor. Cümle
-            // SEÇİLEN DİLDEDİR (bkz. SpeechOutputController.voiceSample) —
-            // yabancı sese Türkçe cümle okutmak ne telaffuzu ne tınıyı
-            // gösteriyordu.
-            await controller.speak(
-              SpeechOutputController.voiceSample(widget.language),
-              languageCode: widget.language,
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
 class _SpeechRateSlider extends ConsumerStatefulWidget {
   const _SpeechRateSlider();
 
@@ -1799,6 +1686,58 @@ class _ForeignSpeechRateSliderState
               onChanged: (value) => setState(() => _rate = value),
               onChangeEnd: (value) =>
                   ref.read(speechOutputProvider.notifier).setForeignRate(value),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sesin TONU (perde): aynı ses daha kalın ya da daha ince okur.
+///
+/// Ayarlarda YOKTU (kullanıcı isteği 2026-08-09: "eksik ayar varsa
+/// eklenmeli"). Motorların kabul ettiği aralık 0,5–2,0; 1,0 sesin kendi tonu.
+class _SpeechPitchSlider extends ConsumerStatefulWidget {
+  const _SpeechPitchSlider();
+
+  @override
+  ConsumerState<_SpeechPitchSlider> createState() => _SpeechPitchSliderState();
+}
+
+class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
+  double? _pitch;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(speechOutputProvider.notifier).pitch().then((value) {
+      if (mounted) setState(() => _pitch = value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pitch = _pitch;
+    if (pitch == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(child: Text(context.l10n.speechPitch)),
+          Expanded(
+            flex: 2,
+            child: Slider(
+              value: pitch,
+              min: 0.5,
+              max: 2,
+              divisions: 6,
+              label: pitch.toStringAsFixed(1),
+              onChanged: (value) => setState(() => _pitch = value),
+              // Kaydırırken DEĞİL bırakınca yazılır: her karede motor ayarı
+              // yeniden kurmak sesi tutukluyor (madde 9 — kasma olmamalı).
+              onChangeEnd: (value) =>
+                  ref.read(speechOutputProvider.notifier).setPitch(value),
             ),
           ),
         ],
@@ -2196,7 +2135,10 @@ Widget _modelDropdown({
     selectedItemBuilder: (context) => [
       Text(autoLabel, overflow: TextOverflow.ellipsis),
       for (final m in items)
-        Text(_ModelSelectors._friendlyModel(m), overflow: TextOverflow.ellipsis),
+        Text(
+          _ModelSelectors._friendlyModel(m),
+          overflow: TextOverflow.ellipsis,
+        ),
     ],
     items: [
       DropdownMenuItem<String?>(value: null, child: Text(autoLabel)),
@@ -2563,15 +2505,18 @@ class _AdvancedAiSection extends ConsumerWidget {
   }
 }
 
-
-/// Seslendirme (TTS) ayarları: okuma işini cihazın yerleşik sesi mi yoksa
-/// Gemini'nin seslendirme modeli mi yapsın, hangi model ve hangi sesle.
+/// **Seslendirme — tek blok.** Okuma işini kim yapacak (cihazın yerleşik sesi
+/// mi, yapay zekâ mı), hangi modelle ve hangi sesle: hepsi burada.
 ///
-/// Metin modeli seçicilerinden AYRI bir bölüm: TTS başka bir model ailesidir
-/// (metin modelleri ses üretemez) ve "hangi modelle podcast METNİ yazılsın"
-/// ile "o metni hangi ses OKUSUN" birbirinden bağımsız iki karardır.
-class _TtsSelectors extends ConsumerWidget {
-  const _TtsSelectors();
+/// KÖK NEDEN (kullanıcı isteği 2026-08-09: "ai ve cihaz seçimleri tek yerden
+/// yapılabilmesi, ses seçimleri tek menüde olmalı"): motor seçimi bir satırda,
+/// yapay zekâ sesi başka bir satırda, CİHAZ sesleri ise uygulamanın diline
+/// göre iki-üç ayrı açılır listede duruyordu. "Sesi değiştireyim" diyen
+/// kullanıcı hangi kutunun hangi motorun sesini seçtiğini ayırt edemiyordu.
+/// Artık seçilen motora göre TEK bir ses seçimi görünür; cihaz sesleri de tek
+/// menüde (dil seç → ses seç) toplanır.
+class _VoiceSection extends ConsumerWidget {
+  const _VoiceSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -2632,7 +2577,7 @@ class _TtsSelectors extends ConsumerWidget {
             ),
           ),
         // Model ve ses YALNIZ yapay zekâ sesi seçiliyken anlamlı: cihaz
-        // sesinin modeli yok, sesi de sistemden geliyor (üstteki ses seçici).
+        // sesinin modeli yok, sesi de sistemden gelir (aşağıdaki menü).
         if (engine == TtsEngine.gemini) ...[
           const SizedBox(height: 14),
           _modelDropdown(
@@ -2658,8 +2603,161 @@ class _TtsSelectors extends ConsumerWidget {
               if (value != null) ref.read(ttsVoiceProvider.notifier).set(value);
             },
           ),
+        ] else ...[
+          const SizedBox(height: 6),
+          // CİHAZ SESLERİ TEK MENÜDE: dil başına ayrı satırlar yerine tek bir
+          // satır, dokununca dil + ses listesi açılır.
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.record_voice_over_outlined),
+            title: Text(l10n.speechVoicePickerTitle),
+            subtitle: Text(l10n.speechVoiceAutoInfo),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showModalBottomSheet<void>(
+              context: context,
+              isScrollControlled: true,
+              showDragHandle: true,
+              builder: (_) => const _VoicePickerSheet(),
+            ),
+          ),
         ],
       ],
+    );
+  }
+}
+
+/// Cihaz seslerinin TEK menüsü: üstte dil seçimi, altında o dilin sesleri.
+/// Seçilen ses hemen O DİLDE bir örnek cümle okur — ad ("tr-tr-x-ama#male_1")
+/// tek başına hiçbir şey anlatmıyor.
+class _VoicePickerSheet extends ConsumerStatefulWidget {
+  const _VoicePickerSheet();
+
+  @override
+  ConsumerState<_VoicePickerSheet> createState() => _VoicePickerSheetState();
+}
+
+class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
+  late List<String> _languages;
+  String? _language;
+  List<SpeechVoice>? _voices;
+  SpeechVoice? _selected;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_language != null) return;
+    _languages = _voiceLanguages(context);
+    _language = _languages.isEmpty ? 'tr' : _languages.first;
+    _load();
+  }
+
+  Future<void> _load() async {
+    final language = _language!;
+    setState(() => _voices = null);
+    final controller = ref.read(speechOutputProvider.notifier);
+    final voices = await controller.voices(language: language);
+    final selected = await controller.selectedVoice(language);
+    if (!mounted || _language != language) return;
+    setState(() {
+      _voices = voices;
+      _selected = selected;
+    });
+  }
+
+  Future<void> _pick(SpeechVoice voice) async {
+    final language = _language!;
+    final controller = ref.read(speechOutputProvider.notifier);
+    await controller.setVoice(language, voice);
+    if (!mounted) return;
+    setState(() => _selected = voice);
+    // Örnek cümle SEÇİLEN DİLDEDİR: yabancı sese Türkçe cümle okutmak ne
+    // telaffuzu ne tınıyı gösteriyordu.
+    await controller.speak(
+      SpeechOutputController.voiceSample(language),
+      languageCode: language,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final voices = _voices;
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.speechVoicePickerTitle,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 10),
+            if (_languages.length > 1)
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final code in _languages)
+                    ChoiceChip(
+                      label: Text(languageLabel(code)),
+                      selected: _language == code,
+                      onSelected: (_) {
+                        if (_language == code) return;
+                        setState(() => _language = code);
+                        _load();
+                      },
+                    ),
+                ],
+              ),
+            const SizedBox(height: 6),
+            // Yükseklik sınırlı: uzun ses listesi levhayı ekranın dışına
+            // taşırmasın, kendi içinde kaysın.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.5,
+              ),
+              child: voices == null
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : voices.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Text(l10n.speechNoVoices),
+                    )
+                  : RadioGroup<String>(
+                      groupValue: _selected?.id,
+                      onChanged: (id) {
+                        final voice = voices
+                            .where((v) => v.id == id)
+                            .firstOrNull;
+                        if (voice != null) _pick(voice);
+                      },
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: voices.length,
+                        itemBuilder: (context, i) => RadioListTile<String>(
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                          value: voices[i].id,
+                          title: Text(
+                            voices[i].name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(voices[i].locale),
+                        ),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -2775,10 +2873,12 @@ class _RestoreButton extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final file = await openFile(
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'JSON', extensions: ['json']),
-      ],
+    final file = await DocPicker.pickOne(
+      const XTypeGroup(
+        label: 'JSON',
+        extensions: ['json'],
+        mimeTypes: ['application/json'],
+      ),
     );
     if (file == null) return;
     try {

@@ -316,9 +316,8 @@ class BubbleController extends ChangeNotifier {
     final clipped = title.characters.length > PageBubble.maxTitle
         ? title.characters.take(PageBubble.maxTitle).toString()
         : title;
-    _bubbles = [..._bubbles]..[index] = _bubbles[index].copyWith(
-      title: clipped,
-    );
+    _bubbles = [..._bubbles]
+      ..[index] = _bubbles[index].copyWith(title: clipped);
     _dirty = true;
     revision.value++;
   }
@@ -387,6 +386,15 @@ class BubbleController extends ChangeNotifier {
     final bubble = byId(id);
     if (bubble == null) return;
     update(bubble.copyWith(starred: !bubble.starred));
+    save();
+  }
+
+  /// Balonu vurguladığı metne bağlayan OKU açar/kapatır (kullanıcı isteği
+  /// 2026-08-09: "ok işaretini kaldırma seçeneği olmalı").
+  void toggleArrow(String id) {
+    final bubble = byId(id);
+    if (bubble == null) return;
+    update(bubble.copyWith(arrow: !bubble.arrow));
     save();
   }
 
@@ -702,10 +710,15 @@ class _LeaderPainter extends CustomPainter {
   /// hem de yönü okunmaz olurdu.
   static const _minLength = 26.0;
 
+  /// Okun opaklığı — kullanıcı isteği 2026-08-09: "yüzde 65 opaklıkta olmalı".
+  static const _alpha = 0.65;
+
   @override
   void paint(Canvas canvas, Size size) {
     for (final bubble in bubbles) {
       if (bubble.rects.isEmpty) continue;
+      // Balon başına kapatılabilir (bkz. [PageBubble.arrow]).
+      if (!bubble.arrow) continue;
       final target = _center(bubble, size);
       if (target == null) continue;
       var tail = Offset(bubble.x * size.width, bubble.y * size.height);
@@ -717,8 +730,20 @@ class _LeaderPainter extends CustomPainter {
       // kapatmasın.
       final head = target - delta / delta.distance * 6;
       final geo = arrowGeometry(tail, head, 2);
+      // **YAZININ ARKASINA GEÇER** (kullanıcı bulgusu 2026-08-09: "ok işareti
+      // PDF veya diğer belgelerde yazının arkasına geçmeli, şu an yazının
+      // üzerine gelip kapatıyor").
+      //
+      // KÖK NEDEN ve neden böyle çözülüyor: belge sayfası RASTERİZE bir
+      // görüntüdür (pdfrx sayfayı tek katman olarak çizer) — okun boyasını
+      // "harflerin altına" koymanın gerçek bir yolu yok, ayrı bir metin
+      // katmanı bulunmuyor. `BlendMode.multiply` aynı sonucu verir: sonuç
+      // renk altındaki pikselle ÇARPILDIĞI için koyu harfler okun üzerinden
+      // olduğu gibi geçer, ok yalnız açık zeminde görünür. Fosforlu kalemin
+      // kâğıt üzerindeki davranışının aynısı.
       final paint = Paint()
-        ..color = color.withValues(alpha: 0.85)
+        ..color = color.withValues(alpha: _alpha)
+        ..blendMode = BlendMode.multiply
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round
         ..style = PaintingStyle.stroke;
@@ -730,7 +755,9 @@ class _LeaderPainter extends CustomPainter {
             ..lineTo(geo.left.dx, geo.left.dy)
             ..lineTo(geo.right.dx, geo.right.dy)
             ..close(),
-          Paint()..color = color.withValues(alpha: 0.85),
+          Paint()
+            ..color = color.withValues(alpha: _alpha)
+            ..blendMode = BlendMode.multiply,
         );
     }
   }
@@ -769,6 +796,7 @@ class _LeaderPainter extends CustomPainter {
       if (a[i].x != b[i].x ||
           a[i].y != b[i].y ||
           a[i].color != b[i].color ||
+          a[i].arrow != b[i].arrow ||
           a[i].rects.length != b[i].rects.length) {
         return true;
       }
@@ -813,10 +841,9 @@ class _BubbleReadCard extends StatelessWidget {
       bubble.x * pageSize.width,
       bubble.y * pageSize.height,
     );
-    final left = (anchor.dx - width / 2).clamp(
-      0.0,
-      math.max(0.0, pageSize.width - width),
-    ).toDouble();
+    final left = (anchor.dx - width / 2)
+        .clamp(0.0, math.max(0.0, pageSize.width - width))
+        .toDouble();
     // Sayfanın alt yarısındaki balonun kartı YUKARI açılır: aşağı açılsa
     // sayfanın dışına taşardı.
     final below = anchor.dy < pageSize.height * 0.55;
@@ -876,6 +903,17 @@ class _BubbleReadCard extends StatelessWidget {
                     ),
                   if (bubble.starred)
                     Icon(Icons.star, size: 15, color: scheme.onSurfaceVariant),
+                  // Ok yalnız VURGULU balonda var: serbest balonun bağlanacağı
+                  // bir metin yok, düğme de anlamsız olurdu.
+                  if (!readOnly && bubble.isHighlight)
+                    _action(
+                      context,
+                      icon: bubble.arrow ? Icons.north_east : Icons.block,
+                      tooltip: bubble.arrow
+                          ? context.l10n.bubbleArrowHide
+                          : context.l10n.bubbleArrowShow,
+                      onPressed: () => controller.toggleArrow(bubble.id),
+                    ),
                   if (!readOnly)
                     _action(
                       context,
@@ -926,7 +964,6 @@ class _BubbleReadCard extends StatelessWidget {
     ),
   );
 }
-
 
 /// Balonu (kart ya da tutamaç) **basılı tutup sürüklenebilir** yapan sarmalayıcı.
 ///
@@ -1085,11 +1122,10 @@ class _BubblePinState extends State<_BubblePin>
   void _syncBlink() {
     final wanted = widget.bubble.urgent;
     if (wanted && _blink == null) {
-      _blink =
-          AnimationController(
-            vsync: this,
-            duration: const Duration(milliseconds: 700),
-          )..repeat(reverse: true);
+      _blink = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 700),
+      )..repeat(reverse: true);
     } else if (!wanted && _blink != null) {
       _blink!.dispose();
       _blink = null;
@@ -1237,43 +1273,42 @@ class _BubblePinState extends State<_BubblePin>
   );
 
   Widget _titleChip(PageBubble bubble, Color color) => Container(
-      constraints: const BoxConstraints(maxWidth: 170),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(9),
-        border: _borderOf(bubble),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
-            blurRadius: _lifted ? 10 : 4,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (bubble.urgent)
-            const Icon(Icons.priority_high, size: 13, color: Colors.black87),
-          if (bubble.starred)
-            const Icon(Icons.star, size: 13, color: Colors.black87),
-          Flexible(
-            child: Text(
-              bubble.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Colors.black87,
-              ),
+    constraints: const BoxConstraints(maxWidth: 170),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(9),
+      border: _borderOf(bubble),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: _lifted ? 0.45 : 0.25),
+          blurRadius: _lifted ? 10 : 4,
+        ),
+      ],
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (bubble.urgent)
+          const Icon(Icons.priority_high, size: 13, color: Colors.black87),
+        if (bubble.starred)
+          const Icon(Icons.star, size: 13, color: Colors.black87),
+        Flexible(
+          child: Text(
+            bubble.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.black87,
             ),
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
 }
-
 
 /// YAZMA kartı: açık balonun içeriği, KLAVYENİN hemen üstünde.
 ///
@@ -1551,7 +1586,10 @@ class _BubbleDockState extends State<BubbleDock> {
     },
   );
 
-  static const _titleStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w700);
+  static const _titleStyle = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+  );
   static const _bodyStyle = TextStyle(fontSize: 14);
 
   /// Şerit düğmesi: küçük, odak İSTEMEYEN simge düğmesi.

@@ -163,6 +163,71 @@ class MainActivity : FlutterFragmentActivity() {
                             }
                         }
                     }
+                    // Belge seçimi UYGULAMA SEÇİCİ ile (kullanıcı isteği
+                    // 2026-08-09: "belge seçileceği zaman dosya tarayıcısını
+                    // seçebilmeliyim").
+                    //
+                    // KÖK NEDEN: `file_selector` Android'de ACTION_OPEN_DOCUMENT
+                    // kullanır; o niyeti YALNIZCA sistemin belge kullanıcı
+                    // arayüzü (DocumentsUI) karşılar ve açılan çekmecede ancak
+                    // DocumentsProvider yazmış sağlayıcılar (Drive, OneDrive,
+                    // cihaz deposu) görünür — telefonun KENDİ dosya yöneticisi
+                    // uygulaması (MIUI Dosyalar vb.) seçenek olarak hiç çıkmaz.
+                    // ACTION_GET_CONTENT'i `createChooser` ile açmak sıradan bir
+                    // uygulama seçimi olur: DocumentsUI de listede kalır ama
+                    // yanına dosya yöneticileri ve galeri de gelir.
+                    //
+                    // Seçilen içerik URI'si kalıcı DEĞİL (izin yalnız bu
+                    // niyet boyunca) — dosya hemen önbelleğe kopyalanır ve
+                    // Dart tarafına gerçek bir yol döner; çağıranların tamamı
+                    // yol/bayt bekliyor.
+                    "pickDocuments" -> {
+                        if (pickResult != null) {
+                            result.error("busy", "Dosya seçici zaten açık", null)
+                        } else {
+                            val mimes = call.argument<List<String>>("mimeTypes")
+                                ?: listOf("*/*")
+                            val multiple = call.argument<Boolean>("multiple") ?: false
+                            val title = call.argument<String>("title")
+                            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                // Tek MIME `type`e, gerisi EXTRA_MIME_TYPES'a:
+                                // yalnız extra verilirse bazı uygulamalar hiç
+                                // süzmüyor, yalnız type verilirse çoklu tür
+                                // anlatılamıyor.
+                                type = if (mimes.size == 1) mimes[0] else "*/*"
+                                if (mimes.size > 1) {
+                                    putExtra(Intent.EXTRA_MIME_TYPES, mimes.toTypedArray())
+                                }
+                                if (multiple) {
+                                    putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                                }
+                            }
+                            try {
+                                pickResult = result
+                                startActivityForResult(
+                                    Intent.createChooser(intent, title),
+                                    pickRequestCode
+                                )
+                            } catch (e: Exception) {
+                                // Hiçbir uygulama karşılamadı: Dart tarafı
+                                // `file_selector` yoluna düşer.
+                                pickResult = null
+                                result.error("unavailable", "$e", null)
+                            }
+                        }
+                    }
+                    // Videonun KAPAK KARESİ (balonlu görüntülü not): çekilen
+                    // videodan tek bir kare çıkarılır ve o karenin üzerine
+                    // balon/vurgu konabilen belge sayfası kurulur.
+                    "videoFrame" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("args", "path gerekli", null)
+                        } else {
+                            result.success(videoFrame(path))
+                        }
+                    }
                     // Uygulama detay ayarları: kullanıcı kalıcı reddettiği bir
                     // izni buradan elle açabilir.
                     "openAppSettings" -> {
@@ -197,8 +262,16 @@ class MainActivity : FlutterFragmentActivity() {
     private var voiceInputResult: MethodChannel.Result? = null
     private val voiceInputRequestCode = 4712
 
+    // Belge seçicinin bekleyen yanıtı (aynı anda tek istek olur).
+    private var pickResult: MethodChannel.Result? = null
+    private val pickRequestCode = 4713
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == pickRequestCode) {
+            onPickResult(resultCode, data)
+            return
+        }
         if (requestCode != voiceInputRequestCode) return
         val pending = voiceInputResult ?: return
         voiceInputResult = null
@@ -240,6 +313,98 @@ class MainActivity : FlutterFragmentActivity() {
                 grantResults[0] == PackageManager.PERMISSION_GRANTED
             cameraResult?.success(granted)
             cameraResult = null
+        }
+    }
+
+    // ---- Belge seçici ------------------------------------------------
+
+    /// Seçilen içerik URI'lerini önbelleğe kopyalar ve {path, name} listesi
+    /// döndürür. İptalde BOŞ liste (hata değil) — çağıran sessizce vazgeçer.
+    private fun onPickResult(resultCode: Int, data: Intent?) {
+        val pending = pickResult ?: return
+        pickResult = null
+        if (resultCode != RESULT_OK || data == null) {
+            pending.success(emptyList<Map<String, String>>())
+            return
+        }
+        val uris = mutableListOf<Uri>()
+        val clip = data.clipData
+        if (clip != null) {
+            for (i in 0 until clip.itemCount) {
+                clip.getItemAt(i).uri?.let(uris::add)
+            }
+        } else {
+            data.data?.let(uris::add)
+        }
+        val out = mutableListOf<Map<String, String>>()
+        for (uri in uris) {
+            val name = displayName(uri)
+            try {
+                // Ad ÖNBELLEK YOLUNDA korunur: çağıranların bir kısmı uzantıya
+                // bakıyor (PDF mi sunum mu) ve rastgele adlı bir kopya o
+                // denetimleri düşürürdü. Çakışmayı klasör önler.
+                val dir = java.io.File(cacheDir, "secim_${System.currentTimeMillis()}")
+                dir.mkdirs()
+                val file = java.io.File(dir, name)
+                contentResolver.openInputStream(uri)?.use { inp ->
+                    file.outputStream().use { out2 -> inp.copyTo(out2) }
+                }
+                if (file.length() > 0) {
+                    out.add(mapOf("path" to file.absolutePath, "name" to name))
+                } else {
+                    file.delete()
+                }
+            } catch (e: Exception) {
+                Log.d(logTag, "secim kopyalanamadi: $e")
+            }
+        }
+        pending.success(out)
+    }
+
+    /// İçerik URI'sinin görünen adı; sağlayıcı vermezse damgalı bir ad.
+    private fun displayName(uri: Uri): String {
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { c ->
+                val index = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && c.moveToFirst()) {
+                    val value = c.getString(index)
+                    if (!value.isNullOrBlank()) return sanitize(value)
+                }
+            }
+        } catch (e: Exception) {
+            Log.d(logTag, "secim adi okunamadi: $e")
+        }
+        val ext = contentResolver.getType(uri)
+            ?.let { android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(it) }
+        return "belge_${System.currentTimeMillis()}" + if (ext != null) ".$ext" else ""
+    }
+
+    /// Dosya adından yol ayırıcılarını temizler (sağlayıcı adına "../" koyarsa
+    /// kopya önbellek klasörünün DIŞINA yazılırdı).
+    private fun sanitize(name: String): String =
+        name.replace('/', '_').replace('\\', '_').trim().ifEmpty { "belge" }
+
+    /// Videodan kapak karesi (JPEG baytları); çıkarılamazsa null.
+    private fun videoFrame(path: String): ByteArray? {
+        val retriever = android.media.MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(path)
+            // 1. saniye: sıfırıncı kare çoğu çekimde karanlık/bulanık oluyor.
+            val frame = retriever.getFrameAtTime(1_000_000)
+                ?: retriever.frameAtTime
+                ?: return null
+            val out = java.io.ByteArrayOutputStream()
+            frame.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, out)
+            frame.recycle()
+            out.toByteArray()
+        } catch (e: Exception) {
+            Log.d(logTag, "video karesi alinamadi: $e")
+            null
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
         }
     }
 

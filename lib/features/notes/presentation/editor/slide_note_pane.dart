@@ -38,7 +38,21 @@ class SlideNotePane extends ConsumerStatefulWidget {
     this.onFieldFocused,
     this.onFieldDisposed,
     this.onImmersiveChanged,
+    this.penMode = false,
+    this.onPenModeChanged,
   });
+
+  /// Slaydın ÜZERİNE yazma kipi (editörün alt çubuğundaki kalem düğmesi).
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "slayt modunda alttaki düzenleme
+  /// üzerine çizme kalemi çalışmıyor"): kalem düğmesi editörde tek bir
+  /// `_penMode` bayrağını çeviriyor ama o bayrak yalnızca [PdfNotePane]'e
+  /// bağlanmıştı — slayt panosu parametreyi hiç almıyordu, dolayısıyla düğme
+  /// slaytta hiçbir şey yapmıyordu. Artık iki pano da AYNI sözleşmeyi taşıyor:
+  /// açıkken tek parmak çizer, iki parmak gezinir ve panonun dibinde kalem
+  /// çubuğu (renk, kalınlık, ok, **silgi**, geri al, temizle) belirir.
+  final bool penMode;
+  final ValueChanged<bool>? onPenModeChanged;
 
   /// Balona yazılırken true (PDF panosuyla aynı sözleşme).
   final ValueChanged<bool>? onImmersiveChanged;
@@ -63,8 +77,9 @@ class SlideNotePane extends ConsumerStatefulWidget {
 }
 
 class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
-  /// Çizimler panoda GÖRÜNÜR ama burada düzenlenmez (PDF sürümüyle aynı
-  /// gerekçe: küçük bölmede tek parmak çizim, slayt geçişini imkânsız kılar).
+  /// Çizimler bölmede de DÜZENLENİR (kalem kipi açıkken) — PDF panosundaki
+  /// kurulumun aynısı. Kip kapalıyken katman dokunuşa hiç karışmaz, yani slayt
+  /// listesi eskisi gibi tek parmakla kayar.
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
@@ -89,6 +104,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   @override
   void initState() {
     super.initState();
+    if (widget.penMode) _ink.setEditing(true);
     _bubbles.onEditingChanged = (editing) {
       _bubbleEditing.value = editing;
       widget.onImmersiveChanged?.call(editing);
@@ -99,6 +115,12 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
   @override
   void didUpdateWidget(SlideNotePane old) {
     super.didUpdateWidget(old);
+    if (old.penMode != widget.penMode) {
+      // Kalem açılırken balon bırakma kipi kapanır: iki kip aynı parmağı ister
+      // (tam ekran görüntüleyicideki ve PDF panosundaki kuralın aynısı).
+      _ink.setEditing(widget.penMode);
+      if (widget.penMode) _bubbles.setAdding(false);
+    }
     // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
     // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
     _ink.replace(widget.attachment.ink);
@@ -163,6 +185,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
       ink: _ink,
       bubbles: _bubbles,
       host: host,
+      penMode: widget.penMode,
     ),
   );
 }
@@ -179,6 +202,7 @@ class _SlidePaneViewer extends StatefulWidget {
     required this.ink,
     required this.bubbles,
     required this.host,
+    required this.penMode,
   });
 
   final List<SlideVM>? slides;
@@ -186,6 +210,7 @@ class _SlidePaneViewer extends StatefulWidget {
   final InkController ink;
   final BubbleController bubbles;
   final PageNoteHost host;
+  final bool penMode;
 
   @override
   State<_SlidePaneViewer> createState() => _SlidePaneViewerState();
@@ -315,10 +340,9 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
           animation: widget.bubbles,
           builder: (context, _) => LayoutBuilder(
             builder: (context, constraints) {
-              final metrics = SlideStripMetrics.forWidth(
-                [for (final s in slides) slideAspect(s)],
-                constraints.maxWidth,
-              );
+              final metrics = SlideStripMetrics.forWidth([
+                for (final s in slides) slideAspect(s),
+              ], constraints.maxWidth);
               _metrics = metrics;
               _viewport = constraints.maxHeight;
               if (!_positioned && widget.host.page > 1) {
@@ -329,10 +353,14 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
               }
               return ListView.builder(
                 controller: _scroll,
-                // Balon taşınırken ya da slayt yakınlaştırılmışken kaydırma
-                // KİLİTLİ: parmak balonu sürüklerken listenin de kayması
-                // taşımayı imkânsız kılıyordu.
-                physics: (widget.bubbles.dragging != null || _zoomed)
+                // Balon taşınırken, KALEM AÇIKKEN ya da slayt
+                // yakınlaştırılmışken kaydırma KİLİTLİ: parmak balonu
+                // sürüklerken (ya da çizerken) listenin de kayması işi
+                // imkânsız kılıyordu.
+                physics:
+                    (widget.bubbles.dragging != null ||
+                        _zoomed ||
+                        widget.penMode)
                     ? const NeverScrollableScrollPhysics()
                     : const ClampingScrollPhysics(),
                 itemCount: slides.length,
@@ -341,6 +369,10 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
                 itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
                 itemBuilder: (context, i) => RepaintBoundary(
                   child: ZoomBox(
+                    // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
+                    // çizer, önceden yapılmış yakınlaştırma kaybolmaz (tam
+                    // ekran görüntüleyicideki kurulumun aynısı).
+                    enabled: !widget.penMode,
                     onZoomChanged: (value) {
                       if (mounted && _zoomed != value) {
                         setState(() => _zoomed = value);
@@ -392,6 +424,15 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
         bottom: 0,
         child: BubbleDock(controller: widget.bubbles),
       ),
+      // Kalem çubuğu bölmenin DİBİNDE: renk, kalınlık, ok, silgi, geri al,
+      // temizle (PDF panosuyla aynı yer ve aynı çubuk).
+      if (widget.penMode)
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: InkToolbar(controller: widget.ink),
+        ),
       Positioned(
         top: 4,
         right: 4,
@@ -425,29 +466,25 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
   );
 
   Widget _addButton() => AnimatedBuilder(
-        animation: widget.bubbles,
-        builder: (context, _) {
-          final adding = widget.bubbles.adding;
-          final scheme = Theme.of(context).colorScheme;
-          return Material(
-            color: adding
-                ? scheme.primary
-                : scheme.surface.withValues(alpha: 0.85),
-            shape: const CircleBorder(),
-            elevation: 2,
-            child: IconButton(
-              tooltip: adding
-                  ? context.l10n.bubbleAddDone
-                  : context.l10n.bubbleAdd,
-              visualDensity: VisualDensity.compact,
-              onPressed: () => widget.bubbles.setAdding(!adding),
-              icon: Icon(
-                adding ? Icons.chat_bubble : Icons.add_comment_outlined,
-                size: 18,
-                color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
-              ),
-            ),
-          );
-        },
+    animation: widget.bubbles,
+    builder: (context, _) {
+      final adding = widget.bubbles.adding;
+      final scheme = Theme.of(context).colorScheme;
+      return Material(
+        color: adding ? scheme.primary : scheme.surface.withValues(alpha: 0.85),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: IconButton(
+          tooltip: adding ? context.l10n.bubbleAddDone : context.l10n.bubbleAdd,
+          visualDensity: VisualDensity.compact,
+          onPressed: () => widget.bubbles.setAdding(!adding),
+          icon: Icon(
+            adding ? Icons.chat_bubble : Icons.add_comment_outlined,
+            size: 18,
+            color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
+          ),
+        ),
       );
+    },
+  );
 }

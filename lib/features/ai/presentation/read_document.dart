@@ -2,6 +2,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/doc_picker.dart';
 import '../../notes/data/doc_text.dart';
 import '../../notes/data/pdf_text.dart';
 import 'listen_screen.dart';
@@ -24,7 +25,7 @@ Future<void> pickAndReadDocument(BuildContext context) async {
       'text/plain',
     ],
   );
-  final file = await openFile(acceptedTypeGroups: const [group]);
+  final file = await DocPicker.pickOne(group);
   if (file == null || !context.mounted) return;
 
   final path = file.path;

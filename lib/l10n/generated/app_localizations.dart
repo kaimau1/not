@@ -1389,7 +1389,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelDocument.
   ///
   /// In tr, this message translates to:
-  /// **'Podcast ve belge sohbeti'**
+  /// **'Belge sohbeti ve PDF özeti'**
   String get aiModelDocument;
 
   /// No description provided for @aiModelTranslate.
@@ -1401,7 +1401,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiModelVoice.
   ///
   /// In tr, this message translates to:
-  /// **'Sesli not'**
+  /// **'Sesli not asistanı'**
   String get aiModelVoice;
 
   /// No description provided for @aiModelAuto.
@@ -4211,6 +4211,96 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Acil (yanıp söner)'**
   String get bubbleUrgent;
+
+  /// No description provided for @captureModeQuestion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu nasıl açalım?'**
+  String get captureModeQuestion;
+
+  /// No description provided for @captureModeBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu'**
+  String get captureModeBubbles;
+
+  /// No description provided for @captureModeBubblesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.'**
+  String get captureModeBubblesInfo;
+
+  /// No description provided for @captureModeClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik'**
+  String get captureModeClassic;
+
+  /// No description provided for @captureModeClassicInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz metin notu; içerik ek olarak girer.'**
+  String get captureModeClassicInfo;
+
+  /// No description provided for @captureModeNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'YENİ'**
+  String get captureModeNew;
+
+  /// No description provided for @imagePrepareTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görselleri düzelt'**
+  String get imagePrepareTitle;
+
+  /// No description provided for @imagePrepareDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Devam'**
+  String get imagePrepareDone;
+
+  /// No description provided for @imageRotateLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sola döndür'**
+  String get imageRotateLeft;
+
+  /// No description provided for @imageRotateRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağa döndür'**
+  String get imageRotateRight;
+
+  /// No description provided for @videoFrameFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videodan kare alınamadı; not klasik açılıyor.'**
+  String get videoFrameFailed;
+
+  /// No description provided for @bubbleArrowHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oku gizle'**
+  String get bubbleArrowHide;
+
+  /// No description provided for @bubbleArrowShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oku göster'**
+  String get bubbleArrowShow;
+
+  /// No description provided for @speechPitch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses tonu'**
+  String get speechPitch;
+
+  /// No description provided for @speechVoicePickerTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses seçimi'**
+  String get speechVoicePickerTitle;
 }
 
 class _AppLocalizationsDelegate

@@ -37,30 +37,36 @@ void main() {
       expect(back.isHighlight, isTrue);
     });
 
-    test('vurgu dikdortgenleri DUZ liste yazilir (Firestore ic ice dizi almaz)',
-        () {
-      // KOK NEDEN (2026-08-08): dikdortgenler [[l,t,r,b]] olarak yaziliyordu;
-      // Firestore ic ice dizi kabul etmez ve o notun YAZIMI TUMUYLE
-      // reddediliyordu — kullanici "metin secip balon koyunca kaydolmuyor,
-      // geri gidince kayboluyor" dedi. Artik duz liste yaziliyor.
-      const bubble = PageBubble(
-        id: 'b',
-        page: 1,
-        x: 0.5,
-        y: 0.5,
-        rects: [
-          PageBubbleRect(0.1, 0.2, 0.9, 0.24),
-          PageBubbleRect(0.1, 0.26, 0.6, 0.30),
-        ],
-      );
-      final raw = bubble.toMap()['r'] as List;
-      expect(raw.every((v) => v is num), isTrue, reason: 'ic ice dizi olmamali');
-      expect(raw, hasLength(8));
-      final back = PageBubble.fromMap(bubble.toMap());
-      expect(back.rects, hasLength(2));
-      expect(back.rects.first.left, 0.1);
-      expect(back.rects.last.bottom, 0.30);
-    });
+    test(
+      'vurgu dikdortgenleri DUZ liste yazilir (Firestore ic ice dizi almaz)',
+      () {
+        // KOK NEDEN (2026-08-08): dikdortgenler [[l,t,r,b]] olarak yaziliyordu;
+        // Firestore ic ice dizi kabul etmez ve o notun YAZIMI TUMUYLE
+        // reddediliyordu — kullanici "metin secip balon koyunca kaydolmuyor,
+        // geri gidince kayboluyor" dedi. Artik duz liste yaziliyor.
+        const bubble = PageBubble(
+          id: 'b',
+          page: 1,
+          x: 0.5,
+          y: 0.5,
+          rects: [
+            PageBubbleRect(0.1, 0.2, 0.9, 0.24),
+            PageBubbleRect(0.1, 0.26, 0.6, 0.30),
+          ],
+        );
+        final raw = bubble.toMap()['r'] as List;
+        expect(
+          raw.every((v) => v is num),
+          isTrue,
+          reason: 'ic ice dizi olmamali',
+        );
+        expect(raw, hasLength(8));
+        final back = PageBubble.fromMap(bubble.toMap());
+        expect(back.rects, hasLength(2));
+        expect(back.rects.first.left, 0.1);
+        expect(back.rects.last.bottom, 0.30);
+      },
+    );
 
     test('ESKI ic ice bicim de okunur (eski kayitlar kaybolmasin)', () {
       final back = PageBubble.fromMap({
@@ -89,6 +95,21 @@ void main() {
 
     test('bozuk dikdortgen kaydi coken deger degil sifir verir', () {
       expect(PageBubbleRect.fromList(const [1, 2]).right, 0);
+    });
+
+    test('ok VARSAYILAN acik; alan yoksa eski kayitta da cizilir', () {
+      // Kullanici oku kapatabiliyor (2026-08-09) ama ALANI OLMAYAN eski
+      // kayitlarda ok gorunmeye devam etmeli: kapatma acik bir secim.
+      const plain = PageBubble(id: 'b', page: 1, x: 0, y: 0);
+      expect(plain.arrow, isTrue);
+      expect(plain.toMap().containsKey('a'), isFalse);
+      expect(PageBubble.fromMap({'i': 'b', 'p': 1}).arrow, isTrue);
+    });
+
+    test('ok KAPATILINCA kayda yazilir ve geri okunur', () {
+      const hidden = PageBubble(id: 'b', page: 1, x: 0, y: 0, arrow: false);
+      expect(hidden.toMap()['a'], isFalse);
+      expect(PageBubble.fromMap(hidden.toMap()).arrow, isFalse);
     });
   });
 
@@ -282,7 +303,14 @@ void main() {
     test('YAZILI balona dokunmak OKUMA kipinde acar — klavye gelmez', () {
       final c = build(
         initial: const [
-          PageBubble(id: 'a', page: 1, x: 0, y: 0, text: 'yazili', collapsed: true),
+          PageBubble(
+            id: 'a',
+            page: 1,
+            x: 0,
+            y: 0,
+            text: 'yazili',
+            collapsed: true,
+          ),
         ],
       );
       c.openOnly('a');
@@ -295,7 +323,9 @@ void main() {
 
     test('BOS balonda okunacak sey yok — dogrudan yazmaya acilir', () {
       final c = build(
-        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0, collapsed: true)],
+        initial: const [
+          PageBubble(id: 'a', page: 1, x: 0, y: 0, collapsed: true),
+        ],
       );
       c.openOnly('a');
       expect(c.editMode, isTrue);
@@ -350,6 +380,16 @@ void main() {
           open: false,
         );
       expect(c.bubbles.single.color, BubbleController.highlightPalette.first);
+    });
+
+    test('ok ac/kapa (vurgunun okunu kaldirma secenegi)', () {
+      final c = build(
+        initial: const [PageBubble(id: 'a', page: 1, x: 0, y: 0)],
+      );
+      c.toggleArrow('a');
+      expect(c.byId('a')!.arrow, isFalse);
+      c.toggleArrow('a');
+      expect(c.byId('a')!.arrow, isTrue);
     });
 
     test('yildiz ac/kapa', () {

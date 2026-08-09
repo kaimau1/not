@@ -75,8 +75,15 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   /// 0.4 (normal Türkçe hızı 0.5'ten yavaş).
   static const _foreignRateKey = 'tts_rate_foreign';
 
+  /// Sesin TONU (perde). Motorlar 0.5–2.0 aralığını kabul eder; 1.0 sesin
+  /// kendi tonudur. Ayarlarda eksikti (kullanıcı isteği 2026-08-09: "eksik
+  /// ayar varsa eklenmeli") — aynı sesin daha kalın/ince okunması, uzun
+  /// dinlemelerde okunabilirliği belirgin değiştiriyor.
+  static const _pitchKey = 'tts_pitch';
+
   static const _defaultRate = 0.5;
   static const _defaultForeignRate = 0.4;
+  static const _defaultPitch = 1.0;
 
   FlutterTts? _tts;
   List<String> _queue = const [];
@@ -132,6 +139,7 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     tts.setErrorHandler((dynamic _) => _sentenceDone?.complete());
     final prefs = await SharedPreferences.getInstance();
     await tts.setSpeechRate(prefs.getDouble(_rateKey) ?? _defaultRate);
+    await tts.setPitch(prefs.getDouble(_pitchKey) ?? _defaultPitch);
     _tts = tts;
     return tts;
   }
@@ -234,10 +242,8 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
     'tr': 'Seçtiğin ses bu. Notların bundan sonra bu sesle, bu hızda okunacak.',
     'en':
         'This is the selected voice. Your notes will be read aloud like this.',
-    'de':
-        'Das ist die ausgewählte Stimme. Deine Notizen werden so vorgelesen.',
-    'es':
-        'Esta es la voz seleccionada. Tus notas se leerán en voz alta así.',
+    'de': 'Das ist die ausgewählte Stimme. Deine Notizen werden so vorgelesen.',
+    'es': 'Esta es la voz seleccionada. Tus notas se leerán en voz alta así.',
   };
 
   /// [language] için örnek cümle (bilinmeyen dilde İngilizce).
@@ -282,6 +288,18 @@ class SpeechOutputController extends Notifier<SpeechOutputState> {
   Future<void> setForeignRate(double value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_foreignRateKey, value);
+  }
+
+  /// Sesin tonu (0.5–2.0; 1.0 = sesin kendi tonu).
+  Future<double> pitch() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_pitchKey) ?? _defaultPitch;
+  }
+
+  Future<void> setPitch(double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(_pitchKey, value);
+    await (await _engine()).setPitch(value);
   }
 
   /// Metni cümlelere bölüp sırayla okur. Zaten okuyorsa önce durdurur.

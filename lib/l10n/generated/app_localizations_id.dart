@@ -1268,12 +1268,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get newPdfNote => 'PDF ekle not al';
 
   @override
-  String get imageNotePreparing =>
-      'Menyusun gambar menjadi dokumen…';
+  String get imageNotePreparing => 'Menyusun gambar menjadi dokumen…';
 
   @override
-  String get newImageNote =>
-      'Tambah gambar, buat catatan';
+  String get newImageNote => 'Tambah gambar, buat catatan';
 
   @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
@@ -2173,10 +2171,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get shareAsText => 'Sebagai teks biasa';
 
   @override
-  String get shareAsTextInfo => 'Mengirim teks catatan dan catatan halaman ke aplikasi mana pun.';
+  String get shareAsTextInfo =>
+      'Mengirim teks catatan dan catatan halaman ke aplikasi mana pun.';
 
   @override
-  String get shareAsTextEmpty => 'Catatan ini tidak punya teks untuk dibagikan.';
+  String get shareAsTextEmpty =>
+      'Catatan ini tidak punya teks untuk dibagikan.';
 
   @override
   String get sharePdfWithBubbles => 'Sebagai PDF bergelembung';
@@ -2186,7 +2186,8 @@ class AppLocalizationsId extends AppLocalizations {
       'Gelembung, sorotan, dan coretan dicetak ke dalam PDF; siapa pun bisa membukanya, dan di Not terbuka bisa diedit.';
 
   @override
-  String get sharePdfWithBubblesNone => 'Catatan ini tidak punya PDF bergelembung atau bercoretan.';
+  String get sharePdfWithBubblesNone =>
+      'Catatan ini tidak punya PDF bergelembung atau bercoretan.';
 
   @override
   String get sharePdfWithBubblesPreparing => 'Menyiapkan PDF bergelembung…';
@@ -2239,4 +2240,52 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get bubbleUrgent => 'Acil (yanıp söner)';
+
+  @override
+  String get captureModeQuestion => 'Notu nasıl açalım?';
+
+  @override
+  String get captureModeBubbles => 'Balonlu';
+
+  @override
+  String get captureModeBubblesInfo =>
+      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+
+  @override
+  String get captureModeClassic => 'Klasik';
+
+  @override
+  String get captureModeClassicInfo =>
+      'Düz metin notu; içerik ek olarak girer.';
+
+  @override
+  String get captureModeNew => 'YENİ';
+
+  @override
+  String get imagePrepareTitle => 'Görselleri düzelt';
+
+  @override
+  String get imagePrepareDone => 'Devam';
+
+  @override
+  String get imageRotateLeft => 'Sola döndür';
+
+  @override
+  String get imageRotateRight => 'Sağa döndür';
+
+  @override
+  String get videoFrameFailed =>
+      'Videodan kare alınamadı; not klasik açılıyor.';
+
+  @override
+  String get bubbleArrowHide => 'Oku gizle';
+
+  @override
+  String get bubbleArrowShow => 'Oku göster';
+
+  @override
+  String get speechPitch => 'Ses tonu';
+
+  @override
+  String get speechVoicePickerTitle => 'Ses seçimi';
 }
