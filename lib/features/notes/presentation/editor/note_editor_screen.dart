@@ -2007,6 +2007,67 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   double _canvasBaseWidth = 0;
   double _canvasBaseHeight = 0;
 
+  /// O anki build'de kurulmuş tuval ağacı ve kurulduğu taban yükseklik.
+  ///
+  /// Klavye animasyonu boyunca gövdenin kısıtı her karede değişiyor ve
+  /// `LayoutBuilder` yeniden koşuyor; taban yükseklik aynı kaldığı sürece
+  /// BİREBİR AYNI widget örneği döndürülür ve Flutter alt ağacı hiç kurmaz.
+  /// Her editör build'inde temizlenir — bayat ağaç bir kare bile yaşamaz.
+  Widget? _canvasCache;
+  double _canvasCacheHeight = -1;
+
+  /// Serbest görsel tuvali + sayfa içeriği. [_canvasCache] ile birlikte
+  /// çalışır; ayrı bir yöntem olması yalnız `build`i okunur tutmak için.
+  Widget _buildCanvas({
+    required double minHeight,
+    required List<Attachment> imageAttachments,
+    required double hintLineHeight,
+    required bool useCanvasHint,
+    required bool hasBodyField,
+    required Widget pageContent,
+    required AppLocalizations l10n,
+  }) => SingleChildScrollView(
+    controller: _pageScroll,
+    padding: const EdgeInsets.only(bottom: 96),
+    child: NotePageCanvas(
+      // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
+      minHeight: minHeight,
+      images: imageAttachments,
+      onRemove: _removeAttachment,
+      onChanged: _updateAttachment,
+      onCrop: _cropImage,
+      onExtractText: _ocrImage,
+      onCopy: _copyAttachment,
+      onCopyMany: _copyAttachments,
+      onDetach: (a) => _setImageAsFile(a, true),
+      onVideoToNote: _videoToNote,
+      topLimit: _bodyTop,
+      hintLineHeight: hintLineHeight,
+      hint: useCanvasHint
+          ? Padding(
+              // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz dikey
+              // dolgusu da eklenir ki ipucu metnin tam yerine otursun.
+              padding: const EdgeInsets.fromLTRB(_kGutter, 16, _kGutter, 0),
+              child: Text(
+                l10n.bodyHint,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Theme.of(context).hintColor),
+              ),
+            )
+          : null,
+      onFloats: _applyFloats,
+      // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için aşağıya
+      // dokunmak yeterli. Listede gövde alanı yok.
+      onTapEmpty: hasBodyField
+          ? () {
+              if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+            }
+          : null,
+      child: KeyedSubtree(key: _pageKey, child: pageContent),
+    ),
+  );
+
   /// Belge notunda bir BALONA yazılıyor: editörün alt çubuğu gizlenir.
   bool _immersiveBubble = false;
 
@@ -3932,6 +3993,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Widget build(BuildContext context) {
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
     _cacheDeps();
+    // Tuval önbelleği YALNIZ bu build içindeki `LayoutBuilder` tekrarları
+    // içindir (klavye animasyonunun kareleri). Editör yeniden kurulduğunda
+    // bayat kalmasın diye burada, her şeyden önce düşürülür.
+    _canvasCache = null;
     final l10n = context.l10n;
     final note = _note;
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
@@ -4444,54 +4509,43 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _listBodyOpen;
     // Gövde BOŞKEN "Not..." ipucu satırı görsellere kapalı bant sayılır.
     //
+    // KLAVYE KARELERİNDE AĞACI YENİDEN KURMA (kullanıcı bulgusu 2026-08-10:
+    // "klavye açılırken kasma sorunu var, geçmişte de vardı hâlâ tam
+    // düzelmedi"): alt çubuk klavye yüksekliği kadar büyüyor, dolayısıyla
+    // Scaffold gövdesinin KISITI animasyonun her karesinde değişiyor ve
+    // `LayoutBuilder` her karede yeniden koşuyordu. Kurulan ağaç
+    // (`SingleChildScrollView` + `NotePageCanvas` + her görselin kutusu)
+    // karede bir baştan yaratılıyordu — oysa tuvalin tek ihtiyacı olan taban
+    // yükseklik [_stableCanvasHeight] sayesinde ZATEN sabit.
+    //
+    // Çözüm: aynı taban için AYNI widget örneği döndürülür. Flutter
+    // `updateChild`te birebir aynı örneği görünce alt ağacı hiç kurmaz, yani
+    // klavye animasyonu boyunca yeniden kurulan tek şey `Padding` kalır.
+    // Önbellek her editör build'inde sıfırlanır (bkz. build başındaki
+    // `_canvasCache = null`) — yani not değişimi ya da yeni görsel bir kare
+    // bile gecikmeden görünür.
     final body = note.type.isPageNoteType
         ? _pageNoteBody(note, keyedHeader, richTheme, noteBodyStyle)
         : LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              controller: _pageScroll,
-              padding: const EdgeInsets.only(bottom: 96),
-              child: NotePageCanvas(
-                // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
-                minHeight: _stableCanvasHeight(constraints),
-                images: imageAttachments,
-                onRemove: _removeAttachment,
-                onChanged: _updateAttachment,
-                onCrop: _cropImage,
-                onExtractText: _ocrImage,
-                onCopy: _copyAttachment,
-                onCopyMany: _copyAttachments,
-                onDetach: (a) => _setImageAsFile(a, true),
-                onVideoToNote: _videoToNote,
-                topLimit: _bodyTop,
+            builder: (context, constraints) {
+              final minHeight = _stableCanvasHeight(constraints);
+              final cached = _canvasCache;
+              if (cached != null && _canvasCacheHeight == minHeight) {
+                return cached;
+              }
+              final built = _buildCanvas(
+                minHeight: minHeight,
+                imageAttachments: imageAttachments,
                 hintLineHeight: hintLineHeight,
-                hint: useCanvasHint
-                    ? Padding(
-                        // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz
-                        // dikey dolgusu da eklenir ki ipucu metnin tam yerine otursun.
-                        padding: const EdgeInsets.fromLTRB(
-                          _kGutter,
-                          16,
-                          _kGutter,
-                          0,
-                        ),
-                        child: Text(
-                          l10n.bodyHint,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: Theme.of(context).hintColor),
-                        ),
-                      )
-                    : null,
-                onFloats: _applyFloats,
-                // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için
-                // aşağıya dokunmak yeterli. Listede gövde alanı yok.
-                onTapEmpty: hasBodyField
-                    ? () {
-                        if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-                      }
-                    : null,
-                child: KeyedSubtree(key: _pageKey, child: pageContent),
-              ),
-            ),
+                useCanvasHint: useCanvasHint,
+                hasBodyField: hasBodyField,
+                pageContent: pageContent,
+                l10n: l10n,
+              );
+              _canvasCache = built;
+              _canvasCacheHeight = minHeight;
+              return built;
+            },
           );
 
     return Actions(
