@@ -1726,6 +1726,18 @@ class AppLocalizationsNl extends AppLocalizations {
   String get sortColor => 'Kleur';
 
   @override
+  String get sortActive => 'Meest bewerkt';
+
+  @override
+  String get voicePreview => 'Stem testen';
+
+  @override
+  String get voicePreviewCached => 'Het voorbeeld wordt één keer gemaakt en daarna lokaal afgespeeld';
+
+  @override
+  String get reorderHint => 'Houd een kaart ingedrukt en sleep hem naar de gewenste plek';
+
+  @override
   String get filterSheetTitle => 'Filter';
 
   @override

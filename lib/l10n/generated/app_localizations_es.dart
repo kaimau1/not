@@ -1725,6 +1725,18 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sortColor => 'Color';
 
   @override
+  String get sortActive => 'Más trabajadas';
+
+  @override
+  String get voicePreview => 'Probar la voz';
+
+  @override
+  String get voicePreviewCached => 'La muestra se genera una vez y luego se reproduce desde el almacenamiento';
+
+  @override
+  String get reorderHint => 'Mantén pulsada una tarjeta y arrástrala donde quieras';
+
+  @override
   String get filterSheetTitle => 'Filtrar';
 
   @override

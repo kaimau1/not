@@ -1709,6 +1709,18 @@ class AppLocalizationsTr extends AppLocalizations {
   String get sortColor => 'Renk';
 
   @override
+  String get sortActive => 'En çok çalışılan';
+
+  @override
+  String get voicePreview => 'Sesi dene';
+
+  @override
+  String get voicePreviewCached => 'Örnek bir kez üretilir, sonra kayıttan çalınır';
+
+  @override
+  String get reorderHint => 'Kartı basılı tutup istediğin yere sürükle';
+
+  @override
   String get filterSheetTitle => 'Süz';
 
   @override

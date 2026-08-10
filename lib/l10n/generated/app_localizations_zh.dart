@@ -1667,6 +1667,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortColor => '颜色';
 
   @override
+  String get sortActive => '最常使用';
+
+  @override
+  String get voicePreview => '试听语音';
+
+  @override
+  String get voicePreviewCached => '示例只生成一次，之后从本地播放';
+
+  @override
+  String get reorderHint => '长按卡片，拖到想要的位置';
+
+  @override
   String get filterSheetTitle => '筛选';
 
   @override

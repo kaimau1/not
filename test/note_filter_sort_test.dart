@@ -86,6 +86,38 @@ void main() {
     expect(order.skip(2).toList(), ['renksiz-yeni', 'sade']);
   });
 
+  // "En çok çalışılan": sayaç cihaz yerelde tutulur (noteActivityProvider),
+  // notu açmak/düzenlemek bir puan ekler. Sayacı olmayan notlar sona düşer ve
+  // kendi aralarında son güncellenene göre dizilir.
+  test('En çok çalışılan sıralaması sayaca göre dizer', () async {
+    final c = await ready();
+    final activity = c.read(noteActivityProvider.notifier);
+    activity
+      ..touch('sade')
+      ..touch('sade')
+      ..touch('kilitli');
+    c.read(noteSortProvider.notifier).set(NoteSort.active);
+    final order = ids(c);
+    expect(order.take(2).toList(), ['sade', 'kilitli']);
+    // Hiç dokunulmamış ikisi: yeni güncellenen önce.
+    expect(order.skip(2).toList(), ['renksiz-yeni', 'alarmli']);
+  });
+
+  test('sayaç kalıcıdır (yeniden okunur)', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    ProviderContainer make() {
+      final c = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    make().read(noteActivityProvider.notifier).touch('a');
+    expect(make().read(noteActivityProvider)['a'], 1);
+  });
+
   bucketTests();
 
   test('renk eşitse güncelleme tarihi belirler', () async {

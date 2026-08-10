@@ -1719,6 +1719,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sortColor => 'Цвет';
 
   @override
+  String get sortActive => 'Самые используемые';
+
+  @override
+  String get voicePreview => 'Проверить голос';
+
+  @override
+  String get voicePreviewCached => 'Образец создаётся один раз, затем воспроизводится из памяти';
+
+  @override
+  String get reorderHint => 'Нажмите и удерживайте карточку, затем перетащите её';
+
+  @override
   String get filterSheetTitle => 'Фильтр';
 
   @override

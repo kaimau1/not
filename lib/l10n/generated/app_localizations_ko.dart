@@ -1683,6 +1683,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sortColor => '색상';
 
   @override
+  String get sortActive => '가장 많이 작업한';
+
+  @override
+  String get voicePreview => '음성 미리 듣기';
+
+  @override
+  String get voicePreviewCached => '샘플은 한 번만 생성되고 이후에는 저장된 파일을 재생합니다';
+
+  @override
+  String get reorderHint => '카드를 길게 눌러 원하는 위치로 끌어 놓으세요';
+
+  @override
   String get filterSheetTitle => '필터';
 
   @override

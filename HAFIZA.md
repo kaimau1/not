@@ -1555,3 +1555,19 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **TUZAK — testler.** Üç widget testi seçim kipini `find.text('Seç')`e dokunarak açıyordu; düğme artık düzenleyicinin İÇİNDE olmadığı için hepsi `tester.state<ItemsEditorState>(...).startSelection()` çağırıyor.
 
   Not: 3c22920'nin APK işi runner geri alınması yüzünden İPTAL oldu (analiz+test yeşildi) — o turun APK'sı çıkmadı, bu turun derlemesi ikisini birden taşıyor.
+
+- 2026-08-10 (31. tur): **Asistan not işlevleri, "en çok çalışılan" sıralaması, sıralama modu, imleç ve ses denemesi** (dal: `claude/ui-fixes-feature-updates-q3vl88`).
+
+  **1) KÖK NEDEN — asistan "kırmızı çerçeve yap" isteğini nota MADDE olarak yazıyordu.** `update_note` aracının alanları yalnız metin/madde/etiket/sabitle/arşiv/hatırlatıcıydı; notun görünümünü değiştirecek bir yol YOKTU. Model elindeki tek araçla isteği yerine getirmeye çalışıp isteğin kendisini içerik sanıyordu (ekran görüntüsü: "kırmızı çerçeve koy" maddesi). Araca `color`, `frameColor`, `starred`, `locked`, `checkItems`, `uncheckItems`, `removeItems` eklendi; açıklamasına "isteği notun içine madde olarak YAZMA" kuralı yazıldı ve sesli not görevi "var olan nota yönelik istekte update_note çağır" diye genişletildi. **TUZAK:** araç şeması İKİ yerde tanımlı — `gemini_service._assistantTools` (REST) ve `firebase_ai_client._assistantTools` (dahili anahtar yolu); biri güncellenip öbürü unutulursa özellik yalnız bir sağlayıcıda çalışır. Renk argümanı Türkçe de gelebiliyor, `parseColor` diğer adları tanır.
+
+  **2) "En çok çalışılan" sıralaması.** Sayaç CİHAZ YERELİ (`noteActivityProvider`, SharedPreferences): notu açmak bir puan, o oturumda değiştirmek bir puan daha. Firestore'a yazılmadı — her açılışta not belgesini güncellemek `updatedAt`i tazeler ve "son güncellenen" sıralamasını anlamsızlaştırırdı. Sayaç yalnız o sıralama seçiliyken izlenir (aksi hâlde her not açılışı dashboard'ı yeniden hesaplardı).
+
+  **3) KÖK NEDEN — sıralama modunda "istediğim yere koyamıyorum".** Mod, normal masonry ızgarayı kullanıyordu; masonry kartı O AN en kısa sütuna atar, yani sıradaki n. notun hangi hücreye düşeceği kart YÜKSEKLİKLERİNE bağlıdır. Kullanıcının kurduğu sıra ile ekrandaki yerleşim tutmuyor, aralarda boşluklar kalıyordu. Modda artık eşit yükseklikte kompakt karolar (`_ReorderTile`, 104 px) çizilir: n. not her zaman (n ~/ sütun, n % sütun) hücresindedir. Tarih kovaları modda kapatıldı (kartlar bölümler arası taşınamıyor) ve üst çubuğa ipucu satırı kondu.
+
+  **4) KÖK NEDEN — "imleç resmin solunda ama yazı sağa gidiyor".** Sarma dolguları `WidgetSpan` + `Size(w, 0)` ile, yani YÜKSEKLİĞİ SIFIR kutulardı. İmlecin ekran konumu `TextPainter`ın kutu ölçümünden gelir; dejenere (yüksekliği sıfır) kutu ölçümde işe yaramıyor ve imleç satır başına, görselin üstüne düşüyordu — yazma konumu doğruydu, yalnız imleç yalan söylüyordu. Kutu yüksekliği yarım puntoya çekildi (`wrapAnchorHeight`), ölçüm ve çizim yolunda AYNI değer. Regresyon testi: imlecin dx'i dolgu genişliğinden küçük olamaz + dolgu satır yüksekliğini büyütmez.
+
+  **5) Ses denemesi.** Hız/ton kaydırıcıları ve cihaz sesi seçimi artık örnek cümle okur. Yapay zekâ sesinde örnek model+ses başına BİR KEZ üretilir, `getApplicationSupportDirectory()/tts_samples/` altına yazılır ve sonraki denemeler dosyadan çalar (kullanıcı isteği: "kota harcamasın"). Geçici klasör kullanılmadı — sistem temizleyince örnek yeniden üretilir ve kota boşuna yanardı.
+
+  **6)** "Notları sırala" ⋮ menüsünden kaldırıldı; sıralamanın tek yeri Süz levhası.
+
+  Doğrulama: Flutter SDK yok, `analyze` + 750+ test CI'da yeşil (26858fd).

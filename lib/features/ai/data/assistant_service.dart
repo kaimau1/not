@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -159,6 +160,51 @@ class AssistantService {
     return {'status': 'ok', 'noteId': id};
   }
 
+  /// Model renk adını serbestçe yazabilir ("kırmızı", "red", "RED"). Türkçe
+  /// adlar da tanınır: kullanıcı "kırmızı çerçeve yap" dediğinde model çoğu kez
+  /// argümanı Türkçe geçiriyor ve katı bir eşleme sessizce "renk yok"a düşerdi.
+  static const _colorAliases = <String, NoteColor>{
+    'kirmizi': NoteColor.red,
+    'kırmızı': NoteColor.red,
+    'seftali': NoteColor.peach,
+    'şeftali': NoteColor.peach,
+    'turuncu': NoteColor.peach,
+    'sari': NoteColor.amber,
+    'sarı': NoteColor.amber,
+    'amber': NoteColor.amber,
+    'yesil': NoteColor.green,
+    'yeşil': NoteColor.green,
+    'adaciyi': NoteColor.sage,
+    'mavi': NoteColor.blue,
+    'lacivert': NoteColor.storm,
+    'firtina': NoteColor.storm,
+    'mor': NoteColor.purple,
+    'pembe': NoteColor.blossom,
+    'kahverengi': NoteColor.clay,
+    'kil': NoteColor.clay,
+    'gri': NoteColor.chalk,
+    'beyaz': NoteColor.chalk,
+    'yok': NoteColor.none,
+    'varsayilan': NoteColor.none,
+    'varsayılan': NoteColor.none,
+    'none': NoteColor.none,
+  };
+
+  /// Renk argümanını çözer; tanınmazsa null (alan hiç yazılmaz — yanlış renk
+  /// vermektense dokunmamak yeğdir).
+  @visibleForTesting
+  static NoteColor? parseColor(dynamic value) {
+    if (value is! String) return null;
+    final key = value.trim().toLowerCase();
+    if (key.isEmpty) return null;
+    final alias = _colorAliases[key];
+    if (alias != null) return alias;
+    for (final color in NoteColor.values) {
+      if (color.id == key || color.name == key) return color;
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>> _updateNote(
     NotesRepository repo,
     Map<String, dynamic> args,
@@ -171,6 +217,18 @@ class AssistantService {
     if (args['title'] is String) fields['title'] = args['title'];
     if (args['body'] is String) fields['body'] = args['body'];
     if (args['setTags'] is List) fields['tags'] = _stringList(args['setTags']);
+    // GÖRÜNÜM: "kırmızı çerçeve yap", "bu notu sarı yap", "yıldızla".
+    //
+    // KÖK NEDEN (kullanıcı 2026-08-09, ekran görüntüsüyle): asistanın
+    // yapabildiği tek şey metin yazmaktı; "kırmızı çerçeve yap" denince elinde
+    // uygun araç olmadığından isteği NOTUN İÇİNE bir madde olarak yazıyordu
+    // ("kırmızı çerçeve koy"). Artık notun kendi alanlarını değiştirebiliyor.
+    final color = parseColor(args['color']);
+    if (color != null) fields['color'] = color.id;
+    final frameColor = parseColor(args['frameColor']);
+    if (frameColor != null) fields['frameColor'] = frameColor.id;
+    if (args['starred'] is bool) fields['starred'] = args['starred'];
+    if (args['locked'] is bool) fields['locked'] = args['locked'];
     if (args['pinned'] is bool) fields['pinned'] = args['pinned'];
     if (args['archived'] is bool) {
       fields['archivedAt'] = (args['archived'] as bool)
@@ -184,13 +242,46 @@ class AssistantService {
       if (reminder != null) fields['reminderAt'] = Timestamp.fromDate(reminder);
     }
 
+    // MADDE İŞLEMLERİ tek okumada toplanır: üçü de aynı listeyi yeniden
+    // yazıyor, ayrı ayrı okunsa son yazan öbürlerini ezerdi.
     final addItems = _stringList(args['addItems']);
-    if (addItems.isNotEmpty) {
-      // Mevcut öğeleri koruyarak sona ekle.
+    final checkItems = _stringList(args['checkItems']);
+    final uncheckItems = _stringList(args['uncheckItems']);
+    final removeItems = _stringList(args['removeItems']);
+    if (addItems.isNotEmpty ||
+        checkItems.isNotEmpty ||
+        uncheckItems.isNotEmpty ||
+        removeItems.isNotEmpty) {
       final current = await repo.watchNote(noteId).first;
       if (current != null) {
+        // Eşleme METİN üzerinden ve gevşek: model maddeyi kullanıcının
+        // söylediği gibi yazar ("süt"), nottaki metin ise "2 lt Süt" olabilir.
+        bool matches(NoteItem item, List<String> wanted) {
+          final text = item.text.trim().toLowerCase();
+          if (text.isEmpty) return false;
+          for (final w in wanted) {
+            final needle = w.trim().toLowerCase();
+            if (needle.isEmpty) continue;
+            if (text == needle ||
+                text.contains(needle) ||
+                needle.contains(text)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        final kept = [
+          for (final item in current.items)
+            if (removeItems.isEmpty || !matches(item, removeItems))
+              matches(item, checkItems)
+                  ? item.copyWith(checked: true)
+                  : (matches(item, uncheckItems)
+                        ? item.copyWith(checked: false)
+                        : item),
+        ];
         fields['items'] = [
-          for (final item in current.items) item.toMap(),
+          for (final item in kept) item.toMap(),
           for (final text in addItems)
             NoteItem(id: _uuid.v4(), text: text).toMap(),
         ];

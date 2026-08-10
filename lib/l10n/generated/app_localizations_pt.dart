@@ -1728,6 +1728,18 @@ class AppLocalizationsPt extends AppLocalizations {
   String get sortColor => 'Cor';
 
   @override
+  String get sortActive => 'Mais trabalhadas';
+
+  @override
+  String get voicePreview => 'Testar a voz';
+
+  @override
+  String get voicePreviewCached => 'A amostra é gerada uma vez e depois reproduzida do armazenamento';
+
+  @override
+  String get reorderHint => 'Toque e segure um cartão e arraste para onde quiser';
+
+  @override
   String get filterSheetTitle => 'Filtrar';
 
   @override

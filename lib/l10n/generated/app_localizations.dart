@@ -3264,6 +3264,30 @@ abstract class AppLocalizations {
   /// **'Renk'**
   String get sortColor;
 
+  /// No description provided for @sortActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'En çok çalışılan'**
+  String get sortActive;
+
+  /// No description provided for @voicePreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesi dene'**
+  String get voicePreview;
+
+  /// No description provided for @voicePreviewCached.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek bir kez üretilir, sonra kayıttan çalınır'**
+  String get voicePreviewCached;
+
+  /// No description provided for @reorderHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartı basılı tutup istediğin yere sürükle'**
+  String get reorderHint;
+
   /// No description provided for @filterSheetTitle.
   ///
   /// In tr, this message translates to:

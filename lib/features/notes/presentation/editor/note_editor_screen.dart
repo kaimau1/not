@@ -636,6 +636,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   ProviderSubscription<AsyncValue<Note?>>? _sub;
   bool _deleted = false;
 
+  /// Bu oturumda çalışma sayacı işlendi mi (bkz. [noteActivityProvider]).
+  bool _workCounted = false;
+
   /// Madde editörünün durumu: başlıktaki klavye "İleri" tuşu liste notunda
   /// ilk maddeye odaklanabilsin diye GlobalKey. Karışık ve saf liste dalları
   /// aynı anahtarı kullanır — tip değişiminde (metin+madde ↔ liste) State
@@ -668,6 +671,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Arka plandaki boş not temizliği bu notu ATLASIN (bkz. cleanupEmptyNotes):
     // kullanıcı yazmaya yeni başladığında doküman kısa bir süre boş görünür.
     openEditorNoteIds.add(widget.noteId);
+    // Notu AÇMAK da bir çalışma izidir ("en çok çalışılan" sıralaması). İlk
+    // kareden sonra: initState içinde sağlayıcı yazmak build'in ortasına
+    // düşer ve Riverpod bunu hata sayar.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(noteActivityProvider.notifier).touch(widget.noteId);
+    });
     // dispose'da `ref` kullanılamadığından (bkz. yukarıdaki KÖK NEDEN notu)
     // depo/ayar bağımlılıkları ilk build'den ÖNCE de elde olmalı: yaşam
     // döngüsü kaydı ilk kare çizilmeden gelebilir.
@@ -1103,6 +1112,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // yazım kaydedilmediği gibi, atılan istisna dispose'un GERİ KALANINI da
     // (ek silme flush'ı, boş not temizliği, otomatik başlık) iptal ediyordu.
     // Depo artık her build'de tazelenen alandan okunur.
+    // "En çok çalışılan" sıralamasının ölçüsü (bkz. noteActivityProvider):
+    // oturumda İLK gerçek değişiklikte bir puan. Her tuş vuruşunda saymak
+    // sayacı yazma hızına bağlardı — uzun bir nota bir cümle eklemek, kısa
+    // bir notu baştan yazmaktan daha çok "çalışma" sayılmamalı.
+    if (!_workCounted) {
+      _workCounted = true;
+      ref.read(noteActivityProvider.notifier).touch(widget.noteId);
+    }
+
     void save() {
       final current = _note;
       if (current != null && !_deleted) {

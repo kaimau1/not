@@ -1703,6 +1703,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sortColor => 'اللون';
 
   @override
+  String get sortActive => 'الأكثر استخدامًا';
+
+  @override
+  String get voicePreview => 'جرّب الصوت';
+
+  @override
+  String get voicePreviewCached => 'يُنشأ المقطع مرة واحدة ثم يُشغَّل من التخزين';
+
+  @override
+  String get reorderHint => 'اضغط مطوّلاً على البطاقة ثم اسحبها إلى المكان الذي تريده';
+
+  @override
   String get filterSheetTitle => 'تصفية';
 
   @override

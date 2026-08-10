@@ -16,10 +16,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
+import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
+import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
@@ -1283,14 +1285,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final hasHiddenFolders = ref.watch(
       hiddenFolderIdsProvider.select((s) => s.isNotEmpty),
     );
-    // Elle sıralama yalnız süzgeçsiz görünümde anlamlı (alt kümede sıra
-    // bozulur); aksi hâlde menü maddesi hiç görünmez ki kullanıcı tıklayıp
-    // "neden olmuyor" demesin.
-    final reorderAvailable =
-        !searchActive &&
-        ref.watch(noteFilterProvider) == NoteFilter.all &&
-        ref.watch(selectedFolderProvider) == null &&
-        ref.watch(selectedTagProvider) == null;
     final hiddenRevealed = ref.watch(hiddenFoldersRevealedProvider);
 
     final page = CallbackShortcuts(
@@ -1358,6 +1352,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                               ),
                               const SizedBox(width: 4),
                             ],
+                            // Modun ne beklediği yazılı: kartın kendisi
+                            // dokununca AÇILMIYOR, uzun basış gerekiyor —
+                            // yazmadan bunu ancak deneyerek anlamak gerekiyordu.
+                            bottom: PreferredSize(
+                              preferredSize: const Size.fromHeight(22),
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  l10n.reorderHint,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ),
+                            ),
                           )
                         else if (selectionActive)
                           // Seçim kümesinin KENDİSİ yalnız burada gerekiyor;
@@ -1559,13 +1571,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               switch (action) {
                                                 'hidden' =>
                                                   _toggleHiddenFolders(),
-                                                'reorder' =>
-                                                  ref
-                                                      .read(
-                                                        reorderModeProvider
-                                                            .notifier,
-                                                      )
-                                                      .set(true),
                                                 'reminders' => context.push(
                                                   '/reminders',
                                                 ),
@@ -1582,27 +1587,19 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               },
                                           // Tasarım bu menüyü dörde indiriyor
                                           // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
-                                          // Sıralama Süz levhasına taşındı; elle
-                                          // sıralama ve gizli klasörler tasarımda
-                                          // hiç yok ama başka girişi olmadığı için
-                                          // burada KALDI — kaldırsaydım iki özellik
-                                          // erişilemez olurdu.
+                                          // "Notları sırala" BURADAN KALKTI
+                                          // (kullanıcı isteği 2026-08-09):
+                                          // sıralamanın tek yeri Süz levhası —
+                                          // aynı iş iki menüde duruyordu ve
+                                          // hangisinin ne yaptığı belirsizdi.
+                                          // Elle sıralama modu Süz → SIRALAMA
+                                          // bölümündeki taşıma düğmesinden
+                                          // açılıyor (bkz. filter_sheet).
                                           itemBuilder: (context) => [
-                                            // Elle sıralama yalnız süzgeçsiz
-                                            // görünümde anlamlı (alt kümede sıra
-                                            // bozulur); aksi hâlde madde hiç
-                                            // görünmez ki kullanıcı tıklayıp
-                                            // "neden olmuyor" demesin.
-                                            if (reorderAvailable)
-                                              _menuItem(
-                                                'reorder',
-                                                Icons.swap_vert,
-                                                l10n.reorderNotes,
-                                              ),
                                             // Gizli klasörler yalnız gizli klasörü
                                             // OLAN kullanıcıda görünür: yoksa
                                             // menüde ölü bir madde durmaz.
-                                            if (hasHiddenFolders)
+                                            if (hasHiddenFolders) ...[
                                               _menuItem(
                                                 'hidden',
                                                 hiddenRevealed
@@ -1611,12 +1608,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                     : Icons.visibility_outlined,
                                                 l10n.hiddenFoldersMenu,
                                               ),
-                                            // Ayırıcı yalnız üstünde madde VARSA:
-                                            // ikisi de gizliyken menü bir çizgiyle
-                                            // başlıyordu, bozuk görünüyordu.
-                                            if (reorderAvailable ||
-                                                hasHiddenFolders)
                                               const PopupMenuDivider(),
+                                            ],
                                             _menuItem(
                                               'reminders',
                                               Icons.alarm_outlined,
@@ -2024,6 +2017,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               section.any((n) => n.id == _dragNoteId))
           ? preview
           : section;
+      // SIRALAMA MODU AYRI BİR IZGARA ÇİZER: eşit yükseklikte kompakt karolar.
+      //
+      // KÖK NEDEN (kullanıcı: "not sıralama sorunlu, yan yana koyamıyorum,
+      // otomatik dizilmeli"): mod normal masonry ızgarayı kullanıyordu ve
+      // orada kart yüksekliği içeriğe göre değişir. Masonry her kartı O AN en
+      // kısa sütuna atar; iki notu yan yana getirmek, aralarındaki bütün
+      // kartların yüksekliklerinin denk gelmesine bağlıydı — kullanıcının
+      // seçtiği sıra ile ekranda oluşan yerleşim tutmuyor, kartların arasında
+      // koca boşluklar kalıyordu (4. ekran görüntüsü). Eşit karolarda n.
+      // sıradaki not HER ZAMAN (n ~/ sütun, n % sütun) hücresine düşer:
+      // sürüklerken görülen önizleme ile bırakınca oluşan sıra birebir aynı.
+      if (reorderEnabled) {
+        return SliverGrid.builder(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
+            mainAxisExtent: _kReorderTileHeight,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final note = items[index];
+            final tile = _ReorderTile(note: note, order: index + 1);
+            return _ReorderableNoteCell(
+              key: ValueKey(note.id),
+              noteId: note.id,
+              cellWidth: cellWidth,
+              inSection: (id) => items.any((n) => n.id == id),
+              onDragStart: () => _startCardDrag(note.id, items),
+              onHover: () => _previewCardDrop(index),
+              onDragEnd: _endCardDrag,
+              feedback: SizedBox(
+                width: cellWidth,
+                height: _kReorderTileHeight,
+                child: tile,
+              ),
+              child: tile,
+            );
+          },
+        );
+      }
       return SliverMasonryGrid.count(
       crossAxisCount: columns,
       mainAxisSpacing: 8,
@@ -2160,7 +2194,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     // Tarih kovaları yalnız "Son düzenlenen" sıralamasında anlamlı: kullanıcı
     // Başlık ya da Renk sıralamasını seçtiyse "BUGÜN" başlığı altındaki sıra
     // tarihe göre olmaz, başlık yalan söyler. O modlarda tek akış kalır.
-    final bucketsActive = ref.read(noteSortProvider) == NoteSort.updated;
+    //
+    // SIRALAMA MODUNDA da kapalı: kartlar yalnız kendi bölümlerinin içinde
+    // taşınabiliyor (bkz. `inSection`), yani "BUGÜN" ile "DAHA ÖNCE" arasına
+    // hiçbir not geçemezdi — kullanıcı taşımayı deneyip tutmayınca sıralamayı
+    // bozuk sanıyordu. Modda tek liste (sabitliler + gerisi) kalır.
+    final bucketsActive =
+        !reorderEnabled && ref.read(noteSortProvider) == NoteSort.updated;
 
     if (!bucketsActive) {
       if (pinned.isEmpty || others.isEmpty) {
@@ -2245,6 +2285,109 @@ class _HeaderSeparator extends StatelessWidget {
                   ),
                 ]
               : const [],
+        ),
+      ),
+    );
+  }
+}
+
+/// Sıralama modundaki karonun sabit yüksekliği. Eşit karo = önceden bilinen
+/// hücre: sürüklerken görülen önizleme ile bırakınca oluşan yerleşim aynı.
+const double _kReorderTileHeight = 104;
+
+/// Sıralama modunun kompakt not karosu: renk, başlık, kısa önizleme ve sıra
+/// numarası. Tam kartın kendisi kullanılmaz — içeriğe göre uzayan kart eşit
+/// hücreye sığmaz, sığdırmak için kırpılınca da okunmaz olurdu.
+class _ReorderTile extends StatelessWidget {
+  const _ReorderTile({required this.note, required this.order});
+
+  final Note note;
+
+  /// Kartın bölümdeki 1 tabanlı sırası: taşırken "kaçıncı sıraya gitti"
+  /// sorusunun cevabı ekranda dursun.
+  final int order;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final framed = note.frameColor != NoteColor.none;
+    final title = note.title.trim();
+    final preview = stripRichMarkers(note.toPlainText()).trim();
+    return Material(
+      color: NoteColors.surface(context, note.color),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: framed
+                ? NoteColors.swatch(note.frameColor)
+                : scheme.outlineVariant.withValues(alpha: 0.5),
+            width: framed ? 2.5 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                if (note.pinned) ...[
+                  Icon(Icons.push_pin, size: 13, color: scheme.primary),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    title.isEmpty ? preview : title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '$order',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: Text(
+                title.isEmpty ? '' : preview,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.25,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Icon(
+                  Icons.drag_indicator,
+                  size: 15,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const Spacer(),
+                if (note.attachments.isNotEmpty)
+                  Icon(
+                    Icons.attach_file,
+                    size: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ],
         ),
       ),
     );

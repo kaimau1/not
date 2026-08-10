@@ -336,6 +336,22 @@ int _rightPadOffset(
   return cut > start ? cut : -1;
 }
 
+/// Dolgu kutusunun YÜKSEKLİĞİ.
+///
+/// KÖK NEDEN (kullanıcı: "imleç resim varken sorunlu, arkasında ya da altında
+/// kalıyor… resmin solunda ama yazmaya başlayınca sağa yazdı"): dolgu kutuları
+/// `Size(w, 0)` ile, yani YÜKSEKLİĞİ SIFIR kuruluyordu. İmlecin ekrandaki yeri
+/// `TextPainter`ın kutu ölçümlerinden gelir; yüksekliği sıfır olan kutu
+/// dejenere bir dikdörtgendir ve imleç ölçümü onu atlayıp satır başına (yani
+/// görselin ÜSTÜNE) düşüyordu. Yazma konumu doğruydu — yalnız imleç yanlış
+/// yerde yanıp sönüyor, kullanıcı harfin nereye gideceğini bilemiyordu.
+///
+/// Yükseklik metnin kendi yüksekliğinin ALTINDA tutulur (yarım punto) ve kutu
+/// satırın ORTASINA hizalanır: satır yüksekliğini büyütmez, yani sarma planı
+/// ve satır kırılımları hiç değişmez.
+double wrapAnchorHeight(TextStyle? style) =>
+    math.max(1.0, (style?.fontSize ?? 14) * 0.5);
+
 void _layout(
   TextPainter painter,
   String display,
@@ -344,6 +360,7 @@ void _layout(
   double columnWidth,
   RichTextTheme? rich,
 ) {
+  final height = wrapAnchorHeight(style);
   painter
     // Ölçüm de biçimi uygular: KALIN ve İTALİK metin daha geniş dizilir,
     // ölçüm bunu görmezse satırlar çizimden farklı kırılır ve imleç kayar.
@@ -351,7 +368,7 @@ void _layout(
     ..setPlaceholderDimensions([
       for (final w in widths)
         PlaceholderDimensions(
-          size: Size(w, 0),
+          size: Size(w, height),
           alignment: PlaceholderAlignment.middle,
         ),
     ])
@@ -393,12 +410,15 @@ InlineSpan buildWrapSpan(
   }
   final segments = display.split(kWrapAnchorChar);
   final children = <InlineSpan>[...parts(segments.first)];
+  // Kutunun yüksekliği ÖLÇÜMDEKİYLE aynı olmalı (bkz. [wrapAnchorHeight]):
+  // ikisi ayrışırsa satırlar farklı kırılır ve imleç kayar.
+  final anchorHeight = wrapAnchorHeight(style);
   for (var i = 1; i < segments.length; i++) {
     final w = i - 1 < widths.length ? widths[i - 1] : 0.0;
     children.add(
       WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: SizedBox(width: w, height: 0),
+        child: SizedBox(width: w, height: anchorHeight),
       ),
     );
     children.addAll(parts(segments[i]));

@@ -412,6 +412,7 @@ class _FilterSheet extends ConsumerWidget {
     NoteSort.created => Icons.fiber_new_outlined,
     NoteSort.title => Icons.sort_by_alpha,
     NoteSort.color => Icons.palette_outlined,
+    NoteSort.active => Icons.local_fire_department_outlined,
   };
 
   @override
@@ -674,6 +675,7 @@ String sortLabel(AppLocalizations l10n, NoteSort sort) => switch (sort) {
   NoteSort.created => l10n.sortCreated,
   NoteSort.title => l10n.sortTitle,
   NoteSort.color => l10n.sortColor,
+  NoteSort.active => l10n.sortActive,
 };
 
 /// Bölüm kartı: simgeli başlık + içerik, yumuşak zeminli tek blok.

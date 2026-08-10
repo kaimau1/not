@@ -1728,6 +1728,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sortColor => 'Couleur';
 
   @override
+  String get sortActive => 'Les plus travaillées';
+
+  @override
+  String get voicePreview => 'Tester la voix';
+
+  @override
+  String get voicePreviewCached => 'L’échantillon est généré une fois, puis lu depuis le stockage';
+
+  @override
+  String get reorderHint => 'Maintenez une carte et faites-la glisser où vous voulez';
+
+  @override
   String get filterSheetTitle => 'Filtrer';
 
   @override

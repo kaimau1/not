@@ -1598,6 +1598,24 @@ class _SyncLimitSelector extends ConsumerWidget {
   }
 }
 
+/// Cihaz sesiyle KISA bir deneme okur.
+///
+/// Hız/ton kaydırıcıları eskiden sessizdi: kullanıcı değeri değiştiriyor ama
+/// nasıl duyulduğunu ancak bir notu açıp okutarak öğreniyordu (kullanıcı
+/// isteği 2026-08-09: "hızı tonu sesi tipi seçince test sesi gelmeli").
+/// Cihaz TTS'i yerel ve bedava — burada kota kaygısı yok.
+void _previewDeviceVoice(BuildContext context, WidgetRef ref) {
+  final language = Localizations.localeOf(context).languageCode;
+  unawaited(
+    ref
+        .read(speechOutputProvider.notifier)
+        .speak(
+          SpeechOutputController.voiceSample(language),
+          languageCode: language,
+        ),
+  );
+}
+
 class _SpeechRateSlider extends ConsumerStatefulWidget {
   const _SpeechRateSlider();
 
@@ -1633,8 +1651,10 @@ class _SpeechRateSliderState extends ConsumerState<_SpeechRateSlider> {
               divisions: 8,
               label: '${(rate * 2).toStringAsFixed(1)}x',
               onChanged: (value) => setState(() => _rate = value),
-              onChangeEnd: (value) =>
-                  ref.read(speechOutputProvider.notifier).setRate(value),
+              onChangeEnd: (value) async {
+                await ref.read(speechOutputProvider.notifier).setRate(value);
+                if (context.mounted) _previewDeviceVoice(context, ref);
+              },
             ),
           ),
         ],
@@ -1684,8 +1704,22 @@ class _ForeignSpeechRateSliderState
               divisions: 8,
               label: '${(rate * 2).toStringAsFixed(1)}x',
               onChanged: (value) => setState(() => _rate = value),
-              onChangeEnd: (value) =>
-                  ref.read(speechOutputProvider.notifier).setForeignRate(value),
+              onChangeEnd: (value) async {
+                await ref
+                    .read(speechOutputProvider.notifier)
+                    .setForeignRate(value);
+                // Yabancı hız İNGİLİZCE örnekle denenir: Türkçe cümleyi
+                // Türkçe hızla okur, ayarın etkisi duyulmazdı.
+                if (!context.mounted) return;
+                unawaited(
+                  ref
+                      .read(speechOutputProvider.notifier)
+                      .speak(
+                        SpeechOutputController.voiceSample('en'),
+                        languageCode: 'en',
+                      ),
+                );
+              },
             ),
           ),
         ],
@@ -1736,8 +1770,10 @@ class _SpeechPitchSliderState extends ConsumerState<_SpeechPitchSlider> {
               onChanged: (value) => setState(() => _pitch = value),
               // Kaydırırken DEĞİL bırakınca yazılır: her karede motor ayarı
               // yeniden kurmak sesi tutukluyor (madde 9 — kasma olmamalı).
-              onChangeEnd: (value) =>
-                  ref.read(speechOutputProvider.notifier).setPitch(value),
+              onChangeEnd: (value) async {
+                await ref.read(speechOutputProvider.notifier).setPitch(value);
+                if (context.mounted) _previewDeviceVoice(context, ref);
+              },
             ),
           ),
         ],
@@ -2811,6 +2847,11 @@ class _VoiceSection extends ConsumerWidget {
               if (value != null) ref.read(ttsVoiceProvider.notifier).set(value);
             },
           ),
+          // Ses adı ("Kore", "Puck") tek başına hiçbir şey anlatmıyor: seçimin
+          // nasıl duyulduğu ancak dinleyerek anlaşılır. Örnek AYNI ses için bir
+          // kez üretilir, sonra kayıttan çalar — deneme kota yakmaz.
+          const SizedBox(height: 6),
+          const _AiVoicePreviewButton(),
         ] else ...[
           const SizedBox(height: 6),
           // CİHAZ SESLERİ TEK MENÜDE: dil başına ayrı satırlar yerine tek bir
@@ -2829,6 +2870,68 @@ class _VoiceSection extends ConsumerWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// Yapay zekâ sesinin deneme düğmesi (bkz. [AiSpeechController.previewVoice]).
+///
+/// Örnek cümle uygulamanın dilindedir ve model başına BİR KEZ üretilir; ikinci
+/// dokunuş kayıttan çalar. Üretim sürerken düğme beklemeye geçer: seslendirme
+/// modeli birkaç saniye sürebiliyor ve tepki vermeyen düğme "çalışmıyor" gibi
+/// görünüyordu.
+class _AiVoicePreviewButton extends ConsumerStatefulWidget {
+  const _AiVoicePreviewButton();
+
+  @override
+  ConsumerState<_AiVoicePreviewButton> createState() =>
+      _AiVoicePreviewButtonState();
+}
+
+class _AiVoicePreviewButtonState extends ConsumerState<_AiVoicePreviewButton> {
+  bool _busy = false;
+
+  Future<void> _play() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final language = Localizations.localeOf(context).languageCode;
+    final sample = SpeechOutputController.voiceSample(language);
+    try {
+      await ref.read(aiSpeechProvider.notifier).previewVoice(sample);
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(error.toString())));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        OutlinedButton.icon(
+          onPressed: _busy ? null : _play,
+          icon: _busy
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.play_arrow, size: 18),
+          label: Text(l10n.voicePreview),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            l10n.voicePreviewCached,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
       ],
     );
   }

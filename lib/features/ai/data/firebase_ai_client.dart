@@ -319,8 +319,12 @@ class FirebaseAiClient {
       ),
       FunctionDeclaration(
         'update_note',
-        'Var olan bir notu günceller. noteId not defteri listesindeki id '
-            'değeridir.',
+        'Var olan bir notu günceller: içeriği, maddeleri, etiketleri VE notun '
+            'kendi görünümü/durumu (renk, çerçeve rengi, sabitle, yıldızla, '
+            'arşivle, kilitle, hatırlatıcı). Kullanıcı "bu notu kırmızı '
+            'çerçeveye al", "sarı yap", "yıldızla", "sütü işaretle" gibi bir '
+            'şey isterse İSTEĞİ NOTUN İÇİNE MADDE OLARAK YAZMA — buradaki '
+            'uygun alanı kullan. noteId not defteri listesindeki id değeridir.',
         parameters: {
           'noteId': Schema.string(),
           'title': Schema.string(),
@@ -329,7 +333,31 @@ class FirebaseAiClient {
             items: Schema.string(),
             description: 'Liste notuna eklenecek yeni maddeler',
           ),
+          'checkItems': Schema.array(
+            items: Schema.string(),
+            description: 'Tamamlandı olarak işaretlenecek maddeler',
+          ),
+          'uncheckItems': Schema.array(
+            items: Schema.string(),
+            description: 'İşareti kaldırılacak maddeler',
+          ),
+          'removeItems': Schema.array(
+            items: Schema.string(),
+            description: 'Silinecek maddeler',
+          ),
           'setTags': Schema.array(items: Schema.string()),
+          'color': Schema.string(
+            description:
+                'Notun ZEMİN rengi: red, peach, amber, green, sage, blue, '
+                'storm, purple, blossom, clay, chalk ya da none.',
+          ),
+          'frameColor': Schema.string(
+            description:
+                'Notun ÇERÇEVE rengi (kartın kenarlığı); değerler color ile '
+                'aynı. "kırmızı çerçeve" isteği bu alandır.',
+          ),
+          'starred': Schema.boolean(),
+          'locked': Schema.boolean(),
           'reminderAt': Schema.string(description: 'ISO 8601'),
           'clearReminder': Schema.boolean(),
           'pinned': Schema.boolean(),
@@ -339,7 +367,14 @@ class FirebaseAiClient {
           'title',
           'body',
           'addItems',
+          'checkItems',
+          'uncheckItems',
+          'removeItems',
           'setTags',
+          'color',
+          'frameColor',
+          'starred',
+          'locked',
           'reminderAt',
           'clearReminder',
           'pinned',
