@@ -35,6 +35,59 @@ void main() {
   /// Satır SONU dolgusu birleştiriciyle işaretlenir.
   int endAnchors(String display) => kWrapGlueChar.allMatches(display).length;
 
+  /// Satır BAŞINDAKİ dolgular arasında YANA KAYDIRAN (kısmi) olanların sayısı.
+  ///
+  /// Tam sütun genişliğindeki satır başı dolgusu "yana kaydırma" değil, satırı
+  /// BOŞALTMADIR: metni görselin altına iter (LTR'de de aynısı yapılıyor, bkz.
+  /// text_wrap_test "sütunu kaplayan görsel metni altına iter"). Yönün doğru
+  /// tarafı seçtiğini denetlerken bu ikisi karıştırılmamalı.
+  int partialStartAnchors(WrapPlan plan, double columnWidth) {
+    var n = 0;
+    var anchor = 0;
+    for (var i = 0; i < plan.display.length; i++) {
+      if (plan.display[i] != kWrapAnchorChar) continue;
+      final isStart = i == 0 || plan.display[i - 1] != kWrapGlueChar;
+      if (isStart && plan.widths[anchor] < columnWidth) n++;
+      anchor++;
+    }
+    return n;
+  }
+
+  /// PLANIN GARANTİSİ: hiçbir görünür karakter görselin bandına giremez.
+  /// Görseller metnin ÜSTÜNE çizildiği için banda giren satır okunmaz olur;
+  /// bu, sarmanın hangi yönde çalıştığından bağımsız tek gerçek koşul.
+  void expectNoOverlap(WrapPlan plan, FloatBox float, TextDirection direction) {
+    final painter = TextPainter(textDirection: direction)
+      ..text = buildWrapSpan(plan.display, plan.widths, style)
+      ..setPlaceholderDimensions([
+        for (final w in plan.widths)
+          PlaceholderDimensions(
+            size: Size(w, wrapAnchorHeight(style)),
+            alignment: PlaceholderAlignment.middle,
+          ),
+      ])
+      ..layout(maxWidth: 300);
+    for (var i = 0; i < plan.display.length; i++) {
+      final ch = plan.display[i];
+      if (ch == kWrapAnchorChar || ch == kWrapGlueChar || ch.trim().isEmpty) {
+        continue;
+      }
+      for (final box in painter.getBoxesForSelection(
+        TextSelection(baseOffset: i, extentOffset: i + 1),
+      )) {
+        final vertical = float.top < box.bottom && box.top < float.bottom;
+        final horizontal =
+            box.right > float.left + 1 && box.left < float.right - 1;
+        expect(
+          vertical && horizontal,
+          isFalse,
+          reason: '"$ch" gorselin bandinda kaldi ($direction)',
+        );
+      }
+    }
+    painter.dispose();
+  }
+
   WrapPlan plan(FloatBox float, TextDirection direction) => planTextWrap(
     logical: long,
     style: style,
@@ -62,7 +115,13 @@ void main() {
       greaterThan(0),
       reason: 'RTL"de soldaki gorsel satir sonuna dolgu koymali',
     );
-    expect(startAnchors(rtl.display), 0);
+    // YANA KAYDIRAN satir basi dolgusu olmamali. Tam sutun genisligindeki
+    // dolgu haric: o, satiri BOSALTIP metni gorselin altina iten uctur
+    // (2026-08-10: tek gecisli dolgu her satiri kurtaramiyor, plan sonundaki
+    // denetim kalanlari boyle temizliyor).
+    expect(partialStartAnchors(rtl, 300), 0);
+    expectNoOverlap(rtl, leftFloat, TextDirection.rtl);
+    expectNoOverlap(ltr, leftFloat, TextDirection.ltr);
   });
 
   test('RTL: fiziksel SAGdaki gorsel satir BASINA dolgu koydurur', () {
@@ -85,9 +144,12 @@ void main() {
   test('dolgu genisligi gorselin kapladigi yer kadar, yonden bagimsiz', () {
     // Sol kenardaki 120dp genisligindeki gorsel, hangi yonde olursa olsun
     // 120dp dolgu urretmeli: degisen dolgunun TARAFI, MIKTARI degil.
+    // (Tam sutun genisligi ayri bir uc: o satir bosaltmadir, yana kaydirma
+    // degil — bkz. yukaridaki not.)
     final rtl = plan(leftFloat, TextDirection.rtl);
     expect(rtl.widths, isNotEmpty);
-    expect(rtl.widths.every((w) => w == 120), isTrue);
+    expect(rtl.widths.every((w) => w == 120 || w == 300), isTrue);
+    expect(rtl.widths.any((w) => w == 120), isTrue);
 
     final ltr = plan(leftFloat, TextDirection.ltr);
     expect(ltr.widths.every((w) => w == 120), isTrue);

@@ -337,38 +337,32 @@ WrapPlan planTextWrap({
   // görselin altına iner). Düzgün sarılmış satırlara dokunulmaz — yalnız
   // gerçekten binenlere. Her düzeltme bir satırı boşalttığı için ilerleme
   // garantili: boşalan satırda metin kalmaz, bir sonraki turda atlanır.
-  for (var pass = 0; pass < 64; pass++) {
+  //
+  // SATIRLAR MOTORDAN OKUNUR, SAYILARAK BULUNMAZ: satır aralıkları
+  // `getLineBoundary` ile metnin başından yürünerek çıkarılır. İlk sürüm
+  // satır tepelerini `LineMetrics.height` toplayarak buluyordu; boşaltılmış
+  // satır (yalnız çapa taşıyan) metinli satırdan KISA olabildiği için o
+  // toplam kayıyor, `_lineRange` başka bir satırı döndürüyor ve binen satır
+  // denetimden kaçıyordu (CI'da yakalandı). Dikey karşılaştırma da kutuların
+  // kendi üst/altını kullanır — hiçbir yerde tahmin yok.
+  for (var pass = 0; pass < 128; pass++) {
     if (!laidOut) {
       _layout(painter, display, widths, style, columnWidth, rich);
       laidOut = true;
     }
-    final metrics = painter.computeLineMetrics();
     var repaired = false;
-    var top = 0.0;
-    for (final metric in metrics) {
-      final lineTop = top;
-      final lineBottom = top + metric.height;
-      top = lineBottom;
-      // Ucuz ön eleme: satır hiçbir görselin yakınında değilse kutularını
-      // hiç istemeyiz (uzun notta satır başına bir ölçüm, yazarken her tuşta
-      // koşan bir yol). Pay bir satır yüksekliği — satır tepelerini satır
-      // yüksekliklerini toplayarak bulduğumuz için kenarda kalanı kaçırmayalım.
-      final near = floats.any(
-        (f) =>
-            f.top < lineBottom + metric.height &&
-            lineTop - metric.height < f.bottom,
-      );
-      if (!near) continue;
-      final range = _lineRange(painter, display, lineTop, metric.height);
-      final text = _lineTextRange(display, range);
+    var offset = 0;
+    while (offset < display.length) {
+      final boundary = painter.getLineBoundary(TextPosition(offset: offset));
+      final start = boundary.start.clamp(0, display.length);
+      final end = boundary.end.clamp(start, display.length);
+      offset = end > offset ? end : offset + 1;
+      final text = _lineTextRange(display, (start: start, end: end));
       if (text == null) continue; // satırda çizilen metin yok
       final boxes = painter.getBoxesForSelection(
         TextSelection(baseOffset: text.start, extentOffset: text.end),
       );
       if (boxes.isEmpty) continue;
-      // Karar GERÇEK kutulardan verilir (satır yüksekliklerini toplayarak
-      // bulunan banttan değil): binme sorusunun tek doğru cevabı çizilen
-      // dikdörtgenlerdir.
       var left = double.infinity;
       var right = -double.infinity;
       var boxTop = double.infinity;
@@ -389,8 +383,8 @@ WrapPlan planTextWrap({
             left < f.right - 1,
       );
       if (!hits) continue;
-      display = display.replaceRange(range.start, range.start, kWrapAnchorChar);
-      widths.insert(_anchorCountBefore(display, range.start), columnWidth);
+      display = display.replaceRange(start, start, kWrapAnchorChar);
+      widths.insert(_anchorCountBefore(display, start), columnWidth);
       repaired = true;
       laidOut = false;
       break; // düzen değişti: baştan ölç
@@ -402,15 +396,26 @@ WrapPlan planTextWrap({
   return WrapPlan(display, widths);
 }
 
-/// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez çapa ve
-/// birleştirici karakterler (ve satır sonu) dışarıda bırakılır. Metin
+/// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez karakterler
+/// (çapa, birleştirici, satır sonu) ve BOŞLUKLAR dışarıda bırakılır. Metin
 /// kalmıyorsa null.
+///
+/// Boşluklar neden dışarıda: yumuşak satır sonundaki boşluk sarma sınırının
+/// ÖTESİNE yerleştirilir (Flutter satır sonu boşluğunu satır genişliğine
+/// saymaz ama kutusunu üretir). O kutuya bakıp "satır görsele bindi" demek
+/// sahte alarm olurdu — ekranda görünen bir şey yok. Binme sorusunun cevabı
+/// yalnız GÖRÜNÜR harflerdir.
 ({int start, int end})? _lineTextRange(
   String display,
   ({int start, int end}) range,
 ) {
   bool invisible(int code) =>
-      code == _kWrapAnchorCode || code == _kWrapGlueCode || code == 0x0A;
+      code == _kWrapAnchorCode ||
+      code == _kWrapGlueCode ||
+      code == 0x0A || // \n
+      code == 0x0D || // \r
+      code == 0x09 || // sekme
+      code == 0x20; // boşluk
   var start = range.start;
   var end = range.end;
   while (start < end && invisible(display.codeUnitAt(start))) {
