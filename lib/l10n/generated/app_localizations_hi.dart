@@ -1714,6 +1714,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sortColor => 'रंग';
 
   @override
+  String get sortActive => 'सबसे अधिक काम की गई';
+
+  @override
+  String get voicePreview => 'आवाज़ आज़माएँ';
+
+  @override
+  String get voicePreviewCached => 'नमूना एक बार बनता है, फिर संग्रहण से चलता है';
+
+  @override
+  String get reorderHint => 'कार्ड को दबाकर रखें और जहाँ चाहें खींचें';
+
+  @override
   String get filterSheetTitle => 'फ़िल्टर';
 
   @override

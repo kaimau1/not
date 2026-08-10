@@ -972,6 +972,18 @@ class GeminiService {
     const task =
         'uygun bir not oluştur: alışveriş/yapılacaklar sayılıyorsa '
         'checklist, aksi hâlde metin. '
+        // KÖK NEDEN (kullanıcı 2026-08-09, ekran görüntüsüyle): görev metni
+        // yalnız "not oluştur" diyordu. Kullanıcı VAR OLAN bir not için
+        // "kırmızı çerçeve yap" dediğinde model, elindeki tek işi yapıp isteği
+        // yeni bir maddeye/nota METİN olarak yazıyordu. Artık istek var olan
+        // bir notu değiştirmeye yönelikse update_note çağrılıyor.
+        'VAR OLAN NOTA YÖNELİK İSTEK: kullanıcı yukarıdaki not defterindeki '
+        'bir notu değiştirmek istiyorsa (rengini/çerçevesini değiştir, '
+        'sabitle, yıldızla, arşivle, kilitle, madde ekle/işaretle/sil, '
+        'başlığını değiştir, hatırlatıcı kur) YENİ NOT OLUŞTURMA — o notun '
+        'id\'siyle update_note çağır. Hangi nottan söz edildiği açıkça '
+        'söylenmediyse en son güncellenen uygun notu seç. İsteğin kendisini '
+        'asla notun içine metin olarak yazma. '
         'NOTUN İÇERİĞİ, İSTEĞİN KENDİSİ DEĞİL SONUCUDUR: kullanıcı notun '
         'içinde ne yazmasını istediğini tarif ediyorsa (ör. "içinde kalın '
         'harflerle kırmızı bir merhaba yazsın") nota O İÇERİĞİ yaz, komut '
@@ -1285,8 +1297,13 @@ class GeminiService {
     {
       'name': 'update_note',
       'description':
-          'Var olan bir notu günceller. noteId not defteri '
-          'listesindeki id değeridir.',
+          'Var olan bir notu günceller: içeriği, maddeleri, etiketleri VE '
+          'notun kendi görünümü/durumu (renk, çerçeve rengi, sabitle, '
+          'yıldızla, arşivle, kilitle, hatırlatıcı). Kullanıcı "bu notu '
+          'kırmızı çerçeveye al", "sarı yap", "yıldızla", "sütü işaretle" '
+          'gibi bir şey isterse İSTEĞİ NOTUN İÇİNE MADDE OLARAK YAZMA — '
+          'buradaki uygun alanı kullan. noteId not defteri listesindeki id '
+          'değeridir.',
       'parameters': {
         'type': 'OBJECT',
         'properties': {
@@ -1298,10 +1315,39 @@ class GeminiService {
             'items': {'type': 'STRING'},
             'description': 'Liste notuna eklenecek yeni maddeler',
           },
+          'checkItems': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+            'description': 'Tamamlandı olarak işaretlenecek maddeler',
+          },
+          'uncheckItems': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+            'description': 'İşareti kaldırılacak maddeler',
+          },
+          'removeItems': {
+            'type': 'ARRAY',
+            'items': {'type': 'STRING'},
+            'description': 'Silinecek maddeler',
+          },
           'setTags': {
             'type': 'ARRAY',
             'items': {'type': 'STRING'},
           },
+          'color': {
+            'type': 'STRING',
+            'description':
+                'Notun ZEMİN rengi: red, peach, amber, green, sage, blue, '
+                'storm, purple, blossom, clay, chalk ya da none (renksiz).',
+          },
+          'frameColor': {
+            'type': 'STRING',
+            'description':
+                'Notun ÇERÇEVE rengi (kartın kenarlığı); değerler color ile '
+                'aynı. "kırmızı çerçeve" isteği bu alandır.',
+          },
+          'starred': {'type': 'BOOLEAN'},
+          'locked': {'type': 'BOOLEAN'},
           'reminderAt': {'type': 'STRING', 'description': 'ISO 8601'},
           'clearReminder': {'type': 'BOOLEAN'},
           'pinned': {'type': 'BOOLEAN'},

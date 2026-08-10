@@ -103,6 +103,54 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
         model: ref.read(ttsModelProvider),
       );
 
+  /// Ses DENEMESİ: seçilen ses/model bir örnek cümle okur.
+  ///
+  /// Örnek AYNI ses için YALNIZ BİR KEZ üretilir; sonuç kalıcı klasöre yazılır
+  /// ve sonraki denemeler dosyadan çalar. Ayarlarda ses seçerken her dokunuşta
+  /// model çağırmak kullanıcının kotasını denemeye yakardı — oysa aynı cümle,
+  /// aynı sesle her seferinde birebir aynı sesi verir (bkz. kullanıcı isteği
+  /// 2026-08-09: "test sesi gelmeli ama kota harcayacağı için 1 kez indirilip
+  /// storage'a kaydedilip oradan oynatılmalı").
+  ///
+  /// Döndürdüğü değer: örnek YENİ mi üretildi (true) yoksa kayıttan mı çalındı
+  /// (false) — ekran kullanıcıya bunu söyleyebilsin.
+  Future<bool> previewVoice(String sample) async {
+    final voice = ref.read(ttsVoiceProvider);
+    final model = ref.read(ttsModelProvider) ?? 'auto';
+    final file = await _sampleFile(model: model, voice: voice, text: sample);
+    var generated = false;
+    if (!file.existsSync() || file.lengthSync() == 0) {
+      final bytes = await _synthesize(sample);
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(bytes, flush: true);
+      generated = true;
+    }
+    // Deneme, okuma durumunu (SpeechOutputState) DEĞİŞTİRMEZ: ayarlar ekranı
+    // bir notu okumuyor; ilerleme çubuğu açılsaydı yanlış olurdu.
+    final player = _player ??= AudioPlayer();
+    await player.stop();
+    await player.setFilePath(file.path);
+    await player.play();
+    return generated;
+  }
+
+  /// Örnek dosyanın yolu. Ad ses+model+metinden türetilir: ses değişince yeni
+  /// dosya, aynı ses tekrar seçilince eski dosya bulunur. Geçici klasör DEĞİL
+  /// kalıcı klasör: sistem geçici dosyaları silince örnek yeniden üretilir ve
+  /// kota boşuna yanardı.
+  Future<File> _sampleFile({
+    required String model,
+    required String voice,
+    required String text,
+  }) async {
+    final dir = await getApplicationSupportDirectory();
+    final key = '${model}_${voice}_${text.hashCode}'.replaceAll(
+      RegExp(r'[^A-Za-z0-9_.-]'),
+      '_',
+    );
+    return File('${dir.path}/tts_samples/$key.wav');
+  }
+
   /// Metni yapay zekâ sesiyle okur. Zaten okuyorsa önce durdurur.
   ///
   /// Hata (kota, anahtar, ağ) fırlatılır: çağıran ekran mesajı gösterip cihaz

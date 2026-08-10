@@ -1725,6 +1725,18 @@ class AppLocalizationsPl extends AppLocalizations {
   String get sortColor => 'Kolor';
 
   @override
+  String get sortActive => 'Najczęściej używane';
+
+  @override
+  String get voicePreview => 'Wypróbuj głos';
+
+  @override
+  String get voicePreviewCached => 'Próbka powstaje raz, potem odtwarzana jest z pamięci';
+
+  @override
+  String get reorderHint => 'Przytrzymaj kartę i przeciągnij ją w wybrane miejsce';
+
+  @override
   String get filterSheetTitle => 'Filtruj';
 
   @override

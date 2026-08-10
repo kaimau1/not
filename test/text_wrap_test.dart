@@ -270,4 +270,78 @@ void main() {
     expect(wrapToLogicalOffset(display, c.selection.start), 10);
     expect(wrapToLogicalOffset(display, c.selection.end), 15);
   });
+
+  /// KÖK NEDEN (kullanıcı 2026-08-09: "imleç resim varken sorunlu, resmin
+  /// solunda ama yazmaya başlayınca sağa yazdı"): dolgu kutuları yüksekliği
+  /// SIFIR kuruluyordu; imleç ölçümü dejenere kutuyu atlayıp satır başına,
+  /// yani görselin üstüne düşüyordu. İmleç, harfin gerçekten gideceği yerde
+  /// (dolgunun SAĞINDA) çizilmeli.
+  test('imlec soldaki gorselin YANINDA cizilir, ustunde degil', () {
+    const style = TextStyle(fontSize: 14, height: 1.4);
+    const floats = [FloatBox(top: 0, left: 0, right: 120, height: 400)];
+    for (final logical in ['', 'abc']) {
+      final plan = planTextWrap(
+        logical: logical,
+        style: style,
+        columnWidth: 300,
+        floats: floats,
+      );
+      expect(plan.widths, isNotEmpty, reason: 'dolgu konmali ($logical)');
+      final painter = TextPainter(
+        text: buildWrapSpan(plan.display, plan.widths, style),
+        textDirection: TextDirection.ltr,
+      )..setPlaceholderDimensions([
+          for (final w in plan.widths)
+            PlaceholderDimensions(
+              size: Size(w, wrapAnchorHeight(style)),
+              alignment: PlaceholderAlignment.middle,
+            ),
+        ]);
+      painter.layout(maxWidth: 300);
+      // Metnin ilk harfinin (ya da bos alanda imlecin) mantiksal 0 konumu.
+      final caret = painter.getOffsetForCaret(
+        TextPosition(offset: wrapToDisplayOffset(plan.display, 0)),
+        Rect.zero,
+      );
+      painter.dispose();
+      expect(
+        caret.dx,
+        greaterThanOrEqualTo(120),
+        reason: 'imlec gorselin ustunde kaliyor ($logical)',
+      );
+    }
+  });
+
+  test('dolgu kutusunun yuksekligi satiri buyutmez', () {
+    const style = TextStyle(fontSize: 14, height: 1.4);
+    // Ayni metin, dolgulu ve dolgusuz: satir yuksekligi degismemeli.
+    TextPainter build(List<FloatBox> floats) {
+      final plan = planTextWrap(
+        logical: 'abc',
+        style: style,
+        columnWidth: 300,
+        floats: floats,
+      );
+      final painter = TextPainter(
+        text: buildWrapSpan(plan.display, plan.widths, style),
+        textDirection: TextDirection.ltr,
+      )..setPlaceholderDimensions([
+          for (final w in plan.widths)
+            PlaceholderDimensions(
+              size: Size(w, wrapAnchorHeight(style)),
+              alignment: PlaceholderAlignment.middle,
+            ),
+        ]);
+      painter.layout(maxWidth: 300);
+      return painter;
+    }
+
+    final plain = build(const []);
+    final padded = build(const [
+      FloatBox(top: 0, left: 0, right: 120, height: 400),
+    ]);
+    expect(padded.height, plain.height);
+    plain.dispose();
+    padded.dispose();
+  });
 }

@@ -1730,6 +1730,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get sortColor => 'Farbe';
 
   @override
+  String get sortActive => 'Am meisten bearbeitet';
+
+  @override
+  String get voicePreview => 'Stimme testen';
+
+  @override
+  String get voicePreviewCached => 'Das Beispiel wird einmal erzeugt und danach lokal abgespielt';
+
+  @override
+  String get reorderHint => 'Karte gedrückt halten und an die gewünschte Stelle ziehen';
+
+  @override
   String get filterSheetTitle => 'Filter';
 
   @override

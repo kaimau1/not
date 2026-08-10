@@ -1712,6 +1712,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortColor => 'Colour';
 
   @override
+  String get sortActive => 'Most worked on';
+
+  @override
+  String get voicePreview => 'Try the voice';
+
+  @override
+  String get voicePreviewCached => 'The sample is generated once, then played from storage';
+
+  @override
+  String get reorderHint => 'Press and hold a card, then drag it where you want';
+
+  @override
   String get filterSheetTitle => 'Filter';
 
   @override

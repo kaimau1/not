@@ -1724,6 +1724,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get sortColor => 'Renk';
 
   @override
+  String get sortActive => 'Paling sering dikerjakan';
+
+  @override
+  String get voicePreview => 'Coba suara';
+
+  @override
+  String get voicePreviewCached => 'Sampel dibuat sekali, lalu diputar dari penyimpanan';
+
+  @override
+  String get reorderHint => 'Tekan dan tahan kartu, lalu seret ke tempat yang diinginkan';
+
+  @override
   String get filterSheetTitle => 'Filtrele';
 
   @override

@@ -1728,6 +1728,18 @@ class AppLocalizationsIt extends AppLocalizations {
   String get sortColor => 'Colore';
 
   @override
+  String get sortActive => 'Più lavorate';
+
+  @override
+  String get voicePreview => 'Prova la voce';
+
+  @override
+  String get voicePreviewCached => 'Il campione viene generato una volta, poi riprodotto dalla memoria';
+
+  @override
+  String get reorderHint => 'Tieni premuta una scheda e trascinala dove vuoi';
+
+  @override
   String get filterSheetTitle => 'Filtra';
 
   @override

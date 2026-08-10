@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,7 +32,69 @@ enum NoteFilter {
 
 /// Dashboard sıralama ölçütü. [manual] = akışın varsayılanı (elle sürükleme /
 /// oluşturma sırası); diğerleri istemci tarafında yeniden sıralar.
-enum NoteSort { manual, updated, created, title, color }
+/// [active] = EN ÇOK ÇALIŞILAN: notun kaç kez açıldığı/düzenlendiği
+/// ([noteActivityProvider]). Ölçüt cihaz yereldir — hangi notla uğraştığın
+/// kişisel bir kullanım izi, buluta yazılmaz.
+enum NoteSort { manual, updated, created, title, color, active }
+
+/// Not başına "çalışma sayacı" (cihaz yerel, kalıcı).
+///
+/// Notu editörde AÇMAK bir puan, o oturumda gerçekten DEĞİŞTİRMEK bir puan
+/// daha ekler (bkz. [NoteActivityNotifier.touch]) — böylece göz atılan not ile
+/// üzerinde çalışılan not aynı ağırlıkta olmaz. Sayaçlar Firestore'a
+/// yazılmaz: her cihazın kendi çalışma alışkanlığı ayrıdır ve not belgesini
+/// her açılışta güncellemek `updatedAt`i bozup "son güncellenen" sıralamasını
+/// anlamsızlaştırırdı.
+final noteActivityProvider =
+    NotifierProvider<NoteActivityNotifier, Map<String, int>>(
+      NoteActivityNotifier.new,
+    );
+
+class NoteActivityNotifier extends Notifier<Map<String, int>> {
+  static const _key = 'note_activity';
+
+  /// Sözlük sınırsız büyümesin: en çok çalışılan bu kadar not tutulur, gerisi
+  /// budanır (sıralama için zaten yalnız tepe uçtakiler anlamlı).
+  static const _maxEntries = 400;
+
+  @override
+  Map<String, int> build() {
+    final raw = ref.watch(sharedPreferencesProvider).getString(_key);
+    if (raw == null || raw.isEmpty) return const {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is num)
+            entry.key.toString(): (entry.value as num).toInt(),
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  /// Notla çalışıldı: sayacı bir artırır.
+  void touch(String noteId) {
+    if (noteId.isEmpty) return;
+    var next = {...state, noteId: (state[noteId] ?? 0) + 1};
+    if (next.length > _maxEntries) {
+      final entries = next.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      next = {for (final e in entries.take(_maxEntries)) e.key: e.value};
+    }
+    state = next;
+    ref.read(sharedPreferencesProvider).setString(_key, jsonEncode(next));
+  }
+
+  /// Not silindiğinde sayacı da düşer (ölü kayıt birikmesin).
+  void forget(String noteId) {
+    if (!state.containsKey(noteId)) return;
+    final next = {...state}..remove(noteId);
+    state = next;
+    ref.read(sharedPreferencesProvider).setString(_key, jsonEncode(next));
+  }
+}
 
 /// FAVORİ SÜZGEÇLER (kalıcı): kullanıcının Süz levhasında yıldızladığı
 /// seçenekler. Ana ekranda "Süz" düğmesinin sağında tek dokunuşluk çip olarak
@@ -507,6 +570,12 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final folderId = ref.watch(selectedFolderProvider);
   final sort = ref.watch(noteSortProvider);
   final suppressed = ref.watch(suppressedFolderIdsProvider);
+  // Sayaçlar YALNIZ o sıralamada izlenir: her not açılışında sayaç değişiyor,
+  // koşulsuz izlense süzgeç sağlayıcısı (ve tüm dashboard) boşuna yeniden
+  // hesaplanırdı.
+  final activity = sort == NoteSort.active
+      ? ref.watch(noteActivityProvider)
+      : const <String, int>{};
 
   return notes.whenData((list) {
     // Boş notlar (yeni oluşturulup hiç doldurulmamış) listede gösterilmez;
@@ -544,14 +613,18 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
           if (_matches(n, query)) n,
       ];
     }
-    return _sortedNotes(result, sort);
+    return _sortedNotes(result, sort, activity);
   });
 });
 
 /// Seçili ölçüte göre notları sıralar. [NoteSort.manual] akıştan gelen sırayı
 /// (orderIndex → updatedAt) korur; başlığa göre sıralamada başlıksız notlar
 /// sona düşer.
-List<Note> _sortedNotes(List<Note> notes, NoteSort sort) {
+List<Note> _sortedNotes(
+  List<Note> notes,
+  NoteSort sort, [
+  Map<String, int> activity = const {},
+]) {
   if (sort == NoteSort.manual) return notes;
   final list = [...notes];
   int dateDesc(DateTime? a, DateTime? b) {
@@ -584,6 +657,16 @@ List<Note> _sortedNotes(List<Note> notes, NoteSort sort) {
         final ai = a.color == NoteColor.none ? 999 : a.color.index;
         final bi = b.color == NoteColor.none ? 999 : b.color.index;
         if (ai != bi) return ai.compareTo(bi);
+        return dateDesc(a.updatedAt, b.updatedAt);
+      });
+    // En çok çalışılan: sayaç büyükten küçüğe. Hiç açılmamış notlar (sayaç
+    // yok = 0) sona düşer ve KENDİ ARALARINDA son güncellenene göre dizilir —
+    // yeni bir not, sayacı sıfır diye listenin en dibine gömülmesin.
+    case NoteSort.active:
+      list.sort((a, b) {
+        final av = activity[a.id] ?? 0;
+        final bv = activity[b.id] ?? 0;
+        if (av != bv) return bv.compareTo(av);
         return dateDesc(a.updatedAt, b.updatedAt);
       });
   }

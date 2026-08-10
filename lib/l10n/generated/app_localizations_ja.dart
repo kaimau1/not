@@ -1682,6 +1682,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get sortColor => '色';
 
   @override
+  String get sortActive => 'よく使うノート';
+
+  @override
+  String get voicePreview => '音声を試す';
+
+  @override
+  String get voicePreviewCached => 'サンプルは一度だけ生成され、以降は保存済みの音声を再生します';
+
+  @override
+  String get reorderHint => 'カードを長押しして好きな位置にドラッグ';
+
+  @override
   String get filterSheetTitle => 'フィルタ';
 
   @override
