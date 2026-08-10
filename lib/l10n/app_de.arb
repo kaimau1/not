@@ -41,6 +41,7 @@
   "clipboardEmpty": "Kein Bild in der Zwischenablage",
   "noNoteSelected": "Wähle links eine Notiz aus",
   "attachmentFailed": "Anhang konnte nicht hinzugefügt werden: {error}",
+  "attachmentCopying": "Wird kopiert...",
   "attachmentUploading": "Wird hochgeladen ...",
   "attachmentNotSynced": "Diese Datei wurde noch nicht auf dieses Gerät synchronisiert",
   "attachmentTooLarge": "Datei ist zu groß (höchstens {limit} MB)",

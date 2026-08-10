@@ -144,6 +144,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => 'コピー中...';
+
+  @override
   String get attachmentUploading => 'アップロード中...';
 
   @override

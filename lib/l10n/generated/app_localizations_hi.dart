@@ -144,6 +144,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => 'कॉपी हो रहा है...';
+
+  @override
   String get attachmentUploading => 'अपलोड हो रहा है...';
 
   @override

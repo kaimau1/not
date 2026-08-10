@@ -144,6 +144,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => '正在复制...';
+
+  @override
   String get attachmentUploading => '正在上传...';
 
   @override

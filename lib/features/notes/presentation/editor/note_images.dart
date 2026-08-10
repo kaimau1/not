@@ -1100,45 +1100,63 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       h = maxH;
       w = h * aspect;
     }
-    return Positioned(
-      left: 0,
-      right: 0,
-      // Önizleme, sayfanın GÖRÜNEN kısmının ortasında durur; sayfa
-      // kaydırıldığında da görselin bandına yakın kalsın diye üst sınır
-      // görselin konumuna göre verilir.
-      top: (widget.topLimit + 8).clamp(0.0, double.infinity),
+    // KAPATMA ALANI SAYFANIN TAMAMI (kullanıcı bulgusu 2026-08-10: "görseli
+    // ön izlemede açıkça üst ve yanlarına tıklayınca kapanıyor ama altına
+    // tıklayınca kapanmıyor"): kutu `Positioned(top: …)` idi ve alt sınırı
+    // olmadığı için yalnız GÖRSELİN KENDİ BANDI kadar yer kaplıyordu — o
+    // bandın altına düşen dokunuş önizlemeye hiç ulaşmıyor, altındaki sayfaya
+    // (metin alanına/boşluğa) gidiyordu. `Positioned.fill` ile katman sayfanın
+    // tamamını kapsar: neresine dokunulursa dokunulsun önizleme kapanır ve
+    // dokunuş sayfaya SIZMAZ (opaque).
+    return Positioned.fill(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _closePreview,
-        child: Center(
-          child: Material(
-            elevation: 8,
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: SizedBox(
-              width: w,
-              height: h,
-              child: Stack(
-                children: [
-                  Positioned.fill(child: _boxFor(img, fit: BoxFit.contain)),
-                  Positioned(
-                    right: 4,
-                    top: 4,
-                    child: IconButton(
-                      tooltip: context.l10n.close,
-                      icon: const Icon(Icons.close, size: 20),
-                      color: Colors.white,
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.black45,
-                      ),
-                      onPressed: _closePreview,
+        // İç Stack: kart yine yalnız YUKARIDAN konumlanır (alt sınırı yok),
+        // yani yüksekliği eskisi gibi serbest kalır — `Padding` kullanılsaydı
+        // uzun görselde kalan yer daralıp taşma verirdi.
+        child: Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              // Önizleme, sayfanın görünen kısmına yakın dursun diye üst sınır
+              // görselin bandına göre verilir.
+              top: (widget.topLimit + 8).clamp(0.0, double.infinity),
+              child: Center(
+                child: Material(
+                  elevation: 8,
+                  color: scheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: SizedBox(
+                    width: w,
+                    height: h,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: _boxFor(img, fit: BoxFit.contain),
+                        ),
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: IconButton(
+                            tooltip: context.l10n.close,
+                            icon: const Icon(Icons.close, size: 20),
+                            color: Colors.white,
+                            style: IconButton.styleFrom(
+                              backgroundColor: Colors.black45,
+                            ),
+                            onPressed: _closePreview,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -1153,6 +1171,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     final scheme = Theme.of(context).colorScheme;
     final editing = _selectedId == img.id;
     final checked = _multiMode && _multi.contains(img.id);
+    final moving = _moveId == img.id;
     final r = _resolve(img, index, cw);
     return Positioned(
       left: r.left,
@@ -1221,10 +1240,22 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 // çiziliyor; sınır olmadan her seferinde görselin rasterı da
                 // yeniden çiziliyordu (birkaç görselli notta kare bütçesinin
                 // görünür bir dilimi).
-                child: RepaintBoundary(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _boxFor(img),
+                // SÜRÜKLERKEN YARI SAYDAM (kullanıcı bulgusu 2026-08-10: "notu
+                // sürüklediğinde metin notu resmin altında kalıyor"): görseller
+                // metnin ÜSTÜNE çizilir, metin de onların etrafından akar —
+                // ama akış ancak yeni bantlar ölçülüp uygulandıktan sonra
+                // yerine oturur (ölçüm kare sonunda yapılır). Parmak hızlıysa
+                // görsel arada metnin üstünde duruyor ve altındaki satırlar
+                // tümüyle kayboluyordu. Saydamlık yalnız TAŞIMA sürerken: metin
+                // her an okunur kalır, bırakınca görsel tam opak olur ve sarma
+                // zaten kesin konuma göre hesaplanmıştır.
+                child: Opacity(
+                  opacity: moving ? 0.55 : 1,
+                  child: RepaintBoundary(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: _boxFor(img),
+                    ),
                   ),
                 ),
               ),

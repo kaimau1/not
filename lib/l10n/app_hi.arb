@@ -41,6 +41,7 @@
   "clipboardEmpty": "क्लिपबोर्ड में कोई चित्र नहीं है",
   "noNoteSelected": "बाईं ओर से कोई नोट चुनें",
   "attachmentFailed": "अनुलग्नक नहीं जोड़ा जा सका: {error}",
+  "attachmentCopying": "कॉपी हो रहा है...",
   "attachmentUploading": "अपलोड हो रहा है...",
   "attachmentNotSynced": "यह फ़ाइल अभी इस डिवाइस पर सिंक नहीं हुई है",
   "attachmentTooLarge": "फ़ाइल बहुत बड़ी है (अधिकतम {limit} MB)",

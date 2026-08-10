@@ -144,6 +144,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => 'جارٍ النسخ...';
+
+  @override
   String get attachmentUploading => 'جارٍ الرفع...';
 
   @override

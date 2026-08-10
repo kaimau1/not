@@ -144,6 +144,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => '복사 중...';
+
+  @override
   String get attachmentUploading => '업로드 중...';
 
   @override

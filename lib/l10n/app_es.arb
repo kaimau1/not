@@ -41,6 +41,7 @@
   "clipboardEmpty": "No hay ninguna imagen en el portapapeles",
   "noNoteSelected": "Elige una nota de la izquierda",
   "attachmentFailed": "No se pudo añadir el archivo adjunto: {error}",
+  "attachmentCopying": "Copiando...",
   "attachmentUploading": "Subiendo...",
   "attachmentNotSynced": "Este archivo todavía no se ha sincronizado en este dispositivo",
   "attachmentTooLarge": "El archivo es demasiado grande (máximo {limit} MB)",

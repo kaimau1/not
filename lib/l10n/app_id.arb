@@ -41,6 +41,7 @@
   "clipboardEmpty": "Tidak ada gambar di papan klip",
   "noNoteSelected": "Pilih catatan di sebelah kiri",
   "attachmentFailed": "Lampiran tidak dapat ditambahkan: {error}",
+  "attachmentCopying": "Menyalin...",
   "attachmentUploading": "Mengunggah...",
   "attachmentNotSynced": "Berkas ini belum tersinkron ke perangkat ini",
   "attachmentTooLarge": "Berkas terlalu besar (maksimal {limit} MB)",

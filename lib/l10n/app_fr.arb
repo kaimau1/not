@@ -41,6 +41,7 @@
   "clipboardEmpty": "Aucune image dans le presse-papiers",
   "noNoteSelected": "Choisissez une note à gauche",
   "attachmentFailed": "Impossible d'ajouter la pièce jointe : {error}",
+  "attachmentCopying": "Copie en cours...",
   "attachmentUploading": "Envoi en cours...",
   "attachmentNotSynced": "Ce fichier n'est pas encore synchronisé sur cet appareil",
   "attachmentTooLarge": "Fichier trop volumineux ({limit} Mo maximum)",

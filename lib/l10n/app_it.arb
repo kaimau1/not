@@ -41,6 +41,7 @@
   "clipboardEmpty": "Nessuna immagine negli appunti",
   "noNoteSelected": "Scegli una nota a sinistra",
   "attachmentFailed": "Impossibile aggiungere l'allegato: {error}",
+  "attachmentCopying": "Copia in corso...",
   "attachmentUploading": "Caricamento...",
   "attachmentNotSynced": "Questo file non è ancora stato sincronizzato su questo dispositivo",
   "attachmentTooLarge": "File troppo grande (massimo {limit} MB)",

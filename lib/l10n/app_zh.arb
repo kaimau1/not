@@ -41,6 +41,7 @@
   "clipboardEmpty": "剪贴板里没有图片",
   "noNoteSelected": "请从左侧选择一条笔记",
   "attachmentFailed": "无法添加附件：{error}",
+  "attachmentCopying": "正在复制...",
   "attachmentUploading": "正在上传...",
   "attachmentNotSynced": "该文件尚未同步到此设备",
   "attachmentTooLarge": "文件太大（最多 {limit} MB）",

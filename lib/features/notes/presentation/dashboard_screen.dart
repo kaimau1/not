@@ -74,6 +74,70 @@ import 'voice_capture_sheet.dart';
 /// gerileme getirir; cihazda ölçüm yapılabildiğinde yeniden değerlendirilsin.
 const double _kGridCacheExtent = 10000;
 
+/// Bir bölüm bu kadar karttan uzunsa DETERMİNİSTİK ızgara bırakılır ve tembel
+/// masonry'ye dönülür (bkz. [_balancedColumns]).
+///
+/// Deterministik ızgara bölümün TAMAMINI tek kutuda çizer: yerleşim ve sıra
+/// kusursuz olur ama kartların hiçbiri tembel kalmaz. Bölümler zaten
+/// sabitlenmiş/bugün/bu hafta/daha önce diye bölündüğünden gerçek kullanımda
+/// bu sınıra çok seyrek varılır; vardığında da eski davranış (tembel masonry)
+/// aynen sürer, yani çok notlu kitaplıkta ilk kare bedeli büyümez.
+const int _kStaticGridLimit = 200;
+
+/// Kartları TAHMİNİ yüksekliklerine göre sütunlara dağıtıp her sütunu kendi
+/// `Column`'unda çizer — masonry ızgaranın deterministik karşılığı.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "notların sıralaması düzgün
+/// olmuyor, kaymalar oluyor; özellikle 2 kolonluda sağ kolonda sürekli
+/// boşluklar kalıyor"): `SliverMasonryGrid` her kartı YERLEŞİM ANINDA en kısa
+/// sütuna atar. Yani sütun ataması kart yüksekliklerinin o anki değerine
+/// bağlıydı; yükseklik kıpırdadığında (seçim çerçevesi, küçük resmin gelmesi,
+/// notun güncellenmesi, tembel yerleşimin sırası) aynı not başka bir sütuna
+/// geçiyor, üstündeki kartlar kayıyor ve bir sütunda kapanmayan boşluklar
+/// kalıyordu.
+///
+/// Burada dağıtım ÇİZİMDEN ÖNCE, [estimateNoteCardHeight] ile yapılır: hangi
+/// kartın hangi sütuna düşeceği yalnız notun içeriğine bağlıdır, yerleşime
+/// değil. Tahmin şaşarsa bedeli yalnız sütunların DİBİNDEKİ boşluk farkıdır;
+/// kartların arasında boşluk oluşamaz (her sütun sıkı bir `Column`).
+Widget _balancedColumns({
+  required List<Note> items,
+  required int columns,
+  required double cellWidth,
+  required Widget Function(int index) cell,
+}) {
+  final heights = List<double>.filled(columns, 0);
+  final buckets = List.generate(columns, (_) => <Widget>[]);
+  for (var index = 0; index < items.length; index++) {
+    var target = 0;
+    for (var c = 1; c < columns; c++) {
+      // Eşitlikte SOLDAKİ sütun kazanır — okuma sırası (soldan sağa) korunur.
+      if (heights[c] < heights[target] - 0.5) target = c;
+    }
+    heights[target] += estimateNoteCardHeight(items[index], cellWidth) + 8;
+    buckets[target].add(cell(index));
+  }
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      for (var c = 0; c < columns; c++) ...[
+        if (c > 0) const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < buckets[c].length; i++) ...[
+                if (i > 0) const SizedBox(height: 8),
+                buckets[c][i],
+              ],
+            ],
+          ),
+        ),
+      ],
+    ],
+  );
+}
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -2058,12 +2122,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         );
       }
-      return SliverMasonryGrid.count(
-      crossAxisCount: columns,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childCount: items.length,
-      itemBuilder: (context, index) {
+      // Tek bir kart hücresi. İki yerleşim (deterministik sütunlar ve tembel
+      // masonry) AYNI hücreyi kullanır: sürükle-sırala, seçim ve odak vurgusu
+      // davranışı ikisinde de birebir aynı kalsın.
+      Widget cell(BuildContext context, int index) {
         final note = items[index];
         // Asistanın dokunduğu not: kart kısa süre vurgulanır ve görünür alana
         // kaydırılır (bkz. focusedNoteProvider). Anahtar, kaydırma için
@@ -2147,7 +2209,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
           child: card,
         );
-      },
+      }
+
+      // Çok uzun bölümde tembelliği bırakmamak için eski masonry (bkz.
+      // [_kStaticGridLimit]).
+      if (items.length > _kStaticGridLimit) {
+        return SliverMasonryGrid.count(
+          crossAxisCount: columns,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childCount: items.length,
+          itemBuilder: cell,
+        );
+      }
+      return SliverToBoxAdapter(
+        child: _balancedColumns(
+          items: items,
+          columns: columns,
+          cellWidth: cellWidth,
+          cell: (index) => cell(context, index),
+        ),
       );
     }
 

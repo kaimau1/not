@@ -41,6 +41,7 @@
   "clipboardEmpty": "В буфере обмена нет изображения",
   "noNoteSelected": "Выберите заметку слева",
   "attachmentFailed": "Не удалось добавить вложение: {error}",
+  "attachmentCopying": "Копирование...",
   "attachmentUploading": "Загрузка...",
   "attachmentNotSynced": "Этот файл ещё не синхронизирован на этом устройстве",
   "attachmentTooLarge": "Файл слишком большой (не больше {limit} МБ)",

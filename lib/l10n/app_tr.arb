@@ -83,6 +83,7 @@
       }
     }
   },
+  "attachmentCopying": "Kopyalanıyor...",
   "attachmentUploading": "Yükleniyor...",
   "attachmentUploadFailed": "Yüklenemedi — yeniden denemek için dokun",
   "attachmentNotSynced": "Dosya bu cihaza henüz senkronlanmadı",

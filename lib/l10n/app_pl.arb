@@ -41,6 +41,7 @@
   "clipboardEmpty": "W schowku nie ma obrazu",
   "noNoteSelected": "Wybierz notatkę po lewej",
   "attachmentFailed": "Nie udało się dodać załącznika: {error}",
+  "attachmentCopying": "Kopiowanie...",
   "attachmentUploading": "Przesyłanie...",
   "attachmentNotSynced": "Ten plik nie został jeszcze zsynchronizowany na tym urządzeniu",
   "attachmentTooLarge": "Plik jest za duży (maksymalnie {limit} MB)",

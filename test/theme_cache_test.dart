@@ -34,7 +34,7 @@ void main() {
     // birbirine karışır ve kağıt yüzeyler açık temaya sızardı.
     expect(identical(light, AppTheme.paper()), isFalse);
     expect(identical(light, AppTheme.light(font: 'Lora')), isFalse);
-    expect(AppTheme.paper().colorScheme.surface, const Color(0xFFF5EDD8));
+    expect(AppTheme.paper().colorScheme.surface, const Color(0xFFF3EFE3));
   });
 
   test('katalogdaki her yazı tipi kendi temasını kurabiliyor', () {
