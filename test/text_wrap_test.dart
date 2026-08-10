@@ -172,7 +172,13 @@ void main() {
       ..layout(maxWidth: columnWidth);
     for (var i = 0; i < plan.display.length; i++) {
       final ch = plan.display[i];
-      if (ch == kWrapAnchorChar || ch == kWrapGlueChar || ch == '\n') continue;
+      // Görünmezler denetim dışı: çapa/birleştirici çizilmez, satır sonundaki
+      // BOŞLUK ise sarma sınırının ötesine yerleşir (ekranda bir şey yok).
+      if (ch == kWrapAnchorChar ||
+          ch == kWrapGlueChar ||
+          ch.trim().isEmpty) {
+        continue;
+      }
       final boxes = painter.getBoxesForSelection(
         TextSelection(baseOffset: i, extentOffset: i + 1),
       );

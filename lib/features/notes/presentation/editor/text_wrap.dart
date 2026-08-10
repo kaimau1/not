@@ -402,15 +402,26 @@ WrapPlan planTextWrap({
   return WrapPlan(display, widths);
 }
 
-/// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez çapa ve
-/// birleştirici karakterler (ve satır sonu) dışarıda bırakılır. Metin
+/// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez karakterler
+/// (çapa, birleştirici, satır sonu) ve BOŞLUKLAR dışarıda bırakılır. Metin
 /// kalmıyorsa null.
+///
+/// Boşluklar neden dışarıda: yumuşak satır sonundaki boşluk sarma sınırının
+/// ÖTESİNE yerleştirilir (Flutter satır sonu boşluğunu satır genişliğine
+/// saymaz ama kutusunu üretir). O kutuya bakıp "satır görsele bindi" demek
+/// sahte alarm olurdu — ekranda görünen bir şey yok. Binme sorusunun cevabı
+/// yalnız GÖRÜNÜR harflerdir.
 ({int start, int end})? _lineTextRange(
   String display,
   ({int start, int end}) range,
 ) {
   bool invisible(int code) =>
-      code == _kWrapAnchorCode || code == _kWrapGlueCode || code == 0x0A;
+      code == _kWrapAnchorCode ||
+      code == _kWrapGlueCode ||
+      code == 0x0A || // \n
+      code == 0x0D || // \r
+      code == 0x09 || // sekme
+      code == 0x20; // boşluk
   var start = range.start;
   var end = range.end;
   while (start < end && invisible(display.codeUnitAt(start))) {
