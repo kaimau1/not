@@ -149,6 +149,96 @@ void main() {
     expect(stripWrapAnchors(plan.display), '');
   });
 
+  /// PLANIN GARANTİSİ: hiçbir görünür karakter görselin bandına giremez.
+  ///
+  /// Kullanıcı bulgusu 2026-08-10 ("metin modunda görselin altında kalıyor"):
+  /// görseller metnin ÜSTÜNE çizildiği için banda giren satır okunmaz olur.
+  /// Plan ne yaparsa yapsın (yana kaydırma, satır boşaltma) sonuç bu koşulu
+  /// sağlamalı; burada plan ölçülüp harf harf denetleniyor.
+  void expectNoOverlap(
+    WrapPlan plan,
+    List<FloatBox> floats,
+    double columnWidth,
+  ) {
+    final painter = TextPainter(textDirection: TextDirection.ltr)
+      ..text = buildWrapSpan(plan.display, plan.widths, style)
+      ..setPlaceholderDimensions([
+        for (final w in plan.widths)
+          PlaceholderDimensions(
+            size: Size(w, wrapAnchorHeight(style)),
+            alignment: PlaceholderAlignment.middle,
+          ),
+      ])
+      ..layout(maxWidth: columnWidth);
+    for (var i = 0; i < plan.display.length; i++) {
+      final ch = plan.display[i];
+      if (ch == kWrapAnchorChar || ch == kWrapGlueChar || ch == '\n') continue;
+      final boxes = painter.getBoxesForSelection(
+        TextSelection(baseOffset: i, extentOffset: i + 1),
+      );
+      for (final box in boxes) {
+        for (final f in floats) {
+          final vertical = f.top < box.bottom && box.top < f.bottom;
+          final horizontal = box.right > f.left + 1 && box.left < f.right - 1;
+          expect(
+            vertical && horizontal,
+            isFalse,
+            reason:
+                '"$ch" (${box.left.toStringAsFixed(1)}..'
+                '${box.right.toStringAsFixed(1)} @ '
+                '${box.top.toStringAsFixed(1)}) gorselin bandinda kaldi',
+          );
+        }
+      }
+    }
+    painter.dispose();
+  }
+
+  test('ortadaki gorsel metni yanina sikistirmaz, altina iter', () {
+    // Sayfanın ORTASINDAKİ görsel iki yanında da sütunun üçte birinden az yer
+    // bırakıyor. Eski eşikte (dörtte bir) metin o şeride sıkışıp
+    // "NLDESB/" · "270726/0050/01" gibi parçalara bölünüyordu.
+    const orta = FloatBox(top: 0, left: 95, right: 205, height: 40);
+    final plan = planTextWrap(
+      logical: long,
+      style: style,
+      columnWidth: 300,
+      floats: const [orta],
+    );
+    expect(stripWrapAnchors(plan.display), long);
+    expect(
+      plan.widths.any((w) => w == 300),
+      isTrue,
+      reason: 'satir bosaltilmadi, metin dar seride sikisti',
+    );
+    expectNoOverlap(plan, const [orta], 300);
+  });
+
+  test('hicbir satir gorselin ustune binmez (sol/sag/orta)', () {
+    const cases = <List<FloatBox>>[
+      [FloatBox(top: 0, left: 0, right: 120, height: 400)],
+      [FloatBox(top: 0, left: 180, right: 300, height: 400)],
+      [FloatBox(top: 0, left: 95, right: 205, height: 400)],
+      [FloatBox(top: 20, left: 0, right: 200, height: 60)],
+      [
+        FloatBox(top: 0, left: 0, right: 110, height: 60),
+        FloatBox(top: 70, left: 190, right: 300, height: 60),
+      ],
+    ];
+    for (final floats in cases) {
+      for (final text in [long, 'NLDESB/270726/0050/01', 'kisa bir satir']) {
+        final plan = planTextWrap(
+          logical: text,
+          style: style,
+          columnWidth: 300,
+          floats: floats,
+        );
+        expect(stripWrapAnchors(plan.display), text);
+        expectNoOverlap(plan, floats, 300);
+      }
+    }
+  });
+
   test('bos metinde sagdaki gorsel imleci yerinden oynatmaz', () {
     final plan = planTextWrap(
       logical: '',

@@ -37,7 +37,14 @@ const int _kWrapGlueCode = 0x2060;
 /// Sarmanın metne bırakacağı en az genişlik (sütun oranı). Bundan darına
 /// sıkıştırılan metin harf harf kırılıp okunmaz hâle gelir; o satırlar
 /// tümüyle boşaltılır ve metin görselin ALTINA iner.
-const double _kMinUsableFraction = 0.25;
+///
+/// **0.25 → 0.35** (kullanıcı bulgusu 2026-08-10, ekran görüntüsü): sayfanın
+/// ORTASINA konmuş bir görsel iki yanında da dörtte birden biraz fazla yer
+/// bırakıyor, yani eski eşiği geçiyordu. Kalan şeritte satıra on beş karakter
+/// sığıyor ve metin "NLDESB/" · "270726/0050/01" gibi parçalara bölünüyordu —
+/// teknik olarak sarma çalışıyor, okunuşu bozuk. Sütunun en az üçte biri
+/// kalmıyorsa metin artık görselin yanına sıkışmıyor, altına iniyor.
+const double _kMinUsableFraction = 0.35;
 
 /// Oranın yanında MUTLAK bir taban (dp): dar bir sütunda dörtte bir de birkaç
 /// karaktere düşebiliyor. Yazı ölçeğiyle birlikte büyür.
@@ -200,11 +207,16 @@ WrapPlan planTextWrap({
   // yapıştıramazsa (ör. satırda hiç boşluk yok) bir daha denenmez — yoksa
   // aynı satır sonsuza dek yeniden dolgulanırdı.
   final rightPadded = <int>{};
+  // Ölçüm, `display`/`widths`ın SON hâlini mi taşıyor? Aşağıdaki son denetim
+  // buna bakıp gereksiz bir tam dizgiyi atlar (yazarken her tuşta koşan bir
+  // yol; bedava bir `TextPainter.layout` istemiyoruz).
+  var laidOut = false;
   // Görsel sayısı azdır (not başına birkaç ek); tur sayısı satır sayısı +
   // eklenen dolgu kadardır. Tavan, beklenmedik bir kırılımda sonsuz döngüyü
   // engeller — aşılırsa o ana kadarki plan kullanılır (metin yine okunur).
   for (var guard = 0; guard < 512; guard++) {
     _layout(painter, display, widths, style, columnWidth, rich);
+    laidOut = true;
     final metrics = painter.computeLineMetrics();
     // Boş tamponun ölçülecek satırı yoktur ama imleç ilk satırdadır: soldaki
     // görsel onu sağa itmezse imleç görselin ÜSTÜNDE yanıp söner.
@@ -263,6 +275,7 @@ WrapPlan planTextWrap({
     if (indentStart > 0 && !hasStartAnchor) {
       display = display.replaceRange(start, start, kWrapAnchorChar);
       widths.insert(_anchorCountBefore(display, start), indentStart);
+      laidOut = false;
       continue; // aynı satırı yeni genişlikle yeniden ölç
     }
 
@@ -290,6 +303,7 @@ WrapPlan planTextWrap({
           '$kWrapGlueChar$kWrapAnchorChar',
         );
         widths.insert(_anchorCountBefore(display, cut), indentEnd);
+        laidOut = false;
         continue;
       }
       // cut == -1: satırda kırılacak boşluk yok (tek uzun kelime). Sağa dolgu
@@ -299,14 +313,113 @@ WrapPlan planTextWrap({
       if (!hasStartAnchor) {
         display = display.replaceRange(start, start, kWrapAnchorChar);
         widths.insert(_anchorCountBefore(display, start), columnWidth);
+        laidOut = false;
         continue;
       }
     }
     line++;
   }
 
+  // ---- SON DENETİM: hiçbir satır görselin ÜSTÜNE binmemeli ---------------
+  //
+  // KÖK NEDEN (kullanıcı bulgusu 2026-08-10 — "metin modunda görselin altında
+  // kalıyor", ekran görüntüsünde satırın bir bölümü görselin arkasında):
+  // yukarıdaki geçiş dolguyu satır SIRASINA göre koyuyor ve bir satıra dolgu
+  // eklemek SONRAKİ satırların kırılımını değiştiriyor. Kimi durumda satır
+  // dolgusuz kalıyordu — en belirgini, satır sonu dolgusunun (birleştirici +
+  // çapa) kırıcı tarafından bir alt satırın BAŞINA atılması: o satır artık
+  // "başında çapa var" sayıldığı için satır başı dolgusu da almıyor ve metin
+  // görselin bandına giriyordu. Görseller metnin ÜSTÜNE çizildiğinden o
+  // satırlar okunmaz oluyordu.
+  //
+  // Burada plan bir kez daha ölçülür ve satırların GERÇEK kutuları görsel
+  // bantlarıyla karşılaştırılır; hâlâ binen satır tümüyle boşaltılır (metin
+  // görselin altına iner). Düzgün sarılmış satırlara dokunulmaz — yalnız
+  // gerçekten binenlere. Her düzeltme bir satırı boşalttığı için ilerleme
+  // garantili: boşalan satırda metin kalmaz, bir sonraki turda atlanır.
+  for (var pass = 0; pass < 64; pass++) {
+    if (!laidOut) {
+      _layout(painter, display, widths, style, columnWidth, rich);
+      laidOut = true;
+    }
+    final metrics = painter.computeLineMetrics();
+    var repaired = false;
+    var top = 0.0;
+    for (final metric in metrics) {
+      final lineTop = top;
+      final lineBottom = top + metric.height;
+      top = lineBottom;
+      // Ucuz ön eleme: satır hiçbir görselin yakınında değilse kutularını
+      // hiç istemeyiz (uzun notta satır başına bir ölçüm, yazarken her tuşta
+      // koşan bir yol). Pay bir satır yüksekliği — satır tepelerini satır
+      // yüksekliklerini toplayarak bulduğumuz için kenarda kalanı kaçırmayalım.
+      final near = floats.any(
+        (f) =>
+            f.top < lineBottom + metric.height &&
+            lineTop - metric.height < f.bottom,
+      );
+      if (!near) continue;
+      final range = _lineRange(painter, display, lineTop, metric.height);
+      final text = _lineTextRange(display, range);
+      if (text == null) continue; // satırda çizilen metin yok
+      final boxes = painter.getBoxesForSelection(
+        TextSelection(baseOffset: text.start, extentOffset: text.end),
+      );
+      if (boxes.isEmpty) continue;
+      // Karar GERÇEK kutulardan verilir (satır yüksekliklerini toplayarak
+      // bulunan banttan değil): binme sorusunun tek doğru cevabı çizilen
+      // dikdörtgenlerdir.
+      var left = double.infinity;
+      var right = -double.infinity;
+      var boxTop = double.infinity;
+      var boxBottom = -double.infinity;
+      for (final box in boxes) {
+        if (box.left < left) left = box.left;
+        if (box.right > right) right = box.right;
+        if (box.top < boxTop) boxTop = box.top;
+        if (box.bottom > boxBottom) boxBottom = box.bottom;
+      }
+      // Bir dp'lik pay: dolgu tam görselin kenarında bittiğinde yuvarlama
+      // farkı yüzünden satırı boşuna aşağı itmeyelim.
+      final hits = floats.any(
+        (f) =>
+            f.top < boxBottom &&
+            boxTop < f.bottom &&
+            right > f.left + 1 &&
+            left < f.right - 1,
+      );
+      if (!hits) continue;
+      display = display.replaceRange(range.start, range.start, kWrapAnchorChar);
+      widths.insert(_anchorCountBefore(display, range.start), columnWidth);
+      repaired = true;
+      laidOut = false;
+      break; // düzen değişti: baştan ölç
+    }
+    if (!repaired) break;
+  }
+
   painter.dispose();
   return WrapPlan(display, widths);
+}
+
+/// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez çapa ve
+/// birleştirici karakterler (ve satır sonu) dışarıda bırakılır. Metin
+/// kalmıyorsa null.
+({int start, int end})? _lineTextRange(
+  String display,
+  ({int start, int end}) range,
+) {
+  bool invisible(int code) =>
+      code == _kWrapAnchorCode || code == _kWrapGlueCode || code == 0x0A;
+  var start = range.start;
+  var end = range.end;
+  while (start < end && invisible(display.codeUnitAt(start))) {
+    start++;
+  }
+  while (end > start && invisible(display.codeUnitAt(end - 1))) {
+    end--;
+  }
+  return end > start ? (start: start, end: end) : null;
 }
 
 /// Satır sonu dolgusunun gireceği konum: [limitX]'e kadar sığan SON kelimenin
