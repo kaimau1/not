@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
@@ -27,6 +28,89 @@ import 'notes_providers.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+/// Kartın YAKLAŞIK yüksekliği (dp), [width] genişliğinde çizildiğinde.
+///
+/// NEDEN TAHMİN: ana ekran ızgarası kartları sütunlara ÇİZMEDEN ÖNCE dağıtır
+/// (bkz. `dashboard_screen.dart` → `_balancedColumns`). Gerçek yükseklikler
+/// ancak yerleşimden sonra bilinir; onlara göre dağıtmak — masonry ızgaranın
+/// yaptığı buydu — kartın hangi sütuna düşeceğini her yerleşimde yeniden
+/// hesaplatıyor, kart yükseklikleri kıpırdadıkça (seçim, küçük resim yüklenmesi,
+/// not güncellemesi) kartlar sütun değiştiriyor ve kullanıcının gördüğü
+/// "kaymalar / sağ sütunda kalan boşluklar" oluşuyordu.
+///
+/// Tahmin YALNIZ DENGEYİ etkiler: sıra ve yerleşim her zaman deterministiktir
+/// (n. kart hangi sütuna atandıysa orada, bir öncekinin hemen altında durur),
+/// tahmin şaşarsa yalnız en alttaki sütun boşluğu bir miktar büyür.
+double estimateNoteCardHeight(Note note, double width) {
+  // Kart gövde yazısı ~12 dp; ortalama karakter genişliği yazı boyunun ~0.52'si
+  // (kartta not kendi ölçeğini kullanıyor, bkz. [_NotePreview]).
+  final charWidth = 12 * note.fontScale.clamp(0.8, 1.4) * 0.52;
+  final textWidth = math.max(40.0, width - 24);
+  final perLine = math.max(8, textWidth ~/ charWidth);
+  int lines(String text, int maxLines) =>
+      math.max(1, math.min(maxLines, (text.trim().length / perLine).ceil()));
+
+  var height = 20.0; // dikey dolgu (10 + 10)
+  if (note.title.trim().isNotEmpty) {
+    height += lines(note.title, 2) * 17.0 + 6;
+  }
+  if (note.locked) {
+    height += 18;
+    return height + 24; // kilit satırı + alt meta bandı
+  }
+
+  const itemHeight = 19.0;
+  switch (note.type) {
+    case NoteType.text:
+      final hasBody = note.body.trim().isNotEmpty;
+      final items = [
+        for (final i in note.items)
+          if (i.text.trim().isNotEmpty) i,
+      ];
+      if (hasBody) height += lines(note.body, items.isEmpty ? 4 : 2) * 16.0;
+      if (items.isNotEmpty) {
+        if (hasBody) height += 6;
+        final maxItems = hasBody ? 3 : 5;
+        height += math.min(items.length, maxItems) * itemHeight;
+        if (items.length > maxItems) height += 16;
+      }
+    case NoteType.checklist:
+    case NoteType.ordered:
+      // Ayrı ad: `switch` gövdesi TEK kapsam — `items` yukarıda tanımlı.
+      final listItems = [
+        for (final i in note.items)
+          if (i.text.trim().isNotEmpty) i,
+      ];
+      height += math.min(listItems.length, 6) * itemHeight;
+      if (listItems.length > 6) height += 16;
+    case NoteType.pdf:
+    case NoteType.slides:
+      final pages = note.pageNotes.length;
+      height += math.min(pages, 5) * itemHeight;
+      if (pages > 5) height += 16;
+  }
+
+  // Ek önizlemesi: görseller tek 72 dp'lik şerit, PDF/sunum satır başına ~22.
+  final previews = [
+    for (final a in note.attachments)
+      if (a.id != note.backgroundImageId) a,
+  ];
+  if (previews.isNotEmpty) {
+    height += 8;
+    if (previews.any((a) => a.kind == AttachmentKind.image)) height += 72;
+    final files = previews
+        .where(
+          (a) => a.kind == AttachmentKind.pdf || a.kind == AttachmentKind.slide,
+        )
+        .length;
+    height += math.min(files, 4) * 22.0;
+  }
+
+  // Alt meta satırı (rozet · etiket · tarih) neredeyse her kartta var.
+  height += 24;
+  return height;
+}
 
 /// Not tarihini kısa gösterir: bugünse saat, aynı yılsa "5 Tem",
 /// eski yıllarsa "5 Tem 2025".

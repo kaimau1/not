@@ -586,13 +586,19 @@ class ItemsEditorState extends State<ItemsEditor> {
   ///
   /// Bant yokken bedel sıfır: [_FloatRow] boş bant listesinde ölçüm bile
   /// planlamaz, yalnız 0 dolgulu bir [Padding] çizer.
-  Widget _floatRow(Widget child, {String? id, double reserved = 0}) {
+  Widget _floatRow(
+    Widget child, {
+    String? id,
+    double reserved = 0,
+    bool pushOnly = false,
+  }) {
     final pageBox = widget.pageBox;
     if (pageBox == null) return child;
     return _FloatRow(
       floats: widget.floats,
       pageBox: pageBox,
       reserved: reserved,
+      pushOnly: pushOnly,
       initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
       onMeasured: id == null ? null : (pad) => _pads[id] = pad,
       child: child,
@@ -1435,6 +1441,13 @@ class ItemsEditorState extends State<ItemsEditor> {
     // çubuğun segmenti oldu (bkz. [startSelection]); footer'da tekrarlanmaz.
     final addButton = _floatRow(
       reserved: _kButtonRowWidth,
+      // DÜĞME SATIRI YANA GEÇMEZ, ALTA İNER (kullanıcı bulgusu 2026-08-10:
+      // "yeni öğe + yazısı resimlerin altında kalıyor, görsel çok büyüyünce
+      // oluyor"): yana kaydırma kararı metne kalan yere bakıyordu ve düğme
+      // satırının metni yok — küçülemeyen 280 dp'lik sabit bir blok. Görselin
+      // bandına değen her durumda satır görselin ALTINA iner; böylece düğme
+      // görselin altında kalamaz, ölçüm bir piksel şaşsa bile.
+      pushOnly: true,
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Row(
@@ -1449,14 +1462,20 @@ class ItemsEditorState extends State<ItemsEditor> {
       ),
     );
 
+    // STRETCH, start DEĞİL: `_FloatRow` kesişmeyi KENDİ genişliğinden ölçüyor
+    // (bkz. [_FloatRowState._measure]). `start` hizalamada düğme satırı yalnız
+    // düğme kadar genişti, yani sayfanın sağ yarısındaki bir görselle hiç
+    // kesişmiyor görünüyor ve satır olduğu yerde kalıyordu. Tam genişlikte
+    // ölçülünce satırın gerçekten hangi görselin bandında olduğu doğru çıkar.
     final footer = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         addButton,
         for (final item in checkedItems) _itemRow(item),
         if (checkedItems.isNotEmpty)
           _floatRow(
             reserved: _kButtonRowWidth,
+            pushOnly: true,
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
               child: TextButton.icon(
@@ -1614,9 +1633,15 @@ class _FloatRow extends StatefulWidget {
     required this.pageBox,
     required this.child,
     this.reserved = 0,
+    this.pushOnly = false,
     this.initial,
     this.onMeasured,
   });
+
+  /// true ise satır görselin YANINA hiç geçmez, bandına değdiği her görselin
+  /// ALTINA iner. Küçülemeyen satırlar ("Yeni öğe", "İşaretlileri sil") böyle:
+  /// yana kaydırma kararı metne kalan yere bakıyor, onlarınsa metni yok.
+  final bool pushOnly;
 
   final List<FloatBox> floats;
   final RenderBox? Function() pageBox;
@@ -1706,17 +1731,19 @@ class _FloatRowState extends State<_FloatRow> {
     final bottom = origin.dy + box.size.height - _top;
     var start = 0.0;
     var end = 0.0;
-    for (final f in widget.floats) {
-      if (f.bottom <= origin.dy || f.top >= bottom) continue;
-      final left = f.left - origin.dx;
-      final right = f.right - origin.dx;
-      if (right <= 0 || left >= width) continue;
-      // Satır görselin GENİŞ tarafına geçer (metin sarmasıyla aynı kural).
-      if (width - right >= left) {
-        if (right > start) start = right;
-      } else {
-        final pad = width - left;
-        if (pad > end) end = pad;
+    if (!widget.pushOnly) {
+      for (final f in widget.floats) {
+        if (f.bottom <= origin.dy || f.top >= bottom) continue;
+        final left = f.left - origin.dx;
+        final right = f.right - origin.dx;
+        if (right <= 0 || left >= width) continue;
+        // Satır görselin GENİŞ tarafına geçer (metin sarmasıyla aynı kural).
+        if (width - right >= left) {
+          if (right > start) start = right;
+        } else {
+          final pad = width - left;
+          if (pad > end) end = pad;
+        }
       }
     }
     var top = 0.0;
@@ -1728,7 +1755,7 @@ class _FloatRowState extends State<_FloatRow> {
       _kMinRowTextWidth,
       (width - widget.reserved) * 0.25,
     );
-    if (textWidth < minTextWidth) {
+    if (widget.pushOnly || textWidth < minTextWidth) {
       // Yana kaçacak yer yok. Gövde metninde bu durumda satır boşaltılır ve
       // metin görselin ALTINA iner (text_wrap.dart `_kMinUsableFraction`);
       // liste maddesinde karşılığı satırı aşağı itmektir. Eskiden satır pes

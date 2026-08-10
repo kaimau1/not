@@ -1571,3 +1571,23 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **6)** "Notları sırala" ⋮ menüsünden kaldırıldı; sıralamanın tek yeri Süz levhası.
 
   Doğrulama: Flutter SDK yok, `analyze` + 750+ test CI'da yeşil (26858fd).
+
+- 2026-08-10 (32. tur): **Izgara yerleşimi, alt çubuk, sayfa rengi, kağıt tonu ve görsel katmanı** (dal: `claude/note-layout-visual-fixes-35dd2c`).
+
+  **1) KÖK NEDEN — "notların sıralaması düzgün olmuyor, kaymalar oluyor; 2 kolonluda sağ kolonda sürekli boşluklar kalıyor".** `SliverMasonryGrid` kartı YERLEŞİM ANINDA en kısa sütuna atar; yani bir notun hangi sütuna düşeceği, o an ölçülmüş kart yüksekliklerine bağlıdır. Yükseklik kıpırdadığı her durumda (seçim, küçük resmin gelmesi, notun güncellenmesi, tembel yerleşimin sırası) aynı not başka bir sütuna geçiyor, altındaki kartlar kayıyor ve bir sütunda kapanmayan boşluk kalıyordu. Dağıtım artık ÇİZİMDEN ÖNCE ve yalnız NOT İÇERİĞİNE bakılarak yapılıyor (`estimateNoteCardHeight` + `_balancedColumns`): her sütun sıkı bir `Column`, yani kartların ARASINDA boşluk oluşamaz; tahmin şaşarsa bedeli yalnız sütunların DİBİNDEKİ fark. **TUZAK:** bu yerleşim bölümün tamamını tek kutuda çizer, yani tembel değildir — 200'den uzun bölümlerde (`_kStaticGridLimit`) eski masonry'ye dönülür ki çok notlu kitaplıkta ilk kare bedeli büyümesin. Bölümler zaten sabitlenmiş/bugün/bu hafta/daha önce diye bölündüğü için bu sınıra seyrek varılır.
+
+  **2) KÖK NEDEN — "alt kısım sığmıyor: biçim, ekle, seç ve eklerin olduğu kısım".** Kapsül `Expanded` + yatay kaydırma içindeydi: taşma HATASI vermiyor ama segmentler AI düğmesinin solunda kesiliyor, dar telefonda "Seç" yarım ve ataç rozeti hiç görünmüyordu. Kaydırılabilir olduğu da belli değildi. Artık `LayoutBuilder` + `TextPainter` ile etiketlerin gerçek genişliği ölçülüyor; sığmıyorsa etiketler düşüyor ve dört segment de simge olarak yan yana kalıyor (ipuçları duruyor). Kaydırma son çare olarak yerinde.
+
+  **3) Sayfa rengi "Ekle" levhasından BİÇİM şeridine taşındı** (kullanıcı: "sayfa rengi ve yanındaki kısımları biçim menüsüne al"). Renk, PDF/ses/QR gibi EK EKLEYEN maddelerin arasında duruyordu; oysa "bu not nasıl görünsün" ayarı. Biçim şeridinde metin biçimlerinden ince bir çizgiyle ayrılmış palet düğmesi: zemin rengi + çerçeve rengi + zemin görseli aynı levhayı açıyor.
+
+  **4) Kağıt tonu sarı-gri arasına çekildi.** Eski küme saman kağıdıydı; en koyu yüzeyde kırmızı ile mavi kanal arasındaki fark 53 birimdi (0xFFDCCDA7). Fark yarıya indirilip parlaklık korundu — kağıt hissi kalıyor, sarılık göze batmıyor. **TUZAK:** `theme_cache_test` yüzey rengini birebir bekliyor, birlikte güncellendi.
+
+  **5) KÖK NEDEN — "yeni öğe + yazısı resimlerin altında kalıyor".** İki kusur birleşiyordu: (a) düğme satırının yana kayıp kaymayacağı kararı METNE kalan yere bakıyordu, oysa düğme satırının metni yok — küçülemeyen 280 dp'lik sabit bir blok; (b) footer `Column`u `CrossAxisAlignment.start` idi, yani satır yalnız DÜĞME kadar genişti ve `_FloatRow` kesişmeyi kendi genişliğinden ölçtüğü için sayfanın sağ yarısındaki bir görselle "kesişmiyor" görünüyordu. Düğme satırları artık `pushOnly`: bandına değen her görselin ALTINA iner, yana hiç geçmez; footer `stretch` ile tam genişlikte ölçülür.
+
+  **6) KÖK NEDEN — "görseli ön izlemede üst ve yanlarına tıklayınca kapanıyor, altına tıklayınca kapanmıyor".** Önizleme katmanı `Positioned(top: …)` idi ve ALT SINIRI yoktu: kutu yalnız görselin kendi bandı kadar yer kaplıyor, o bandın altına düşen dokunuş katmana hiç ulaşmıyordu. `Positioned.fill` ile katman sayfanın tamamını kapsıyor.
+
+  **7) Sürüklenen görsel yarı saydam** ("notu sürüklediğinde metin notu resmin altında kalıyor"). Görseller metnin ÜSTÜNE çizilir; metin etraflarından akar ama akış ancak yeni bantlar ölçülüp uygulandıktan SONRA (kare sonu) yerine oturur. Parmak hızlıysa görsel arada metnin üstünde duruyor ve satırlar kayboluyordu. Saydamlık yalnız taşıma sürerken; bırakınca görsel tam opak.
+
+  **8) Sessiz bekleme bitti** ("görüntü kopyalanırken veya başka bir şey yüklenirken sessizlik var"). Pano ve ek işleri ancak BİTİNCE SnackBar gösteriyordu; büyük görselin baytlarını okumak (bulut kopyasında indirmek) saniyeler sürüyordu. `_runBusy` + şeritteki canlı gösterge: kopyalama, yapıştırma ve görsel hazırlama artık görünür. Yeni l10n anahtarı `attachmentCopying` on altı dile eklendi (generated dosyalar elle, CI `pub get` ile yeniden üretiyor).
+
+  Doğrulama: Flutter SDK bu oturumda ortamda YOK — `analyze`/`test` çalıştırılamadı, CI'ya bırakıldı. Cihazda doğrulanmadı.

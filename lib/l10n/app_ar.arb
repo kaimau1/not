@@ -41,6 +41,7 @@
   "clipboardEmpty": "لا توجد صورة في الحافظة",
   "noNoteSelected": "اختر ملاحظة من الجانب",
   "attachmentFailed": "تعذّر إضافة المرفق: {error}",
+  "attachmentCopying": "جارٍ النسخ...",
   "attachmentUploading": "جارٍ الرفع...",
   "attachmentNotSynced": "لم تتم مزامنة هذا الملف مع هذا الجهاز بعد",
   "attachmentTooLarge": "الملف كبير جدًا (بحد أقصى {limit} ميجابايت)",

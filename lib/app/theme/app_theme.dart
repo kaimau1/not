@@ -70,14 +70,21 @@ abstract final class AppTheme {
       brightness: brightness,
     );
     if (paper) {
-      // Hafif saman kağıdı tonları: sıcak, sarımsı krem yüzeyler.
+      // Kağıt tonu: SARI-GRİ arası, ılık ama doygun olmayan yüzeyler.
+      //
+      // Sarı YARIYA İNDİRİLDİ (kullanıcı isteği 2026-08-10: "kağıt tonunun
+      // sarısını biraz azalt, çok sarı; hafif grileşebilir, sarı gri arası").
+      // Eski küme saman kağıdıydı — en koyu yüzeyde kırmızı ile mavi kanal
+      // arasındaki fark 53 birimdi (0xFFDCCDA7), yani belirgin sarı. Kanal
+      // farkı yarıya indirilip parlaklık korunarak ton griye çekildi: kağıt
+      // hissi (yüzeyler hâlâ sıcak tarafta) kalır, sarılık göze batmaz.
       scheme = scheme.copyWith(
-        surface: const Color(0xFFF5EDD8),
-        surfaceContainerLowest: const Color(0xFFFBF5E6),
-        surfaceContainerLow: const Color(0xFFF0E6CC),
-        surfaceContainer: const Color(0xFFEBDFC2),
-        surfaceContainerHigh: const Color(0xFFE4D6B4),
-        surfaceContainerHighest: const Color(0xFFDCCDA7),
+        surface: const Color(0xFFF3EFE3),
+        surfaceContainerLowest: const Color(0xFFFAF7EF),
+        surfaceContainerLow: const Color(0xFFEDE8DA),
+        surfaceContainer: const Color(0xFFE7E1D1),
+        surfaceContainerHigh: const Color(0xFFDFD9C7),
+        surfaceContainerHighest: const Color(0xFFD6CFBB),
       );
     }
     if (isDark) {

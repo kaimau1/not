@@ -144,6 +144,9 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => 'Menyalin...';
+
+  @override
   String get attachmentUploading => 'Mengunggah...';
 
   @override

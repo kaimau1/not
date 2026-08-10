@@ -127,7 +127,10 @@ class _AttachSheet extends StatelessWidget {
         ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
-      ('color', Icons.palette_outlined, l10n.color, l10n.backgroundColorInfo),
+      // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10: "sayfa rengi ve
+      // yanındaki kısımları biçim menüsüne al"): sayfa görünümü artık alt
+      // çubuktaki "Biçim" şeridinin palet düğmesinde (bkz. format_bar.dart).
+      // Bu levha yalnız NOTA GİREN şeyleri listeler; renk buraya ait değildi.
       if (copied != null)
         (
           'paste-attachment',

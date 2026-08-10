@@ -343,6 +343,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// gösterge sürer ve aynı işin ikinci kez başlatılmasını engeller.
   String? _aiTask;
 
+  /// Süren DOSYA işinin adı (kopyalama, yapıştırma, ek hazırlama). AI'dan
+  /// ayrı bir alan: ikisi aynı anda koşabilir ve biri ötekini susturmamalı.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "görüntü kopyalanırken veya
+  /// başka bir şey yüklenirken sessizlik var, yüklenme dönencesi lazım"):
+  /// pano işleri ancak BİTİNCE bir SnackBar gösteriyordu. Büyük bir görselin
+  /// baytlarını okumak (bulut kopyasında: indirmek) saniyeler sürebiliyor ve o
+  /// süre boyunca ekranda hiçbir iz yoktu — kullanıcı düğmeye basmadığını
+  /// sanıp tekrar basıyordu.
+  String? _busyTask;
+
+  /// Uzun süren DOSYA işlerinin ortak sarmalayıcısı: şeritteki göstergeyi
+  /// açar/kapatır. AI'nın [_runAi]'ı ile aynı desen; hata yönetimi çağırana
+  /// bırakılır (her işin kendi anlamlı mesajı var).
+  Future<T> _runBusy<T>(String label, Future<T> Function() body) async {
+    setState(() => _busyTask = label);
+    try {
+      return await body();
+    } finally {
+      if (mounted) setState(() => _busyTask = null);
+    }
+  }
+
   /// Uzun süren AI işlerinin TEK giriş noktası: göstergeyi açar/kapatır,
   /// hataları tek biçimde bildirir. Yeni bir AI özelliği eklenirken
   /// göstergeyi ayrıca düşünmek gerekmesin diye burada toplandı.
@@ -423,6 +446,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Gövde metninin sayfa kenarlarından boşluğu.
   static const double _kGutter = 16;
+
+  /// Alt çubuk segment etiketlerinin (Biçim / Ekle / Seç) yazı boyu. Ölçüm ve
+  /// çizim AYNI değeri kullanmalı — ayrışırsa "sığıyor mu" kararı yalan söyler
+  /// (bkz. [_toolLabelsFit]).
+  static const double _kToolLabelSize = 12.5;
 
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
@@ -1261,11 +1289,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final repo = ref.read(attachmentRepositoryProvider);
     if (repo == null) return;
     try {
-      final attachment = await repo.prepareImage(
-        noteId: widget.noteId,
-        bytes: bytes,
-        fileName: fileName,
+      // Sıkıştırma + diske yazma büyük fotoğrafta saniyeler sürüyor ve o süre
+      // boyunca ekranda hiçbir iz yoktu (bkz. [_busyTask]).
+      final attachment = await _runBusy(
+        context.l10n.attachmentUploading,
+        () => repo.prepareImage(
+          noteId: widget.noteId,
+          bytes: bytes,
+          fileName: fileName,
+        ),
       );
+      if (!mounted) return;
       _mutate(
         (n) => n.copyWith(
           attachments: [
@@ -1818,16 +1852,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final repo = ref.read(attachmentRepositoryProvider);
     final attachment = attachments.first;
     try {
-      if (attachment.kind == AttachmentKind.image) {
-        final bytes = await repo?.readBytes(attachment);
-        if (bytes != null) await Pasteboard.writeImage(bytes);
-      } else if (_isDesktop) {
-        final paths = [
-          for (final a in attachments)
-            if (a.localPath.isNotEmpty) a.localPath,
-        ];
-        if (paths.isNotEmpty) await Pasteboard.writeFiles(paths);
-      }
+      // Baytları okumak (bulut kopyasında: indirmek) uzun sürebilir; şeritte
+      // canlı gösterge dursun (bkz. [_busyTask]).
+      await _runBusy(l10n.attachmentCopying, () async {
+        if (attachment.kind == AttachmentKind.image) {
+          final bytes = await repo?.readBytes(attachment);
+          if (bytes != null) await Pasteboard.writeImage(bytes);
+        } else if (_isDesktop) {
+          final paths = [
+            for (final a in attachments)
+              if (a.localPath.isNotEmpty) a.localPath,
+          ];
+          if (paths.isNotEmpty) await Pasteboard.writeFiles(paths);
+        }
+      });
     } catch (_) {
       // Sistem panosuna yazmak her platformda mümkün değil (ör. masaüstünde
       // görsel yazımı yok). Uygulama içi kopya yine de alındı; kullanıcıya
@@ -1842,24 +1880,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final repo = ref.read(attachmentRepositoryProvider);
     if (sources.isEmpty || repo == null) return;
     try {
-      // SIRAYLA: her kopya sayfadaki yerini bir öncekine göre hesaplıyor
-      // (bkz. [_placeNewImage]); aynı anda koşsalardı üst üste binerlerdi.
-      for (final source in sources) {
-        final copy = await repo.duplicate(
-          noteId: widget.noteId,
-          source: source,
-        );
-        if (!mounted) return;
-        _mutate(
-          (n) => n.copyWith(
-            attachments: [
-              ...n.attachments,
-              if (copy.floatsOnPage) _placeNewImage(copy, n) else copy,
-            ],
-          ),
-          immediate: true,
-        );
-      }
+      // Baytların yeniden yazılması saniyeler sürebilir: gösterge şeritte
+      // dursun, kullanıcı düğmenin çalıştığını görsün (bkz. [_busyTask]).
+      await _runBusy(context.l10n.attachmentUploading, () async {
+        // SIRAYLA: her kopya sayfadaki yerini bir öncekine göre hesaplıyor
+        // (bkz. [_placeNewImage]); aynı anda koşsalardı üst üste binerlerdi.
+        for (final source in sources) {
+          final copy = await repo.duplicate(
+            noteId: widget.noteId,
+            source: source,
+          );
+          if (!mounted) return;
+          _mutate(
+            (n) => n.copyWith(
+              attachments: [
+                ...n.attachments,
+                if (copy.floatsOnPage) _placeNewImage(copy, n) else copy,
+              ],
+            ),
+            immediate: true,
+          );
+        }
+      });
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } on AttachmentMissingException {
@@ -2036,8 +2078,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _addVideo();
       case 'paste':
         await _pasteImage();
-      case 'color':
-        await _showColorSheet();
+      // 'color' BURADAN KALKTI: sayfa görünümü artık biçim şeridinde
+      // (bkz. attach_sheet.dart'taki gerekçe ve [_showColorSheet]).
     }
   }
 
@@ -3212,40 +3254,82 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     required String label,
     required VoidCallback onTap,
     bool active = false,
+    bool compact = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: active ? scheme.primaryContainer : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
+    return Tooltip(
+      message: label,
+      child: Material(
+        color: active ? scheme.primaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Container(
-          height: 38,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: active ? scheme.onPrimaryContainer : scheme.onSurface,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 18,
                   color: active ? scheme.onPrimaryContainer : scheme.onSurface,
                 ),
-              ),
-            ],
+                // Dar ekranda etiket düşer, simge kalır (bkz. [_toolLabelsFit]).
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: _kToolLabelSize,
+                      fontWeight: FontWeight.w600,
+                      color: active
+                          ? scheme.onPrimaryContainer
+                          : scheme.onSurface,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Alt çubuk segmentlerinin ETİKETLİ hâli [maxWidth]'e sığıyor mu?
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "alt kısım sığmıyor, biçim ekle
+  /// seç ve eklerin olduğu kısım"): kapsül `Expanded` + yatay kaydırma
+  /// içindeydi. Taşma hatası vermiyordu ama segmentler AI düğmesinin solunda
+  /// KESİLİYORDU: dar telefonda "Seç" yarım, ataç rozeti hiç görünmüyor,
+  /// kullanıcı çubuğun sağını ancak kaydırarak bulabiliyordu (üstelik
+  /// kaydırılabildiği de belli değildi). Ölçüp karar veriyoruz: sığmıyorsa
+  /// etiketler düşer, dört segment de simge olarak yan yana kalır.
+  bool _toolLabelsFit(
+    List<String> labels, {
+    required double maxWidth,
+    required double fixedWidth,
+  }) {
+    const style = TextStyle(
+      fontSize: _kToolLabelSize,
+      fontWeight: FontWeight.w600,
+    );
+    final scaler = MediaQuery.textScalerOf(context);
+    var needed = fixedWidth;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      // Etiketin kendisi + simgeyle arasındaki 6 dp.
+      needed += painter.width + 6;
+    }
+    return needed <= maxWidth;
   }
 
   /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).
@@ -3344,7 +3428,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  Widget _addToolButton(AppLocalizations l10n) {
+  Widget _addToolButton(AppLocalizations l10n, {bool compact = false}) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: l10n.addAttachment,
@@ -3362,15 +3446,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.add, size: 18, color: scheme.onSurface),
-                const SizedBox(width: 6),
-                Text(
-                  l10n.addAttachment,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: scheme.onSurface,
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    l10n.addAttachment,
+                    style: TextStyle(
+                      fontSize: _kToolLabelSize,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -4639,6 +4725,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
                       // açık kalabiliyordu.
                       if (_aiTask != null) _AiBanner(label: _aiTask!),
+                      // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
+                      // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
+                      if (_busyTask != null)
+                        _AiBanner(
+                          label: _busyTask!,
+                          icon: Icons.sync,
+                        ),
                       // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                       // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                       if (_formatBarOpen)
@@ -4701,6 +4794,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     ? n.copyWith(titleFontScale: value)
                                     : n.copyWith(fontScale: value),
                               ),
+                              // Sayfa rengi/çerçeve/zemin görseli: "Ekle"
+                              // levhasından buraya taşındı (bkz. FormatBar).
+                              onPageStyle: _showColorSheet,
                               onClose: () =>
                                   setState(() => _formatBarOpen = false),
                             ),
@@ -4715,14 +4811,42 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         color: background,
                         height: 64,
                         padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                        child: Row(
+                        child: LayoutBuilder(
+                          builder: (context, barConstraints) {
+                        final showSelect =
+                            !note.type.isPageNoteType && note.items.isNotEmpty;
+                        final showAttachments = fileAttachments.isNotEmpty;
+                        // Kapsülün ETİKETSİZ (simge) tabanı: her segment 38 dp,
+                        // aralar 3, kapsül dolgusu 6 + kenarlık 2.
+                        final segments = 2 + (showSelect ? 1 : 0);
+                        var fixed =
+                            segments * 38.0 +
+                            (segments - 1) * 3 +
+                            8 +
+                            // Sağ blok: AI (≈76) + mikrofon (50) + iki 8 dp
+                            // aralık; belge notunda kalem düğmesi de var.
+                            76 +
+                            50 +
+                            16;
+                        if (showAttachments) fixed += 3 + 46;
+                        if (isDocumentNote) fixed += 46 + 8;
+                        final compact = !_toolLabelsFit(
+                          [
+                            l10n.formatTitle,
+                            l10n.addAttachment,
+                            if (showSelect) l10n.select,
+                          ],
+                          maxWidth: barConstraints.maxWidth,
+                          fixedWidth: fixed,
+                        );
+                        return Row(
                           children: [
                             // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
                             // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
                             // Seç) ve dar ekranda dördü birden taşıyordu.
-                            // Kaydırılabilir olunca taşma yerine kayıyor; boş
-                            // kalan yer de AI/mikrofonu sağa itmeye yarıyor
-                            // (eski `Spacer`ın işi).
+                            // Kaydırma SON ÇARE olarak duruyor (çok büyük yazı
+                            // ölçeğinde simgeler bile taşabilir); olağan dar
+                            // ekranda artık etiketler düşüyor ve hepsi görünüyor.
                             Expanded(
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
@@ -4746,6 +4870,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                         icon: Icons.text_format,
                                         label: l10n.formatTitle,
                                         active: _formatBarOpen,
+                                        compact: compact,
                                         onTap: () => setState(
                                           () =>
                                               _formatBarOpen = !_formatBarOpen,
@@ -4756,7 +4881,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       // Ekle levhasının en üst bölümüne taşındı: çubuk
                                       // üç segmentle kalabalıktı ve ekleme işi iki ayrı
                                       // yere bölünmüştü (bkz. attach_sheet.dart).
-                                      _addToolButton(l10n),
+                                      _addToolButton(l10n, compact: compact),
                                       // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
                                       // "seç burada olsun, yeni öğe eski yerinde"):
                                       // toplu kopyalama/silme girişi bir tur ekranın
@@ -4765,12 +4890,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       // sayfanın neresinde olursak olalım görünür
                                       // kalıyor hem hiçbir şeyi kapatmıyor.
                                       // Madde yoksa gizli: seçilecek bir şey yok.
-                                      if (!note.type.isPageNoteType &&
-                                          note.items.isNotEmpty) ...[
+                                      if (showSelect) ...[
                                         const SizedBox(width: 3),
                                         _toolSegment(
                                           icon: Icons.checklist,
                                           label: l10n.select,
+                                          compact: compact,
                                           onTap: () => _itemsEditorKey
                                               .currentState
                                               ?.startSelection(),
@@ -4781,7 +4906,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       // isteği 2026-08-08 — "ekler yazısı ve göster
                                       // gizlesi alt alana gelsin, bir satır alan
                                       // kurtarmış oluruz").
-                                      if (fileAttachments.isNotEmpty) ...[
+                                      if (showAttachments) ...[
                                         const SizedBox(width: 3),
                                         _attachmentsToggle(
                                           l10n,
@@ -4859,6 +4984,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               ),
                             ),
                           ],
+                        );
+                          },
                         ),
                       ),
                     ],
@@ -4938,9 +5065,12 @@ class _CleanCopySelectionAction extends Action<CopySelectionTextIntent> {
 /// SnackBar yeterli değildi — kayboluyor, kullanıcı "çalışıyor mu, dondu mu"
 /// bilemiyordu.
 class _AiBanner extends StatelessWidget {
-  const _AiBanner({required this.label});
+  const _AiBanner({required this.label, this.icon = Icons.auto_awesome});
 
   final String label;
+
+  /// Şeridin simgesi: AI işlerinde yıldız, dosya işlerinde eşitleme oku.
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -4958,11 +5088,7 @@ class _AiBanner extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Icon(
-                  Icons.auto_awesome,
-                  size: 18,
-                  color: scheme.onSecondaryContainer,
-                ),
+                Icon(icon, size: 18, color: scheme.onSecondaryContainer),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

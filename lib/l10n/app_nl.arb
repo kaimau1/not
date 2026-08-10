@@ -41,6 +41,7 @@
   "clipboardEmpty": "Geen afbeelding op het klembord",
   "noNoteSelected": "Kies links een notitie",
   "attachmentFailed": "De bijlage kon niet worden toegevoegd: {error}",
+  "attachmentCopying": "Kopiëren...",
   "attachmentUploading": "Uploaden...",
   "attachmentNotSynced": "Dit bestand is nog niet met dit apparaat gesynchroniseerd",
   "attachmentTooLarge": "Bestand is te groot (maximaal {limit} MB)",

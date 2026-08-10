@@ -42,7 +42,18 @@ class FormatBar extends StatefulWidget {
     required this.onOpacityEnd,
     required this.onClose,
     this.target,
+    this.onPageStyle,
   });
+
+  /// SAYFA görünümü (zemin rengi, çerçeve rengi, zemin görseli) levhasını açar.
+  ///
+  /// Buraya taşındı (kullanıcı isteği 2026-08-10: "sayfa rengi ve yanındaki
+  /// kısımları biçim menüsüne al"): renk "Ekle" levhasının en altında, PDF/ses
+  /// /QR gibi EK ekleyen maddelerin arasında duruyordu — orada aranan bir şey
+  /// değil, sayfanın görünümüne ait bir ayar. Biçim çubuğu zaten "bu not nasıl
+  /// görünsün" düğmelerinin toplandığı yer; renk de oraya ait. null ise düğme
+  /// hiç çizilmez.
+  final VoidCallback? onPageStyle;
 
   /// Çubuğun yazdığı alan. Yalnız AKTİF BİÇİM vurgusu için gerekli: imleç ya
   /// da seçim değiştikçe hangi düğmenin basılı duracağı buradan hesaplanır
@@ -254,6 +265,25 @@ class _FormatBarState extends State<FormatBar> {
                         family: widget.fontFamily,
                         onChanged: widget.onFontChanged,
                       ),
+                      // Sayfa görünümü (zemin/çerçeve rengi, zemin görseli):
+                      // metin biçimlerinden ince bir çizgiyle ayrılır — biri
+                      // SEÇİME, öteki SAYFANIN tamamına uygulanır.
+                      if (widget.onPageStyle != null) ...[
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          height: 24,
+                          child: VerticalDivider(
+                            width: 9,
+                            thickness: 1,
+                            color: scheme.outlineVariant,
+                          ),
+                        ),
+                        _Btn(
+                          icon: Icons.palette_outlined,
+                          tooltip: l10n.color,
+                          onTap: widget.onPageStyle,
+                        ),
+                      ],
                       const SizedBox(width: 4),
                       IconButton(
                         tooltip: l10n.close,

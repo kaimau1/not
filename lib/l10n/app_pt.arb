@@ -41,6 +41,7 @@
   "clipboardEmpty": "Não há imagens na área de transferência",
   "noNoteSelected": "Escolha uma nota à esquerda",
   "attachmentFailed": "Não foi possível adicionar o anexo: {error}",
+  "attachmentCopying": "Copiando...",
   "attachmentUploading": "A carregar...",
   "attachmentNotSynced": "Este ficheiro ainda não foi sincronizado neste dispositivo",
   "attachmentTooLarge": "Ficheiro demasiado grande (máximo {limit} MB)",

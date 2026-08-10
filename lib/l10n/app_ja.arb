@@ -41,6 +41,7 @@
   "clipboardEmpty": "クリップボードに画像がありません",
   "noNoteSelected": "左からメモを選んでください",
   "attachmentFailed": "添付ファイルを追加できませんでした: {error}",
+  "attachmentCopying": "コピー中...",
   "attachmentUploading": "アップロード中...",
   "attachmentNotSynced": "このファイルはまだこの端末に同期されていません",
   "attachmentTooLarge": "ファイルが大きすぎます（最大 {limit} MB）",

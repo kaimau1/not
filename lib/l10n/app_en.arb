@@ -41,6 +41,7 @@
   "clipboardEmpty": "No image on the clipboard",
   "noNoteSelected": "Pick a note from the left",
   "attachmentFailed": "Couldn't add the attachment: {error}",
+  "attachmentCopying": "Copying...",
   "attachmentUploading": "Uploading...",
   "attachmentUploadFailed": "Upload failed — tap to retry",
   "attachmentNotSynced": "This file hasn't synced to this device yet",

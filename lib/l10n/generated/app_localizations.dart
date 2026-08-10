@@ -372,6 +372,12 @@ abstract class AppLocalizations {
   /// **'Ek eklenemedi: {error}'**
   String attachmentFailed(String error);
 
+  /// No description provided for @attachmentCopying.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalanıyor...'**
+  String get attachmentCopying;
+
   /// No description provided for @attachmentUploading.
   ///
   /// In tr, this message translates to:

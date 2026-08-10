@@ -144,6 +144,9 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get attachmentCopying => 'Copia in corso...';
+
+  @override
   String get attachmentUploading => 'Caricamento...';
 
   @override
