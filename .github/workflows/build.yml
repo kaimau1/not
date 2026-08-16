@@ -178,12 +178,22 @@ jobs:
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
 
-      - name: APK'yı yükle
-        uses: actions/upload-artifact@v4
-        with:
-          name: notlar-android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
+      # BOYUT RAPORU: APK'nın içinde hangi mimarilerin ve hangi büyük
+      # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a
+      # çıkınca (arm64'e indirilmiş olmasına RAĞMEN) nedeni loglardan
+      # okunamadı — bu adım bir daha tahmin yürütmek zorunda kalmamak için.
+      - name: APK içeriğini raporla
+        run: |
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          ls -l "$apk"
+          echo "--- yerel kitaplık mimarileri ---"
+          unzip -l "$apk" | awk '/ lib\// {split($4, p, "/"); print p[2]}' \
+            | sort | uniq -c | sort -rn
+          echo "--- mimari başına toplam bayt ---"
+          unzip -l "$apk" | awk '/ lib\// {split($4, p, "/"); s[p[2]] += $1} \
+            END {for (a in s) printf "%12d  %s\n", s[a], a}' | sort -rn
+          echo "--- en büyük 25 girdi ---"
+          unzip -l "$apk" | sort -rn | head -25
 
       # AAB (Play App Bundle) derlemesi şimdilik DEVRE DIŞI: uygulama henüz
       # Play'e yüklenmediğinden her main derlemesini gereksiz ~2-3 dk
@@ -194,6 +204,14 @@ jobs:
       # main'e push'ta APK kalıcı bir Release olarak yayınlanır. Artifact'ten
       # farkı: doğrudan .apk linki (zip yok), süresi dolmaz, telefondan tıkla-kur.
       # GitHub yeni release için bildirim maili gönderir.
+      # SIRA ÖNEMLİ — Release, artifact yüklemeden ÖNCE gelir.
+      # KÖK NEDEN (2026-08-16, koşu #31950441604): deponun Actions artifact
+      # DEPOLAMA kotası dolduğu için `upload-artifact` "Artifact storage quota
+      # has been hit" ile düştü; adım zorunlu olduğundan (if-no-files-found:
+      # error) iş orada kesildi ve Release ADIMI HİÇ ÇALIŞMADI. Yani APK
+      # derlenmiş olmasına rağmen indirilebilir hiçbir kopya çıkmadı.
+      # Release varlıkları artifact kotasından SAYILMIYOR; kalıcı ve doğrudan
+      # indirilebilir olan da o. Artifact artık yalnızca bir kolaylık.
       - name: APK'yı sürüm numarasıyla adlandır
         if: github.ref == 'refs/heads/main'
         run: mv build/app/outputs/flutter-apk/app-release.apk notlar-v1.0.${{ github.run_number }}.apk
@@ -213,3 +231,17 @@ jobs:
             depo kökündeki **build-windows.bat** dosyasını çalıştırarak masaüstünde
             derleyebilirsin.
           files: notlar-v1.0.${{ github.run_number }}.apk
+
+      # Artifact yükleme ARTIK ZORUNLU DEĞİL (continue-on-error): depo
+      # kotası dolduğunda tek başına bütün işi düşürüyordu. Asıl teslimat
+      # yolu yukarıdaki Release; bu adım yalnız elle tetiklenen (main dışı)
+      # koşularda işe yarıyor, çünkü orada Release yayınlanmıyor.
+      - name: APK'yı yükle (kotaya bağlı, zorunlu değil)
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: notlar-android-apk
+          path: |
+            notlar-v1.0.${{ github.run_number }}.apk
+            build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: warn
