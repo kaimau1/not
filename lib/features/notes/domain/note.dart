@@ -38,6 +38,29 @@ enum NoteColor {
   );
 }
 
+/// Metne gömülü bir ek bağı: `📎 <label>` etiketi hangi eke gider.
+/// Bkz. `Note.tagLinks`.
+class NoteTagLink {
+  const NoteTagLink({required this.label, required this.attachmentId});
+
+  /// Metinde görünen etiket yazısı (kullanıcının seçtiği kelime/cümle).
+  final String label;
+
+  /// Bağlandığı ekin kimliği. Ek silinirse bağ yetim kalır ve okuyan taraf
+  /// onu yok sayar — bağı temizlemek için ayrıca yazım gerekmesin diye.
+  final String attachmentId;
+
+  factory NoteTagLink.fromMap(Map<String, dynamic> map) => NoteTagLink(
+    label: map['label'] as String? ?? '',
+    attachmentId: map['attachmentId'] as String? ?? '',
+  );
+
+  Map<String, dynamic> toMap() => {
+    'label': label,
+    'attachmentId': attachmentId,
+  };
+}
+
 class AiSummary {
   const AiSummary({required this.text, required this.model, this.createdAt});
 
@@ -113,6 +136,7 @@ class Note {
     this.backgroundOpacity = 0.35,
     this.listColumns = 1,
     this.archivePages = const [],
+    this.tagLinks = const [],
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -232,6 +256,26 @@ class Note {
   /// Burada yalnız kullanıcının kendi verdiği adlar tutulur; girdiler
   /// `Attachment.section` / `NoteItem.section` ile bu adlara bağlanır.
   final List<String> archivePages;
+
+  /// Metnin İÇİNE gömülmüş ek bağları: hangi ETİKET METNİ hangi eke gider.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "o yazıya PDF gömülür, o yazının altı
+  /// çizilir kırmızı vurgulanır, tıklayınca PDF önizlemede açılır". Yani
+  /// bağın taşıyıcısı DOSYA ADI değil, kullanıcının kendi yazdığı kelime
+  /// ("uygulaması") olmalı.
+  ///
+  /// **Neden metinde gizli kimlik yok**: satır içi biçim işaretleri
+  /// (rich_text.dart) metinde durup görünmez çiziliyor ve bu, imleç/seçim
+  /// konumlarının denetleyicinin metniyle birebir örtüşmesi gereken çok
+  /// hassas bir sözleşme. Ek bağı için ikinci bir gizli karakter sınıfı daha
+  /// eklemek o sözleşmeyi yeniden riske atardı. Bunun yerine metinde yalnız
+  /// GÖRÜNÜR bir ataç (📎) ile etiketin kendisi durur; hangi eke gittiği
+  /// burada yazar.
+  ///
+  /// Liste (harita değil): etiket metni kullanıcının yazdığı serbest bir
+  /// dize ve nokta içerebiliyor — Firestore'da harita ANAHTARI yapmak alan
+  /// yolu kurallarına takılırdı.
+  final List<NoteTagLink> tagLinks;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -436,6 +480,7 @@ class Note {
     double? backgroundOpacity,
     int? listColumns,
     List<String>? archivePages,
+    List<NoteTagLink>? tagLinks,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -473,6 +518,7 @@ class Note {
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     listColumns: listColumns ?? this.listColumns,
     archivePages: archivePages ?? this.archivePages,
+    tagLinks: tagLinks ?? this.tagLinks,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -571,6 +617,10 @@ class Note {
         for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
           p.toString(),
       ],
+      tagLinks: [
+        for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
+          NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
+      ],
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
@@ -629,6 +679,9 @@ class Note {
     // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
     // ancak boş dizi yazılarak kayda geçer.
     'archivePages': archivePages,
+    // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
+    // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
+    'tagLinks': [for (final l in tagLinks) l.toMap()],
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

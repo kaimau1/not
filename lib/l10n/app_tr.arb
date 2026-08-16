@@ -1229,5 +1229,22 @@
   "attachmentTagInsert": "Metne ekle",
   "attachmentTagInserted": "Ek etiketi metne eklendi.",
   "attachmentTagPreview": "Eki önizle",
-  "attachmentTagEdit": "Eki düzenle"
+  "attachmentTagEdit": "Eki düzenle",
+  "archiveCardSummary": "{files} dosya · {texts} metin",
+  "@archiveCardSummary": {
+    "placeholders": {
+      "files": {
+        "type": "int"
+      },
+      "texts": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveEntryTitle": "Başlık",
+  "archiveLinkedFile": "Bağlı dosya",
+  "archiveNoLink": "Bağlı dosya yok",
+  "attachmentTagEmbed": "Seçili yazıya ek göm",
+  "attachmentTagNoAttachment": "Önce nota bir dosya ekle; sonra yazıya gömebilirsin.",
+  "bubbleModeBubble": "Balon"
 }

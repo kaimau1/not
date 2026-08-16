@@ -4961,6 +4961,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Eki düzenle'**
   String get attachmentTagEdit;
+
+  /// No description provided for @archiveCardSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{files} dosya · {texts} metin'**
+  String archiveCardSummary(int files, int texts);
+
+  /// No description provided for @archiveEntryTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get archiveEntryTitle;
+
+  /// No description provided for @archiveLinkedFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı dosya'**
+  String get archiveLinkedFile;
+
+  /// No description provided for @archiveNoLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı dosya yok'**
+  String get archiveNoLink;
+
+  /// No description provided for @attachmentTagEmbed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili yazıya ek göm'**
+  String get attachmentTagEmbed;
+
+  /// No description provided for @attachmentTagNoAttachment.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.'**
+  String get attachmentTagNoAttachment;
+
+  /// No description provided for @bubbleModeBubble.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balon'**
+  String get bubbleModeBubble;
 }
 
 class _AppLocalizationsDelegate

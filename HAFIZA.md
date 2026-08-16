@@ -1709,3 +1709,56 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   ilgisi yok; aynı testler değişiklik ÖNCESİ ağaçta da düşüyor. CI Flutter
   3.44.6 kullanıyor, orada derleniyorlar. Cihazda hiçbir madde
   doğrulanmadı.
+
+
+- 2026-08-16 (35. tur): **Cihaz denemesinden gelen on bulgu** (dal:
+  `claude/app-development-tasks-blibxu`).
+
+  **1) KÖK NEDEN — liste↔metin dönüşümünde maddelerde "OBJ- [x] ..." ham
+  metni.** Dönüşüm `_bodyController.text`i okuyordu; o metin görünmez SARMA
+  ÇAPALARI (U+FFFC) ve kelime birleştiricileri (U+2060) taşıyor. Çapa satır
+  başına düşünce `^([-*•]|\d+[.)])\s+` kalıbı eşleşmiyor, önek sökülmüyor ve
+  kullanıcı maddede ham işareti görüyordu; üstelik ham çapalar gövde olarak
+  NOTA da yazılıyordu. Artık her iki yön de `logicalText` okuyor, yazarken
+  `setLogical` kullanılıyor ve `itemsFromText` görünmezleri kendi de
+  temizliyor. **Ders:** editör tamponundan çıkan metin nota gitmeden önce
+  MUTLAKA `logicalText`ten geçmeli.
+
+  **2) KÖK NEDEN — "2 sütun anlık görünmüyor, çıkıp girince oluyor".**
+  `_sameVisual` (saf-yazım kestirmesi) `listColumns`u KARŞILAŞTIRMIYORDU;
+  sütun değişimi "görünür hiçbir şey değişmedi" sayılıp `setState` atlanıyor,
+  yeni düzen ancak başka bir sebeple gelen çizimde görünüyordu. `starred` de
+  aynı boşluktaydı. **Ders:** çizimi etkileyen her yeni alan `_sameVisual`e
+  eklenmeli — unutulursa hata "bazen oluyor" diye görünür ve teşhisi zordur.
+
+  **3) KÖK NEDEN — ipucu ("Not…") ile imlecin ayrı yerde olması.** İpucu
+  görselin ALTINA itiliyordu (`hintTopFor`), oysa metin görselin YANINDAN
+  akıyor ve imleç ilk satırda kalıyordu. İpucu artık metnin kuralını izliyor
+  (`hintPlacement`): yanda kullanılabilir genişlik kalıyorsa görselin
+  sağından başlar, kalmıyorsa altına iner — eşik metin sarmasıyla aynı.
+
+  **4) Döndürme ekranı KAPATMIYOR.** Kırpma sonucu notun tuvalinde görülmek
+  istenir (ekran kapanır), döndürme ise arka arkaya yapılan bir ayardır;
+  her turda ekranı kapatmak kullanıcıyı görseli yeniden açmaya zorluyordu.
+  `onRotate` artık güncellenmiş eki döndürüyor, ekran kendini tazeliyor
+  (`Image` anahtarına sayaç konur, yoksa aynı yoldaki yeni dosya eski
+  önbellekten çizilir).
+
+  **5) Metne gömülü ek bağı: taşıyıcı DOSYA ADI değil KULLANICININ YAZISI.**
+  Kullanıcı "o yazıya PDF gömülür" dedi; ilk sürüm etiketi dosya adından
+  kuruyordu. Bağ artık `Note.tagLinks` listesinde (etiket metni →
+  ek kimliği) duruyor, metinde yalnız görünür bir ataç var. **Metne GİZLİ
+  KİMLİK GÖMÜLMEDİ** — biçim işaretlerinin görünmez çizilmesi imleç/seçim
+  sözleşmesine bağlı ve ikinci bir gizli karakter sınıfı o sözleşmeyi
+  yeniden riske atardı. Harita değil LİSTE: etiket metni nokta içerebiliyor
+  ve Firestore harita anahtarı olarak sorun çıkarırdı.
+
+  **6) Klavye kasması — TEŞHİS EDİLDİ, DÜZELTİLMEDİ.** Editörün ana build'i
+  klavye animasyonundan etkilenmiyor (yalnız `_KeyboardLift` `viewInsets`e
+  bağlı ve çocuğu aynı örnek olduğu için alt ağaç yeniden kurulmuyor). Kalan
+  maliyet YERLEŞİMDE: alt çubuğun yüksekliği her karede değişince Scaffold
+  GÖVDENİN kısıtını da her karede değiştiriyor, yani sayfa tuvali yeniden
+  yerleşiyor. Kalıcı çözüm alt çubuğu Scaffold'ın gövde kısıtından ayırmak
+  (`resizeToAvoidBottomInset: false` + yığında konumlandırma) ama bu, uzun
+  uğraşla ayarlanmış klavye davranışını değiştirir; cihazda profil almadan
+  yapılmamalı.

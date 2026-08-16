@@ -1812,13 +1812,43 @@ class BubbleToolbar extends StatelessWidget {
       builder: (context, _) => SafeArea(
         top: false,
         child: SizedBox(
-          height: 48,
+          height: 54,
           child: Row(
             children: [
+              // KİP SEÇİMİ EN BAŞTA VE ETİKETLİ (kullanıcı bulgusu
+              // 2026-08-16: "paint tarzı metin balonu eklemeyi bulamadım").
+              // Önce renklerin arasına sıkışmış simgesiz bir düğmeydi;
+              // araç çubuğu yatay kaydığı için çoğu zaman ekranın dışında
+              // kalıyordu. Artık iki seçenek de yazıyla, sabit ve solda.
+              Padding(
+                padding: const EdgeInsets.only(left: 8, right: 4),
+                child: SegmentedButton<bool>(
+                  showSelectedIcon: false,
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  segments: [
+                    ButtonSegment(
+                      value: false,
+                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                      label: Text(context.l10n.bubbleModeBubble),
+                    ),
+                    ButtonSegment(
+                      value: true,
+                      icon: const Icon(Icons.text_fields, size: 16),
+                      label: Text(context.l10n.bubblePlainMode),
+                    ),
+                  ],
+                  selected: {controller.plainMode},
+                  onSelectionChanged: (selection) =>
+                      controller.setPlainMode(selection.first),
+                ),
+              ),
               Expanded(
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
                   children: [
                     for (final argb in BubbleController.palette)
                       GestureDetector(
@@ -1845,30 +1875,20 @@ class BubbleToolbar extends StatelessWidget {
                   ],
                 ),
               ),
-              // AÇIK METİN ALANI kipi (kullanıcı isteği 2026-08-16).
-              IconButton(
-                tooltip: controller.plainMode
-                    ? context.l10n.bubblePlainModeOn
-                    : context.l10n.bubblePlainMode,
-                isSelected: controller.plainMode,
-                onPressed: () =>
-                    controller.setPlainMode(!controller.plainMode),
-                icon: Icon(
-                  controller.plainMode
-                      ? Icons.text_fields
-                      : Icons.text_fields_outlined,
-                ),
-              ),
+              // İpucu: kip düğmeleri yer kapladığı için TEK satır ve dar.
               Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Text(
-                  controller.plainMode
-                      ? context.l10n.bubblePlainTapToPlace
-                      : context.l10n.bubbleTapToPlace,
-                  textAlign: TextAlign.end,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall,
+                padding: const EdgeInsets.only(right: 10),
+                child: SizedBox(
+                  width: 84,
+                  child: Text(
+                    controller.plainMode
+                        ? context.l10n.bubblePlainTapToPlace
+                        : context.l10n.bubbleTapToPlace,
+                    textAlign: TextAlign.end,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
                 ),
               ),
             ],

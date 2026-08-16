@@ -2641,4 +2641,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentTagEdit => 'Edit attachment';
+
+  @override
+  String archiveCardSummary(int files, int texts) {
+    return '$files files · $texts texts';
+  }
+
+  @override
+  String get archiveEntryTitle => 'Title';
+
+  @override
+  String get archiveLinkedFile => 'Linked file';
+
+  @override
+  String get archiveNoLink => 'No linked file';
+
+  @override
+  String get attachmentTagEmbed => 'Embed attachment in selection';
+
+  @override
+  String get attachmentTagNoAttachment =>
+      'Add a file to the note first, then you can embed it in the text.';
+
+  @override
+  String get bubbleModeBubble => 'Bubble';
 }

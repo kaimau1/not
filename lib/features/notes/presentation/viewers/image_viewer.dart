@@ -41,17 +41,28 @@ class ImageViewerScreen extends StatefulWidget {
 
   /// Görseli 90°'nin katıyla döndürüp KALICI olarak yeniden yazacak taraf
   /// ([onCrop] ile aynı gerekçe). null ise döndürme düğmeleri çizilmez.
-  final Future<void> Function(Attachment, int)? onRotate;
+  ///
+  /// GÜNCELLENMİŞ eki döndürür (null = başarısız): ekran döndürdükten sonra
+  /// KAPANMIYOR, yeni ekle kendini tazeliyor. Kullanıcı bulgusu 2026-08-16:
+  /// "her döndürme işleminden sonra düzenleme ekranı kapanıyor ama işlem
+  /// başarılı" — arka arkaya iki tur atmak için ekranı yeniden açmak
+  /// gerekiyordu.
+  final Future<Attachment?> Function(Attachment, int)? onRotate;
 
   @override
   State<ImageViewerScreen> createState() => _ImageViewerScreenState();
 }
 
 class _ImageViewerScreenState extends State<ImageViewerScreen> {
+  /// EKRANIN GÖSTERDİĞİ ek. Döndürme dosyayı yeniden yazdığı için
+  /// `_attachment` o andan sonra bayat: boyutlar takas olmuş, bulut
+  /// kopyası silinmiş olur. Yerel kopya döndürme sonrası tazelenir.
+  late Attachment _attachment = widget.attachment;
+
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
-        widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
+        widget.onChanged?.call(_attachment.copyWith(ink: strokes)),
   );
   final _zoom = TransformationController();
   bool _editing = false;
@@ -71,7 +82,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   /// dosyanın YEREL kopyasını okur (buluttaki kopya indirilmeden olmaz) ve
   /// kutuları yerleştirmek için görselin piksel ölçüsü gerekir.
   bool get _ocrAvailable {
-    final a = widget.attachment;
+    final a = _attachment;
     return ScanOcr.supported &&
         a.localPath.isNotEmpty &&
         localFileExists(a.localPath) &&
@@ -80,7 +91,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   }
 
   Future<void> _openRecognizer() async {
-    final a = widget.attachment;
+    final a = _attachment;
     // Çizim açıkken yarım kalan çizgi kaybolmasın.
     if (_editing) _ink.save();
     await Navigator.of(context).push(
@@ -130,31 +141,51 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
       Navigator.of(context).pop();
       return;
     }
-    await widget.onCrop!(widget.attachment, rect);
+    await widget.onCrop!(_attachment, rect);
     if (mounted) Navigator.of(context).pop();
   }
 
-  /// Görseli çeyrek tur döndürür ve tam ekrandan ÇIKAR: döndürme dosyayı
-  /// yeniden yazdığından bu ekrandaki ek nesnesi (ve çizim denetleyicisi)
-  /// anında bayatlar — kırpmadaki ([_crop]) gerekçenin aynısı. Nota dönmek,
-  /// dönmüş hâli notun kendi tuvalinden göstermenin en kısa yolu.
+  /// Görseli çeyrek tur döndürür ve EKRANDA KALIR.
+  ///
+  /// Kırpmadan ([_crop]) farkı burada: kırpma yeni bir çerçeve seçtirir ve
+  /// sonuç notun tuvalinde görülmek istenir; döndürme ise arka arkaya
+  /// yapılan bir ayardır ("bir tur daha"). Ekranı her turda kapatmak
+  /// kullanıcıyı görseli yeniden açmaya zorluyordu.
+  ///
+  /// Döndürme dosyayı AYNI yola yeniden yazdığı için Flutter'ın görsel
+  /// önbelleği temizlenmezse eski kare gösterilmeye devam eder; temizlik
+  /// çağıranda yapılıyor (bkz. `_rotateImage`). Buradaki `_reloadKey` ise
+  /// widget ağacındaki `Image`'ı yeni bir öğe yapıp çözdürmeyi zorlar.
   Future<void> _rotate(int quarterTurns) async {
     if (_busy) return;
     // Çizim açıkken yarım kalan çizgi kaybolmasın.
     if (_editing) _ink.save();
     setState(() => _busy = true);
     try {
-      await widget.onRotate!(widget.attachment, quarterTurns);
-    } finally {
+      final updated = await widget.onRotate!(_attachment, quarterTurns);
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        if (updated != null) {
+          _attachment = updated;
+          _reloadKey++;
+          // Çizim de döndü; denetleyici yeni oranlı noktalarla tazelenir.
+          _ink.replace(updated.ink);
+        }
+      });
+    } catch (_) {
       if (mounted) setState(() => _busy = false);
     }
-    if (mounted) Navigator.of(context).pop();
   }
+
+  /// Her döndürmede artar; `Image`'ın anahtarına girer ki aynı yoldaki yeni
+  /// dosya gerçekten yeniden çözülsün.
+  int _reloadKey = 0;
 
   /// Görselin kaynağı: yerel kopya → indirme adresi. Kırpma ekranı da aynı
   /// kaynağı kullanır ki seçilen alan gösterilenle birebir örtüşsün.
   ImageProvider _provider() {
-    final a = widget.attachment;
+    final a = _attachment;
     if (a.localPath.isNotEmpty && localFileExists(a.localPath)) {
       return FileImage(File(a.localPath));
     }
@@ -164,7 +195,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final a = widget.attachment;
+    final a = _attachment;
     Widget image;
     if (a.localPath.isNotEmpty && localFileExists(a.localPath)) {
       // Çözünürlük kovası: ekler 1600 px'e kadar olabiliyor ve tam
@@ -172,6 +203,9 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
       // bırakılır (2×), gerisi boşuna bellek.
       image = Image.file(
         File(a.localPath),
+        // Döndürme dosyayı AYNI yola yazıyor; anahtar değişmezse Flutter
+        // eski kareyi göstermeye devam eder (bkz. [_rotate]).
+        key: ValueKey('${a.localPath}#$_reloadKey'),
         fit: BoxFit.contain,
         cacheWidth: decodeWidthBucket(
           MediaQuery.sizeOf(context).width * 2,

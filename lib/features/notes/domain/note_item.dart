@@ -6,6 +6,8 @@ class NoteItem {
     this.checked = false,
     this.starred = false,
     this.section = '',
+    this.title = '',
+    this.attachmentId = '',
   });
 
   final String id;
@@ -30,17 +32,33 @@ class NoteItem {
   /// notlarda yok sayılır — [Attachment.section] ile aynı kural.
   final String section;
 
+  /// ARŞİV DEFTERİNDE girdinin BAŞLIĞI (kullanıcı isteği 2026-08-16:
+  /// "hepsinin başlığı ayarlanabilmeli"). Boşsa girdi metninin ilk satırı
+  /// başlık gibi gösterilir. Arşiv dışındaki notlarda yok sayılır.
+  final String title;
+
+  /// ARŞİV DEFTERİNDE girdinin BAĞLI olduğu ekin kimliği (kullanıcı isteği
+  /// 2026-08-16: "metinler görsel veya belge ile bağlanabilmeli"). Boş = bağ
+  /// yok. Bağlı ek silinirse kimlik yetim kalır; okuyan taraf ek listesinde
+  /// bulamazsa bağı yok sayar — kimliği temizlemek için ayrıca yazım
+  /// gerekmesin diye.
+  final String attachmentId;
+
   NoteItem copyWith({
     String? text,
     bool? checked,
     bool? starred,
     String? section,
+    String? title,
+    String? attachmentId,
   }) => NoteItem(
     id: id,
     text: text ?? this.text,
     checked: checked ?? this.checked,
     starred: starred ?? this.starred,
     section: section ?? this.section,
+    title: title ?? this.title,
+    attachmentId: attachmentId ?? this.attachmentId,
   );
 
   factory NoteItem.fromMap(Map<String, dynamic> map) => NoteItem(
@@ -49,6 +67,8 @@ class NoteItem {
     checked: map['checked'] as bool? ?? false,
     starred: map['starred'] as bool? ?? false,
     section: map['section'] as String? ?? '',
+    title: map['title'] as String? ?? '',
+    attachmentId: map['attachmentId'] as String? ?? '',
   );
 
   Map<String, dynamic> toMap() => {
@@ -57,5 +77,7 @@ class NoteItem {
     'checked': checked,
     if (starred) 'starred': true,
     if (section.isNotEmpty) 'section': section,
+    if (title.isNotEmpty) 'title': title,
+    if (attachmentId.isNotEmpty) 'attachmentId': attachmentId,
   };
 }

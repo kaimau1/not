@@ -117,6 +117,10 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
     final y = b[i];
     if (x.id != y.id ||
         x.checked != y.checked ||
+        // Yıldız satırda bir simge çiziyor: değişimi "görünmez" sayılırsa
+        // yalnız `ItemsEditor`ın kendi setState'i onu gösterir, kart
+        // önizlemesi ve dışa aktarma bayat kalırdı.
+        x.starred != y.starred ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
     }
@@ -1104,6 +1108,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       a.titleTextOpacity == b.titleTextOpacity &&
       a.backgroundImageId == b.backgroundImageId &&
       a.backgroundOpacity == b.backgroundOpacity &&
+      // KÖK NEDEN (kullanıcı 2026-08-16: "tek sütun 2 sütun çalışıyor ancak
+      // anlık canlı bazen görülmüyor, bir çıkış yapınca oluyor"): sütun
+      // sayısı burada KARŞILAŞTIRILMIYORDU. Değişim "saf yazım" sayılıp
+      // `setState` atlanıyor, yeni düzen ancak başka bir sebeple gelen
+      // yeniden çizimde (ör. editörden çıkıp girmek) görünüyordu.
+      a.listColumns == b.listColumns &&
+      a.archivePages.length == b.archivePages.length &&
       a.orderIndex == b.orderIndex &&
       a.deletedAt == b.deletedAt &&
       a.archivedAt == b.archivedAt &&
@@ -1562,8 +1573,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       [for (final a in note.attachments) a.fileName],
     );
     if (name == null) return null;
+    return _attachmentForTag(note, name);
+  }
+
+  /// Etiket metninden eke: önce SEÇİLİ METİNDEN kurulan bağlar
+  /// ([Note.tagLinks]), sonra dosya adıyla eşleşme. Sıra önemli — kullanıcı
+  /// bir etikete dosya adının kendisini yazmışsa bağ yine de önce gelir.
+  static Attachment? _attachmentForTag(Note note, String label) {
+    for (final link in note.tagLinks) {
+      if (link.label != label) continue;
+      for (final a in note.attachments) {
+        if (a.id == link.attachmentId) return a;
+      }
+    }
     for (final a in note.attachments) {
-      if (a.fileName == name) return a;
+      if (a.fileName == label) return a;
     }
     return null;
   }
@@ -1609,6 +1633,87 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// SEÇİLİ METNE bir ek gömer (kullanıcı isteği 2026-08-16: "o yazıya PDF
+  /// gömülür, o yazının altı çizilir kırmızı vurgulanır, tıklayınca PDF
+  /// önizlemede açılır").
+  ///
+  /// Seçilen kelimenin başına ataç konur ve metnin kendisi etiket olur;
+  /// hangi eke gittiği nota [Note.tagLinks] olarak yazılır. Metne gizli
+  /// kimlik GÖMÜLMEZ — gerekçesi orada.
+  Future<void> _embedIntoSelection(EditableTextState state) async {
+    final note = _note;
+    if (note == null) return;
+    final selection = _bodyController.selection;
+    if (!selection.isValid || selection.isCollapsed) return;
+    final logical = _bodyController.logicalText;
+    final start = wrapToLogicalOffset(
+      _bodyController.text,
+      selection.start,
+    ).clamp(0, logical.length);
+    final end = wrapToLogicalOffset(
+      _bodyController.text,
+      selection.end,
+    ).clamp(start, logical.length);
+    final label = logical.substring(start, end).trim();
+    if (label.isEmpty) return;
+
+    // Hangi ek gömülecek: notun EK ŞERİDİNDEKİ dosyalar. Ek yoksa önce
+    // eklenmeli — buradan dosya seçtirip yüklemek, kullanıcının "hangi
+    // notta ne var" beklentisini bozardı.
+    final candidates = note.attachments;
+    if (candidates.isEmpty) {
+      _showSnack(context.l10n.attachmentTagNoAttachment);
+      return;
+    }
+    final chosen = await showModalBottomSheet<Attachment>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final a in candidates)
+              ListTile(
+                leading: Icon(switch (a.kind) {
+                  AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
+                  AttachmentKind.slide => Icons.slideshow_outlined,
+                  AttachmentKind.video => Icons.videocam_outlined,
+                  AttachmentKind.audio => Icons.audiotrack_outlined,
+                  AttachmentKind.image => Icons.image_outlined,
+                }),
+                title: Text(
+                  a.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () => Navigator.pop(sheetContext, a),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chosen == null || !mounted) return;
+
+    // Metne yalnız ATAÇ eklenir; seçilen yazı olduğu gibi kalır.
+    final tagged = '$kAttachmentTagPrefix$label';
+    final body = logical.replaceRange(start, end, tagged);
+    _bodyController.setLogical(body, start + tagged.length);
+    _mutate(
+      (n) => n.copyWith(
+        body: body,
+        tagLinks: [
+          // Aynı etiket ikinci kez bağlanırsa eskisi değişir, çoğalmaz.
+          for (final l in n.tagLinks)
+            if (l.label != label) l,
+          NoteTagLink(label: label, attachmentId: chosen.id),
+        ],
+      ),
+      immediate: true,
+    );
+    _showSnack(context.l10n.attachmentTagInserted);
+  }
+
   /// İmlecin bulunduğu yere ek etiketi yazar (bkz. attachment_tag.dart).
   ///
   /// Etiket düz metindir: dışa aktarmada, paylaşımda ve panoda "📎 rapor.pdf"
@@ -1650,6 +1755,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     // EK ETİKETİ (kullanıcı isteği 2026-08-16): imleç "📎 rapor.pdf"in
     // üzerindeyse önizleme ve düzenleme buradan açılır.
+    // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
+    if (!state.textEditingValue.selection.isCollapsed &&
+        _selectedAttachmentTag() == null) {
+      items.insert(
+        0,
+        ContextMenuButtonItem(
+          label: context.l10n.attachmentTagEmbed,
+          onPressed: () {
+            state.hideToolbar();
+            unawaited(_embedIntoSelection(state));
+          },
+        ),
+      );
+    }
     final tagged = _selectedAttachmentTag();
     if (tagged != null) {
       items.insertAll(0, [
@@ -2072,9 +2191,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Kırpmayla ([_cropImage]) aynı gerekçeler: aynı yola yeniden yazılan
   /// dosya için görsel önbelleği temizlenir, yoksa eski (dönmemiş) hâl
   /// gösterilmeye devam eder.
-  Future<void> _rotateImage(Attachment image, int quarterTurns) async {
+  /// Döndürülen eki geri döndürür ki tam ekran görüntüleyici KAPANMADAN
+  /// kendini tazeleyebilsin (kullanıcı bulgusu 2026-08-16: "her döndürme
+  /// işleminden sonra düzenleme ekranı kapanıyor"). Hata durumunda null.
+  Future<Attachment?> _rotateImage(Attachment image, int quarterTurns) async {
     final repo = ref.read(attachmentRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) return null;
     try {
       final turned = await repo.rotateImage(
         noteId: widget.noteId,
@@ -2085,6 +2207,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ..clear()
         ..clearLiveImages();
       _updateAttachment(turned);
+      return turned;
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } on AttachmentMissingException {
@@ -2092,6 +2215,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
+    return null;
   }
 
   /// Alt bardaki bir düğme (görünüm/renk, ek, hesap makinesi) alt sayfa/menü
@@ -2719,9 +2843,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       note.items,
       numbered: note.type == NoteType.ordered,
     );
-    final existing = _bodyController.text.trim();
+    // `logicalText` — HAM `text` DEĞİL. KÖK NEDEN (kullanıcı 2026-08-16,
+    // ekran görüntüsü): denetleyicinin metni görünmez SARMA ÇAPALARI (￼) ve
+    // kelime birleştiricileri (⁠) taşıyor; ham metin gövdeye yazılınca o
+    // karakterler nota kalıcı olarak girdi. Listeye geri dönüştürürken de
+    // satır "￼- [x] ..." diye başladığı için madde işareti kalıbı eşleşmedi
+    // ve maddelerde "OBJ- [x] ..." diye ham metin göründü.
+    final existing = _bodyController.logicalText.trim();
     final body = existing.isEmpty ? converted : '$existing\n$converted';
-    _bodyController.text = body;
+    // `text =` değil `setLogical`: sarma planı yeni gövdeye göre yeniden
+    // kurulsun, yoksa eski çapalar imleci kaydırır.
+    _bodyController.setLogical(body, body.length);
     _mutate(
       (n) => n.copyWith(type: NoteType.text, body: body, items: const []),
       immediate: true,
@@ -2735,15 +2867,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     if (note == null) return;
     _flushPending(_bodyController);
+    // Yine `logicalText` (bkz. [_convertToText]'teki kök neden).
     final items = itemsFromText(
-      _bodyController.text,
+      _bodyController.logicalText,
       newId: () => const Uuid().v4(),
     );
     if (items.isEmpty) {
       _showSnack(context.l10n.convertToListEmpty);
       return;
     }
-    _bodyController.text = '';
+    _bodyController.setLogical('', 0);
     _mutate(
       (n) => n.copyWith(
         type: NoteType.checklist,
@@ -4394,7 +4527,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Metne gömülü ek etiketleri (bkz. attachment_tag.dart) buradan
     // beslenir: ek silinip eklendikçe etiketin kırmızı çizilip çizilmeyeceği
     // değişir. Yalnız GÖVDE — başlığa ek etiketi konmaz.
+    // Etiket adları: hem SEÇİLİ METİNDEN kurulan bağlar (kullanıcı isteği
+    // 2026-08-16 — "o yazıya PDF gömülür") hem de dosya adıyla eklenen
+    // etiketler. İkisi de aynı çizim yolundan geçer.
     _bodyController.attachmentNames = [
+      for (final link in note.tagLinks)
+        if (link.label.isNotEmpty) link.label,
       for (final a in note.attachments) a.fileName,
     ];
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`

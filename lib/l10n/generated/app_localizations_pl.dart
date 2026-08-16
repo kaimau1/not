@@ -2658,4 +2658,28 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get attachmentTagEdit => 'Eki düzenle';
+
+  @override
+  String archiveCardSummary(int files, int texts) {
+    return '$files dosya · $texts metin';
+  }
+
+  @override
+  String get archiveEntryTitle => 'Başlık';
+
+  @override
+  String get archiveLinkedFile => 'Bağlı dosya';
+
+  @override
+  String get archiveNoLink => 'Bağlı dosya yok';
+
+  @override
+  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+
+  @override
+  String get attachmentTagNoAttachment =>
+      'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.';
+
+  @override
+  String get bubbleModeBubble => 'Balon';
 }

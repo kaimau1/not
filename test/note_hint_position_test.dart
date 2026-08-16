@@ -37,4 +37,41 @@ void main() {
     const uzak = FloatBox(top: 200, left: 0, right: 300, height: 40);
     expect(hintTopFor(const [a, uzak], bodyTop, lineHeight), 150.0);
   });
+
+  // ── İpucu ile İMLECİN AYNI YERDE olması ───────────────────────────────
+  // Kullanıcı bulgusu 2026-08-16 (ekran görüntüsü): "Not... yazısı ile imleç
+  // farklı yerlerde, imlecin yeri doğru". Metin görselin YANINDAN akıyorsa
+  // ipucu da orada durmalı; yalnız yan taraf okunmayacak kadar darsa altına
+  // inmeli (metnin kendi kuralıyla birebir aynı).
+  const columnWidth = 400.0;
+
+  test('yanında yer varsa ipucu görselin SAĞINDAN başlar, aşağı inmez', () {
+    // Görsel sütunun solunda 160 dp yer kaplıyor; kalan 240 dp (%60) okunur.
+    const sol = FloatBox(top: 90, left: 0, right: 160, height: 120);
+    final place = hintPlacement(const [sol], bodyTop, lineHeight, columnWidth);
+    expect(place.top, bodyTop);
+    expect(place.left, 160.0);
+  });
+
+  test('yan taraf çok darsa ipucu eskisi gibi altına iner', () {
+    // Görsel 340 dp kaplıyor; kalan 60 dp (%15) eşiğin altında.
+    const genis = FloatBox(top: 90, left: 0, right: 340, height: 60);
+    final place = hintPlacement(const [genis], bodyTop, lineHeight, columnWidth);
+    expect(place.top, 150.0);
+    expect(place.left, 0.0);
+  });
+
+  test('SAĞ kenardaki görsel ipucunu içeri itmez, yalnız daraltır', () {
+    // Sağda duran görsel: sol kenar boşta, ipucu 0'dan başlamalı.
+    const sag = FloatBox(top: 90, left: 260, right: 400, height: 120);
+    final place = hintPlacement(const [sag], bodyTop, lineHeight, columnWidth);
+    expect(place.top, bodyTop);
+    expect(place.left, 0.0);
+  });
+
+  test('görsel yokken ipucu yine gövdenin tepesinde', () {
+    final place = hintPlacement(const [], bodyTop, lineHeight, columnWidth);
+    expect(place.top, bodyTop);
+    expect(place.left, 0.0);
+  });
 }

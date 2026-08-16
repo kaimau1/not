@@ -669,9 +669,59 @@ class _NotePreview extends StatelessWidget {
     );
 
     switch (note.type) {
-      // Arşiv defterinin önizlemesi metin notununkiyle aynı (bkz.
-      // yükseklik kestirimindeki aynı gerekçe).
+      // ARŞİV DEFTERİ kartta kendini belli eder (kullanıcı bulgusu
+      // 2026-08-16: "arşiv notu ekledim ama görünümü farklı olmalı,
+      // dashboard'ta arşiv notu olduğu belli olmalı"). Sıradan bir notla
+      // aynı görününce defterin ne olduğu ancak açınca anlaşılıyordu.
+      // Rozet, defterin içindekileri de sayar: kaç dosya, kaç metin girdisi.
       case NoteType.archive:
+        final files = note.attachments.length;
+        final texts = note.items.where((i) => i.text.trim().isNotEmpty).length;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: scheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 13,
+                    color: scheme.onTertiaryContainer,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    context.l10n.archiveNotebook,
+                    style: bodyStyle.copyWith(
+                      color: scheme.onTertiaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              context.l10n.archiveCardSummary(files, texts),
+              style: bodyStyle,
+            ),
+            if (note.archivePages.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                note.archivePages.join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: bodyStyle.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ],
+        );
       case NoteType.text:
         // Karışık içerik: metin notu hem gövde hem checklist maddesi taşıyabilir.
         final hasBody = note.body.trim().isNotEmpty;

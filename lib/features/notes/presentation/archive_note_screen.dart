@@ -181,43 +181,156 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     });
   }
 
-  /// Metin girdisi ekler (seçili sayfaya).
-  Future<void> _addText(Note note) async {
-    final controller = TextEditingController();
-    final text = await showDialog<String>(
+  /// Metin girdisi ekler/düzenler (seçili sayfaya).
+  ///
+  /// [existing] verilirse o girdi düzenlenir. Girdinin BAŞLIĞI ve bağlı
+  /// olduğu DOSYA da buradan ayarlanır (kullanıcı isteği 2026-08-16:
+  /// "metinler görsel veya belge ile bağlanabilmesi… hepsinin başlığı
+  /// ayarlanabilmeli"): bir alıntının hangi belgeden geldiği, bir notun
+  /// hangi fotoğrafa ait olduğu defterde kaybolmasın.
+  Future<void> _editText(Note note, {NoteItem? existing}) async {
+    final titleController = TextEditingController(text: existing?.title ?? '');
+    final textController = TextEditingController(text: existing?.text ?? '');
+    var linkedId = existing?.attachmentId ?? '';
+
+    final saved = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.archiveAddText),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          maxLines: 6,
-          minLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.cancel),
+      builder: (dialogContext) {
+        final l10n = dialogContext.l10n;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            title: Text(l10n.archiveAddText),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    decoration: InputDecoration(
+                      labelText: l10n.archiveEntryTitle,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: textController,
+                    autofocus: existing == null,
+                    maxLines: 8,
+                    minLines: 3,
+                    decoration: InputDecoration(
+                      labelText: l10n.archiveCaptureText,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // BAĞLI DOSYA: defterdeki eklerden biri seçilir. Yeni dosya
+                  // yüklemek ayrı bir iş (alttaki "Dosya ekle"); burada
+                  // yalnız VAR OLANA bağlanır, yoksa aynı dosya iki kez
+                  // yüklenirdi.
+                  DropdownButtonFormField<String>(
+                    initialValue: linkedId.isEmpty ? '' : linkedId,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: l10n.archiveLinkedFile,
+                    ),
+                    items: [
+                      DropdownMenuItem(
+                        value: '',
+                        child: Text(l10n.archiveNoLink),
+                      ),
+                      for (final a in note.attachments)
+                        DropdownMenuItem(
+                          value: a.id,
+                          child: Text(
+                            a.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
+                    onChanged: (value) =>
+                        setDialogState(() => linkedId = value ?? ''),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(l10n.ok),
+              ),
+            ],
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: Text(context.l10n.ok),
-          ),
-        ],
-      ),
+        );
+      },
     );
-    controller.dispose();
-    if (text == null || text.trim().isEmpty) return;
-    await _mutate(
-      note,
-      (n) => n.copyWith(
+    final title = titleController.text.trim();
+    final text = textController.text.trim();
+    titleController.dispose();
+    textController.dispose();
+    if (saved != true || text.isEmpty) return;
+
+    await _mutate(note, (n) {
+      if (existing != null) {
+        return n.copyWith(
+          items: [
+            for (final i in n.items)
+              if (i.id == existing.id)
+                i.copyWith(text: text, title: title, attachmentId: linkedId)
+              else
+                i,
+          ],
+        );
+      }
+      return n.copyWith(
         items: [
           ...n.items,
           NoteItem(
             id: const Uuid().v4(),
-            text: text.trim(),
+            text: text,
+            title: title,
+            attachmentId: linkedId,
             section: _customPage ?? '',
           ),
+        ],
+      );
+    });
+  }
+
+  /// Ekin defterdeki ADINI değiştirir (dosya adı = girdinin başlığı).
+  Future<void> _renameAttachment(Note note, Attachment attachment) async {
+    final controller = TextEditingController(text: attachment.fileName);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.archiveEntryTitle),
+        content: TextField(controller: controller, autofocus: true),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(dialogContext.l10n.ok),
+          ),
+        ],
+      ),
+    );
+    final name = controller.text.trim();
+    controller.dispose();
+    if (saved != true || name.isEmpty || name == attachment.fileName) return;
+    // YALNIZ görünen ad değişir; dosyanın kendisi (yerel yol, depo yolu)
+    // olduğu gibi kalır — yeniden adlandırma yükleme kuyruğunu tetiklemesin.
+    await _mutate(
+      note,
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == attachment.id) a.copyWith(fileName: name) else a,
         ],
       ),
     );
@@ -616,27 +729,86 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
               children: [
                 for (final item in items)
-                  Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: const Icon(Icons.notes_outlined),
-                      title: Text(item.text),
-                      subtitle: item.section.isEmpty
+                  Builder(
+                    builder: (context) {
+                      // Bağlı dosya: kimliği ek listesinde bulunamıyorsa
+                      // (ek silinmiş) bağ sessizce yok sayılır.
+                      final linked = item.attachmentId.isEmpty
                           ? null
-                          : Text(item.section),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _mutate(
-                          note,
-                          (n) => n.copyWith(
-                            items: [
-                              for (final i in n.items)
-                                if (i.id != item.id) i,
+                          : note.attachments
+                                .where((a) => a.id == item.attachmentId)
+                                .firstOrNull;
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          isThreeLine: item.title.isNotEmpty,
+                          leading: const Icon(Icons.notes_outlined),
+                          title: Text(
+                            item.title.isNotEmpty
+                                ? item.title
+                                : item.text.split('\n').first,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                item.text,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (linked != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: InkWell(
+                                    onTap: () => _open(linked),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.link,
+                                          size: 14,
+                                          color: scheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            linked.fileName,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                                  color: scheme.primary,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
+                          onTap: () => _editText(note, existing: item),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _mutate(
+                              note,
+                              (n) => n.copyWith(
+                                items: [
+                                  for (final i in n.items)
+                                    if (i.id != item.id) i,
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 for (final attachment in attachments)
                   Card(
@@ -661,9 +833,23 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                         ].join(' · '),
                       ),
                       onTap: () => _open(attachment),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () => _removeAttachment(note, attachment),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Dosyanın defterdeki ADI = girdinin başlığı
+                          // (kullanıcı isteği 2026-08-16).
+                          IconButton(
+                            tooltip: l10n.archiveEntryTitle,
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () =>
+                                _renameAttachment(note, attachment),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () =>
+                                _removeAttachment(note, attachment),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -677,7 +863,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                 FloatingActionButton.small(
                   heroTag: 'archive-text',
                   tooltip: l10n.archiveAddText,
-                  onPressed: () => _addText(note),
+                  onPressed: () => _editText(note),
                   child: const Icon(Icons.post_add),
                 ),
                 const SizedBox(width: 10),

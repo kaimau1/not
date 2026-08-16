@@ -981,5 +981,22 @@
   "attachmentTagInsert": "Insert into the text",
   "attachmentTagInserted": "The attachment tag was inserted.",
   "attachmentTagPreview": "Preview attachment",
-  "attachmentTagEdit": "Edit attachment"
+  "attachmentTagEdit": "Edit attachment",
+  "archiveCardSummary": "{files} files · {texts} texts",
+  "@archiveCardSummary": {
+    "placeholders": {
+      "files": {
+        "type": "int"
+      },
+      "texts": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveEntryTitle": "Title",
+  "archiveLinkedFile": "Linked file",
+  "archiveNoLink": "No linked file",
+  "attachmentTagEmbed": "Embed attachment in selection",
+  "attachmentTagNoAttachment": "Add a file to the note first, then you can embed it in the text.",
+  "bubbleModeBubble": "Bubble"
 }

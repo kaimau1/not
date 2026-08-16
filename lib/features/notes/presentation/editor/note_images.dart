@@ -23,7 +23,7 @@ void openImageViewer(
   Attachment img,
   ValueChanged<Attachment> onChanged, {
   Future<void> Function(Attachment, Rect)? onCrop,
-  Future<void> Function(Attachment, int)? onRotate,
+  Future<Attachment?> Function(Attachment, int)? onRotate,
 }) {
   final hasLocal = localFileExists(img.localPath);
   if (!hasLocal && !img.isUploaded) {
@@ -582,6 +582,57 @@ double hintTopFor(List<FloatBox> floats, double bodyTop, double lineHeight) {
   return y;
 }
 
+/// İpucunun ilk satırda SOLDAN ne kadar içeride başlayacağı (dp).
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-16, ekran görüntüsü: "Not... yazısı
+/// ile imleç farklı yerlerde, imlecin yeri doğru"): ipucu görselin ALTINA
+/// itiliyordu ([hintTopFor]), oysa METİN görselin YANINDAN akıyor — imleç de
+/// ilk satırda, görselin sağında duruyordu. İpucu ile imleç iki ayrı yerde
+/// görününce not boşken kullanıcı nereye yazacağını göremiyordu.
+///
+/// Artık ipucu metnin kuralını izler: ilk satırda görselin sağında kullanılır
+/// genişlik kalıyorsa ipucu O SATIRDA, görselin sağından başlar; kalmıyorsa
+/// (sarma eşiği — bkz. `text_wrap.dart`) eskisi gibi görselin altına iner.
+///
+/// [columnWidth] metin sütununun genişliği; eşik onun oranı olarak ölçülür.
+/// Dönen değer soldaki dolgudur — üst konum yine [hintTopFor]'dan gelir ve
+/// dolgu sıfırdan büyükse o üst konum [bodyTop]'ta kalır.
+({double top, double left}) hintPlacement(
+  List<FloatBox> floats,
+  double bodyTop,
+  double lineHeight,
+  double columnWidth, {
+  double minUsableFraction = 0.35,
+}) {
+  // İlk satırı kesen bantlar: metnin ilk satırı da tam olarak bunlardan
+  // etkileniyor.
+  final crossing = [
+    for (final f in floats)
+      if (f.top < bodyTop + lineHeight && bodyTop < f.bottom) f,
+  ];
+  if (crossing.isEmpty || columnWidth <= 0) {
+    return (top: bodyTop, left: 0);
+  }
+  // Soldaki en sağ kenar: birden çok görsel varsa ipucu hepsinin sağından
+  // başlamalı. Sağ kenarda duran görsel (left > 0) ipucunu içeri itmez,
+  // yalnız kullanılabilir genişliği kısar.
+  var leftEdge = 0.0;
+  var rightLimit = columnWidth;
+  for (final f in crossing) {
+    if (f.left <= 0) {
+      if (f.right > leftEdge) leftEdge = f.right;
+    } else if (f.left < rightLimit) {
+      rightLimit = f.left;
+    }
+  }
+  final usable = rightLimit - leftEdge;
+  if (usable < columnWidth * minUsableFraction) {
+    // Metin de bu satırda sığmıyor; ikisi birlikte görselin altına iner.
+    return (top: hintTopFor(floats, bodyTop, lineHeight), left: 0);
+  }
+  return (top: bodyTop, left: leftEdge);
+}
+
 class NotePageCanvas extends StatefulWidget {
   const NotePageCanvas({
     super.key,
@@ -644,7 +695,7 @@ class NotePageCanvas extends StatefulWidget {
   /// ([onCrop] ile aynı gerekçe: dosyayı yeniden yazmak ek deposu ve not
   /// kimliği ister, ikisi de bu katmanda yok). null ise döndürme düğmesi
   /// çizilmez.
-  final Future<void> Function(Attachment, int)? onRotate;
+  final Future<Attachment?> Function(Attachment, int)? onRotate;
   final Future<void> Function(Attachment)? onExtractText;
 
   /// Görseli panoya kopyalar; null ise menüde görünmez.
@@ -874,8 +925,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return boxes;
   }
 
-  double _hintTop(double cw) =>
-      hintTopFor(_floatsFor(cw), widget.topLimit, widget.hintLineHeight);
+  ({double top, double left}) _hintPlacement(double cw) => hintPlacement(
+    _floatsFor(cw),
+    widget.topLimit,
+    widget.hintLineHeight,
+    cw,
+  );
 
   void _reportFloats(double cw) {
     final cb = widget.onFloats;
@@ -1011,11 +1066,19 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
               // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
               if (widget.hint != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: _hintTop(cw),
-                  child: IgnorePointer(child: widget.hint!),
+                Builder(
+                  builder: (context) {
+                    // İpucu metnin ilk satırıyla AYNI yere oturur: görselin
+                    // yanında yer varsa yanına, yoksa altına (bkz.
+                    // [hintPlacement]).
+                    final place = _hintPlacement(cw);
+                    return PositionedDirectional(
+                      start: place.left,
+                      end: 0,
+                      top: place.top,
+                      child: IgnorePointer(child: widget.hint!),
+                    );
+                  },
                 ),
               for (final (index, img) in widget.images.indexed)
                 _positioned(context, img, index, cw),

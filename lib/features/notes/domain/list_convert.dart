@@ -13,6 +13,14 @@ library;
 
 import 'note_item.dart';
 
+/// Editörün düzenleme tamponunda yaşayan GÖRÜNMEZ karakterler: sarma çapası
+/// (U+FFFC) ve kelime birleştirici (U+2060) — bkz. text_wrap.dart.
+///
+/// Çağıranın `logicalText` vermesi beklenir, ama burada da temizlenir:
+/// bir tanesi satır başına düşünce madde işareti kalıbı eşleşmiyor ve
+/// kullanıcı maddede ham "OBJ- [x] ..." metnini görüyordu (2026-08-16).
+final RegExp _invisibleChars = RegExp('[\u{FFFC}\u{2060}]', unicode: true);
+
 /// Düz metni liste maddelerine böler.
 ///
 /// Her BOŞ OLMAYAN satır bir madde olur. Satırın başındaki liste işaretleri
@@ -28,7 +36,7 @@ import 'note_item.dart';
 List<NoteItem> itemsFromText(String text, {required String Function() newId}) {
   final items = <NoteItem>[];
   for (final rawLine in text.split('\n')) {
-    var line = rawLine.trim();
+    var line = rawLine.replaceAll(_invisibleChars, '').trim();
     if (line.isEmpty) continue;
     var checked = false;
     // Madde işareti: "- ", "* ", "• ", "1. ", "1) "
