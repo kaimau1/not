@@ -721,21 +721,36 @@ RichMark activeFormats(String text, int start, int end) {
 /// muhasebesi bu boyutta kazançtan çok yer tutar).
 const _spanCacheLimit = 256;
 final Map<
-  (String, TextStyle?, Color?, List<Color>, Color),
+  (String, TextStyle?, Color?, List<Color>, Color, String),
   List<InlineSpan>
 >
 _spanCache = {};
 
+/// [attachmentNames] notun ek dosya adları — metne gömülü ek etiketleri
+/// (bkz. attachment_tag.dart) bunlara göre bulunup kırmızı çizilir. Boşsa
+/// hiçbir etiket işaretlenmez.
 List<InlineSpan> richSpans(
   String text,
   TextStyle? style, {
   Color? linkColor,
   required List<Color> palette,
   required Color markerColor,
+  Iterable<String> attachmentNames = const [],
 }) {
   if (text.isEmpty) return [TextSpan(text: text, style: style)];
-  if (!_hasMarker(text)) return linkSpans(text, style, linkColor);
-  final cacheKey = (text, style, linkColor, palette, markerColor);
+  if (!_hasMarker(text)) {
+    return linkSpans(text, style, linkColor, attachmentNames: attachmentNames);
+  }
+  // Ek adları da ANAHTARIN parçası: ek silinip eklenince etiket işaretlemesi
+  // değişiyor, bayat span dönerse etiket eski hâliyle çizilirdi.
+  final cacheKey = (
+    text,
+    style,
+    linkColor,
+    palette,
+    markerColor,
+    attachmentNames.join('\u0000'),
+  );
   final cached = _spanCache[cacheKey];
   if (cached != null) return cached;
   final built = _richSpansUncached(
@@ -744,6 +759,7 @@ List<InlineSpan> richSpans(
     linkColor: linkColor,
     palette: palette,
     markerColor: markerColor,
+    attachmentNames: attachmentNames,
   );
   if (_spanCache.length >= _spanCacheLimit) _spanCache.clear();
   // Değiştirilemez: liste artık PAYLAŞILIYOR, bir çağıranın onu yerinde
@@ -757,6 +773,7 @@ List<InlineSpan> _richSpansUncached(
   String text,
   TextStyle? style, {
   Color? linkColor,
+  Iterable<String> attachmentNames = const [],
   required List<Color> palette,
   required Color markerColor,
 }) {
@@ -791,14 +808,26 @@ List<InlineSpan> _richSpansUncached(
     for (final box in _emptyBoxPattern.allMatches(part)) {
       if (box.start > cursor) {
         spans.addAll(
-          linkSpans(part.substring(cursor, box.start), styleFor, linkColor),
+          linkSpans(
+            part.substring(cursor, box.start),
+            styleFor,
+            linkColor,
+            attachmentNames: attachmentNames,
+          ),
         );
       }
       spans.add(TextSpan(text: box[0], style: markerStyle));
       cursor = box.end;
     }
     if (cursor < part.length) {
-      spans.addAll(linkSpans(part.substring(cursor), styleFor, linkColor));
+      spans.addAll(
+        linkSpans(
+          part.substring(cursor),
+          styleFor,
+          linkColor,
+          attachmentNames: attachmentNames,
+        ),
+      );
     }
   }
 

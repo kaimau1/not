@@ -2636,4 +2636,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String archiveCopied(int count) {
     return '$count dosya arşiv defterine kopyalandı.';
   }
+
+  @override
+  String get archiveCaptureTitle => 'Görselden yakala';
+
+  @override
+  String get archiveCapturePage => 'Sayfa';
+
+  @override
+  String get archiveCapturePageInfo =>
+      'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.';
+
+  @override
+  String get archiveCaptureText => 'Tanınan metin';
+
+  @override
+  String get attachmentTagInsert => 'Metne ekle';
+
+  @override
+  String get attachmentTagInserted => 'Ek etiketi metne eklendi.';
+
+  @override
+  String get attachmentTagPreview => 'Eki önizle';
+
+  @override
+  String get attachmentTagEdit => 'Eki düzenle';
 }

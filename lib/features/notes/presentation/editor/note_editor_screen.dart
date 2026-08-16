@@ -28,6 +28,7 @@ import '../../../../core/utils/debouncer.dart';
 import '../../../../core/utils/doc_picker.dart';
 import '../../../../core/utils/format_bytes.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/markdown.dart';
 import '../../../../core/utils/note_fonts.dart';
@@ -84,6 +85,10 @@ import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
 import 'slide_note_pane.dart';
 import '../viewers/image_crop.dart';
+import '../viewers/image_viewer.dart';
+import '../viewers/pdf_viewer_screen.dart';
+import '../viewers/slide_viewer_screen.dart';
+import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
 import 'text_wrap.dart';
 
@@ -1544,6 +1549,76 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// Gövdedeki imlecin üzerinde durduğu EK ETİKETİ (yoksa null).
+  /// Bağlantı aramanın ([_selectedLink]) ek karşılığı; konum aynı gerekçeyle
+  /// önce mantıksal metne çevrilir.
+  Attachment? _selectedAttachmentTag() {
+    final note = _note;
+    final selection = _bodyController.selection;
+    if (note == null || !selection.isValid) return null;
+    final name = attachmentTagAt(
+      _bodyController.logicalText,
+      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
+      [for (final a in note.attachments) a.fileName],
+    );
+    if (name == null) return null;
+    for (final a in note.attachments) {
+      if (a.fileName == name) return a;
+    }
+    return null;
+  }
+
+  /// Metne gömülü ek etiketini AÇAR.
+  ///
+  /// [editing] false ise ÖNİZLEME: görsel/belge salt okunur açılır (çizim,
+  /// kırpma, döndürme düğmeleri çizilmez). true ise DÜZENLEME: aynı ekranlar
+  /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
+  /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
+  void _openAttachmentTag(Attachment attachment, {required bool editing}) {
+    if (!localFileExists(attachment.localPath) && !attachment.isUploaded) {
+      _showSnack(context.l10n.attachmentNotSynced);
+      return;
+    }
+    if (attachment.kind == AttachmentKind.image) {
+      openImageViewer(
+        context,
+        attachment,
+        editing ? _updateAttachment : (_) {},
+        onCrop: editing ? _cropImage : null,
+        onRotate: editing ? _rotateImage : null,
+      );
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => switch (attachment.kind) {
+          AttachmentKind.pdf => PdfViewerScreen(
+            attachment: attachment,
+            onChanged: editing ? _updateAttachment : null,
+          ),
+          AttachmentKind.slide => SlideViewerScreen(
+            attachment: attachment,
+            onChanged: editing ? _updateAttachment : null,
+          ),
+          AttachmentKind.video => VideoViewerScreen(attachment: attachment),
+          // Ses ekinin görüntüleyicisi yok; şeritteki oynatıcıdan çalınır.
+          AttachmentKind.audio => ImageViewerScreen(attachment: attachment),
+          AttachmentKind.image => ImageViewerScreen(attachment: attachment),
+        },
+      ),
+    );
+  }
+
+  /// İmlecin bulunduğu yere ek etiketi yazar (bkz. attachment_tag.dart).
+  ///
+  /// Etiket düz metindir: dışa aktarmada, paylaşımda ve panoda "📎 rapor.pdf"
+  /// olarak okunur biçimde taşınır; editörde kırmızı ve altı çizili çizilir.
+  void _insertAttachmentTag(Attachment attachment) {
+    final tag = attachmentTagFor(attachment.fileName);
+    _appendPlainText(tag);
+    _showSnack(context.l10n.attachmentTagInserted);
+  }
+
   /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
   /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
   /// platformun kendi listesinden gelir.
@@ -1572,6 +1647,27 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           },
         ),
       );
+    }
+    // EK ETİKETİ (kullanıcı isteği 2026-08-16): imleç "📎 rapor.pdf"in
+    // üzerindeyse önizleme ve düzenleme buradan açılır.
+    final tagged = _selectedAttachmentTag();
+    if (tagged != null) {
+      items.insertAll(0, [
+        ContextMenuButtonItem(
+          label: context.l10n.attachmentTagPreview,
+          onPressed: () {
+            state.hideToolbar();
+            _openAttachmentTag(tagged, editing: false);
+          },
+        ),
+        ContextMenuButtonItem(
+          label: context.l10n.attachmentTagEdit,
+          onPressed: () {
+            state.hideToolbar();
+            _openAttachmentTag(tagged, editing: true);
+          },
+        ),
+      ]);
     }
     final url = _selectedLink();
     if (url != null) {
@@ -4295,6 +4391,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
     _bodyController.richTheme = richTheme;
     _titleController.richTheme = richTheme;
+    // Metne gömülü ek etiketleri (bkz. attachment_tag.dart) buradan
+    // beslenir: ek silinip eklendikçe etiketin kırmızı çizilip çizilmeyeceği
+    // değişir. Yalnız GÖVDE — başlığa ek etiketi konmaz.
+    _bodyController.attachmentNames = [
+      for (final a in note.attachments) a.fileName,
+    ];
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`
     // çiftinden, BAŞLIK ise kendi `titleFontFamily`/`titleFontScale`
     // değerlerinden beslenir — biçim çubuğu odaktaki alana yazar.
@@ -4634,6 +4736,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       maxLines: null,
       minLines: note.items.isEmpty ? 8 : 2,
       keyboardType: TextInputType.multiline,
+      // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
+      //
+      // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
+      // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
+      // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
+      // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
+      // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
+      onTap: () {
+        final tagged = _selectedAttachmentTag();
+        if (tagged != null) _openAttachmentTag(tagged, editing: false);
+      },
       // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
       // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
       // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
@@ -5004,6 +5117,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         onRemove: _removeAttachment,
                         onChanged: _updateAttachment,
                         onCopy: _copyAttachment,
+                        // Belge (PDF/sunum) notunda gövde metni yok; etiket
+                        // yazacak bir yer olmadığı için düğme çizilmez.
+                        onInsertTag: note.type.isPageNoteType
+                            ? null
+                            : _insertAttachmentTag,
                         onPlaceOnPage: (a) => _setImageAsFile(a, false),
                         onVideoToNote: _videoToNote,
                         expanded: ref.watch(attachmentsExpandedProvider),

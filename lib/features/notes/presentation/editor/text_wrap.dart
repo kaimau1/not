@@ -509,15 +509,17 @@ InlineSpan buildWrapSpan(
   TextStyle? style, {
   Color? linkColor,
   RichTextTheme? rich,
+  Iterable<String> attachmentNames = const [],
 }) {
   List<InlineSpan> parts(String text) => rich == null
-      ? linkSpans(text, style, linkColor)
+      ? linkSpans(text, style, linkColor, attachmentNames: attachmentNames)
       : richSpans(
           text,
           style,
           linkColor: linkColor,
           palette: rich.palette,
           markerColor: rich.markerColor,
+          attachmentNames: attachmentNames,
         );
 
   if (widths.isEmpty || !display.contains(kWrapAnchorChar)) {
@@ -725,6 +727,29 @@ class WrapTextController extends TextEditingController {
   double _columnWidth = 0;
   double _textScale = 1.0;
   TextDirection _direction = TextDirection.ltr;
+
+  /// Notun ek dosya adları — metne gömülü ek etiketlerini (bkz.
+  /// attachment_tag.dart) bulup kırmızı çizmek için. Ölçüm yolu da AYNI
+  /// listeyi kullanır: renk ve alt çizgi satır genişliğini değiştirmediği
+  /// için ölçüm ile çizim ayrışmaz, ama iki taraf aynı işlevden geçsin diye
+  /// yine de her ikisine verilir.
+  List<String> _attachmentNames = const [];
+
+  set attachmentNames(List<String> value) {
+    if (_attachmentNames.length == value.length &&
+        _attachmentNames.join('\u0000') == value.join('\u0000')) {
+      return;
+    }
+    _attachmentNames = value;
+    // Yalnız ÇİZİM değişti (renk/alt çizgi); satır kırılımı aynı kaldığı için
+    // yeniden dizmeye gerek yok — span önbelleği düşürülüp yeniden çizilir.
+    _spanCache = null;
+    notifyListeners();
+  }
+
+  /// Metindeki ek etiketlerinin adları (imleç konumundan hangi eke
+  /// bakılacağını çağıran bulur).
+  List<String> get attachmentNames => _attachmentNames;
 
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
@@ -1378,7 +1403,14 @@ class WrapTextController extends TextEditingController {
       return _spanCache!;
     }
     final span =
-        buildWrapSpan(text, widths, style, linkColor: linkColor, rich: _rich)
+        buildWrapSpan(
+              text,
+              widths,
+              style,
+              linkColor: linkColor,
+              rich: _rich,
+              attachmentNames: _attachmentNames,
+            )
             as TextSpan;
     _spanKeyText = text;
     _spanKeyStyle = style;

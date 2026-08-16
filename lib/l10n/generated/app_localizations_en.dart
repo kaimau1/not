@@ -2616,4 +2616,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String archiveCopied(int count) {
     return '$count files copied to the archive notebook.';
   }
+
+  @override
+  String get archiveCaptureTitle => 'Capture from image';
+
+  @override
+  String get archiveCapturePage => 'Page';
+
+  @override
+  String get archiveCapturePageInfo =>
+      'The type the AI suggested. Left empty, it goes to the Texts page.';
+
+  @override
+  String get archiveCaptureText => 'Recognised text';
+
+  @override
+  String get attachmentTagInsert => 'Insert into the text';
+
+  @override
+  String get attachmentTagInserted => 'The attachment tag was inserted.';
+
+  @override
+  String get attachmentTagPreview => 'Preview attachment';
+
+  @override
+  String get attachmentTagEdit => 'Edit attachment';
 }

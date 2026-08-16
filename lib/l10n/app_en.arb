@@ -973,5 +973,13 @@
         "type": "int"
       }
     }
-  }
+  },
+  "archiveCaptureTitle": "Capture from image",
+  "archiveCapturePage": "Page",
+  "archiveCapturePageInfo": "The type the AI suggested. Left empty, it goes to the Texts page.",
+  "archiveCaptureText": "Recognised text",
+  "attachmentTagInsert": "Insert into the text",
+  "attachmentTagInserted": "The attachment tag was inserted.",
+  "attachmentTagPreview": "Preview attachment",
+  "attachmentTagEdit": "Edit attachment"
 }

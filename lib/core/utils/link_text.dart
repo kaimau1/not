@@ -7,6 +7,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'attachment_tag.dart';
+
 /// Bulunan bağlantının türü. E-posta ayrı tutulur çünkü açılışı farklıdır
 /// (`mailto:`) ve **web kalıbından ÖNCE eşleşmesi** gerekir.
 ///
@@ -132,28 +134,61 @@ String? linkAt(String text, int offset) {
 /// Metni düz ve bağlantı parçalarına böler. [linkColor] null ise metin
 /// olduğu gibi döner — ÖLÇÜM yolu (TextPainter) rengi umursamaz ve renk/alt
 /// çizgi satır genişliğini değiştirmediği için ölçüm ile çizim ayrışmaz.
-List<InlineSpan> linkSpans(String text, TextStyle? style, Color? linkColor) {
+List<InlineSpan> linkSpans(
+  String text,
+  TextStyle? style,
+  Color? linkColor, {
+  Iterable<String> attachmentNames = const [],
+}) {
   if (linkColor == null || text.isEmpty) {
     return [TextSpan(text: text, style: style)];
   }
-  final links = findLinks(text);
-  if (links.isEmpty) return [TextSpan(text: text, style: style)];
+  // EK ETİKETLERİ (bkz. attachment_tag.dart) bağlantılarla AYNI listede
+  // toplanır: ikisi de metnin bir aralığını başka renkte çizen işaretler ve
+  // aynı aralıkta ikisi birden olamaz. Ayrı iki geçiş yapılsaydı çakışan
+  // aralıklarda span'ler üst üste binerdi.
+  final marks =
+      <({int start, int end, bool attachment})>[
+        for (final link in findLinks(text))
+          (start: link.start, end: link.end, attachment: false),
+        for (final tag in findAttachmentTags(text, attachmentNames))
+          (start: tag.start, end: tag.end, attachment: true),
+      ]..sort((a, b) => a.start - b.start);
+  if (marks.isEmpty) return [TextSpan(text: text, style: style)];
 
-  final linkStyle = (style ?? const TextStyle()).copyWith(
+  final base = style ?? const TextStyle();
+  final linkStyle = base.copyWith(
     color: linkColor,
     decoration: TextDecoration.underline,
     decorationColor: linkColor,
   );
+  // Ek etiketi KIRMIZI + altı çizili (kullanıcının tarif ettiği görünüm).
+  // Renk temadan DEĞİL sabit: etiketin "bu bir dosya" işareti olması
+  // gerekiyor ve tema rengiyle bağlantı renginden ayrılamazdı.
+  const attachmentColor = Color(0xFFD32F2F);
+  final attachmentStyle = base.copyWith(
+    color: attachmentColor,
+    decoration: TextDecoration.underline,
+    decorationColor: attachmentColor,
+  );
+
   final spans = <InlineSpan>[];
   var cursor = 0;
-  for (final link in links) {
-    if (link.start > cursor) {
+  for (final mark in marks) {
+    // Çakışan işaret (ör. dosya adı bir alan adıyla bitiyor) atlanır.
+    if (mark.start < cursor) continue;
+    if (mark.start > cursor) {
       spans.add(
-        TextSpan(text: text.substring(cursor, link.start), style: style),
+        TextSpan(text: text.substring(cursor, mark.start), style: style),
       );
     }
-    spans.add(TextSpan(text: link.url, style: linkStyle));
-    cursor = link.end;
+    spans.add(
+      TextSpan(
+        text: text.substring(mark.start, mark.end),
+        style: mark.attachment ? attachmentStyle : linkStyle,
+      ),
+    );
+    cursor = mark.end;
   }
   if (cursor < text.length) {
     spans.add(TextSpan(text: text.substring(cursor), style: style));

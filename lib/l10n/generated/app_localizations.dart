@@ -4913,6 +4913,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count} dosya arşiv defterine kopyalandı.'**
   String archiveCopied(int count);
+
+  /// No description provided for @archiveCaptureTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görselden yakala'**
+  String get archiveCaptureTitle;
+
+  /// No description provided for @archiveCapturePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa'**
+  String get archiveCapturePage;
+
+  /// No description provided for @archiveCapturePageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.'**
+  String get archiveCapturePageInfo;
+
+  /// No description provided for @archiveCaptureText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tanınan metin'**
+  String get archiveCaptureText;
+
+  /// No description provided for @attachmentTagInsert.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metne ekle'**
+  String get attachmentTagInsert;
+
+  /// No description provided for @attachmentTagInserted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek etiketi metne eklendi.'**
+  String get attachmentTagInserted;
+
+  /// No description provided for @attachmentTagPreview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eki önizle'**
+  String get attachmentTagPreview;
+
+  /// No description provided for @attachmentTagEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eki düzenle'**
+  String get attachmentTagEdit;
 }
 
 class _AppLocalizationsDelegate

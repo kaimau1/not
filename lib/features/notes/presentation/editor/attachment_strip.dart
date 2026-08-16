@@ -31,6 +31,7 @@ class AttachmentStrip extends StatelessWidget {
     required this.onToggle,
     this.onChanged,
     this.onCopy,
+    this.onInsertTag,
     this.onPlaceOnPage,
     this.onVideoToNote,
   });
@@ -40,6 +41,10 @@ class AttachmentStrip extends StatelessWidget {
 
   /// Eki panoya kopyalar (başka nota yapıştırılabilir). null ise düğme yok.
   final ValueChanged<Attachment>? onCopy;
+
+  /// Eki METNİN İÇİNE etiket olarak yazar (bkz. attachment_tag.dart).
+  /// null ise düğme çizilmez (ör. belge notunda gövde metni yok).
+  final ValueChanged<Attachment>? onInsertTag;
 
   /// "Ek olarak" duran GÖRSELİ sayfaya (yüzen katmana) geri koyar.
   final ValueChanged<Attachment>? onPlaceOnPage;
@@ -80,6 +85,7 @@ class AttachmentStrip extends StatelessWidget {
               onRemove: () => onRemove(attachments[index]),
               onChanged: onChanged,
               onCopy: onCopy,
+              onInsertTag: onInsertTag,
               onPlaceOnPage: onPlaceOnPage,
               onVideoToNote: onVideoToNote,
             ),
@@ -224,6 +230,7 @@ class _AttachmentTile extends ConsumerWidget {
     required this.onRemove,
     this.onChanged,
     this.onCopy,
+    this.onInsertTag,
     this.onPlaceOnPage,
     this.onVideoToNote,
   });
@@ -232,6 +239,7 @@ class _AttachmentTile extends ConsumerWidget {
   final VoidCallback onRemove;
   final ValueChanged<Attachment>? onChanged;
   final ValueChanged<Attachment>? onCopy;
+  final ValueChanged<Attachment>? onInsertTag;
   final ValueChanged<Attachment>? onPlaceOnPage;
   final Future<void> Function(Attachment)? onVideoToNote;
 
@@ -494,7 +502,9 @@ class _AttachmentTile extends ConsumerWidget {
         // Kopyala (her ek türünde) ve "sayfaya koy" (yalnız ek olarak duran
         // görselde). Küçük döşemede yer az: ikisi de sol üstte, kaldırmanın
         // karşı köşesinde durur ki yanlışlıkla silmeye basılmasın.
-        if (onCopy != null || (onPlaceOnPage != null && _canPlaceOnPage))
+        if (onCopy != null ||
+            onInsertTag != null ||
+            (onPlaceOnPage != null && _canPlaceOnPage))
           PositionedDirectional(
             start: 2,
             top: 2,
@@ -510,6 +520,20 @@ class _AttachmentTile extends ConsumerWidget {
                       backgroundColor: Colors.black38,
                     ),
                     onPressed: () => onCopy!(attachment),
+                  ),
+                // METNE EKLE (kullanıcı isteği 2026-08-16): imlecin olduğu
+                // yere "📎 dosya.pdf" etiketi yazılır; etiket editörde
+                // kırmızı ve altı çizili çizilir, dokununca önizleme açar.
+                if (onInsertTag != null)
+                  IconButton(
+                    tooltip: context.l10n.attachmentTagInsert,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(Icons.text_snippet_outlined, size: 16),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black38,
+                    ),
+                    onPressed: () => onInsertTag!(attachment),
                   ),
                 if (onPlaceOnPage != null && _canPlaceOnPage)
                   IconButton(

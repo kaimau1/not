@@ -12,8 +12,10 @@ import 'package:uuid/uuid.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
+import '../../ai/data/gemini_service.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
+import '../data/scan/scan_ocr.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
@@ -124,6 +126,13 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   static bool _matches(String text, String query) =>
       text.toLowerCase().contains(query);
 
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _mutate(Note note, Note Function(Note) change) async {
     final repo = _repo;
     if (repo == null) return;
@@ -212,6 +221,172 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
         ],
       ),
     );
+  }
+
+  /// **Görselden yakala**: ekran görüntüsünü OCR'lar, metni yapay zekâya
+  /// düzelttirir, türünü tahmin ettirir ve deftere kaydeder.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "SS'le kaydedilen not defteri OCR ile
+  /// çıkarır ai ile olur ve kaydeder — hadis defteri, film arşivi vs."
+  ///
+  /// Akış bilerek bu sırada:
+  ///  1. **OCR cihazda** ([ScanOcr]) — bedava, çevrimdışı, kotasız.
+  ///  2. Metin çıkmadıysa DURULUR: modele boş metin göndermek kotayı boşa
+  ///     yakar (görselde yazı yoksa yapılacak bir şey yok).
+  ///  3. Model metni düzeltir ve türü söyler ([GeminiService.tidyCapture]);
+  ///     tür, defterin var olan sayfalarından biriyse oraya, değilse yeni
+  ///     bir sayfa olarak açılır.
+  ///  4. Sonuç ONAYA sunulur — model metni değiştirebiliyor ve sayfa açmak
+  ///     kalıcı bir karar; sessizce kaydetmek yanlış yere düşen girdilerle
+  ///     defteri kirletirdi.
+  ///
+  /// Görselin kendisi de deftere KOPYALANIR: metin yanlış çıkarsa kaynağa
+  /// bakmanın tek yolu odur.
+  Future<void> _captureFromImage(Note note) async {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
+    if (!ScanOcr.supported) {
+      _snack(context.l10n.imageOcrNone);
+      return;
+    }
+    final picked = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2400,
+      maxHeight: 2400,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final lines = await ScanOcr.recognizeImageLines(picked.path);
+      final raw = [for (final line in lines) line.text].join('\n').trim();
+      if (raw.isEmpty) {
+        if (!mounted) return;
+        setState(() => _busy = false);
+        _snack(context.l10n.imageOcrNone);
+        return;
+      }
+      final tidied = await ref
+          .read(geminiServiceProvider)
+          .tidyCapture(raw, known: note.archivePages);
+      if (!mounted) return;
+      setState(() => _busy = false);
+      await _confirmCapture(
+        note,
+        suggestion: tidied,
+        imageBytes: await picked.readAsBytes(),
+        imageName: picked.name,
+      );
+    } on GeminiException catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _snack(e.message);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      _snack(context.l10n.aiError('$e'));
+    }
+  }
+
+  /// Yakalanan metni ve önerilen sayfayı onaya sunar, onaylanırsa kaydeder.
+  Future<void> _confirmCapture(
+    Note note, {
+    required ({String category, String title, String text}) suggestion,
+    required Uint8List imageBytes,
+    required String imageName,
+  }) async {
+    final textController = TextEditingController(text: suggestion.text);
+    final pageController = TextEditingController(
+      text: suggestion.category.isEmpty
+          ? (_customPage ?? '')
+          : suggestion.category,
+    );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final l10n = dialogContext.l10n;
+        return AlertDialog(
+          title: Text(l10n.archiveCaptureTitle),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: pageController,
+                  decoration: InputDecoration(
+                    labelText: l10n.archiveCapturePage,
+                    helperText: l10n.archiveCapturePageInfo,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: textController,
+                  maxLines: 10,
+                  minLines: 4,
+                  decoration: InputDecoration(labelText: l10n.archiveCaptureText),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.ok),
+            ),
+          ],
+        );
+      },
+    );
+    final text = textController.text.trim();
+    final page = pageController.text.trim();
+    textController.dispose();
+    pageController.dispose();
+    if (confirmed != true || text.isEmpty || !mounted) return;
+
+    setState(() => _busy = true);
+    Attachment? stored;
+    try {
+      stored = await ref
+          .read(attachmentRepositoryProvider)
+          ?.prepareImage(
+            noteId: note.id,
+            bytes: imageBytes,
+            fileName: imageName,
+          );
+    } catch (_) {
+      // Görsel eklenemese de (çok büyük, depo dolu) METİN kaydedilsin:
+      // yakalamanın asıl değeri yazıda.
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    await _mutate(note, (n) {
+      // Model yeni bir sayfa adı önerdiyse sayfa da açılır; var olansa
+      // ikinci kez eklenmez.
+      final pages = page.isEmpty || n.archivePages.contains(page)
+          ? n.archivePages
+          : [...n.archivePages, page];
+      return n.copyWith(
+        archivePages: pages,
+        items: [
+          ...n.items,
+          NoteItem(id: const Uuid().v4(), text: text, section: page),
+        ],
+        attachments: stored == null
+            ? n.attachments
+            : [
+                ...n.attachments,
+                stored.copyWith(asFile: true, section: page),
+              ],
+      );
+    });
+    if (!mounted) return;
+    setState(() {
+      _autoPage = page.isEmpty ? _AutoPage.texts : null;
+      _customPage = page.isEmpty ? null : page;
+    });
   }
 
   /// Galeriden/diskten dosya seçip deftere KOPYALAR.
@@ -504,6 +679,14 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                   tooltip: l10n.archiveAddText,
                   onPressed: () => _addText(note),
                   child: const Icon(Icons.post_add),
+                ),
+                const SizedBox(width: 10),
+                // Ekran görüntüsünden yakalama (kullanıcı isteği 2026-08-16).
+                FloatingActionButton.small(
+                  heroTag: 'archive-capture',
+                  tooltip: l10n.archiveCaptureTitle,
+                  onPressed: () => _captureFromImage(note),
+                  child: const Icon(Icons.document_scanner_outlined),
                 ),
                 const SizedBox(width: 10),
                 FloatingActionButton.extended(

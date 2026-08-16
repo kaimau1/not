@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/attachment_tag.dart';
 import '../../../core/utils/local_file.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_docx.dart';
@@ -126,6 +127,14 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
         if (item.text.trim().isNotEmpty) item.text,
     ].join('\n'),
   };
+
+  /// Dışa aktarılacak GÖVDE metni: metin içi ek etiketleri ("📎 rapor.pdf")
+  /// gömülü fontun çizebileceği "[ek: rapor.pdf]" biçimine çevrilir
+  /// (gerekçe: exportAttachmentTags).
+  String _exportContent() => exportAttachmentTags(
+    _exported(_markedContent, _content.text),
+    [for (final a in widget.note.attachments) a.fileName],
+  );
 
   /// Alandaki metin kullanıcı tarafından DEĞİŞTİRİLMEDİYSE işaretli özgün
   /// hâli döner (biçim korunur); değiştirildiyse kullanıcının yazdığı düz
@@ -268,7 +277,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       final title = _title.text.trim();
       final bytes = await NotePdf.build(
         title: _exported(_markedTitle, title),
-        content: _exported(_markedContent, _content.text),
+        content: _exportContent(),
         date: _date,
         images: await _loadImages(),
         palette: NoteColors.richPalette,
@@ -289,7 +298,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       final title = _title.text.trim();
       final bytes = await NoteDocx.build(
         title: title,
-        content: _exported(_markedContent, _content.text),
+        content: _exportContent(),
         date: _date,
         images: await _loadImages(),
       );

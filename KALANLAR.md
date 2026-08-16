@@ -2,6 +2,22 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-08-16 turundan kalan (cihazda doğrulanmadı)
+- [ ] **R8 küçültmeli release APK'yı CİHAZDA dene.** minify + shrinkResources
+  ilk kez açıldı. R8 hatası derlemede değil, o kod yolu ilk kez çalıştığında
+  patlar — özellikle bakılacaklar: ana ekran widget'larının güncellenmesi
+  (`home_widget` sınıf adını METİN olarak taşıyor), zamanlanmış
+  hatırlatıcıların yeniden başlatmadan sonra da durması (Gson yansıması),
+  Google girişi, Firestore senkronu, ML Kit metin tanıma.
+- [ ] **32 bit cihaz desteği KALKTI** (`abiFilters = arm64-v8a`). 2015 öncesi
+  telefonlar ve bazı ucuz tabletler uygulamayı artık kuramaz — bilinçli karar,
+  Play'e çıkarken mağaza listesinde belirtilmeli.
+- [ ] **Podcast WAV dışa aktarımı** metnin TAMAMINI yeniden seslendirir
+  (dinlerken üretilen parçalar okuma bitince siliniyor). Uzun belgede kota
+  bedeli yüksek; kullanıcıya soruluyor ama ölçülmedi.
+- [ ] Yeni l10n anahtarları (~50) yalnız TR ve EN'de; kalan 14 dil şablona
+  (Türkçe) düşüyor. `Çeviri üret` iş akışı elle tetiklenmeli.
+
 ## 2026-08-06 genel kullanım denetiminden kalan (bilinçli ertelenen küçük uçlar)
 - [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
   kutusu senkronu çözüldü; scroll paylaşımı split-shell refaktörü ister).

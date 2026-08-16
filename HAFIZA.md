@@ -1605,3 +1605,86 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   **CI'da yakalanan iki tuzak (aynı tur).** (a) Yumuşak satır sonundaki BOŞLUK sarma sınırının ötesine yerleştirilir — Flutter onu satır genişliğine saymaz ama kutusunu üretir. Denetim o kutuya bakınca düzgün sarılmış satırları "bindi" sanıp aşağı itiyordu; karar artık yalnız GÖRÜNÜR harflerden veriliyor. (b) Satırın dikey yerini `LineMetrics.height` toplayarak bulmak yanlış: boşaltılmış satır (yalnız çapa taşıyan) metinli satırdan kısa olabiliyor. Üstüne `_lineRange` konumu x=0'dan okuyor — RTL'de x=0 satırın SONU, LTR'de de tam genişlikte çapa varsa konum bir alt satıra düşüyor. İkisi birden "yanlış satırı denetle" demek. Satır aralıkları artık metnin başından `getLineBoundary` ile yürünerek çıkarılıyor. **Ders:** satır geometrisi metin motorundan OKUNUR, sayılarak bulunmaz.
 
   **RTL testleri gevşetildi (bilerek).** `startAnchors == 0` ve `widths.every(120)` beklentileri, satır BOŞALTMAYI da yasaklıyordu; oysa boşaltma LTR'de zaten var olan üçüncü uç. Testler artık niyeti ölçüyor: yana kaydıran (kısmi) dolgu doğru tarafta mı + planın GARANTİSİ (hiçbir görünür karakter görselin bandında olamaz). Sayı beklentisi mekanizmayı, geometri beklentisi sonucu ölçer; ikincisi doğru olandı.
+
+- 2026-08-16 (34. tur): **On dokuz maddelik istek listesi** (dal:
+  `claude/app-development-tasks-blibxu`). Kararlar ve kök nedenler:
+
+  **1) KÖK NEDEN — "bazı mailler ve internet adresleri eksik yanlış adres
+  işaretine alınıyor".** `link_text.dart`'ta e-posta kalıbı HİÇ YOKTU.
+  `ali@ornek.com` yazıldığında çıplak alan adı kalıbı `@`'in SAĞINDAKİ
+  `ornek.com`'u yakalıyor, kullanıcı adını dışarıda bırakıyordu: adresin
+  yarısı maviye boyanıyor, tıklanınca `https://ornek.com` açılıyordu.
+  E-posta kalıbı web kalıbından ÖNCE geliyor (alternasyon sırası önemli) ve
+  `openLink` `@` görünce `mailto:` şeması kuruyor. Uzantı listesi 17'den
+  ~120'ye çıkarıldı (tr alt alanları, ülke kodları, yeni nesil uzantılar).
+  **TUZAK:** `at`, `be`, `in`, `it`, `no`, `to`, `us`, `id`, `ma`, `my`, `so`
+  BİLEREK dışarıda — "bitti.It happens" gibi noktadan sonra boşluk unutulmuş
+  cümleler linke düşüyordu. O alan adları `www.`/`https://` ile yakalanıyor.
+
+  **2) KÖK NEDEN — "3 resim gönderdim 2'si geldi ve üst üste geldiler".**
+  İKİ ayrı kusur: (a) `share_intake` her ek için ayrı bir `arrayUnion`
+  ateşleyip HİÇBİRİNİ beklemiyordu; son yazım yoldayken açılan editör kendi
+  anlık görüntüsünü (henüz 2 ekli) geri yazınca son ek siliniyordu. Artık
+  ekler önce toplanıp TEK arrayUnion'da, `await` ile yazılıyor (zaman aşımı
+  şart: dönen Future sunucu onayını bekliyor, çevrimdışıyken hiç
+  tamamlanmaz). (b) Konumu yazılmamış görsellerin otomatik yığını
+  `8 + index * 130` sabit aralıklıydı; varsayılan genişlik sütunun yarısı
+  olduğundan dikey bir fotoğraf ~240 dp geliyor ve sonraki görsel öncekinin
+  ortasına düşüyordu. Yığın artık GERÇEK yüksekliklerle kuruluyor.
+
+  **3) Metin içi ek etiketi GİZLİ KİMLİK TAŞIMAZ, dosya ADIYLA eşleşir**
+  ("📎 rapor.pdf"). Biçim işaretleri metinde durup görünmez çiziliyor; ek
+  etiketi için ikinci bir gizli karakter sınıfı daha eklemek, imleç/seçim
+  konumlarının denetleyicinin metniyle birebir örtüşmesi gereken bir yerde
+  yeni bir kayma kaynağı olurdu. Ad ile eşleşmede çizilen metin ile ham metin
+  AYNI; kopyala/yapıştır, paylaşım ve dışa aktarma etiketi okunur taşıyor.
+  Bedeli: aynı adlı iki ek varsa etiket ilkine bağlanır. **TUZAK:** PT Sans'ta
+  ATAÇ (U+1F4CE) glifi yok — PDF/Word dışa aktarımında etiket
+  `exportAttachmentTags` ile "[ek: rapor.pdf]"e çevriliyor, yoksa çıktıda boş
+  kutu görünürdü. Düzenlenebilir alanda span'e tıklama çalışmadığı için
+  önizleme `TextField.onTap` + imleç konumundan açılıyor.
+
+  **4) Arşiv defteri ayrı bir EKRAN, editörün içinde bir kip değil.** Editör
+  tek bir sayfa üstünde çalışıyor (gövde metni, yüzen görseller, ek şeridi);
+  defterin içeriği ise sayfalara bölünmüş bir dizin ve asıl işlemi aramak.
+  İkisini tek ekrana sığdırmak her iki yerleşimi de bozardı. Otomatik
+  sayfaların adları l10n'dan geldiği için kayda YAZILMAZ (dil değişince adlar
+  da değişsin); yalnız kullanıcının açtığı sayfalar `Note.archivePages`'te
+  durur. Dosyalar KOPYALANIR (kullanıcının açık tercihi): kaynak not silinse
+  bile kopya sağlam kalır, bedeli Storage'da iki kez yer kaplaması.
+
+  **5) `Note.listColumns` HER ZAMAN yazılır (koşullu değil).** Notlar
+  `set(merge: true)` ile kaydediliyor; atlanmış anahtar SİLİNMEZ, yani
+  koşullu yazılsaydı iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not
+  her açılışta yine iki sütunlu gelirdi. Aynı gerekçe `archivePages` için de
+  geçerli. `NoteItem.starred`/`section` koşullu yazılabiliyor çünkü madde
+  dizisi bütün olarak değişiyor.
+
+  **6) İki sütunlu listede SÜRÜKLEYEREK SIRALAMA KAPALI.**
+  `ReorderableListView` tek eksende çalışıyor; iki sütunlu ızgarada "araya
+  bırak" hedefi belirsiz ve yanlış hesaplanan tek bir indeks bütün listeyi
+  karıştırırdı. Sıralama gerekince tek sütuna dönülür; menüdeki "Maddeleri
+  sırala" iki sütunda da çalışır.
+
+  **7) APK: `abiFilters += "arm64-v8a"` + R8 küçültme AÇILDI.**
+  `--target-platform android-arm64` yalnız FLUTTER'ın kitaplıklarını tek
+  mimariye indiriyordu; eklentilerin yerel kitaplıkları (ML Kit, pdfium,
+  mobile_scanner, record) üç mimari için de paketleniyordu. `proguardFiles`
+  zaten tanımlıydı ama `isMinifyEnabled` kapalı olduğu için HİÇ OKUNMUYORDU.
+  **TUZAK:** yansıma kullanan yollar tek tek korunuyor —
+  `flutter_local_notifications` (Gson ile JSON saklıyor, alan adları
+  karışırsa hatırlatıcılar sessizce kaybolur), `home_widget` (sağlayıcı sınıfı
+  ADA GÖRE bulunuyor), `io.flutter.**`. Release APK CİHAZDA denenmeli: R8
+  hatası derlemede değil, o kod yolu ilk kez çalıştığında patlar.
+
+  **8) AI özet/analizi tamamlanmış maddeleri artık değerlendirmiyor**
+  (`Note.toPlainText(skipChecked:)`). Modelin "liste eksik" sanıp uydurmaması
+  için kaç madde elendiği tek satırla istemde bildiriliyor. Paylaşım/dışa
+  aktarma varsayılanı (false) kullanır — orada işaretli madde GÖRÜNMELİ.
+
+  Doğrulama: bu oturumda Flutter SDK kuruldu (3.47.0), `analyze` temiz ve
+  641 test geçiyor. **20 test yerelde `pdfrx` 1.3.5'in Dart 3.13 ile
+  derlenmemesi yüzünden YÜKLENEMİYOR** — kusur paketin içinde, değişikliklerle
+  ilgisi yok; aynı testler değişiklik ÖNCESİ ağaçta da düşüyor. CI Flutter
+  3.44.6 kullanıyor, orada derleniyorlar. Cihazda hiçbir madde
+  doğrulanmadı.

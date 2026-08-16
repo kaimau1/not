@@ -709,6 +709,62 @@ class GeminiService {
     ]).then(stripMarkdown);
   }
 
+  /// **Hızlı yakalama**: OCR'dan çıkan ham metni düzeltir, kısa bir başlık
+  /// ve TÜR (kategori) önerir.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "SS'le kaydedilen not defteri OCR ile
+  /// çıkarır ai ile olur ve kaydeder — hadis defteri, film arşivi vs."
+  /// Ekran görüntüsünden çıkan metin satır sonları kırık, tireli ve arayüz
+  /// kırıntılarıyla karışık geliyor; okunur hâle getirmek ve "bu bir hadis
+  /// mi, film önerisi mi, alıntı mı" ayrımını yapmak modelin işi.
+  ///
+  /// Kategori SERBEST metin, sabit bir liste değil: kullanıcının defterleri
+  /// önceden bilinmiyor ve sabit liste "Hadisler"i "Alıntılar"a sıkıştırırdı.
+  /// [known] verilirse model ÖNCE onların arasından seçmeye çalışır — aynı
+  /// içerik her seferinde yeni bir sayfa açmasın.
+  ///
+  /// Dönen kayıt: (kategori, başlık, düzeltilmiş metin). Model beklenmedik
+  /// bir şey döndürürse ham metin olduğu gibi geri verilir — yakalama
+  /// hiçbir durumda kaybolmaz.
+  Future<({String category, String title, String text})> tidyCapture(
+    String raw, {
+    Iterable<String> known = const [],
+  }) async {
+    final pages = known.where((k) => k.trim().isNotEmpty).toList();
+    try {
+      final response = await _generate([
+        {
+          'text':
+              'Aşağıdaki metin bir ekran görüntüsünden OCR ile çıkarıldı. '
+              'Yap: (1) satır sonu kırıklarını ve tirelemeyi düzelt, arayüz '
+              'kırıntılarını (saat, pil, düğme yazıları) at, anlamı DEĞİŞTİRME '
+              've hiçbir şey ekleme; (2) en fazla 6 kelimelik Türkçe bir '
+              'başlık üret; (3) içeriğin TÜRÜNÜ tek bir kısa Türkçe adla '
+              'söyle (ör. "Hadisler", "Filmler", "Alıntılar", "Tarifler", '
+              '"Kitaplar").'
+              '${pages.isEmpty ? '' : ' Tür için ÖNCE şunlardan uygun olan '
+                  'varsa onu seç: ${pages.join(", ")}.'}'
+              '\nYanıtı YALNIZCA şu JSON ile ver: '
+              '{"tur": "...", "baslik": "...", "metin": "..."}'
+              '\n\n---\n$raw',
+        },
+      ], jsonOutput: true);
+      final decoded = jsonDecode(response);
+      if (decoded is! Map) throw const GeminiException('Beklenmeyen yanıt');
+      final text = (decoded['metin'] as String? ?? '').trim();
+      return (
+        category: (decoded['tur'] as String? ?? '').trim(),
+        title: (decoded['baslik'] as String? ?? '').trim(),
+        text: text.isEmpty ? raw : text,
+      );
+    } on GeminiException {
+      rethrow;
+    } catch (_) {
+      // Bozuk JSON ya da beklenmedik biçim: yakalama kaybolmasın.
+      return (category: '', title: '', text: raw);
+    }
+  }
+
   /// Kullanılabilir SESLENDİRME modelleri.
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma
