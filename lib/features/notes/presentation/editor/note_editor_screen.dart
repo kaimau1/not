@@ -1667,8 +1667,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         return;
       }
     }
-    // Seçim yok: imlecin yerine dosya adıyla etiket.
-    _insertAttachmentTag(chosen);
+    // Seçim YOK: dosya adını imlece yazmak yerine bağlama kipine geç —
+    // kullanıcı yazıyı sonra seçsin (istenen "ters" yön).
+    _startPendingEmbed(chosen);
   }
 
   /// Gömülecek eki seçtiren levha.
@@ -1727,6 +1728,55 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       immediate: true,
     );
     _showSnack(context.l10n.attachmentTagInserted);
+  }
+
+  /// BAĞLAMA KİPİ: seçilmiş ama henüz bir yazıya bağlanmamış ek.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "ek gömmede ters olarak da çalışmalı, yani
+  /// önce eki seçip sonra metni seçme de olmalı". İlk sürüm yalnız tek yönü
+  /// destekliyordu (önce yazıyı seç, sonra eki). İki yön de meşru: elinde
+  /// dosya varken nereye koyacağına sonra karar vermek de olağan.
+  ///
+  /// Kip açıkken alt çubukta bir şerit durur ("… bağlanacak yazıyı seç") ve
+  /// hem o şeritteki düğme hem de metin seçim menüsü bağlamayı bitirir.
+  Attachment? _pendingEmbed;
+
+  /// Bağlama kipini başlatır (ek seçildi, yazı bekleniyor).
+  void _startPendingEmbed(Attachment attachment) {
+    setState(() => _pendingEmbed = attachment);
+    _showSnack(context.l10n.attachmentTagPickText);
+  }
+
+  /// Bağlama kipini o anki SEÇİMLE bitirir.
+  ///
+  /// Seçim denetleyicide yaşıyor: alan odağı kaybetse bile
+  /// `controller.selection` korunuyor (biçim çubuğu da yıllardır buna
+  /// dayanıyor — bkz. [FormatTarget]). Bu yüzden şeritteki düğmeye basmak
+  /// seçimi düşürmüyor.
+  void _finishPendingEmbed() {
+    final attachment = _pendingEmbed;
+    if (attachment == null) return;
+    final selection = _bodyController.selection;
+    final logical = _bodyController.logicalText;
+    if (!selection.isValid || selection.isCollapsed) {
+      _showSnack(context.l10n.attachmentTagPickText);
+      return;
+    }
+    final start = wrapToLogicalOffset(
+      _bodyController.text,
+      selection.start,
+    ).clamp(0, logical.length);
+    final end = wrapToLogicalOffset(
+      _bodyController.text,
+      selection.end,
+    ).clamp(start, logical.length);
+    final label = logical.substring(start, end).trim();
+    if (label.isEmpty) {
+      _showSnack(context.l10n.attachmentTagPickText);
+      return;
+    }
+    setState(() => _pendingEmbed = null);
+    _applyEmbed(label: label, attachment: attachment, start: start, end: end);
   }
 
   /// Levha açılırken alınan seçim anlık görüntüsü (bkz. [_showAttachMenu]).
@@ -1796,16 +1846,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _applyEmbed(label: label, attachment: chosen, start: start, end: end);
   }
 
-  /// İmlecin bulunduğu yere ek etiketi yazar (bkz. attachment_tag.dart).
-  ///
-  /// Etiket düz metindir: dışa aktarmada, paylaşımda ve panoda "📎 rapor.pdf"
-  /// olarak okunur biçimde taşınır; editörde kırmızı ve altı çizili çizilir.
-  void _insertAttachmentTag(Attachment attachment) {
-    final tag = attachmentTagFor(attachment.fileName);
-    _appendPlainText(tag);
-    _showSnack(context.l10n.attachmentTagInserted);
-  }
-
   /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
   /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
   /// platformun kendi listesinden gelir.
@@ -1837,6 +1877,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
     // EK ETİKETİ (kullanıcı isteği 2026-08-16): imleç "📎 rapor.pdf"in
     // üzerindeyse önizleme ve düzenleme buradan açılır.
+    // BAĞLAMA KİPİ açıksa ilk madde odur: kullanıcı yazıyı yeni seçti,
+    // yapacağı tek iş bağlamak.
+    if (_pendingEmbed != null &&
+        !state.textEditingValue.selection.isCollapsed) {
+      items.insert(
+        0,
+        ContextMenuButtonItem(
+          label: context.l10n.attachmentTagLinkHere,
+          onPressed: () {
+            state.hideToolbar();
+            _finishPendingEmbed();
+          },
+        ),
+      );
+    }
     // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
     if (!state.textEditingValue.selection.isCollapsed &&
         _selectedAttachmentTag() == null) {
@@ -5385,9 +5440,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                         onCopy: _copyAttachment,
                         // Belge (PDF/sunum) notunda gövde metni yok; etiket
                         // yazacak bir yer olmadığı için düğme çizilmez.
+                        // Ek şeridindeki düğme artık BAĞLAMA KİPİNİ başlatır
+                        // ("önce eki seç, sonra yazıyı"): dosya adını imlece
+                        // yazmak yerine kullanıcı bağlanacak yazıyı seçer.
                         onInsertTag: note.type.isPageNoteType
                             ? null
-                            : _insertAttachmentTag,
+                            : _startPendingEmbed,
                         onPlaceOnPage: (a) => _setImageAsFile(a, false),
                         onVideoToNote: _videoToNote,
                         expanded: ref.watch(attachmentsExpandedProvider),
@@ -5395,6 +5453,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             .read(attachmentsExpandedProvider.notifier)
                             .toggle(),
                       ),
+                      // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
+                      // beklediğini söyler ve seçilen yazıya bağlar.
+                      // Kip görünmez olsaydı kullanıcı ne beklendiğini
+                      // bilemezdi (ek seçildi ama ekranda hiçbir şey
+                      // değişmiyor).
+                      if (_pendingEmbed != null)
+                        _PendingEmbedBanner(
+                          fileName: _pendingEmbed!.fileName,
+                          onLink: _finishPendingEmbed,
+                          onCancel: () => setState(() => _pendingEmbed = null),
+                        ),
                       // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
                       // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
                       // açık kalabiliyordu.
@@ -5731,6 +5800,62 @@ class _CleanCopySelectionAction extends Action<CopySelectionTextIntent> {
 /// Süren AI işini gösteren şerit: iş bitene kadar ekranda durur. Tek bir
 /// SnackBar yeterli değildi — kayboluyor, kullanıcı "çalışıyor mu, dondu mu"
 /// bilemiyordu.
+/// BAĞLAMA KİPİ şeridi: seçilmiş ek + "bağlanacak yazıyı seç" yönergesi.
+///
+/// Kullanıcı isteği 2026-08-16 ("önce eki seçip sonra metni seçme de
+/// olmalı"). Şerit alt çubuğun içinde durur; düğmeye basmak metin alanının
+/// odağını düşürse bile seçim denetleyicide korunuyor (bkz.
+/// `_finishPendingEmbed`).
+class _PendingEmbedBanner extends StatelessWidget {
+  const _PendingEmbedBanner({
+    required this.fileName,
+    required this.onLink,
+    required this.onCancel,
+  });
+
+  final String fileName;
+  final VoidCallback onLink;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.tertiaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+        child: Row(
+          children: [
+            Icon(Icons.link, size: 18, color: scheme.onTertiaryContainer),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.attachmentTagPendingBanner(fileName),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onTertiaryContainer,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onLink,
+              child: Text(l10n.attachmentTagLinkHere),
+            ),
+            IconButton(
+              tooltip: l10n.cancel,
+              icon: const Icon(Icons.close, size: 18),
+              color: scheme.onTertiaryContainer,
+              onPressed: onCancel,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AiBanner extends StatelessWidget {
   const _AiBanner({required this.label, this.icon = Icons.auto_awesome});
 

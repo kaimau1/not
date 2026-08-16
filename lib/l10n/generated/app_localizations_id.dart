@@ -2685,4 +2685,16 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get attachmentTagEmbedInfo =>
       'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
+
+  @override
+  String get attachmentTagPickText =>
+      'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.';
+
+  @override
+  String get attachmentTagLinkHere => 'Buraya bağla';
+
+  @override
+  String attachmentTagPendingBanner(String name) {
+    return '$name bağlanacak — yazıyı seç';
+  }
 }

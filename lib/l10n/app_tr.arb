@@ -1247,5 +1247,15 @@
   "attachmentTagEmbed": "Seçili yazıya ek göm",
   "attachmentTagNoAttachment": "Önce nota bir dosya ekle; sonra yazıya gömebilirsin.",
   "bubbleModeBubble": "Balon",
-  "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır"
+  "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
+  "attachmentTagPickText": "Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.",
+  "attachmentTagLinkHere": "Buraya bağla",
+  "attachmentTagPendingBanner": "{name} bağlanacak — yazıyı seç",
+  "@attachmentTagPendingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -1825,3 +1825,22 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   "+ Ekle" levhasına alındı: yazı seçiliyse o yazıya, değilse imlecin yerine
   bağlanıyor. Seçim levha açılırken ANLIK GÖRÜNTÜYE alınıyor — levha klavyeyi
   kapatıyor ve odak düşünce seçim daralabiliyor.
+
+
+- 2026-08-16 (37. tur): **Ek gömme İKİ YÖNLÜ.** Kullanıcı: "ek gömmede ters
+  olarak da çalışmalı, yani önce eki seçip sonra metni seçme de olmalı."
+  İlk sürüm tek yönü destekliyordu (önce yazıyı seç → sonra eki). İkinci yön
+  BAĞLAMA KİPİ ile eklendi: ek seçilince `_pendingEmbed` dolar, alt çubukta
+  "… bağlanacak yazıyı seç" şeridi çıkar; yazı seçilince hem şeritteki
+  "Buraya bağla" düğmesi hem de metin seçim menüsünün ilk maddesi bağlamayı
+  bitirir.
+
+  **Neden şeritteki düğme seçimi düşürmüyor:** seçim denetleyicide yaşıyor
+  (`controller.selection`), alan odağı kaybetse bile korunuyor — biçim
+  çubuğu yıllardır aynı varsayıma dayanıyor (bkz. `FormatTarget`). Bu yüzden
+  ayrıca bir anlık görüntü tutmaya gerek yok; "+ Ekle" levhası yolunda ise
+  levha klavyeyi kapattığı için anlık görüntü ALINIYOR (`_selectionSnapshot`).
+
+  Ek şeridindeki "Metne ekle" düğmesi de artık dosya adını imlece yazmıyor,
+  bağlama kipini başlatıyor — kullanıcının tarif ettiği "önce ek" yönünün
+  doğal giriş noktası orası.

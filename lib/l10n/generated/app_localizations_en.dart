@@ -2669,4 +2669,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get attachmentTagEmbedInfo =>
       'Links to your selected text, or at the cursor if nothing is selected';
+
+  @override
+  String get attachmentTagPickText =>
+      'Now select the text to link, then tap \"Link here\".';
+
+  @override
+  String get attachmentTagLinkHere => 'Link here';
+
+  @override
+  String attachmentTagPendingBanner(String name) {
+    return '$name will be linked — select the text';
+  }
 }

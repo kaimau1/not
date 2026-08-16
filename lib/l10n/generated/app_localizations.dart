@@ -5009,6 +5009,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır'**
   String get attachmentTagEmbedInfo;
+
+  /// No description provided for @attachmentTagPickText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.'**
+  String get attachmentTagPickText;
+
+  /// No description provided for @attachmentTagLinkHere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Buraya bağla'**
+  String get attachmentTagLinkHere;
+
+  /// No description provided for @attachmentTagPendingBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} bağlanacak — yazıyı seç'**
+  String attachmentTagPendingBanner(String name);
 }
 
 class _AppLocalizationsDelegate

@@ -999,5 +999,15 @@
   "attachmentTagEmbed": "Embed attachment in selection",
   "attachmentTagNoAttachment": "Add a file to the note first, then you can embed it in the text.",
   "bubbleModeBubble": "Bubble",
-  "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected"
+  "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected",
+  "attachmentTagPickText": "Now select the text to link, then tap \"Link here\".",
+  "attachmentTagLinkHere": "Link here",
+  "attachmentTagPendingBanner": "{name} will be linked — select the text",
+  "@attachmentTagPendingBanner": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
