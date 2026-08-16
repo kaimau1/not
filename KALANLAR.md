@@ -3,12 +3,9 @@
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
 ## 2026-08-16 turundan kalan (cihazda doğrulanmadı)
-- [ ] **Klavye açılıp kapanırken alt çubukta kasma** — teşhis edildi
-  (HAFIZA 35. tur, madde 6): alt çubuğun yüksekliği her animasyon karesinde
-  değişince Scaffold gövdenin kısıtını da değiştiriyor ve sayfa tuvali her
-  karede yeniden YERLEŞİYOR. Çözüm alt çubuğu gövde kısıtından ayırmak;
-  cihazda profil alınmadan yapılmamalı (klavye davranışı uzun uğraşla
-  ayarlandı).
+- [ ] **Klavye kasması düzeltildi — CİHAZDA ÖLÇÜLMEDİ.** `_KeyboardLift`
+  artık çocuğun kısıtını değiştirmiyor (bkz. HAFIZA 35. tur, madde 6).
+  Kazanç yalnız mekanizmadan biliniyor; gerçek kare süresi ölçülmedi.
 - [ ] **R8 küçültmeli release APK'yı CİHAZDA dene.** minify + shrinkResources
   ilk kez açıldı. R8 hatası derlemede değil, o kod yolu ilk kez çalıştığında
   patlar — özellikle bakılacaklar: ana ekran widget'larının güncellenmesi

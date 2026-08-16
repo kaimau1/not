@@ -1753,7 +1753,27 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   yeniden riske atardı. Harita değil LİSTE: etiket metni nokta içerebiliyor
   ve Firestore harita anahtarı olarak sorun çıkarırdı.
 
-  **6) Klavye kasması — TEŞHİS EDİLDİ, DÜZELTİLMEDİ.** Editörün ana build'i
+  **6) KÖK NEDEN — klavye kasması (DÜZELTİLDİ, aynı tur).** İlk teşhis
+  "Scaffold gövde kısıtı her karede değişiyor" idi ve eksikti: gövdenin
+  çocuğu kaydırma görünümünde SINIRSIZ yükseklik kısıtı alıyor, yani tuval
+  zaten yeniden yerleşmiyordu. Asıl maliyet ALT ÇUBUKTAYDI. `_KeyboardLift`
+  bir `Padding`di; `Padding` çocuğu KISITI DARALTARAK yerleştirir, dolayısıyla
+  alt dolgu her animasyon karesinde değişince çocuğun `maxHeight`i de
+  değişiyor ve alt çubuğun tamamı (ek şeridi + biçim çubuğu + banner'lar,
+  düzinelerce düğme) kare başına bir kez yeniden YERLEŞİYORDU. Widget'lar
+  aynı olduğu için yeniden KURULUM yoktu — bu yüzden önceki turlarda
+  "yeniden kurmayı önleme" çözümleri sorunu bitirmedi; kasmayı yapan
+  yerleşimdi.
+  ÇÖZÜM: `_KeyboardLift` artık bir `RenderShiftedBox` — çocuğu GELEN kısıtla
+  ölçüyor (kısıt animasyon boyunca sabit, yerleşim atlanıyor) ve yalnız kendi
+  boyunu büyütüyor. Sayfa tuvalindeki `PageMinHeight` ile birebir aynı
+  yöntem. Ayrıca çubuk `RepaintBoundary`ye alındı: yer değiştirirken gövdeyi
+  yeniden boyatmıyor.
+  **Ders:** "kısıtı daraltan" her sarmalayıcı (Padding, ConstrainedBox,
+  SizedBox) animasyonlu bir değerle beslendiğinde alt ağacın TAMAMINI her
+  karede yeniden yerleştirir. Bu depoda aynı tuzağa üçüncü kez düşüldü.
+
+  **6b) İlk teşhis (kayıt için):** Editörün ana build'i
   klavye animasyonundan etkilenmiyor (yalnız `_KeyboardLift` `viewInsets`e
   bağlı ve çocuğu aynı örnek olduğu için alt ağaç yeniden kurulmuyor). Kalan
   maliyet YERLEŞİMDE: alt çubuğun yüksekliği her karede değişince Scaffold

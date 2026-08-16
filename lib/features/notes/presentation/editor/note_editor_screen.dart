@@ -5228,10 +5228,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // Balona yazılırken alt çubuk TÜMÜYLE gizlenir: klavye + belge
           // bölmesi + iki çubuk aynı ekrana sığmıyor ve balon kartı altta
           // kalıyordu (kullanıcı isteği 2026-08-08). Kip bitince geri gelir.
+          // RepaintBoundary: çubuk klavye animasyonu boyunca yer değiştiriyor;
+          // ayrı katmanda olmazsa her karede GÖVDEYİ de yeniden boyatır.
           bottomNavigationBar: _immersiveBubble
               ? null
               : _KeyboardLift(
-                  child: Column(
+                  child: RepaintBoundary(
+                    child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
@@ -5536,6 +5539,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       ),
                     ],
                   ),
+                  ),
                 ),
         ),
       ),
@@ -5553,16 +5557,83 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 /// değişiyor. Dolguyu çubuğun kendi ağacının içinde okumak, o ağacın tamamını
 /// kare kare yeniden kurduruyordu. Burada [child] dışarıdan hazır geliyor;
 /// yeniden kurulan tek şey [Padding], çocuk aynı örnek olduğu için atlanır.
-class _KeyboardLift extends StatelessWidget {
-  const _KeyboardLift({required this.child});
-
-  final Widget child;
+/// Alt çubuğu klavyenin ÜSTÜNDE tutar: altına klavye yüksekliği kadar boşluk
+/// ayırır ama **çocuğun kısıtına dokunmaz**.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-16: "klavye açılırken biçim/ek kısmı
+/// yukarı kaydırılırken çok kasma var, aynı sorun inerken de"): burası
+/// `Padding(bottom: viewInsets.bottom)` idi. `Padding` çocuğu KISITI
+/// DARALTARAK yerleştirir — alt dolgu her animasyon karesinde değiştiği için
+/// çocuğun `maxHeight`i de her karede değişiyor ve alt çubuğun TAMAMI
+/// (ek şeridi + biçim çubuğu + banner'lar, düzinelerce düğme) kare başına bir
+/// kez yeniden YERLEŞİYORDU. Widget'lar aynı kaldığı için yeniden KURULUM
+/// yoktu; kasmayı yapan yerleşimdi.
+///
+/// Bu kutu çocuğu GELEN kısıtla ölçer (kısıt animasyon boyunca sabit kalır,
+/// yerleşim kirli değilse Flutter onu tümüyle atlar) ve yalnız KENDİ boyunu
+/// büyütür. Sayfanın tuvalinde aynı yöntem zaten kullanılıyor — bkz.
+/// `PageMinHeight` (note_images.dart), gerekçesi birebir aynı.
+///
+/// Görsel davranış değişmez: çubuk yine klavyenin hemen üstünde durur ve
+/// Scaffold gövdeyi çubuğun üstünde bırakır (`contentBottom`
+/// hesabı çubuğun TOPLAM yüksekliğine bakıyor).
+class _KeyboardLift extends SingleChildRenderObjectWidget {
+  const _KeyboardLift({required super.child});
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-    child: child,
-  );
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderKeyboardLift(MediaQuery.viewInsetsOf(context).bottom);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderKeyboardLift renderObject,
+  ) => renderObject.inset = MediaQuery.viewInsetsOf(context).bottom;
+}
+
+class _RenderKeyboardLift extends RenderShiftedBox {
+  _RenderKeyboardLift(this._inset) : super(null);
+
+  double _inset;
+  set inset(double value) {
+    if (_inset == value) return;
+    _inset = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.constrain(Size(0, _inset));
+      return;
+    }
+    // Çocuğa GELEN kısıt olduğu gibi verilir: klavye yüksekliği değişse de
+    // çocuğun kısıtı DEĞİŞMEZ, dolayısıyla yerleşimi atlanır.
+    child.layout(constraints, parentUsesSize: true);
+    (child.parentData! as BoxParentData).offset = Offset.zero;
+    size = constraints.constrain(
+      Size(child.size.width, child.size.height + _inset),
+    );
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      super.computeMinIntrinsicHeight(width) + _inset;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      super.computeMaxIntrinsicHeight(width) + _inset;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) return constraints.constrain(Size(0, _inset));
+    final childSize = child.getDryLayout(constraints);
+    return constraints.constrain(
+      Size(childSize.width, childSize.height + _inset),
+    );
+  }
 }
 
 /// Klavyeden Kopyala/Kes'in temiz-metin sürümü.
