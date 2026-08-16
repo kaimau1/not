@@ -147,6 +147,13 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   context.l10n.newOrderedList,
                   () => widget.onCreate(NoteType.ordered),
                 ),
+                // ARŞİV DEFTERİ (kullanıcı isteği 2026-08-16): kendi
+                // sayfaları olan, belge/görsel KOPYASI toplayan not.
+                (
+                  Icons.inventory_2_outlined,
+                  context.l10n.archiveNotebook,
+                  () => widget.onCreate(NoteType.archive),
+                ),
               ],
               // YAKALA: hepsi bir İÇERİKTEN not üretir (ses, fotoğraf, tarama,
               // el yazısı, video, QR). Bölüm başlığı bunu açıkça söylüyor —

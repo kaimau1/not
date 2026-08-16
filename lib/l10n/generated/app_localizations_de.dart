@@ -2539,4 +2539,104 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get bubblePlainHint => 'Yazmak için dokun';
+
+  @override
+  String get noteSearchTitle => 'Notta ara';
+
+  @override
+  String get noteSearchHint => 'Bu notta ara…';
+
+  @override
+  String get noteSearchEmptyHint =>
+      'Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF\'lerin içi için aşağıdaki taramayı başlat.';
+
+  @override
+  String get noteSearchNoHit => 'Eşleşme bulunamadı.';
+
+  @override
+  String get noteSearchScanAttachments => 'Ekleri tara';
+
+  @override
+  String get noteSearchAskAi => 'Yapay zekâya sor';
+
+  @override
+  String get noteTitleLabel => 'Başlık';
+
+  @override
+  String get noteBodyLabel => 'Not metni';
+
+  @override
+  String get itemLabel => 'Madde';
+
+  @override
+  String noteSearchAttachmentsInfo(int count) {
+    return '$count ek taranabilir (görsel/PDF).';
+  }
+
+  @override
+  String noteSearchAttachmentsReady(int count) {
+    return '$count ekin içi de aranıyor.';
+  }
+
+  @override
+  String pageLabel(int page) {
+    return 'Sayfa $page';
+  }
+
+  @override
+  String get archiveNotebook => 'Arşiv defteri';
+
+  @override
+  String get archiveNotebookInfo =>
+      'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.';
+
+  @override
+  String get archivePageImages => 'Görseller';
+
+  @override
+  String get archivePageVideos => 'Videolar';
+
+  @override
+  String get archivePageDocuments => 'Belgeler';
+
+  @override
+  String get archivePageTexts => 'Metinler';
+
+  @override
+  String get archiveNewPage => 'Yeni sayfa';
+
+  @override
+  String get archivePageName => 'Sayfa adı (ör. Faturalar)';
+
+  @override
+  String get archivePageEmpty => 'Bu sayfa henüz boş.';
+
+  @override
+  String get archiveSearchHint => 'Defterde ara…';
+
+  @override
+  String get archiveAddText => 'Metin ekle';
+
+  @override
+  String get archiveAddFile => 'Dosya ekle';
+
+  @override
+  String get archiveCopyHere => 'Arşiv defterine kopyala';
+
+  @override
+  String get archiveNoNotebook =>
+      'Henüz arşiv defteri yok. Önce bir tane oluştur.';
+
+  @override
+  String get archiveNothingToCopy => 'Bu notta kopyalanacak ek yok.';
+
+  @override
+  String archiveDeleteEntry(String name) {
+    return '\"$name\" defterden silinsin mi? Bu kopya kalıcı olarak gider.';
+  }
+
+  @override
+  String archiveCopied(int count) {
+    return '$count dosya arşiv defterine kopyalandı.';
+  }
 }

@@ -12,6 +12,7 @@ import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
+import '../features/notes/presentation/archive_note_screen.dart';
 import '../features/notes/presentation/archive_screen.dart';
 import '../features/notes/presentation/dashboard_screen.dart';
 import '../features/notes/presentation/notes_providers.dart';
@@ -31,6 +32,12 @@ import 'split_shell.dart';
 /// ekranında kaldı ve derleyici/test bunu göremedi (geçerli bir dizeydi).
 /// Tek yer, tek test: `test/note_route_test.dart`.
 String noteRoutePath(String id, {String query = ''}) => '/note/$id$query';
+
+/// ARŞİV DEFTERİ rotası. Ayrı bir yol, çünkü defter not editöründe değil
+/// kendi ekranında açılıyor (bkz. [ArchiveNoteScreen] — gerekçe orada).
+/// Kart/liste yollarının hangisini kullanacağı `openNoteRoute`'ta notun
+/// tipine bakılarak seçilir.
+String archiveNoteRoutePath(String id) => '/notebook/$id';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
@@ -73,6 +80,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 MediaQuery.sizeOf(context).width < kSplitBreakpoint
                 ? const DashboardScreen()
                 : const NoNoteSelected(),
+          ),
+          GoRoute(
+            path: '/notebook/:id',
+            builder: (context, state) => ArchiveNoteScreen(
+              key: ValueKey('notebook-${state.pathParameters['id']}'),
+              noteId: state.pathParameters['id']!,
+            ),
           ),
           GoRoute(
             path: '/note/:id',

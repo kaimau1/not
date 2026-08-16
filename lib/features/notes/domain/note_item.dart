@@ -5,6 +5,7 @@ class NoteItem {
     required this.text,
     this.checked = false,
     this.starred = false,
+    this.section = '',
   });
 
   final String id;
@@ -24,11 +25,22 @@ class NoteItem {
   /// false'a DÖNMEK anlamlı bir durum; yıldızın yokluğu ile false'u aynı).
   final bool starred;
 
-  NoteItem copyWith({String? text, bool? checked, bool? starred}) => NoteItem(
+  /// ARŞİV DEFTERİNDE metin girdisinin hangi ELLE AÇILMIŞ sayfaya ait olduğu
+  /// (bkz. `Note.archivePages`). Boş = "Metinler" sayfası. Arşiv dışındaki
+  /// notlarda yok sayılır — [Attachment.section] ile aynı kural.
+  final String section;
+
+  NoteItem copyWith({
+    String? text,
+    bool? checked,
+    bool? starred,
+    String? section,
+  }) => NoteItem(
     id: id,
     text: text ?? this.text,
     checked: checked ?? this.checked,
     starred: starred ?? this.starred,
+    section: section ?? this.section,
   );
 
   factory NoteItem.fromMap(Map<String, dynamic> map) => NoteItem(
@@ -36,6 +48,7 @@ class NoteItem {
     text: map['text'] as String? ?? '',
     checked: map['checked'] as bool? ?? false,
     starred: map['starred'] as bool? ?? false,
+    section: map['section'] as String? ?? '',
   );
 
   Map<String, dynamic> toMap() => {
@@ -43,5 +56,6 @@ class NoteItem {
     'text': text,
     'checked': checked,
     if (starred) 'starred': true,
+    if (section.isNotEmpty) 'section': section,
   };
 }

@@ -112,6 +112,7 @@ class Note {
     this.backgroundImageId,
     this.backgroundOpacity = 0.35,
     this.listColumns = 1,
+    this.archivePages = const [],
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -222,6 +223,15 @@ class Note {
   /// tek satırlık maddelerden, başka bir notu paragraf uzunluğunda
   /// maddelerden oluşabiliyor ve ikincisi iki sütunda okunmaz hâle gelir.
   final int listColumns;
+
+  /// Arşiv defterinin ELLE açılmış sayfaları (sıralı, adlarıyla).
+  ///
+  /// Türe göre dolan sayfalar (Görseller / Videolar / Belgeler / Metinler)
+  /// burada DURMAZ — onlar her arşivde vardır ve dilden geldikleri için
+  /// kayda yazılmaları uygulamanın dili değişince adları dondururdu.
+  /// Burada yalnız kullanıcının kendi verdiği adlar tutulur; girdiler
+  /// `Attachment.section` / `NoteItem.section` ile bu adlara bağlanır.
+  final List<String> archivePages;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -322,6 +332,15 @@ class Note {
           if (skipChecked && item.checked) continue;
           buffer.writeln('${++number}. ${item.text}');
         }
+      case NoteType.archive:
+        // Arşiv defterinin metni: açıklama + metin girdileri. Ekler
+        // (görsel/belge) düz metne dökülemez; başlıkları paylaşım/dışa
+        // aktarmada zaten ek listesi olarak görünür.
+        if (body.trim().isNotEmpty) buffer.writeln(body);
+        for (final item in items) {
+          if (item.text.trim().isEmpty) continue;
+          buffer.writeln(item.text);
+        }
       case NoteType.pdf:
       case NoteType.slides:
         // PDF/sunum notunun metni SAYFA NOTLARIDIR. Sayfa numarası olmadan
@@ -373,7 +392,7 @@ class Note {
         for (final item in items)
           if (include(item)) item.text.trim(),
       ].join('\n'),
-      NoteType.checklist || NoteType.ordered => [
+      NoteType.checklist || NoteType.ordered || NoteType.archive => [
         if (body.trim().isNotEmpty) body.trim(),
         for (final item in items)
           if (include(item)) item.text.trim(),
@@ -416,6 +435,7 @@ class Note {
     bool clearBackgroundImage = false,
     double? backgroundOpacity,
     int? listColumns,
+    List<String>? archivePages,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -452,6 +472,7 @@ class Note {
         : (backgroundImageId ?? this.backgroundImageId),
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     listColumns: listColumns ?? this.listColumns,
+    archivePages: archivePages ?? this.archivePages,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -546,6 +567,10 @@ class Note {
       // bilmeyen bu sürüm) tek sütuna düşer — çizim yolu ikiden fazlasını
       // yerleştiremez.
       listColumns: (map['listColumns'] as num?)?.toInt() == 2 ? 2 : 1,
+      archivePages: [
+        for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
+          p.toString(),
+      ],
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
@@ -601,6 +626,9 @@ class Note {
     // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
     // yine iki sütunlu gelirdi.
     'listColumns': listColumns,
+    // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
+    // ancak boş dizi yazılarak kayda geçer.
+    'archivePages': archivePages,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

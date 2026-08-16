@@ -4739,6 +4739,180 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yazmak için dokun'**
   String get bubblePlainHint;
+
+  /// No description provided for @noteSearchTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notta ara'**
+  String get noteSearchTitle;
+
+  /// No description provided for @noteSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta ara…'**
+  String get noteSearchHint;
+
+  /// No description provided for @noteSearchEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF\'lerin içi için aşağıdaki taramayı başlat.'**
+  String get noteSearchEmptyHint;
+
+  /// No description provided for @noteSearchNoHit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşme bulunamadı.'**
+  String get noteSearchNoHit;
+
+  /// No description provided for @noteSearchScanAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleri tara'**
+  String get noteSearchScanAttachments;
+
+  /// No description provided for @noteSearchAskAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâya sor'**
+  String get noteSearchAskAi;
+
+  /// No description provided for @noteTitleLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get noteTitleLabel;
+
+  /// No description provided for @noteBodyLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not metni'**
+  String get noteBodyLabel;
+
+  /// No description provided for @itemLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde'**
+  String get itemLabel;
+
+  /// No description provided for @noteSearchAttachmentsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek taranabilir (görsel/PDF).'**
+  String noteSearchAttachmentsInfo(int count);
+
+  /// No description provided for @noteSearchAttachmentsReady.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ekin içi de aranıyor.'**
+  String noteSearchAttachmentsReady(int count);
+
+  /// No description provided for @pageLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {page}'**
+  String pageLabel(int page);
+
+  /// No description provided for @archiveNotebook.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşiv defteri'**
+  String get archiveNotebook;
+
+  /// No description provided for @archiveNotebookInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.'**
+  String get archiveNotebookInfo;
+
+  /// No description provided for @archivePageImages.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller'**
+  String get archivePageImages;
+
+  /// No description provided for @archivePageVideos.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videolar'**
+  String get archivePageVideos;
+
+  /// No description provided for @archivePageDocuments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belgeler'**
+  String get archivePageDocuments;
+
+  /// No description provided for @archivePageTexts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metinler'**
+  String get archivePageTexts;
+
+  /// No description provided for @archiveNewPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sayfa'**
+  String get archiveNewPage;
+
+  /// No description provided for @archivePageName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa adı (ör. Faturalar)'**
+  String get archivePageName;
+
+  /// No description provided for @archivePageEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfa henüz boş.'**
+  String get archivePageEmpty;
+
+  /// No description provided for @archiveSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defterde ara…'**
+  String get archiveSearchHint;
+
+  /// No description provided for @archiveAddText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin ekle'**
+  String get archiveAddText;
+
+  /// No description provided for @archiveAddFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya ekle'**
+  String get archiveAddFile;
+
+  /// No description provided for @archiveCopyHere.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arşiv defterine kopyala'**
+  String get archiveCopyHere;
+
+  /// No description provided for @archiveNoNotebook.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz arşiv defteri yok. Önce bir tane oluştur.'**
+  String get archiveNoNotebook;
+
+  /// No description provided for @archiveNothingToCopy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu notta kopyalanacak ek yok.'**
+  String get archiveNothingToCopy;
+
+  /// No description provided for @archiveDeleteEntry.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" defterden silinsin mi? Bu kopya kalıcı olarak gider.'**
+  String archiveDeleteEntry(String name);
+
+  /// No description provided for @archiveCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dosya arşiv defterine kopyalandı.'**
+  String archiveCopied(int count);
 }
 
 class _AppLocalizationsDelegate

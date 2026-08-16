@@ -666,6 +666,49 @@ class GeminiService {
         const GeminiException('Seslendirme modeli bulunamadı');
   }
 
+  /// Not içi aramanın AI katmanı: soruyu notun METNİNE (ve varsa eklerden
+  /// çıkarılmış metinlere) dayanarak yanıtlar.
+  ///
+  /// [chatAboutNote]'tan farkı: ekleri GÖRSEL olarak göndermez, yalnız
+  /// çıkarılmış METNİ gönderir. Arama levhası PDF/OCR metnini zaten yerelde
+  /// üretiyor; aynı sayfaları bir de görüntü olarak yüklemek hem kotayı
+  /// katlar hem uzun belgede isteği şişirirdi.
+  ///
+  /// [extras] ek başına çıkarılmış metinler. Toplam uzunluk sınırlanır:
+  /// 200 sayfalık bir PDF'in tamamı tek istemde ne sığar ne de gerekir.
+  Future<String> askAboutNoteText(
+    Note note,
+    String question, {
+    Iterable<String> extras = const [],
+  }) {
+    const limit = 24000;
+    final buffer = StringBuffer(note.toPlainText());
+    for (final extra in extras) {
+      if (buffer.length >= limit) break;
+      final trimmed = extra.trim();
+      if (trimmed.isEmpty) continue;
+      buffer
+        ..writeln()
+        ..writeln('---')
+        ..writeln(
+          trimmed.length > limit - buffer.length
+              ? trimmed.substring(0, limit - buffer.length)
+              : trimmed,
+        );
+    }
+    return _generate([
+      {
+        'text':
+            'Aşağıda bir notun içeriği ve eklerinden çıkarılmış metinler '
+            'var. Kullanıcı bu notun içinde bir şey arıyor. Sorduğu şeyin '
+            'notta NEREDE ve NASIL geçtiğini Türkçe, kısa ve net söyle; '
+            'ilgili cümleyi de alıntıla. Geçmiyorsa "bu notta bulamadım" '
+            'de, uydurma. Markdown kullanma.'
+            '\n\nARANAN: $question\n\n---\n${buffer.toString()}',
+      },
+    ]).then(stripMarkdown);
+  }
+
   /// Kullanılabilir SESLENDİRME modelleri.
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-08-09: "gemini TTS'den okuma

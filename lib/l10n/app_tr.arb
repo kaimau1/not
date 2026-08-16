@@ -1157,5 +1157,69 @@
   "bubblePlainMode": "Açık metin alanı",
   "bubblePlainModeOn": "Açık metin alanı açık",
   "bubblePlainTapToPlace": "Metnin geleceği yere dokun",
-  "bubblePlainHint": "Yazmak için dokun"
+  "bubblePlainHint": "Yazmak için dokun",
+  "noteSearchTitle": "Notta ara",
+  "noteSearchHint": "Bu notta ara…",
+  "noteSearchEmptyHint": "Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF'lerin içi için aşağıdaki taramayı başlat.",
+  "noteSearchNoHit": "Eşleşme bulunamadı.",
+  "noteSearchScanAttachments": "Ekleri tara",
+  "noteSearchAskAi": "Yapay zekâya sor",
+  "noteTitleLabel": "Başlık",
+  "noteBodyLabel": "Not metni",
+  "itemLabel": "Madde",
+  "noteSearchAttachmentsInfo": "{count} ek taranabilir (görsel/PDF).",
+  "@noteSearchAttachmentsInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteSearchAttachmentsReady": "{count} ekin içi de aranıyor.",
+  "@noteSearchAttachmentsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pageLabel": "Sayfa {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveNotebook": "Arşiv defteri",
+  "archiveNotebookInfo": "Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.",
+  "archivePageImages": "Görseller",
+  "archivePageVideos": "Videolar",
+  "archivePageDocuments": "Belgeler",
+  "archivePageTexts": "Metinler",
+  "archiveNewPage": "Yeni sayfa",
+  "archivePageName": "Sayfa adı (ör. Faturalar)",
+  "archivePageEmpty": "Bu sayfa henüz boş.",
+  "archiveSearchHint": "Defterde ara…",
+  "archiveAddText": "Metin ekle",
+  "archiveAddFile": "Dosya ekle",
+  "archiveCopyHere": "Arşiv defterine kopyala",
+  "archiveNoNotebook": "Henüz arşiv defteri yok. Önce bir tane oluştur.",
+  "archiveNothingToCopy": "Bu notta kopyalanacak ek yok.",
+  "archiveDeleteEntry": "\"{name}\" defterden silinsin mi? Bu kopya kalıcı olarak gider.",
+  "@archiveDeleteEntry": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveCopied": "{count} dosya arşiv defterine kopyalandı.",
+  "@archiveCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

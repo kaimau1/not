@@ -2517,4 +2517,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubblePlainHint => 'Tap to write';
+
+  @override
+  String get noteSearchTitle => 'Search in note';
+
+  @override
+  String get noteSearchHint => 'Search this note…';
+
+  @override
+  String get noteSearchEmptyHint =>
+      'Searches the note text, items and page notes instantly. Start the scan below to look inside image and PDF attachments.';
+
+  @override
+  String get noteSearchNoHit => 'No matches found.';
+
+  @override
+  String get noteSearchScanAttachments => 'Scan attachments';
+
+  @override
+  String get noteSearchAskAi => 'Ask the AI';
+
+  @override
+  String get noteTitleLabel => 'Title';
+
+  @override
+  String get noteBodyLabel => 'Note text';
+
+  @override
+  String get itemLabel => 'Item';
+
+  @override
+  String noteSearchAttachmentsInfo(int count) {
+    return '$count attachments can be scanned (image/PDF).';
+  }
+
+  @override
+  String noteSearchAttachmentsReady(int count) {
+    return 'Searching inside $count attachments too.';
+  }
+
+  @override
+  String pageLabel(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String get archiveNotebook => 'Archive notebook';
+
+  @override
+  String get archiveNotebookInfo =>
+      'A notebook with its own pages that keeps copies of important documents and images.';
+
+  @override
+  String get archivePageImages => 'Images';
+
+  @override
+  String get archivePageVideos => 'Videos';
+
+  @override
+  String get archivePageDocuments => 'Documents';
+
+  @override
+  String get archivePageTexts => 'Texts';
+
+  @override
+  String get archiveNewPage => 'New page';
+
+  @override
+  String get archivePageName => 'Page name (e.g. Invoices)';
+
+  @override
+  String get archivePageEmpty => 'This page is empty.';
+
+  @override
+  String get archiveSearchHint => 'Search the notebook…';
+
+  @override
+  String get archiveAddText => 'Add text';
+
+  @override
+  String get archiveAddFile => 'Add file';
+
+  @override
+  String get archiveCopyHere => 'Copy to an archive notebook';
+
+  @override
+  String get archiveNoNotebook => 'No archive notebook yet. Create one first.';
+
+  @override
+  String get archiveNothingToCopy => 'This note has no attachments to copy.';
+
+  @override
+  String archiveDeleteEntry(String name) {
+    return 'Delete \"$name\" from the notebook? This copy is gone for good.';
+  }
+
+  @override
+  String archiveCopied(int count) {
+    return '$count files copied to the archive notebook.';
+  }
 }

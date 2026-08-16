@@ -12,7 +12,20 @@ enum NoteType {
   checklist('checklist'),
   ordered('ordered'),
   pdf('pdf'),
-  slides('slides');
+  slides('slides'),
+
+  /// **Arşiv defteri** — kendi sayfaları olan, içine belge/görsel KOPYASI
+  /// alan uzun soluklu not (kullanıcı isteği 2026-08-16: "arşiv özelliği
+  /// önemli notları belgeleri toplayan bir klasör… oraya kopya oluşturur").
+  ///
+  /// Sıradan notlardan farkı: içerik "gövde metni" değil, SAYFALARA
+  /// dağıtılmış girdilerdir. Sayfaların bir kısmı türe göre kendiliğinden
+  /// dolar (Görseller / Videolar / Belgeler / Metinler), bir kısmını
+  /// kullanıcı açar (bkz. `Note.archivePages`).
+  ///
+  /// Eklenen dosya PAYLAŞILMAZ, KOPYALANIR: kaynak not silinse bile
+  /// arşivdeki kopya sağlam kalır (kullanıcının açık tercihi).
+  archive('archive');
 
   const NoteType(this.id);
 

@@ -76,7 +76,9 @@ import 'format_bar.dart';
 import 'format_menu.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
+import '../archive_note_screen.dart';
 import 'note_menu_sheet.dart';
+import 'note_search_sheet.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
@@ -2480,6 +2482,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           note.type == NoteType.checklist || note.type == NoteType.ordered,
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
+      hasAttachments: note.attachments.isNotEmpty,
     );
     if (action == null || !mounted) return;
     switch (action) {
@@ -2487,6 +2490,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
       case 'star':
         _mutate((n) => n.copyWith(starred: !n.starred), immediate: true);
+      case 'search':
+        _flushPending(_bodyController);
+        if (mounted) {
+          await showNoteSearchSheet(context, ref, _note ?? note);
+        }
       case 'share':
         await _share();
       case 'export':
@@ -2507,6 +2515,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _sortItems();
       case 'imagesToFiles':
         _allImagesToFiles();
+      case 'toArchive':
+        await _copyToArchive();
       case 'columns':
         _mutate(
           (n) => n.copyWith(listColumns: n.listColumns == 2 ? 1 : 2),
@@ -2517,6 +2527,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       case 'delete':
         _delete();
     }
+  }
+
+  /// Notun eklerini bir ARŞİV DEFTERİNE fiziksel kopya olarak taşır.
+  ///
+  /// Hangi deftere gideceği sorulur; hiç defter yoksa kullanıcı önce bir
+  /// tane oluşturmalı (defteri buradan sessizce yaratmak, kullanıcının
+  /// haberi olmayan bir not üretirdi).
+  Future<void> _copyToArchive() async {
+    final note = _note;
+    final notes = ref.read(notesRepositoryProvider);
+    final attachments = ref.read(attachmentRepositoryProvider);
+    if (note == null || notes == null || attachments == null) return;
+    if (note.attachments.isEmpty) {
+      _showSnack(context.l10n.archiveNothingToCopy);
+      return;
+    }
+    final notebooks = [
+      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+        if (n.type == NoteType.archive && n.deletedAt == null) n,
+    ];
+    if (notebooks.isEmpty) {
+      _showSnack(context.l10n.archiveNoNotebook);
+      return;
+    }
+    final chosen = await showModalBottomSheet<Note>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final notebook in notebooks)
+              ListTile(
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: Text(
+                  notebook.displayTitle.trim().isEmpty
+                      ? sheetContext.l10n.archiveNotebook
+                      : notebook.displayTitle,
+                ),
+                onTap: () => Navigator.pop(sheetContext, notebook),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chosen == null || !mounted) return;
+    _showSnack(context.l10n.generating);
+    final count = await copyAttachmentsToArchive(
+      source: note,
+      archive: chosen,
+      attachments: attachments,
+      notes: notes,
+    );
+    if (!mounted) return;
+    _showSnack(context.l10n.archiveCopied(count));
   }
 
   /// Sayfada YÜZEN bütün görselleri ek şeridine indirir (tek işlemde).

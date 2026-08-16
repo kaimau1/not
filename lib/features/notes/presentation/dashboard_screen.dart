@@ -543,9 +543,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// nota odak gitmeli ve notun çerçevesi hafif yanıp sönmeli" — uzun bir
   /// listede yeni notun nereye düştüğü görünmüyordu (asistanın oluşturduğu
   /// notlarda bu zaten vardı, aynı yol elle oluşturulanlara da açıldı).
-  Future<void> _openNew(String id, {String query = ''}) async {
+  Future<void> _openNew(String id, {String query = '', NoteType? type}) async {
     if (!mounted) return;
-    await context.push(noteRoutePath(id, query: query));
+    // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
+    await context.push(
+      type == NoteType.archive
+          ? archiveNoteRoutePath(id)
+          : noteRoutePath(id, query: query),
+    );
     if (!mounted) return;
     ref.read(focusedNoteProvider.notifier).focus(id);
   }
@@ -607,7 +612,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       type,
       folderId: ref.read(selectedFolderProvider),
     );
-    await _openNew(id);
+    await _openNew(id, type: type);
     // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
     // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
     // görünmüyordu) FAB yolunda açık kalmıştı. Klasör süzgeci kalır (not o

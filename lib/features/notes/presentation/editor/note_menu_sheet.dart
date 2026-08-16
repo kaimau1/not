@@ -23,6 +23,7 @@ Future<String?> showNoteEditorMenu(
   required bool isList,
   required bool twoColumns,
   required bool hasFloatingImages,
+  required bool hasAttachments,
 }) {
   final l10n = context.l10n;
   return showModalBottomSheet<String>(
@@ -41,6 +42,7 @@ Future<String?> showNoteEditorMenu(
           isList: isList,
           twoColumns: twoColumns,
           hasFloatingImages: hasFloatingImages,
+          hasAttachments: hasAttachments,
         ),
       ),
     ),
@@ -57,6 +59,7 @@ class _MenuGrid extends StatelessWidget {
     required this.isList,
     required this.twoColumns,
     required this.hasFloatingImages,
+    required this.hasAttachments,
   });
 
   final AppLocalizations l10n;
@@ -76,6 +79,10 @@ class _MenuGrid extends StatelessWidget {
   /// Notta SAYFADA YÜZEN (metnin arasına konmuş) görsel var mı? "Görselleri
   /// eke dönüştür" maddesi yalnız o zaman anlamlı.
   final bool hasFloatingImages;
+
+  /// Notun herhangi bir eki var mı? "Arşiv defterine kopyala" yalnız o zaman
+  /// anlamlı — kopyalanacak dosya yoksa madde ölü durur.
+  final bool hasAttachments;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +117,13 @@ class _MenuGrid extends StatelessWidget {
       // görselli bir notta bu on ayrı işlem demekti.
       if (hasFloatingImages)
         ('imagesToFiles', l10n.imagesToAttachments, Icons.attach_file),
+      // NOT İÇİ ARAMA (kullanıcı isteği 2026-08-16). Ana ekrandaki arama
+      // notlar ARASINDA çalışıyor; bu, tek notun içine bakar.
+      ('search', l10n.noteSearchTitle, Icons.manage_search),
+      // Ekleri bir arşiv defterine KOPYALAR (kullanıcı isteği 2026-08-16):
+      // kaynak not silinse bile kopya sağlam kalır.
+      if (hasAttachments)
+        ('toArchive', l10n.archiveCopyHere, Icons.inventory_2_outlined),
       ('share', l10n.share, Icons.share_outlined),
       // "PDF olarak dışa aktar" DEĞİL: belge notlarında çıktı balonlu PDF de
       // olabiliyor, metin notlarında Word de üretiliyor. Etiket artık yolu

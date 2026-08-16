@@ -118,6 +118,13 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     // notları yazılır (belgenin kendisi zaten ek olarak duruyor ve buradaki
     // dışa aktarma metin + görsel üretiyor).
     NoteType.pdf || NoteType.slides => note.pageNotesText().trimRight(),
+    // Arşiv defteri: açıklaması + metin girdileri. Ekler (görsel/belge)
+    // dışa aktarmanın görsel bölümünden zaten geçiyor.
+    NoteType.archive => [
+      if (note.body.trim().isNotEmpty) note.body.trimRight(),
+      for (final item in note.items)
+        if (item.text.trim().isNotEmpty) item.text,
+    ].join('\n'),
   };
 
   /// Alandaki metin kullanıcı tarafından DEĞİŞTİRİLMEDİYSE işaretli özgün

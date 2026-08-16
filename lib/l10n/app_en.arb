@@ -909,5 +909,69 @@
   "bubblePlainMode": "Open text box",
   "bubblePlainModeOn": "Open text box is on",
   "bubblePlainTapToPlace": "Tap where the text should go",
-  "bubblePlainHint": "Tap to write"
+  "bubblePlainHint": "Tap to write",
+  "noteSearchTitle": "Search in note",
+  "noteSearchHint": "Search this note…",
+  "noteSearchEmptyHint": "Searches the note text, items and page notes instantly. Start the scan below to look inside image and PDF attachments.",
+  "noteSearchNoHit": "No matches found.",
+  "noteSearchScanAttachments": "Scan attachments",
+  "noteSearchAskAi": "Ask the AI",
+  "noteTitleLabel": "Title",
+  "noteBodyLabel": "Note text",
+  "itemLabel": "Item",
+  "noteSearchAttachmentsInfo": "{count} attachments can be scanned (image/PDF).",
+  "@noteSearchAttachmentsInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteSearchAttachmentsReady": "Searching inside {count} attachments too.",
+  "@noteSearchAttachmentsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pageLabel": "Page {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "archiveNotebook": "Archive notebook",
+  "archiveNotebookInfo": "A notebook with its own pages that keeps copies of important documents and images.",
+  "archivePageImages": "Images",
+  "archivePageVideos": "Videos",
+  "archivePageDocuments": "Documents",
+  "archivePageTexts": "Texts",
+  "archiveNewPage": "New page",
+  "archivePageName": "Page name (e.g. Invoices)",
+  "archivePageEmpty": "This page is empty.",
+  "archiveSearchHint": "Search the notebook…",
+  "archiveAddText": "Add text",
+  "archiveAddFile": "Add file",
+  "archiveCopyHere": "Copy to an archive notebook",
+  "archiveNoNotebook": "No archive notebook yet. Create one first.",
+  "archiveNothingToCopy": "This note has no attachments to copy.",
+  "archiveDeleteEntry": "Delete \"{name}\" from the notebook? This copy is gone for good.",
+  "@archiveDeleteEntry": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archiveCopied": "{count} files copied to the archive notebook.",
+  "@archiveCopied": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

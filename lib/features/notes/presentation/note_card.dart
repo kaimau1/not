@@ -62,6 +62,9 @@ double estimateNoteCardHeight(Note note, double width) {
 
   const itemHeight = 19.0;
   switch (note.type) {
+    // Arşiv defteri kartta metin notu gibi ölçülür: kartta gösterdiği şey
+    // açıklaması + metin girdileri (ekler zaten ek rozetiyle sayılıyor).
+    case NoteType.archive:
     case NoteType.text:
       final hasBody = note.body.trim().isNotEmpty;
       final items = [
@@ -142,7 +145,12 @@ Future<void> openNoteRoute(BuildContext context, Note note) async {
       if (!ok || !context.mounted) return;
     }
     if (context.mounted) {
-      final push = context.push(noteRoutePath(note.id));
+      // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
+      final push = context.push(
+        note.type == NoteType.archive
+            ? archiveNoteRoutePath(note.id)
+            : noteRoutePath(note.id),
+      );
       // Rota yığına girdikten hemen sonra kilit açılır (push editör
       // KAPANANA dek tamamlanmaz; onu bekleseydik editör açıkken karttan
       // ikinci kez açmak da engellenirdi — o ayrı bir tercih).
@@ -661,6 +669,9 @@ class _NotePreview extends StatelessWidget {
     );
 
     switch (note.type) {
+      // Arşiv defterinin önizlemesi metin notununkiyle aynı (bkz.
+      // yükseklik kestirimindeki aynı gerekçe).
+      case NoteType.archive:
       case NoteType.text:
         // Karışık içerik: metin notu hem gövde hem checklist maddesi taşıyabilir.
         final hasBody = note.body.trim().isNotEmpty;
@@ -1047,6 +1058,7 @@ class NoteListRow extends ConsumerWidget {
       NoteType.ordered => Icons.format_list_numbered,
       NoteType.pdf => Icons.picture_as_pdf_outlined,
       NoteType.slides => Icons.slideshow_outlined,
+      NoteType.archive => Icons.inventory_2_outlined,
       NoteType.text => Icons.notes,
     };
   }

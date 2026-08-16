@@ -434,6 +434,7 @@ class Attachment {
     this.y,
     this.pageY,
     this.asFile = false,
+    this.section = '',
     this.ink = const [],
     this.bubbles = const [],
     this.pageIds = const [],
@@ -485,6 +486,12 @@ class Attachment {
   /// görüntüsü) metnin yerleşimini bozuyor, taşınıp küçültülmesi gerekiyordu.
   /// Görsel olmayan eklerde yok sayılır — onlar zaten hep şerittedir.
   final bool asFile;
+
+  /// ARŞİV DEFTERİNDE ekin hangi ELLE AÇILMIŞ sayfaya konduğu
+  /// (bkz. `Note.archivePages`). Boş = sayfa seçilmemiş; ek o zaman türüne
+  /// göre kendiliğinden dolan sayfada (Görseller / Videolar / Belgeler)
+  /// görünür. Arşiv dışındaki notlarda yok sayılır.
+  final String section;
 
   /// PDF üzerine elle yapılan çizimler (sayfa üstü katman). Boş = çizim yok.
   final List<InkStroke> ink;
@@ -564,6 +571,7 @@ class Attachment {
     double? y,
     double? pageY,
     bool? asFile,
+    String? section,
     List<InkStroke>? ink,
     List<PageBubble>? bubbles,
     List<String>? pageIds,
@@ -584,6 +592,7 @@ class Attachment {
     y: y ?? this.y,
     pageY: pageY ?? this.pageY,
     asFile: asFile ?? this.asFile,
+    section: section ?? this.section,
     ink: ink ?? this.ink,
     bubbles: bubbles ?? this.bubbles,
     pageIds: pageIds ?? this.pageIds,
@@ -611,6 +620,7 @@ class Attachment {
         y: (map['y'] as num?)?.toDouble(),
         pageY: (map['pageY'] as num?)?.toDouble(),
         asFile: map['asFile'] as bool? ?? false,
+        section: map['section'] as String? ?? '',
         ink: [
           for (final e in (map['ink'] as List?) ?? const [])
             InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
@@ -662,6 +672,8 @@ class Attachment {
     if (pageY != null) 'pageY': pageY,
     // Yalnız true iken yazılır: eski notların şemasına yeni bir alan eklemez.
     if (asFile) 'asFile': true,
+    // Yalnız doluysa yazılır (arşiv defteri dışında hiç oluşmaz).
+    if (section.isNotEmpty) 'section': section,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],
     // Çizimle aynı kural: yalnız doluysa yazılır, balonsuz ekin şeması büyümez.
     if (bubbles.isNotEmpty) 'bubbles': [for (final b in bubbles) b.toMap()],
