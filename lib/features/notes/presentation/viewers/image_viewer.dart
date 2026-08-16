@@ -9,6 +9,7 @@ import '../editor/note_images.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
+import 'bubble_layer.dart';
 import 'image_crop.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
@@ -58,6 +59,22 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   /// `_attachment` o andan sonra bayat: boyutlar takas olmuş, bulut
   /// kopyası silinmiş olur. Yerel kopya döndürme sonrası tazelenir.
   late Attachment _attachment = widget.attachment;
+
+  /// GÖRSEL ÜZERİNE METİN — Paint'in metin aracının karşılığı.
+  ///
+  /// KÖK NEDEN (kullanıcı 2026-08-16: "paint tarzı metin alanını
+  /// bulamıyorum"): "açık metin alanı" balon kipinin bir seçeneği olarak
+  /// eklenmişti, ama BALON KİPİ yalnız PDF/sunum görüntüleyicisinde vardı —
+  /// yani bir FOTOĞRAFIN üstüne yazı koymanın hiçbir yolu yoktu. Oysa
+  /// Paint'te metin aracının doğal yeri tam olarak resmin üstü.
+  ///
+  /// Veri modeli hazırdı: `Attachment.bubbles` her ek türünde var ve
+  /// senkronlanıyor; görsel tek "sayfa" olduğu için hepsi `page: 1`.
+  late final BubbleController _bubbles = BubbleController(
+    initial: widget.attachment.bubbles,
+    onChanged: (list) =>
+        widget.onChanged?.call(_attachment.copyWith(bubbles: list)),
+  );
 
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
@@ -109,6 +126,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   @override
   void dispose() {
     _ink.dispose();
+    _bubbles.dispose();
     _zoom.dispose();
     super.dispose();
   }
@@ -233,7 +251,12 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
         : 1.0;
 
     return PopScope(
-      onPopInvokedWithResult: (_, _) => _ink.save(),
+      onPopInvokedWithResult: (_, _) {
+        _ink.save();
+        // Yazılmadan bırakılan boş metin alanı görselde anlamsız bir çerçeve
+        // olarak kalmasın (PDF görüntüleyicideki kuralın aynısı).
+        _bubbles.dropEmpty();
+      },
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -263,6 +286,30 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                 onPressed: _busy ? null : () => _rotate(1),
               ),
             ],
+            // METİN ARACI (Paint'teki gibi): görselin üstüne yazı bırakır.
+            // Çizim kipiyle karşılıklı dışlamalı — ikisi de tek parmağı
+            // kullanıyor.
+            if (widget.onChanged != null)
+              AnimatedBuilder(
+                animation: _bubbles,
+                builder: (context, _) => IconButton(
+                  tooltip: _bubbles.adding
+                      ? l10n.bubbleAddDone
+                      : l10n.bubblePlainMode,
+                  isSelected: _bubbles.adding,
+                  icon: Icon(_bubbles.adding ? Icons.check : Icons.title),
+                  onPressed: () {
+                    if (!_bubbles.adding) {
+                      if (_editing) _toggleEditing();
+                      // Görselde varsayılan AÇIK METİN: kullanıcı buraya
+                      // "Paint gibi yazı koymak" için geliyor, balon
+                      // tutamacı için değil.
+                      _bubbles.setPlainMode(true);
+                    }
+                    _bubbles.setAdding(!_bubbles.adding);
+                  },
+                ),
+              ),
             if (widget.onChanged != null)
               IconButton(
                 tooltip: _editing ? l10n.annotateDone : l10n.annotate,
@@ -274,53 +321,92 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
         ),
         body: _busy
             ? const Center(child: CircularProgressIndicator())
-            : Center(
-          child: AspectRatio(
-            aspectRatio: aspect,
-            // Çizimde InteractiveViewer'ın kendi jestleri kapalı: tek parmak
-            // çizer, iki parmak yakınlaştırma/kaydırmayı InkNavLayer matrise
-            // uygular (IV iki parmağın birlikte hareketini "pan" sayıp
-            // panEnabled:false'ta yutuyor — bkz. ink_layer.dart).
-            child: InkNavLayer(
-              enabled: _editing,
-              controller: _ink,
-              getMatrix: () => _zoom.value,
-              setMatrix: (m) => _zoom.value = m,
-              minScale: 1,
-              maxScale: 8,
-              clampToBounds: true,
-              child: InteractiveViewer(
-                transformationController: _zoom,
-                maxScale: 8,
-                panEnabled: !_editing,
-                scaleEnabled: !_editing,
-                child: Stack(
-                  children: [
-                    Positioned.fill(child: image),
-                    Positioned.fill(
-                      child: InkPageLayer(controller: _ink, page: 1),
+            : Stack(
+                children: [
+                  Positioned.fill(child: _canvas(aspect, image)),
+                  // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
+                  // daraldığı için "alt kenar" = klavyenin üstü
+                  // (PDF görüntüleyicideki yerleşimin aynısı).
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: BubbleDock(
+                      controller: _bubbles,
+                      readOnly: widget.onChanged == null,
+                      bottomPadding: MediaQuery.paddingOf(context).bottom,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-          ),
-        ),
         // Metni tanı düğmesi: çizim kipinde gizlenir (o an araç çubuğu
         // kalem/silgi için kullanılıyor).
-        floatingActionButton: !_ocrAvailable || _editing
-            ? null
-            : FloatingActionButton.extended(
-                heroTag: 'image-ocr',
-                tooltip: l10n.imageOcrTitle,
-                onPressed: _openRecognizer,
-                icon: const Icon(Icons.text_fields),
-                label: Text(l10n.imageOcrShort),
-              ),
+        // Metni tanı düğmesi metin/çizim kiplerinde gizlenir. `AnimatedBuilder`
+        // ŞART: kip değişince yalnız denetleyici haber veriyor, ekranın
+        // kendisi yeniden kurulmuyor.
+        floatingActionButton: AnimatedBuilder(
+          animation: _bubbles,
+          builder: (context, _) => !_ocrAvailable || _editing || _bubbles.adding
+              ? const SizedBox.shrink()
+              : FloatingActionButton.extended(
+                  heroTag: 'image-ocr',
+                  tooltip: l10n.imageOcrTitle,
+                  onPressed: _openRecognizer,
+                  icon: const Icon(Icons.text_fields),
+                  label: Text(l10n.imageOcrShort),
+                ),
+        ),
         bottomNavigationBar: _editing
             ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
-            : null,
+            : AnimatedBuilder(
+                animation: _bubbles,
+                builder: (context, _) => _bubbles.adding
+                    ? BubbleToolbar(controller: _bubbles)
+                    : const SizedBox.shrink(),
+              ),
       ),
     );
   }
+
+  /// Görsel + çizim + metin katmanları (hepsi görselin en-boy kutusunda).
+  Widget _canvas(double aspect, Widget image) => Center(
+    child: AspectRatio(
+      aspectRatio: aspect,
+      // Çizimde InteractiveViewer'ın kendi jestleri kapalı: tek parmak
+      // çizer, iki parmak yakınlaştırma/kaydırmayı InkNavLayer matrise
+      // uygular (IV iki parmağın birlikte hareketini "pan" sayıp
+      // panEnabled:false'ta yutuyor — bkz. ink_layer.dart).
+      child: InkNavLayer(
+        enabled: _editing,
+        controller: _ink,
+        getMatrix: () => _zoom.value,
+        setMatrix: (m) => _zoom.value = m,
+        minScale: 1,
+        maxScale: 8,
+        clampToBounds: true,
+        child: InteractiveViewer(
+          transformationController: _zoom,
+          maxScale: 8,
+          panEnabled: !_editing,
+          scaleEnabled: !_editing,
+          child: Stack(
+            children: [
+              Positioned.fill(child: image),
+              Positioned.fill(child: InkPageLayer(controller: _ink, page: 1)),
+              // Metin katmanı görselin KUTUSUYLA aynı: konumlar sayfa
+              // oranı olduğu için yakınlaştırmada da yerinde kalır
+              // (çizim katmanıyla aynı gerekçe). Görsel tek sayfa.
+              Positioned.fill(
+                child: BubblePageLayer(
+                  controller: _bubbles,
+                  page: 1,
+                  readOnly: widget.onChanged == null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

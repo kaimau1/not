@@ -1782,3 +1782,46 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   (`resizeToAvoidBottomInset: false` + yığında konumlandırma) ama bu, uzun
   uğraşla ayarlanmış klavye davranışını değiştirir; cihazda profil almadan
   yapılmamalı.
+
+
+- 2026-08-16 (36. tur): **Kasmanın ASIL kökü ve Paint metin aracının yeri.**
+
+  **1) KÖK NEDEN — klavye kasması (35. turdaki düzeltme YETMEDİ).** O tur
+  `_KeyboardLift`in çocuğa DARALTILMIŞ kısıt vermesi düzeltildi ve çubuğun
+  İÇİ korundu; ama çubuk hâlâ Scaffold'ın `bottomNavigationBar` YUVASINDAYDI
+  ve toplam yüksekliği klavye kadar BÜYÜYORDU. Scaffold gövde alanını
+  `bottom - max(viewInsets, altÇubukYüksekliği)` ile hesapladığı için, her
+  animasyon karesinde Scaffold'ın kendisi ve gövde yeniden yerleşiyordu.
+  ÇÖZÜM: çubuk yuvadan çıkarılıp GÖVDENİN DİBİNE bir `Column` çocuğu yapıldı.
+  `Column`da esnek olmayan çocuk SINIRSIZ yükseklik kısıtıyla ölçülür — kısıt
+  klavyeden bağımsız, yerleşim tümüyle atlanır. Klavye yüksekliğini artık
+  Scaffold'ın kendi `resizeToAvoidBottomInset`i hallediyor; çubuk gövdenin
+  dibinde olduğu için kendiliğinden klavyenin üstünde kalıyor ve elle
+  kaldırma (`_KeyboardLift`) tümüyle SİLİNDİ.
+  **TUZAK:** `SafeArea(bottom: false)` şart. Çubuk yuvadayken Scaffold gövdeden
+  alt dolguyu kaldırıyordu; yuva boşalınca dolgu geri gelir ve sayfa alanı
+  sebepsiz kısalırdı.
+  **Ders:** "alt çubuğu klavyeyle birlikte büyüt" kalıbı Scaffold'ın yerleşim
+  hesabına giriyor. Çubuk gövdenin İÇİNDE olmalı; yuva sabit yükseklikli
+  çubuklar için.
+
+  **2) KÖK NEDEN — "paint tarzı metin alanını bulamıyorum".** Özellik 34.
+  turda BALON KİPİNİN bir seçeneği olarak eklenmişti; oysa balon kipi yalnız
+  PDF/SUNUM görüntüleyicisinde var — yani bir FOTOĞRAFIN üstüne yazı koymanın
+  hiçbir yolu yoktu ve Paint'te metin aracının doğal yeri tam olarak orası.
+  35. turda araç çubuğundaki düğmeyi belirginleştirmek de bu yüzden işe
+  yaramadı: sorun düğmenin görünürlüğü değil, EKRANIN yokluğuydu.
+  ÇÖZÜM: metin aracı GÖRSEL görüntüleyiciye eklendi (üst barda "T" düğmesi,
+  görselde varsayılan olarak açık-metin kipi). Veri modeli hazırdı —
+  `Attachment.bubbles` her ek türünde var ve senkronlanıyor; görsel tek sayfa
+  olduğu için hepsi `page: 1`. Yazılan metin not sayfasındaki KÜÇÜK HALDE de
+  çiziliyor (`_ImageBox._plainTexts`), yoksa kullanıcı fotoğrafa yazıyor ama
+  notta hiçbir şey değişmiyordu.
+  **Ders:** bir özellik "bulunamıyor" deniyorsa önce o özelliğin BULUNDUĞU
+  EKRAN doğru mu diye bakılmalı; düğmeyi büyütmek yanlış ekranda çare değil.
+
+  **3) Ek gömme iki saklı giriş noktasındaydı** (ek şeridindeki 16 px simge ve
+  Android'in metin seçim menüsü — fazla maddeleri "⋮" taşmasına atıyor).
+  "+ Ekle" levhasına alındı: yazı seçiliyse o yazıya, değilse imlecin yerine
+  bağlanıyor. Seçim levha açılırken ANLIK GÖRÜNTÜYE alınıyor — levha klavyeyi
+  kapatıyor ve odak düşünce seçim daralabiliyor.

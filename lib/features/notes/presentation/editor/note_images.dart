@@ -164,18 +164,67 @@ class _ImageBox extends StatelessWidget {
   /// (görselin tamamı görünsün — önizlemenin amacı bu).
   final BoxFit fit;
 
-  @override
-  Widget build(BuildContext context) {
-    if (img.ink.isEmpty) return _content(context);
-    return Stack(
-      children: [
-        Positioned.fill(child: _content(context)),
-        Positioned.fill(
+  /// Görselin üstüne yazılmış AÇIK METİNLER (Paint tarzı metin aracı —
+  /// bkz. `PageBubble.plain`). Not sayfasındaki küçük halde de görünmeli:
+  /// yoksa kullanıcı fotoğrafa yazı koyuyor ama notta hiçbir şey değişmiyor.
+  ///
+  /// Yalnız `plain` olanlar çizilir; balon TUTAMAÇLARI küçük önizlemede
+  /// okunmaz birer nokta olurdu, onlar tam ekranda görünür.
+  ///
+  /// Salt çizim: denetleyici kurulmaz (küçük halde düzenleme yok) ve
+  /// dokunuş yutulmaz — görsele dokunmak yine tam ekranı açar.
+  List<Widget> _plainTexts(Size box) {
+    final texts = [
+      for (final b in img.bubbles)
+        if (b.plain && b.text.trim().isNotEmpty) b,
+    ];
+    if (texts.isEmpty) return const [];
+    return [
+      for (final b in texts)
+        Positioned(
+          left: b.x * box.width,
+          top: b.y * box.height,
           child: IgnorePointer(
-            child: CustomPaint(painter: InkPainter(img.ink, 1)),
+            child: Text(
+              b.text.trim(),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                // Küçük halde okunabilirlik için oranlı: tam ekrandaki 16 pt
+                // burada kutunun genişliğine göre küçülür.
+                fontSize: (box.width * 0.05).clamp(7.0, 14.0),
+                height: 1.2,
+                fontWeight: FontWeight.w600,
+                color: Color(b.color),
+                shadows: const [
+                  Shadow(blurRadius: 2, color: Colors.black54),
+                ],
+              ),
+            ),
           ),
         ),
-      ],
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (img.ink.isEmpty && img.bubbles.isEmpty) return _content(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final box = Size(constraints.maxWidth, constraints.maxHeight);
+        return Stack(
+          children: [
+            Positioned.fill(child: _content(context)),
+            if (img.ink.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(painter: InkPainter(img.ink, 1)),
+                ),
+              ),
+            ..._plainTexts(box),
+          ],
+        );
+      },
     );
   }
 

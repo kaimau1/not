@@ -3,9 +3,13 @@
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
 ## 2026-08-16 turundan kalan (cihazda doğrulanmadı)
-- [ ] **Klavye kasması düzeltildi — CİHAZDA ÖLÇÜLMEDİ.** `_KeyboardLift`
-  artık çocuğun kısıtını değiştirmiyor (bkz. HAFIZA 35. tur, madde 6).
-  Kazanç yalnız mekanizmadan biliniyor; gerçek kare süresi ölçülmedi.
+- [ ] **Klavye kasması: iki turda düzeltildi, CİHAZDA ÖLÇÜLMEDİ.** Alt çubuk
+  Scaffold yuvasından çıkarılıp gövdenin dibine alındı (bkz. HAFIZA 36. tur).
+  Kazanç mekanizmadan biliniyor; gerçek kare süresi ölçülmedi.
+- [ ] **Görsele yazılan metin dışa aktarmada YOK.** Paint tarzı metin aracı
+  görsel görüntüleyiciye eklendi ve not sayfasındaki küçük halde çiziliyor,
+  ama PDF/Word dışa aktarımı ile paylaşılan görselde henüz görünmüyor
+  (çizim/`ink` için de aynı sınır geçerli).
 - [ ] **R8 küçültmeli release APK'yı CİHAZDA dene.** minify + shrinkResources
   ilk kez açıldı. R8 hatası derlemede değil, o kod yolu ilk kez çalıştığında
   patlar — özellikle bakılacaklar: ana ekran widget'larının güncellenmesi
