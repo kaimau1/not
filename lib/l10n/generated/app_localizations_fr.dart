@@ -2685,4 +2685,8 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get bubbleModeBubble => 'Balon';
+
+  @override
+  String get attachmentTagEmbedInfo =>
+      'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
 }

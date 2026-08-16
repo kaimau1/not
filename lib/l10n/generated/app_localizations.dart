@@ -5003,6 +5003,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Balon'**
   String get bubbleModeBubble;
+
+  /// No description provided for @attachmentTagEmbedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır'**
+  String get attachmentTagEmbedInfo;
 }
 
 class _AppLocalizationsDelegate

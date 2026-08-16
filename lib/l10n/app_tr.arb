@@ -1246,5 +1246,6 @@
   "archiveNoLink": "Bağlı dosya yok",
   "attachmentTagEmbed": "Seçili yazıya ek göm",
   "attachmentTagNoAttachment": "Önce nota bir dosya ekle; sonra yazıya gömebilirsin.",
-  "bubbleModeBubble": "Balon"
+  "bubbleModeBubble": "Balon",
+  "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır"
 }

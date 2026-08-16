@@ -25,6 +25,7 @@ Future<String?> showAttachSheet(
   BuildContext context, {
   required bool isDesktop,
   bool pageNote = false,
+  bool canEmbed = false,
   String? copiedAttachmentName,
 }) => showModalBottomSheet<String>(
   context: context,
@@ -40,6 +41,7 @@ Future<String?> showAttachSheet(
   builder: (sheetContext) => _AttachSheet(
     isDesktop: isDesktop,
     pageNote: pageNote,
+    canEmbed: canEmbed,
     copiedAttachmentName: copiedAttachmentName,
   ),
 );
@@ -51,6 +53,7 @@ class _AttachSheet extends StatelessWidget {
   const _AttachSheet({
     required this.isDesktop,
     required this.pageNote,
+    required this.canEmbed,
     this.copiedAttachmentName,
   });
 
@@ -61,6 +64,10 @@ class _AttachSheet extends StatelessWidget {
   /// başına tutulan notlarda), seçenek gösterip hiçbir şey olmaması
   /// kullanıcıyı yanıltırdı.
   final bool pageNote;
+
+  /// Notta gömülebilecek EK var mı? "Yazıya ek göm" yalnız o zaman
+  /// gösterilir — eki olmayan notta madde ölü durur.
+  final bool canEmbed;
 
   final String? copiedAttachmentName;
 
@@ -83,6 +90,19 @@ class _AttachSheet extends StatelessWidget {
       if (!pageNote) ...[
         ('text-block', Icons.notes, l10n.addTextBlock, null),
         ('list-item', Icons.checklist, l10n.editorToolList, null),
+        // YAZIYA EK GÖM (kullanıcı bulgusu 2026-08-16: "ek gömmeyi
+        // bulamadım"). İki giriş noktası vardı ve ikisi de saklıydı: ek
+        // şeridindeki 16 piksellik simge ve metin seçim menüsü — Android o
+        // menüde fazla maddeleri "⋮" taşmasına atıyor, yani madde çoğu zaman
+        // hiç görünmüyordu. Dosya eklemek için zaten buraya gelindiği için
+        // asıl yeri burası.
+        if (canEmbed)
+          (
+            'embed-attachment',
+            Icons.link,
+            l10n.attachmentTagEmbed,
+            l10n.attachmentTagEmbedInfo,
+          ),
       ],
     ];
 

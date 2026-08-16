@@ -2665,4 +2665,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bubbleModeBubble => 'Bubble';
+
+  @override
+  String get attachmentTagEmbedInfo =>
+      'Links to your selected text, or at the cursor if nothing is selected';
 }
