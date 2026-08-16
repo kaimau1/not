@@ -1737,10 +1737,12 @@ class AppLocalizationsPt extends AppLocalizations {
   String get voicePreview => 'Testar a voz';
 
   @override
-  String get voicePreviewCached => 'A amostra é gerada uma vez e depois reproduzida do armazenamento';
+  String get voicePreviewCached =>
+      'A amostra é gerada uma vez e depois reproduzida do armazenamento';
 
   @override
-  String get reorderHint => 'Toque e segure um cartão e arraste para onde quiser';
+  String get reorderHint =>
+      'Toque e segure um cartão e arraste para onde quiser';
 
   @override
   String get filterSheetTitle => 'Filtrar';
@@ -2317,7 +2319,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get exportNotesOption => 'Texto da nota (PDF / Word)';
 
   @override
-  String get exportNotesOptionInfo => 'Texto e imagens da nota; balões não incluídos.';
+  String get exportNotesOptionInfo =>
+      'Texto e imagens da nota; balões não incluídos.';
 
   @override
   String get captureNoteTitle => 'Título da nota (opcional)';
@@ -2348,7 +2351,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get imageOcrWorking => 'Reconhecendo texto…';
 
   @override
-  String get imageOcrSelectHint => 'Toque: palavra · Segure e arraste: letra a letra';
+  String get imageOcrSelectHint =>
+      'Toque: palavra · Segure e arraste: letra a letra';
 
   @override
   String get imageOcrInsert => 'Adicionar à nota';
@@ -2366,7 +2370,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get exportImages => 'Imagens';
 
   @override
-  String get exportImagesInfo => 'O texto flui ao lado de imagens estreitas alinhadas à esquerda ou à direita; as centralizadas ocupam a largura total.';
+  String get exportImagesInfo =>
+      'O texto flui ao lado de imagens estreitas alinhadas à esquerda ou à direita; as centralizadas ocupam a largura total.';
 
   @override
   String get exportAlignLeft => 'Esq.';
@@ -2393,7 +2398,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aiModelNoMatch => 'Nenhum modelo correspondente.';
 
   @override
-  String get aiModelAutoInfo => 'O app tenta os modelos mais adequados em ordem.';
+  String get aiModelAutoInfo =>
+      'O app tenta os modelos mais adequados em ordem.';
 
   @override
   String imageOcrCharsSelected(int count) {
@@ -2420,4 +2426,112 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aiModelShowAllInfo => 'Também lista modelos que o app não usa.';
+
+  @override
+  String get rotateFailed => 'Görsel döndürülemedi.';
+
+  @override
+  String get dashboardBackgroundPick => 'Zemin görseli seç';
+
+  @override
+  String get dashboardBackgroundChange => 'Zemin görselini değiştir';
+
+  @override
+  String podcastRenderingAudio(int done, int total) {
+    return 'Ses hazırlanıyor: $done/$total parça';
+  }
+
+  @override
+  String get podcastExportAudio => 'Ses dosyası olarak dışa aktar';
+
+  @override
+  String get podcastExportAudioCost =>
+      'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.';
+
+  @override
+  String get podcastShareText => 'Metni paylaş';
+
+  @override
+  String get podcastSaveAsNote => 'Yeni not olarak kaydet';
+
+  @override
+  String get podcastSavedAsNote => 'Podcast metni not olarak kaydedildi.';
+
+  @override
+  String get listenPreparingVoice => 'Ses hazırlanıyor…';
+
+  @override
+  String get appearancePreviewTitle => 'Örnek metin';
+
+  @override
+  String get appearancePreviewNoteTitle => 'Örnek not başlığı';
+
+  @override
+  String get appearancePreviewBody =>
+      'Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.';
+
+  @override
+  String get appearancePreviewItem => 'Liste maddesi böyle görünür';
+
+  @override
+  String get convertToText => 'Metne dönüştür';
+
+  @override
+  String get convertToList => 'Listeye dönüştür';
+
+  @override
+  String get convertedToText => 'Liste düz metne dönüştürüldü.';
+
+  @override
+  String get convertedToList => 'Metin listeye dönüştürüldü.';
+
+  @override
+  String get convertToListEmpty => 'Listeye dönüştürülecek satır yok.';
+
+  @override
+  String get listTwoColumns => '2 sütun';
+
+  @override
+  String get listOneColumn => 'Tek sütun';
+
+  @override
+  String get sortItems => 'Maddeleri sırala';
+
+  @override
+  String get sortStarredFirst => 'Önce yıldızlılar';
+
+  @override
+  String get sortUncheckedFirst => 'Tamamlananlar sona';
+
+  @override
+  String get sortAlphabetical => 'A → Z';
+
+  @override
+  String get sortAlphabeticalDesc => 'Z → A';
+
+  @override
+  String get imagesToAttachments => 'Görselleri eke dönüştür';
+
+  @override
+  String imagesToAttachmentsDone(int count) {
+    return '$count görsel eke dönüştürüldü.';
+  }
+
+  @override
+  String get imageOcrShowRecognized => 'Tanınan metni vurgula';
+
+  @override
+  String get imageOcrHideRecognized => 'Vurguyu kaldır';
+
+  @override
+  String get bubblePlainMode => 'Açık metin alanı';
+
+  @override
+  String get bubblePlainModeOn => 'Açık metin alanı açık';
+
+  @override
+  String get bubblePlainTapToPlace => 'Metnin geleceği yere dokun';
+
+  @override
+  String get bubblePlainHint => 'Yazmak için dokun';
 }

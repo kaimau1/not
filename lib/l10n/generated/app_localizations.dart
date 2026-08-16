@@ -4535,6 +4535,210 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uygulamanın kullanmadığı modeller de listelenir.'**
   String get aiModelShowAllInfo;
+
+  /// No description provided for @rotateFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel döndürülemedi.'**
+  String get rotateFailed;
+
+  /// No description provided for @dashboardBackgroundPick.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin görseli seç'**
+  String get dashboardBackgroundPick;
+
+  /// No description provided for @dashboardBackgroundChange.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin görselini değiştir'**
+  String get dashboardBackgroundChange;
+
+  /// No description provided for @podcastRenderingAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses hazırlanıyor: {done}/{total} parça'**
+  String podcastRenderingAudio(int done, int total);
+
+  /// No description provided for @podcastExportAudio.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses dosyası olarak dışa aktar'**
+  String get podcastExportAudio;
+
+  /// No description provided for @podcastExportAudioCost.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.'**
+  String get podcastExportAudioCost;
+
+  /// No description provided for @podcastShareText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni paylaş'**
+  String get podcastShareText;
+
+  /// No description provided for @podcastSaveAsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not olarak kaydet'**
+  String get podcastSaveAsNote;
+
+  /// No description provided for @podcastSavedAsNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Podcast metni not olarak kaydedildi.'**
+  String get podcastSavedAsNote;
+
+  /// No description provided for @listenPreparingVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses hazırlanıyor…'**
+  String get listenPreparingVoice;
+
+  /// No description provided for @appearancePreviewTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek metin'**
+  String get appearancePreviewTitle;
+
+  /// No description provided for @appearancePreviewNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örnek not başlığı'**
+  String get appearancePreviewNoteTitle;
+
+  /// No description provided for @appearancePreviewBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.'**
+  String get appearancePreviewBody;
+
+  /// No description provided for @appearancePreviewItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste maddesi böyle görünür'**
+  String get appearancePreviewItem;
+
+  /// No description provided for @convertToText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metne dönüştür'**
+  String get convertToText;
+
+  /// No description provided for @convertToList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeye dönüştür'**
+  String get convertToList;
+
+  /// No description provided for @convertedToText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste düz metne dönüştürüldü.'**
+  String get convertedToText;
+
+  /// No description provided for @convertedToList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin listeye dönüştürüldü.'**
+  String get convertedToList;
+
+  /// No description provided for @convertToListEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeye dönüştürülecek satır yok.'**
+  String get convertToListEmpty;
+
+  /// No description provided for @listTwoColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'2 sütun'**
+  String get listTwoColumns;
+
+  /// No description provided for @listOneColumn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek sütun'**
+  String get listOneColumn;
+
+  /// No description provided for @sortItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeleri sırala'**
+  String get sortItems;
+
+  /// No description provided for @sortStarredFirst.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önce yıldızlılar'**
+  String get sortStarredFirst;
+
+  /// No description provided for @sortUncheckedFirst.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananlar sona'**
+  String get sortUncheckedFirst;
+
+  /// No description provided for @sortAlphabetical.
+  ///
+  /// In tr, this message translates to:
+  /// **'A → Z'**
+  String get sortAlphabetical;
+
+  /// No description provided for @sortAlphabeticalDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Z → A'**
+  String get sortAlphabeticalDesc;
+
+  /// No description provided for @imagesToAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görselleri eke dönüştür'**
+  String get imagesToAttachments;
+
+  /// No description provided for @imagesToAttachmentsDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} görsel eke dönüştürüldü.'**
+  String imagesToAttachmentsDone(int count);
+
+  /// No description provided for @imageOcrShowRecognized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tanınan metni vurgula'**
+  String get imageOcrShowRecognized;
+
+  /// No description provided for @imageOcrHideRecognized.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vurguyu kaldır'**
+  String get imageOcrHideRecognized;
+
+  /// No description provided for @bubblePlainMode.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık metin alanı'**
+  String get bubblePlainMode;
+
+  /// No description provided for @bubblePlainModeOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Açık metin alanı açık'**
+  String get bubblePlainModeOn;
+
+  /// No description provided for @bubblePlainTapToPlace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metnin geleceği yere dokun'**
+  String get bubblePlainTapToPlace;
+
+  /// No description provided for @bubblePlainHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmak için dokun'**
+  String get bubblePlainHint;
 }
 
 class _AppLocalizationsDelegate

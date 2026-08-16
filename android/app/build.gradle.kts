@@ -42,6 +42,20 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // YALNIZ 64 BİT (kullanıcı isteği 2026-08-16: "32 bit derlenmesin
+        // boşuna kota harcamasın"). `--target-platform android-arm64` yalnız
+        // FLUTTER'ın kendi kitaplıklarını (engine + Dart AOT) tek mimariye
+        // indiriyordu; eklentilerin yerel kitaplıkları (ML Kit, pdfium,
+        // mobile_scanner, record…) yine üç mimari için de paketleniyordu.
+        // abiFilters bunları da keser: APK'da tek bir `arm64-v8a/` klasörü
+        // kalır. Bayrak unutulsa bile 32 bit derlenmez.
+        //
+        // BEDELİ: uygulama 32 bit cihazlarda (2015 öncesi telefonlar,
+        // bazı ucuz tabletler) HİÇ kurulmaz. Bilinçli karar.
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     signingConfigs {
@@ -60,6 +74,17 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // R8 KOD KÜÇÜLTME AÇIK (2026-08-16). Bu iki bayrak olmadan
+            // `proguardFiles` hiçbir işe yaramıyordu: AGP'de küçültme
+            // varsayılan olarak KAPALI, kural dosyaları yalnız açıkken
+            // okunur. Kullanılmayan sınıflar (Firebase'in dokunmadığımız
+            // modülleri, Syncfusion, ML Kit'in diğer dilleri) ve
+            // kullanılmayan kaynaklar APK'dan düşer.
+            //
+            // Yansıma (reflection) kullanan yollar proguard-rules.pro'da
+            // TEK TEK korunuyor — oraya bakmadan kural ekleme/çıkarma.
+            isMinifyEnabled = true
+            isShrinkResources = true
             // ML Kit metin tanımanın kullanılmayan dil modelleri için R8
             // dontwarn kuralları (bkz. proguard-rules.pro — bunlar olmadan
             // release derlemesi "Missing class ...chinese/korean..." ile

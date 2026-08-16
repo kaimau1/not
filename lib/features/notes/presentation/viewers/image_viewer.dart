@@ -25,6 +25,7 @@ class ImageViewerScreen extends StatefulWidget {
     required this.attachment,
     this.onChanged,
     this.onCrop,
+    this.onRotate,
   });
 
   final Attachment attachment;
@@ -38,6 +39,10 @@ class ImageViewerScreen extends StatefulWidget {
   /// düğmesi hiç çizilmez.
   final Future<void> Function(Attachment, Rect)? onCrop;
 
+  /// Görseli 90°'nin katıyla döndürüp KALICI olarak yeniden yazacak taraf
+  /// ([onCrop] ile aynı gerekçe). null ise döndürme düğmeleri çizilmez.
+  final Future<void> Function(Attachment, int)? onRotate;
+
   @override
   State<ImageViewerScreen> createState() => _ImageViewerScreenState();
 }
@@ -50,6 +55,11 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   );
   final _zoom = TransformationController();
   bool _editing = false;
+
+  /// Döndürme sürerken (dosya yeniden kodlanıyor) düğmeler kilitlenir:
+  /// iki döndürme üst üste binerse ikincisi birincinin ESKİ baytlarını okur
+  /// ve ilk tur kaybolurdu.
+  bool _busy = false;
 
   // ── Görseldeki METNİ TANI ────────────────────────────────────────────
   // Tanıma ve seçim BU EKRANDA DEĞİL, ortak "Metni Tanı" ekranında
@@ -124,6 +134,23 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  /// Görseli çeyrek tur döndürür ve tam ekrandan ÇIKAR: döndürme dosyayı
+  /// yeniden yazdığından bu ekrandaki ek nesnesi (ve çizim denetleyicisi)
+  /// anında bayatlar — kırpmadaki ([_crop]) gerekçenin aynısı. Nota dönmek,
+  /// dönmüş hâli notun kendi tuvalinden göstermenin en kısa yolu.
+  Future<void> _rotate(int quarterTurns) async {
+    if (_busy) return;
+    // Çizim açıkken yarım kalan çizgi kaybolmasın.
+    if (_editing) _ink.save();
+    setState(() => _busy = true);
+    try {
+      await widget.onRotate!(widget.attachment, quarterTurns);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+    if (mounted) Navigator.of(context).pop();
+  }
+
   /// Görselin kaynağı: yerel kopya → indirme adresi. Kırpma ekranı da aynı
   /// kaynağı kullanır ki seçilen alan gösterilenle birebir örtüşsün.
   ImageProvider _provider() {
@@ -186,8 +213,22 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
               IconButton(
                 tooltip: l10n.crop,
                 icon: const Icon(Icons.crop),
-                onPressed: () => _crop(aspect),
+                onPressed: _busy ? null : () => _crop(aspect),
               ),
+            // Döndürme (kullanıcı isteği 2026-08-16). Kırpmayla aynı kural:
+            // çizim MODUNDA gizlenir, o an araç çubuğu kalem/silgi için.
+            if (widget.onRotate != null && !_editing) ...[
+              IconButton(
+                tooltip: l10n.imageRotateLeft,
+                icon: const Icon(Icons.rotate_left),
+                onPressed: _busy ? null : () => _rotate(-1),
+              ),
+              IconButton(
+                tooltip: l10n.imageRotateRight,
+                icon: const Icon(Icons.rotate_right),
+                onPressed: _busy ? null : () => _rotate(1),
+              ),
+            ],
             if (widget.onChanged != null)
               IconButton(
                 tooltip: _editing ? l10n.annotateDone : l10n.annotate,
@@ -197,7 +238,9 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
               ),
           ],
         ),
-        body: Center(
+        body: _busy
+            ? const Center(child: CircularProgressIndicator())
+            : Center(
           child: AspectRatio(
             aspectRatio: aspect,
             // Çizimde InteractiveViewer'ın kendi jestleri kapalı: tek parmak

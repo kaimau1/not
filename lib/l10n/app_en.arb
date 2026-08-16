@@ -858,5 +858,56 @@
   "attachmentsCopiedCount": "{count} attachments",
   "exportImageLineOf": "/ {count} lines",
   "aiModelShowAll": "Show all",
-  "aiModelShowAllInfo": "Also lists models the app does not use."
+  "aiModelShowAllInfo": "Also lists models the app does not use.",
+  "rotateFailed": "Couldn't rotate the image.",
+  "dashboardBackgroundPick": "Choose background image",
+  "dashboardBackgroundChange": "Change background image",
+  "podcastRenderingAudio": "Preparing audio: {done}/{total} parts",
+  "@podcastRenderingAudio": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "podcastExportAudio": "Export as audio file",
+  "podcastExportAudioCost": "The whole script is re-synthesised with the AI voice and saved as a single WAV file. This uses your Gemini quota and can take a few minutes for long texts.",
+  "podcastShareText": "Share the script",
+  "podcastSaveAsNote": "Save as a new note",
+  "podcastSavedAsNote": "The podcast script was saved as a note.",
+  "listenPreparingVoice": "Preparing audio…",
+  "appearancePreviewTitle": "Sample text",
+  "appearancePreviewNoteTitle": "Sample note title",
+  "appearancePreviewBody": "Your notes will look like this. Inline **bold**, ~underlined~ and ==2:highlighted== text appears like so.",
+  "appearancePreviewItem": "A checklist item looks like this",
+  "convertToText": "Convert to text",
+  "convertToList": "Convert to list",
+  "convertedToText": "The list was converted to plain text.",
+  "convertedToList": "The text was converted to a list.",
+  "convertToListEmpty": "There are no lines to convert into a list.",
+  "listTwoColumns": "Two columns",
+  "listOneColumn": "Single column",
+  "sortItems": "Sort items",
+  "sortStarredFirst": "Starred first",
+  "sortUncheckedFirst": "Completed last",
+  "sortAlphabetical": "A → Z",
+  "sortAlphabeticalDesc": "Z → A",
+  "imagesToAttachments": "Move images to attachments",
+  "imagesToAttachmentsDone": "{count} images moved to attachments.",
+  "@imagesToAttachmentsDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "imageOcrShowRecognized": "Highlight recognised text",
+  "imageOcrHideRecognized": "Hide the highlight",
+  "bubblePlainMode": "Open text box",
+  "bubblePlainModeOn": "Open text box is on",
+  "bubblePlainTapToPlace": "Tap where the text should go",
+  "bubblePlainHint": "Tap to write"
 }

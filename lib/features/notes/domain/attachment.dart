@@ -104,6 +104,7 @@ class PageBubble {
     this.urgent = false,
     this.rects = const [],
     this.arrow = true,
+    this.plain = false,
   });
 
   /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
@@ -166,6 +167,19 @@ class PageBubble {
   /// kayıtlarda alan yok ve okun kaybolması sürpriz olurdu.
   final bool arrow;
 
+  /// **AÇIK METİN ALANI** — Paint'in metin aracı gibi.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "balon moduna ek özellik olarak açık metin
+  /// alanı paintteki gibi". Normal balon sayfada küçük bir tutamaç olarak
+  /// durur ve yazısı ancak dokununca açılır — yerine bir şey YAZMAK
+  /// (bir çizime etiket koymak, bir fotoğrafın üstüne tarih düşmek) için
+  /// fazladan bir adım demek. `plain` balonun yazısı sayfanın üstünde
+  /// DOĞRUDAN, tutamaçsız çizilir; dokunulunca yine aynı kart açılır.
+  ///
+  /// Veri modeli aynı kalır (renk, taşıma, silme, senkron, paylaşım, toplu
+  /// liste hepsi olduğu gibi çalışır) — değişen yalnız ÇİZİM biçimi.
+  final bool plain;
+
   /// Bu balon bir METİN vurgusu mu (yoksa serbest balon mu)?
   bool get isHighlight => rects.isNotEmpty;
 
@@ -181,6 +195,7 @@ class PageBubble {
     bool? urgent,
     List<PageBubbleRect>? rects,
     bool? arrow,
+    bool? plain,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
@@ -193,6 +208,7 @@ class PageBubble {
     starred: starred ?? this.starred,
     urgent: urgent ?? this.urgent,
     rects: rects ?? this.rects,
+    plain: plain ?? this.plain,
     arrow: arrow ?? this.arrow,
   );
 
@@ -210,6 +226,7 @@ class PageBubble {
     rects: _rectsFromMap(map),
     // Alan YOKSA ok çizilir: eski kayıtlarda ok vardı, okuma onu düşürmemeli.
     arrow: map['a'] as bool? ?? true,
+    plain: map['n'] as bool? ?? false,
   );
 
   /// Vurgu dikdörtgenlerini kayıttan okur.
@@ -253,6 +270,7 @@ class PageBubble {
     if (urgent) 'u': true,
     // Yalnız KAPATILDIYSA yazılır (varsayılan açık — bkz. [arrow]).
     if (!arrow) 'a': false,
+    if (plain) 'n': true,
     // DÜZ liste: Firestore iç içe dizi kabul etmiyor (bkz. [_rectsFromMap]).
     if (rects.isNotEmpty)
       'r': [
@@ -332,6 +350,45 @@ List<InkStroke> cropInk(
     );
   }
   return out;
+}
+
+/// Görsel 90°'nin katlarıyla döndürülünce üstündeki çizimleri de döndürür.
+///
+/// [cropInk] ile aynı gerekçe: noktalar görselin ORANI (0–1) olarak tutuluyor,
+/// görsel dönüp çizgiler olduğu gibi kalırsa imza/işaret görselin bambaşka bir
+/// yerine düşer.
+///
+/// Saat yönünde çeyrek tur: `(x, y) → (1 - y, x)`. Tur sayısı 4'e göre
+/// indirgenir; negatif değer (sola döndürme) pozitife çevrilir, böylece tek
+/// bir dönüşüm art arda uygulanarak 180° ve 270° de çıkar. Kalınlık görsel
+/// genişliğinin oranı olduğundan tek sayıda turda en/boy yer değiştirir ve
+/// oran da o ölçüde değişir — ama [InkStroke.width] görselin dar kenarına
+/// göre değil genişliğine göre ölçeklendiğinden burada düzeltme YAPILMAZ:
+/// kırpmadan farklı olarak döndürme görselin alanını değiştirmez, çizgi
+/// kalınlığındaki fark gözle ayırt edilemeyecek kadar küçüktür.
+List<InkStroke> rotateInk(List<InkStroke> strokes, int quarterTurns) {
+  var turns = quarterTurns % 4;
+  if (turns < 0) turns += 4;
+  if (turns == 0 || strokes.isEmpty) return strokes;
+  var current = strokes;
+  for (var turn = 0; turn < turns; turn++) {
+    current = [
+      for (final s in current)
+        InkStroke(
+          page: s.page,
+          color: s.color,
+          width: s.width,
+          points: [
+            for (var i = 0; i + 1 < s.points.length; i += 2) ...[
+              1 - s.points[i + 1],
+              s.points[i],
+            ],
+          ],
+          arrow: s.arrow,
+        ),
+    ];
+  }
+  return current;
 }
 
 /// Akıştan gelen ek listesini yerel düzenle birleştirir.

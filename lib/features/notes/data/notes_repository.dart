@@ -253,12 +253,26 @@ class NotesRepository {
   }
 
   void updateFields(String noteId, Map<String, dynamic> fields) {
-    unawaited(
-      _notes.doc(noteId).set({
-        ...fields,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true)),
-    );
+    unawaited(updateFieldsAndWait(noteId, fields));
+  }
+
+  /// [updateFields]'in BEKLENEBİLİR hâli. Yazımın yerel önbelleğe düştüğünü
+  /// görmesi gereken çağıranlar (ör. paylaşım alımı, yazımdan hemen sonra
+  /// editörü açıyor) bunu kullanır; ateşle-unut yol için [updateFields] var.
+  ///
+  /// `set(merge: true)` çevrimdışıyken de anında yerel önbelleğe yazar ve
+  /// dönen Future sunucu onayını bekler — bu yüzden çağıran tarafta zaman
+  /// aşımı/hata yutma sorumluluğu kalır (bkz. `updateNote` yorumu).
+  Future<void> updateFieldsAndWait(
+    String noteId,
+    Map<String, dynamic> fields,
+  ) {
+    final write = _notes.doc(noteId).set({
+      ...fields,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    unawaited(write);
+    return write;
   }
 
   /// Notların elle sıralamasını (madde 1: basılı tutup sürükle) kalıcılaştırır.

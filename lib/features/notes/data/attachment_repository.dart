@@ -95,6 +95,27 @@ class _CropRequest {
   final double bottom;
 }
 
+/// Çeyrek tur döndürme isteği (izolat tek argüman alır). [quarterTurns]
+/// pozitifse saat yönünde, negatifse tersine.
+class _RotateRequest {
+  const _RotateRequest(this.bytes, this.quarterTurns);
+
+  final Uint8List bytes;
+  final int quarterTurns;
+}
+
+/// Görseli 90°'nin katlarıyla döndürür. Kırpmayla aynı gerekçeyle JPEG
+/// üretir (bkz. [_cropImage] yorumu).
+_CompressResult _rotateImage(_RotateRequest request) {
+  final decoded = img.decodeImage(request.bytes);
+  if (decoded == null) return _CompressResult(request.bytes, 0, 0, false);
+  final turned = img.copyRotate(decoded, angle: request.quarterTurns * 90);
+  final encoded = Uint8List.fromList(
+    img.encodeJpg(turned, quality: AppConstants.imageJpegQuality),
+  );
+  return _CompressResult(encoded, turned.width, turned.height, true);
+}
+
 /// Kırpma her zaman JPEG üretir — `prepareImage` de girişte aynısını yapıyor,
 /// ayrıca `image` paketi WebP YAZAMIYOR; tek çıkış biçimi tutmak "png olarak
 /// kırpılınca dosya büyüdü" ve "webp kırpılamıyor" dallarının ikisini birden
@@ -324,6 +345,66 @@ class AttachmentRepository {
     );
     // Uzantı değiştiyse (ör. .png → .jpg) yerel dosya adı da değişti; eskisi
     // artık hiçbir yerden gösterilmiyor, yetim kalmasın.
+    if (!kIsWeb && oldLocalPath.isNotEmpty && oldLocalPath != stored.localPath) {
+      try {
+        await File(oldLocalPath).delete();
+      } on FileSystemException {
+        // Dosya zaten yoksa yapacak bir şey yok.
+      }
+    }
+    return stored;
+  }
+
+  /// Görseli 90°'nin katlarıyla döndürüp KALICI olarak yeniden yazar
+  /// (kullanıcı isteği 2026-08-16: "resim düzenlemede döndürme lazım").
+  ///
+  /// [cropImage] ile birebir aynı yol ve aynı gerekçeler: dosya aynı ek
+  /// kimliğiyle yeniden yazılır, bulut kopyası silinip ek "yüklenmemiş"e
+  /// döner, kuyruk yeni baytları gönderir. Döndürme de kalıcıdır — görsel
+  /// tuvalde, tam ekranda, dışa aktarımda, OCR'de ayrı ayrı çiziliyor;
+  /// "şu kadar dönük" bilgisi alan olarak saklansaydı bu yolların HEPSİ onu
+  /// uygulamak zorunda kalırdı.
+  ///
+  /// En/boy yer değiştirdiğinde [Attachment.width]/[height] de takas edilir:
+  /// tuvaldeki yerleşim ve sarma bantları bu ölçüye bakıyor.
+  Future<Attachment> rotateImage({
+    required String noteId,
+    required Attachment attachment,
+    required int quarterTurns,
+  }) async {
+    final bytes = await readBytes(attachment);
+    if (bytes == null) throw const AttachmentMissingException();
+    final result = await compute(
+      _rotateImage,
+      _RotateRequest(bytes, quarterTurns),
+    );
+    if (result.width == 0) throw const AttachmentMissingException();
+    if (result.bytes.length > maxBytes) throw const FileTooLargeException();
+
+    // Kırpmadaki sıra ve gerekçenin aynısı (bkz. cropImage): silme _store'dan
+    // ÖNCE, hatası döndürmeyi düşürmez.
+    try {
+      await deleteFromStorage(attachment);
+    } catch (_) {
+      // Çevrimdışı ya da geçici Storage hatası.
+    }
+    final oldLocalPath = attachment.localPath;
+    final safeName = '${p.basenameWithoutExtension(attachment.fileName)}.jpg';
+    final stored = await _store(
+      noteId,
+      attachment.copyWith(
+        fileName: safeName,
+        mimeType: 'image/jpeg',
+        sizeBytes: result.bytes.length,
+        width: result.width,
+        height: result.height,
+        storagePath: '',
+        downloadUrl: '',
+        ink: rotateInk(attachment.ink, quarterTurns),
+      ),
+      result.bytes,
+      freedBytes: attachment.sizeBytes,
+    );
     if (!kIsWeb && oldLocalPath.isNotEmpty && oldLocalPath != stored.localPath) {
       try {
         await File(oldLocalPath).delete();

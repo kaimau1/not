@@ -9,6 +9,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../settings/settings_providers.dart';
 import 'gemini_service.dart';
+import 'pcm_wav.dart';
 
 /// **Yapay zekâ sesiyle** okuma: metin Gemini'nin seslendirme modeline
 /// gönderilir, dönen ses çalınır. Cihaz TTS'inin ([SpeechOutputController])
@@ -161,9 +162,12 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     final chunks = chunk(text);
     if (chunks.isEmpty) return;
     final generation = ++_generation;
+    // `loading: true` ile başlar: ilk parça modelden gelene kadar hoparlörden
+    // ses çıkmıyor ve ekran bunu göstermek zorunda (bkz. SpeechOutputState).
     state = SpeechOutputState(
       state: SpeechState.speaking,
       total: chunks.length,
+      loading: true,
     );
     final player = _player ??= AudioPlayer();
 
@@ -178,6 +182,15 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
         if (generation != _generation) return;
         await player.setFilePath(file.path);
         await player.play();
+        // Ses BAŞLADI: bekleme göstergesi kalksın. Ön yükleme yetişemezse
+        // (uzun paragraf, yavaş ağ) bir sonraki turda yeniden açılır.
+        if (generation == _generation && state.state != SpeechState.idle) {
+          state = SpeechOutputState(
+            state: state.state,
+            total: chunks.length,
+            spoken: i,
+          );
+        }
         // TUZAK: `play()` çalma bitince döner AMA duraklatıldığında da döner.
         // Yalnız ona güvenilirse duraklat→devam et sırasında döngü sıradaki
         // parçaya geçer ve iki parça üst üste çalar. Bu yüzden parçanın
@@ -194,6 +207,8 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
           state: state.state,
           total: chunks.length,
           spoken: i + 1,
+          // Son parça değilse sıradakini beklemeye geçiyoruz.
+          loading: i + 1 < chunks.length,
         );
       }
       if (generation == _generation && state.state != SpeechState.idle) {
@@ -233,5 +248,52 @@ class AiSpeechController extends Notifier<SpeechOutputState> {
     state = const SpeechOutputState();
     await _player?.stop();
     _cleanTemp();
+  }
+
+  /// Metnin TAMAMINI seslendirip TEK bir WAV dosyası olarak yazar ve yolunu
+  /// döndürür (kullanıcı isteği 2026-08-16: podcast'i ses dosyası olarak dışa
+  /// aktarma).
+  ///
+  /// Okumadan ([speak]) iki farkı var:
+  ///  1. Hiçbir şey ÇALINMAZ — dosya üretmek için parçaların sırayla
+  ///     beklenmesi yeter, oynatıcıya hiç dokunulmaz.
+  ///  2. Parçalar sırayla ve TEK TEK istenir. Okumada sıradaki parça çalarken
+  ///     üretiliyor (bekleme duyulmasın diye); burada duyulacak bir şey yok ve
+  ///     paralel istek kullanıcının kotasına aynı anda birden çok çağrı olarak
+  ///     düşerdi.
+  ///
+  /// [onProgress] her parça bitince (üretilen, toplam) ile çağrılır — çağıran
+  /// ekran "3/12" gösterebilsin. Model hatası olduğu gibi fırlatılır.
+  ///
+  /// MALİYET UYARISI çağıranın işi: burada her parça bir model çağrısıdır ve
+  /// okuma sırasında zaten üretilmiş parçalar YENİDEN üretilir (geçici
+  /// dosyalar okuma bitince siliniyor, ayrıca kullanıcı hiç dinlemeden de
+  /// dışa aktarabilir).
+  Future<String> renderToFile(
+    String text, {
+    required String fileName,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    final chunks = chunk(text);
+    if (chunks.isEmpty) throw const GeminiException('Seslendirilecek metin yok');
+    final parts = <Uint8List>[];
+    for (var i = 0; i < chunks.length; i++) {
+      parts.add(await _synthesize(chunks[i]));
+      onProgress?.call(i + 1, chunks.length);
+    }
+    final merged = concatWav(parts);
+    if (merged.isEmpty) {
+      throw const GeminiException('Seslendirme modeli ses döndürmedi');
+    }
+    // Geçici klasör: dosya paylaşıldıktan sonra sistemin temizlemesi
+    // beklenir; kalıcı klasörde tutmak kullanıcının depolamasını sessizce
+    // şişirirdi (bir dakikalık ses ~3 MB).
+    final dir = await getTemporaryDirectory();
+    final safe = fileName.replaceAll(RegExp(r'[^\w\s.-]'), '_').trim();
+    final file = File(
+      '${dir.path}/${safe.isEmpty ? 'podcast' : safe}.wav',
+    );
+    await file.writeAsBytes(merged, flush: true);
+    return file.path;
   }
 }

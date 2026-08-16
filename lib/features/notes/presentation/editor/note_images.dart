@@ -23,6 +23,7 @@ void openImageViewer(
   Attachment img,
   ValueChanged<Attachment> onChanged, {
   Future<void> Function(Attachment, Rect)? onCrop,
+  Future<void> Function(Attachment, int)? onRotate,
 }) {
   final hasLocal = localFileExists(img.localPath);
   if (!hasLocal && !img.isUploaded) {
@@ -37,6 +38,7 @@ void openImageViewer(
         attachment: img,
         onChanged: onChanged,
         onCrop: onCrop,
+        onRotate: onRotate,
       ),
     ),
   );
@@ -589,6 +591,7 @@ class NotePageCanvas extends StatefulWidget {
     required this.onRemove,
     required this.onChanged,
     this.onCrop,
+    this.onRotate,
     this.onExtractText,
     this.onCopy,
     this.onCopyMany,
@@ -636,6 +639,12 @@ class NotePageCanvas extends StatefulWidget {
 
   /// Tam ekranda seçilen kırpma alanını uygular (bkz. [ImageViewerScreen]).
   final Future<void> Function(Attachment, Rect)? onCrop;
+
+  /// Görseli 90°'nin katıyla döndürüp KALICI olarak yeniden yazacak taraf
+  /// ([onCrop] ile aynı gerekçe: dosyayı yeniden yazmak ek deposu ve not
+  /// kimliği ister, ikisi de bu katmanda yok). null ise döndürme düğmesi
+  /// çizilmez.
+  final Future<void> Function(Attachment, int)? onRotate;
   final Future<void> Function(Attachment)? onExtractText;
 
   /// Görseli panoya kopyalar; null ise menüde görünmez.
@@ -776,7 +785,37 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return null;
   }
 
-  double _defaultTop(int index) => 8.0 + index * 130.0;
+  /// Konumu YAZILMAMIŞ görsellerin (paylaşımdan gelen, eski kayıt) sayfadaki
+  /// otomatik yeri.
+  ///
+  /// KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi ve üst
+  /// üste geldiler"): burada eskiden `8 + index * 130` vardı — sabit 130 dp
+  /// aralık. Ama görselin yüksekliği en boy oranından çıkıyor ve varsayılan
+  /// genişlik sütunun yarısı: dikey bir fotoğraf ~240 dp geliyor, yani bir
+  /// sonraki görsel öncekinin tam ortasına düşüyordu. İki görsel üst üste
+  /// binince alttaki tümüyle görünmez oluyor, kullanıcı "gelmedi" sanıyordu.
+  ///
+  /// Artık yığın GERÇEK yüksekliklerle kuruluyor: konumu yazılı görseller
+  /// yığına katılmaz (onlar kullanıcının koyduğu yerdedir), konumsuz olanlar
+  /// sırayla bir öncekinin ALTINA iner.
+  double _defaultTop(int index, double cw) {
+    var cursor = 8.0;
+    for (var i = 0; i < widget.images.length && i < index; i++) {
+      final other = widget.images[i];
+      // Kullanıcının yerleştirdiği görsel otomatik yığını kaydırmaz.
+      if (other.pageY != null || other.y != null) continue;
+      final aspect =
+          (other.width != null &&
+              other.height != null &&
+              other.width! > 0 &&
+              other.height! > 0)
+          ? other.width! / other.height!
+          : 1.0;
+      final w = cw * (other.displayWidth ?? 0.5).clamp(_minWidthFrac, 1.0);
+      cursor += w / aspect + 16;
+    }
+    return cursor;
+  }
 
   /// Görselin sayfadaki nihai yerleşimi (dp). Canlı taşıma/boyutlandırma
   /// değerleri öncelikli. Üst sınır 0'a kırpılır; alt sınır yok — sayfa uzar.
@@ -808,7 +847,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         : img.pageY ??
               (img.y != null
                   ? img.y! * _legacyCanvasHeight
-                  : _defaultTop(index));
+                  : _defaultTop(index, cw));
     left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
     // Başlık/çip bölgesi görsele kapalı: üst sınırın altına inemez.
     if (top < widget.topLimit) top = widget.topLimit;
@@ -862,7 +901,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       );
       return;
     }
-    openImageViewer(context, img, widget.onChanged, onCrop: widget.onCrop);
+    openImageViewer(
+      context,
+      img,
+      widget.onChanged,
+      onCrop: widget.onCrop,
+      onRotate: widget.onRotate,
+    );
   }
 
   /// Ekin türüne göre sayfa kutusu içeriği: görsele [_ImageBox], videoya

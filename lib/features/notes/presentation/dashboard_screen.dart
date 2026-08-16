@@ -47,6 +47,7 @@ import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
 import 'color_picker_sheet.dart';
+import 'dashboard_background_sheet.dart';
 import 'filter_sheet.dart';
 import 'image_prepare_screen.dart';
 import 'note_card.dart';
@@ -1641,6 +1642,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                                 'archive' => context.push(
                                                   '/archive',
                                                 ),
+                                                'background' =>
+                                                  showDashboardBackgroundSheet(
+                                                    context,
+                                                  ),
                                                 'trash' => context.push(
                                                   '/trash',
                                                 ),
@@ -1683,6 +1688,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                               'archive',
                                               Icons.archive_outlined,
                                               l10n.archiveTitle,
+                                            ),
+                                            // Zemin görseli AYARLARDAN
+                                            // BURAYA taşındı (kullanıcı
+                                            // isteği 2026-08-16): sonucu
+                                            // yalnız bu ekranda görülüyor.
+                                            _menuItem(
+                                              'background',
+                                              Icons.wallpaper,
+                                              l10n.dashboardBackground,
                                             ),
                                             _menuItem(
                                               'trash',

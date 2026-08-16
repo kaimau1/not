@@ -69,6 +69,15 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
   int _anchor = 0;
   int _extent = 0;
 
+  /// TANINAN metnin tamamı aydınlık bir katmanla vurgulansın mı?
+  ///
+  /// Kullanıcı isteği 2026-08-16: "metin tanımada tanınan metinleri beyaz
+  /// aydınlık vurgulama". Ekran görselin üstünde hiçbir iz bırakmıyordu:
+  /// tanımanın hangi yazıyı gördüğü (ve hangisini kaçırdığı) ancak
+  /// seçmeye çalışınca anlaşılıyordu. Beyaz yıkama karanlık zeminli
+  /// belgelerde de okunur kalsın diye ince bir çerçeveyle birlikte çizilir.
+  bool _highlightAll = true;
+
   /// Görselin ekrandaki ölçeği: 1 = genişliğe sığdır. Yakınlaştırma
   /// InteractiveViewer yerine ölçek düğmeleriyle yapılır — iç içe jest
   /// tanıyıcıları seçimi güvenilmez kılıyordu.
@@ -155,6 +164,18 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
           style: const TextStyle(fontSize: 15),
         ),
         actions: [
+          // Tanınan metnin aydınlık vurgusu açık/kapalı: fotoğrafın kendisini
+          // net görmek gerektiğinde kapatılabilsin.
+          IconButton(
+            tooltip: _highlightAll
+                ? l10n.imageOcrHideRecognized
+                : l10n.imageOcrShowRecognized,
+            isSelected: _highlightAll,
+            onPressed: () => setState(() => _highlightAll = !_highlightAll),
+            icon: Icon(
+              _highlightAll ? Icons.highlight : Icons.highlight_outlined,
+            ),
+          ),
           IconButton(
             tooltip: l10n.imageOcrZoomOut,
             onPressed: _zoom <= 1
@@ -228,6 +249,7 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
                           Positioned.fill(
                             child: _SelectLayer(
                               text: _text,
+                              highlightAll: _highlightAll,
                               imageSize: Size(
                                 widget.imageWidth.toDouble(),
                                 widget.imageHeight.toDouble(),
@@ -279,6 +301,41 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
                         ),
                       ],
                     ),
+                    // CANLI OKUMA (kullanıcı isteği 2026-08-16: "seçilen
+                    // metinde ne okunduğunu canlı görme"). Seçim sürerken
+                    // parmağın altındaki harfler görselin üstünde kalıyor ve
+                    // tanımanın onları NE OKUDUĞU görünmüyordu — el yazısı
+                    // ya da düşük çözünürlüklü bir belgede asıl merak edilen
+                    // tam olarak bu. Kutu SABİT yükseklikte: seçim büyüyüp
+                    // küçülürken alt çubuk zıplamasın.
+                    if (_hasSelection) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        width: double.infinity,
+                        height: 64,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: SingleChildScrollView(
+                          child: SelectableText(
+                            _text.textOf(_start, _end),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -329,6 +386,7 @@ class _TextRecognizeScreenState extends State<TextRecognizeScreen> {
 class _SelectLayer extends StatefulWidget {
   const _SelectLayer({
     required this.text,
+    required this.highlightAll,
     required this.imageSize,
     required this.start,
     required this.end,
@@ -338,6 +396,11 @@ class _SelectLayer extends StatefulWidget {
   });
 
   final RecognizedText text;
+
+  /// Tanınan metnin TAMAMI aydınlık bir katmanla gösterilsin mi
+  /// (bkz. `_TextRecognizeScreenState._highlightAll`).
+  final bool highlightAll;
+
   final Size imageSize;
   final int start;
   final int end;
@@ -500,7 +563,22 @@ class _SelectLayerState extends State<_SelectLayer> {
             _setDragging(false);
           },
           child: CustomPaint(
-            painter: _SelectionPainter(rects: rects, accent: widget.accent),
+            painter: _SelectionPainter(
+              rects: rects,
+              // Tanınan metnin tamamı: seçim kutularıyla AYNI birleştirme
+              // yolundan geçer (satır satır), böylece iki katman birbirine
+              // birebir oturur.
+              recognized: widget.highlightAll
+                  ? [
+                      for (final r in widget.text.selectionRects(
+                        0,
+                        widget.text.text.length,
+                      ))
+                        _toScreen(r, box),
+                    ]
+                  : const <Rect>[],
+              accent: widget.accent,
+            ),
             size: Size.infinite,
           ),
         );
@@ -511,13 +589,40 @@ class _SelectLayerState extends State<_SelectLayer> {
 
 /// Seçim vurgusu + iki uçtaki tutamaç.
 class _SelectionPainter extends CustomPainter {
-  const _SelectionPainter({required this.rects, required this.accent});
+  const _SelectionPainter({
+    required this.rects,
+    required this.recognized,
+    required this.accent,
+  });
 
   final List<Rect> rects;
+
+  /// Tanınan METNİN TAMAMI (seçili olsun olmasın). Seçim kutularının ALTINA
+  /// çizilir: seçilen bölge vurgulu renkte, geri kalan tanınan metin soluk
+  /// beyaz kalır.
+  final List<Rect> recognized;
+
   final Color accent;
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Tanınan metnin aydınlık katmanı (kullanıcı isteği 2026-08-16).
+    if (recognized.isNotEmpty) {
+      final wash = Paint()..color = Colors.white.withValues(alpha: 0.28);
+      final edge = Paint()
+        ..color = Colors.white.withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      for (final r in recognized) {
+        final rr = RRect.fromRectAndRadius(
+          r.inflate(1),
+          const Radius.circular(2),
+        );
+        canvas
+          ..drawRRect(rr, wash)
+          ..drawRRect(rr, edge);
+      }
+    }
     if (rects.isEmpty) return;
     final fill = Paint()..color = accent.withValues(alpha: 0.35);
     final stroke = Paint()
@@ -549,6 +654,7 @@ class _SelectionPainter extends CustomPainter {
   @override
   bool shouldRepaint(_SelectionPainter old) =>
       old.accent != accent ||
+      old.recognized.length != recognized.length ||
       old.rects.length != rects.length ||
       (rects.isNotEmpty && old.rects.first != rects.first) ||
       (rects.isNotEmpty && old.rects.last != rects.last);

@@ -111,6 +111,7 @@ class Note {
     this.titleTextOpacity = 1,
     this.backgroundImageId,
     this.backgroundOpacity = 0.35,
+    this.listColumns = 1,
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -210,6 +211,17 @@ class Note {
   /// Zemin görselinin görünürlüğü (0.05–1). Varsayılan bilerek düşük: tam
   /// opak bir fotoğrafın üstünde not okunmuyor.
   final double backgroundOpacity;
+
+  /// Liste notunun KAÇ SÜTUNDA gösterileceği: 1 (varsayılan) ya da 2.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "liste modunda 2 kolon modu". Kısa maddeli
+  /// uzun listelerde (alışveriş, yapılacaklar) tek sütun ekranın sağ yarısını
+  /// boş bırakıp listeyi gereksiz uzatıyor.
+  ///
+  /// Not BAŞINA saklanır, genel ayar değil: aynı kullanıcının bir notu
+  /// tek satırlık maddelerden, başka bir notu paragraf uzunluğunda
+  /// maddelerden oluşabiliyor ve ikincisi iki sütunda okunmaz hâle gelir.
+  final int listColumns;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -276,7 +288,14 @@ class Note {
   /// kullanılır.
   String get displayTitle => stripRichMarkers(title);
 
-  String toPlainText() {
+  /// [skipChecked] true ise TAMAMLANMIŞ maddeler metne katılmaz.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "ai analiz işaretli öğeleri de analiz
+  /// ediyor". Yapılacaklar listesinde işaretli madde BİTMİŞ iştir; analiz ve
+  /// özet onları da sayınca "alışveriş yapılmalı" gibi zaten yapılmış işleri
+  /// eylem maddesi olarak geri veriyordu. Paylaşım/dışa aktarma yolları
+  /// varsayılanı (false) kullanır — orada işaretli madde GÖRÜNMELİ.
+  String toPlainText({bool skipChecked = false}) {
     final buffer = StringBuffer();
     if (title.trim().isNotEmpty) buffer.writeln(stripRichMarkers(title).trim());
     switch (type) {
@@ -285,6 +304,7 @@ class Note {
         // Karışık içerik: metin notuna eklenen checklist maddeleri de dahil.
         for (final item in items) {
           if (item.text.trim().isEmpty) continue;
+          if (skipChecked && item.checked) continue;
           buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
         }
       case NoteType.checklist:
@@ -292,12 +312,15 @@ class Note {
         // duran açıklama); dışa aktarmada kaybolmamalı.
         if (body.trim().isNotEmpty) buffer.writeln(body);
         for (final item in items) {
+          if (skipChecked && item.checked) continue;
           buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
         }
       case NoteType.ordered:
         if (body.trim().isNotEmpty) buffer.writeln(body);
-        for (var i = 0; i < items.length; i++) {
-          buffer.writeln('${i + 1}. ${items[i].text}');
+        var number = 0;
+        for (final item in items) {
+          if (skipChecked && item.checked) continue;
+          buffer.writeln('${++number}. ${item.text}');
         }
       case NoteType.pdf:
       case NoteType.slides:
@@ -392,6 +415,7 @@ class Note {
     String? backgroundImageId,
     bool clearBackgroundImage = false,
     double? backgroundOpacity,
+    int? listColumns,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -427,6 +451,7 @@ class Note {
         ? null
         : (backgroundImageId ?? this.backgroundImageId),
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
+    listColumns: listColumns ?? this.listColumns,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -517,6 +542,10 @@ class Note {
           1,
       backgroundImageId: map['backgroundImageId'] as String?,
       backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
+      // 1 ve 2 dışındaki bir değer (ileride eklenecek bir sütun sayısını
+      // bilmeyen bu sürüm) tek sütuna düşer — çizim yolu ikiden fazlasını
+      // yerleştiremez.
+      listColumns: (map['listColumns'] as num?)?.toInt() == 2 ? 2 : 1,
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
@@ -567,6 +596,11 @@ class Note {
     // yoksa eski değer kalır, bu yüzden null da açıkça yazılır.
     'backgroundImageId': backgroundImageId,
     'backgroundOpacity': backgroundOpacity,
+    // HER ZAMAN yazılır (koşullu değil): notlar `set(merge: true)` ile
+    // kaydediliyor, yani atlanmış bir anahtar SİLİNMEZ — koşullu yazılsaydı
+    // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
+    // yine iki sütunlu gelirdi.
+    'listColumns': listColumns,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

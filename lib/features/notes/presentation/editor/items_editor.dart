@@ -121,6 +121,7 @@ class ItemsEditor extends StatefulWidget {
     required this.items,
     required this.onChanged,
     required this.showCheckboxes,
+    this.columns = 1,
     this.expandItems = true,
     this.header,
     this.footer,
@@ -138,6 +139,16 @@ class ItemsEditor extends StatefulWidget {
   final List<NoteItem> items;
   final ValueChanged<List<NoteItem>> onChanged;
   final bool showCheckboxes;
+
+  /// Maddelerin kaç SÜTUNDA dizileceği: 1 (varsayılan) ya da 2
+  /// (kullanıcı isteği 2026-08-16: "liste modunda 2 kolon modu").
+  ///
+  /// İki sütunda SÜRÜKLEYEREK SIRALAMA KAPALIDIR. `ReorderableListView` tek
+  /// eksende çalışıyor; iki sütunlu bir ızgarada "araya bırak" hedefi
+  /// belirsiz (sağ sütunun üçüncü satırı, sıradaki hangi indeks?) ve yanlış
+  /// hesaplanan tek bir indeks bütün listeyi karıştırırdı. Sıralama gerekince
+  /// tek sütuna dönülür; menüdeki "Maddeleri sırala" iki sütunda da çalışır.
+  final int columns;
 
   /// Sayfadaki görsellerin kapladığı bantlar (sayfa uzayı): madde metni
   /// bunların etrafından akar. Boşsa satırlar sıradan davranır.
@@ -828,6 +839,23 @@ class ItemsEditorState extends State<ItemsEditor> {
     });
   }
 
+  /// Maddenin yıldızını çevirir (kullanıcı isteği 2026-08-16).
+  ///
+  /// İşaretlemenin ([_toggleItem]) aksine satırın YERİNİ değiştirmez:
+  /// yıldız bir durum değil bir etiket, listeyi kendiliğinden yeniden
+  /// dizmesi kullanıcının elle verdiği sırayı bozardı. Sıraya yansıması
+  /// isteniyorsa ⋮ → "Maddeleri sırala" → "Önce yıldızlılar" kullanılır.
+  void _toggleStar(NoteItem target) {
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
+    setState(() {
+      _items[index] = _items[index].copyWith(
+        starred: !_items[index].starred,
+      );
+    });
+    _commit();
+  }
+
   void _insertAfter(NoteItem after) {
     final index = _items.indexWhere((i) => i.id == after.id);
     if (index < 0) return;
@@ -1129,6 +1157,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     final key = (
       item.text,
       item.checked,
+      item.starred,
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),
@@ -1369,6 +1398,22 @@ class ItemsEditorState extends State<ItemsEditor> {
                 ),
               ),
             ),
+            // YILDIZ (kullanıcı isteği 2026-08-16). Yıldızlıysa HER ZAMAN
+            // görünür — işaretin kendisi bilgi; yıldızsız satırda yalnız
+            // odaklanınca çıkar, yoksa her satırda ikinci bir düğme yer
+            // kaplardı. Seçim kipinde hiç çizilmez (o kip toplu iş için).
+            if (!_selectionMode && (item.starred || focused))
+              IconButton(
+                tooltip: item.starred ? l10n.unstar : l10n.star,
+                icon: Icon(
+                  item.starred ? Icons.star : Icons.star_outline,
+                  size: 18,
+                ),
+                color: item.starred
+                    ? scheme.tertiary
+                    : scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                onPressed: () => _toggleStar(item),
+              ),
             // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
             // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
             // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
@@ -1489,6 +1534,56 @@ class ItemsEditorState extends State<ItemsEditor> {
         if (widget.footer != null) widget.footer!,
       ],
     );
+
+    // İKİ SÜTUN: sürüklenebilir liste yerine iki paralel sütun. Maddeler
+    // yarı yarıya bölünür (soldaki ilk yarı, sağdaki ikinci yarı) — soldan
+    // sağa dizilseydi göz her maddede satır atlamak zorunda kalır, "1 2 / 3 4"
+    // düzeni basılı bir listeye hiç benzemezdi.
+    //
+    // Satırların KENDİSİ aynı `_itemRow`: onay kutusu, yıldız, biçimli metin,
+    // uzun basma menüsü ve seçim kipi tek sütundakiyle birebir aynı çalışır.
+    // Yalnız sürükleme tutamağı yok (bkz. [ItemsEditor.columns]).
+    if (widget.columns == 2) {
+      final half = (listItems.length + 1) ~/ 2;
+      final columns = <Widget>[
+        for (final range in [
+          (start: 0, end: half),
+          (start: half, end: listItems.length),
+        ])
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = range.start; i < range.end; i++)
+                  _cachedItemRow(listItems[i], orderNumber: i + 1),
+              ],
+            ),
+          ),
+      ];
+      final grid = ListView(
+        padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
+        shrinkWrap: widget.shrinkWrap,
+        physics: widget.shrinkWrap
+            ? const NeverScrollableScrollPhysics()
+            : null,
+        children: [
+          if (widget.header != null) widget.header!,
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: columns),
+          footer,
+        ],
+      );
+      return PopScope(
+        canPop: !_selectionMode,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) _exitSelection();
+        },
+        child: OverlayPortal(
+          controller: _barController,
+          overlayChildBuilder: _selectionBar,
+          child: grid,
+        ),
+      );
+    }
 
     final list = ReorderableListView.builder(
       // Alt dolgu, altta sabit duran seçim çubuğunun son maddeyi örtmemesi

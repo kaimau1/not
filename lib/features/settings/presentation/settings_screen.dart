@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:file_selector/file_selector.dart';
@@ -9,18 +8,19 @@ import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../app/theme/note_colors.dart';
 import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
 import '../../../core/utils/note_fonts.dart';
+import '../../../core/utils/rich_text.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/speech_output.dart';
 import '../../ai/data/ai_gate.dart';
@@ -129,6 +129,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         keywords: 'tema yazi boyutu zemin koyu acik kagit liste',
         rows: [
           _SettingRow(
+            // ÖRNEK METİN en üstte (kullanıcı isteği 2026-08-16: "görünüm
+            // ayarlarına örnek metin"). Tema, yazı tipi ve yazı boyutu
+            // ayrı ayrı seçiliyor ama sonucu ancak notu açınca görülüyordu;
+            // örnek bunları BİRLİKTE, gerçek bir notun görünümünde gösterir.
+            const _AppearancePreview(),
+            title: l10n.appearancePreviewTitle,
+            keywords: 'ornek metin onizleme gorunum',
+          ),
+          _SettingRow(
             // Boşluk seçicinin İÇİNDE: ayrı bir satır olsaydı süzmede tek
             // başına kalıp araya boşluk bırakırdı.
             const Column(
@@ -167,11 +176,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             title: l10n.cardRichPreview,
             keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
           ),
-          _SettingRow(
-            const _DashboardBackgroundTile(),
-            title: l10n.dashboardBackground,
-            keywords: l10n.dashboardBackgroundInfo,
-          ),
+          // ANA EKRAN ZEMİNİ BURADAN KALKTI (kullanıcı isteği 2026-08-16):
+          // artık ana ekranın kendi 3 nokta menüsünde (bkz.
+          // dashboard_background_sheet.dart). Zeminin sonucu yalnız ana
+          // ekranda görülüyor; ayarlara girip çıkarak denemek gerekiyordu.
           _SettingRow(
             const _DarkScheduleEditor(),
             title: l10n.darkSchedule,
@@ -1036,6 +1044,99 @@ class _LanguageSheetState extends State<_LanguageSheet> {
   }
 }
 
+/// Görünüm ayarlarının CANLI örneği: seçilen tema, yazı tipi ve yazı boyutu
+/// gerçek bir notun görünümünde birlikte gösterilir.
+///
+/// Kullanıcı isteği 2026-08-16: "görünüm ayarlarına örnek metin". Eskiden tek
+/// satırlık bir yazı boyutu önizlemesi vardı ([_TypographySection] içinde) ve
+/// yalnız BOYUTU gösteriyordu; başlığın gövdeden ne kadar büyük olduğu, satır
+/// içi biçimlerin (kalın, vurgu, altı çizili) seçilen yazı tipinde nasıl
+/// durduğu, madde satırlarının nasıl göründüğü ancak notu açınca anlaşılıyordu.
+///
+/// Önizleme gerçek çizim yollarını kullanır — [richSpans] ile satır içi
+/// biçimler, [applyNoteFont] ile yazı tipi, not paleti ile renkler. Kendi
+/// başına bir "örnek görünüm" çizilseydi ayarların gerçek sonucundan
+/// ayrışırdı.
+class _AppearancePreview extends ConsumerWidget {
+  const _AppearancePreview();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final font = ref.watch(appFontProvider);
+    final step = nearestFontScaleStep(ref.watch(fontScaleProvider));
+
+    TextStyle styled(TextStyle? base) =>
+        applyNoteFont(base ?? const TextStyle(), font);
+
+    // Örneğin KENDİSİ sistem yazı ölçeğinden muaf; ayarın kendi kademesini
+    // uygular ([_TypographySection]'daki önizlemeyle aynı gerekçe: seçici
+    // büyüyünce satır taşıyordu).
+    return MediaQuery.withNoTextScaling(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.appearancePreviewNoteTitle,
+              textScaler: TextScaler.linear(step.scale),
+              style: styled(
+                theme.textTheme.titleMedium,
+              ).copyWith(color: scheme.onSurface),
+            ),
+            const SizedBox(height: 6),
+            Text.rich(
+              TextSpan(
+                children: richSpans(
+                  l10n.appearancePreviewBody,
+                  styled(
+                    theme.textTheme.bodyMedium,
+                  ).copyWith(color: scheme.onSurface),
+                  palette: NoteColors.richPalette,
+                  markerColor: const Color(0x00000000),
+                ),
+              ),
+              textScaler: TextScaler.linear(step.scale),
+            ),
+            const SizedBox(height: 8),
+            // Madde satırı: liste notlarının görünümü de yazı tipinden
+            // etkileniyor, örnek onu da kapsamalı.
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_box_outlined,
+                  size: 16 * step.scale,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.appearancePreviewItem,
+                    textScaler: TextScaler.linear(step.scale),
+                    style: styled(
+                      theme.textTheme.bodyMedium,
+                    ).copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ThemeSelector extends ConsumerWidget {
   const _ThemeSelector();
 
@@ -1154,102 +1255,6 @@ class _VoiceModeSelector extends ConsumerWidget {
 /// Canlı geri bildirim kaybolmasın diye altta sabit yükseklikte bir önizleme
 /// satırı sürüklenen değerle ölçeklenir (yüksekliği sabit olduğundan
 /// büyümesi üstteki kaydırıcıyı oynatmaz).
-
-/// Ana ekranın zemin görseli: seç / görünürlük / kaldır.
-///
-/// Görsel uygulamanın kendi klasörüne KOPYALANIR: galeriden seçilen yol
-/// geçici olabiliyor (Android paylaşım önbelleği), kopyalanmazsa zemin bir
-/// süre sonra kendiliğinden kayboluyordu.
-class _DashboardBackgroundTile extends ConsumerWidget {
-  const _DashboardBackgroundTile();
-
-  Future<void> _pick(BuildContext context, WidgetRef ref) async {
-    final Uint8List bytes;
-    if (kIsWeb) return;
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      const group = XTypeGroup(
-        label: 'Görseller',
-        extensions: ['jpg', 'jpeg', 'png', 'webp'],
-      );
-      final file = await openFile(acceptedTypeGroups: const [group]);
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-    } else {
-      // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
-      // boşuna bellek (bkz. editördeki aynı tavan).
-      final file = await ImagePicker().pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2400,
-        maxHeight: 2400,
-      );
-      if (file == null) return;
-      bytes = await file.readAsBytes();
-    }
-    final dir = await getApplicationDocumentsDirectory();
-    // Dosya adı her seferinde değişir: aynı yol yeniden yazılsa Flutter'ın
-    // görsel önbelleği eski kareyi göstermeye devam ederdi.
-    final target = File('${dir.path}/dashboard_bg_${const Uuid().v4()}.img');
-    await target.writeAsBytes(bytes);
-    final previous = ref.read(dashboardBackgroundProvider).path;
-    ref.read(dashboardBackgroundProvider.notifier).setPath(target.path);
-    if (previous != null && previous != target.path) {
-      unawaited(File(previous).delete().catchError((_) => File(previous)));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final background = ref.watch(dashboardBackgroundProvider);
-    final hasImage =
-        background.path != null && File(background.path!).existsSync();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.wallpaper),
-          title: Text(l10n.dashboardBackground),
-          subtitle: Text(l10n.dashboardBackgroundInfo),
-          trailing: hasImage
-              ? IconButton(
-                  tooltip: l10n.removeBackgroundImage,
-                  icon: const Icon(Icons.hide_image_outlined),
-                  onPressed: () => ref
-                      .read(dashboardBackgroundProvider.notifier)
-                      .setPath(null),
-                )
-              : null,
-          onTap: () => _pick(context, ref),
-        ),
-        if (hasImage)
-          Row(
-            children: [
-              const Icon(Icons.opacity, size: 18),
-              Expanded(
-                child: Slider(
-                  value: background.opacity.clamp(0.05, 1),
-                  min: 0.05,
-                  max: 1,
-                  onChanged: (value) => ref
-                      .read(dashboardBackgroundProvider.notifier)
-                      .setOpacity(value),
-                ),
-              ),
-              SizedBox(
-                width: 44,
-                child: Text(
-                  '%${(background.opacity * 100).round()}',
-                  textAlign: TextAlign.end,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
 
 /// TİPOGRAFİ TEK BLOKTA: yazı tipi + yazı boyutu + ORTAK önizleme.
 ///

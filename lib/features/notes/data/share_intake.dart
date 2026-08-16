@@ -166,6 +166,16 @@ final shareIntakeProvider = Provider<void>((ref) {
 
     final attachRepo = ref.read(attachmentRepositoryProvider);
     if (attachRepo != null) {
+      // Hazırlanan ekler ÖNCE toplanır, sonra TEK yazımda gider.
+      //
+      // KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi"):
+      // eskiden döngünün her turunda ayrı bir `updateFields` (arrayUnion)
+      // ateşleniyordu ve HİÇBİRİ beklenmiyordu. Son yazım daha yoldayken
+      // aşağıdaki `push` editörü açıyor, editör de kendi anlık görüntüsünü
+      // (henüz 2 ekli) geri yazınca son ek siliniyordu. Tek arrayUnion'da
+      // böyle bir aralık yok; ayrıca `await` ile editör açılmadan önce
+      // yazımın gittiği garanti.
+      final prepared = <Attachment>[];
       for (final file in docs) {
         try {
           // Ek dosyaları da aynı kurala tabi: önbellek dışındaki bir yolu
@@ -225,12 +235,24 @@ final shareIntakeProvider = Provider<void>((ref) {
                       InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
                   ],
                 );
-          repo.updateFields(id, {
-            'attachments': FieldValue.arrayUnion([stored.toMap()]),
-          });
+          prepared.add(stored);
         } catch (_) {
           // Tek dosya okunamazsa/çok büyükse not yine oluşsun.
         }
+      }
+      if (prepared.isNotEmpty) {
+        // Zaman aşımı ŞART: dönen Future sunucu onayını bekliyor ve
+        // çevrimdışıyken hiç tamamlanmıyor. Yazım o durumda da yerel
+        // önbelleğe ANINDA düşmüştür — beklediğimiz tek şey editör açılmadan
+        // önce o düşüşün gerçekleşmesi.
+        await repo
+            .updateFieldsAndWait(id, {
+              'attachments': FieldValue.arrayUnion([
+                for (final a in prepared) a.toMap(),
+              ]),
+            })
+            .timeout(const Duration(seconds: 3), onTimeout: () {})
+            .catchError((Object _) {});
       }
     }
 

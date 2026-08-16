@@ -234,6 +234,17 @@ class BubbleController extends ChangeNotifier {
     return null;
   }
 
+  /// Yeni bırakılacak balon AÇIK METİN ALANI mı olsun (Paint'teki metin
+  /// aracı gibi — bkz. [PageBubble.plain])? Araç çubuğundan seçilir ve
+  /// seçim yeni balonlara taşınır; var olan balonlar etkilenmez.
+  bool plainMode = false;
+
+  void setPlainMode(bool value) {
+    if (plainMode == value) return;
+    plainMode = value;
+    notifyListeners();
+  }
+
   /// Sayfanın boş bir noktasına serbest balon bırakır.
   void add(int page, double x, double y) => _insert(
     PageBubble(
@@ -242,6 +253,7 @@ class BubbleController extends ChangeNotifier {
       x: x.clamp(0.0, 1.0),
       y: y.clamp(0.0, 1.0),
       color: color,
+      plain: plainMode,
     ),
   );
 
@@ -1188,14 +1200,28 @@ class _BubblePinState extends State<_BubblePin>
     final opaque = _lifted || !bubble.collapsed;
     final color = Color(bubble.color).withValues(alpha: opaque ? 1 : 0.72);
     final hasTitle = bubble.title.trim().isNotEmpty;
-    final child = hasTitle ? _titleChip(bubble, color) : _dot(bubble, color);
+    // AÇIK METİN ALANI: tutamaç yerine yazının kendisi çizilir.
+    final child = bubble.plain
+        ? _plainText(bubble, Color(bubble.color))
+        : (hasTitle ? _titleChip(bubble, color) : _dot(bubble, color));
     final point = Offset(
       bubble.x * widget.pageSize.width,
       bubble.y * widget.pageSize.height,
     );
     // Etiket genişliği bilinmiyor; sol kenarı noktadan 20 px sola alıp sayfaya
     // kıstırmak yeterli — etiket kısa (en çok 12 karakter).
-    final at = hasTitle
+    final at = bubble.plain
+        ? Offset(
+            point.dx.clamp(
+              0.0,
+              (widget.pageSize.width - 60).clamp(0.0, double.infinity),
+            ),
+            point.dy.clamp(
+              0.0,
+              (widget.pageSize.height - 20).clamp(0.0, double.infinity),
+            ),
+          )
+        : hasTitle
         ? Offset(
             (point.dx - 20).clamp(
               0.0,
@@ -1271,6 +1297,62 @@ class _BubblePinState extends State<_BubblePin>
       color: Colors.black87,
     ),
   );
+
+  /// Paint tarzı AÇIK METİN: balonun yazısı sayfanın üstünde doğrudan
+  /// görünür — kutu yok, tutamaç yok.
+  ///
+  /// Sayfa fotoğraf da olabildiği için yazı **çift çizilir**: önce koyu bir
+  /// dış hat (stroke), üstüne balonun kendi rengi. Tek renkli düz yazı açık
+  /// bir zeminde (beyaz kâğıt, parlak gökyüzü) okunmuyordu; dış hat her
+  /// zeminde okunur kılar ve gölgenin aksine yazıyı bulanıklaştırmaz.
+  ///
+  /// Boş metin, üzerine dokunulabilecek bir hedef bırakmak için yer tutucu
+  /// gösterir; yoksa yeni bırakılan boş bir metin alanı görünmez olur ve
+  /// kullanıcı onu bir daha açamazdı.
+  Widget _plainText(PageBubble bubble, Color color) {
+    final text = bubble.text.trim();
+    final empty = text.isEmpty;
+    final style = TextStyle(
+      fontSize: 16,
+      height: 1.25,
+      fontWeight: FontWeight.w600,
+      color: color,
+    );
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      decoration: empty || _lifted
+          ? BoxDecoration(
+              // Boşken (ve taşınırken) ince bir çerçeve: alanın nerede
+              // olduğu görünsün.
+              border: Border.all(color: color.withValues(alpha: 0.8)),
+              borderRadius: BorderRadius.circular(4),
+            )
+          : null,
+      child: empty
+          ? Text(
+              context.l10n.bubblePlainHint,
+              style: style.copyWith(
+                color: color.withValues(alpha: 0.75),
+                fontStyle: FontStyle.italic,
+              ),
+            )
+          : Stack(
+              children: [
+                Text(
+                  text,
+                  style: style.copyWith(
+                    foreground: Paint()
+                      ..style = PaintingStyle.stroke
+                      ..strokeWidth = 3
+                      ..color = Colors.black.withValues(alpha: 0.55),
+                  ),
+                ),
+                Text(text, style: style),
+              ],
+            ),
+    );
+  }
 
   Widget _titleChip(PageBubble bubble, Color color) => Container(
     constraints: const BoxConstraints(maxWidth: 170),
@@ -1763,10 +1845,26 @@ class BubbleToolbar extends StatelessWidget {
                   ],
                 ),
               ),
+              // AÇIK METİN ALANI kipi (kullanıcı isteği 2026-08-16).
+              IconButton(
+                tooltip: controller.plainMode
+                    ? context.l10n.bubblePlainModeOn
+                    : context.l10n.bubblePlainMode,
+                isSelected: controller.plainMode,
+                onPressed: () =>
+                    controller.setPlainMode(!controller.plainMode),
+                icon: Icon(
+                  controller.plainMode
+                      ? Icons.text_fields
+                      : Icons.text_fields_outlined,
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Text(
-                  context.l10n.bubbleTapToPlace,
+                  controller.plainMode
+                      ? context.l10n.bubblePlainTapToPlace
+                      : context.l10n.bubbleTapToPlace,
                   textAlign: TextAlign.end,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

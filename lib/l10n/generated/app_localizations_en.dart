@@ -1721,10 +1721,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voicePreview => 'Try the voice';
 
   @override
-  String get voicePreviewCached => 'The sample is generated once, then played from storage';
+  String get voicePreviewCached =>
+      'The sample is generated once, then played from storage';
 
   @override
-  String get reorderHint => 'Press and hold a card, then drag it where you want';
+  String get reorderHint =>
+      'Press and hold a card, then drag it where you want';
 
   @override
   String get filterSheetTitle => 'Filter';
@@ -2300,7 +2302,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportNotesOption => 'Note text (PDF / Word)';
 
   @override
-  String get exportNotesOptionInfo => 'The note’s text and images; bubbles not included.';
+  String get exportNotesOptionInfo =>
+      'The note’s text and images; bubbles not included.';
 
   @override
   String get captureNoteTitle => 'Note title (optional)';
@@ -2331,7 +2334,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imageOcrWorking => 'Recognizing text…';
 
   @override
-  String get imageOcrSelectHint => 'Tap: word · Hold and drag: letter by letter';
+  String get imageOcrSelectHint =>
+      'Tap: word · Hold and drag: letter by letter';
 
   @override
   String get imageOcrInsert => 'Add to note';
@@ -2349,7 +2353,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportImages => 'Images';
 
   @override
-  String get exportImagesInfo => 'Text flows beside narrow images aligned left or right; centred images take the full width.';
+  String get exportImagesInfo =>
+      'Text flows beside narrow images aligned left or right; centred images take the full width.';
 
   @override
   String get exportAlignLeft => 'Left';
@@ -2376,7 +2381,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiModelNoMatch => 'No matching model.';
 
   @override
-  String get aiModelAutoInfo => 'The app tries the most suitable models in order.';
+  String get aiModelAutoInfo =>
+      'The app tries the most suitable models in order.';
 
   @override
   String imageOcrCharsSelected(int count) {
@@ -2403,4 +2409,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiModelShowAllInfo => 'Also lists models the app does not use.';
+
+  @override
+  String get rotateFailed => 'Couldn\'t rotate the image.';
+
+  @override
+  String get dashboardBackgroundPick => 'Choose background image';
+
+  @override
+  String get dashboardBackgroundChange => 'Change background image';
+
+  @override
+  String podcastRenderingAudio(int done, int total) {
+    return 'Preparing audio: $done/$total parts';
+  }
+
+  @override
+  String get podcastExportAudio => 'Export as audio file';
+
+  @override
+  String get podcastExportAudioCost =>
+      'The whole script is re-synthesised with the AI voice and saved as a single WAV file. This uses your Gemini quota and can take a few minutes for long texts.';
+
+  @override
+  String get podcastShareText => 'Share the script';
+
+  @override
+  String get podcastSaveAsNote => 'Save as a new note';
+
+  @override
+  String get podcastSavedAsNote => 'The podcast script was saved as a note.';
+
+  @override
+  String get listenPreparingVoice => 'Preparing audio…';
+
+  @override
+  String get appearancePreviewTitle => 'Sample text';
+
+  @override
+  String get appearancePreviewNoteTitle => 'Sample note title';
+
+  @override
+  String get appearancePreviewBody =>
+      'Your notes will look like this. Inline **bold**, ~underlined~ and ==2:highlighted== text appears like so.';
+
+  @override
+  String get appearancePreviewItem => 'A checklist item looks like this';
+
+  @override
+  String get convertToText => 'Convert to text';
+
+  @override
+  String get convertToList => 'Convert to list';
+
+  @override
+  String get convertedToText => 'The list was converted to plain text.';
+
+  @override
+  String get convertedToList => 'The text was converted to a list.';
+
+  @override
+  String get convertToListEmpty => 'There are no lines to convert into a list.';
+
+  @override
+  String get listTwoColumns => 'Two columns';
+
+  @override
+  String get listOneColumn => 'Single column';
+
+  @override
+  String get sortItems => 'Sort items';
+
+  @override
+  String get sortStarredFirst => 'Starred first';
+
+  @override
+  String get sortUncheckedFirst => 'Completed last';
+
+  @override
+  String get sortAlphabetical => 'A → Z';
+
+  @override
+  String get sortAlphabeticalDesc => 'Z → A';
+
+  @override
+  String get imagesToAttachments => 'Move images to attachments';
+
+  @override
+  String imagesToAttachmentsDone(int count) {
+    return '$count images moved to attachments.';
+  }
+
+  @override
+  String get imageOcrShowRecognized => 'Highlight recognised text';
+
+  @override
+  String get imageOcrHideRecognized => 'Hide the highlight';
+
+  @override
+  String get bubblePlainMode => 'Open text box';
+
+  @override
+  String get bubblePlainModeOn => 'Open text box is on';
+
+  @override
+  String get bubblePlainTapToPlace => 'Tap where the text should go';
+
+  @override
+  String get bubblePlainHint => 'Tap to write';
 }

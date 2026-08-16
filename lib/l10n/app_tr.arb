@@ -1106,5 +1106,56 @@
     }
   },
   "aiModelShowAll": "Tümünü göster",
-  "aiModelShowAllInfo": "Uygulamanın kullanmadığı modeller de listelenir."
+  "aiModelShowAllInfo": "Uygulamanın kullanmadığı modeller de listelenir.",
+  "rotateFailed": "Görsel döndürülemedi.",
+  "dashboardBackgroundPick": "Zemin görseli seç",
+  "dashboardBackgroundChange": "Zemin görselini değiştir",
+  "podcastRenderingAudio": "Ses hazırlanıyor: {done}/{total} parça",
+  "@podcastRenderingAudio": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "podcastExportAudio": "Ses dosyası olarak dışa aktar",
+  "podcastExportAudioCost": "Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.",
+  "podcastShareText": "Metni paylaş",
+  "podcastSaveAsNote": "Yeni not olarak kaydet",
+  "podcastSavedAsNote": "Podcast metni not olarak kaydedildi.",
+  "listenPreparingVoice": "Ses hazırlanıyor…",
+  "appearancePreviewTitle": "Örnek metin",
+  "appearancePreviewNoteTitle": "Örnek not başlığı",
+  "appearancePreviewBody": "Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.",
+  "appearancePreviewItem": "Liste maddesi böyle görünür",
+  "convertToText": "Metne dönüştür",
+  "convertToList": "Listeye dönüştür",
+  "convertedToText": "Liste düz metne dönüştürüldü.",
+  "convertedToList": "Metin listeye dönüştürüldü.",
+  "convertToListEmpty": "Listeye dönüştürülecek satır yok.",
+  "listTwoColumns": "2 sütun",
+  "listOneColumn": "Tek sütun",
+  "sortItems": "Maddeleri sırala",
+  "sortStarredFirst": "Önce yıldızlılar",
+  "sortUncheckedFirst": "Tamamlananlar sona",
+  "sortAlphabetical": "A → Z",
+  "sortAlphabeticalDesc": "Z → A",
+  "imagesToAttachments": "Görselleri eke dönüştür",
+  "imagesToAttachmentsDone": "{count} görsel eke dönüştürüldü.",
+  "@imagesToAttachmentsDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "imageOcrShowRecognized": "Tanınan metni vurgula",
+  "imageOcrHideRecognized": "Vurguyu kaldır",
+  "bubblePlainMode": "Açık metin alanı",
+  "bubblePlainModeOn": "Açık metin alanı açık",
+  "bubblePlainTapToPlace": "Metnin geleceği yere dokun",
+  "bubblePlainHint": "Yazmak için dokun"
 }

@@ -368,13 +368,25 @@ class GeminiService {
     return text;
   }
 
+  /// Özet ve analize giden not metni: TAMAMLANMIŞ maddeler dışarıda kalır
+  /// (kullanıcı isteği 2026-08-16 — bkz. `Note.toPlainText(skipChecked:)`).
+  /// Modelin "liste eksik" sanıp uydurmaması için kaç madde elendiği tek
+  /// satırla bildirilir.
+  static String _reviewText(Note note) {
+    final done = note.items.where((i) => i.checked).length;
+    final text = note.toPlainText(skipChecked: true);
+    if (done == 0) return text;
+    return '$text\n\n(Ayrıca $done madde tamamlanmış ve bilerek '
+        'çıkarılmıştır; onları değerlendirme.)';
+  }
+
   /// Notu Türkçe, kısa ve madde işaretli özetler.
   Future<String> summarizeNote(Note note) => _generate([
     {
       'text':
           'Aşağıdaki notu Türkçe olarak kısa ve öz biçimde özetle. '
           'Uygunsa madde işaretleri kullan. Yalnızca özeti yaz, başka '
-          'açıklama ekleme.\n\n---\n${note.toPlainText()}',
+          'açıklama ekleme.\n\n---\n${_reviewText(note)}',
     },
   ]);
 
@@ -385,7 +397,7 @@ class GeminiService {
           'Aşağıdaki notu Türkçe analiz et: ana temaları çıkar, varsa '
           'eksik veya belirsiz noktaları belirt ve nottan doğan yapılacak '
           'işleri listele. Kısa ve eyleme dönük yaz.\n\n---\n'
-          '${note.toPlainText()}',
+          '${_reviewText(note)}',
     },
   ]);
 

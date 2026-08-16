@@ -20,6 +20,9 @@ Future<String?> showNoteEditorMenu(
   required bool starred,
   required bool locked,
   required bool archived,
+  required bool isList,
+  required bool twoColumns,
+  required bool hasFloatingImages,
 }) {
   final l10n = context.l10n;
   return showModalBottomSheet<String>(
@@ -35,6 +38,9 @@ Future<String?> showNoteEditorMenu(
           starred: starred,
           locked: locked,
           archived: archived,
+          isList: isList,
+          twoColumns: twoColumns,
+          hasFloatingImages: hasFloatingImages,
         ),
       ),
     ),
@@ -48,6 +54,9 @@ class _MenuGrid extends StatelessWidget {
     required this.starred,
     required this.locked,
     required this.archived,
+    required this.isList,
+    required this.twoColumns,
+    required this.hasFloatingImages,
   });
 
   final AppLocalizations l10n;
@@ -55,6 +64,18 @@ class _MenuGrid extends StatelessWidget {
   final bool starred;
   final bool locked;
   final bool archived;
+
+  /// Not LİSTE tipinde mi (checklist / sıralı)? Listeye özgü maddeler
+  /// (metne çevir, sütun sayısı, maddeleri sırala) yalnız o zaman çizilir —
+  /// metin notunda ölü madde durmasın.
+  final bool isList;
+
+  /// Liste iki sütunda mı gösteriliyor (bkz. `Note.listColumns`).
+  final bool twoColumns;
+
+  /// Notta SAYFADA YÜZEN (metnin arasına konmuş) görsel var mı? "Görselleri
+  /// eke dönüştür" maddesi yalnız o zaman anlamlı.
+  final bool hasFloatingImages;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +92,24 @@ class _MenuGrid extends StatelessWidget {
         starred ? l10n.unstar : l10n.star,
         starred ? Icons.star : Icons.star_outline,
       ),
+      // LİSTEYE ÖZGÜ maddeler (kullanıcı istekleri 2026-08-16). Hepsi
+      // yerel ve anında: hiçbiri model çağırmaz.
+      if (isList) ...[
+        ('toText', l10n.convertToText, Icons.notes_outlined),
+        ('sortItems', l10n.sortItems, Icons.sort),
+        (
+          'columns',
+          twoColumns ? l10n.listOneColumn : l10n.listTwoColumns,
+          twoColumns ? Icons.view_agenda_outlined : Icons.view_column_outlined,
+        ),
+      ] else
+        ('toList', l10n.convertToList, Icons.checklist),
+      // Metin içi görselleri TOPLUCA ek şeridine indirir (kullanıcı isteği
+      // 2026-08-16: "metin içi görselleri eke dönüştürme butonu"). Görsel
+      // görsel yapılabiliyordu (görselin kendi menüsündeki "Ek yap") ama on
+      // görselli bir notta bu on ayrı işlem demekti.
+      if (hasFloatingImages)
+        ('imagesToFiles', l10n.imagesToAttachments, Icons.attach_file),
       ('share', l10n.share, Icons.share_outlined),
       // "PDF olarak dışa aktar" DEĞİL: belge notlarında çıktı balonlu PDF de
       // olabiliyor, metin notlarında Word de üretiliyor. Etiket artık yolu

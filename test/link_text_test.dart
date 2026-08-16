@@ -18,8 +18,37 @@ void main() {
   });
 
   test('link olmayan noktalı metinler link sayılmaz', () {
-    for (final text in ['rapor.txt', 'sürüm 1.2.3', 'Ahmet.Yilmaz', 'saat 14.30']) {
+    for (final text in [
+      'rapor.txt',
+      'sürüm 1.2.3',
+      'Ahmet.Yilmaz',
+      'saat 14.30',
+      // Noktadan sonra boşluk unutulmuş cümle: iki harfli ülke kodlarıyla
+      // çakışan kelimeler linke düşmemeli (bkz. _tldPattern yorumu).
+      'bitti.It happens',
+      'geldi.At the door',
+    ]) {
       expect(findLinks(text), isEmpty, reason: text);
+    }
+  });
+
+  test('e-posta tümüyle tek parça bulunur, web adresi sanılmaz', () {
+    final mail = findLinks('yaz ali.veli@ornek.com.tr bana').single;
+    expect(mail.url, 'ali.veli@ornek.com.tr');
+    expect(mail.kind, LinkKind.email);
+    // KÖK NEDEN sınavı: eskiden yalnız "ornek.com" yakalanıyordu.
+    expect(findLinks('info@ornek.com').single.url, 'info@ornek.com');
+  });
+
+  test('genişletilen uzantılar ve tr alt alanları tanınır', () {
+    for (final entry in {
+      'ornek.com.tr': 'ornek.com.tr',
+      'kurum.gov.tr': 'kurum.gov.tr',
+      'okul.k12.tr': 'okul.k12.tr',
+      'magaza.store': 'magaza.store',
+      'blog.online/yazi': 'blog.online/yazi',
+    }.entries) {
+      expect(findLinks(entry.key).single.url, entry.value, reason: entry.key);
     }
   });
 

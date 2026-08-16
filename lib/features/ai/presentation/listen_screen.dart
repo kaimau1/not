@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/speech_output.dart';
+import '../../notes/data/notes_repository.dart';
+import '../../notes/domain/note_type.dart';
 import '../../settings/settings_providers.dart';
 import '../data/ai_cache.dart';
 import '../data/ai_speech.dart';
@@ -50,6 +55,11 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
   bool _busy = true;
   bool _generating = false;
   bool _isPodcast = false;
+
+  /// Ses dosyasi URETILIYOR mu (disa aktarma) ve kacinci parcada.
+  bool _rendering = false;
+  int _renderDone = 0;
+  int _renderTotal = 0;
 
   /// Gosterilen metin onbellekten mi geldi (yeniden uret secenegi icin).
   bool _fromCache = false;
@@ -222,6 +232,109 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
     }
   }
 
+  /// Podcast SESİNİ tek bir WAV dosyasına döker ve paylaşım levhasını açar.
+  ///
+  /// Ses üretimi kotadan düşüyor ve dinlerken üretilen parçalar okuma bitince
+  /// siliniyor — bu yüzden dışa aktarma metni BAŞTAN seslendirir ve maliyeti
+  /// önce kullanıcıya sorar.
+  Future<void> _exportAudio() async {
+    final text = _text;
+    if (text == null || text.trim().isEmpty) return;
+    final l10n = context.l10n;
+    if (!ref.read(aiSpeechProvider.notifier).isAvailable) {
+      _snack(l10n.ttsEngineAiUnavailable);
+      return;
+    }
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.podcastExportAudio),
+        content: Text(l10n.podcastExportAudioCost),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.podcastExportAudio),
+          ),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
+
+    await ref.read(speechOutputProvider.notifier).stop();
+    await ref.read(aiSpeechProvider.notifier).stop();
+    setState(() {
+      _rendering = true;
+      _renderDone = 0;
+      _renderTotal = 0;
+    });
+    try {
+      final path = await ref
+          .read(aiSpeechProvider.notifier)
+          .renderToFile(
+            text,
+            fileName: widget.title,
+            onProgress: (done, total) {
+              if (!mounted) return;
+              setState(() {
+                _renderDone = done;
+                _renderTotal = total;
+              });
+            },
+          );
+      if (!mounted) return;
+      setState(() => _rendering = false);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(path)], text: widget.title),
+      );
+    } on GeminiException catch (e) {
+      if (!mounted) return;
+      setState(() => _rendering = false);
+      _snack(e.message);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _rendering = false);
+      _snack(context.l10n.aiError('$e'));
+    }
+  }
+
+  /// Podcast METNİNİ paylaşır (ses değil — kota harcamaz).
+  Future<void> _shareText() async {
+    final text = _text;
+    if (text == null || text.trim().isEmpty) return;
+    await SharePlus.instance.share(
+      ShareParams(text: text, subject: widget.title),
+    );
+  }
+
+  /// Podcast metnini YENİ NOT olarak kaydeder ve o notu açar.
+  Future<void> _saveAsNote() async {
+    final text = _text;
+    if (text == null || text.trim().isEmpty) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    try {
+      final id = await repo.createNote(NoteType.text, body: text);
+      repo.updateFields(id, {'title': widget.title});
+      if (!mounted) return;
+      _snack(context.l10n.podcastSavedAsNote);
+      context.push(noteRoutePath(id));
+    } catch (e) {
+      if (!mounted) return;
+      _snack(context.l10n.aiError('$e'));
+    }
+  }
+
+  void _snack(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _showOriginal() async {
     await ref.read(speechOutputProvider.notifier).stop();
     await ref.read(aiSpeechProvider.notifier).stop();
@@ -257,16 +370,66 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
               onPressed: _generating ? null : _showOriginal,
               child: Text(l10n.listenOriginalText),
             ),
+          // DIŞA AKTARMA (kullanıcı isteği 2026-08-16). Yalnız podcast
+          // metninde anlamlı: ham belge metni zaten kaynağında duruyor.
+          if (_isPodcast && !_generating && !_rendering)
+            PopupMenuButton<String>(
+              tooltip: l10n.exportTitle,
+              onSelected: (action) => switch (action) {
+                'audio' => _exportAudio(),
+                'text' => _shareText(),
+                'note' => _saveAsNote(),
+                _ => null,
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'audio',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.audio_file_outlined),
+                    title: Text(l10n.podcastExportAudio),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'text',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.ios_share),
+                    title: Text(l10n.podcastShareText),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'note',
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.note_add_outlined),
+                    title: Text(l10n.podcastSaveAsNote),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
-      body: _busy || _generating
+      body: _busy || _generating || _rendering
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(),
+                  CircularProgressIndicator(
+                    // Ses üretiminde kaçıncı parçada olduğumuz biliniyor:
+                    // belirsiz çark yerine gerçek ilerleme gösterilir.
+                    value: _rendering && _renderTotal > 0
+                        ? _renderDone / _renderTotal
+                        : null,
+                  ),
                   const SizedBox(height: 12),
-                  Text(_generating ? l10n.generating : l10n.listenReadingPdf),
+                  Text(
+                    _rendering
+                        ? l10n.podcastRenderingAudio(_renderDone, _renderTotal)
+                        : (_generating
+                              ? l10n.generating
+                              : l10n.listenReadingPdf),
+                  ),
                 ],
               ),
             )
@@ -328,7 +491,34 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: LinearProgressIndicator(
-                              value: speech.progress,
+                              // Parça HAZIRLANIRKEN belirsiz (akan) çubuk:
+                              // hoparlörden ses çıkmadığı o birkaç saniyede
+                              // ekranda hiçbir şey kıpırdamıyordu (kullanıcı
+                              // isteği 2026-08-16 — bkz. SpeechOutputState).
+                              value: speech.loading ? null : speech.progress,
+                            ),
+                          ),
+                        if (speech.loading)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.listenPreparingVoice,
+                                  style: Theme.of(context).textTheme.labelMedium
+                                      ?.copyWith(color: scheme.primary),
+                                ),
+                              ],
                             ),
                           ),
                         Row(

@@ -42,6 +42,7 @@ class SpeechOutputState {
     this.state = SpeechState.idle,
     this.total = 0,
     this.spoken = 0,
+    this.loading = false,
   });
 
   final SpeechState state;
@@ -49,6 +50,16 @@ class SpeechOutputState {
   /// Sıraya alınan cümle sayısı ve kaçının okunduğu — ilerleme göstergesi.
   final int total;
   final int spoken;
+
+  /// Ses HAZIRLANIYOR mu? Yalnız yapay zekâ sesinde true olur: parça modelden
+  /// istenirken hoparlörden ses çıkmaz.
+  ///
+  /// Kullanıcı isteği 2026-08-16: "podcast kısmında ai sesini beklerken
+  /// sessizlik var yüklenme efekti lazım". Düğme "Duraklat"a dönüyor ama
+  /// birkaç saniye hiçbir şey duyulmuyordu; kullanıcı bozulduğunu sanıp
+  /// tekrar basıyor ve okuma baştan başlıyordu. Cihaz TTS'i anında konuştuğu
+  /// için orada hep false kalır.
+  final bool loading;
 
   bool get isActive => state != SpeechState.idle;
   double get progress => total == 0 ? 0 : (spoken / total).clamp(0.0, 1.0);

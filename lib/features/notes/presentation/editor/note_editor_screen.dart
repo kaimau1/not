@@ -54,6 +54,7 @@ import '../../data/scan/scan_ocr.dart';
 import '../../data/scan/scan_title.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
+import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
@@ -1967,6 +1968,34 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
+  /// Görseli KALICI olarak 90°'nin katıyla döndürür (tam ekrandaki döndür
+  /// düğmesinden gelir). [quarterTurns] pozitif = saat yönü.
+  ///
+  /// Kırpmayla ([_cropImage]) aynı gerekçeler: aynı yola yeniden yazılan
+  /// dosya için görsel önbelleği temizlenir, yoksa eski (dönmemiş) hâl
+  /// gösterilmeye devam eder.
+  Future<void> _rotateImage(Attachment image, int quarterTurns) async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    try {
+      final turned = await repo.rotateImage(
+        noteId: widget.noteId,
+        attachment: image,
+        quarterTurns: quarterTurns,
+      );
+      PaintingBinding.instance.imageCache
+        ..clear()
+        ..clearLiveImages();
+      _updateAttachment(turned);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } on AttachmentMissingException {
+      if (mounted) _showSnack(context.l10n.rotateFailed);
+    } catch (e) {
+      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+    }
+  }
+
   /// Alt bardaki bir düğme (görünüm/renk, ek, hesap makinesi) alt sayfa/menü
   /// açmadan önce klavyeyi kesin kapatır. Klavye elle kapatılmış olsa bile bir
   /// metin alanı odakta kalabiliyor; alt sayfa kapanınca odak geri gelip
@@ -2036,6 +2065,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
       onCrop: _cropImage,
+      onRotate: _rotateImage,
       onExtractText: _ocrImage,
       onCopy: _copyAttachment,
       onCopyMany: _copyAttachments,
@@ -2446,6 +2476,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       starred: note.starred,
       locked: note.locked,
       archived: note.archivedAt != null,
+      isList:
+          note.type == NoteType.checklist || note.type == NoteType.ordered,
+      twoColumns: note.listColumns == 2,
+      hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
     );
     if (action == null || !mounted) return;
     switch (action) {
@@ -2465,11 +2499,143 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _toggleArchive();
       case 'clear':
         await _clearContent();
+      case 'toText':
+        _convertToText();
+      case 'toList':
+        _convertToList();
+      case 'sortItems':
+        await _sortItems();
+      case 'imagesToFiles':
+        _allImagesToFiles();
+      case 'columns':
+        _mutate(
+          (n) => n.copyWith(listColumns: n.listColumns == 2 ? 1 : 2),
+          immediate: true,
+        );
       case 'settings':
         if (mounted) context.push('/settings');
       case 'delete':
         _delete();
     }
+  }
+
+  /// Sayfada YÜZEN bütün görselleri ek şeridine indirir (tek işlemde).
+  ///
+  /// Görselin kendi menüsündeki "Ek yap" ([_setImageAsFile]) aynı işi tek
+  /// görsel için yapıyor; buradaki toplu sürüm kullanıcı isteği 2026-08-16
+  /// ("metin içi görselleri eke dönüştürme butonu"). Tek `_mutate` çağrısı:
+  /// görsel başına ayrı yazım hem Firestore'a on ayrı güncelleme gönderir
+  /// hem de geri alma yığınını on adımla doldururdu.
+  void _allImagesToFiles() {
+    final note = _note;
+    if (note == null) return;
+    final count = note.attachments.where((a) => a.floatsOnPage).length;
+    if (count == 0) return;
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.floatsOnPage) a.copyWith(asFile: true) else a,
+        ],
+      ),
+      immediate: true,
+    );
+    _showSnack(context.l10n.imagesToAttachmentsDone(count));
+  }
+
+  /// Liste notunu DÜZ METİN notuna çevirir — model çağırmadan.
+  ///
+  /// Maddeler gövdenin SONUNA eklenir (gövdede zaten bir açıklama olabilir)
+  /// ve liste boşaltılır. Geri alınabilir: "- [x] süt" biçimindeki satırlar
+  /// [itemsFromText] tarafından okunuyor, yani "metne çevir → listeye çevir"
+  /// hem maddeleri hem işaretleri geri getirir.
+  void _convertToText() {
+    final note = _note;
+    if (note == null || note.items.isEmpty) return;
+    _flushPending(_bodyController);
+    final converted = textFromItems(
+      note.items,
+      numbered: note.type == NoteType.ordered,
+    );
+    final existing = _bodyController.text.trim();
+    final body = existing.isEmpty ? converted : '$existing\n$converted';
+    _bodyController.text = body;
+    _mutate(
+      (n) => n.copyWith(type: NoteType.text, body: body, items: const []),
+      immediate: true,
+    );
+    _showSnack(context.l10n.convertedToText);
+  }
+
+  /// Düz metin notunu LİSTE notuna çevirir — model çağırmadan.
+  /// Her boş olmayan satır bir madde olur, gövde boşalır.
+  void _convertToList() {
+    final note = _note;
+    if (note == null) return;
+    _flushPending(_bodyController);
+    final items = itemsFromText(
+      _bodyController.text,
+      newId: () => const Uuid().v4(),
+    );
+    if (items.isEmpty) {
+      _showSnack(context.l10n.convertToListEmpty);
+      return;
+    }
+    _bodyController.text = '';
+    _mutate(
+      (n) => n.copyWith(
+        type: NoteType.checklist,
+        body: '',
+        // Metin notunda zaten madde varsa (karışık içerik) onlar korunur ve
+        // yeni maddeler ARKALARINA eklenir — dönüşüm hiçbir şey silmemeli.
+        items: [...n.items, ...items],
+      ),
+      immediate: true,
+    );
+    _showSnack(context.l10n.convertedToList);
+  }
+
+  /// Maddeleri seçilen ölçüte göre sıralar (yerel, geri alınabilir bir
+  /// düzenleme olarak kaydedilir).
+  Future<void> _sortItems() async {
+    final note = _note;
+    if (note == null || note.items.isEmpty) return;
+    final l10n = context.l10n;
+    final choice = await showModalBottomSheet<ItemSort>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (sort, label, icon) in <(ItemSort, String, IconData)>[
+              (ItemSort.starredFirst, l10n.sortStarredFirst, Icons.star),
+              (
+                ItemSort.uncheckedFirst,
+                l10n.sortUncheckedFirst,
+                Icons.check_box_outline_blank,
+              ),
+              (ItemSort.alphabetical, l10n.sortAlphabetical, Icons.sort_by_alpha),
+              (
+                ItemSort.alphabeticalDesc,
+                l10n.sortAlphabeticalDesc,
+                Icons.sort_by_alpha,
+              ),
+            ])
+              ListTile(
+                leading: Icon(icon),
+                title: Text(label),
+                onTap: () => Navigator.pop(sheetContext, sort),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !mounted) return;
+    _mutate(
+      (n) => n.copyWith(items: sortItems(n.items, choice)),
+      immediate: true,
+    );
   }
 
   /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.
@@ -4476,6 +4642,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         key: _itemsEditorKey,
         items: note.items,
         showCheckboxes: note.type == NoteType.checklist,
+        // İki sütun YALNIZ gerçek liste notunda (kullanıcı isteği
+        // 2026-08-16). Metin notuna iliştirilmiş maddeler gövdenin altında
+        // birkaç satır tutuyor; onları ikiye bölmek yalnız karıştırırdı.
+        columns: note.listColumns,
         expandItems: ref.watch(expandListItemsProvider),
         onChanged: (items) => _mutate((n) => n.copyWith(items: items)),
         floats: _floats,
