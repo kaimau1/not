@@ -1666,7 +1666,28 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   karıştırırdı. Sıralama gerekince tek sütuna dönülür; menüdeki "Maddeleri
   sırala" iki sütunda da çalışır.
 
-  **7) APK: `abiFilters += "arm64-v8a"` + R8 küçültme AÇILDI.**
+  **7) KÖK NEDEN — `abiFilters` 32 biti ELEMEDİ (ölçüldü, koşu
+  #31951618844).** APK'ya boyut raporu adımı eklenene kadar bu görülmedi:
+  rapor üç mimarinin de paketlendiğini gösterdi (arm64 50 MB, x86_64 23 MB,
+  armeabi-v7a 14 MB). `libapp.so`/`libflutter.so` gerçekten tek mimariydi —
+  yani `--target-platform android-arm64` çalışıyor — fazlalık EKLENTİLERİN
+  hazır `.so` dosyalarıydı (ML Kit OCR, barkod, pdfium).
+  `defaultConfig.ndk.abiFilters` bunlara işlemiyor. Çözüm
+  `packaging.jniLibs.excludes` ile x86/x86_64/armeabi/armeabi-v7a
+  klasörlerini paketleme sırasında atmak; koşu #31952689706 yalnız arm64
+  kaldığını doğruladı. `splits.abi` bilerek KULLANILMADI: çıktının adını
+  `app-arm64-v8a-release.apk` yapıp CI'daki yayınlama yolunu kırardı.
+  Rapor adımı artık DENETİM — istenmeyen mimari sızarsa derleme düşer.
+
+  **TUZAK — ölçü birimi karıştırma.** İlk turda "APK 60 MB'tan 100 MB'a
+  çıktı" diye yanlış teşhis kondu: karşılaştırılan 51.6 MB önceki koşunun
+  ARTIFACT ZIP'iydi, 99.8 MB ise APK dosyasının kendisi. `unzip -l`
+  toplamı (110.8 MB) ile dosya boyutunun (99.8 MB) birbirine yakın olması
+  yerel kitaplıkların SIKIŞTIRILMADAN saklandığını gösteriyor (AGP
+  varsayılanı) — yani APK dosyası zaten büyük görünür. Boyut kıyaslarken
+  her zaman aynı şeyi ölç.
+
+  **7b) R8 küçültme AÇILDI.**
   `--target-platform android-arm64` yalnız FLUTTER'ın kitaplıklarını tek
   mimariye indiriyordu; eklentilerin yerel kitaplıkları (ML Kit, pdfium,
   mobile_scanner, record) üç mimari için de paketleniyordu. `proguardFiles`

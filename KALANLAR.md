@@ -17,6 +17,10 @@
   bedeli yüksek; kullanıcıya soruluyor ama ölçülmedi.
 - [ ] Yeni l10n anahtarları (~50) yalnız TR ve EN'de; kalan 14 dil şablona
   (Türkçe) düşüyor. `Çeviri üret` iş akışı elle tetiklenmeli.
+- [ ] **GitHub Actions artifact DEPOLAMA kotası dolu** ("Artifact storage
+  quota has been hit"). APK artık Release olarak yayınlandığı için teslimat
+  etkilenmiyor (artifact adımı zorunlu değil), ama eski artifact'ler
+  Actions → sağdaki "Artifacts" bölümünden silinmezse kota dolu kalır.
 
 ## 2026-08-06 genel kullanım denetiminden kalan (bilinçli ertelenen küçük uçlar)
 - [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
