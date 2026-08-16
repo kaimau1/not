@@ -194,6 +194,14 @@ jobs:
             END {for (a in s) printf "%12d  %s\n", s[a], a}' | sort -rn
           echo "--- en büyük 25 girdi ---"
           unzip -l "$apk" | sort -rn | head -25
+          # DENETİM: 32 bit / x86 kitaplığı sızarsa derleme DÜŞER.
+          # Koşu #31951618844'te `abiFilters` sessizce işe yaramamış ve APK
+          # üç mimariyle çıkmıştı; sessiz kalırsa bir daha fark edilmez.
+          if unzip -l "$apk" | grep -qE ' lib/(x86|x86_64|armeabi|armeabi-v7a)/'; then
+            echo "::error::APK istenmeyen mimari içeriyor (yalnız arm64-v8a olmalı)."
+            exit 1
+          fi
+          echo "Yalnız arm64-v8a: doğrulandı."
 
       # AAB (Play App Bundle) derlemesi şimdilik DEVRE DIŞI: uygulama henüz
       # Play'e yüklenmediğinden her main derlemesini gereksiz ~2-3 dk

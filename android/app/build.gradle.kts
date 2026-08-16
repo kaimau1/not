@@ -43,13 +43,18 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // YALNIZ 64 BİT (kullanıcı isteği 2026-08-16: "32 bit derlenmesin
-        // boşuna kota harcamasın"). `--target-platform android-arm64` yalnız
-        // FLUTTER'ın kendi kitaplıklarını (engine + Dart AOT) tek mimariye
-        // indiriyordu; eklentilerin yerel kitaplıkları (ML Kit, pdfium,
-        // mobile_scanner, record…) yine üç mimari için de paketleniyordu.
-        // abiFilters bunları da keser: APK'da tek bir `arm64-v8a/` klasörü
-        // kalır. Bayrak unutulsa bile 32 bit derlenmez.
+        // YALNIZ 64 BİT — 1. savunma hattı (kullanıcı isteği 2026-08-16:
+        // "32 bit derlenmesin boşuna kota harcamasın").
+        //
+        // TEK BAŞINA YETMİYOR, ölçüldü: koşu #31951618844'ün boyut raporu
+        // yalnız bununla üretilen APK'da ÜÇ mimarinin de durduğunu gösterdi
+        // (arm64 50 MB, x86_64 23 MB, armeabi-v7a 14 MB). `libapp.so` ve
+        // `libflutter.so` gerçekten tek mimariydi — yani `--target-platform`
+        // çalışıyor — ama EKLENTİLERİN yerel kitaplıkları (ML Kit OCR,
+        // barkod, pdfium) hepsi paketlenmişti. Asıl kesme aşağıdaki
+        // `packaging.jniLibs.excludes` ile yapılıyor; bu blok yine de duruyor
+        // çünkü NDK derlemesi olan bir bağımlılık eklenirse onu kaynağında
+        // engeller.
         //
         // BEDELİ: uygulama 32 bit cihazlarda (2015 öncesi telefonlar,
         // bazı ucuz tabletler) HİÇ kurulmaz. Bilinçli karar.
@@ -64,6 +69,25 @@ android {
             keyPassword = keystoreProperties["keyPassword"] as String?
             storeFile = (keystoreProperties["storeFile"] as String?)?.let { file(it) }
             storePassword = keystoreProperties["storePassword"] as String?
+        }
+    }
+
+    // 32 BİT VE x86 KİTAPLIKLARI PAKETTEN ÇIKAR — 2. (ve etkili) savunma
+    // hattı. `defaultConfig.ndk.abiFilters` eklenti AAR'larından gelen hazır
+    // `.so` dosyalarını elemedi (yukarıdaki ölçüme bak); paketleme süzgeci
+    // ise dosya yoluna bakıp doğrudan atıyor.
+    //
+    // `splits.abi` yerine bu seçildi: splits çıktı dosyasının adını
+    // `app-arm64-v8a-release.apk` yapıyor ve CI'daki yükleme/yayınlama
+    // yolları o adı bilmiyor — sessizce "APK yok" hatasına düşerdi.
+    packaging {
+        jniLibs {
+            excludes += setOf(
+                "**/x86_64/**",
+                "**/x86/**",
+                "**/armeabi-v7a/**",
+                "**/armeabi/**",
+            )
         }
     }
 
