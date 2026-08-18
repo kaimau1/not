@@ -2814,4 +2814,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get friendsRowInfo => 'Add friends, share folders with them';
+
+  @override
+  String get accountRecoverConflictTitle => 'This device has unsaved notes';
+
+  @override
+  String accountRecoverConflictBody(Object count) {
+    return 'This Google account is already linked to another session; switching to it will hide the $count note(s) on this device (they aren\'t deleted, just no longer reachable from here). Continue anyway?';
+  }
+
+  @override
+  String get accountRecoverConflictProceed => 'Switch anyway';
 }

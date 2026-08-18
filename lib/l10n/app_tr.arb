@@ -1295,5 +1295,8 @@
   "folderShareCount": "{count, plural, one{1 kişiyle paylaşıldı} other{{count} kişiyle paylaşıldı}}",
   "folderShareTitle": "\"{name}\" klasörünü paylaş",
   "folderShareInfo": "Seçtiğin arkadaş bu klasörü ve içindeki notları görür, düzenleyebilir.",
-  "friendsRowInfo": "Arkadaş ekle, klasörlerini onlarla paylaş"
+  "friendsRowInfo": "Arkadaş ekle, klasörlerini onlarla paylaş",
+  "accountRecoverConflictTitle": "Bu cihazda kaydedilmemiş notlar var",
+  "accountRecoverConflictBody": "Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki {count} not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?",
+  "accountRecoverConflictProceed": "Yine de geç"
 }

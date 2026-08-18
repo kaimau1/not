@@ -5255,6 +5255,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Arkadaş ekle, klasörlerini onlarla paylaş'**
   String get friendsRowInfo;
+
+  /// No description provided for @accountRecoverConflictTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda kaydedilmemiş notlar var'**
+  String get accountRecoverConflictTitle;
+
+  /// No description provided for @accountRecoverConflictBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki {count} not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?'**
+  String accountRecoverConflictBody(Object count);
+
+  /// No description provided for @accountRecoverConflictProceed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yine de geç'**
+  String get accountRecoverConflictProceed;
 }
 
 class _AppLocalizationsDelegate

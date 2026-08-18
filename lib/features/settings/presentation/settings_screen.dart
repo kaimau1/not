@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:file_selector/file_selector.dart';
+import 'package:firebase_auth/firebase_auth.dart'
+    show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -3396,13 +3398,81 @@ class _AccountSection extends ConsumerWidget {
     try {
       await ref.read(authRepositoryProvider).linkWithGoogle();
       messenger.showSnackBar(SnackBar(content: Text(l10n.accountLinked)));
-    } catch (e) {
-      // En sık hata: seçilen Google hesabı BAŞKA bir hesaba zaten bağlı
-      // (credential-already-in-use). Bu durumda birleştirme yapılamaz —
-      // Firebase iki uid'i tek başına birleştiremez.
+    } on FirebaseAuthException catch (e) {
       // Hesap seçiciyi kapatmak hata değil: sessizce geçilir.
       if (isSignInCancel(e)) return;
+      // **credential-already-in-use — KÖK NEDEN düzeltmesi** (kullanıcı
+      // bulgusu 2026-08-18: "çıkış yaptım tekrar giremiyorum bu hatayı
+      // veriyor"). Seçilen Google hesabı zaten BAŞKA bir Firebase
+      // kullanıcısına (kullanıcının kendi ESKİ gerçek hesabına) bağlı —
+      // Firebase iki uid'i BİRLEŞTİREMEZ, yalnız hata verir. Eskiden burada
+      // ham hata metni gösterilip kullanıcı çıkmaza düşüyordu ("Google
+      // hesabı bağla" dışında bir yol yoktu, oysa gerekli olan BAĞLAMAK
+      // değil o hesaba doğrudan GİRİŞ yapmaktı).
+      //
+      // ÇÖZÜM: `e.credential` (reddedilen ama GEÇERLİ Google kimlik bilgisi)
+      // ile doğrudan giriş yapılır — Google hesap seçiciyi TEKRAR açmaya
+      // gerek kalmaz. Bu, o anki (yeni/anonim) oturumdaki notları TERK EDER;
+      // boşsa (neredeyse her zaman — bu ekrana yeni bir anonim oturumla
+      // düşülmüştür) sormadan geçilir, doluysa önce onay istenir.
+      if (e.code == 'credential-already-in-use' && e.credential != null) {
+        if (context.mounted) {
+          await _recoverExistingAccount(context, ref, e.credential!);
+        }
+        return;
+      }
       messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+    } catch (e) {
+      if (isSignInCancel(e)) return;
+      messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+    }
+  }
+
+  /// [credential] zaten BAŞKA (gerçek) bir Firebase hesabına ait — o hesaba
+  /// doğrudan giriş yapar. Şu anki (yeni/anonim) oturumun notları varsa
+  /// (nadir ama imkânsız değil — kullanıcı hesaptan çıkmadan önce bu cihazda
+  /// birkaç not almış olabilir) önce onay ister; kaybolacakları açıkça söyler.
+  Future<void> _recoverExistingAccount(
+    BuildContext context,
+    WidgetRef ref,
+    AuthCredential credential,
+  ) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final noteCount = (ref.read(notesStreamProvider).value ?? const [])
+        .where((n) => !n.isEmpty)
+        .length;
+    if (noteCount > 0) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.accountRecoverConflictTitle),
+          content: Text(l10n.accountRecoverConflictBody(noteCount)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.accountRecoverConflictProceed),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true || !context.mounted) return;
+    }
+    try {
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      // Başarıda auth durumu değişir; kullanıcı gerçek hesabına döner,
+      // notları olduğu gibi orada bekliyor olur.
+      if (context.mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.accountLinked)));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(authErrorText(l10n, e))));
+      }
     }
   }
 

@@ -2829,4 +2829,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
+
+  @override
+  String get accountRecoverConflictTitle =>
+      'Bu cihazda kaydedilmemiş notlar var';
+
+  @override
+  String accountRecoverConflictBody(Object count) {
+    return 'Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki $count not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?';
+  }
+
+  @override
+  String get accountRecoverConflictProceed => 'Yine de geç';
 }

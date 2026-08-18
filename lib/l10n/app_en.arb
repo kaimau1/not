@@ -1047,5 +1047,8 @@
   "folderShareCount": "{count, plural, one{Shared with 1 person} other{Shared with {count} people}}",
   "folderShareTitle": "Share \"{name}\"",
   "folderShareInfo": "The friends you pick can see and edit this folder and its notes.",
-  "friendsRowInfo": "Add friends, share folders with them"
+  "friendsRowInfo": "Add friends, share folders with them",
+  "accountRecoverConflictTitle": "This device has unsaved notes",
+  "accountRecoverConflictBody": "This Google account is already linked to another session; switching to it will hide the {count} note(s) on this device (they aren't deleted, just no longer reachable from here). Continue anyway?",
+  "accountRecoverConflictProceed": "Switch anyway"
 }

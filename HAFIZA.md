@@ -1969,3 +1969,24 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   kez" varsayımı APK GÜNCELLEMESİ senaryosunda YANLIŞ — State ölmeden süren
   bir oturum, kodun yeni sürümünü hiç çalıştırmamış olabilir; tek seferlik
   başlatma mantığı `resume` gibi tekrarlanan, ucuz bir kancayla desteklenmeli.
+
+- 2026-08-18 (41. tur): **"Çıkış yaptım tekrar giremiyorum" — credential-already-in-use.**
+  Kullanıcı ⋮ → Çıkış yap sonrası (muhtemel neden: sürüm test ederken temiz
+  kurulum SharedPreferences'ı sıfırlamış, `_autoGuestTriedKey` yeniden false
+  olmuş) sessiz anonim girişe düşmüş, sonra "Google hesabı bağla" ile ESKİ
+  gerçek hesabına dönmeye çalışmış. `linkWithCredential`, o Google kimliği
+  zaten BAŞKA (kendi eski) bir uid'e ait olduğu için `credential-already-in-use`
+  ile reddediyordu ve ekran ham hata metnini gösterip kullanıcıyı çıkmaza
+  sokuyordu — "bağlama" burada yanlış eylemdi, gereken doğrudan GİRİŞ'ti.
+
+  ÇÖZÜM: `_linkAccount` artık bu hatayı özel yakalıyor; Firebase'in hatayla
+  birlikte verdiği `e.credential` (reddedilen ama geçerli kimlik bilgisi) ile
+  DOĞRUDAN `signInWithCredential` çağırıyor — Google hesap seçicisi tekrar
+  açılmadan gerçek hesaba dönülüyor. O anki (atılacak) anonim oturumda not
+  varsa (nadir ama olası) önce sayısını söyleyip onay istiyor, yoksa
+  sormadan geçiyor.
+
+  **Ders:** "credential-already-in-use" Firebase'in EN SIK karşılaşılan
+  anonim-hesap-yükseltme hatasıdır ve SDK bilerek `.credential` alanında
+  kurtarma yolunu taşır — ham hata metni basmak yerine bu alan her zaman
+  kontrol edilip doğrudan giriş denenmeli.
