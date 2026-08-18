@@ -1014,5 +1014,8 @@
   "docNamePhoto": "Photo notes",
   "docNameScan": "Scan notes",
   "docNameImage": "Image notes",
-  "docNameVideo": "Video notes"
+  "docNameVideo": "Video notes",
+  "folderManage": "Manage folder",
+  "folderEmpty": "This folder is empty",
+  "folderEmptyHint": "Add a note with + below, or move a note here while editing it."
 }

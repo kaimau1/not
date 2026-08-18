@@ -1262,5 +1262,8 @@
   "docNamePhoto": "Fotoğraf notları",
   "docNameScan": "Tarama notları",
   "docNameImage": "Görsel notları",
-  "docNameVideo": "Görüntü notları"
+  "docNameVideo": "Görüntü notları",
+  "folderManage": "Klasörü yönet",
+  "folderEmpty": "Bu klasör boş",
+  "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı."
 }

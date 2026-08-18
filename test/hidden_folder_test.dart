@@ -65,12 +65,26 @@ void main() {
 
   test('gizli klasörün notu listeye girmez', () async {
     final c = await ready();
+    // Kök görünümde KLASÖRDEKİ hiçbir not yoktur (klasör artık bir yer,
+    // süzgeç değil — bkz. filteredNotesProvider); gizli klasör ayrıca
+    // aramada da bastırılır (aşağıdaki test).
     final ids = c
         .read(filteredNotesProvider)
         .requireValue
         .map((n) => n.id)
         .toList();
-    expect(ids, ['n-acik', 'n-klasorsuz']);
+    expect(ids, ['n-klasorsuz']);
+  });
+
+  test('açık klasörün notu ARAMAYLA bulunur', () async {
+    final c = await ready();
+    c.read(searchQueryProvider.notifier).set('gündem');
+    final ids = c
+        .read(filteredNotesProvider)
+        .requireValue
+        .map((n) => n.id)
+        .toList();
+    expect(ids, ['n-acik']);
   });
 
   test('gizli klasörün notu ARAMAYLA da bulunmaz', () async {
@@ -93,8 +107,25 @@ void main() {
         .requireValue
         .map((n) => n.id)
         .toList();
-    expect(ids, ['n-gizli', 'n-acik', 'n-klasorsuz']);
+    // Gizlilik açılsa da klasördeki not kök listede DEĞİL: klasörün notu
+    // klasörün kendi sayfasında durur. Açılan tek şey BASTIRMADIR — etiketler
+    // yeniden görünür (ve arama gizli notu da bulur, aşağıdaki test).
+    expect(ids, ['n-klasorsuz']);
     expect(c.read(allTagsProvider), ['finans', 'iş']);
+  });
+
+  test('gizlilik açılınca gizli not ARAMAYLA bulunur', () async {
+    final c = await ready();
+    // Sorgu, süzgeç sağlayıcısı İLK KEZ okunmadan önce kurulur: gecikmeli
+    // sorgu ilk kuruluşunda anlık değeri okur, sonrasında 350 ms bekler.
+    c.read(hiddenFoldersRevealedProvider.notifier).set(true);
+    c.read(searchQueryProvider.notifier).set('şifre');
+    final ids = c
+        .read(filteredNotesProvider)
+        .requireValue
+        .map((n) => n.id)
+        .toList();
+    expect(ids, ['n-gizli']);
   });
 
   test('gizli klasör kimlikleri klasör akışından türetilir', () async {

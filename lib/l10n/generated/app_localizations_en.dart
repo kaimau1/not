@@ -2696,4 +2696,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get docNameVideo => 'Video notes';
+
+  @override
+  String get folderManage => 'Manage folder';
+
+  @override
+  String get folderEmpty => 'This folder is empty';
+
+  @override
+  String get folderEmptyHint =>
+      'Add a note with + below, or move a note here while editing it.';
 }

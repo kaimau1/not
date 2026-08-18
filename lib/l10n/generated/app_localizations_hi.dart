@@ -2699,4 +2699,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get docNameVideo => 'Görüntü notları';
+
+  @override
+  String get folderManage => 'Klasörü yönet';
+
+  @override
+  String get folderEmpty => 'Bu klasör boş';
+
+  @override
+  String get folderEmptyHint =>
+      'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
 }

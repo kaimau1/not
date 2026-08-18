@@ -29,6 +29,7 @@ import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../folders/presentation/folder_tile.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
@@ -437,22 +438,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   /// sırası) → klasörler. [direction] +1 sola çekiş (sonraki), -1 sağa çekiş.
   void _cycleFilterFolder(int direction) {
     // Çip barı kalkınca "kullanıcının seçtiği görünür süzgeçler" listesi de
-    // kalktı; çekiş artık süzgeçlerin TAMAMINI geziyor. Gizli klasörler yine
-    // atlanır — kaydırma kullanıcıyı görünmez bir klasöre sokmamalı.
-    final revealHidden = ref.read(hiddenFoldersRevealedProvider);
-    final folders = [
-      for (final f
-          in ref.read(foldersStreamProvider).value ?? const <NoteFolder>[])
-        if (!f.hidden || revealHidden) f,
-    ];
-    // ETİKETLER de gezilir (istek 2026-08-08: "sayfayı sağa sola kaydırınca
-    // onlara geçsin"): çipler artık kullanıcının etiketlerini varsayılan
-    // gösterdiğine göre çekiş de aynı kümeyi dolaşmalı, yoksa ekranda görünen
-    // kısayollarla jestin gezdiği yerler ayrışırdı.
+    // kalktı; çekiş artık durum süzgeçlerinin ve etiketlerin TAMAMINI geziyor.
+    //
+    // **KLASÖRLER BU GEZİDE YOK** (2026-08-18): klasör bir süzgeç değil, ana
+    // ekranda karosu olan bir YER. Yandan çekince klasörün İÇİNE girmek —
+    // hem de geri dönüş yolu belli olmadan — kullanıcıyı notlarını kaybetmiş
+    // sanacağı bir ekrana düşürüyordu.
     final tags = ref.read(allTagsProvider);
     final segments = <(NoteFilter, String?, String?)>[
       for (final f in NoteFilter.values) (f, null, null),
-      for (final folder in folders) (NoteFilter.all, folder.id, null),
       for (final tag in tags) (NoteFilter.all, null, tag),
     ];
     if (segments.length < 2) return;
@@ -1813,6 +1807,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                         _kGridCacheExtent,
                                       ),
                                   slivers: [
+                                    // **KLASÖR RAFI**: ana ekranın tepesinde,
+                                    // notlarla aynı ızgarada. Yalnız kök
+                                    // görünümde çizilir — arama/süzgeç/etiket
+                                    // sonuçlarının arasında klasör karosu
+                                    // görmek kafa karıştırırdı.
+                                    if (!searchActive &&
+                                        !reorderActive &&
+                                        ref.watch(noteFilterProvider) ==
+                                            NoteFilter.all &&
+                                        ref.watch(selectedTagProvider) ==
+                                            null &&
+                                        ref.watch(selectedFolderProvider) ==
+                                            null)
+                                      _folderShelf(columns),
                                     ...notesAsync.when(
                                       data: (notes) => _buildNoteSlivers(
                                         context,
@@ -1982,6 +1990,37 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
       );
+
+  /// Ana ekranın tepesindeki **klasör rafı**: her klasör bir karo, sonda
+  /// "Yeni klasör". Karolar not kartlarıyla AYNI sütun düzenini kullanır ki
+  /// raf ızgaranın devamı gibi dursun, ayrı bir bölüm gibi değil.
+  ///
+  /// Gizli klasörler yalnız o oturumda açığa çıkarıldıysa çizilir — karonun
+  /// adı bile gizli notların varlığını ele verirdi.
+  Widget _folderShelf(int columns) {
+    final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
+    final folders = [
+      for (final f
+          in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
+        if (!f.hidden || revealHidden) f,
+    ];
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: columns,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          mainAxisExtent: FolderTile.height,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index == folders.length) return const NewFolderTile();
+          final folder = folders[index];
+          return FolderTile(key: ValueKey('folder-${folder.id}'), folder: folder);
+        }, childCount: folders.length + 1),
+      ),
+    );
+  }
 
   List<Widget> _buildNoteSlivers(
     BuildContext context,

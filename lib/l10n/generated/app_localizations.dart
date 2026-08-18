@@ -5057,6 +5057,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Görüntü notları'**
   String get docNameVideo;
+
+  /// No description provided for @folderManage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörü yönet'**
+  String get folderManage;
+
+  /// No description provided for @folderEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasör boş'**
+  String get folderEmpty;
+
+  /// No description provided for @folderEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.'**
+  String get folderEmptyHint;
 }
 
 class _AppLocalizationsDelegate

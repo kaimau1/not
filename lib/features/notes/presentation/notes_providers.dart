@@ -559,6 +559,29 @@ final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   );
 });
 
+/// **BİR KLASÖRÜN İÇİ** (klasörün kendi sayfası — bkz. `FolderScreen`).
+///
+/// Ana ekranın süzgeçlerinden (arama, durum, etiket) BAĞIMSIZ: klasöre giren
+/// kullanıcı orada duran her şeyi görmek ister; dışarıda bırakılmış bir
+/// süzgecin klasörün içini de budaması "notum kayboldu" demekti. Yalnız
+/// sıralama ortak — kullanıcının seçtiği düzen her yerde aynı olsun.
+final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
+  ref,
+  folderId,
+) {
+  final notes = ref.watch(notesStreamProvider);
+  final sort = ref.watch(noteSortProvider);
+  final activity = sort == NoteSort.active
+      ? ref.watch(noteActivityProvider)
+      : const <String, int>{};
+  return notes.whenData(
+    (list) => _sortedNotes([
+      for (final n in list)
+        if (n.folderId == folderId && n.archivedAt == null && !n.isEmpty) n,
+    ], sort, activity),
+  );
+});
+
 /// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
   final notes = ref.watch(notesStreamProvider);
@@ -595,6 +618,20 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
       result = [
         for (final n in result)
           if (n.folderId == folderId) n,
+      ];
+    } else if (query.isEmpty && tag == null && filter == NoteFilter.all) {
+      // **KLASÖRDEKİ NOT ANA EKRANDA DURMAZ** (kullanıcı isteği 2026-08-18:
+      // "klasör dashboard'ta bir not gibi yer kaplar, basılınca kendi
+      // içerisindeki notlar görülür ayrı bir sayfada"). Klasör artık bir
+      // süzgeç değil bir YER: notu klasöre koymak onu ana ekrandan KALDIRIR,
+      // yoksa aynı not iki yerde birden durur ve klasörün "toplama" işi
+      // anlamsızlaşırdı.
+      //
+      // ARAMA VE SÜZGEÇ BUNUN DIŞINDA: bir şey ARAYAN kullanıcı klasörün
+      // içindekini de bulmalı — "notum kayboldu" en pahalı hata.
+      result = [
+        for (final n in result)
+          if (n.folderId == null) n,
       ];
     }
     if (tag != null) {

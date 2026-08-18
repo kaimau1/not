@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
-import '../../folders/presentation/folder_sheets.dart';
 import 'notes_providers.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
@@ -218,15 +217,8 @@ List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
   final favorites = ref.watch(favoriteFiltersProvider);
   final l10n = context.l10n;
   final filter = ref.watch(noteFilterProvider);
-  final folderId = ref.watch(selectedFolderProvider);
   final tag = ref.watch(selectedTagProvider);
   final sort = ref.watch(noteSortProvider);
-  final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
-  final folders = [
-    for (final f
-        in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
-      if (!f.hidden || revealHidden) f,
-  ];
   final tags = ref.watch(allTagsProvider);
 
   final chips = <Widget>[];
@@ -244,19 +236,9 @@ List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
             onTap: () => ref.read(noteFilterProvider.notifier).set(f),
           ),
         );
-      case 'folder':
-        // Silinmiş (ya da gizlenmiş) klasörün jetonu ÇÖZÜLEMEZ ve çizilmez;
-        // ayrı bir temizlik gerekmez.
-        final folder = folders.where((f) => f.id == value).firstOrNull;
-        if (folder == null || folderId == folder.id) continue;
-        chips.add(
-          _FavoriteChip(
-            label: folder.name,
-            icon: Icons.folder_outlined,
-            onTap: () =>
-                ref.read(selectedFolderProvider.notifier).set(folder.id),
-          ),
-        );
+      // 'folder' JETONU ARTIK ÇİZİLMEZ: klasör bir süzgeç değil, ana
+      // ekranda karosu olan bir YER (bkz. `FolderTile`). Eski kayıtlarda
+      // kalmış klasör jetonları sessizce yok sayılır.
       case 'tag':
         if (!tags.contains(value) || tag == value) continue;
         chips.add(
@@ -405,17 +387,8 @@ class _FilterSheet extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final filter = ref.watch(noteFilterProvider);
-    final folderId = ref.watch(selectedFolderProvider);
     final tag = ref.watch(selectedTagProvider);
     final sort = ref.watch(noteSortProvider);
-    // Gizli klasörler yalnız o oturumda açıldıysa listelenir — levhada
-    // görünen bir klasör adı, gizli notların varlığını ele verirdi.
-    final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
-    final folders = [
-      for (final f
-          in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
-        if (!f.hidden || revealHidden) f,
-    ];
     final tags = ref.watch(allTagsProvider);
     final appliedCount = appliedFilterCount(ref);
     final favorites = ref.watch(favoriteFiltersProvider);
@@ -508,51 +481,12 @@ class _FilterSheet extends ConsumerWidget {
             ),
           ),
 
-          // Bölüm klasör YOKKEN de görünür: "+ Yeni klasör" ile klasör
-          // doğrudan buradan da oluşturulabilir. Seçili klasör çipinde ⋮
-          // düğmesi klasör YÖNETİMİNİ (yeniden adlandır / gizle / sil) açar —
-          // eski girişi (çip barına uzun basış) bar silinince kaybolmuştu ve
-          // klasör yönetimi tamamen erişilmez kalmıştı. Uzun basış da çalışır.
-          _Section(
-            icon: Icons.folder_outlined,
-            title: l10n.filterSectionFolder,
-            child: _OptionWrap(
-              children: [
-                for (final f in folders)
-                  _Option(
-                    label: f.name,
-                    icon: f.iconData,
-                    selected: folderId == f.id,
-                    // Seçili klasöre tekrar dokunmak seçimi KALDIRIR: levhada
-                    // ayrı bir "hepsi" satırı olmadan da geri dönülebilsin.
-                    onTap: () => ref
-                        .read(selectedFolderProvider.notifier)
-                        .set(folderId == f.id ? null : f.id),
-                    onLongPress: () => showFolderActionsSheet(context, ref, f),
-                    onManage: folderId == f.id
-                        ? () => showFolderActionsSheet(context, ref, f)
-                        : null,
-                    favorite: favorites.contains(folderFavoriteToken(f.id)),
-                    onToggleFavorite: () =>
-                        favoritesNotifier.toggle(folderFavoriteToken(f.id)),
-                  ),
-                _Option(
-                  label: l10n.newFolder,
-                  icon: Icons.add,
-                  selected: false,
-                  outlined: true,
-                  onTap: () async {
-                    final id = await showFolderEditorDialog(context, ref);
-                    // Yeni klasör hemen süzgeç olarak da seçilir: kullanıcı
-                    // "oluştu mu" diye aramasın, boş klasörünü görsün.
-                    if (id != null) {
-                      ref.read(selectedFolderProvider.notifier).set(id);
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
+          // **KLASÖR BÖLÜMÜ BURADAN KALKTI** (kullanıcı isteği 2026-08-18:
+          // "şu an etiketle klasör aynı şey"). Klasör bir süzgeç olduğu
+          // sürece etiketin ikizinden başka bir şey değildi: ikisi de listeyi
+          // daraltıyordu. Klasör artık ana ekranda karosu olan bir YER
+          // (bkz. `FolderTile` / `FolderScreen`); oluşturma, yönetme ve içine
+          // girme oradan yapılır. Etiket saf etiket olarak burada kalır.
 
           if (tags.isNotEmpty)
             _Section(
@@ -740,23 +674,12 @@ class _Option extends StatelessWidget {
     this.icon,
     this.favorite,
     this.onToggleFavorite,
-    this.onLongPress,
-    this.onManage,
-    this.outlined = false,
   });
 
   final String label;
   final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-
-  /// Dolu ise seçili çipte ⋮ görünür (klasör yönetimi girişi).
-  final VoidCallback? onManage;
-
-  /// "+ Yeni klasör" gibi eylem çipleri: dolgusuz, kesikli görünüm yerine
-  /// ince kenarlık.
-  final bool outlined;
 
   /// null = bu seçenek favorilenemez. Dolu ise çipin sonunda yıldız çıkar.
   final bool? favorite;
@@ -770,8 +693,6 @@ class _Option extends StatelessWidget {
     // eski tasarımda her çipin kenarlığı levhayı tel kafese çeviriyordu.
     final background = selected
         ? scheme.primary
-        : outlined
-        ? Colors.transparent
         : scheme.surfaceContainerHigh;
     final foreground = selected ? scheme.onPrimary : scheme.onSurface;
     return Material(
@@ -780,19 +701,12 @@ class _Option extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        onLongPress: onLongPress,
         child: Container(
           height: 38,
           padding: EdgeInsetsDirectional.only(
             start: 12,
-            end: (star == null && onManage == null) ? 12 : 4,
+            end: star == null ? 12 : 4,
           ),
-          decoration: outlined
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: scheme.outlineVariant),
-                )
-              : null,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -828,19 +742,6 @@ class _Option extends StatelessWidget {
                           : star
                           ? scheme.primary
                           : scheme.onSurfaceVariant.withValues(alpha: 0.45),
-                    ),
-                  ),
-                ),
-              if (onManage != null)
-                InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: onManage,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.more_vert,
-                      size: 16,
-                      color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
                     ),
                   ),
                 ),
