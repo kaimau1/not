@@ -1952,3 +1952,20 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   paylaşım kayıtlarını temizler (BİLİNEN SINIR: karşı tarafın aynası, Cloud
   Function olmadığı için, karşı tarafın kendi temizliğine kalır — zararsız
   kalıntı, bkz. account_service.dart).
+
+- 2026-08-18 (40. tur): **"Böyle bir hesap var ama bulamıyor" — KÖK NEDEN.**
+  Canlı denemede (v1.0.333) kullanıcı, arkadaş olarak eklemeye çalıştığı
+  hesabın var olduğunu ama "bulunamadı" dediğini bildirdi. Diyalog: hedef
+  hesap "zaten açıktı, güncelleme yaptım ama çıkıp geri girmedim." Dizin
+  senkronu (`syncOwnDirectoryEntry`) yalnız `DashboardScreen.initState`te,
+  yani State İLK KURULDUĞUNDA çalışıyordu. APK güncellenip uygulama tam
+  kapat-aç yapılmadan arka planda kalıp öne getirilerek devam edilince
+  eski State (ve onun bir kez çalışmış initState'i) hayatta kalabiliyor —
+  yeni sürümün senkron kodu o oturumda HİÇ tetiklenmiyor, kullanıcının
+  e-postası dizine yazılmıyor. ÇÖZÜM: `DashboardScreen` artık
+  `WidgetsBindingObserver`; uygulama ÖNE her getirildiğinde (`resumed`) de
+  senkron tazelenir — ucuz tek-doküman `merge` yazımı, güncelleme sonrası
+  ilk arkaya al/öne getir kendiliğinden düzeltir. **Ders:** "girişte bir
+  kez" varsayımı APK GÜNCELLEMESİ senaryosunda YANLIŞ — State ölmeden süren
+  bir oturum, kodun yeni sürümünü hiç çalıştırmamış olabilir; tek seferlik
+  başlatma mantığı `resume` gibi tekrarlanan, ucuz bir kancayla desteklenmeli.

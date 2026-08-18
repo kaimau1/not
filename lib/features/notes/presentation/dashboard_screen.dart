@@ -148,7 +148,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
   /// Metin provider'dan başlar: dar↔geniş kesme noktası geçişinde (tablet
   /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
   /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
@@ -227,9 +228,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
     // Kendi e-posta → uid kaydını tazele (kişiler/klasör paylaşımı bunu
     // arar — bkz. FriendsRepository). Ucuz (tek doküman, merge), e-postası
-    // olmayan (anonim/yerel) hesapta hiçbir şey yapmaz. Dashboard yalnız
-    // oturum açıkken mount olduğu için "girişte bir kez" burası.
-    ref.read(friendsRepositoryProvider)?.syncOwnDirectoryEntry();
+    // olmayan (anonim/yerel) hesapta hiçbir şey yapmaz.
+    WidgetsBinding.instance.addObserver(this);
+    _syncOwnDirectoryEntry();
+  }
+
+  void _syncOwnDirectoryEntry() =>
+      ref.read(friendsRepositoryProvider)?.syncOwnDirectoryEntry();
+
+  /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "böyle bir hesap var ama
+  /// bulamıyor").** Dizin kaydı yalnız `initState`te, yani State ilk
+  /// KURULDUĞUNDA yazılıyordu. APK GÜNCELLENİP uygulama tam kapat-aç
+  /// yapılmadan (arka planda kalıp öne getirilerek) devam edildiğinde
+  /// `initState` bir daha ÇALIŞMIYOR — eski sürümde arkadaş özelliği
+  /// yokken açılmış oturum, güncellemeden sonra da hâlâ aynı State'i
+  /// kullanıyor, yeni eklenen senkron kodu hiç tetiklenmiyor. Kullanıcının
+  /// e-postası dizine hiç yazılmıyor, arkadaşı onu "bulamıyor."
+  ///
+  /// ÇÖZÜM: uygulama ÖNE her getirildiğinde (resume) de tazelenir — ucuz
+  /// bir tek-doküman `merge` yazımı, güncelleme sonrası ilk "arkaya al/öne
+  /// getir" bunu kendiliğinden düzeltir.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) _syncOwnDirectoryEntry();
   }
 
   /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
@@ -272,6 +294,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     _searchFocus.dispose();
     _gridScrolled.dispose();
