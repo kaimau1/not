@@ -2706,4 +2706,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Add a note with + below, or move a note here while editing it.';
+
+  @override
+  String get brainstormTitle => 'Brainstorm with AI';
+
+  @override
+  String get brainstormRowInfo =>
+      'AI drafts an outline first, then you build on it together';
+
+  @override
+  String get brainstormIntro =>
+      'Tap one of the headings above or just type — let\'s start thinking together.';
+
+  @override
+  String get brainstormOutlineTitle => 'OUTLINE';
+
+  @override
+  String get brainstormInputHint => 'Write an idea or ask a question…';
+
+  @override
+  String get brainstormAddIdea => 'Add to note';
+
+  @override
+  String get brainstormAdded => 'Added to note';
 }

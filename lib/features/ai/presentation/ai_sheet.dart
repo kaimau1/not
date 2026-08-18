@@ -22,6 +22,7 @@ import '../data/ai_report.dart';
 import 'ai_hub_screen.dart' show AiPointsBar;
 import 'listen_screen.dart';
 import '../data/gemini_service.dart';
+import 'brainstorm_screen.dart';
 import 'doc_chat_screen.dart';
 
 /// "Notu değiştir" geri çağırması: AI çıktısı notun içeriğiyle değiştirilir;
@@ -702,6 +703,28 @@ class _AiSheetState extends ConsumerState<AiSheet> {
                             },
                     ),
                   ),
+                  // **AI İLE BERABER DÜŞÜN** (kullanıcı isteği 2026-08-18):
+                  // sohbetten bilerek AYRI bir satır — o soru-cevap, bu
+                  // GENERATİF bir beyin fırtınası (bkz. brainstorm_screen.dart).
+                  // Boş notta da anlamlı: AI başlıktan yola çıkıp ana hat
+                  // önerir, o yüzden `note.isEmpty` burada engel değil.
+                  if (widget.onAppendText != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: _AiRow(
+                        icon: Icons.lightbulb_outline,
+                        title: l10n.brainstormTitle,
+                        subtitle: l10n.brainstormRowInfo,
+                        onTap: () {
+                          Navigator.pop(context);
+                          BrainstormScreen.open(
+                            context,
+                            widget.note,
+                            onAddToNote: widget.onAppendText,
+                          );
+                        },
+                      ),
+                    ),
                   _sectionLabel(context, l10n.aiSectionNote),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),

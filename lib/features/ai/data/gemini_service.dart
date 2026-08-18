@@ -957,6 +957,93 @@ class GeminiService {
     ).then(stripMarkdown);
   }
 
+  /// **AI İLE BERABER DÜŞÜN — Ana hat.**
+  ///
+  /// Kullanıcı isteği 2026-08-18: "ai ile beraber düşün modu … adım adım: AI
+  /// önce plan/ana hat çıkarır." Notun konusuna uygun, birlikte
+  /// geliştirilebilecek 4-6 kısa başlık önerir; ekrandaki panel bunları çip
+  /// olarak gösterir, birine dokunmak o başlık üzerinde sohbeti başlatır.
+  Future<List<String>> outlineNote(Note note) async {
+    final text = note.toPlainText();
+    final raw = await _generate([
+      {
+        'text':
+            'Aşağıdaki notun konusuna uygun, birlikte beyin fırtınası '
+            'yapılarak geliştirilebilecek 4-6 kısa Türkçe başlık öner '
+            '(her biri en fazla 6 kelime, madde işareti veya numara YOK). '
+            'Not neredeyse boşsa (yeni başlanmış), başlığından ya da genel '
+            'bir "nereden başlanır" mantığından yola çık. Yanıtı YALNIZCA '
+            'JSON dizisi olarak ver: ["başlık1", "başlık2"]'
+            '\n\n---\n${text.isEmpty ? note.displayTitle : text}',
+      },
+    ], jsonOutput: true, preferModel: _taskModel(AiTask.general));
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return const [];
+    return [
+      for (final item in decoded.take(6))
+        item.toString().trim(),
+    ]..removeWhere((s) => s.isEmpty);
+  }
+
+  /// **AI İLE BERABER DÜŞÜN — sohbet.**
+  ///
+  /// [chatAboutNote]'tan bilerek FARKLI bir kişilik taşır: o yalnız notun
+  /// içeriğine dayanan bir SORU-CEVAP'tır ("olmayanı uydurma"); burası
+  /// GENERATİF bir beyin fırtınasıdır — notu bağlam alır ama yeni fikir,
+  /// açı ve soru üretmesi asıl işi. [focusHeading] doluysa (kullanıcı bir
+  /// ana hat başlığına dokunduysa) konuşma o başlığa odaklanır.
+  Future<String> brainstormAboutNote({
+    required Note note,
+    required List<ChatTurn> history,
+    String? focusHeading,
+  }) {
+    final title = note.displayTitle.trim();
+    final text = note.toPlainText();
+    final contents = <Map<String, dynamic>>[
+      {
+        'role': 'user',
+        'parts': [
+          {
+            'text':
+                'Kullanıcıyla birlikte bir not üzerinde BEYİN FIRTINASI '
+                'yapıyorsun'
+                '${title.isEmpty ? '' : ' (not başlığı: "$title")'}. '
+                'Notun şu anki içeriğini bağlam olarak kullan ama fikir '
+                'üretmekten çekinme: yeni açılar öner, sorular sor, '
+                'somut öneriler ver. Türkçe, kısa ve odaklı yaz (en çok '
+                '4-5 cümle ya da kısa madde listesi); markdown kullanma, '
+                'düz metin yaz.'
+                '${focusHeading == null ? '' : ' Şu başlık üzerinde '
+                    'yoğunlaş: "$focusHeading".'}'
+                '\n\n---\n${text.isEmpty ? '(not henüz boş)' : text}',
+          },
+        ],
+      },
+      {
+        'role': 'model',
+        'parts': [
+          {
+            'text': focusHeading == null
+                ? 'Notu inceledim, birlikte düşünmeye hazırım. Nereden '
+                      'başlamak istersin?'
+                : 'Harika, "$focusHeading" üzerine birlikte düşünelim.',
+          },
+        ],
+      },
+      for (final turn in history)
+        {
+          'role': turn.isUser ? 'user' : 'model',
+          'parts': [
+            {'text': turn.text},
+          ],
+        },
+    ];
+    return _generateFromContents(
+      contents,
+      preferModel: _taskModel(AiTask.document),
+    ).then(stripMarkdown);
+  }
+
   /// Metinleri vektörlere çevirir (semantik arama için, toplu istek).
   Future<List<List<double>>> embedTexts(List<String> texts) async {
     if (texts.isEmpty) return const [];

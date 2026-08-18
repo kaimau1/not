@@ -1017,5 +1017,12 @@
   "docNameVideo": "Video notes",
   "folderManage": "Manage folder",
   "folderEmpty": "This folder is empty",
-  "folderEmptyHint": "Add a note with + below, or move a note here while editing it."
+  "folderEmptyHint": "Add a note with + below, or move a note here while editing it.",
+  "brainstormTitle": "Brainstorm with AI",
+  "brainstormRowInfo": "AI drafts an outline first, then you build on it together",
+  "brainstormIntro": "Tap one of the headings above or just type — let's start thinking together.",
+  "brainstormOutlineTitle": "OUTLINE",
+  "brainstormInputHint": "Write an idea or ask a question…",
+  "brainstormAddIdea": "Add to note",
+  "brainstormAdded": "Added to note"
 }

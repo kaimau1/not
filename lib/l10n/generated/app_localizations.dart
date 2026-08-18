@@ -5075,6 +5075,48 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.'**
   String get folderEmptyHint;
+
+  /// No description provided for @brainstormTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI ile beraber düşün'**
+  String get brainstormTitle;
+
+  /// No description provided for @brainstormRowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz'**
+  String get brainstormRowInfo;
+
+  /// No description provided for @brainstormIntro.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.'**
+  String get brainstormIntro;
+
+  /// No description provided for @brainstormOutlineTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'ANA HAT'**
+  String get brainstormOutlineTitle;
+
+  /// No description provided for @brainstormInputHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir fikir yaz ya da soru sor…'**
+  String get brainstormInputHint;
+
+  /// No description provided for @brainstormAddIdea.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get brainstormAddIdea;
+
+  /// No description provided for @brainstormAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota eklendi'**
+  String get brainstormAdded;
 }
 
 class _AppLocalizationsDelegate

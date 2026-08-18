@@ -2704,4 +2704,27 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get folderEmptyHint =>
       'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
+
+  @override
+  String get brainstormTitle => 'AI ile beraber düşün';
+
+  @override
+  String get brainstormRowInfo =>
+      'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz';
+
+  @override
+  String get brainstormIntro =>
+      'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
+
+  @override
+  String get brainstormOutlineTitle => 'ANA HAT';
+
+  @override
+  String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
+
+  @override
+  String get brainstormAddIdea => 'Nota ekle';
+
+  @override
+  String get brainstormAdded => 'Nota eklendi';
 }

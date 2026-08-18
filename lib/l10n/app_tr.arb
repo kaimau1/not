@@ -1265,5 +1265,12 @@
   "docNameVideo": "Görüntü notları",
   "folderManage": "Klasörü yönet",
   "folderEmpty": "Bu klasör boş",
-  "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı."
+  "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.",
+  "brainstormTitle": "AI ile beraber düşün",
+  "brainstormRowInfo": "AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz",
+  "brainstormIntro": "Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.",
+  "brainstormOutlineTitle": "ANA HAT",
+  "brainstormInputHint": "Bir fikir yaz ya da soru sor…",
+  "brainstormAddIdea": "Nota ekle",
+  "brainstormAdded": "Nota eklendi"
 }
