@@ -30,6 +30,7 @@ import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_tile.dart';
+import '../../friends/data/friends_repository.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
@@ -224,6 +225,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       // İlk açılışta izin tanıtımı (bir kez).
       if (mounted) PermissionsOnboarding.maybeShow(context, ref);
     });
+    // Kendi e-posta → uid kaydını tazele (kişiler/klasör paylaşımı bunu
+    // arar — bkz. FriendsRepository). Ucuz (tek doküman, merge), e-postası
+    // olmayan (anonim/yerel) hesapta hiçbir şey yapmaz. Dashboard yalnız
+    // oturum açıkken mount olduğu için "girişte bir kez" burası.
+    ref.read(friendsRepositoryProvider)?.syncOwnDirectoryEntry();
   }
 
   /// Ana ekran mikrofon widget'ının bas-başlat isteği varsa Sesli Not
@@ -2016,6 +2022,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
         if (!f.hidden || revealHidden) f,
     ];
+    // **PAYLAŞILAN klasörler AYNI RAFTA** (kullanıcı isteği 2026-08-18:
+    // "ortak notlar klasörü kişiler bağlanır notları ortak görür"). Kendi
+    // klasörlerimden SONRA gelirler — kendi düzenim önce, arkadaşlarımınki
+    // sonra; iki liste ayrı kaynaktan geldiği için gizli klasör süzgeci
+    // burada geçerli değil (paylaşılan bir klasör asla "benim gizli
+    // klasörüm" olamaz).
+    final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
+    final total = folders.length + shared.length;
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       sliver: SliverGrid(
@@ -2026,10 +2040,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           mainAxisExtent: FolderTile.height,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == folders.length) return const NewFolderTile();
-          final folder = folders[index];
-          return FolderTile(key: ValueKey('folder-${folder.id}'), folder: folder);
-        }, childCount: folders.length + 1),
+          if (index == total) return const NewFolderTile();
+          if (index < folders.length) {
+            final folder = folders[index];
+            return FolderTile(
+              key: ValueKey('folder-${folder.id}'),
+              folder: folder,
+            );
+          }
+          final share = shared[index - folders.length];
+          return SharedFolderTile(
+            key: ValueKey('shared-folder-${share.folderId}'),
+            share: share,
+          );
+        }, childCount: total + 1),
       ),
     );
   }

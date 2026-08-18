@@ -2729,4 +2729,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get brainstormAdded => 'Added to note';
+
+  @override
+  String get folderShared => 'This folder is shared with a friend';
+
+  @override
+  String get friendsTitle => 'Contacts';
+
+  @override
+  String get friendsAdd => 'Add friend';
+
+  @override
+  String get friendsEmpty =>
+      'No one yet. Add a friend by email to share folders with them.';
+
+  @override
+  String get friendsRequestsTitle => 'REQUESTS';
+
+  @override
+  String get friendsListTitle => 'MY FRIENDS';
+
+  @override
+  String get friendsAddEmailHint => 'friend@email.com';
+
+  @override
+  String get friendsSendRequest => 'Send request';
+
+  @override
+  String get friendsRequestSent => 'Request sent';
+
+  @override
+  String get friendsNotFound =>
+      'No user is registered with this email. They need to have opened the app with a Google account at least once.';
+
+  @override
+  String get friendsSelf => 'You can\'t add yourself as a friend';
+
+  @override
+  String get friendsAlready => 'You\'re already friends';
+
+  @override
+  String get friendsDecline => 'Decline';
+
+  @override
+  String get friendsAccept => 'Accept';
+
+  @override
+  String get friendsRemove => 'Remove';
+
+  @override
+  String get friendsRemoveConfirmTitle => 'Remove friend';
+
+  @override
+  String friendsRemoveConfirmBody(Object name) {
+    return 'Remove $name from your friends? Folders you shared with them will no longer be visible.';
+  }
+
+  @override
+  String get friendsNeedsAccount =>
+      'Contacts and folder sharing require a linked Google account.';
+
+  @override
+  String get folderShare => 'Share';
+
+  @override
+  String folderShareCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Shared with $count people',
+      one: 'Shared with 1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String folderShareTitle(Object name) {
+    return 'Share \"$name\"';
+  }
+
+  @override
+  String get folderShareInfo =>
+      'The friends you pick can see and edit this folder and its notes.';
+
+  @override
+  String get friendsRowInfo => 'Add friends, share folders with them';
 }

@@ -12,6 +12,26 @@ abstract final class AppConstants {
   static const String aiQuotaCollection = 'aiQuota';
   static const String foldersCollection = 'folders';
 
+  /// Kişiler (arkadaşlar) — `users/{uid}/friends/{friendUid}`.
+  static const String friendsCollection = 'friends';
+
+  /// Bekleyen arkadaşlık istekleri — `users/{uid}/friendRequests/{fromUid}`.
+  /// Alıcının kendi alt koleksiyonuna GÖNDEREN yazar (bkz. firestore.rules).
+  static const String friendRequestsCollection = 'friendRequests';
+
+  /// E-postadan kullanıcı bulmak için KÖK koleksiyon (kullanıcı adı altında
+  /// DEĞİL — aksi hâlde "ben bu e-postanın sahibiyim" iddiasını doğrulayacak
+  /// hiçbir yer olmazdı). Doküman kimliği küçük harfe çevrilmiş e-posta;
+  /// içeriği yalnız `{uid}`. Her kullanıcı GİRİŞTE kendi kaydını yazar.
+  static const String userDirectoryCollection = 'userDirectory';
+
+  /// Klasör paylaşımının KÖK ayna koleksiyonu — `folderShares/{folderId}`,
+  /// kimliği paylaşılan klasörün kendi id'siyle AYNI. Paylaşılan kullanıcının
+  /// "hangi klasörler bana açıldı" sorusunu tek sorguda yanıtlamasını sağlar
+  /// (`sharedWith` dizisinde `array-contains`); asıl klasör ve notlar yine
+  /// SAHİBİNİN `users/{ownerId}/...` altında kalır (bkz. firestore.rules).
+  static const String folderSharesCollection = 'folderShares';
+
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';

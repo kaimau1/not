@@ -6,6 +6,14 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // `folderShares/{folderId}` aynasını okur — klasör paylaşım kurallarının
+    // hepsi aynı iki soruyu sorar ("bu folderId'nin gerçek sahibi kim",
+    // "kimlerle paylaşılmış"); tek yerden okumak kopya `get()` çağrılarını
+    // ve aralarında tutarsızlık riskini önler.
+    function folderShare(folderId) {
+      return get(/databases/$(database)/documents/folderShares/$(folderId)).data;
+    }
+
     // Kullanıcının kök dokümanı (premiumUntil gibi hesap alanları).
     // premiumUntil istemciden YAZILAMAZ: kullanıcı kendi dokümanına
     // premiumUntil yazarak ücretsiz premium alamasın. Alan yalnızca
@@ -19,9 +27,180 @@ service cloud.firestore {
             .affectedKeys().hasAny(['premiumUntil']);
     }
 
-    // Her kullanıcı yalnızca kendi verisini okuyup yazabilir.
+    // Her kullanıcı yalnızca kendi verisini okuyup yazabilir. Aşağıdaki DAR
+    // istisnalar (arkadaşlık isteği/kabulü, klasör paylaşımı) bu genel
+    // kuralın YANINA eklenir — Firestore kuralları OR'lanır: eşleşen
+    // herhangi bir blok izin verirse istek geçer. Bu blok sahibin KENDİ
+    // erişimini asla daraltmaz.
     match /users/{uid}/{document=**} {
       allow read, write: if signedInAs(uid);
+    }
+
+    // **ARKADAŞLIK İSTEĞİ** — kullanıcı isteği 2026-08-18: "kişiler
+    // kullanıcıya dışarıdan (e-postayla) belirleyebilmeli." Sunucusuz
+    // (Cloud Function yok) bir istek/kabul akışı: GÖNDEREN, ALICININ
+    // `friendRequests` alt koleksiyonuna KENDİ kimliğiyle bir doküman
+    // bırakır. Yalnız kendi e-postasını/adını yazabilir — başkası adına
+    // sahte istek gönderemez.
+    match /users/{toUid}/friendRequests/{fromUid} {
+      allow read: if request.auth != null
+        && (request.auth.uid == toUid || request.auth.uid == fromUid);
+      allow create: if request.auth != null
+        && request.auth.uid == fromUid
+        && request.resource.data.keys().hasOnly(
+            ['fromEmail', 'fromName', 'createdAt'])
+        && request.resource.data.fromEmail is string
+        && request.resource.data.fromName is string;
+      // Silme: ALICI reddeder/kabul kaydını temizler, GÖNDEREN isteğini
+      // geri çeker — ikisi de kendi payına düşeni kaldırabilir.
+      allow delete: if request.auth != null
+        && (request.auth.uid == toUid || request.auth.uid == fromUid);
+      // Güncelleme YOK: bir istek değiştirilmez, ya silinir ya kabul edilip
+      // `friends`e taşınır.
+      allow update: if false;
+    }
+
+    // **ARKADAŞLIK KAYDI** — normalde `users/{uid}/{document=**}` ile
+    // yalnız SAHİBİ yazar. Kabul akışı KARŞILIKLI iki doküman ister: X bana
+    // (Y'ye) istek göndermişse (`users/{Y}/friendRequests/{X}`), BEN (Y)
+    // kabul ederken hem kendi listeme hem X'in listesine yazmalıyım — bu
+    // istisna TAM O tek durumu açar: Y, X'in `friends` alt koleksiyonuna
+    // (`users/{ownerUid=X}/friends/{friendUid=Y}`) YALNIZ Y'nin KENDİ
+    // gelen kutusunda ("users/{Y}/friendRequests/{X}", yani
+    // `users/{friendUid}/friendRequests/{ownerUid}`) karşılığı olan bir
+    // istek varsa yazabilir. İsteğin VARLIĞI, X'in bu arkadaşlığa zaten
+    // rıza gösterdiğinin kanıtıdır.
+    //
+    // KÖK NEDEN (ilk taslakta ters yazılmıştı — kendi kendine gözden geçirme
+    // sırasında yakalandı): `users/{ownerUid}/friendRequests/{friendUid}`
+    // GÖNDERENİN gelen kutusuna bakıyordu, oysa istek her zaman ALICININ
+    // (`friendUid`) gelen kutusunda durur. Yanlış yol tüm kabul akışını
+    // sessizce reddederdi (exists() hep false).
+    match /users/{ownerUid}/friends/{friendUid} {
+      allow create: if request.auth != null
+        && request.auth.uid == friendUid
+        && exists(
+            /databases/$(database)/documents/users/$(friendUid)/friendRequests/$(ownerUid))
+        && request.resource.data.keys().hasOnly(['email', 'name', 'since'])
+        && request.resource.data.email is string
+        && request.resource.data.name is string;
+      // Kaldırma: iki taraf da (ben ya da arkadaşım) her iki aynayı
+      // silebilir — arkadaşlığı bozmak KARŞILIKLI rıza gerektirmez.
+      allow delete: if request.auth != null
+        && (request.auth.uid == ownerUid || request.auth.uid == friendUid);
+      allow update: if false;
+    }
+
+    // **KLASÖR PAYLAŞIMI** — kullanıcı isteği 2026-08-18: "ortak notlar
+    // klasörü kişiler bağlanır notları ortak görür." Sahip zaten yukarıdaki
+    // genel kuralla kendi klasörüne erişiyor; burası yalnız PAYLAŞILAN
+    // kullanıcılara EK okuma/yazma izni verir — `sharedWith` dizisinde kendi
+    // uid'i varsa. Bu turun kapsamı (kullanıcı seçimi): rol ayrımı yok,
+    // paylaşılan kişi OKUR VE YAZAR; klasörü paylaşabilmek/kaldırabilmek
+    // yine yalnız sahipte kalır (`sharedWith`i değiştirme yetkisi bu blokta
+    // YOK — o genel kuralla sahibe ait).
+    match /users/{ownerUid}/folders/{folderId} {
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.get('sharedWith', []);
+      // Paylaşılan kullanıcı klasörün AD/SİMGE/GİZLİLİĞİNİ değiştiremez,
+      // yalnız kendi `sharedWith` üyeliği aynı kalır — asıl kısıtlama
+      // istemci arayüzünde (paylaşılan klasörde düzenle/gizle yok), burada
+      // yalnız `sharedWith` alanının SABİT kalması zorunlu kılınır.
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.get('sharedWith', [])
+        && request.resource.data.sharedWith == resource.data.sharedWith;
+    }
+
+    // **NOT ERİŞİMİ — paylaşılan klasörün içi.** Sahip zaten genel kuralla
+    // erişiyor; burası notun BAĞLI OLDUĞU klasörün paylaşıldığı kullanıcıya
+    // ek erişim verir. `folderId` sahibi kim olursa olsun `folderShares`
+    // KÖK aynasından çözülür (bkz. aşağıdaki koleksiyon) — bu sayede notun
+    // hangi kullanıcının altında olduğu ile klasörün sahibi FARKLI
+    // olabilir (paylaşılan kişi klasöre kendi notunu eklerse bile not,
+    // klasörün SAHİBİNİN koleksiyonuna yazılır — istemci tarafı zaten böyle
+    // kurgulandı, bkz. FolderScreen/_SharedFolderView).
+    match /users/{noteOwnerUid}/notes/{noteId} {
+      // **SAHİP EŞLEŞMESİ ZORUNLU** (kendi kendine gözden geçirmede
+      // yakalandı): yalnız "bu folderId bana paylaşılmış mı" sormak
+      // YETMEZ — `noteOwnerUid` (yol parçası, JOKER) ile aynanın gerçek
+      // `ownerId`sinin AYNI olduğu da doğrulanmalı. Yoksa A, KENDİSİYLE
+      // paylaşılmış herhangi bir klasörün folderId'sini kullanarak
+      // `users/{KURBAN}/notes/{yeni}` yoluna keyfi not YAZABİLİR ya da
+      // kurbanın folderId'si tesadüfen eşleşen bir notunu OKUYABİLİRDİ —
+      // kurbanın o klasörle hiçbir ilgisi olmasa bile.
+      allow read, update: if request.auth != null
+        && resource.data.folderId != null
+        && folderShare(resource.data.folderId).ownerId == noteOwnerUid
+        && request.auth.uid in folderShare(resource.data.folderId).sharedWith;
+      allow create: if request.auth != null
+        && request.resource.data.folderId != null
+        && folderShare(request.resource.data.folderId).ownerId == noteOwnerUid
+        && request.auth.uid
+            in folderShare(request.resource.data.folderId).sharedWith;
+      // Kalıcı silme (`hardDelete`) paylaşılan kullanıcıya AÇIK DEĞİL —
+      // yalnız güncelleme (biçim, düzenleme, çöpe taşıma). Başkasının notunu
+      // GERİ DÖNÜŞSÜZ silme yetkisi sahipte kalır; bu bilinçli bir
+      // güvenlik marjı, "herkes düzenler" kararının kapsamadığı tek eylem.
+      allow delete: if false;
+    }
+
+    // **KLASÖR PAYLAŞIM AYNASI** — `folderShares/{folderId}`, kimliği
+    // `users/{ownerId}/folders/{folderId}` ile AYNI. Paylaşılan kullanıcının
+    // "bana hangi klasörler açıldı" sorusunu TEK sorguda yanıtlar
+    // (`sharedWith` dizisinde `array-contains`) ve yukarıdaki not kuralının
+    // "bu folderId kime ait, kimlerle paylaşılmış" ARAMASINI besler. Yalnız
+    // SAHİP yazabilir; ad/simge SENKRON kopyası olduğundan (bkz.
+    // FoldersRepository.updateFolder) klasörün asıl doğrusu her zaman
+    // `users/{ownerId}/folders/{folderId}`dedir.
+    match /folderShares/{folderId} {
+      allow read: if request.auth != null
+        && (request.auth.uid == resource.data.ownerId
+            || request.auth.uid in resource.data.sharedWith);
+      // **SAHİPLİK KANITI ZORUNLU** (kendi kendine gözden geçirmede
+      // yakalandı): yalnız `ownerId == request.auth.uid` demek YETMEZ —
+      // `folderShares` AYRI bir kök koleksiyon olduğundan, bu şart tek
+      // başına herhangi bir kullanıcının RASTGELE bir folderId için sahte
+      // bir ayna dokümanı yaratıp KENDİSİNİ `sharedWith`e ekleyerek o
+      // klasörün (ve içindeki notların) gerçek sahibi gibi davranmasına
+      // izin verirdi — yukarıdaki not kuralı yalnız bu aynaya bakıyor,
+      // gerçek klasörün var olup olmadığına DEĞİL. `exists()` şartı,
+      // yazan kişinin `users/{kendi_uid}/folders/{folderId}` altında GERÇEK
+      // bir klasöre sahip olduğunu (yani gerçekten o klasörün sahibi
+      // olduğunu) doğrular.
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.ownerId
+        && exists(
+            /databases/$(database)/documents/users/$(request.auth.uid)/folders/$(folderId))
+        && request.resource.data.keys().hasOnly(
+            ['ownerId', 'name', 'icon', 'sharedWith'])
+        && request.resource.data.sharedWith is list;
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.ownerId
+        && request.auth.uid == request.resource.data.ownerId
+        && exists(
+            /databases/$(database)/documents/users/$(request.auth.uid)/folders/$(folderId))
+        && request.resource.data.keys().hasOnly(
+            ['ownerId', 'name', 'icon', 'sharedWith']);
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.ownerId;
+    }
+
+    // **E-POSTA DİZİNİ** — `userDirectory/{eposta}` = `{uid}`. Arkadaş
+    // eklemek isteyen kullanıcı bir e-postadan uid'e buradan ulaşır. Her
+    // kullanıcı yalnız KENDİ e-postasının kaydını yazabilir (doküman
+    // kimliğinin küçük harfli e-postasıyla eşleştiği ve `uid`in kendisi
+    // olduğu doğrulanır) — başkası adına sahte yönlendirme kaydı bırakamaz.
+    // Okuma herkese (giriş yapmış) açık: e-postadan arama BUNU gerektirir,
+    // ama yalnız `get` (tek doküman) — `list` YASAK, aksi hâlde dizinin
+    // TAMAMI (kayıtlı her e-posta) taranabilirdi.
+    match /userDirectory/{email} {
+      allow get: if request.auth != null;
+      allow list: if false;
+      allow create, update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.uid == request.auth.uid;
     }
 
     // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:
