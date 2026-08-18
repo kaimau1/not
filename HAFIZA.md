@@ -1844,3 +1844,61 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   Ek şeridindeki "Metne ekle" düğmesi de artık dosya adını imlece yazmıyor,
   bağlama kipini başlatıyor — kullanıcının tarif ettiği "önce ek" yönünün
   doğal giriş noktası orası.
+
+- 2026-08-18 (38. tur): **Beş kullanıcı bulgusu**: balonlu PDF adı, "Buraya
+  bağla" çalışmıyor, açık metin balonu Paint tarzı değil, klasör = etiketin
+  ikizi, Süz çubuğunda istenmeyen etiket çipleri, klavye kasması sürüyor.
+
+  **1) Belge adı KÖK NEDEN.** Balonlu not oluşturma yolları (`_buildPageNote*`
+  / `_createPageNoteWithPdf`) belgeye NOTUN BAŞLIĞI yerine YAKALAMA KİPİNİN
+  MENÜ ETİKETİNİ ("PDF ekle not al") veriyordu — 09-08'deki düzeltme yalnız
+  görsellerden kurulan belgeleri kapsamış, editörde SONRADAN eklenen PDF/sunum
+  ekleri (`_pickPdf`/`_pickSlide`) ise hâlâ dosyanın KENDİ adını taşıyordu ama
+  bu kez başlık istendiğinde uygulanmıyordu. Tek kural: `documentBaseName()`
+  (note_share.dart) — başlık doluysa o, boşsa dosyanın kendi adı + "notlar".
+
+  **2) "Buraya bağla" ÇALIŞMIYOR — 37. turdaki varsayım YANLIŞTI.** O turun
+  notu "seçim denetleyicide yaşıyor, alan odağı kaybetse bile korunuyor"
+  diyordu; bu YANLIŞ — `TextSelection.selection` odak düşünce (ör. şeritteki
+  düğmeye dokunmak `EditableText`in odağını düşürür) İMLECE ÇÖKER
+  (`isCollapsed`). `_finishPendingEmbed` çöken seçimi görünce sessizce
+  "yazıyı seç" uyarısına dönüyordu — kullanıcıya "hiçbir şey olmuyor" gibi
+  görünüyordu. ÇÖZÜM iki katmanlı: şerit `TextFieldTapRegion` + `ExcludeFocus`
+  içine alındı (dokunmak artık odağı düşürmüyor) VE son DOLU seçim ayrıca
+  `_lastBodySelection`de yedekleniyor (odak yine de düşerse diye). **Ders:**
+  "biçim çubuğu yıllardır buna dayanıyor" gibi bir emsal, YENİ bir widget'ın
+  aynı garantiye sahip olduğunun kanıtı değil — biçim çubuğunun kendi
+  düğmeleri zaten `TextFieldTapRegion` içindeydi, bağlama şeridi değildi.
+
+  **3) Klasör = etiketin ikizi — kök tasarım hatası.** Klasör bugüne kadar bir
+  SÜZGEÇTİ (Süz levhasında seçilip listeyi daraltan bir seçenek), etiketin
+  yaptığı işin birebir aynısı. Kullanıcı isteği net: klasör bir YER olsun, ana
+  ekranda kendi karosu olsun, içine girilsin. `FolderTile` (karo) +
+  `FolderScreen` (kendi sayfası, `Navigator.push` — GoRouter kabuğunun sağ
+  paneline sıkışmasın) eklendi; `folderNotesProvider` klasörün içini SÜZGEÇTEN
+  BAĞIMSIZ verir. `filteredNotesProvider` artık klasörlü notu KÖK listede
+  GÖSTERMEZ (yalnız süzgeçsiz/aramasız kök görünümde — arama ve etiket/durum
+  süzgeçleri klasörün içine yine ulaşır, "notum kayboldu" en pahalı hata).
+
+  **4) Süz çubuğundaki etiket çipleri — TUTARSIZ istisna.** 08-08'de etiketler
+  bilerek istisna tutulup yıldızlanmasalar da hepsi çip olmuştu; ama çubuktan
+  KALDIRMANIN yolu yoktu (yıldız zaten kapalıydı). Kural artık HER seçenek
+  için aynı: yalnız Süz levhasında yıldızlanan şey çubukta çip olur.
+
+  **5) Klavye kasması — YERLEŞİM maliyeti, kurulum değil.** 33./35./36.
+  turlar KURULUMU (rebuild) durdurdu: alt çubuk/tuval artık aynı widget
+  örneğini dönüyor. Kalan maliyet YERLEŞİMDİ: `Scaffold.resizeToAvoidBottomInset`
+  gövdenin kısıtını klavye animasyonunun HER KARESİNDE (~30 kare) değiştiriyor;
+  Flutter alt ağacı yeniden KURMASA bile YENİDEN ÖLÇÜYOR — yüzlerce kartlık ana
+  ekran ızgarası ve pdfrx (her yeni yükseklikte sayfayı yeniden pişiriyor) bu
+  tek başına takılmaya yetiyor. Ana ekran ve editörde `resizeToAvoidBottomInset:
+  false`; editörde boşluk artık `KeyboardSnap` (core/widgets/keyboard_snap.dart)
+  ile KADEMELİ (96 dp) veriliyor — ~30 yerleşim yerine 3-4. **TUZAK (ilk
+  sürümde teste yakalandı):** kademeleme her `build()`'te yeniden hesaplanırsa,
+  animasyon durup TAM değere indikten SONRAKİ bir build (ör. tazeleme
+  zamanlayıcısının kendi `setState`'i) aynı `live` değerini TEKRAR kademeleyip
+  tam değeri anında geri yuvarlar; kademeleme yalnız `live` bir ÖNCEKİ build'e
+  göre DEĞİŞTİYSE uygulanmalı. Tam ekran PDF/sunum/görsel görüntüleyicileri
+  BİLEREK dokunulmadı — oradaki balon yazma kartı `resizeToAvoidBottomInset`in
+  varsayılan davranışına dayanıyor (21. turda ince ayarlanmış "klavyenin
+  hemen üstü" konumlaması); kapatmak kartı klavyenin ALTINDA bırakırdı.

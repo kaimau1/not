@@ -1361,6 +1361,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       child: Focus(
         autofocus: true,
         child: Scaffold(
+          // **KASMA — ana ekran klavyeyle YENİDEN ÖLÇÜLMESİN** (kullanıcı
+          // bulgusu 2026-08-18: "kasma devam ediyor klavye açılırken … arama /
+          // levhalarda"). Aramaya dokunmak klavyeyi açıyor, Scaffold da
+          // gövdeyi animasyonun her karesinde kısaltıyordu: ızgara geniş bir
+          // önbellek payıyla kartların TAMAMINI ölçtüğü için (bkz.
+          // [_kGridCacheExtent]) her kare yüzlerce kartın yeniden
+          // yerleşimi demekti.
+          //
+          // Arama alanı ekranın TEPESİNDE olduğu için gövdenin kısalmasına
+          // zaten gerek yok; klavye yalnız yüzen düğmelerin üstünü örter,
+          // onlar da yazarken kullanılmıyor.
+          resizeToAvoidBottomInset: false,
           body: SafeArea(
             child: Stack(
               children: [
