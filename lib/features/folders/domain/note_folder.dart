@@ -11,6 +11,8 @@ class NoteFolder {
     this.icon = defaultIcon,
     this.hidden = false,
     this.createdAt,
+    required this.ownerId,
+    this.sharedWith = const [],
   });
 
   final String id;
@@ -30,6 +32,22 @@ class NoteFolder {
   /// başına "Kilitle" (biyometrik) seçeneğini kullanır.
   final bool hidden;
   final DateTime? createdAt;
+
+  /// Klasörün GERÇEK sahibi — belge her zaman `users/{ownerId}/folders/{id}`
+  /// altında yaşar. Kendi klasörlerimde bu her zaman benim uid'im; PAYLAŞILAN
+  /// bir klasörde (bkz. [sharedWith]) beni davet eden kişinin uid'i. Notların
+  /// hangi koleksiyondan okunacağını/yazılacağını bu alan belirler — klasör
+  /// paylaşılsa da notlar SAHİBİNİN altında kalır, kopyalanmaz.
+  final String ownerId;
+
+  /// Kullanıcı isteği 2026-08-18: "ortak notlar klasörü — kişiler bağlanır,
+  /// notları ortak görür." Bu klasöre erişimi olan (sahip DIŞINDAKİ)
+  /// arkadaşların uid listesi; boşsa klasör özeldir. Erişim OKUMA+YAZMA'dır
+  /// (bkz. firestore.rules) — rol ayrımı (yalnız okuyan/yazan) bu turun
+  /// kapsamı dışında bırakıldı.
+  final List<String> sharedWith;
+
+  bool get isShared => sharedWith.isNotEmpty;
 
   /// Varsayılan sade simge.
   static const String defaultIcon = 'folder';
@@ -57,15 +75,29 @@ class NoteFolder {
 
   IconData get iconData => iconChoices[icon] ?? Icons.folder_outlined;
 
-  NoteFolder copyWith({String? name, String? icon, bool? hidden}) => NoteFolder(
+  NoteFolder copyWith({
+    String? name,
+    String? icon,
+    bool? hidden,
+    List<String>? sharedWith,
+  }) => NoteFolder(
     id: id,
     name: name ?? this.name,
     icon: icon ?? this.icon,
     hidden: hidden ?? this.hidden,
     createdAt: createdAt,
+    ownerId: ownerId,
+    sharedWith: sharedWith ?? this.sharedWith,
   );
 
-  factory NoteFolder.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  /// [ownerId] verilmezse dokümanın YOLUNDAN çıkarılır
+  /// (`users/{ownerId}/folders/{id}`) — kendi klasörlerimde bu zaten benim
+  /// uid'im olur; paylaşılan bir klasörü sahibinin koleksiyonundan okurken de
+  /// (bkz. `sharedFolderRefsProvider`) doğru sahip otomatik çözülür.
+  factory NoteFolder.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc, {
+    String? ownerId,
+  }) {
     final map = doc.data() ?? const <String, dynamic>{};
     return NoteFolder(
       id: doc.id,
@@ -73,6 +105,11 @@ class NoteFolder {
       icon: map['icon'] as String? ?? defaultIcon,
       hidden: map['hidden'] as bool? ?? false,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
+      ownerId: ownerId ?? doc.reference.parent.parent?.id ?? '',
+      sharedWith: [
+        for (final uid in (map['sharedWith'] as List<dynamic>? ?? const []))
+          uid.toString(),
+      ],
     );
   }
 
@@ -80,6 +117,8 @@ class NoteFolder {
     'name': name,
     'icon': icon,
     'hidden': hidden,
+    'ownerId': ownerId,
+    'sharedWith': sharedWith,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

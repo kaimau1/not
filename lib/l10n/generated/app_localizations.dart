@@ -5117,6 +5117,144 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Nota eklendi'**
   String get brainstormAdded;
+
+  /// No description provided for @folderShared.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasör bir arkadaşınla ortak'**
+  String get folderShared;
+
+  /// No description provided for @friendsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiler'**
+  String get friendsTitle;
+
+  /// No description provided for @friendsAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaş ekle'**
+  String get friendsAdd;
+
+  /// No description provided for @friendsEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.'**
+  String get friendsEmpty;
+
+  /// No description provided for @friendsRequestsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'İSTEKLER'**
+  String get friendsRequestsTitle;
+
+  /// No description provided for @friendsListTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'ARKADAŞLARIM'**
+  String get friendsListTitle;
+
+  /// No description provided for @friendsAddEmailHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'arkadas@eposta.com'**
+  String get friendsAddEmailHint;
+
+  /// No description provided for @friendsSendRequest.
+  ///
+  /// In tr, this message translates to:
+  /// **'İstek gönder'**
+  String get friendsSendRequest;
+
+  /// No description provided for @friendsRequestSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'İstek gönderildi'**
+  String get friendsRequestSent;
+
+  /// No description provided for @friendsNotFound.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.'**
+  String get friendsNotFound;
+
+  /// No description provided for @friendsSelf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendini arkadaş ekleyemezsin'**
+  String get friendsSelf;
+
+  /// No description provided for @friendsAlready.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaten arkadaşsınız'**
+  String get friendsAlready;
+
+  /// No description provided for @friendsDecline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reddet'**
+  String get friendsDecline;
+
+  /// No description provided for @friendsAccept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kabul et'**
+  String get friendsAccept;
+
+  /// No description provided for @friendsRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaldır'**
+  String get friendsRemove;
+
+  /// No description provided for @friendsRemoveConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşlıktan çıkar'**
+  String get friendsRemoveConfirmTitle;
+
+  /// No description provided for @friendsRemoveConfirmBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.'**
+  String friendsRemoveConfirmBody(Object name);
+
+  /// No description provided for @friendsNeedsAccount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.'**
+  String get friendsNeedsAccount;
+
+  /// No description provided for @folderShare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaş'**
+  String get folderShare;
+
+  /// No description provided for @folderShareCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 kişiyle paylaşıldı} other{{count} kişiyle paylaşıldı}}'**
+  String folderShareCount(num count);
+
+  /// No description provided for @folderShareTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" klasörünü paylaş'**
+  String folderShareTitle(Object name);
+
+  /// No description provided for @folderShareInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçtiğin arkadaş bu klasörü ve içindeki notları görür, düzenleyebilir.'**
+  String get folderShareInfo;
+
+  /// No description provided for @friendsRowInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaş ekle, klasörlerini onlarla paylaş'**
+  String get friendsRowInfo;
 }
 
 class _AppLocalizationsDelegate

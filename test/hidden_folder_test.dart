@@ -14,8 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// o oturum boyunca açılır — bu durumda notlar yeniden listeye girer.
 void main() {
   const folders = [
-    NoteFolder(id: 'gizli', name: 'Kişisel', hidden: true),
-    NoteFolder(id: 'acik', name: 'İş'),
+    NoteFolder(id: 'gizli', name: 'Kişisel', hidden: true, ownerId: 'me'),
+    NoteFolder(id: 'acik', name: 'İş', ownerId: 'me'),
   ];
   const notes = [
     Note(

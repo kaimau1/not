@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../friends/data/friends_repository.dart';
+import '../../friends/domain/friend.dart';
+import '../../friends/presentation/friends_screen.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
@@ -165,6 +169,20 @@ Future<void> showFolderActionsSheet(
             ),
             onTap: () => Navigator.pop(sheetContext, 'hide'),
           ),
+          // **PAYLAŞ** (kullanıcı isteği 2026-08-18: "ortak notlar klasörü
+          // kişiler bağlanır notları ortak görür"). Yerel (anonim) hesapta
+          // e-posta olmadığından özellik hiç görünmez.
+          if (!ref.read(isAnonymousProvider))
+            ListTile(
+              leading: Icon(
+                folder.isShared ? Icons.people : Icons.person_add_alt_outlined,
+              ),
+              title: Text(l10n.folderShare),
+              subtitle: folder.isShared
+                  ? Text(l10n.folderShareCount(folder.sharedWith.length))
+                  : null,
+              onTap: () => Navigator.pop(sheetContext, 'share'),
+            ),
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: Text(l10n.deleteFolder),
@@ -187,6 +205,8 @@ Future<void> showFolderActionsSheet(
       if (!folder.hidden && ref.read(selectedFolderProvider) == folder.id) {
         ref.read(selectedFolderProvider.notifier).set(null);
       }
+    case 'share':
+      if (context.mounted) await showFolderShareSheet(context, ref, folder);
     case 'delete':
       final confirmed = await showDialog<bool>(
         context: context,
@@ -259,4 +279,105 @@ Future<String?> showFolderPickSheet(
   // Yeni klasör: oluşturulunca not doğrudan ona atanır.
   if (!context.mounted) return null;
   return showFolderEditorDialog(context, ref);
+}
+
+/// **KLASÖRÜ PAYLAŞ.** Arkadaş listesinden seçim + paylaşılanların yönetimi
+/// (kaldırma) tek levhada. Bu turun kapsamı (kullanıcı seçimi 2026-08-18):
+/// rol ayrımı yok, paylaşılan kişi klasörü OKUR VE YAZAR.
+Future<void> showFolderShareSheet(
+  BuildContext context,
+  WidgetRef ref,
+  NoteFolder folder,
+) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    // Consumer: kutucuklar sabit `folder` yerine CANLI klasör dokümanını
+    // izler. Sabit olsaydı bir kutuya dokunmak Firestore'a yazar ama
+    // ekrandaki kutu bir sonraki kare geri sıçrardı (setState hiç çağrılmaz).
+    builder: (sheetContext) => Consumer(
+      builder: (sheetContext, sheetRef, _) {
+        final l10n = sheetContext.l10n;
+        final liveFolder =
+            sheetRef
+                .watch(foldersStreamProvider)
+                .value
+                ?.where((f) => f.id == folder.id)
+                .firstOrNull ??
+            folder;
+        final friends =
+            sheetRef.watch(friendsStreamProvider).value ?? const <Friend>[];
+        final foldersRepo = sheetRef.watch(foldersRepositoryProvider);
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.folderShareTitle(liveFolder.name),
+                  style: Theme.of(sheetContext).textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n.folderShareInfo,
+                  style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (friends.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.friendsEmpty),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(sheetContext);
+                            openFriendsScreenOrExplain(context, ref);
+                          },
+                          icon: const Icon(
+                            Icons.person_add_alt_outlined,
+                            size: 18,
+                          ),
+                          label: Text(l10n.friendsAdd),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  for (final friend in friends)
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: liveFolder.sharedWith.contains(friend.uid),
+                      title: Text(
+                        friend.name.isEmpty ? friend.email : friend.name,
+                      ),
+                      subtitle: Text(friend.email),
+                      onChanged: foldersRepo == null
+                          ? null
+                          : (checked) {
+                              if (checked ?? false) {
+                                foldersRepo.shareFolder(liveFolder, friend.uid);
+                              } else {
+                                foldersRepo.unshareFolder(
+                                  liveFolder,
+                                  friend.uid,
+                                );
+                              }
+                            },
+                    ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
 }

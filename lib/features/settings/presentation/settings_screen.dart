@@ -33,6 +33,8 @@ import '../../ai/data/gemini_service.dart';
 import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_errors.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../friends/data/friends_repository.dart';
+import '../../friends/presentation/friends_screen.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
@@ -275,6 +277,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _RestoreButton(),
             title: l10n.importBackup,
             keywords: 'geri yukle ice aktar',
+          ),
+        ],
+      ),
+      // Kullanıcı isteği 2026-08-18: "kişiler kullanıcıya dışarıdan
+      // belirleyebilmeli" — arkadaş ekleme ve klasör paylaşımının girişi
+      // buradan da erişilebilir (asıl giriş klasör ⋮ menüsündeki "Paylaş").
+      _Area(
+        id: 'friends',
+        icon: Icons.people_outline,
+        title: l10n.friendsTitle,
+        summary: '',
+        keywords: 'arkadas kisi paylas klasor ortak',
+        rows: [
+          _SettingRow(
+            const _FriendsRow(),
+            title: l10n.friendsTitle,
+            keywords: 'arkadas ekle davet e-posta',
           ),
         ],
       ),
@@ -596,6 +615,44 @@ class _SettingsArea extends StatelessWidget {
 
 // _SettingsGroup (basliksiz kart grubu) kaldirildi: yerini akordeon
 // _SettingsArea aldi, dokuz grup alti alana indi.
+
+/// "Kişiler" alanının tek satırı: arkadaş listesine/isteklere götürür.
+/// Yerel (anonim) hesapta e-posta olmadığı için özellik anlamsız —
+/// `openFriendsScreenOrExplain` dokununca bunu açıklar.
+class _FriendsRow extends ConsumerWidget {
+  const _FriendsRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final requestCount =
+        ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.people_outline),
+      title: Text(l10n.friendsTitle),
+      subtitle: Text(l10n.friendsRowInfo),
+      trailing: requestCount > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$requestCount',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: () => openFriendsScreenOrExplain(context, ref),
+    );
+  }
+}
 
 /// Ayarların en üstündeki kimlik kartı: avatar, ad, e-posta ve senkron durumu.
 class _ProfileCard extends ConsumerWidget {

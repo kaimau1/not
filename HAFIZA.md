@@ -1902,3 +1902,53 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   BİLEREK dokunulmadı — oradaki balon yazma kartı `resizeToAvoidBottomInset`in
   varsayılan davranışına dayanıyor (21. turda ince ayarlanmış "klavyenin
   hemen üstü" konumlaması); kapatmak kartı klavyenin ALTINDA bırakırdı.
+
+- 2026-08-18 (39. tur): **Ortak notlar klasörü + Kişiler (arkadaşlar).**
+  Kullanıcı isteği: "ortak notlar klasörü kişiler bağlanır notları ortak
+  görür … kişiler kullanıcıya dışarıdan (e-postayla) belirlenebilmeli."
+  Sunucusuz mimaride (Cloud Function yok) e-posta → uid çözümü `userDirectory`
+  kök koleksiyonuyla, arkadaşlık istek/kabul akışı `friendRequests` +
+  `friends` alt koleksiyonlarıyla, klasör paylaşımı `folderShares` kök
+  aynasıyla çözüldü (bkz. `firestore.rules` başındaki yorumlar). Paylaşılan
+  klasörün notları KOPYALANMAZ — hep SAHİBİNİN koleksiyonunda kalır; paylaşan
+  kişi de kendi ekleyeceği notu doğrudan sahibin koleksiyonuna yazar (bkz.
+  `sharedFolderNotesProvider`, `FolderScreen._SharedFolderView`).
+
+  **KENDİ KENDİNE GÖZDEN GEÇİRMEDE YAKALANAN İKİ GÜVENLİK AÇIĞI** (kurallar
+  yazıldıktan sonra, deploy'dan ÖNCE emülatörle test edilirken bulundu —
+  ikisi de canlıya çıksaydı gerçek bir sızıntı olurdu):
+
+  1) **Ters `exists()` yolu.** Arkadaşlık kabulünde Y, X'in `friends` alt
+  koleksiyonuna yazarken kanıt olarak `users/{X}/friendRequests/{Y}`'e
+  bakıyordu — ama istek her zaman ALICININ (Y) gelen kutusunda durur
+  (`users/{Y}/friendRequests/{X}`). Yanlış yön, kabul akışının TAMAMINI
+  sessizce reddederdi (`exists()` hep false).
+
+  2) **`folderShares` sahiplik taklidi (gerçek açık).** İlk taslakta
+  `folderShares/{folderId}` oluşturma kuralı yalnız `ownerId ==
+  request.auth.uid` istiyordu — bu, AYRI bir kök koleksiyon olduğundan,
+  herhangi bir kullanıcının RASTGELE bir folderId için sahte bir ayna
+  yaratıp kendini `sharedWith`e ekleyerek o klasörün (ve İÇİNDEKİ NOTLARIN)
+  sahibiymiş gibi davranmasına izin verirdi. Çözüm: yazan kişinin
+  `users/{kendi_uid}/folders/{folderId}` altında GERÇEK bir klasöre sahip
+  olduğu `exists()` ile doğrulanır. AYRICA not kuralı yalnız "bu folderId
+  bana paylaşılmış mı" değil, "`noteOwnerUid` gerçekten bu folderId'nin
+  sahibi mi" diye de sormalı — yoksa biriyle paylaşılan HERHANGİ bir
+  klasörün id'si, o klasörle hiç ilgisi olmayan bir kurbanın not
+  koleksiyonuna yazı enjekte etmek için kullanılabilirdi.
+
+  **Ders:** paylaşım/yetki kuralları yazıldıktan sonra "mantıken doğru
+  görünüyor" yeterli değil — `firebase-tools` + `@firebase/rules-unit-testing`
+  ile YEREL EMÜLATÖRDE gerçek `assertSucceeds`/`assertFails` senaryoları
+  koşturmak (özellikle "yetkisiz taraf X'i yapabilir mi" testleri) canlıya
+  çıkmadan önce iki gerçek deliği yakaladı. Araç bu ortamda önceden kurulu
+  değildi; `npm install -g firebase-tools` + `firebase setup:emulators:firestore`
+  ile kuruldu, iş bitince kaldırıldı (proje bağımlılığı değil).
+
+  Ayrıca: `NoteFolder`e `ownerId`/`sharedWith` eklendi (klasör dashboard'ta
+  karo olduğu için — bkz. 37. tur — artık iki tür karo var: kendi klasörüm
+  `FolderTile`, paylaşılan `SharedFolderTile`, aynı rafta yan yana). Kişiler
+  ekranı Ayarlar'dan da erişilebilir; hesap silme akışı kendi arkadaş/istek/
+  paylaşım kayıtlarını temizler (BİLİNEN SINIR: karşı tarafın aynası, Cloud
+  Function olmadığı için, karşı tarafın kendi temizliğine kalır — zararsız
+  kalıntı, bkz. account_service.dart).

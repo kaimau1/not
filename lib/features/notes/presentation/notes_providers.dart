@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/rich_text.dart';
@@ -581,6 +582,36 @@ final folderNotesProvider = Provider.family<AsyncValue<List<Note>>, String>((
     ], sort, activity),
   );
 });
+
+/// **PAYLAŞILAN bir klasörün içi.** [folderNotesProvider]'ın ikizi — tek
+/// fark, notların BENİM koleksiyonumdan değil klasörün SAHİBİNİN
+/// koleksiyonundan okunması. Anahtar `(ownerId, folderId)`: aynı ekranın
+/// (`FolderScreen`) hem kendi hem paylaşılan klasörlerde çalışabilmesi için.
+///
+/// Kullanıcı isteği 2026-08-18: "kişiler bağlanır notları ortak görür."
+/// Sahiplik notların Firestore konumunu belirler (bkz. `NoteFolder.ownerId`
+/// açıklaması) — paylaşılan kullanıcı buraya not eklerse o not de SAHİBİNİN
+/// koleksiyonuna yazılır, kopya oluşmaz.
+final sharedFolderNotesProvider =
+    StreamProvider.family<List<Note>, ({String ownerId, String folderId})>((
+      ref,
+      key,
+    ) {
+      final repo = NotesRepository(FirebaseFirestore.instance, key.ownerId);
+      return repo.watchNotes().map(
+        (list) => _sortedNotes(
+          [
+            for (final n in list)
+              if (n.folderId == key.folderId &&
+                  n.archivedAt == null &&
+                  !n.isEmpty)
+                n,
+          ],
+          NoteSort.updated,
+          const {},
+        ),
+      );
+    });
 
 /// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.
 final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {

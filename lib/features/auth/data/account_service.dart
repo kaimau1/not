@@ -39,6 +39,8 @@ class AccountService {
     for (final name in const [
       AppConstants.notesCollection,
       AppConstants.foldersCollection,
+      AppConstants.friendsCollection,
+      AppConstants.friendRequestsCollection,
       'aiReports',
     ]) {
       final snapshot = await userDoc.collection(name).get();
@@ -51,6 +53,39 @@ class AccountService {
         await batch.commit();
       }
     }
+
+    // 2b) KÖK koleksiyonlardaki kendi kayıtları: `folderShares` (sahip
+    // olduğum paylaşımlar) ve `userDirectory` (e-posta → uid kaydım).
+    //
+    // **BİLİNEN SINIR (client-only mimari, Cloud Function yok):** bu adım
+    // yalnız KENDİ dokümanlarımı temizler. Başka bir kullanıcının `friends`
+    // alt koleksiyonundaki bana ait ayna kaydı ya da benim paylaştığım bir
+    // klasörün arkadaşımın ekranındaki referansı burada SİLİNMEZ — o
+    // kullanıcının kendi koleksiyonuna yazma yetkim yok (kural yalnız kabul
+    // akışı için dar bir istisna tanıyor, silme için değil). Kalıntı zararsız
+    // (isim/e-posta + artık var olmayan bir uid); firestore.rules zaten yeni
+    // erişim vermez, karşı taraf bir dahaki senkronda ya da kendi
+    // kaldırmasında temizlenir.
+    final shares = await firestore
+        .collection(AppConstants.folderSharesCollection)
+        .where('ownerId', isEqualTo: uid)
+        .get();
+    for (var i = 0; i < shares.docs.length; i += 400) {
+      final batch = firestore.batch();
+      for (final doc in shares.docs.skip(i).take(400)) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+    final email = user.email;
+    if (email != null && email.trim().isNotEmpty) {
+      await firestore
+          .collection(AppConstants.userDirectoryCollection)
+          .doc(email.trim().toLowerCase())
+          .delete()
+          .catchError((_) {});
+    }
+
     await userDoc.delete();
 
     // 3) Auth hesabı. Firebase güvenlik gereği taze oturum ister; oturum

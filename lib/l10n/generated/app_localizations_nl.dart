@@ -2748,4 +2748,89 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get brainstormAdded => 'Nota eklendi';
+
+  @override
+  String get folderShared => 'Bu klasör bir arkadaşınla ortak';
+
+  @override
+  String get friendsTitle => 'Kişiler';
+
+  @override
+  String get friendsAdd => 'Arkadaş ekle';
+
+  @override
+  String get friendsEmpty =>
+      'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
+
+  @override
+  String get friendsRequestsTitle => 'İSTEKLER';
+
+  @override
+  String get friendsListTitle => 'ARKADAŞLARIM';
+
+  @override
+  String get friendsAddEmailHint => 'arkadas@eposta.com';
+
+  @override
+  String get friendsSendRequest => 'İstek gönder';
+
+  @override
+  String get friendsRequestSent => 'İstek gönderildi';
+
+  @override
+  String get friendsNotFound =>
+      'Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.';
+
+  @override
+  String get friendsSelf => 'Kendini arkadaş ekleyemezsin';
+
+  @override
+  String get friendsAlready => 'Zaten arkadaşsınız';
+
+  @override
+  String get friendsDecline => 'Reddet';
+
+  @override
+  String get friendsAccept => 'Kabul et';
+
+  @override
+  String get friendsRemove => 'Kaldır';
+
+  @override
+  String get friendsRemoveConfirmTitle => 'Arkadaşlıktan çıkar';
+
+  @override
+  String friendsRemoveConfirmBody(Object name) {
+    return '$name arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.';
+  }
+
+  @override
+  String get friendsNeedsAccount =>
+      'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
+
+  @override
+  String get folderShare => 'Paylaş';
+
+  @override
+  String folderShareCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kişiyle paylaşıldı',
+      one: '1 kişiyle paylaşıldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String folderShareTitle(Object name) {
+    return '\"$name\" klasörünü paylaş';
+  }
+
+  @override
+  String get folderShareInfo =>
+      'Seçtiğin arkadaş bu klasörü ve içindeki notları görür, düzenleyebilir.';
+
+  @override
+  String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
 }
