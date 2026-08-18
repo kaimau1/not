@@ -253,3 +253,43 @@ jobs:
             notlar-v1.0.${{ github.run_number }}.apk
             build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: warn
+
+  # main'e her push'ta Firestore/Storage kurallarını ve web sürümünü otomatik
+  # yayınlar. Elle `firebase deploy` / `wrangler pages deploy` çalıştırmaya
+  # gerek kalmaz.
+  deploy:
+    name: Firebase + Cloudflare Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Bağımlılıkları indir
+        run: flutter pub get
+
+      - name: Web derle
+        run: >
+          flutter build web --release
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+
+      - name: Firebase kurallarını yayınla
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npx firebase-tools deploy --only firestore,storage --non-interactive
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
+      - name: Cloudflare Pages'e yayınla
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy build/web --project-name=notlar-web --branch=main
