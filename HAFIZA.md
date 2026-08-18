@@ -1993,3 +1993,58 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   anonim-hesap-yükseltme hatasıdır ve SDK bilerek `.credential` alanında
   kurtarma yolunu taşır — ham hata metni basmak yerine bu alan her zaman
   kontrol edilip doğrudan giriş denenmeli.
+
+- 2026-08-18 (42. tur): **Paylaşılan klasör "Missing or insufficient
+  permissions" — KÖK NEDEN ve ortak çalışmanın eksik yarısı.**
+
+  Kullanıcı bulgusu: arkadaş eklendi, klasör paylaşıldı, ama karşı hesapta
+  klasör açılınca ekranda yalnız
+  `[cloud_firestore/permission-denied]` yazıyordu.
+
+  KÖK NEDEN: `sharedFolderNotesProvider`, sahibin notlarını
+  `NotesRepository.watchNotes()` ile — yani KOLEKSİYONUN TAMAMINI isteyerek —
+  okuyordu. Firestore'da bir LİSTE sorgusu sonuçları kurala göre AYIKLAMAZ:
+  kural sonuçtaki her doküman için geçmiyorsa sorgunun TAMAMI reddedilir.
+  Kural erişimi yalnız "paylaşılan klasöre ait" notlara veriyordu, sahibin
+  öbür notları sorguya girdiği an istek çöküyordu. ÇÖZÜM: yeni
+  `watchFolderNotes(folderId)` — sorgu tek eşitlik süzgeciyle klasöre
+  daraltıldı (çöp süzgeci istemcide; ikinci bir sunucu süzgeci bileşik
+  indeks sorusu açardı, `firestore.indexes.json` bilerek boş).
+
+  **İKİNCİ, DAHA SESSİZ HATA:** liste düzelse bile nota DOKUNULAMIYORDU.
+  Editör bütün okuma/yazımlarını `notesRepositoryProvider` (= giriş yapmış
+  kullanıcının koleksiyonu) üzerinden yapıyor; paylaşılan not sahibinin
+  koleksiyonunda yaşadığı için editör onu bulamıyor, yazımlar da kendi
+  altımıza aynı kimlikle HAYALET bir not olarak düşüyordu. Sahip artık
+  rotanın `?owner=` parametresiyle taşınıyor (`NoteEditorScreen.ownerId`) ve
+  `ownedNoteStreamProvider`/`ownedPendingWritesProvider` sahibin
+  koleksiyonunu okuyor. Aynı gerekçeyle paylaşılan kartta ⋮ menüsü
+  GİZLENDİ: oradaki işlemlerin hepsi kendi depoma yazıyor.
+
+  **Ders:** "Firestore liste sorgusu = kuralın süzgeci" sanmak bu projede
+  ikinci kez pahalıya patladı. Kural neyi açıyorsa SORGU DA tam onu
+  istemeli. Ve bir belgeyi başka bir kullanıcının koleksiyonundan göstermek
+  yetmez — o belgeye dokunan HER yol (editör, kart menüsü, geri alma,
+  silme) hangi depoya yazdığını ayrıca söylemek zorunda.
+
+  **Bu turda eklenenler (kullanıcı listesi):** not paylaşımı (alıcıda
+  `users/{uid}/inboxNotes` → "Gelen notlar" ekranı, kabul edince kendi notu
+  olur — canlı bağ DEĞİL kopya, çünkü gönderen sonradan silince alıcının
+  notu yok olmamalı); klasör yetkileri (okuma / yazma / her ikisi;
+  `folderShares.roles` haritası, varsayılan `both` ki eski paylaşımların
+  erişimi sessizce kesilmesin); davet kabul/ret (`pending` dizisi + davetli
+  yalnız KENDİ satırını `arrayUnion`/`arrayRemove` ile taşıyabilir —
+  klasörü okuyamadığı için oku-değiştir-yaz yapamaz); klasör sohbeti
+  (`folderShares/{id}/messages`, klasörün altında DEĞİL: erişim sorusunun
+  cevabı zaten aynada); ana ekranda arkadaşlık isteği + klasör daveti
+  şeridi; klasör rafı varsayılan olarak tek satırlık çip şeridi (karo rafı
+  üç klasörde bir 92 px'lik satır açıyordu); sağ üstte hesap simgesi
+  (Google fotoğrafı / yerel hesap simgesi) + ⋮ menüsünde hesap-kişiler-gelen
+  notlar; Ayarlar'da Hesap ve Kişiler en üste alındı.
+
+  **BİLİNEN SINIR (bilinçli):** ortak klasörde EKLERİN yönetimi paylaşılmaz.
+  Görüntüleme çalışır (`downloadUrl` jetonu Storage kurallarından bağımsız),
+  ama ek ekleme/silme her zaman giriş yapmış kullanıcının kendi Storage
+  yoluna gider — Storage kuralları Firestore'daki paylaşımı GÖREMEZ
+  (Cloud Function olmadan çözümü yok). Ortak klasörler metin ve listeler
+  için tasarlandı. Aynı gerekçeyle gönderilen notun ekleri taşınmaz.

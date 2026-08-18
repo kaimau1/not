@@ -7,6 +7,7 @@ import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
+import '../../inbox/presentation/send_note_sheet.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
@@ -74,6 +75,10 @@ class _ActionsGrid extends StatelessWidget {
       // yapılır (bkz. showNoteShareSheet). Eskiden ızgarada iki ayrı kutu
       // vardı ve "Paylaş" PDF notunda sessizce hiçbir şey yapmıyordu.
       ('share', l10n.share, Icons.share_outlined),
+      // **ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18): sistem paylaşım
+      // levhasından AYRI bir kutu — o, notu uygulamanın DIŞINA çıkarır;
+      // bu, uygulamanın içinde bir kişinin gelen kutusuna bırakır.
+      ('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
       ('copy', l10n.copy, Icons.copy_outlined),
       ('select', l10n.select, Icons.check_circle_outline),
       ('folder', l10n.moveToFolder, Icons.folder_outlined),
@@ -214,6 +219,12 @@ Future<void> _runNoteAction(
       if (!await unlockIfNeeded()) return;
       if (!context.mounted) return;
       await showNoteShareSheet(context, ref, note);
+    case 'sendToFriend':
+      // Kilitli notun içeriği doğrulamasız GÖNDERİLMESİN: kopya karşı
+      // tarafta kilitsiz açılır (paylaş/kopyala ile aynı gerekçe).
+      if (!await unlockIfNeeded()) return;
+      if (!context.mounted) return;
+      await showSendNoteToFriendSheet(context, ref, note);
     case 'listen':
       // Okuma cihazın TTS'i ile yapılır (model çağrısı yok). Kilitli notun
       // içeriği sesli de okunmasın.

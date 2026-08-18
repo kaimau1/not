@@ -286,3 +286,184 @@ class NewFolderTile extends ConsumerWidget {
     );
   }
 }
+
+
+/// **KOMPAKT KLASÖR ÇİPİ** — kullanıcı isteği 2026-08-18: "klasörler ana
+/// ekranda çok fazla yer kaplıyor, farklı bir çözüm bulalım."
+///
+/// [FolderTile]'ın (92 px'lik karo) yatay şeritteki karşılığı: simge + ad +
+/// not sayısı, ~36 px yüksekliğinde. Aynı eylemler — dokun aç, uzun bas
+/// yönet — böylece iki görünüm arasında öğrenilen şey değişmez.
+class FolderChip extends ConsumerWidget {
+  const FolderChip({super.key, required this.folder});
+
+  final NoteFolder folder;
+
+  /// Şeridin yüksekliği; kaydırma alanının sabit kalması için tek yerde.
+  static const double stripHeight = 40;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    final count = ref
+        .watch(folderNotesProvider(folder.id))
+        .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
+    return _ChipShell(
+      background: scheme.secondaryContainer,
+      foreground: scheme.onSecondaryContainer,
+      icon: folder.iconData,
+      label: folder.name,
+      count: count,
+      trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
+      onTap: () => FolderScreen.open(context, folder.id),
+      onLongPress: () => showFolderActionsSheet(context, ref, folder),
+    );
+  }
+}
+
+/// Paylaşılan klasörün çipi — [SharedFolderTile]'ın şerit hâli.
+class SharedFolderChip extends ConsumerWidget {
+  const SharedFolderChip({super.key, required this.share});
+
+  final SharedFolderRef share;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    // Yalnız YAZMA yetkisinde not listesi okunamaz (kural reddeder); sayı
+    // sorulmaz, yerine ortak klasör rozeti yeter.
+    final count = share.role.canRead
+        ? ref
+              .watch(
+                sharedFolderNotesProvider((
+                  ownerId: share.ownerId,
+                  folderId: share.folderId,
+                )),
+              )
+              .maybeWhen(data: (notes) => notes.length, orElse: () => 0)
+        : null;
+    return _ChipShell(
+      background: scheme.tertiaryContainer,
+      foreground: scheme.onTertiaryContainer,
+      icon: share.iconData,
+      label: share.name,
+      count: count,
+      trailingIcon: Icons.people_alt_outlined,
+      onTap: () => FolderScreen.open(
+        context,
+        share.folderId,
+        ownerId: share.ownerId,
+      ),
+    );
+  }
+}
+
+/// "Yeni klasör" çipi — şeridin sonunda.
+class NewFolderChip extends ConsumerWidget {
+  const NewFolderChip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = Theme.of(context).colorScheme;
+    return _ChipShell(
+      background: Colors.transparent,
+      foreground: scheme.onSurfaceVariant,
+      border: scheme.outlineVariant,
+      icon: Icons.create_new_folder_outlined,
+      label: context.l10n.newFolder,
+      onTap: () async {
+        final id = await showFolderEditorDialog(context, ref);
+        if (id != null && context.mounted) {
+          await FolderScreen.open(context, id);
+        }
+      },
+    );
+  }
+}
+
+/// Üç çipin ortak gövdesi: tek yerde biçim, üç yerde aynı görünüm.
+class _ChipShell extends StatelessWidget {
+  const _ChipShell({
+    required this.background,
+    required this.foreground,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.count,
+    this.trailingIcon,
+    this.border,
+    this.onLongPress,
+  });
+
+  final Color background;
+  final Color foreground;
+  final Color? border;
+  final IconData icon;
+  final String label;
+  final int? count;
+  final IconData? trailingIcon;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: background,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: border == null
+            ? BorderSide.none
+            : BorderSide(color: border!),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 17, color: foreground),
+              const SizedBox(width: 6),
+              // Uzun klasör adları şeridi ele geçirmesin: çip en fazla
+              // 150 px, ad taşarsa kısalır.
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 150),
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: foreground,
+                  ),
+                ),
+              ),
+              if (count != null) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '$count',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: foreground.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+              if (trailingIcon != null) ...[
+                const SizedBox(width: 5),
+                Icon(
+                  trailingIcon,
+                  size: 13,
+                  color: foreground.withValues(alpha: 0.75),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -2820,7 +2820,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get folderShareInfo =>
-      'Seçtiğin arkadaş bu klasörü ve içindeki notları görür, düzenleyebilir.';
+      'Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.';
 
   @override
   String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
@@ -2836,4 +2836,104 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accountRecoverConflictProceed => 'Yine de geç';
+  @override
+  String get folderRoleRead => 'Okuma';
+
+  @override
+  String get folderRoleWrite => 'Yazma';
+
+  @override
+  String get folderRoleBoth => 'Okuma + yazma';
+
+  @override
+  String get folderInvitePending => 'Davet gönderildi, yanıt bekleniyor';
+
+  @override
+  String get folderWriteOnlyTitle => 'Yalnız yazma yetkin var';
+
+  @override
+  String get folderWriteOnlyHint => 'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
+
+  @override
+  String get folderChatTitle => 'Sohbet';
+
+  @override
+  String get folderChatHint => 'Mesaj yaz…';
+
+  @override
+  String get folderChatSend => 'Gönder';
+
+  @override
+  String get folderChatEmptyTitle => 'Henüz mesaj yok';
+
+  @override
+  String get folderChatEmptyHint => 'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
+
+  @override
+  String get folderInviteTitle => 'Klasör daveti';
+
+  @override
+  String folderInviteBody(Object name) {
+    return '"$name" klasörü seninle paylaşıldı.';
+  }
+
+  @override
+  String get folderInviteAccepted => 'Klasör eklendi';
+
+  @override
+  String get folderInviteDeclined => 'Davet reddedildi';
+
+  @override
+  String friendRequestBanner(Object name) {
+    return '$name sana arkadaşlık isteği gönderdi';
+  }
+
+  @override
+  String get friendRequestAccepted => 'Arkadaş eklendi';
+
+  @override
+  String get sendNoteAction => 'Arkadaşa gönder';
+
+  @override
+  String get sendNoteTitle => 'Notu arkadaşına gönder';
+
+  @override
+  String get sendNoteInfo => 'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
+
+  @override
+  String sendNoteSent(Object name) {
+    return 'Not $name kişisine gönderildi';
+  }
+
+  @override
+  String get inboxTitle => 'Gelen notlar';
+
+  @override
+  String get inboxEmpty => 'Gelen not yok';
+
+  @override
+  String get inboxEmptyHint => 'Arkadaşlarının sana gönderdiği notlar burada birikir.';
+
+  @override
+  String inboxFrom(Object name) {
+    return '$name gönderdi';
+  }
+
+  @override
+  String get inboxAccept => 'Notlarıma ekle';
+
+  @override
+  String get inboxAccepted => 'Not notlarına eklendi';
+
+  @override
+  String get folderShelfExpand => 'Klasörleri büyüt';
+
+  @override
+  String get folderShelfCollapse => 'Klasörleri daralt';
+
+  @override
+  String get accountSheetLocalInfo => 'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
+
+  @override
+  String get accountSettings => 'Hesap ayarları';
 }

@@ -13,6 +13,7 @@ import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
+import 'folder_chat_screen.dart';
 import 'folder_sheets.dart';
 
 /// **KLASÖRÜN KENDİ SAYFASI.**
@@ -78,6 +79,18 @@ class FolderScreen extends ConsumerWidget {
       appBar: AppBar(
         title: _FolderTitle(icon: folder?.iconData, name: folder?.name),
         actions: [
+          // Sohbet, PAYLAŞILMIŞ klasörde tek dokunuş uzakta olsun: sahip de
+          // katılımcılar da aynı odayı kullanıyor (bkz. FolderChatScreen).
+          if (folder != null && folder.sharedWith.isNotEmpty)
+            IconButton(
+              tooltip: l10n.folderChatTitle,
+              icon: const Icon(Icons.forum_outlined),
+              onPressed: () => FolderChatScreen.open(
+                context,
+                folderId: folder.id,
+                folderName: folder.name,
+              ),
+            ),
           if (folder != null)
             IconButton(
               tooltip: l10n.folderManage,
@@ -131,9 +144,20 @@ class _FolderTitle extends StatelessWidget {
 }
 
 class _NotesGrid extends StatelessWidget {
-  const _NotesGrid({required this.async});
+  const _NotesGrid({
+    required this.async,
+    this.ownerId,
+    this.readOnly = false,
+  });
 
   final AsyncValue<List<Note>> async;
+
+  /// Paylaşılan klasörde notların SAHİBİ — kart bunu editöre taşır, yoksa
+  /// not kendi koleksiyonumda aranır ve "bulunamadı" olur.
+  final String? ownerId;
+
+  /// Yalnız okuma yetkisi: editör kilitli açılır.
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +184,11 @@ class _NotesGrid extends StatelessWidget {
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
                   itemCount: notes.length,
-                  itemBuilder: (context, index) => NoteCard(note: notes[index]),
+                  itemBuilder: (context, index) => NoteCard(
+                    note: notes[index],
+                    ownerId: ownerId,
+                    readOnly: readOnly,
+                  ),
                 );
               },
             ),
@@ -170,6 +198,11 @@ class _NotesGrid extends StatelessWidget {
 
 /// Paylaşılan klasörün gövdesi: klasör dokümanı da notlar da SAHİBİNİN
 /// koleksiyonundan canlı okunur (bkz. sınıf açıklaması).
+///
+/// **YETKİ** (kullanıcı isteği 2026-08-18): sahibin verdiği rol ekranı
+/// biçimlendirir — yalnız okuma yetkisinde "yeni not" düğmesi YOK, yalnız
+/// yazma yetkisinde notlar listelenmez (kural da okumayı reddeder, arayüz
+/// bunu bir hata gibi değil bir açıklama gibi gösterir).
 class _SharedFolderView extends ConsumerWidget {
   const _SharedFolderView({required this.folderId, required this.ownerId});
 
@@ -179,6 +212,14 @@ class _SharedFolderView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    // Yetki, paylaşım aynasındaki `roles` haritasından gelir; ayna zaten ana
+    // ekranın raf listesi için dinleniyor, ek bir okuma maliyeti yok.
+    final share = ref
+        .watch(sharedFolderRefsProvider)
+        .value
+        ?.where((s) => s.folderId == folderId)
+        .firstOrNull;
+    final role = share?.role ?? FolderRole.both;
     return StreamBuilder<NoteFolder?>(
       stream: FoldersRepository.watchSharedFolder(
         FirebaseFirestore.instance,
@@ -195,41 +236,144 @@ class _SharedFolderView extends ConsumerWidget {
             if (context.mounted) Navigator.of(context).maybePop();
           });
         }
-        final notesAsync = ref.watch(
-          sharedFolderNotesProvider((ownerId: ownerId, folderId: folderId)),
-        );
+        final name = folder?.name ?? share?.name;
         return Scaffold(
           appBar: AppBar(
-            title: _FolderTitle(icon: folder?.iconData, name: folder?.name),
+            title: _FolderTitle(
+              icon: folder?.iconData ?? share?.iconData,
+              name: name,
+            ),
             actions: [
+              IconButton(
+                tooltip: l10n.folderChatTitle,
+                icon: const Icon(Icons.forum_outlined),
+                onPressed: () => FolderChatScreen.open(
+                  context,
+                  folderId: folderId,
+                  folderName: name ?? '',
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Tooltip(
-                  message: l10n.folderShared,
-                  child: const Icon(Icons.people_outline, size: 20),
+                  message: '${l10n.folderShared} · ${folderRoleLabel(l10n, role)}',
+                  child: Icon(
+                    role == FolderRole.both
+                        ? Icons.people_outline
+                        : Icons.lock_outline,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton(
-            tooltip: l10n.newTextNote,
-            onPressed: () async {
-              final repo = NotesRepository(FirebaseFirestore.instance, ownerId);
-              final id = await repo.createNote(
-                NoteType.text,
-                folderId: folderId,
-              );
-              if (!context.mounted) return;
-              await openNoteRoute(
-                context,
-                Note(id: id, type: NoteType.text, folderId: folderId),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-          body: _NotesGrid(async: notesAsync),
+          floatingActionButton: role.canWrite
+              ? FloatingActionButton(
+                  tooltip: l10n.newTextNote,
+                  // YALNIZ YAZMA yetkisinde editör AÇILAMAZ: editör notu
+                  // geri OKUMAK zorunda ve okuma reddediliyor — ekran boş
+                  // bir "yükleniyor"da kalırdı. O yetkide not küçük bir
+                  // yazma penceresinden tek seferde bırakılır.
+                  onPressed: () => role.canRead
+                      ? _createNote(context)
+                      : _composeWriteOnly(context),
+                  child: const Icon(Icons.add),
+                )
+              : null,
+          body: role.canRead
+              ? _NotesGrid(
+                  ownerId: ownerId,
+                  readOnly: !role.canWrite,
+                  async: ref.watch(
+                    sharedFolderNotesProvider((
+                      ownerId: ownerId,
+                      folderId: folderId,
+                    )),
+                  ),
+                )
+              // Yalnız YAZMA yetkisi: notları göremez ama bırakabilir. Boş
+              // liste yerine NEDENİ yazılır, yoksa "klasör bozuk" sanılır.
+              : EmptyState(
+                  icon: Icons.drive_file_move_outline,
+                  title: l10n.folderWriteOnlyTitle,
+                  subtitle: l10n.folderWriteOnlyHint,
+                ),
         );
       },
+    );
+  }
+
+  /// **YALNIZ YAZMA** yetkisinde not bırakma penceresi: başlık + metin,
+  /// tek yazımda kaydedilir ve editör hiç açılmaz (kullanıcı notu geri
+  /// okuyamıyor — bkz. [FolderRole.write]).
+  Future<void> _composeWriteOnly(BuildContext context) async {
+    final l10n = context.l10n;
+    final titleController = TextEditingController();
+    final bodyController = TextEditingController();
+    try {
+      final saved = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.newTextNote),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(hintText: l10n.titleHint),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: bodyController,
+                minLines: 3,
+                maxLines: 8,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(hintText: l10n.bodyHint),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(l10n.ok),
+            ),
+          ],
+        ),
+      );
+      final title = titleController.text.trim();
+      final body = bodyController.text.trim();
+      if (!(saved ?? false) || (title.isEmpty && body.isEmpty)) return;
+      final repo = NotesRepository(FirebaseFirestore.instance, ownerId);
+      final id = await repo.createNote(
+        NoteType.text,
+        folderId: folderId,
+        body: body,
+      );
+      if (title.isNotEmpty) repo.updateFields(id, {'title': title});
+    } finally {
+      // finally İÇİNDE: diyalog fırlarsa ya da rota programlı kapanırsa
+      // denetleyiciler sızardı (klasör düzenleme diyaloğuyla aynı gerekçe).
+      titleController.dispose();
+      bodyController.dispose();
+    }
+  }
+
+  /// Paylaşılan klasöre yeni not: not SAHİBİN koleksiyonuna yazılır
+  /// (klasörle birlikte yaşasın diye — bkz. sınıf açıklaması).
+  Future<void> _createNote(BuildContext context) async {
+    final repo = NotesRepository(FirebaseFirestore.instance, ownerId);
+    final id = await repo.createNote(NoteType.text, folderId: folderId);
+    if (!context.mounted) return;
+    await openNoteRoute(
+      context,
+      Note(id: id, type: NoteType.text, folderId: folderId),
+      ownerId: ownerId,
     );
   }
 }

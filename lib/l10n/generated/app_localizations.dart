@@ -5247,7 +5247,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderShareInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Seçtiğin arkadaş bu klasörü ve içindeki notları görür, düzenleyebilir.'**
+  /// **'Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.'**
   String get folderShareInfo;
 
   /// No description provided for @friendsRowInfo.
@@ -5273,6 +5273,192 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yine de geç'**
   String get accountRecoverConflictProceed;
+  /// No description provided for @folderRoleRead.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okuma'**
+  String get folderRoleRead;
+
+  /// No description provided for @folderRoleWrite.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazma'**
+  String get folderRoleWrite;
+
+  /// No description provided for @folderRoleBoth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okuma + yazma'**
+  String get folderRoleBoth;
+
+  /// No description provided for @folderInvitePending.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet gönderildi, yanıt bekleniyor'**
+  String get folderInvitePending;
+
+  /// No description provided for @folderWriteOnlyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız yazma yetkin var'**
+  String get folderWriteOnlyTitle;
+
+  /// No description provided for @folderWriteOnlyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.'**
+  String get folderWriteOnlyHint;
+
+  /// No description provided for @folderChatTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sohbet'**
+  String get folderChatTitle;
+
+  /// No description provided for @folderChatHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesaj yaz…'**
+  String get folderChatHint;
+
+  /// No description provided for @folderChatSend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gönder'**
+  String get folderChatSend;
+
+  /// No description provided for @folderChatEmptyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz mesaj yok'**
+  String get folderChatEmptyTitle;
+
+  /// No description provided for @folderChatEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.'**
+  String get folderChatEmptyHint;
+
+  /// No description provided for @folderInviteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör daveti'**
+  String get folderInviteTitle;
+
+  /// No description provided for @folderInviteBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'"$name" klasörü seninle paylaşıldı.'**
+  String folderInviteBody(Object name);
+
+  /// No description provided for @folderInviteAccepted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör eklendi'**
+  String get folderInviteAccepted;
+
+  /// No description provided for @folderInviteDeclined.
+  ///
+  /// In tr, this message translates to:
+  /// **'Davet reddedildi'**
+  String get folderInviteDeclined;
+
+  /// No description provided for @friendRequestBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'$name sana arkadaşlık isteği gönderdi'**
+  String friendRequestBanner(Object name);
+
+  /// No description provided for @friendRequestAccepted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaş eklendi'**
+  String get friendRequestAccepted;
+
+  /// No description provided for @sendNoteAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşa gönder'**
+  String get sendNoteAction;
+
+  /// No description provided for @sendNoteTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu arkadaşına gönder'**
+  String get sendNoteTitle;
+
+  /// No description provided for @sendNoteInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.'**
+  String get sendNoteInfo;
+
+  /// No description provided for @sendNoteSent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not $name kişisine gönderildi'**
+  String sendNoteSent(Object name);
+
+  /// No description provided for @inboxTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen notlar'**
+  String get inboxTitle;
+
+  /// No description provided for @inboxEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen not yok'**
+  String get inboxEmpty;
+
+  /// No description provided for @inboxEmptyHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşlarının sana gönderdiği notlar burada birikir.'**
+  String get inboxEmptyHint;
+
+  /// No description provided for @inboxFrom.
+  ///
+  /// In tr, this message translates to:
+  /// **'$name gönderdi'**
+  String inboxFrom(Object name);
+
+  /// No description provided for @inboxAccept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarıma ekle'**
+  String get inboxAccept;
+
+  /// No description provided for @inboxAccepted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not notlarına eklendi'**
+  String get inboxAccepted;
+
+  /// No description provided for @folderShelfExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörleri büyüt'**
+  String get folderShelfExpand;
+
+  /// No description provided for @folderShelfCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörleri daralt'**
+  String get folderShelfCollapse;
+
+  /// No description provided for @accountSheetLocalInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.'**
+  String get accountSheetLocalInfo;
+
+  /// No description provided for @accountSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap ayarları'**
+  String get accountSettings;
+
 }
 
 class _AppLocalizationsDelegate

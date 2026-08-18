@@ -119,6 +119,28 @@ final noteStreamProvider = StreamProvider.family<Note?, String>((ref, noteId) {
   return repo.watchNote(noteId);
 });
 
+/// **BAŞKASININ notunun** canlı akışı — paylaşılan klasördeki not, sahibinin
+/// koleksiyonunda yaşıyor (bkz. `NoteFolder.ownerId`). [noteStreamProvider]
+/// her zaman GİRİŞ YAPMIŞ kullanıcının koleksiyonuna bakar; paylaşılan bir
+/// notu onunla açmak "not bulunamadı" demekti ve editördeki her yazım kendi
+/// koleksiyonumda HAYALET bir kopya yaratıyordu.
+final ownedNoteStreamProvider =
+    StreamProvider.family<Note?, ({String ownerId, String noteId})>(
+      (ref, key) => NotesRepository(
+        FirebaseFirestore.instance,
+        key.ownerId,
+      ).watchNote(key.noteId),
+    );
+
+/// [pendingWritesProvider]'ın başka bir sahibin notu için karşılığı.
+final ownedPendingWritesProvider =
+    StreamProvider.family<bool, ({String ownerId, String noteId})>(
+      (ref, key) => NotesRepository(
+        FirebaseFirestore.instance,
+        key.ownerId,
+      ).watchPendingWrites(key.noteId),
+    );
+
 /// Editördeki senkron göstergesi: true = yerel değişiklik sunucuya yazılmayı
 /// bekliyor.
 final pendingWritesProvider = StreamProvider.family<bool, String>((
@@ -167,6 +189,37 @@ class NotesRepository {
       return notes;
     });
   }
+
+  /// **TEK BİR KLASÖRÜN notları.** [watchNotes]'un dar kapsamlı ikizi.
+  ///
+  /// KÖK NEDEN (paylaşılan klasör "Missing or insufficient permissions"
+  /// veriyordu — kullanıcı bulgusu 2026-08-18): paylaşılan klasör ekranı
+  /// sahibin notlarını [watchNotes] ile, yani KOLEKSİYONUN TAMAMINI
+  /// isteyerek okuyordu. Firestore'da bir liste sorgusu, sonuçları kurala
+  /// göre AYIKLAMAZ; kural sonuçtaki HER doküman için geçmiyorsa sorgunun
+  /// TAMAMI reddedilir. Kural ise erişimi yalnız "paylaşılan klasöre ait"
+  /// notlara veriyor (bkz. firestore.rules) — sahibin öbür notları sorguya
+  /// girdiği an istek çöküyordu ve ekran hep hata gösteriyordu.
+  ///
+  /// Sorgu `folderId`ye daraltılınca sonuçtaki her doküman kuralın kapsamına
+  /// girer ve izin verilir.
+  ///
+  /// Çöp kutusu süzgeci SUNUCUDA DEĞİL istemcide: tek eşitlik süzgeci
+  /// otomatik tek-alan indeksiyle karşılanır, ikinci bir süzgeç eklemek
+  /// bileşik indeks sorusunu açardı (bu depoda `firestore.indexes.json`
+  /// bilerek boş). Klasör başına not sayısı küçük olduğundan ayıklama
+  /// istemcide ucuz.
+  Stream<List<Note>> watchFolderNotes(String folderId) => _notes
+      .where('folderId', isEqualTo: folderId)
+      .snapshots()
+      .map((snapshot) {
+        final notes = [
+          for (final doc in snapshot.docs)
+            if (doc.data()['deletedAt'] == null) Note.fromDoc(doc),
+        ];
+        notes.sort(_compare);
+        return notes;
+      });
 
   /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
   /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).

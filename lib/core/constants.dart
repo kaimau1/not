@@ -32,6 +32,17 @@ abstract final class AppConstants {
   /// SAHİBİNİN `users/{ownerId}/...` altında kalır (bkz. firestore.rules).
   static const String folderSharesCollection = 'folderShares';
 
+  /// Paylaşılan klasörün SOHBETİ — `folderShares/{folderId}/messages/{id}`.
+  /// Klasörün kendi altında değil AYNANIN altında: aynayı klasöre erişimi
+  /// olan herkes okuyabiliyor, kurallar da "bu klasöre kim erişebilir"
+  /// sorusunu zaten oradan yanıtlıyor (bkz. firestore.rules).
+  static const String folderMessagesCollection = 'messages';
+
+  /// **GELEN NOTLAR** — `users/{uid}/inboxNotes/{id}`. Bir arkadaşın bana
+  /// GÖNDERDİĞİ not, kendi notlarımın arasına KARIŞMADAN burada bekler;
+  /// kabul edersem gerçek bir nota dönüşür (bkz. InboxRepository).
+  static const String inboxNotesCollection = 'inboxNotes';
+
   // Gemini
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta';
