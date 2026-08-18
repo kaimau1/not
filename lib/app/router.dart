@@ -96,6 +96,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => NoteEditorScreen(
               key: ValueKey('note-${state.pathParameters['id']}'),
               noteId: state.pathParameters['id']!,
+              // ?owner=<uid>: PAYLAŞILAN klasördeki not — sahibinin
+              // koleksiyonundan okunur/yazılır (bkz. NoteEditorScreen.ownerId).
+              ownerId: state.uri.queryParameters['owner'],
+              // ?ro=1: yalnız OKUMA yetkisi verilmiş paylaşılan not — alanlar
+              // kilitli açılır (bkz. NoteEditorScreen.readOnly).
+              readOnly: state.uri.queryParameters['ro'] == '1',
               // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
               startDrawing: state.uri.queryParameters['draw'] == '1',
               // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.

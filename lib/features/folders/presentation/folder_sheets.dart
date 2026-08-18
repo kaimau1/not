@@ -11,6 +11,7 @@ import '../../friends/presentation/friends_screen.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
+import 'folder_chat_screen.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -183,6 +184,16 @@ Future<void> showFolderActionsSheet(
                   : null,
               onTap: () => Navigator.pop(sheetContext, 'share'),
             ),
+          // **SOHBET** (kullanıcı isteği 2026-08-18: "birde birbirine mesaj
+          // gönderme alanı olabilir") — yalnız gerçekten paylaşılmış
+          // klasörde: kendi kendine sohbet edilecek bir oda açmanın anlamı
+          // yok.
+          if (folder.sharedWith.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.forum_outlined),
+              title: Text(l10n.folderChatTitle),
+              onTap: () => Navigator.pop(sheetContext, 'chat'),
+            ),
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: Text(l10n.deleteFolder),
@@ -207,6 +218,14 @@ Future<void> showFolderActionsSheet(
       }
     case 'share':
       if (context.mounted) await showFolderShareSheet(context, ref, folder);
+    case 'chat':
+      if (context.mounted) {
+        await FolderChatScreen.open(
+          context,
+          folderId: folder.id,
+          folderName: folder.name,
+        );
+      }
     case 'delete':
       final confirmed = await showDialog<bool>(
         context: context,
@@ -226,7 +245,9 @@ Future<void> showFolderActionsSheet(
         ),
       );
       if (confirmed ?? false) {
-        await ref.read(foldersRepositoryProvider)?.deleteFolder(folder.id);
+        await ref
+            .read(foldersRepositoryProvider)
+            ?.deleteFolder(folder.id, shared: folder.isShared);
       }
   }
 }
@@ -281,9 +302,12 @@ Future<String?> showFolderPickSheet(
   return showFolderEditorDialog(context, ref);
 }
 
-/// **KLASÖRÜ PAYLAŞ.** Arkadaş listesinden seçim + paylaşılanların yönetimi
-/// (kaldırma) tek levhada. Bu turun kapsamı (kullanıcı seçimi 2026-08-18):
-/// rol ayrımı yok, paylaşılan kişi klasörü OKUR VE YAZAR.
+/// **KLASÖRÜ PAYLAŞ.** Arkadaş listesinden seçim, kişi başına YETKİ
+/// (okuma / yazma / her ikisi) ve paylaşılanların yönetimi tek levhada.
+///
+/// Kullanıcı isteği 2026-08-18: "klasör sahibi paylaşılan klasörde yetki
+/// belirleyebilsin yazma, okuma veya her ikisi şeklinde." Seçim yalnız
+/// SAHİPTE: davetli kendi rolünü değiştiremez (bkz. firestore.rules).
 Future<void> showFolderShareSheet(
   BuildContext context,
   WidgetRef ref,
@@ -352,27 +376,21 @@ Future<void> showFolderShareSheet(
                     ),
                   )
                 else
-                  for (final friend in friends)
-                    CheckboxListTile(
-                      contentPadding: EdgeInsets.zero,
-                      value: liveFolder.sharedWith.contains(friend.uid),
-                      title: Text(
-                        friend.name.isEmpty ? friend.email : friend.name,
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final friend in friends)
+                            _FriendShareRow(
+                              folder: liveFolder,
+                              friend: friend,
+                              repo: foldersRepo,
+                            ),
+                        ],
                       ),
-                      subtitle: Text(friend.email),
-                      onChanged: foldersRepo == null
-                          ? null
-                          : (checked) {
-                              if (checked ?? false) {
-                                foldersRepo.shareFolder(liveFolder, friend.uid);
-                              } else {
-                                foldersRepo.unshareFolder(
-                                  liveFolder,
-                                  friend.uid,
-                                );
-                              }
-                            },
                     ),
+                  ),
               ],
             ),
           ),
@@ -381,3 +399,82 @@ Future<void> showFolderShareSheet(
     ),
   );
 }
+
+/// Paylaşım levhasının tek satırı: kişi + açık/kapalı anahtarı + (paylaşımda
+/// ise) yetki seçici. Yetki seçici yalnız paylaşılmış kişide çizilir —
+/// paylaşılmayan bir kişinin yetkisini seçmek anlamsız.
+class _FriendShareRow extends StatelessWidget {
+  const _FriendShareRow({
+    required this.folder,
+    required this.friend,
+    required this.repo,
+  });
+
+  final NoteFolder folder;
+  final Friend friend;
+  final FoldersRepository? repo;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final accepted = folder.sharedWith.contains(friend.uid);
+    final pending = folder.pending.contains(friend.uid);
+    final shared = accepted || pending;
+    final role = folder.roleOf(friend.uid);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          value: shared,
+          title: Text(friend.name.isEmpty ? friend.email : friend.name),
+          subtitle: Text(
+            // Davet gönderildi ama yanıtlanmadıysa bunu SÖYLE: kullanıcı
+            // "paylaştım ama görmüyor" diye ikinci kez paylaşmaya çalışıyor.
+            pending ? l10n.folderInvitePending : friend.email,
+            style: pending
+                ? TextStyle(color: scheme.tertiary, fontStyle: FontStyle.italic)
+                : null,
+          ),
+          onChanged: repo == null
+              ? null
+              : (checked) {
+                  if (checked ?? false) {
+                    repo!.shareFolder(folder, friend.uid, role: role);
+                  } else {
+                    repo!.unshareFolder(folder, friend.uid);
+                  }
+                },
+        ),
+        if (shared)
+          Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 10),
+            child: Wrap(
+              spacing: 6,
+              children: [
+                for (final option in FolderRole.values)
+                  ChoiceChip(
+                    label: Text(folderRoleLabel(l10n, option)),
+                    selected: role == option,
+                    onSelected: repo == null
+                        ? null
+                        : (_) =>
+                              repo!.setFolderRole(folder, friend.uid, option),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Yetkinin okunur adı. Tek yerde: levha, klasör başlığı ve davet kartı aynı
+/// kelimeleri kullansın.
+String folderRoleLabel(AppLocalizations l10n, FolderRole role) =>
+    switch (role) {
+      FolderRole.read => l10n.folderRoleRead,
+      FolderRole.write => l10n.folderRoleWrite,
+      FolderRole.both => l10n.folderRoleBoth,
+    };

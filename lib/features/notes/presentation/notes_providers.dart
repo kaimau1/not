@@ -217,6 +217,31 @@ List<(NoteBucket, List<Note>)> dateBuckets(List<Note> notes, DateTime now) {
   return [for (final entry in result.entries) (entry.key, entry.value)];
 }
 
+/// **KLASÖR RAFI AÇIK MI** (kalıcı) — kullanıcı isteği 2026-08-18:
+/// "klasörler ana ekranda çok fazla yer kaplıyor, farklı bir çözüm bulalım."
+///
+/// Kapalıyken (VARSAYILAN) klasörler tek satırlık yatay bir çip şeridine
+/// iner: on klasör bile ~46 px yer kaplar, oysa karo ızgarası her üç klasör
+/// için 92 px'lik bir satır açıyor ve notlar ekranın altına düşüyordu.
+/// Açıkken eski karo rafı geri gelir — klasörleri bir arada görmek isteyen
+/// kullanıcı tek dokunuşla ona geçer ve tercihi hatırlanır.
+final folderShelfExpandedProvider =
+    NotifierProvider<FolderShelfExpandedNotifier, bool>(
+      FolderShelfExpandedNotifier.new,
+    );
+
+class FolderShelfExpandedNotifier extends Notifier<bool> {
+  static const _key = 'folder_shelf_expanded';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
+
+  void toggle() {
+    state = !state;
+    ref.read(sharedPreferencesProvider).setBool(_key, state);
+  }
+}
+
 /// Ana ekran ızgara mı liste mi (kullanıcı tercihi, kalıcı).
 ///
 /// Izgara masonry kartlar, liste tek sütun kompakt satırlar. Sütun SAYISI
@@ -598,19 +623,22 @@ final sharedFolderNotesProvider =
       key,
     ) {
       final repo = NotesRepository(FirebaseFirestore.instance, key.ownerId);
-      return repo.watchNotes().map(
-        (list) => _sortedNotes(
-          [
-            for (final n in list)
-              if (n.folderId == key.folderId &&
-                  n.archivedAt == null &&
-                  !n.isEmpty)
-                n,
-          ],
-          NoteSort.updated,
-          const {},
-        ),
-      );
+      // **KLASÖRE DARALTILMIŞ sorgu** (`watchNotes` DEĞİL): sahibin tüm
+      // notlarını istemek Firestore kuralları tarafından TÜMDEN reddediliyor
+      // ve ekran "Missing or insufficient permissions" gösteriyordu — kök
+      // neden ve gerekçe `NotesRepository.watchFolderNotes`ta.
+      return repo
+          .watchFolderNotes(key.folderId)
+          .map(
+            (list) => _sortedNotes(
+              [
+                for (final n in list)
+                  if (n.archivedAt == null && !n.isEmpty) n,
+              ],
+              NoteSort.updated,
+              const {},
+            ),
+          );
     });
 
 /// Arama + filtre + etiket + klasör uygulanmış, arşiv dışı not listesi.

@@ -30,7 +30,11 @@ import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_tile.dart';
+import '../../auth/presentation/account_sheet.dart';
 import '../../friends/data/friends_repository.dart';
+import '../../friends/presentation/friends_screen.dart';
+import '../../friends/presentation/home_invites.dart';
+import '../../inbox/presentation/inbox_screen.dart';
 import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
@@ -1630,6 +1634,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 actions: searchExpanded
                                     ? const [SizedBox(width: 4)]
                                     : [
+                                        // **HESAP SİMGESİ** (kullanıcı isteği
+                                        // 2026-08-18: "giriş yapıldıysa üst
+                                        // alanda profil simgesi görülsün,
+                                        // yapılmadıysa yerel hesap simgesi
+                                        // olsun"). Hangi hesapla çalışıldığı
+                                        // ayarlara girmeden görünsün.
+                                        const AccountAvatarButton(),
                                         // Yapay Zeka yeniden KENDİ düğmesi oldu.
                                         // Bir süre ⋮ menüsünde durmuştu çünkü arama
                                         // alanının içindeki ✨ (akıllı arama) ile
@@ -1676,6 +1687,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ),
                                           onSelected: (action) =>
                                               switch (action) {
+                                                'account' => showAccountSheet(
+                                                  context,
+                                                ),
+                                                'inbox' => InboxScreen.open(
+                                                  context,
+                                                ),
+                                                'friends' =>
+                                                  openFriendsScreenOrExplain(
+                                                    context,
+                                                    ref,
+                                                  ),
                                                 'hidden' =>
                                                   _toggleHiddenFolders(),
                                                 'reminders' => context.push(
@@ -1707,6 +1729,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           // bölümündeki taşıma düğmesinden
                                           // açılıyor (bkz. filter_sheet).
                                           itemBuilder: (context) => [
+                                            // **HESAP** (kullanıcı isteği
+                                            // 2026-08-18: "hesap seçeneklerini
+                                            // ana sayfadaki sağ üstteki 3
+                                            // noktaya da koy"): profil, kişiler
+                                            // ve gelen notlar tek levhada.
+                                            _menuItem(
+                                              'account',
+                                              Icons.account_circle_outlined,
+                                              l10n.account,
+                                            ),
+                                            _menuItem(
+                                              'friends',
+                                              Icons.people_outline,
+                                              l10n.friendsTitle,
+                                            ),
+                                            _menuItem(
+                                              'inbox',
+                                              Icons.move_to_inbox_outlined,
+                                              l10n.inboxTitle,
+                                            ),
+                                            const PopupMenuDivider(),
                                             // Gizli klasörler yalnız gizli klasörü
                                             // OLAN kullanıcıda görünür: yoksa
                                             // menüde ölü bir madde durmaz.
@@ -1762,6 +1805,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // dokuz artı çipli bar (dashboard_chips.dart) ve ona
                         // bağlı "hangi çip görünsün" ayarları kaldırıldı;
                         // süzme tek yoldan, Süz levhasından yapılıyor.
+                        // **BEKLEYEN DAVETLER** (kullanıcı isteği 2026-08-18:
+                        // "arkadaşlık isteği geldiğinde ana sayfada görülsün",
+                        // "klasör paylaşıldığında kabul et veya reddet
+                        // seçeneği olsun"). Bir şey beklemiyorsa hiç
+                        // çizilmez — boşken sıfır yer kaplar.
+                        const HomeInvites(),
                         const DashboardFilterRow(),
                         // Hızlı yakala: "+" → editör → yaz → geri yolunu tek
                         // satıra indirir. Tasarım bunu kaydırma akışının
@@ -2045,6 +2094,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
         if (!f.hidden || revealHidden) f,
     ];
+    // **YER SORUNU** (kullanıcı isteği 2026-08-18: "klasörler ana ekranda çok
+    // fazla yer kaplıyor, farklı bir çözüm bulalım"): karo rafı üç klasörde
+    // bir 92 px'lik satır açıyor ve notlar ekranın altına iniyordu. Varsayılan
+    // artık TEK SATIRLIK yatay çip şeridi (~40 px, kaç klasör olursa olsun);
+    // karo görünümü tek dokunuşla geri gelir ve tercih hatırlanır (bkz.
+    // [folderShelfExpandedProvider]).
+    if (!ref.watch(folderShelfExpandedProvider)) {
+      return _folderStrip(folders);
+    }
     // **PAYLAŞILAN klasörler AYNI RAFTA** (kullanıcı isteği 2026-08-18:
     // "ortak notlar klasörü kişiler bağlanır notları ortak görür"). Kendi
     // klasörlerimden SONRA gelirler — kendi düzenim önce, arkadaşlarımınki
@@ -2053,6 +2111,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // klasörüm" olamaz).
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
     final total = folders.length + shared.length;
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: TextButton.icon(
+              onPressed: () =>
+                  ref.read(folderShelfExpandedProvider.notifier).toggle(),
+              icon: const Icon(Icons.unfold_less, size: 18),
+              label: Text(context.l10n.folderShelfCollapse),
+            ),
+          ),
+        ),
+        _folderGrid(columns, folders, shared, total),
+      ],
+    );
+  }
+
+  /// Klasör rafının KARO (açık) hâli — bkz. [_folderShelf].
+  Widget _folderGrid(
+    int columns,
+    List<NoteFolder> folders,
+    List<SharedFolderRef> shared,
+    int total,
+  ) {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
       sliver: SliverGrid(
@@ -2077,6 +2160,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             share: share,
           );
         }, childCount: total + 1),
+      ),
+    );
+  }
+
+  /// Klasör rafının KOMPAKT (varsayılan) hâli: tek satır, yatay kaydırılan
+  /// çipler. Yükseklik klasör sayısından BAĞIMSIZ — asıl kazanç bu.
+  Widget _folderStrip(List<NoteFolder> folders) {
+    final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: FolderChip.stripHeight,
+        child: Row(
+          children: [
+            Expanded(
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
+                children: [
+                  for (final folder in folders) ...[
+                    FolderChip(
+                      key: ValueKey('folder-chip-${folder.id}'),
+                      folder: folder,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  for (final share in shared) ...[
+                    SharedFolderChip(
+                      key: ValueKey('shared-chip-${share.folderId}'),
+                      share: share,
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  const NewFolderChip(),
+                ],
+              ),
+            ),
+            // Karo görünümüne geçiş: klasörleri bir arada görmek isteyen
+            // kullanıcı için kapı açık kalsın.
+            IconButton(
+              tooltip: context.l10n.folderShelfExpand,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.unfold_more, size: 18),
+              onPressed: () =>
+                  ref.read(folderShelfExpandedProvider.notifier).toggle(),
+            ),
+          ],
+        ),
       ),
     );
   }

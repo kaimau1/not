@@ -41,6 +41,8 @@ class AccountService {
       AppConstants.foldersCollection,
       AppConstants.friendsCollection,
       AppConstants.friendRequestsCollection,
+      // Bana gönderilmiş, henüz kabul edilmemiş notlar da benim verimdir.
+      AppConstants.inboxNotesCollection,
       'aiReports',
     ]) {
       final snapshot = await userDoc.collection(name).get();

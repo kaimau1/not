@@ -5,6 +5,7 @@ import 'dart:io';
 // dart:ui'nin Color/TextStyle gibi tipleri material'ınkilerle çakışmasın.
 import 'dart:ui' show AppExitResponse;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -246,6 +247,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   const NoteEditorScreen({
     super.key,
     required this.noteId,
+    this.ownerId,
+    this.readOnly = false,
     this.startDrawing = false,
     this.startVoiceCapture = false,
     this.startVideo = false,
@@ -256,6 +259,32 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   });
 
   final String noteId;
+
+  /// Notun SAHİBİ, kendimden farklıysa (PAYLAŞILAN klasördeki not). null =
+  /// benim notum.
+  ///
+  /// KÖK NEDEN (paylaşılan klasördeki not açılmıyordu): editör tüm okuma ve
+  /// yazımlarını `notesRepositoryProvider` üzerinden, yani GİRİŞ YAPMIŞ
+  /// kullanıcının koleksiyonundan yapıyordu. Paylaşılan bir not sahibinin
+  /// koleksiyonunda yaşadığından editör onu bulamıyor, yazımlar da benim
+  /// koleksiyonuma aynı kimlikle HAYALET bir not olarak düşüyordu. Sahip
+  /// rotanın `?owner=` parametresiyle taşınır (bkz. `noteRoutePath`).
+  ///
+  /// **SINIR — EKLERİN yönetimi paylaşılmaz.** Görüntüleme çalışır (kartlar
+  /// ve görüntüleyiciler `downloadUrl` jetonunu kullanıyor, o da Storage
+  /// kurallarından bağımsız), ama ek EKLEME/SİLME hep GİRİŞ YAPMIŞ
+  /// kullanıcının kendi Storage yolunda olur: dosyalar `users/{uid}/...`
+  /// altında ve Storage kuralları Firestore'daki klasör paylaşımını göremez
+  /// (bkz. storage.rules). Pratikte: ortak klasörler metin ve listeler için
+  /// tasarlandı; ekler karşı taraftan silinemez.
+  final String? ownerId;
+
+  /// **SALT OKUNUR** — paylaşılan klasörde yalnız OKUMA yetkisi verilmiş
+  /// kullanıcı (bkz. `FolderRole`). Yazımlar sunucuda ZATEN reddedilirdi;
+  /// bayrak olmadan kullanıcı yazdığını ekranda görür, çıkışta sessizce
+  /// kaybederdi. Bayrak hem alanları kilitler hem depoyu boşa alır — hiçbir
+  /// yazım denenmez.
+  final bool readOnly;
 
   /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
   /// kaydedilen çizim nota görsel eki olarak girer.
@@ -446,7 +475,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _cacheDeps() {
-    _notesRepo = ref.read(notesRepositoryProvider);
+    // Paylaşılan not SAHİBİNİN koleksiyonuna yazılır (bkz.
+    // [NoteEditorScreen.ownerId]); kendi notlarımda eski yol aynen sürer.
+    final owner = widget.ownerId;
+    _notesRepo = widget.readOnly
+        ? null
+        : owner == null
+        ? ref.read(notesRepositoryProvider)
+        : NotesRepository(FirebaseFirestore.instance, owner);
     _attachmentRepo = ref.read(attachmentRepositoryProvider);
     _gemini = ref.read(geminiServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);
@@ -796,7 +832,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingPdf = widget.startPdf;
     _pendingSlides = widget.startSlides;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
-    _sub = ref.listenManual(noteStreamProvider(widget.noteId), (
+    final owner = widget.ownerId;
+    _sub = ref.listenManual(owner == null
+        ? noteStreamProvider(widget.noteId)
+        : ownedNoteStreamProvider((ownerId: owner, noteId: widget.noteId)), (
       previous,
       next,
     ) {
@@ -1042,6 +1081,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Dashboard akışında zaten yüklü olan notu senkron döndürür (varsa).
   /// İlk kareyi dolu kurup açılış kasmasını önlemek için kullanılır.
   Note? _cachedNote() {
+    // Paylaşılan not BENİM akışımda yok (sahibinin koleksiyonunda yaşıyor);
+    // önbelleğe bakmak en iyi ihtimalle boşuna, en kötüsünde yanlış notu
+    // gösterir.
+    if (widget.ownerId != null) return null;
     final notes = ref.read(notesStreamProvider).value;
     if (notes == null) return null;
     for (final n in notes) {
@@ -3337,7 +3380,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // ekranda kalır: depo şimdiden yakalanır ki geri alma editörsüz de
     // çalışsın; unmount SONRASI dokunuşta denetleyici/ref/setState'e
     // dokunulmaz (dispose edilmiş controller'a yazmak çökertiyordu).
-    final repo = ref.read(notesRepositoryProvider);
+    // AÇIK OLAN notun deposu (`_notesRepo`): paylaşılan bir notta geri alma
+    // sahibin koleksiyonuna yazmalı, benimkine değil.
+    final repo = _notesRepo;
     showUndoSnackBar(
       context,
       message: context.l10n.noteUpdatedUndo,
@@ -3933,7 +3978,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _delete() {
-    final repo = ref.read(notesRepositoryProvider);
+    // Açık olan notun deposu: paylaşılan notu çöpe atmak sahibin
+    // koleksiyonundaki dokümanı işaretler (bkz. [NoteEditorScreen.ownerId]).
+    final repo = _notesRepo;
     final note = _note;
     if (repo == null || note == null) return;
     _deleted = true;
@@ -4760,6 +4807,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       child: TextField(
         controller: _titleController,
         focusNode: _titleFocus,
+        readOnly: widget.readOnly,
         onChanged: (_) =>
             _mutate((n) => n.copyWith(title: _titleController.logicalText)),
         style: applyNoteOpacity(
@@ -5064,6 +5112,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final bodyField = TextField(
       controller: _bodyController,
       focusNode: _bodyFocus,
+      readOnly: widget.readOnly,
       // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
       // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
       style: noteBodyStyle,
@@ -5315,8 +5364,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 padding: const EdgeInsetsDirectional.only(end: 4),
                 child: Consumer(
                   builder: (context, ref, _) {
+                    final owner = widget.ownerId;
                     final pending =
-                        ref.watch(pendingWritesProvider(widget.noteId)).value ??
+                        ref
+                            .watch(
+                              owner == null
+                                  ? pendingWritesProvider(widget.noteId)
+                                  : ownedPendingWritesProvider((
+                                      ownerId: owner,
+                                      noteId: widget.noteId,
+                                    )),
+                            )
+                            .value ??
                         false;
                     return Tooltip(
                       message: pending ? l10n.syncPending : l10n.synced,

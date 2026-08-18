@@ -2810,7 +2810,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderShareInfo =>
-      'The friends you pick can see and edit this folder and its notes.';
+      'An invite goes to the friend you pick; they see the folder once they accept. You choose their permission (read / write / both).';
 
   @override
   String get friendsRowInfo => 'Add friends, share folders with them';
@@ -2825,4 +2825,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountRecoverConflictProceed => 'Switch anyway';
+  @override
+  String get folderRoleRead => 'Read';
+
+  @override
+  String get folderRoleWrite => 'Write';
+
+  @override
+  String get folderRoleBoth => 'Read + write';
+
+  @override
+  String get folderInvitePending => 'Invite sent, waiting for an answer';
+
+  @override
+  String get folderWriteOnlyTitle => 'You only have write access';
+
+  @override
+  String get folderWriteOnlyHint => 'You can add new notes to this folder but cannot see the notes inside it.';
+
+  @override
+  String get folderChatTitle => 'Chat';
+
+  @override
+  String get folderChatHint => 'Write a message…';
+
+  @override
+  String get folderChatSend => 'Send';
+
+  @override
+  String get folderChatEmptyTitle => 'No messages yet';
+
+  @override
+  String get folderChatEmptyHint => 'Talk here with the people you shared this folder with.';
+
+  @override
+  String get folderInviteTitle => 'Folder invite';
+
+  @override
+  String folderInviteBody(Object name) {
+    return 'The folder "$name" was shared with you.';
+  }
+
+  @override
+  String get folderInviteAccepted => 'Folder added';
+
+  @override
+  String get folderInviteDeclined => 'Invite declined';
+
+  @override
+  String friendRequestBanner(Object name) {
+    return '$name sent you a friend request';
+  }
+
+  @override
+  String get friendRequestAccepted => 'Friend added';
+
+  @override
+  String get sendNoteAction => 'Send to a friend';
+
+  @override
+  String get sendNoteTitle => 'Send the note to a friend';
+
+  @override
+  String get sendNoteInfo => 'A copy of the note lands in the person\'s "Incoming notes" box. Attachments (images, documents, audio) are not sent.';
+
+  @override
+  String sendNoteSent(Object name) {
+    return 'Note sent to $name';
+  }
+
+  @override
+  String get inboxTitle => 'Incoming notes';
+
+  @override
+  String get inboxEmpty => 'No incoming notes';
+
+  @override
+  String get inboxEmptyHint => 'Notes your friends send you collect here.';
+
+  @override
+  String inboxFrom(Object name) {
+    return 'Sent by $name';
+  }
+
+  @override
+  String get inboxAccept => 'Add to my notes';
+
+  @override
+  String get inboxAccepted => 'Note added to your notes';
+
+  @override
+  String get folderShelfExpand => 'Expand folders';
+
+  @override
+  String get folderShelfCollapse => 'Collapse folders';
+
+  @override
+  String get accountSheetLocalInfo => 'Your notes are only on this device. Link a Google account to back them up and add friends.';
+
+  @override
+  String get accountSettings => 'Account settings';
 }

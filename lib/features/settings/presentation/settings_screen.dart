@@ -36,6 +36,8 @@ import '../../auth/data/account_service.dart';
 import '../../auth/presentation/auth_errors.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../friends/data/friends_repository.dart';
+import '../../inbox/data/inbox_repository.dart';
+import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
@@ -79,6 +81,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final areas = <_Area>[
+      // **HESAP EN ÜSTTE** (kullanıcı isteği 2026-08-18: "ayarlarda hesap
+      // ayarlarını üste getir"). Hesap ve kişiler ayarların en dibindeydi:
+      // giriş/çıkış, arkadaş ekleme ve hesap silme gibi en sık aranan işler
+      // için dokuz alanın altına kadar kaydırmak gerekiyordu.
+      _Area(
+        id: 'account',
+        icon: Icons.manage_accounts_outlined,
+        title: l10n.account,
+        summary: '',
+        keywords: 'cikis hesap sil e-posta',
+        rows: [
+          _SettingRow(
+            const _AccountSection(),
+            title: l10n.account,
+            keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
+          ),
+        ],
+      ),
+      // Kullanıcı isteği 2026-08-18: "kişiler kullanıcıya dışarıdan
+      // belirleyebilmeli" — arkadaş ekleme ve klasör paylaşımının girişi
+      // buradan da erişilebilir (asıl giriş klasör ⋮ menüsündeki "Paylaş").
+      _Area(
+        id: 'friends',
+        icon: Icons.people_outline,
+        title: l10n.friendsTitle,
+        summary: '',
+        keywords: 'arkadas kisi paylas klasor ortak gelen not',
+        rows: [
+          _SettingRow(
+            const _FriendsRow(),
+            title: l10n.friendsTitle,
+            keywords: 'arkadas ekle davet e-posta',
+          ),
+          _SettingRow(
+            const _InboxRow(),
+            title: l10n.inboxTitle,
+            keywords: 'gelen not paylasilan arkadas',
+          ),
+        ],
+      ),
       _Area(
         id: 'ai',
         icon: Icons.auto_awesome,
@@ -279,37 +321,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _RestoreButton(),
             title: l10n.importBackup,
             keywords: 'geri yukle ice aktar',
-          ),
-        ],
-      ),
-      // Kullanıcı isteği 2026-08-18: "kişiler kullanıcıya dışarıdan
-      // belirleyebilmeli" — arkadaş ekleme ve klasör paylaşımının girişi
-      // buradan da erişilebilir (asıl giriş klasör ⋮ menüsündeki "Paylaş").
-      _Area(
-        id: 'friends',
-        icon: Icons.people_outline,
-        title: l10n.friendsTitle,
-        summary: '',
-        keywords: 'arkadas kisi paylas klasor ortak',
-        rows: [
-          _SettingRow(
-            const _FriendsRow(),
-            title: l10n.friendsTitle,
-            keywords: 'arkadas ekle davet e-posta',
-          ),
-        ],
-      ),
-      _Area(
-        id: 'account',
-        icon: Icons.manage_accounts_outlined,
-        title: l10n.account,
-        summary: '',
-        keywords: 'cikis hesap sil e-posta',
-        rows: [
-          _SettingRow(
-            const _AccountSection(),
-            title: l10n.account,
-            keywords: 'cikis hesap sil e-posta ${l10n.deleteAccount}',
           ),
         ],
       ),
@@ -652,6 +663,43 @@ class _FriendsRow extends ConsumerWidget {
             )
           : const Icon(Icons.chevron_right),
       onTap: () => openFriendsScreenOrExplain(context, ref),
+    );
+  }
+}
+
+/// "Gelen notlar" satırı — bir arkadaşın GÖNDERDİĞİ, henüz kabul edilmemiş
+/// notlar (kullanıcı isteği 2026-08-18: "paylaşılan not alıcıda farklı gelen
+/// notlar klasöründe görülsün").
+class _InboxRow extends ConsumerWidget {
+  const _InboxRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final count = ref.watch(inboxNotesProvider).value?.length ?? 0;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.move_to_inbox_outlined),
+      title: Text(l10n.inboxTitle),
+      subtitle: Text(l10n.inboxEmptyHint),
+      trailing: count > 0
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              ),
+            )
+          : const Icon(Icons.chevron_right),
+      onTap: () => InboxScreen.open(context),
     );
   }
 }

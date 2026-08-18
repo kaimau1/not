@@ -1,6 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+/// Paylaşılan bir klasörde bir kişinin YETKİSİ (kullanıcı isteği 2026-08-18:
+/// "klasör sahibi paylaşılan klasörde yetki belirleyebilsin yazma, okuma veya
+/// her ikisi şeklinde").
+///
+/// [write] tek başına "öneri kutusu"dur: kişi klasöre kendi notunu bırakır
+/// ama içerideki notları GÖREMEZ. Tuhaf görünse de kuralın doğal ikinci
+/// yarısı bu (okuma ve yazma Firestore'da ayrı izinler) ve kullanıcı üç
+/// seçeneği açıkça istedi.
+enum FolderRole {
+  read('read'),
+  write('write'),
+  both('both');
+
+  const FolderRole(this.id);
+
+  final String id;
+
+  bool get canRead => this != FolderRole.write;
+  bool get canWrite => this != FolderRole.read;
+
+  /// Bilinmeyen/eksik değer [both]'a düşer: rol alanı eklenmeden ÖNCE
+  /// paylaşılmış klasörlerde herkes okuyup yazıyordu ve güncelleme onların
+  /// erişimini sessizce kesmemeli (kural tarafı da aynı varsayılanı kullanır,
+  /// bkz. firestore.rules → folderRole).
+  static FolderRole fromId(String? id) =>
+      FolderRole.values.firstWhere((r) => r.id == id, orElse: () => both);
+}
+
 /// Notları kategorilere ayıran klasör (gelişmiş etiket). Firestore'da
 /// users/{uid}/folders/{id} altında tutulur; notlar klasöre `folderId`
 /// alanıyla bağlanır.
@@ -13,6 +41,8 @@ class NoteFolder {
     this.createdAt,
     required this.ownerId,
     this.sharedWith = const [],
+    this.pending = const [],
+    this.roles = const {},
   });
 
   final String id;
@@ -42,12 +72,25 @@ class NoteFolder {
 
   /// Kullanıcı isteği 2026-08-18: "ortak notlar klasörü — kişiler bağlanır,
   /// notları ortak görür." Bu klasöre erişimi olan (sahip DIŞINDAKİ)
-  /// arkadaşların uid listesi; boşsa klasör özeldir. Erişim OKUMA+YAZMA'dır
-  /// (bkz. firestore.rules) — rol ayrımı (yalnız okuyan/yazan) bu turun
-  /// kapsamı dışında bırakıldı.
+  /// arkadaşların uid listesi; boşsa klasör özeldir. Her kişinin erişimi
+  /// [roles] ile belirlenir (okuma / yazma / her ikisi — bkz. [FolderRole] ve
+  /// firestore.rules). Buradaki kişiler daveti KABUL ETMİŞ olanlardır;
+  /// yanıtlamayanlar [pending]'de bekler.
   final List<String> sharedWith;
 
-  bool get isShared => sharedWith.isNotEmpty;
+  /// DAVET EDİLMİŞ ama henüz yanıt vermemiş kişiler (kullanıcı isteği
+  /// 2026-08-18: "klasör paylaşıldığında kabul et veya reddet seçeneği
+  /// olsun"). Davetli kabul edene kadar klasöre HİÇBİR erişimi yoktur;
+  /// kabul edince kendini buradan düşürüp [sharedWith]'e ekler.
+  final List<String> pending;
+
+  /// uid → yetki. Listede olmayan kişi [FolderRole.both] sayılır (bkz.
+  /// [FolderRole.fromId]).
+  final Map<String, FolderRole> roles;
+
+  bool get isShared => sharedWith.isNotEmpty || pending.isNotEmpty;
+
+  FolderRole roleOf(String uid) => roles[uid] ?? FolderRole.both;
 
   /// Varsayılan sade simge.
   static const String defaultIcon = 'folder';
@@ -80,6 +123,8 @@ class NoteFolder {
     String? icon,
     bool? hidden,
     List<String>? sharedWith,
+    List<String>? pending,
+    Map<String, FolderRole>? roles,
   }) => NoteFolder(
     id: id,
     name: name ?? this.name,
@@ -88,6 +133,8 @@ class NoteFolder {
     createdAt: createdAt,
     ownerId: ownerId,
     sharedWith: sharedWith ?? this.sharedWith,
+    pending: pending ?? this.pending,
+    roles: roles ?? this.roles,
   );
 
   /// [ownerId] verilmezse dokümanın YOLUNDAN çıkarılır
@@ -110,6 +157,11 @@ class NoteFolder {
         for (final uid in (map['sharedWith'] as List<dynamic>? ?? const []))
           uid.toString(),
       ],
+      pending: [
+        for (final uid in (map['pending'] as List<dynamic>? ?? const []))
+          uid.toString(),
+      ],
+      roles: parseFolderRoles(map['roles']),
     );
   }
 
@@ -119,8 +171,20 @@ class NoteFolder {
     'hidden': hidden,
     'ownerId': ownerId,
     'sharedWith': sharedWith,
+    'pending': pending,
+    'roles': {for (final e in roles.entries) e.key: e.value.id},
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),
+  };
+}
+
+/// Firestore'daki `roles` haritasını çözer. Klasör dokümanı ve paylaşım
+/// aynası aynı biçimi taşıdığından ikisi de bunu kullanır.
+Map<String, FolderRole> parseFolderRoles(Object? raw) {
+  if (raw is! Map) return const {};
+  return {
+    for (final entry in raw.entries)
+      entry.key.toString(): FolderRole.fromId(entry.value?.toString()),
   };
 }

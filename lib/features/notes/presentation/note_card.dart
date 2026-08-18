@@ -136,7 +136,15 @@ String formatNoteDate(DateTime date) {
 /// açabiliyordu; açılış sürerken gelen ikinci dokunuş yutulur.
 String? _openingNoteId;
 
-Future<void> openNoteRoute(BuildContext context, Note note) async {
+/// [ownerId] verilirse not BAŞKASININ koleksiyonundadır (paylaşılan klasör);
+/// editör onu sahibinin altından açar (bkz. `NoteEditorScreen.ownerId`).
+/// [readOnly] yalnız okuma yetkisi verilmiş paylaşımlarda alanları kilitler.
+Future<void> openNoteRoute(
+  BuildContext context,
+  Note note, {
+  String? ownerId,
+  bool readOnly = false,
+}) async {
   if (_openingNoteId == note.id) return;
   _openingNoteId = note.id;
   try {
@@ -145,11 +153,18 @@ Future<void> openNoteRoute(BuildContext context, Note note) async {
       if (!ok || !context.mounted) return;
     }
     if (context.mounted) {
+      final params = [
+        if (ownerId != null) 'owner=$ownerId',
+        if (readOnly) 'ro=1',
+      ];
       // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
       final push = context.push(
         note.type == NoteType.archive
             ? archiveNoteRoutePath(note.id)
-            : noteRoutePath(note.id),
+            : noteRoutePath(
+                note.id,
+                query: params.isEmpty ? '' : '?${params.join('&')}',
+              ),
       );
       // Rota yığına girdikten hemen sonra kilit açılır (push editör
       // KAPANANA dek tamamlanmaz; onu bekleseydik editör açıkken karttan
@@ -252,14 +267,30 @@ Widget highlightedText(
 
 /// Dashboard'daki kompakt not kartı.
 class NoteCard extends ConsumerWidget {
-  const NoteCard({super.key, required this.note, this.highlightQuery = ''});
+  const NoteCard({
+    super.key,
+    required this.note,
+    this.highlightQuery = '',
+    this.ownerId,
+    this.readOnly = false,
+  });
 
   final Note note;
+
+  /// PAYLAŞILAN klasörde çizilen kartta notun SAHİBİ; kendi notlarımda null.
+  /// Kart bunu editöre taşır, yoksa editör notu kendi koleksiyonumda arar ve
+  /// bulamaz (bkz. `NoteEditorScreen.ownerId`).
+  final String? ownerId;
+
+  /// Paylaşılan klasörde YALNIZ OKUMA yetkisi varsa true — editör kilitli
+  /// açılır (bkz. `NoteEditorScreen.readOnly`).
+  final bool readOnly;
 
   /// Aktif arama sorgusu; boş değilse eşleşmeler vurgulanır.
   final String highlightQuery;
 
-  Future<void> _openNote(BuildContext context) => openNoteRoute(context, note);
+  Future<void> _openNote(BuildContext context) =>
+      openNoteRoute(context, note, ownerId: ownerId, readOnly: readOnly);
 
   void _delete(BuildContext context, WidgetRef ref) {
     final repo = ref.read(notesRepositoryProvider);
@@ -568,7 +599,12 @@ class NoteCard extends ConsumerWidget {
             // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
             // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
             // seçim sırasında sabit kalır).
-            if (!selectionActive)
+            // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
+            // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
+            // yazar — başkasının notunda o işlemler kendi altımda aynı
+            // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
+            // düzenlemek editörden geçer (o, sahibin deposuna yazar).
+            if (!selectionActive && ownerId == null)
               PositionedDirectional(
                 top: 2,
                 end: 2,
