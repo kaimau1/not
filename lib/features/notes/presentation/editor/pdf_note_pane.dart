@@ -342,6 +342,23 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           bottom: 0,
           child: BubbleDock(controller: widget.bubbles),
         ),
+        // **BALON ARAÇ ÇUBUĞU BURADA DA VAR** (kullanıcı bulgusu 2026-08-18:
+        // "bu balon PDF ekle not al modunda yok, sadece metin içi PDF
+        // eklendiğinde çıkıyor"). Çubuk yalnız tam ekran görüntüleyicilere
+        // konmuştu; balonlu kipin KENDİ ekranında — yani "PDF/sunum ekle not
+        // al" ile açılan iki bölmeli ekranda — kip seçimi (balon / açık metin)
+        // ve renk paleti hiç görünmüyordu. Aynı çubuk, aynı denetleyici.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: AnimatedBuilder(
+            animation: widget.bubbles,
+            builder: (context, _) => widget.bubbles.adding
+                ? BubbleToolbar(controller: widget.bubbles)
+                : const SizedBox.shrink(),
+          ),
+        ),
         Positioned(
           top: 4,
           right: 4,

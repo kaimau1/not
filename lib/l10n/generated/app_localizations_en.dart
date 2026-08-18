@@ -2681,4 +2681,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String attachmentTagPendingBanner(String name) {
     return '$name will be linked — select the text';
   }
+
+  @override
+  String get docNameNotesSuffix => 'notes';
+
+  @override
+  String get docNamePhoto => 'Photo notes';
+
+  @override
+  String get docNameScan => 'Scan notes';
+
+  @override
+  String get docNameImage => 'Image notes';
+
+  @override
+  String get docNameVideo => 'Video notes';
 }

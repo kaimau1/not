@@ -105,6 +105,7 @@ class PageBubble {
     this.rects = const [],
     this.arrow = true,
     this.plain = false,
+    this.size = 1,
   });
 
   /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
@@ -180,6 +181,28 @@ class PageBubble {
   /// liste hepsi olduğu gibi çalışır) — değişen yalnız ÇİZİM biçimi.
   final bool plain;
 
+  /// **Açık metin alanının YAZI BOYU ÇARPANI** (1 = varsayılan boy).
+  ///
+  /// Kullanıcı isteği 2026-08-18: "açık metin balonu Paint'teki gibi boyutu
+  /// ayarlanabilir olmalı". Sayfanın köşesindeki tutamaç sürüklenerek
+  /// büyütülüp küçültülür; değer nota yazıldığı için cihazlar arasında ve
+  /// paylaşılan PDF'te de aynı kalır.
+  ///
+  /// Çarpan (mutlak punto değil): yazı ekran uzayında çiziliyor, çarpan
+  /// yakınlaştırmadan bağımsız olarak "iki kat büyük" demeyi sürdürür.
+  /// [minSize]–[maxSize] arasına kıstırılır.
+  final double size;
+
+  /// Açık metin alanının en küçük/en büyük yazı boyu çarpanı. Alt sınır
+  /// okunaklılık, üst sınır sayfayı tümüyle kapatan bir yazı için.
+  static const double minSize = 0.5;
+  static const double maxSize = 5;
+
+  /// Çarpanın ekrandaki karşılığı: 16 px taban.
+  static const double baseFontSize = 16;
+
+  double get fontSize => baseFontSize * size;
+
   /// Bu balon bir METİN vurgusu mu (yoksa serbest balon mu)?
   bool get isHighlight => rects.isNotEmpty;
 
@@ -196,6 +219,7 @@ class PageBubble {
     List<PageBubbleRect>? rects,
     bool? arrow,
     bool? plain,
+    double? size,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
@@ -210,6 +234,7 @@ class PageBubble {
     rects: rects ?? this.rects,
     plain: plain ?? this.plain,
     arrow: arrow ?? this.arrow,
+    size: (size ?? this.size).clamp(minSize, maxSize),
   );
 
   factory PageBubble.fromMap(Map<String, dynamic> map) => PageBubble(
@@ -227,6 +252,8 @@ class PageBubble {
     // Alan YOKSA ok çizilir: eski kayıtlarda ok vardı, okuma onu düşürmemeli.
     arrow: map['a'] as bool? ?? true,
     plain: map['n'] as bool? ?? false,
+    // Alan yoksa varsayılan boy: eski kayıtlar olduğu gibi çizilir.
+    size: ((map['z'] as num?)?.toDouble() ?? 1).clamp(minSize, maxSize),
   );
 
   /// Vurgu dikdörtgenlerini kayıttan okur.
@@ -271,6 +298,8 @@ class PageBubble {
     // Yalnız KAPATILDIYSA yazılır (varsayılan açık — bkz. [arrow]).
     if (!arrow) 'a': false,
     if (plain) 'n': true,
+    // Yalnız DEĞİŞTİRİLDİYSE yazılır (varsayılan 1).
+    if (size != 1) 'z': size,
     // DÜZ liste: Firestore iç içe dizi kabul etmiyor (bkz. [_rectsFromMap]).
     if (rects.isNotEmpty)
       'r': [

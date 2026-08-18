@@ -2642,4 +2642,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String attachmentTagPendingBanner(String name) {
     return '$name bağlanacak — yazıyı seç';
   }
+
+  @override
+  String get docNameNotesSuffix => 'notlar';
+
+  @override
+  String get docNamePhoto => 'Fotoğraf notları';
+
+  @override
+  String get docNameScan => 'Tarama notları';
+
+  @override
+  String get docNameImage => 'Görsel notları';
+
+  @override
+  String get docNameVideo => 'Görüntü notları';
 }

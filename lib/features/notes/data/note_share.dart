@@ -194,6 +194,32 @@ class NoteShare {
   }
 }
 
+/// Balonlu (belge) notta duran BELGENİN adını kurar.
+///
+/// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "balonlu modda başlık hatası —
+/// oluşturulan PDF'nin adı 'PDF ekle not al' oluyor, orijinal adı buna
+/// değiştiriliyor").** Belgeye şimdiye dek YAKALAMA KİPİNİN MENÜ ETİKETİ
+/// veriliyordu ("PDF ekle not al.pdf", "Görsel ekle not al.pdf"): ana ekran
+/// birbirinin aynı adlarla doluyor, seçilen dosyanın kendi adı da kayboluyordu.
+///
+/// Kural artık tek: **belgenin adı NOTUN BAŞLIĞIDIR**; başlık boşsa belgenin
+/// KENDİ adı korunur ve yanına "notlar" eklenir (`rapor` → `rapor notlar`).
+/// Yakalama kipinin adı hiçbir yerde dosya adı olmaz.
+///
+/// [originalName] uzantılı ya da uzantısız olabilir; dönen ad UZANTISIZDIR —
+/// çağıran kendi uzantısını ekler.
+String documentBaseName({
+  required String noteTitle,
+  required String originalName,
+  required String notesSuffix,
+}) {
+  final titled = safePdfBaseName(noteTitle);
+  if (titled != null) return titled;
+  final base = p.basenameWithoutExtension(originalName).trim();
+  if (base.isEmpty) return notesSuffix.trim();
+  return safePdfBaseName('$base $notesSuffix') ?? base;
+}
+
 /// Not başlığından **dosya adı** üretir: dosya sisteminde sorun çıkaran
 /// karakterler atılır, uzunluk sınırlanır. Kullanılabilir bir ad çıkmazsa
 /// (başlık boş ya da tamamen işaretten ibaret) null döner — çağıran o zaman

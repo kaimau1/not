@@ -206,13 +206,14 @@ class DashboardFilterRow extends ConsumerWidget {
 /// kaldırılabilir çip onu zaten gösteriyor, ikisi yan yana aynı etiketi iki
 /// kez yazardı.
 ///
-/// **Kullanıcının KENDİ ETİKETLERİ varsayılan olarak burada** (istek
-/// 2026-08-08: "Süz'ün yanında benim eklediklerim varsayılan ekli olsun").
-/// Eskiden etiketin çip olarak görünmesi için önce Süz levhasından
-/// yıldızlanması gerekiyordu; oysa etiketler zaten kullanıcının kendi
-/// eklediği şeyler — ayrıca "favorile" adımı istemek gereksiz bir kapıydı.
-/// Yıldızlananlar önce gelir (kullanıcı sırayı böyle seçmiş), kalan etiketler
-/// arkadan; yinelenen çizilmez.
+/// **ETİKET DE YILDIZA BAĞLI** (kullanıcı bulgusu 2026-08-18: "filtrelerde
+/// yıldızlı olmamasına rağmen etiketler görünüyor ve kaldırılamıyor").
+/// 2026-08-08'de etiketler istisna tutulmuş, yıldızlanmasalar da hepsi
+/// kendiliğinden çip olmuştu; ama o zaman çubuktan çıkarmanın YOLU YOKTU —
+/// yıldız zaten kapalı olduğu için kapatılacak bir şey de yoktu ve etiket
+/// biriktiren notlarda çubuk taşıyordu. Artık kural her seçenek için AYNI:
+/// çubukta yalnız Süz levhasında yıldızlanmış olan görünür, yıldızı kaldırmak
+/// çipi de kaldırır.
 List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
   final favorites = ref.watch(favoriteFiltersProvider);
   final l10n = context.l10n;
@@ -277,22 +278,6 @@ List<Widget> favoriteFilterChips(BuildContext context, WidgetRef ref) {
     }
   }
 
-  // Yıldızlanmamış etiketler: kullanıcının kendi eklediği her etiket tek
-  // dokunuşla süzgeç olur. Zaten uygulanmış olan ve yukarıda favori olarak
-  // çizilmiş olan atlanır.
-  final favoriteTags = {
-    for (final token in favorites)
-      if (token.startsWith('tag:')) token.substring(4),
-  };
-  for (final name in tags) {
-    if (name == tag || favoriteTags.contains(name)) continue;
-    chips.add(
-      _FavoriteChip(
-        label: '#$name',
-        onTap: () => ref.read(selectedTagProvider.notifier).set(name),
-      ),
-    );
-  }
   return chips;
 }
 

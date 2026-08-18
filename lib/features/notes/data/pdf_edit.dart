@@ -185,9 +185,18 @@ class PdfEdit {
     Size page, {
     required PdfFont title,
     required PdfFont body,
+    required Uint8List fontBytes,
   }) {
     final anchorX = (bubble.x * page.width).clamp(0.0, page.width);
     final anchorY = (bubble.y * page.height).clamp(0.0, page.height);
+    // AÇIK METİN ALANI kutu DEĞİL: sayfanın üstüne doğrudan yazılır — ekranda
+    // nasıl görünüyorsa damgada da öyle. Kutu olarak basılsaydı Paint tarzı
+    // yazının bütün anlamı (fotoğrafın üstüne tarih düşmek, çizime etiket
+    // koymak) paylaşılan dosyada kaybolurdu.
+    if (bubble.plain) {
+      _drawPlainText(g, bubble, page, fontBytes);
+      return;
+    }
     // Ucundaki nokta her balonda var: not kutusu kaydırılsa bile balonun
     // sayfada NEREYİ gösterdiği belli olsun.
     g.drawEllipse(
@@ -258,6 +267,39 @@ class PdfEdit {
         bounds: Rect.fromLTWH(box.left + 4 + pad, y, inner, bodyHeight),
       );
     }
+  }
+
+  /// Paint tarzı açık metin alanının damgası: kutusuz, doğrudan sayfaya
+  /// yazılan metin.
+  ///
+  /// Punto sayfa genişliğinin oranıdır — ekranda 16 px'lik yazı A4'te ~17 pt
+  /// olur ve balonun kendi boyut çarpanı ([PageBubble.size]) buna çarpılır.
+  /// Sabit punto verilseydi aynı yazı A4'te minicik, küçük bir slaytta kocaman
+  /// çıkardı.
+  static void _drawPlainText(
+    PdfGraphics g,
+    PageBubble bubble,
+    Size page,
+    Uint8List fontBytes,
+  ) {
+    final text = bubble.text.trim();
+    if (text.isEmpty) return;
+    final size = (page.width * 0.028 * bubble.size).clamp(4.0, 200.0);
+    final font = PdfTrueTypeFont(fontBytes, size);
+    final width = math.max(40.0, page.width - bubble.x * page.width);
+    final height = _blockHeight(font, text, width);
+    final left = (bubble.x * page.width)
+        .clamp(0.0, math.max(0.0, page.width - 40))
+        .toDouble();
+    final top = (bubble.y * page.height)
+        .clamp(0.0, math.max(0.0, page.height - height))
+        .toDouble();
+    g.drawString(
+      text,
+      font,
+      brush: _brush(bubble.color, 1),
+      bounds: Rect.fromLTWH(left, top, width, height),
+    );
   }
 
   /// [width] genişliğine sarılan metnin yüksekliği.
@@ -477,7 +519,14 @@ class PdfEdit {
             _drawHighlight(g, bubble, visible);
           }
           for (final bubble in bubblesByPage[index] ?? const <PageBubble>[]) {
-            _drawBubbleNote(g, bubble, visible, title: title, body: body);
+            _drawBubbleNote(
+              g,
+              bubble,
+              visible,
+              title: title,
+              body: body,
+              fontBytes: fontBytes,
+            );
           }
         } finally {
           g.restore(state);

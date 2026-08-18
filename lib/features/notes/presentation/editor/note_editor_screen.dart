@@ -49,6 +49,7 @@ import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
+import '../../data/note_share.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
@@ -731,6 +732,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // notta seçim neredeyse hep bir cümleyi taşımak/silmek için yapılıyor.
     attachSentenceSelection(_bodyController);
     attachSentenceSelection(_titleController);
+    // Gövdedeki SON DOLU seçimi sakla (bkz. [_lastBodySelection]).
+    _bodyController.addListener(_rememberBodySelection);
     // Biçim çubuğu son odaklanan alana yazar; gövde odağı burada bildirilir
     // (maddeler ItemsEditor'dan bildirir).
     _titleFocus.addListener(() {
@@ -1741,6 +1744,28 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// hem o şeritteki düğme hem de metin seçim menüsü bağlamayı bitirir.
   Attachment? _pendingEmbed;
 
+  /// Gövdede en son yapılmış DOLU (boş olmayan) seçim.
+  ///
+  /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "buraya bağla çalışmıyor,
+  /// basıyorum bağlanmıyor").** `_finishPendingEmbed` seçimi doğrudan
+  /// `_bodyController.selection`'dan okuyordu; oysa şeritteki düğmeye dokunmak
+  /// gövde alanının DIŞINA dokunmaktır: `EditableText` odağı düşürüp seçimi
+  /// imlece ÇÖKERTİYOR (`isCollapsed`). Bağlama sessizce iptal ediliyor,
+  /// kullanıcıya yeniden "yazıyı seç" diyen aynı bildirim çıkıyordu — dışarıdan
+  /// "hiçbir şey olmuyor" gibi görünen tam olarak buydu.
+  ///
+  /// İki katmanlı çözüm: şerit artık [TextFieldTapRegion] içinde (dokunmak
+  /// odağı düşürmez) VE seçim burada yedekleniyor — hangi yoldan gelirse
+  /// gelsin, bağlanacak yazı elde kalır.
+  TextSelection? _lastBodySelection;
+
+  void _rememberBodySelection() {
+    final selection = _bodyController.selection;
+    if (selection.isValid && !selection.isCollapsed) {
+      _lastBodySelection = selection;
+    }
+  }
+
   /// Bağlama kipini başlatır (ek seçildi, yazı bekleniyor).
   void _startPendingEmbed(Attachment attachment) {
     setState(() => _pendingEmbed = attachment);
@@ -1756,9 +1781,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _finishPendingEmbed() {
     final attachment = _pendingEmbed;
     if (attachment == null) return;
-    final selection = _bodyController.selection;
+    final live = _bodyController.selection;
+    // Canlı seçim çökmüşse (odak düştü) son dolu seçime düşülür.
+    final selection = (live.isValid && !live.isCollapsed)
+        ? live
+        : _lastBodySelection;
     final logical = _bodyController.logicalText;
-    if (!selection.isValid || selection.isCollapsed) {
+    if (selection == null || !selection.isValid || selection.isCollapsed) {
       _showSnack(context.l10n.attachmentTagPickText);
       return;
     }
@@ -1776,6 +1805,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       return;
     }
     setState(() => _pendingEmbed = null);
+    // Bağlandı: yedek seçim tüketildi, ikinci bir "Buraya bağla" aynı yazıyı
+    // yeniden bağlamasın.
+    _lastBodySelection = null;
     _applyEmbed(label: label, attachment: attachment, start: start, end: end);
   }
 
@@ -1998,7 +2030,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final attachment = await repo.preparePdf(
         noteId: widget.noteId,
         bytes: restored == null ? bytes : restored['bytes'] as Uint8List,
-        fileName: file.name,
+        fileName: _documentFileName(file.name, '.pdf'),
       );
       final stored = restored == null
           ? attachment
@@ -2021,6 +2053,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
+  }
+
+  /// Balonlu (belge) notta duran belgenin dosya adı: **notun başlığı**;
+  /// başlık boşsa dosyanın KENDİ adı + "notlar" (bkz. [documentBaseName]).
+  ///
+  /// Klasik metin notunda ek sıradan bir dosyadır ve adı DEĞİŞTİRİLMEZ —
+  /// kullanıcı oraya bilinen adıyla bir dosya koydu, yeniden adlandırmak
+  /// onu kaybettirirdi.
+  String _documentFileName(String originalName, String extension) {
+    final note = _note;
+    if (note == null ||
+        (note.type != NoteType.pdf && note.type != NoteType.slides)) {
+      return originalName;
+    }
+    final base = documentBaseName(
+      noteTitle: note.displayTitle,
+      originalName: originalName,
+      notesSuffix: context.l10n.docNameNotesSuffix,
+    );
+    return '$base$extension';
   }
 
   Future<void> _pickSlide() async {
@@ -2066,7 +2118,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final attachment = await repo.prepareSlide(
         noteId: widget.noteId,
         bytes: bytes,
-        fileName: file.name,
+        fileName: _documentFileName(file.name, '.pptx'),
       );
       _mutate(
         (n) => n.copyWith(attachments: [...n.attachments, attachment]),
@@ -5821,11 +5873,17 @@ class _PendingEmbedBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.tertiaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-        child: Row(
+    // TextFieldTapRegion + ExcludeFocus: şeride dokunmak gövdenin odağını
+    // DÜŞÜRMEZ, dolayısıyla seçim imlece çökmez (bkz. [_lastBodySelection]
+    // kök nedeni). Aynı kural notta metin yazılırken açılan her yardımcı
+    // arayüz için geçerli — bkz. balon kartındaki eylemler.
+    return TextFieldTapRegion(
+      child: ExcludeFocus(
+        child: Material(
+          color: scheme.tertiaryContainer,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+            child: Row(
           children: [
             Icon(Icons.link, size: 18, color: scheme.onTertiaryContainer),
             const SizedBox(width: 8),
@@ -5850,6 +5908,8 @@ class _PendingEmbedBanner extends StatelessWidget {
               onPressed: onCancel,
             ),
           ],
+            ),
+          ),
         ),
       ),
     );

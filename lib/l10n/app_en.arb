@@ -1009,5 +1009,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "docNameNotesSuffix": "notes",
+  "docNamePhoto": "Photo notes",
+  "docNameScan": "Scan notes",
+  "docNameImage": "Image notes",
+  "docNameVideo": "Video notes"
 }

@@ -5027,6 +5027,36 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{name} bağlanacak — yazıyı seç'**
   String attachmentTagPendingBanner(String name);
+
+  /// No description provided for @docNameNotesSuffix.
+  ///
+  /// In tr, this message translates to:
+  /// **'notlar'**
+  String get docNameNotesSuffix;
+
+  /// No description provided for @docNamePhoto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fotoğraf notları'**
+  String get docNamePhoto;
+
+  /// No description provided for @docNameScan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarama notları'**
+  String get docNameScan;
+
+  /// No description provided for @docNameImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel notları'**
+  String get docNameImage;
+
+  /// No description provided for @docNameVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görüntü notları'**
+  String get docNameVideo;
 }
 
 class _AppLocalizationsDelegate

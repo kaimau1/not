@@ -1257,5 +1257,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "docNameNotesSuffix": "notlar",
+  "docNamePhoto": "Fotoğraf notları",
+  "docNameScan": "Tarama notları",
+  "docNameImage": "Görsel notları",
+  "docNameVideo": "Görüntü notları"
 }

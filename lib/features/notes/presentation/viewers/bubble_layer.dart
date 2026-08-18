@@ -99,6 +99,31 @@ class BubbleController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// **Açık metin alanının** renkleri — balon renginden AYRI ve başı SİYAH.
+  ///
+  /// Kullanıcı isteği 2026-08-18: "açık metin balonunun varsayılanı siyah
+  /// olmalı". Balon rengi bir TUTAMACIN rengidir (sarı not, mavi soru); açık
+  /// metin ise sayfanın üstüne YAZI yazmaktır ve yazının varsayılanı her
+  /// yerde siyahtır. Amber bir yazı beyaz kâğıtta zaten okunmuyordu.
+  static const plainPalette = <int>[
+    0xFF000000, // siyah (varsayılan)
+    0xFFFFFFFF, // beyaz (koyu sayfa/fotoğraf için)
+    0xFFD32F2F, // kırmızı
+    0xFF1976D2, // mavi
+    0xFF388E3C, // yeşil
+    0xFFF57C00, // turuncu
+    0xFF7B1FA2, // mor
+    0xFF00838F, // petrol
+  ];
+
+  /// Yeni bırakılacak AÇIK METİN alanının rengi (varsayılan siyah).
+  int plainColor = plainPalette.first;
+
+  void setPlainColor(int value) {
+    plainColor = value;
+    notifyListeners();
+  }
+
   /// Az önce eklenen balon: katman onu açık ve klavyesi odaklanmış getirir.
   String? justAdded;
 
@@ -214,6 +239,8 @@ class BubbleController extends ChangeNotifier {
           a[i].color != b[i].color ||
           a[i].collapsed != b[i].collapsed ||
           a[i].starred != b[i].starred ||
+          a[i].plain != b[i].plain ||
+          a[i].size != b[i].size ||
           a[i].rects.length != b[i].rects.length) {
         return false;
       }
@@ -252,7 +279,8 @@ class BubbleController extends ChangeNotifier {
       page: page,
       x: x.clamp(0.0, 1.0),
       y: y.clamp(0.0, 1.0),
-      color: color,
+      // Açık metin alanı kendi paletinden doğar (varsayılan siyah).
+      color: plainMode ? plainColor : color,
       plain: plainMode,
     ),
   );
@@ -1201,8 +1229,12 @@ class _BubblePinState extends State<_BubblePin>
     final color = Color(bubble.color).withValues(alpha: opaque ? 1 : 0.72);
     final hasTitle = bubble.title.trim().isNotEmpty;
     // AÇIK METİN ALANI: tutamaç yerine yazının kendisi çizilir.
+    // Boyutlanırken model henüz yazılmadı: geçici çarpan burada uygulanır.
+    final shown = _resizeSize == null
+        ? bubble
+        : bubble.copyWith(size: _resizeSize);
     final child = bubble.plain
-        ? _plainText(bubble, Color(bubble.color))
+        ? _plainText(context, shown, Color(bubble.color))
         : (hasTitle ? _titleChip(bubble, color) : _dot(bubble, color));
     final point = Offset(
       bubble.x * widget.pageSize.width,
@@ -1309,22 +1341,34 @@ class _BubblePinState extends State<_BubblePin>
   /// Boş metin, üzerine dokunulabilecek bir hedef bırakmak için yer tutucu
   /// gösterir; yoksa yeni bırakılan boş bir metin alanı görünmez olur ve
   /// kullanıcı onu bir daha açamazdı.
-  Widget _plainText(PageBubble bubble, Color color) {
+  Widget _plainText(BuildContext context, PageBubble bubble, Color color) {
     final text = bubble.text.trim();
     final empty = text.isEmpty;
-    final style = TextStyle(
-      fontSize: 16,
-      height: 1.25,
-      fontWeight: FontWeight.w600,
+    final fontSize = bubble.fontSize;
+    // **VARSAYILAN YAZI BİÇİMİ** (kullanıcı isteği 2026-08-18: "yazı formatı
+    // varsayılan yazı formatı olmalı"): kendi kalınlığını (w600) dayatmak
+    // yerine temanın gövde biçimi devralınır — uygulamanın/notun seçili yazı
+    // tipi neyse açık metin de onunla yazılır.
+    final base = Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
+    final style = base.copyWith(
+      fontSize: fontSize,
+      height: 1.2,
+      fontWeight: FontWeight.normal,
       color: color,
     );
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 260),
+    // Dış hat yazının ZIDDI: siyah yazının çevresi beyaz, beyaz yazının
+    // çevresi siyah. Sabit koyu dış hat, siyah varsayılanla birlikte yazıyı
+    // kendi gölgesinde kaybediyordu.
+    final outline = color.computeLuminance() < 0.5
+        ? Colors.white.withValues(alpha: 0.85)
+        : Colors.black.withValues(alpha: 0.7);
+    final body = Container(
+      constraints: BoxConstraints(maxWidth: math.max(120, fontSize * 16)),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: empty || _lifted
+      decoration: empty || _lifted || _resizing
           ? BoxDecoration(
-              // Boşken (ve taşınırken) ince bir çerçeve: alanın nerede
-              // olduğu görünsün.
+              // Boşken (taşınırken, boyutlanırken) ince bir çerçeve: alanın
+              // nerede olduğu ve nereye kadar uzandığı görünsün.
               border: Border.all(color: color.withValues(alpha: 0.8)),
               borderRadius: BorderRadius.circular(4),
             )
@@ -1344,14 +1388,90 @@ class _BubblePinState extends State<_BubblePin>
                   style: style.copyWith(
                     foreground: Paint()
                       ..style = PaintingStyle.stroke
-                      ..strokeWidth = 3
-                      ..color = Colors.black.withValues(alpha: 0.55),
+                      ..strokeWidth = math.max(2, fontSize / 6)
+                      ..color = outline,
                   ),
                 ),
                 Text(text, style: style),
               ],
             ),
     );
+    if (widget.readOnly) return body;
+    // **BOYUT TUTAMACI (Paint'teki gibi)**: yazının sağ alt köşesinde küçük
+    // bir kulp; sürüklendikçe yazı büyür/küçülür. Yalnız AÇIK (seçili) metin
+    // alanında çizilir — sayfadaki her yazının yanında sürekli duran bir kulp
+    // belgeyi okunmaz hâle getirirdi.
+    if (bubble.collapsed && !_resizing) return body;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        body,
+        Positioned(
+          right: -9,
+          bottom: -9,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            // Boş `onTap`/`onLongPress` bilerek burada: üstteki
+            // [BubbleDragArea] aynı iki jesti dinliyor ve kulba 220 ms basılı
+            // tutmak balonu TAŞIMAYA başlatırdı. Arenaya çocuk olarak giren
+            // tanıyıcı önce eklendiği için kazanır; kulp yalnız boyutlandırır.
+            onTap: () {},
+            onLongPress: () {},
+            onPanStart: (_) => setState(() => _resizing = true),
+            onPanUpdate: (d) => _resizeBy(bubble, d.delta),
+            onPanEnd: (_) => _resizeEnd(),
+            onPanCancel: _resizeEnd,
+            child: Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(color: outline, width: 1.5),
+              ),
+              child: const Icon(
+                Icons.open_in_full,
+                size: 12,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Boyut tutamacı şu an sürükleniyor mu (çerçeve bu sırada görünür kalır).
+  bool _resizing = false;
+
+  /// Sürükleme sırasında biriken çarpan; parmak bırakılınca bir kez yazılır.
+  ///
+  /// Taşımadaki kök nedenin aynısı (bkz. [_drag]): her karede `update` çağırmak
+  /// sayfadaki bütün balon katmanını yeniden kurar ve kulp parmağın gerisinde
+  /// kalır. Model YALNIZ bitişte yazılır.
+  double? _resizeSize;
+
+  void _resizeBy(PageBubble bubble, Offset delta) {
+    final current = _resizeSize ?? bubble.size;
+    // Çapraz hareketin ikisi de büyütür: sağa VE aşağı çekmek Paint'te
+    // kutuyu büyütür. 90 px sürükleme ≈ bir kat büyüme.
+    final next = (current + (delta.dx + delta.dy) / 90)
+        .clamp(PageBubble.minSize, PageBubble.maxSize)
+        .toDouble();
+    if (next == current) return;
+    setState(() => _resizeSize = next);
+  }
+
+  void _resizeEnd() {
+    final next = _resizeSize;
+    setState(() {
+      _resizing = false;
+      _resizeSize = null;
+    });
+    if (next == null) return;
+    widget.controller
+      ..update(widget.bubble.copyWith(size: next))
+      ..save();
   }
 
   Widget _titleChip(PageBubble bubble, Color color) => Container(
@@ -1765,7 +1885,11 @@ class _BubbleDockState extends State<BubbleDock> {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.only(right: 8),
           children: [
-            for (final argb in BubbleController.palette)
+            // Açık metin alanı kendi paletini kullanır (siyah/beyaz dahil) —
+            // tutamaç renkleri bir YAZI için doğru seçenekler değil.
+            for (final argb in bubble.plain
+                ? BubbleController.plainPalette
+                : BubbleController.palette)
               GestureDetector(
                 key: ValueKey('bubble-color-$argb'),
                 onTap: () => widget.controller
@@ -1845,14 +1969,22 @@ class BubbleToolbar extends StatelessWidget {
                       controller.setPlainMode(selection.first),
                 ),
               ),
+              // Palet KİPE GÖRE değişir: balon tutamacının renkleri ile
+              // açık metnin renkleri ayrı listeler (açık metnin başı siyah —
+              // bkz. [BubbleController.plainPalette]).
               Expanded(
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   children: [
-                    for (final argb in BubbleController.palette)
+                    for (final argb
+                        in controller.plainMode
+                            ? BubbleController.plainPalette
+                            : BubbleController.palette)
                       GestureDetector(
-                        onTap: () => controller.setColor(argb),
+                        onTap: () => controller.plainMode
+                            ? controller.setPlainColor(argb)
+                            : controller.setColor(argb),
                         child: Container(
                           width: 26,
                           height: 26,
@@ -1864,9 +1996,14 @@ class BubbleToolbar extends StatelessWidget {
                             color: Color(argb),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: controller.color == argb
+                              color:
+                                  (controller.plainMode
+                                      ? controller.plainColor
+                                      : controller.color) ==
+                                      argb
                                   ? scheme.onSurface
-                                  : Colors.transparent,
+                                  // Beyaz renk beyaz zeminde kaybolmasın.
+                                  : scheme.outlineVariant,
                               width: 2.5,
                             ),
                           ),

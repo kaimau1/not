@@ -832,7 +832,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     await _buildPageNote(
       pageBytes: [frame],
-      fallbackName: l10n.newVideoNote,
+      fallbackName: l10n.docNameVideo,
       noteTitle: choice.noteTitle,
       extraVideoPath: picked.path,
     );
@@ -871,7 +871,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (prepared == null || prepared.isEmpty || !mounted) return;
     await _buildPageNoteFromPaths(
       prepared,
-      fallbackName: l10n.newPhotoNote,
+      fallbackName: l10n.docNamePhoto,
       noteTitle: choice.noteTitle,
     );
   }
@@ -932,7 +932,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     if (paths.isEmpty) return;
     await _buildPageNoteFromPaths(
       paths,
-      fallbackName: l10n.newScanNote,
+      fallbackName: l10n.docNameScan,
       noteTitle: choice.noteTitle,
     );
   }
@@ -985,7 +985,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     }
     await _buildPageNoteFromPaths(
       prepared,
-      fallbackName: l10n.newImageNote,
+      fallbackName: l10n.docNameImage,
       noteTitle: choice.noteTitle,
     );
   }
@@ -1125,8 +1125,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         folderId: ref.read(selectedFolderProvider),
       );
       final maps = <Map<String, dynamic>>[];
-      // Belgenin adı NOTUN BAŞLIĞI (bkz. capture_mode_sheet.dart): başlık
-      // boşsa yakalama kipinin varsayılan adına düşülür.
+      // Belgenin adı NOTUN BAŞLIĞI (bkz. capture_mode_sheet.dart). Başlık
+      // boşsa YAKALAMA KİPİNİN MENÜ ETİKETİ değil, kısa bir BELGE adı
+      // kullanılır (kullanıcı bulgusu 2026-08-18: belgeler "PDF ekle not al",
+      // "Görsel ekle not al" diye adlanıyordu — bkz. [documentBaseName]).
       final attachment = await attachments.preparePdf(
         noteId: id,
         bytes: pdfBytes,
