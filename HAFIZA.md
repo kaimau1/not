@@ -2048,3 +2048,162 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   yoluna gider — Storage kuralları Firestore'daki paylaşımı GÖREMEZ
   (Cloud Function olmadan çözümü yok). Ortak klasörler metin ve listeler
   için tasarlandı. Aynı gerekçeyle gönderilen notun ekleri taşınmaz.
+
+## 2026-08-21 — Kullanıcı pull listesi: kapsam kararları
+
+Kullanıcı çok maddeli bir "pull" listesi verdi (senkron/görsel/PDF hataları,
+web PC görünümü, klavye zıplaması, arkadaş arama, klasör izinleri kişi
+bazlı, madde modu hizalama, birlikte-çalışma pomodoro modu, kalem/tablet
+premium modu). Netleştirme soruları soruldu, kararlar:
+
+- **Pomodoro/"birlikte çalışalım" modu**: ERTELENDİ, kullanıcı "bunu kaydet
+  sonra yapalım" dedi — bu oturumda YAPILMAYACAK. Sonraki bir oturumda ele
+  alınacak, kapsam (basit ortak sayaç mı / tam oda-eşleştirme sistemi mi)
+  o zaman netleştirilecek.
+- **Kalem/tablet premium modu**: bu oturumda KODLANMAYACAK, sadece plan/
+  özellik listesi yazılacak (el yazısı sayfası, şekil tanıma otomatik/
+  manuel düzelt, premium ek fikirler). Kodlama ayrı bir görev.
+- **Diğer maddeler**: hepsi bu oturumda sırayla ele alınacak → bitince
+  main'e merge + release APK derlenecek.
+
+Sıradaki liste (pull'dan, pomodoro ve kalem modu hariç):
+1. Görsel/belge senkron sorunu (özellikle balonlu modda)
+2. Masaüstü/web'de balonlu modda görsel görüntülenememesi
+3. "Unsupported operation" hatası — PDF/görsel ekleme (web)
+4. Web sürümü mobilin büyütülmüşü gibi — PC'ye özgü layout gerekiyor
+5. Kalan kasma/zıplama: klavye açılıp kapanırken biçim/ekle panelinin zıplaması
+6. Arkadaş eklemede tüm kullanıcılar içinde arama seçeneği
+7. Paylaşılan klasörlerde kişi bazlı okuma/yazma izni (NOT: HAFIZA'da daha
+   önce `folderShares.roles` ile read/write/both zaten eklenmiş görünüyor —
+   önce mevcut duruma bakılacak, eksikse tamamlanacak)
+8. Tablet/kalem modları — SADECE PLAN (bkz. yukarı)
+9. Madde modunda kutu hizalaması: kutular ilk satıra göre değil ortalanarak
+   diziliyor, düzeltilecek
+
+## 2026-08-21 (devam) — Arkadaş aramada tüm kullanıcılar içinde arama
+
+Kullanıcı "Cloud Function ile tam özellik yap" dedi. Eklenenler:
+
+- `functions/` (yeni klasör, Node.js 20, `firebase-admin`/`firebase-functions`
+  v2) — tek callable: `searchUsers({query})`. Giriş şart, sorgu ≥2 karakter,
+  en fazla 15 sonuç, kendisi hariç. `userSearch` koleksiyonunda `nameLower`/
+  `emailLower` alanlarında iki ayrı önek (prefix) sorgusu çalıştırıp
+  birleştiriyor (composite index gerekmiyor, tek alan sıralaması).
+- `userSearch/{uid}` — YENİ Firestore koleksiyonu. `userDirectory`'den FARKI:
+  istemciden HİÇ okunamaz (`get`/`list` ikisi de `false`), yalnız Admin SDK
+  (yani bu fonksiyon) okuyabilir. Yazma yalnız kendi dokümanına
+  (`FriendsRepository.syncOwnDirectoryEntry` içinde `userDirectory` ile
+  birlikte yazılıyor).
+  **Gerekçe**: `userDirectory` zaten `get`e (tam e-posta bilinmeden
+  okunamaz) herkese açık ama isimle arama `list`/aralık sorgusu istiyor —
+  bunu istemciye açmak tüm kullanıcı tabanının taranabilir olması demek.
+  Onun yerine okuma sunucu tarafına (Cloud Function) taşındı, sonuç 15
+  kayıtla sınırlı.
+- `firestore.rules`: `userSearch` kuralı eklendi.
+- `firebase.json`: `functions` bloğu eklendi (`functions/`, nodejs20).
+- `pubspec.yaml`: `cloud_functions` paketi eklendi.
+- `friends_screen.dart`: "Arkadaş ekle" artık iki sekmeli bir alt sayfa
+  (`_AddFriendSheet`) — "Ara" (debounce'lu canlı arama, sonuç listesinde
+  doğrudan "Ekle") ve "E-posta ile" (eski tam e-posta akışı, arananın henüz
+  `userSearch`e düşmemiş köşe durumları için bırakıldı).
+- `friends_repository.dart`: `searchUsers()`, `sendRequestToUid()` eklendi.
+- l10n: yeni anahtarlar (`friendsSearch*`) yalnız `app_tr.arb` (şablon) ve
+  `app_en.arb`'a eklendi — diğer 14 dil ÇEVİRİLMEDİ, çalışma zamanında
+  şablona (Türkçe) düşecekler. Kapsam nedeniyle bilinçli bırakıldı, bir
+  sonraki oturumda tamamlanmalı.
+
+**BİLİNEN SINIR / YAPILMASI GEREKEN**: bu özellik DEPLOY EDİLMEDEN
+çalışmaz — `functions/README.md`'de adımlar var. Özetle:
+`cd functions && npm install && firebase deploy --only functions &&
+firebase deploy --only firestore:rules`. Cloud Functions için Blaze
+(pay-as-you-go) plana geçiş gerekebilir. Bu ortamda (Claude Code oturumu)
+firebase CLI/deploy erişimi YOK, kullanıcı kendi makinesinden yapmalı.
+
+**Bu ortamda Flutter SDK da kurulu değil** — hiçbir değişiklik
+`flutter analyze`/`flutter build` ile burada doğrulanamadı, yalnız kod
+okuması + Node syntax check (`node --check functions/index.js`) yapıldı.
+Gerçek doğrulama push sonrası CI'da (GitHub Actions) ya da kullanıcının
+kendi makinesinde olacak.
+
+## 2026-08-21 (devam 2) — Cloud Functions'ı da CI'a bağla
+
+Kullanıcı: "firebase ve cloudflare otomatik deploy ediliyor olması gerek"
+— haklıydı, `build.yml`'deki `deploy` işi yalnız `firestore,storage`
+yayınlıyordu, `functions` YOKTU (bir önceki turda eklenen `searchUsers`
+elle deploy gerektiriyordu). Düzeltildi: `deploy` işine `npm install
+--prefix functions` + `firebase deploy --only functions` adımı eklendi,
+`continue-on-error: true` ile (Blaze plana geçilmemişse ya da servis
+hesabının IAM rolleri yetmiyorsa geri kalan yayını kırmasın diye).
+Ayrıntı/gerekli IAM rolleri `functions/README.md`'de.
+
+**Hâlâ kullanıcının yapması gereken** (CI bunu yapamaz): proje Blaze
+plana geçmemişse geçirmek + `FIREBASE_SERVICE_ACCOUNT` servis hesabına
+Cloud Functions dağıtımı için gereken IAM rollerini eklemek. İkisi de
+Google Cloud Console/Firebase konsolu üzerinden, tek seferlik.
+
+## 2026-08-21 (devam 3) — Kalem/tablet modu: ÖZELLİK PLANI (kodlanmadı)
+
+Kullanıcı bu oturumda yalnız plan istedi, kodlama YOK. Sonraki bir
+oturumda buradan devam edilebilir.
+
+**Kapsam**: "tabletler ve kalem kullanıcıları için özel seçenekler ve
+modlar … el yazma sayfası olmalı, kaleme özel geometrik şekiller
+çizildiğinde otomatik ve manuel düzelt seçenekleri … premium bir kalemli
+not uygulamasında neler olmalıysa" (kullanıcı isteği).
+
+### Aşama 1 — El yazısı sayfası (temel)
+- Yeni not tipi ya da mevcut `NoteType`'a ek: "El yazısı sayfası" — tam
+  sayfa serbest çizim tuvali (mevcut `InkController`/`InkPageLayer`,
+  bkz. `lib/features/notes/presentation/viewers/ink_layer.dart`, PDF/görsel
+  üstünde zaten var — burada BOŞ bir sayfada, arkaplan olmadan).
+  Stroke verisi mevcut `ink` alanının aynısıyla saklanabilir (şema değişmez).
+- Kalem algılama: `Listener`/`PointerDeviceKind.stylus` ile parmak/kalem
+  ayrımı — kalemle çizim, parmakla kaydırma/zoom (bazı premium not
+  uygulamalarının "palm rejection" dediği şey).
+- Sayfa büyüklüğü: sonsuz kaydırma mı (Notability tarzı) yoksa sabit A4/
+  Letter sayfa mı — kullanıcıya sorulmalı.
+
+### Aşama 2 — Şekil tanıma (otomatik/manuel düzelt)
+- Çizilen stroke'un geometrisi (köşe sayısı, kapalılık, kavis) basit
+  bir sezgisel/ısı haritası algoritmasıyla çember/kare/üçgen/ok/çizgiye
+  eşleştirilir (üçüncü parti bağımlılık gerekmez, ör. Douglas-Peucker
+  köşe azaltma + açı analizi).
+- "Otomatik düzelt": çizim bitince (parmak/kalem kalkınca) kısa bir
+  gecikmeyle (ör. 400ms) sezgisel eşik geçilirse otomatik şekle
+  yapıştırır, kullanıcı geri alabilir (Undo).
+- "Manuel düzelt": çizili şeklin üstünde küçük bir "şekle dönüştür"
+  düğmesi belirir (dokunulmazsa kaybolur) — otomatik davranışı
+  istemeyen kullanıcılar için.
+- Ayarlar: Ayarlar → Kalem'de aç/kapa + hassasiyet kaydırıcısı.
+
+### Aşama 3 — Premium kalem/tablet fikirleri (öncelik kullanıcıyla
+netleştirilmeli, hepsi aynı oturumda yapılmamalı):
+1. **Kalem kalınlığı/basınç desteği** — `Stylus` basınç verisi varsa
+   (bazı cihazlarda `PointerEvent.pressure`) çizgi kalınlığı buna göre
+   değişsin.
+2. **Cetvel/pergel aracı** — ekranda sürüklenebilir sanal cetvel,
+   üstüne çizilen çizgi otomatik düzleşir.
+3. **Lazer işaretçi modu** — sunum sırasında geçici (birkaç saniyede
+   silinen) işaretleme.
+4. **El yazısını metne çevir (handwriting OCR)** — zaten var olan OCR
+   altyapısı (`text_recognize_screen.dart`) el yazısı moduna bağlanabilir;
+   Gemini tabanlı OCR el yazısında ne kadar başarılı test edilmeli.
+5. **Çok sayfalı defter modu** — el yazısı sayfaları bir "defter" altında
+   gruplanıp sekme/kaydırmayla gezilebilir (mevcut çoklu-not yapısına
+   yeni bir gruplama katmanı ister).
+6. **Kalem renk/kalınlık favorileri** — sık kullanılan 4-6 kombinasyon
+   hızlı erişim şeridinde.
+7. **Sağ/sol el modu** — araç çubuğunun ekranın hangi kenarında
+   duracağı (tablet + kalemle sol elini kullanan kullanıcılar için).
+8. **Şekil kütüphanesi genişletme** — çember/kare/üçgen/ok ötesinde
+   akış şeması kutuları, oklu bağlantılar (basit bir diyagram modu).
+9. **Zoom-yazma (palm-safe yakınlaştırma)** — küçük yazı alanına
+   büyütülmüş bir "yazma penceresi" (GoodNotes'un "yakınlaştırma
+   kutusu" özelliği) — tabletlerde ince el yazısını rahatlatır.
+
+### Öneri
+Aşama 1 + 2'yi TEK bir sonraki oturumda (orta büyüklükte iş) yapmak,
+Aşama 3'ü kullanıcıyla önceliklendirip birer birer eklemek mantıklı —
+hepsi birden hem test edilemez büyüklükte hem de UI/UX kararı (sonsuz mu
+sabit sayfa mı, hangi premium fikirler öncelikli) kullanıcıdan netlik
+istiyor.

@@ -287,6 +287,25 @@ jobs:
           npx firebase-tools deploy --only firestore,storage --non-interactive
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
+      - name: Cloud Functions bağımlılıklarını indir
+        run: npm install --prefix functions
+
+      # Kurallardan AYRI adım: Cloud Functions Blaze (ücretli) plan ister.
+      # Proje henüz Blaze'e yükseltilmediyse bu adım başarısız olur ama
+      # `continue-on-error` sayesinde geri kalan yayın (kurallar + web)
+      # engellenmez — plan yükseltilince bir sonraki main push'unda
+      # fonksiyon kendiliğinden yayınlanır, elle bir şey yapmaya gerek
+      # kalmaz (kullanıcı isteği 2026-08-21: "otomatik deploy ediliyor
+      # olması gerek").
+      - name: Cloud Functions'ı yayınla (searchUsers)
+        continue-on-error: true
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GOOGLE_APPLICATION_CREDENTIALS"
+          npx firebase-tools deploy --only functions --non-interactive
+          rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
       - name: Cloudflare Pages'e yayınla
         uses: cloudflare/wrangler-action@v3
         with:

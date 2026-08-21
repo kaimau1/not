@@ -5595,9 +5595,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             _AiBanner(label: _busyTask!, icon: Icons.sync),
                           // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                           // yerine kendi içinde kaydırılır (Flexible + kaydırma).
-                          if (_formatBarOpen)
-                            Flexible(
-                              child: SingleChildScrollView(
+                          //
+                          // ZIPLAMA (kullanıcı bulgusu 2026-08-21): panel eskiden
+                          // `if (_formatBarOpen) Flexible(...)` ile Column'a ANINDA
+                          // (0 ms) eklenip çıkarılıyordu — klavyenin KeyboardSnap ile
+                          // kademeli/yumuşatılmış hareketiyle aynı karede çakışınca
+                          // "zıplama" hissi veriyordu. Panel artık her zaman ağaçta,
+                          // `AnimatedSize` yüksekliğini yumuşak kapatıyor/açıyor;
+                          // kapalıyken `SizedBox.shrink()` yer kaplamıyor.
+                          Flexible(
+                            child: AnimatedSize(
+                              duration: const Duration(milliseconds: 180),
+                              curve: Curves.easeOut,
+                              alignment: Alignment.bottomCenter,
+                              child: !_formatBarOpen
+                                  ? const SizedBox.shrink()
+                                  : SingleChildScrollView(
                                 child: FormatBar(
                                   target: _formatTarget,
                                   onFormat: _applyFormat,
@@ -5663,6 +5676,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                 ),
                               ),
                             ),
+                          ),
                           // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
                           // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
                           // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek

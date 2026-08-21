@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path/path.dart' as p;
 
 /// build() sıcak yolundaki dosya-varlığı denetimleri için süreç ömürlü
@@ -21,6 +22,15 @@ const _maxExistsCache = 512;
 
 bool localFileExists(String path) {
   if (path.isEmpty) return false;
+  // Web'de gerçek bir dosya sistemi yok — `dart:io File` çağrısı platforma
+  // göre ya `false` döner ya da istisna fırlatır (kullanıcı bulgusu:
+  // "masaüstünde webte görseller/PDF görüntülenemiyor, balonlu mod
+  // çalışmıyor" — görsel/PDF/balon katmanlarının HEPSİ altta bu fonksiyona
+  // dayanıyor, bkz. attachment_strip.dart, note_images.dart,
+  // image_viewer.dart, pdf_viewer_screen.dart). Web'de yerel yol zaten hiç
+  // yazılmıyor (`appSupportPath` null kalır, bkz. bu dosyanın altı), o
+  // yüzden erken `false` hem doğru hem güvenli.
+  if (kIsWeb) return false;
   if (_existsCache.contains(path)) return true;
   if (File(path).existsSync()) {
     if (_existsCache.length >= _maxExistsCache) _existsCache.clear();
