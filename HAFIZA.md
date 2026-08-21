@@ -2207,3 +2207,21 @@ Aşama 3'ü kullanıcıyla önceliklendirip birer birer eklemek mantıklı —
 hepsi birden hem test edilemez büyüklükte hem de UI/UX kararı (sonsuz mu
 sabit sayfa mı, hangi premium fikirler öncelikli) kullanıcıdan netlik
 istiyor.
+
+## 2026-08-21 (devam 4) — CI: Actions dakika kotası doldu
+
+`main`e push edilen [apk] commit'i (639ae6c → sonra retry 1c7d0b4) CI'da
+"Analiz + Test" işi 4-5 SANİYEDE "failure" ile düşüyor, log indirmesi
+404 dönüyor — bu gerçek bir test/derleme hatası değil, runner hiç
+başlamadan GitHub Actions dakika KOTASININ dolduğuna işaret ediyor
+(kullanıcı doğruladı: "actions kotam doldu"). `rerun_failed_jobs` ve
+`run_workflow` (workflow_dispatch) API çağrıları da 403 "Resource not
+accessible by integration" ile reddedildi (bilinen kısıt, önceki turlarda
+da not edilmişti).
+
+**Durum**: main'deki kod (commit 1c7d0b4) tam ve doğru — bekleyen hiçbir
+değişiklik yok. Yalnız CI'ın (analiz/test, APK derleme, Firebase+
+Cloudflare deploy) ÇALIŞMASI kota yenilenene kadar mümkün değil. Kota
+yenilenince (aylık otomatik sıfırlanır, GitHub → Settings → Billing →
+Plans and usage'dan bakılabilir) tek bir push (ya da boş bir commit)
+yeterli — kodda ekstra bir şey yapmaya gerek yok.
