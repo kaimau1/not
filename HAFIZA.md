@@ -2225,3 +2225,54 @@ Cloudflare deploy) ÇALIŞMASI kota yenilenene kadar mümkün değil. Kota
 yenilenince (aylık otomatik sıfırlanır, GitHub → Settings → Billing →
 Plans and usage'dan bakılabilir) tek bir push (ya da boş bir commit)
 yeterli — kodda ekstra bir şey yapmaya gerek yok.
+
+## 2026-08-21 (devam 5) — KALANLAR'dan kod tarafı maddeler tek tek yapıldı
+
+Kullanıcı: "pull kalanlara bak ve tek tek yap bitir". `KALANLAR.md`'deki
+maddeler tarandı; cihaz/konsol/karar gerektirenler bırakıldı, KOD tarafında
+yapılabilir olanların hepsi bu oturumda yapıldı.
+
+### KÖK NEDEN BULGUSU: main DERLENMİYORDU
+`friendsSearch*` (6 anahtar) bir önceki turda yalnız `app_tr.arb`/`app_en.arb`'a
+eklenmiş, `flutter gen-l10n` çalıştırılmadığı için **üretilmiş Dart
+dosyalarına hiç girmemişti** — `friends_screen.dart` bu getter'ları
+çağırıyor, yani `flutter analyze`/derleme kırık. CI kotası dolu olduğu için
+kimse görmemişti (bkz. devam 4). Getter'lar `app_localizations.dart` ve 16
+yerel dosyanın hepsine elle eklendi.
+**Ders**: bu ortamda Flutter SDK yok; ARB'ye anahtar eklemek YETMEZ, üretilmiş
+dosyalar da elle güncellenmeli, yoksa depo derlenmez halde kalır.
+
+### Yapılanlar
+1. **Görsele yapılan çizim/metin dışa aktarmada** — yeni
+   `lib/features/notes/data/image_stamp.dart` (`ImageStamp`): çizgi, vurgu ve
+   balonları (Paint tarzı açık metin dahil) görselin BAYTLARINA basar. PDF/Word
+   dışa aktarımı (`pdf_export_screen._loadImages`) ve panoya kopyalama
+   (`note_editor_screen._copyAttachments`) artık damgalı kopyayı kullanıyor.
+   Görünüm kuralları `PdfEdit.burnForSharing` ile aynı (aynı 0.28 vurgu
+   saydamlığı, aynı 0.028 punto oranı) ki aynı not PDF'te ve görselde aynı
+   dursun. Ek dosyasına DOKUNULMUYOR. Test: `test/image_stamp_test.dart`.
+2. **Liste kaydırma konumu** — `_DashboardScreenState._scrollOffsets` (statik,
+   segment başına) + segment başına `ScrollController`. Kesme noktası
+   geçişinde ekran başka bir DashboardScreen instance'ına geçtiği için konum
+   sıfırlanıyordu; arama kutusunun 2026-08-16'daki çözümünün aynısı.
+   Split-shell refaktörü GEREKMEDİ.
+3. **Yedekle/geri yükle servise çıkarıldı** — `NoteBackup`
+   (`lib/features/notes/data/note_backup.dart`), ayarlar ekranındaki iki
+   widget'ın içinden alındı; anonim→Google hesap birleştirme akışının ön
+   koşuluydu. Test: `test/note_backup_test.dart` (yedek `downloadUrl`
+   taşımıyor, kilit/arşiv/tarih alanları geri geliyor, geçmiş hatırlatıcı
+   elenmiş, bozuk biçim `FormatException`).
+4. **16 dilin tamamı eksiksiz** — 283 eksik anahtar × 14 dil çevrildi; ARB +
+   üretilmiş Dart birlikte yamalandı (yardımcı betikler oturum scratchpad'inde,
+   depoya girmedi). `folderShareCount` çoğulu her dilde one/other; Rusça/Lehçe/
+   Arapça'nın few/many dalları YOK (kaba ama yanlış değil, gen-l10n bir sonraki
+   koşuda ARB'den düzeltebilir).
+5. **KALANLAR temizliği**: "PDF çizimini paylaşılan PDF'e gömme kullanıcı
+   kararı bekliyor" maddesi SİLİNDİ — 2026-08-08'de `syncfusion_flutter_pdf`
+   ile (seçenek b) zaten çözülmüş, madde eskimişti.
+
+### Doğrulama sınırı
+Flutter SDK bu ortamda yok: `flutter analyze`/`flutter test` KOŞMADI. Denetim
+elle yapıldı (üretilmiş dosyalarda tırnak dengesi taraması, kodda kullanılan
+her `l10n.X` anahtarının üretilmiş sınıfta var olduğunun taranması). Gerçek
+doğrulama CI kotası yenilenince ya da kullanıcının makinesinde.
