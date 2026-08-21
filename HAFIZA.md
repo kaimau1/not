@@ -2140,3 +2140,70 @@ Ayrıntı/gerekli IAM rolleri `functions/README.md`'de.
 plana geçmemişse geçirmek + `FIREBASE_SERVICE_ACCOUNT` servis hesabına
 Cloud Functions dağıtımı için gereken IAM rollerini eklemek. İkisi de
 Google Cloud Console/Firebase konsolu üzerinden, tek seferlik.
+
+## 2026-08-21 (devam 3) — Kalem/tablet modu: ÖZELLİK PLANI (kodlanmadı)
+
+Kullanıcı bu oturumda yalnız plan istedi, kodlama YOK. Sonraki bir
+oturumda buradan devam edilebilir.
+
+**Kapsam**: "tabletler ve kalem kullanıcıları için özel seçenekler ve
+modlar … el yazma sayfası olmalı, kaleme özel geometrik şekiller
+çizildiğinde otomatik ve manuel düzelt seçenekleri … premium bir kalemli
+not uygulamasında neler olmalıysa" (kullanıcı isteği).
+
+### Aşama 1 — El yazısı sayfası (temel)
+- Yeni not tipi ya da mevcut `NoteType`'a ek: "El yazısı sayfası" — tam
+  sayfa serbest çizim tuvali (mevcut `InkController`/`InkPageLayer`,
+  bkz. `lib/features/notes/presentation/viewers/ink_layer.dart`, PDF/görsel
+  üstünde zaten var — burada BOŞ bir sayfada, arkaplan olmadan).
+  Stroke verisi mevcut `ink` alanının aynısıyla saklanabilir (şema değişmez).
+- Kalem algılama: `Listener`/`PointerDeviceKind.stylus` ile parmak/kalem
+  ayrımı — kalemle çizim, parmakla kaydırma/zoom (bazı premium not
+  uygulamalarının "palm rejection" dediği şey).
+- Sayfa büyüklüğü: sonsuz kaydırma mı (Notability tarzı) yoksa sabit A4/
+  Letter sayfa mı — kullanıcıya sorulmalı.
+
+### Aşama 2 — Şekil tanıma (otomatik/manuel düzelt)
+- Çizilen stroke'un geometrisi (köşe sayısı, kapalılık, kavis) basit
+  bir sezgisel/ısı haritası algoritmasıyla çember/kare/üçgen/ok/çizgiye
+  eşleştirilir (üçüncü parti bağımlılık gerekmez, ör. Douglas-Peucker
+  köşe azaltma + açı analizi).
+- "Otomatik düzelt": çizim bitince (parmak/kalem kalkınca) kısa bir
+  gecikmeyle (ör. 400ms) sezgisel eşik geçilirse otomatik şekle
+  yapıştırır, kullanıcı geri alabilir (Undo).
+- "Manuel düzelt": çizili şeklin üstünde küçük bir "şekle dönüştür"
+  düğmesi belirir (dokunulmazsa kaybolur) — otomatik davranışı
+  istemeyen kullanıcılar için.
+- Ayarlar: Ayarlar → Kalem'de aç/kapa + hassasiyet kaydırıcısı.
+
+### Aşama 3 — Premium kalem/tablet fikirleri (öncelik kullanıcıyla
+netleştirilmeli, hepsi aynı oturumda yapılmamalı):
+1. **Kalem kalınlığı/basınç desteği** — `Stylus` basınç verisi varsa
+   (bazı cihazlarda `PointerEvent.pressure`) çizgi kalınlığı buna göre
+   değişsin.
+2. **Cetvel/pergel aracı** — ekranda sürüklenebilir sanal cetvel,
+   üstüne çizilen çizgi otomatik düzleşir.
+3. **Lazer işaretçi modu** — sunum sırasında geçici (birkaç saniyede
+   silinen) işaretleme.
+4. **El yazısını metne çevir (handwriting OCR)** — zaten var olan OCR
+   altyapısı (`text_recognize_screen.dart`) el yazısı moduna bağlanabilir;
+   Gemini tabanlı OCR el yazısında ne kadar başarılı test edilmeli.
+5. **Çok sayfalı defter modu** — el yazısı sayfaları bir "defter" altında
+   gruplanıp sekme/kaydırmayla gezilebilir (mevcut çoklu-not yapısına
+   yeni bir gruplama katmanı ister).
+6. **Kalem renk/kalınlık favorileri** — sık kullanılan 4-6 kombinasyon
+   hızlı erişim şeridinde.
+7. **Sağ/sol el modu** — araç çubuğunun ekranın hangi kenarında
+   duracağı (tablet + kalemle sol elini kullanan kullanıcılar için).
+8. **Şekil kütüphanesi genişletme** — çember/kare/üçgen/ok ötesinde
+   akış şeması kutuları, oklu bağlantılar (basit bir diyagram modu).
+9. **Zoom-yazma (palm-safe yakınlaştırma)** — küçük yazı alanına
+   büyütülmüş bir "yazma penceresi" (GoodNotes'un "yakınlaştırma
+   kutusu" özelliği) — tabletlerde ince el yazısını rahatlatır.
+
+### Öneri
+Aşama 1 + 2'yi TEK bir sonraki oturumda (orta büyüklükte iş) yapmak,
+Aşama 3'ü kullanıcıyla önceliklendirip birer birer eklemek mantıklı —
+hepsi birden hem test edilemez büyüklükte hem de UI/UX kararı (sonsuz mu
+sabit sayfa mı, hangi premium fikirler öncelikli) kullanıcıdan netlik
+istiyor.
