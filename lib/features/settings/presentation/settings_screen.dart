@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart' show Timestamp;
 import 'package:file_selector/file_selector.dart';
 import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
@@ -13,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/note_colors.dart';
 import '../../../core/constants.dart';
@@ -39,9 +37,8 @@ import '../../friends/data/friends_repository.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import '../../friends/presentation/friends_screen.dart';
+import '../../notes/data/note_backup.dart';
 import '../../notes/data/notes_repository.dart';
-import '../../notes/domain/note.dart';
-import '../../notes/domain/note_type.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 
@@ -3191,37 +3188,6 @@ class _VoicePickerSheetState extends ConsumerState<_VoicePickerSheet> {
 class _BackupButton extends ConsumerWidget {
   const _BackupButton();
 
-  Map<String, dynamic> _exportNote(Note n) => {
-    'id': n.id,
-    'type': n.type.id,
-    'title': n.title,
-    'body': n.body,
-    'items': [
-      for (final i in n.items) {'text': i.text, 'checked': i.checked},
-    ],
-    'tags': n.tags,
-    'color': n.color.id,
-    'frameColor': n.frameColor.id,
-    'folderId': n.folderId,
-    'pinned': n.pinned,
-    'starred': n.starred,
-    'locked': n.locked,
-    'createdAt': n.createdAt?.toIso8601String(),
-    'updatedAt': n.updatedAt?.toIso8601String(),
-    'archivedAt': n.archivedAt?.toIso8601String(),
-    'reminderAt': n.reminderAt?.toIso8601String(),
-    'attachments': [
-      // BİLEREK storagePath, downloadUrl DEĞİL: downloadUrl içindeki
-      // `?token=` Storage kurallarını atlayan, süresi dolmayan bir anahtardır.
-      // Yedek dosyası e-posta/bulut diskle elden ele dolaşır; URL yazılsaydı
-      // yedeği gören herkes kullanıcının tüm eklerine oturum açmadan süresiz
-      // erişirdi. storagePath tek başına işe yaramaz (kural denetiminden
-      // geçer); geri yükleme ekleri zaten atlıyor (bkz. _RestoreButton).
-      for (final a in n.attachments)
-        {'fileName': a.fileName, 'kind': a.kind.name, 'path': a.storagePath},
-    ],
-  };
-
   Future<void> _export(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -3235,17 +3201,9 @@ class _BackupButton extends ConsumerWidget {
       return;
     }
     try {
-      final payload = const JsonEncoder.withIndent('  ').convert({
-        'app': 'notlar',
-        'exportedAt': DateTime.now().toIso8601String(),
-        'noteCount': notes.length,
-        'notes': [for (final n in notes) _exportNote(n)],
-      });
       final now = DateTime.now();
-      final stamp =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-'
-          '${now.day.toString().padLeft(2, '0')}';
-      final fileName = 'notlar-yedek-$stamp.json';
+      final payload = NoteBackup.encode(notes, at: now);
+      final fileName = NoteBackup.fileName(now);
       if (kIsWeb) {
         // Web'de dosya sistemi/path_provider yok: baytlar bellekten paylaşılır.
         await SharePlus.instance.share(
@@ -3305,61 +3263,10 @@ class _RestoreButton extends ConsumerWidget {
     );
     if (file == null) return;
     try {
-      final decoded = jsonDecode(await file.readAsString());
-      final rawNotes = (decoded as Map<String, dynamic>)['notes'];
-      if (rawNotes is! List) throw const FormatException();
-      const uuid = Uuid();
       var count = 0;
-      for (final raw in rawNotes) {
-        if (raw is! Map) continue;
-        final map = raw.cast<String, dynamic>();
-        final type = NoteType.fromId(map['type'] as String?);
-        final title = map['title'] as String? ?? '';
-        final body = map['body'] as String? ?? '';
-        final items = [
-          for (final i in (map['items'] as List<dynamic>? ?? const []))
-            if (i is Map)
-              {
-                'id': uuid.v4(),
-                'text': i['text'] as String? ?? '',
-                'checked': i['checked'] as bool? ?? false,
-              },
-        ];
-        if (title.trim().isEmpty && body.trim().isEmpty && items.isEmpty) {
-          continue;
-        }
-        final id = await repo.createNote(type);
-        // Yedekteki alanların OLABİLDİĞİNCE çoğu geri yazılır. Eskiden yalnız
-        // title/body/items/tags/pinned dönüyordu: kilitli notlar KİLİTSİZ
-        // (içerik açıkta!), arşivdekiler ana duvara, renk/hatırlatıcı/tarih
-        // kayıp geliyordu. Klasör geri yüklenmez (id başka hesapta anlamsız).
-        Timestamp? ts(String key) {
-          final v = map[key] as String?;
-          final parsed = v == null ? null : DateTime.tryParse(v);
-          return parsed == null ? null : Timestamp.fromDate(parsed);
-        }
-
-        repo.updateFields(id, {
-          'title': title,
-          'body': body,
-          'items': items,
-          'tags': [
-            for (final t in (map['tags'] as List<dynamic>? ?? const []))
-              t.toString(),
-          ],
-          'pinned': map['pinned'] as bool? ?? false,
-          'starred': map['starred'] as bool? ?? false,
-          'locked': map['locked'] as bool? ?? false,
-          if (map['color'] is String) 'color': map['color'],
-          if (map['frameColor'] is String) 'frameColor': map['frameColor'],
-          if (ts('createdAt') != null) 'createdAt': ts('createdAt'),
-          if (ts('archivedAt') != null) 'archivedAt': ts('archivedAt'),
-          // Geçmişte kalmış hatırlatıcı geri kurulmaz (bildirim zaten
-          // planlanmaz, "Geçmiş" listesini şişirir).
-          if (ts('reminderAt') != null &&
-              ts('reminderAt')!.toDate().isAfter(DateTime.now()))
-            'reminderAt': ts('reminderAt'),
-        });
+      for (final restored in NoteBackup.decode(await file.readAsString())) {
+        final id = await repo.createNote(restored.type);
+        repo.updateFields(id, restored.fields);
         count++;
       }
       messenger.showSnackBar(

@@ -122,9 +122,10 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   **2026-08-06 incelemesi:** doğrudan kopyalama TEHLİKELİ — anonim hesaba bir
   kez çıkılınca geri girilemez, yarıda kalan kopyanın kalanı kalıcı kayıptır.
   Güvenli tasarım: önce yerel yedek al → Google'a gir → yedeği geri yükle
-  (bir şey giderse dosya diskte durur). Ön koşul: yedekle/geri yükle mantığı
-  şu an `settings_screen.dart` içindeki widget'lara gömülü, servise
-  çıkarılmalı. Uçtan uca sınamak iki ayrı Google hesabı + gerçek cihaz ister.
+  (bir şey giderse dosya diskte durur). **Ön koşul YAPILDI** (2026-08-21):
+  yedekle/geri yükle mantığı `lib/features/notes/data/note_backup.dart`
+  (`NoteBackup`) içinde, testi `test/note_backup_test.dart`. Kalan iş akışın
+  kendisi; uçtan uca sınamak iki ayrı Google hesabı + gerçek cihaz ister.
 
 ## Bilinen eksik / risk
 - [ ] **Sesli notta canlı yazım yok** — kayıt+döküm aynı anda mikrofonu
