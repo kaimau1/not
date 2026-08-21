@@ -289,12 +289,42 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Kaydırma bildirimini ayırıcıya bağlar; `false` dönerek bildirimi
   /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
+  ///
+  /// Aynı yerden liste konumu da kaydedilir (bkz. [_scrollOffsets]) — ayrı bir
+  /// dinleyici eklemek aynı bildirimi ikinci kez gezdirmek olurdu.
   bool _onGridScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
     final scrolled = notification.metrics.pixels > 2;
     if (_gridScrolled.value != scrolled) _gridScrolled.value = scrolled;
+    _scrollOffsets[_activeSegment] = notification.metrics.pixels;
     return false;
   }
+
+  /// Liste kaydırma konumu, segment (filtre|klasör|etiket) başına.
+  ///
+  /// **STATİK ve ekranın ömründen bağımsız**: dar↔geniş kesme noktası
+  /// geçişinde (tablet döndürme, pencere boyutlandırma) ekran BAŞKA bir
+  /// DashboardScreen instance'ına geçiyor — dar düzende liste rotanın
+  /// çocuğu, geniş düzende SplitShell'in sol paneli. Konum State'te
+  /// tutulsaydı her geçişte liste başa sarardı (arama kutusunun aynı
+  /// sorunu provider'la çözülmüştü, bkz. [_searchController]).
+  ///
+  /// Yan kazanç: filtreler arasında gidip gelirken de her segment kendi
+  /// yerinde kalır.
+  static final _scrollOffsets = <String, double>{};
+
+  /// Segment başına kaydırma denetleyicisi: yeni bir segmentin görünümü
+  /// [_scrollOffsets]'teki konumdan AÇILIR.
+  final _scrollControllers = <String, ScrollController>{};
+
+  /// O an çizilen segmentin anahtarı — kaydırma bildirimi hangi segmentin
+  /// konumunu yazacağını buradan bilir.
+  String _activeSegment = '';
+
+  ScrollController _scrollFor(String segment) => _scrollControllers.putIfAbsent(
+    segment,
+    () => ScrollController(initialScrollOffset: _scrollOffsets[segment] ?? 0),
+  );
 
   @override
   void dispose() {
@@ -302,6 +332,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _searchController.dispose();
     _searchFocus.dispose();
     _gridScrolled.dispose();
+    for (final controller in _scrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -1435,6 +1468,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         '${ref.watch(noteFilterProvider)}'
                         '|${ref.watch(selectedFolderProvider) ?? ''}'
                         '|${ref.watch(selectedTagProvider) ?? ''}';
+                    // Kaydırma bildirimi konumu bu segmentin altına yazsın.
+                    _activeSegment = segmentKey;
                     // Başlık (arama/seçim barı + filtre çipleri) kaydırma
                     // görünümünün DIŞINDA sabit durur: liste kayarken çipler
                     // yerinde kalır; filtre değişim animasyonu yalnız not
@@ -1877,6 +1912,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ),
                                 child: CustomScrollView(
                                   key: ValueKey(segmentKey),
+                                  // Konum ekranın State'inde DEĞİL, segment
+                                  // başına saklanıyor (bkz. [_scrollOffsets]):
+                                  // kesme noktası geçişinde liste başa sarmaz.
+                                  controller: _scrollFor(segmentKey),
                                   // KÖK NEDEN (aşağı kaydırırken liste yukarı
                                   // sıçraması): SliverMasonryGrid tembeldir ve
                                   // toplam kaydırma uzunluğunu yalnızca O AN

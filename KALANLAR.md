@@ -32,8 +32,12 @@
   Actions → sağdaki "Artifacts" bölümünden silinmezse kota dolu kalır.
 
 ## 2026-08-06 genel kullanım denetiminden kalan (bilinçli ertelenen küçük uçlar)
-- [ ] **Kesme noktası geçişinde liste kaydırma konumu sıfırlanıyor** (arama
-  kutusu senkronu çözüldü; scroll paylaşımı split-shell refaktörü ister).
+- [ ] **Kesme noktası geçişinde liste kaydırma konumu: KODLANDI, cihazda
+  denenmedi.** Konum artık `_DashboardScreenState._scrollOffsets` içinde
+  segment (filtre|klasör|etiket) başına STATİK tutuluyor, yani ekran başka
+  bir instance'a geçse de liste yerinde kalır (split-shell refaktörü
+  gerekmedi). Yan etki: filtreler arasında gidip gelirken de her segment
+  kendi konumunu koruyor.
 - [ ] **Cihazda doğrulanmadı**: temiz Kes/Kopyala (özellikle donanım Ctrl+C
   override'ı), FileProvider'lı "Eki kopyala"nın WhatsApp'a yapışması, geri
   tuşunun ses kaydını/çizimi kaydederek çıkması, Süz levhasının yeni görünümü,
