@@ -50,6 +50,7 @@ import '../../../settings/settings_providers.dart';
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
+import '../../data/image_stamp.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
 import '../../data/notes_repository.dart';
@@ -2308,7 +2309,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       await _runBusy(l10n.attachmentCopying, () async {
         if (attachment.kind == AttachmentKind.image) {
           final bytes = await repo?.readBytes(attachment);
-          if (bytes != null) await Pasteboard.writeImage(bytes);
+          // Görselin üstündeki çizim/açık metin dosyanın içinde değil (bkz.
+          // ImageStamp): panoya damgalı kopya yazılır, yoksa başka uygulamaya
+          // yapıştırılan görselde yazı yok olurdu.
+          if (bytes != null) {
+            await Pasteboard.writeImage(
+              await ImageStamp.burn(bytes, attachment),
+            );
+          }
         } else if (_isDesktop) {
           final paths = [
             for (final a in attachments)

@@ -11,6 +11,7 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/attachment_tag.dart';
 import '../../../core/utils/local_file.dart';
 import '../data/attachment_repository.dart';
+import '../data/image_stamp.dart';
 import '../data/note_docx.dart';
 import '../data/note_pdf.dart';
 import '../domain/attachment.dart';
@@ -165,12 +166,17 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       try {
         final bytes = await repo.readBytes(a);
         if (bytes == null) continue;
+        // Görselin üstüne yapılan çizim/metin dosyanın İÇİNDE değil, ekin
+        // yanında duruyor (bkz. ImageStamp): damgalanmazsa dışa aktarılan
+        // belgede kaybolurdu. Damgalanan kopya PNG olur.
+        final stamped = ImageStamp.needed(a);
+        final drawn = stamped ? await ImageStamp.burn(bytes, a) : bytes;
         out.add(
           ExportImage(
-            bytes: bytes,
+            bytes: drawn,
             width: a.width ?? 0,
             height: a.height ?? 0,
-            mimeType: a.mimeType,
+            mimeType: identical(drawn, bytes) ? a.mimeType : 'image/png',
             line: option.line,
             widthFraction: option.widthFraction,
             align: option.align,
