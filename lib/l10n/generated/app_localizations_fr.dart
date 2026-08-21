@@ -151,7 +151,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get attachmentUploadFailed =>
-      'Yüklenemedi — yeniden denemek için dokun';
+      'Échec de l\'envoi — touchez pour réessayer';
 
   @override
   String get attachmentNotSynced =>
@@ -491,7 +491,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String assistantDeleteConfirm(String title) {
-    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+    return 'L\'assistant veut mettre la note "${title}" à la corbeille. Vous confirmez ?';
   }
 
   @override
@@ -1271,7 +1271,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get annotateDone => 'Terminer l\'annotation';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => 'Ajouter un PDF et prendre des notes';
 
   @override
   String get imageNotePreparing => 'Assemblage des images en un document…';
@@ -1280,81 +1280,81 @@ class AppLocalizationsFr extends AppLocalizations {
   String get newImageNote => 'Ajouter une image et prendre des notes';
 
   @override
-  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+  String get pdfPageNoteHint => 'Note de cette page…';
 
   @override
   String pdfPage(int page) {
-    return 'Sayfa $page';
+    return 'Page ${page}';
   }
 
   @override
   String pdfPageOf(int page, int total) {
-    return 'Sayfa $page / $total';
+    return 'Page ${page} / ${total}';
   }
 
   @override
-  String get pdfPreviousPage => 'Önceki sayfa';
+  String get pdfPreviousPage => 'Page précédente';
 
   @override
-  String get pdfNextPage => 'Sonraki sayfa';
+  String get pdfNextPage => 'Page suivante';
 
   @override
-  String get pdfFullScreen => 'Tam ekran aç';
+  String get pdfFullScreen => 'Ouvrir en plein écran';
 
   @override
-  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+  String get pdfNoDocument => 'Cette note n\'a pas encore de PDF';
 
   @override
-  String get pdfChooseDocument => 'PDF seç';
+  String get pdfChooseDocument => 'Choisir un PDF';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => 'Ajouter des diapositives et prendre des notes';
 
   @override
-  String get slidesNoDocument => 'Bu notta henüz sunum yok';
+  String get slidesNoDocument => 'Cette note n\'a pas encore de présentation';
 
   @override
-  String get slidesChooseDocument => 'Sunum seç';
+  String get slidesChooseDocument => 'Choisir une présentation';
 
   @override
-  String get pdfEditPages => 'Sayfaları düzenle';
+  String get pdfEditPages => 'Modifier les pages';
 
   @override
-  String get pdfDeletePages => 'Seçili sayfaları sil';
+  String get pdfDeletePages => 'Supprimer les pages sélectionnées';
 
   @override
   String get pdfAddBlankPage => 'Ajouter une page vierge';
 
   @override
-  String get pdfRotatePages => 'Döndür';
+  String get pdfRotatePages => 'Pivoter';
 
   @override
-  String get pdfBurnInk => 'El yazısını belgeye göm';
+  String get pdfBurnInk => 'Graver l\'écriture manuscrite dans le document';
 
   @override
-  String get pdfApplyChanges => 'Değişiklikleri uygula';
+  String get pdfApplyChanges => 'Appliquer les modifications';
 
   @override
-  String get pdfCannotDeleteAllPages => 'Tüm sayfalar silinemez';
+  String get pdfCannotDeleteAllPages => 'Vous ne pouvez pas supprimer toutes les pages';
 
   @override
   String get pdfPagesHint =>
-      'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.';
+      'Touchez une page pour la sélectionner. Les notes de page suivent leur page ; la note d\'une page supprimée est masquée mais conservée dans vos données.';
 
   @override
   String pdfEditFailed(String error) {
-    return 'PDF düzenlenemedi: $error';
+    return 'Impossible de modifier le PDF : ${error}';
   }
 
   @override
-  String get pdfInkBurned => 'El yazısı belgeye gömüldü';
+  String get pdfInkBurned => 'Écriture manuscrite gravée dans le document';
 
   @override
-  String get pdfAllPageNotes => 'Tüm sayfa notları';
+  String get pdfAllPageNotes => 'Toutes les notes de page';
 
   @override
   String get pdfNoPageNotes =>
-      'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.';
+      'Pas encore de notes de page. Allez sur une page et écrivez dans le champ ci-dessous.';
 
   @override
   String get crop => 'Rogner';
@@ -1846,7 +1846,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addTextBlock => 'Ajouter du texte';
 
   @override
-  String get attachNoteContent => 'Not içeriği';
+  String get attachNoteContent => 'Contenu de la note';
 
   @override
   String get noteBackgroundImage => 'Image de fond';
@@ -1905,155 +1905,155 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String scanReviewPage(int current, int total) {
-    return 'Sayfa $current / $total';
+    return 'Page ${current} / ${total}';
   }
 
   @override
-  String get scanRotatePage => 'Sayfayı döndür';
+  String get scanRotatePage => 'Pivoter la page';
 
   @override
-  String get scanDeletePage => 'Sayfayı sil';
+  String get scanDeletePage => 'Supprimer la page';
 
   @override
-  String get scanLastPage => 'Son sayfa silinemez';
+  String get scanLastPage => 'La dernière page ne peut pas être supprimée';
 
   @override
-  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+  String get scanDiscardTitle => 'Abandonner les pages numérisées ?';
 
   @override
-  String get scanDiscardConfirm => 'At';
+  String get scanDiscardConfirm => 'Abandonner';
 
   @override
-  String get scanAdjustCorners => 'Köşeleri ayarla';
+  String get scanAdjustCorners => 'Ajuster les coins';
 
   @override
-  String get scanFilterOriginal => 'Özgün';
+  String get scanFilterOriginal => 'Original';
 
   @override
-  String get scanFilterAuto => 'Netleştir';
+  String get scanFilterAuto => 'Améliorer';
 
   @override
-  String get scanFilterGray => 'Gri';
+  String get scanFilterGray => 'Niveaux de gris';
 
   @override
-  String get scanFilterBw => 'Siyah-beyaz';
+  String get scanFilterBw => 'Noir et blanc';
 
   @override
-  String get scanApplyAll => 'Hepsine uygula';
+  String get scanApplyAll => 'Appliquer à toutes';
 
   @override
-  String get scanPageFailed => 'Sayfa görüntülenemedi';
+  String get scanPageFailed => 'Impossible d\'afficher la page';
 
   @override
   String get scanCropHint =>
-      'Yamuk sayfayı \"Köşeleri ayarla\" ile düzeltebilirsin';
+      'Corrigez une page de travers avec « Ajuster les coins »';
 
   @override
-  String get scanAddAsPdf => 'PDF olarak ekle';
+  String get scanAddAsPdf => 'Ajouter en PDF';
 
   @override
-  String get scanAddAsImages => 'Görsel olarak ekle';
+  String get scanAddAsImages => 'Ajouter en images';
 
   @override
-  String get scanBuildingPdf => 'PDF hazırlanıyor…';
+  String get scanBuildingPdf => 'Préparation du PDF…';
 
   @override
   String scanOcrProgress(int done, int total) {
-    return 'Metin tanınıyor… $done/$total';
+    return 'Reconnaissance du texte… ${done}/${total}';
   }
 
   @override
-  String get scanAutoDetect => 'Kenarları otomatik bul';
+  String get scanAutoDetect => 'Détecter les bords automatiquement';
 
   @override
-  String get scanReset => 'Sıfırla';
+  String get scanReset => 'Réinitialiser';
 
   @override
-  String get scanDetecting => 'Kenarlar aranıyor…';
+  String get scanDetecting => 'Recherche des bords…';
 
   @override
   String get scanAutoFound =>
-      'Kenarlar otomatik bulundu; gerekirse tutamaçlardan ince ayar yap';
+      'Bords trouvés automatiquement ; ajustez-les avec les poignées si besoin';
 
   @override
-  String get scanDragHint => 'Köşeleri kâğıdın kenarlarına sürükle';
+  String get scanDragHint => 'Faites glisser les coins jusqu\'aux bords de la feuille';
 
   @override
-  String get scanApplyCorners => 'Düzelt ve uygula';
+  String get scanApplyCorners => 'Redresser et appliquer';
 
   @override
-  String get scanWorking => 'Düzeltiliyor…';
+  String get scanWorking => 'Redressement…';
 
   @override
-  String get scanPdfAdded => 'Tarama, PDF eki olarak nota eklendi';
+  String get scanPdfAdded => 'Numérisation ajoutée à la note en pièce jointe PDF';
 
   @override
   String get premiumTitle => 'Premium';
 
   @override
   String premiumStatusActive(String date) {
-    return 'Premium etkin — $date tarihine kadar';
+    return 'Premium actif — jusqu\'au ${date}';
   }
 
   @override
-  String get premiumStatusFree => 'Ücretsiz sürümü kullanıyorsun';
+  String get premiumStatusFree => 'Vous utilisez la version gratuite';
 
   @override
-  String get premiumPerksTitle => 'Premium ile ne değişir?';
+  String get premiumPerksTitle => 'Qu\'est-ce qui change avec Premium ?';
 
   @override
-  String get premiumPerkAi => 'Günlük yapay zeka puanı';
+  String get premiumPerkAi => 'Points d\'IA quotidiens';
 
   @override
-  String get premiumPerkAttach => 'Ek dosya boyutu';
+  String get premiumPerkAttach => 'Taille des pièces jointes';
 
   @override
-  String get premiumPerkStorage => 'Bulut depolama alanı';
+  String get premiumPerkStorage => 'Stockage cloud';
 
   @override
-  String get premiumPerkAuto => 'Otomatik günlük içerik';
+  String get premiumPerkAuto => 'Contenu quotidien automatique';
 
   @override
   String get premiumPerkAutoBody =>
-      'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.';
+      'Le briefing quotidien et les suggestions sont préparés automatiquement chaque jour ; en version gratuite, ils ne se lancent qu\'à la demande.';
 
   @override
-  String get premiumHowTitle => 'Nasıl edinilir?';
+  String get premiumHowTitle => 'Comment l\'obtenir ?';
 
   @override
   String get premiumHowBody =>
-      'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.';
+      'Premium arrivera bientôt sur le Play Store. Nous sommes actuellement en accès anticipé.';
 
   @override
   String get premiumByokHint =>
-      'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).';
+      'Si vous saisissez votre propre clé d\'API Gemini, les fonctions d\'IA fonctionnent sans quota — indépendamment de Premium (Réglages → IA).';
 
   @override
-  String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
+  String get premiumDiscoverTitle => 'Des fonctions que vous avez peut-être manquées';
 
   @override
   String get discoverScanBody =>
-      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
+      'Les pages numérisées sont redressées et améliorées, puis transformées en PDF CONSULTABLE en un geste — la couche de texte est produite sur l\'appareil, gratuitement.';
 
   @override
   String get discoverSemanticBody =>
-      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
+      'L\'onglet « Intelligent » de la recherche cherche par SENS et non par mots : tapez « horaires de vol » et votre note de voyage apparaît.';
 
   @override
   String get discoverAssistantBody =>
-      'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.';
+      'Le micro de l\'écran d\'accueil transforme tout seul votre voix en notes, listes et rappels — dites simplement « dentiste demain à 9 h ».';
 
   @override
   String get discoverLockBody =>
-      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.';
+      'Vous pouvez verrouiller une note par empreinte ou visage : son contenu n\'apparaît jamais dans la recherche, les widgets ou l\'IA.';
 
   @override
   String get discoverHiddenBody =>
-      'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.';
+      'Les notes d\'un dossier masqué n\'apparaissent jamais sur l\'écran d\'accueil ni dans la recherche ; afficher le dossier demande une authentification.';
 
   @override
   String get discoverExportBody =>
-      'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+      'Chaque note peut être exportée en PDF ou Word, images comprises (dans le menu de partage).';
 
   @override
   String get guestSignInUnavailable =>
@@ -2112,82 +2112,82 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appFontDefaultSuffix => 'par défaut';
 
   @override
-  String get pdfSelectOcrRunning => 'Metin tanınıyor…';
+  String get pdfSelectOcrRunning => 'Reconnaissance du texte…';
 
   @override
-  String get pdfSelectOcrNone => 'Bu sayfada metin bulunamadı';
+  String get pdfSelectOcrNone => 'Aucun texte trouvé sur cette page';
 
   @override
   String pdfSelectCopied(int n) {
-    return '$n karakter kopyalandı';
+    return '${n} caractères copiés';
   }
 
   @override
-  String get bubbleAdd => 'Not balonu bırak';
+  String get bubbleAdd => 'Poser une bulle de note';
 
   @override
-  String get bubbleAddDone => 'Balon bırakmayı bitir';
+  String get bubbleAddDone => 'Ajout de bulles terminé';
 
   @override
-  String get bubbleCollapse => 'Balonu küçült';
+  String get bubbleCollapse => 'Réduire la bulle';
 
   @override
-  String get bubbleHint => 'Buraya notunu yaz…';
+  String get bubbleHint => 'Écrivez votre note ici…';
 
   @override
-  String get bubbleTapToPlace => 'Sayfada balonu bırakmak istediğin yere dokun';
+  String get bubbleTapToPlace => 'Touchez l\'endroit de la page où placer la bulle';
 
   @override
-  String get aiModelPodcast => 'Podcast anlatısı';
+  String get aiModelPodcast => 'Narration de podcast';
 
   @override
-  String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
+  String get listenAiVoice => 'Écouter avec la voix de l\'IA';
 
   @override
   String get listenAiVoiceInfo =>
-      'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.';
+      'Gemini lit à la place de la voix de l\'appareil : plus naturel, mais chaque paragraphe coûte un appel au modèle.';
 
   @override
   String listenAiVoiceFailed(String error) {
-    return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
+    return 'Échec de la narration IA (${error}). Lecture avec la voix de l\'appareil.';
   }
 
   @override
-  String get ttsSectionTitle => 'Seslendirme';
+  String get ttsSectionTitle => 'Narration';
 
   @override
-  String get ttsEngineDevice => 'Cihaz sesi';
+  String get ttsEngineDevice => 'Voix de l\'appareil';
 
   @override
-  String get ttsEngineAi => 'Yapay zekâ';
+  String get ttsEngineAi => 'IA';
 
   @override
   String get ttsEngineDeviceInfo =>
-      'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
+      'La voix intégrée de l\'appareil lit : gratuite, hors ligne et sans limite de longueur.';
 
   @override
   String get ttsEngineAiInfo =>
-      'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+      'Le modèle vocal de Gemini lit : nettement plus naturel, mais chaque paragraphe est un appel au modèle et votre propre clé Gemini est nécessaire.';
 
   @override
   String get ttsEngineAiUnavailable =>
       'La voix IA nécessite votre propre clé Gemini. En attendant, la lecture utilise la voix de l\'appareil.';
 
   @override
-  String get ttsModel => 'Seslendirme modeli';
+  String get ttsModel => 'Modèle vocal';
 
   @override
-  String get ttsVoice => 'Yapay zekâ sesi';
+  String get ttsVoice => 'Voix de l\'IA';
 
   @override
-  String get shareAsNote => 'Not olarak paylaş';
+  String get shareAsNote => 'Partager en tant que note';
 
   @override
   String get shareAsNoteInfo =>
-      'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.';
+      'Envoie la note avec ses pièces jointes, notes de page, dessins et bulles ; l\'autre personne l\'ouvre à l\'identique dans l\'application Not.';
 
   @override
-  String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
+  String get shareAsNotePreparing => 'Préparation du paquet de la note…';
 
   @override
   String get shareAsText => 'En texte brut';
@@ -2217,98 +2217,98 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sharePdfWithBubblesSuffix => ' (avec bulles)';
 
   @override
-  String get bubbleStar => 'Yıldızla';
+  String get bubbleStar => 'Marquer';
 
   @override
-  String get bubbleEdit => 'Balonu düzenle';
+  String get bubbleEdit => 'Modifier la bulle';
 
   @override
-  String get bubbleStarredOnly => 'Yalnız yıldızlılar';
+  String get bubbleStarredOnly => 'Seulement les marquées';
 
   @override
-  String get bubbleSearchHint => 'Balonlarda ara…';
+  String get bubbleSearchHint => 'Rechercher dans les bulles…';
 
   @override
-  String get bubblesOverviewTitle => 'Balonlar';
+  String get bubblesOverviewTitle => 'Bulles';
 
   @override
   String get bubblesEmpty =>
-      'Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.';
+      'Pas encore de bulles. Sélectionnez du texte dans le document et surlignez-le, ou posez une bulle sur la page.';
 
   @override
-  String get bubblesNoMatch => 'Aramaya uyan balon yok.';
+  String get bubblesNoMatch => 'Aucune bulle ne correspond à votre recherche.';
 
   @override
-  String get bubbleNoText => '(boş balon)';
+  String get bubbleNoText => '(bulle vide)';
 
   @override
-  String get pdfHighlight => 'Vurgula';
+  String get pdfHighlight => 'Surligner';
 
   @override
-  String get pdfHighlightWithNote => 'Vurgula + not';
+  String get pdfHighlightWithNote => 'Surligner + note';
 
   @override
-  String get pageNotesShow => 'Sayfa notunu göster';
+  String get pageNotesShow => 'Afficher la note de page';
 
   @override
-  String get pageNotesHide => 'Sayfa notunu gizle';
+  String get pageNotesHide => 'Masquer la note de page';
 
   @override
-  String get bubbleSave => 'Kaydet';
+  String get bubbleSave => 'Enregistrer';
 
   @override
-  String get bubbleTitleHint => 'Başlık';
+  String get bubbleTitleHint => 'Titre';
 
   @override
-  String get bubbleUrgent => 'Acil (yanıp söner)';
+  String get bubbleUrgent => 'Urgent (clignote)';
 
   @override
-  String get captureModeQuestion => 'Notu nasıl açalım?';
+  String get captureModeQuestion => 'Comment la note doit-elle s\'ouvrir ?';
 
   @override
-  String get captureModeBubbles => 'Balonlu';
+  String get captureModeBubbles => 'Bulles';
 
   @override
   String get captureModeBubblesInfo =>
-      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+      'Le contenu devient une page de document : bulles, surlignages et stylo.';
 
   @override
-  String get captureModeClassic => 'Klasik';
+  String get captureModeClassic => 'Classique';
 
   @override
   String get captureModeClassicInfo =>
-      'Düz metin notu; içerik ek olarak girer.';
+      'Note en texte simple ; le contenu entre en pièce jointe.';
 
   @override
-  String get captureModeNew => 'YENİ';
+  String get captureModeNew => 'NOUVEAU';
 
   @override
-  String get imagePrepareTitle => 'Görselleri düzelt';
+  String get imagePrepareTitle => 'Ajuster les images';
 
   @override
-  String get imagePrepareDone => 'Devam';
+  String get imagePrepareDone => 'Continuer';
 
   @override
-  String get imageRotateLeft => 'Sola döndür';
+  String get imageRotateLeft => 'Pivoter à gauche';
 
   @override
-  String get imageRotateRight => 'Sağa döndür';
+  String get imageRotateRight => 'Pivoter à droite';
 
   @override
   String get videoFrameFailed =>
-      'Videodan kare alınamadı; not klasik açılıyor.';
+      'Impossible d\'extraire une image de la vidéo ; une note classique s\'ouvre.';
 
   @override
-  String get bubbleArrowHide => 'Oku gizle';
+  String get bubbleArrowHide => 'Masquer la flèche';
 
   @override
-  String get bubbleArrowShow => 'Oku göster';
+  String get bubbleArrowShow => 'Afficher la flèche';
 
   @override
-  String get speechPitch => 'Ses tonu';
+  String get speechPitch => 'Hauteur de la voix';
 
   @override
-  String get speechVoicePickerTitle => 'Ses seçimi';
+  String get speechVoicePickerTitle => 'Choix de la voix';
 
   @override
   String get formatRemove => 'Supprimer';
@@ -2430,80 +2430,80 @@ class AppLocalizationsFr extends AppLocalizations {
       'Affiche aussi les modèles que l’application n’utilise pas.';
 
   @override
-  String get rotateFailed => 'Görsel döndürülemedi.';
+  String get rotateFailed => 'Impossible de pivoter l\'image.';
 
   @override
-  String get dashboardBackgroundPick => 'Zemin görseli seç';
+  String get dashboardBackgroundPick => 'Choisir une image de fond';
 
   @override
-  String get dashboardBackgroundChange => 'Zemin görselini değiştir';
+  String get dashboardBackgroundChange => 'Changer l\'image de fond';
 
   @override
   String podcastRenderingAudio(int done, int total) {
-    return 'Ses hazırlanıyor: $done/$total parça';
+    return 'Préparation de l\'audio : ${done}/${total} parties';
   }
 
   @override
-  String get podcastExportAudio => 'Ses dosyası olarak dışa aktar';
+  String get podcastExportAudio => 'Exporter en fichier audio';
 
   @override
   String get podcastExportAudioCost =>
-      'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.';
+      'Tout le script est resynthétisé avec la voix de l\'IA et enregistré dans un seul fichier WAV. Cela consomme votre quota Gemini et peut prendre quelques minutes sur les textes longs.';
 
   @override
-  String get podcastShareText => 'Metni paylaş';
+  String get podcastShareText => 'Partager le script';
 
   @override
-  String get podcastSaveAsNote => 'Yeni not olarak kaydet';
+  String get podcastSaveAsNote => 'Enregistrer comme nouvelle note';
 
   @override
-  String get podcastSavedAsNote => 'Podcast metni not olarak kaydedildi.';
+  String get podcastSavedAsNote => 'Le script du podcast a été enregistré comme note.';
 
   @override
-  String get listenPreparingVoice => 'Ses hazırlanıyor…';
+  String get listenPreparingVoice => 'Préparation de l\'audio…';
 
   @override
-  String get appearancePreviewTitle => 'Örnek metin';
+  String get appearancePreviewTitle => 'Texte d\'exemple';
 
   @override
-  String get appearancePreviewNoteTitle => 'Örnek not başlığı';
+  String get appearancePreviewNoteTitle => 'Titre de note d\'exemple';
 
   @override
   String get appearancePreviewBody =>
-      'Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.';
+      'Vos notes ressembleront à ceci. Le texte **en gras**, ~souligné~ et ==2:surligné== s\'affiche ainsi.';
 
   @override
-  String get appearancePreviewItem => 'Liste maddesi böyle görünür';
+  String get appearancePreviewItem => 'Voici à quoi ressemble un élément de liste';
 
   @override
-  String get convertToText => 'Metne dönüştür';
+  String get convertToText => 'Convertir en texte';
 
   @override
-  String get convertToList => 'Listeye dönüştür';
+  String get convertToList => 'Convertir en liste';
 
   @override
-  String get convertedToText => 'Liste düz metne dönüştürüldü.';
+  String get convertedToText => 'La liste a été convertie en texte simple.';
 
   @override
-  String get convertedToList => 'Metin listeye dönüştürüldü.';
+  String get convertedToList => 'Le texte a été converti en liste.';
 
   @override
-  String get convertToListEmpty => 'Listeye dönüştürülecek satır yok.';
+  String get convertToListEmpty => 'Il n\'y a aucune ligne à convertir en liste.';
 
   @override
-  String get listTwoColumns => '2 sütun';
+  String get listTwoColumns => 'Deux colonnes';
 
   @override
-  String get listOneColumn => 'Tek sütun';
+  String get listOneColumn => 'Une colonne';
 
   @override
-  String get sortItems => 'Maddeleri sırala';
+  String get sortItems => 'Trier les éléments';
 
   @override
-  String get sortStarredFirst => 'Önce yıldızlılar';
+  String get sortStarredFirst => 'Marqués en premier';
 
   @override
-  String get sortUncheckedFirst => 'Tamamlananlar sona';
+  String get sortUncheckedFirst => 'Terminés en dernier';
 
   @override
   String get sortAlphabetical => 'A → Z';
@@ -2512,456 +2512,456 @@ class AppLocalizationsFr extends AppLocalizations {
   String get sortAlphabeticalDesc => 'Z → A';
 
   @override
-  String get imagesToAttachments => 'Görselleri eke dönüştür';
+  String get imagesToAttachments => 'Déplacer les images vers les pièces jointes';
 
   @override
   String imagesToAttachmentsDone(int count) {
-    return '$count görsel eke dönüştürüldü.';
+    return '${count} images déplacées vers les pièces jointes.';
   }
 
   @override
-  String get imageOcrShowRecognized => 'Tanınan metni vurgula';
+  String get imageOcrShowRecognized => 'Surligner le texte reconnu';
 
   @override
-  String get imageOcrHideRecognized => 'Vurguyu kaldır';
+  String get imageOcrHideRecognized => 'Masquer le surlignage';
 
   @override
-  String get bubblePlainMode => 'Açık metin alanı';
+  String get bubblePlainMode => 'Zone de texte ouverte';
 
   @override
-  String get bubblePlainModeOn => 'Açık metin alanı açık';
+  String get bubblePlainModeOn => 'La zone de texte ouverte est activée';
 
   @override
-  String get bubblePlainTapToPlace => 'Metnin geleceği yere dokun';
+  String get bubblePlainTapToPlace => 'Touchez l\'endroit où le texte doit aller';
 
   @override
-  String get bubblePlainHint => 'Yazmak için dokun';
+  String get bubblePlainHint => 'Touchez pour écrire';
 
   @override
-  String get noteSearchTitle => 'Notta ara';
+  String get noteSearchTitle => 'Rechercher dans la note';
 
   @override
-  String get noteSearchHint => 'Bu notta ara…';
+  String get noteSearchHint => 'Rechercher dans cette note…';
 
   @override
   String get noteSearchEmptyHint =>
-      'Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF\'lerin içi için aşağıdaki taramayı başlat.';
+      'Recherche instantanément dans le texte, les éléments et les notes de page. Lancez l\'analyse ci-dessous pour chercher dans les pièces jointes image et PDF.';
 
   @override
-  String get noteSearchNoHit => 'Eşleşme bulunamadı.';
+  String get noteSearchNoHit => 'Aucun résultat trouvé.';
 
   @override
-  String get noteSearchScanAttachments => 'Ekleri tara';
+  String get noteSearchScanAttachments => 'Analyser les pièces jointes';
 
   @override
-  String get noteSearchAskAi => 'Yapay zekâya sor';
+  String get noteSearchAskAi => 'Demander à l\'IA';
 
   @override
-  String get noteTitleLabel => 'Başlık';
+  String get noteTitleLabel => 'Titre';
 
   @override
-  String get noteBodyLabel => 'Not metni';
+  String get noteBodyLabel => 'Texte de la note';
 
   @override
-  String get itemLabel => 'Madde';
+  String get itemLabel => 'Élément';
 
   @override
   String noteSearchAttachmentsInfo(int count) {
-    return '$count ek taranabilir (görsel/PDF).';
+    return '${count} pièces jointes peuvent être analysées (image/PDF).';
   }
 
   @override
   String noteSearchAttachmentsReady(int count) {
-    return '$count ekin içi de aranıyor.';
+    return 'La recherche porte aussi sur ${count} pièces jointes.';
   }
 
   @override
   String pageLabel(int page) {
-    return 'Sayfa $page';
+    return 'Page ${page}';
   }
 
   @override
-  String get archiveNotebook => 'Arşiv defteri';
+  String get archiveNotebook => 'Carnet d\'archives';
 
   @override
   String get archiveNotebookInfo =>
-      'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.';
+      'Un carnet avec ses propres pages qui conserve des copies de documents et d\'images importants.';
 
   @override
-  String get archivePageImages => 'Görseller';
+  String get archivePageImages => 'Images';
 
   @override
-  String get archivePageVideos => 'Videolar';
+  String get archivePageVideos => 'Vidéos';
 
   @override
-  String get archivePageDocuments => 'Belgeler';
+  String get archivePageDocuments => 'Documents';
 
   @override
-  String get archivePageTexts => 'Metinler';
+  String get archivePageTexts => 'Textes';
 
   @override
-  String get archiveNewPage => 'Yeni sayfa';
+  String get archiveNewPage => 'Nouvelle page';
 
   @override
-  String get archivePageName => 'Sayfa adı (ör. Faturalar)';
+  String get archivePageName => 'Nom de la page (par ex. Factures)';
 
   @override
-  String get archivePageEmpty => 'Bu sayfa henüz boş.';
+  String get archivePageEmpty => 'Cette page est vide.';
 
   @override
-  String get archiveSearchHint => 'Defterde ara…';
+  String get archiveSearchHint => 'Rechercher dans le carnet…';
 
   @override
-  String get archiveAddText => 'Metin ekle';
+  String get archiveAddText => 'Ajouter du texte';
 
   @override
-  String get archiveAddFile => 'Dosya ekle';
+  String get archiveAddFile => 'Ajouter un fichier';
 
   @override
-  String get archiveCopyHere => 'Arşiv defterine kopyala';
+  String get archiveCopyHere => 'Copier dans un carnet d\'archives';
 
   @override
   String get archiveNoNotebook =>
-      'Henüz arşiv defteri yok. Önce bir tane oluştur.';
+      'Pas encore de carnet d\'archives. Créez-en un d\'abord.';
 
   @override
-  String get archiveNothingToCopy => 'Bu notta kopyalanacak ek yok.';
+  String get archiveNothingToCopy => 'Cette note n\'a aucune pièce jointe à copier.';
 
   @override
   String archiveDeleteEntry(String name) {
-    return '\"$name\" defterden silinsin mi? Bu kopya kalıcı olarak gider.';
+    return 'Supprimer « ${name} » du carnet ? Cette copie sera perdue définitivement.';
   }
 
   @override
   String archiveCopied(int count) {
-    return '$count dosya arşiv defterine kopyalandı.';
+    return '${count} fichiers copiés dans le carnet d\'archives.';
   }
 
   @override
-  String get archiveCaptureTitle => 'Görselden yakala';
+  String get archiveCaptureTitle => 'Capturer depuis une image';
 
   @override
-  String get archiveCapturePage => 'Sayfa';
+  String get archiveCapturePage => 'Page';
 
   @override
   String get archiveCapturePageInfo =>
-      'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.';
+      'Le type suggéré par l\'IA. Laissé vide, il ira sur la page Textes.';
 
   @override
-  String get archiveCaptureText => 'Tanınan metin';
+  String get archiveCaptureText => 'Texte reconnu';
 
   @override
-  String get attachmentTagInsert => 'Metne ekle';
+  String get attachmentTagInsert => 'Insérer dans le texte';
 
   @override
-  String get attachmentTagInserted => 'Ek etiketi metne eklendi.';
+  String get attachmentTagInserted => 'L\'étiquette de la pièce jointe a été insérée.';
 
   @override
-  String get attachmentTagPreview => 'Eki önizle';
+  String get attachmentTagPreview => 'Aperçu de la pièce jointe';
 
   @override
-  String get attachmentTagEdit => 'Eki düzenle';
+  String get attachmentTagEdit => 'Modifier la pièce jointe';
 
   @override
   String archiveCardSummary(int files, int texts) {
-    return '$files dosya · $texts metin';
+    return '${files} fichiers · ${texts} textes';
   }
 
   @override
-  String get archiveEntryTitle => 'Başlık';
+  String get archiveEntryTitle => 'Titre';
 
   @override
-  String get archiveLinkedFile => 'Bağlı dosya';
+  String get archiveLinkedFile => 'Fichier lié';
 
   @override
-  String get archiveNoLink => 'Bağlı dosya yok';
+  String get archiveNoLink => 'Aucun fichier lié';
 
   @override
-  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+  String get attachmentTagEmbed => 'Intégrer la pièce jointe dans la sélection';
 
   @override
   String get attachmentTagNoAttachment =>
-      'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.';
+      'Ajoutez d\'abord un fichier à la note, vous pourrez ensuite l\'intégrer dans le texte.';
 
   @override
-  String get bubbleModeBubble => 'Balon';
+  String get bubbleModeBubble => 'Bulle';
 
   @override
   String get attachmentTagEmbedInfo =>
-      'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
+      'Se lie au texte sélectionné, ou au curseur si rien n\'est sélectionné';
 
   @override
   String get attachmentTagPickText =>
-      'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.';
+      'Sélectionnez maintenant le texte à lier, puis touchez « Lier ici ».';
 
   @override
-  String get attachmentTagLinkHere => 'Buraya bağla';
+  String get attachmentTagLinkHere => 'Lier ici';
 
   @override
   String attachmentTagPendingBanner(String name) {
-    return '$name bağlanacak — yazıyı seç';
+    return '${name} sera lié — sélectionnez le texte';
   }
 
   @override
-  String get docNameNotesSuffix => 'notlar';
+  String get docNameNotesSuffix => 'notes';
 
   @override
-  String get docNamePhoto => 'Fotoğraf notları';
+  String get docNamePhoto => 'Notes de photo';
 
   @override
-  String get docNameScan => 'Tarama notları';
+  String get docNameScan => 'Notes de numérisation';
 
   @override
-  String get docNameImage => 'Görsel notları';
+  String get docNameImage => 'Notes d\'image';
 
   @override
-  String get docNameVideo => 'Görüntü notları';
+  String get docNameVideo => 'Notes de vidéo';
 
   @override
-  String get folderManage => 'Klasörü yönet';
+  String get folderManage => 'Gérer le dossier';
 
   @override
-  String get folderEmpty => 'Bu klasör boş';
+  String get folderEmpty => 'Ce dossier est vide';
 
   @override
   String get folderEmptyHint =>
-      'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
+      'Ajoutez une note avec le + ci-dessous, ou déplacez une note ici pendant que vous la modifiez.';
 
   @override
-  String get brainstormTitle => 'AI ile beraber düşün';
+  String get brainstormTitle => 'Réfléchir avec l\'IA';
 
   @override
   String get brainstormRowInfo =>
-      'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz';
+      'L\'IA rédige d\'abord un plan, puis vous construisez dessus ensemble';
 
   @override
   String get brainstormIntro =>
-      'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
+      'Touchez l\'un des titres ci-dessus ou écrivez simplement — réfléchissons ensemble.';
 
   @override
-  String get brainstormOutlineTitle => 'ANA HAT';
+  String get brainstormOutlineTitle => 'PLAN';
 
   @override
-  String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
+  String get brainstormInputHint => 'Écrivez une idée ou posez une question…';
 
   @override
-  String get brainstormAddIdea => 'Nota ekle';
+  String get brainstormAddIdea => 'Ajouter à la note';
 
   @override
-  String get brainstormAdded => 'Nota eklendi';
+  String get brainstormAdded => 'Ajouté à la note';
 
   @override
-  String get folderShared => 'Bu klasör bir arkadaşınla ortak';
+  String get folderShared => 'Ce dossier est partagé avec un ami';
 
   @override
-  String get friendsTitle => 'Kişiler';
+  String get friendsTitle => 'Contacts';
 
   @override
-  String get friendsAdd => 'Arkadaş ekle';
+  String get friendsAdd => 'Ajouter un ami';
 
   @override
   String get friendsEmpty =>
-      'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
+      'Personne pour l\'instant. Ajoutez un ami par e-mail pour partager des dossiers avec lui.';
 
   @override
-  String get friendsRequestsTitle => 'İSTEKLER';
+  String get friendsRequestsTitle => 'DEMANDES';
 
   @override
-  String get friendsListTitle => 'ARKADAŞLARIM';
+  String get friendsListTitle => 'MES AMIS';
 
   @override
-  String get friendsAddEmailHint => 'arkadas@eposta.com';
+  String get friendsAddEmailHint => 'ami@email.com';
 
   @override
-  String get friendsSendRequest => 'İstek gönder';
+  String get friendsSendRequest => 'Envoyer la demande';
 
   @override
-  String get friendsRequestSent => 'İstek gönderildi';
+  String get friendsRequestSent => 'Demande envoyée';
 
   @override
   String get friendsNotFound =>
-      'Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.';
+      'Aucun utilisateur n\'est inscrit avec cet e-mail. Il doit avoir ouvert l\'application au moins une fois avec un compte Google.';
 
   @override
-  String get friendsSelf => 'Kendini arkadaş ekleyemezsin';
+  String get friendsSelf => 'Vous ne pouvez pas vous ajouter vous-même';
 
   @override
-  String get friendsAlready => 'Zaten arkadaşsınız';
+  String get friendsAlready => 'Vous êtes déjà amis';
 
   @override
-  String get friendsDecline => 'Reddet';
+  String get friendsDecline => 'Refuser';
 
   @override
-  String get friendsAccept => 'Kabul et';
+  String get friendsAccept => 'Accepter';
 
   @override
-  String get friendsRemove => 'Kaldır';
+  String get friendsRemove => 'Retirer';
 
   @override
-  String get friendsRemoveConfirmTitle => 'Arkadaşlıktan çıkar';
+  String get friendsRemoveConfirmTitle => 'Retirer l\'ami';
 
   @override
   String friendsRemoveConfirmBody(Object name) {
-    return '$name arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.';
+    return 'Retirer ${name} de vos amis ? Les dossiers partagés avec lui ne seront plus visibles.';
   }
 
   @override
   String get friendsNeedsAccount =>
-      'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
+      'Les contacts et le partage de dossiers nécessitent un compte Google lié.';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'Rechercher par nom ou e-mail';
 
   @override
-  String get friendsSearchTab => 'Ara';
+  String get friendsSearchTab => 'Recherche';
 
   @override
-  String get friendsSearchEmailTab => 'E-posta ile';
+  String get friendsSearchEmailTab => 'Par e-mail';
 
   @override
-  String get friendsSearchEmpty => 'Sonuç yok';
+  String get friendsSearchEmpty => 'Aucun résultat';
 
   @override
-  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+  String get friendsSearchTooShort => 'Saisissez au moins 2 caractères pour rechercher';
 
   @override
-  String get friendsSearchAdd => 'Ekle';
+  String get friendsSearchAdd => 'Ajouter';
 
   @override
-  String get folderShare => 'Paylaş';
+  String get folderShare => 'Partager';
 
   @override
   String folderShareCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count kişiyle paylaşıldı',
-      one: '1 kişiyle paylaşıldı',
+      other: 'Partagé avec ${count} personnes',
+      one: 'Partagé avec 1 personne',
     );
     return '$_temp0';
   }
 
   @override
   String folderShareTitle(Object name) {
-    return '\"$name\" klasörünü paylaş';
+    return 'Partager « ${name} »';
   }
 
   @override
   String get folderShareInfo =>
-      'Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.';
+      'Une invitation part vers l\'ami choisi ; il voit le dossier dès qu\'il accepte. Vous choisissez son autorisation (lecture / écriture / les deux).';
 
   @override
-  String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
+  String get friendsRowInfo => 'Ajoutez des amis, partagez des dossiers avec eux';
 
   @override
   String get accountRecoverConflictTitle =>
-      'Bu cihazda kaydedilmemiş notlar var';
+      'Cet appareil contient des notes non sauvegardées';
 
   @override
   String accountRecoverConflictBody(Object count) {
-    return 'Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki $count not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?';
+    return 'Ce compte Google est déjà lié à une autre session ; y basculer masquera les ${count} note(s) de cet appareil (elles ne sont pas supprimées, simplement plus accessibles d\'ici). Continuer quand même ?';
   }
 
   @override
-  String get accountRecoverConflictProceed => 'Yine de geç';
+  String get accountRecoverConflictProceed => 'Basculer quand même';
   @override
-  String get folderRoleRead => 'Okuma';
+  String get folderRoleRead => 'Lecture';
 
   @override
-  String get folderRoleWrite => 'Yazma';
+  String get folderRoleWrite => 'Écriture';
 
   @override
-  String get folderRoleBoth => 'Okuma + yazma';
+  String get folderRoleBoth => 'Lecture + écriture';
 
   @override
-  String get folderInvitePending => 'Davet gönderildi, yanıt bekleniyor';
+  String get folderInvitePending => 'Invitation envoyée, en attente de réponse';
 
   @override
-  String get folderWriteOnlyTitle => 'Yalnız yazma yetkin var';
+  String get folderWriteOnlyTitle => 'Vous n\'avez qu\'un accès en écriture';
 
   @override
-  String get folderWriteOnlyHint => 'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
+  String get folderWriteOnlyHint => 'Vous pouvez ajouter de nouvelles notes à ce dossier, mais pas voir celles qu\'il contient.';
 
   @override
-  String get folderChatTitle => 'Sohbet';
+  String get folderChatTitle => 'Discussion';
 
   @override
-  String get folderChatHint => 'Mesaj yaz…';
+  String get folderChatHint => 'Écrivez un message…';
 
   @override
-  String get folderChatSend => 'Gönder';
+  String get folderChatSend => 'Envoyer';
 
   @override
-  String get folderChatEmptyTitle => 'Henüz mesaj yok';
+  String get folderChatEmptyTitle => 'Pas encore de messages';
 
   @override
-  String get folderChatEmptyHint => 'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
+  String get folderChatEmptyHint => 'Discutez ici avec les personnes avec qui vous avez partagé ce dossier.';
 
   @override
-  String get folderInviteTitle => 'Klasör daveti';
+  String get folderInviteTitle => 'Invitation à un dossier';
 
   @override
   String folderInviteBody(Object name) {
-    return '"$name" klasörü seninle paylaşıldı.';
+    return 'Le dossier « ${name} » a été partagé avec vous.';
   }
 
   @override
-  String get folderInviteAccepted => 'Klasör eklendi';
+  String get folderInviteAccepted => 'Dossier ajouté';
 
   @override
-  String get folderInviteDeclined => 'Davet reddedildi';
+  String get folderInviteDeclined => 'Invitation refusée';
 
   @override
   String friendRequestBanner(Object name) {
-    return '$name sana arkadaşlık isteği gönderdi';
+    return '${name} vous a envoyé une demande d\'ami';
   }
 
   @override
-  String get friendRequestAccepted => 'Arkadaş eklendi';
+  String get friendRequestAccepted => 'Ami ajouté';
 
   @override
-  String get sendNoteAction => 'Arkadaşa gönder';
+  String get sendNoteAction => 'Envoyer à un ami';
 
   @override
-  String get sendNoteTitle => 'Notu arkadaşına gönder';
+  String get sendNoteTitle => 'Envoyer la note à un ami';
 
   @override
-  String get sendNoteInfo => 'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
+  String get sendNoteInfo => 'Une copie de la note arrive dans la boîte « Notes reçues » de la personne. Les pièces jointes (images, documents, audio) ne sont pas envoyées.';
 
   @override
   String sendNoteSent(Object name) {
-    return 'Not $name kişisine gönderildi';
+    return 'Note envoyée à ${name}';
   }
 
   @override
-  String get inboxTitle => 'Gelen notlar';
+  String get inboxTitle => 'Notes reçues';
 
   @override
-  String get inboxEmpty => 'Gelen not yok';
+  String get inboxEmpty => 'Aucune note reçue';
 
   @override
-  String get inboxEmptyHint => 'Arkadaşlarının sana gönderdiği notlar burada birikir.';
+  String get inboxEmptyHint => 'Les notes que vos amis vous envoient s\'accumulent ici.';
 
   @override
   String inboxFrom(Object name) {
-    return '$name gönderdi';
+    return 'Envoyée par ${name}';
   }
 
   @override
-  String get inboxAccept => 'Notlarıma ekle';
+  String get inboxAccept => 'Ajouter à mes notes';
 
   @override
-  String get inboxAccepted => 'Not notlarına eklendi';
+  String get inboxAccepted => 'Note ajoutée à vos notes';
 
   @override
-  String get folderShelfExpand => 'Klasörleri büyüt';
+  String get folderShelfExpand => 'Déplier les dossiers';
 
   @override
-  String get folderShelfCollapse => 'Klasörleri daralt';
+  String get folderShelfCollapse => 'Replier les dossiers';
 
   @override
-  String get accountSheetLocalInfo => 'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
+  String get accountSheetLocalInfo => 'Vos notes ne sont que sur cet appareil. Liez un compte Google pour les sauvegarder et ajouter des amis.';
 
   @override
-  String get accountSettings => 'Hesap ayarları';
+  String get accountSettings => 'Paramètres du compte';
 }
