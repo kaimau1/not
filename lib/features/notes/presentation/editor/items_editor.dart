@@ -1290,9 +1290,16 @@ class ItemsEditorState extends State<ItemsEditor> {
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeOut,
         child: Row(
+          // Çok satırlı maddelerde kutucuk/numara artık tüm satır
+          // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
+          // (kullanıcı isteği). TextField'ın üst iç boşluğu (contentPadding
+          // vertical: 10) ile checkbox/numaranın kendi üst boşluğu farklı
+          // olduğundan `leading`e ince bir üst pay eklendi, aksi hâlde
+          // start hizalamasında kutucuk metnin biraz üstünde kalır.
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ?dragHandle,
-            leading,
+            Padding(padding: const EdgeInsets.only(top: 4), child: leading),
             Expanded(
               // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
               child: GestureDetector(

@@ -12,6 +12,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../../core/utils/rich_text.dart';
+import '../../../core/utils/web_blob.dart';
 
 /// Notu paylaşılabilir bir PDF'e çevirir.
 ///
@@ -285,12 +286,25 @@ abstract final class NotePdf {
   }
 
   /// PDF'i geçici dosyaya yazar; hem önizleme hem paylaşma bunu kullanır.
+  ///
+  /// Web'de ÇAĞRILMAMALI: `dart:io File`/`path_provider` web'de gerçek bir
+  /// dosya sistemine bağlı değil, çağrıldığında "Unsupported operation"
+  /// fırlatırdı (kullanıcı bulgusu — PDF/görsel ekleme web'de patlıyordu).
+  /// Web için bkz. [webBlobUrl].
   static Future<String> writeTemp(Uint8List bytes, String title) async {
     final dir = await getTemporaryDirectory();
     final file = File(p.join(dir.path, '${safeFileName(title)}.pdf'));
     await file.writeAsBytes(bytes, flush: true);
     return file.path;
   }
+
+  /// Web karşılığı: dosyaya yazmak yerine bellekteki byte'ları bir
+  /// `blob:` URL'ine sarar. Dönen URL, `Attachment.downloadUrl` alanına
+  /// konup `isUploaded: true` işaretlenirse mevcut önizleyici/paylaşım
+  /// akışları (Storage'dan gelen bir PDF'miş gibi) değişiklik gerektirmeden
+  /// çalışır.
+  static String webBlobUrl(Uint8List bytes) =>
+      createBlobUrl(bytes, 'application/pdf');
 
   static String safeFileName(String title) {
     final cleaned = title

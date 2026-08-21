@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
@@ -271,18 +273,18 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
       );
   }
 
-  Future<String?> _generate() async {
+  /// PDF byte'larını üretir. Diske/blob'a yazmayı çağıran taraf yapar —
+  /// web ve masaüstü/mobil farklı hedeflere yazdığı için ayrıldı.
+  Future<Uint8List?> _generateBytes() async {
     setState(() => _busy = true);
     try {
-      final title = _title.text.trim();
-      final bytes = await NotePdf.build(
-        title: _exported(_markedTitle, title),
+      return await NotePdf.build(
+        title: _exported(_markedTitle, _title.text.trim()),
         content: _exportContent(),
         date: _date,
         images: await _loadImages(),
         palette: NoteColors.richPalette,
       );
-      return await NotePdf.writeTemp(bytes, title);
     } catch (e) {
       if (mounted) _showError(e);
       return null;
@@ -291,18 +293,16 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
     }
   }
 
-  /// Word (.docx) üretip geçici dosya yolunu döner.
-  Future<String?> _generateDocx() async {
+  /// Word (.docx) byte'larını üretir.
+  Future<Uint8List?> _generateDocxBytes() async {
     setState(() => _busy = true);
     try {
-      final title = _title.text.trim();
-      final bytes = await NoteDocx.build(
-        title: title,
+      return await NoteDocx.build(
+        title: _title.text.trim(),
         content: _exportContent(),
         date: _date,
         images: await _loadImages(),
       );
-      return await NoteDocx.writeTemp(bytes, title);
     } catch (e) {
       if (mounted) _showError(e);
       return null;
@@ -312,17 +312,23 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   }
 
   Future<void> _shareWord() async {
-    final path = await _generateDocx();
-    if (path == null || !mounted) return;
+    final bytes = await _generateDocxBytes();
+    if (bytes == null || !mounted) return;
+    const mimeType =
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    // Web'de `dart:io File` çalışmaz ("Unsupported operation" — kullanıcı
+    // bulgusu); share_plus web'de byte'lardan doğrudan indirme/paylaşım
+    // tetikleyebiliyor, geçici dosyaya hiç gerek yok.
+    final file = kIsWeb
+        ? XFile.fromData(
+            bytes,
+            name: '${NotePdf.safeFileName(_title.text)}.docx',
+            mimeType: mimeType,
+          )
+        : XFile(await NoteDocx.writeTemp(bytes, _title.text), mimeType: mimeType);
     await SharePlus.instance.share(
       ShareParams(
-        files: [
-          XFile(
-            path,
-            mimeType:
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          ),
-        ],
+        files: [file],
         subject: _title.text.trim().isEmpty
             ? context.l10n.appName
             : _title.text.trim(),
@@ -331,29 +337,48 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
   }
 
   Future<void> _preview() async {
-    final path = await _generate();
-    if (path == null || !mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PdfViewerScreen(
-          attachment: Attachment(
+    final bytes = await _generateBytes();
+    if (bytes == null || !mounted) return;
+    // Web'de gerçek dosya yolu yok: byte'lar blob URL'ine sarılıp mevcut
+    // "Storage'dan gelen ek" yolundan (isUploaded/downloadUrl) gösteriliyor,
+    // ki PdfViewerScreen değişmesin.
+    final attachment = kIsWeb
+        ? Attachment(
             id: 'preview',
             kind: AttachmentKind.pdf,
             fileName: NotePdf.safeFileName(_title.text),
             mimeType: 'application/pdf',
-            localPath: path,
-          ),
-        ),
-      ),
-    );
+            downloadUrl: NotePdf.webBlobUrl(bytes),
+          )
+        : Attachment(
+            id: 'preview',
+            kind: AttachmentKind.pdf,
+            fileName: NotePdf.safeFileName(_title.text),
+            mimeType: 'application/pdf',
+            localPath: await NotePdf.writeTemp(bytes, _title.text),
+          );
+    if (!mounted) return;
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => PdfViewerScreen(attachment: attachment)));
   }
 
   Future<void> _share() async {
-    final path = await _generate();
-    if (path == null || !mounted) return;
+    final bytes = await _generateBytes();
+    if (bytes == null || !mounted) return;
+    final file = kIsWeb
+        ? XFile.fromData(
+            bytes,
+            name: '${NotePdf.safeFileName(_title.text)}.pdf',
+            mimeType: 'application/pdf',
+          )
+        : XFile(
+            await NotePdf.writeTemp(bytes, _title.text),
+            mimeType: 'application/pdf',
+          );
     await SharePlus.instance.share(
       ShareParams(
-        files: [XFile(path, mimeType: 'application/pdf')],
+        files: [file],
         subject: _title.text.trim().isEmpty
             ? context.l10n.appName
             : _title.text.trim(),
