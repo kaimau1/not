@@ -2124,3 +2124,19 @@ firebase CLI/deploy erişimi YOK, kullanıcı kendi makinesinden yapmalı.
 okuması + Node syntax check (`node --check functions/index.js`) yapıldı.
 Gerçek doğrulama push sonrası CI'da (GitHub Actions) ya da kullanıcının
 kendi makinesinde olacak.
+
+## 2026-08-21 (devam 2) — Cloud Functions'ı da CI'a bağla
+
+Kullanıcı: "firebase ve cloudflare otomatik deploy ediliyor olması gerek"
+— haklıydı, `build.yml`'deki `deploy` işi yalnız `firestore,storage`
+yayınlıyordu, `functions` YOKTU (bir önceki turda eklenen `searchUsers`
+elle deploy gerektiriyordu). Düzeltildi: `deploy` işine `npm install
+--prefix functions` + `firebase deploy --only functions` adımı eklendi,
+`continue-on-error: true` ile (Blaze plana geçilmemişse ya da servis
+hesabının IAM rolleri yetmiyorsa geri kalan yayını kırmasın diye).
+Ayrıntı/gerekli IAM rolleri `functions/README.md`'de.
+
+**Hâlâ kullanıcının yapması gereken** (CI bunu yapamaz): proje Blaze
+plana geçmemişse geçirmek + `FIREBASE_SERVICE_ACCOUNT` servis hesabına
+Cloud Functions dağıtımı için gereken IAM rollerini eklemek. İkisi de
+Google Cloud Console/Firebase konsolu üzerinden, tek seferlik.

@@ -1,5 +1,28 @@
 # Cloud Functions — `searchUsers`
 
+> **Otomatik dağıtım**: `main`e her push'ta `.github/workflows/build.yml`
+> içindeki `deploy` işi bu fonksiyonu da yayınlamayı DENER (adım: "Cloud
+> Functions'ı yayınla"). Elle `firebase deploy --only functions`
+> çalıştırmana GEREK YOK — proje Blaze plana geçmişse ve
+> `FIREBASE_SERVICE_ACCOUNT` gizli anahtarının rolleri yeterliyse bir
+> sonraki main push'unda kendiliğinden yayınlanır. Bu adım
+> `continue-on-error: true` ile işaretli: Blaze'e geçilmediyse veya rol
+> eksikse KIRMIZI (başarısız) görünür ama geri kalan yayın (Firestore/
+> Storage kuralları, web, Cloudflare) engellenmez. Actions sekmesinde bu
+> adımın loguna bakıp neden başarısız olduğunu görebilirsin — aşağıdaki iki
+> ön koşuldan biri eksik demektir:
+> 1. Proje Blaze (pay-as-you-go) planda değil.
+> 2. `FIREBASE_SERVICE_ACCOUNT` servis hesabının IAM rolleri Cloud
+>    Functions dağıtımına yetmiyor — gerekli roller: **Cloud Functions
+>    Developer**, **Service Account User**, **Cloud Build Editor**,
+>    **Artifact Registry Writer** (2. nesil fonksiyonlar Cloud Run üstünde
+>    çalıştığı için **Cloud Run Admin** de gerekebilir). Firestore/Storage
+>    kuralları için kullanılan servis hesabının rolleri genelde bunları
+>    kapsamaz, ayrıca eklemek gerekebilir (Google Cloud Console → IAM).
+>
+> Aşağıdaki elle-dağıtım adımları yalnız yerelde test etmek ya da CI dışı
+> bir dağıtım yapmak istersen gerekli.
+
 Tek fonksiyon: arkadaş eklemede "tüm kullanıcılar içinde ad/e-posta ile
 arama" (kullanıcı isteği 2026-08-21). Neden Cloud Function gerektiği ve
 gizlilik gerekçesi `firestore.rules`'taki `userSearch` koleksiyonu kuralında
