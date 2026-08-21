@@ -151,7 +151,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get attachmentUploadFailed =>
-      'Yüklenemedi — yeniden denemek için dokun';
+      '上传失败 — 点按重试';
 
   @override
   String get attachmentNotSynced => '该文件尚未同步到此设备';
@@ -480,7 +480,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String assistantDeleteConfirm(String title) {
-    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+    return '助手想把笔记「${title}」移到回收站。同意吗？';
   }
 
   @override
@@ -1222,7 +1222,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get annotateDone => '结束批注';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => '添加 PDF 并记笔记';
 
   @override
   String get imageNotePreparing => '正在把图片整理成文档…';
@@ -1231,81 +1231,81 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newImageNote => '添加图片并记笔记';
 
   @override
-  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+  String get pdfPageNoteHint => '本页的笔记…';
 
   @override
   String pdfPage(int page) {
-    return 'Sayfa $page';
+    return '第 ${page} 页';
   }
 
   @override
   String pdfPageOf(int page, int total) {
-    return 'Sayfa $page / $total';
+    return '第 ${page} / ${total} 页';
   }
 
   @override
-  String get pdfPreviousPage => 'Önceki sayfa';
+  String get pdfPreviousPage => '上一页';
 
   @override
-  String get pdfNextPage => 'Sonraki sayfa';
+  String get pdfNextPage => '下一页';
 
   @override
-  String get pdfFullScreen => 'Tam ekran aç';
+  String get pdfFullScreen => '全屏打开';
 
   @override
-  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+  String get pdfNoDocument => '这条笔记还没有 PDF';
 
   @override
-  String get pdfChooseDocument => 'PDF seç';
+  String get pdfChooseDocument => '选择 PDF';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => '添加幻灯片并记笔记';
 
   @override
-  String get slidesNoDocument => 'Bu notta henüz sunum yok';
+  String get slidesNoDocument => '这条笔记还没有演示文稿';
 
   @override
-  String get slidesChooseDocument => 'Sunum seç';
+  String get slidesChooseDocument => '选择演示文稿';
 
   @override
-  String get pdfEditPages => 'Sayfaları düzenle';
+  String get pdfEditPages => '编辑页面';
 
   @override
-  String get pdfDeletePages => 'Seçili sayfaları sil';
+  String get pdfDeletePages => '删除所选页面';
 
   @override
   String get pdfAddBlankPage => '添加空白页';
 
   @override
-  String get pdfRotatePages => 'Döndür';
+  String get pdfRotatePages => '旋转';
 
   @override
-  String get pdfBurnInk => 'El yazısını belgeye göm';
+  String get pdfBurnInk => '把手写内容烙进文档';
 
   @override
-  String get pdfApplyChanges => 'Değişiklikleri uygula';
+  String get pdfApplyChanges => '应用更改';
 
   @override
-  String get pdfCannotDeleteAllPages => 'Tüm sayfalar silinemez';
+  String get pdfCannotDeleteAllPages => '不能删除全部页面';
 
   @override
   String get pdfPagesHint =>
-      'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.';
+      '点按页面即可选中。页面笔记会跟随所在页面；被删除页面的笔记会隐藏，但仍保留在你的数据中。';
 
   @override
   String pdfEditFailed(String error) {
-    return 'PDF düzenlenemedi: $error';
+    return '无法编辑 PDF：${error}';
   }
 
   @override
-  String get pdfInkBurned => 'El yazısı belgeye gömüldü';
+  String get pdfInkBurned => '手写内容已烙进文档';
 
   @override
-  String get pdfAllPageNotes => 'Tüm sayfa notları';
+  String get pdfAllPageNotes => '所有页面笔记';
 
   @override
   String get pdfNoPageNotes =>
-      'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.';
+      '还没有页面笔记。翻到某一页，在下面的输入框里写吧。';
 
   @override
   String get crop => '裁剪';
@@ -1778,7 +1778,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addTextBlock => '添加文字';
 
   @override
-  String get attachNoteContent => 'Not içeriği';
+  String get attachNoteContent => '笔记内容';
 
   @override
   String get noteBackgroundImage => '背景图片';
@@ -1834,155 +1834,155 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String scanReviewPage(int current, int total) {
-    return 'Sayfa $current / $total';
+    return '第 ${current} / ${total} 页';
   }
 
   @override
-  String get scanRotatePage => 'Sayfayı döndür';
+  String get scanRotatePage => '旋转页面';
 
   @override
-  String get scanDeletePage => 'Sayfayı sil';
+  String get scanDeletePage => '删除页面';
 
   @override
-  String get scanLastPage => 'Son sayfa silinemez';
+  String get scanLastPage => '最后一页无法删除';
 
   @override
-  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+  String get scanDiscardTitle => '放弃已扫描的页面吗？';
 
   @override
-  String get scanDiscardConfirm => 'At';
+  String get scanDiscardConfirm => '放弃';
 
   @override
-  String get scanAdjustCorners => 'Köşeleri ayarla';
+  String get scanAdjustCorners => '调整四角';
 
   @override
-  String get scanFilterOriginal => 'Özgün';
+  String get scanFilterOriginal => '原图';
 
   @override
-  String get scanFilterAuto => 'Netleştir';
+  String get scanFilterAuto => '增强';
 
   @override
-  String get scanFilterGray => 'Gri';
+  String get scanFilterGray => '灰度';
 
   @override
-  String get scanFilterBw => 'Siyah-beyaz';
+  String get scanFilterBw => '黑白';
 
   @override
-  String get scanApplyAll => 'Hepsine uygula';
+  String get scanApplyAll => '应用到全部';
 
   @override
-  String get scanPageFailed => 'Sayfa görüntülenemedi';
+  String get scanPageFailed => '无法显示该页面';
 
   @override
   String get scanCropHint =>
-      'Yamuk sayfayı \"Köşeleri ayarla\" ile düzeltebilirsin';
+      '页面歪斜时用「调整四角」来纠正';
 
   @override
-  String get scanAddAsPdf => 'PDF olarak ekle';
+  String get scanAddAsPdf => '作为 PDF 添加';
 
   @override
-  String get scanAddAsImages => 'Görsel olarak ekle';
+  String get scanAddAsImages => '作为图片添加';
 
   @override
-  String get scanBuildingPdf => 'PDF hazırlanıyor…';
+  String get scanBuildingPdf => '正在准备 PDF…';
 
   @override
   String scanOcrProgress(int done, int total) {
-    return 'Metin tanınıyor… $done/$total';
+    return '正在识别文字… ${done}/${total}';
   }
 
   @override
-  String get scanAutoDetect => 'Kenarları otomatik bul';
+  String get scanAutoDetect => '自动识别边缘';
 
   @override
-  String get scanReset => 'Sıfırla';
+  String get scanReset => '重置';
 
   @override
-  String get scanDetecting => 'Kenarlar aranıyor…';
+  String get scanDetecting => '正在寻找边缘…';
 
   @override
   String get scanAutoFound =>
-      'Kenarlar otomatik bulundu; gerekirse tutamaçlardan ince ayar yap';
+      '已自动找到边缘；如有需要可用控制点微调';
 
   @override
-  String get scanDragHint => 'Köşeleri kâğıdın kenarlarına sürükle';
+  String get scanDragHint => '把四角拖到纸张边缘';
 
   @override
-  String get scanApplyCorners => 'Düzelt ve uygula';
+  String get scanApplyCorners => '校正并应用';
 
   @override
-  String get scanWorking => 'Düzeltiliyor…';
+  String get scanWorking => '正在校正…';
 
   @override
-  String get scanPdfAdded => 'Tarama, PDF eki olarak nota eklendi';
+  String get scanPdfAdded => '扫描件已作为 PDF 附件添加到笔记';
 
   @override
-  String get premiumTitle => 'Premium';
+  String get premiumTitle => '高级版';
 
   @override
   String premiumStatusActive(String date) {
-    return 'Premium etkin — $date tarihine kadar';
+    return '高级版已启用 — 至 ${date}';
   }
 
   @override
-  String get premiumStatusFree => 'Ücretsiz sürümü kullanıyorsun';
+  String get premiumStatusFree => '你正在使用免费版';
 
   @override
-  String get premiumPerksTitle => 'Premium ile ne değişir?';
+  String get premiumPerksTitle => '高级版有什么不同？';
 
   @override
-  String get premiumPerkAi => 'Günlük yapay zeka puanı';
+  String get premiumPerkAi => '每日 AI 点数';
 
   @override
-  String get premiumPerkAttach => 'Ek dosya boyutu';
+  String get premiumPerkAttach => '附件大小';
 
   @override
-  String get premiumPerkStorage => 'Bulut depolama alanı';
+  String get premiumPerkStorage => '云端存储空间';
 
   @override
-  String get premiumPerkAuto => 'Otomatik günlük içerik';
+  String get premiumPerkAuto => '自动的每日内容';
 
   @override
   String get premiumPerkAutoBody =>
-      'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.';
+      '每日简报和建议会每天自动生成；免费版只有在你主动请求时才运行。';
 
   @override
-  String get premiumHowTitle => 'Nasıl edinilir?';
+  String get premiumHowTitle => '如何获得？';
 
   @override
   String get premiumHowBody =>
-      'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.';
+      '高级版很快会在 Play 商店提供。目前我们处于早期使用阶段。';
 
   @override
   String get premiumByokHint =>
-      'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).';
+      '如果填入你自己的 Gemini API 密钥，AI 功能就不受配额限制，与高级版无关（设置 → AI）。';
 
   @override
-  String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
+  String get premiumDiscoverTitle => '你可能错过的功能';
 
   @override
   String get discoverScanBody =>
-      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
+      '扫描的页面会被自动校正、增强，一键变成可搜索的 PDF —— 文字层在设备上生成，完全免费。';
 
   @override
   String get discoverSemanticBody =>
-      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
+      '搜索框里的「智能」标签按意思搜索，而不是按词：输入「航班时间」，你的旅行笔记就会出现。';
 
   @override
   String get discoverAssistantBody =>
-      'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.';
+      '主屏幕上的麦克风会自动把你说的话变成笔记、清单和提醒 —— 只要说「明天九点看牙医」。';
 
   @override
   String get discoverLockBody =>
-      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.';
+      '你可以用指纹或人脸锁定笔记：内容绝不会出现在搜索、小组件或 AI 中。';
 
   @override
   String get discoverHiddenBody =>
-      'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.';
+      '隐藏文件夹里的笔记不会出现在主屏幕或搜索中；显示该文件夹需要验证身份。';
 
   @override
   String get discoverExportBody =>
-      'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+      '每条笔记都能连同图片导出为 PDF 或 Word（在分享菜单里）。';
 
   @override
   String get guestSignInUnavailable =>
@@ -2038,81 +2038,81 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appFontDefaultSuffix => '默认';
 
   @override
-  String get pdfSelectOcrRunning => 'Metin tanınıyor…';
+  String get pdfSelectOcrRunning => '正在识别文字…';
 
   @override
-  String get pdfSelectOcrNone => 'Bu sayfada metin bulunamadı';
+  String get pdfSelectOcrNone => '本页没有找到文字';
 
   @override
   String pdfSelectCopied(int n) {
-    return '$n karakter kopyalandı';
+    return '已复制 ${n} 个字符';
   }
 
   @override
-  String get bubbleAdd => 'Not balonu bırak';
+  String get bubbleAdd => '放一个笔记气泡';
 
   @override
-  String get bubbleAddDone => 'Balon bırakmayı bitir';
+  String get bubbleAddDone => '气泡添加完毕';
 
   @override
-  String get bubbleCollapse => 'Balonu küçült';
+  String get bubbleCollapse => '收起气泡';
 
   @override
-  String get bubbleHint => 'Buraya notunu yaz…';
+  String get bubbleHint => '在这里写你的笔记…';
 
   @override
-  String get bubbleTapToPlace => 'Sayfada balonu bırakmak istediğin yere dokun';
+  String get bubbleTapToPlace => '点按页面上想放气泡的位置';
 
   @override
-  String get aiModelPodcast => 'Podcast anlatısı';
+  String get aiModelPodcast => '播客朗读';
 
   @override
-  String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
+  String get listenAiVoice => '用 AI 语音收听';
 
   @override
   String get listenAiVoiceInfo =>
-      'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.';
+      '由 Gemini 代替设备语音朗读：更自然，但每个段落都会消耗一次模型调用。';
 
   @override
   String listenAiVoiceFailed(String error) {
-    return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
+    return 'AI 朗读失败（${error}）。改用设备语音朗读。';
   }
 
   @override
-  String get ttsSectionTitle => 'Seslendirme';
+  String get ttsSectionTitle => '朗读';
 
   @override
-  String get ttsEngineDevice => 'Cihaz sesi';
+  String get ttsEngineDevice => '设备语音';
 
   @override
-  String get ttsEngineAi => 'Yapay zekâ';
+  String get ttsEngineAi => 'AI';
 
   @override
   String get ttsEngineDeviceInfo =>
-      'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
+      '由设备内置语音朗读：免费、离线、长度不限。';
 
   @override
   String get ttsEngineAiInfo =>
-      'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+      '由 Gemini 的语音模型朗读：明显更自然，但每个段落都是一次模型调用，并且需要你自己的 Gemini 密钥。';
 
   @override
   String get ttsEngineAiUnavailable => 'AI 语音需要你自己的 Gemini 密钥。在此之前将使用设备语音朗读。';
 
   @override
-  String get ttsModel => 'Seslendirme modeli';
+  String get ttsModel => '语音模型';
 
   @override
-  String get ttsVoice => 'Yapay zekâ sesi';
+  String get ttsVoice => 'AI 声音';
 
   @override
-  String get shareAsNote => 'Not olarak paylaş';
+  String get shareAsNote => '作为笔记分享';
 
   @override
   String get shareAsNoteInfo =>
-      'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.';
+      '连同附件、页面笔记、手写和气泡一起发送；对方在 Not 应用里打开时完全一样。';
 
   @override
-  String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
+  String get shareAsNotePreparing => '正在准备笔记包…';
 
   @override
   String get shareAsText => '以纯文本形式';
@@ -2140,98 +2140,98 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharePdfWithBubblesSuffix => '（带气泡）';
 
   @override
-  String get bubbleStar => 'Yıldızla';
+  String get bubbleStar => '加星标';
 
   @override
-  String get bubbleEdit => 'Balonu düzenle';
+  String get bubbleEdit => '编辑气泡';
 
   @override
-  String get bubbleStarredOnly => 'Yalnız yıldızlılar';
+  String get bubbleStarredOnly => '仅星标';
 
   @override
-  String get bubbleSearchHint => 'Balonlarda ara…';
+  String get bubbleSearchHint => '搜索气泡…';
 
   @override
-  String get bubblesOverviewTitle => 'Balonlar';
+  String get bubblesOverviewTitle => '气泡';
 
   @override
   String get bubblesEmpty =>
-      'Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.';
+      '还没有气泡。在文档中选中文字并高亮，或者在页面上放一个气泡。';
 
   @override
-  String get bubblesNoMatch => 'Aramaya uyan balon yok.';
+  String get bubblesNoMatch => '没有符合搜索条件的气泡。';
 
   @override
-  String get bubbleNoText => '(boş balon)';
+  String get bubbleNoText => '（空气泡）';
 
   @override
-  String get pdfHighlight => 'Vurgula';
+  String get pdfHighlight => '高亮';
 
   @override
-  String get pdfHighlightWithNote => 'Vurgula + not';
+  String get pdfHighlightWithNote => '高亮 + 笔记';
 
   @override
-  String get pageNotesShow => 'Sayfa notunu göster';
+  String get pageNotesShow => '显示页面笔记';
 
   @override
-  String get pageNotesHide => 'Sayfa notunu gizle';
+  String get pageNotesHide => '隐藏页面笔记';
 
   @override
-  String get bubbleSave => 'Kaydet';
+  String get bubbleSave => '保存';
 
   @override
-  String get bubbleTitleHint => 'Başlık';
+  String get bubbleTitleHint => '标题';
 
   @override
-  String get bubbleUrgent => 'Acil (yanıp söner)';
+  String get bubbleUrgent => '紧急（闪烁）';
 
   @override
-  String get captureModeQuestion => 'Notu nasıl açalım?';
+  String get captureModeQuestion => '笔记要以哪种方式打开？';
 
   @override
-  String get captureModeBubbles => 'Balonlu';
+  String get captureModeBubbles => '气泡';
 
   @override
   String get captureModeBubblesInfo =>
-      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+      '内容会变成文档页面：可用气泡、高亮和笔。';
 
   @override
-  String get captureModeClassic => 'Klasik';
+  String get captureModeClassic => '经典';
 
   @override
   String get captureModeClassicInfo =>
-      'Düz metin notu; içerik ek olarak girer.';
+      '普通文字笔记；内容以附件形式加入。';
 
   @override
-  String get captureModeNew => 'YENİ';
+  String get captureModeNew => '新';
 
   @override
-  String get imagePrepareTitle => 'Görselleri düzelt';
+  String get imagePrepareTitle => '调整图片';
 
   @override
-  String get imagePrepareDone => 'Devam';
+  String get imagePrepareDone => '继续';
 
   @override
-  String get imageRotateLeft => 'Sola döndür';
+  String get imageRotateLeft => '向左旋转';
 
   @override
-  String get imageRotateRight => 'Sağa döndür';
+  String get imageRotateRight => '向右旋转';
 
   @override
   String get videoFrameFailed =>
-      'Videodan kare alınamadı; not klasik açılıyor.';
+      '无法从视频中截取画面；将打开经典笔记。';
 
   @override
-  String get bubbleArrowHide => 'Oku gizle';
+  String get bubbleArrowHide => '隐藏箭头';
 
   @override
-  String get bubbleArrowShow => 'Oku göster';
+  String get bubbleArrowShow => '显示箭头';
 
   @override
-  String get speechPitch => 'Ses tonu';
+  String get speechPitch => '语音音调';
 
   @override
-  String get speechVoicePickerTitle => 'Ses seçimi';
+  String get speechVoicePickerTitle => '选择声音';
 
   @override
   String get formatRemove => '移除';
@@ -2348,80 +2348,80 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiModelShowAllInfo => '同时列出应用未使用的模型。';
 
   @override
-  String get rotateFailed => 'Görsel döndürülemedi.';
+  String get rotateFailed => '无法旋转图片。';
 
   @override
-  String get dashboardBackgroundPick => 'Zemin görseli seç';
+  String get dashboardBackgroundPick => '选择背景图片';
 
   @override
-  String get dashboardBackgroundChange => 'Zemin görselini değiştir';
+  String get dashboardBackgroundChange => '更换背景图片';
 
   @override
   String podcastRenderingAudio(int done, int total) {
-    return 'Ses hazırlanıyor: $done/$total parça';
+    return '正在准备音频：${done}/${total} 段';
   }
 
   @override
-  String get podcastExportAudio => 'Ses dosyası olarak dışa aktar';
+  String get podcastExportAudio => '导出为音频文件';
 
   @override
   String get podcastExportAudioCost =>
-      'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.';
+      '整篇稿子会用 AI 语音重新合成，并保存为一个 WAV 文件。这会消耗你的 Gemini 配额，长文本可能需要几分钟。';
 
   @override
-  String get podcastShareText => 'Metni paylaş';
+  String get podcastShareText => '分享稿子';
 
   @override
-  String get podcastSaveAsNote => 'Yeni not olarak kaydet';
+  String get podcastSaveAsNote => '保存为新笔记';
 
   @override
-  String get podcastSavedAsNote => 'Podcast metni not olarak kaydedildi.';
+  String get podcastSavedAsNote => '播客稿已保存为笔记。';
 
   @override
-  String get listenPreparingVoice => 'Ses hazırlanıyor…';
+  String get listenPreparingVoice => '正在准备音频…';
 
   @override
-  String get appearancePreviewTitle => 'Örnek metin';
+  String get appearancePreviewTitle => '示例文字';
 
   @override
-  String get appearancePreviewNoteTitle => 'Örnek not başlığı';
+  String get appearancePreviewNoteTitle => '示例笔记标题';
 
   @override
   String get appearancePreviewBody =>
-      'Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.';
+      '你的笔记会是这个样子。文中的 **粗体**、~下划线~ 和 ==2:高亮== 显示成这样。';
 
   @override
-  String get appearancePreviewItem => 'Liste maddesi böyle görünür';
+  String get appearancePreviewItem => '清单条目看起来是这样';
 
   @override
-  String get convertToText => 'Metne dönüştür';
+  String get convertToText => '转换为文本';
 
   @override
-  String get convertToList => 'Listeye dönüştür';
+  String get convertToList => '转换为清单';
 
   @override
-  String get convertedToText => 'Liste düz metne dönüştürüldü.';
+  String get convertedToText => '清单已转换为普通文本。';
 
   @override
-  String get convertedToList => 'Metin listeye dönüştürüldü.';
+  String get convertedToList => '文本已转换为清单。';
 
   @override
-  String get convertToListEmpty => 'Listeye dönüştürülecek satır yok.';
+  String get convertToListEmpty => '没有可以转换成清单的行。';
 
   @override
-  String get listTwoColumns => '2 sütun';
+  String get listTwoColumns => '两栏';
 
   @override
-  String get listOneColumn => 'Tek sütun';
+  String get listOneColumn => '单栏';
 
   @override
-  String get sortItems => 'Maddeleri sırala';
+  String get sortItems => '排序条目';
 
   @override
-  String get sortStarredFirst => 'Önce yıldızlılar';
+  String get sortStarredFirst => '星标优先';
 
   @override
-  String get sortUncheckedFirst => 'Tamamlananlar sona';
+  String get sortUncheckedFirst => '已完成放最后';
 
   @override
   String get sortAlphabetical => 'A → Z';
@@ -2430,456 +2430,456 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sortAlphabeticalDesc => 'Z → A';
 
   @override
-  String get imagesToAttachments => 'Görselleri eke dönüştür';
+  String get imagesToAttachments => '把图片移到附件';
 
   @override
   String imagesToAttachmentsDone(int count) {
-    return '$count görsel eke dönüştürüldü.';
+    return '已把 ${count} 张图片移到附件。';
   }
 
   @override
-  String get imageOcrShowRecognized => 'Tanınan metni vurgula';
+  String get imageOcrShowRecognized => '高亮识别出的文字';
 
   @override
-  String get imageOcrHideRecognized => 'Vurguyu kaldır';
+  String get imageOcrHideRecognized => '隐藏高亮';
 
   @override
-  String get bubblePlainMode => 'Açık metin alanı';
+  String get bubblePlainMode => '开放文本框';
 
   @override
-  String get bubblePlainModeOn => 'Açık metin alanı açık';
+  String get bubblePlainModeOn => '开放文本框已开启';
 
   @override
-  String get bubblePlainTapToPlace => 'Metnin geleceği yere dokun';
+  String get bubblePlainTapToPlace => '点按文字要放置的位置';
 
   @override
-  String get bubblePlainHint => 'Yazmak için dokun';
+  String get bubblePlainHint => '点按即可书写';
 
   @override
-  String get noteSearchTitle => 'Notta ara';
+  String get noteSearchTitle => '在笔记中搜索';
 
   @override
-  String get noteSearchHint => 'Bu notta ara…';
+  String get noteSearchHint => '搜索这条笔记…';
 
   @override
   String get noteSearchEmptyHint =>
-      'Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF\'lerin içi için aşağıdaki taramayı başlat.';
+      '立即搜索笔记正文、条目和页面笔记。想在图片和 PDF 附件里查找，请启动下面的扫描。';
 
   @override
-  String get noteSearchNoHit => 'Eşleşme bulunamadı.';
+  String get noteSearchNoHit => '没有找到匹配项。';
 
   @override
-  String get noteSearchScanAttachments => 'Ekleri tara';
+  String get noteSearchScanAttachments => '扫描附件';
 
   @override
-  String get noteSearchAskAi => 'Yapay zekâya sor';
+  String get noteSearchAskAi => '问一问 AI';
 
   @override
-  String get noteTitleLabel => 'Başlık';
+  String get noteTitleLabel => '标题';
 
   @override
-  String get noteBodyLabel => 'Not metni';
+  String get noteBodyLabel => '笔记正文';
 
   @override
-  String get itemLabel => 'Madde';
+  String get itemLabel => '条目';
 
   @override
   String noteSearchAttachmentsInfo(int count) {
-    return '$count ek taranabilir (görsel/PDF).';
+    return '可扫描 ${count} 个附件（图片/PDF）。';
   }
 
   @override
   String noteSearchAttachmentsReady(int count) {
-    return '$count ekin içi de aranıyor.';
+    return '也会在 ${count} 个附件中搜索。';
   }
 
   @override
   String pageLabel(int page) {
-    return 'Sayfa $page';
+    return '第 ${page} 页';
   }
 
   @override
-  String get archiveNotebook => 'Arşiv defteri';
+  String get archiveNotebook => '归档笔记本';
 
   @override
   String get archiveNotebookInfo =>
-      'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.';
+      '一本有自己页面的笔记本，用来保存重要文件和图片的副本。';
 
   @override
-  String get archivePageImages => 'Görseller';
+  String get archivePageImages => '图片';
 
   @override
-  String get archivePageVideos => 'Videolar';
+  String get archivePageVideos => '视频';
 
   @override
-  String get archivePageDocuments => 'Belgeler';
+  String get archivePageDocuments => '文档';
 
   @override
-  String get archivePageTexts => 'Metinler';
+  String get archivePageTexts => '文本';
 
   @override
-  String get archiveNewPage => 'Yeni sayfa';
+  String get archiveNewPage => '新建页面';
 
   @override
-  String get archivePageName => 'Sayfa adı (ör. Faturalar)';
+  String get archivePageName => '页面名称（例如：发票）';
 
   @override
-  String get archivePageEmpty => 'Bu sayfa henüz boş.';
+  String get archivePageEmpty => '这一页是空的。';
 
   @override
-  String get archiveSearchHint => 'Defterde ara…';
+  String get archiveSearchHint => '搜索笔记本…';
 
   @override
-  String get archiveAddText => 'Metin ekle';
+  String get archiveAddText => '添加文本';
 
   @override
-  String get archiveAddFile => 'Dosya ekle';
+  String get archiveAddFile => '添加文件';
 
   @override
-  String get archiveCopyHere => 'Arşiv defterine kopyala';
+  String get archiveCopyHere => '复制到归档笔记本';
 
   @override
   String get archiveNoNotebook =>
-      'Henüz arşiv defteri yok. Önce bir tane oluştur.';
+      '还没有归档笔记本。请先创建一个。';
 
   @override
-  String get archiveNothingToCopy => 'Bu notta kopyalanacak ek yok.';
+  String get archiveNothingToCopy => '这条笔记没有可复制的附件。';
 
   @override
   String archiveDeleteEntry(String name) {
-    return '\"$name\" defterden silinsin mi? Bu kopya kalıcı olarak gider.';
+    return '要从笔记本删除「${name}」吗？该副本将永久消失。';
   }
 
   @override
   String archiveCopied(int count) {
-    return '$count dosya arşiv defterine kopyalandı.';
+    return '已把 ${count} 个文件复制到归档笔记本。';
   }
 
   @override
-  String get archiveCaptureTitle => 'Görselden yakala';
+  String get archiveCaptureTitle => '从图片中提取';
 
   @override
-  String get archiveCapturePage => 'Sayfa';
+  String get archiveCapturePage => '页面';
 
   @override
   String get archiveCapturePageInfo =>
-      'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.';
+      'AI 建议的类型。留空则放入「文本」页面。';
 
   @override
-  String get archiveCaptureText => 'Tanınan metin';
+  String get archiveCaptureText => '识别出的文字';
 
   @override
-  String get attachmentTagInsert => 'Metne ekle';
+  String get attachmentTagInsert => '插入到正文';
 
   @override
-  String get attachmentTagInserted => 'Ek etiketi metne eklendi.';
+  String get attachmentTagInserted => '已插入附件标记。';
 
   @override
-  String get attachmentTagPreview => 'Eki önizle';
+  String get attachmentTagPreview => '预览附件';
 
   @override
-  String get attachmentTagEdit => 'Eki düzenle';
+  String get attachmentTagEdit => '编辑附件';
 
   @override
   String archiveCardSummary(int files, int texts) {
-    return '$files dosya · $texts metin';
+    return '${files} 个文件 · ${texts} 段文本';
   }
 
   @override
-  String get archiveEntryTitle => 'Başlık';
+  String get archiveEntryTitle => '标题';
 
   @override
-  String get archiveLinkedFile => 'Bağlı dosya';
+  String get archiveLinkedFile => '关联的文件';
 
   @override
-  String get archiveNoLink => 'Bağlı dosya yok';
+  String get archiveNoLink => '没有关联文件';
 
   @override
-  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+  String get attachmentTagEmbed => '把附件嵌入所选文字';
 
   @override
   String get attachmentTagNoAttachment =>
-      'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.';
+      '请先给笔记添加一个文件，然后才能把它嵌入正文。';
 
   @override
-  String get bubbleModeBubble => 'Balon';
+  String get bubbleModeBubble => '气泡';
 
   @override
   String get attachmentTagEmbedInfo =>
-      'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
+      '链接到你选中的文字；若未选中任何内容，则链接到光标处';
 
   @override
   String get attachmentTagPickText =>
-      'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.';
+      '现在选中要链接的文字，然后点按「链接到这里」。';
 
   @override
-  String get attachmentTagLinkHere => 'Buraya bağla';
+  String get attachmentTagLinkHere => '链接到这里';
 
   @override
   String attachmentTagPendingBanner(String name) {
-    return '$name bağlanacak — yazıyı seç';
+    return '${name} 将被链接 —— 请选中文字';
   }
 
   @override
-  String get docNameNotesSuffix => 'notlar';
+  String get docNameNotesSuffix => '笔记';
 
   @override
-  String get docNamePhoto => 'Fotoğraf notları';
+  String get docNamePhoto => '照片笔记';
 
   @override
-  String get docNameScan => 'Tarama notları';
+  String get docNameScan => '扫描笔记';
 
   @override
-  String get docNameImage => 'Görsel notları';
+  String get docNameImage => '图片笔记';
 
   @override
-  String get docNameVideo => 'Görüntü notları';
+  String get docNameVideo => '视频笔记';
 
   @override
-  String get folderManage => 'Klasörü yönet';
+  String get folderManage => '管理文件夹';
 
   @override
-  String get folderEmpty => 'Bu klasör boş';
+  String get folderEmpty => '这个文件夹是空的';
 
   @override
   String get folderEmptyHint =>
-      'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
+      '用下面的 + 添加笔记，或在编辑笔记时把它移到这里。';
 
   @override
-  String get brainstormTitle => 'AI ile beraber düşün';
+  String get brainstormTitle => '和 AI 一起头脑风暴';
 
   @override
   String get brainstormRowInfo =>
-      'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz';
+      'AI 先起草一个提纲，然后你们一起完善';
 
   @override
   String get brainstormIntro =>
-      'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
+      '点按上面的某个标题，或者直接开始写 —— 我们一起想。';
 
   @override
-  String get brainstormOutlineTitle => 'ANA HAT';
+  String get brainstormOutlineTitle => '提纲';
 
   @override
-  String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
+  String get brainstormInputHint => '写下一个想法或提出问题…';
 
   @override
-  String get brainstormAddIdea => 'Nota ekle';
+  String get brainstormAddIdea => '添加到笔记';
 
   @override
-  String get brainstormAdded => 'Nota eklendi';
+  String get brainstormAdded => '已添加到笔记';
 
   @override
-  String get folderShared => 'Bu klasör bir arkadaşınla ortak';
+  String get folderShared => '这个文件夹已与好友共享';
 
   @override
-  String get friendsTitle => 'Kişiler';
+  String get friendsTitle => '联系人';
 
   @override
-  String get friendsAdd => 'Arkadaş ekle';
+  String get friendsAdd => '添加好友';
 
   @override
   String get friendsEmpty =>
-      'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
+      '还没有人。用邮箱添加好友，就能和对方共享文件夹。';
 
   @override
-  String get friendsRequestsTitle => 'İSTEKLER';
+  String get friendsRequestsTitle => '请求';
 
   @override
-  String get friendsListTitle => 'ARKADAŞLARIM';
+  String get friendsListTitle => '我的好友';
 
   @override
-  String get friendsAddEmailHint => 'arkadas@eposta.com';
+  String get friendsAddEmailHint => 'friend@email.com';
 
   @override
-  String get friendsSendRequest => 'İstek gönder';
+  String get friendsSendRequest => '发送请求';
 
   @override
-  String get friendsRequestSent => 'İstek gönderildi';
+  String get friendsRequestSent => '请求已发送';
 
   @override
   String get friendsNotFound =>
-      'Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.';
+      '没有用这个邮箱注册的用户。对方至少要用 Google 账号打开过一次应用。';
 
   @override
-  String get friendsSelf => 'Kendini arkadaş ekleyemezsin';
+  String get friendsSelf => '不能把自己添加为好友';
 
   @override
-  String get friendsAlready => 'Zaten arkadaşsınız';
+  String get friendsAlready => '你们已经是好友了';
 
   @override
-  String get friendsDecline => 'Reddet';
+  String get friendsDecline => '拒绝';
 
   @override
-  String get friendsAccept => 'Kabul et';
+  String get friendsAccept => '接受';
 
   @override
-  String get friendsRemove => 'Kaldır';
+  String get friendsRemove => '移除';
 
   @override
-  String get friendsRemoveConfirmTitle => 'Arkadaşlıktan çıkar';
+  String get friendsRemoveConfirmTitle => '移除好友';
 
   @override
   String friendsRemoveConfirmBody(Object name) {
-    return '$name arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.';
+    return '要把 ${name} 从好友中移除吗？你与对方共享的文件夹将不再可见。';
   }
 
   @override
   String get friendsNeedsAccount =>
-      'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
+      '联系人和文件夹共享需要已关联的 Google 账号。';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => '按名称或邮箱搜索';
 
   @override
-  String get friendsSearchTab => 'Ara';
+  String get friendsSearchTab => '搜索';
 
   @override
-  String get friendsSearchEmailTab => 'E-posta ile';
+  String get friendsSearchEmailTab => '按邮箱';
 
   @override
-  String get friendsSearchEmpty => 'Sonuç yok';
+  String get friendsSearchEmpty => '没有结果';
 
   @override
-  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+  String get friendsSearchTooShort => '请至少输入 2 个字符再搜索';
 
   @override
-  String get friendsSearchAdd => 'Ekle';
+  String get friendsSearchAdd => '添加';
 
   @override
-  String get folderShare => 'Paylaş';
+  String get folderShare => '共享';
 
   @override
   String folderShareCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count kişiyle paylaşıldı',
-      one: '1 kişiyle paylaşıldı',
+      other: '已与 ${count} 人共享',
+      one: '已与 1 人共享',
     );
     return '$_temp0';
   }
 
   @override
   String folderShareTitle(Object name) {
-    return '\"$name\" klasörünü paylaş';
+    return '共享「${name}」';
   }
 
   @override
   String get folderShareInfo =>
-      'Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.';
+      '邀请会发给你选择的好友；对方接受后即可看到文件夹。权限（只读 / 写入 / 两者）由你决定。';
 
   @override
-  String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
+  String get friendsRowInfo => '添加好友，与他们共享文件夹';
 
   @override
   String get accountRecoverConflictTitle =>
-      'Bu cihazda kaydedilmemiş notlar var';
+      '此设备上有尚未保存的笔记';
 
   @override
   String accountRecoverConflictBody(Object count) {
-    return 'Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki $count not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?';
+    return '这个 Google 账号已关联到另一个会话；切换过去会隐藏本设备上的 ${count} 条笔记（不会删除，只是从这里无法再访问）。仍要继续吗？';
   }
 
   @override
-  String get accountRecoverConflictProceed => 'Yine de geç';
+  String get accountRecoverConflictProceed => '仍要切换';
   @override
-  String get folderRoleRead => 'Okuma';
+  String get folderRoleRead => '只读';
 
   @override
-  String get folderRoleWrite => 'Yazma';
+  String get folderRoleWrite => '写入';
 
   @override
-  String get folderRoleBoth => 'Okuma + yazma';
+  String get folderRoleBoth => '只读 + 写入';
 
   @override
-  String get folderInvitePending => 'Davet gönderildi, yanıt bekleniyor';
+  String get folderInvitePending => '邀请已发送，等待回复';
 
   @override
-  String get folderWriteOnlyTitle => 'Yalnız yazma yetkin var';
+  String get folderWriteOnlyTitle => '你只有写入权限';
 
   @override
-  String get folderWriteOnlyHint => 'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
+  String get folderWriteOnlyHint => '你可以往这个文件夹里添加新笔记，但看不到里面的笔记。';
 
   @override
-  String get folderChatTitle => 'Sohbet';
+  String get folderChatTitle => '聊天';
 
   @override
-  String get folderChatHint => 'Mesaj yaz…';
+  String get folderChatHint => '写一条消息…';
 
   @override
-  String get folderChatSend => 'Gönder';
+  String get folderChatSend => '发送';
 
   @override
-  String get folderChatEmptyTitle => 'Henüz mesaj yok';
+  String get folderChatEmptyTitle => '还没有消息';
 
   @override
-  String get folderChatEmptyHint => 'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
+  String get folderChatEmptyHint => '在这里和共享了此文件夹的人聊天。';
 
   @override
-  String get folderInviteTitle => 'Klasör daveti';
+  String get folderInviteTitle => '文件夹邀请';
 
   @override
   String folderInviteBody(Object name) {
-    return '"$name" klasörü seninle paylaşıldı.';
+    return '文件夹「${name}」已共享给你。';
   }
 
   @override
-  String get folderInviteAccepted => 'Klasör eklendi';
+  String get folderInviteAccepted => '已添加文件夹';
 
   @override
-  String get folderInviteDeclined => 'Davet reddedildi';
+  String get folderInviteDeclined => '已拒绝邀请';
 
   @override
   String friendRequestBanner(Object name) {
-    return '$name sana arkadaşlık isteği gönderdi';
+    return '${name} 向你发来好友请求';
   }
 
   @override
-  String get friendRequestAccepted => 'Arkadaş eklendi';
+  String get friendRequestAccepted => '已添加好友';
 
   @override
-  String get sendNoteAction => 'Arkadaşa gönder';
+  String get sendNoteAction => '发送给好友';
 
   @override
-  String get sendNoteTitle => 'Notu arkadaşına gönder';
+  String get sendNoteTitle => '把笔记发送给好友';
 
   @override
-  String get sendNoteInfo => 'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
+  String get sendNoteInfo => '笔记副本会送到对方的「收到的笔记」中。附件（图片、文档、音频）不会一起发送。';
 
   @override
   String sendNoteSent(Object name) {
-    return 'Not $name kişisine gönderildi';
+    return '笔记已发送给 ${name}';
   }
 
   @override
-  String get inboxTitle => 'Gelen notlar';
+  String get inboxTitle => '收到的笔记';
 
   @override
-  String get inboxEmpty => 'Gelen not yok';
+  String get inboxEmpty => '没有收到的笔记';
 
   @override
-  String get inboxEmptyHint => 'Arkadaşlarının sana gönderdiği notlar burada birikir.';
+  String get inboxEmptyHint => '好友发给你的笔记会汇集到这里。';
 
   @override
   String inboxFrom(Object name) {
-    return '$name gönderdi';
+    return '来自 ${name}';
   }
 
   @override
-  String get inboxAccept => 'Notlarıma ekle';
+  String get inboxAccept => '添加到我的笔记';
 
   @override
-  String get inboxAccepted => 'Not notlarına eklendi';
+  String get inboxAccepted => '笔记已添加到你的笔记中';
 
   @override
-  String get folderShelfExpand => 'Klasörleri büyüt';
+  String get folderShelfExpand => '展开文件夹';
 
   @override
-  String get folderShelfCollapse => 'Klasörleri daralt';
+  String get folderShelfCollapse => '收起文件夹';
 
   @override
-  String get accountSheetLocalInfo => 'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
+  String get accountSheetLocalInfo => '你的笔记只保存在本设备。关联 Google 账号即可备份并添加好友。';
 
   @override
-  String get accountSettings => 'Hesap ayarları';
+  String get accountSettings => '账号设置';
 }

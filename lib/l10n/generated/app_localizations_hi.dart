@@ -151,7 +151,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get attachmentUploadFailed =>
-      'Yüklenemedi — yeniden denemek için dokun';
+      'अपलोड नहीं हो सका — दोबारा कोशिश करने के लिए टैप करें';
 
   @override
   String get attachmentNotSynced =>
@@ -488,7 +488,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String assistantDeleteConfirm(String title) {
-    return 'Asistan \"$title\" notunu çöp kutusuna taşımak istiyor. Onaylıyor musun?';
+    return 'सहायक "${title}" नोट को कूड़ेदान में डालना चाहता है। क्या आप सहमत हैं?';
   }
 
   @override
@@ -1260,7 +1260,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get annotateDone => 'टिप्पणी समाप्त करें';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => 'PDF जोड़ें, नोट लिखें';
 
   @override
   String get imageNotePreparing => 'इमेज को दस्तावेज़ में लगाया जा रहा है…';
@@ -1269,81 +1269,81 @@ class AppLocalizationsHi extends AppLocalizations {
   String get newImageNote => 'इमेज जोड़ें, नोट लें';
 
   @override
-  String get pdfPageNoteHint => 'Bu sayfanın notu…';
+  String get pdfPageNoteHint => 'इस पेज का नोट…';
 
   @override
   String pdfPage(int page) {
-    return 'Sayfa $page';
+    return 'पेज ${page}';
   }
 
   @override
   String pdfPageOf(int page, int total) {
-    return 'Sayfa $page / $total';
+    return 'पेज ${page} / ${total}';
   }
 
   @override
-  String get pdfPreviousPage => 'Önceki sayfa';
+  String get pdfPreviousPage => 'पिछला पेज';
 
   @override
-  String get pdfNextPage => 'Sonraki sayfa';
+  String get pdfNextPage => 'अगला पेज';
 
   @override
-  String get pdfFullScreen => 'Tam ekran aç';
+  String get pdfFullScreen => 'पूरी स्क्रीन में खोलें';
 
   @override
-  String get pdfNoDocument => 'Bu notta henüz PDF yok';
+  String get pdfNoDocument => 'इस नोट में अभी कोई PDF नहीं है';
 
   @override
-  String get pdfChooseDocument => 'PDF seç';
+  String get pdfChooseDocument => 'PDF चुनें';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => 'स्लाइड जोड़ें, नोट लिखें';
 
   @override
-  String get slidesNoDocument => 'Bu notta henüz sunum yok';
+  String get slidesNoDocument => 'इस नोट में अभी कोई प्रेज़ेंटेशन नहीं है';
 
   @override
-  String get slidesChooseDocument => 'Sunum seç';
+  String get slidesChooseDocument => 'प्रेज़ेंटेशन चुनें';
 
   @override
-  String get pdfEditPages => 'Sayfaları düzenle';
+  String get pdfEditPages => 'पेज संपादित करें';
 
   @override
-  String get pdfDeletePages => 'Seçili sayfaları sil';
+  String get pdfDeletePages => 'चुने हुए पेज हटाएँ';
 
   @override
   String get pdfAddBlankPage => 'खाली पेज जोड़ें';
 
   @override
-  String get pdfRotatePages => 'Döndür';
+  String get pdfRotatePages => 'घुमाएँ';
 
   @override
-  String get pdfBurnInk => 'El yazısını belgeye göm';
+  String get pdfBurnInk => 'हस्तलेख को दस्तावेज़ में पक्का करें';
 
   @override
-  String get pdfApplyChanges => 'Değişiklikleri uygula';
+  String get pdfApplyChanges => 'बदलाव लागू करें';
 
   @override
-  String get pdfCannotDeleteAllPages => 'Tüm sayfalar silinemez';
+  String get pdfCannotDeleteAllPages => 'आप सारे पेज नहीं हटा सकते';
 
   @override
   String get pdfPagesHint =>
-      'Sayfaya dokunup seçin. Sayfa notları sayfalarıyla birlikte taşınır; silinen sayfanın notu listede görünmez ama kaydınızda kalır.';
+      'पेज चुनने के लिए उस पर टैप करें। पेज-नोट अपने पेज के साथ चलते हैं; हटाए गए पेज का नोट छिप जाता है, पर आपके डेटा में बना रहता है।';
 
   @override
   String pdfEditFailed(String error) {
-    return 'PDF düzenlenemedi: $error';
+    return 'PDF संपादित नहीं हो सका: ${error}';
   }
 
   @override
-  String get pdfInkBurned => 'El yazısı belgeye gömüldü';
+  String get pdfInkBurned => 'हस्तलेख दस्तावेज़ में पक्का कर दिया गया';
 
   @override
-  String get pdfAllPageNotes => 'Tüm sayfa notları';
+  String get pdfAllPageNotes => 'सभी पेज-नोट';
 
   @override
   String get pdfNoPageNotes =>
-      'Henüz sayfa notu yok. Sayfayı çevirip alttaki alana yazın.';
+      'अभी कोई पेज-नोट नहीं है। किसी पेज पर जाएँ और नीचे दिए बॉक्स में लिखें।';
 
   @override
   String get crop => 'काटें';
@@ -1830,7 +1830,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addTextBlock => 'टेक्स्ट जोड़ें';
 
   @override
-  String get attachNoteContent => 'Not içeriği';
+  String get attachNoteContent => 'नोट की सामग्री';
 
   @override
   String get noteBackgroundImage => 'पृष्ठभूमि चित्र';
@@ -1889,155 +1889,155 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String scanReviewPage(int current, int total) {
-    return 'Sayfa $current / $total';
+    return 'पेज ${current} / ${total}';
   }
 
   @override
-  String get scanRotatePage => 'Sayfayı döndür';
+  String get scanRotatePage => 'पेज घुमाएँ';
 
   @override
-  String get scanDeletePage => 'Sayfayı sil';
+  String get scanDeletePage => 'पेज हटाएँ';
 
   @override
-  String get scanLastPage => 'Son sayfa silinemez';
+  String get scanLastPage => 'आख़िरी पेज नहीं हटाया जा सकता';
 
   @override
-  String get scanDiscardTitle => 'Taranan sayfalar atılsın mı?';
+  String get scanDiscardTitle => 'स्कैन किए पेज छोड़ दें?';
 
   @override
-  String get scanDiscardConfirm => 'At';
+  String get scanDiscardConfirm => 'छोड़ें';
 
   @override
-  String get scanAdjustCorners => 'Köşeleri ayarla';
+  String get scanAdjustCorners => 'कोने ठीक करें';
 
   @override
-  String get scanFilterOriginal => 'Özgün';
+  String get scanFilterOriginal => 'मूल';
 
   @override
-  String get scanFilterAuto => 'Netleştir';
+  String get scanFilterAuto => 'बेहतर बनाएँ';
 
   @override
-  String get scanFilterGray => 'Gri';
+  String get scanFilterGray => 'श्वेत-श्याम रंगत';
 
   @override
-  String get scanFilterBw => 'Siyah-beyaz';
+  String get scanFilterBw => 'काला-सफ़ेद';
 
   @override
-  String get scanApplyAll => 'Hepsine uygula';
+  String get scanApplyAll => 'सब पर लागू करें';
 
   @override
-  String get scanPageFailed => 'Sayfa görüntülenemedi';
+  String get scanPageFailed => 'पेज दिखाया नहीं जा सका';
 
   @override
   String get scanCropHint =>
-      'Yamuk sayfayı \"Köşeleri ayarla\" ile düzeltebilirsin';
+      'टेढ़े पेज को "कोने ठीक करें" से सुधारें';
 
   @override
-  String get scanAddAsPdf => 'PDF olarak ekle';
+  String get scanAddAsPdf => 'PDF के रूप में जोड़ें';
 
   @override
-  String get scanAddAsImages => 'Görsel olarak ekle';
+  String get scanAddAsImages => 'छवियों के रूप में जोड़ें';
 
   @override
-  String get scanBuildingPdf => 'PDF hazırlanıyor…';
+  String get scanBuildingPdf => 'PDF तैयार हो रही है…';
 
   @override
   String scanOcrProgress(int done, int total) {
-    return 'Metin tanınıyor… $done/$total';
+    return 'पाठ पहचाना जा रहा है… ${done}/${total}';
   }
 
   @override
-  String get scanAutoDetect => 'Kenarları otomatik bul';
+  String get scanAutoDetect => 'किनारे अपने आप पहचानें';
 
   @override
-  String get scanReset => 'Sıfırla';
+  String get scanReset => 'रीसेट करें';
 
   @override
-  String get scanDetecting => 'Kenarlar aranıyor…';
+  String get scanDetecting => 'किनारे खोजे जा रहे हैं…';
 
   @override
   String get scanAutoFound =>
-      'Kenarlar otomatik bulundu; gerekirse tutamaçlardan ince ayar yap';
+      'किनारे अपने आप मिल गए; ज़रूरत हो तो हैंडल से ठीक करें';
 
   @override
-  String get scanDragHint => 'Köşeleri kâğıdın kenarlarına sürükle';
+  String get scanDragHint => 'कोनों को काग़ज़ के किनारों तक खींचें';
 
   @override
-  String get scanApplyCorners => 'Düzelt ve uygula';
+  String get scanApplyCorners => 'सीधा करके लागू करें';
 
   @override
-  String get scanWorking => 'Düzeltiliyor…';
+  String get scanWorking => 'सीधा किया जा रहा है…';
 
   @override
-  String get scanPdfAdded => 'Tarama, PDF eki olarak nota eklendi';
+  String get scanPdfAdded => 'स्कैन नोट में PDF अनुलग्नक के रूप में जुड़ गया';
 
   @override
-  String get premiumTitle => 'Premium';
+  String get premiumTitle => 'प्रीमियम';
 
   @override
   String premiumStatusActive(String date) {
-    return 'Premium etkin — $date tarihine kadar';
+    return 'प्रीमियम चालू — ${date} तक';
   }
 
   @override
-  String get premiumStatusFree => 'Ücretsiz sürümü kullanıyorsun';
+  String get premiumStatusFree => 'आप मुफ़्त संस्करण इस्तेमाल कर रहे हैं';
 
   @override
-  String get premiumPerksTitle => 'Premium ile ne değişir?';
+  String get premiumPerksTitle => 'प्रीमियम से क्या बदलता है?';
 
   @override
-  String get premiumPerkAi => 'Günlük yapay zeka puanı';
+  String get premiumPerkAi => 'रोज़ के AI अंक';
 
   @override
-  String get premiumPerkAttach => 'Ek dosya boyutu';
+  String get premiumPerkAttach => 'अनुलग्नक का आकार';
 
   @override
-  String get premiumPerkStorage => 'Bulut depolama alanı';
+  String get premiumPerkStorage => 'क्लाउड संग्रहण';
 
   @override
-  String get premiumPerkAuto => 'Otomatik günlük içerik';
+  String get premiumPerkAuto => 'अपने आप बनने वाली रोज़ की सामग्री';
 
   @override
   String get premiumPerkAutoBody =>
-      'Günlük brifing ve öneriler her gün kendiliğinden hazırlanır; ücretsizde yalnız düğmeyle üretilir.';
+      'रोज़ाना का ब्रीफ़िंग और सुझाव हर दिन अपने आप तैयार होते हैं; मुफ़्त संस्करण में ये केवल माँगने पर चलते हैं।';
 
   @override
-  String get premiumHowTitle => 'Nasıl edinilir?';
+  String get premiumHowTitle => 'इसे कैसे लें?';
 
   @override
   String get premiumHowBody =>
-      'Premium yakında Play Store üzerinden satın alınabilecek. Şu an erken erişim dönemindeyiz.';
+      'प्रीमियम जल्द ही Play Store पर उपलब्ध होगा। फ़िलहाल हम शुरुआती पहुँच में हैं।';
 
   @override
   String get premiumByokHint =>
-      'Kendi Gemini API anahtarını girersen yapay zeka özellikleri kotasız çalışır — Premium\'dan bağımsız (Ayarlar → Yapay Zeka).';
+      'अगर आप अपनी Gemini API कुंजी डालते हैं, तो AI सुविधाएँ बिना कोटा के चलती हैं — प्रीमियम से अलग (सेटिंग → AI)।';
 
   @override
-  String get premiumDiscoverTitle => 'Gözden kaçan özellikler';
+  String get premiumDiscoverTitle => 'वे सुविधाएँ जो शायद आपसे छूट गईं';
 
   @override
   String get discoverScanBody =>
-      'Kamerayla taranan sayfalar kenar bulma ve netleştirmeyle düzelir, tek dokunuşla ARANABİLİR PDF olur — metin katmanı cihazda, ücretsiz üretilir.';
+      'स्कैन किए पेज सीधे और साफ़ किए जाते हैं और एक टैप में खोजे जा सकने वाली PDF बन जाते हैं — पाठ की परत डिवाइस पर ही, मुफ़्त बनती है।';
 
   @override
   String get discoverSemanticBody =>
-      'Arama kutusundaki \"Akıllı\" sekmesi kelime değil ANLAM arar: \"uçak saatleri\" yazınca seyahat notun çıkar.';
+      'खोज बॉक्स का "स्मार्ट" टैब शब्दों से नहीं, अर्थ से खोजता है: "उड़ान का समय" लिखिए और आपका यात्रा नोट सामने आ जाएगा।';
 
   @override
   String get discoverAssistantBody =>
-      'Ana ekrandaki mikrofon konuşmanı nota, listeye ve hatırlatıcıya kendisi çevirir — \"yarın 9\'da diş randevusu\" demen yeter.';
+      'होम स्क्रीन का माइक आपकी बात को अपने आप नोट, सूची और अनुस्मारक में बदल देता है — बस कहिए "कल सुबह 9 बजे दंत चिकित्सक"।';
 
   @override
   String get discoverLockBody =>
-      'Bir notu parmak izi/yüz kilidiyle kilitleyebilirsin: içeriği aramaya, widget\'a ve AI\'a hiç sızmaz.';
+      'आप नोट को फ़िंगरप्रिंट/चेहरे से लॉक कर सकते हैं: उसकी सामग्री खोज, विजेट या AI में कभी नहीं जाती।';
 
   @override
   String get discoverHiddenBody =>
-      'Gizli klasördeki notlar ana ekranda ve aramada hiç görünmez; klasörü göstermek kimlik doğrulaması ister.';
+      'छिपे फ़ोल्डर के नोट होम स्क्रीन या खोज में कभी नहीं दिखते; फ़ोल्डर दिखाने के लिए प्रमाणीकरण चाहिए।';
 
   @override
   String get discoverExportBody =>
-      'Her not görselleriyle birlikte PDF ya da Word olarak dışa aktarılabilir (paylaş menüsünde).';
+      'हर नोट को छवियों सहित PDF या Word में निर्यात किया जा सकता है (साझा मेन्यू में)।';
 
   @override
   String get guestSignInUnavailable =>
@@ -2096,82 +2096,82 @@ class AppLocalizationsHi extends AppLocalizations {
   String get appFontDefaultSuffix => 'डिफ़ॉल्ट';
 
   @override
-  String get pdfSelectOcrRunning => 'Metin tanınıyor…';
+  String get pdfSelectOcrRunning => 'पाठ पहचाना जा रहा है…';
 
   @override
-  String get pdfSelectOcrNone => 'Bu sayfada metin bulunamadı';
+  String get pdfSelectOcrNone => 'इस पेज पर कोई पाठ नहीं मिला';
 
   @override
   String pdfSelectCopied(int n) {
-    return '$n karakter kopyalandı';
+    return '${n} अक्षर कॉपी हुए';
   }
 
   @override
-  String get bubbleAdd => 'Not balonu bırak';
+  String get bubbleAdd => 'नोट बुलबुला रखें';
 
   @override
-  String get bubbleAddDone => 'Balon bırakmayı bitir';
+  String get bubbleAddDone => 'बुलबुले जोड़ना पूरा';
 
   @override
-  String get bubbleCollapse => 'Balonu küçült';
+  String get bubbleCollapse => 'बुलबुला समेटें';
 
   @override
-  String get bubbleHint => 'Buraya notunu yaz…';
+  String get bubbleHint => 'अपना नोट यहाँ लिखें…';
 
   @override
-  String get bubbleTapToPlace => 'Sayfada balonu bırakmak istediğin yere dokun';
+  String get bubbleTapToPlace => 'पेज पर उस जगह टैप करें जहाँ बुलबुला चाहिए';
 
   @override
-  String get aiModelPodcast => 'Podcast anlatısı';
+  String get aiModelPodcast => 'पॉडकास्ट वाचन';
 
   @override
-  String get listenAiVoice => 'Yapay zekâ sesiyle dinle';
+  String get listenAiVoice => 'AI आवाज़ से सुनें';
 
   @override
   String get listenAiVoiceInfo =>
-      'Cihaz sesi yerine Gemini seslendirir: daha doğal, her paragraf bir model çağrısı harcar.';
+      'डिवाइस की आवाज़ के बजाय Gemini पढ़ता है: ज़्यादा स्वाभाविक, पर हर अनुच्छेद पर एक मॉडल कॉल लगती है।';
 
   @override
   String listenAiVoiceFailed(String error) {
-    return 'Yapay zekâ seslendirmesi başarısız oldu ($error). Cihaz sesiyle okunuyor.';
+    return 'AI वाचन विफल (${error})। डिवाइस की आवाज़ से पढ़ा जा रहा है।';
   }
 
   @override
-  String get ttsSectionTitle => 'Seslendirme';
+  String get ttsSectionTitle => 'वाचन';
 
   @override
-  String get ttsEngineDevice => 'Cihaz sesi';
+  String get ttsEngineDevice => 'डिवाइस की आवाज़';
 
   @override
-  String get ttsEngineAi => 'Yapay zekâ';
+  String get ttsEngineAi => 'AI';
 
   @override
   String get ttsEngineDeviceInfo =>
-      'Cihazın yerleşik sesi okur: bedava, çevrimdışı ve sınırsız uzunlukta.';
+      'डिवाइस की अंतर्निर्मित आवाज़ पढ़ती है: मुफ़्त, ऑफ़लाइन और बिना लंबाई की सीमा के।';
 
   @override
   String get ttsEngineAiInfo =>
-      'Gemini\'nin seslendirme modeli okur: belirgin daha doğal ama her paragraf bir model çağrısıdır ve kendi Gemini anahtarını ister.';
+      'Gemini का वाक् मॉडल पढ़ता है: काफ़ी ज़्यादा स्वाभाविक, पर हर अनुच्छेद एक मॉडल कॉल है और आपकी अपनी Gemini कुंजी चाहिए।';
 
   @override
   String get ttsEngineAiUnavailable =>
       'AI आवाज़ के लिए आपकी अपनी Gemini कुंजी चाहिए। तब तक पढ़ना डिवाइस की आवाज़ से होगा।';
 
   @override
-  String get ttsModel => 'Seslendirme modeli';
+  String get ttsModel => 'वाक् मॉडल';
 
   @override
-  String get ttsVoice => 'Yapay zekâ sesi';
+  String get ttsVoice => 'AI आवाज़';
 
   @override
-  String get shareAsNote => 'Not olarak paylaş';
+  String get shareAsNote => 'नोट के रूप में साझा करें';
 
   @override
   String get shareAsNoteInfo =>
-      'Notu ekleri, sayfa notları, çizimleri ve balonlarıyla gönderir; karşı taraf Not uygulamasında aynı şekilde açar.';
+      'नोट को अनुलग्नकों, पेज-नोट, चित्रों और बुलबुलों समेत भेजता है; सामने वाला उसे Not ऐप में बिलकुल वैसा ही खोलता है।';
 
   @override
-  String get shareAsNotePreparing => 'Not paketi hazırlanıyor…';
+  String get shareAsNotePreparing => 'नोट पैकेज तैयार हो रहा है…';
 
   @override
   String get shareAsText => 'सादे टेक्स्ट के रूप में';
@@ -2202,98 +2202,98 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sharePdfWithBubblesSuffix => ' (बबल सहित)';
 
   @override
-  String get bubbleStar => 'Yıldızla';
+  String get bubbleStar => 'तारांकित करें';
 
   @override
-  String get bubbleEdit => 'Balonu düzenle';
+  String get bubbleEdit => 'बुलबुला संपादित करें';
 
   @override
-  String get bubbleStarredOnly => 'Yalnız yıldızlılar';
+  String get bubbleStarredOnly => 'केवल तारांकित';
 
   @override
-  String get bubbleSearchHint => 'Balonlarda ara…';
+  String get bubbleSearchHint => 'बुलबुलों में खोजें…';
 
   @override
-  String get bubblesOverviewTitle => 'Balonlar';
+  String get bubblesOverviewTitle => 'बुलबुले';
 
   @override
   String get bubblesEmpty =>
-      'Henüz balon yok. Belgede bir metni seçip vurgula ya da sayfaya balon bırak.';
+      'अभी कोई बुलबुला नहीं है। दस्तावेज़ में पाठ चुनकर उसे हाइलाइट करें, या पेज पर एक बुलबुला रखें।';
 
   @override
-  String get bubblesNoMatch => 'Aramaya uyan balon yok.';
+  String get bubblesNoMatch => 'आपकी खोज से कोई बुलबुला मेल नहीं खाता।';
 
   @override
-  String get bubbleNoText => '(boş balon)';
+  String get bubbleNoText => '(खाली बुलबुला)';
 
   @override
-  String get pdfHighlight => 'Vurgula';
+  String get pdfHighlight => 'हाइलाइट करें';
 
   @override
-  String get pdfHighlightWithNote => 'Vurgula + not';
+  String get pdfHighlightWithNote => 'हाइलाइट + नोट';
 
   @override
-  String get pageNotesShow => 'Sayfa notunu göster';
+  String get pageNotesShow => 'पेज-नोट दिखाएँ';
 
   @override
-  String get pageNotesHide => 'Sayfa notunu gizle';
+  String get pageNotesHide => 'पेज-नोट छिपाएँ';
 
   @override
-  String get bubbleSave => 'Kaydet';
+  String get bubbleSave => 'सहेजें';
 
   @override
-  String get bubbleTitleHint => 'Başlık';
+  String get bubbleTitleHint => 'शीर्षक';
 
   @override
-  String get bubbleUrgent => 'Acil (yanıp söner)';
+  String get bubbleUrgent => 'अत्यावश्यक (चमकता है)';
 
   @override
-  String get captureModeQuestion => 'Notu nasıl açalım?';
+  String get captureModeQuestion => 'नोट किस रूप में खुले?';
 
   @override
-  String get captureModeBubbles => 'Balonlu';
+  String get captureModeBubbles => 'बुलबुले';
 
   @override
   String get captureModeBubblesInfo =>
-      'İçerik belge sayfası olur: üzerine balon, vurgu ve kalem.';
+      'सामग्री दस्तावेज़ पेज बन जाती है: बुलबुले, हाइलाइट और कलम।';
 
   @override
-  String get captureModeClassic => 'Klasik';
+  String get captureModeClassic => 'पारंपरिक';
 
   @override
   String get captureModeClassicInfo =>
-      'Düz metin notu; içerik ek olarak girer.';
+      'सादा पाठ नोट; सामग्री अनुलग्नक के रूप में जुड़ती है।';
 
   @override
-  String get captureModeNew => 'YENİ';
+  String get captureModeNew => 'नया';
 
   @override
-  String get imagePrepareTitle => 'Görselleri düzelt';
+  String get imagePrepareTitle => 'छवियाँ ठीक करें';
 
   @override
-  String get imagePrepareDone => 'Devam';
+  String get imagePrepareDone => 'आगे बढ़ें';
 
   @override
-  String get imageRotateLeft => 'Sola döndür';
+  String get imageRotateLeft => 'बाएँ घुमाएँ';
 
   @override
-  String get imageRotateRight => 'Sağa döndür';
+  String get imageRotateRight => 'दाएँ घुमाएँ';
 
   @override
   String get videoFrameFailed =>
-      'Videodan kare alınamadı; not klasik açılıyor.';
+      'वीडियो से फ़्रेम नहीं लिया जा सका; पारंपरिक नोट खोला जा रहा है।';
 
   @override
-  String get bubbleArrowHide => 'Oku gizle';
+  String get bubbleArrowHide => 'तीर छिपाएँ';
 
   @override
-  String get bubbleArrowShow => 'Oku göster';
+  String get bubbleArrowShow => 'तीर दिखाएँ';
 
   @override
-  String get speechPitch => 'Ses tonu';
+  String get speechPitch => 'आवाज़ की ऊँचाई';
 
   @override
-  String get speechVoicePickerTitle => 'Ses seçimi';
+  String get speechVoicePickerTitle => 'आवाज़ का चुनाव';
 
   @override
   String get formatRemove => 'हटाएं';
@@ -2413,80 +2413,80 @@ class AppLocalizationsHi extends AppLocalizations {
       'ऐप जिन मॉडलों का उपयोग नहीं करता, वे भी दिखते हैं।';
 
   @override
-  String get rotateFailed => 'Görsel döndürülemedi.';
+  String get rotateFailed => 'छवि घुमाई नहीं जा सकी।';
 
   @override
-  String get dashboardBackgroundPick => 'Zemin görseli seç';
+  String get dashboardBackgroundPick => 'पृष्ठभूमि छवि चुनें';
 
   @override
-  String get dashboardBackgroundChange => 'Zemin görselini değiştir';
+  String get dashboardBackgroundChange => 'पृष्ठभूमि छवि बदलें';
 
   @override
   String podcastRenderingAudio(int done, int total) {
-    return 'Ses hazırlanıyor: $done/$total parça';
+    return 'ऑडियो तैयार हो रहा है: ${done}/${total} हिस्से';
   }
 
   @override
-  String get podcastExportAudio => 'Ses dosyası olarak dışa aktar';
+  String get podcastExportAudio => 'ऑडियो फ़ाइल के रूप में निर्यात करें';
 
   @override
   String get podcastExportAudioCost =>
-      'Metnin tamamı yapay zekâ sesiyle yeniden seslendirilip tek bir WAV dosyası olarak hazırlanır. Bu işlem Gemini kotandan düşer ve uzun metinlerde birkaç dakika sürebilir.';
+      'पूरी स्क्रिप्ट AI आवाज़ से दोबारा बनाई जाती है और एक ही WAV फ़ाइल में सहेजी जाती है। इसमें आपका Gemini कोटा लगता है और लंबे पाठ पर कुछ मिनट लग सकते हैं।';
 
   @override
-  String get podcastShareText => 'Metni paylaş';
+  String get podcastShareText => 'स्क्रिप्ट साझा करें';
 
   @override
-  String get podcastSaveAsNote => 'Yeni not olarak kaydet';
+  String get podcastSaveAsNote => 'नए नोट के रूप में सहेजें';
 
   @override
-  String get podcastSavedAsNote => 'Podcast metni not olarak kaydedildi.';
+  String get podcastSavedAsNote => 'पॉडकास्ट स्क्रिप्ट नोट के रूप में सहेज दी गई।';
 
   @override
-  String get listenPreparingVoice => 'Ses hazırlanıyor…';
+  String get listenPreparingVoice => 'ऑडियो तैयार हो रहा है…';
 
   @override
-  String get appearancePreviewTitle => 'Örnek metin';
+  String get appearancePreviewTitle => 'नमूना पाठ';
 
   @override
-  String get appearancePreviewNoteTitle => 'Örnek not başlığı';
+  String get appearancePreviewNoteTitle => 'नमूना नोट शीर्षक';
 
   @override
   String get appearancePreviewBody =>
-      'Notların bu yazı tipi ve boyutta görünecek. Satır içi **kalın**, ~altı çizili~ ve ==2:vurgulu== metinler de böyle durur.';
+      'आपके नोट ऐसे दिखेंगे। पाठ में **मोटा**, ~रेखांकित~ और ==2:हाइलाइट किया== ऐसा दिखता है।';
 
   @override
-  String get appearancePreviewItem => 'Liste maddesi böyle görünür';
+  String get appearancePreviewItem => 'सूची की एक पंक्ति ऐसी दिखती है';
 
   @override
-  String get convertToText => 'Metne dönüştür';
+  String get convertToText => 'पाठ में बदलें';
 
   @override
-  String get convertToList => 'Listeye dönüştür';
+  String get convertToList => 'सूची में बदलें';
 
   @override
-  String get convertedToText => 'Liste düz metne dönüştürüldü.';
+  String get convertedToText => 'सूची सादे पाठ में बदल दी गई।';
 
   @override
-  String get convertedToList => 'Metin listeye dönüştürüldü.';
+  String get convertedToList => 'पाठ सूची में बदल दिया गया।';
 
   @override
-  String get convertToListEmpty => 'Listeye dönüştürülecek satır yok.';
+  String get convertToListEmpty => 'सूची में बदलने के लिए कोई पंक्ति नहीं है।';
 
   @override
-  String get listTwoColumns => '2 sütun';
+  String get listTwoColumns => 'दो स्तंभ';
 
   @override
-  String get listOneColumn => 'Tek sütun';
+  String get listOneColumn => 'एक स्तंभ';
 
   @override
-  String get sortItems => 'Maddeleri sırala';
+  String get sortItems => 'पंक्तियाँ क्रम में लगाएँ';
 
   @override
-  String get sortStarredFirst => 'Önce yıldızlılar';
+  String get sortStarredFirst => 'पहले तारांकित';
 
   @override
-  String get sortUncheckedFirst => 'Tamamlananlar sona';
+  String get sortUncheckedFirst => 'पूरी हुई सबसे बाद में';
 
   @override
   String get sortAlphabetical => 'A → Z';
@@ -2495,456 +2495,456 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sortAlphabeticalDesc => 'Z → A';
 
   @override
-  String get imagesToAttachments => 'Görselleri eke dönüştür';
+  String get imagesToAttachments => 'छवियों को अनुलग्नकों में ले जाएँ';
 
   @override
   String imagesToAttachmentsDone(int count) {
-    return '$count görsel eke dönüştürüldü.';
+    return '${count} छवियाँ अनुलग्नकों में ले जाई गईं।';
   }
 
   @override
-  String get imageOcrShowRecognized => 'Tanınan metni vurgula';
+  String get imageOcrShowRecognized => 'पहचाना गया पाठ हाइलाइट करें';
 
   @override
-  String get imageOcrHideRecognized => 'Vurguyu kaldır';
+  String get imageOcrHideRecognized => 'हाइलाइट छिपाएँ';
 
   @override
-  String get bubblePlainMode => 'Açık metin alanı';
+  String get bubblePlainMode => 'खुला पाठ बॉक्स';
 
   @override
-  String get bubblePlainModeOn => 'Açık metin alanı açık';
+  String get bubblePlainModeOn => 'खुला पाठ बॉक्स चालू है';
 
   @override
-  String get bubblePlainTapToPlace => 'Metnin geleceği yere dokun';
+  String get bubblePlainTapToPlace => 'जहाँ पाठ चाहिए वहाँ टैप करें';
 
   @override
-  String get bubblePlainHint => 'Yazmak için dokun';
+  String get bubblePlainHint => 'लिखने के लिए टैप करें';
 
   @override
-  String get noteSearchTitle => 'Notta ara';
+  String get noteSearchTitle => 'नोट में खोजें';
 
   @override
-  String get noteSearchHint => 'Bu notta ara…';
+  String get noteSearchHint => 'इस नोट में खोजें…';
 
   @override
   String get noteSearchEmptyHint =>
-      'Notun metninde, maddelerinde ve sayfa notlarında anında arar. Ek görsellerin ve PDF\'lerin içi için aşağıdaki taramayı başlat.';
+      'नोट का पाठ, पंक्तियाँ और पेज-नोट तुरंत खोजता है। छवि और PDF अनुलग्नकों के भीतर देखने के लिए नीचे स्कैन शुरू करें।';
 
   @override
-  String get noteSearchNoHit => 'Eşleşme bulunamadı.';
+  String get noteSearchNoHit => 'कोई मेल नहीं मिला।';
 
   @override
-  String get noteSearchScanAttachments => 'Ekleri tara';
+  String get noteSearchScanAttachments => 'अनुलग्नक स्कैन करें';
 
   @override
-  String get noteSearchAskAi => 'Yapay zekâya sor';
+  String get noteSearchAskAi => 'AI से पूछें';
 
   @override
-  String get noteTitleLabel => 'Başlık';
+  String get noteTitleLabel => 'शीर्षक';
 
   @override
-  String get noteBodyLabel => 'Not metni';
+  String get noteBodyLabel => 'नोट का पाठ';
 
   @override
-  String get itemLabel => 'Madde';
+  String get itemLabel => 'पंक्ति';
 
   @override
   String noteSearchAttachmentsInfo(int count) {
-    return '$count ek taranabilir (görsel/PDF).';
+    return '${count} अनुलग्नक स्कैन किए जा सकते हैं (छवि/PDF)।';
   }
 
   @override
   String noteSearchAttachmentsReady(int count) {
-    return '$count ekin içi de aranıyor.';
+    return '${count} अनुलग्नकों के भीतर भी खोजा जा रहा है।';
   }
 
   @override
   String pageLabel(int page) {
-    return 'Sayfa $page';
+    return 'पेज ${page}';
   }
 
   @override
-  String get archiveNotebook => 'Arşiv defteri';
+  String get archiveNotebook => 'संग्रह कॉपी';
 
   @override
   String get archiveNotebookInfo =>
-      'Önemli belgeleri ve görselleri kopyasıyla toplayan, kendi sayfaları olan defter.';
+      'अपने पेजों वाली एक कॉपी, जिसमें ज़रूरी दस्तावेज़ों और छवियों की नक़लें रखी जाती हैं।';
 
   @override
-  String get archivePageImages => 'Görseller';
+  String get archivePageImages => 'छवियाँ';
 
   @override
-  String get archivePageVideos => 'Videolar';
+  String get archivePageVideos => 'वीडियो';
 
   @override
-  String get archivePageDocuments => 'Belgeler';
+  String get archivePageDocuments => 'दस्तावेज़';
 
   @override
-  String get archivePageTexts => 'Metinler';
+  String get archivePageTexts => 'पाठ';
 
   @override
-  String get archiveNewPage => 'Yeni sayfa';
+  String get archiveNewPage => 'नया पेज';
 
   @override
-  String get archivePageName => 'Sayfa adı (ör. Faturalar)';
+  String get archivePageName => 'पेज का नाम (जैसे बिल)';
 
   @override
-  String get archivePageEmpty => 'Bu sayfa henüz boş.';
+  String get archivePageEmpty => 'यह पेज खाली है।';
 
   @override
-  String get archiveSearchHint => 'Defterde ara…';
+  String get archiveSearchHint => 'कॉपी में खोजें…';
 
   @override
-  String get archiveAddText => 'Metin ekle';
+  String get archiveAddText => 'पाठ जोड़ें';
 
   @override
-  String get archiveAddFile => 'Dosya ekle';
+  String get archiveAddFile => 'फ़ाइल जोड़ें';
 
   @override
-  String get archiveCopyHere => 'Arşiv defterine kopyala';
+  String get archiveCopyHere => 'संग्रह कॉपी में नक़ल करें';
 
   @override
   String get archiveNoNotebook =>
-      'Henüz arşiv defteri yok. Önce bir tane oluştur.';
+      'अभी कोई संग्रह कॉपी नहीं है। पहले एक बनाएँ।';
 
   @override
-  String get archiveNothingToCopy => 'Bu notta kopyalanacak ek yok.';
+  String get archiveNothingToCopy => 'इस नोट में नक़ल करने योग्य कोई अनुलग्नक नहीं है।';
 
   @override
   String archiveDeleteEntry(String name) {
-    return '\"$name\" defterden silinsin mi? Bu kopya kalıcı olarak gider.';
+    return 'क्या "${name}" को कॉपी से हटाना है? यह नक़ल हमेशा के लिए चली जाएगी।';
   }
 
   @override
   String archiveCopied(int count) {
-    return '$count dosya arşiv defterine kopyalandı.';
+    return '${count} फ़ाइलें संग्रह कॉपी में नक़ल हो गईं।';
   }
 
   @override
-  String get archiveCaptureTitle => 'Görselden yakala';
+  String get archiveCaptureTitle => 'छवि से लें';
 
   @override
-  String get archiveCapturePage => 'Sayfa';
+  String get archiveCapturePage => 'पेज';
 
   @override
   String get archiveCapturePageInfo =>
-      'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.';
+      'AI का सुझाया प्रकार। खाली छोड़ने पर यह "पाठ" पेज में जाएगा।';
 
   @override
-  String get archiveCaptureText => 'Tanınan metin';
+  String get archiveCaptureText => 'पहचाना गया पाठ';
 
   @override
-  String get attachmentTagInsert => 'Metne ekle';
+  String get attachmentTagInsert => 'पाठ में डालें';
 
   @override
-  String get attachmentTagInserted => 'Ek etiketi metne eklendi.';
+  String get attachmentTagInserted => 'अनुलग्नक का चिह्न डाल दिया गया।';
 
   @override
-  String get attachmentTagPreview => 'Eki önizle';
+  String get attachmentTagPreview => 'अनुलग्नक देखें';
 
   @override
-  String get attachmentTagEdit => 'Eki düzenle';
+  String get attachmentTagEdit => 'अनुलग्नक संपादित करें';
 
   @override
   String archiveCardSummary(int files, int texts) {
-    return '$files dosya · $texts metin';
+    return '${files} फ़ाइलें · ${texts} पाठ';
   }
 
   @override
-  String get archiveEntryTitle => 'Başlık';
+  String get archiveEntryTitle => 'शीर्षक';
 
   @override
-  String get archiveLinkedFile => 'Bağlı dosya';
+  String get archiveLinkedFile => 'जुड़ी हुई फ़ाइल';
 
   @override
-  String get archiveNoLink => 'Bağlı dosya yok';
+  String get archiveNoLink => 'कोई जुड़ी फ़ाइल नहीं';
 
   @override
-  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+  String get attachmentTagEmbed => 'चुने हुए पाठ में अनुलग्नक जोड़ें';
 
   @override
   String get attachmentTagNoAttachment =>
-      'Önce nota bir dosya ekle; sonra yazıya gömebilirsin.';
+      'पहले नोट में एक फ़ाइल जोड़ें, फिर आप उसे पाठ में लगा सकेंगे।';
 
   @override
-  String get bubbleModeBubble => 'Balon';
+  String get bubbleModeBubble => 'बुलबुला';
 
   @override
   String get attachmentTagEmbedInfo =>
-      'Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır';
+      'आपके चुने पाठ से जुड़ता है, और कुछ न चुना हो तो कर्सर की जगह पर';
 
   @override
   String get attachmentTagPickText =>
-      'Şimdi bağlanacak yazıyı seç, sonra \"Buraya bağla\"ya dokun.';
+      'अब वह पाठ चुनें जिससे जोड़ना है, फिर "यहाँ जोड़ें" पर टैप करें।';
 
   @override
-  String get attachmentTagLinkHere => 'Buraya bağla';
+  String get attachmentTagLinkHere => 'यहाँ जोड़ें';
 
   @override
   String attachmentTagPendingBanner(String name) {
-    return '$name bağlanacak — yazıyı seç';
+    return '${name} जोड़ा जाएगा — पाठ चुनें';
   }
 
   @override
-  String get docNameNotesSuffix => 'notlar';
+  String get docNameNotesSuffix => 'नोट';
 
   @override
-  String get docNamePhoto => 'Fotoğraf notları';
+  String get docNamePhoto => 'फ़ोटो के नोट';
 
   @override
-  String get docNameScan => 'Tarama notları';
+  String get docNameScan => 'स्कैन के नोट';
 
   @override
-  String get docNameImage => 'Görsel notları';
+  String get docNameImage => 'छवि के नोट';
 
   @override
-  String get docNameVideo => 'Görüntü notları';
+  String get docNameVideo => 'वीडियो के नोट';
 
   @override
-  String get folderManage => 'Klasörü yönet';
+  String get folderManage => 'फ़ोल्डर प्रबंधित करें';
 
   @override
-  String get folderEmpty => 'Bu klasör boş';
+  String get folderEmpty => 'यह फ़ोल्डर खाली है';
 
   @override
   String get folderEmptyHint =>
-      'Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.';
+      'नीचे + से नोट जोड़ें, या किसी नोट को संपादित करते समय यहाँ ले आएँ।';
 
   @override
-  String get brainstormTitle => 'AI ile beraber düşün';
+  String get brainstormTitle => 'AI के साथ विचार-मंथन';
 
   @override
   String get brainstormRowInfo =>
-      'AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz';
+      'पहले AI एक रूपरेखा बनाता है, फिर आप दोनों मिलकर उसे बढ़ाते हैं';
 
   @override
   String get brainstormIntro =>
-      'Yukarıdaki başlıklardan birine dokun ya da doğrudan yaz — birlikte düşünmeye başlayalım.';
+      'ऊपर के किसी शीर्षक पर टैप करें या बस लिखना शुरू करें — चलिए साथ में सोचते हैं।';
 
   @override
-  String get brainstormOutlineTitle => 'ANA HAT';
+  String get brainstormOutlineTitle => 'रूपरेखा';
 
   @override
-  String get brainstormInputHint => 'Bir fikir yaz ya da soru sor…';
+  String get brainstormInputHint => 'कोई विचार लिखें या सवाल पूछें…';
 
   @override
-  String get brainstormAddIdea => 'Nota ekle';
+  String get brainstormAddIdea => 'नोट में जोड़ें';
 
   @override
-  String get brainstormAdded => 'Nota eklendi';
+  String get brainstormAdded => 'नोट में जोड़ दिया गया';
 
   @override
-  String get folderShared => 'Bu klasör bir arkadaşınla ortak';
+  String get folderShared => 'यह फ़ोल्डर किसी मित्र के साथ साझा है';
 
   @override
-  String get friendsTitle => 'Kişiler';
+  String get friendsTitle => 'संपर्क';
 
   @override
-  String get friendsAdd => 'Arkadaş ekle';
+  String get friendsAdd => 'मित्र जोड़ें';
 
   @override
   String get friendsEmpty =>
-      'Henüz kimse yok. E-postayla bir arkadaş ekle, klasörlerini onunla paylaş.';
+      'अभी कोई नहीं है। ईमेल से मित्र जोड़ें ताकि उनके साथ फ़ोल्डर साझा कर सकें।';
 
   @override
-  String get friendsRequestsTitle => 'İSTEKLER';
+  String get friendsRequestsTitle => 'अनुरोध';
 
   @override
-  String get friendsListTitle => 'ARKADAŞLARIM';
+  String get friendsListTitle => 'मेरे मित्र';
 
   @override
-  String get friendsAddEmailHint => 'arkadas@eposta.com';
+  String get friendsAddEmailHint => 'friend@email.com';
 
   @override
-  String get friendsSendRequest => 'İstek gönder';
+  String get friendsSendRequest => 'अनुरोध भेजें';
 
   @override
-  String get friendsRequestSent => 'İstek gönderildi';
+  String get friendsRequestSent => 'अनुरोध भेज दिया गया';
 
   @override
   String get friendsNotFound =>
-      'Bu e-postayla kayıtlı bir kullanıcı bulunamadı. Kişinin uygulamayı Google hesabıyla en az bir kez açmış olması gerekir.';
+      'इस ईमेल से कोई उपयोगकर्ता पंजीकृत नहीं है। उन्हें कम से कम एक बार Google खाते से ऐप खोलना होगा।';
 
   @override
-  String get friendsSelf => 'Kendini arkadaş ekleyemezsin';
+  String get friendsSelf => 'आप ख़ुद को मित्र नहीं बना सकते';
 
   @override
-  String get friendsAlready => 'Zaten arkadaşsınız';
+  String get friendsAlready => 'आप पहले से मित्र हैं';
 
   @override
-  String get friendsDecline => 'Reddet';
+  String get friendsDecline => 'अस्वीकार करें';
 
   @override
-  String get friendsAccept => 'Kabul et';
+  String get friendsAccept => 'स्वीकार करें';
 
   @override
-  String get friendsRemove => 'Kaldır';
+  String get friendsRemove => 'हटाएँ';
 
   @override
-  String get friendsRemoveConfirmTitle => 'Arkadaşlıktan çıkar';
+  String get friendsRemoveConfirmTitle => 'मित्र हटाएँ';
 
   @override
   String friendsRemoveConfirmBody(Object name) {
-    return '$name arkadaş listenden kaldırılsın mı? Onunla paylaştığın klasörler artık görünmez.';
+    return 'क्या ${name} को मित्रों से हटाना है? आपने जो फ़ोल्डर साझा किए थे, वे अब नहीं दिखेंगे।';
   }
 
   @override
   String get friendsNeedsAccount =>
-      'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
+      'संपर्क और फ़ोल्डर साझा करने के लिए जुड़ा हुआ Google खाता ज़रूरी है।';
 
   @override
-  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+  String get friendsSearchHint => 'नाम या ईमेल से खोजें';
 
   @override
-  String get friendsSearchTab => 'Ara';
+  String get friendsSearchTab => 'खोज';
 
   @override
-  String get friendsSearchEmailTab => 'E-posta ile';
+  String get friendsSearchEmailTab => 'ईमेल से';
 
   @override
-  String get friendsSearchEmpty => 'Sonuç yok';
+  String get friendsSearchEmpty => 'कोई परिणाम नहीं';
 
   @override
-  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+  String get friendsSearchTooShort => 'खोजने के लिए कम से कम 2 अक्षर लिखें';
 
   @override
-  String get friendsSearchAdd => 'Ekle';
+  String get friendsSearchAdd => 'जोड़ें';
 
   @override
-  String get folderShare => 'Paylaş';
+  String get folderShare => 'साझा करें';
 
   @override
   String folderShareCount(num count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count kişiyle paylaşıldı',
-      one: '1 kişiyle paylaşıldı',
+      other: '${count} लोगों के साथ साझा',
+      one: '1 व्यक्ति के साथ साझा',
     );
     return '$_temp0';
   }
 
   @override
   String folderShareTitle(Object name) {
-    return '\"$name\" klasörünü paylaş';
+    return '"${name}" साझा करें';
   }
 
   @override
   String get folderShareInfo =>
-      'Seçtiğin arkadaşa davet gider; kabul edince klasörü görür. Yetkiyi (okuma / yazma / her ikisi) sen belirlersin.';
+      'आपके चुने मित्र को निमंत्रण जाता है; स्वीकार करते ही उन्हें फ़ोल्डर दिखने लगता है। अनुमति (पढ़ना / लिखना / दोनों) आप तय करते हैं।';
 
   @override
-  String get friendsRowInfo => 'Arkadaş ekle, klasörlerini onlarla paylaş';
+  String get friendsRowInfo => 'मित्र जोड़ें, उनके साथ फ़ोल्डर साझा करें';
 
   @override
   String get accountRecoverConflictTitle =>
-      'Bu cihazda kaydedilmemiş notlar var';
+      'इस डिवाइस पर बिना सहेजे नोट हैं';
 
   @override
   String accountRecoverConflictBody(Object count) {
-    return 'Bu Google hesabı zaten başka bir oturuma bağlı; ona geçersen bu cihazdaki $count not artık görünmeyecek (silinmezler ama bu ekrandan erişilemezler). Yine de geçmek istiyor musun?';
+    return 'यह Google खाता पहले से किसी दूसरे सत्र से जुड़ा है; उस पर जाने से इस डिवाइस के ${count} नोट छिप जाएँगे (वे मिटते नहीं, बस यहाँ से पहुँच में नहीं रहेंगे)। फिर भी जारी रखें?';
   }
 
   @override
-  String get accountRecoverConflictProceed => 'Yine de geç';
+  String get accountRecoverConflictProceed => 'फिर भी बदलें';
   @override
-  String get folderRoleRead => 'Okuma';
+  String get folderRoleRead => 'पढ़ना';
 
   @override
-  String get folderRoleWrite => 'Yazma';
+  String get folderRoleWrite => 'लिखना';
 
   @override
-  String get folderRoleBoth => 'Okuma + yazma';
+  String get folderRoleBoth => 'पढ़ना + लिखना';
 
   @override
-  String get folderInvitePending => 'Davet gönderildi, yanıt bekleniyor';
+  String get folderInvitePending => 'निमंत्रण भेजा गया, उत्तर की प्रतीक्षा है';
 
   @override
-  String get folderWriteOnlyTitle => 'Yalnız yazma yetkin var';
+  String get folderWriteOnlyTitle => 'आपके पास केवल लिखने की अनुमति है';
 
   @override
-  String get folderWriteOnlyHint => 'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
+  String get folderWriteOnlyHint => 'आप इस फ़ोल्डर में नए नोट डाल सकते हैं, पर भीतर के नोट नहीं देख सकते।';
 
   @override
-  String get folderChatTitle => 'Sohbet';
+  String get folderChatTitle => 'बातचीत';
 
   @override
-  String get folderChatHint => 'Mesaj yaz…';
+  String get folderChatHint => 'संदेश लिखें…';
 
   @override
-  String get folderChatSend => 'Gönder';
+  String get folderChatSend => 'भेजें';
 
   @override
-  String get folderChatEmptyTitle => 'Henüz mesaj yok';
+  String get folderChatEmptyTitle => 'अभी कोई संदेश नहीं';
 
   @override
-  String get folderChatEmptyHint => 'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
+  String get folderChatEmptyHint => 'जिनके साथ यह फ़ोल्डर साझा किया है, उनसे यहाँ बात करें।';
 
   @override
-  String get folderInviteTitle => 'Klasör daveti';
+  String get folderInviteTitle => 'फ़ोल्डर का निमंत्रण';
 
   @override
   String folderInviteBody(Object name) {
-    return '"$name" klasörü seninle paylaşıldı.';
+    return '"${name}" फ़ोल्डर आपके साथ साझा किया गया है।';
   }
 
   @override
-  String get folderInviteAccepted => 'Klasör eklendi';
+  String get folderInviteAccepted => 'फ़ोल्डर जोड़ दिया गया';
 
   @override
-  String get folderInviteDeclined => 'Davet reddedildi';
+  String get folderInviteDeclined => 'निमंत्रण अस्वीकार किया गया';
 
   @override
   String friendRequestBanner(Object name) {
-    return '$name sana arkadaşlık isteği gönderdi';
+    return '${name} ने आपको मित्रता का अनुरोध भेजा है';
   }
 
   @override
-  String get friendRequestAccepted => 'Arkadaş eklendi';
+  String get friendRequestAccepted => 'मित्र जोड़ लिया गया';
 
   @override
-  String get sendNoteAction => 'Arkadaşa gönder';
+  String get sendNoteAction => 'मित्र को भेजें';
 
   @override
-  String get sendNoteTitle => 'Notu arkadaşına gönder';
+  String get sendNoteTitle => 'नोट किसी मित्र को भेजें';
 
   @override
-  String get sendNoteInfo => 'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
+  String get sendNoteInfo => 'नोट की एक नक़ल उस व्यक्ति के "आए हुए नोट" बॉक्स में पहुँचती है। अनुलग्नक (छवियाँ, दस्तावेज़, ऑडियो) नहीं भेजे जाते।';
 
   @override
   String sendNoteSent(Object name) {
-    return 'Not $name kişisine gönderildi';
+    return 'नोट ${name} को भेज दिया गया';
   }
 
   @override
-  String get inboxTitle => 'Gelen notlar';
+  String get inboxTitle => 'आए हुए नोट';
 
   @override
-  String get inboxEmpty => 'Gelen not yok';
+  String get inboxEmpty => 'कोई आया हुआ नोट नहीं';
 
   @override
-  String get inboxEmptyHint => 'Arkadaşlarının sana gönderdiği notlar burada birikir.';
+  String get inboxEmptyHint => 'आपके मित्र जो नोट भेजते हैं, वे यहाँ जमा होते हैं।';
 
   @override
   String inboxFrom(Object name) {
-    return '$name gönderdi';
+    return 'भेजने वाला: ${name}';
   }
 
   @override
-  String get inboxAccept => 'Notlarıma ekle';
+  String get inboxAccept => 'मेरे नोट में जोड़ें';
 
   @override
-  String get inboxAccepted => 'Not notlarına eklendi';
+  String get inboxAccepted => 'नोट आपके नोट में जुड़ गया';
 
   @override
-  String get folderShelfExpand => 'Klasörleri büyüt';
+  String get folderShelfExpand => 'फ़ोल्डर फैलाएँ';
 
   @override
-  String get folderShelfCollapse => 'Klasörleri daralt';
+  String get folderShelfCollapse => 'फ़ोल्डर समेटें';
 
   @override
-  String get accountSheetLocalInfo => 'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
+  String get accountSheetLocalInfo => 'आपके नोट केवल इसी डिवाइस पर हैं। बैकअप लेने और मित्र जोड़ने के लिए Google खाता जोड़ें।';
 
   @override
-  String get accountSettings => 'Hesap ayarları';
+  String get accountSettings => 'खाता सेटिंग';
 }
