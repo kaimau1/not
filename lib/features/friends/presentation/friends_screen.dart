@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -92,67 +94,252 @@ class FriendsScreen extends ConsumerWidget {
     ),
   );
 
-  Future<void> _addFriend(BuildContext context, WidgetRef ref) async {
+  Future<void> _addFriend(BuildContext context, WidgetRef ref) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (_) => const _AddFriendSheet(),
+  );
+}
+
+/// Arkadaş ekleme: iki sekme — tüm kullanıcılar içinde ad/e-posta ile arama
+/// (kullanıcı isteği 2026-08-21, bkz. `functions/searchUsers`) ve eski tam
+/// e-posta akışı (arananın hiç arama dizinine düşmemiş olabileceği köşe
+/// durumlar için, ör. henüz `userSearch` yazılmadan önce oluşmuş hesaplar).
+class _AddFriendSheet extends ConsumerStatefulWidget {
+  const _AddFriendSheet();
+
+  @override
+  ConsumerState<_AddFriendSheet> createState() => _AddFriendSheetState();
+}
+
+class _AddFriendSheetState extends ConsumerState<_AddFriendSheet>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tab = TabController(length: 2, vsync: this);
+  final _searchController = TextEditingController();
+  final _emailController = TextEditingController();
+  Timer? _debounce;
+  String _query = '';
+  List<UserSearchResult>? _results;
+  bool _searching = false;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _tab.dispose();
+    _searchController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _query = value;
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 350), _runSearch);
+  }
+
+  Future<void> _runSearch() async {
+    final q = _query.trim();
+    final repo = ref.read(friendsRepositoryProvider);
+    if (repo == null || q.length < 2) {
+      setState(() => _results = q.isEmpty ? null : const []);
+      return;
+    }
+    setState(() => _searching = true);
+    try {
+      final results = await repo.searchUsers(q);
+      if (mounted) setState(() => _results = results);
+    } catch (_) {
+      if (mounted) setState(() => _results = const []);
+    } finally {
+      if (mounted) setState(() => _searching = false);
+    }
+  }
+
+  Future<void> _sendToUid(String uid) async {
     final l10n = context.l10n;
-    final controller = TextEditingController();
-    final email = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.friendsAdd),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(hintText: l10n.friendsAddEmailHint),
-          onSubmitted: (v) => Navigator.pop(dialogContext, v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text),
-            child: Text(l10n.friendsSendRequest),
-          ),
-        ],
-      ),
-    );
-    if (email == null || email.trim().isEmpty || !context.mounted) return;
     final repo = ref.read(friendsRepositoryProvider);
     if (repo == null) return;
     try {
-      await repo.sendRequest(email.trim());
-      if (context.mounted) {
+      await repo.sendRequestToUid(uid);
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.friendsRequestSent)));
       }
-    } on FriendNotFoundException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.friendsNotFound)));
-      }
     } on SelfFriendException {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.friendsSelf)));
       }
     } on AlreadyFriendException {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.friendsAlready)));
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
       }
     }
+  }
+
+  Future<void> _sendToEmail() async {
+    final l10n = context.l10n;
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+    final repo = ref.read(friendsRepositoryProvider);
+    if (repo == null) return;
+    try {
+      await repo.sendRequest(email);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsRequestSent)));
+      }
+    } on FriendNotFoundException {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsNotFound)));
+      }
+    } on SelfFriendException {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsSelf)));
+      }
+    } on AlreadyFriendException {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.friendsAlready)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(l10n.friendsAdd, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          TabBar(
+            controller: _tab,
+            tabs: [
+              Tab(text: l10n.friendsSearchTab),
+              Tab(text: l10n.friendsSearchEmailTab),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tab,
+              children: [
+                _searchTab(context, scrollController),
+                _emailTab(context),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _searchTab(BuildContext context, ScrollController scrollController) {
+    final l10n = context.l10n;
+    final results = _results;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: TextField(
+            controller: _searchController,
+            autofocus: true,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: l10n.friendsSearchHint,
+              prefixIcon: const Icon(Icons.search),
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ),
+        if (_searching) const LinearProgressIndicator(minHeight: 2),
+        Expanded(
+          child: results == null
+              ? Center(
+                  child: Text(
+                    l10n.friendsSearchTooShort,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                )
+              : results.isEmpty
+              ? Center(
+                  child: Text(
+                    l10n.friendsSearchEmpty,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                )
+              : ListView.builder(
+                  controller: scrollController,
+                  itemCount: results.length,
+                  itemBuilder: (context, i) {
+                    final r = results[i];
+                    return ListTile(
+                      leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+                      title: Text(r.name.isEmpty ? r.email : r.name),
+                      subtitle: Text(r.email),
+                      trailing: TextButton(
+                        onPressed: () => _sendToUid(r.uid),
+                        child: Text(l10n.friendsSearchAdd),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _emailTab(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(hintText: l10n.friendsAddEmailHint),
+            onSubmitted: (_) => _sendToEmail(),
+          ),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: _sendToEmail,
+            child: Text(l10n.friendsSendRequest),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -2079,3 +2079,48 @@ Sıradaki liste (pull'dan, pomodoro ve kalem modu hariç):
 8. Tablet/kalem modları — SADECE PLAN (bkz. yukarı)
 9. Madde modunda kutu hizalaması: kutular ilk satıra göre değil ortalanarak
    diziliyor, düzeltilecek
+
+## 2026-08-21 (devam) — Arkadaş aramada tüm kullanıcılar içinde arama
+
+Kullanıcı "Cloud Function ile tam özellik yap" dedi. Eklenenler:
+
+- `functions/` (yeni klasör, Node.js 20, `firebase-admin`/`firebase-functions`
+  v2) — tek callable: `searchUsers({query})`. Giriş şart, sorgu ≥2 karakter,
+  en fazla 15 sonuç, kendisi hariç. `userSearch` koleksiyonunda `nameLower`/
+  `emailLower` alanlarında iki ayrı önek (prefix) sorgusu çalıştırıp
+  birleştiriyor (composite index gerekmiyor, tek alan sıralaması).
+- `userSearch/{uid}` — YENİ Firestore koleksiyonu. `userDirectory`'den FARKI:
+  istemciden HİÇ okunamaz (`get`/`list` ikisi de `false`), yalnız Admin SDK
+  (yani bu fonksiyon) okuyabilir. Yazma yalnız kendi dokümanına
+  (`FriendsRepository.syncOwnDirectoryEntry` içinde `userDirectory` ile
+  birlikte yazılıyor).
+  **Gerekçe**: `userDirectory` zaten `get`e (tam e-posta bilinmeden
+  okunamaz) herkese açık ama isimle arama `list`/aralık sorgusu istiyor —
+  bunu istemciye açmak tüm kullanıcı tabanının taranabilir olması demek.
+  Onun yerine okuma sunucu tarafına (Cloud Function) taşındı, sonuç 15
+  kayıtla sınırlı.
+- `firestore.rules`: `userSearch` kuralı eklendi.
+- `firebase.json`: `functions` bloğu eklendi (`functions/`, nodejs20).
+- `pubspec.yaml`: `cloud_functions` paketi eklendi.
+- `friends_screen.dart`: "Arkadaş ekle" artık iki sekmeli bir alt sayfa
+  (`_AddFriendSheet`) — "Ara" (debounce'lu canlı arama, sonuç listesinde
+  doğrudan "Ekle") ve "E-posta ile" (eski tam e-posta akışı, arananın henüz
+  `userSearch`e düşmemiş köşe durumları için bırakıldı).
+- `friends_repository.dart`: `searchUsers()`, `sendRequestToUid()` eklendi.
+- l10n: yeni anahtarlar (`friendsSearch*`) yalnız `app_tr.arb` (şablon) ve
+  `app_en.arb`'a eklendi — diğer 14 dil ÇEVİRİLMEDİ, çalışma zamanında
+  şablona (Türkçe) düşecekler. Kapsam nedeniyle bilinçli bırakıldı, bir
+  sonraki oturumda tamamlanmalı.
+
+**BİLİNEN SINIR / YAPILMASI GEREKEN**: bu özellik DEPLOY EDİLMEDEN
+çalışmaz — `functions/README.md`'de adımlar var. Özetle:
+`cd functions && npm install && firebase deploy --only functions &&
+firebase deploy --only firestore:rules`. Cloud Functions için Blaze
+(pay-as-you-go) plana geçiş gerekebilir. Bu ortamda (Claude Code oturumu)
+firebase CLI/deploy erişimi YOK, kullanıcı kendi makinesinden yapmalı.
+
+**Bu ortamda Flutter SDK da kurulu değil** — hiçbir değişiklik
+`flutter analyze`/`flutter build` ile burada doğrulanamadı, yalnız kod
+okuması + Node syntax check (`node --check functions/index.js`) yapıldı.
+Gerçek doğrulama push sonrası CI'da (GitHub Actions) ya da kullanıcının
+kendi makinesinde olacak.

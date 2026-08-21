@@ -341,6 +341,27 @@ service cloud.firestore {
         && resource.data.uid == request.auth.uid;
     }
 
+    // **KULLANICI ARAMA DİZİNİ** — arkadaş eklemede "tüm kullanıcılar
+    // içinde arama" (kullanıcı isteği 2026-08-21). `userDirectory`'nin
+    // aksine bu koleksiyon istemciden HİÇ okunamaz — ne `get` ne `list`.
+    // Okuma yalnız `functions/searchUsers` callable'ından Admin SDK ile
+    // olur (kuralları atlar, ama sonucu 15 kayıtla ve önek eşleşmesiyle
+    // sınırlar) — aksi hâlde herkese `get` açık `userDirectory` deseniyle
+    // aynı yolu izleseydik, e-posta yerine ad araması TÜM kullanıcı
+    // tabanının brute-force taranmasını mümkün kılardı (e-posta zaten
+    // bilinmesi gereken bir sır, ama isim öneki değil). Yazma yalnız
+    // KENDİ dokümanına.
+    match /userSearch/{uid} {
+      allow get, list: if false;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly(
+          ['uid', 'name', 'email', 'nameLower', 'emailLower']
+        );
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
     // Dahili AI kota sayacı. AYRI KÖK KOLEKSİYONDA, bilerek:
     //
     // KÖK NEDEN (iki ayrı açık, ikisi de faturayı projeye çıkarıyordu):

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
@@ -96,11 +97,53 @@ class FriendsRepository {
   /// Kendi e-posta → uid kaydını yazar/tazeler. `DashboardScreen.initState`
   /// içinden her açılışta çağrılır (ucuz — tek doküman, `merge`); e-postası
   /// olmayan (anonim/yerel) hesapta hiçbir şey yapmaz.
+  ///
+  /// Aynı çağrıda `userSearch/{uid}` de yazılır: bu koleksiyon istemciden
+  /// OKUNAMAZ (bkz. firestore.rules), yalnız `functions/searchUsers`
+  /// callable'ı Admin SDK ile üstünden geçip isim/e-posta önekiyle sınırlı
+  /// sonuç döner. Amaç: kullanıcı listesi TAMAMEN taranabilir olmasın (aksi
+  /// hâlde `userDirectory` gibi herkese `list` açardık), arama yalnız
+  /// sunucu tarafında, sonuç sayısı sınırlı çalışsın.
   Future<void> syncOwnDirectoryEntry() async {
     if (email.isEmpty) return;
     await _directory.doc(_normalizeEmail(email)).set({
       'uid': uid,
     }, SetOptions(merge: true));
+    await _firestore.collection('userSearch').doc(uid).set({
+      'uid': uid,
+      'name': name,
+      'email': email,
+      'nameLower': name.trim().toLowerCase(),
+      'emailLower': _normalizeEmail(email),
+    }, SetOptions(merge: true));
+  }
+
+  /// Ad/e-posta önekiyle KULLANICI ARAR (Cloud Function üzerinden — istemci
+  /// `userSearch`i doğrudan okuyamaz). Boş/çok kısa sorguda boş liste döner,
+  /// sunucu tarafında da en fazla 15 sonuç dönüyor.
+  Future<List<UserSearchResult>> searchUsers(String query) async {
+    final q = query.trim();
+    if (q.length < 2) return const [];
+    final callable = FirebaseFunctions.instance.httpsCallable('searchUsers');
+    final result = await callable.call<Map<String, dynamic>>({'query': q});
+    final raw = (result.data['results'] as List?) ?? const [];
+    return [
+      for (final r in raw)
+        UserSearchResult.fromMap(Map<String, dynamic>.from(r as Map)),
+    ];
+  }
+
+  /// [targetUid]'ye doğrudan istek gönderir (arama sonucundan — e-posta
+  /// dizini araya girmiyor, uid zaten [searchUsers]'dan biliniyor).
+  Future<void> sendRequestToUid(String targetUid) async {
+    if (targetUid == uid) throw const SelfFriendException();
+    final already = await _myFriends.doc(targetUid).get();
+    if (already.exists) throw const AlreadyFriendException();
+    await _userDoc(
+      targetUid,
+    ).collection(AppConstants.friendRequestsCollection).doc(uid).set(
+      FriendRequest(fromUid: uid, fromEmail: email, fromName: name).toMap(),
+    );
   }
 
   Future<String?> _lookupUidByEmail(String targetEmail) async {
@@ -172,4 +215,24 @@ class FriendsRepository {
       (_) {},
     );
   }
+}
+
+/// [FriendsRepository.searchUsers] sonucundaki tek kullanıcı.
+class UserSearchResult {
+  const UserSearchResult({
+    required this.uid,
+    required this.name,
+    required this.email,
+  });
+
+  factory UserSearchResult.fromMap(Map<String, dynamic> map) =>
+      UserSearchResult(
+        uid: map['uid'] as String? ?? '',
+        name: map['name'] as String? ?? '',
+        email: map['email'] as String? ?? '',
+      );
+
+  final String uid;
+  final String name;
+  final String email;
 }
