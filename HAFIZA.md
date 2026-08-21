@@ -2048,3 +2048,34 @@ Tarihli, append-only. İş başında oku; iş sonunda kalıcı karar/bug-kök/tu
   yoluna gider — Storage kuralları Firestore'daki paylaşımı GÖREMEZ
   (Cloud Function olmadan çözümü yok). Ortak klasörler metin ve listeler
   için tasarlandı. Aynı gerekçeyle gönderilen notun ekleri taşınmaz.
+
+## 2026-08-21 — Kullanıcı pull listesi: kapsam kararları
+
+Kullanıcı çok maddeli bir "pull" listesi verdi (senkron/görsel/PDF hataları,
+web PC görünümü, klavye zıplaması, arkadaş arama, klasör izinleri kişi
+bazlı, madde modu hizalama, birlikte-çalışma pomodoro modu, kalem/tablet
+premium modu). Netleştirme soruları soruldu, kararlar:
+
+- **Pomodoro/"birlikte çalışalım" modu**: ERTELENDİ, kullanıcı "bunu kaydet
+  sonra yapalım" dedi — bu oturumda YAPILMAYACAK. Sonraki bir oturumda ele
+  alınacak, kapsam (basit ortak sayaç mı / tam oda-eşleştirme sistemi mi)
+  o zaman netleştirilecek.
+- **Kalem/tablet premium modu**: bu oturumda KODLANMAYACAK, sadece plan/
+  özellik listesi yazılacak (el yazısı sayfası, şekil tanıma otomatik/
+  manuel düzelt, premium ek fikirler). Kodlama ayrı bir görev.
+- **Diğer maddeler**: hepsi bu oturumda sırayla ele alınacak → bitince
+  main'e merge + release APK derlenecek.
+
+Sıradaki liste (pull'dan, pomodoro ve kalem modu hariç):
+1. Görsel/belge senkron sorunu (özellikle balonlu modda)
+2. Masaüstü/web'de balonlu modda görsel görüntülenememesi
+3. "Unsupported operation" hatası — PDF/görsel ekleme (web)
+4. Web sürümü mobilin büyütülmüşü gibi — PC'ye özgü layout gerekiyor
+5. Kalan kasma/zıplama: klavye açılıp kapanırken biçim/ekle panelinin zıplaması
+6. Arkadaş eklemede tüm kullanıcılar içinde arama seçeneği
+7. Paylaşılan klasörlerde kişi bazlı okuma/yazma izni (NOT: HAFIZA'da daha
+   önce `folderShares.roles` ile read/write/both zaten eklenmiş görünüyor —
+   önce mevcut duruma bakılacak, eksikse tamamlanacak)
+8. Tablet/kalem modları — SADECE PLAN (bkz. yukarı)
+9. Madde modunda kutu hizalaması: kutular ilk satıra göre değil ortalanarak
+   diziliyor, düzeltilecek
