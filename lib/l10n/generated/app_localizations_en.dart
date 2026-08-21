@@ -2790,6 +2790,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Contacts and folder sharing require a linked Google account.';
 
   @override
+  String get friendsSearchHint => 'Search by name or email';
+
+  @override
+  String get friendsSearchTab => 'Search';
+
+  @override
+  String get friendsSearchEmailTab => 'By email';
+
+  @override
+  String get friendsSearchEmpty => 'No results';
+
+  @override
+  String get friendsSearchTooShort => 'Type at least 2 characters to search';
+
+  @override
+  String get friendsSearchAdd => 'Add';
+
+  @override
   String get folderShare => 'Share';
 
   @override

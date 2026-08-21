@@ -5226,6 +5226,42 @@ abstract class AppLocalizations {
   /// **'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.'**
   String get friendsNeedsAccount;
 
+  /// No description provided for @friendsSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İsim veya e-posta ile ara'**
+  String get friendsSearchHint;
+
+  /// No description provided for @friendsSearchTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara'**
+  String get friendsSearchTab;
+
+  /// No description provided for @friendsSearchEmailTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta ile'**
+  String get friendsSearchEmailTab;
+
+  /// No description provided for @friendsSearchEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonuç yok'**
+  String get friendsSearchEmpty;
+
+  /// No description provided for @friendsSearchTooShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramak için en az 2 karakter yaz'**
+  String get friendsSearchTooShort;
+
+  /// No description provided for @friendsSearchAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get friendsSearchAdd;
+
   /// No description provided for @folderShare.
   ///
   /// In tr, this message translates to:

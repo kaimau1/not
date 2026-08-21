@@ -52,16 +52,6 @@
   kullanımını sayamaz; istemci tavanı var). Sunucu zorlaması Cloud Function
   (finalize tetikleyicisi + Firestore sayaç) ister — Play Billing'den önce.
 
-- [ ] **PDF çizimini dışa aktarılan/paylaşılan PDF'e gömme** — çizim yalnız
-  uygulama içinde görünüyor. **2026-08-06 incelemesi: mevcut bağımlılıklarla
-  YAPILAMIYOR.** `pdfrx` yalnız görüntüler, `pdf` yalnız sıfırdan üretir; var
-  olan bir PDF'i ayrıştırıp içerik akışına yazan kütüphane yok. KULLANICI
-  KARARI BEKLİYOR: (a) sayfaları rasterleştirip PDF'i yeniden kur — yeni
-  bağımlılık yok ama uygulamanın taradığı PDF'lerdeki görünmez OCR metin
-  katmanı yok olur (yalnız paylaşılan kopyada, orijinal ek bozulmaz);
-  (b) `syncfusion_flutter_pdf` ekle — metin korunur, bedeli ağır bağımlılık +
-  Play lisans denetimi.
-
 ## Play'e çıkış — kalan iş (2026-08-02)
 
 Sıra bilerek böyle: önce senin tarafındaki konsol işleri (kodu bekletmiyor),

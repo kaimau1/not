@@ -2728,6 +2728,24 @@ class AppLocalizationsZh extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
+  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+
+  @override
+  String get friendsSearchTab => 'Ara';
+
+  @override
+  String get friendsSearchEmailTab => 'E-posta ile';
+
+  @override
+  String get friendsSearchEmpty => 'Sonuç yok';
+
+  @override
+  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+
+  @override
+  String get friendsSearchAdd => 'Ekle';
+
+  @override
   String get folderShare => 'Paylaş';
 
   @override
