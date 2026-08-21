@@ -24,8 +24,14 @@
 - [ ] **Podcast WAV dışa aktarımı** metnin TAMAMINI yeniden seslendirir
   (dinlerken üretilen parçalar okuma bitince siliniyor). Uzun belgede kota
   bedeli yüksek; kullanıcıya soruluyor ama ölçülmedi.
-- [ ] Yeni l10n anahtarları (~50) yalnız TR ve EN'de; kalan 14 dil şablona
-  (Türkçe) düşüyor. `Çeviri üret` iş akışı elle tetiklenmeli.
+- [ ] **Çeviriler tamamlandı (2026-08-21), gözden geçirilmedi.** 16 dilin
+  hepsinde 895 anahtarın tamamı dolu (eksik olan 283 anahtar bu oturumda
+  çevrildi, `flutter gen-l10n` bu ortamda olmadığı için üretilmiş Dart
+  dosyaları da elle yamalandı). Kalan iş yalnız ANADİLİ konuşana okutmak —
+  aşağıdaki "Çevirileri anadili konuşana göstert" maddesine bakılacak.
+  Not: `folderShareCount` çoğul kalıbı her dilde yalnız `one`/`other`
+  dallarını taşıyor; Rusça/Arapça/Lehçe gibi diller `few`/`many` ayrımı
+  yapamıyor (dilbilgisi olarak kaba ama yanlış değil).
 - [ ] **GitHub Actions artifact DEPOLAMA kotası dolu** ("Artifact storage
   quota has been hit"). APK artık Release olarak yayınlandığı için teslimat
   etkilenmiyor (artifact adımı zorunlu değil), ama eski artifact'ler
