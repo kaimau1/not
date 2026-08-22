@@ -2463,6 +2463,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
+  /// Odaklı yazı alanını klavyenin üstüne kaydırır.
+  ///
+  /// KÖK NEDEN: gövde, klavye animasyonu boyunca bilerek TAM BOYUNDA kalır
+  /// (kasmayı doğuran kare kare yerleşim böyle önleniyor — bkz.
+  /// [KeyboardSnap]). Ama `EditableText` imleci görünür kılmak için tam da o
+  /// karelere, klavye yüksekliğinin değiştiği `didChangeMetrics`e bakıyor ve
+  /// o sırada alan gerçekten görünür olduğu için hiç kaydırmıyor. Boşluk
+  /// oturunca ekranın altındaki alan klavyenin ardında kalabilirdi; burada
+  /// bir kez, yumuşak biçimde yukarı alınıyor.
+  ///
+  /// `keepVisibleAtEnd`: alan zaten görünüyorsa hiçbir şey yapılmaz —
+  /// gereksiz bir kaydırma sayfanın yerini oynatır.
+  void _revealFocusedField() {
+    final ctx = FocusManager.instance.primaryFocus?.context;
+    if (ctx == null || !ctx.mounted) return;
+    final box = ctx.findRenderObject();
+    if (box is! RenderBox || !box.attached || !box.hasSize) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+    );
+  }
+
   /// Sayfa tuvalinin alt sınırı: gövde alanının GÖRÜLEN EN BÜYÜK yüksekliği.
   ///
   /// KÖK NEDEN (2026-08-08 kullanıcı bulgusu: "klavye açılırken titreme kasma
@@ -5282,6 +5307,370 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             },
           );
 
+    // ALT ÇUBUK — Scaffold'ın `bottomNavigationBar` YUVASINDA DEĞİL,
+    // gövdenin dibinde bir `Column` çocuğu.
+    //
+    // KÖK NEDEN (kullanıcı 2026-08-16: "kasma sorunu tam çözülmemiş"):
+    // yuvadayken çubuğun yüksekliği klavye kadar BÜYÜYORDU. Scaffold'ın
+    // gövde alanı `bottom - max(viewInsets, altÇubukYüksekliği)` ile
+    // hesaplandığı için çubuğun her karede değişen boyu Scaffold'ı ve
+    // gövdeyi her karede yeniden YERLEŞTİRİYORDU. `Column`da ise esnek
+    // OLMAYAN çocuk klavyeden bağımsız bir kısıtla ölçülür.
+    //
+    // ÇUBUK BURADA, `KeyboardSnap`in DIŞINDA kuruluyor (2026-08-22):
+    // klavye boşluğu değişince `KeyboardSnap` gövde ağacını yeniden kurar;
+    // çubuk o kapanışın içinde olsaydı — ek şeridi, biçim çubuğu,
+    // BottomAppBar, AI ve mikrofon düğmeleriyle birlikte — her açılış ve
+    // kapanışta baştan kurulurdu. Dışarıda kurulunca AYNI ÖRNEK olarak
+    // geçirilir ve Flutter alt ağacı hiç ellemez.
+    //
+    // Balona yazılırken çubuk TÜMÜYLE gizlenir: klavye + belge bölmesi + iki
+    // çubuk aynı ekrana sığmıyor ve balon kartı altta kalıyordu (kullanıcı
+    // isteği 2026-08-08). Kip bitince geri gelir.
+    //
+    // RepaintBoundary: çubuk klavye animasyonu boyunca yer değiştiriyor;
+    // ayrı katmanda olmazsa her karede GÖVDEYİ de yeniden boyatır.
+    final Widget? bottomBar = _immersiveBubble
+        ? null
+        : RepaintBoundary(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
+                // işaretli görsel/video) SAYFANIN DİBİNDE, kapanabilir bir
+                // şeritte. Görseller ve videolar her not tipinde TAM SAYFA
+                // serbest katmanda kalır (NotePageCanvas — yukarıda).
+                // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
+                // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
+                // KÖK NEDEN: burada `if (keyboard == 0)` vardı.
+                // `AttachmentStrip` klavye kontrolünü ZATEN kendi içinde
+                // yapıyor (SizedBox.shrink döndürüyor); dıştaki koşul
+                // widget'ı ağaçtan tümüyle düşürüyor, bütün State'ler
+                // (ses oynatıcısı dahil) dispose ediliyor ve klavye
+                // kapanınca sıfırdan kuruluyordu — şeridin kaydırma
+                // konumu sıfırlanıyor, ÇALAN SES sessizce duruyordu.
+                AttachmentStrip(
+                  attachments: [
+                    for (final a in note.attachments)
+                      if (!a.floatsOnPage) a,
+                  ],
+                  onRemove: _removeAttachment,
+                  onChanged: _updateAttachment,
+                  onCopy: _copyAttachment,
+                  // Belge (PDF/sunum) notunda gövde metni yok; etiket
+                  // yazacak bir yer olmadığı için düğme çizilmez.
+                  // Ek şeridindeki düğme artık BAĞLAMA KİPİNİ başlatır
+                  // ("önce eki seç, sonra yazıyı"): dosya adını imlece
+                  // yazmak yerine kullanıcı bağlanacak yazıyı seçer.
+                  onInsertTag: note.type.isPageNoteType
+                      ? null
+                      : _startPendingEmbed,
+                  onPlaceOnPage: (a) => _setImageAsFile(a, false),
+                  onVideoToNote: _videoToNote,
+                  expanded: ref.watch(attachmentsExpandedProvider),
+                  onToggle: () => ref
+                      .read(attachmentsExpandedProvider.notifier)
+                      .toggle(),
+                ),
+                // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
+                // beklediğini söyler ve seçilen yazıya bağlar.
+                // Kip görünmez olsaydı kullanıcı ne beklendiğini
+                // bilemezdi (ek seçildi ama ekranda hiçbir şey
+                // değişmiyor).
+                if (_pendingEmbed != null)
+                  _PendingEmbedBanner(
+                    fileName: _pendingEmbed!.fileName,
+                    onLink: _finishPendingEmbed,
+                    onCancel: () => setState(() => _pendingEmbed = null),
+                  ),
+                // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
+                // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
+                // açık kalabiliyordu.
+                if (_aiTask != null) _AiBanner(label: _aiTask!),
+                // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
+                // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
+                if (_busyTask != null)
+                  _AiBanner(label: _busyTask!, icon: Icons.sync),
+                // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
+                // yerine kendi içinde kaydırılır (Flexible + kaydırma).
+                //
+                // ZIPLAMA (kullanıcı bulgusu 2026-08-21): panel eskiden
+                // `if (_formatBarOpen) Flexible(...)` ile Column'a ANINDA
+                // (0 ms) eklenip çıkarılıyordu — klavyenin kendi hareketiyle
+                // aynı karede çakışınca "zıplama" hissi veriyordu. Panel artık
+                // her zaman ağaçta, `AnimatedSize` yüksekliğini yumuşak
+                // kapatıyor/açıyor; kapalıyken `SizedBox.shrink()` yer
+                // kaplamıyor.
+                Flexible(
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    alignment: Alignment.bottomCenter,
+                    child: !_formatBarOpen
+                        ? const SizedBox.shrink()
+                        : SingleChildScrollView(
+                            child: FormatBar(
+                              target: _formatTarget,
+                              onFormat: _applyFormat,
+                              onClearFormat: _clearFormat,
+                              onRemoveFormat: _removeFormat,
+                              fontFamily: _titleIsTarget
+                                  ? note.titleFontFamily
+                                  : note.fontFamily,
+                              fontScale: _titleIsTarget
+                                  ? note.titleFontScale
+                                  : note.fontScale,
+                              textOpacity: _titleIsTarget
+                                  ? note.titleTextOpacity
+                                  : note.textOpacity,
+                              hasSelection: _hasSelection,
+                              onOpacityChanged: (value) => _mutate(
+                                (n) => _titleIsTarget
+                                    ? n.copyWith(titleTextOpacity: value)
+                                    : n.copyWith(textOpacity: value),
+                              ),
+                              onOpacityEnd: (value) => _applyStepOrNote(
+                                RichFormat.opacity,
+                                kRichOpacitySteps,
+                                kRichOpacityDefault,
+                                value,
+                                (n) => _titleIsTarget
+                                    ? n.copyWith(titleTextOpacity: value)
+                                    : n.copyWith(textOpacity: value),
+                              ),
+                              onFontChanged: (family) => _mutate(
+                                (n) => _titleIsTarget
+                                    ? (family == null
+                                          ? n.copyWith(
+                                              clearTitleFontFamily: true,
+                                            )
+                                          : n.copyWith(titleFontFamily: family))
+                                    : (family == null
+                                          ? n.copyWith(clearFontFamily: true)
+                                          : n.copyWith(fontFamily: family)),
+                                immediate: true,
+                              ),
+                              // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
+                              // Firestore'a yazmak boşuna trafik olurdu.
+                              onScaleChanged: (value) => _mutate(
+                                (n) => _titleIsTarget
+                                    ? n.copyWith(titleFontScale: value)
+                                    : n.copyWith(fontScale: value),
+                              ),
+                              onScaleEnd: (value) => _applyStepOrNote(
+                                RichFormat.size,
+                                kRichSizeSteps,
+                                kRichSizeDefault,
+                                value,
+                                (n) => _titleIsTarget
+                                    ? n.copyWith(titleFontScale: value)
+                                    : n.copyWith(fontScale: value),
+                              ),
+                              // Sayfa rengi/çerçeve/zemin görseli: "Ekle"
+                              // levhasından buraya taşındı (bkz. FormatBar).
+                              onPageStyle: _showColorSheet,
+                              onClose: () =>
+                                  setState(() => _formatBarOpen = false),
+                            ),
+                          ),
+                  ),
+                ),
+                // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
+                // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
+                // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
+                // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
+                // "Ekle" açılırına taşındı.
+                BottomAppBar(
+                  color: background,
+                  height: 64,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                  child: LayoutBuilder(
+                    builder: (context, barConstraints) {
+                      final showSelect =
+                          !note.type.isPageNoteType &&
+                          note.items.isNotEmpty;
+                      final showAttachments = fileAttachments.isNotEmpty;
+                      // Kapsülün ETİKETSİZ (simge) tabanı: her segment 38 dp,
+                      // aralar 3, kapsül dolgusu 6 + kenarlık 2.
+                      final segments = 2 + (showSelect ? 1 : 0);
+                      var fixed =
+                          segments * 38.0 +
+                          (segments - 1) * 3 +
+                          8 +
+                          // Sağ blok: AI (≈76) + mikrofon (50) + iki 8 dp
+                          // aralık; belge notunda kalem düğmesi de var.
+                          76 +
+                          50 +
+                          16;
+                      if (showAttachments) fixed += 3 + 46;
+                      if (isDocumentNote) fixed += 46 + 8;
+                      final compact = !_toolLabelsFit(
+                        [
+                          l10n.formatTitle,
+                          l10n.addAttachment,
+                          if (showSelect) l10n.select,
+                        ],
+                        maxWidth: barConstraints.maxWidth,
+                        fixedWidth: fixed,
+                      );
+                      return Row(
+                        children: [
+                          // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
+                          // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
+                          // Seç) ve dar ekranda dördü birden taşıyordu.
+                          // Kaydırma SON ÇARE olarak duruyor (çok büyük yazı
+                          // ölçeğinde simgeler bile taşabilir); olağan dar
+                          // ekranda artık etiketler düşüyor ve hepsi görünüyor.
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.outlineVariant,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _toolSegment(
+                                      icon: Icons.text_format,
+                                      label: l10n.formatTitle,
+                                      active: _formatBarOpen,
+                                      compact: compact,
+                                      onTap: () => setState(
+                                        () => _formatBarOpen =
+                                            !_formatBarOpen,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    // "Metin ekle" / "Liste maddesi ekle" buradan
+                                    // Ekle levhasının en üst bölümüne taşındı: çubuk
+                                    // üç segmentle kalabalıktı ve ekleme işi iki ayrı
+                                    // yere bölünmüştü (bkz. attach_sheet.dart).
+                                    _addToolButton(
+                                      l10n,
+                                      compact: compact,
+                                    ),
+                                    // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
+                                    // "seç burada olsun, yeni öğe eski yerinde"):
+                                    // toplu kopyalama/silme girişi bir tur ekranın
+                                    // dibinde yüzen bir düğmeydi ve alt paneli
+                                    // örtüyordu. Alt çubuğun segmenti olunca hem
+                                    // sayfanın neresinde olursak olalım görünür
+                                    // kalıyor hem hiçbir şeyi kapatmıyor.
+                                    // Madde yoksa gizli: seçilecek bir şey yok.
+                                    if (showSelect) ...[
+                                      const SizedBox(width: 3),
+                                      _toolSegment(
+                                        icon: Icons.checklist,
+                                        label: l10n.select,
+                                        compact: compact,
+                                        onTap: () => _itemsEditorKey
+                                            .currentState
+                                            ?.startSelection(),
+                                      ),
+                                    ],
+                                    // EKLER düğmesi: şeridin kendi başlık satırı
+                                    // kalktı, aç/kapa buraya taşındı (kullanıcı
+                                    // isteği 2026-08-08 — "ekler yazısı ve göster
+                                    // gizlesi alt alana gelsin, bir satır alan
+                                    // kurtarmış oluruz").
+                                    if (showAttachments) ...[
+                                      const SizedBox(width: 3),
+                                      _attachmentsToggle(
+                                        l10n,
+                                        fileAttachments.length,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // PDF/sunum notunda KALEM alt çubukta: tam ekrana
+                          // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
+                          // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
+                          // boşluk).
+                          if (isDocumentNote) ...[
+                            _penToolButton(l10n),
+                            const SizedBox(width: 8),
+                          ],
+                          Tooltip(
+                            message: l10n.aiTitle,
+                            child: SizedBox(
+                              height: 44,
+                              child: FilledButton.tonalIcon(
+                                onPressed: () => showAiSheet(
+                                  context,
+                                  note,
+                                  onAppendText: _appendText,
+                                  onReplaceText: _replaceText,
+                                  onCreateNote: _createNoteFromText,
+                                ),
+                                style: FilledButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      13,
+                                    ),
+                                  ),
+                                ),
+                                icon: const Icon(
+                                  Icons.auto_awesome,
+                                  size: 19,
+                                ),
+                                // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
+                                // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
+                                // dilde aynı okunur; tam adı ipucunda duruyor.
+                                label: const Text('AI'),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
+                          // yakalama editörün en sık kullanılan girişi.
+                          Tooltip(
+                            message: l10n.liveDictation,
+                            child: SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Material(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(14),
+                                elevation: 2,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: _captureVoice,
+                                  child: Icon(
+                                    Icons.mic_none,
+                                    size: 25,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+
     return Actions(
       actions: {
         // Klavyeden Kopyala/Kes (Ctrl+C / Ctrl+X): EditableText bu eylemleri
@@ -5311,11 +5700,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         },
         child: Scaffold(
           backgroundColor: background,
-          // **KASMA — klavye boşluğu artık KADEMELİ** (bkz. [KeyboardSnap]).
+          // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
           // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
           // görselli/uzun notlarda ve PDF bölmesinde yalnızca bu yeniden
           // ölçüm bile takılma yaratıyor. Boşluk aşağıda, gövdenin
-          // dolgusundan ve kademeli olarak veriliyor.
+          // dolgusundan veriliyor ve bir açılış/kapanışta EN ÇOK BİR KEZ
+          // değişiyor; çubuğun klavyeyle birlikte akan hareketi ise
+          // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
             backgroundColor: background,
@@ -5456,6 +5847,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // boşalınca dolgu geri gelir ve sayfa alanı sebepsiz kısalırdı.
           // Görünüm birebir korunur.
           body: KeyboardSnap(
+            // Klavye durup gövde oturduktan sonra odaklı alanı görünür kıl —
+            // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
+            // kendi imleç kaydırması bu işi yapamaz (bkz. [KeyboardSnap]).
+            onSettled: (inset) {
+              if (inset > 0) _revealFocusedField();
+            },
             builder: (context, keyboardInset) => Padding(
               padding: EdgeInsets.only(bottom: keyboardInset),
               child: Column(
@@ -5485,393 +5882,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       ),
                     ),
                   ),
-                  // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt çubuğu
-                  // ekranın dibinde bırakır — yani klavye açıkken alt çubuğun tamamı
-                  // (biçim çubuğu dahil) klavyenin ALTINDA kalıyordu ve kullanılamıyordu
-                  // ("düzenleme alanı güzel ama altta olduğu için klavyenin altında
-                  // kalıyor"). Çubuk klavye kadar yukarı kaldırılır; böylece "Aa"
-                  // düğmesi de yazarken erişilebilir olur — biçim çubuğunu açmak için
-                  // klavyeyi kapatmak, kapatınca da seçimi kaybetmek gerekmez.
+                  // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt
+                  // çubuğu ekranın dibinde bırakır — yani klavye açıkken alt
+                  // çubuğun tamamı (biçim çubuğu dahil) klavyenin ALTINDA
+                  // kalıyordu ve kullanılamıyordu ("düzenleme alanı güzel ama
+                  // altta olduğu için klavyenin altında kalıyor"). Çubuk klavye
+                  // kadar yukarı kaldırılır; böylece "Aa" düğmesi de yazarken
+                  // erişilebilir olur — biçim çubuğunu açmak için klavyeyi
+                  // kapatmak, kapatınca da seçimi kaybetmek gerekmez.
                   //
-                  // KASMA (v1.0.175): klavye yüksekliği ANİMASYONLU değişir; bu değeri
-                  // ekranın ana build'inde okumak, animasyonun her karesinde EDİTÖRÜN
-                  // TAMAMINI (sayfa tuvali, sarma ölçümü, madde listesi) yeniden
-                  // kurdurup gözle görülür bir takılma yaratıyordu. Okuma artık bu
-                  // küçük Builder'ın içinde: klavye oynarken yalnız alt çubuk yeniden
-                  // kurulur.
-                  //
-                  // TİTREME (kullanıcı ekran görüntüsüyle: "klavye açılıp üste
-                  // itilirken titriyor kasıyor"): buradaki `Builder` klavye yüksekliğini
-                  // okumakla kalmıyor, çubuğun TÜM alt ağacını — ek şeridi, biçim
-                  // çubuğu, BottomAppBar, AI ve mikrofon düğmeleri — klavyenin HER
-                  // ANİMASYON KARESİNDE yeniden kuruyordu. [_KeyboardLift] yalnız
-                  // dolguyu yeniler; çocuk AYNI widget örneği olduğu için Flutter alt
-                  // ağacı hiç yeniden kurmaz.
-                  // Balona yazılırken alt çubuk TÜMÜYLE gizlenir: klavye + belge
-                  // bölmesi + iki çubuk aynı ekrana sığmıyor ve balon kartı altta
-                  // kalıyordu (kullanıcı isteği 2026-08-08). Kip bitince geri gelir.
-                  // RepaintBoundary: çubuk klavye animasyonu boyunca yer değiştiriyor;
-                  // ayrı katmanda olmazsa her karede GÖVDEYİ de yeniden boyatır.
-                  // ALT ÇUBUK — artık Scaffold'ın `bottomNavigationBar` YUVASINDA
-                  // DEĞİL, gövdenin dibinde bir `Column` çocuğu.
-                  //
-                  // KÖK NEDEN (kullanıcı 2026-08-16: "kasma sorunu tam
-                  // çözülmemiş"): yuvadayken çubuğun yüksekliği klavye kadar
-                  // BÜYÜYORDU (`_KeyboardLift`). Scaffold'ın gövde alanı
-                  // `bottom - max(viewInsets, altÇubukYüksekliği)` ile
-                  // hesaplandığı için çubuğun her karede değişen boyu Scaffold'ı
-                  // ve gövdeyi her karede yeniden YERLEŞTİRİYORDU.
-                  //
-                  // `Column`da ise esnek OLMAYAN çocuk önce ve SINIRSIZ yükseklik
-                  // kısıtıyla ölçülür: kısıt klavyeden bağımsız, dolayısıyla
-                  // çubuğun yerleşimi tümüyle ATLANIR. Klavye yüksekliğini artık
-                  // Scaffold'ın kendisi hallediyor (`resizeToAvoidBottomInset`
-                  // gövdeyi kısaltıyor), çubuk da gövdenin dibinde olduğu için
-                  // kendiliğinden klavyenin üstünde kalıyor — elle kaldırma
-                  // (`_KeyboardLift`) gereksiz kaldı ve silindi.
-                  //
-                  // Balona yazılırken alt çubuk TÜMÜYLE gizlenir: klavye + belge
-                  // bölmesi + iki çubuk aynı ekrana sığmıyor ve balon kartı altta
-                  // kalıyordu (kullanıcı isteği 2026-08-08). Kip bitince geri gelir.
-                  if (!_immersiveBubble)
-                    RepaintBoundary(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Sayfada yüzmeyen ekler (PDF/sunum/ses + "ek olarak"
-                          // işaretli görsel/video) SAYFANIN DİBİNDE, kapanabilir bir
-                          // şeritte. Görseller ve videolar her not tipinde TAM SAYFA
-                          // serbest katmanda kalır (NotePageCanvas — yukarıda).
-                          // Klavye açıkken şerit gizlenir: zaten görünmüyordu (klavyenin
-                          // altındaydı), yukarı kaldırılsaydı yazma alanını yerdi.
-                          // KÖK NEDEN: burada `if (keyboard == 0)` vardı.
-                          // `AttachmentStrip` klavye kontrolünü ZATEN kendi içinde
-                          // yapıyor (SizedBox.shrink döndürüyor); dıştaki koşul
-                          // widget'ı ağaçtan tümüyle düşürüyor, bütün State'ler
-                          // (ses oynatıcısı dahil) dispose ediliyor ve klavye
-                          // kapanınca sıfırdan kuruluyordu — şeridin kaydırma
-                          // konumu sıfırlanıyor, ÇALAN SES sessizce duruyordu.
-                          AttachmentStrip(
-                            attachments: [
-                              for (final a in note.attachments)
-                                if (!a.floatsOnPage) a,
-                            ],
-                            onRemove: _removeAttachment,
-                            onChanged: _updateAttachment,
-                            onCopy: _copyAttachment,
-                            // Belge (PDF/sunum) notunda gövde metni yok; etiket
-                            // yazacak bir yer olmadığı için düğme çizilmez.
-                            // Ek şeridindeki düğme artık BAĞLAMA KİPİNİ başlatır
-                            // ("önce eki seç, sonra yazıyı"): dosya adını imlece
-                            // yazmak yerine kullanıcı bağlanacak yazıyı seçer.
-                            onInsertTag: note.type.isPageNoteType
-                                ? null
-                                : _startPendingEmbed,
-                            onPlaceOnPage: (a) => _setImageAsFile(a, false),
-                            onVideoToNote: _videoToNote,
-                            expanded: ref.watch(attachmentsExpandedProvider),
-                            onToggle: () => ref
-                                .read(attachmentsExpandedProvider.notifier)
-                                .toggle(),
-                          ),
-                          // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
-                          // beklediğini söyler ve seçilen yazıya bağlar.
-                          // Kip görünmez olsaydı kullanıcı ne beklendiğini
-                          // bilemezdi (ek seçildi ama ekranda hiçbir şey
-                          // değişmiyor).
-                          if (_pendingEmbed != null)
-                            _PendingEmbedBanner(
-                              fileName: _pendingEmbed!.fileName,
-                              onLink: _finishPendingEmbed,
-                              onCancel: () => setState(() => _pendingEmbed = null),
-                            ),
-                          // Dikte açıkken kaçırılamayacak bir şerit: tek başına kırmızı
-                          // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
-                          // açık kalabiliyordu.
-                          if (_aiTask != null) _AiBanner(label: _aiTask!),
-                          // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
-                          // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
-                          if (_busyTask != null)
-                            _AiBanner(label: _busyTask!, icon: Icons.sync),
-                          // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
-                          // yerine kendi içinde kaydırılır (Flexible + kaydırma).
-                          //
-                          // ZIPLAMA (kullanıcı bulgusu 2026-08-21): panel eskiden
-                          // `if (_formatBarOpen) Flexible(...)` ile Column'a ANINDA
-                          // (0 ms) eklenip çıkarılıyordu — klavyenin KeyboardSnap ile
-                          // kademeli/yumuşatılmış hareketiyle aynı karede çakışınca
-                          // "zıplama" hissi veriyordu. Panel artık her zaman ağaçta,
-                          // `AnimatedSize` yüksekliğini yumuşak kapatıyor/açıyor;
-                          // kapalıyken `SizedBox.shrink()` yer kaplamıyor.
-                          Flexible(
-                            child: AnimatedSize(
-                              duration: const Duration(milliseconds: 180),
-                              curve: Curves.easeOut,
-                              alignment: Alignment.bottomCenter,
-                              child: !_formatBarOpen
-                                  ? const SizedBox.shrink()
-                                  : SingleChildScrollView(
-                                child: FormatBar(
-                                  target: _formatTarget,
-                                  onFormat: _applyFormat,
-                                  onClearFormat: _clearFormat,
-                                  onRemoveFormat: _removeFormat,
-                                  fontFamily: _titleIsTarget
-                                      ? note.titleFontFamily
-                                      : note.fontFamily,
-                                  fontScale: _titleIsTarget
-                                      ? note.titleFontScale
-                                      : note.fontScale,
-                                  textOpacity: _titleIsTarget
-                                      ? note.titleTextOpacity
-                                      : note.textOpacity,
-                                  hasSelection: _hasSelection,
-                                  onOpacityChanged: (value) => _mutate(
-                                    (n) => _titleIsTarget
-                                        ? n.copyWith(titleTextOpacity: value)
-                                        : n.copyWith(textOpacity: value),
-                                  ),
-                                  onOpacityEnd: (value) => _applyStepOrNote(
-                                    RichFormat.opacity,
-                                    kRichOpacitySteps,
-                                    kRichOpacityDefault,
-                                    value,
-                                    (n) => _titleIsTarget
-                                        ? n.copyWith(titleTextOpacity: value)
-                                        : n.copyWith(textOpacity: value),
-                                  ),
-                                  onFontChanged: (family) => _mutate(
-                                    (n) => _titleIsTarget
-                                        ? (family == null
-                                              ? n.copyWith(
-                                                  clearTitleFontFamily: true,
-                                                )
-                                              : n.copyWith(titleFontFamily: family))
-                                        : (family == null
-                                              ? n.copyWith(clearFontFamily: true)
-                                              : n.copyWith(fontFamily: family)),
-                                    immediate: true,
-                                  ),
-                                  // Sürüklerken yalnız yerel durum + gecikmeli kayıt: her kare
-                                  // Firestore'a yazmak boşuna trafik olurdu.
-                                  onScaleChanged: (value) => _mutate(
-                                    (n) => _titleIsTarget
-                                        ? n.copyWith(titleFontScale: value)
-                                        : n.copyWith(fontScale: value),
-                                  ),
-                                  onScaleEnd: (value) => _applyStepOrNote(
-                                    RichFormat.size,
-                                    kRichSizeSteps,
-                                    kRichSizeDefault,
-                                    value,
-                                    (n) => _titleIsTarget
-                                        ? n.copyWith(titleFontScale: value)
-                                        : n.copyWith(fontScale: value),
-                                  ),
-                                  // Sayfa rengi/çerçeve/zemin görseli: "Ekle"
-                                  // levhasından buraya taşındı (bkz. FormatBar).
-                                  onPageStyle: _showColorSheet,
-                                  onClose: () =>
-                                      setState(() => _formatBarOpen = false),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Alt bar: eskiden yedi ETİKETSİZ ikon yan yanaydı (palet, ataş,
-                          // hesap, biçim, liste, mikrofon, AI) ve hangisinin ne yaptığı
-                          // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
-                          // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
-                          // "Ekle" açılırına taşındı.
-                          BottomAppBar(
-                            color: background,
-                            height: 64,
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                            child: LayoutBuilder(
-                              builder: (context, barConstraints) {
-                                final showSelect =
-                                    !note.type.isPageNoteType &&
-                                    note.items.isNotEmpty;
-                                final showAttachments = fileAttachments.isNotEmpty;
-                                // Kapsülün ETİKETSİZ (simge) tabanı: her segment 38 dp,
-                                // aralar 3, kapsül dolgusu 6 + kenarlık 2.
-                                final segments = 2 + (showSelect ? 1 : 0);
-                                var fixed =
-                                    segments * 38.0 +
-                                    (segments - 1) * 3 +
-                                    8 +
-                                    // Sağ blok: AI (≈76) + mikrofon (50) + iki 8 dp
-                                    // aralık; belge notunda kalem düğmesi de var.
-                                    76 +
-                                    50 +
-                                    16;
-                                if (showAttachments) fixed += 3 + 46;
-                                if (isDocumentNote) fixed += 46 + 8;
-                                final compact = !_toolLabelsFit(
-                                  [
-                                    l10n.formatTitle,
-                                    l10n.addAttachment,
-                                    if (showSelect) l10n.select,
-                                  ],
-                                  maxWidth: barConstraints.maxWidth,
-                                  fixedWidth: fixed,
-                                );
-                                return Row(
-                                  children: [
-                                    // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
-                                    // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
-                                    // Seç) ve dar ekranda dördü birden taşıyordu.
-                                    // Kaydırma SON ÇARE olarak duruyor (çok büyük yazı
-                                    // ölçeğinde simgeler bile taşabilir); olağan dar
-                                    // ekranda artık etiketler düşüyor ve hepsi görünüyor.
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(3),
-                                          decoration: BoxDecoration(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.surface,
-                                            borderRadius: BorderRadius.circular(13),
-                                            border: Border.all(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.outlineVariant,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              _toolSegment(
-                                                icon: Icons.text_format,
-                                                label: l10n.formatTitle,
-                                                active: _formatBarOpen,
-                                                compact: compact,
-                                                onTap: () => setState(
-                                                  () => _formatBarOpen =
-                                                      !_formatBarOpen,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 3),
-                                              // "Metin ekle" / "Liste maddesi ekle" buradan
-                                              // Ekle levhasının en üst bölümüne taşındı: çubuk
-                                              // üç segmentle kalabalıktı ve ekleme işi iki ayrı
-                                              // yere bölünmüştü (bkz. attach_sheet.dart).
-                                              _addToolButton(
-                                                l10n,
-                                                compact: compact,
-                                              ),
-                                              // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
-                                              // "seç burada olsun, yeni öğe eski yerinde"):
-                                              // toplu kopyalama/silme girişi bir tur ekranın
-                                              // dibinde yüzen bir düğmeydi ve alt paneli
-                                              // örtüyordu. Alt çubuğun segmenti olunca hem
-                                              // sayfanın neresinde olursak olalım görünür
-                                              // kalıyor hem hiçbir şeyi kapatmıyor.
-                                              // Madde yoksa gizli: seçilecek bir şey yok.
-                                              if (showSelect) ...[
-                                                const SizedBox(width: 3),
-                                                _toolSegment(
-                                                  icon: Icons.checklist,
-                                                  label: l10n.select,
-                                                  compact: compact,
-                                                  onTap: () => _itemsEditorKey
-                                                      .currentState
-                                                      ?.startSelection(),
-                                                ),
-                                              ],
-                                              // EKLER düğmesi: şeridin kendi başlık satırı
-                                              // kalktı, aç/kapa buraya taşındı (kullanıcı
-                                              // isteği 2026-08-08 — "ekler yazısı ve göster
-                                              // gizlesi alt alana gelsin, bir satır alan
-                                              // kurtarmış oluruz").
-                                              if (showAttachments) ...[
-                                                const SizedBox(width: 3),
-                                                _attachmentsToggle(
-                                                  l10n,
-                                                  fileAttachments.length,
-                                                ),
-                                              ],
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // PDF/sunum notunda KALEM alt çubukta: tam ekrana
-                                    // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
-                                    // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
-                                    // boşluk).
-                                    if (isDocumentNote) ...[
-                                      _penToolButton(l10n),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    Tooltip(
-                                      message: l10n.aiTitle,
-                                      child: SizedBox(
-                                        height: 44,
-                                        child: FilledButton.tonalIcon(
-                                          onPressed: () => showAiSheet(
-                                            context,
-                                            note,
-                                            onAppendText: _appendText,
-                                            onReplaceText: _replaceText,
-                                            onCreateNote: _createNoteFromText,
-                                          ),
-                                          style: FilledButton.styleFrom(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(
-                                                13,
-                                              ),
-                                            ),
-                                          ),
-                                          icon: const Icon(
-                                            Icons.auto_awesome,
-                                            size: 19,
-                                          ),
-                                          // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
-                                          // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
-                                          // dilde aynı okunur; tam adı ipucunda duruyor.
-                                          label: const Text('AI'),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
-                                    // yakalama editörün en sık kullanılan girişi.
-                                    Tooltip(
-                                      message: l10n.liveDictation,
-                                      child: SizedBox(
-                                        width: 50,
-                                        height: 50,
-                                        child: Material(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.primaryContainer,
-                                          borderRadius: BorderRadius.circular(14),
-                                          elevation: 2,
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(14),
-                                            onTap: _captureVoice,
-                                            child: Icon(
-                                              Icons.mic_none,
-                                              size: 25,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onPrimaryContainer,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  // ZIPLAMA + KASMA — HAREKET İLE YERLEŞİM AYRILDI (kullanıcı
+                  // bulgusu 2026-08-22: "klavye açılıp kapanırken bu alan
+                  // kayıyor"). Çubuk klavyeyle birlikte KARE KARE kayar ama
+                  // yalnız BOYAMA katmanında ([KeyboardSlide] → `Transform`);
+                  // gövdenin yerleşimi ise animasyon boyunca hiç değişmez,
+                  // klavye durunca TEK SEFERDE oturur (bkz. [KeyboardSnap]).
+                  // Eskiden ikisi de aynı kademeli değerden besleniyordu:
+                  // yerleşim azalmıştı ama çubuk 96 dp'lik sıçramalarla
+                  // yukarı çıkıyordu — kullanıcının gördüğü zıplama buydu.
+                  if (bottomBar != null)
+                    KeyboardSlide(inset: keyboardInset, child: bottomBar),
                 ],
               ),
             ),
@@ -5882,16 +5912,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 }
 
-/// Alt çubuğu klavyenin ÜSTÜNE kaldırır.
-///
-/// `Scaffold` bunu kendisi yapmaz: `bottomNavigationBar` her zaman ekranın
-/// dibine konur (`_ScaffoldLayout`: `bottom - bottomWidgetsHeight`), klavye
-/// yüksekliği hesaba katılmaz — yani çubuk klavyenin ALTINDA kalırdı.
-///
-/// Neden ayrı bir widget: klavye yüksekliği animasyon boyunca her karede
-/// değişiyor. Dolguyu çubuğun kendi ağacının içinde okumak, o ağacın tamamını
-/// kare kare yeniden kurduruyordu. Burada [child] dışarıdan hazır geliyor;
-/// yeniden kurulan tek şey [Padding], çocuk aynı örnek olduğu için atlanır.
 /// Klavyeden Kopyala/Kes'in temiz-metin sürümü.
 ///
 /// EditableText, [CopySelectionTextIntent] eylemini `Action.overridable`
