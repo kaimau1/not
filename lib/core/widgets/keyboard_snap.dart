@@ -2,54 +2,86 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-/// Klavye yüksekliğini **kademeli** veren sarmalayıcı.
+/// Klavye boşluğunu İKİ AYRI yoldan veren sarmalayıcı: gövdeye KARARLI
+/// (yerleşim için), alt çubuğa CANLI (yalnız boyama için).
 ///
-/// **KÖK NEDEN — "kasma devam ediyor klavye açılırken"** (kullanıcı bulgusu
-/// 2026-08-18; 33., 35. ve 36. turlardaki düzeltmelerden sonra da sürüyor).
-/// Önceki turlar yeniden KURULUMU (rebuild) durdurdu: alt çubuk artık aynı
-/// widget örneğini döndürüyor, tuval sabit tabana kilitlendi. Kalan maliyet
-/// YERLEŞİMDİ (layout): `Scaffold.resizeToAvoidBottomInset` gövdenin
-/// yüksekliğini klavye animasyonunun HER KARESİNDE (~30 kare) değiştiriyor.
-/// Kısıt değişince Flutter alt ağacı yeniden kurmasa bile YENİDEN ÖLÇER —
-/// ağır ekranlarda (yüz karta yakın ana ekran ızgarası, görselli not tuvali,
-/// PDF görüntüleyici) bu tek başına takılmayı doğuruyor. pdfrx'te ise her
-/// yeni yükseklik sayfayı yeniden pişiriyor.
+/// **KÖK NEDEN — "kasma büyük oranda çözüldü ama hâlâ var, alt çubuk klavye
+/// açılıp kapanırken kayıyor"** (kullanıcı bulgusu 2026-08-22, ekran
+/// görüntüsünde biçim/ekle/seç çubuğu işaretli).
 ///
-/// Çözüm: ilgili ekranda `resizeToAvoidBottomInset: false` yapılır ve klavye
-/// boşluğu BURADAN verilir. Değer [step] kademelerine yuvarlandığı için
-/// animasyon boyunca ~30 yerleşim yerine 3-4 tane olur; animasyon durunca da
-/// tam değere inilir, ekranın altında kademe payı kalmaz.
+/// Bu widget'ın ÖNCEKİ sürümü klavye yüksekliğini 96 dp'lik KADEMELERE
+/// yuvarlıyordu. Doğru yöne gitmişti — yerleşim sayısı ~30'dan 3-4'e indi,
+/// kasma gerçekten azaldı — ama yerine görünür bir kusur koydu: alt çubuk
+/// artık 0 → 96 → 192 → 288 → (tam değer) diye DÖRT SIÇRAYIŞLA yukarı
+/// çıkıyordu. Kullanıcının gördüğü "zıplama" tam olarak buydu. Yani kademe,
+/// pahalı yerleşimle akıcı hareket arasındaki bir UZLAŞMAYDI ve ikisini de
+/// tam veremiyordu.
 ///
-/// `MediaQuery.viewInsetsOf` YALNIZ bu küçük widget'ı dinler; çocuk kademe
-/// değişmedikçe **aynı widget örneğidir**, dolayısıyla ara karelerde ne
-/// yeniden kurulur ne de yeniden ölçülür.
+/// **Kökten çözüm — ikisinin AYNI değerden beslenmesi gerekmiyor.**
+///
+/// * **Yerleşim (pahalı, seyrek olmalı)**: gövdenin boşluğu animasyon
+///   BOYUNCA HİÇ değişmez. Klavye açılırken gövde tam boyunda kalır (kısalan
+///   kısım zaten klavyenin ve çubuğun ardındadır, görünmez); kapanırken daha
+///   İLK karede tam boya döner (açılacak alan böylece boş değil, DOLU
+///   ortaya çıkar). Boşluk yalnızca klavye ~140 ms durduğunda (yani açılış
+///   bittiğinde) gerçek değerine oturur. Sonuç: bir açılış/kapanış çevriminde
+///   gövde TOPLAM İKİ KEZ ölçülür — kare başına değil.
+/// * **Hareket (bedava, kare kare olmalı)**: alt çubuk [KeyboardSlide] ile
+///   klavyeyi kare kare izler ama yalnız BOYAMA katmanında (`Transform` +
+///   `RepaintBoundary`). Yerleşim yoktur, dolayısıyla kademeye de gerek
+///   yoktur: hareket cihazın yenileme hızında akar.
+///
+/// Böylece kasma (yerleşim yok) ve zıplama (kademe yok) aynı anda biter.
+///
+/// Kullanım: ilgili ekranda `resizeToAvoidBottomInset: false` yapılır, gövde
+/// [builder]'ın verdiği kararlı boşlukla doldurulur, klavyeyle birlikte
+/// kayması istenen çubuk AYNI boşluk verilerek [KeyboardSlide] ile sarılır.
+/// Çubuğun kendisi [builder]'ın DIŞINDA kurulup içeri aynı örnek olarak
+/// verilmelidir; yoksa boşluk her oturduğunda çubuk da baştan kurulur.
 class KeyboardSnap extends StatefulWidget {
-  const KeyboardSnap({super.key, required this.builder, this.step = 96});
+  const KeyboardSnap({
+    super.key,
+    required this.builder,
+    this.onSettled,
+    this.settle = const Duration(milliseconds: 140),
+  });
 
-  /// Kademeli klavye boşluğuyla çağrılır. Aynı boşluk için AYNI örnek
+  /// Kararlı klavye boşluğuyla çağrılır. Aynı boşluk için AYNI örnek
   /// döndürülür (önbellek burada tutulur), bu yüzden gövdesi serbestçe
   /// pahalı olabilir.
   final Widget Function(BuildContext context, double inset) builder;
 
-  /// Yuvarlama kademesi (dp). Küçük değer daha akıcı ama daha çok yerleşim.
-  final double step;
+  /// Boşluk oturup YENİ YERLEŞİM EKRANA GELDİKTEN sonra çağrılır.
+  ///
+  /// Neden gerekli: `EditableText` imleci klavyenin üstüne kaydırmak için
+  /// `didChangeMetrics`e (yani klavye yüksekliğinin değiştiği KARELERE)
+  /// bakar. Burada gövde o karelerde bilerek TAM BOYUNDA tutulduğu için
+  /// Flutter "imleç zaten görünüyor" diye kaydırmaz; boşluk ise 140 ms sonra
+  /// oturur ve alanı klavyenin ardında bırakabilir. Çağıran bu geri
+  /// bildirimde odaklı alanı görünür kılar (bkz. editördeki
+  /// `_revealFocusedField`).
+  final ValueChanged<double>? onSettled;
+
+  /// Klavyenin "durdu" sayılması için gereken hareketsizlik süresi. Bu süre
+  /// dolmadan gövde yeniden ölçülmez.
+  final Duration settle;
 
   @override
   State<KeyboardSnap> createState() => _KeyboardSnapState();
 }
 
 class _KeyboardSnapState extends State<KeyboardSnap> {
+  /// Gövdenin yerleşiminde kullanılan KARARLI boşluk. Animasyon sırasında 0,
+  /// klavye durduğunda gerçek yükseklik.
   double _inset = 0;
 
-  /// Son build'te GÖRÜLEN ham (kademelenmemiş) değer.
+  /// Son build'te GÖRÜLEN ham (canlı) değer.
   ///
-  /// KÖK NEDEN (ilk sürümde test kırıldı): kademeleme her `build()`'te yeniden
-  /// hesaplanıyordu — animasyon durup [_settle] tam değere indikten SONRA bile
-  /// bir sonraki build (ör. tazeleme zamanlayıcısının kendi `setState`'i) aynı
-  /// `live` değerini tekrar kademeliyor ve TAM değeri anında geri
-  /// YUVARLIYORDU. Kademeleme artık YALNIZ `live` bir ÖNCEKİ build'e göre
-  /// DEĞİŞTİYSE uygulanır; değişmediyse [_inset] (kademeli ya da tam) olduğu
-  /// gibi kalır.
+  /// KÖK NEDEN (önceki sürümde test kırıldı): hedef her `build()`'te yeniden
+  /// hesaplanıyordu — klavye durup boşluk oturduktan SONRA bile bir sonraki
+  /// build (ör. tazeleme zamanlayıcısının kendi `setState`'i) aynı değeri
+  /// tekrar işleyip oturmuş boşluğu geri ALIYORDU. Hesap artık YALNIZ `live`
+  /// bir önceki build'e göre DEĞİŞTİYSE yapılır.
   double _lastLive = 0;
 
   Widget? _child;
@@ -69,19 +101,22 @@ class _KeyboardSnapState extends State<KeyboardSnap> {
     super.dispose();
   }
 
-  double _quantize(double live) =>
-      live <= 0 ? 0 : (live / widget.step).ceil() * widget.step;
-
-  /// Klavye [live] değerinde ~140 ms hareketsiz kalırsa TAM değere iner.
-  /// Kademe yukarı yuvarladığı için klavyenin üstünde [step]'e kadar boşluk
-  /// kalabilirdi; animasyon durduğunda bu pay silinir.
+  /// Klavye [live] değerinde [KeyboardSnap.settle] kadar hareketsiz kalırsa
+  /// gövde gerçek yüksekliğe oturur. Açılışta bu, animasyonun BİTTİĞİ andır:
+  /// gövdenin kısalan kısmı o sırada klavyenin ardındadır, yani ölçüm gözle
+  /// görülmez.
   void _scheduleSettle(double live) {
     _settle?.cancel();
-    _settle = Timer(const Duration(milliseconds: 140), () {
+    _settle = Timer(widget.settle, () {
       if (!mounted || _inset == live) return;
       setState(() {
         _inset = live;
         _child = null;
+      });
+      // Yeni yerleşim ekrana geldikten SONRA: geri bildirimi alan taraf
+      // (odaklı alanı görünür kılmak gibi) gerçek ölçülerle çalışsın.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onSettled?.call(live);
       });
     });
   }
@@ -91,13 +126,57 @@ class _KeyboardSnapState extends State<KeyboardSnap> {
     final live = MediaQuery.viewInsetsOf(context).bottom;
     if (live != _lastLive) {
       _lastLive = live;
-      final target = _quantize(live);
-      if (target != _inset) {
-        _inset = target;
+      // Klavye HAREKET HÂLİNDE: gövde tam boyuna döner ve animasyon bitene
+      // kadar öyle kalır. Kapanışta bunun ayrıca bir faydası var — açılan
+      // alan içeriğiyle birlikte ortaya çıkar, bir kare bile boş görünmez.
+      if (_inset != 0) {
+        _inset = 0;
         _child = null;
       }
       _scheduleSettle(live);
     }
     return _child ??= widget.builder(context, _inset);
+  }
+}
+
+/// Çocuğunu klavyenin üstünde KARE KARE tutar — ama yalnız BOYAYARAK.
+///
+/// [KeyboardSnap] gövdeye KARARLI bir boşluk verir ([inset]); çubuk o
+/// boşluğun üstüne yerleşmiştir. Canlı klavye yüksekliği o boşluktan farklı
+/// olduğu her karede aradaki FARK kadar ötelenir, böylece çubuğun alt kenarı
+/// HER KAREDE tam olarak klavyenin üst kenarına oturur — animasyonun
+/// ortasında bile.
+///
+/// Neden bedava:
+/// * `MediaQuery.viewInsetsOf` YALNIZ bu küçük widget'ı dinler; [child]
+///   dışarıdan hazır gelen AYNI örnek olduğu için alt ağaç hiç kurulmaz.
+/// * Değişen tek şey `Transform`un ötelemesi → `markNeedsPaint`. Hiçbir
+///   yerleşim (layout) yoktur, dolayısıyla kademeye de gerek yoktur.
+/// * Dıştaki `RepaintBoundary` boyama isteğinin ekranın geri kalanına
+///   yayılmasını keser; çağıranın çocuğa koyduğu sınır sayesinde de çubuğun
+///   rasteri yeniden çizilmez, hazır katman yalnız yeni konuma taşınır.
+class KeyboardSlide extends StatelessWidget {
+  const KeyboardSlide({super.key, required this.inset, required this.child});
+
+  /// [KeyboardSnap]'in gövdeye verdiği KARARLI boşluk.
+  final double inset;
+
+  /// Kaydırılacak ağaç. Çağıran tarafta bir `RepaintBoundary` ile sarılı
+  /// olması beklenir (bkz. sınıf açıklaması).
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final live = MediaQuery.viewInsetsOf(context).bottom;
+    // Negatif = YUKARI. Boşluk 0'ken (animasyon sürerken) çubuk klavye kadar
+    // yukarı kalkar; boşluk oturunca fark sıfırlanır ve öteleme kendiliğinden
+    // biter — çubuk iki durumda da BİREBİR aynı yerde olduğu için oturma anı
+    // ekranda görünmez.
+    return RepaintBoundary(
+      child: Transform.translate(
+        offset: Offset(0, inset - live),
+        child: child,
+      ),
+    );
   }
 }

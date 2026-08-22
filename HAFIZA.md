@@ -2208,6 +2208,51 @@ hepsi birden hem test edilemez büyüklükte hem de UI/UX kararı (sonsuz mu
 sabit sayfa mı, hangi premium fikirler öncelikli) kullanıcıdan netlik
 istiyor.
 
+## 2026-08-22 — Klavye zıplaması/kasması: HAREKET ile YERLEŞİM ayrıldı
+
+**Bulgu (kullanıcı, ekran görüntüleriyle)**: "klavye açılıp kapanırken kasma
+sorunu vardı, büyük oranda çözüldü ancak hâlâ var; sorun işaretlediğim alanın
+kaymasından kaynaklanıyor" — işaretlenen alan editörün alt çubuğu
+(Biçim / Ekle / Seç + AI + mikrofon).
+
+**KÖK NEDEN**: `KeyboardSnap` (2026-08-18'de eklendi) klavye yüksekliğini
+96 dp'lik KADEMELERE yuvarlıyordu. Yerleşim sayısı ~30'dan 3-4'e indiği için
+kasma gerçekten azaldı, ama alt çubuk artık 0 → 96 → 192 → 288 → (tam değer)
+diye DÖRT AYRI SIÇRAYIŞLA yukarı çıkıyordu. Yani kademe, pahalı yerleşimle
+akıcı hareket arasında bir UZLAŞMAYDI ve ikisini de tam veremiyordu:
+kalan kasma + yeni zıplama aynı kaynaktan geliyordu.
+
+**KARAR — ikisi aynı değerden beslenmek zorunda değil** (`lib/core/widgets/
+keyboard_snap.dart`):
+- **Yerleşim** (`KeyboardSnap`): gövdenin boşluğu animasyon boyunca HİÇ
+  değişmez. Açılırken gövde tam boyunda kalır (kısalan kısım zaten klavyenin
+  ve çubuğun ardındadır, görünmez), kapanırken daha İLK karede tam boya döner
+  (açılan alan boş değil, DOLU ortaya çıkar). Boşluk yalnız klavye 140 ms
+  durunca oturur. Bir açılış/kapanış çevriminde gövde İKİ kez ölçülür.
+- **Hareket** (yeni `KeyboardSlide`): çubuk klavyeyi KARE KARE izler ama
+  yalnız BOYAMA katmanında (`RepaintBoundary` + `Transform.translate`).
+  Yerleşim olmadığı için kademeye de gerek yok — hareket cihazın yenileme
+  hızında akar, tek bir sıçrama kalmaz.
+
+**Yan düzeltmeler**:
+- Alt çubuk artık `KeyboardSnap`in builder'ının DIŞINDA kuruluyor
+  (`bottomBar` yerel değişkeni) ve içeri aynı örnek olarak geçiyor. Eskiden
+  boşluk her değiştiğinde ek şeridi + biçim çubuğu + BottomAppBar baştan
+  kuruluyordu. Bu ayrıca gizli bir tuzağı da kaldırdı: builder `setState`ten
+  de çağrılıyor, yani içindeki `ref.watch` editörün build'i dışında
+  koşuyordu.
+- **TUZAK (bu değişikliğin bedeli)**: `EditableText` imleci klavyenin üstüne
+  kaydırmak için `didChangeMetrics`e, yani klavye yüksekliğinin değiştiği
+  KARELERE bakar. Gövde o karelerde bilerek kısaltılmadığı için Flutter
+  "imleç zaten görünüyor" deyip kaydırmıyor ve boşluk oturunca alan klavyenin
+  ardında kalabiliyordu. Çözüm: `KeyboardSnap.onSettled` geri bildirimi +
+  editörde `_revealFocusedField` (`Scrollable.ensureVisible`,
+  `keepVisibleAtEnd` — alan zaten görünüyorsa hiçbir şey yapmaz).
+
+**Testler**: `test/keyboard_snap_test.dart` yeniden yazıldı — çubuğun ekran
+konumu HER ara karede `ekran − canlı klavye` olmalı (zıplama yok) ve tam bir
+açılış+kapanış çevriminde gövde TOPLAM ÜÇ kez kurulmalı (kasma yok).
+
 ## 2026-08-21 (devam 4) — CI: Actions dakika kotası doldu
 
 `main`e push edilen [apk] commit'i (639ae6c → sonra retry 1c7d0b4) CI'da
