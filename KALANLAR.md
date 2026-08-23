@@ -5,8 +5,16 @@
 ## 2026-08-23 turundan kalan (CİHAZDA HİÇ ÇALIŞTIRILMADI)
 
 Bu tur Flutter SDK'sı OLMAYAN bir ortamda yazıldı: `flutter analyze` ve
-`flutter test` koşmadı, doğrulama CI'a bırakıldı. Hepsi elle gözden geçirildi
+`flutter test` koşmadı. **CI de koşamadı**: main'e push edilen 72c528f
+işi 3 SANİYEDE "failure" ile düştü ve log indirmesi 404 döndü — 2026-08-21'de
+kaydedilen Actions DAKİKA KOTASI hâlâ dolu (son başarılı koşu 2026-08-18,
+#345). Yani bu turdaki kodun DERLENDİĞİ hiçbir yerde doğrulanmadı; kota
+yenilenince bir push (ya da boş commit) yeterli. Hepsi elle gözden geçirildi
 ama hiçbiri cihazda görülmedi.
+
+- [ ] **İLK İŞ: kota yenilenince `flutter analyze` + `flutter test` koştur.**
+  Bu turda 3 yeni dosya, 28 yeni l10n anahtarı ve 15 dosyada değişiklik var;
+  derleme hatası çıkarsa büyük olasılıkla aşağıdaki iki maddeden biridir.
 
 - [ ] **Alan seçimi (PDF/sunum/görsel)** — yakalama `RepaintBoundary.toImage`
   ile. Bakılacaklar: pdfrx'in çizdiği sayfa gerçekten yakalanıyor mu, seçim
