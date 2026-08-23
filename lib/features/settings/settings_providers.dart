@@ -679,20 +679,72 @@ class AssistantVoiceNotifier extends Notifier<bool> {
   void toggle() => set(!state);
 }
 
-/// Ana ekranın (dashboard) ZEMİN görseli.
+/// Ana ekranın (dashboard) ZEMİNİ: **renk + desen + görsel**.
 ///
 /// Nota özel zeminden farkı: bu ayar cihaza aittir, buluta yazılmaz. Seçilen
 /// görsel uygulamanın kendi klasörüne KOPYALANIR — galerideki dosya silinse
 /// ya da geçici paylaşım yolu geçersizleşse bile zemin kaybolmasın.
+///
+/// **RENK VE DESEN** (kullanıcı isteği: "ana ekran zemini kısmına renk ve
+/// model seçenekleri"): zemin şimdiye dek yalnız GALERİDEN bir fotoğraf
+/// seçtiriyordu. Fotoğraf koymak istemeyen ama ana ekranını kişiselleştirmek
+/// isteyen kullanıcı için hiçbir şey yoktu; üstelik fotoğraflı zemin kart
+/// ızgarasının okunurluğunu her zaman düşürüyor. Renk + desen bu boşluğu
+/// dolduruyor ve desenler ÇİZİLİYOR (varlık dosyası yok): temaya uyum
+/// sağlıyorlar ve APK'yı büyütmüyorlar.
+///
+/// Üçü ÜST ÜSTE binebilir — sıra: renk (en altta), desen, görsel.
+enum DashboardPattern {
+  none('none'),
+  dots('dots'),
+  grid('grid'),
+  lines('lines'),
+  diagonal('diagonal'),
+  graph('graph');
+
+  const DashboardPattern(this.id);
+
+  final String id;
+
+  static DashboardPattern fromId(String? id) => DashboardPattern.values
+      .firstWhere((p) => p.id == id, orElse: () => DashboardPattern.none);
+}
+
 @immutable
 class DashboardBackground {
-  const DashboardBackground({this.path, this.opacity = 0.25});
+  const DashboardBackground({
+    this.path,
+    this.opacity = 0.25,
+    this.color,
+    this.pattern = DashboardPattern.none,
+  });
 
-  /// Cihazdaki kopyanın yolu; null = zemin yok.
+  /// Cihazdaki kopyanın yolu; null = zemin görseli yok.
   final String? path;
 
   /// Görünürlük (0.05–1). Varsayılan düşük: kart ızgarası okunur kalmalı.
+  /// Hem görselin hem desenin görünürlüğünü ayarlar.
   final double opacity;
+
+  /// Düz zemin rengi (ARGB); null = temanın kendi yüzey rengi.
+  final int? color;
+
+  /// Zemin deseni; [DashboardPattern.none] = desen yok.
+  final DashboardPattern pattern;
+
+  DashboardBackground copyWith({
+    String? path,
+    bool clearPath = false,
+    double? opacity,
+    int? color,
+    bool clearColor = false,
+    DashboardPattern? pattern,
+  }) => DashboardBackground(
+    path: clearPath ? null : (path ?? this.path),
+    opacity: opacity ?? this.opacity,
+    color: clearColor ? null : (color ?? this.color),
+    pattern: pattern ?? this.pattern,
+  );
 }
 
 final dashboardBackgroundProvider =
@@ -703,6 +755,8 @@ final dashboardBackgroundProvider =
 class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   static const _pathKey = 'dashboard_bg_path';
   static const _opacityKey = 'dashboard_bg_opacity';
+  static const _colorKey = 'dashboard_bg_color';
+  static const _patternKey = 'dashboard_bg_pattern';
 
   @override
   DashboardBackground build() {
@@ -710,11 +764,13 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
     return DashboardBackground(
       path: prefs.getString(_pathKey),
       opacity: prefs.getDouble(_opacityKey) ?? 0.25,
+      color: prefs.getInt(_colorKey),
+      pattern: DashboardPattern.fromId(prefs.getString(_patternKey)),
     );
   }
 
   void setPath(String? path) {
-    state = DashboardBackground(path: path, opacity: state.opacity);
+    state = state.copyWith(path: path, clearPath: path == null);
     final prefs = ref.read(sharedPreferencesProvider);
     if (path == null) {
       prefs.remove(_pathKey);
@@ -724,7 +780,32 @@ class DashboardBackgroundNotifier extends Notifier<DashboardBackground> {
   }
 
   void setOpacity(double value) {
-    state = DashboardBackground(path: state.path, opacity: value);
+    state = state.copyWith(opacity: value);
     ref.read(sharedPreferencesProvider).setDouble(_opacityKey, value);
+  }
+
+  void setColor(int? argb) {
+    state = state.copyWith(color: argb, clearColor: argb == null);
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (argb == null) {
+      prefs.remove(_colorKey);
+    } else {
+      prefs.setInt(_colorKey, argb);
+    }
+  }
+
+  void setPattern(DashboardPattern pattern) {
+    state = state.copyWith(pattern: pattern);
+    ref.read(sharedPreferencesProvider).setString(_patternKey, pattern.id);
+  }
+
+  /// Renk + desen + görseli birlikte varsayılana döndürür.
+  void reset() {
+    state = const DashboardBackground();
+    ref.read(sharedPreferencesProvider)
+      ..remove(_pathKey)
+      ..remove(_opacityKey)
+      ..remove(_colorKey)
+      ..remove(_patternKey);
   }
 }

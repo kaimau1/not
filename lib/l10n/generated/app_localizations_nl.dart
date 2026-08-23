@@ -2945,4 +2945,88 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get accountSettings => 'Hesap ayarları';
+
+  @override
+  String get videoFramesExtracting => 'Videodan kareler alınıyor…';
+
+  @override
+  String get areaSelect => 'Alan seç';
+
+  @override
+  String get areaSelectOff => 'Alan seçimini kapat';
+
+  @override
+  String get areaSelectHint => 'Kopyalamak ya da yapay zekâya sormak istediğin alanı parmağınla çiz.';
+
+  @override
+  String get areaCopyImage => 'Görsel olarak kopyala';
+
+  @override
+  String get areaCopied => 'Seçilen alan panoya kopyalandı.';
+
+  @override
+  String get areaAskAi => 'Yapay zekâya sor';
+
+  @override
+  String get areaAskTitle => 'Seçilen alan';
+
+  @override
+  String get areaAskHint => 'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).';
+
+  @override
+  String get areaAskRun => 'Sor';
+
+  @override
+  String get areaCaptureFailed => 'Seçilen alanın görüntüsü alınamadı.';
+
+  @override
+  String get areaTooSmall => 'Seçilen alan çok küçük.';
+
+  @override
+  String get areaAddToNote => 'Nota ekle';
+
+  @override
+  String get bubbleTextFill => 'Yazı zemini';
+
+  @override
+  String get bubbleTextFillNone => 'Zeminsiz';
+
+  @override
+  String get bubbleTextAlignLeft => 'Sola hizala';
+
+  @override
+  String get bubbleTextAlignCenter => 'Ortala';
+
+  @override
+  String get bubbleTextAlignRight => 'Sağa hizala';
+
+  @override
+  String get dashboardBackgroundPattern => 'Desen';
+
+  @override
+  String get dashboardBackgroundColor => 'Zemin rengi';
+
+  @override
+  String get dashboardBackgroundImageSection => 'Zemin görseli';
+
+  @override
+  String get dashboardBackgroundReset => 'Varsayılana dön';
+
+  @override
+  String get patternNone => 'Düz';
+
+  @override
+  String get patternDots => 'Noktalı';
+
+  @override
+  String get patternGrid => 'Kareli';
+
+  @override
+  String get patternLines => 'Çizgili';
+
+  @override
+  String get patternDiagonal => 'Çapraz';
+
+  @override
+  String get patternGraph => 'Milimetrik';
 }

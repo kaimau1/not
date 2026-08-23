@@ -1256,6 +1256,12 @@ class ItemsEditorState extends State<ItemsEditor> {
           else if (widget.showCheckboxes)
             Checkbox(
               value: item.checked,
+              // Kutunun KENDİ kutusu 48 dp'lik dokunma hedefinden 40 dp'ye
+              // iner: 48 dp'lik kutu ilk satırın ortasından her zaman daha
+              // aşağıda kalıyordu (bkz. [leadingTop] — "madde kutuları
+              // yazıdan biraz altta" kök nedeni). 40 dp hem hizalanabiliyor
+              // hem de dokunulabilir bir hedef olarak kalıyor.
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               // Boş satırın kutusu PASİF: dokunulunca hiçbir şey olmadığını
               // görmek, işaretlenip alta düşen boş bir maddeyi geri almaktan
               // iyidir (bkz. _toggleItem). Zaten işaretliyse etkin kalır ki
@@ -1278,6 +1284,35 @@ class ItemsEditorState extends State<ItemsEditor> {
       ),
     );
 
+    // **KUTUCUK/NUMARA HİZASI** (kullanıcı bulgusu: "madde boxları tam
+    // hizalı değil, biraz altta kalıyor yazıdan").
+    //
+    // KÖK NEDEN: satır `CrossAxisAlignment.start` ile diziliyor (çok satırlı
+    // maddede kutu İLK satıra hizalanmalı, satırın ortasına değil) ve kutuya
+    // sabit 4 dp'lik bir üst pay veriliyordu. Oysa iki öğenin yüksekliği
+    // farklı: `TextField`in ilk satırının ortası `contentPadding.top` (10) +
+    // satır yüksekliğinin yarısı kadar aşağıda, `Checkbox`ın ortası ise kendi
+    // kutusunun (48 dp) yarısı kadar. 16 punto yazıda bu 19.6'ya karşı 24 dp
+    // demek — kutu her zaman yaklaşık 4 dp AŞAĞIDA kalıyordu ve sabit pay
+    // farkı büyütüyordu.
+    //
+    // Çözüm iki parçalı: kutunun kendi kutusu 40 dp'ye indirildi (yukarıda)
+    // ve üst pay artık SABİT değil, "ilk satırın ortası − öğenin yarısı"
+    // olarak HESAPLANIYOR. Yazı tipi/boyutu ve sistem yazı ölçeği değişince
+    // hiza kendiliğinden korunur.
+    final fontSize = MediaQuery.textScalerOf(
+      context,
+    ).scale(baseStyle.fontSize ?? 16);
+    // `height` verilmemişse yazı tipinin kendi satır yüksekliği geçerli;
+    // Roboto ve benzerlerinde bu ~1.2 katıdır.
+    final lineHeight = fontSize * (baseStyle.height ?? 1.2);
+    // TextField `contentPadding: vertical 10` ile kuruluyor (aşağıya bak).
+    final firstLineCenter = 10 + lineHeight / 2;
+    final leadingHeight = _selectionMode
+        ? 22.0
+        : (widget.showCheckboxes ? 40.0 : lineHeight);
+    final leadingTop = math.max(0.0, firstLineCenter - leadingHeight / 2);
+
     Widget rowBody(bool focused) => Container(
       color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1292,14 +1327,15 @@ class ItemsEditorState extends State<ItemsEditor> {
         child: Row(
           // Çok satırlı maddelerde kutucuk/numara artık tüm satır
           // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
-          // (kullanıcı isteği). TextField'ın üst iç boşluğu (contentPadding
-          // vertical: 10) ile checkbox/numaranın kendi üst boşluğu farklı
-          // olduğundan `leading`e ince bir üst pay eklendi, aksi hâlde
-          // start hizalamasında kutucuk metnin biraz üstünde kalır.
+          // (kullanıcı isteği). Üst pay [leadingTop] ile HESAPLANIR — bkz.
+          // orada anlatılan hiza kök nedeni.
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ?dragHandle,
-            Padding(padding: const EdgeInsets.only(top: 4), child: leading),
+            Padding(
+              padding: EdgeInsets.only(top: leadingTop),
+              child: leading,
+            ),
             Expanded(
               // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
               child: GestureDetector(

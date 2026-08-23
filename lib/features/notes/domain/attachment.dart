@@ -106,6 +106,10 @@ class PageBubble {
     this.arrow = true,
     this.plain = false,
     this.size = 1,
+    this.bold = false,
+    this.italic = false,
+    this.fill = 0,
+    this.align = 0,
   });
 
   /// Kalıcı kimlik: balon taşınıp düzenlendiğinde liste yeniden kurulur,
@@ -193,6 +197,31 @@ class PageBubble {
   /// [minSize]–[maxSize] arasına kıstırılır.
   final double size;
 
+  /// **AÇIK METİN ALANININ BİÇİMİ** (kullanıcı isteği: "metin kutusunu
+  /// geliştirme").
+  ///
+  /// Kutu şimdiye dek yalnız RENK ve BOY veriyordu. Paint'in metin aracının
+  /// karşılığı olarak konmuştu ama iki eksiği vardı:
+  /// * Fotoğraf ya da taranmış bir sayfanın üstünde yazı, zemin karışık
+  ///   olduğunda dış hatla bile zor okunuyordu — **dolgu** ([fill]) yazının
+  ///   arkasına düz bir zemin koyar, yazı her belgede okunur olur.
+  /// * Bir başlık ya da uyarı vurgulanamıyordu — **kalın/italik** ([bold],
+  ///   [italic]) ve çok satırlı yazıda **hizalama** ([align]) eklendi.
+  ///
+  /// Hepsi eski kayıtlarda YOK ve varsayılanları eski davranışı verir
+  /// (kalın değil, italik değil, dolgusuz, sola dayalı) — eski notlar
+  /// olduğu gibi çizilmeye devam eder.
+  final bool bold;
+  final bool italic;
+
+  /// Yazının arkasındaki dolgu rengi (ARGB); 0 = dolgu yok.
+  final int fill;
+
+  /// Çok satırlı yazının hizası: 0 sola, 1 ortaya, 2 sağa. Sayı olarak
+  /// tutulur — alan adı kısa kalsın ve etki alanı `dart:ui`ye bağlanmasın
+  /// (çizim tarafı `TextAlign`e çevirir).
+  final int align;
+
   /// Açık metin alanının en küçük/en büyük yazı boyu çarpanı. Alt sınır
   /// okunaklılık, üst sınır sayfayı tümüyle kapatan bir yazı için.
   static const double minSize = 0.5;
@@ -220,6 +249,10 @@ class PageBubble {
     bool? arrow,
     bool? plain,
     double? size,
+    bool? bold,
+    bool? italic,
+    int? fill,
+    int? align,
   }) => PageBubble(
     id: id,
     page: page ?? this.page,
@@ -235,6 +268,10 @@ class PageBubble {
     plain: plain ?? this.plain,
     arrow: arrow ?? this.arrow,
     size: (size ?? this.size).clamp(minSize, maxSize),
+    bold: bold ?? this.bold,
+    italic: italic ?? this.italic,
+    fill: fill ?? this.fill,
+    align: align ?? this.align,
   );
 
   factory PageBubble.fromMap(Map<String, dynamic> map) => PageBubble(
@@ -254,6 +291,10 @@ class PageBubble {
     plain: map['n'] as bool? ?? false,
     // Alan yoksa varsayılan boy: eski kayıtlar olduğu gibi çizilir.
     size: ((map['z'] as num?)?.toDouble() ?? 1).clamp(minSize, maxSize),
+    bold: map['b'] as bool? ?? false,
+    italic: map['e'] as bool? ?? false,
+    fill: (map['f'] as num?)?.toInt() ?? 0,
+    align: (map['g'] as num?)?.toInt() ?? 0,
   );
 
   /// Vurgu dikdörtgenlerini kayıttan okur.
@@ -300,6 +341,10 @@ class PageBubble {
     if (plain) 'n': true,
     // Yalnız DEĞİŞTİRİLDİYSE yazılır (varsayılan 1).
     if (size != 1) 'z': size,
+    if (bold) 'b': true,
+    if (italic) 'e': true,
+    if (fill != 0) 'f': fill,
+    if (align != 0) 'g': align,
     // DÜZ liste: Firestore iç içe dizi kabul etmiyor (bkz. [_rectsFromMap]).
     if (rects.isNotEmpty)
       'r': [

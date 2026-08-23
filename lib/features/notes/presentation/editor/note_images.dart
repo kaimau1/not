@@ -185,20 +185,41 @@ class _ImageBox extends StatelessWidget {
           left: b.x * box.width,
           top: b.y * box.height,
           child: IgnorePointer(
-            child: Text(
-              b.text.trim(),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                // Küçük halde okunabilirlik için oranlı: tam ekrandaki 16 pt
-                // burada kutunun genişliğine göre küçülür.
-                fontSize: (box.width * 0.05).clamp(7.0, 14.0),
-                height: 1.2,
-                fontWeight: FontWeight.w600,
-                color: Color(b.color),
-                shadows: const [
-                  Shadow(blurRadius: 2, color: Colors.black54),
-                ],
+            child: DecoratedBox(
+              // Dolgu küçük halde de çizilir: tam ekranda zemini olan bir
+              // yazı, notta zeminsiz görünüp okunmaz olmasın.
+              decoration: BoxDecoration(
+                color: b.fill == 0 ? null : Color(b.fill),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: b.fill == 0 ? 0 : 2,
+                ),
+                child: Text(
+                  b.text.trim(),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: switch (b.align) {
+                    1 => TextAlign.center,
+                    2 => TextAlign.right,
+                    _ => TextAlign.left,
+                  },
+                  style: TextStyle(
+                    // Küçük halde okunabilirlik için oranlı: tam ekrandaki
+                    // 16 pt burada kutunun genişliğine göre küçülür.
+                    fontSize: (box.width * 0.05).clamp(7.0, 14.0),
+                    height: 1.2,
+                    fontWeight: b.bold ? FontWeight.w800 : FontWeight.w600,
+                    fontStyle: b.italic
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                    color: Color(b.color),
+                    shadows: b.fill == 0
+                        ? const [Shadow(blurRadius: 2, color: Colors.black54)]
+                        : null,
+                  ),
+                ),
               ),
             ),
           ),

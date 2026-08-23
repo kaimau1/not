@@ -471,6 +471,53 @@ class GeminiService {
         },
       ]);
 
+  /// Belgeden **SEÇİLEN BİR ALANI** (formül, tablo, şekil, el yazısı) modele
+  /// sorar — bkz. `AreaSelectLayer`.
+  ///
+  /// [question] boşsa varsayılan yönerge çalışır: alandaki metni ve formülleri
+  /// olduğu gibi çıkar, ne anlama geldiğini açıkla, bir problem varsa çöz.
+  /// Kullanıcının bu özellikten ilk beklediği şey bu; her seferinde soru
+  /// yazdırmak, "formülü seç ve sor" akışını yavaşlatırdı.
+  ///
+  /// [extractTextFromImage]'ten farkı: orası bir görselin TAMAMINI okunaklı
+  /// bir NOTA çevirir (OCR niyeti); burada amaç seçilen küçük parçayı
+  /// ANLAMAK — matematiksel gösterim korunur ve çözüm istenir.
+  Future<String> askAboutImage(
+    Uint8List bytes,
+    String mimeType, {
+    String question = '',
+  }) async {
+    final asked = question.trim();
+    return _generate([
+      {
+        'inline_data': {
+          'mime_type': mimeType,
+          'data': await _encodeBase64(bytes),
+        },
+      },
+      {
+        'text': asked.isEmpty
+            ? 'Bu görsel bir belgeden (PDF, sunum ya da fotoğraf) seçilmiş '
+                  'küçük bir alandır. '
+                  'Önce alandaki metni ve FORMÜLLERİ olduğu gibi çıkar; '
+                  'formülleri okunabilir düz metin olarak yaz (üs için ^, '
+                  'kesir için /, kök için √ gibi). '
+                  'Sonra kısa ve açık bir şekilde ne anlattığını açıkla: '
+                  'hangi terim ne demek, formül nerede kullanılır. '
+                  'Alanda çözülecek bir soru ya da problem varsa ADIM ADIM '
+                  'çöz ve sonucu ayrı bir satırda belirt. '
+                  'Görselde olmayan şeyi uydurma. '
+                  'Markdown kullanma: yıldız, kalın işareti veya # koyma.'
+            : 'Bu görsel bir belgeden seçilmiş küçük bir alandır. '
+                  'Kullanıcının sorusu: "$asked". '
+                  'Yalnızca görseldekine dayanarak, Türkçe ve açık biçimde '
+                  'cevapla. Formül varsa okunabilir düz metin olarak yaz. '
+                  'Görselde olmayan şeyi uydurma. '
+                  'Markdown kullanma: yıldız, kalın işareti veya # koyma.',
+      },
+    ]).then(stripMarkdown);
+  }
+
   /// Görüntülü nottan (video: görüntü + ses birlikte) detaylı bir not çıkarır.
   /// Modele videonun tamamı gider; süre sınırı çağıran tarafta uygulanır
   /// (satır içi gönderim boyutu sınırlıdır).

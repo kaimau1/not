@@ -2925,4 +2925,88 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountSettings => 'Account settings';
+
+  @override
+  String get videoFramesExtracting => 'Grabbing frames from the video…';
+
+  @override
+  String get areaSelect => 'Select area';
+
+  @override
+  String get areaSelectOff => 'Turn off area select';
+
+  @override
+  String get areaSelectHint => 'Drag a box around what you want to copy or ask the AI about.';
+
+  @override
+  String get areaCopyImage => 'Copy as image';
+
+  @override
+  String get areaCopied => 'Selected area copied to the clipboard.';
+
+  @override
+  String get areaAskAi => 'Ask the AI';
+
+  @override
+  String get areaAskTitle => 'Selected area';
+
+  @override
+  String get areaAskHint => 'Add a question if you like (leave it empty to transcribe and explain).';
+
+  @override
+  String get areaAskRun => 'Ask';
+
+  @override
+  String get areaCaptureFailed => 'Couldn\'t capture the selected area.';
+
+  @override
+  String get areaTooSmall => 'The selected area is too small.';
+
+  @override
+  String get areaAddToNote => 'Add to note';
+
+  @override
+  String get bubbleTextFill => 'Text background';
+
+  @override
+  String get bubbleTextFillNone => 'No background';
+
+  @override
+  String get bubbleTextAlignLeft => 'Align left';
+
+  @override
+  String get bubbleTextAlignCenter => 'Align center';
+
+  @override
+  String get bubbleTextAlignRight => 'Align right';
+
+  @override
+  String get dashboardBackgroundPattern => 'Pattern';
+
+  @override
+  String get dashboardBackgroundColor => 'Background color';
+
+  @override
+  String get dashboardBackgroundImageSection => 'Background image';
+
+  @override
+  String get dashboardBackgroundReset => 'Reset to default';
+
+  @override
+  String get patternNone => 'Plain';
+
+  @override
+  String get patternDots => 'Dots';
+
+  @override
+  String get patternGrid => 'Grid';
+
+  @override
+  String get patternLines => 'Lines';
+
+  @override
+  String get patternDiagonal => 'Diagonal';
+
+  @override
+  String get patternGraph => 'Graph paper';
 }

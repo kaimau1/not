@@ -222,10 +222,22 @@ class MainActivity : FlutterFragmentActivity() {
                     // balon/vurgu konabilen belge sayfası kurulur.
                     "videoFrame" -> {
                         val path = call.argument<String>("path")
+                        // atUs verilmezse kapak karesi (bkz. videoFrame).
+                        val atUs = call.argument<Number>("atUs")?.toLong()
                         if (path == null) {
                             result.error("args", "path gerekli", null)
                         } else {
-                            result.success(videoFrame(path))
+                            result.success(videoFrame(path, atUs))
+                        }
+                    }
+                    // Videonun toplam süresi (ms). Balonlu görüntülü not
+                    // kaç kare örnekleyeceğini buna göre seçiyor.
+                    "videoDuration" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("args", "path gerekli", null)
+                        } else {
+                            result.success(videoDurationMs(path))
                         }
                     }
                     // Uygulama detay ayarları: kullanıcı kalıcı reddettiği bir
@@ -385,12 +397,21 @@ class MainActivity : FlutterFragmentActivity() {
         name.replace('/', '_').replace('\\', '_').trim().ifEmpty { "belge" }
 
     /// Videodan kapak karesi (JPEG baytları); çıkarılamazsa null.
-    private fun videoFrame(path: String): ByteArray? {
+    private fun videoFrame(path: String, atUs: Long? = null): ByteArray? {
         val retriever = android.media.MediaMetadataRetriever()
         return try {
             retriever.setDataSource(path)
-            // 1. saniye: sıfırıncı kare çoğu çekimde karanlık/bulanık oluyor.
-            val frame = retriever.getFrameAtTime(1_000_000)
+            // atUs verilmişse O ANIN karesi (en yakın anahtar kare — tam
+            // kare aramak uzun videoda saniyeler sürüyor), yoksa 1. saniye:
+            // sıfırıncı kare çoğu çekimde karanlık/bulanık oluyor.
+            val frame = (
+                if (atUs != null) {
+                    val sync = android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                    retriever.getFrameAtTime(atUs, sync)
+                } else {
+                    retriever.getFrameAtTime(1_000_000)
+                }
+                )
                 ?: retriever.frameAtTime
                 ?: return null
             val out = java.io.ByteArrayOutputStream()
@@ -400,6 +421,24 @@ class MainActivity : FlutterFragmentActivity() {
         } catch (e: Exception) {
             Log.d(logTag, "video karesi alinamadi: $e")
             null
+        } finally {
+            try {
+                retriever.release()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    // Videonun süresi (ms); okunamazsa 0.
+    private fun videoDurationMs(path: String): Long {
+        val retriever = android.media.MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(path)
+            val key = android.media.MediaMetadataRetriever.METADATA_KEY_DURATION
+            retriever.extractMetadata(key)?.toLongOrNull() ?: 0L
+        } catch (e: Exception) {
+            Log.d(logTag, "video suresi alinamadi: $e")
+            0L
         } finally {
             try {
                 retriever.release()

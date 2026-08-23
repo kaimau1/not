@@ -5459,6 +5459,173 @@ abstract class AppLocalizations {
   /// **'Hesap ayarları'**
   String get accountSettings;
 
+  /// No description provided for @videoFramesExtracting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videodan kareler alınıyor…'**
+  String get videoFramesExtracting;
+
+  /// No description provided for @areaSelect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alan seç'**
+  String get areaSelect;
+
+  /// No description provided for @areaSelectOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alan seçimini kapat'**
+  String get areaSelectOff;
+
+  /// No description provided for @areaSelectHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalamak ya da yapay zekâya sormak istediğin alanı parmağınla çiz.'**
+  String get areaSelectHint;
+
+  /// No description provided for @areaCopyImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel olarak kopyala'**
+  String get areaCopyImage;
+
+  /// No description provided for @areaCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen alan panoya kopyalandı.'**
+  String get areaCopied;
+
+  /// No description provided for @areaAskAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâya sor'**
+  String get areaAskAi;
+
+  /// No description provided for @areaAskTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen alan'**
+  String get areaAskTitle;
+
+  /// No description provided for @areaAskHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).'**
+  String get areaAskHint;
+
+  /// No description provided for @areaAskRun.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sor'**
+  String get areaAskRun;
+
+  /// No description provided for @areaCaptureFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen alanın görüntüsü alınamadı.'**
+  String get areaCaptureFailed;
+
+  /// No description provided for @areaTooSmall.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilen alan çok küçük.'**
+  String get areaTooSmall;
+
+  /// No description provided for @areaAddToNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota ekle'**
+  String get areaAddToNote;
+
+  /// No description provided for @bubbleTextFill.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı zemini'**
+  String get bubbleTextFill;
+
+  /// No description provided for @bubbleTextFillNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zeminsiz'**
+  String get bubbleTextFillNone;
+
+  /// No description provided for @bubbleTextAlignLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sola hizala'**
+  String get bubbleTextAlignLeft;
+
+  /// No description provided for @bubbleTextAlignCenter.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortala'**
+  String get bubbleTextAlignCenter;
+
+  /// No description provided for @bubbleTextAlignRight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sağa hizala'**
+  String get bubbleTextAlignRight;
+
+  /// No description provided for @dashboardBackgroundPattern.
+  ///
+  /// In tr, this message translates to:
+  /// **'Desen'**
+  String get dashboardBackgroundPattern;
+
+  /// No description provided for @dashboardBackgroundColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin rengi'**
+  String get dashboardBackgroundColor;
+
+  /// No description provided for @dashboardBackgroundImageSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zemin görseli'**
+  String get dashboardBackgroundImageSection;
+
+  /// No description provided for @dashboardBackgroundReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılana dön'**
+  String get dashboardBackgroundReset;
+
+  /// No description provided for @patternNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz'**
+  String get patternNone;
+
+  /// No description provided for @patternDots.
+  ///
+  /// In tr, this message translates to:
+  /// **'Noktalı'**
+  String get patternDots;
+
+  /// No description provided for @patternGrid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kareli'**
+  String get patternGrid;
+
+  /// No description provided for @patternLines.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgili'**
+  String get patternLines;
+
+  /// No description provided for @patternDiagonal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çapraz'**
+  String get patternDiagonal;
+
+  /// No description provided for @patternGraph.
+  ///
+  /// In tr, this message translates to:
+  /// **'Milimetrik'**
+  String get patternGraph;
 }
 
 class _AppLocalizationsDelegate
