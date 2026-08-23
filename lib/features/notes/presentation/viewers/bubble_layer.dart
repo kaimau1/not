@@ -116,6 +116,23 @@ class BubbleController extends ChangeNotifier {
     0xFF00838F, // petrol
   ];
 
+  /// Açık metin alanının DOLGU (yazı zemini) seçenekleri; 0 = dolgu yok.
+  ///
+  /// Yarı saydam siyah/beyaz en başta: fotoğrafın üstüne yazı yazarken en çok
+  /// istenen şey, altındakini tümüyle örtmeden yazıyı okunur kılmak. Ardından
+  /// düz renkler geliyor (etiket, uyarı).
+  static const fillPalette = <int>[
+    0, // dolgu yok
+    0x99000000, // yarı saydam siyah
+    0x99FFFFFF, // yarı saydam beyaz
+    0xFFFFFFFF, // beyaz
+    0xFF000000, // siyah
+    0xFFFFF59D, // sarı fosforlu
+    0xFFC8E6C9, // yeşil
+    0xFFBBDEFB, // mavi
+    0xFFFFCDD2, // kırmızı
+  ];
+
   /// Yeni bırakılacak AÇIK METİN alanının rengi (varsayılan siyah).
   int plainColor = plainPalette.first;
 
@@ -1353,38 +1370,62 @@ class _BubblePinState extends State<_BubblePin>
     final style = base.copyWith(
       fontSize: fontSize,
       height: 1.2,
-      fontWeight: FontWeight.normal,
+      // KALIN/İTALİK (kullanıcı isteği: "metin kutusunu geliştirme"): biçim
+      // balonun kendi alanlarından geliyor, varsayılan hâli eski davranışın
+      // aynısı (bkz. [PageBubble.bold]).
+      fontWeight: bubble.bold ? FontWeight.w700 : FontWeight.normal,
+      fontStyle: bubble.italic ? FontStyle.italic : FontStyle.normal,
       color: color,
     );
+    final align = switch (bubble.align) {
+      1 => TextAlign.center,
+      2 => TextAlign.right,
+      _ => TextAlign.left,
+    };
+    // DOLGU: fotoğrafın/taranmış sayfanın karışık zemininde dış hat bile
+    // yetmiyordu; dolgu yazının arkasına düz bir zemin koyar.
+    final fill = bubble.fill == 0 ? null : Color(bubble.fill);
     // Dış hat yazının ZIDDI: siyah yazının çevresi beyaz, beyaz yazının
     // çevresi siyah. Sabit koyu dış hat, siyah varsayılanla birlikte yazıyı
     // kendi gölgesinde kaybediyordu.
     final outline = color.computeLuminance() < 0.5
         ? Colors.white.withValues(alpha: 0.85)
         : Colors.black.withValues(alpha: 0.7);
+    final framed = empty || _lifted || _resizing;
     final body = Container(
       constraints: BoxConstraints(maxWidth: math.max(120, fontSize * 16)),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      decoration: empty || _lifted || _resizing
+      padding: fill == null
+          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2)
+          : EdgeInsets.symmetric(horizontal: fontSize * 0.35, vertical: 4),
+      decoration: (framed || fill != null)
           ? BoxDecoration(
+              color: fill,
               // Boşken (taşınırken, boyutlanırken) ince bir çerçeve: alanın
               // nerede olduğu ve nereye kadar uzandığı görünsün.
-              border: Border.all(color: color.withValues(alpha: 0.8)),
+              border: framed
+                  ? Border.all(color: color.withValues(alpha: 0.8))
+                  : null,
               borderRadius: BorderRadius.circular(4),
             )
           : null,
       child: empty
           ? Text(
               context.l10n.bubblePlainHint,
+              textAlign: align,
               style: style.copyWith(
                 color: color.withValues(alpha: 0.75),
                 fontStyle: FontStyle.italic,
               ),
             )
+          // Dolgu varken DIŞ HAT çizilmez: zemin zaten okunurluğu sağlıyor,
+          // dış hat dolgunun üstünde gereksiz bir kalınlık bırakıyordu.
+          : fill != null
+          ? Text(text, textAlign: align, style: style)
           : Stack(
               children: [
                 Text(
                   text,
+                  textAlign: align,
                   style: style.copyWith(
                     foreground: Paint()
                       ..style = PaintingStyle.stroke
@@ -1392,7 +1433,7 @@ class _BubblePinState extends State<_BubblePin>
                       ..color = outline,
                   ),
                 ),
-                Text(text, style: style),
+                Text(text, textAlign: align, style: style),
               ],
             ),
     );
@@ -1574,6 +1615,9 @@ class _BubbleDockState extends State<BubbleDock> {
   /// Renk şeridi açık mı? (Eylem satırındaki palet düğmesi açar.)
   bool _colors = false;
 
+  /// Açık metin alanının DOLGU şeridi açık mı (bkz. [PageBubble.fill]).
+  bool _fills = false;
+
   @override
   void initState() {
     super.initState();
@@ -1616,6 +1660,7 @@ class _BubbleDockState extends State<BubbleDock> {
     // sanılmasın.
     _actions = false;
     _colors = false;
+    _fills = false;
     // Düzenlemeye açıldıysa klavye hazır gelir. Okuma kipinde bu kart zaten
     // görünmüyor — orada sayfanın üzerindeki balon var.
     if (widget.controller.editMode && !widget.readOnly) {
@@ -1748,7 +1793,10 @@ class _BubbleDockState extends State<BubbleDock> {
                           selected: _actions,
                           onPressed: () => setState(() {
                             _actions = !_actions;
-                            if (!_actions) _colors = false;
+                            if (!_actions) {
+                              _colors = false;
+                              _fills = false;
+                            }
                           }),
                         ),
                     ],
@@ -1780,6 +1828,8 @@ class _BubbleDockState extends State<BubbleDock> {
                 if (_actions && !widget.readOnly) _actionRow(context, bubble),
                 if (_actions && _colors && !widget.readOnly)
                   _colorStrip(bubble),
+                if (_actions && _fills && bubble.plain && !widget.readOnly)
+                  _fillStrip(bubble),
               ],
             ),
           ),
@@ -1853,6 +1903,55 @@ class _BubbleDockState extends State<BubbleDock> {
             selected: _colors,
             onPressed: () => setState(() => _colors = !_colors),
           ),
+          // **METİN KUTUSU BİÇİMİ** — yalnız AÇIK METİN alanında (normal
+          // balonun yazısı kartın içinde duruyor, sayfada değil; orada
+          // kalın/hiza/dolgu bir şey ifade etmez).
+          if (bubble.plain) ...[
+            _barButton(
+              context,
+              icon: Icons.format_bold,
+              tooltip: l10n.formatBold,
+              selected: bubble.bold,
+              onPressed: () => widget.controller
+                ..update(bubble.copyWith(bold: !bubble.bold))
+                ..save(),
+            ),
+            _barButton(
+              context,
+              icon: Icons.format_italic,
+              tooltip: l10n.formatItalic,
+              selected: bubble.italic,
+              onPressed: () => widget.controller
+                ..update(bubble.copyWith(italic: !bubble.italic))
+                ..save(),
+            ),
+            // Hiza tek düğmeyle DÖNER (sol → orta → sağ): kartta üç ayrı
+            // düğmeye yer yok, simge de o an hangi hizada olduğunu gösterir.
+            _barButton(
+              context,
+              icon: switch (bubble.align) {
+                1 => Icons.format_align_center,
+                2 => Icons.format_align_right,
+                _ => Icons.format_align_left,
+              },
+              tooltip: switch (bubble.align) {
+                1 => l10n.bubbleTextAlignCenter,
+                2 => l10n.bubbleTextAlignRight,
+                _ => l10n.bubbleTextAlignLeft,
+              },
+              selected: bubble.align != 0,
+              onPressed: () => widget.controller
+                ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
+                ..save(),
+            ),
+            _barButton(
+              context,
+              icon: Icons.format_color_fill,
+              tooltip: l10n.bubbleTextFill,
+              selected: _fills,
+              onPressed: () => setState(() => _fills = !_fills),
+            ),
+          ],
           const Spacer(),
           TextFieldTapRegion(
             child: ExcludeFocus(
@@ -1912,6 +2011,57 @@ class _BubbleDockState extends State<BubbleDock> {
                       width: bubble.color == argb ? 3 : 1,
                     ),
                   ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  /// Açık metin alanının DOLGU şeridi: yazının arkasına konan zemin rengi.
+  /// İlk seçenek "dolgu yok" (eski, dış hatlı çizim).
+  Widget _fillStrip(PageBubble bubble) => TextFieldTapRegion(
+    child: ExcludeFocus(
+      child: SizedBox(
+        height: 38,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.only(right: 8),
+          children: [
+            for (final argb in BubbleController.fillPalette)
+              GestureDetector(
+                key: ValueKey('bubble-fill-$argb'),
+                onTap: () => widget.controller
+                  ..update(bubble.copyWith(fill: argb))
+                  ..save(),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: argb == 0 ? null : Color(argb),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: bubble.fill == argb
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Colors.black26,
+                      width: bubble.fill == argb ? 3 : 1,
+                    ),
+                  ),
+                  child: argb == 0
+                      ? Tooltip(
+                          message: context.l10n.bubbleTextFillNone,
+                          child: const Icon(
+                            Icons.format_color_reset,
+                            size: 14,
+                            color: Colors.black45,
+                          ),
+                        )
+                      : null,
                 ),
               ),
           ],

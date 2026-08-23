@@ -54,6 +54,7 @@ import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
 import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
+import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
 import 'image_prepare_screen.dart';
 import 'note_card.dart';
@@ -817,9 +818,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// **Balonlu kip** (kullanıcı isteği 2026-08-09: "belge tara not al,
   /// görüntülü not al, foto çek not al — bunlarda da balonlu mod olmalı"):
   /// balon/vurgu/el yazısı bir SAYFANIN üzerinde yaşar, videonun sayfası yok.
-  /// Bu yüzden balonlu kipte videonun KAPAK KARESİ bir belge sayfasına
+  /// Bu yüzden balonlu kipte videodan KARELER alınıp belge SAYFALARINA
   /// dönüştürülür ve video nota ek olarak bağlı kalır — hem üzerine
-  /// işaretlenebilir bir görüntü hem de kaydın kendisi elde durur.
+  /// işaretlenebilir görüntüler hem de kaydın kendisi elde durur.
+  ///
+  /// Kare SAYISI kaydın uzunluğuna göre seçilir (bkz. [VideoFrame.sample]):
+  /// tek kapak karesi, videodan alınan notu videonun ilk saniyesine
+  /// hapsediyordu.
   Future<void> _createVideoNote() async {
     // Kapak karesi yalnız Android'de çıkarılabiliyor: masaüstünde seçenek hiç
     // SORULMAZ — sorup sonra sessizce klasiğe düşmek, seçimi yok saymak olurdu.
@@ -844,9 +849,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!mounted) return;
     final picked = await ImagePicker().pickVideo(source: ImageSource.camera);
     if (picked == null || !mounted) return;
-    final frame = await VideoFrame.cover(picked.path);
+    // Kare çıkarmak (uzun videoda birkaç saniye) sessiz beklemesin.
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.videoFramesExtracting)));
+    final frames = await VideoFrame.sample(picked.path);
     if (!mounted) return;
-    if (frame == null) {
+    messenger.hideCurrentSnackBar();
+    if (frames.isEmpty) {
       // Kare çıkarılamadı: kip sessizce düşürülmez, klasik nota bağlanır ki
       // çekilen video kaybolmasın.
       _showSnack(l10n.videoFrameFailed);
@@ -858,7 +867,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       return;
     }
     await _buildPageNote(
-      pageBytes: [frame],
+      pageBytes: frames,
       fallbackName: l10n.docNameVideo,
       noteTitle: choice.noteTitle,
       extraVideoPath: picked.path,
@@ -1269,30 +1278,47 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     await _openNew(id);
   }
 
-  /// Ayarlardan seçilen ana ekran zemin görseli (yoksa boş liste).
+  /// Ana ekran zemini: **renk → desen → görsel** (üçü de isteğe bağlı, üst
+  /// üste binebilirler — bkz. `dashboard_background_sheet.dart`).
   List<Widget> _dashboardBackground(WidgetRef ref) {
     final background = ref.watch(dashboardBackgroundProvider);
+    final layers = <Widget>[];
+    final color = background.color;
+    if (color != null) {
+      layers.add(Positioned.fill(child: ColoredBox(color: Color(color))));
+    }
+    if (background.pattern != DashboardPattern.none) {
+      layers.add(
+        Positioned.fill(
+          child: DashboardPatternLayer(
+            pattern: background.pattern,
+            opacity: background.opacity,
+          ),
+        ),
+      );
+    }
     final path = background.path;
-    if (path == null) return const [];
     // Önbellekli varlık denetimi: build her tuş vuruşunda çalışıyor, senkron
     // stat her seferinde ödenmesin. Çözünürlük ekran genişliğiyle sınırlı —
     // sınırsız decode tam boy bitmap'i bellekte tutuyordu.
-    if (!localFileExists(path)) return const [];
-    final targetWidth =
-        (MediaQuery.sizeOf(context).width *
-                MediaQuery.devicePixelRatioOf(context))
-            .round();
-    return [
-      Positioned.fill(
-        child: Opacity(
-          opacity: background.opacity.clamp(0.05, 1),
-          child: Image(
-            image: ResizeImage(FileImage(File(path)), width: targetWidth),
-            fit: BoxFit.cover,
+    if (path != null && localFileExists(path)) {
+      final targetWidth =
+          (MediaQuery.sizeOf(context).width *
+                  MediaQuery.devicePixelRatioOf(context))
+              .round();
+      layers.add(
+        Positioned.fill(
+          child: Opacity(
+            opacity: background.opacity.clamp(0.05, 1),
+            child: Image(
+              image: ResizeImage(FileImage(File(path)), width: targetWidth),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
-      ),
-    ];
+      );
+    }
+    return layers;
   }
 
   @override

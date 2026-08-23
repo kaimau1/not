@@ -285,7 +285,19 @@ class PdfEdit {
     final text = bubble.text.trim();
     if (text.isEmpty) return;
     final size = (page.width * 0.028 * bubble.size).clamp(4.0, 200.0);
-    final font = PdfTrueTypeFont(fontBytes, size);
+    // Kalın/italik damgaya da geçer: metin kutusunun biçimi yalnız uygulama
+    // içinde kalsaydı paylaşılan PDF ile ekran ayrışırdı (aynı gerekçe
+    // çizimlerin gömülmesinde de geçerliydi).
+    final font = (bubble.bold || bubble.italic)
+        ? PdfTrueTypeFont(
+            fontBytes,
+            size,
+            multiStyle: [
+              if (bubble.bold) PdfFontStyle.bold,
+              if (bubble.italic) PdfFontStyle.italic,
+            ],
+          )
+        : PdfTrueTypeFont(fontBytes, size);
     final width = math.max(40.0, page.width - bubble.x * page.width);
     final height = _blockHeight(font, text, width);
     final left = (bubble.x * page.width)
@@ -294,11 +306,23 @@ class PdfEdit {
     final top = (bubble.y * page.height)
         .clamp(0.0, math.max(0.0, page.height - height))
         .toDouble();
+    final bounds = Rect.fromLTWH(left, top, width, height);
+    // DOLGU: ekranda yazının arkasındaki zemin neyse damgada da o.
+    if (bubble.fill != 0) {
+      g.drawRectangle(brush: _brush(bubble.fill, 1), bounds: bounds);
+    }
     g.drawString(
       text,
       font,
       brush: _brush(bubble.color, 1),
-      bounds: Rect.fromLTWH(left, top, width, height),
+      bounds: bounds,
+      format: PdfStringFormat(
+        alignment: switch (bubble.align) {
+          1 => PdfTextAlignment.center,
+          2 => PdfTextAlignment.right,
+          _ => PdfTextAlignment.left,
+        },
+      ),
     );
   }
 

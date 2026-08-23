@@ -9,6 +9,8 @@ import '../../data/pptx_render.dart';
 import '../../data/slide_deck.dart';
 import '../../domain/attachment.dart';
 import '../editor/bubbles_overview.dart';
+import 'area_actions.dart';
+import 'area_select.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'slide_canvas.dart';
@@ -61,6 +63,25 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   /// Çizim modu ekran durumu (görüntüleyiciyi çizgi başına yeniden kurmamak
   /// için; çizgiler InkPageLayer içinde bağımsız tazelenir).
   bool _editing = false;
+
+  /// **ALAN SEÇİMİ** kipi — slaytta da PDF'teki ile aynı (bkz.
+  /// [AreaSelectLayer]): sunumdaki bir formül, tablo ya da şema seçilip
+  /// panoya alınır veya yapay zekâya sorulur.
+  bool _areaMode = false;
+  final _areaBoundary = GlobalKey();
+
+  /// Alan seçimini açar/kapatır; çizim ve balon bırakma kipleri kapanır.
+  void _toggleAreaMode() {
+    setState(() {
+      _areaMode = !_areaMode;
+      if (!_areaMode) return;
+      if (_editing) {
+        _editing = false;
+        _ink.setEditing(false);
+      }
+      _bubbles.setAdding(false);
+    });
+  }
 
   List<SlideVM>? _slides;
   Object? _error;
@@ -185,6 +206,12 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
           ),
           actions: [
             IconButton(
+              tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
+              isSelected: _areaMode,
+              icon: const Icon(Icons.crop_free),
+              onPressed: _toggleAreaMode,
+            ),
+            IconButton(
               tooltip: l10n.bubblesOverviewTitle,
               icon: const Icon(Icons.forum_outlined),
               onPressed: _openBubbles,
@@ -211,7 +238,9 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         ),
         body: Stack(
           children: [
-            Positioned.fill(child: _body(l10n)),
+            Positioned.fill(
+              child: RepaintBoundary(key: _areaBoundary, child: _body(l10n)),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -222,6 +251,14 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                 bottomPadding: MediaQuery.paddingOf(context).bottom,
               ),
             ),
+            if (_areaMode)
+              Positioned.fill(
+                child: AreaSelectLayer(
+                  boundaryKey: _areaBoundary,
+                  onCancel: _toggleAreaMode,
+                  onCaptured: (png) => showAreaActions(context, png),
+                ),
+              ),
           ],
         ),
         bottomNavigationBar: _editing

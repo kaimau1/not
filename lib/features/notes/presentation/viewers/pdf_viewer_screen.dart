@@ -11,6 +11,8 @@ import '../../../../core/utils/pdf_copy_text.dart';
 import '../../data/pdf/edge_auto_scroll.dart';
 import '../../domain/attachment.dart';
 import '../editor/bubbles_overview.dart';
+import 'area_actions.dart';
+import 'area_select.dart';
 import 'bubble_layer.dart';
 import 'ink_layer.dart';
 import 'pdf_select_layer.dart';
@@ -64,6 +66,15 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   /// Çizim modu ekran durumu.
   bool _editing = false;
 
+  /// **ALAN SEÇİMİ** kipi (bkz. [AreaSelectLayer]): açıkken sayfanın üstünde
+  /// dikdörtgen çizilir, kapalıyken katman hiç kurulmaz.
+  bool _areaMode = false;
+
+  /// Alan seçiminin yakalayacağı katman: belge + üzerine konmuş vurgu, balon
+  /// ve el yazısı. Seçim çerçevesi bu sınırın DIŞINDA duruyor (bkz.
+  /// [captureBoundaryArea]).
+  final _areaBoundary = GlobalKey();
+
   /// Kenar oto-kaydırması: seçim sürüklenirken işaretçinin son EKRAN konumu
   /// (katman bildirir; null = sürükleme yok) ve 60 Hz itme zamanlayıcısı.
   Offset? _dragPos;
@@ -105,6 +116,21 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       _ink.setEditing(_editing);
       // Çizim açılırken balon ekleme kipi kapanır: iki kip aynı parmağı ister.
       if (_editing) _bubbles.setAdding(false);
+      if (_editing) _areaMode = false;
+    });
+  }
+
+  /// Alan seçimini açar/kapatır. Diğer iki kip (çizim, balon bırakma) kapanır:
+  /// üçü de aynı parmağı bekliyor.
+  void _toggleAreaMode() {
+    setState(() {
+      _areaMode = !_areaMode;
+      if (!_areaMode) return;
+      if (_editing) {
+        _editing = false;
+        _ink.setEditing(false);
+      }
+      _bubbles.setAdding(false);
     });
   }
 
@@ -219,6 +245,12 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           ),
           actions: [
             IconButton(
+              tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
+              isSelected: _areaMode,
+              icon: const Icon(Icons.crop_free),
+              onPressed: _toggleAreaMode,
+            ),
+            IconButton(
               tooltip: l10n.bubblesOverviewTitle,
               icon: const Icon(Icons.forum_outlined),
               onPressed: _openBubbles,
@@ -261,7 +293,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             autofocus: true,
             child: Stack(
               children: [
-                Positioned.fill(child: viewer),
+                Positioned.fill(
+                  child: RepaintBoundary(key: _areaBoundary, child: viewer),
+                ),
                 // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
                 // daraldığı için "alt kenar" = klavyenin üstü (bkz. BubbleDock).
                 Positioned(
@@ -293,6 +327,17 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                     bubbles: _bubbles,
                   ),
                 ),
+                // Alan seçimi EN ÜSTTE ve yakalanan sınırın DIŞINDA: karartma
+                // ile seçim çerçevesi görüntüye karışmaz, yönerge şeridi de
+                // seçim çubuğunun altında kalmaz.
+                if (_areaMode)
+                  Positioned.fill(
+                    child: AreaSelectLayer(
+                      boundaryKey: _areaBoundary,
+                      onCancel: _toggleAreaMode,
+                      onCaptured: (png) => showAreaActions(context, png),
+                    ),
+                  ),
               ],
             ),
           ),

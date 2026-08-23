@@ -10,6 +10,8 @@ import '../editor/note_images.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import 'bubble_layer.dart';
+import 'area_actions.dart';
+import 'area_select.dart';
 import 'image_crop.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
@@ -200,6 +202,24 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   /// dosya gerçekten yeniden çözülsün.
   int _reloadKey = 0;
 
+  /// **ALAN SEÇİMİ** kipi (bkz. [AreaSelectLayer]).
+  bool _areaMode = false;
+  final _areaBoundary = GlobalKey();
+
+  /// Alan seçimini açar/kapatır; çizim ve metin bırakma kipleri kapanır —
+  /// üçü de tek parmağı bekliyor.
+  void _toggleAreaMode() {
+    setState(() {
+      _areaMode = !_areaMode;
+      if (!_areaMode) return;
+      if (_editing) {
+        _editing = false;
+        _ink.setEditing(false);
+      }
+      _bubbles.setAdding(false);
+    });
+  }
+
   /// Görselin kaynağı: yerel kopya → indirme adresi. Kırpma ekranı da aynı
   /// kaynağı kullanır ki seçilen alan gösterilenle birebir örtüşsün.
   ImageProvider _provider() {
@@ -317,13 +337,26 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                 icon: Icon(_editing ? Icons.check : Icons.edit_outlined),
                 onPressed: _toggleEditing,
               ),
+            // ALAN SEÇİMİ: görselin bir parçasını (formül, tablo, yazı)
+            // panoya al ya da yapay zekâya sor — PDF/sunumdakiyle aynı kip.
+            IconButton(
+              tooltip: _areaMode ? l10n.areaSelectOff : l10n.areaSelect,
+              isSelected: _areaMode,
+              icon: const Icon(Icons.crop_free),
+              onPressed: _busy ? null : _toggleAreaMode,
+            ),
           ],
         ),
         body: _busy
             ? const Center(child: CircularProgressIndicator())
             : Stack(
                 children: [
-                  Positioned.fill(child: _canvas(aspect, image)),
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      key: _areaBoundary,
+                      child: _canvas(aspect, image),
+                    ),
+                  ),
                   // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
                   // daraldığı için "alt kenar" = klavyenin üstü
                   // (PDF görüntüleyicideki yerleşimin aynısı).
@@ -337,6 +370,14 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                       bottomPadding: MediaQuery.paddingOf(context).bottom,
                     ),
                   ),
+                  if (_areaMode)
+                    Positioned.fill(
+                      child: AreaSelectLayer(
+                        boundaryKey: _areaBoundary,
+                        onCancel: _toggleAreaMode,
+                        onCaptured: (png) => showAreaActions(context, png),
+                      ),
+                    ),
                 ],
               ),
         // Metni tanı düğmesi: çizim kipinde gizlenir (o an araç çubuğu

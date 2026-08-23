@@ -610,6 +610,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }
 
   void _clearFormatTargetFor(WrapTextController controller) {
+    // Alan yok oluyor: hem dinleyicisi hem de ondan hatırlanan seçim düşer,
+    // yoksa [_finishPendingEmbed] ölü bir denetleyiciye yazmayı denerdi.
+    controller.removeListener(_rememberTargetSelection);
+    if (_lastSelectionTarget?.controller == controller) {
+      _lastSelectionTarget = null;
+      _lastSelection = null;
+    }
     if (_formatTarget?.controller != controller) return;
     _formatTarget = null;
     if (!_formatBarOpen) return;
@@ -629,6 +636,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     VoidCallback commit,
   ) {
     final changed = _formatTarget?.controller != controller;
+    if (changed) {
+      // SON DOLU SEÇİM dinleyicisi hep ETKİN alanda durur (bkz.
+      // [_lastSelection]): madde satırına geçen kullanıcı orada seçtiği
+      // yazıya da ek bağlayabilsin. Önce kaldır-sonra ekle: aynı dinleyici
+      // iki kez kayıtlı kalmasın (gövde initState'te de kaydediliyor).
+      _formatTarget?.controller.removeListener(_rememberTargetSelection);
+      controller
+        ..removeListener(_rememberTargetSelection)
+        ..addListener(_rememberTargetSelection);
+    }
     _formatTarget = FormatTarget(
       controller: controller,
       focusNode: focusNode,
@@ -769,8 +786,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // notta seçim neredeyse hep bir cümleyi taşımak/silmek için yapılıyor.
     attachSentenceSelection(_bodyController);
     attachSentenceSelection(_titleController);
-    // Gövdedeki SON DOLU seçimi sakla (bkz. [_lastBodySelection]).
-    _bodyController.addListener(_rememberBodySelection);
+    // Etkin alandaki SON DOLU seçimi sakla (bkz. [_lastSelection]). Gövde
+    // açılışta zaten varsayılan hedef; madde satırları odaklanınca
+    // [_setFormatTarget] dinleyiciyi oraya taşır.
+    _bodyController.addListener(_rememberTargetSelection);
     // Biçim çubuğu son odaklanan alana yazar; gövde odağı burada bildirilir
     // (maddeler ItemsEditor'dan bildirir).
     _titleFocus.addListener(() {
@@ -1751,29 +1770,40 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
 
   /// Seçili aralığı etikete çevirir ve bağı nota yazar.
+  ///
+  /// [target] verilirse etiket O ALANA yazılır (madde satırı, başlık); alanın
+  /// metni nota kendi `commit`'iyle geçer. Verilmezse gövdeye yazılır ve metin
+  /// ile bağ TEK yazımda kaydedilir.
   void _applyEmbed({
     required String label,
     required Attachment attachment,
     required int start,
     required int end,
+    FormatTarget? target,
   }) {
-    final logical = _bodyController.logicalText;
+    final controller = target?.controller ?? _bodyController;
+    final logical = controller.logicalText;
     // Metne yalnız ATAÇ eklenir; seçilen yazı olduğu gibi kalır.
     final tagged = '$kAttachmentTagPrefix$label';
-    final body = logical.replaceRange(start, end, tagged);
-    _bodyController.setLogical(body, start + tagged.length);
-    _mutate(
-      (n) => n.copyWith(
-        body: body,
-        tagLinks: [
-          // Aynı etiket ikinci kez bağlanırsa eskisi değişir, çoğalmaz.
-          for (final l in n.tagLinks)
-            if (l.label != label) l,
-          NoteTagLink(label: label, attachmentId: attachment.id),
-        ],
-      ),
-      immediate: true,
-    );
+    final text = logical.replaceRange(start, end, tagged);
+    controller.setLogical(text, start + tagged.length);
+    // Aynı etiket ikinci kez bağlanırsa eskisi değişir, çoğalmaz.
+    List<NoteTagLink> links(Note note) => [
+      for (final l in note.tagLinks)
+        if (l.label != label) l,
+      NoteTagLink(label: label, attachmentId: attachment.id),
+    ];
+    if (identical(controller, _bodyController)) {
+      _mutate(
+        (n) => n.copyWith(body: text, tagLinks: links(n)),
+        immediate: true,
+      );
+    } else {
+      // Alanın kendi kaydı önce koşar (madde metnini nota yazan tek yol o),
+      // bağ ondan sonra eklenir.
+      target!.commit();
+      _mutate((n) => n.copyWith(tagLinks: links(n)), immediate: true);
+    }
     _showSnack(context.l10n.attachmentTagInserted);
   }
 
@@ -1788,7 +1818,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// hem o şeritteki düğme hem de metin seçim menüsü bağlamayı bitirir.
   Attachment? _pendingEmbed;
 
-  /// Gövdede en son yapılmış DOLU (boş olmayan) seçim.
+  /// Etkin metin alanında en son yapılmış DOLU (boş olmayan) seçim ve o
+  /// seçimin ait olduğu alan.
   ///
   /// **KÖK NEDEN (kullanıcı bulgusu 2026-08-18: "buraya bağla çalışmıyor,
   /// basıyorum bağlanmıyor").** `_finishPendingEmbed` seçimi doğrudan
@@ -1798,15 +1829,31 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// kullanıcıya yeniden "yazıyı seç" diyen aynı bildirim çıkıyordu — dışarıdan
   /// "hiçbir şey olmuyor" gibi görünen tam olarak buydu.
   ///
-  /// İki katmanlı çözüm: şerit artık [TextFieldTapRegion] içinde (dokunmak
-  /// odağı düşürmez) VE seçim burada yedekleniyor — hangi yoldan gelirse
-  /// gelsin, bağlanacak yazı elde kalır.
-  TextSelection? _lastBodySelection;
+  /// **İKİNCİ TUR (kullanıcı bulgusu: "buraya bağla çalışmıyor HÂLÂ; basınca
+  /// hiçbir şey olmuyor, 'bağla' yazısı kalmaya devam ediyor").** İlk çözüm
+  /// ([TextFieldTapRegion] + yedek seçim) tek bir alanı, GÖVDEYİ varsayıyordu
+  /// ve yedeğe düşemediği her durumda düğme SESSİZCE geri dönüyordu — kip
+  /// açık kalıyor, kullanıcı aynı düğmeye tekrar tekrar basıyordu. Üç kapı
+  /// birden kapatıldı:
+  /// 1. Seçim artık **etkin alandan** hatırlanıyor (gövde, başlık ya da bir
+  ///    MADDE satırı — bkz. [_setFormatTarget]); liste notunda da bağlanır.
+  /// 2. Şeride PARMAK DEĞDİĞİ AN seçim yedekleniyor
+  ///    ([_PendingEmbedBanner.onPointerDown]) — odak/seçim düşse bile bir kare
+  ///    önce elimizde.
+  /// 3. Seçim hiçbir yoldan bulunamazsa düğme artık SESSİZ KALMIYOR: etiket
+  ///    imlecin yerine (yoksa metnin sonuna) dosya adıyla yazılır — yani
+  ///    "Metne ekle"nin ilk günkü davranışı. Basmak HER ZAMAN bir sonuç üretir
+  ///    ve kip kapanır.
+  TextSelection? _lastSelection;
+  FormatTarget? _lastSelectionTarget;
 
-  void _rememberBodySelection() {
-    final selection = _bodyController.selection;
+  void _rememberTargetSelection() {
+    final target = _formatTarget;
+    if (target == null) return;
+    final selection = target.controller.selection;
     if (selection.isValid && !selection.isCollapsed) {
-      _lastBodySelection = selection;
+      _lastSelection = selection;
+      _lastSelectionTarget = target;
     }
   }
 
@@ -1818,41 +1865,87 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Bağlama kipini o anki SEÇİMLE bitirir.
   ///
-  /// Seçim denetleyicide yaşıyor: alan odağı kaybetse bile
-  /// `controller.selection` korunuyor (biçim çubuğu da yıllardır buna
-  /// dayanıyor — bkz. [FormatTarget]). Bu yüzden şeritteki düğmeye basmak
-  /// seçimi düşürmüyor.
+  /// Seçim üç kaynaktan sırayla aranır ve hiçbiri tutmazsa BİLE bir sonuç
+  /// üretilir (bkz. [_lastSelection] — "basıyorum hiçbir şey olmuyor" kök
+  /// nedeni):
+  /// 1. **Etkin alanın canlı seçimi** — şerit [TextFieldTapRegion] içinde
+  ///    olduğu için dokunmak odağı düşürmez, seçim çoğu zaman burada durur.
+  /// 2. **Hatırlanan son dolu seçim** — odak yine de düştüyse (donanım
+  ///    klavyesi, sistem geri jesti, alanın yeniden kurulması) yedek devreye
+  ///    girer; hangi alandan geldiği de saklandığı için madde satırları da
+  ///    çalışır.
+  /// 3. **İmleç** — seçim yoksa etiket imlecin yerine dosya adıyla yazılır.
+  ///
+  /// Her üç yolda da kip KAPANIR: şeritte asılı kalan bir "bağla" yazısı,
+  /// kullanıcının gördüğü asıl hataydı.
   void _finishPendingEmbed() {
     final attachment = _pendingEmbed;
     if (attachment == null) return;
-    final live = _bodyController.selection;
-    // Canlı seçim çökmüşse (odak düştü) son dolu seçime düşülür.
-    final selection = (live.isValid && !live.isCollapsed)
-        ? live
-        : _lastBodySelection;
-    final logical = _bodyController.logicalText;
-    if (selection == null || !selection.isValid || selection.isCollapsed) {
-      _showSnack(context.l10n.attachmentTagPickText);
-      return;
+    var target = _formatTarget;
+    var selection = target?.controller.selection;
+    final liveIsUsable =
+        selection != null && selection.isValid && !selection.isCollapsed;
+    if (!liveIsUsable) {
+      target = _lastSelectionTarget;
+      selection = _lastSelection;
     }
-    final start = wrapToLogicalOffset(
-      _bodyController.text,
-      selection.start,
-    ).clamp(0, logical.length);
-    final end = wrapToLogicalOffset(
-      _bodyController.text,
-      selection.end,
-    ).clamp(start, logical.length);
-    final label = logical.substring(start, end).trim();
-    if (label.isEmpty) {
-      _showSnack(context.l10n.attachmentTagPickText);
-      return;
+    final controller = target?.controller;
+    var label = '';
+    var start = 0;
+    var end = 0;
+    if (controller != null &&
+        selection != null &&
+        selection.isValid &&
+        !selection.isCollapsed) {
+      final logical = controller.logicalText;
+      start = wrapToLogicalOffset(
+        controller.text,
+        selection.start,
+      ).clamp(0, logical.length);
+      end = wrapToLogicalOffset(
+        controller.text,
+        selection.end,
+      ).clamp(start, logical.length);
+      label = logical.substring(start, end).trim();
     }
     setState(() => _pendingEmbed = null);
     // Bağlandı: yedek seçim tüketildi, ikinci bir "Buraya bağla" aynı yazıyı
     // yeniden bağlamasın.
-    _lastBodySelection = null;
-    _applyEmbed(label: label, attachment: attachment, start: start, end: end);
+    _lastSelection = null;
+    _lastSelectionTarget = null;
+    if (label.isEmpty) {
+      _insertTagAtCaret(attachment);
+      return;
+    }
+    _applyEmbed(
+      label: label,
+      attachment: attachment,
+      start: start,
+      end: end,
+      target: target,
+    );
+  }
+
+  /// Seçim bulunamadığında bağlama kipinin ÇIKIŞI: etiket gövdedeki imlecin
+  /// yerine (imleç de yoksa metnin sonuna) dosya adıyla yazılır.
+  ///
+  /// Bu, "Metne ekle"nin ilk günkü davranışı — yani kullanıcının bildiği bir
+  /// sonuç. Sessizce hiçbir şey yapmamaktan her koşulda iyidir.
+  void _insertTagAtCaret(Attachment attachment) {
+    final logical = _bodyController.logicalText;
+    final live = _bodyController.selection;
+    final caret = live.isValid
+        ? wrapToLogicalOffset(
+            _bodyController.text,
+            live.baseOffset,
+          ).clamp(0, logical.length)
+        : logical.length;
+    _applyEmbed(
+      label: attachment.fileName,
+      attachment: attachment,
+      start: caret,
+      end: caret,
+    );
   }
 
   /// Levha açılırken alınan seçim anlık görüntüsü (bkz. [_showAttachMenu]).
@@ -5365,7 +5458,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   onInsertTag: note.type.isPageNoteType
                       ? null
                       : _startPendingEmbed,
-                  onPlaceOnPage: (a) => _setImageAsFile(a, false),
+                  // **"Sayfaya koy" BELGE NOTUNDA YOK** (kullanıcı bulgusu:
+                  // "video ekinde bağla butonuna basınca video kayboluyor").
+                  // KÖK NEDEN: düğme eki "şeritte değil, sayfada" diye
+                  // işaretliyor; sayfa akışı ise yalnız METİN notunun
+                  // tuvalinde var. PDF/sunum notunda üstteki bölme belgeyi
+                  // çiziyor, yüzen ek için bir yer yok — ek şeritten
+                  // kalkıyor, hiçbir yerde çizilmiyor, yani KAYBOLUYORDU
+                  // (veri duruyordu ama kullanıcı için yok olmuş demekti).
+                  onPlaceOnPage: note.type.isPageNoteType
+                      ? null
+                      : (a) => _setImageAsFile(a, false),
                   onVideoToNote: _videoToNote,
                   expanded: ref.watch(attachmentsExpandedProvider),
                   onToggle: () => ref
@@ -5380,6 +5483,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 if (_pendingEmbed != null)
                   _PendingEmbedBanner(
                     fileName: _pendingEmbed!.fileName,
+                    // Parmak şeride DEĞDİĞİ an seçim yedeklenir: sonraki
+                    // karede odak düşse bile bağlanacak yazı elde kalır.
+                    onPointerDown: _rememberTargetSelection,
                     onLink: _finishPendingEmbed,
                     onCancel: () => setState(() => _pendingEmbed = null),
                   ),
@@ -5966,11 +6072,16 @@ class _CleanCopySelectionAction extends Action<CopySelectionTextIntent> {
 class _PendingEmbedBanner extends StatelessWidget {
   const _PendingEmbedBanner({
     required this.fileName,
+    required this.onPointerDown,
     required this.onLink,
     required this.onCancel,
   });
 
   final String fileName;
+
+  /// Şeride PARMAK DEĞER DEĞMEZ (dokunuşun işlenmesinden, dolayısıyla olası
+  /// odak/seçim kaybından ÖNCE) çağrılır — bkz. `_lastSelection`.
+  final VoidCallback onPointerDown;
   final VoidCallback onLink;
   final VoidCallback onCancel;
 
@@ -5979,12 +6090,16 @@ class _PendingEmbedBanner extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     // TextFieldTapRegion + ExcludeFocus: şeride dokunmak gövdenin odağını
-    // DÜŞÜRMEZ, dolayısıyla seçim imlece çökmez (bkz. [_lastBodySelection]
+    // DÜŞÜRMEZ, dolayısıyla seçim imlece çökmez (bkz. `_lastSelection`
     // kök nedeni). Aynı kural notta metin yazılırken açılan her yardımcı
     // arayüz için geçerli — bkz. balon kartındaki eylemler.
     return TextFieldTapRegion(
       child: ExcludeFocus(
-        child: Material(
+        child: Listener(
+          // `Listener` jest arenasına GİRMEZ: düğmelerin kendi dokunuşlarını
+          // hiç etkilemez, yalnız haber verir.
+          onPointerDown: (_) => onPointerDown(),
+          child: Material(
           color: scheme.tertiaryContainer,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
@@ -6015,6 +6130,7 @@ class _PendingEmbedBanner extends StatelessWidget {
           ],
             ),
           ),
+        ),
         ),
       ),
     );

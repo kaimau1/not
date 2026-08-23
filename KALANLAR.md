@@ -2,6 +2,35 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-08-23 turundan kalan (CİHAZDA HİÇ ÇALIŞTIRILMADI)
+
+Bu tur Flutter SDK'sı OLMAYAN bir ortamda yazıldı: `flutter analyze` ve
+`flutter test` koşmadı, doğrulama CI'a bırakıldı. Hepsi elle gözden geçirildi
+ama hiçbiri cihazda görülmedi.
+
+- [ ] **Alan seçimi (PDF/sunum/görsel)** — yakalama `RepaintBoundary.toImage`
+  ile. Bakılacaklar: pdfrx'in çizdiği sayfa gerçekten yakalanıyor mu, seçim
+  çerçevesi görüntüye karışıyor mu, panoya yazılan PNG WhatsApp/Word'e
+  yapışıyor mu, "yapay zekâya sor" formülü doğru okuyor mu.
+- [ ] **Alan seçimi NOT BÖLMESİNDE yok**: yalnız tam ekran görüntüleyicilerde
+  (PDF/sunum/görsel). Balonlu notta bölmedeki tam ekran düğmesiyle
+  erişiliyor — bir dokunuş fazla. İstenirse `pdf_note_pane`/`slide_note_pane`
+  araç çubuğuna da konabilir.
+- [ ] **Syncfusion `PdfTrueTypeFont(multiStyle:)` + `PdfStringFormat`**
+  (metin kutusunun kalın/italik/hizasını PAYLAŞILAN PDF'e taşıyor) derlenmedi.
+  API adları yanlışsa `pdf_edit.dart` derleme hatası verir.
+- [ ] **Yerli `videoDuration` köprüsü** (MainActivity) derlenmedi; görüntülü
+  notta balonlu kip kaç sayfa üreteceğini buna göre seçiyor. Köprü dönmezse
+  `VideoFrame.sample` tek kareye (eski davranışa) düşer — güvenli, ama
+  çoklu kare hiç çalışmaz.
+- [ ] **Yeni l10n anahtarları (28)** ELLE yazıldı (`flutter gen-l10n`
+  koşturulamadı): `app_tr.arb` + `app_en.arb` + 17 üretilmiş dosya. Kalan 14
+  dil Türkçe metne düşüyor (mevcut kural). Bir sonraki gen-l10n koşusunda
+  sıralama değişebilir, içerik aynı kalmalı.
+- [ ] **Madde kutucuğu hizası** hesaba dayanıyor (`10 + satırYüksekliği/2 −
+  kutuYüksekliği/2`); satır yüksekliği yazı tipinin kendi metriğinden gelirse
+  1-2 px sapabilir. Farklı yazı tipi + büyük yazı ölçeğiyle bakılmalı.
+
 ## 2026-08-16 turundan kalan (cihazda doğrulanmadı)
 - [ ] **Klavye kasması: iki turda düzeltildi, CİHAZDA ÖLÇÜLMEDİ.** Alt çubuk
   Scaffold yuvasından çıkarılıp gövdenin dibine alındı (bkz. HAFIZA 36. tur).

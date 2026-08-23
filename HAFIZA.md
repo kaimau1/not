@@ -2270,3 +2270,99 @@ Cloudflare deploy) ÇALIŞMASI kota yenilenene kadar mümkün değil. Kota
 yenilenince (aylık otomatik sıfırlanır, GitHub → Settings → Billing →
 Plans and usage'dan bakılabilir) tek bir push (ya da boş bir commit)
 yeterli — kodda ekstra bir şey yapmaya gerek yok.
+
+## 2026-08-23 — Altı maddelik tur: alan seçimi, metin kutusu, hiza, zemin, video, "buraya bağla"
+
+Kullanıcının altı maddesi tek oturumda yapıldı. Kararların gerekçeleri:
+
+### 1. PDF/slayt/görselde ALAN SEÇİMİ (yeni: `viewers/area_select.dart`)
+**Niye metin seçimi yetmiyordu**: bir formül sayfada METİN olarak durmuyor —
+indis, kesir çizgisi, kök, integral ayrı ayrı yerleştirilmiş glifler (ya da
+doğrudan çizim). Metin katmanından kopyalanınca anlamsız bir karakter dizisi
+çıkıyor. Aynısı tablo, grafik ve el yazısı için de geçerli.
+
+**KARAR — yakalama yolu EKRAN, belge değil** (`RepaintBoundary.toImage` +
+`image` paketiyle kırpma, kırpma `compute` ile arka planda). Alternatif
+pdfrx'in kendi `page.render`'ıydı; seçilmedi çünkü (a) aynı kod PDF, sunum ve
+görselde birebir çalışıyor — sunum bir belge değil, çizilen bir widget ağacı;
+(b) seçilen alan kullanıcının GÖRDÜĞÜ şey oluyor, üzerine konmuş vurgu/balon/
+el yazısı dahil. Bedeli: çözünürlük yakınlaştırmaya bağlı (pixelRatio 3 ile
+telafi ediliyor, küçük formülü net isteyen önce yakınlaştırır).
+
+**TUZAK**: seçim katmanı yakalanan `RepaintBoundary`'nin DIŞINDA durmalı,
+yoksa karartma ve seçim çerçevesi de görüntüye girer. Üç görüntüleyicide de
+katman Stack'in EN SONUNDA (seçim çubuğu/balon kartının üstünde).
+
+Eylemler kullanıcı seçimiyle iki tane: **panoya görsel olarak kopyala**
+(`Pasteboard.writeImage` — ek kopyalamanın kullandığı yolun aynısı) ve
+**yapay zekâya sor** (`GeminiService.askAboutImage`; soru boşsa varsayılan
+yönerge formülü/metni çıkarıp açıklıyor ve problem varsa adım adım çözüyor).
+
+### 2. Metin kutusu (açık metin balonu) geliştirildi
+Kutu yalnız RENK ve BOY veriyordu. İki gerçek eksik: (a) fotoğraf/taranmış
+sayfanın karışık zemininde dış hatlı yazı bile zor okunuyordu → **dolgu**
+(`PageBubble.fill`, 0 = yok); (b) başlık/uyarı vurgulanamıyordu → **kalın,
+italik, hiza** (`bold`, `italic`, `align`). Dolgu varken dış hat ÇİZİLMİYOR —
+zemin okunurluğu zaten sağlıyor, ikisi birlikte kalın bir bulanıklık bırakıyordu.
+Biçim üç yere birden geçiyor: sayfa üstü çizim, notun küçük önizlemesi
+(`note_images.dart`) ve PAYLAŞILAN PDF (`pdf_edit.dart` — `PdfStringFormat` +
+`multiStyle`). Yalnız uygulama içinde kalsaydı ekranla dosya ayrışırdı.
+
+### 3. Madde kutucukları yazıdan ~4 dp AŞAĞIDAYDI — KÖK NEDEN
+Satır `CrossAxisAlignment.start` ile diziliyor (çok satırlı maddede kutu ilk
+satıra hizalanmalı) ve kutuya SABİT 4 dp üst pay veriliyordu. Oysa iki öğenin
+yüksekliği farklı: `TextField`in ilk satırının ortası `contentPadding.top`
+(10) + satır yüksekliğinin yarısı; `Checkbox`ın ortası ise kendi kutusunun
+(48 dp) yarısı. 16 puntoda 19.6'ya karşı 24 dp — kutu her zaman aşağıda,
+sabit pay farkı büyütüyordu. **Çözüm iki parçalı**: `Checkbox`
+`materialTapTargetSize: shrinkWrap` ile 40 dp'ye indi VE üst pay artık
+"ilk satırın ortası − öğenin yarısı" olarak HESAPLANIYOR (yazı tipi, boyut ve
+sistem yazı ölçeği değişse de hiza korunuyor).
+
+### 4. Ana ekran zemini: renk + desen
+Zemin yalnız galeriden fotoğraf seçtiriyordu; fotoğraf istemeyen kullanıcının
+ana ekranını kişiselleştirme yolu yoktu (üstelik fotoğraflı zemin kart
+ızgarasının okunurluğunu her zaman düşürüyor). Eklendi: 10 nötr renk + 6 desen
+(düz/noktalı/kareli/çizgili/çapraz/milimetrik). Desenler ÇİZİLİYOR
+(`dashboard_pattern.dart`, varlık dosyası yok): temaya uyuyorlar ve APK'yı
+büyütmüyorlar. Üç katman üst üste binebiliyor — renk, desen, görsel. Görünürlük
+kaydırıcısı artık desen için de geçerli.
+
+### 5. Görüntülü notta balonlu kip — İKİ ayrı hata
+**(a) "Sadece ilk kareye balon yerleşiyor, görsele dönüşüyor".** Balonlu kip
+tek bir KAPAK karesinden belge kuruyordu: videodan alınan not, videonun ilk
+saniyesinden alınan nota indirgeniyordu. Kaydın geri kalanına balon bırakmanın
+yolu yoktu. Artık kayıt boyunca eşit aralıklarla (varsayılan 10 sn, en çok 12)
+kare alınıp her biri belgenin bir SAYFASI oluyor (`VideoFrame.sample`; yerli
+tarafa `atUs` ve `videoDuration` eklendi, kare arama `OPTION_CLOSEST_SYNC` —
+tam kare aramak uzun videoda saniyeler sürüyor).
+
+**(b) "Video ekinde bağla butonuna basınca video kayboluyor".** Basılan düğme
+"Sayfaya koy" (`onPlaceOnPage`) idi: eki "şeritte değil, SAYFADA" diye
+işaretliyor. Sayfa akışı ise yalnız METİN notunun tuvalinde var — PDF/sunum
+notunda üstteki bölme belgeyi çiziyor, yüzen ek için yer yok. Ek şeritten
+kalkıyor, hiçbir yerde çizilmiyordu (veri duruyordu ama kullanıcı için yok
+olmuştu). Düğme artık belge notlarında HİÇ çizilmiyor.
+
+### 6. "Buraya bağla" HÂLÂ çalışmıyordu — ikinci tur
+2026-08-18'deki ilk çözüm ([TextFieldTapRegion] + yedek seçim) tek bir alanı,
+GÖVDEYİ varsayıyordu ve yedeğe düşemediği her durumda düğme SESSİZCE geri
+dönüyordu; kip açık kalıyor, kullanıcı aynı düğmeye tekrar tekrar basıyordu
+("basınca hiçbir şey olmuyor, bağla yazısı kalmaya devam ediyor"). Üç kapı
+birden kapatıldı:
+1. Seçim artık **etkin alandan** hatırlanıyor (`_lastSelectionTarget` —
+   gövde, başlık ya da bir MADDE satırı); dinleyici `_setFormatTarget` ile
+   hedefe taşınıyor, yani liste notunda da bağlanabiliyor.
+2. Şeride **parmak değdiği an** (`Listener.onPointerDown`, jest arenasına
+   girmez) seçim yedekleniyor — odak bir kare sonra düşse bile elde kalıyor.
+3. Seçim hiçbir yoldan bulunamazsa düğme artık sessiz kalmıyor: etiket
+   imlecin yerine (yoksa metnin sonuna) dosya adıyla yazılıyor — "Metne
+   ekle"nin ilk günkü davranışı. **Basmak HER ZAMAN bir sonuç üretiyor ve kip
+   kapanıyor.** Asıl hata, kullanıcının gördüğü kadarıyla, şeritte asılı kalan
+   "bağla" yazısıydı.
+
+### TUZAK — bu tur derlenemedi
+Oturumun koştuğu ortamda Flutter SDK YOK: `flutter analyze` ve `flutter test`
+çalıştırılamadı, doğrulama CI'a bırakıldı. Riskli iki nokta (elle gözden
+geçirildi ama cihazda görülmedi): Syncfusion `PdfTrueTypeFont(multiStyle:)` +
+`PdfStringFormat` çağrıları ve yerli `videoDuration` köprüsü.
