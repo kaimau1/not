@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../ai/data/ai_gate.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../inbox/data/inbox_repository.dart';
@@ -100,11 +101,21 @@ Future<void> showAccountSheet(BuildContext context) => showModalBottomSheet<
       final requests =
           ref.watch(incomingFriendRequestsProvider).value?.length ?? 0;
       final incoming = ref.watch(inboxNotesProvider).value?.length ?? 0;
+      final premium = ref.watch(premiumProvider).value ?? false;
+      final email = user?.email?.trim() ?? '';
       final name = (user?.displayName?.trim().isNotEmpty ?? false)
           ? user!.displayName!.trim()
-          : (user?.email?.trim().isNotEmpty ?? false)
-          ? user!.email!.trim()
+          : email.isNotEmpty
+          ? email
           : l10n.localAccountBadge;
+      // Kullanıcı bulgusu 2026-08-29: "hesap bilgisi yetersiz". Levha yalnız
+      // adı ve tek satırlık bir durumu gösteriyordu; hangi e-postayla giriş
+      // yapıldığı ve planın ne olduğu hiçbir yerde görünmüyordu. E-posta
+      // ADIN ALTINDA yazılır (ad zaten e-posta ise tekrarlanmaz).
+      final details = [
+        if (email.isNotEmpty && email != name) email,
+        anonymous ? l10n.accountSheetLocalInfo : l10n.synced,
+      ].join('\n');
       return SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -126,10 +137,8 @@ Future<void> showAccountSheet(BuildContext context) => showModalBottomSheet<
                     : Icon(anonymous ? Icons.smartphone : Icons.person_outline),
               ),
               title: Text(name),
-              subtitle: Text(
-                anonymous ? l10n.accountSheetLocalInfo : l10n.synced,
-              ),
-              isThreeLine: anonymous,
+              subtitle: Text(details),
+              isThreeLine: details.contains('\n'),
             ),
             const Divider(height: 8),
             ListTile(
@@ -150,12 +159,29 @@ Future<void> showAccountSheet(BuildContext context) => showModalBottomSheet<
                 InboxScreen.open(context);
               },
             ),
+            // Plan da hesabın bir parçası: hangi sürümde olduğunu görmek için
+            // Ayarlar'ın dibine inmek gerekiyordu.
+            ListTile(
+              leading: const Icon(Icons.workspace_premium_outlined),
+              title: Text(l10n.premiumTitle),
+              subtitle: premium ? null : Text(l10n.premiumStatusFree),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                context.push('/premium');
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.manage_accounts_outlined),
               title: Text(l10n.accountSettings),
+              trailing: const Icon(Icons.chevron_right),
+              // `?area=account` OLMADAN Ayarlar "Görünüm" açık geliyordu ve
+              // "Hesap ayarları"na basan kullanıcı kapalı bir hesap kartıyla
+              // karşılaşıyordu (kullanıcı bulgusu 2026-08-29: "hesap
+              // ayarlarına ulaşmak zor ve anlaşılır değil").
               onTap: () {
                 Navigator.pop(sheetContext);
-                context.push('/settings');
+                context.push('/settings?area=account');
               },
             ),
             const SizedBox(height: 8),

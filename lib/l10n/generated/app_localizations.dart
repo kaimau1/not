@@ -5226,6 +5226,42 @@ abstract class AppLocalizations {
   /// **'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.'**
   String get friendsNeedsAccount;
 
+  /// No description provided for @friendsSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'İsim veya e-posta ile ara'**
+  String get friendsSearchHint;
+
+  /// No description provided for @friendsSearchTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ara'**
+  String get friendsSearchTab;
+
+  /// No description provided for @friendsSearchEmailTab.
+  ///
+  /// In tr, this message translates to:
+  /// **'E-posta ile'**
+  String get friendsSearchEmailTab;
+
+  /// No description provided for @friendsSearchEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonuç yok'**
+  String get friendsSearchEmpty;
+
+  /// No description provided for @friendsSearchTooShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramak için en az 2 karakter yaz'**
+  String get friendsSearchTooShort;
+
+  /// No description provided for @friendsSearchAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekle'**
+  String get friendsSearchAdd;
+
   /// No description provided for @folderShare.
   ///
   /// In tr, this message translates to:
@@ -5273,6 +5309,7 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yine de geç'**
   String get accountRecoverConflictProceed;
+
   /// No description provided for @folderRoleRead.
   ///
   /// In tr, this message translates to:
@@ -5348,7 +5385,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderInviteBody.
   ///
   /// In tr, this message translates to:
-  /// **'"$name" klasörü seninle paylaşıldı.'**
+  /// **'\"{name}\" klasörü seninle paylaşıldı.'**
   String folderInviteBody(Object name);
 
   /// No description provided for @folderInviteAccepted.
@@ -5366,7 +5403,7 @@ abstract class AppLocalizations {
   /// No description provided for @friendRequestBanner.
   ///
   /// In tr, this message translates to:
-  /// **'$name sana arkadaşlık isteği gönderdi'**
+  /// **'{name} sana arkadaşlık isteği gönderdi'**
   String friendRequestBanner(Object name);
 
   /// No description provided for @friendRequestAccepted.
@@ -5390,13 +5427,13 @@ abstract class AppLocalizations {
   /// No description provided for @sendNoteInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.'**
+  /// **'Notun bir kopyası seçtiğin kişinin \"Gelen notlar\" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.'**
   String get sendNoteInfo;
 
   /// No description provided for @sendNoteSent.
   ///
   /// In tr, this message translates to:
-  /// **'Not $name kişisine gönderildi'**
+  /// **'Not {name} kişisine gönderildi'**
   String sendNoteSent(Object name);
 
   /// No description provided for @inboxTitle.
@@ -5420,7 +5457,7 @@ abstract class AppLocalizations {
   /// No description provided for @inboxFrom.
   ///
   /// In tr, this message translates to:
-  /// **'$name gönderdi'**
+  /// **'{name} gönderdi'**
   String inboxFrom(Object name);
 
   /// No description provided for @inboxAccept.

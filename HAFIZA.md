@@ -2366,3 +2366,96 @@ Oturumun koştuğu ortamda Flutter SDK YOK: `flutter analyze` ve `flutter test`
 çalıştırılamadı, doğrulama CI'a bırakıldı. Riskli iki nokta (elle gözden
 geçirildi ama cihazda görülmedi): Syncfusion `PdfTrueTypeFont(multiStyle:)` +
 `PdfStringFormat` çağrıları ve yerli `videoDuration` köprüsü.
+
+## 2026-08-29 — 2026-08-23 turu İLK KEZ derlendi, test edildi ve cihaza kuruldu
+
+Actions dakika kotası hâlâ dolu olduğu için doğrulama **yerel makinede**
+yapıldı (Flutter 3.44.6, `C:\src\flutter`). 2026-08-23 turunun "hiçbir yerde
+derlenmedi" durumu kapandı: `flutter analyze` 0 hata, `flutter test` **786
+test yeşil**, imzalı APK telefona kuruldu ve açıldı.
+
+### TUZAK — yerel derlemede versionCode 1 çıkar, telefon kurulumu REDDEDER
+`flutter build apk` bayraksız derlendiğinde sürüm `pubspec.yaml`'daki
+`1.0.0+1`'den gelir, yani **versionCode = 1**. Telefonda ise CI'ın kurduğu
+sürüm var ve CI `--build-number=${{ github.run_number }}` geçiyor (son kurulu:
+**346**). Sonuç: `adb install -r` →
+`INSTALL_FAILED_VERSION_DOWNGRADE: Update version code 1 is older than current 346`.
+Kurulum hiç başlamadığı için veri kaybı olmaz, ama derleme boşa gider.
+**Kural: yerel APK'yı telefona kurarken `--build-number=<telefondakinden
+büyük>` ZORUNLU.** Bu turda 347 kullanıldı; bir sonraki CI koşusu daha büyük
+bir run_number ile geleceği için çakışma yok. Telefondaki numarayı öğrenmek
+için: `adb shell dumpsys package dev.kaimau.notlar | grep versionCode`.
+Uygulamayı KALDIRIP kurmak da çözer ama **yerel veriyi siler** — yapılmaz.
+
+### Kök neden — turun TEK derleme hatası: eksik `rendering.dart` import'u
+`area_select.dart` `RenderRepaintBoundary` kullanıyordu ama yalnız
+`material.dart` import ediyordu. `material.dart` → `widgets/basic.dart`
+rendering'i **seçili bir `show` listesiyle** dışa veriyor: `RenderBox` ve
+`globalToLocal` o listede var, `RenderRepaintBoundary` YOK. Bu yüzden
+`RenderBox` kullanan 6 kardeş dosya sorunsuz derlenirken yalnız bu dosya
+düştü. Çözüm tek satır: `import 'package:flutter/rendering.dart';`.
+Ders: `RenderBox` derleniyor diye rendering sınıflarının hepsi geliyor sanma.
+
+### Üretilen l10n dosyasındaki çakışma ELLE çözülmez
+Çalışma klasöründe yarım kalmış bir `git stash pop`'tan kalma çakışma vardı
+(`lib/l10n/generated/app_localizations.dart`, "Updated upstream / Stashed
+changes"). Bu dosyalar ARB'den ÜRETİLİYOR — çakışma birleştirilmez,
+`flutter gen-l10n` ile 18 dosya kaynaktan yeniden üretilir. 2026-08-23'te elle
+yazılan 28 anahtar da böylece gerçek üretimden geçti.
+
+## 2026-08-29 (devam) — Beş maddelik tur: imleç/görsel, klasör "+", kişi arama, hesap
+
+### KÖK NEDEN — imleç ve yazı görselin ARKASINDA kalıyordu
+Kullanıcı: "klavyeyi bir kez açıp kapattıktan sonra imleç kayboldu ve yazı
+yazamadım; sonra fark ettim ki görselin arkasına geçmiş — bu sorun uzun
+süredir çözemediğimiz bir sorun, başka durumlarda da oldu."
+
+Hata `planTextWrap` (text_wrap.dart) döngüsündeydi. Plan metnin **VAR OLAN**
+satırlarını görselin bandından aşağı itiyor ve satır başına bir satır
+ilerliyordu; yeterli metin varsa döngü bandın altında bitiyordu. **Boş (ya da
+banttan KISA) tamponda itilecek satır yok**: `line >= metrics.length`
+koşuluyla döngü tek bir dolgu satırı ekledikten sonra duruyordu, yani imleç
+400 px'lik görselin altına değil yalnız BİR satır aşağı iniyordu — hâlâ
+arkada. İpucu metni ("Not...") ise ayrı bir yoldan (`hintPlacement`) görselin
+ALTINA konduğu için **ipucu bir yeri, imleç bambaşka bir yeri gösteriyordu**;
+kullanıcının "kayboldu" dediği şey buydu.
+
+Çözüm: tampon bitince durma — imlecin oturduğu SANAL satır hâlâ bir bandı
+kesiyorsa dolgu eklemeye devam et; bant bitince `indentStart` 0 olur ve döngü
+kendiliğinden kapanır. Görselin YANINDA okunur yer varsa tek dolgu yeter,
+imleç gereksiz yere aşağı itilmez. Kanıt: `text_wrap_test.dart` içinde iki
+yeni test — düzeltmeden önce KIRMIZI ("10 bekleniyordu, 1 geldi").
+
+### Klasör "+" düğmesi: davranış artık ORTAK (kopya değil)
+Klasörün kendi sayfasındaki yüzen "+" düz bir FAB'dı ve yalnız boş bir metin
+notu açıyordu. On bir oluşturma akışı ana ekranın kendi State'inin içinde
+yazılmıştı; klasör sayfası onlara erişemiyordu. Akışlar
+`presentation/quick_add_actions.dart` içindeki **`QuickAddActions` mixin**'ine
+taşındı (~525 satır); iki ekran da onu bağlıyor ve üç kancayı veriyor:
+`quickAddFolderId`, `openNewNote`, `clearQuickAddSearchBox`. Yan kazanç:
+dashboard_screen.dart'tan 16 import düştü.
+
+### TUZAK — `material.dart` rendering'i SEÇEREK dışa verir
+`RenderBox` ve `globalToLocal` material üzerinden gelir, `RenderRepaintBoundary`
+GELMEZ (`widgets/basic.dart` bir `show` listesi kullanıyor). Bu yüzden aynı
+kavramı kullanan altı dosya derlenirken yalnız biri düşer. Bkz. aynı gün
+`area_select.dart` düzeltmesi.
+
+### "Bugün/dün 24 saate göre" — ana ekran grupları DEĞİL
+Kullanıcı ana ekran gruplarını işaret etti ama `dateBuckets`
+(notes_providers.dart) zaten takvim gününe göre çalışıyor ve bunu doğrulayan
+test VAR: `note_filter_sort_test.dart` → "dün 23:59 bugüne SAYILMAZ".
+Uygulamadaki TEK yuvarlanan 24 saatlik pencere **AI günlük puan kotası**
+(`ai_gate.dart`, `_quotaWindow = Duration(hours: 24)`) — metinleri de "bugün
+kalan puan" / "yarın tekrar oluşturabilirsin" diyor, yani şikâyetin sözleriyle
+birebir örtüşüyor. BİLEREK dokunulmadı: pencere takvim gününe çevrilirse
+`firestore.rules`'daki `dayStart < request.time - 24h` tavanı gevşetilmek
+zorunda ve kötüye kullanım zemini açılır. Kullanıcı onayı bekliyor.
+
+### Kişi araması artık "içinde geçen"
+`functions/searchUsers` yalnız ÖNEK eşleştiriyordu ("mehmet" → "Ali Mehmet"i
+bulamıyordu). Firestore metin içinde arayamadığı için dizin sunucuda
+okunup bellekte süzülüyor; önek eşleşmeleri listenin başında kalıyor.
+Tavan koda yazıldı (`SCAN_LIMIT = 1000`; yükseltme yolu n-gram +
+`array-contains`). **Bu değişiklik ancak `firebase deploy --only functions`
+ile canlıya çıkar** — APK'ya girmez.

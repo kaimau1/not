@@ -218,9 +218,6 @@ WrapPlan planTextWrap({
     _layout(painter, display, widths, style, columnWidth, rich);
     laidOut = true;
     final metrics = painter.computeLineMetrics();
-    // Boş tamponun ölçülecek satırı yoktur ama imleç ilk satırdadır: soldaki
-    // görsel onu sağa itmezse imleç görselin ÜSTÜNDE yanıp söner.
-    if (line >= metrics.length && !(line == 0 && display.isEmpty)) break;
 
     var top = 0.0;
     for (var i = 0; i < line && i < metrics.length; i++) {
@@ -265,6 +262,37 @@ WrapPlan planTextWrap({
       // altında biter.
       indentStart = columnWidth;
       indentEnd = 0;
+    }
+
+    // ---- TAMPONUN SONU: satır yok ama İMLEÇ var ---------------------------
+    //
+    // KÖK NEDEN (kullanıcı bulgusu 2026-08-29 — "klavyeyi bir kez açıp
+    // kapatınca imleç kayboldu, yazamadım; sonra fark ettim ki yazı görselin
+    // arkasına geçmiş"): aşağıdaki geçiş metnin VAR OLAN satırlarını iter ve
+    // satır başına bir satır ilerler, yani yeterince metin varsa döngü
+    // görselin altında biter. Boş (ya da görselin bandından KISA) tamponda
+    // itilecek satır yoktur: eski kod tek bir dolgu satırı ekleyip duruyordu,
+    // imleç 400 px'lik görselin altına değil yalnız BİR satır aşağı iniyordu —
+    // yani hâlâ görselin arkasında. İpucu metni ise ayrı bir yoldan
+    // (`hintPlacement`) görselin ALTINA konduğu için ipucu bir yeri, imleç
+    // başka yeri gösteriyordu.
+    //
+    // Çözüm: tampon bittiğinde durma; imlecin oturduğu SANAL satır hâlâ bir
+    // bandı kesiyorsa dolgu eklemeye devam et. Bant bitince [indentStart] 0
+    // olur ve döngü kendiliğinden kapanır.
+    if (line >= metrics.length) {
+      if (indentStart <= 0) break;
+      // Dolgu metnin SONUNA eklenir (bu satırın "başı" orasıdır); çapa
+      // sırası korunduğu için genişlik de listenin sonuna gider.
+      display += kWrapAnchorChar;
+      widths.add(indentStart);
+      laidOut = false;
+      // Görselin YANINDA okunur yer varsa imleç oraya oturdu, iş bitti —
+      // dar bir görsel imleci gereksiz yere aşağı itmemeli.
+      if (indentStart < columnWidth) break;
+      // Satırın tamamı kapalı: imleç hâlâ görselin arkasında, bir alt
+      // satırdan devam et.
+      continue;
     }
 
     final range = _lineRange(painter, display, top, lineHeight);

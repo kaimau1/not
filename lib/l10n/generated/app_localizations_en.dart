@@ -2790,6 +2790,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Contacts and folder sharing require a linked Google account.';
 
   @override
+  String get friendsSearchHint => 'Search by name or email';
+
+  @override
+  String get friendsSearchTab => 'Search';
+
+  @override
+  String get friendsSearchEmailTab => 'By email';
+
+  @override
+  String get friendsSearchEmpty => 'No results';
+
+  @override
+  String get friendsSearchTooShort => 'Type at least 2 characters to search';
+
+  @override
+  String get friendsSearchAdd => 'Add';
+
+  @override
   String get folderShare => 'Share';
 
   @override
@@ -2825,6 +2843,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accountRecoverConflictProceed => 'Switch anyway';
+
   @override
   String get folderRoleRead => 'Read';
 
@@ -2841,7 +2860,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderWriteOnlyTitle => 'You only have write access';
 
   @override
-  String get folderWriteOnlyHint => 'You can add new notes to this folder but cannot see the notes inside it.';
+  String get folderWriteOnlyHint =>
+      'You can add new notes to this folder but cannot see the notes inside it.';
 
   @override
   String get folderChatTitle => 'Chat';
@@ -2856,14 +2876,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderChatEmptyTitle => 'No messages yet';
 
   @override
-  String get folderChatEmptyHint => 'Talk here with the people you shared this folder with.';
+  String get folderChatEmptyHint =>
+      'Talk here with the people you shared this folder with.';
 
   @override
   String get folderInviteTitle => 'Folder invite';
 
   @override
   String folderInviteBody(Object name) {
-    return 'The folder "$name" was shared with you.';
+    return 'The folder \"$name\" was shared with you.';
   }
 
   @override
@@ -2887,7 +2908,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendNoteTitle => 'Send the note to a friend';
 
   @override
-  String get sendNoteInfo => 'A copy of the note lands in the person\'s "Incoming notes" box. Attachments (images, documents, audio) are not sent.';
+  String get sendNoteInfo =>
+      'A copy of the note lands in the person\'s \"Incoming notes\" box. Attachments (images, documents, audio) are not sent.';
 
   @override
   String sendNoteSent(Object name) {
@@ -2921,7 +2943,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderShelfCollapse => 'Collapse folders';
 
   @override
-  String get accountSheetLocalInfo => 'Your notes are only on this device. Link a Google account to back them up and add friends.';
+  String get accountSheetLocalInfo =>
+      'Your notes are only on this device. Link a Google account to back them up and add friends.';
 
   @override
   String get accountSettings => 'Account settings';
@@ -2936,7 +2959,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areaSelectOff => 'Turn off area select';
 
   @override
-  String get areaSelectHint => 'Drag a box around what you want to copy or ask the AI about.';
+  String get areaSelectHint =>
+      'Drag a box around what you want to copy or ask the AI about.';
 
   @override
   String get areaCopyImage => 'Copy as image';
@@ -2951,7 +2975,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get areaAskTitle => 'Selected area';
 
   @override
-  String get areaAskHint => 'Add a question if you like (leave it empty to transcribe and explain).';
+  String get areaAskHint =>
+      'Add a question if you like (leave it empty to transcribe and explain).';
 
   @override
   String get areaAskRun => 'Ask';

@@ -440,4 +440,53 @@ void main() {
     plain.dispose();
     padded.dispose();
   });
+
+  // ---- İMLEÇ GÖRSELİN ARKASINDA KALMASIN ------------------------------
+  //
+  // Kullanıcı bulgusu 2026-08-29: boş bir nota görsel eklenip klavye bir kez
+  // açılıp kapatılınca "imleç kayboldu, yazamadım, sonra fark ettim ki yazı
+  // görselin arkasına geçmiş". Plan METNİN VAR OLAN satırlarını itiyordu;
+  // boş tamponda itilecek satır olmadığı için imleç görselin altında kalıyordu.
+  test('bos notta imlec tam genislikteki gorselin ALTINA iner', () {
+    const columnWidth = 300.0;
+    final probe = TextPainter(
+      text: const TextSpan(text: 'A', style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    final lineHeight = probe.preferredLineHeight;
+    probe.dispose();
+
+    final plan = planTextWrap(
+      logical: '',
+      style: style,
+      columnWidth: columnWidth,
+      floats: const [
+        FloatBox(top: 0, left: 0, right: columnWidth, height: 200),
+      ],
+    );
+
+    // Notun gövdesi BOŞ kalır: dolgu yalnız görüntüdedir, metne girmez.
+    expect(stripWrapAnchors(plan.display), '');
+    // Bandın altına inmek için bant boyu kadar dolgu satırı gerekir; tek
+    // satırlık dolgu (eski davranış) imleci görselin arkasında bırakıyordu.
+    expect(
+      plan.widths.length,
+      greaterThanOrEqualTo((200 / lineHeight).ceil()),
+    );
+    expect(plan.widths.every((w) => w == columnWidth), isTrue);
+    // İmleç (mantıksal 0) dolguların ARDINDA, yani görselin altında durur.
+    expect(wrapToDisplayOffset(plan.display, 0), plan.display.length);
+  });
+
+  test('bos notta dar gorselin YANINDA yer varsa imlec asagi inmez', () {
+    final plan = planTextWrap(
+      logical: '',
+      style: style,
+      columnWidth: 300,
+      floats: const [FloatBox(top: 0, left: 0, right: 120, height: 200)],
+    );
+    // Tek dolgu: imleç görselin sağına oturur, altına İNMEZ.
+    expect(plan.widths, [120.0]);
+    expect(stripWrapAnchors(plan.display), '');
+  });
 }

@@ -2800,6 +2800,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Kişiler ve klasör paylaşımı Google hesabı bağlı kullanıcılarda çalışır.';
 
   @override
+  String get friendsSearchHint => 'İsim veya e-posta ile ara';
+
+  @override
+  String get friendsSearchTab => 'Ara';
+
+  @override
+  String get friendsSearchEmailTab => 'E-posta ile';
+
+  @override
+  String get friendsSearchEmpty => 'Sonuç yok';
+
+  @override
+  String get friendsSearchTooShort => 'Aramak için en az 2 karakter yaz';
+
+  @override
+  String get friendsSearchAdd => 'Ekle';
+
+  @override
   String get folderShare => 'Paylaş';
 
   @override
@@ -2836,6 +2854,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accountRecoverConflictProceed => 'Yine de geç';
+
   @override
   String get folderRoleRead => 'Okuma';
 
@@ -2852,7 +2871,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get folderWriteOnlyTitle => 'Yalnız yazma yetkin var';
 
   @override
-  String get folderWriteOnlyHint => 'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
+  String get folderWriteOnlyHint =>
+      'Bu klasöre yeni not ekleyebilirsin ama içindeki notları göremezsin.';
 
   @override
   String get folderChatTitle => 'Sohbet';
@@ -2867,14 +2887,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get folderChatEmptyTitle => 'Henüz mesaj yok';
 
   @override
-  String get folderChatEmptyHint => 'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
+  String get folderChatEmptyHint =>
+      'Bu klasörü paylaştığın kişilerle burada yazışabilirsin.';
 
   @override
   String get folderInviteTitle => 'Klasör daveti';
 
   @override
   String folderInviteBody(Object name) {
-    return '"$name" klasörü seninle paylaşıldı.';
+    return '\"$name\" klasörü seninle paylaşıldı.';
   }
 
   @override
@@ -2898,7 +2919,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get sendNoteTitle => 'Notu arkadaşına gönder';
 
   @override
-  String get sendNoteInfo => 'Notun bir kopyası seçtiğin kişinin "Gelen notlar" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
+  String get sendNoteInfo =>
+      'Notun bir kopyası seçtiğin kişinin \"Gelen notlar\" kutusuna düşer. Ekler (görsel, belge, ses) gönderilmez.';
 
   @override
   String sendNoteSent(Object name) {
@@ -2912,7 +2934,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get inboxEmpty => 'Gelen not yok';
 
   @override
-  String get inboxEmptyHint => 'Arkadaşlarının sana gönderdiği notlar burada birikir.';
+  String get inboxEmptyHint =>
+      'Arkadaşlarının sana gönderdiği notlar burada birikir.';
 
   @override
   String inboxFrom(Object name) {
@@ -2932,7 +2955,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get folderShelfCollapse => 'Klasörleri daralt';
 
   @override
-  String get accountSheetLocalInfo => 'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
+  String get accountSheetLocalInfo =>
+      'Notların yalnız bu cihazda. Google hesabı bağlarsan yedeklenir ve arkadaş ekleyebilirsin.';
 
   @override
   String get accountSettings => 'Hesap ayarları';
@@ -2947,7 +2971,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get areaSelectOff => 'Alan seçimini kapat';
 
   @override
-  String get areaSelectHint => 'Kopyalamak ya da yapay zekâya sormak istediğin alanı parmağınla çiz.';
+  String get areaSelectHint =>
+      'Kopyalamak ya da yapay zekâya sormak istediğin alanı parmağınla çiz.';
 
   @override
   String get areaCopyImage => 'Görsel olarak kopyala';
@@ -2962,7 +2987,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get areaAskTitle => 'Seçilen alan';
 
   @override
-  String get areaAskHint => 'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).';
+  String get areaAskHint =>
+      'İstersen bir soru yaz (boş bırakırsan formülü/metni çıkarıp açıklar).';
 
   @override
   String get areaAskRun => 'Sor';

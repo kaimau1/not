@@ -46,7 +46,13 @@ import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.initialArea});
+
+  /// Acilista ACIK gelecek alanin kimligi (ornegin 'account'). Rotadan
+  /// `?area=` ile gelir: hesap levhasindaki "Hesap ayarlari" dogrudan hesap
+  /// kartini acsin diye — kapali bir listeye dusmek "ulasilmaz" hissi
+  /// veriyordu (kullanici bulgusu 2026-08-29).
+  final String? initialArea;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
@@ -66,7 +72,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Acik olan alan. Tek seferde biri acik: dokuz kart alt alta dururken
   /// aranan ayara ulasmak icin ekranlarca kaydirmak gerekiyordu.
   /// Kalici DEGIL - her acilista "Gorunum" acik gelir (en sik dokunulan).
-  String _open = 'appearance';
+  late String _open = widget.initialArea ?? 'appearance';
   String _query = '';
   final _searchController = TextEditingController();
 

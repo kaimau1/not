@@ -123,7 +123,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
+        builder: (context, state) =>
+            SettingsScreen(initialArea: state.uri.queryParameters['area']),
       ),
       GoRoute(
         path: '/privacy',

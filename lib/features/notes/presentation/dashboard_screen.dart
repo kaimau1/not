@@ -1,11 +1,6 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 // ScrollCacheExtent (ızgara önbellek payı) yalnız rendering katmanında.
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -18,7 +13,6 @@ import 'package:uuid/uuid.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
-import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
@@ -35,33 +29,24 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../friends/presentation/home_invites.dart';
 import '../../inbox/presentation/inbox_screen.dart';
-import '../../settings/data/permissions_service.dart';
 import '../../settings/settings_providers.dart';
 import '../../settings/presentation/permissions_onboarding.dart';
 import '../data/attachment_repository.dart';
-import '../data/document_scan.dart';
-import '../data/scan/scan_pdf.dart';
-import '../data/scan/scan_title.dart';
-import '../data/note_share.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
 import '../data/upload_queue.dart';
-import '../data/video_frame.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
-import 'capture_mode_sheet.dart';
 import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
 import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
-import 'image_prepare_screen.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
-import 'qr_scan_screen.dart';
+import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
-import 'scan_review_screen.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
@@ -154,7 +139,23 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, QuickAddActions {
+
+  // ---- Yüzen "+" düğmesinin kancaları (bkz. QuickAddActions) -------------
+
+  /// Yeni not, ana ekranda o an SEÇİLİ olan klasöre doğar.
+  @override
+  String? get quickAddFolderId => ref.read(selectedFolderProvider);
+
+  @override
+  Future<void> openNewNote(String id, {String query = '', NoteType? type}) =>
+      _openNew(id, query: query, type: type);
+
+  /// Ana ekranın arama kutusu var: yeni not yazılı bir arama yüzünden
+  /// listeden elenmesin.
+  @override
+
+  void clearQuickAddSearchBox() => _searchController.clear();
   /// Metin provider'dan başlar: dar↔geniş kesme noktası geçişinde (tablet
   /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
   /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
@@ -449,21 +450,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ref.read(selectedFolderProvider.notifier).set(null);
       }
       if (!mounted) return;
-      _showSnack(l10n.hiddenFoldersHiddenAgain);
+      showQuickAddSnack(l10n.hiddenFoldersHiddenAgain);
       return;
     }
     if (!await authenticateForNote(l10n.hiddenFolderAuthReason)) return;
     ref.read(hiddenFoldersRevealedProvider.notifier).set(true);
     if (!mounted) return;
-    _showSnack(l10n.hiddenFoldersShown);
+    showQuickAddSnack(l10n.hiddenFoldersShown);
   }
-
-  void _showSnack(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   // Sıralama seçici alt sayfası (_pickSort) kaldırıldı: sıralama artık Süz
   // levhasının SIRALAMA bölümünde, süzgeçlerle aynı yerde.
 
@@ -631,41 +625,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       );
   }
 
-  Future<void> _createNote(NoteType type) async {
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    // Klasör TEK yazımda: createNote + ayrı updateFields arasında doküman bir
-    // an klasörsüz/boş kalıyordu (bkz. NotesRepository.createNote yorumu).
-    final id = await repo.createNote(
-      type,
-      folderId: ref.read(selectedFolderProvider),
-    );
-    await _openNew(id, type: type);
-    // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
-    // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
-    // görünmüyordu) FAB yolunda açık kalmıştı. Klasör süzgeci kalır (not o
-    // klasöre doğdu); boş bırakılıp silinen not için süzgeçlere dokunulmaz.
-    if (!mounted) return;
-    // Kısa bekleme ŞART: push future'ı POP anında tamamlanır, editörün son
-    // yazımı ise dispose'daki _saveNow'da (çıkış animasyonundan sonra) düşer.
-    // Hemen bakılsaydı hızlı yazıp çıkan kullanıcının notu akışta hâlâ boş
-    // görünür ve süzgeçler temizlenmezdi — düzeltmenin hedeflediği senaryo.
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    final kept = ref.read(notesStreamProvider).value ?? const <Note>[];
-    final survives = kept.any((n) => n.id == id && !n.isEmpty);
-    if (!survives) return;
-    if (ref.read(noteFilterProvider) != NoteFilter.all) {
-      ref.read(noteFilterProvider.notifier).set(NoteFilter.all);
-    }
-    if (ref.read(selectedTagProvider) != null) {
-      ref.read(selectedTagProvider.notifier).set(null);
-    }
-    if (ref.read(searchQueryProvider).trim().isNotEmpty) {
-      _searchController.clear();
-      ref.read(searchQueryProvider.notifier).set('');
-    }
-  }
 
   /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
   /// eyleme göre notu kurar.
@@ -722,7 +681,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         // hiç oluşmuyordu. `mounted` kontrolü de yalnız BİLDİRİMİ atlar,
         // fonksiyondan çıkmaz — eskiden çıkıyordu ve not oluşmadan dönüyordu.
         if (mounted) {
-          _showSnack(
+          showQuickAddSnack(
             e is GeminiException
                 ? (e.isAuthError ? l10n.aiNoApiKey : e.message)
                 : l10n.assistantGenericError,
@@ -785,497 +744,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       });
     } catch (e) {
       File(path).delete().ignore();
-      if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
+      if (mounted) showQuickAddSnack(context.l10n.attachmentFailed('$e'));
     }
-  }
-
-  /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
-  /// açarak başlar; çizim nota görsel eki olarak kaydedilir.
-  Future<void> _createHandwritingNote() async {
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final id = await repo.createNote(NoteType.text);
-    final folderId = ref.read(selectedFolderProvider);
-    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    await _openNew(id, query: '?draw=1');
-  }
-
-  /// Sesli not modu (Keep'teki gibi): not oluşturulur, editör açılır açılmaz
-  /// ses kaydı başlar ve konuşma dökümü nota canlı yazılır; bitişte ses
-  /// m4a eki olarak nota bağlanır.
-  Future<void> _createVoiceCaptureNote() async {
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final id = await repo.createNote(NoteType.text);
-    final folderId = ref.read(selectedFolderProvider);
-    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
-    await _openNew(id, query: '?voice=1');
-  }
-
-  /// Görüntülü not: kamera açılır, video YALNIZCA cihazda saklanır (buluta
-  /// yüklenmez).
-  ///
-  /// **Balonlu kip** (kullanıcı isteği 2026-08-09: "belge tara not al,
-  /// görüntülü not al, foto çek not al — bunlarda da balonlu mod olmalı"):
-  /// balon/vurgu/el yazısı bir SAYFANIN üzerinde yaşar, videonun sayfası yok.
-  /// Bu yüzden balonlu kipte videodan KARELER alınıp belge SAYFALARINA
-  /// dönüştürülür ve video nota ek olarak bağlı kalır — hem üzerine
-  /// işaretlenebilir görüntüler hem de kaydın kendisi elde durur.
-  ///
-  /// Kare SAYISI kaydın uzunluğuna göre seçilir (bkz. [VideoFrame.sample]):
-  /// tek kapak karesi, videodan alınan notu videonun ilk saniyesine
-  /// hapsediyordu.
-  Future<void> _createVideoNote() async {
-    // Kapak karesi yalnız Android'de çıkarılabiliyor: masaüstünde seçenek hiç
-    // SORULMAZ — sorup sonra sessizce klasiğe düşmek, seçimi yok saymak olurdu.
-    final choice = VideoFrame.supported
-        ? await _askCaptureMode(context.l10n.newVideoNote)
-        : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
-    if (choice == null || !mounted) return;
-    if (choice.mode == CaptureMode.classic) {
-      await _openBlankNote(
-        NoteType.text,
-        query: '?video=1',
-        title: choice.noteTitle,
-      );
-      return;
-    }
-    final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) _showSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
-    final picked = await ImagePicker().pickVideo(source: ImageSource.camera);
-    if (picked == null || !mounted) return;
-    // Kare çıkarmak (uzun videoda birkaç saniye) sessiz beklemesin.
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.videoFramesExtracting)));
-    final frames = await VideoFrame.sample(picked.path);
-    if (!mounted) return;
-    messenger.hideCurrentSnackBar();
-    if (frames.isEmpty) {
-      // Kare çıkarılamadı: kip sessizce düşürülmez, klasik nota bağlanır ki
-      // çekilen video kaybolmasın.
-      _showSnack(l10n.videoFrameFailed);
-      await _openBlankNote(
-        NoteType.text,
-        query: '?video=1',
-        title: choice.noteTitle,
-      );
-      return;
-    }
-    await _buildPageNote(
-      pageBytes: frames,
-      fallbackName: l10n.docNameVideo,
-      noteTitle: choice.noteTitle,
-      extraVideoPath: picked.path,
-    );
-  }
-
-  /// "Foto çek not al": fotoğraf makinesi açılır. Klasik kipte kare nota
-  /// gömülür ve kullanıcı hemen yazmaya başlar; balonlu kipte kare bir belge
-  /// sayfası olur ve üzerine balon/vurgu/kalem konabilir.
-  Future<void> _createPhotoNote() async {
-    final choice = await _askCaptureMode(context.l10n.newPhotoNote);
-    if (choice == null || !mounted) return;
-    if (choice.mode == CaptureMode.classic) {
-      await _openBlankNote(
-        NoteType.text,
-        query: '?photo=1',
-        title: choice.noteTitle,
-      );
-      return;
-    }
-    final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) _showSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
-    final picked = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      maxWidth: 2400,
-      maxHeight: 2400,
-    );
-    if (picked == null || !mounted) return;
-    // Fotoğraf da belgeye girmeden önce düzeltilir (madde 2'nin aynısı):
-    // yamuk ya da yan çekilmiş bir kare, not kurulduktan sonra düzeltilemiyor.
-    final prepared = await ImagePrepareScreen.open(context, [picked.path]);
-    if (prepared == null || prepared.isEmpty || !mounted) return;
-    await _buildPageNoteFromPaths(
-      prepared,
-      fallbackName: l10n.docNamePhoto,
-      noteTitle: choice.noteTitle,
-    );
-  }
-
-  /// "Belge tara not al": belge tarayıcı açılır (kenar tespiti + perspektif
-  /// düzeltme).
-  ///
-  /// Klasik kipte tarama EDİTÖRDE yapılır ve sayfalar sıradan görsel/PDF eki
-  /// olur. Balonlu kipte tarama burada yapılır ve sonuç doğrudan bir BELGE
-  /// notudur: sayfa başına not, balon, vurgu ve kalem hazır gelir.
-  Future<void> _createScanNote() async {
-    // Belge tarayıcı yoksa (masaüstü) balonlu kip kurulamaz: seçenek
-    // sorulmaz, editördeki eski yol (fotoğraflardan tarama) açılır.
-    final choice = DocumentScan.supported
-        ? await _askCaptureMode(context.l10n.newScanNote)
-        : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
-    if (choice == null || !mounted) return;
-    if (choice.mode == CaptureMode.classic) {
-      await _openBlankNote(
-        NoteType.text,
-        query: '?scan=1',
-        title: choice.noteTitle,
-      );
-      return;
-    }
-    final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) _showSnack(l10n.permCameraInfo);
-      return;
-    }
-    if (!mounted) return;
-    List<String>? pages;
-    try {
-      pages = await DocumentScan.scanPages();
-    } catch (e) {
-      if (mounted) _showSnack(l10n.scanFailed('$e'));
-      return;
-    }
-    if (pages == null || pages.isEmpty || !mounted) return;
-    // İnceleme ekranı zaten kırpma/döndürme/filtre veriyor ve tek aranabilir
-    // PDF üretebiliyor: balonlu kipin istediği belge tam olarak o.
-    final result = await ScanReviewScreen.open(context, pages);
-    if (result == null || !mounted) return;
-    final pdfBytes = result.pdfBytes;
-    if (pdfBytes != null) {
-      await _createPageNoteWithPdf(
-        pdfBytes,
-        // `.pdf` uzantısı aşağıda ekleniyor; ad uzantısız verilir.
-        fallbackName: p.basenameWithoutExtension(
-          scanFileName(result.title, DateTime.now()),
-        ),
-        noteTitle: choice.noteTitle,
-      );
-      return;
-    }
-    final paths = result.imagePaths ?? const <String>[];
-    if (paths.isEmpty) return;
-    await _buildPageNoteFromPaths(
-      paths,
-      fallbackName: l10n.docNameScan,
-      noteTitle: choice.noteTitle,
-    );
-  }
-
-  /// "PDF ekle not al": dosya seçici gelir, seçilen belge notun içine gömülür.
-  ///
-  /// Balonlu kipte ekran ÜSTTE sayfa ALTTA o sayfanın notu olacak şekilde
-  /// ikiye bölünür; klasik kipte PDF sıradan bir ek olur ve not düz metin
-  /// notudur. Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
-  Future<void> _createPdfNote() async {
-    final choice = await _askCaptureMode(context.l10n.newPdfNote);
-    if (choice == null || !mounted) return;
-    await _openBlankNote(
-      choice.mode == CaptureMode.bubbles ? NoteType.pdf : NoteType.text,
-      query: '?pdf=1',
-      title: choice.noteTitle,
-    );
-  }
-
-  /// "Görsel ekle not al": seçilen görseller TEK BELGEYE (PDF) dizilir ve
-  /// PDF notunun aynısı açılır.
-  ///
-  /// Neden yeni bir not TİPİ değil (kullanıcı isteği 2026-08-08: "PDF not al
-  /// modu güzel, aynı şekilde görsel notu modu yapalım"): görsel notunun
-  /// istediği HER ŞEY — sayfa başına not, balon, vurgu, ok, el yazısı, sayfa
-  /// ekle/sil, paylaşım, dışa aktarma — PDF notunda zaten var ve tek kopya
-  /// hâlinde çalışıyor. Görseller belgeye çevrilince bunların hepsi bedava
-  /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını
-  /// (ve ikinci bir hata kaynağını) doğururdu.
-  Future<void> _createImageNote() async {
-    final choice = await _askCaptureMode(context.l10n.newImageNote);
-    if (choice == null || !mounted) return;
-    final l10n = context.l10n;
-    const group = XTypeGroup(
-      label: 'Görsel',
-      extensions: ['jpg', 'jpeg', 'png', 'webp'],
-      mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    );
-    final files = await DocPicker.pickMany(group);
-    if (files.isEmpty || !mounted) return;
-    // Kırp/döndür ADIMI (kullanıcı isteği 2026-08-09): görseller belgeye
-    // dizilmeden ya da nota eklenmeden önce burada düzeltilir.
-    final prepared = await ImagePrepareScreen.open(context, [
-      for (final f in files) f.path,
-    ]);
-    if (prepared == null || prepared.isEmpty || !mounted) return;
-    if (choice.mode == CaptureMode.classic) {
-      await _createImageAttachmentNote(prepared, choice.noteTitle);
-      return;
-    }
-    await _buildPageNoteFromPaths(
-      prepared,
-      fallbackName: l10n.docNameImage,
-      noteTitle: choice.noteTitle,
-    );
-  }
-
-  /// "Sunum ekle not al": PDF yolunun slayt eşi.
-  Future<void> _createSlidesNote() async {
-    final choice = await _askCaptureMode(context.l10n.newSlidesNote);
-    if (choice == null || !mounted) return;
-    await _openBlankNote(
-      choice.mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
-      query: '?slides=1',
-      title: choice.noteTitle,
-    );
-  }
-
-  /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
-  /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).
-  Future<CaptureChoice?> _askCaptureMode(String title) =>
-      showCaptureModeSheet(context, title: title);
-
-  /// Boş bir not kurup editörü [query] açılış niyetiyle açar (klasör süzgeci
-  /// varsa nota da yazılır). Altı yakalama yolunun ortak kuyruğu.
-  ///
-  /// [title] yakalama levhasında yazılan addır (boş olabilir): klasik kipte
-  /// de kullanılır, böylece "başlığı önce yaz" alışkanlığı iki kipte de aynı
-  /// çalışır.
-  Future<void> _openBlankNote(
-    NoteType type, {
-    String query = '',
-    String title = '',
-  }) async {
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final id = await repo.createNote(
-      type,
-      folderId: ref.read(selectedFolderProvider),
-    );
-    if (title.isNotEmpty) repo.updateFields(id, {'title': title});
-    await _openNew(id, query: query);
-  }
-
-  /// Görselleri TEK BELGEYE dizip balonlu (sayfa notlu) bir not kurar.
-  ///
-  /// Belgenin adı [noteTitle]'dan gelir; boşsa [fallbackName] kullanılır
-  /// (bkz. `capture_mode_sheet.dart` — dosya adı kök nedeni).
-  Future<void> _buildPageNoteFromPaths(
-    List<String> paths, {
-    required String fallbackName,
-    required String noteTitle,
-  }) async {
-    if (paths.isEmpty) return;
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
-    try {
-      final bytes = await ScanPdf.build(paths);
-      if (!mounted) return;
-      messenger.hideCurrentSnackBar();
-      await _createPageNoteWithPdf(
-        bytes,
-        fallbackName: fallbackName,
-        noteTitle: noteTitle,
-      );
-    } catch (e) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
-    }
-  }
-
-  /// Baytları belge sayfası olarak taşıyan PDF notunu kurar.
-  Future<void> _buildPageNote({
-    required List<Uint8List> pageBytes,
-    required String fallbackName,
-    required String noteTitle,
-    String? extraVideoPath,
-  }) async {
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
-    try {
-      // ScanPdf yol bekliyor: baytlar geçici dosyaya yazılır ve iş bitince
-      // silinir (önbellekte kalıcı kopya bırakma).
-      final dir = await getTemporaryDirectory();
-      final paths = <String>[];
-      for (var i = 0; i < pageBytes.length; i++) {
-        final file = File(
-          p.join(
-            dir.path,
-            'kare_${DateTime.now().microsecondsSinceEpoch}$i.jpg',
-          ),
-        );
-        await file.writeAsBytes(pageBytes[i]);
-        paths.add(file.path);
-      }
-      final bytes = await ScanPdf.build(paths);
-      for (final path in paths) {
-        File(path).delete().ignore();
-      }
-      if (!mounted) return;
-      messenger.hideCurrentSnackBar();
-      await _createPageNoteWithPdf(
-        bytes,
-        fallbackName: fallbackName,
-        noteTitle: noteTitle,
-        extraVideoPath: extraVideoPath,
-      );
-    } catch (e) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
-    }
-  }
-
-  /// PDF baytlarından balonlu not: tek yazımda tip + klasör + ek.
-  ///
-  /// Neden yeni bir not TİPİ değil (kullanıcı isteği 2026-08-08: "PDF not al
-  /// modu güzel, aynı şekilde görsel notu modu yapalım"): balonlu kipin
-  /// istediği HER ŞEY — sayfa başına not, balon, vurgu, ok, el yazısı, sayfa
-  /// ekle/sil, paylaşım, dışa aktarma — PDF notunda zaten var ve tek kopya
-  /// hâlinde çalışıyor. Görüntüler belgeye çevrilince bunların hepsi bedava
-  /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını (ve ikinci
-  /// bir hata kaynağını) doğururdu.
-  Future<void> _createPageNoteWithPdf(
-    Uint8List pdfBytes, {
-    required String fallbackName,
-    required String noteTitle,
-    String? extraVideoPath,
-  }) async {
-    final repo = ref.read(notesRepositoryProvider);
-    final attachments = ref.read(attachmentRepositoryProvider);
-    if (repo == null || attachments == null) return;
-    final l10n = context.l10n;
-    try {
-      final id = await repo.createNote(
-        NoteType.pdf,
-        folderId: ref.read(selectedFolderProvider),
-      );
-      final maps = <Map<String, dynamic>>[];
-      // Belgenin adı NOTUN BAŞLIĞI (bkz. capture_mode_sheet.dart). Başlık
-      // boşsa YAKALAMA KİPİNİN MENÜ ETİKETİ değil, kısa bir BELGE adı
-      // kullanılır (kullanıcı bulgusu 2026-08-18: belgeler "PDF ekle not al",
-      // "Görsel ekle not al" diye adlanıyordu — bkz. [documentBaseName]).
-      final attachment = await attachments.preparePdf(
-        noteId: id,
-        bytes: pdfBytes,
-        fileName: '${safePdfBaseName(noteTitle) ?? fallbackName}.pdf',
-      );
-      maps.add(attachment.toMap());
-      // Görüntülü notta kaydın kendisi de nota bağlanır: sayfa yalnız kapak
-      // karesi, asıl içerik video.
-      if (extraVideoPath != null) {
-        final video = await attachments.prepareVideo(
-          noteId: id,
-          sourcePath: extraVideoPath,
-          duration: Duration.zero,
-        );
-        maps.add(video.copyWith(asFile: true).toMap());
-      }
-      repo.updateFields(id, {
-        'attachments': FieldValue.arrayUnion(maps),
-        if (noteTitle.isNotEmpty) 'title': noteTitle,
-      });
-      if (!mounted) return;
-      await _openNew(id);
-    } catch (e) {
-      if (mounted) _showSnack(l10n.genericError('$e'));
-    }
-  }
-
-  /// Klasik görsel notu: seçilen görseller sıradan ek olarak nota girer.
-  Future<void> _createImageAttachmentNote(
-    List<String> paths,
-    String noteTitle,
-  ) async {
-    final repo = ref.read(notesRepositoryProvider);
-    final attachments = ref.read(attachmentRepositoryProvider);
-    if (repo == null || attachments == null) return;
-    final l10n = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.imageNotePreparing)));
-    try {
-      final id = await repo.createNote(
-        NoteType.text,
-        folderId: ref.read(selectedFolderProvider),
-      );
-      // Görseller SAYFAYA yerleşir, ek şeridine değil (kullanıcı isteği
-      // 2026-08-09: "görsel eklendiğinde direk ekrana"). Konum burada
-      // veriliyor: alansız bırakılan ekler sayfanın aynı noktasında üst üste
-      // biniyordu. Genişlik ekrandan tahmin edilir — düzen oranlı olduğu için
-      // gerçek sayfa biraz farklı olsa da sıralama korunur.
-      const pageWidth = 360.0;
-      const displayWidth = 0.86;
-      var top = 96.0;
-      final maps = <Map<String, dynamic>>[];
-      for (final path in paths) {
-        final attachment = await attachments.prepareImage(
-          noteId: id,
-          bytes: await File(path).readAsBytes(),
-          fileName: p.basename(path),
-        );
-        maps.add(
-          attachment
-              .copyWith(x: 0.06, pageY: top, displayWidth: displayWidth)
-              .toMap(),
-        );
-        final aspect =
-            (attachment.width != null &&
-                attachment.height != null &&
-                attachment.height! > 0)
-            ? attachment.width! / attachment.height!
-            : 1.0;
-        top += pageWidth * displayWidth / aspect + 16;
-      }
-      repo.updateFields(id, {
-        'attachments': FieldValue.arrayUnion(maps),
-        if (noteTitle.isNotEmpty) 'title': noteTitle,
-      });
-      if (!mounted) return;
-      messenger.hideCurrentSnackBar();
-      await _openNew(id);
-    } catch (e) {
-      messenger
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l10n.genericError('$e'))));
-    }
-  }
-
-  /// QR kod okur ve içeriğini yeni bir nota yazar. Not tarama BAŞARILI olunca
-  /// oluşturulur — iptal edilirse ortada boş not kalmaz.
-  Future<void> _createQrNote() async {
-    final l10n = context.l10n;
-    final perms = ref.read(permissionsServiceProvider);
-    if (!await perms.cameraGranted() && !await perms.requestCamera()) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.permCameraInfo)));
-      }
-      return;
-    }
-    if (!mounted) return;
-    final code = await openQrScanner(context);
-    if (code == null || !mounted) return;
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final id = await repo.createNote(NoteType.text);
-    final folderId = ref.read(selectedFolderProvider);
-    repo.updateFields(id, {
-      'body': code,
-      // Null-aware eleman: klasör süzgeci yoksa anahtar hiç yazılmaz.
-      'folderId': ?folderId,
-    });
-    await _openNew(id);
   }
 
   /// Ana ekran zemini: **renk → desen → görsel** (üçü de isteğe bağlı, üst
@@ -1415,7 +885,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final page = CallbackShortcuts(
       bindings: {
         const SingleActivator(LogicalKeyboardKey.keyN, control: true): () =>
-            _createNote(NoteType.text),
+            createNote(NoteType.text),
       },
       child: Focus(
         autofocus: true,
@@ -1847,7 +1317,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         if (ref.watch(quickCaptureRowProvider))
                           _QuickCaptureRow(
                             onCreateChecklist: () =>
-                                _createNote(NoteType.checklist),
+                                createNote(NoteType.checklist),
                             onSaved: _afterQuickCapture,
                           ),
                         // Sabit başlık ile kayan ızgara arasındaki SINIR
@@ -2045,17 +1515,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         const SizedBox(height: 10),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
-                          onVoiceCapture: _createVoiceCaptureNote,
-                          onVideoNote: _createVideoNote,
-                          onPhotoNote: _createPhotoNote,
-                          onScanNote: _createScanNote,
-                          onPdfNote: _createPdfNote,
-                          onImageNote: _createImageNote,
-                          onSlidesNote: _createSlidesNote,
-                          onQrNote: _createQrNote,
+                          onVoiceCapture: createVoiceCaptureNote,
+                          onVideoNote: createVideoNote,
+                          onPhotoNote: createPhotoNote,
+                          onScanNote: createScanNote,
+                          onPdfNote: createPdfNote,
+                          onImageNote: createImageNote,
+                          onSlidesNote: createSlidesNote,
+                          onQrNote: createQrNote,
                           anchor: _fabColumnLink,
-                          onCreate: _createNote,
-                          onHandwriting: _createHandwritingNote,
+                          onCreate: createNote,
+                          onHandwriting: createHandwritingNote,
                         ),
                       ],
                     ),

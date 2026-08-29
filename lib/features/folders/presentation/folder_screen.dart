@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -11,6 +13,8 @@ import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../notes/presentation/quick_add_actions.dart';
+import '../../notes/presentation/quick_add_fab.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
@@ -37,7 +41,7 @@ import 'folder_sheets.dart';
 /// Rota DEĞİL, `Navigator.push` ile açılır: geniş ekranda GoRouter kabuğu
 /// (SplitShell) sağ paneli not editörüne ayırıyor; klasör listesi oraya
 /// sıkışmamalı, tam sayfa açılmalı.
-class FolderScreen extends ConsumerWidget {
+class FolderScreen extends ConsumerStatefulWidget {
   const FolderScreen({super.key, required this.folderId, this.ownerId});
 
   final String folderId;
@@ -56,12 +60,41 @@ class FolderScreen extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FolderScreen> createState() => _FolderScreenState();
+}
+
+class _FolderScreenState extends ConsumerState<FolderScreen>
+    with QuickAddActions {
+  /// "+" menüsünün demirlendiği nokta (bkz. QuickAddFab.anchor).
+  final _fabLink = LayerLink();
+
+  /// Bu sayfada oluşturulan her not, doğrudan BU klasöre doğar.
+  @override
+  String? get quickAddFolderId => widget.folderId;
+
+  @override
+  Future<void> openNewNote(
+    String id, {
+    String query = '',
+    NoteType? type,
+  }) async {
+    if (!mounted) return;
+    await context.push(
+      type == NoteType.archive
+          ? archiveNoteRoutePath(id)
+          : noteRoutePath(id, query: query),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final folderId = widget.folderId;
+    final ownerId = widget.ownerId;
     final l10n = context.l10n;
     final myUid = ref.watch(currentUidProvider);
     final shared = ownerId != null && ownerId != myUid;
 
-    if (shared) return _SharedFolderView(folderId: folderId, ownerId: ownerId!);
+    if (shared) return _SharedFolderView(folderId: folderId, ownerId: ownerId);
 
     final folders = ref.watch(foldersStreamProvider).value;
     final folder = folders?.where((f) => f.id == folderId).firstOrNull;
@@ -99,25 +132,28 @@ class FolderScreen extends ConsumerWidget {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: l10n.newTextNote,
-        onPressed: () => _createNote(context, ref),
-        child: const Icon(Icons.add),
+      // Ana ekrandakinin AYNISI: metin/madde, el yazısı, sesli, görüntülü,
+      // foto, belge tarama, PDF, görsel, sunum ve QR. Eskiden burada düz bir
+      // FAB vardı ve yalnız boş bir METİN notu açıyordu (kullanıcı bulgusu
+      // 2026-08-29: "klasör içlerindeki ekle butonu sadece metin notu
+      // açıyor"). Davranış [QuickAddActions] ile ORTAK, kopya değil.
+      floatingActionButton: CompositedTransformTarget(
+        link: _fabLink,
+        child: QuickAddFab(
+          anchor: _fabLink,
+          onCreate: createNote,
+          onHandwriting: createHandwritingNote,
+          onVoiceCapture: createVoiceCaptureNote,
+          onVideoNote: createVideoNote,
+          onPhotoNote: createPhotoNote,
+          onScanNote: createScanNote,
+          onPdfNote: createPdfNote,
+          onImageNote: createImageNote,
+          onSlidesNote: createSlidesNote,
+          onQrNote: createQrNote,
+        ),
       ),
       body: _NotesGrid(async: notesAsync),
-    );
-  }
-
-  /// Klasörün içinde yeni not: `folderId` doğrudan yazılır, kullanıcı notu
-  /// oluşturduktan sonra ayrıca "klasöre taşı" adımı yapmasın.
-  Future<void> _createNote(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(notesRepositoryProvider);
-    if (repo == null) return;
-    final id = await repo.createNote(NoteType.text, folderId: folderId);
-    if (!context.mounted) return;
-    await openNoteRoute(
-      context,
-      Note(id: id, type: NoteType.text, folderId: folderId),
     );
   }
 }

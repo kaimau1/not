@@ -2,19 +2,32 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
-## 2026-08-23 turundan kalan (CİHAZDA HİÇ ÇALIŞTIRILMADI)
+## 2026-08-29 turundan kalan
 
-Bu tur Flutter SDK'sı OLMAYAN bir ortamda yazıldı: `flutter analyze` ve
-`flutter test` koşmadı. **CI de koşamadı**: main'e push edilen 72c528f
-işi 3 SANİYEDE "failure" ile düştü ve log indirmesi 404 döndü — 2026-08-21'de
-kaydedilen Actions DAKİKA KOTASI hâlâ dolu (son başarılı koşu 2026-08-18,
-#345). Yani bu turdaki kodun DERLENDİĞİ hiçbir yerde doğrulanmadı; kota
-yenilenince bir push (ya da boş commit) yeterli. Hepsi elle gözden geçirildi
-ama hiçbiri cihazda görülmedi.
+- [ ] **`firebase deploy --only functions`** — kişi araması "içinde geçen"
+  olacak şekilde `functions/index.js` değişti ama CANLIYA ÇIKMADI. APK'ya
+  girmez; deploy edilene kadar telefonda arama hâlâ ESKİ (önek) davranışta.
+  CI kotası dolu olduğu için elle koşulmalı.
+- [ ] **AI günlük puan kotası: 24 saat mi, gece yarısı mı?** Kullanıcı
+  "bugün/dün 24 saate göre yapılıyor" dedi ve ana ekran gruplarını işaret
+  etti, ama ana ekran grupları zaten takvim gününe göre (testi var). Yuvarlanan
+  24 saatlik TEK pencere `ai_gate.dart`'taki puan kotası. Takvim gününe
+  çevirmek `firestore.rules`'daki kötüye kullanım tavanını gevşetmeyi
+  gerektiriyor — karar kullanıcıda (bkz. HAFIZA 2026-08-29 devam).
+- [ ] **Cihazda görülmedi**: klasör "+" menüsünün ağır akışları (PDF/tarama/
+  video/sunum) klasör sayfasından denenmedi; not doğru klasöre doğuyor mu
+  gözle bakılmalı. Ana ekran yolu değişmedi, ortak koda taşındı.
+- [ ] **Paylaşılan klasörün "+" düğmesi** hâlâ yalnız metin notu açıyor
+  (`_SharedFolderView`): ağır akışlar ekleri BAŞKASININ Storage yoluna
+  yazacağı için bilinçli olarak kapsam dışı bırakıldı.
 
-- [ ] **İLK İŞ: kota yenilenince `flutter analyze` + `flutter test` koştur.**
-  Bu turda 3 yeni dosya, 28 yeni l10n anahtarı ve 15 dosyada değişiklik var;
-  derleme hatası çıkarsa büyük olasılıkla aşağıdaki iki maddeden biridir.
+## 2026-08-23 turundan kalan (DERLENDİ + KURULDU, davranış görülmedi)
+
+2026-08-29'da yerel makinede doğrulandı: `flutter analyze` 0 hata,
+`flutter test` 786 test yeşil, imzalı APK (versionCode 347) telefona kuruldu
+ve açıldı. Yani kod artık DERLENİYOR ve testleri geçiyor; aşağıdakiler
+"derlenmedi" riski değil, **cihazda gözle görülmedi** riski. (Actions dakika
+kotası hâlâ dolu; CI beklenmedi.)
 
 - [ ] **Alan seçimi (PDF/sunum/görsel)** — yakalama `RepaintBoundary.toImage`
   ile. Bakılacaklar: pdfrx'in çizdiği sayfa gerçekten yakalanıyor mu, seçim
@@ -25,16 +38,13 @@ ama hiçbiri cihazda görülmedi.
   erişiliyor — bir dokunuş fazla. İstenirse `pdf_note_pane`/`slide_note_pane`
   araç çubuğuna da konabilir.
 - [ ] **Syncfusion `PdfTrueTypeFont(multiStyle:)` + `PdfStringFormat`**
-  (metin kutusunun kalın/italik/hizasını PAYLAŞILAN PDF'e taşıyor) derlenmedi.
-  API adları yanlışsa `pdf_edit.dart` derleme hatası verir.
-- [ ] **Yerli `videoDuration` köprüsü** (MainActivity) derlenmedi; görüntülü
-  notta balonlu kip kaç sayfa üreteceğini buna göre seçiyor. Köprü dönmezse
-  `VideoFrame.sample` tek kareye (eski davranışa) düşer — güvenli, ama
-  çoklu kare hiç çalışmaz.
-- [ ] **Yeni l10n anahtarları (28)** ELLE yazıldı (`flutter gen-l10n`
-  koşturulamadı): `app_tr.arb` + `app_en.arb` + 17 üretilmiş dosya. Kalan 14
-  dil Türkçe metne düşüyor (mevcut kural). Bir sonraki gen-l10n koşusunda
-  sıralama değişebilir, içerik aynı kalmalı.
+  (metin kutusunun kalın/italik/hizasını PAYLAŞILAN PDF'e taşıyor) artık
+  DERLENİYOR — API adları doğruymuş. Kalan: paylaşılan PDF'te kalın/italik/
+  hiza gerçekten doğru çıkıyor mu, gözle bakılmalı.
+- [ ] **Yerli `videoDuration` köprüsü** (MainActivity) derleniyor ama cihazda
+  denenmedi; görüntülü notta balonlu kip kaç sayfa üreteceğini buna göre
+  seçiyor. Köprü dönmezse `VideoFrame.sample` tek kareye (eski davranışa)
+  düşer — güvenli, ama çoklu kare hiç çalışmaz.
 - [ ] **Madde kutucuğu hizası** hesaba dayanıyor (`10 + satırYüksekliği/2 −
   kutuYüksekliği/2`); satır yüksekliği yazı tipinin kendi metriğinden gelirse
   1-2 px sapabilir. Farklı yazı tipi + büyük yazı ölçeğiyle bakılmalı.
