@@ -4,12 +4,15 @@
 
 ## 2026-08-30 turundan kalan (CİHAZDA GÖRÜLMEDİ)
 
-Bu oturumda Flutter SDK yok: `flutter analyze` / `flutter test` KOŞULMADI,
-doğrulama CI'a ve telefona kaldı. Bakılacaklar:
+2. turda bu makineye Flutter SDK geldi (`C:\src\flutter`): `flutter analyze` +
+`flutter test` (794/794) KOŞULDU, imleç düzeltmesi telefona kuruldu
+(build-number 350). Kalanlar hâlâ cihazda gözle bakılmalı:
 
-- [ ] **Sarma/imleç**: ölçüm artık alanın satır çıpasını (`forceStrutHeight`)
-  kullanıyor. Görselli bir notta yazı görselin arkasına/altına kaçıyor mu,
-  imleç ile "Not…" ipucu AYNI satırda mı, yazarken satırlar oynuyor mu?
+- [ ] **Sarma/imleç — cihazda doğrula**: kök neden bulundu ve düzeltildi
+  (bkz. HAFIZA 2026-08-30 2. tur: `LineMetrics.height` yalan söylüyor +
+  metnin ardına çapa ekleniyordu), 3 kırmızı test yeşil. Telefonda bak:
+  imleç yazının hemen ardında mı, "Not…" ipucu ile AYNI satırda mı,
+  yazarken satırlar oynuyor mu?
 - [ ] **Kendi kendine kayma**: bant süzgecinden alanın yüksekliği çıkarıldı;
   metnin/resmin kendiliğinden yer değiştirmesi bitmiş olmalı (kullanıcı
   2026-08-30 ekran görüntüsü).

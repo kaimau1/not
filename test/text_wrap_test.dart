@@ -554,18 +554,62 @@ void main() {
       ],
     );
     final painter = paint(plan, columnWidth);
-    final metrics = painter.computeLineMetrics();
+    final lines = painter.computeLineMetrics().length;
+    final drawnHeight = painter.height;
     painter.dispose();
-    expect(metrics.length, greaterThan(1));
-    // Son satır METNİN ('abc') satırı; ondan öncekiler yalnız dolgu taşıyor.
-    final textLine = metrics.last.height;
-    for (final line in metrics) {
-      expect(
-        line.height,
-        closeTo(textLine, 0.5),
-        reason: 'dolgu satırı metin satırından farklı yükseklikte',
-      );
-    }
+    expect(lines, greaterThan(1));
+    // ÖLÇÜM GERÇEK GEOMETRİDEN YAPILIR, `LineMetrics.height`TEN DEĞİL:
+    // `forceStrutHeight` satırı tam boya KİLİTLER (çizim doğru) ama
+    // `LineMetrics.height` yalnız dolgu taşıyan satır için kilitlenmemiş
+    // boyu — dolgu kutusunun yarım puntosunu — bildirir. 2026-08-30 kayması
+    // tam olarak buydu: plan satır tepelerini o alandan topluyor, 20/7 kat
+    // aşağı sapıyordu (bkz. planTextWrap'taki `preferredLineHeight` notu).
+    expect(
+      drawnHeight,
+      closeTo(lines * lineHeightOf(), 0.5),
+      reason: 'dolgu satırı metin satırından farklı yükseklikte çizildi',
+    );
+  });
+
+  test('metin VARKEN imlec metnin ardinda kalir, gorselin boyu kadar inmez', () {
+    // Kullanıcı bulgusu 2026-08-30 (ekran görüntüsü): yazı görselin altında
+    // duruyor ama imleç onun ~25 satır AŞAĞISINDA, üstelik küçük görselin
+    // genişliği kadar içeride yanıp sönüyordu. Yazma yeri doğruydu — yalnız
+    // imleç metinden kopmuştu.
+    //
+    // KÖK NEDEN: "tampon bitti ama imleç var" dalı BOŞ tampon için yazılmıştı,
+    // metin varken de koşup metnin ARDINA çapa ekliyordu; son çapanın genişliği
+    // imlecin ekrandaki girintisinin ta kendisiydi.
+    const columnWidth = 300.0;
+    const text = 'kisa satir';
+    final plan = planTextWrap(
+      logical: text,
+      style: style,
+      // Alanın tepesinden ÖNCE başlayan uzun görsel: metni aşağı iter.
+      floats: const [FloatBox(top: -150, left: 0, right: columnWidth, height: 200)],
+      columnWidth: columnWidth,
+    );
+
+    // Metnin ARDINDA çapa kalmamalı: imlecin evi son harfin ardıdır.
+    expect(
+      plan.display.endsWith(text),
+      isTrue,
+      reason: 'metnin ardına çapa eklendi, imleç metinden koptu: '
+          '${plan.display.runes.length - plan.display.indexOf(text) - text.length} çapa',
+    );
+
+    // ...ve imleç gerçekten son harfin yanında çizilir.
+    final painter = paint(plan, columnWidth);
+    final caret = painter.getOffsetForCaret(
+      TextPosition(offset: wrapToDisplayOffset(plan.display, text.length)),
+      Rect.zero,
+    );
+    final end = painter.getOffsetForCaret(
+      TextPosition(offset: plan.display.length),
+      Rect.zero,
+    );
+    painter.dispose();
+    expect(caret.dy, closeTo(end.dy, 0.5));
   });
 
   // ---- METNİ İMLECİN YERİNE EKLEME (sesli yazma) -----------------------

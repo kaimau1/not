@@ -224,13 +224,17 @@ WrapPlan planTextWrap({
     laidOut = true;
     final metrics = painter.computeLineMetrics();
 
-    var top = 0.0;
-    for (var i = 0; i < line && i < metrics.length; i++) {
-      top += metrics[i].height;
-    }
-    final lineHeight = line < metrics.length
-        ? metrics[line].height
-        : painter.preferredLineHeight;
+    // SATIR TEPESİ `LineMetrics`TEN TOPLANMAZ (kullanıcı bulgusu 2026-08-30,
+    // ekran görüntüsü: imleç yazının çok altında):
+    // `forceStrutHeight: true` her satırı taban stilin yüksekliğine kilitler,
+    // ama `LineMetrics.height` KİLİTLENMEMİŞ boyu bildiriyor — yalnız dolgu
+    // taşıyan bir satır için bu, dolgu kutusunun boyudur ([wrapAnchorHeight],
+    // yarım punto). Ölçüm: 30 dolgu satırı `metrics[i].height`e göre 7 dp
+    // (toplam 210) ama boyacının gerçek boyu 600 dp, yani 30 × 20. Toplam
+    // 20/7 kat kayıyor ve plan bandı aşmak için gereken satır sayısını üçe
+    // katlayarak sayıyordu. Çıpa kilitli olduğu için satır adımı SABİTTİR.
+    final lineHeight = painter.preferredLineHeight;
+    final top = line * lineHeight;
     final bottom = top + lineHeight;
 
     // Satırı kesen görseller: her biri metni GENİŞ tarafına iter.
@@ -286,6 +290,14 @@ WrapPlan planTextWrap({
     // bandı kesiyorsa dolgu eklemeye devam et. Bant bitince [indentStart] 0
     // olur ve döngü kendiliğinden kapanır.
     if (line >= metrics.length) {
+      // BU DAL YALNIZ BOŞ TAMPON İÇİNDİR (kullanıcı bulgusu 2026-08-30, ekran
+      // görüntüsü: "imleç yazının çok altında, görselin genişliği kadar
+      // içeride"). Metin VARSA imlecin evi zaten son harfin ardıdır ve o satır
+      // yukarıdaki geçişte bandın altına çoktan itilmiştir; buraya çapa
+      // eklemek imleci metinden koparıp bandın boyu kadar aşağı sürüklüyordu.
+      // Ölçüm: metinli tamponda sona 3 çapa ekleniyordu ve sonuncusunun
+      // genişliği (66 dp) imlecin ekrandaki girintisinin ta kendisiydi.
+      if (logical.isNotEmpty) break;
       if (indentStart <= 0) {
         // BANT BİTTİ — imlecin oturacağı satır artık boşta. Ama tamponun
         // sonundaki dolgular satırı TAMAMEN kapladıysa "metnin sonu" konumu o
