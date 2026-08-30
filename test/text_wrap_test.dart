@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/features/notes/presentation/editor/note_images.dart'
+    show hintTopFor;
 import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 
 void main() {
@@ -161,6 +163,10 @@ void main() {
     double columnWidth,
   ) {
     final painter = TextPainter(textDirection: TextDirection.ltr)
+      // ÇİZİMLE AYNI ÇIPA: alan satırlarını taban stile kilitliyor
+      // (`forceStrutHeight`). Çıpasız ölçen bir denetim, dolgu satırlarını
+      // gerçekte olduğundan KISA sanar ve binmeyi göremezdi.
+      ..strutStyle = wrapStrutStyle(style)
       ..text = buildWrapSpan(plan.display, plan.widths, style)
       ..setPlaceholderDimensions([
         for (final w in plan.widths)
@@ -386,6 +392,7 @@ void main() {
       final painter = TextPainter(
         text: buildWrapSpan(plan.display, plan.widths, style),
         textDirection: TextDirection.ltr,
+        strutStyle: wrapStrutStyle(style),
       )..setPlaceholderDimensions([
           for (final w in plan.widths)
             PlaceholderDimensions(
@@ -421,6 +428,7 @@ void main() {
       final painter = TextPainter(
         text: buildWrapSpan(plan.display, plan.widths, style),
         textDirection: TextDirection.ltr,
+        strutStyle: wrapStrutStyle(style),
       )..setPlaceholderDimensions([
           for (final w in plan.widths)
             PlaceholderDimensions(
@@ -447,35 +455,135 @@ void main() {
   // açılıp kapatılınca "imleç kayboldu, yazamadım, sonra fark ettim ki yazı
   // görselin arkasına geçmiş". Plan METNİN VAR OLAN satırlarını itiyordu;
   // boş tamponda itilecek satır olmadığı için imleç görselin altında kalıyordu.
-  test('bos notta imlec tam genislikteki gorselin ALTINA iner', () {
-    const columnWidth = 300.0;
+  /// Planı, ALANIN çizdiği gibi ölçen bir boyacı: satır yüksekliği çıpası
+  /// (`forceStrutHeight`) dahil. Çıpasız ölçüm dolgu satırlarını gerçekte
+  /// olduğundan kısa sanar — 2026-08-30 kaymasının kök nedeni buydu.
+  TextPainter paint(WrapPlan plan, double columnWidth) {
+    final painter = TextPainter(
+      text: buildWrapSpan(plan.display, plan.widths, style),
+      textDirection: TextDirection.ltr,
+      strutStyle: wrapStrutStyle(style),
+    )..setPlaceholderDimensions([
+        for (final w in plan.widths)
+          PlaceholderDimensions(
+            size: Size(w, wrapAnchorHeight(style)),
+            alignment: PlaceholderAlignment.middle,
+          ),
+      ]);
+    painter.layout(maxWidth: columnWidth);
+    return painter;
+  }
+
+  /// Boş bir alanın satır yüksekliği (alan da bu çıpayla çiziyor).
+  double lineHeightOf() {
     final probe = TextPainter(
       text: const TextSpan(text: 'A', style: style),
       textDirection: TextDirection.ltr,
+      strutStyle: wrapStrutStyle(style),
     )..layout();
-    final lineHeight = probe.preferredLineHeight;
+    final h = probe.preferredLineHeight;
     probe.dispose();
+    return h;
+  }
 
+  test('bos notta imlec tam genislikteki gorselin ALTINA ve SOLA iner', () {
+    const columnWidth = 300.0;
+    const band = FloatBox(top: 0, left: 0, right: columnWidth, height: 200);
     final plan = planTextWrap(
       logical: '',
       style: style,
       columnWidth: columnWidth,
-      floats: const [
-        FloatBox(top: 0, left: 0, right: columnWidth, height: 200),
-      ],
+      floats: const [band],
     );
 
     // Notun gövdesi BOŞ kalır: dolgu yalnız görüntüdedir, metne girmez.
     expect(stripWrapAnchors(plan.display), '');
-    // Bandın altına inmek için bant boyu kadar dolgu satırı gerekir; tek
-    // satırlık dolgu (eski davranış) imleci görselin arkasında bırakıyordu.
-    expect(
-      plan.widths.length,
-      greaterThanOrEqualTo((200 / lineHeight).ceil()),
+
+    final painter = paint(plan, columnWidth);
+    final caret = painter.getOffsetForCaret(
+      TextPosition(offset: wrapToDisplayOffset(plan.display, 0)),
+      Rect.zero,
     );
-    expect(plan.widths.every((w) => w == columnWidth), isTrue);
-    // İmleç (mantıksal 0) dolguların ARDINDA, yani görselin altında durur.
-    expect(wrapToDisplayOffset(plan.display, 0), plan.display.length);
+    painter.dispose();
+    // KAYMA TESTİ: imleç görselin ALTINDA olmalı ama BİR SATIRDAN fazla
+    // aşağıda değil. Çıpasız ölçümde dolgu satırları ~7 dp sanılıyor, ekranda
+    // ~20 dp çiziliyordu: imleç bandın üç katı kadar aşağı düşüyordu.
+    expect(caret.dy, greaterThanOrEqualTo(band.bottom));
+    expect(caret.dy, lessThan(band.bottom + lineHeightOf() + 1));
+    // ...ve satırın BAŞINDA: dolgu satırın tamamını kapladığı için imleç
+    // eskiden sütunun sağ ucunda yanıp sönüyordu.
+    expect(caret.dx, lessThan(4));
+  });
+
+  test('IPUCU ile IMLEC ayni satirda (sarma plani ile hint ayni kurali)', () {
+    // Kullanıcı bulgusu: "Not…" ipucu bir yerde, imleç başka yerde.
+    // İkisi ayrı kodda hesaplanıyor; sonuçları BİREBİR tutmalı.
+    const columnWidth = 300.0;
+    const band = FloatBox(top: 0, left: 0, right: columnWidth, height: 200);
+    final lineHeight = lineHeightOf();
+    final plan = planTextWrap(
+      logical: '',
+      style: style,
+      columnWidth: columnWidth,
+      floats: const [band],
+    );
+    final painter = paint(plan, columnWidth);
+    final caret = painter.getOffsetForCaret(
+      TextPosition(offset: wrapToDisplayOffset(plan.display, 0)),
+      Rect.zero,
+    );
+    painter.dispose();
+    expect(
+      caret.dy,
+      closeTo(hintTopFor(const [band], 0, lineHeight), 1.0),
+      reason: 'ipucu ile imleç ayrı satırlara düştü',
+    );
+  });
+
+  test('dolgu satiri METIN satiriyla ayni yukseklikte cizilir', () {
+    // KÖK NEDEN: dolgu kutusu yarım punto boyunda; yalnız dolgu taşıyan bir
+    // satır ölçümde o kadar KISA görünüyor, alanda ise tam satır yüksekliğine
+    // kilitleniyordu. Ölçüm de artık çıpalı (bkz. wrapStrutStyle).
+    const columnWidth = 300.0;
+    final plan = planTextWrap(
+      logical: 'abc',
+      style: style,
+      columnWidth: columnWidth,
+      floats: const [
+        FloatBox(top: 0, left: 0, right: columnWidth, height: 60),
+      ],
+    );
+    final painter = paint(plan, columnWidth);
+    final metrics = painter.computeLineMetrics();
+    painter.dispose();
+    expect(metrics.length, greaterThan(1));
+    // Son satır METNİN ('abc') satırı; ondan öncekiler yalnız dolgu taşıyor.
+    final textLine = metrics.last.height;
+    for (final line in metrics) {
+      expect(
+        line.height,
+        closeTo(textLine, 0.5),
+        reason: 'dolgu satırı metin satırından farklı yükseklikte',
+      );
+    }
+  });
+
+  // ---- METNİ İMLECİN YERİNE EKLEME (sesli yazma) -----------------------
+  test('insertAtCaret metni imlecin yerine, bosluklariyla ekler', () {
+    final r = insertAtCaret('birinci ikinci', 7, 'ARA');
+    expect(r.text, 'birinci ARA ikinci');
+    expect(r.caret, 11); // 'birinci ARA' sonunda
+  });
+
+  test('insertAtCaret kelimenin ortasina bosluklu girer', () {
+    final r = insertAtCaret('abcdef', 3, 'X');
+    expect(r.text, 'abc X def');
+    expect(r.caret, 5);
+  });
+
+  test('insertAtCaret bos tamponda ve satir sonunda fazla bosluk koymaz', () {
+    expect(insertAtCaret('', 0, 'merhaba').text, 'merhaba');
+    expect(insertAtCaret('satir\n', 6, 'yeni').text, 'satir\nyeni');
   });
 
   test('bos notta dar gorselin YANINDA yer varsa imlec asagi inmez', () {

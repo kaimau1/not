@@ -30,6 +30,11 @@ import '../../../../core/utils/rich_text.dart';
 const String kWrapAnchorChar = '￼';
 const int _kWrapAnchorCode = 0xFFFC;
 
+/// Bandın altındaki ilk boş satıra konan "imleç evi" dolgusunun genişliği.
+/// Sıfır olamaz: sıfır genişlikte bir kutu dolu satıra da sığar ve imleç yine
+/// üstteki dolgu satırının sağ ucunda kalırdı (bkz. [planTextWrap]).
+const double _kCaretHomeWidth = 1;
+
 /// Sağ kenar dolgusunu son kelimeye yapıştıran görünmez birleştirici.
 const String kWrapGlueChar = '⁠';
 const int _kWrapGlueCode = 0x2060;
@@ -281,7 +286,24 @@ WrapPlan planTextWrap({
     // bandı kesiyorsa dolgu eklemeye devam et. Bant bitince [indentStart] 0
     // olur ve döngü kendiliğinden kapanır.
     if (line >= metrics.length) {
-      if (indentStart <= 0) break;
+      if (indentStart <= 0) {
+        // BANT BİTTİ — imlecin oturacağı satır artık boşta. Ama tamponun
+        // sonundaki dolgular satırı TAMAMEN kapladıysa "metnin sonu" konumu o
+        // satırın SAĞ UCUDUR: imleç görselin bittiği yerin solunda değil,
+        // sütunun sağ kenarında yanıp sönerdi. Bandın altındaki ilk boş satıra
+        // saç teli genişliğinde bir çapa konur — kırıcı onu alt satıra atar
+        // (dolu satıra 1 dp bile sığmaz), imleç de ipucunun ("Not…") çizildiği
+        // yere, satır başına oturur.
+        if (display.isNotEmpty &&
+            display.codeUnitAt(display.length - 1) == _kWrapAnchorCode &&
+            widths.isNotEmpty &&
+            widths.last >= columnWidth) {
+          display += kWrapAnchorChar;
+          widths.add(_kCaretHomeWidth);
+          laidOut = false;
+        }
+        break;
+      }
       // Dolgu metnin SONUNA eklenir (bu satırın "başı" orasıdır); çapa
       // sırası korunduğu için genişlik de listenin sonuna gider.
       display += kWrapAnchorChar;
@@ -498,6 +520,31 @@ int _rightPadOffset(
 double wrapAnchorHeight(TextStyle? style) =>
     math.max(1.0, (style?.fontSize ?? 14) * 0.5);
 
+/// Metin alanının SATIR YÜKSEKLİĞİ ÇIPASI — ölçüm ile çizimin ortak kilidi.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-30, ekran görüntüsü: "son imleç
+/// güncellemesinden sonra ciddi kayma mevcut, daha kötü oldu"):
+/// `EditableText` `strutStyle` verilmediğinde `StrutStyle.fromTextStyle(style,
+/// forceStrutHeight: true)` kullanır — yani ÇİZİMDE her satır, içinde ne
+/// olursa olsun, taban stilin yüksekliğine kilitlenir. Sarmayı planlayan
+/// [TextPainter] ise ÇIPASIZ ölçüyordu ve iki taraf şu iki durumda ayrışıyordu:
+///
+/// 1. **Yalnız dolgu taşıyan satır** (metin görselin altına itilirken üretilen
+///    boş satır): çizimde tam satır yüksekliği, ölçümde yalnız dolgu kutusunun
+///    boyu ([wrapAnchorHeight] — yarım punto, ~7 dp). Plan bir görselin bandını
+///    aşmak için gereken satır sayısını üçe-dörde katlayarak sayıyor, ekranda o
+///    satırlar tam boy çizilince metin ve imleç görselin ÇOK ALTINA düşüyordu.
+///    2026-08-29'daki "imleç görselin arkasında kalmasın" düzeltmesi bu sayımı
+///    boş tamponda da çalıştırdığı için kayma o turda GÖRÜNÜR hâle geldi.
+/// 2. **Satır içi büyütülmüş yazı** (biçim çubuğunun punto kademeleri): çizimde
+///    çıpaya kilitli, ölçümde daha uzun.
+///
+/// Çözüm tek satır: ölçüm de AYNI çıpayı kullanır. Alanlara çıpa ayrıca
+/// AÇIKÇA verilir (bkz. note_editor_screen / items_editor) — böylece eşleşme
+/// `EditableText`in varsayılanına değil, bu işleve bağlıdır.
+StrutStyle wrapStrutStyle(TextStyle style) =>
+    StrutStyle.fromTextStyle(style, forceStrutHeight: true);
+
 void _layout(
   TextPainter painter,
   String display,
@@ -508,6 +555,9 @@ void _layout(
 ) {
   final height = wrapAnchorHeight(style);
   painter
+    // SATIR YÜKSEKLİĞİ ÇIPASI: alan her satırı taban stile kilitliyor, ölçüm
+    // de aynı kilidi kullanmalı (bkz. [wrapStrutStyle] — kaymanın kök nedeni).
+    ..strutStyle = wrapStrutStyle(style)
     // Ölçüm de biçimi uygular: KALIN ve İTALİK metin daha geniş dizilir,
     // ölçüm bunu görmezse satırlar çizimden farklı kırılır ve imleç kayar.
     ..text = buildWrapSpan(display, widths, style, rich: rich)
@@ -648,6 +698,34 @@ int wrapToLogicalOffset(String display, int displayOffset) {
   return seen;
 }
 
+/// Metni mantıksal bir tampona İMLECİN yerine ekler.
+///
+/// KULLANICI BULGUSU 2026-08-30: "not içerisindeki sesli yazma butonu, nota
+/// ekle dendiğinde imlecin olduğu yere eklemiyor, en başa metin notu olarak
+/// ekliyor." Dikte/OCR gibi akışlar metni notun SONUNA yığıyordu; kullanıcı
+/// cümlenin ortasında konuşup devam edemiyordu.
+///
+/// Eklenen parça kelimeye yapışmasın diye iki yanına GEREKTİĞİ KADAR boşluk
+/// konur (satır sonu ve var olan boşluk yeni boşluk doğurmaz). Dönen imleç
+/// eklenen metnin SONUNDADIR: kullanıcı kaldığı yerden yazmaya devam eder.
+({String text, int caret}) insertAtCaret(
+  String logical,
+  int caret,
+  String insert,
+) {
+  final at = caret.clamp(0, logical.length);
+  final trimmed = insert.trim();
+  if (trimmed.isEmpty) return (text: logical, caret: at);
+  bool blank(String ch) => ch.trim().isEmpty;
+  final before = at > 0 && !blank(logical[at - 1]) ? ' ' : '';
+  final after = at < logical.length && !blank(logical[at]) ? ' ' : '';
+  final piece = '$before$trimmed$after';
+  return (
+    text: logical.replaceRange(at, at, piece),
+    caret: at + before.length + trimmed.length,
+  );
+}
+
 /// Bir metin alanını sarar, alanın SAYFA üzerindeki yerini ölçer ve sayfa
 /// uzayında verilen görsel bantlarını ([floats]) alanın kendi metin uzayına
 /// çevirip denetleyicisine aktarır.
@@ -665,10 +743,20 @@ class WrapFieldMeasure extends StatefulWidget {
     required this.floats,
     required this.pageBox,
     required this.child,
+    this.textTop = 0,
   });
 
   final WrapTextController controller;
   final TextStyle style;
+
+  /// Alanın ÜST KENARI ile İLK METİN SATIRI arasındaki boşluk (dp) —
+  /// `InputDecoration.contentPadding`in üst yarısı.
+  ///
+  /// KÖK NEDEN: bantlar alanın kutusuna göre ölçülüyor, sarma planı ise METİN
+  /// uzayında çalışıyor (satır 0'ın tepesi = 0). İkisi arasındaki dolgu
+  /// düşülmezse plan bandı olduğundan yukarıda sanır: metin görselin altına
+  /// dolgu kadar FAZLA itilir, imleç ile ipucu ayrı satırlara düşer.
+  final double textTop;
 
   /// Görsellerin sayfa uzayındaki bantları.
   final List<FloatBox> floats;
@@ -714,15 +802,28 @@ class _WrapFieldMeasureState extends State<WrapFieldMeasure> {
     final origin = box.localToGlobal(Offset.zero, ancestor: page);
     final width = box.size.width;
     if (width <= 0) return;
-    final bottom = origin.dy + box.size.height;
+    // Metnin başladığı çizgi: alanın tepesi + iç dolgu (bkz. [textTop]).
+    final textOrigin = origin.dy + widget.textTop;
     widget.controller.updateLayout(
       floats: [
         for (final f in widget.floats)
-          // Alanı hiç kesmeyen görsel plana girmez: gereksiz yeniden dizgi
-          // (ve uzun listede satır başına ölçüm) olmasın.
-          if (f.bottom > origin.dy && f.top < bottom && f.right > origin.dx)
+          // Alanın ÜSTÜNDE ya da SOLUNDA kalan görsel plana girmez: gereksiz
+          // yeniden dizgi (ve uzun listede satır başına ölçüm) olmasın.
+          //
+          // ALT SINIR BİLEREK YOK (kullanıcı bulgusu 2026-08-30: "kendi
+          // kendine yazının ve resimlerin konumu değişti, ben müdahale
+          // etmedim"). Burada eskiden `f.top < origin.dy + box.size.height`
+          // de vardı — yani süzgeç alanın O ANKİ YÜKSEKLİĞİNE bakıyordu.
+          // Ama o yükseklik planın KENDİ sonucudur: plan dolgu ekleyince alan
+          // uzuyor, uzayınca bir alttaki görsel de süzgeci geçiyor, o da yeni
+          // dolgu doğuruyor; dolgu düşünce alan kısalıyor ve görsel süzgeçten
+          // çıkıyor. Metin iki durum arasında kendi kendine gidip geliyordu.
+          // Süzgeç artık yalnız alanın SABİT üst kenarına bakar: plan girdileri
+          // planın çıktısından bağımsız, yani KARARLI. Alanın altında kalan
+          // bant zaten hiçbir satırı kesmediği için tek bir dolgu bile üretmez.
+          if (f.bottom > origin.dy && f.right > origin.dx)
             FloatBox(
-              top: f.top - origin.dy,
+              top: f.top - textOrigin,
               left: (f.left - origin.dx).clamp(0.0, width).toDouble(),
               right: (f.right - origin.dx).clamp(0.0, width).toDouble(),
               height: f.height,

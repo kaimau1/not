@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 // `AppExitResponse` (didRequestAppExit'in dönüş tipi) dart:ui'de yaşıyor;
 // material/services onu yeniden dışa AKTARMIYOR. `show` ile alınır ki
 // dart:ui'nin Color/TextStyle gibi tipleri material'ınkilerle çakışmasın.
@@ -497,10 +498,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Gövde metninin sayfa kenarlarından boşluğu.
   static const double _kGutter = 16;
 
-  /// Alt çubuk segment etiketlerinin (Biçim / Ekle / Seç) yazı boyu. Ölçüm ve
-  /// çizim AYNI değeri kullanmalı — ayrışırsa "sığıyor mu" kararı yalan söyler
-  /// (bkz. [_toolLabelsFit]).
-  static const double _kToolLabelSize = 12.5;
+  /// Gövde alanının İÇ DOLGUSU (üst = alt). Üç yerde birden geçerlidir:
+  /// alanın `contentPadding`i, sarma ölçümünün metin başlangıcı
+  /// ([WrapFieldMeasure.textTop]) ve tuval ipucunun ilk satırı
+  /// ([NotePageCanvas.textTop]). Tek kaynaktan beslenmezse ipucu, imleç ve
+  /// sarma üç ayrı çizgiye oturur.
+  ///
+  /// Değer, çerçevesiz ve dolgusuz bir `InputDecoration`ın Flutter'daki
+  /// varsayılanıdır (dikeyde 8 dp): görünüm birebir korunsun, ama artık
+  /// TAHMİN edilmesin. İpucu eskiden 16 dp ile konumlanıyordu — yani metnin
+  /// ilk satırının 8 dp altına.
+  static const double _kBodyTextTop = 8;
+
+  /// Alt çubuk araç düğmelerinin (Biçim / Ekle / Seç / Ekler) kare kenarı.
+  ///
+  /// KULLANICI İSTEĞİ 2026-08-30 ("ekle, biçim, seç'i Keep tarzında sadece
+  /// simgeler hâline getir"): segmentler etiketliydi ve dar ekranda etiketin
+  /// düşüp düşmeyeceğine ÖLÇÜLEREK karar veriliyordu — yani çubuk cihaza göre
+  /// başka görünüyordu. Artık her yerde yalnız simge: satır ferahladı, karar
+  /// ve ölçüm kodu da gereksiz kaldı.
+  static const double _kToolSegment = 40;
 
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
@@ -566,6 +583,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       style: style,
       floats: _floats,
       pageBox: _pageBox,
+      // Bantlar alanın KUTUSUNA göre ölçülüyor, plan ise METİN uzayında
+      // çalışıyor: aradaki iç dolgu düşülmezse metin görselin altına bir
+      // dolgu boyu FAZLA iniyor (bkz. WrapFieldMeasure.textTop).
+      textTop: _kBodyTextTop,
       child: field,
     );
   }
@@ -651,6 +672,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       focusNode: focusNode,
       commit: commit,
     );
+    // Alan yeni odaklandı: imleci klavyenin üstüne al. Bu kapanış gövde,
+    // başlık ve madde satırlarının HEPSİNDEN geçtiği için tek yer yeter.
+    _revealCaretSoon();
     // Çubuk AÇIKKEN hedef değişmesi çizimi etkiler: aktif biçim vurgusu yeni
     // alanın imlecinden hesaplanmalı. Kapalıyken çizim değişmediği için
     // gereksiz yere setState çağırmıyoruz (odak her satırda değişiyor).
@@ -2556,29 +2580,101 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
   }
 
-  /// Odaklı yazı alanını klavyenin üstüne kaydırır.
+  /// Klavyenin en son ÖLÇÜLEN yüksekliği. Klavye kapalıyken de saklanır:
+  /// odak alındığı anda klavye daha açılmamış olur ama nereye kaydıracağımızı
+  /// bilmek için yüksekliğini bilmek gerekir (bkz. [_revealCaret]).
+  double _keyboardMemory = _kKeyboardGuess;
+
+  /// Klavye boşluğunun YERLEŞİME GİRMİŞ hâli ([KeyboardSnap] gövdeye bunu
+  /// veriyor). Sıfırsa klavye ya kapalı ya da hareket hâlinde: o durumda
+  /// klavyenin kapladığı yer sayfanın yerleşiminde HENÜZ yoktur.
+  double _keyboardInset = 0;
+
+  /// İlk açılışta klavye hiç ölçülmemiş olur; Android'de tipik yükseklik.
+  /// Tahmin tutmazsa oturma anındaki ikinci geçiş düzeltir.
+  static const double _kKeyboardGuess = 300;
+
+  /// Odaklı alanın İMLECİNİ klavyenin üstüne kaydırır.
   ///
-  /// KÖK NEDEN: gövde, klavye animasyonu boyunca bilerek TAM BOYUNDA kalır
-  /// (kasmayı doğuran kare kare yerleşim böyle önleniyor — bkz.
-  /// [KeyboardSnap]). Ama `EditableText` imleci görünür kılmak için tam da o
-  /// karelere, klavye yüksekliğinin değiştiği `didChangeMetrics`e bakıyor ve
-  /// o sırada alan gerçekten görünür olduğu için hiç kaydırmıyor. Boşluk
-  /// oturunca ekranın altındaki alan klavyenin ardında kalabilirdi; burada
-  /// bir kez, yumuşak biçimde yukarı alınıyor.
+  /// KÖK NEDEN — 1: **ALANIN TAMAMI DEĞİL, İMLEÇ** (kullanıcı bulgusu
+  /// 2026-08-30: "uzun notlarda bir yere yazmak istediğimde klavye açılıp
+  /// oraya odaklama hem geç kalıyor hem de güzel değil"). Burada eskiden
+  /// `Scrollable.ensureVisible` ile ALANIN kendisi görünür kılınıyordu. Gövde
+  /// TEK bir dev `TextField`tir: uzun bir notta o kutu ekrandan metrelerce
+  /// uzundur ve `keepVisibleAtEnd` onun ALT KENARINI hizalar — kullanıcı
+  /// notun ortasına dokunuyor, ekran notun SONUNA atlıyordu.
   ///
-  /// `keepVisibleAtEnd`: alan zaten görünüyorsa hiçbir şey yapılmaz —
-  /// gereksiz bir kaydırma sayfanın yerini oynatır.
-  void _revealFocusedField() {
-    final ctx = FocusManager.instance.primaryFocus?.context;
-    if (ctx == null || !ctx.mounted) return;
-    final box = ctx.findRenderObject();
-    if (box is! RenderBox || !box.attached || !box.hasSize) return;
-    Scrollable.ensureVisible(
-      ctx,
-      duration: const Duration(milliseconds: 140),
-      curve: Curves.easeOut,
-      alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+  /// KÖK NEDEN — 2: **GEÇ KALIYOR**. Kaydırma yalnız [KeyboardSnap] boşluğu
+  /// oturttuğunda (klavye animasyonu + 140 ms) yapılıyordu. Artık odak
+  /// alındığı ANDA, klavyenin bilinen yüksekliği ([_keyboardMemory])
+  /// düşülerek kaydırılıyor; oturma anındaki ikinci geçiş yalnız tahmin
+  /// tutmadıysa iş yapar.
+  ///
+  /// [hidden] sayfanın yerleşiminde HENÜZ olmayan, ama ekranı örtecek olan
+  /// yükseklik (açılmakta olan klavye).
+  void _revealCaret({double hidden = 0}) {
+    if (!_pageScroll.hasClients) return;
+    final focused = FocusManager.instance.primaryFocus?.context;
+    if (focused == null || !focused.mounted) return;
+    final editable = _findEditable(focused.findRenderObject());
+    final position = _pageScroll.position;
+    final viewport = position.context.notificationContext?.findRenderObject();
+    if (editable == null ||
+        !editable.attached ||
+        !editable.hasSize ||
+        viewport is! RenderBox ||
+        !viewport.hasSize ||
+        !_isDescendantOf(editable, viewport)) {
+      // Ölçemedik (odak başka bir katmanda, alan henüz yerleşmemiş): eski
+      // davranışa düş — hiç kaydırmamaktan iyidir.
+      if (focused.mounted) {
+        Scrollable.ensureVisible(
+          focused,
+          duration: const Duration(milliseconds: 140),
+          curve: Curves.easeOut,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+        );
+      }
+      return;
+    }
+    final offset = editable.selection?.extentOffset ?? -1;
+    final caret = offset < 0
+        ? (Offset.zero & Size(1, editable.preferredLineHeight))
+        : editable.getLocalRectForCaret(TextPosition(offset: offset));
+    final top = editable.localToGlobal(caret.topLeft, ancestor: viewport).dy;
+    final bottom = top + math.max(caret.height, editable.preferredLineHeight);
+    // İmleç kenara yapışmasın: bir-iki satırlık nefes payı.
+    const margin = 28.0;
+    final visibleBottom = viewport.size.height - hidden;
+    var delta = 0.0;
+    if (bottom + margin > visibleBottom) {
+      delta = bottom + margin - visibleBottom;
+    } else if (top - margin < 0) {
+      delta = top - margin;
+    }
+    if (delta.abs() < 1) return;
+    final target = (position.pixels + delta).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
     );
+    if ((target - position.pixels).abs() < 1) return;
+    position.animateTo(
+      target,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// Bir alan ODAK ALDIĞI anda imleci görünür kılar — klavyenin açılmasını
+  /// beklemeden (bkz. [_revealCaret] kök neden 2). Kaydırma bir kare
+  /// ertelenir: odak olayı yerleşimden önce gelebiliyor.
+  void _revealCaretSoon() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Klavye yerleşime girmişse (oturmuş) ekranı örten fazladan bir şey
+      // yok; girmemişse açılacak klavyenin yüksekliği düşülür.
+      _revealCaret(hidden: _keyboardInset > 0 ? 0 : _keyboardMemory);
+    });
   }
 
   /// Sayfa tuvalinin alt sınırı: gövde alanının GÖRÜLEN EN BÜYÜK yüksekliği.
@@ -2624,6 +2720,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     required double minHeight,
     required List<Attachment> imageAttachments,
     required double hintLineHeight,
+    required TextStyle hintStyle,
     required bool useCanvasHint,
     required bool hasBodyField,
     required Widget pageContent,
@@ -2645,18 +2742,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onDetach: (a) => _setImageAsFile(a, true),
       onVideoToNote: _videoToNote,
       topLimit: _bodyTop,
+      // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
+      // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
+      textTop: _kBodyTextTop,
+      textLeft: _kGutter,
       hintLineHeight: hintLineHeight,
       hint: useCanvasHint
-          ? Padding(
-              // Gövde metniyle aynı sol kenar; TextField'ın çerçevesiz dikey
-              // dolgusu da eklenir ki ipucu metnin tam yerine otursun.
-              padding: const EdgeInsets.fromLTRB(_kGutter, 16, _kGutter, 0),
-              child: Text(
-                l10n.bodyHint,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).hintColor,
-                ),
-              ),
+          // DOLGU YOK: ipucunun yeri tuvalde, metnin ilk satırının tam
+          // çizgisinde hesaplanıyor (bkz. NotePageCanvas.textTop/textLeft).
+          // Buraya konan her pay o hesabı kaydırır — eskiden üstte 16 dp
+          // vardı ve ipucu metnin bir tık altında duruyordu.
+          //
+          // İpucu, gövdenin KENDİ stiliyle çizilir (yazı tipi, punto, satır
+          // aralığı): tema stiliyle çizilirse notun büyütülmüş yazısında
+          // ipucu ile imleç ayrı satırlara düşer.
+          ? Text(
+              l10n.bodyHint,
+              style: hintStyle.copyWith(color: Theme.of(context).hintColor),
             )
           : null,
       onFloats: _applyFloats,
@@ -4143,7 +4245,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     required String label,
     required VoidCallback onTap,
     bool active = false,
-    bool compact = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
@@ -4154,71 +4255,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: onTap,
-          child: Container(
-            height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 18,
-                  color: active ? scheme.onPrimaryContainer : scheme.onSurface,
-                ),
-                // Dar ekranda etiket düşer, simge kalır (bkz. [_toolLabelsFit]).
-                if (!compact) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: _kToolLabelSize,
-                      fontWeight: FontWeight.w600,
-                      color: active
-                          ? scheme.onPrimaryContainer
-                          : scheme.onSurface,
-                    ),
-                  ),
-                ],
-              ],
+          child: SizedBox(
+            height: _kToolSegment,
+            width: _kToolSegment,
+            child: Icon(
+              icon,
+              size: 21,
+              color: active ? scheme.onPrimaryContainer : scheme.onSurface,
             ),
           ),
         ),
       ),
     );
-  }
-
-  /// Alt çubuk segmentlerinin ETİKETLİ hâli [maxWidth]'e sığıyor mu?
-  ///
-  /// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "alt kısım sığmıyor, biçim ekle
-  /// seç ve eklerin olduğu kısım"): kapsül `Expanded` + yatay kaydırma
-  /// içindeydi. Taşma hatası vermiyordu ama segmentler AI düğmesinin solunda
-  /// KESİLİYORDU: dar telefonda "Seç" yarım, ataç rozeti hiç görünmüyor,
-  /// kullanıcı çubuğun sağını ancak kaydırarak bulabiliyordu (üstelik
-  /// kaydırılabildiği de belli değildi). Ölçüp karar veriyoruz: sığmıyorsa
-  /// etiketler düşer, dört segment de simge olarak yan yana kalır.
-  bool _toolLabelsFit(
-    List<String> labels, {
-    required double maxWidth,
-    required double fixedWidth,
-  }) {
-    const style = TextStyle(
-      fontSize: _kToolLabelSize,
-      fontWeight: FontWeight.w600,
-    );
-    final scaler = MediaQuery.textScalerOf(context);
-    var needed = fixedWidth;
-    for (final label in labels) {
-      final painter = TextPainter(
-        text: TextSpan(text: label, style: style),
-        textDirection: Directionality.of(context),
-        textScaler: scaler,
-        maxLines: 1,
-      )..layout();
-      // Etiketin kendisi + simgeyle arasındaki 6 dp.
-      needed += painter.width + 6;
-    }
-    return needed <= maxWidth;
   }
 
   /// Alt çubuğun "Ekle" segmenti: TEK levhayı açar (attach_sheet.dart).
@@ -4260,13 +4308,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               onTap: () =>
                   ref.read(attachmentsExpandedProvider.notifier).toggle(),
               child: Container(
-                height: 38,
+                height: _kToolSegment,
                 padding: const EdgeInsets.symmetric(horizontal: 9),
                 alignment: Alignment.center,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.attach_file, size: 17, color: ink),
+                    Icon(Icons.attach_file, size: 19, color: ink),
                     const SizedBox(width: 4),
                     Text(
                       '$count',
@@ -4313,7 +4361,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  Widget _addToolButton(AppLocalizations l10n, {bool compact = false}) {
+  Widget _addToolButton(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: l10n.addAttachment,
@@ -4323,31 +4371,58 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         child: InkWell(
           borderRadius: BorderRadius.circular(10),
           onTap: _showAttachMenu,
-          child: Container(
-            height: 38,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add, size: 18, color: scheme.onSurface),
-                if (!compact) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    l10n.addAttachment,
-                    style: TextStyle(
-                      fontSize: _kToolLabelSize,
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+          child: SizedBox(
+            height: _kToolSegment,
+            width: _kToolSegment,
+            child: Icon(Icons.add, size: 21, color: scheme.onSurface),
           ),
         ),
       ),
     );
+  }
+
+  /// Metni İMLECİN OLDUĞU YERE ekler; imleç bilinmiyorsa notun sonuna.
+  ///
+  /// KULLANICI BULGUSU 2026-08-30: "not içerisindeki sesli yazma butonu nota
+  /// ekle dendiğinde imlecin olduğu yere eklemiyor, en başa metin notu olarak
+  /// ekliyor." [_appendPlainText] metni gövdenin SONUNA, boş satır bırakarak
+  /// yığıyordu — kullanıcı cümlenin ortasında konuşup devam edemiyordu.
+  ///
+  /// Hedef alan en son ODAKLANAN alandır ([_formatTarget]); levha açılırken
+  /// odak düştüğü için canlı odağa bakmak yetmez. Başlık hedefse metin yine
+  /// gövdeye gider (dikte başlığa yazılmaz).
+  void _insertTextAtCaret(String raw) {
+    final text = stripMarkdown(raw).trim();
+    if (text.isEmpty) return;
+    final note = _note;
+    if (note == null) return;
+    final target = _formatTarget?.controller;
+    // Liste maddesinde yazılıyorsa metin O SATIRA girer (satırın notu
+    // güncellemesi de editörün kendi yolundan geçsin).
+    if (target != null &&
+        target != _bodyController &&
+        target != _titleController &&
+        (_itemsEditorKey.currentState?.insertTextAtCaret(target, text) ??
+            false)) {
+      return;
+    }
+    // Gövde alanı yoksa (saf liste notu) ya da imleç hiç konmamışsa eski
+    // davranış: metin nota eklenir.
+    final hasBody = note.type == NoteType.text || note.body.trim().isNotEmpty;
+    final selection = _bodyController.selection;
+    if (!hasBody || !selection.isValid) {
+      _appendPlainText(text);
+      return;
+    }
+    final logical = _bodyController.logicalText;
+    final result = insertAtCaret(
+      logical,
+      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
+      text,
+    );
+    if (result.text == logical) return;
+    _bodyController.setLogical(result.text, result.caret);
+    _mutate((n) => n.copyWith(body: result.text), immediate: true);
   }
 
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
@@ -4355,6 +4430,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ESKİDEN dikte doğrudan gövdeye canlı yazıyordu; kullanıcı yanlış tanınan
   /// bir cümleyi ancak nottan silerek düzeltebiliyordu. Artık metin önce
   /// levhada gözden geçiriliyor, nota yalnız onaylanan hâli giriyor.
+  ///
+  /// Dönen metin İMLECİN yerine girer (bkz. [_insertTextAtCaret]).
   Future<void> _captureVoice() async {
     final result = await showVoiceCaptureSheet(
       context,
@@ -4368,13 +4445,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (audioPath != null) {
       await _attachVoiceAudio(audioPath, result.audioDuration);
       if (!mounted) return;
-      if (result.text.trim().isNotEmpty) _appendText(result.text);
+      if (result.text.trim().isNotEmpty) _insertTextAtCaret(result.text);
       return;
     }
 
     final instruction = voiceCaptureInstruction(result.action);
     if (instruction == null) {
-      _appendText(result.text);
+      _insertTextAtCaret(result.text);
       return;
     }
 
@@ -4385,7 +4462,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           .read(geminiServiceProvider)
           .rewriteText(result.text, instruction);
       if (!mounted) return;
-      _appendText(text.trim().isEmpty ? result.text : text.trim());
+      _insertTextAtCaret(text.trim().isEmpty ? result.text : text.trim());
     } on GeminiException catch (e) {
       if (mounted) _showSnack(e.isAuthError ? l10n.aiNoApiKey : e.message);
     } catch (e) {
@@ -5203,11 +5280,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // bir satırlık pay eklenirdi); bedeli, kullanıcının görseli en üst satıra
     // hiç koyamamasıydı. Artık ters yönde çözülür: görsel serbest, ipucu
     // görselin altına iner (bkz. [NotePageCanvas.hint]).
-    final bodyFontSize = MediaQuery.textScalerOf(
-      context,
-    ).scale(Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16);
-    // İpucu satırının bandı (satır aralığı ~1.45).
-    final hintLineHeight = bodyFontSize * 1.45;
+    // İpucu satırının bandı = metnin GERÇEK satır yüksekliği.
+    //
+    // KÖK NEDEN: burada notun kendi yazı ölçeği (`fontScale`) yok sayılıyor
+    // ve satır aralığı 1.45 diye TAHMİN ediliyordu. Alan ise satırlarını
+    // stilin çıpasına kilitliyor (bkz. [wrapStrutStyle]); büyük puntolu bir
+    // notta ipucu ile imleç bu yüzden ayrı satırlara düşüyordu.
+    final hintLineHeight =
+        MediaQuery.textScalerOf(context).scale(noteBodyStyle.fontSize ?? 16) *
+        (noteBodyStyle.height ?? 1.45);
     // Tuval ipucunu yalnız gerçekten çakışma olabilecek durumda üstlenir:
     // gövde boş VE sayfada görsel var. Diğer hâllerde TextField'ın kendi
     // ipucu kullanılır (odak/animasyon davranışı bozulmasın).
@@ -5234,6 +5315,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
       // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
       style: noteBodyStyle,
+      // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
+      // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
+      // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
+      // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
+      strutStyle: wrapStrutStyle(noteBodyStyle),
       onChanged: (value) =>
           _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
       maxLines: null,
@@ -5261,6 +5347,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         hintText: useCanvasHint ? null : l10n.bodyHint,
         filled: false,
         border: InputBorder.none,
+        // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
+        // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
+        // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
+        // varsayılanına bırakılırsa üç yer sessizce ayrışır.
+        contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
       ),
     );
 
@@ -5389,6 +5480,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 minHeight: minHeight,
                 imageAttachments: imageAttachments,
                 hintLineHeight: hintLineHeight,
+                hintStyle: noteBodyStyle,
                 useCanvasHint: useCanvasHint,
                 hasBodyField: hasBodyField,
                 pageContent: pageContent,
@@ -5590,43 +5682,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   color: background,
                   height: 64,
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                  child: LayoutBuilder(
-                    builder: (context, barConstraints) {
+                  child: Builder(
+                    builder: (context) {
                       final showSelect =
                           !note.type.isPageNoteType &&
                           note.items.isNotEmpty;
                       final showAttachments = fileAttachments.isNotEmpty;
-                      // Kapsülün ETİKETSİZ (simge) tabanı: her segment 38 dp,
-                      // aralar 3, kapsül dolgusu 6 + kenarlık 2.
-                      final segments = 2 + (showSelect ? 1 : 0);
-                      var fixed =
-                          segments * 38.0 +
-                          (segments - 1) * 3 +
-                          8 +
-                          // Sağ blok: AI (≈76) + mikrofon (50) + iki 8 dp
-                          // aralık; belge notunda kalem düğmesi de var.
-                          76 +
-                          50 +
-                          16;
-                      if (showAttachments) fixed += 3 + 46;
-                      if (isDocumentNote) fixed += 46 + 8;
-                      final compact = !_toolLabelsFit(
-                        [
-                          l10n.formatTitle,
-                          l10n.addAttachment,
-                          if (showSelect) l10n.select,
-                        ],
-                        maxWidth: barConstraints.maxWidth,
-                        fixedWidth: fixed,
-                      );
                       return Row(
                         children: [
                           // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
                           // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
-                          // Seç) ve dar ekranda dördü birden taşıyordu.
-                          // Kaydırma SON ÇARE olarak duruyor (çok büyük yazı
-                          // ölçeğinde simgeler bile taşabilir); olağan dar
-                          // ekranda artık etiketler düşüyor ve hepsi görünüyor.
+                          // Seç). Segmentler Keep gibi yalnız SİMGE olduğundan
+                          // dördü de en dar telefona sığar; kaydırma yalnız çok
+                          // büyük sistem yazı ölçeğinde devreye giren son çare.
                           Expanded(
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -5650,7 +5718,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       icon: Icons.text_format,
                                       label: l10n.formatTitle,
                                       active: _formatBarOpen,
-                                      compact: compact,
                                       onTap: () => setState(
                                         () => _formatBarOpen =
                                             !_formatBarOpen,
@@ -5661,10 +5728,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     // Ekle levhasının en üst bölümüne taşındı: çubuk
                                     // üç segmentle kalabalıktı ve ekleme işi iki ayrı
                                     // yere bölünmüştü (bkz. attach_sheet.dart).
-                                    _addToolButton(
-                                      l10n,
-                                      compact: compact,
-                                    ),
+                                    _addToolButton(l10n),
                                     // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
                                     // "seç burada olsun, yeni öğe eski yerinde"):
                                     // toplu kopyalama/silme girişi bir tur ekranın
@@ -5678,7 +5742,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                       _toolSegment(
                                         icon: Icons.checklist,
                                         label: l10n.select,
-                                        compact: compact,
                                         onTap: () => _itemsEditorKey
                                             .currentState
                                             ?.startSelection(),
@@ -5957,7 +6020,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
             // kendi imleç kaydırması bu işi yapamaz (bkz. [KeyboardSnap]).
             onSettled: (inset) {
-              if (inset > 0) _revealFocusedField();
+              _keyboardInset = inset;
+              if (inset <= 0) return;
+              _keyboardMemory = inset;
+              // Tahmin tuttuysa bu geçiş hiçbir şey yapmaz (imleç zaten
+              // görünür); tutmadıysa farkı burada kapatır.
+              _revealCaret();
             },
             builder: (context, keyboardInset) => Padding(
               padding: EdgeInsets.only(bottom: keyboardInset),

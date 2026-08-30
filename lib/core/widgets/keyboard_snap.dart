@@ -58,8 +58,8 @@ class KeyboardSnap extends StatefulWidget {
   /// bakar. Burada gövde o karelerde bilerek TAM BOYUNDA tutulduğu için
   /// Flutter "imleç zaten görünüyor" diye kaydırmaz; boşluk ise 140 ms sonra
   /// oturur ve alanı klavyenin ardında bırakabilir. Çağıran bu geri
-  /// bildirimde odaklı alanı görünür kılar (bkz. editördeki
-  /// `_revealFocusedField`).
+  /// bildirimde odaklı alanın İMLECİNİ görünür kılar (bkz. editördeki
+  /// `_revealCaret`).
   final ValueChanged<double>? onSettled;
 
   /// Klavyenin "durdu" sayılması için gereken hareketsizlik süresi. Bu süre

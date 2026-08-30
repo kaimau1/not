@@ -19,8 +19,11 @@ void main() {
 
   test('ipucunu kesen görsel ipucunu altına iter', () {
     // Asıl bug: görsel en üste sürüklendiğinde ipucu altında kayboluyordu.
+    // Bandın altı 150; ipucu METNİN SATIRINA oturur, yani gövdenin
+    // tepesinden itibaren tam satır katına (100 + 3×20 = 160) — imleç de
+    // orada yanıp söner (bkz. hintTopFor).
     const ust = FloatBox(top: 90, left: 0, right: 300, height: 60);
-    expect(hintTopFor(const [ust], bodyTop, lineHeight), 150.0);
+    expect(hintTopFor(const [ust], bodyTop, lineHeight), 160.0);
   });
 
   test('üst üste binen iki görsel ipucunu en alttakinin altına iter', () {
@@ -33,9 +36,9 @@ void main() {
 
   test('araya boşluk giren ikinci görsel ipucunu bir daha itmez', () {
     const a = FloatBox(top: 90, left: 0, right: 300, height: 60); // bottom 150
-    // İpucu 150'ye iner; bu görsel 200'de başlıyor, 150+20 bandını kesmiyor.
+    // İpucu 160'a iner; bu görsel 200'de başlıyor, 160+20 bandını kesmiyor.
     const uzak = FloatBox(top: 200, left: 0, right: 300, height: 40);
-    expect(hintTopFor(const [a, uzak], bodyTop, lineHeight), 150.0);
+    expect(hintTopFor(const [a, uzak], bodyTop, lineHeight), 160.0);
   });
 
   // ── İpucu ile İMLECİN AYNI YERDE olması ───────────────────────────────
@@ -57,7 +60,7 @@ void main() {
     // Görsel 340 dp kaplıyor; kalan 60 dp (%15) eşiğin altında.
     const genis = FloatBox(top: 90, left: 0, right: 340, height: 60);
     final place = hintPlacement(const [genis], bodyTop, lineHeight, columnWidth);
-    expect(place.top, 150.0);
+    expect(place.top, 160.0);
     expect(place.left, 0.0);
   });
 

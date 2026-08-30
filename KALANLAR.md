@@ -2,6 +2,24 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-08-30 turundan kalan (CİHAZDA GÖRÜLMEDİ)
+
+Bu oturumda Flutter SDK yok: `flutter analyze` / `flutter test` KOŞULMADI,
+doğrulama CI'a ve telefona kaldı. Bakılacaklar:
+
+- [ ] **Sarma/imleç**: ölçüm artık alanın satır çıpasını (`forceStrutHeight`)
+  kullanıyor. Görselli bir notta yazı görselin arkasına/altına kaçıyor mu,
+  imleç ile "Not…" ipucu AYNI satırda mı, yazarken satırlar oynuyor mu?
+- [ ] **Kendi kendine kayma**: bant süzgecinden alanın yüksekliği çıkarıldı;
+  metnin/resmin kendiliğinden yer değiştirmesi bitmiş olmalı (kullanıcı
+  2026-08-30 ekran görüntüsü).
+- [ ] **Uzun notta dokunma**: klavye açılırken imleç, alanın SONUNA değil
+  dokunulan yere kaydırılıyor; ilk kaydırma klavye tahminiyle (300 dp) hemen
+  yapılıyor. Tahmin tutmadığında oturma anındaki ikinci geçiş düzeltiyor mu?
+- [ ] **Madde satırı menüsü**: kutucuğa uzun basınca yıldız/seç/sil menüsü.
+  Eski "uzun basış = seç" alışkanlığı menüde bir dokunuş uzadı.
+- [ ] **Alt çubuk**: Biçim/Ekle/Seç artık yalnız simge (Keep tarzı).
+
 ## 2026-08-29 turundan kalan
 
 - [ ] **`firebase deploy --only functions`** — kişi araması "içinde geçen"

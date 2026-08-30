@@ -647,7 +647,16 @@ double hintTopFor(List<FloatBox> floats, double bodyTop, double lineHeight) {
   final sorted = [...floats]..sort((a, b) => a.top.compareTo(b.top));
   var y = bodyTop;
   for (final f in sorted) {
-    if (f.top < y + lineHeight && y < f.bottom) y = f.bottom;
+    if (f.top < y + lineHeight && y < f.bottom) {
+      // SATIRA OTURT: metin sürekli değil, SATIR SATIR akar — imleç bandın
+      // bittiği dp'ye değil, bandı geçen İLK SATIRIN başına iner (sarma planı
+      // da tam olarak bunu yapar, bkz. planTextWrap). Yuvarlanmazsa ipucu bir
+      // satırın altında kalan bir farkla imlecin üstünde/altında görünür —
+      // kullanıcının "ipucu ile imleç farklı yerlerde" dediği fark budur.
+      y = lineHeight > 0
+          ? bodyTop + ((f.bottom - bodyTop) / lineHeight).ceil() * lineHeight
+          : f.bottom;
+    }
   }
   return y;
 }
@@ -723,6 +732,8 @@ class NotePageCanvas extends StatefulWidget {
     this.onFloats,
     this.hint,
     this.hintLineHeight = 0,
+    this.textTop = 0,
+    this.textLeft = 0,
   });
 
   final List<Attachment> images;
@@ -734,6 +745,18 @@ class NotePageCanvas extends StatefulWidget {
   /// altı. Görsel başlığın üzerine hiç çıkamaz. Gövde metninin ilk satırının
   /// tepesi de burasıdır ([hint] bu noktadan aşağı itilir).
   final double topLimit;
+
+  /// [topLimit] ile gövde metninin İLK SATIRININ tepesi arasındaki boşluk
+  /// (dp) — alanın `contentPadding.top`u. İpucu metnin ilk satırıyla AYNI
+  /// çizgide durmalı; bu pay geçilmezse ipucu bir yerde, imleç başka yerde
+  /// görünür (kullanıcı bulgusu 2026-08-16 ve yine 2026-08-30).
+  final double textTop;
+
+  /// Gövde metninin SOL kenarı (dp) — alanın sayfa kenarından boşluğu.
+  /// İpucu, metnin sütununda konumlanır: bantlar sayfa uzayında ölçülüyor,
+  /// sarma planı ise sütun uzayında çalışıyor. Bu pay geçilmezse ipucu, metnin
+  /// başladığı yerin bir kenar boşluğu KADAR sağında durur.
+  final double textLeft;
 
   /// Boş gövdenin ipucu metni ("Not yaz…"), tuval üzerinde konumlandırılır.
   ///
@@ -995,12 +1018,31 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return boxes;
   }
 
-  ({double top, double left}) _hintPlacement(double cw) => hintPlacement(
-    _floatsFor(cw),
-    widget.topLimit,
-    widget.hintLineHeight,
-    cw,
-  );
+  /// İpucunun SAYFA uzayındaki yeri.
+  ///
+  /// Hesap METİN SÜTUNU uzayında yapılır (bantlar sola/sağa kenar boşluğu
+  /// kadar kaydırılır, sütun genişliği iki kenar boşluğu düşülerek verilir) —
+  /// sarma planı da tam olarak bu uzayda çalışıyor (bkz. WrapFieldMeasure).
+  /// İki hesap ayrı uzaylarda yapılırsa ipucu ile imleç ayrı yerlere düşer.
+  ({double top, double left}) _hintPlacement(double cw) {
+    final inset = widget.textLeft;
+    final place = hintPlacement(
+      [
+        for (final f in _floatsFor(cw))
+          FloatBox(
+            top: f.top,
+            left: f.left - inset,
+            right: f.right - inset,
+            height: f.height,
+          ),
+      ],
+      // METİN uzayı: ipucu, alanın kutusuna değil ilk satırın tepesine oturur.
+      widget.topLimit + widget.textTop,
+      widget.hintLineHeight,
+      (cw - inset * 2).clamp(0.0, cw),
+    );
+    return (top: place.top, left: inset + place.left);
+  }
 
   void _reportFloats(double cw) {
     final cb = widget.onFloats;
@@ -1144,7 +1186,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     final place = _hintPlacement(cw);
                     return PositionedDirectional(
                       start: place.left,
-                      end: 0,
+                      end: widget.textLeft,
                       top: place.top,
                       child: IgnorePointer(child: widget.hint!),
                     );

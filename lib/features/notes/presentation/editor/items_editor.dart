@@ -285,6 +285,31 @@ class ItemsEditorState extends State<ItemsEditor> {
     _syncBar();
   }
 
+  /// [target] bu editörün satırlarından biriyse metni O SATIRA, imlecin
+  /// yerine ekler ve nota işler; değilse false döner (çağıran gövdeye yazar).
+  ///
+  /// Sesli yakalama gibi akışlar odağı düşürdüğü için hedefi çağıran taşır
+  /// (editör en son odaklanan alanı zaten biliyor — `_formatTarget`).
+  bool insertTextAtCaret(TextEditingController target, String text) {
+    for (final entry in _controllers.entries) {
+      if (!identical(entry.value, target)) continue;
+      final index = _items.indexWhere((i) => i.id == entry.key);
+      if (index < 0) return false;
+      final controller = entry.value;
+      final logical = controller.logicalText;
+      final selection = controller.selection;
+      final caret = selection.isValid
+          ? wrapToLogicalOffset(controller.text, selection.baseOffset)
+          : logical.length;
+      final result = insertAtCaret(logical, caret, text);
+      if (result.text == logical) return true;
+      controller.setLogical(result.text, result.caret);
+      _updateText(_items[index], result.text);
+      return true;
+    }
+    return false;
+  }
+
   void _exitSelection() {
     setState(() {
       _selected.clear();
@@ -566,10 +591,10 @@ class ItemsEditorState extends State<ItemsEditor> {
   static const double _kLeadingWidth = 48;
 
   /// Sil düğmesinin (odaksızken boş kutunun) genişliği.
-  static const double _kTrailingWidth = 48;
+  static const double _kTrailingWidth = 40;
 
-  /// Satırın iki yanındaki yatay dolgu.
-  static const double _kRowPadding = 24;
+  /// Satırın iki yanındaki yatay dolgunun TOPLAMI (sol 12 + sağ 2).
+  static const double _kRowPadding = 14;
 
   /// "Yeni öğe / Seç" ve "İşaretlileri sil" düğme satırlarının sığdığı en az
   /// genişlik. Bu satırların metni sarılamaz (düğme daralmaz); dar kalırlarsa
@@ -837,6 +862,63 @@ class ItemsEditorState extends State<ItemsEditor> {
       });
       _commit();
     });
+  }
+
+  /// Satıra UZUN BASINCA açılan menü: yıldızla, seç, sil.
+  ///
+  /// KULLANICI İSTEĞİ 2026-08-30 ("yıldızla tuşu maddeler için yerleşimi kötü,
+  /// basılı tutunca gelsin"): yıldız düğmesi her odaklanan satırda beliriyor,
+  /// metni daraltıyor ve silme düğmesini içeri itiyordu. Satır işleri artık
+  /// tek bir menüde toplandı; satırın kendisinde yalnız YILDIZLI olanın
+  /// işareti ve odaklıyken silme "x"i duruyor.
+  ///
+  /// Menü parmağın bastığı yerde açılır — uzun basışın nereden geldiği
+  /// böylece görünür olur.
+  Future<void> _showItemMenu(NoteItem item, Offset globalPosition) async {
+    final l10n = context.l10n;
+    final overlay = Overlay.of(context).context.findRenderObject();
+    if (overlay is! RenderBox || !overlay.hasSize) return;
+    final position = RelativeRect.fromRect(
+      globalPosition & const Size(1, 1),
+      Offset.zero & overlay.size,
+    );
+    PopupMenuItem<_ItemAction> entry(
+      _ItemAction value,
+      IconData icon,
+      String label,
+    ) => PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: 12),
+          Text(label),
+        ],
+      ),
+    );
+
+    final choice = await showMenu<_ItemAction>(
+      context: context,
+      position: position,
+      items: [
+        entry(
+          _ItemAction.star,
+          item.starred ? Icons.star : Icons.star_outline,
+          item.starred ? l10n.unstar : l10n.star,
+        ),
+        entry(_ItemAction.select, Icons.checklist, l10n.select),
+        entry(_ItemAction.delete, Icons.delete_outline, l10n.removeItem),
+      ],
+    );
+    if (!mounted || choice == null) return;
+    switch (choice) {
+      case _ItemAction.star:
+        _toggleStar(item);
+      case _ItemAction.select:
+        _toggleSelection(item);
+      case _ItemAction.delete:
+        _removeItem(item);
+    }
   }
 
   /// Maddenin yıldızını çevirir (kullanıcı isteği 2026-08-16).
@@ -1235,11 +1317,18 @@ class ItemsEditorState extends State<ItemsEditor> {
           )
         : null;
 
-    // Sol bölge (kutucuk/numara). Uzun basış seçim modunu açar: metin alanına
-    // uzun basmak Android'in kendi metin seçimini açtığı için madde seçimi
-    // buraya bağlandı, ikisi çakışmaz.
+    // Sol bölge (kutucuk/numara). Uzun basış SATIR MENÜSÜNÜ açar (yıldız,
+    // seç, sil): metin alanına uzun basmak Android'in kendi metin seçimini
+    // açtığı için madde jestleri buraya bağlandı, ikisi çakışmaz. Seçim
+    // kipinde uzun basış eskisi gibi doğrudan seçer (menü orada anlamsız).
     final leading = GestureDetector(
-      onLongPress: () => _toggleSelection(item),
+      onLongPressStart: (details) {
+        if (_selectionMode) {
+          _toggleSelection(item);
+        } else {
+          _showItemMenu(item, details.globalPosition);
+        }
+      },
       onTap: _selectionMode ? () => _toggleSelection(item) : null,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1315,7 +1404,8 @@ class ItemsEditorState extends State<ItemsEditor> {
 
     Widget rowBody(bool focused) => Container(
       color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      // Sağ pay dar: silme "x"i kenara yaklaşsın (bkz. [_kTrailingWidth]).
+      padding: const EdgeInsetsDirectional.only(start: 12, end: 2),
       // İşaretleme geçişi: satır sertçe sönmek yerine yumuşak solar.
       // Kutucuğun kendi tik animasyonu Material'dan geliyor; buradaki solma
       // ona eşlik eder. Üstü çizili hâl anında gelir — çizgi kısmi çizilemez,
@@ -1377,6 +1467,10 @@ class ItemsEditorState extends State<ItemsEditor> {
                           // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
                           // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
                           style: fieldStyle,
+                          // Satır yüksekliği çıpası gövdeyle aynı yerden
+                          // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
+                          // ayrışmasın.
+                          strutStyle: wrapStrutStyle(fieldStyle),
                           decoration: InputDecoration(
                             hintText: l10n.newItemHint,
                             filled: false,
@@ -1441,34 +1535,50 @@ class ItemsEditorState extends State<ItemsEditor> {
                 ),
               ),
             ),
-            // YILDIZ (kullanıcı isteği 2026-08-16). Yıldızlıysa HER ZAMAN
-            // görünür — işaretin kendisi bilgi; yıldızsız satırda yalnız
-            // odaklanınca çıkar, yoksa her satırda ikinci bir düğme yer
-            // kaplardı. Seçim kipinde hiç çizilmez (o kip toplu iş için).
-            if (!_selectionMode && (item.starred || focused))
+            // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
+            // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca
+            // gelsin"). Eskiden satır odaklanınca boş bir yıldız düğmesi
+            // beliriyor, metni daraltıyor ve silme "x"ini içeri itiyordu —
+            // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
+            // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
+            // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
+            if (!_selectionMode && item.starred)
               IconButton(
-                tooltip: item.starred ? l10n.unstar : l10n.star,
-                icon: Icon(
-                  item.starred ? Icons.star : Icons.star_outline,
-                  size: 18,
+                tooltip: l10n.unstar,
+                icon: const Icon(Icons.star, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 26,
+                  height: 34,
                 ),
-                color: item.starred
-                    ? scheme.tertiary
-                    : scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                color: scheme.tertiary,
                 onPressed: () => _toggleStar(item),
               ),
             // Silme "x" yalnızca satır odaklıyken görünür: kaydırırken ya
             // da yazarken yanlışlıkla basılmaz (madde 11-12). Odaksızken
             // yerini boş bir kutu tutar ki satırlar yatayda zıplamasın.
+            //
+            // BÜYÜDÜ VE SAĞA KAYDI (kullanıcı isteği 2026-08-30): simge 18 →
+            // 22, kutusu 48 → [_kTrailingWidth] ve satırın sağ payı 12 → 2 dp.
+            // Düğme kenara yaklaşınca hem hedefi büyüdü hem de metne kalan
+            // genişlik arttı.
             if (focused && !_selectionMode)
               IconButton(
                 tooltip: l10n.removeItem,
-                icon: const Icon(Icons.close, size: 18),
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                icon: const Icon(Icons.close, size: 22),
+                // Kutu, odaksız satırdaki boş yer tutucuyla BİREBİR aynı
+                // (yoğunluk ayarı verilmiyor): odak değişince satır yatayda
+                // bir piksel bile oynamasın.
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: _kTrailingWidth,
+                  height: 40,
+                ),
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
                 onPressed: () => _removeItem(item),
               )
             else
-              const SizedBox(width: 48),
+              const SizedBox(width: _kTrailingWidth),
           ],
         ),
       ),
@@ -1919,3 +2029,6 @@ class _FloatRowState extends State<_FloatRow> {
     }
   }
 }
+
+/// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
+enum _ItemAction { star, select, delete }

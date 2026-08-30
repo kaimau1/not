@@ -2459,3 +2459,98 @@ okunup bellekte süzülüyor; önek eşleşmeleri listenin başında kalıyor.
 Tavan koda yazıldı (`SCAN_LIMIT = 1000`; yükseltme yolu n-gram +
 `array-contains`). **Bu değişiklik ancak `firebase deploy --only functions`
 ile canlıya çıkar** — APK'ya girmez.
+
+## 2026-08-30 — İmleç/ipucu/yazma senkronu: ÖLÇÜM İLE ÇİZİM AYNI ÇIPAYA BAĞLANDI
+
+Kullanıcı: "son imleç güncellemesinden sonra bu şekilde ciddi kayma mevcut,
+daha kötü oldu; imleç ve ipucu ve yazma senkronunun üzerine düzgünce çalış."
+İkinci ekran görüntüsü (aynı not, 18 dakika sonra, hiç dokunulmadan):
+"kendi kendine yazı ve resimlerin konumu değişti" — yazı küçük görselin
+ARKASINA geçmiş.
+
+### KÖK NEDEN 1 — `EditableText` her satırı çıpaya kilitler, ölçüm kilitlemiyordu
+`TextField`e `strutStyle` verilmezse `EditableText`
+`StrutStyle.fromTextStyle(style, forceStrutHeight: true)` kullanır: ÇİZİMDE
+her satır, içinde ne olursa olsun, taban stilin yüksekliğindedir. Sarmayı
+planlayan `TextPainter` ise çıpasız ölçüyordu. İki taraf tam olarak şurada
+ayrışıyor: **yalnız dolgu taşıyan satır**. Metin görselin altına itilirken
+üretilen boş satırlar dolgu kutusunun boyunda (yarım punto, ~7 dp) ölçülüyor,
+ekranda ~24 dp çiziliyordu. Plan bandı aşmak için gereken satır sayısını
+üç-dört katına çıkarıp sayıyor; ekranda o satırlar tam boy çizilince metin ve
+imleç görselin ÇOK altına düşüyor, bir sonraki görselin bandına giriyordu.
+
+Neden şimdiye kadar görünmedi: satır sonundaki BOŞLUK dolgu satırında kalıyor
+ve satıra gerçek yazı tipi metriği kazandırıyor. Bu yüzden boşluklu metinlerde
+ölçüm doğruydu. Kullanıcının notunda tek kelime ("mmmmhg") vardı — hiç boşluk
+yok, dolayısıyla her dolgu satırı SAF dolgu. 2026-08-29'daki "imleç görselin
+arkasında kalmasın" düzeltmesi aynı sayımı BOŞ tamponda da çalıştırdığı için
+kayma o turda görünür hâle geldi ("daha kötü oldu" tam olarak buydu).
+
+Çözüm: `wrapStrutStyle(style)` — ölçüm de aynı çıpayı kullanıyor; ayrıca
+alanlara çıpa AÇIKÇA veriliyor, yani eşleşme Flutter'ın varsayılanına değil
+tek bir işleve bağlı. Testlerdeki denetim boyacıları da çıpalı (çıpasız bir
+denetim binmeyi göremezdi — nitekim görmüyordu).
+
+### KÖK NEDEN 2 — süzgeç, planın KENDİ çıktısına bakıyordu (kendi kendine kayma)
+`WrapFieldMeasure` bantları süzerken `f.top < origin.dy + box.size.height`
+diyordu. O yükseklik planın sonucudur: plan dolgu ekleyince alan uzuyor,
+uzayınca bir alttaki görsel de süzgeci geçiyor, o da dolgu doğuruyor; dolgu
+düşünce alan kısalıyor ve görsel süzgeçten çıkıyor. Metin iki durum arasında
+KENDİ KENDİNE gidip geliyordu. Alt sınır kaldırıldı: süzgeç yalnız alanın
+sabit üst kenarına bakıyor, yani plan girdileri planın çıktısından bağımsız.
+(Alanın altında kalan bant hiçbir satırı kesmediği için dolgu da üretmez.)
+
+### KÖK NEDEN 3 — ipucu ile imleç AYRI UZAYLARDA hesaplanıyordu
+Üç ayrışma birden vardı: (a) ipucu alanın kutusuna göre + 16 dp dolguyla
+konuyor, metin ise alanın `contentPadding`i (8 dp) kadar aşağıda başlıyordu;
+(b) ipucu SAYFA uzayında, sarma planı METİN SÜTUNU uzayında çalışıyordu — sol
+kenar boşluğu (16 dp) iki kez sayılıyordu; (c) ipucu satır yüksekliği
+"punto × 1.45" diye tahmin ediliyor ve notun kendi yazı ölçeği yok sayılıyordu.
+Artık tek kaynak: `_kBodyTextTop` (8) + `_kGutter` (16) hem alanın dolgusu, hem
+ölçümün metin başlangıcı (`WrapFieldMeasure.textTop`), hem de tuval ipucunun
+konumu (`NotePageCanvas.textTop/textLeft`). `hintTopFor` ayrıca sonucu TAM
+SATIRA yuvarlıyor: metin sürekli değil satır satır akar, imleç bandın bittiği
+dp'ye değil bandı geçen ilk satırın başına iner.
+
+### İmleç "satırın sağ ucunda" sorunu
+Boş tamponda bandı aşan dolgular satırı TAMAMEN kapladığı için "metnin sonu"
+konumu o satırın SAĞ UCUYDU. Bandın altındaki ilk boş satıra 1 dp'lik bir
+"imleç evi" çapası konuyor: kırıcı onu alt satıra atıyor (dolu satıra 1 dp bile
+sığmaz), imleç de ipucunun durduğu yere oturuyor. Sıfır genişlik İŞE YARAMAZ —
+sıfır genişlikte kutu dolu satıra da sığar.
+
+### Uzun notta dokunma: alanın tamamı değil İMLEÇ görünür kılınıyor
+`_revealFocusedField` `Scrollable.ensureVisible` ile ALANI hizalıyordu; gövde
+tek bir dev `TextField` olduğu için `keepVisibleAtEnd` notun SONUNA atlıyordu.
+Yenisi (`_revealCaret`) `RenderEditable.getLocalRectForCaret` ile imlecin
+kutusunu kaydırıyor. Ayrıca artık ODAK ANINDA çalışıyor: klavyenin en son
+ölçülen yüksekliği (`_keyboardMemory`, ilk açılışta 300 dp tahmini)
+düşülerek hemen kaydırılıyor; `KeyboardSnap` boşluğu oturttuğunda ikinci geçiş
+yalnız tahmin tutmadıysa iş yapıyor. Eskiden tek kaydırma klavye animasyonu +
+140 ms sonra geliyordu ("hem geç kalıyor hem güzel değil").
+
+### Aynı turda — kullanıcı istekleri
+* **Sesli yazma imlece yazıyor**: `_appendPlainText` metni gövdenin SONUNA
+  yığıyordu ("en başa metin notu olarak ekliyor"). `insertAtCaret` metni
+  imlecin yerine, iki yanına gerektiği kadar boşluk koyarak ekliyor; hedef
+  alan en son ODAKLANAN alan (`_formatTarget`) — levha açılırken odak
+  düştüğü için canlı odağa bakmak yetmiyor. Liste maddesindeyse
+  `ItemsEditorState.insertTextAtCaret` o satıra yazıyor.
+* **Madde yıldızı basılı tutunca**: yıldız düğmesi her odaklanan satırda
+  beliriyor, metni daraltıyor ve silme "x"ini içeri itiyordu. Artık sol
+  bölgeye uzun basınca açılan menüde (yıldızla / seç / sil); satırda yalnız
+  YILDIZLI olanın işareti duruyor.
+* **Silme "x" büyüdü ve sağa kaydı**: 18 → 22 punto, kutusu 48 → 40 dp,
+  satırın sağ payı 12 → 2 dp. Kutu, odaksız satırdaki yer tutucuyla BİREBİR
+  aynı (yoğunluk ayarı verilmiyor) — odak değişince satır yatayda oynamıyor.
+* **Alt çubuk Keep tarzı**: Biçim/Ekle/Seç/Ekler yalnız simge, 40 dp kare.
+  Etiketlerin sığıp sığmadığını ÖLÇEN kod (`_toolLabelsFit`) tümüyle kalktı —
+  çubuk artık cihazdan cihaza değişmiyor.
+
+### TUZAK — bu turda da derlenemedi
+Oturumun koştuğu ortamda Flutter SDK yok: `flutter analyze` ve `flutter test`
+çalıştırılamadı. En riskli varsayım, `EditableText`in çıpa varsayılanı
+(`forceStrutHeight: true`) ve bitişik iki dolgu kutusu arasında satır
+kırılabilmesi (UAX#14 LB20, U+FFFC = CB). İkisi de yeni testlerle ölçülüyor:
+`text_wrap_test` içinde "imleç bandın altında ve SOLDA", "ipucu ile imleç aynı
+satırda" ve "dolgu satırı metin satırıyla aynı yükseklikte".
