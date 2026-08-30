@@ -673,43 +673,38 @@ double hintTopFor(List<FloatBox> floats, double bodyTop, double lineHeight) {
 /// genişlik kalıyorsa ipucu O SATIRDA, görselin sağından başlar; kalmıyorsa
 /// (sarma eşiği — bkz. `text_wrap.dart`) eskisi gibi görselin altına iner.
 ///
-/// [columnWidth] metin sütununun genişliği; eşik onun oranı olarak ölçülür.
-/// Dönen değer soldaki dolgudur — üst konum yine [hintTopFor]'dan gelir ve
-/// dolgu sıfırdan büyükse o üst konum [bodyTop]'ta kalır.
+/// [columnWidth] metin sütununun genişliği. Dönen değer soldaki dolgudur —
+/// üst konum yine [hintTopFor]'dan gelir ve dolgu sıfırdan büyükse o üst konum
+/// [bodyTop]'ta kalır.
+///
+/// DOLGU BURADA HESAPLANMAZ, SARMA PLANINDAN OKUNUR ([wrapLineIndents]).
+/// Eskiden buradaki ayrı hesap `left > 0` olan her görseli "sağ kenarda"
+/// sayıyordu; ORTADA duran bir görselde plan metni görselin SAĞINA akıtırken
+/// ipucu kendini ALTINA indiriyordu (kullanıcı bulgusu 2026-08-30: "imleç
+/// kaymıyor ama ipucu başka yerde hâlâ"). Aynı dikiş üçüncü kez patladığı için
+/// karar tek kaynağa bağlandı.
 ({double top, double left}) hintPlacement(
   List<FloatBox> floats,
   double bodyTop,
   double lineHeight,
   double columnWidth, {
-  double minUsableFraction = 0.35,
+  double textScaleFactor = 1.0,
 }) {
-  // İlk satırı kesen bantlar: metnin ilk satırı da tam olarak bunlardan
-  // etkileniyor.
-  final crossing = [
-    for (final f in floats)
-      if (f.top < bodyTop + lineHeight && bodyTop < f.bottom) f,
-  ];
-  if (crossing.isEmpty || columnWidth <= 0) {
-    return (top: bodyTop, left: 0);
-  }
-  // Soldaki en sağ kenar: birden çok görsel varsa ipucu hepsinin sağından
-  // başlamalı. Sağ kenarda duran görsel (left > 0) ipucunu içeri itmez,
-  // yalnız kullanılabilir genişliği kısar.
-  var leftEdge = 0.0;
-  var rightLimit = columnWidth;
-  for (final f in crossing) {
-    if (f.left <= 0) {
-      if (f.right > leftEdge) leftEdge = f.right;
-    } else if (f.left < rightLimit) {
-      rightLimit = f.left;
-    }
-  }
-  final usable = rightLimit - leftEdge;
-  if (usable < columnWidth * minUsableFraction) {
-    // Metin de bu satırda sığmıyor; ikisi birlikte görselin altına iner.
+  if (floats.isEmpty || columnWidth <= 0) return (top: bodyTop, left: 0);
+  // İlk satırın dolgusu: metnin ilk satırı da tam olarak bundan etkileniyor.
+  final indents = wrapLineIndents(
+    floats: floats,
+    columnWidth: columnWidth,
+    top: bodyTop,
+    bottom: bodyTop + lineHeight,
+    textScaleFactor: textScaleFactor,
+  );
+  if (indents.start >= columnWidth) {
+    // Satırın tamamı dolgu: metin de bu satıra sığmıyor, ikisi birlikte
+    // görselin altına iner.
     return (top: hintTopFor(floats, bodyTop, lineHeight), left: 0);
   }
-  return (top: bodyTop, left: leftEdge);
+  return (top: bodyTop, left: indents.start);
 }
 
 class NotePageCanvas extends StatefulWidget {
@@ -1040,6 +1035,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       widget.topLimit + widget.textTop,
       widget.hintLineHeight,
       (cw - inset * 2).clamp(0.0, cw),
+      // Okunur genişlik tabanı yazı ölçeğiyle büyüyor; sarma planı da AYNI
+      // ölçeği kullanıyor (bkz. WrapFieldMeasure), yoksa büyük yazıda ipucu
+      // ile metin yine ayrışır.
+      textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
     );
     return (top: place.top, left: inset + place.left);
   }

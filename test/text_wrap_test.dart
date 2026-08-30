@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart'
-    show hintTopFor;
+    show hintPlacement, hintTopFor;
 import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 
 void main() {
@@ -538,6 +538,44 @@ void main() {
       closeTo(hintTopFor(const [band], 0, lineHeight), 1.0),
       reason: 'ipucu ile imleç ayrı satırlara düştü',
     );
+  });
+
+  test('ORTADAKI gorsel: ipucu ile imlec ayni yerde (ayni dolgu kaynagi)', () {
+    // Kullanıcı bulgusu 2026-08-30 (ekran görüntüsü): "imleç kaymıyor ama
+    // ipucu başka yerde hâlâ". Görsel sütunun ORTASINDA: sol kenarda da değil,
+    // sağ kenarda da. Plan metni GENİŞ tarafa (sağına) akıtıyordu; ipucu ise
+    // `left > 0` olan her görseli "sağ kenarda" sayıp kendini ALTINA
+    // indiriyordu. Ölçüm: imleç dx 85 / dy 0, ipucu dx 0 / dy 60.
+    const columnWidth = 300.0;
+    const band = FloatBox(top: 0, left: 35, right: 85, height: 60);
+    final lineHeight = lineHeightOf();
+    final plan = planTextWrap(
+      logical: '',
+      style: style,
+      columnWidth: columnWidth,
+      floats: const [band],
+    );
+    final painter = paint(plan, columnWidth);
+    final caret = painter.getOffsetForCaret(
+      TextPosition(offset: wrapToDisplayOffset(plan.display, 0)),
+      Rect.zero,
+    );
+    painter.dispose();
+
+    final hint = hintPlacement(const [band], 0, lineHeight, columnWidth);
+    expect(
+      hint.left,
+      closeTo(caret.dx, 1.0),
+      reason: 'ipucu ile imleç ayrı SÜTUNLARA düştü',
+    );
+    expect(
+      hint.top,
+      closeTo(caret.dy, 1.0),
+      reason: 'ipucu ile imleç ayrı SATIRLARA düştü',
+    );
+    // ...ve ikisi de görselin YANINDA kalır, altına inmez (yan tarafta
+    // 300-85 = 215 dp, yani sütunun %72'si okunur genişlik var).
+    expect(caret.dy, 0.0);
   });
 
   test('dolgu satiri METIN satiriyla ayni yukseklikte cizilir', () {

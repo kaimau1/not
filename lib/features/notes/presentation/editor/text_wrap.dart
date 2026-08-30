@@ -181,6 +181,62 @@ void cleanClipboardAction(EditableTextState state, {required bool cut}) {
   state.hideToolbar();
 }
 
+/// `[top, bottom)` satırını kesen bantların o satıra bıraktığı dolgular:
+/// [start] MANTIKSAL satır başına, [end] satır sonuna konacak genişlik.
+///
+/// Metin bandın GENİŞ olan tarafından akar (Word'ün dar boşluğa metin
+/// sıkıştırmaması gibi). Kalan yer okunur bir satıra yetmiyorsa [start]
+/// `columnWidth` döner: satırın tamamı dolgudur ve metin bandın ALTINA iner.
+///
+/// **İPUCU DA BURAYI ÇAĞIRIR** (bkz. `note_images.dart` → `hintPlacement`).
+/// KÖK NEDEN (kullanıcı bulgusu 2026-08-30, ekran görüntüsü: "imleç kaymıyor
+/// ama ipucu başka yerde hâlâ"): bu karar iki yerde AYRI yazılmıştı ve
+/// ORTADA duran bir görselde zıt sonuç veriyordu — plan `hugsLeft` ile metni
+/// görselin sağına akıtırken, ipucu `left > 0` olan her görseli "sağ kenarda"
+/// sayıp yalnız daraltıyor ve kendini ALTINA indiriyordu. Ölçüm (300 dp sütun,
+/// bant left 35 → right 85): imleç dx 85 / dy 0, ipucu dx 0 / dy 60. Aynı
+/// dikiş 16 ve 29 Ağustos'ta da patladığı için hesap tek kaynağa bağlandı.
+({double start, double end}) wrapLineIndents({
+  required List<FloatBox> floats,
+  required double columnWidth,
+  required double top,
+  required double bottom,
+  TextDirection direction = TextDirection.ltr,
+  double textScaleFactor = 1.0,
+}) {
+  // Görselin yeri FİZİKSELdir (ölçülen x), dolgu ise MANTIKSAL satır başına/
+  // sonuna konan bir çapa karakteridir. LTR'de satır başı fiziksel solda,
+  // RTL'de fiziksel sağdadır — bu eşleme çevrilmezse RTL'de dolgu görselin
+  // BULUNMADIĞI tarafa konur ve metin görselin üstüne biner.
+  final ltr = direction == TextDirection.ltr;
+  var start = 0.0;
+  var end = 0.0;
+  for (final f in floats) {
+    if (f.top < bottom && top < f.bottom) {
+      final hugsLeft = columnWidth - f.right >= f.left;
+      final pad = hugsLeft ? f.right : columnWidth - f.left;
+      if (hugsLeft == ltr) {
+        if (pad > start) start = pad;
+      } else {
+        if (pad > end) end = pad;
+      }
+    }
+  }
+  if (start < 0) start = 0;
+  if (end < 0) end = 0;
+  if (start + end > 0 &&
+      columnWidth - start - end <
+          math.max(
+            columnWidth * _kMinUsableFraction,
+            _kMinUsableWidth * textScaleFactor,
+          )) {
+    // Kalan yer okunur bir satıra yetmiyor: dolgu satırın TAMAMINI yer,
+    // kırıcı o satıra hiç kelime sığdıramaz ve metin görselin ALTINA iner.
+    return (start: columnWidth, end: 0.0);
+  }
+  return (start: start, end: end);
+}
+
 /// [logical] metni [columnWidth] genişliğinde dizerken, [floats] görsellerinin
 /// kestiği satırların başına ne genişlikte dolgu gerektiğini hesaplar.
 ///
@@ -208,6 +264,8 @@ WrapPlan planTextWrap({
   );
 
   var line = 0;
+  // Satır başı LTR'de fiziksel solda, RTL'de sağdadır (bkz. [wrapLineIndents]).
+  final ltr = direction == TextDirection.ltr;
   // Sağ dolgusu bir kez denenmiş satırlar. Dolgu, kırıcı onu son kelimeye
   // yapıştıramazsa (ör. satırda hiç boşluk yok) bir daha denenmez — yoksa
   // aynı satır sonsuza dek yeniden dolgulanırdı.
@@ -237,41 +295,18 @@ WrapPlan planTextWrap({
     final top = line * lineHeight;
     final bottom = top + lineHeight;
 
-    // Satırı kesen görseller: her biri metni GENİŞ tarafına iter.
-    //
-    // Görselin yeri FİZİKSELdir (ölçülen x), dolgu ise MANTIKSAL satır başına/
-    // sonuna konan bir çapa karakteridir. LTR'de satır başı fiziksel solda,
-    // RTL'de fiziksel sağdadır — bu eşleme çevrilmezse RTL'de dolgu görselin
-    // BULUNMADIĞI tarafa konur ve metin görselin üstüne biner.
-    final ltr = direction == TextDirection.ltr;
-    var indentStart = 0.0;
-    var indentEnd = 0.0;
-    for (final f in floats) {
-      if (f.top < bottom && top < f.bottom) {
-        final hugsLeft = columnWidth - f.right >= f.left;
-        final pad = hugsLeft ? f.right : columnWidth - f.left;
-        if (hugsLeft == ltr) {
-          if (pad > indentStart) indentStart = pad;
-        } else {
-          if (pad > indentEnd) indentEnd = pad;
-        }
-      }
-    }
-    if (indentStart < 0) indentStart = 0;
-    if (indentEnd < 0) indentEnd = 0;
-    if (indentStart + indentEnd > 0 &&
-        columnWidth - indentStart - indentEnd <
-            math.max(
-              columnWidth * _kMinUsableFraction,
-              _kMinUsableWidth * textScaleFactor,
-            )) {
-      // Kalan yer okunur bir satıra yetmiyor: dolgu satırın TAMAMINI yer,
-      // kırıcı o satıra hiç kelime sığdıramaz ve metin görselin ALTINA iner.
-      // Satır başına bir satır yüksekliği ilerlendiği için döngü görselin
-      // altında biter.
-      indentStart = columnWidth;
-      indentEnd = 0;
-    }
+    // Satırı kesen görsellerin bu satıra bıraktığı dolgular. İPUCU DA AYNI
+    // İŞLEVİ ÇAĞIRIR (bkz. [wrapLineIndents]).
+    final indents = wrapLineIndents(
+      floats: floats,
+      columnWidth: columnWidth,
+      top: top,
+      bottom: bottom,
+      direction: direction,
+      textScaleFactor: textScaleFactor,
+    );
+    final indentStart = indents.start;
+    final indentEnd = indents.end;
 
     // ---- TAMPONUN SONU: satır yok ama İMLEÇ var ---------------------------
     //
