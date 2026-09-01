@@ -29,7 +29,7 @@ abstract final class VideoFrame {
     try {
       return await _channel.invokeMethod<Uint8List>('videoFrame', {
         'path': path,
-        if (atUs != null) 'atUs': atUs,
+        'atUs': ?atUs,
       });
     } on PlatformException {
       return null;

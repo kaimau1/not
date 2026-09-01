@@ -326,6 +326,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             mimeType: mimeType,
           )
         : XFile(await NoteDocx.writeTemp(bytes, _title.text), mimeType: mimeType);
+    if (!mounted) return;
     await SharePlus.instance.share(
       ShareParams(
         files: [file],
@@ -376,6 +377,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
             await NotePdf.writeTemp(bytes, _title.text),
             mimeType: 'application/pdf',
           );
+    if (!mounted) return;
     await SharePlus.instance.share(
       ShareParams(
         files: [file],
