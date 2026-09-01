@@ -2557,3 +2557,75 @@ Oturumun koştuğu ortamda Flutter SDK yok: `flutter analyze` ve `flutter test`
 kırılabilmesi (UAX#14 LB20, U+FFFC = CB). İkisi de yeni testlerle ölçülüyor:
 `text_wrap_test` içinde "imleç bandın altında ve SOLDA", "ipucu ile imleç aynı
 satırda" ve "dolgu satırı metin satırıyla aynı yükseklikte".
+
+## 2026-09-01 — Alt çubuk ikili mikrofon, seç hizası, ek etiketi ve defterin yeniden tasarımı
+
+Kullanıcının sekiz maddelik, dört ekran görüntülü turu. Bu oturumda **Flutter
+SDK ortama indirildi** (stable 3.44.6, `flutter_infra_release` tarball) —
+`flutter analyze` temiz, `flutter test` 814 test yeşil. 2026-08-30'un dersi
+(bkz. yukarısı) uygulandı: hiçbir şey koşulmadan "düzeltildi" denmedi.
+
+### KÖK NEDEN — "seç aktifken hiza bozuluyor"
+Sürükleme tutamacı `reorderIndex != null && _selectionMode` koşuluyla
+çiziliyordu. Checklist'in **İŞARETLİ** maddeleri sürüklenebilir listenin
+DIŞINDA, footer'da duruyor (Keep'in "tamamlananlar" bölümü gibi) ve iki sütun
+kipinde hiçbir satır sürüklenmiyor — o satırlarda tutamaç yok, seçim yuvarlağı
+22 dp solda kalıyor, aynı ekranda İKİ farklı sol kenar oluşuyordu. Tutamacın
+YUVASI artık seçim kipinde her satırda ayrılıyor (sürüklenemeyende boş);
+sarma payı (`reserved`) da `dragHandle == null` yerine `_selectionMode`e
+bağlandı.
+
+### KÖK NEDEN — ek etiketi "tamamen işlevsiz" (İKİ ayrı sebep)
+Kullanıcı liste notunda "Buraya bağla" ile bağladığı PDF'in etiketini
+görüyordu ama etiket düz yazıydı ve dokunuş bir şey yapmıyordu.
+1. **Madde satırları hiç beslenmiyordu.** Etiketi kırmızı+altı çizili çizen ve
+   dokunuşu eke bağlayan yol yalnız GÖVDE alanında kuruluydu; editör
+   `_bodyController.attachmentNames` yazıyor, `ItemsEditor`ın satır
+   denetleyicilerine hiçbir şey vermiyordu.
+2. **TUZAK — `buildTextSpan`in "sadelik kısayolu" etiketi görmüyordu.**
+   `WrapTextController.buildTextSpan`, metinde bağlantı ve biçim işareti yoksa
+   üst sınıfın DÜZ span'ini döndürüyor (IME davranışı bozulmasın diye).
+   "📎 rapor.pdf" metninde ikisi de yok → etiket **gövdede de** hiç
+   boyanmıyordu. Yani "altı çizilmiyor" şikâyeti liste notuna özgü değildi.
+   Tarama artık ek etiketine de bakıyor ve tarama anahtarı ek ADLARINI
+   içeriyor (aynı metin, dosya eklenip silindikçe etiketli hâle gelip
+   çıkabiliyor). Testle doğrulandı: düzeltme geri alınınca KIRMIZI.
+
+### CANLI DİKTE — tanıyıcı metni DÜZELTİR, o yüzden "ekle" değil "değiştir"
+Alt çubukta iki mikrofon var: parıltılı olan eski yol (levhada gözden geçir,
+özetle/böl), sade olan yeni "sesle yazma" — söz imlece anında düşer, levha
+yok, AI yok, kota yok. Ana ekranın mikrofonu da ikiye ayrıldı (sade olan
+`?dictate=1` ile boş not açıp dikteyi başlatır).
+TUZAK: `DeviceSpeech.listen` her olayda o ana kadarki TAM metni gönderir ve
+önceki bir kelimeyi sonradan düzeltebilir ("bir" → "birkaç"). Gelen parçayı
+imlece EKLEMEK metni ikizler. Bu yüzden dikte boyunca yazılan aralık
+(`_dictationAt`/`_dictationLength`) hatırlanır ve her olayda yenisiyle
+DEĞİŞTİRİLİR; aralığın dışı — kullanıcının o sırada elle yazdığı harfler
+dahil — hiç ellenmez. Kural saf bir işleve çıkarıldı: `dictationReplace`
+(text_wrap.dart), 7 testi var.
+
+### DEFTER (arşiv defteri) — neden yeniden yazıldı
+Eski ekran, üstünde arama kutusu ve çip barı olan DÜZ BİR LİSTEYDİ; çipler
+dört OTOMATİK sayfaydı (Görseller/Videolar/Belgeler/Metinler), yani içerik
+TÜRÜNE göre bölünüyordu. Bir konuya ait fotoğraf, PDF ve not asla yan yana
+gelemiyordu — defterin tek vaadi ("bir sayfada bir konu") tam olarak bu yüzden
+çalışmıyordu; ekranda hiçbir şey de defter olduğunu söylemiyordu.
+Yeni model: yatay çevrilen SAYFALAR (`PageView` + `_PageTurn`), her sayfa bir
+KONU ve içinde metin/görsel/dosya birlikte. İlk sayfa **Genel**: sayfası
+atanmamış her girdi orada — eski defterler göç gerektirmeden açılıyor.
+KARAR: sayfa silmek girdiyi SİLMEZ, Genel'e taşır. Tanınmayan bölüm adı
+taşıyan (sayfası başka cihazdan silinmiş) girdi de Genel'de listelenir —
+eskiden hiçbir sayfada görünmüyordu, yani kullanıcı için KAYBOLMUŞTU.
+TUZAK — sayfa çevirme dönüşümü: `PageView` çocuklarını zaten yatayda kaydırır;
+`_PageTurn` önce o kaydırmayı geri alır (`Transform.translate`), sonra sayfayı
+cilt kenarı çevresinde döndürür. RTL'de `PageView`ın yönü de cildin yeri de
+ters olduğundan işaret `Directionality`den geliyor.
+
+### Aynı turda
+* "Notta ara" (büyüteç) ve "Paylaş" alt çubuğa kondu; ⋮ menüsündeki maddeler
+  de duruyor. "Seç"in simgesi `checklist` → `select_all` (eskisi yanındaki
+  "Ekle" segmentinin açtığı "liste maddesi ekle" ile aynı resmi çiziyordu).
+* Klasörün kendi sayfasına arama, sıralama menüsü, not sayısı geldi ve ızgara
+  ana ekranın sütun tercihini paylaşıyor. Eşleşme kuralı ana ekranınkiyle aynı
+  işlevden geliyor (`noteMatchesQuery`) — iki ayrı kural, aynı sorgunun bir
+  yerde bulup öbüründe bulamaması demekti.
