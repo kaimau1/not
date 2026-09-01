@@ -106,6 +106,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               startDrawing: state.uri.queryParameters['draw'] == '1',
               // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
               startVoiceCapture: state.uri.queryParameters['voice'] == '1',
+              // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
+              // imlecin olduğu yere anında yazılır (yapay zekâ yok).
+              startDictation: state.uri.queryParameters['dictate'] == '1',
               // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
               startVideo: state.uri.queryParameters['video'] == '1',
               // ?photo=1: foto çek not al — fotoğraf makinesi açılır.

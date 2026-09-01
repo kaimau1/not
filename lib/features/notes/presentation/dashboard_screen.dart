@@ -1484,33 +1484,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Asistan: ortak dinleme levhasını açar. Eski "Asistan"
-                        // yazılı 68 px'lik yuvarlak düğme kaldırıldı — kayıt
-                        // durumunu levha gösteriyor, düğmenin nefes almasına
-                        // gerek kalmadı.
-                        Tooltip(
-                          message: l10n.voiceAssistantTitle,
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: Material(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(14),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(14),
-                                onTap: _captureVoiceNote,
-                                child: Icon(
-                                  Icons.mic_none,
-                                  size: 24,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ),
-                          ),
+                        // İKİ MİKROFON — editörün alt çubuğundakiyle AYNI
+                        // ayrım (kullanıcı isteği 2026-09-01: "ana ekrandaki
+                        // ses butonunu da güncelle"):
+                        //  * sade mikrofon → SESLE YAZ: boş bir not açılır ve
+                        //    konuşulan söz doğrudan nota yazılır, levha yok.
+                        //  * parıltılı mikrofon → asistan/ses yakalama
+                        //    levhası (eski davranış): metin gözden geçirilir,
+                        //    özetlenebilir, hatırlatıcıya çevrilebilir.
+                        _DashVoiceButton(
+                          tooltip: l10n.voiceAssistantTitle,
+                          icon: Icons.mic_none,
+                          badge: Icons.auto_awesome,
+                          onTap: _captureVoiceNote,
+                        ),
+                        const SizedBox(height: 10),
+                        _DashVoiceButton(
+                          tooltip: l10n.liveDictation,
+                          icon: Icons.mic,
+                          onTap: createDictationNote,
                         ),
                         const SizedBox(height: 10),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
@@ -2821,4 +2813,59 @@ class _PinchColumnsState extends State<_PinchColumns> {
     },
     child: widget.child,
   );
+}
+
+/// Ana ekranın sağ alt sütunundaki mikrofon düğmesi.
+///
+/// İki örneği var ve tek fark [badge]: parıltılı olan yapay zekâ yolunu
+/// (asistan levhası), sade olan doğrudan dikteyi açar. Editörün alt
+/// çubuğundaki ikili ile bilerek aynı görünür — aynı iş, aynı simge.
+class _DashVoiceButton extends StatelessWidget {
+  const _DashVoiceButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final IconData? badge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Material(
+          color: scheme.primaryContainer,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 24, color: scheme.onPrimaryContainer),
+                if (badge != null)
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: Icon(
+                      badge,
+                      size: 11,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

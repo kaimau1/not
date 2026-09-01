@@ -1464,6 +1464,12 @@ abstract class AppLocalizations {
   /// **'Sesli yazdır'**
   String get liveDictation;
 
+  /// No description provided for @voiceCaptureAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli yakala (yapay zekâ)'**
+  String get voiceCaptureAi;
+
   /// No description provided for @dictationListening.
   ///
   /// In tr, this message translates to:
@@ -5069,6 +5075,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu klasör boş'**
   String get folderEmpty;
+
+  /// No description provided for @folderNoteCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} not'**
+  String folderNoteCount(int count);
 
   /// No description provided for @folderEmptyHint.
   ///

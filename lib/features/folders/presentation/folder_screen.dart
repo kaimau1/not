@@ -11,6 +11,7 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
@@ -68,6 +69,29 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
   /// "+" menüsünün demirlendiği nokta (bkz. QuickAddFab.anchor).
   final _fabLink = LayerLink();
 
+  /// **KLASÖR İÇİ ARAMA** (kullanıcı bulgusu 2026-09-01: "klasör içerisinde
+  /// ayarlar eksik, arama yok vb. ek özellikler eksik").
+  ///
+  /// Klasör bir YER olduğundan (bkz. sınıf açıklaması) ana ekranın arama
+  /// kutusu buraya erişmiyordu: kullanıcı klasöre girip yüz notun arasında
+  /// aradığını gözle bulmak zorundaydı. Kutu üst barda, dokunmadan
+  /// görünmez — açılınca aramaya odaklanır, kapanınca sorgu düşer.
+  final _searchController = TextEditingController();
+  bool _searching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _searching = !_searching;
+      if (!_searching) _searchController.clear();
+    });
+  }
+
   /// Bu sayfada oluşturulan her not, doğrudan BU klasöre doğar.
   @override
   String? get quickAddFolderId => widget.folderId;
@@ -110,8 +134,27 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: _FolderTitle(icon: folder?.iconData, name: folder?.name),
+        title: _searching
+            ? _FolderSearchField(controller: _searchController)
+            : _FolderTitle(
+                icon: folder?.iconData,
+                name: folder?.name,
+                count: notesAsync.value?.length,
+              ),
         actions: [
+          IconButton(
+            tooltip: _searching ? l10n.close : l10n.searchHint,
+            icon: Icon(_searching ? Icons.close : Icons.search),
+            onPressed: _toggleSearch,
+          ),
+          // SIRALAMA klasörün içinde de değiştirilebilsin: ölçüt ana ekranla
+          // ORTAK (bkz. folderNotesProvider) — kullanıcının seçtiği düzen her
+          // yerde aynı olsun, iki ayrı ayar iki ayrı sürpriz demek.
+          _SortMenu(
+            current: ref.watch(noteSortProvider),
+            onPick: (sort) =>
+                ref.read(noteSortProvider.notifier).set(sort),
+          ),
           // Sohbet, PAYLAŞILMIŞ klasörde tek dokunuş uzakta olsun: sahip de
           // katılımcılar da aynı odayı kullanıyor (bkz. FolderChatScreen).
           if (folder != null && folder.sharedWith.isNotEmpty)
@@ -153,30 +196,116 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
           onQrNote: createQrNote,
         ),
       ),
-      body: _NotesGrid(async: notesAsync),
+      // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,
+      // dinleyici yalnız gövdeyi çizer (üst bar aynı kalır).
+      body: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: _searchController,
+        builder: (context, value, _) =>
+            _NotesGrid(async: notesAsync, query: value.text),
+      ),
+    );
+  }
+}
+
+/// Üst bardaki arama kutusu (klasör içi). Ayrı widget: `autofocus` yalnız
+/// kutu AĞACA GİRDİĞİNDE bir kez çalışsın — üst bar her sayımda yeniden
+/// çizildiğinde odak yeniden istenirse klavye kapanıp açılırdı.
+class _FolderSearchField extends StatelessWidget {
+  const _FolderSearchField({required this.controller});
+
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) => TextField(
+    controller: controller,
+    autofocus: true,
+    textInputAction: TextInputAction.search,
+    decoration: InputDecoration(
+      border: InputBorder.none,
+      hintText: context.l10n.searchHint,
+    ),
+  );
+}
+
+/// Sıralama ölçütü menüsü — ana ekranın süzgeç levhasındaki listenin klasör
+/// içindeki kısa hâli. [NoteSort.manual] BURADA YOK: elle sıralama ana
+/// ekranın sürükle-bırak kipiyle kurulur, klasörde o kip çalışmıyor.
+class _SortMenu extends StatelessWidget {
+  const _SortMenu({required this.current, required this.onPick});
+
+  final NoteSort current;
+  final ValueChanged<NoteSort> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return PopupMenuButton<NoteSort>(
+      tooltip: l10n.sortBy,
+      icon: const Icon(Icons.sort),
+      initialValue: current,
+      onSelected: onPick,
+      itemBuilder: (context) => [
+        for (final sort in NoteSort.values)
+          if (sort != NoteSort.manual)
+            PopupMenuItem<NoteSort>(
+              value: sort,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    child: sort == current
+                        ? const Icon(Icons.check, size: 18)
+                        : null,
+                  ),
+                  Expanded(child: Text(sortLabel(l10n, sort))),
+                ],
+              ),
+            ),
+      ],
     );
   }
 }
 
 class _FolderTitle extends StatelessWidget {
-  const _FolderTitle({required this.icon, required this.name});
+  const _FolderTitle({required this.icon, required this.name, this.count});
 
   final IconData? icon;
   final String? name;
 
+  /// Klasördeki not sayısı (biliniyorsa) — adın altında küçük satır.
+  /// Klasörün ne kadar dolu olduğu içine girmeden de görünsün.
+  final int? count;
+
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Icon(icon ?? Icons.folder_outlined, size: 20),
-      const SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          name ?? context.l10n.filterSectionFolder,
-          overflow: TextOverflow.ellipsis,
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon ?? Icons.folder_outlined, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name ?? context.l10n.filterSectionFolder,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (count != null)
+                Text(
+                  context.l10n.folderNoteCount(count!),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 }
 
 class _NotesGrid extends StatelessWidget {
@@ -184,9 +313,14 @@ class _NotesGrid extends StatelessWidget {
     required this.async,
     this.ownerId,
     this.readOnly = false,
+    this.query = '',
   });
 
   final AsyncValue<List<Note>> async;
+
+  /// Klasör içi arama sorgusu; boşsa süzgeç yoktur. Eşleşme kuralı ana
+  /// ekranınkiyle AYNI işlevden gelir (bkz. [noteMatchesQuery]).
+  final String query;
 
   /// Paylaşılan klasörde notların SAHİBİ — kart bunu editöre taşır, yoksa
   /// not kendi koleksiyonumda aranır ve "bulunamadı" olur.
@@ -198,16 +332,29 @@ class _NotesGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final needle = query.trim().toLowerCase();
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) =>
           EmptyState(icon: Icons.error_outline, title: l10n.genericError('$e')),
-      data: (notes) => notes.isEmpty
-          ? EmptyState(
-              icon: Icons.folder_open_outlined,
-              title: l10n.folderEmpty,
-              subtitle: l10n.folderEmptyHint,
-            )
+      data: (all) {
+        final notes = needle.isEmpty
+            ? all
+            : [
+                for (final n in all)
+                  if (noteMatchesQuery(n, needle)) n,
+              ];
+        return notes.isEmpty
+          ? (needle.isEmpty
+              ? EmptyState(
+                  icon: Icons.folder_open_outlined,
+                  title: l10n.folderEmpty,
+                  subtitle: l10n.folderEmptyHint,
+                )
+              : EmptyState(
+                  icon: Icons.search_off,
+                  title: l10n.noteSearchNoHit,
+                ))
           : LayoutBuilder(
               builder: (context, constraints) {
                 final columns = (constraints.maxWidth / 220).floor().clamp(
@@ -227,7 +374,8 @@ class _NotesGrid extends StatelessWidget {
                   ),
                 );
               },
-            ),
+            );
+      },
     );
   }
 }
@@ -239,14 +387,32 @@ class _NotesGrid extends StatelessWidget {
 /// biçimlendirir — yalnız okuma yetkisinde "yeni not" düğmesi YOK, yalnız
 /// yazma yetkisinde notlar listelenmez (kural da okumayı reddeder, arayüz
 /// bunu bir hata gibi değil bir açıklama gibi gösterir).
-class _SharedFolderView extends ConsumerWidget {
+class _SharedFolderView extends ConsumerStatefulWidget {
   const _SharedFolderView({required this.folderId, required this.ownerId});
 
   final String folderId;
   final String ownerId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SharedFolderView> createState() => _SharedFolderViewState();
+}
+
+class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
+  /// Paylaşılan klasörde de arama var: kendi klasörümdekiyle aynı kutu,
+  /// aynı eşleşme kuralı (bkz. [_FolderScreenState._searchController]).
+  final _searchController = TextEditingController();
+  bool _searching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final folderId = widget.folderId;
+    final ownerId = widget.ownerId;
     final l10n = context.l10n;
     // Yetki, paylaşım aynasındaki `roles` haritasından gelir; ayna zaten ana
     // ekranın raf listesi için dinleniyor, ek bir okuma maliyeti yok.
@@ -275,11 +441,22 @@ class _SharedFolderView extends ConsumerWidget {
         final name = folder?.name ?? share?.name;
         return Scaffold(
           appBar: AppBar(
-            title: _FolderTitle(
-              icon: folder?.iconData ?? share?.iconData,
-              name: name,
-            ),
+            title: _searching
+                ? _FolderSearchField(controller: _searchController)
+                : _FolderTitle(
+                    icon: folder?.iconData ?? share?.iconData,
+                    name: name,
+                  ),
             actions: [
+              if (role.canRead)
+                IconButton(
+                  tooltip: _searching ? l10n.close : l10n.searchHint,
+                  icon: Icon(_searching ? Icons.close : Icons.search),
+                  onPressed: () => setState(() {
+                    _searching = !_searching;
+                    if (!_searching) _searchController.clear();
+                  }),
+                ),
               IconButton(
                 tooltip: l10n.folderChatTitle,
                 icon: const Icon(Icons.forum_outlined),
@@ -317,14 +494,18 @@ class _SharedFolderView extends ConsumerWidget {
                 )
               : null,
           body: role.canRead
-              ? _NotesGrid(
-                  ownerId: ownerId,
-                  readOnly: !role.canWrite,
-                  async: ref.watch(
-                    sharedFolderNotesProvider((
-                      ownerId: ownerId,
-                      folderId: folderId,
-                    )),
+              ? ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, _) => _NotesGrid(
+                    ownerId: ownerId,
+                    readOnly: !role.canWrite,
+                    query: value.text,
+                    async: ref.watch(
+                      sharedFolderNotesProvider((
+                        ownerId: ownerId,
+                        folderId: folderId,
+                      )),
+                    ),
                   ),
                 )
               // Yalnız YAZMA yetkisi: notları göremez ama bırakabilir. Boş
@@ -385,10 +566,10 @@ class _SharedFolderView extends ConsumerWidget {
       final title = titleController.text.trim();
       final body = bodyController.text.trim();
       if (!(saved ?? false) || (title.isEmpty && body.isEmpty)) return;
-      final repo = NotesRepository(FirebaseFirestore.instance, ownerId);
+      final repo = NotesRepository(FirebaseFirestore.instance, widget.ownerId);
       final id = await repo.createNote(
         NoteType.text,
-        folderId: folderId,
+        folderId: widget.folderId,
         body: body,
       );
       if (title.isNotEmpty) repo.updateFields(id, {'title': title});
@@ -403,13 +584,13 @@ class _SharedFolderView extends ConsumerWidget {
   /// Paylaşılan klasöre yeni not: not SAHİBİN koleksiyonuna yazılır
   /// (klasörle birlikte yaşasın diye — bkz. sınıf açıklaması).
   Future<void> _createNote(BuildContext context) async {
-    final repo = NotesRepository(FirebaseFirestore.instance, ownerId);
-    final id = await repo.createNote(NoteType.text, folderId: folderId);
+    final repo = NotesRepository(FirebaseFirestore.instance, widget.ownerId);
+    final id = await repo.createNote(NoteType.text, folderId: widget.folderId);
     if (!context.mounted) return;
     await openNoteRoute(
       context,
-      Note(id: id, type: NoteType.text, folderId: folderId),
-      ownerId: ownerId,
+      Note(id: id, type: NoteType.text, folderId: widget.folderId),
+      ownerId: widget.ownerId,
     );
   }
 }

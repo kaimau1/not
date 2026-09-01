@@ -252,6 +252,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.readOnly = false,
     this.startDrawing = false,
     this.startVoiceCapture = false,
+    this.startDictation = false,
     this.startVideo = false,
     this.startPhoto = false,
     this.startScan = false,
@@ -294,6 +295,11 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// Keep tarzı sesli not modu: editör açılır açılmaz ses kaydı + canlı
   /// döküm başlar; bitişte ses m4a eki olur, döküm notta kalır.
   final bool startVoiceCapture;
+
+  /// `?dictate=1` — CANLI DİKTE ile açılır: not açılır açılmaz mikrofon
+  /// dinlemeye başlar ve konuşulan söz imlece yazılır (bkz.
+  /// [_toggleDictation]). Ana ekrandaki sade mikrofonun yolu budur.
+  final bool startDictation;
 
   /// (+) menüsündeki "Görüntülü not": açılışta kamera başlatılır.
   final bool startVideo;
@@ -437,6 +443,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// niyetleri; not gelir gelmez bir kez çalıştırılır.
   bool _pendingDraw = false;
   bool _pendingVoice = false;
+  bool _pendingDictation = false;
   bool _pendingVideo = false;
   bool _pendingPhoto = false;
   bool _pendingScan = false;
@@ -452,6 +459,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingVoice) {
       _pendingVoice = false;
       _startVoiceCapture();
+    }
+    if (_pendingDictation) {
+      _pendingDictation = false;
+      // Gövde odaklanır ki imleç görünür bir yerde olsun; dikte de oraya
+      // yazsın (odaksız alanda hedef bulunamazdı).
+      _bodyFocus.requestFocus();
+      unawaited(_toggleDictation());
     }
     if (_pendingVideo) {
       _pendingVideo = false;
@@ -869,6 +883,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     });
     _pendingDraw = widget.startDrawing;
     _pendingVoice = widget.startVoiceCapture;
+    _pendingDictation = widget.startDictation;
     _pendingVideo = widget.startVideo;
     _pendingPhoto = widget.startPhoto;
     _pendingScan = widget.startScan;
@@ -1083,6 +1098,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     openEditorNoteIds.remove(widget.noteId);
+    // Dikte açıkken editörden çıkılabiliyor: mikrofon ekranla birlikte
+    // kapanmazsa arka planda dinlemeye devam ederdi.
+    if (_dictationSub != null) {
+      _dictationSub!.cancel();
+      _dictationSub = null;
+      unawaited(DeviceSpeech.stop());
+    }
     // Yalnız `_debouncer.flush()` DEĞİL: denetleyici metni nottan sapmış ama
     // bekleyen debounce yoksa (IME'nin odak düşerken onChanged üretmeden
     // commit ettiği otomatik düzeltme, alan içi Ctrl+Z) flush hiçbir şey
@@ -1721,6 +1743,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         },
       ),
     );
+  }
+
+  /// Ada göre eki bulup ÖNİZLEMEDE açar (madde satırından gelen dokunuş).
+  /// Ad hem bağ etiketi hem dosya adı olabilir — çözüm [_attachmentForTag]'te.
+  void _openTagByName(String name) {
+    final note = _note;
+    if (note == null) return;
+    final attachment = _attachmentForTag(note, name);
+    if (attachment != null) _openAttachmentTag(attachment, editing: false);
   }
 
   /// "+ Ekle" levhasından gelen ek gömme akışı.
@@ -4361,6 +4392,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
+  /// Alt çubuğun sağındaki MİKROFON düğmesi (iki tane: AI ve düz dikte).
+  ///
+  /// [badge] verilirse simgenin sağ üstüne küçük bir parıltı konur — iki
+  /// mikrofonu tek bakışta ayıran işaret budur. [active] dikte AÇIKKEN
+  /// düğmeyi vurgu rengine boyar: mikrofonun açık kaldığı fark edilmiyordu.
+  Widget _voiceButton({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onTap,
+    IconData? badge,
+    bool active = false,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    final background = active ? scheme.primary : scheme.primaryContainer;
+    final ink = active ? scheme.onPrimary : scheme.onPrimaryContainer;
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Material(
+          color: background,
+          borderRadius: BorderRadius.circular(14),
+          elevation: 2,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: onTap,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, size: 24, color: ink),
+                if (badge != null)
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: Icon(badge, size: 11, color: ink),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Alt çubuktaki büyüteç: "Notta ara" levhası (⋮ menüsündekiyle aynı yol).
+  Future<void> _openNoteSearch() async {
+    final note = _note;
+    if (note == null) return;
+    // Bekleyen yazım önce nota geçsin: aranan kelime az önce yazıldıysa
+    // kaydedilmemiş metinde bulunamazdı.
+    _flushPending(_bodyController);
+    if (!mounted) return;
+    await showNoteSearchSheet(context, ref, _note ?? note);
+  }
+
   Widget _addToolButton(AppLocalizations l10n) {
     final scheme = Theme.of(context).colorScheme;
     return Tooltip(
@@ -4423,6 +4510,146 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (result.text == logical) return;
     _bodyController.setLogical(result.text, result.caret);
     _mutate((n) => n.copyWith(body: result.text), immediate: true);
+  }
+
+  // ————————————————————————————————————————————————————————————————
+  // CANLI DİKTE — "sesle yazma"
+  //
+  // Kullanıcı isteği 2026-09-01: "mikrofon işareti direk sesle yazma olsun,
+  // hemen yanına da AI anımsatacak farklı bir mikrofon butonu koyalım, bu da
+  // şuanki durum olsun; sesle yazma çok pratik ve doğru olmalı, kişinin
+  // imlecinin olduğu yere yazmalı."
+  //
+  // Alt çubuktaki İKİ mikrofon tam olarak bu ayrım:
+  //  * `mic` (sade)      → BURASI: klavye gibi davranır, konuşulan söz
+  //    imlecin olduğu yere anında yazılır, levha açılmaz, yapay zekâ
+  //    çağrılmaz, kota harcanmaz.
+  //  * `mic + parıltı`   → [_captureVoice]: eski davranış. Metin önce
+  //    levhada gözden geçirilir, istenirse özetlenir/maddelere bölünür.
+  //
+  // **Neden "sil ve yeniden yaz"**: tanıyıcı her olayda o ana kadarki TAM
+  // metni gönderir (bkz. DeviceSpeech.listen) ve söylenen bir kelimeyi
+  // sonradan DÜZELTEBİLİR ("bir" → "birkaç"). Gelen parçayı imlece eklemek
+  // metni ikizler; bu yüzden dikte boyunca yazdığımız aralık ([_dictationAt],
+  // [_dictationLength]) hatırlanır ve her olayda o aralık yenisiyle
+  // DEĞİŞTİRİLİR. Kullanıcının dikte sırasında elle yazdığı harfler aralığın
+  // dışında kaldığı için korunur.
+  StreamSubscription<({String? text, double? level})>? _dictationSub;
+
+  /// Diktenin yazdığı alan (gövde, başlık ya da bir madde satırı) ve o
+  /// alandaki yazma aralığı. Hedef, dikte BAŞLARKEN en son odaklanmış olan
+  /// alandır ([_formatTarget]) — imleç oradadır.
+  FormatTarget? _dictationTarget;
+  int _dictationAt = 0;
+  int _dictationLength = 0;
+
+  bool get _dictating => _dictationSub != null;
+
+  /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
+  Future<void> _toggleDictation() async {
+    if (_dictating) {
+      await _stopDictation();
+      return;
+    }
+    final l10n = context.l10n;
+    // Yerleşik tanıma yoksa (Windows) canlı yazma mümkün değil: kullanıcı
+    // düğmeye basınca hiçbir şey olmasın diye ses levhasına düşülür —
+    // orada konuşma kaydedilip topluca yazıya dökülür.
+    if (!await DeviceSpeech.isAvailable()) {
+      if (mounted) await _captureVoice();
+      return;
+    }
+    if (!await DeviceSpeech.ensureMicPermission()) {
+      if (mounted) _showSnack(l10n.micPermissionDenied);
+      return;
+    }
+    if (!mounted) return;
+
+    // Hedef alan + imleç konumu ŞİMDİ dondurulur. Alan odaklı değilse
+    // (kullanıcı nota hiç dokunmadan mikrofona bastı) gövdenin sonuna
+    // yazılır ve odak gövdeye verilir — imleç gözle görülür bir yerde olsun.
+    var target = _formatTarget;
+    if (target == null) {
+      _bodyFocus.requestFocus();
+      target = _formatTarget;
+    }
+    final controller = target?.controller ?? _bodyController;
+    final selection = controller.selection;
+    _dictationTarget = target;
+    _dictationAt = selection.isValid
+        ? wrapToLogicalOffset(controller.text, selection.baseOffset)
+        : controller.logicalText.length;
+    _dictationLength = 0;
+
+    final sub = DeviceSpeech.listen().listen(
+      (event) {
+        final text = event.text;
+        if (text == null || !mounted) return;
+        _writeDictationAtCaret(text);
+      },
+      onError: (Object e) {
+        // Yerli taraf oturumu kendi kapattıysa (arka plana düşme, uzun
+        // sessizlik) bu bir hata değil, bitiştir: yazılan metin zaten notta.
+        if (e is PlatformException &&
+            (e.code == 'speech_background' || e.code == 'speech_idle')) {
+          unawaited(_stopDictation());
+          return;
+        }
+        unawaited(_stopDictation());
+        if (mounted) {
+          _showSnack(e is PlatformException ? (e.message ?? e.code) : '$e');
+        }
+      },
+      onDone: () => unawaited(_stopDictation()),
+    );
+    if (!mounted) {
+      await sub.cancel();
+      return;
+    }
+    setState(() => _dictationSub = sub);
+  }
+
+  /// Dikteyi bitirir: akış kapatılır, şerit iner, metin olduğu gibi kalır.
+  Future<void> _stopDictation() async {
+    final sub = _dictationSub;
+    if (sub == null) return;
+    _dictationSub = null;
+    _dictationTarget = null;
+    _dictationLength = 0;
+    await sub.cancel();
+    await DeviceSpeech.stop();
+    if (mounted) setState(() {});
+  }
+
+  /// Tanınan TAM metni hedef alandaki dikte aralığına yazar.
+  ///
+  /// Aralığın iki yanına, ancak GEREKİYORSA, birer boşluk konur — cümlenin
+  /// ortasına konuşan kullanıcının sözü kelimeye yapışmasın ([insertAtCaret]
+  /// ile aynı kural). İmleç her zaman yazılan sözün SONUNDA kalır.
+  void _writeDictationAtCaret(String spoken) {
+    final piece = spoken.trim();
+    if (piece.isEmpty) return;
+    final target = _dictationTarget;
+    final controller = target?.controller ?? _bodyController;
+    final logical = controller.logicalText;
+    final start = _dictationAt.clamp(0, logical.length);
+    final end = (start + _dictationLength).clamp(start, logical.length);
+    bool blank(String ch) => ch.trim().isEmpty;
+    final before = start > 0 && !blank(logical[start - 1]) ? ' ' : '';
+    final after = end < logical.length && !blank(logical[end]) ? ' ' : '';
+    final inserted = '$before$piece$after';
+    final text = logical.replaceRange(start, end, inserted);
+    if (text == logical) return;
+    _dictationLength = inserted.length;
+    controller.setLogical(text, start + before.length + piece.length);
+    // Metni nota işleyen yol alanın KENDİ kaydıdır: madde satırında satırın
+    // metnini nota yazan tek yer orası, gövdede/başlıkta da doğru alana
+    // yazılmasını o kapanış garanti eder.
+    if (target != null) {
+      target.commit();
+    } else {
+      _mutate((n) => n.copyWith(body: text), immediate: true);
+    }
   }
 
   /// Sesle yakalama: ortak levhayı açar, dönen metni seçilen eyleme göre işler.
@@ -5398,6 +5625,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         textStyle: noteBodyStyle,
         onFieldFocused: _setFormatTarget,
         onFieldDisposed: _clearFormatTargetFor,
+        // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
+        // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
+        attachmentNames: _bodyController.attachmentNames,
+        onAttachmentTag: _openTagByName,
         wholeNoteText: () => _note?.toPlainText() ?? '',
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -5429,6 +5660,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         textStyle: noteBodyStyle,
         onFieldFocused: _setFormatTarget,
         onFieldDisposed: _clearFormatTargetFor,
+        // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
+        // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
+        attachmentNames: _bodyController.attachmentNames,
+        onAttachmentTag: _openTagByName,
         wholeNoteText: () => _note?.toPlainText() ?? '',
         header: (note.body.trim().isNotEmpty || _listBodyOpen)
             ? Column(
@@ -5585,6 +5820,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // ikon yeterince belirgin değildi, mikrofon farkına varılmadan
                 // açık kalabiliyordu.
                 if (_aiTask != null) _AiBanner(label: _aiTask!),
+                // CANLI DİKTE şeridi: mikrofon açıkken kaçırılamayacak bir
+                // gösterge (aynı gerekçe — açık kalmış mikrofon fark
+                // edilmiyordu). Dokunmak dikteyi bitirir.
+                if (_dictating)
+                  _AiBanner(
+                    label: l10n.dictationListening,
+                    icon: Icons.mic,
+                    onTap: () => unawaited(_stopDictation()),
+                  ),
                 // Dosya işleri (kopyalama/yapıştırma) için aynı şerit,
                 // ayrı simge: sessiz bekleme bitti (bkz. [_busyTask]).
                 if (_busyTask != null)
@@ -5737,16 +5981,49 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     // sayfanın neresinde olursak olalım görünür
                                     // kalıyor hem hiçbir şeyi kapatmıyor.
                                     // Madde yoksa gizli: seçilecek bir şey yok.
+                                    //
+                                    // SİMGE DEĞİŞTİ (kullanıcı bulgusu
+                                    // 2026-09-01: "alt alandaki seç işareti
+                                    // karışıyor, farklı bir simge
+                                    // kullanalım"): `checklist` simgesi tam
+                                    // yanındaki "Ekle" segmentinin açtığı
+                                    // "liste maddesi ekle" işiyle aynı
+                                    // resmi çiziyordu — ikisi de üç madde
+                                    // ve bir tik. `select_all` kesikli
+                                    // çerçevesiyle "toplu iş" anlamını
+                                    // taşır ve başka hiçbir düğmeye
+                                    // benzemez.
                                     if (showSelect) ...[
                                       const SizedBox(width: 3),
                                       _toolSegment(
-                                        icon: Icons.checklist,
+                                        icon: Icons.select_all,
                                         label: l10n.select,
                                         onTap: () => _itemsEditorKey
                                             .currentState
                                             ?.startSelection(),
                                       ),
                                     ],
+                                    // NOTTA ARA ve PAYLAŞ artık ⋮ menüsünün
+                                    // içinde saklı değil, alt çubukta
+                                    // (kullanıcı isteği 2026-09-01: "notta
+                                    // ara seçeneğini alt alana büyüteç
+                                    // işareti ile koyalım", "paylaş
+                                    // seçeneğini de alt alana koyalım").
+                                    // Menüdeki maddeleri KALDIRMADIK: aynı
+                                    // eylem iki yerden çalışır, alışkanlık
+                                    // bozulmaz.
+                                    const SizedBox(width: 3),
+                                    _toolSegment(
+                                      icon: Icons.search,
+                                      label: l10n.noteSearchTitle,
+                                      onTap: _openNoteSearch,
+                                    ),
+                                    const SizedBox(width: 3),
+                                    _toolSegment(
+                                      icon: Icons.share_outlined,
+                                      label: l10n.share,
+                                      onTap: () => unawaited(_share()),
+                                    ),
                                     // EKLER düğmesi: şeridin kendi başlık satırı
                                     // kalktı, aç/kapa buraya taşındı (kullanıcı
                                     // isteği 2026-08-08 — "ekler yazısı ve göster
@@ -5803,33 +6080,26 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          // Mikrofon başparmak bölgesinde ve en büyük hedef: sesle
-                          // yakalama editörün en sık kullanılan girişi.
-                          Tooltip(
-                            message: l10n.liveDictation,
-                            child: SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Material(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(14),
-                                elevation: 2,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(14),
-                                  onTap: _captureVoice,
-                                  child: Icon(
-                                    Icons.mic_none,
-                                    size: 25,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              ),
-                            ),
+                          const SizedBox(width: 6),
+                          // İKİ MİKROFON (kullanıcı isteği 2026-09-01):
+                          // soldaki YAPAY ZEKÂ yolu (levhada gözden geçir,
+                          // özetle/böl), sağdaki DÜZ SESLE YAZMA (konuşulan
+                          // söz imlecin olduğu yere anında düşer). Simgeler
+                          // bilerek farklı: parıltılı mikrofon "burada AI
+                          // var" der, sade mikrofon klavyenin dikte tuşunu
+                          // anımsatır. Bkz. [_toggleDictation].
+                          _voiceButton(
+                            tooltip: l10n.voiceCaptureAi,
+                            icon: Icons.mic_none,
+                            badge: Icons.auto_awesome,
+                            onTap: _captureVoice,
+                          ),
+                          const SizedBox(width: 6),
+                          _voiceButton(
+                            tooltip: l10n.liveDictation,
+                            icon: _dictating ? Icons.stop : Icons.mic,
+                            active: _dictating,
+                            onTap: () => unawaited(_toggleDictation()),
                           ),
                         ],
                       );
@@ -6206,19 +6476,30 @@ class _PendingEmbedBanner extends StatelessWidget {
 }
 
 class _AiBanner extends StatelessWidget {
-  const _AiBanner({required this.label, this.icon = Icons.auto_awesome});
+  const _AiBanner({
+    required this.label,
+    this.icon = Icons.auto_awesome,
+    this.onTap,
+  });
 
   final String label;
 
-  /// Şeridin simgesi: AI işlerinde yıldız, dosya işlerinde eşitleme oku.
+  /// Şeridin simgesi: AI işlerinde yıldız, dosya işlerinde eşitleme oku,
+  /// canlı diktede mikrofon.
   final IconData icon;
+
+  /// Dolu ise şerit TIKLANABİLİR (dikteyi bitirmek gibi). AI/dosya işlerinde
+  /// null: onların şeridi yalnız bilgi verir, iptal edilemez.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Material(
       color: scheme.secondaryContainer,
-      child: Column(
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           LinearProgressIndicator(
@@ -6243,6 +6524,7 @@ class _AiBanner extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

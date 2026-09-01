@@ -124,6 +124,21 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     await openNewNote(id, query: '?voice=1');
   }
 
+  /// **SESLE YAZ** — yapay zekâsız, levhasız dikte notu.
+  ///
+  /// Kullanıcı isteği 2026-09-01: "sesle yazma çok pratik ve doğru olmalı…
+  /// ana ekrandaki ses butonunu da güncelle." Ana ekranın sade mikrofonu
+  /// boş bir metin notu açar ve dikteyi hemen başlatır: konuşulan söz
+  /// doğrudan nota düşer, arada gözden geçirme levhası yoktur.
+  Future<void> createDictationNote() async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final id = await repo.createNote(NoteType.text);
+    final folderId = quickAddFolderId;
+    if (folderId != null) repo.updateFields(id, {'folderId': folderId});
+    await openNewNote(id, query: '?dictate=1');
+  }
+
   /// Görüntülü not: kamera açılır, video YALNIZCA cihazda saklanır (buluta
   /// yüklenmez).
   ///

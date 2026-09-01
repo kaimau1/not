@@ -345,6 +345,7 @@
   "calcExpressionHint": "ör. 12,5×3+40",
   "calcInvalid": "Geçersiz ifade",
   "liveDictation": "Sesli yazdır",
+  "voiceCaptureAi": "Sesli yakala (yapay zekâ)",
   "dictationListening": "Dinleniyor... konuştukça metin yazılır",
   "dictationNoKeyInfo": "Bu cihazda anlık yazdırma yok; kayıt bitince tek seferde yazıya dökülecek.",
   "dictationHoldHint": "Mikrofonu basılı tutup konuşun, bırakınca yazılır",
@@ -1265,6 +1266,14 @@
   "docNameVideo": "Görüntü notları",
   "folderManage": "Klasörü yönet",
   "folderEmpty": "Bu klasör boş",
+  "folderNoteCount": "{count} not",
+  "@folderNoteCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "folderEmptyHint": "Aşağıdaki + ile buraya not ekle ya da bir notu düzenlerken bu klasöre taşı.",
   "brainstormTitle": "AI ile beraber düşün",
   "brainstormRowInfo": "AI önce bir ana hat çıkarır, sonra birlikte geliştirirsiniz",

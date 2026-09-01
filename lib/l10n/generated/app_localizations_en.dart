@@ -734,6 +734,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get liveDictation => 'Dictate';
 
   @override
+  String get voiceCaptureAi => 'Voice capture (AI)';
+
+  @override
   String get dictationListening => 'Listening... text appears as you speak';
 
   @override
@@ -2702,6 +2705,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderEmpty => 'This folder is empty';
+
+  @override
+  String folderNoteCount(int count) {
+    return '$count notes';
+  }
 
   @override
   String get folderEmptyHint =>

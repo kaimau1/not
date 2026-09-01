@@ -740,6 +740,9 @@ class AppLocalizationsPl extends AppLocalizations {
   String get liveDictation => 'Dyktuj';
 
   @override
+  String get voiceCaptureAi => 'Sesli yakala (yapay zekâ)';
+
+  @override
   String get dictationListening =>
       'Słucham... tekst pojawia się w trakcie mówienia';
 
@@ -2719,6 +2722,11 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get folderEmpty => 'Bu klasör boş';
+
+  @override
+  String folderNoteCount(int count) {
+    return '$count not';
+  }
 
   @override
   String get folderEmptyHint =>

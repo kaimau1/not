@@ -795,6 +795,15 @@ String _searchableBody(Note note) {
   return text;
 }
 
+/// **Not, arama sorgusuna uyuyor mu** — ana ekranın süzgeciyle AYNI kural.
+///
+/// Klasörün kendi sayfası da bunu kullanır (kullanıcı bulgusu 2026-09-01:
+/// "klasör içerisinde … arama yok"): iki yerde iki farklı eşleşme kuralı
+/// olsaydı aynı sorgu ana ekranda bulup klasörde bulamayabilirdi. [query]
+/// KÜÇÜK HARFE ÇEVRİLMİŞ ve kırpılmış gelmelidir (çağıran bir kez yapar,
+/// her not için değil).
+bool noteMatchesQuery(Note note, String query) => _matches(note, query);
+
 bool _matches(Note note, String query) {
   if (note.title.toLowerCase().contains(query)) return true;
   // Kilitli notun içeriği aramaya sızmasın; yalnızca başlıktan bulunur.

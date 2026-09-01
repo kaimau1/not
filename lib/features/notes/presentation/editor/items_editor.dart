@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
@@ -134,6 +135,8 @@ class ItemsEditor extends StatefulWidget {
     this.onFieldFocused,
     this.wholeNoteText,
     this.onFieldDisposed,
+    this.attachmentNames = const [],
+    this.onAttachmentTag,
   });
 
   final List<NoteItem> items;
@@ -203,6 +206,23 @@ class ItemsEditor extends StatefulWidget {
   /// biçim çubuğunun hedefi bu alansa hedefi bıraksın — yoksa çubuk dispose
   /// edilmiş denetleyiciye yazmaya çalışıyordu.
   final void Function(WrapTextController controller)? onFieldDisposed;
+
+  /// Metne gömülü EK ETİKETLERİNİN adları (bkz. attachment_tag.dart).
+  ///
+  /// **KÖK NEDEN (kullanıcı bulgusu 2026-09-01: "ek bağlama … ataç işareti
+  /// geliyor ama tamamen işlevsiz, altı çizilmiyor, basınca bir şey
+  /// olmuyor").** Etiketi kırmızı + altı çizili çizen ve dokunuşu eke
+  /// bağlayan yol yalnız GÖVDE alanında kuruluydu: editör listeyi
+  /// `_bodyController.attachmentNames` ile besliyor, madde satırlarının
+  /// denetleyicilerine hiçbir şey vermiyordu. Liste notunda ("Buraya bağla"
+  /// bir MADDE metnine uygulandığında) etiket düz yazı olarak kalıyor,
+  /// tıklanacak bir şey de olmuyordu — kullanıcının gördüğü tam olarak buydu.
+  final List<String> attachmentNames;
+
+  /// Bir madde satırındaki ek etiketine dokunuldu: [fileName] etiketin
+  /// taşıdığı ad (bağ etiketi ya da dosya adı). Eki açmak editörün işi —
+  /// görüntüleyiciler ve düzenleme geri çağrıları orada.
+  final void Function(String fileName)? onAttachmentTag;
 
   @override
   State<ItemsEditor> createState() => ItemsEditorState();
@@ -308,6 +328,22 @@ class ItemsEditorState extends State<ItemsEditor> {
       return true;
     }
     return false;
+  }
+
+  /// İmleç bir EK ETİKETİNİN üstüne düştüyse çağıranı haberdar eder.
+  /// Konum önce mantıksal metne çevrilir: alanın metni sarma çapaları
+  /// taşıyabiliyor ve çapalar sayılırsa etiketin sınırları kayardı.
+  void _tapAttachmentTag(WrapTextController controller) {
+    final onTag = widget.onAttachmentTag;
+    if (onTag == null || widget.attachmentNames.isEmpty) return;
+    final selection = controller.selection;
+    if (!selection.isValid) return;
+    final name = attachmentTagAt(
+      controller.logicalText,
+      wrapToLogicalOffset(controller.text, selection.baseOffset),
+      widget.attachmentNames,
+    );
+    if (name != null) onTag(name);
   }
 
   void _exitSelection() {
@@ -494,6 +530,9 @@ class ItemsEditorState extends State<ItemsEditor> {
     });
     // Tema (renk paleti) değişebilir; setter aynı değerde hiçbir şey yapmaz.
     controller.richTheme = widget.richTheme;
+    // Ek etiketleri gövdeyle AYNI yoldan çizilsin (bkz.
+    // [ItemsEditor.attachmentNames]); setter aynı listede hiçbir şey yapmaz.
+    controller.attachmentNames = widget.attachmentNames;
     return controller;
   }
 
@@ -1303,19 +1342,30 @@ class ItemsEditorState extends State<ItemsEditor> {
     // sıralama da oraya taşındı. Orada uzun basış SEÇİM demek olduğundan
     // tutamaç gecikmesiz sürükler (ReorderableDragStartListener) ve seçim
     // jestlerinin DIŞINDA durur — üstüne dokunmak öğeyi seçmez.
-    final dragHandle = (reorderIndex != null && _selectionMode)
-        ? ReorderableDragStartListener(
-            index: reorderIndex,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(end: 2),
-              child: Icon(
-                Icons.drag_indicator,
-                size: 20,
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-            ),
-          )
-        : null;
+    //
+    // **HİZA** (kullanıcı bulgusu 2026-09-01: "işaretli yer hizasız oluyor
+    // seç aktifken"): tutamaç yalnız SÜRÜKLENEBİLİR satırlarda vardı, ama
+    // seçim kipinde ekranda sürüklenemeyen satırlar da duruyor —
+    // checklist'in İŞARETLİ maddeleri listenin dışında, footer'da çiziliyor
+    // (bkz. [build] → `checkedItems`) ve iki sütun kipinde hiçbir satır
+    // sürüklenmiyor. Tutamacı olmayan satırın seçim yuvarlağı 22 dp solda
+    // kalıyor, aynı ekranda iki farklı sol kenar oluyordu. Artık seçim
+    // kipinde yuva HER satırda ayrılır; sürüklenemeyen satırda boş kalır.
+    final Widget? dragHandle = !_selectionMode
+        ? null
+        : SizedBox(
+            width: _kHandleWidth,
+            child: reorderIndex == null
+                ? null
+                : ReorderableDragStartListener(
+                    index: reorderIndex,
+                    child: Icon(
+                      Icons.drag_indicator,
+                      size: 20,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
+                  ),
+          );
 
     // Sol bölge (kutucuk/numara). Uzun basış SATIR MENÜSÜNÜ açar (yıldız,
     // seç, sil): metin alanına uzun basmak Android'in kendi metin seçimini
@@ -1460,6 +1510,13 @@ class ItemsEditorState extends State<ItemsEditor> {
                           // yeni öğeye geçer.
                           onEditingComplete: () => _insertAfter(item),
                           textInputAction: TextInputAction.next,
+                          // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
+                          // aynı kural (bkz. note_editor_screen `bodyField`):
+                          // düzenlenebilir alanda span'e tanıyıcı bağlanamaz
+                          // (dokunuş imleci taşımak için EditableText'e
+                          // gider), bu yüzden dokunuştan SONRA imlecin
+                          // nereye düştüğüne bakılır.
+                          onTap: () => _tapAttachmentTag(controller),
                           // Tam göster modunda satır sarılıp büyür; "dokununca
                           // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
                           maxLines: widget.expandItems || focused ? null : 1,
@@ -1593,7 +1650,7 @@ class ItemsEditorState extends State<ItemsEditor> {
         // verilmeli (bkz. _FloatRow.reserved).
         reserved:
             _kRowPadding +
-            (dragHandle == null ? 0 : _kHandleWidth) +
+            (_selectionMode ? _kHandleWidth : 0) +
             _kLeadingWidth +
             _kTrailingWidth,
         // Odak DEĞİŞİMİ yalnız bu satırı yeniden çizer (bkz. [_focusFlags]).
@@ -1616,6 +1673,13 @@ class ItemsEditorState extends State<ItemsEditor> {
     final showChecks = widget.showCheckboxes;
     // Satır önbelleğinin liste düzeyi girdileri (bkz. [_rowCache]).
     _syncRowCache(theme, l10n);
+    // Ek listesi değişince (ek silindi/eklendi) etiketin kırmızı çizilip
+    // çizilmeyeceği değişir. Satır ÖNBELLEKTEN gelebildiği için besleme
+    // `_controllerFor`a bırakılamaz: denetleyici zaten var olan satırlarda o
+    // işlev hiç çağrılmaz. Setter aynı listede hiçbir şey yapmaz.
+    for (final controller in _controllers.values) {
+      controller.attachmentNames = widget.attachmentNames;
+    }
 
     // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da
     // ayrı bir blok olarak durur (Keep'in "tamamlananlar" bölümü gibi).
