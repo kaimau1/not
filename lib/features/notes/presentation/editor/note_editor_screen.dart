@@ -4618,6 +4618,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _dictationLength = 0;
     await sub.cancel();
     await DeviceSpeech.stop();
+    // Son sözler beklemede kalmasın: yazım sırasında kayıt gecikmeliydi
+    // (yukarıya bak), dikte biterken bir kez kesinleştirilir. `_saveNow`
+    // denetleyici ile not arasındaki farkı yazan hazır yol.
+    _saveNow();
     if (mounted) setState(() {});
   }
 
@@ -4642,13 +4646,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (text == logical) return;
     _dictationLength = result.length;
     controller.setLogical(text, result.caret);
-    // Metni nota işleyen yol alanın KENDİ kaydıdır: madde satırında satırın
-    // metnini nota yazan tek yer orası, gövdede/başlıkta da doğru alana
-    // yazılmasını o kapanış garanti eder.
-    if (target != null) {
-      target.commit();
+    // **KAYIT YAZMAKLA AYNI YOLDAN, GECİKMELİ.** Tanıyıcı saniyede birkaç kez
+    // olay gönderiyor; alanın kendi `commit`i (gövde/başlık) `immediate: true`
+    // ile yazdığından her olay ayrı bir Firestore yazımı olurdu — konuşurken
+    // ağı ve kotayı boşuna yakan, üstelik kasan bir yol. Klavyeden yazarken
+    // izlenen yol da bu değil: `TextField.onChanged` gecikmeli `_mutate`
+    // çağırıyor. Madde satırı ise zaten kendi gecikmeli yolundan geçer
+    // (ItemsEditor.onChanged), o yüzden orada alanın `commit`i kullanılır.
+    if (identical(controller, _bodyController)) {
+      _mutate((n) => n.copyWith(body: text));
+    } else if (identical(controller, _titleController)) {
+      _mutate((n) => n.copyWith(title: text));
     } else {
-      _mutate((n) => n.copyWith(body: text), immediate: true);
+      target?.commit();
     }
   }
 

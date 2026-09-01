@@ -306,9 +306,23 @@ jobs:
           npx firebase-tools deploy --only functions --non-interactive
           rm -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
+      # KÖK NEDEN (deploy 2026-08-21'den beri KIRMIZI: "The constant
+      # EventTarget must be initialized … functions/node_modules/
+      # event-target-shim/index.d.ts"): `wrangler pages deploy`, ÇALIŞMA
+      # DİZİNİNDEKİ `functions/` klasörünü **Cloudflare Pages Functions**
+      # sanıp esbuild ile paketlemeye çalışıyor. Bu depodaki `functions/` ise
+      # FIREBASE Cloud Functions — ad çakışması. Bir üstteki "Cloud Functions
+      # bağımlılıklarını indir" adımı `functions/node_modules`ı doldurduğu an
+      # (o adım 2026-08-21'de eklendi) paketleme patlıyor; web derlemesinin
+      # kendisiyle hiç ilgisi yok.
+      #
+      # ÇÖZÜM: yayın `build/` dizininden koşuluyor — orada `functions/` yok,
+      # wrangler Pages Functions aramayı bırakıyor. Yayınlanan içerik aynı
+      # (`build/web`), yalnız yol göreli hâle geldi.
       - name: Cloudflare Pages'e yayınla
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy build/web --project-name=notlar-web --branch=main
+          workingDirectory: build
+          command: pages deploy web --project-name=notlar-web --branch=main
