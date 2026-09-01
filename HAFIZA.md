@@ -2629,3 +2629,89 @@ ters olduğundan işaret `Directionality`den geliyor.
   ana ekranın sütun tercihini paylaşıyor. Eşleşme kuralı ana ekranınkiyle aynı
   işlevden geliyor (`noteMatchesQuery`) — iki ayrı kural, aynı sorgunun bir
   yerde bulup öbüründe bulamaması demekti.
+
+## 2026-09-01 (2. tur) — Defterin üstüne YAZILIYOR: kâğıt, oto sayfa, tutamaç hizası
+
+Aynı günün ikinci turu; kullanıcı defteri açıp beş madde bildirdi. Bu
+oturumda da Flutter SDK ortama indirildi (stable 3.44.6): `flutter analyze`
+temiz, `flutter test` **839 test yeşil**.
+
+### KÖK NEDEN — "metin yazamıyorum, yazmak için bu alan açılıyor"
+Sabahki tur defteri sayfalara böldü ama YAZMAYI hâlâ bir `AlertDialog`a
+bağlıyordu ("+ → Metin ekle" → yaz → Tamam → satır olarak sayfaya düşer).
+Yani ekranda bir defter duruyordu ama defterin üstüne yazılamıyordu.
+Şimdi her sayfanın kendisi bir yazı alanı (`_PageWriter`): kâğıda dokun,
+yaz; kayıt 600 ms geciktirilerek kendiliğinden yapılır.
+* **Yazı ÇİZGİLERE oturuyor**: satır yüksekliği kâğıdın çizgi aralığıyla
+  aynı (28 dp) ve `forceStrutHeight` ile yazı tipinden bağımsız sabit.
+  Desen de içerikle BİRLİKTE kayıyor (boyacı kaydırma konumunu okuyor) —
+  sabit dursaydı sayfa kaydırılır kaydırılmaz yazı çizgilerin arasına
+  düşerdi.
+* **Yazı girdisi kayıtta AYRI bir alan değil**: sayfanın ilk sade (başlıksız,
+  dosyaya bağlanmamış) metin girdisi. Eski defterler göç etmeden açılıyor;
+  başlıklı/bağlı bloklar yazının altında ayrı ayrı duruyor.
+* Kural saf bir işleve çıkarıldı: `archiveWriteText` (7 testi var) —
+  sayfa yoksa açar, hatırlanan kimlik zaten varsa İKİZLEMEZ, metin
+  tümüyle silinince girdiyi de siler, değişiklik yoksa AYNI kaydı döndürür.
+
+### KÖK NEDEN — telefonda PDF/sunum eklemek İMKÂNSIZDI
+Defterin "Dosya ekle"si mobilde yalnız `ImagePicker.pickMultiImage`
+çağırıyordu, yani galeri. Kullanıcı "PDF eklenebilmeli, slayt eklenebilmeli"
+derken var olmayan bir yolu değil, KAPALI bir yolu tarif ediyordu. Artık "+"
+levhasında Görsel / Fotoğraf çek / PDF / Sunum / Görselden yakala ayrı ayrı
+var; belgeler `DocPicker` üzerinden seçiliyor (Android'de dosya yöneticisi de
+listeye düşsün diye — gerekçe `doc_picker.dart`'ta).
+
+### KARAR — yeni sayfa DİYALOG SORMADAN açılır
+Defterin sonunda her zaman boş bir yaprak duruyor; ileri kaydırmak ona
+geçiriyor. Yaprak, üstüne YAZILINCA (ya da dosya eklenince, ya da başlığına
+ad yazılınca) kayda geçiyor — boşuna kaydıran kullanıcı deftere boş sayfa
+biriktirmiyor. Sayfa adı da yerinde düzenleniyor (başlığa dokun-yaz);
+"Sayfayı yeniden adlandır" diyalogu yalnız ⋮ menüsünde bir kısayol olarak
+kaldı. Ad çakışırsa yazım REDDEDİLİR ve başlık eski ada döner: ad, girdileri
+sayfaya bağlayan anahtar.
+
+### Kâğıt deseni (`Note.archivePaper`)
+Çizgili / kareli / noktalı / düz — defterin KENDİ kaydında (genel ayar değil:
+fatura defteri kareli, günlük çizgili olabilir). Tanınmayan kimlik çizgiliye
+düşer; alan koşulsuz yazılır (merge tuzağı: atlanan anahtar silinmez).
+
+### KÖK NEDEN — "6 nokta ile seçim işareti hâlâ hizasız"
+Sabahki tur tutamacın YUVASINI her satırda ayırmıştı (sol kenarlar
+hizalandı) ama tutamacın kendisi satırın `Row`una doğrudan konuyordu. Satır
+`CrossAxisAlignment.start` ile dizildiği için 20 dp'lik simge satırın en
+üstüne yapışıyor, yanındaki seçim yuvarlağı ise ilk yazı satırının ortasına
+hizalanıyordu: ölçülen fark **12 dp**. Tutamaç artık yuvarlağınkiyle aynı
+hesabı kullanıyor ("ilk satırın ortası − simgenin yarısı"). Test düzeltme
+geri alınınca KIRMIZI (12.0 > 1.0).
+
+### PERFORMANS
+* **Sayfa gövdesi önbelleği**: defter Firestore akışını dinliyor ve her yazım
+  bütün ekranı yeniden kuruyordu — `PageView` o an üç sayfayı canlı tutuyor,
+  yani bir sayfaya yazmak öbür iki sayfanın alanlarını/fotoğraflarını da
+  baştan kuruyordu. Girdileri değişmemiş sayfa artık AYNI widget örneğini
+  döndürüyor (satır önbelleğinin sayfa ölçeğindeki hâli).
+* **TUZAK — önbellek + bayat `Note`**: önbellekteki geri çağrılar eski bir
+  `Note`u kapanışında tutuyor. `_mutate` artık çağıranın kopyasını değil
+  kaydın EN SON hâlini (`_liveNote`) değiştiriyor; yoksa arada eklenen bir
+  dosya geri alınırdı (`items`/`attachments` dizi alanları, merge yazımında
+  bütünüyle değişiyor).
+* Sayfa içeriği **tembel** (`SliverList.builder`): yüz fotoğraflı sayfada düz
+  bir `Column` hepsini kurup yerleştiriyordu.
+* Arama tek geçişte: eskiden her SAYFA için bütün girdiler süzülüyordu
+  (girdi × sayfa), üstelik her tuş vuruşunda.
+* Yazı alanı `ref`e hiç dokunmuyor: kayıt yolu build'de alınan `_liveNote`/
+  `_liveRepo` ile çalışıyor — ekran kapanırken `Debouncer.flush` `ref.read`
+  çağırsaydı "kapatılmış ref" hatası verir ve yazılan SON cümle kaybolurdu.
+
+### TUZAK — `ScrollController.position` sayfa çevirirken PATLIYOR
+Kâğıdın deseni kaydırma konumunu okuyor. `controller.position`,
+`_positions.length == 1` doğrulamasına takılıyor: sayfa çevrilirken eski
+yaprağın kaydırılabilir alanı sökülmeden yenisi bağlanıyor (bir an İKİ
+konum), sayfa ağaçtan düşerken de hiç konum kalmıyor ama boyacı bir kez daha
+çiziliyor. Yani defterde sayfa çevirmek kırmızı ekran demekti. Çözüm
+`positions` üzerinden ilk konumu okumak. **Bu hatayı bu turda yazılan widget
+testi yakaladı** (`archive_notebook_screen_test.dart`) — aynı test "+"
+levhasının kısa ekranda taştığını da gösterdi (levha artık kaydırılıyor).
+DERS: defter gibi ekranların en az bir kez GERÇEKTEN kurulduğu bir test
+olsun; saf işlev testleri bu iki hatanın ikisini de göremezdi.

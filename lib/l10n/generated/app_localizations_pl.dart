@@ -2699,6 +2699,48 @@ class AppLocalizationsPl extends AppLocalizations {
   }
 
   @override
+  String get archivePaper => 'Kâğıt';
+
+  @override
+  String get archivePaperLined => 'Çizgili';
+
+  @override
+  String get archivePaperGrid => 'Kareli';
+
+  @override
+  String get archivePaperDots => 'Noktalı';
+
+  @override
+  String get archivePaperPlain => 'Düz';
+
+  @override
+  String get archiveWriteHint => 'Bu sayfaya yaz…';
+
+  @override
+  String get archivePageTitleHint => 'Sayfa adı';
+
+  @override
+  String archiveAutoPageName(int number) {
+    return 'Sayfa $number';
+  }
+
+  @override
+  String get archiveNewPageHint =>
+      'Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.';
+
+  @override
+  String get archiveNewPageLabel => 'Yeni sayfa';
+
+  @override
+  String get archiveAttachmentsHeading => 'Bu sayfadaki dosyalar';
+
+  @override
+  String get archiveNotesHeading => 'Notlar';
+
+  @override
+  String get archiveOpenPage => 'Sayfaya git';
+
+  @override
   String get archiveEntryTitle => 'Başlık';
 
   @override

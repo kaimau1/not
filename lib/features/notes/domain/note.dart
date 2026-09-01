@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/utils/rich_text.dart';
+import 'archive_paper.dart';
 import 'attachment.dart';
 import 'note_item.dart';
 import 'note_type.dart';
@@ -136,6 +137,7 @@ class Note {
     this.backgroundOpacity = 0.35,
     this.listColumns = 1,
     this.archivePages = const [],
+    this.archivePaper = ArchivePaper.lined,
     this.tagLinks = const [],
     this.orderIndex = 0,
     this.createdAt,
@@ -256,6 +258,10 @@ class Note {
   /// Burada yalnız kullanıcının kendi verdiği adlar tutulur; girdiler
   /// `Attachment.section` / `NoteItem.section` ile bu adlara bağlanır.
   final List<String> archivePages;
+
+  /// Arşiv defterinin KÂĞIT DESENİ (çizgili / kareli / noktalı / düz).
+  /// Defter başına saklanır — bkz. [ArchivePaper].
+  final ArchivePaper archivePaper;
 
   /// Metnin İÇİNE gömülmüş ek bağları: hangi ETİKET METNİ hangi eke gider.
   ///
@@ -480,6 +486,7 @@ class Note {
     double? backgroundOpacity,
     int? listColumns,
     List<String>? archivePages,
+    ArchivePaper? archivePaper,
     List<NoteTagLink>? tagLinks,
     double? orderIndex,
     DateTime? deletedAt,
@@ -518,6 +525,7 @@ class Note {
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     listColumns: listColumns ?? this.listColumns,
     archivePages: archivePages ?? this.archivePages,
+    archivePaper: archivePaper ?? this.archivePaper,
     tagLinks: tagLinks ?? this.tagLinks,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
@@ -617,6 +625,7 @@ class Note {
         for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
           p.toString(),
       ],
+      archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
       tagLinks: [
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
@@ -679,6 +688,10 @@ class Note {
     // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
     // ancak boş dizi yazılarak kayda geçer.
     'archivePages': archivePages,
+    // HER ZAMAN yazılır (yukarıdaki merge tuzağı): desen varsayılana
+    // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
+    // kalır ve defter her açılışta yine kareli gelirdi.
+    'archivePaper': archivePaper.id,
     // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
     // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
     'tagLinks': [for (final l in tagLinks) l.toMap()],

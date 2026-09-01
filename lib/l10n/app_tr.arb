@@ -1265,6 +1265,26 @@
       }
     }
   },
+  "archivePaper": "Kâğıt",
+  "archivePaperLined": "Çizgili",
+  "archivePaperGrid": "Kareli",
+  "archivePaperDots": "Noktalı",
+  "archivePaperPlain": "Düz",
+  "archiveWriteHint": "Bu sayfaya yaz…",
+  "archivePageTitleHint": "Sayfa adı",
+  "archiveAutoPageName": "Sayfa {number}",
+  "@archiveAutoPageName": {
+      "placeholders": {
+          "number": {
+              "type": "int"
+          }
+      }
+  },
+  "archiveNewPageHint": "Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.",
+  "archiveNewPageLabel": "Yeni sayfa",
+  "archiveAttachmentsHeading": "Bu sayfadaki dosyalar",
+  "archiveNotesHeading": "Notlar",
+  "archiveOpenPage": "Sayfaya git",
   "archiveEntryTitle": "Başlık",
   "archiveLinkedFile": "Bağlı dosya",
   "archiveNoLink": "Bağlı dosya yok",

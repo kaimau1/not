@@ -5028,6 +5028,84 @@ abstract class AppLocalizations {
   /// **'{files} dosya · {texts} metin'**
   String archiveCardSummary(int files, int texts);
 
+  /// No description provided for @archivePaper.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kâğıt'**
+  String get archivePaper;
+
+  /// No description provided for @archivePaperLined.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizgili'**
+  String get archivePaperLined;
+
+  /// No description provided for @archivePaperGrid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kareli'**
+  String get archivePaperGrid;
+
+  /// No description provided for @archivePaperDots.
+  ///
+  /// In tr, this message translates to:
+  /// **'Noktalı'**
+  String get archivePaperDots;
+
+  /// No description provided for @archivePaperPlain.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düz'**
+  String get archivePaperPlain;
+
+  /// No description provided for @archiveWriteHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfaya yaz…'**
+  String get archiveWriteHint;
+
+  /// No description provided for @archivePageTitleHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa adı'**
+  String get archivePageTitleHint;
+
+  /// No description provided for @archiveAutoPageName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {number}'**
+  String archiveAutoPageName(int number);
+
+  /// No description provided for @archiveNewPageHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.'**
+  String get archiveNewPageHint;
+
+  /// No description provided for @archiveNewPageLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni sayfa'**
+  String get archiveNewPageLabel;
+
+  /// No description provided for @archiveAttachmentsHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfadaki dosyalar'**
+  String get archiveAttachmentsHeading;
+
+  /// No description provided for @archiveNotesHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar'**
+  String get archiveNotesHeading;
+
+  /// No description provided for @archiveOpenPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya git'**
+  String get archiveOpenPage;
+
   /// No description provided for @archiveEntryTitle.
   ///
   /// In tr, this message translates to:

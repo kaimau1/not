@@ -626,6 +626,10 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// modunda vardır).
   static const double _kHandleWidth = 22;
 
+  /// Tutamaç simgesinin kutusu (kare): hizası bu yükseklikten hesaplanıyor
+  /// (bkz. [_itemRow] → `handleTop`).
+  static const double _kHandleIcon = 20;
+
   /// Kutucuk / seçim dairesi / sıra numarasının kapladığı genişlik.
   static const double _kLeadingWidth = 48;
 
@@ -1361,7 +1365,7 @@ class ItemsEditorState extends State<ItemsEditor> {
                     index: reorderIndex,
                     child: Icon(
                       Icons.drag_indicator,
-                      size: 20,
+                      size: _kHandleIcon,
                       color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
                     ),
                   ),
@@ -1451,6 +1455,20 @@ class ItemsEditorState extends State<ItemsEditor> {
         ? 22.0
         : (widget.showCheckboxes ? 40.0 : lineHeight);
     final leadingTop = math.max(0.0, firstLineCenter - leadingHeight / 2);
+    // **TUTAMAÇ HİZASI** (kullanıcı bulgusu 2026-09-01, ekran görüntüsüyle:
+    // "6 nokta ile seçim işareti hâlâ hizasız").
+    //
+    // KÖK NEDEN: bir önceki tur tutamacın YUVASINI her satırda ayırdı (sol
+    // kenarlar hizalandı) ama tutamacın kendisi satırın Row'una DOĞRUDAN
+    // konuyordu. Satır `CrossAxisAlignment.start` ile diziliyor, yani 20
+    // dp'lik simge satırın en üstüne yapışıyor; yanındaki seçim yuvarlağı
+    // ise [leadingTop] kadar aşağıda. İkisi aynı satırda ama farklı
+    // yükseklikte duruyordu — kullanıcının gördüğü hizasızlık buydu.
+    //
+    // Çözüm yuvarlağınkiyle AYNI hesap: "ilk satırın ortası − simgenin
+    // yarısı". Yazı tipi/boyutu ve sistem yazı ölçeği değişse de ikisi
+    // birlikte kayar.
+    final handleTop = math.max(0.0, firstLineCenter - _kHandleIcon / 2);
 
     Widget rowBody(bool focused) => Container(
       color: selected ? scheme.primaryContainer.withValues(alpha: 0.4) : null,
@@ -1471,7 +1489,11 @@ class ItemsEditorState extends State<ItemsEditor> {
           // orada anlatılan hiza kök nedeni.
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ?dragHandle,
+            if (dragHandle != null)
+              Padding(
+                padding: EdgeInsets.only(top: handleTop),
+                child: dragHandle,
+              ),
             Padding(
               padding: EdgeInsets.only(top: leadingTop),
               child: leading,

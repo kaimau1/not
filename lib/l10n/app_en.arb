@@ -1017,6 +1017,26 @@
       }
     }
   },
+  "archivePaper": "Paper",
+  "archivePaperLined": "Lined",
+  "archivePaperGrid": "Grid",
+  "archivePaperDots": "Dotted",
+  "archivePaperPlain": "Plain",
+  "archiveWriteHint": "Write on this page…",
+  "archivePageTitleHint": "Page name",
+  "archiveAutoPageName": "Page {number}",
+  "@archiveAutoPageName": {
+      "placeholders": {
+          "number": {
+              "type": "int"
+          }
+      }
+  },
+  "archiveNewPageHint": "Start writing or add something — the page opens by itself.",
+  "archiveNewPageLabel": "New page",
+  "archiveAttachmentsHeading": "Files on this page",
+  "archiveNotesHeading": "Notes",
+  "archiveOpenPage": "Go to page",
   "archiveEntryTitle": "Title",
   "archiveLinkedFile": "Linked file",
   "archiveNoLink": "No linked file",

@@ -59,6 +59,30 @@ void main() {
     );
   });
 
+  testWidgets('6 nokta ile seçim yuvarlağı AYNI yükseklikte', (tester) async {
+    // Kullanıcı bulgusu 2026-09-01 (ekran görüntüsüyle): "6 nokta ile seçim
+    // işareti hâlâ hizasız".
+    //
+    // KÖK NEDEN: bir önceki tur tutamacın YUVASINI her satırda ayırdı (sol
+    // kenarlar hizalandı) ama tutamacın kendisi satırın Row'una doğrudan
+    // konuyordu. Satır `CrossAxisAlignment.start` ile dizildiği için simge
+    // satırın en üstüne yapışıyor, yanındaki yuvarlak ise ilk yazı satırının
+    // ortasına hizalanıyordu — yani ikisi dikeyde ayrı yerlerde duruyordu.
+    await pumpEditor(tester);
+
+    final handle = tester.getCenter(find.byIcon(Icons.drag_indicator).first).dy;
+    final circle = tester
+        .getCenter(find.byIcon(Icons.circle_outlined).first)
+        .dy;
+    expect(
+      (handle - circle).abs(),
+      lessThan(1.0),
+      reason:
+          'Tutamaç ve seçim yuvarlağı aynı satırda aynı yükseklikte '
+          'durmalı (fark: ${handle - circle})',
+    );
+  });
+
   testWidgets('tutamaç yalnız sürüklenebilir satırlarda çizilir', (
     tester,
   ) async {

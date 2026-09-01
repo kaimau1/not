@@ -2682,6 +2682,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get archivePaper => 'Paper';
+
+  @override
+  String get archivePaperLined => 'Lined';
+
+  @override
+  String get archivePaperGrid => 'Grid';
+
+  @override
+  String get archivePaperDots => 'Dotted';
+
+  @override
+  String get archivePaperPlain => 'Plain';
+
+  @override
+  String get archiveWriteHint => 'Write on this page…';
+
+  @override
+  String get archivePageTitleHint => 'Page name';
+
+  @override
+  String archiveAutoPageName(int number) {
+    return 'Page $number';
+  }
+
+  @override
+  String get archiveNewPageHint =>
+      'Start writing or add something — the page opens by itself.';
+
+  @override
+  String get archiveNewPageLabel => 'New page';
+
+  @override
+  String get archiveAttachmentsHeading => 'Files on this page';
+
+  @override
+  String get archiveNotesHeading => 'Notes';
+
+  @override
+  String get archiveOpenPage => 'Go to page';
+
+  @override
   String get archiveEntryTitle => 'Title';
 
   @override
