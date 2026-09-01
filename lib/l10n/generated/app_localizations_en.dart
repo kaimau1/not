@@ -2587,6 +2587,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNewPage => 'New page';
 
   @override
+  String get archiveGeneralPage => 'General';
+
+  @override
+  String get archiveRenamePage => 'Rename page';
+
+  @override
+  String get archiveDeletePage => 'Delete page';
+
+  @override
+  String archiveDeletePageInfo(String name) {
+    return 'Delete the page \"$name\"? Its entries are not deleted; they move to the General page.';
+  }
+
+  @override
+  String get archivePrevPage => 'Previous page';
+
+  @override
+  String get archiveNextPage => 'Next page';
+
+  @override
+  String get archiveAddEntry => 'Add to page';
+
+  @override
+  String get archiveMoveEntry => 'Move to another page';
+
+  @override
+  String archiveEntryCount(int count) {
+    return '$count entries';
+  }
+
+  @override
   String get archivePageName => 'Page name (e.g. Invoices)';
 
   @override
@@ -2628,7 +2659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archiveCapturePageInfo =>
-      'The type the AI suggested. Left empty, it goes to the Texts page.';
+      'The page the AI suggested. Left empty, it goes to the General page.';
 
   @override
   String get archiveCaptureText => 'Recognised text';

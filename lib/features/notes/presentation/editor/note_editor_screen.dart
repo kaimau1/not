@@ -4627,21 +4627,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// ortasına konuşan kullanıcının sözü kelimeye yapışmasın ([insertAtCaret]
   /// ile aynı kural). İmleç her zaman yazılan sözün SONUNDA kalır.
   void _writeDictationAtCaret(String spoken) {
-    final piece = spoken.trim();
-    if (piece.isEmpty) return;
+    if (spoken.trim().isEmpty) return;
     final target = _dictationTarget;
     final controller = target?.controller ?? _bodyController;
     final logical = controller.logicalText;
-    final start = _dictationAt.clamp(0, logical.length);
-    final end = (start + _dictationLength).clamp(start, logical.length);
-    bool blank(String ch) => ch.trim().isEmpty;
-    final before = start > 0 && !blank(logical[start - 1]) ? ' ' : '';
-    final after = end < logical.length && !blank(logical[end]) ? ' ' : '';
-    final inserted = '$before$piece$after';
-    final text = logical.replaceRange(start, end, inserted);
+    // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye).
+    final result = dictationReplace(
+      logical,
+      _dictationAt,
+      _dictationLength,
+      spoken,
+    );
+    final text = result.text;
     if (text == logical) return;
-    _dictationLength = inserted.length;
-    controller.setLogical(text, start + before.length + piece.length);
+    _dictationLength = result.length;
+    controller.setLogical(text, result.caret);
     // Metni nota işleyen yol alanın KENDİ kaydıdır: madde satırında satırın
     // metnini nota yazan tek yer orası, gövdede/başlıkta da doğru alana
     // yazılmasını o kapanış garanti eder.

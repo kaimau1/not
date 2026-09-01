@@ -308,7 +308,7 @@ class _FolderTitle extends StatelessWidget {
   }
 }
 
-class _NotesGrid extends StatelessWidget {
+class _NotesGrid extends ConsumerWidget {
   const _NotesGrid({
     required this.async,
     this.ownerId,
@@ -330,9 +330,12 @@ class _NotesGrid extends StatelessWidget {
   final bool readOnly;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final needle = query.trim().toLowerCase();
+    // Sütun sayısı ANA EKRANLA ortak: kullanıcı orada iki parmakla seçtiği
+    // yoğunluğu klasörde de görsün (sıralamayla aynı gerekçe). 0 = otomatik.
+    final fixedColumns = ref.watch(gridColumnsProvider);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) =>
@@ -357,10 +360,9 @@ class _NotesGrid extends StatelessWidget {
                 ))
           : LayoutBuilder(
               builder: (context, constraints) {
-                final columns = (constraints.maxWidth / 220).floor().clamp(
-                  2,
-                  6,
-                );
+                final columns = fixedColumns > 0
+                    ? fixedColumns
+                    : (constraints.maxWidth / 220).floor().clamp(2, 6);
                 return MasonryGridView.count(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
                   crossAxisCount: columns,

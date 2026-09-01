@@ -4860,6 +4860,60 @@ abstract class AppLocalizations {
   /// **'Yeni sayfa'**
   String get archiveNewPage;
 
+  /// No description provided for @archiveGeneralPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get archiveGeneralPage;
+
+  /// No description provided for @archiveRenamePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfayı yeniden adlandır'**
+  String get archiveRenamePage;
+
+  /// No description provided for @archiveDeletePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfayı sil'**
+  String get archiveDeletePage;
+
+  /// No description provided for @archiveDeletePageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{name}\" sayfası silinsin mi? İçindeki girdiler silinmez, Genel sayfasına taşınır.'**
+  String archiveDeletePageInfo(String name);
+
+  /// No description provided for @archivePrevPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki sayfa'**
+  String get archivePrevPage;
+
+  /// No description provided for @archiveNextPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki sayfa'**
+  String get archiveNextPage;
+
+  /// No description provided for @archiveAddEntry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya ekle'**
+  String get archiveAddEntry;
+
+  /// No description provided for @archiveMoveEntry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başka sayfaya taşı'**
+  String get archiveMoveEntry;
+
+  /// No description provided for @archiveEntryCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} girdi'**
+  String archiveEntryCount(int count);
+
   /// No description provided for @archivePageName.
   ///
   /// In tr, this message translates to:
@@ -4935,7 +4989,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveCapturePageInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.'**
+  /// **'Yapay zekânın önerdiği sayfa. Boş bırakılırsa Genel sayfasına düşer.'**
   String get archiveCapturePageInfo;
 
   /// No description provided for @archiveCaptureText.

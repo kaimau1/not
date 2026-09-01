@@ -1199,6 +1199,29 @@
   "archivePageDocuments": "Belgeler",
   "archivePageTexts": "Metinler",
   "archiveNewPage": "Yeni sayfa",
+  "archiveGeneralPage": "Genel",
+  "archiveRenamePage": "Sayfayı yeniden adlandır",
+  "archiveDeletePage": "Sayfayı sil",
+  "archiveDeletePageInfo": "\"{name}\" sayfası silinsin mi? İçindeki girdiler silinmez, Genel sayfasına taşınır.",
+  "@archiveDeletePageInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archivePrevPage": "Önceki sayfa",
+  "archiveNextPage": "Sonraki sayfa",
+  "archiveAddEntry": "Sayfaya ekle",
+  "archiveMoveEntry": "Başka sayfaya taşı",
+  "archiveEntryCount": "{count} girdi",
+  "@archiveEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "archivePageName": "Sayfa adı (ör. Faturalar)",
   "archivePageEmpty": "Bu sayfa henüz boş.",
   "archiveSearchHint": "Defterde ara…",
@@ -1225,7 +1248,7 @@
   },
   "archiveCaptureTitle": "Görselden yakala",
   "archiveCapturePage": "Sayfa",
-  "archiveCapturePageInfo": "Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.",
+  "archiveCapturePageInfo": "Yapay zekânın önerdiği sayfa. Boş bırakılırsa Genel sayfasına düşer.",
   "archiveCaptureText": "Tanınan metin",
   "attachmentTagInsert": "Metne ekle",
   "attachmentTagInserted": "Ek etiketi metne eklendi.",

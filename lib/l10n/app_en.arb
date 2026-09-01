@@ -951,6 +951,29 @@
   "archivePageDocuments": "Documents",
   "archivePageTexts": "Texts",
   "archiveNewPage": "New page",
+  "archiveGeneralPage": "General",
+  "archiveRenamePage": "Rename page",
+  "archiveDeletePage": "Delete page",
+  "archiveDeletePageInfo": "Delete the page \"{name}\"? Its entries are not deleted; they move to the General page.",
+  "@archiveDeletePageInfo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "archivePrevPage": "Previous page",
+  "archiveNextPage": "Next page",
+  "archiveAddEntry": "Add to page",
+  "archiveMoveEntry": "Move to another page",
+  "archiveEntryCount": "{count} entries",
+  "@archiveEntryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "archivePageName": "Page name (e.g. Invoices)",
   "archivePageEmpty": "This page is empty.",
   "archiveSearchHint": "Search the notebook…",
@@ -977,7 +1000,7 @@
   },
   "archiveCaptureTitle": "Capture from image",
   "archiveCapturePage": "Page",
-  "archiveCapturePageInfo": "The type the AI suggested. Left empty, it goes to the Texts page.",
+  "archiveCapturePageInfo": "The page the AI suggested. Left empty, it goes to the General page.",
   "archiveCaptureText": "Recognised text",
   "attachmentTagInsert": "Insert into the text",
   "attachmentTagInserted": "The attachment tag was inserted.",

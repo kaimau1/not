@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/rich_text.dart';
 
@@ -770,6 +771,43 @@ int wrapToLogicalOffset(String display, int displayOffset) {
   return (
     text: logical.replaceRange(at, at, piece),
     caret: at + before.length + trimmed.length,
+  );
+}
+
+/// **CANLI DİKTE YAZIMI** — konuşulan sözü imlecin yerine, KENDİ yazdığı
+/// aralığın üstüne yazar.
+///
+/// Cihazın tanıyıcısı her olayda o ana kadarki TAM metni gönderir ve önceki
+/// bir kelimeyi SONRADAN düzeltebilir ("bir" → "birkaç"). Gelen parçayı
+/// imlece eklemek metni ikizler; bu yüzden dikte boyunca yazılan aralık
+/// ([at]..[at]+[length]) hatırlanır ve her olayda yenisiyle DEĞİŞTİRİLİR.
+/// Aralığın dışı — kullanıcının dikte sürerken elle yazdığı harfler dahil —
+/// hiç ellenmez.
+///
+/// Eklenen parça kelimeye yapışmasın diye iki yanına GEREKTİĞİ KADAR boşluk
+/// konur ([insertAtCaret] ile aynı kural). Dönen `length` bir sonraki olayda
+/// değiştirilecek aralığın uzunluğudur (boşluklar dahil), `caret` ise
+/// konuşulan sözün SONUDUR — kullanıcı oradan yazmaya devam edebilir.
+({String text, int caret, int length}) dictationReplace(
+  String logical,
+  int at,
+  int length,
+  String spoken,
+) {
+  final piece = spoken.trim();
+  final start = at.clamp(0, logical.length);
+  final end = (start + length).clamp(start, logical.length);
+  if (piece.isEmpty) {
+    return (text: logical, caret: end, length: end - start);
+  }
+  bool blank(String ch) => ch.trim().isEmpty;
+  final before = start > 0 && !blank(logical[start - 1]) ? ' ' : '';
+  final after = end < logical.length && !blank(logical[end]) ? ' ' : '';
+  final inserted = '$before$piece$after';
+  return (
+    text: logical.replaceRange(start, end, inserted),
+    caret: start + before.length + piece.length,
+    length: inserted.length,
   );
 }
 
@@ -1547,8 +1585,14 @@ class WrapTextController extends TextEditingController {
   /// findLinks + stripRichMarkers taraması yapıyordu ("klavye açılırken
   /// kasma"nın bir parçası). Metin değişmediyse sonuç yeniden kullanılır.
   String? _scanText;
+
+  /// Sadelik taraması ek adlarına da bağlı: aynı metin, ek listesi değişince
+  /// etiketli hâle gelebilir (dosya sonradan eklendi) ya da etiketini
+  /// kaybedebilir (dosya silindi).
+  String? _scanNamesKey;
   bool _scanHasLink = false;
   bool _scanHasMarker = false;
+  bool _scanHasTag = false;
 
   /// Üretilmiş span ağacının önbelleği.
   ///
@@ -1598,10 +1642,13 @@ class WrapTextController extends TextEditingController {
   }
 
   void _scanPlainness() {
-    if (_scanText == text) return;
+    final namesKey = _attachmentNames.join('\u0000');
+    if (_scanText == text && _scanNamesKey == namesKey) return;
     _scanText = text;
+    _scanNamesKey = namesKey;
     _scanHasLink = findLinks(text).isNotEmpty;
     _scanHasMarker = stripRichMarkers(text) != text;
+    _scanHasTag = findAttachmentTags(text, _attachmentNames).isNotEmpty;
   }
 
   @override
@@ -1620,7 +1667,15 @@ class WrapTextController extends TextEditingController {
       // Biçim işareti ya da bağlantı yoksa üst sınıfın span'i kullanılır
       // (IME davranışı olduğu gibi kalsın).
       _scanPlainness();
-      if ((linkColor == null || !_scanHasLink) && !_scanHasMarker) {
+      //
+      // **EK ETİKETİ DE SADELİĞİ BOZAR** (kullanıcı bulgusu 2026-09-01:
+      // "ataç işareti geliyor ama … altı çizilmiyor"). Kısayol yalnız
+      // bağlantıya ve biçim işaretine bakıyordu; "📎 rapor.pdf" gibi bir
+      // metinde ikisi de yok, dolayısıyla üst sınıfın DÜZ span'i dönüyor ve
+      // etiket kırmızı/altı çizili HİÇ çizilmiyordu — yalnız madde
+      // satırlarında değil, gövdede de.
+      if ((linkColor == null || (!_scanHasLink && !_scanHasTag)) &&
+          !_scanHasMarker) {
         span = super.buildTextSpan(
           context: context,
           style: style,

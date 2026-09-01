@@ -2605,6 +2605,37 @@ class AppLocalizationsIt extends AppLocalizations {
   String get archiveNewPage => 'Yeni sayfa';
 
   @override
+  String get archiveGeneralPage => 'Genel';
+
+  @override
+  String get archiveRenamePage => 'Sayfayı yeniden adlandır';
+
+  @override
+  String get archiveDeletePage => 'Sayfayı sil';
+
+  @override
+  String archiveDeletePageInfo(String name) {
+    return '\"$name\" sayfası silinsin mi? İçindeki girdiler silinmez, Genel sayfasına taşınır.';
+  }
+
+  @override
+  String get archivePrevPage => 'Önceki sayfa';
+
+  @override
+  String get archiveNextPage => 'Sonraki sayfa';
+
+  @override
+  String get archiveAddEntry => 'Sayfaya ekle';
+
+  @override
+  String get archiveMoveEntry => 'Başka sayfaya taşı';
+
+  @override
+  String archiveEntryCount(int count) {
+    return '$count girdi';
+  }
+
+  @override
   String get archivePageName => 'Sayfa adı (ör. Faturalar)';
 
   @override
@@ -2647,7 +2678,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get archiveCapturePageInfo =>
-      'Yapay zekânın önerdiği tür. Boş bırakılırsa Metinler sayfasına düşer.';
+      'Yapay zekânın önerdiği sayfa. Boş bırakılırsa Genel sayfasına düşer.';
 
   @override
   String get archiveCaptureText => 'Tanınan metin';
