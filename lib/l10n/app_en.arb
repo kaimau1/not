@@ -1017,6 +1017,7 @@
       }
     }
   },
+  "archivePlaceOnPage": "Place on page",
   "archivePaper": "Paper",
   "archivePaperLined": "Lined",
   "archivePaperGrid": "Grid",

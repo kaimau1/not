@@ -22,6 +22,7 @@ import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/gemini_service.dart';
+import '../../ai/presentation/ai_sheet.dart';
 import '../../settings/data/permissions_service.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
@@ -30,7 +31,12 @@ import '../domain/archive_paper.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
+import 'color_picker_sheet.dart';
+import 'editor/drawing_screen.dart';
+import 'editor/format_bar.dart';
+import 'editor/format_menu.dart';
 import 'editor/note_images.dart';
+import 'editor/text_wrap.dart';
 import 'viewers/pdf_viewer_screen.dart';
 import 'viewers/slide_viewer_screen.dart';
 import 'viewers/video_viewer.dart';
@@ -132,16 +138,36 @@ NoteItem? archivePageText(Note note, String page) {
   return null;
 }
 
-/// Sayfanın serbest yazısı DIŞINDA kalan girdiler (dosyalar + başlıklı ya da
-/// bir dosyaya bağlı metin blokları).
+/// Sayfanın serbest yazısı ve SAYFADA YÜZEN görselleri dışında kalan
+/// girdiler (dosya ekleri + başlıklı ya da bir dosyaya bağlı metin blokları).
 List<ArchiveEntry> archivePageExtras(Note note, String page) {
   final writing = archivePageText(note, page);
   return [
     for (final entry in archiveEntriesOf(note, page))
-      if (entry.file != null || writing == null || entry.text!.id != writing.id)
+      if (entry.file != null
+          ? !entry.file!.floatsOnPage
+          : (writing == null || entry.text!.id != writing.id))
         entry,
   ];
 }
+
+/// Sayfada YÜZEN görsel/videolar — metin bunların etrafından akar ve
+/// kullanıcı yerlerini/boyutlarını değiştirebilir (bkz. [NotePageCanvas]).
+///
+/// Kullanıcı isteği 2026-09-02: "görsel eklendiğinde normal not sayfamız gibi
+/// metin etrafından akabilmeli, yeri değiştirilebilmeli". Eski defterlerdeki
+/// görseller `asFile: true` ile eklendiği için sayfada yüzmez, alttaki dosya
+/// listesinde durur; girdinin ⋮ menüsündeki "Sayfaya yerleştir" onları
+/// tuvale taşır.
+List<Attachment> archivePageFloats(Note note, String page) => [
+  for (final a in note.attachments)
+    if (a.floatsOnPage && archiveOnPage(note, a.section, page)) a,
+];
+
+/// Defterin ilk sayfasının adı: kullanıcı verdiyse o, yoksa dilden gelen
+/// "Genel" ([fallback]).
+String archiveGeneralLabel(Note note, String fallback) =>
+    note.archiveGeneralName.trim().isEmpty ? fallback : note.archiveGeneralName;
 
 /// Kendiliğinden açılan sayfanın adı: "Sayfa 3" (Genel dahil kaçıncı yaprak
 /// olacaksa o). Aynı ad zaten varsa numara ilerletilir — ad, girdileri
@@ -262,6 +288,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     for (final controller in _scrolls.values) {
       controller.dispose();
     }
+    for (final controller in _writers.values) {
+      controller.dispose();
+    }
+    _styleDebounce.dispose();
     super.dispose();
   }
 
@@ -269,8 +299,12 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
 
   NotesRepository? get _repo => _liveRepo;
 
-  String _pageLabel(String name) =>
-      name.isEmpty ? context.l10n.archiveGeneralPage : name;
+  String _pageLabel(String name) {
+    if (name.isNotEmpty) return name;
+    final note = _note;
+    final fallback = context.l10n.archiveGeneralPage;
+    return note == null ? fallback : archiveGeneralLabel(note, fallback);
+  }
 
   static bool _matches(String text, String query) =>
       text.toLowerCase().contains(query);
@@ -405,6 +439,23 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     return true;
   }
 
+  /// İlk sayfanın (bölümsüz girdilerin sayfası) ADINI değiştirir.
+  ///
+  /// Girdilere DOKUNULMAZ: ad yalnız görünendir (bkz.
+  /// [Note.archiveGeneralName]). Boş ad "Genel"e döner — kullanıcı adı
+  /// silerek varsayılana dönebilsin.
+  Future<bool> _renameGeneral(String name) async {
+    final note = _note;
+    if (note == null) return false;
+    final trimmed = name.trim();
+    if (trimmed == note.archiveGeneralName) return false;
+    // Aynı adı taşıyan bir sayfa varsa reddedilir: alt çubuk ve sayfa
+    // listesi iki farklı sayfayı aynı adla gösterirdi.
+    if (trimmed.isNotEmpty && note.archivePages.contains(trimmed)) return false;
+    await _mutate((n) => n.copyWith(archiveGeneralName: trimmed));
+    return true;
+  }
+
   /// Sayfayı siler. **Girdiler SİLİNMEZ**, Genel sayfasına taşınır: bir
   /// sayfayı kaldırmak "bu başlığı istemiyorum" demektir, "bu belgeleri
   /// istemiyorum" demek değil.
@@ -448,7 +499,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     if (mounted) _goToPage(0);
   }
 
-  /// Kâğıt deseni levhası (çizgili / kareli / noktalı / düz).
+  /// **KÂĞIT levhası**: rengi ve deseni (çizgili / kareli / noktalı / düz).
+  ///
+  /// Biçim çubuğundaki "sayfa görünümü" düğmesi de buraya çıkar — defterde
+  /// sayfanın görünümü kâğıdın kendisidir.
   Future<void> _paperSheet(Note note) async {
     final l10n = context.l10n;
     String label(ArchivePaper paper) => switch (paper) {
@@ -457,40 +511,72 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       ArchivePaper.dots => l10n.archivePaperDots,
       ArchivePaper.plain => l10n.archivePaperPlain,
     };
-    final picked = await showModalBottomSheet<ArchivePaper>(
+    // null = desen seçilmedi; `pickedColor` = renk şeridi istendi.
+    const pickedColor = 'color';
+    final picked = await showModalBottomSheet<Object>(
       context: context,
       showDragHandle: true,
-      // `RadioListTile.groupValue`/`onChanged` KULLANILMAZ (kullanımdan
-      // kalktı): seçili değer ve geri çağrı dıştaki [RadioGroup]'tan gelir —
-      // ayarlardaki dil seçicisiyle aynı desen.
       builder: (sheetContext) => SafeArea(
-        child: RadioGroup<ArchivePaper>(
-          groupValue: note.archivePaper,
-          onChanged: (value) => Navigator.pop(sheetContext, value),
+        child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final paper in ArchivePaper.values)
-                RadioListTile<ArchivePaper>(
-                  value: paper,
-                  title: Text(label(paper)),
-                  // Desenin KENDİSİ örneklenir: adları okumak yerine bakıp
-                  // seçmek defterde çok daha hızlı.
-                  secondary: SizedBox(
-                    width: 44,
-                    height: 34,
-                    child: _PaperSwatch(
-                      paper: paper,
-                      color: NoteColors.surface(sheetContext, note.color),
-                    ),
-                  ),
+              ListTile(
+                leading: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: NoteColors.surface(sheetContext, note.color),
                 ),
+                title: Text(sheetContext.l10n.backgroundColor),
+                onTap: () => Navigator.pop(sheetContext, pickedColor),
+              ),
+              const Divider(height: 1),
+              // `RadioListTile.groupValue`/`onChanged` KULLANILMAZ
+              // (kullanımdan kalktı): seçili değer ve geri çağrı dıştaki
+              // [RadioGroup]'tan gelir — ayarlardaki dil seçicisiyle aynı
+              // desen.
+              RadioGroup<ArchivePaper>(
+                groupValue: note.archivePaper,
+                onChanged: (value) => Navigator.pop(sheetContext, value),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final paper in ArchivePaper.values)
+                      RadioListTile<ArchivePaper>(
+                        value: paper,
+                        title: Text(label(paper)),
+                        // Desenin KENDİSİ örneklenir: adları okumak yerine
+                        // bakıp seçmek defterde çok daha hızlı.
+                        secondary: SizedBox(
+                          width: 44,
+                          height: 34,
+                          child: _PaperSwatch(
+                            paper: paper,
+                            color: NoteColors.surface(sheetContext, note.color),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
-    if (picked == null || picked == note.archivePaper) return;
+    if (!mounted || picked == null) return;
+    if (picked == pickedColor) {
+      // KÂĞIDIN RENGİ notun rengidir (defterin zeminini zaten o çiziyor):
+      // ortak renk şeridi kullanılır, seçim canlı uygulanır.
+      await showNoteColorPicker(
+        context,
+        frame: false,
+        current: note.color,
+        onChanged: (color) =>
+            unawaited(_mutate((n) => n.copyWith(color: color))),
+      );
+      return;
+    }
+    if (picked is! ArchivePaper || picked == note.archivePaper) return;
     await _mutate((n) => n.copyWith(archivePaper: picked));
   }
 
@@ -1007,6 +1093,16 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     ]);
   }
 
+  /// **Çizim**: editörün çizim ekranını açar, sonucu sayfaya görsel olarak
+  /// koyar (yüzen, sürüklenebilir).
+  Future<void> _addDrawing(String page) async {
+    final bytes = await Navigator.of(
+      context,
+    ).push<Uint8List>(MaterialPageRoute(builder: (_) => const DrawingScreen()));
+    if (bytes == null) return;
+    await _storeFiles(page, [(name: 'cizim.png', bytes: bytes)]);
+  }
+
   /// Seçilen dosyaları türlerine göre hazırlayıp sayfaya ekler.
   ///
   /// Sayfa henüz açılmamışsa (defterin sonundaki boş yaprak) AYNI yazımda
@@ -1073,8 +1169,22 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             fileName: file.name,
           ),
         };
-        // Defterdeki ek sayfada YÜZMEZ: defter bir dizin, bir tuval değil.
-        added.add(stored.copyWith(asFile: true, section: page));
+        // **GÖRSEL SAYFADA YÜZER** (kullanıcı isteği 2026-09-02: "görsel
+        // eklendiğinde normal not sayfamız gibi metin etrafından
+        // akabilmeli, yeri değiştirilebilmeli"): eskiden defterdeki her ek
+        // `asFile: true` ile ekleniyor, yani sayfaya değil alttaki dosya
+        // listesine giriyordu. Belgeler (PDF/sunum) listede kalır — onlar
+        // sayfada gösterilemez.
+        final onPage = stored.kind == AttachmentKind.image;
+        added.add(
+          onPage
+              ? _placeOnPage(
+                  stored.copyWith(asFile: false, section: page),
+                  note,
+                  placed: added,
+                )
+              : stored.copyWith(asFile: true, section: page),
+        );
       } on FileTooLargeException catch (e) {
         // Tek dosya tavana takılsa da kalanlar eklensin; sebep sonda
         // söylenir — eskiden hata sessizce yutuluyor, dosya "eklenmiyor"
@@ -1229,6 +1339,15 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                   title: Text(l10n.archiveCaptureTitle),
                   onTap: () => Navigator.pop(sheetContext, 'capture'),
                 ),
+              // ÇİZİM de defterde (kullanıcı isteği 2026-09-02: "sanki arşiv
+              // defteri farklı bir uygulama gibi, hiçbir özelliğimiz yok
+              // orada, hepsi olmalı"): editördeki aynı ekran açılır, sonuç
+              // sayfada YÜZEN bir görsel olur.
+              ListTile(
+                leading: const Icon(Icons.brush_outlined),
+                title: Text(l10n.addDrawing),
+                onTap: () => Navigator.pop(sheetContext, 'drawing'),
+              ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.post_add),
@@ -1259,6 +1378,8 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
         await _addSlide(page);
       case 'capture':
         await _captureFromImage(note, page);
+      case 'drawing':
+        await _addDrawing(page);
       case 'text':
         await _editText(note, page);
       case 'page':
@@ -1325,11 +1446,61 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// bağlı kalır ve sayfa kaydırılamazdı.
   final _scrolls = <String, ScrollController>{};
 
+  /// Sayfa adı → yazı alanının denetleyicisi.
+  ///
+  /// [WrapTextController]: metnin görsellerin ETRAFINDAN akması ve satır içi
+  /// biçim (kalın/renk/vurgu) bu sınıfın işi — gövde metniyle birebir aynı
+  /// yol (bkz. text_wrap.dart). Denetleyici ekranda tutulur, alanın kendi
+  /// state'inde değil: biçim çubuğu da, sayfa gövdesi önbelleği de aynı
+  /// örneğe bakmalı.
+  final _writers = <String, WrapTextController>{};
+
+  /// Sayfa adı → o sayfadaki görsellerin kapladığı bantlar (metin bunların
+  /// etrafından akar). [NotePageCanvas] ölçer, yazı alanı kullanır.
+  final _floats = <String, List<FloatBox>>{};
+
+  /// Sayfa adı → tuvalin kök kutusunun anahtarı (görsel konumları buna göre
+  /// ölçülür).
+  final _pageKeys = <String, GlobalKey>{};
+
+  /// Sayfa adı → tuvalin EN AZ yüksekliği. Klavye açılınca görünür alan
+  /// kısalıyor; en büyük görülen yükseklik saklanır ki tuval klavyenin her
+  /// animasyon karesinde yeniden yerleşmesin (editördeki aynı tuzak).
+  final _canvasHeights = <String, double>{};
+
+  /// Biçim çubuğu açık mı (alt çubuktaki "Aa" düğmesi açıp kapatır).
+  bool _formatBarOpen = false;
+
   FocusNode _focusFor(Map<String, FocusNode> nodes, String page) =>
       nodes.putIfAbsent(page, FocusNode.new);
 
   ScrollController _scrollFor(String page) =>
       _scrolls.putIfAbsent(page, ScrollController.new);
+
+  GlobalKey _pageKeyFor(String page) =>
+      _pageKeys.putIfAbsent(page, GlobalKey.new);
+
+  /// Sayfanın yazı denetleyicisi; ilk çağrıda kayıttaki metinle kurulur.
+  WrapTextController _writerFor(String page, String text) {
+    final existing = _writers[page];
+    if (existing != null) return existing;
+    final controller = WrapTextController(text: text);
+    _writers[page] = controller;
+    return controller;
+  }
+
+  /// Sayfanın tuvalinin kök kutusu ([WrapFieldMeasure] konumları buna göre
+  /// çevirir).
+  RenderBox? _pageBox(String page) {
+    final box = _pageKeys[page]?.currentContext?.findRenderObject();
+    return box is RenderBox && box.hasSize ? box : null;
+  }
+
+  /// Tuval bantları değişti: yazı alanı metni yeniden kırsın.
+  void _applyFloats(String page, List<FloatBox> floats) {
+    if (sameFloatList(_floats[page] ?? const [], floats)) return;
+    setState(() => _floats[page] = floats);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1447,7 +1618,18 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
           : _book(note, names, sheets, paper),
       bottomNavigationBar: (_searching && _query.isNotEmpty)
           ? null
-          : _pageBar(note, names, sheets, page),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // **BİÇİM ÇUBUĞU** (kullanıcı isteği 2026-09-02: "biçim
+                // ayarları vs burada da olmalı"): editörün çubuğunun ta
+                // kendisi — kalın/italik/altı çizili, yazı ve vurgu rengi,
+                // yazı tipi, boyut, şeffaflık ve sayfa görünümü. Defter
+                // ayrı bir uygulama değil; aynı motoru kullanıyor.
+                if (_formatBarOpen) _formatBar(note),
+                _pageBar(note, names, sheets, page),
+              ],
+            ),
     );
   }
 
@@ -1470,6 +1652,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     itemBuilder: (context, index) {
       final name = sheets[index];
       final isNew = index >= names.length;
+      final generalName = archiveGeneralLabel(
+        note,
+        context.l10n.archiveGeneralPage,
+      );
       return _PageTurn(
         controller: _pageController,
         index: index,
@@ -1481,17 +1667,22 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
           number: index + 1,
           total: names.length,
           isNew: isNew,
-          header: index == 0
-              ? _GeneralPageTitle(title: _pageLabel(name))
-              : _PageTitleField(
-                  // Ad değişince alan SIFIRDAN kurulur: eski adla açılmış
-                  // denetleyici yeni adı göstermezdi.
-                  key: ValueKey('title-$name'),
-                  name: name,
-                  hint: context.l10n.archivePageTitleHint,
-                  focusNode: _focusFor(_titleFocus, name),
-                  onRename: (value) => _renamePage(name, value),
-                ),
+          // BAŞLIK HER SAYFADA YERİNDE DÜZENLENİR (kullanıcı isteği
+          // 2026-09-02: "sayfa başlığını direk üzerine tıklayarak yazıp
+          // değiştirebilmeliyim") — ilk sayfa dahil. İlk sayfanın adı
+          // kayıtta AYRI durur (`Note.archiveGeneralName`): oradaki
+          // girdiler bölüm adı taşımıyor, taşısaydı ad değişince hepsinin
+          // yeniden etiketlenmesi gerekirdi.
+          header: _PageTitleField(
+            // Ad değişince alan SIFIRDAN kurulur: eski adla açılmış
+            // denetleyici yeni adı göstermezdi.
+            key: ValueKey('title-$index-${index == 0 ? generalName : name}'),
+            name: index == 0 ? generalName : name,
+            hint: context.l10n.archivePageTitleHint,
+            focusNode: _focusFor(_titleFocus, name),
+            onRename: (value) =>
+                index == 0 ? _renameGeneral(value) : _renamePage(name, value),
+          ),
           child: _cachedPageBody(note, name),
         ),
       );
@@ -1520,6 +1711,20 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// içerik bir dizeye yazılıp karşılaştırılıyor.
   String _bodySignature(Note note, String name) {
     final buffer = StringBuffer();
+    // SAYFADA YÜZEN görseller: yerleri ve boyutları değişince tuval yeniden
+    // kurulmalı (sürüklenen görsel eski yerinde donardı).
+    for (final image in archivePageFloats(note, name)) {
+      buffer
+        ..write('i:')
+        ..write(image.id)
+        ..write('@')
+        ..write(image.x)
+        ..write(',')
+        ..write(image.pageY)
+        ..write(',')
+        ..write(image.displayWidth)
+        ..write('\n');
+    }
     for (final entry in archivePageExtras(note, name)) {
       final item = entry.text;
       if (item != null) {
@@ -1554,7 +1759,15 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     // Yazının METNİ de anahtarda: uzaktan gelen değişiklik ekrana yansımalı.
     // (Kullanıcı yazarken alan zaten kendi metnini koruyor — bkz.
     // [_PageWriter.didUpdateWidget].)
-    final key = (writing?.id, writing?.text, _bodySignature(note, name));
+    // Bantlar da anahtarda: görsel sürüklenince metnin ETRAFINDAN AKMASI
+    // için yazı alanının yeni bantları görmesi gerekiyor (liste yalnız
+    // gerçekten değişince yenileniyor — bkz. [_applyFloats]).
+    final key = (
+      writing?.id,
+      writing?.text,
+      identityHashCode(_floats[name]),
+      _bodySignature(note, name),
+    );
     final hit = _bodyCache[name];
     if (hit != null && hit.$1 == key) return hit.$2;
     final body = _pageBody(note, name);
@@ -1569,6 +1782,8 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       theme.colorScheme,
       note.archivePaper,
       note.fontFamily,
+      note.fontScale,
+      note.textOpacity,
       context.l10n.localeName,
     );
     if (env != _bodyCacheEnv) {
@@ -1585,51 +1800,196 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// Bir sayfanın içeriği: serbest yazı alanı + (varsa) dosyalar ve başlıklı
   /// bloklar.
   ///
-  /// **TEMBEL liste** (`SliverList.builder`): bir sayfada yüz fotoğraf
-  /// olabiliyor ve düz bir `Column` hepsini — ekranda görünmeyenler dahil —
-  /// kurup yerleştirirdi. Kaydırma denetleyicisi dışarıdan geliyor, çünkü
-  /// kâğıdın deseni de aynı konuma göre çiziliyor (bkz. [_PaperPainter]).
+  /// Bir sayfanın içeriği: **normal not sayfasının ta kendisi** — serbest
+  /// yazı alanı, üstünde yüzen görseller, altında dosya ekleri ve başlıklı
+  /// bloklar.
+  ///
+  /// **Kullanıcı isteği 2026-09-02:** "görsel eklendiğinde normal not
+  /// sayfamız gibi metin etrafından akabilmeli, yeri değiştirilebilmeli;
+  /// şu an sanki arşiv defteri farklı bir uygulama gibi, hiçbir özelliğimiz
+  /// yok orada."
+  ///
+  /// Bu yüzden defter artık kendi çizim yolunu kurmuyor, EDİTÖRÜN yolunu
+  /// kullanıyor: görseller [NotePageCanvas] üzerinde yüzer (sürüklenir,
+  /// boyutlandırılır, ⋮ menüsünden kırpılır/silinir), yazı alanı
+  /// [WrapTextController] + [WrapFieldMeasure] ile metni o görsellerin
+  /// etrafından akıtır ve satır içi biçim (kalın/renk/vurgu) aynı motordan
+  /// gelir.
   Widget _pageBody(Note note, String name) {
     final extras = archivePageExtras(note, name);
     final writing = archivePageText(note, name);
+    final images = archivePageFloats(note, name);
+    final controller = _writerFor(name, writing?.text ?? '');
+    final scheme = Theme.of(context).colorScheme;
+    controller.richTheme = RichTextTheme(
+      palette: NoteColors.richPalette,
+      markerColor: scheme.onSurfaceVariant.withValues(alpha: 0.45),
+    );
     // ÜST DOLGU YOK: desenin başlangıcı ile yazının ilk satırı aynı noktadan
     // başlasın (yoksa çizgiler yazının arasına düşer).
-    const padding = EdgeInsetsDirectional.fromSTEB(38, 0, 16, 0);
-    return CustomScrollView(
-      controller: _scrollFor(name),
-      slivers: [
-        SliverPadding(
-          padding: padding,
-          sliver: SliverToBoxAdapter(
-            child: _PageWriter(
-              // Kimlik SAYFA adına bağlı, girdiye değil: ilk harfte girdi
-              // oluşuyor ve kimliğe bağlı olsa alan o anda sıfırlanıp odağı
-              // kaybederdi.
-              key: ValueKey('writer-$name'),
-              text: writing?.text ?? '',
-              hint: context.l10n.archiveWriteHint,
-              // Defterin kendi yazı tipi (kitap/daktilo) yazıya da geçer;
-              // BOYUT sabit kalır — satır yüksekliği kâğıdın çizgi
-              // aralığına bağlı (bkz. [_kLineGap]).
-              fontFamily: note.fontFamily,
-              focusNode: _focusFor(_writerFocus, name),
-              onChanged: (value) => _saveWriting(name, value),
-            ),
-          ),
-        ),
-        if (extras.isNotEmpty)
-          SliverPadding(
-            padding: padding.add(const EdgeInsets.only(top: 18)),
-            sliver: SliverList.builder(
-              itemCount: extras.length,
-              itemBuilder: (context, i) => _entryTile(note, extras[i]),
-            ),
-          ),
-        // Yazının altında kalan boşluk da yazı alanına dokunmak sayılsın
-        // diye bırakılıyor (bkz. [_PageSheet] — boş kâğıda dokunmak odaklar).
-        const SliverToBoxAdapter(child: SizedBox(height: 120)),
-      ],
+    const padding = EdgeInsetsDirectional.fromSTEB(
+      _kGutter,
+      0,
+      16,
+      _kPageBottomGap,
     );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Klavye açılınca görünür alan kısalıyor; tuvalin en az yüksekliği
+        // EN BÜYÜK görülen değerde tutulur — yoksa klavyenin her karesinde
+        // sayfa yeniden yerleşir (editördeki `_stableCanvasHeight` tuzağı).
+        final height = math.max(
+          _canvasHeights[name] ?? 0,
+          constraints.maxHeight,
+        );
+        _canvasHeights[name] = height;
+        return SingleChildScrollView(
+          controller: _scrollFor(name),
+          child: NotePageCanvas(
+            images: images,
+            minHeight: height,
+            onRemove: _removeAttachment,
+            onChanged: _updateAttachment,
+            onDetach: (a) => _setImageOnPage(a, false),
+            onCopy: null,
+            topLimit: 0,
+            textTop: 0,
+            textLeft: _kGutter,
+            onFloats: (floats) => _applyFloats(name, floats),
+            // Boş kâğıda dokunmak yazı alanını odaklar (gerçek defterde de
+            // sayfanın neresine dokunursan oraya yazarsın).
+            onTapEmpty: _focusFor(_writerFocus, name).requestFocus,
+            child: KeyedSubtree(
+              key: _pageKeyFor(name),
+              child: Padding(
+                padding: padding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _PageWriter(
+                      // Kimlik SAYFA adına bağlı, girdiye değil: ilk harfte
+                      // girdi oluşuyor ve kimliğe bağlı olsa alan o anda
+                      // sıfırlanıp odağı kaybederdi.
+                      key: ValueKey('writer-$name'),
+                      controller: controller,
+                      text: writing?.text ?? '',
+                      hint: context.l10n.archiveWriteHint,
+                      // Defterin kendi yazı tipi ve boyutu yazıya da geçer
+                      // (biçim çubuğundan değişir).
+                      fontFamily: note.fontFamily,
+                      fontScale: note.fontScale,
+                      textOpacity: note.textOpacity,
+                      floats: _floats[name] ?? const [],
+                      pageBox: () => _pageBox(name),
+                      focusNode: _focusFor(_writerFocus, name),
+                      onChanged: (value) => _saveWriting(name, value),
+                      onFocused: () => _onWriterFocused(name),
+                    ),
+                    if (extras.isNotEmpty) ...[
+                      const SizedBox(height: 18),
+                      for (final entry in extras) _entryTile(note, entry),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Yazı alanı odaklandı: biçim çubuğunun hedefi bu sayfa olsun.
+  void _onWriterFocused(String page) {
+    if (_formatPage == page) return;
+    setState(() => _formatPage = page);
+  }
+
+  /// Biçim çubuğunun yazdığı SAYFA (yazı alanı). Sayfa çevrilince odakla
+  /// birlikte değişir.
+  String? _formatPage;
+
+  /// Biçim çubuğunun hedefi: o an odaklı yazı alanı. Çubuk odak İSTEMEDİĞİ
+  /// için (bkz. [FormatBar]) alan odağını korur, seçim de yerinde kalır.
+  FormatTarget? _formatTarget() {
+    final page = _formatPage;
+    final controller = page == null ? null : _writers[page];
+    if (page == null || controller == null) return null;
+    return FormatTarget(
+      controller: controller,
+      focusNode: _focusFor(_writerFocus, page),
+      commit: () => unawaited(_saveWriting(page, controller.logicalText)),
+    );
+  }
+
+  /// Biçim düğmesi: seçime uygular (seçim yoksa imlece "bekleyen biçim"
+  /// açar) ve metni kaydeder — programlı değişiklikte alanın `onChanged`i
+  /// çalışmaz.
+  void _runOnWriter(bool Function(WrapTextController) action) {
+    final target = _formatTarget();
+    if (target == null) return;
+    if (action(target.controller)) target.commit();
+    if (!target.focusNode.hasFocus) target.focusNode.requestFocus();
+    setState(() {});
+  }
+
+  /// Kaydırıcılar (boyut/şeffaflık) sürüklenirken kayıt GECİKTİRİLİR: her
+  /// karede Firestore'a yazmak boşuna trafik.
+  final _styleDebounce = Debouncer();
+
+  void _mutateStyleSoon(Note Function(Note) change) {
+    setState(() {});
+    _styleDebounce(() => unawaited(_mutate(change)));
+  }
+
+  /// Eki kayıtta günceller (taşıma, boyutlandırma, kırpma, ad değişimi).
+  void _updateAttachment(Attachment attachment) => unawaited(
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == attachment.id) attachment else a,
+        ],
+      ),
+    ),
+  );
+
+  /// Görseli SAYFAYA yerleştirir ([onPage] true) ya da sayfadan alıp dosya
+  /// listesine taşır. Sayfaya ilk kez konan görsele bir yer de verilir.
+  void _setImageOnPage(Attachment attachment, bool onPage) {
+    if (!onPage) {
+      _updateAttachment(attachment.copyWith(asFile: true));
+      return;
+    }
+    final note = _note;
+    final placed = note == null
+        ? attachment.copyWith(asFile: false)
+        : _placeOnPage(attachment.copyWith(asFile: false), note);
+    _updateAttachment(placed);
+  }
+
+  /// Yeni görselin sayfadaki yeri: var olan görsellerin ALTINA, sol kenara
+  /// yakın. Ölçüm gerekmez — kullanıcı zaten sürükleyip istediği yere
+  /// koyabiliyor; önemli olan üst üste binmemesi.
+  Attachment _placeOnPage(
+    Attachment image,
+    Note note, {
+    List<Attachment> placed = const [],
+  }) {
+    final page = image.section;
+    var top = 8.0;
+    final width = _pageBox(page)?.size.width ?? 0;
+    for (final other in [...archivePageFloats(note, page), ...placed]) {
+      if (other.id == image.id || !other.floatsOnPage) continue;
+      final aspect =
+          (other.width != null && other.height != null && other.height! > 0)
+          ? other.width! / other.height!
+          : 1.0;
+      final bottom =
+          (other.pageY ?? 0) + (width * (other.displayWidth ?? 0.32)) / aspect;
+      if (bottom + 12 > top) top = bottom + 12;
+    }
+    return image.copyWith(x: 0.04, pageY: top, displayWidth: 0.32);
   }
 
   Widget _entryTile(Note note, ArchiveEntry entry) {
@@ -1656,6 +2016,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       onRename: () => _renameAttachment(file),
       onMove: () => _moveEntry(note, entry),
       onDelete: () => _removeAttachment(file),
+      // Eski defterlerdeki görseller dosya olarak eklenmişti; buradan
+      // sayfaya taşınır ve metin etrafından akmaya başlar.
+      onPlaceOnPage: file.kind == AttachmentKind.image
+          ? () => _setImageOnPage(file, true)
+          : null,
     );
   }
 
@@ -1718,7 +2083,60 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     AttachmentKind.audio => Icons.audiotrack_outlined,
   };
 
-  /// Alt çubuk: sayfa çevirme okları, konum göstergesi ve "+".
+  /// Yapay zekâdan gelen metni açık sayfanın YAZISININ sonuna ekler.
+  Future<void> _appendToPage(String page, String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    final controller = _writers[page];
+    final current = controller?.logicalText ?? '';
+    final merged = current.trim().isEmpty ? trimmed : '$current\n\n$trimmed';
+    controller?.setLogical(merged, merged.length);
+    await _saveWriting(page, merged);
+  }
+
+  /// Defterin biçim çubuğu — editörünkiyle AYNI widget.
+  Widget _formatBar(Note note) => FormatBar(
+    target: _formatTarget(),
+    onFormat: (format, {int? colorIndex}) =>
+        _runOnWriter((c) => applyRichFormat(c, format, colorIndex: colorIndex)),
+    onClearFormat: () => _runOnWriter(clearRichFormat),
+    onRemoveFormat: (format) =>
+        _runOnWriter((c) => removeRichFormat(c, format)),
+    fontFamily: note.fontFamily,
+    fontScale: note.fontScale,
+    textOpacity: note.textOpacity,
+    hasSelection: () {
+      final selection = _formatTarget()?.controller.selection;
+      return selection != null && selection.isValid && !selection.isCollapsed;
+    },
+    onFontChanged: (family) => unawaited(
+      _mutate(
+        (n) => family == null
+            ? n.copyWith(clearFontFamily: true)
+            : n.copyWith(fontFamily: family),
+      ),
+    ),
+    // Sürüklerken gecikmeli kayıt, bırakınca kalıcı.
+    onScaleChanged: (value) =>
+        _mutateStyleSoon((n) => n.copyWith(fontScale: value)),
+    onScaleEnd: (value) =>
+        unawaited(_mutate((n) => n.copyWith(fontScale: value))),
+    onOpacityChanged: (value) =>
+        _mutateStyleSoon((n) => n.copyWith(textOpacity: value)),
+    onOpacityEnd: (value) =>
+        unawaited(_mutate((n) => n.copyWith(textOpacity: value))),
+    // SAYFA GÖRÜNÜMÜ defterde "kâğıt": rengi ve deseni (çizgili/kareli/
+    // noktalı/düz) aynı levhada.
+    onPageStyle: () => unawaited(_paperSheet(note)),
+    onClose: () => setState(() => _formatBarOpen = false),
+  );
+
+  /// Alt çubuk: sayfa çevirme okları, konum göstergesi, biçim, yapay zekâ
+  /// ve "+".
+  ///
+  /// Düğmeler DAR: beş düğme ve sayfa adı en dar telefona da sığmalı
+  /// (kullanıcı bulgusu 2026-09-02: "alt kısım sığmıyor" — editörün alt
+  /// çubuğunda da aynı sıkışma vardı).
   Widget _pageBar(
     Note note,
     List<String> names,
@@ -1728,15 +2146,30 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final isNew = page >= names.length;
+    Widget compact({
+      required String tooltip,
+      required IconData icon,
+      required VoidCallback? onPressed,
+      bool selected = false,
+    }) => IconButton(
+      tooltip: tooltip,
+      isSelected: selected,
+      icon: Icon(icon, size: 22),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+      onPressed: onPressed,
+    );
+
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
         child: Row(
           children: [
-            IconButton(
+            compact(
               tooltip: l10n.archivePrevPage,
-              icon: const Icon(Icons.chevron_left),
+              icon: Icons.chevron_left,
               onPressed: page > 0 ? () => _goToPage(page - 1) : null,
             ),
             Expanded(
@@ -1744,7 +2177,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                 borderRadius: BorderRadius.circular(10),
                 onTap: () => _pagesSheet(note),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1758,6 +2191,8 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                       ),
                       Text(
                         isNew ? sheets[page] : '${page + 1} / ${names.length}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11.5,
                           color: scheme.onSurfaceVariant,
@@ -1768,14 +2203,41 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                 ),
               ),
             ),
-            IconButton(
+            compact(
               tooltip: l10n.archiveNextPage,
-              icon: const Icon(Icons.chevron_right),
+              icon: Icons.chevron_right,
               onPressed: page < sheets.length - 1
                   ? () => _goToPage(page + 1)
                   : null,
             ),
-            const SizedBox(width: 4),
+            compact(
+              tooltip: l10n.formatTitle,
+              icon: Icons.text_format,
+              selected: _formatBarOpen,
+              onPressed: () => setState(() {
+                _formatBarOpen = !_formatBarOpen;
+                // Çubuk AÇIK SAYFAYA yazar: kullanıcı hiçbir alana
+                // dokunmadan çubuğu açtıysa hedef boş kalır ve düğmeler
+                // sessizce hiçbir şey yapmazdı.
+                if (_formatBarOpen) _formatPage = sheets[page];
+              }),
+            ),
+            // YAPAY ZEKÂ defterde de (kullanıcı isteği 2026-09-02: "hepsi
+            // olmalı"): özetle, soru sor, çevir — editördeki aynı levha.
+            // Gelen metin açık sayfanın yazısının sonuna eklenir.
+            compact(
+              tooltip: l10n.aiTitle,
+              icon: Icons.auto_awesome,
+              onPressed: () => unawaited(
+                showAiSheet(
+                  context,
+                  note,
+                  onAppendText: (text) =>
+                      unawaited(_appendToPage(sheets[page], text)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 2),
             FloatingActionButton.small(
               heroTag: 'notebook-add',
               tooltip: l10n.archiveAddEntry,
@@ -1795,6 +2257,13 @@ const double _kLineGap = 28;
 
 /// Yazının taban punto'su. Satır yüksekliği [_kLineGap] / bu sayı.
 const double _kWriteFontSize = 16;
+
+/// Yazının kâğıdın SOL kenarından uzaklığı (kenar payı çizgisinin sağı).
+const double _kGutter = 38;
+
+/// Sayfanın altında bırakılan boşluk: yazının altına dokunmak da yazı
+/// alanına dokunmak sayılsın (bkz. [NotePageCanvas.onTapEmpty]).
+const double _kPageBottomGap = 120;
 
 /// **SAYFA ÇEVİRME.** Sayfa, defterin sırtı (SOL kenar) çevresinde döner.
 ///
@@ -1831,6 +2300,12 @@ class _PageTurn extends StatelessWidget {
             : controller.initialPage.toDouble();
         final t = (index - position).clamp(-1.0, 1.0);
         if (t == 0) return child!;
+        // TÜMÜYLE ÇEVRİLMİŞ sayfa hiç çizilmez. 90°'ye yakın döndürülmüş
+        // yaprak ekranda cilt kenarında ince, açık renkli bir şerit
+        // bırakıyordu (kullanıcı bulgusu 2026-09-02: "sayfa düzgün
+        // görülmüyor") — üstelik görünmeyen bir sayfayı boyamanın bedeli de
+        // boşuna.
+        if (t.abs() >= 0.999) return const SizedBox.shrink();
         // Sırt SOLDA — ama sağdan sola yazılan dillerde defter de ters
         // açılır: hem `PageView`ın kaydırma yönü hem de cildin yeri döner.
         final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -2122,35 +2597,6 @@ class _PaperSwatch extends StatelessWidget {
   }
 }
 
-/// Genel sayfasının başlığı: DÜZENLENEMEZ (adı uygulamanın dilinden geliyor,
-/// kayda yazılmıyor).
-class _GeneralPageTitle extends StatelessWidget {
-  const _GeneralPageTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Text(
-        title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.titleMedium?.copyWith(
-          fontStyle: FontStyle.italic,
-          fontWeight: FontWeight.w600,
-          decoration: TextDecoration.underline,
-          decorationColor: theme.colorScheme.onSurfaceVariant.withValues(
-            alpha: 0.4,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Sayfa başlığı — YERİNDE düzenlenir.
 ///
 /// Eskiden ad yalnız ⋮ menüsündeki "Sayfayı yeniden adlandır" diyalogundan
@@ -2232,6 +2678,9 @@ class _PageTitleFieldState extends State<_PageTitleField> {
       ),
       decoration: InputDecoration(
         isDense: true,
+        // Dolgu KAPALI: temanın `filled: true`si kâğıdın üstüne opak bir
+        // kutu boyuyor ve çizgileri siliyordu (bkz. [_PageWriter]).
+        filled: false,
         contentPadding: EdgeInsets.zero,
         hintText: widget.hint,
         border: const UnderlineInputBorder(),
@@ -2262,29 +2711,47 @@ class _PageTitleFieldState extends State<_PageTitleField> {
 class _PageWriter extends StatefulWidget {
   const _PageWriter({
     super.key,
+    required this.controller,
     required this.text,
     required this.hint,
     required this.focusNode,
+    required this.floats,
+    required this.pageBox,
     required this.onChanged,
+    required this.onFocused,
     this.fontFamily,
+    this.fontScale = 1,
+    this.textOpacity = 1,
   });
+
+  /// Alanın denetleyicisi EKRANDA tutulur (bkz.
+  /// [_ArchiveNoteScreenState._writers]): biçim çubuğu da aynı örneğe yazar.
+  final WrapTextController controller;
 
   final String text;
   final String hint;
 
-  /// Defterin yazı tipi (`Note.fontFamily`): null = uygulama varsayılanı.
+  /// Defterin yazı tipi / boyut çarpanı / opaklığı (biçim çubuğundan gelir).
   final String? fontFamily;
+  final double fontScale;
+  final double textOpacity;
+
+  /// Sayfadaki görsellerin bantları — metin bunların etrafından akar.
+  final List<FloatBox> floats;
+
+  /// Tuvalin kök kutusu: bantlar sayfa uzayında ölçülüyor, alan kendi metin
+  /// uzayına çevirebilsin diye gerekli.
+  final RenderBox? Function() pageBox;
+
   final FocusNode focusNode;
   final ValueChanged<String> onChanged;
+  final VoidCallback onFocused;
 
   @override
   State<_PageWriter> createState() => _PageWriterState();
 }
 
 class _PageWriterState extends State<_PageWriter> {
-  late final TextEditingController _controller = TextEditingController(
-    text: widget.text,
-  );
   final _debounce = Debouncer(
     delay: const Duration(milliseconds: 600),
     maxWait: const Duration(seconds: 4),
@@ -2299,25 +2766,29 @@ class _PageWriterState extends State<_PageWriter> {
   /// Odak gidince bekleyen kayıt HEMEN yazılır: kullanıcı sayfayı çevirmeden
   /// önce yazdığının kaydolduğundan emin olmalı.
   void _onFocusChange() {
-    if (!widget.focusNode.hasFocus) _debounce.flush();
+    if (widget.focusNode.hasFocus) {
+      widget.onFocused();
+      return;
+    }
+    _debounce.flush();
   }
 
   @override
   void didUpdateWidget(covariant _PageWriter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.text == _controller.text) return;
+    if (widget.text == widget.controller.logicalText) return;
     if (widget.focusNode.hasFocus || _debounce.hasPending) return;
-    _controller.text = widget.text;
+    widget.controller.setLogical(widget.text, widget.text.length);
   }
 
   @override
   void dispose() {
     widget.focusNode.removeListener(_onFocusChange);
     // Sayfa çevrildiğinde bu alan ağaçtan düşüyor: bekleyen kayıt burada
-    // yazılmazsa son yazılanlar KAYBOLURDU.
+    // yazılmazsa son yazılanlar KAYBOLURDU. (Denetleyici ekranda kaldığı
+    // için burada YOK EDİLMEZ.)
     _debounce.flush();
     _debounce.dispose();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -2325,14 +2796,19 @@ class _PageWriterState extends State<_PageWriter> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final size = _kWriteFontSize * widget.fontScale;
     final style = TextStyle(
-      fontSize: _kWriteFontSize,
-      height: _kLineGap / _kWriteFontSize,
+      fontSize: size,
+      // Satır yüksekliği kâğıdın çizgi aralığına oranlanır: yazı büyüyünce
+      // satır da büyür, ama çizgilerin katı kalır (yazı çizgiye oturur).
+      height: (_kLineGap * widget.fontScale) / size,
       fontFamily: widget.fontFamily,
-      color: scheme.onSurface,
+      color: scheme.onSurface.withValues(
+        alpha: widget.textOpacity.clamp(0.3, 1.0),
+      ),
     );
-    return TextField(
-      controller: _controller,
+    final field = TextField(
+      controller: widget.controller,
       focusNode: widget.focusNode,
       maxLines: null,
       minLines: 6,
@@ -2343,22 +2819,40 @@ class _PageWriterState extends State<_PageWriter> {
       // emoji ya da farklı bir yazı tipi olan satır uzar ve o satırdan sonra
       // yazı kâğıdın çizgilerinden kayardı.
       strutStyle: StrutStyle(
-        fontSize: _kWriteFontSize,
-        height: _kLineGap / _kWriteFontSize,
+        fontSize: size,
+        height: (_kLineGap * widget.fontScale) / size,
         fontFamily: widget.fontFamily,
         forceStrutHeight: true,
       ),
       cursorColor: scheme.primary,
       decoration: InputDecoration(
         isDense: true,
+        // **DOLGU KAPALI** (kullanıcı bulgusu 2026-09-02: "arşiv defterinde
+        // sayfa çizgileri kayboluyor"): uygulamanın `InputDecorationTheme`i
+        // `filled: true` — alan, kâğıdın üstüne KENDİ opak dikdörtgenini
+        // boyuyor ve altındaki çizgileri siliyordu. Ekran görüntüsünde
+        // çizgiler tam da alanın bittiği yerde başlıyordu.
+        filled: false,
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
         contentPadding: EdgeInsets.zero,
         hintText: widget.hint,
         hintStyle: style.copyWith(
           color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
         ),
       ),
-      onChanged: (value) => _debounce(() => widget.onChanged(value)),
+      onChanged: (_) =>
+          _debounce(() => widget.onChanged(widget.controller.logicalText)),
+    );
+    // Ölçüm: alanın sayfadaki yerini bulup bantları metin uzayına çevirir —
+    // metin görsellerin etrafından böyle akar (gövde metniyle aynı yol).
+    return WrapFieldMeasure(
+      controller: widget.controller,
+      style: style,
+      floats: widget.floats,
+      pageBox: widget.pageBox,
+      child: field,
     );
   }
 }
@@ -2453,6 +2947,7 @@ class _FileEntry extends StatelessWidget {
     required this.onRename,
     required this.onMove,
     required this.onDelete,
+    this.onPlaceOnPage,
   });
 
   final Attachment attachment;
@@ -2460,6 +2955,9 @@ class _FileEntry extends StatelessWidget {
   final VoidCallback onRename;
   final VoidCallback onMove;
   final VoidCallback onDelete;
+
+  /// Görseli sayfaya (tuvale) taşır; yalnız görsellerde vardır.
+  final VoidCallback? onPlaceOnPage;
 
   @override
   Widget build(BuildContext context) =>
@@ -2517,6 +3015,7 @@ class _FileEntry extends StatelessWidget {
                   onRename: onRename,
                   onMove: onMove,
                   onDelete: onDelete,
+                  onPlaceOnPage: onPlaceOnPage,
                 ),
               ],
             ),
@@ -2611,11 +3110,15 @@ class _EntryMenu extends StatelessWidget {
     required this.onMove,
     required this.onDelete,
     this.onRename,
+    this.onPlaceOnPage,
   });
 
   final VoidCallback? onRename;
   final VoidCallback onMove;
   final VoidCallback onDelete;
+
+  /// Görseli sayfaya yerleştirir (metin etrafından aksın).
+  final VoidCallback? onPlaceOnPage;
 
   @override
   Widget build(BuildContext context) {
@@ -2626,12 +3129,15 @@ class _EntryMenu extends StatelessWidget {
       tooltip: l10n.more,
       onSelected: (value) => switch (value) {
         'rename' => onRename?.call(),
+        'page' => onPlaceOnPage?.call(),
         'move' => onMove(),
         _ => onDelete(),
       },
       itemBuilder: (context) => [
         if (onRename != null)
           PopupMenuItem(value: 'rename', child: Text(l10n.archiveEntryTitle)),
+        if (onPlaceOnPage != null)
+          PopupMenuItem(value: 'page', child: Text(l10n.archivePlaceOnPage)),
         PopupMenuItem(value: 'move', child: Text(l10n.archiveMoveEntry)),
         PopupMenuItem(value: 'delete', child: Text(l10n.delete)),
       ],

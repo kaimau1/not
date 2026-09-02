@@ -2640,6 +2640,9 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
+  String get archivePlaceOnPage => 'Sayfaya yerleştir';
+
+  @override
   String get archivePaper => 'Kâğıt';
 
   @override

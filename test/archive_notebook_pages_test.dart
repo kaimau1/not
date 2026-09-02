@@ -26,7 +26,18 @@ Note _notebook({
   attachments: attachments,
 );
 
+/// Sayfadaki DOSYA eki (listede durur, sayfada yüzmez).
 Attachment _file(String id, {String section = ''}) => Attachment(
+  id: id,
+  kind: AttachmentKind.image,
+  fileName: '$id.jpg',
+  mimeType: 'image/jpeg',
+  section: section,
+  asFile: true,
+);
+
+/// SAYFADA YÜZEN görsel: metin etrafından akar (bkz. archivePageFloats).
+Attachment _float(String id, {String section = ''}) => Attachment(
   id: id,
   kind: AttachmentKind.image,
   fileName: '$id.jpg',
@@ -320,5 +331,39 @@ void main() {
     expect(next.items.length, 2);
     expect(next.items.first.id, 'blok');
     expect(next.items.last.text, 'serbest yazı');
+  });
+
+  test('sayfada YÜZEN görsel dosya listesinde değil tuvalde durur', () {
+    // Kullanıcı isteği 2026-09-02: "görsel eklendiğinde normal not sayfamız
+    // gibi metin etrafından akabilmeli". Yüzen görsel artık sayfanın
+    // tuvalinde; alttaki dosya listesinde İKİNCİ kez görünmemeli.
+    final note = _notebook(
+      pages: ['Seyahat'],
+      attachments: [
+        _float('foto', section: 'Seyahat'),
+        _file('bilet', section: 'Seyahat'),
+      ],
+    );
+    expect(archivePageFloats(note, 'Seyahat').map((a) => a.id), ['foto']);
+    expect(archivePageExtras(note, 'Seyahat').map((e) => e.file!.id), [
+      'bilet',
+    ]);
+  });
+
+  test('ilk sayfanın adı kayıtta AYRI durur, girdileri etiketlemez', () {
+    // Kullanıcı isteği 2026-09-02: "sayfa başlığını direk üzerine tıklayarak
+    // yazıp değiştirebilmeliyim" — ilk sayfa dahil. Girdiler bölüm adı
+    // taşımadığı için ad yalnız GÖRÜNENDİR.
+    final note = _notebook(
+      items: const [NoteItem(id: 'i', text: 'bölümsüz')],
+    ).copyWith(archiveGeneralName: 'Günlük');
+    expect(archiveGeneralLabel(note, 'Genel'), 'Günlük');
+    expect(archivePageNames(note), ['']);
+    expect(archiveEntriesOf(note, '').single.text?.id, 'i');
+    // Ad silinince varsayılana döner.
+    expect(
+      archiveGeneralLabel(note.copyWith(archiveGeneralName: ''), 'Genel'),
+      'Genel',
+    );
   });
 }

@@ -2682,6 +2682,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get archivePlaceOnPage => 'Place on page';
+
+  @override
   String get archivePaper => 'Paper';
 
   @override

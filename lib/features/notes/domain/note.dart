@@ -138,6 +138,7 @@ class Note {
     this.listColumns = 1,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
+    this.archiveGeneralName = '',
     this.tagLinks = const [],
     this.orderIndex = 0,
     this.createdAt,
@@ -262,6 +263,16 @@ class Note {
   /// Arşiv defterinin KÂĞIT DESENİ (çizgili / kareli / noktalı / düz).
   /// Defter başına saklanır — bkz. [ArchivePaper].
   final ArchivePaper archivePaper;
+
+  /// Defterin İLK sayfasının (bölümsüz girdilerin toplandığı sayfa) ADI.
+  /// Boş = uygulamanın dilinden gelen "Genel".
+  ///
+  /// Neden ayrı bir alan: ilk sayfanın girdileri bölüm adı TAŞIMAZ (boş
+  /// `section`) ve öksüz kalmış girdiler de oraya düşer (bkz.
+  /// `archiveOnPage`). Sayfaya gerçek bir ad verilseydi bütün o girdilerin
+  /// yeniden etiketlenmesi gerekirdi; ad yalnız GÖRÜNENDİR, girdilerin
+  /// bağlanma kuralı değişmez.
+  final String archiveGeneralName;
 
   /// Metnin İÇİNE gömülmüş ek bağları: hangi ETİKET METNİ hangi eke gider.
   ///
@@ -487,6 +498,7 @@ class Note {
     int? listColumns,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
+    String? archiveGeneralName,
     List<NoteTagLink>? tagLinks,
     double? orderIndex,
     DateTime? deletedAt,
@@ -526,6 +538,7 @@ class Note {
     listColumns: listColumns ?? this.listColumns,
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
+    archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
     tagLinks: tagLinks ?? this.tagLinks,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
@@ -626,6 +639,7 @@ class Note {
           p.toString(),
       ],
       archivePaper: ArchivePaper.fromId(map['archivePaper'] as String?),
+      archiveGeneralName: map['archiveGeneralName'] as String? ?? '',
       tagLinks: [
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
@@ -692,6 +706,9 @@ class Note {
     // (çizgili) DÖNDÜRÜLEBİLMELİ; koşullu yazılsaydı kayıtta eski desen
     // kalır ve defter her açılışta yine kareli gelirdi.
     'archivePaper': archivePaper.id,
+    // HER ZAMAN yazılır (merge tuzağı): ad SİLİNEBİLMELİ — boş dize
+    // "Genel"e dönmek demek.
+    'archiveGeneralName': archiveGeneralName,
     // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
     // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
     'tagLinks': [for (final l in tagLinks) l.toMap()],

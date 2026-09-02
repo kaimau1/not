@@ -5028,6 +5028,12 @@ abstract class AppLocalizations {
   /// **'{files} dosya · {texts} metin'**
   String archiveCardSummary(int files, int texts);
 
+  /// No description provided for @archivePlaceOnPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya yerleştir'**
+  String get archivePlaceOnPage;
+
   /// No description provided for @archivePaper.
   ///
   /// In tr, this message translates to:

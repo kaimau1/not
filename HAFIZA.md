@@ -2715,3 +2715,59 @@ testi yakaladı** (`archive_notebook_screen_test.dart`) — aynı test "+"
 levhasının kısa ekranda taştığını da gösterdi (levha artık kaydırılıyor).
 DERS: defter gibi ekranların en az bir kez GERÇEKTEN kurulduğu bir test
 olsun; saf işlev testleri bu iki hatanın ikisini de göremezdi.
+
+## 2026-09-02 — Dikte geriye gitmiyor; defter artık "aynı uygulama"
+
+Kullanıcının altı maddesi, dört ekran görüntüsüyle. `flutter analyze` temiz,
+`flutter test` **852 test yeşil**.
+
+### KÖK NEDEN — dikte "önce yazıyor, sonra alt satıra, sonra geri birleştiriyor"
+İki ayrı sebep, ikisi de tanıyıcının gönderdiği metinde:
+1. **Satır sonu.** Köprü (MainActivity) segmentleri `\n` ile birleştiriyor
+   (`joined`) — duraklamadan sonra gelen her parça YENİ SATIR oluyordu.
+   Dikte bir paragraf yazar; satır sonları artık boşluğa iniyor.
+2. **Kısalma.** Tanıyıcı bazen daha KISA bir tam metin gönderiyor (segment
+   sınırındaki tekrar `dedupeSpeechSegments` ile düşünce). Gelen metin
+   olduğu gibi yazıldığı için ekrandaki cümle kısalıp geri geliyordu.
+Kural saf bir işleve çıkarıldı: `dictationMerge(shown, spoken)` — satır
+sonları tek boşluğa iner, KISALAN sonuç yok sayılır, kalan her durumda
+(uzama ya da kuyruk düzeltmesi) yenisi yazılır. Android klavyesinin diktesi
+de böyle davranır: yazılan metin yalnız SONUNDAN uzar. 6 testi var.
+
+### KÖK NEDEN — "arşiv defterinde sayfa çizgileri kayboluyor"
+Uygulamanın `InputDecorationTheme`i `filled: true` (fillColor
+`surfaceContainerLow`). Defterin yazı alanı ve başlığı bu yüzden kâğıdın
+üstüne KENDİ opak dikdörtgenini boyuyor, altındaki çizgileri siliyordu —
+ekran görüntüsünde çizgiler tam da alanın (minLines: 6 → 6 satır) bittiği
+yerde başlıyor. Defterdeki alanlar artık `filled: false`. Testi var
+(alanların dolgusu kapalı olmalı).
+Aynı turda: tümüyle çevrilmiş sayfa artık hiç çizilmiyor — 90°'ye yakın
+döndürülmüş yaprak cilt kenarında açık renkli ince bir şerit bırakıyordu
+("sayfa düzgün görülmüyor").
+
+### DEFTER = NORMAL NOT SAYFASI (kullanıcı: "sanki farklı bir uygulama gibi")
+Defter kendi çizim yolunu kurmayı bıraktı, editörün yolunu kullanıyor:
+* Görseller `NotePageCanvas` üzerinde YÜZER — sürüklenir, boyutlandırılır,
+  ⋮ menüsünden yönetilir; metin `WrapTextController` + `WrapFieldMeasure`
+  ile etraflarından akar. Yeni görsel `asFile: false` ile eklenir ve
+  sayfada bir yer alır. Eski defterlerdeki dosya-görseller listede kalır,
+  ⋮ → "Sayfaya yerleştir" onları tuvale taşır.
+* `FormatBar` (kalın/italik/altı çizili, yazı ve vurgu rengi, yazı tipi,
+  boyut, şeffaflık, sayfa görünümü) defterin alt çubuğunda.
+* Yapay zekâ levhası ve çizim ekranı da defterde.
+* Sayfa görünümü levhası "kâğıt": rengi (ortak renk şeridi) + deseni.
+* TUZAK — sayfa gövdesi önbelleği: anahtar artık yüzen görsellerin
+  konum/boyutunu VE bant listesinin kimliğini de içeriyor; içermeseydi
+  sürüklenen görsel eski yerinde donar, metin yeni bantları hiç görmezdi.
+
+### Başlık her sayfada yerinde düzenlenir
+İlk sayfa dahil. O sayfanın girdileri bölüm adı TAŞIMIYOR (boş `section`),
+bu yüzden adı kayıtta ayrı bir alanda durur: `Note.archiveGeneralName` —
+yalnız GÖRÜNEN ad, girdilerin bağlanma kuralı değişmez. Boş ad "Genel"e
+döner; var olan bir sayfayla çakışan ad reddedilir ve başlık eski adına
+geri döner.
+
+### Alt çubuk sığmıyordu
+Editörde AI düğmesinin etiketi tümüyle kalktı (mikrofonlarla aynı kare
+ölçüde, adı ipucunda). Defterin çubuğu da dar düğmelere geçti (40 dp) —
+beş düğme + sayfa adı 320 dp'lik ekrana sığıyor, testi var.

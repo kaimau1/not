@@ -4543,6 +4543,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   int _dictationAt = 0;
   int _dictationLength = 0;
 
+  /// Dikte boyunca ALANA YAZILMIŞ metin. Tanıyıcının yeni gönderdiği metin
+  /// bununla birleştirilir (bkz. [dictationMerge]): yazılan cümle geriye
+  /// gitmesin, satırı bölünmesin.
+  String _dictationShown = '';
+
   bool get _dictating => _dictationSub != null;
 
   /// Sade mikrofon: dikteyi başlatır, açıksa bitirir.
@@ -4580,6 +4585,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ? wrapToLogicalOffset(controller.text, selection.baseOffset)
         : controller.logicalText.length;
     _dictationLength = 0;
+    _dictationShown = '';
 
     final sub = DeviceSpeech.listen().listen(
       (event) {
@@ -4616,6 +4622,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _dictationSub = null;
     _dictationTarget = null;
     _dictationLength = 0;
+    _dictationShown = '';
     await sub.cancel();
     await DeviceSpeech.stop();
     // Son sözler beklemede kalmasın: yazım sırasında kayıt gecikmeliydi
@@ -4635,12 +4642,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final target = _dictationTarget;
     final controller = target?.controller ?? _bodyController;
     final logical = controller.logicalText;
+    // Gelen metin ÖNCE yazılanla birleştirilir: satır sonları boşluğa iner ve
+    // kısalan (geri giden) sonuç yok sayılır — kullanıcı yazdığı cümlenin
+    // bölünüp yeniden birleştiğini görmesin (bkz. [dictationMerge]).
+    final merged = dictationMerge(_dictationShown, spoken);
+    if (merged == _dictationShown) return;
+    _dictationShown = merged;
     // Yazma kuralının kendisi saf bir işlevde (sınanabilsin diye).
     final result = dictationReplace(
       logical,
       _dictationAt,
       _dictationLength,
-      spoken,
+      merged,
     );
     final text = result.text;
     if (text == logical) return;
@@ -6060,34 +6073,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             _penToolButton(l10n),
                             const SizedBox(width: 8),
                           ],
-                          Tooltip(
-                            message: l10n.aiTitle,
-                            child: SizedBox(
-                              height: 44,
-                              child: FilledButton.tonalIcon(
-                                onPressed: () => showAiSheet(
-                                  context,
-                                  note,
-                                  onAppendText: _appendText,
-                                  onReplaceText: _replaceText,
-                                  onCreateNote: _createNoteFromText,
-                                ),
-                                style: FilledButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      13,
-                                    ),
-                                  ),
-                                ),
-                                icon: const Icon(
-                                  Icons.auto_awesome,
-                                  size: 19,
-                                ),
-                                // Etiket kısa: "Yapay Zeka" alt çubuğu taşırıyordu
-                                // (dar ekranda sağa kayıp kesiliyordu). Kısaltma her
-                                // dilde aynı okunur; tam adı ipucunda duruyor.
-                                label: const Text('AI'),
-                              ),
+                          // YALNIZ SİMGE (kullanıcı bulgusu 2026-09-02: "alt
+                          // kısım sığmıyor, AI yazan butondaki AI yazısını
+                          // kaldır sadece simgesi kalsın"). Etiket önce
+                          // "Yapay Zeka"dan "AI"ya kısaltılmıştı, o da
+                          // yetmedi: düğme artık mikrofonlarla aynı kare
+                          // ölçüde ve çubuk üçünü de sığdırıyor. Adı
+                          // ipucunda duruyor.
+                          _voiceButton(
+                            tooltip: l10n.aiTitle,
+                            icon: Icons.auto_awesome,
+                            onTap: () => showAiSheet(
+                              context,
+                              note,
+                              onAppendText: _appendText,
+                              onReplaceText: _replaceText,
+                              onCreateNote: _createNoteFromText,
                             ),
                           ),
                           const SizedBox(width: 6),

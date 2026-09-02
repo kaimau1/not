@@ -5,10 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/archive_paper.dart';
+import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/archive_note_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/format_bar.dart';
+import 'package:notlar/features/notes/presentation/editor/note_images.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// **DEFTERİN EKRANI** (kullanıcı isteği 2026-09-01: "metin yazamıyorum,
@@ -41,6 +44,7 @@ void main() {
   Note notebook({
     List<String> pages = const [],
     List<NoteItem> items = const [],
+    List<Attachment> attachments = const [],
     ArchivePaper paper = ArchivePaper.lined,
   }) => Note(
     id: 'n1',
@@ -49,6 +53,7 @@ void main() {
     archivePages: pages,
     archivePaper: paper,
     items: items,
+    attachments: attachments,
   );
 
   testWidgets('sayfanın kendisi bir yazı alanıdır (diyalog yok)', (
@@ -105,19 +110,27 @@ void main() {
     expect(next.onPressed, isNull);
   });
 
-  testWidgets('sayfa başlığı YERİNDE düzenlenir, Genel sayfası sabittir', (
+  testWidgets('HER sayfanın başlığı yerinde düzenlenir (ilk sayfa dahil)', (
     tester,
   ) async {
+    // Kullanıcı isteği 2026-09-02: "sayfa başlığını direk üzerine tıklayarak
+    // yazıp değiştirebilmeliyim". Eskiden ilk sayfanın başlığı düz yazıydı.
     await pumpNotebook(tester, notebook(pages: ['Faturalar']));
-    // Genel sayfasının başlığı düz yazı: alan yok (ilk sayfada yalnız yazı
-    // alanı var).
-    expect(find.byType(TextField), findsOneWidget);
+    // Başlık + yazı alanı: iki alan.
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.text('Genel'), findsWidgets);
 
     await tester.tap(find.byIcon(Icons.chevron_right));
     await tester.pumpAndSettle();
-    // İkinci sayfada başlık da bir alan: yazı alanıyla birlikte iki tane.
     expect(find.byType(TextField), findsNWidgets(2));
     expect(find.text('Faturalar'), findsWidgets);
+  });
+
+  testWidgets('ilk sayfanın adı kullanıcının verdiği addır', (tester) async {
+    final note = notebook().copyWith(archiveGeneralName: 'Günlük');
+    await pumpNotebook(tester, note);
+    expect(find.text('Günlük'), findsWidgets);
+    expect(find.text('Genel'), findsNothing);
   });
 
   testWidgets('kâğıt deseni menüden seçilir', (tester) async {
@@ -249,5 +262,74 @@ void main() {
     expect(find.text('Bilet'), findsOneWidget);
     expect(find.text('Seyahat'), findsWidgets);
     expect(find.text('genel sayfadaki fatura notu'), findsNothing);
+  });
+
+  testWidgets('yazı alanı kâğıdın çizgilerini KAPATMAZ (dolgu kapalı)', (
+    tester,
+  ) async {
+    // KÖK NEDEN (kullanıcı bulgusu 2026-09-02: "arşiv defterinde sayfa
+    // çizgileri kayboluyor"): uygulamanın `InputDecorationTheme`i
+    // `filled: true` — alan kâğıdın üstüne kendi opak dikdörtgenini boyuyor
+    // ve altındaki çizgileri siliyordu. Ekran görüntüsünde çizgiler tam da
+    // alanın bittiği yerde başlıyordu.
+    await pumpNotebook(tester, notebook());
+    for (final field in tester.widgetList<TextField>(find.byType(TextField))) {
+      expect(
+        field.decoration?.filled,
+        isFalse,
+        reason: 'Defterdeki alanlar kâğıdın üstüne opak kutu boyamamalı',
+      );
+    }
+  });
+
+  testWidgets('BİÇİM çubuğu defterde de var', (tester) async {
+    // Kullanıcı isteği 2026-09-02: "biçim ayarları vs burada da olmalı".
+    await pumpNotebook(tester, notebook());
+    expect(find.byType(FormatBar), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.text_format));
+    await tester.pumpAndSettle();
+    expect(find.byType(FormatBar), findsOneWidget);
+  });
+
+  testWidgets('sayfadaki görsel TUVALDE yüzer (metin etrafından akar)', (
+    tester,
+  ) async {
+    // Kullanıcı isteği 2026-09-02: "görsel eklendiğinde normal not sayfamız
+    // gibi metin etrafından akabilmeli, yeri değiştirilebilmeli".
+    await pumpNotebook(
+      tester,
+      notebook(
+        attachments: [
+          Attachment(
+            id: 'foto',
+            kind: AttachmentKind.image,
+            fileName: 'foto.jpg',
+            mimeType: 'image/jpeg',
+            x: 0.04,
+            pageY: 8,
+            displayWidth: 0.32,
+          ),
+        ],
+      ),
+    );
+    // Tuval kuruldu: görsel sayfanın üstünde yüzen bir katman olarak duruyor
+    // (editördeki gövdeyle aynı widget).
+    expect(find.byType(NotePageCanvas), findsWidgets);
+    // Dosya listesinde İKİNCİ kez görünmüyor.
+    expect(find.text('foto.jpg'), findsNothing);
+  });
+
+  testWidgets('alt çubuk DAR ekrana sığar (taşma yok)', (tester) async {
+    // Kullanıcı bulgusu 2026-09-02: "alt kısım sığmıyor". Çubukta beş düğme
+    // ve sayfa adı var; taşma bir çizim hatası olarak testte patlar.
+    tester.view.physicalSize = const Size(320 * 3, 640 * 3);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
+    await pumpNotebook(tester, notebook(pages: ['Faturalar']));
+    expect(tester.takeException(), isNull);
+    expect(find.byIcon(Icons.text_format), findsOneWidget);
+    expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
   });
 }

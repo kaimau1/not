@@ -58,4 +58,61 @@ void main() {
     final result = dictationReplace('kısa', 0, 99, 'yeni');
     expect(result.text, 'yeni');
   });
+
+  // ————————————————————————————————— GERİYE GİTMEYEN YAZIM
+  //
+  // Kullanıcı bulgusu 2026-09-02 (üç ekran görüntüsüyle): "önce yazıyor,
+  // sonra alt satıra yazıyor, sonra geri birleştiriyor gibi düzgün olmayan
+  // bir yazma biçimi var; Android'in kendi sesle yazma tuşu gibi basit
+  // olmalı." Kural: satır sonları boşluğa iner, kısalan sonuç yok sayılır.
+
+  test('SATIR SONU boşluğa iner — dikte paragraf yazar, liste değil', () {
+    // Köprü, duraklamada segmentleri `\n` ile birleştiriyor (bkz.
+    // MainActivity.joined); ekranda cümle ikiye bölünmüş görünüyordu.
+    expect(
+      dictationMerge('', 'söylediklerim\nburaya yaz'),
+      'söylediklerim buraya yaz',
+    );
+    expect(dictationMerge('', 'iki   boşluk'), 'iki boşluk');
+  });
+
+  test('KISALAN sonuç yok sayılır — yazılan cümle geri gitmez', () {
+    const shown = 'söylediklerim buraya yaz';
+    expect(dictationMerge(shown, 'söylediklerim'), shown);
+    expect(dictationMerge(shown, 'söylediklerim buraya'), shown);
+    // Boş olay da metni silmez.
+    expect(dictationMerge(shown, '   '), shown);
+  });
+
+  test('UZAYAN ve KUYRUĞU DÜZELTİLEN sonuç yazılır', () {
+    expect(dictationMerge('bir', 'bir iki'), 'bir iki');
+    // "iki" → "ikizi": kuyruk düzeltmesi kabul edilir.
+    expect(dictationMerge('bir iki', 'bir ikizi'), 'bir ikizi');
+  });
+
+  test('ilk olay: yazılan yokken gelen metin olduğu gibi girer', () {
+    expect(dictationMerge('', 'merhaba'), 'merhaba');
+  });
+
+  test('dikte akışı uçtan uca: metin yalnız SONUNDAN uzar', () {
+    // Tanıyıcının gerçek dizisi (ekran görüntülerindeki sıra).
+    var shown = '';
+    var text = '';
+    var length = 0;
+    for (final spoken in [
+      'söylediklerim',
+      'söylediklerim buraya yaz',
+      'söylediklerim\nburaya yaz',
+      'söylediklerim',
+    ]) {
+      final merged = dictationMerge(shown, spoken);
+      if (merged == shown) continue;
+      shown = merged;
+      final result = dictationReplace(text, 0, length, merged);
+      text = result.text;
+      length = result.length;
+    }
+    expect(text, 'söylediklerim buraya yaz');
+    expect(text.contains('\n'), isFalse);
+  });
 }

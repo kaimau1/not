@@ -788,6 +788,35 @@ int wrapToLogicalOffset(String display, int displayOffset) {
 /// konur ([insertAtCaret] ile aynı kural). Dönen `length` bir sonraki olayda
 /// değiştirilecek aralığın uzunluğudur (boşluklar dahil), `caret` ise
 /// konuşulan sözün SONUDUR — kullanıcı oradan yazmaya devam edebilir.
+/// **DİKTE METNİNİ BİRLEŞTİRME** — yazılan metin geriye gitmez, satır
+/// bölünmez.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-09-02, üç ekran görüntüsüyle: "önce
+/// yazıyor, sonra alt satıra yazıyor, sonra geri birleştiriyor"): tanıyıcı her
+/// olayda o ana kadarki TAM metni gönderiyor ve bu metin bazen KISALIYOR
+/// (yeni ara sonuç önceki segmentin tekrarını düşürünce) ya da segment
+/// sınırında SATIR SONU kazanıyor (köprü parçaları `\n` ile birleştiriyor —
+/// bkz. MainActivity.joined). Gelen metin olduğu gibi yazılınca kullanıcı,
+/// yazdığı cümlenin bölünüp yeniden birleştiğini, hatta kısalıp geri geldiğini
+/// görüyordu. Android'in kendi klavye diktesi bunu yapmaz: yazılan metin
+/// yalnız SONUNDAN uzar.
+///
+/// Kural bu yüzden üç satır:
+///  * Satır sonları ve katlanmış boşluklar TEK boşluğa iner — dikte bir
+///    paragraf yazar, liste değil.
+///  * Yeni metin, yazılanın KISALTILMIŞ hâliyse yok sayılır (geriye gitme).
+///  * Kalan her durumda yeni metin yazılır (uzama ya da kuyruk düzeltmesi).
+String dictationMerge(String shown, String spoken) {
+  final next = spoken.replaceAll(RegExp(r'\s+'), ' ').trim();
+  final current = shown.replaceAll(RegExp(r'\s+'), ' ').trim();
+  if (next.isEmpty) return current;
+  if (current.isEmpty) return next;
+  // Kısalma: tanıyıcı bir kelimeyi geri aldı. Kullanıcı onu SÖYLEDİ; silmek,
+  // ekranda yazının kaybolup geri gelmesi demek.
+  if (current.startsWith(next)) return current;
+  return next;
+}
+
 ({String text, int caret, int length}) dictationReplace(
   String logical,
   int at,
