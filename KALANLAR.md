@@ -23,6 +23,29 @@
   Eski "uzun basış = seç" alışkanlığı menüde bir dokunuş uzadı.
 - [ ] **Alt çubuk**: Biçim/Ekle/Seç artık yalnız simge (Keep tarzı).
 
+## 2026-09-05 kullanım turundan kalan (CİHAZDA GÖRÜLMEDİ)
+
+Tur `flutter analyze` (0 sorun) ve `flutter test` (892 test yeşil) ile
+kapandı; aşağıdakiler derleme riski değil, **gözle bakılmadı** riski:
+
+- [ ] **Klasör ve arşiv ızgarası** artık ana ekranın deterministik düzenini
+  kullanıyor (`NoteBalancedGrid`). Bakılacak: klasöre girip çıkarken kartlar
+  sütun değiştiriyor mu, sağ sütunda boşluk kalıyor mu, 200'den çok notlu
+  bir klasörde tembel masonry'ye düşüş sorunsuz mu.
+- [ ] **"Başa dön" düğmesi** (ana ekran, 800 px'den sonra çıkar). Bakılacak:
+  süzgeç/klasör değiştirince liste tepeden mi açılıyor (denetleyici
+  `keepScrollOffset: false`), düğme seçim kipinde gizleniyor mu.
+- [ ] **Son aramalar şeridi** yalnız arama kutusu odaklı ve BOŞKEN çıkar.
+  Bakılacak: klavye açılırken kasma yapıyor mu (şerit sabit başlığın içinde).
+- [ ] **Etiket yeniden adlandırma/silme** çok notta sıralı yazım yapıyor
+  (`updateFieldsAndWait`). Yüzlerce notlu bir etikette ne kadar sürüyor,
+  ilerleme göstergesi gerekir mi — ölçülmedi.
+- [ ] **Notu çoğalt**: ekler BİLEREK kopyalanmıyor (bkz. HAFIZA 2026-09-05).
+  Kullanıcı ekli bir notu çoğaltıp eklerin gelmediğini görürse, kopyada bunu
+  söyleyen bir satır gerekebilir.
+- [ ] **Uygulama sürümü satırı** (`package_info_plus`) Windows'ta denenmedi;
+  Android'de CI'ın `--build-number`ı görünmeli.
+
 ## 2026-08-29 turundan kalan
 
 - [ ] **`firebase deploy --only functions`** — kişi araması "içinde geçen"
@@ -90,8 +113,12 @@ kotası hâlâ dolu; CI beklenmedi.)
 - [ ] **Podcast WAV dışa aktarımı** metnin TAMAMINI yeniden seslendirir
   (dinlerken üretilen parçalar okuma bitince siliniyor). Uzun belgede kota
   bedeli yüksek; kullanıcıya soruluyor ama ölçülmedi.
-- [ ] Yeni l10n anahtarları (~50) yalnız TR ve EN'de; kalan 14 dil şablona
-  (Türkçe) düşüyor. `Çeviri üret` iş akışı elle tetiklenmeli.
+- [ ] **ÇEVİRİ BORCU: 385 anahtar** (997'nin %39'u) yalnız TR ve EN'de;
+  kalan 14 dil şablona (Türkçe) düşüyor — yani Fransızca seçen kullanıcı
+  arayüzün üçte birinden fazlasını Türkçe görüyor. 2026-09-05'te ölçüldü
+  (eskiden "~50" yazıyordu). `Çeviri üret` iş akışı elle tetiklenmeli
+  (Actions → Run workflow, `AI_TRANSLATE_KEY` gerekli); sonuç PR olarak
+  gelir ve yayına çıkmadan gözden geçirilmeli.
 - [ ] **GitHub Actions artifact DEPOLAMA kotası dolu** ("Artifact storage
   quota has been hit"). APK artık Release olarak yayınlandığı için teslimat
   etkilenmiyor (artifact adımı zorunlu değil), ama eski artifact'ler

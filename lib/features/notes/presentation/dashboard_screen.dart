@@ -79,7 +79,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with WidgetsBindingObserver, QuickAddActions {
-
   /// Kart ızgarasının kaydırma denetleyicisi — "başa dön" düğmesi buradan
   /// tepeye döner.
   ///
@@ -88,7 +87,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// denetleyiciye bağlanır. Bu yüzden konum `_gridScroll.offset` ile
   /// OKUNMAZ (tek konum varsayar, iki konumda fırlatır) — konum kaydırma
   /// bildiriminden izlenir. `animateTo` çok konumla çalışır.
-  final _gridScroll = ScrollController();
+  ///
+  /// `keepScrollOffset: false` BİLEREK: ızgara segment (süzgeç|klasör|etiket)
+  /// değişince `ValueKey` ile yeniden kurulur ve tek bir denetleyici paylaşan
+  /// iki görünüm arasında konum TAŞINABİLİRDİ — yeni süzgeç, eskisinin
+  /// kaldığı yerden açılırdı (kısa listede boş ekran). Kapalıyken her yeni
+  /// segment tepeden başlar; aynı segment içinde konum zaten korunur (widget
+  /// aynı kalır, konum nesnesi yeniden kurulmaz).
+  final _gridScroll = ScrollController(keepScrollOffset: false);
 
   /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
   /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
@@ -108,8 +114,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Ana ekranın arama kutusu var: yeni not yazılı bir arama yüzünden
   /// listeden elenmesin.
   @override
-
   void clearQuickAddSearchBox() => _searchController.clear();
+
   /// Metin provider'dan başlar: dar↔geniş kesme noktası geçişinde (tablet
   /// döndürme, pencere boyutlandırma) ekran BAŞKA bir DashboardScreen
   /// instance'ına geçiyor; kutu boş başlasaydı liste görünmez bir sorguyla
@@ -658,7 +664,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ),
       );
   }
-
 
   /// Sağ alttaki asistan düğmesi: ortak dinleme levhasını açar ve seçilen
   /// eyleme göre notu kurar.
@@ -1425,120 +1430,121 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             child: NotificationListener<ScrollNotification>(
                               onNotification: _onGridScroll,
                               child: GestureDetector(
-                              // Yatay çekişle filtreler/klasörler arasında
-                              // gezin. Dikey kaydırma CustomScrollView'de
-                              // kalır; eksenler farklı olduğundan çakışmaz.
-                              onHorizontalDragEnd: (details) {
-                                final velocity = details.primaryVelocity ?? 0;
-                                if (velocity.abs() < 200) return;
-                                _cycleFilterFolder(velocity < 0 ? 1 : -1);
-                              },
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 260),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) {
-                                  // Çekiş yönüne göre yumuşak kaydır + soldur.
-                                  final begin = Offset(
-                                    _swipeForward ? 0.12 : -0.12,
-                                    0,
-                                  );
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: Tween(
-                                        begin: begin,
-                                        end: Offset.zero,
-                                      ).animate(animation),
-                                      child: child,
-                                    ),
-                                  );
+                                // Yatay çekişle filtreler/klasörler arasında
+                                // gezin. Dikey kaydırma CustomScrollView'de
+                                // kalır; eksenler farklı olduğundan çakışmaz.
+                                onHorizontalDragEnd: (details) {
+                                  final velocity = details.primaryVelocity ?? 0;
+                                  if (velocity.abs() < 200) return;
+                                  _cycleFilterFolder(velocity < 0 ? 1 : -1);
                                 },
-                                layoutBuilder:
-                                    (currentChild, previousChildren) => Stack(
-                                      alignment: Alignment.topCenter,
-                                      children: [
-                                        ...previousChildren,
-                                        ?currentChild,
-                                      ],
-                                    ),
-                                child: CustomScrollView(
-                                  key: ValueKey(segmentKey),
-                                  // "Başa dön" düğmesi buradan tepeye döner.
-                                  controller: _gridScroll,
-                                  // KÖK NEDEN (aşağı kaydırırken liste yukarı
-                                  // sıçraması): SliverMasonryGrid tembeldir ve
-                                  // toplam kaydırma uzunluğunu yalnızca O AN
-                                  // yerleşmiş kartların ORTALAMA yüksekliğinden
-                                  // TAHMİN eder. Masonry'de kart boyları çok
-                                  // farklı olduğundan tahmin her karede oynuyor;
-                                  // tahmin o anki konumun altına düştüğü an
-                                  // ScrollPosition kendini düzeltip listeyi
-                                  // yukarı çekiyordu (sona yaklaşıldıkça sık).
-                                  // Geniş önbellek payı kartların TAMAMINI ilk
-                                  // yerleşimde ölçtürür: uzunluk tahmin değil
-                                  // gerçek olur, düzeltme/sıçrama hiç olmaz.
-                                  // Bedeli, bu pay içindeki kartların önceden
-                                  // kurulması; bu sınırın (≈130 kart) ötesinde
-                                  // tembelliğe geri dönülür.
-                                  scrollCacheExtent:
-                                      const ScrollCacheExtent.pixels(
-                                        _kGridCacheExtent,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 260),
+                                  switchInCurve: Curves.easeOutCubic,
+                                  switchOutCurve: Curves.easeInCubic,
+                                  transitionBuilder: (child, animation) {
+                                    // Çekiş yönüne göre yumuşak kaydır + soldur.
+                                    final begin = Offset(
+                                      _swipeForward ? 0.12 : -0.12,
+                                      0,
+                                    );
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SlideTransition(
+                                        position: Tween(
+                                          begin: begin,
+                                          end: Offset.zero,
+                                        ).animate(animation),
+                                        child: child,
                                       ),
-                                  slivers: [
-                                    // **KLASÖR RAFI**: ana ekranın tepesinde,
-                                    // notlarla aynı ızgarada. Yalnız kök
-                                    // görünümde çizilir — arama/süzgeç/etiket
-                                    // sonuçlarının arasında klasör karosu
-                                    // görmek kafa karıştırırdı.
-                                    if (!searchActive &&
-                                        !reorderActive &&
-                                        ref.watch(noteFilterProvider) ==
-                                            NoteFilter.all &&
-                                        ref.watch(selectedTagProvider) ==
-                                            null &&
-                                        ref.watch(selectedFolderProvider) ==
-                                            null)
-                                      _folderShelf(columns),
-                                    ...notesAsync.when(
-                                      data: (notes) => _buildNoteSlivers(
-                                        context,
-                                        notes,
-                                        columns,
-                                        cellWidth: cellWidth,
-                                        selectionActive: selectionActive,
-                                        searchActive: searchActive,
-                                        reorderEnabled: reorderActive,
+                                    );
+                                  },
+                                  layoutBuilder:
+                                      (currentChild, previousChildren) => Stack(
+                                        alignment: Alignment.topCenter,
+                                        children: [
+                                          ...previousChildren,
+                                          ?currentChild,
+                                        ],
                                       ),
-                                      loading: () => [
-                                        const SliverFillRemaining(
-                                          hasScrollBody: false,
-                                          child: Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
+                                  child: CustomScrollView(
+                                    key: ValueKey(segmentKey),
+                                    // "Başa dön" düğmesi buradan tepeye döner.
+                                    controller: _gridScroll,
+                                    // KÖK NEDEN (aşağı kaydırırken liste yukarı
+                                    // sıçraması): SliverMasonryGrid tembeldir ve
+                                    // toplam kaydırma uzunluğunu yalnızca O AN
+                                    // yerleşmiş kartların ORTALAMA yüksekliğinden
+                                    // TAHMİN eder. Masonry'de kart boyları çok
+                                    // farklı olduğundan tahmin her karede oynuyor;
+                                    // tahmin o anki konumun altına düştüğü an
+                                    // ScrollPosition kendini düzeltip listeyi
+                                    // yukarı çekiyordu (sona yaklaşıldıkça sık).
+                                    // Geniş önbellek payı kartların TAMAMINI ilk
+                                    // yerleşimde ölçtürür: uzunluk tahmin değil
+                                    // gerçek olur, düzeltme/sıçrama hiç olmaz.
+                                    // Bedeli, bu pay içindeki kartların önceden
+                                    // kurulması; bu sınırın (≈130 kart) ötesinde
+                                    // tembelliğe geri dönülür.
+                                    scrollCacheExtent:
+                                        const ScrollCacheExtent.pixels(
+                                          _kGridCacheExtent,
                                         ),
-                                      ],
-                                      error: (e, _) => [
-                                        SliverFillRemaining(
-                                          hasScrollBody: false,
-                                          child: EmptyState(
-                                            icon: Icons.error_outline,
-                                            title: l10n.genericError(
-                                              e.toString(),
+                                    slivers: [
+                                      // **KLASÖR RAFI**: ana ekranın tepesinde,
+                                      // notlarla aynı ızgarada. Yalnız kök
+                                      // görünümde çizilir — arama/süzgeç/etiket
+                                      // sonuçlarının arasında klasör karosu
+                                      // görmek kafa karıştırırdı.
+                                      if (!searchActive &&
+                                          !reorderActive &&
+                                          ref.watch(noteFilterProvider) ==
+                                              NoteFilter.all &&
+                                          ref.watch(selectedTagProvider) ==
+                                              null &&
+                                          ref.watch(selectedFolderProvider) ==
+                                              null)
+                                        _folderShelf(columns),
+                                      ...notesAsync.when(
+                                        data: (notes) => _buildNoteSlivers(
+                                          context,
+                                          notes,
+                                          columns,
+                                          cellWidth: cellWidth,
+                                          selectionActive: selectionActive,
+                                          searchActive: searchActive,
+                                          reorderEnabled: reorderActive,
+                                        ),
+                                        loading: () => [
+                                          const SliverFillRemaining(
+                                            hasScrollBody: false,
+                                            child: Center(
+                                              child:
+                                                  CircularProgressIndicator(),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SliverToBoxAdapter(
-                                      child: SizedBox(height: 88),
-                                    ),
-                                  ],
+                                        ],
+                                        error: (e, _) => [
+                                          SliverFillRemaining(
+                                            hasScrollBody: false,
+                                            child: EmptyState(
+                                              icon: Icons.error_outline,
+                                              title: l10n.genericError(
+                                                e.toString(),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SliverToBoxAdapter(
+                                        child: SizedBox(height: 88),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
                         ),
                       ],
                     );

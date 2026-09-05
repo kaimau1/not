@@ -613,12 +613,24 @@ class NoteCard extends ConsumerWidget {
     // tek okunuyordu — bir notu geçmek için on kaydırma gerekiyordu. Kart
     // artık TEK bir düğüm: "başlık, özet, durum" tek seferde okunur, seçili
     // olup olmadığı da söylenir.
+    // Etiket UCUZ tutulur: `toPlainText()` notun bütün maddelerini dolaşıp
+    // yeni bir dizgi kurar ve bu KART BAŞINA, HER build'de olurdu (önbellek
+    // payında ~130 kart canlı). Ekran okuyucunun önizlemesi için notun ilk
+    // birkaç satırı zaten yeterli; gövde sınırlı bir dilimden alınır.
+    const previewLimit = 160;
+    final rawBody = note.body.length > previewLimit
+        ? note.body.substring(0, previewLimit)
+        : note.body;
     final semanticLabel = [
       if (note.locked)
         context.l10n.lockedNote
       else ...[
         if (hasTitle) note.displayTitle.trim(),
-        note.toPlainText().trim(),
+        stripRichMarkers(rawBody).trim(),
+        if (note.items.isNotEmpty)
+          context.l10n.noteStatsItems(
+            note.items.where((i) => i.text.trim().isNotEmpty).length,
+          ),
       ],
       if (note.pinned) context.l10n.pin,
       if (note.starred) context.l10n.star,

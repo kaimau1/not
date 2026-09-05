@@ -2860,3 +2860,113 @@ metin hem anlamsal arama besleniyor; anlamsal indeksin bayatlama anahtarına
 ek metninin uzunluğu da katıldı, yoksa seçenek açılınca vektörler eski
 kalırdı.
 
+
+## 2026-09-05 — Son kullanıcı turu: kullanım, görünüm, performans (45 madde)
+
+Bu tur bir ÖZELLİK turu değil, **denetim** turu: uygulamayı bir son kullanıcı
+gibi baştan sona gezip "burada takılırım / burası çirkin / burası yavaş"
+dediğim yerleri toplayıp kapattım. Kod tabanı çok denetlenmiş olduğu için
+kolay hatalar bitmişti; bulunanların çoğu **ana ekranda ÇÖZÜLMÜŞ ama diğer
+ekranlara taşınmamış** kararlar ile **geri alınamayan tek dokunuşluk yıkıcı
+işler** oldu.
+
+### KÖK NEDEN 1 — düzeltmeler ana ekranda kalmış, klasöre/arşive gitmemiş
+2026-08-10'da masonry ızgara bırakılıp `_balancedColumns`a geçilmişti
+(kullanıcı bulgusu: "kaymalar oluyor, sağ kolonda sürekli boşluk kalıyor").
+Ama o düzeltme YALNIZ `dashboard_screen.dart` içindeydi: **klasör sayfası ve
+arşiv hâlâ `MasonryGridView` kullanıyordu**, yani aynı hata klasörün İÇİNDE
+aynen sürüyordu ve kimse fark etmemişti çünkü bulgu "ana ekran" diye
+raporlanmıştı.
+
+Ders: bir yüzeyde çözülen yerleşim hatası, aynı kartı çizen BÜTÜN yüzeylerde
+çözülmüş sayılamaz. Çözüm ortak koda taşındı — `note_grid.dart`
+(`balancedNoteColumns` + `NoteBalancedGrid` + `kStaticGridLimit`); üç yüzey
+de artık tek koddan geçiyor. `note_sort_menu.dart` de aynı gerekçeyle
+klasörden çıkarıldı (arşiv aynı menüyü kullanıyor).
+
+**Ek kazanç (perf):** `_balancedColumns` düz bir `Column` kuruyordu ve
+`RepaintBoundary` EKLEMİYORDU. Sliver listeleri bunu kendiliğinden ekler
+(`addRepaintBoundaries`), düz `Column` eklemez — yani tek bir kartın
+kıpırdaması (seçim çerçevesi, küçük resmin gelmesi, odak halkasının nabzı)
+bölümün TAMAMINI yeniden boyatıyordu. Her hücre artık kendi sınırında.
+
+### KÖK NEDEN 2 — tek dokunuşluk, geri alınamayan yıkıcı işler
+Ana ekranda silme geri alınabiliyordu (`showUndoSnackBar`), ama aynı özen
+yardımcı ekranlara girmemişti:
+* **Hatırlatıcıyı kaldır** — tek dokunuş, geri dönüş yok, üstelik eski zaman
+  artık görülemediği için yeniden kurulamıyordu. → geri al.
+* **Çöpten geri yükle** — sessizdi; not listeden kayboluyor, nereye gittiği
+  görünmüyordu. → bildirim + geri al.
+* **Gelen notu reddet** — tek dokunuşta yok oluyordu. Burada geri al
+  KURULAMIYOR: `firestore.rules` gereği `inboxNotes` dokümanını yalnız
+  GÖNDEREN yaratabilir (`fromUid == request.auth.uid`), alıcı kendi kutusuna
+  yeniden yazamaz. Onun yerine ONAY diyaloğu kondu.
+
+Ders: "geri al" her yerde mümkün değil; mümkün olmadığı yerde ONAY sorulur.
+Hangisinin geçerli olduğunu belirleyen şey güvenlik kuralları, arayüz tercihi
+değil.
+
+### KÖK NEDEN 3 — türetilmiş veri YÖNETİLEMİYOR
+Etiketler notlardan türetiliyordu (`allTagsProvider`), yani bir etiketin
+kendisi hiçbir yerde nesne değildi. Sonuç: yazım hatasıyla açılmış bir
+etiketi ("prjeler") düzeltmenin tek yolu onu taşıyan HER notu tek tek açmaktı
+ve bu yüzden etiket düzeni bozuluyordu. `NotesRepository.renameTag` /
+`deleteTag` eklendi (süz levhasında etikete uzun basış). Yeniden adlandırma
+KÜME mantığıyla birleştirir: hedef ad zaten varsa bir notta aynı etiket iki
+kez duramaz. Seçili etiket yeniden adlandırılıyorsa süzgeç de yeni ada
+taşınır — yoksa ekran "hiç not yok" gösterirdi.
+
+### Perf: DateFormat kart başına kuruluyordu
+`formatNoteDate` her çağrısında yeni bir `DateFormat` kuruyordu ve bu çağrı
+KART BAŞINA yapılıyor; önbellek payında ~130 kart canlı duruyor. Desen+DİL
+anahtarlı önbellek kondu. `static final` OLAMAZDI: ilk açılıştaki dili ömür
+boyu taşırdı (aynı tuzağın `RemindersScreen._format`taki hâli de düzeltildi —
+orada `get` idi, yani satır başına bir biçimlendirici).
+
+**TUZAK (kendi kendime açtığım):** kart için ekran okuyucu etiketi eklerken
+ilk hâlinde `note.toPlainText()` çağırmıştım — notun bütün maddelerini
+dolaşıp yeni bir dizgi kuran bir işlev, kart başına, HER build'de. Az önce
+kapattığım perf deliğini geri açıyordu. Etiket artık başlık + gövdenin ilk
+160 karakteri + madde sayısı.
+
+### `ScrollController` tuzağı ("başa dön" düğmesi)
+Izgara `AnimatedSwitcher` içinde ve segment (süzgeç|klasör|etiket) değişince
+`ValueKey` ile yenileniyor; geçiş sırasında ESKİ ve YENİ görünüm aynı anda
+ayakta olabiliyor ve ikisi de aynı denetleyiciye bağlanıyor. İki sonuç:
+1. Konum `_gridScroll.offset` ile OKUNAMAZ (tek konum varsayar, iki konumda
+   fırlatır) — konum kaydırma BİLDİRİMİNDEN izleniyor (`_onGridScroll` zaten
+   vardı, aynı bildirime bindirildi, ikinci bir dinleyici açılmadı).
+   `animateTo` çok konumla çalışır, o güvenli.
+2. `keepScrollOffset: false` ŞART: tek denetleyiciyi paylaşan iki görünüm
+   arasında konum taşınabilirdi, yani yeni süzgeç eskisinin kaldığı yerden
+   açılırdı (kısa listede boş ekran).
+
+### ARB'de ÇİFT anahtar
+`app_tr.arb` ve `app_en.arb` `archivePageEmpty`i İKİ kez taşıyordu. JSON
+ayrıştırıcıları sessizce SONUNCUyu alıyor, yani davranış doğruydu ama ilk
+değer ölü kodu oldu ve `gen-l10n` hiç uyarmadı. Anahtar tekilleştirildi.
+Ders: ARB dosyalarına elle ekleme yapılırken anahtar var mı diye bakılmıyor;
+ekleme artık `json.load` + `if key in d` ile yapılıyor.
+
+### Çeviri borcu BÜYÜMÜŞ
+KALANLAR'da "~50 anahtar yalnız TR ve EN'de" yazıyordu; ölçüldü: **385
+anahtar** (997'nin %39'u) 14 dilde eksik ve şablona (Türkçe) düşüyor. Yani
+Fransızca seçen bir kullanıcı arayüzün üçte birinden fazlasını Türkçe
+görüyor. Bu turda ELLE ÇEVİRİLMEDİ — deponun bunun için bir iş akışı var
+(Actions → "Çeviri üret", `tool/translate_arb.dart`, `AI_TRANSLATE_KEY`) ve
+KALANLAR bu çevirilerin yayına çıkmadan anadili konuşanlara gösterilmesini
+şart koşuyor; elle üretilen 5390 dizgi hem o iş akışını kopyalar hem gözden
+geçirilemez bir diff olurdu. Sayı KALANLAR'da güncellendi.
+
+### Bu turda eklenen görünür şeyler (özet)
+Arşiv: ızgara + arama + sıralama + sayaç. Çöp: kalan gün, geri almalı geri
+yükleme, hepsini geri yükle, boşaltma ilerlemesi, arama, silinme sırası.
+Hatırlatıcılar: geri al, göreli zaman, hızlı ön ayarlar (bu akşam/yarın/
+gelecek hafta), gecikmiş rozeti, 1 saat erteleme, sayaç. Gelen notlar: onay,
+geliş tarihi, sayaç. Not: çoğalt (ekler BİLEREK kopyalanmaz — Storage'da
+notun id'si altında duruyorlar, kopyalamak her dosyayı indirip yeniden
+yüklemek demek), istatistik levhası. Ana ekran: tümünü seç, toplu klasöre
+taşı, toplu çoğalt, başa dön, son aramalar, arama sonuç sayısı. Erişim:
+ipucusuz IconButton kalmadı (12 tane vardı), kart ekran okuyucuya TEK düğüm.
+Ayarlar: uygulama sürümü (`package_info_plus`; `share_plus` win32 ^6 istediği
+için sürüm ^10.2.1 olmak zorunda, ^9 çözülmüyor).
