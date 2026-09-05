@@ -6185,6 +6185,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Etikete uzun bas: yeniden adlandır ya da sil.'**
   String get tagLongPressHint;
+
+  /// No description provided for @recentSearches.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son aramalar'**
+  String get recentSearches;
+
+  /// No description provided for @clearRecentSearches.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geçmişi temizle'**
+  String get clearRecentSearches;
 }
 
 class _AppLocalizationsDelegate

@@ -1363,5 +1363,7 @@
   },
   "tagRenamed": "Tag renamed",
   "tagDeleted": "Tag removed",
-  "tagLongPressHint": "Long-press a tag to rename or delete it."
+  "tagLongPressHint": "Long-press a tag to rename or delete it.",
+  "recentSearches": "Recent searches",
+  "clearRecentSearches": "Clear history"
 }

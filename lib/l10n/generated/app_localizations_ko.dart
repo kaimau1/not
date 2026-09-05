@@ -3375,4 +3375,10 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get tagLongPressHint =>
       'Etikete uzun bas: yeniden adlandır ya da sil.';
+
+  @override
+  String get recentSearches => 'Son aramalar';
+
+  @override
+  String get clearRecentSearches => 'Geçmişi temizle';
 }

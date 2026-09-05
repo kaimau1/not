@@ -447,6 +447,65 @@ class DebouncedSearchQueryNotifier extends Notifier<String> {
   }
 }
 
+/// **SON ARAMALAR** (kalıcı, cihaz yerel).
+///
+/// NEDEN: arama kutusu her açılışta bomboş açılıyordu. Aynı sorgu ("fatura",
+/// bir kişi adı, bir proje kodu) günde birkaç kez elle yeniden yazılıyor;
+/// üstelik notlarda aranan şey çoğu zaman uzun bir özel ad. Sorgular buluta
+/// YAZILMAZ: ne aradığın kişisel bir kullanım izidir.
+final searchHistoryProvider =
+    NotifierProvider<SearchHistoryNotifier, List<String>>(
+      SearchHistoryNotifier.new,
+    );
+
+class SearchHistoryNotifier extends Notifier<List<String>> {
+  static const _key = 'search_history';
+
+  /// Kutunun altında tek satırda kalsın: daha fazlası hem yer kaplar hem
+  /// "son" olmaktan çıkar.
+  static const maxEntries = 8;
+
+  @override
+  List<String> build() =>
+      ref.watch(sharedPreferencesProvider).getStringList(_key) ?? const [];
+
+  /// Sorguyu listenin başına alır. Aynı sorgu zaten varsa TAŞINIR (kopya
+  /// birikmez). Çok kısa sorgular kaydedilmez: tek harf "geçmiş" değildir.
+  void remember(String query) {
+    final value = query.trim();
+    if (value.length < 2) return;
+    final next = [
+      value,
+      for (final q in state)
+        if (q.toLowerCase() != value.toLowerCase()) q,
+    ].take(maxEntries).toList();
+    if (next.length == state.length &&
+        next.isNotEmpty &&
+        state.isNotEmpty &&
+        next.first == state.first) {
+      return;
+    }
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next);
+  }
+
+  void forget(String query) {
+    final next = [
+      for (final q in state)
+        if (q != query) q,
+    ];
+    if (next.length == state.length) return;
+    state = next;
+    ref.read(sharedPreferencesProvider).setStringList(_key, next);
+  }
+
+  void clear() {
+    if (state.isEmpty) return;
+    state = const [];
+    ref.read(sharedPreferencesProvider).setStringList(_key, const []);
+  }
+}
+
 final noteFilterProvider = NotifierProvider<NoteFilterNotifier, NoteFilter>(
   NoteFilterNotifier.new,
 );

@@ -1384,6 +1384,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // çizilmez — boşken sıfır yer kaplar.
                         const HomeInvites(),
                         const DashboardFilterRow(),
+                        // **SON ARAMALAR** — yalnız arama kutusu odaklıyken
+                        // ve kutu BOŞKEN. Yazmaya başlayınca kaybolur:
+                        // sonuçların üstünde bir çip şeridi durmasın.
+                        ListenableBuilder(
+                          listenable: _searchFocus,
+                          builder: (context, _) => _RecentSearches(
+                            visible: _searchFocus.hasFocus,
+                            onPick: (q) {
+                              _searchController.text = q;
+                              _searchController.selection =
+                                  TextSelection.collapsed(offset: q.length);
+                              ref.read(searchQueryProvider.notifier).set(q);
+                            },
+                          ),
+                        ),
                         // Hızlı yakala: "+" → editör → yaz → geri yolunu tek
                         // satıra indirir. Tasarım bunu kaydırma akışının
                         // içine koyuyordu; sabit satırda tutuyorum ki liste
@@ -1837,6 +1852,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       ];
     }
 
+    // **ARAMA SONUÇ SAYISI**: "aradığım şey kaç notta var" sorusunun cevabı
+    // hiçbir yerde yoktu; kullanıcı kartları saymak zorundaydı.
+    final countHeader = <Widget>[
+      if (searchActive)
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                l10n.searchResultCount(notes.length),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+    ];
+
     final pinned = [
       for (final n in notes)
         if (n.pinned) n,
@@ -2128,6 +2163,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (!bucketsActive) {
       if (pinned.isEmpty || others.isEmpty) {
         return [
+          ...countHeader,
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
           SliverPadding(
             padding: gridPadding,
@@ -2136,6 +2172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         ];
       }
       return [
+        ...countHeader,
         header(l10n.sectionPinnedShort, pinned.length),
         SliverPadding(
           padding: gridPadding,
@@ -2163,6 +2200,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ];
 
     return [
+      ...countHeader,
       // Boş kova hiç çizilmez — başlık tek başına duran bir çizgi olurdu.
       for (final (label, list) in buckets)
         if (list.isNotEmpty) ...[
@@ -2447,8 +2485,15 @@ class _SearchField extends ConsumerWidget {
               focusNode: focusNode,
               onChanged: (value) =>
                   ref.read(searchQueryProvider.notifier).set(value),
-              // Alan dışına dokununca odak bırakılır; bar daralır.
-              onTapOutside: (_) => focusNode?.unfocus(),
+              // Alan dışına dokununca odak bırakılır; bar daralır. Sorgu da
+              // o anda "son aramalar"a düşer — kullanıcı arama yapıp bir
+              // nota geçtiğinde geçmişe yazılmasının doğal anı burası.
+              onTapOutside: (_) {
+                ref.read(searchHistoryProvider.notifier).remember(query);
+                focusNode?.unfocus();
+              },
+              onSubmitted: (value) =>
+                  ref.read(searchHistoryProvider.notifier).remember(value),
               textInputAction: TextInputAction.search,
               style: const TextStyle(fontSize: 13.5),
               decoration: InputDecoration(
@@ -2511,6 +2556,82 @@ class _SearchField extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+}
+
+/// Arama kutusunun altındaki "son aramalar" şeridi.
+///
+/// Boşken hiç yer kaplamaz. Çipe dokunmak sorguyu geri getirir, çipteki ×
+/// onu geçmişten siler (yanlış yazılmış ya da bir daha aranmayacak bir
+/// sorgu listede kalmasın).
+class _RecentSearches extends ConsumerWidget {
+  const _RecentSearches({required this.visible, required this.onPick});
+
+  final bool visible;
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!visible) return const SizedBox.shrink();
+    if (ref.watch(searchQueryProvider).isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+    final history = ref.watch(searchHistoryProvider);
+    if (history.isEmpty) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                l10n.recentSearches,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: ref.read(searchHistoryProvider.notifier).clear,
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                child: Text(
+                  l10n.clearRecentSearches,
+                  style: const TextStyle(fontSize: 11),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 32,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: history.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 6),
+              itemBuilder: (context, index) {
+                final query = history[index];
+                return InputChip(
+                  label: Text(query, style: const TextStyle(fontSize: 12)),
+                  avatar: const Icon(Icons.history, size: 14),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => onPick(query),
+                  onDeleted: () =>
+                      ref.read(searchHistoryProvider.notifier).forget(query),
+                  deleteIcon: const Icon(Icons.close, size: 14),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

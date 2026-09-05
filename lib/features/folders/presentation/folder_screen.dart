@@ -211,8 +211,11 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
       // dinleyici yalnız gövdeyi çizer (üst bar aynı kalır).
       body: ValueListenableBuilder<TextEditingValue>(
         valueListenable: _searchController,
-        builder: (context, value, _) =>
-            _NotesGrid(async: notesAsync, query: value.text),
+        builder: (context, value, _) => _NotesGrid(
+          async: notesAsync,
+          query: value.text,
+          onCreateNote: () => createNote(NoteType.text),
+        ),
       ),
     );
   }
@@ -298,7 +301,12 @@ class _NotesGrid extends ConsumerWidget {
     this.ownerId,
     this.readOnly = false,
     this.query = '',
+    this.onCreateNote,
   });
+
+  /// Boş klasörde gösterilen "Metin notu" düğmesi. null = düğme çizilmez
+  /// (yalnız-okuma yetkisiyle açılmış paylaşılan klasör).
+  final VoidCallback? onCreateNote;
 
   final AsyncValue<List<Note>> async;
 
@@ -337,6 +345,11 @@ class _NotesGrid extends ConsumerWidget {
                   icon: Icons.folder_open_outlined,
                   title: l10n.folderEmpty,
                   subtitle: l10n.folderEmptyHint,
+                  // Boş klasörde istenen şey belli: bir not. Kullanıcı
+                  // eskiden ekranın dibindeki "+"yı aramak zorundaydı.
+                  actionLabel: onCreateNote == null ? null : l10n.newTextNote,
+                  actionIcon: Icons.add,
+                  onAction: onCreateNote,
                 )
               : EmptyState(
                   icon: Icons.search_off,

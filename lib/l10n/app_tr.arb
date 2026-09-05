@@ -1611,5 +1611,7 @@
   },
   "tagRenamed": "Etiket yeniden adlandırıldı",
   "tagDeleted": "Etiket kaldırıldı",
-  "tagLongPressHint": "Etikete uzun bas: yeniden adlandır ya da sil."
+  "tagLongPressHint": "Etikete uzun bas: yeniden adlandır ya da sil.",
+  "recentSearches": "Son aramalar",
+  "clearRecentSearches": "Geçmişi temizle"
 }

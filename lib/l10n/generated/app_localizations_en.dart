@@ -3411,4 +3411,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagLongPressHint => 'Long-press a tag to rename or delete it.';
+
+  @override
+  String get recentSearches => 'Recent searches';
+
+  @override
+  String get clearRecentSearches => 'Clear history';
 }

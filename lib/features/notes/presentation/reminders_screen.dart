@@ -237,6 +237,9 @@ class RemindersScreen extends ConsumerWidget {
               icon: Icons.alarm_outlined,
               title: l10n.remindersEmpty,
               subtitle: l10n.remindersEmptyHint,
+              actionLabel: l10n.newReminder,
+              actionIcon: Icons.alarm_add_outlined,
+              onAction: () => _addReminder(context, ref),
             );
           }
           final now = DateTime.now();
