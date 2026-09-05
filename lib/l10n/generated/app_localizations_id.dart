@@ -2636,7 +2636,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get archivePageName => 'Sayfa adı (ör. Faturalar)';
 
   @override
-  String get archivePageEmpty => 'Bu sayfa henüz boş.';
+  String get archivePageEmpty => 'Boş sayfa';
 
   @override
   String get archiveSearchHint => 'Defterde ara…';
@@ -3136,4 +3136,31 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get patternGraph => 'Milimetrik';
+
+  @override
+  String get archivePagesOverview => 'Sayfalar';
+
+  @override
+  String get archiveSemanticHint => 'Defterde anlamıyla ara…';
+
+  @override
+  String get semanticUnavailable =>
+      'Anlamsal arama şu an kullanılamıyor; metin araması gösteriliyor.';
+
+  @override
+  String get sharedNotifications => 'Paylaşılan klasör bildirimleri';
+
+  @override
+  String get sharedNotificationsInfo =>
+      'Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.';
+
+  @override
+  String get copyAsText => 'Metni kopyala';
+
+  @override
+  String get searchAttachments => 'Ek içeriğinde de ara';
+
+  @override
+  String get searchAttachmentsInfo =>
+      'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.';
 }

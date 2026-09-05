@@ -119,6 +119,7 @@ class Note {
     this.body = '',
     this.items = const [],
     this.pageNotes = const {},
+    this.updatedBy = '',
     this.attachments = const [],
     this.tags = const [],
     this.folderId,
@@ -175,6 +176,19 @@ class Note {
   /// not not sonraki açılışta geri gelirdi (renk/şeffaflık alanlarındaki aynı
   /// tuzağın haritalı hâli). Boş dizgi taşıyan anahtar "notu yok" demektir.
   final Map<String, String> pageNotes;
+
+  /// Notu SON YAZAN kişinin uid'i. Yalnız PAYLAŞILAN klasörlerde anlamlı:
+  /// "bu değişikliği ben mi yaptım, karşı taraf mı" sorusunun tek yanıtı
+  /// (kullanıcı isteği 2026-09-04: "paylaşılan notlarda karşı taraf … bir
+  /// notta değişiklik yaptığında bildirim gelmeli"). Kendi yazdığım
+  /// değişiklik bana bildirim/rozet ÜRETMEZ.
+  ///
+  /// Kayda depo katmanı yazar (bkz. `NotesRepository.editorUid`), [toMap]
+  /// DEĞİL: notun kendisi kimin yazdığını bilmez, yazan bilir. Eski
+  /// kayıtlarda boş — o zaman "kimin yazdığı bilinmiyor" sayılır ve
+  /// bildirime girer (kayıp bildirim, yanlış sessizlikten iyidir).
+  final String updatedBy;
+
   final List<Attachment> attachments;
 
   /// Serbest etiketler ("iş", "ev"...). '#' işareti olmadan saklanır.
@@ -547,6 +561,9 @@ class Note {
     archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
     reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
     aiSummary: aiSummary ?? this.aiSummary,
+    // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
+    // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
+    updatedBy: updatedBy,
   );
 
   factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -647,6 +664,7 @@ class Note {
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
+      updatedBy: map['updatedBy'] as String? ?? '',
       deletedAt: (map['deletedAt'] as Timestamp?)?.toDate(),
       archivedAt: (map['archivedAt'] as Timestamp?)?.toDate(),
       reminderAt: (map['reminderAt'] as Timestamp?)?.toDate(),

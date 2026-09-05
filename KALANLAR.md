@@ -268,6 +268,20 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   geçirilmedi — yukarıdaki "Çevirileri anadili konuşana göstert" maddesinin
   kapsamına girer.
 
+## Paylaşım bildirimleri — gerçek arka plan itmesi (FCM)
+- [ ] **Bildirim şu an YEREL** (2026-09-04): `SharedActivityService`
+  Firestore dinleyicisinden besleniyor, yani uygulama tümden kapalıyken
+  bildirim düşmez — ancak uygulama bir daha açıldığında görünür. Gerçek
+  arka plan itmesi `firebase_messaging` + `folderShares/{id}/messages` ve
+  paylaşılan notlar üstünde bir Cloud Functions tetikleyicisi ister
+  (cihaz token'ları kullanıcı belgesinde tutulur). Rozet ve ayar anahtarı
+  hazır, yalnız taşıma katmanı değişecek.
+- [ ] **KURAL DAĞITIMI BEKLİYOR**: sohbet görseli `firestore.rules` +
+  `storage.rules` değişikliği gerektiriyor (`folderChats/…` ağacı ve
+  mesajdaki `imageUrl`/`imagePath` alanları). `firebase deploy`
+  ÇALIŞTIRILMADAN sohbete görsel gönderilemez — istemci "permission denied"
+  alır.
+
 ## Sonra yapılacak
 Sıra kullanıcı tarafından 2026-07-27'de belirlendi; 1. madde (çeviri + Gmail
 silme) tamamlandı, kalanlar sırayla:

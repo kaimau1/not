@@ -397,6 +397,33 @@ class AutoTitleNotifier extends Notifier<bool> {
 }
 
 /// Notlar kaydedilirken AI otomatik etiket atasın mı?
+/// **PAYLAŞILAN KLASÖR BİLDİRİMLERİ** (kullanıcı isteği 2026-09-04:
+/// "bildirim hem telefona bildirim gelmeli ayarlardan kapatılabilir olarak
+/// hem de ana sayfada basit bir işaretçi olmalı").
+///
+/// Kapalıyken YALNIZ telefon bildirimi susar; ana ekrandaki rozet
+/// (okunmamış sayısı) durur — o, bildirimden ayrı bir şey: uygulamanın
+/// içinde "bir şey oldu" demenin sessiz yolu.
+///
+/// Varsayılan AÇIK: paylaşılan klasör zaten "haberim olsun" diye kurulan
+/// bir şey.
+final sharedNotificationsProvider =
+    NotifierProvider<SharedNotificationsNotifier, bool>(
+      SharedNotificationsNotifier.new,
+    );
+
+class SharedNotificationsNotifier extends Notifier<bool> {
+  static const _key = 'shared_notifications';
+
+  @override
+  bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? true;
+
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
+  }
+}
+
 final autoTagProvider = NotifierProvider<AutoTagNotifier, bool>(
   AutoTagNotifier.new,
 );

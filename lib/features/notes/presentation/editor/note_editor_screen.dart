@@ -23,6 +23,7 @@ import 'package:pasteboard/pasteboard.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/router.dart';
+import '../../../auth/presentation/auth_providers.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
@@ -497,7 +498,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         ? null
         : owner == null
         ? ref.read(notesRepositoryProvider)
-        : NotesRepository(FirebaseFirestore.instance, owner);
+        : NotesRepository(
+            FirebaseFirestore.instance,
+            owner,
+            editorUid: ref.read(currentUidProvider),
+          );
     _attachmentRepo = ref.read(attachmentRepositoryProvider);
     _gemini = ref.read(geminiServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);

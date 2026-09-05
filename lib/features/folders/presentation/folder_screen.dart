@@ -16,6 +16,7 @@ import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
 import '../../notes/presentation/quick_add_fab.dart';
+import '../data/folder_activity.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
@@ -66,6 +67,15 @@ class FolderScreen extends ConsumerStatefulWidget {
 
 class _FolderScreenState extends ConsumerState<FolderScreen>
     with QuickAddActions {
+  /// **OKUNDU damgası**: klasörü açmak oradaki her şeyi okunmuş sayar —
+  /// ana ekrandaki rozet (ve duran bildirim) böyle söner. Kare SONUNDA:
+  /// build sırasında sağlayıcı yazmak yasak.
+  void _markSeenSoon(String folderId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(folderSeenProvider.notifier).markSeen(folderId);
+    });
+  }
+
   /// "+" menüsünün demirlendiği nokta (bkz. QuickAddFab.anchor).
   final _fabLink = LayerLink();
 
@@ -120,6 +130,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
 
     if (shared) return _SharedFolderView(folderId: folderId, ownerId: ownerId);
 
+    _markSeenSoon(folderId);
     final folders = ref.watch(foldersStreamProvider).value;
     final folder = folders?.where((f) => f.id == folderId).firstOrNull;
     final notesAsync = ref.watch(folderNotesProvider(folderId));
@@ -400,6 +411,15 @@ class _SharedFolderView extends ConsumerStatefulWidget {
 }
 
 class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
+  /// **OKUNDU damgası**: klasörü açmak oradaki her şeyi okunmuş sayar —
+  /// ana ekrandaki rozet (ve duran bildirim) böyle söner. Kare SONUNDA:
+  /// build sırasında sağlayıcı yazmak yasak.
+  void _markSeenSoon(String folderId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ref.read(folderSeenProvider.notifier).markSeen(folderId);
+    });
+  }
+
   /// Paylaşılan klasörde de arama var: kendi klasörümdekiyle aynı kutu,
   /// aynı eşleşme kuralı (bkz. [_FolderScreenState._searchController]).
   final _searchController = TextEditingController();
@@ -416,6 +436,7 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
     final folderId = widget.folderId;
     final ownerId = widget.ownerId;
     final l10n = context.l10n;
+    _markSeenSoon(folderId);
     // Yetki, paylaşım aynasındaki `roles` haritasından gelir; ayna zaten ana
     // ekranın raf listesi için dinleniyor, ek bir okuma maliyeti yok.
     final share = ref
@@ -568,7 +589,11 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
       final title = titleController.text.trim();
       final body = bodyController.text.trim();
       if (!(saved ?? false) || (title.isEmpty && body.isEmpty)) return;
-      final repo = NotesRepository(FirebaseFirestore.instance, widget.ownerId);
+      final repo = NotesRepository(
+        FirebaseFirestore.instance,
+        widget.ownerId,
+        editorUid: ref.read(currentUidProvider),
+      );
       final id = await repo.createNote(
         NoteType.text,
         folderId: widget.folderId,
@@ -586,7 +611,11 @@ class _SharedFolderViewState extends ConsumerState<_SharedFolderView> {
   /// Paylaşılan klasöre yeni not: not SAHİBİN koleksiyonuna yazılır
   /// (klasörle birlikte yaşasın diye — bkz. sınıf açıklaması).
   Future<void> _createNote(BuildContext context) async {
-    final repo = NotesRepository(FirebaseFirestore.instance, widget.ownerId);
+    final repo = NotesRepository(
+      FirebaseFirestore.instance,
+      widget.ownerId,
+      editorUid: ref.read(currentUidProvider),
+    );
     final id = await repo.createNote(NoteType.text, folderId: widget.folderId);
     if (!context.mounted) return;
     await openNoteRoute(

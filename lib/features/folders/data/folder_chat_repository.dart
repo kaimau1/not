@@ -1,5 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
@@ -21,6 +25,8 @@ class FolderMessage {
     required this.senderId,
     required this.senderName,
     required this.text,
+    this.imageUrl = '',
+    this.imagePath = '',
     this.createdAt,
   });
 
@@ -28,6 +34,21 @@ class FolderMessage {
   final String senderId;
   final String senderName;
   final String text;
+
+  /// **GÖRSEL MESAJ** (kullanıcı isteği 2026-09-04: "sohbette görsel
+  /// gönderilebilir olsun ve kopyalanabilsin"). Boşsa düz metin mesajı.
+  ///
+  /// İndirme adresi mesajda durur; dosyanın kendisi Storage'da
+  /// `folderChats/{folderId}/…` altında (klasörün ÜYELERİNE açık — bkz.
+  /// storage.rules). Not eklerinin `users/{uid}/…` yolu burada işe yaramaz:
+  /// oraya yalnız sahibi erişebilir, karşı taraf görseli göremezdi.
+  final String imageUrl;
+
+  /// Storage'daki yol — mesaj silinince dosya da silinsin diye.
+  final String imagePath;
+
+  bool get hasImage => imageUrl.isNotEmpty;
+
   final DateTime? createdAt;
 
   factory FolderMessage.fromDoc(
@@ -39,6 +60,8 @@ class FolderMessage {
       senderId: map['senderId'] as String? ?? '',
       senderName: map['senderName'] as String? ?? '',
       text: map['text'] as String? ?? '',
+      imageUrl: map['imageUrl'] as String? ?? '',
+      imagePath: map['imagePath'] as String? ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
     );
   }
@@ -69,17 +92,30 @@ final folderChatRepositoryProvider = Provider<FolderChatRepository?>((ref) {
   final name = (user?.displayName?.trim().isNotEmpty ?? false)
       ? user!.displayName!.trim()
       : (user?.email ?? '');
-  return FolderChatRepository(FirebaseFirestore.instance, uid: uid, name: name);
+  return FolderChatRepository(
+    FirebaseFirestore.instance,
+    FirebaseStorage.instance,
+    uid: uid,
+    name: name,
+  );
 });
 
 class FolderChatRepository {
   FolderChatRepository(
-    this._firestore, {
+    this._firestore,
+    this._storage, {
     required this.uid,
     required this.name,
   });
 
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
+
+  static const _uuid = Uuid();
+
+  /// Sohbet görselinin tavanı. Not eklerinden (10/50 MB) çok daha dar:
+  /// sohbet bir dosya deposu değil, üstelik her üye görseli indiriyor.
+  static const int maxImageBytes = 8 * 1024 * 1024;
   final String uid;
   final String name;
 
@@ -118,8 +154,55 @@ class FolderChatRepository {
     });
   }
 
+  /// **GÖRSEL GÖNDERİR.** Dosya önce Storage'a çıkar, sonra mesaj yazılır:
+  /// ters sırada olsaydı adresi henüz olmayan bir mesaj bir an "kırık
+  /// görsel" olarak görünürdü.
+  ///
+  /// [text] açıklama olarak mesajın altına düşer (boş olabilir).
+  Future<void> sendImage(
+    String folderId,
+    Uint8List bytes, {
+    String text = '',
+    String contentType = 'image/png',
+  }) async {
+    if (bytes.isEmpty) return;
+    if (bytes.length > maxImageBytes) {
+      throw FolderImageTooLargeException(maxImageBytes);
+    }
+    final path =
+        '${AppConstants.folderChatStoragePrefix}/$folderId/${_uuid.v4()}.png';
+    final ref = _storage.ref(path);
+    await ref.putData(bytes, SettableMetadata(contentType: contentType));
+    final url = await ref.getDownloadURL();
+    final trimmed = text.trim();
+    await _messages(folderId).add({
+      'senderId': uid,
+      'senderName': name,
+      'text': trimmed.length > kFolderMessageMaxLength
+          ? trimmed.substring(0, kFolderMessageMaxLength)
+          : trimmed,
+      'imageUrl': url,
+      'imagePath': path,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   /// Kendi mesajını siler (klasör sahibi başkasınınkini de silebilir —
-  /// bkz. firestore.rules).
-  Future<void> delete(String folderId, String messageId) =>
-      _messages(folderId).doc(messageId).delete();
+  /// bkz. firestore.rules). Görselli mesajda DOSYA da silinir; silinemezse
+  /// mesaj yine gider (yetim dosya, görünen bir çöpten iyidir).
+  Future<void> delete(String folderId, String messageId, {String path = ''}) async {
+    await _messages(folderId).doc(messageId).delete();
+    if (path.isEmpty) return;
+    try {
+      await _storage.ref(path).delete();
+    } catch (_) {}
+  }
+}
+
+
+/// Sohbete sığmayacak kadar büyük görsel.
+class FolderImageTooLargeException implements Exception {
+  const FolderImageTooLargeException(this.maxBytes);
+
+  final int maxBytes;
 }

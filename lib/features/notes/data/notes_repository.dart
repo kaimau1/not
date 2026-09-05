@@ -157,7 +157,18 @@ final pendingWritesProvider = StreamProvider.family<bool, String>((
 /// bağlantı gelince arka planda senkronlar — kesintisiz otomatik senkronun
 /// temeli budur.
 class NotesRepository {
-  NotesRepository(this._firestore, this.uid);
+  NotesRepository(this._firestore, this.uid, {String? editorUid})
+    : editorUid = editorUid ?? uid;
+
+  /// **YAZAN kişinin uid'i** — [uid] (koleksiyonun SAHİBİ) ile aynı olmak
+  /// zorunda değil: paylaşılan bir klasörde not, klasörün SAHİBİNİN
+  /// koleksiyonuna yazılır ama yazan bir başkasıdır (bkz.
+  /// `sharedFolderNotesProvider`, `FolderScreen`).
+  ///
+  /// Her yazımda `updatedBy` olarak kayda geçer; paylaşılan klasör rozeti ve
+  /// bildirimi "bu değişikliği ben mi yaptım" sorusunu buradan yanıtlar —
+  /// yoksa kendi düzenlemem kendi telefonuma bildirim düşerdi.
+  final String editorUid;
 
   final FirebaseFirestore _firestore;
   final String uid;
@@ -291,7 +302,7 @@ class NotesRepository {
           orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
     // Bekletmeden yaz: çevrimdışıyken de anında açılabilsin.
-    unawaited(doc.set(note.toMap()));
+    unawaited(doc.set({...note.toMap(), 'updatedBy': editorUid}));
     return doc.id;
   }
 
@@ -300,7 +311,9 @@ class NotesRepository {
   /// çalışır (çevrimdışı-önce), yalnız pencere kapanışı gibi "süreç ölmeden
   /// diske insin" noktaları kısa bir zaman aşımıyla bekler.
   Future<void> updateNote(Note note) {
-    final write = _notes.doc(note.id).set(note.toMap(), SetOptions(merge: true));
+    final write = _notes
+        .doc(note.id)
+        .set({...note.toMap(), 'updatedBy': editorUid}, SetOptions(merge: true));
     unawaited(write);
     return write;
   }
@@ -323,6 +336,7 @@ class NotesRepository {
     final write = _notes.doc(noteId).set({
       ...fields,
       'updatedAt': FieldValue.serverTimestamp(),
+      'updatedBy': editorUid,
     }, SetOptions(merge: true));
     unawaited(write);
     return write;

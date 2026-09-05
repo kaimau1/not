@@ -1,10 +1,19 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../notes/presentation/editor/drawing_screen.dart';
 import '../data/folder_chat_repository.dart';
 
 /// **PAYLAŞILAN KLASÖRÜN SOHBETİ** (kullanıcı isteği 2026-08-18: "birde
@@ -42,6 +51,10 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
 
+  /// Görsel yükleniyor: gönder düğmeleri kilitlenir, ikinci kez
+  /// gönderilmesin.
+  bool _sending = false;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -68,6 +81,127 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(context.l10n.genericError('$e'))));
     }
+  }
+
+  /// **GÖRSEL GÖNDER** (kullanıcı isteği 2026-09-04: "sohbette görsel
+  /// gönderilebilir olsun … gönderilirken üzerine çizme gibi işlevler
+  /// olabilsin").
+  ///
+  /// Akış: kaynağı seç → önizleme → istersen ÜZERİNE ÇİZ → gönder. Çizim
+  /// ekranı not tarafındakinin ta kendisi ([DrawingScreen]), yalnız zemini
+  /// seçilen görsel.
+  Future<void> _sendImage() async {
+    final l10n = context.l10n;
+    final mobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image_outlined),
+              title: Text(l10n.addImage),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+            ),
+            if (mobile)
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(l10n.takePhoto),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+    final picked = await ImagePicker().pickImage(
+      source: source,
+      // Sohbet görselinin tavanı dar (bkz. `maxImageBytes`): kaynağı
+      // yüklemeden önce küçültmek, "çok büyük" hatasına düşmenin en ucuz
+      // yolu.
+      maxWidth: 2000,
+      maxHeight: 2000,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+    var bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final draw = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.4,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Image.memory(bytes, fit: BoxFit.contain),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(sheetContext, true),
+                  icon: const Icon(Icons.brush_outlined, size: 18),
+                  label: Text(l10n.addDrawing),
+                ),
+                FilledButton.icon(
+                  onPressed: () => Navigator.pop(sheetContext, false),
+                  icon: const Icon(Icons.send, size: 18),
+                  label: Text(l10n.folderChatSend),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (draw == null || !mounted) return;
+    if (draw) {
+      final drawn = await Navigator.of(context).push<Uint8List>(
+        MaterialPageRoute(
+          builder: (_) => DrawingScreen(
+            background: bytes,
+            saveLabel: l10n.folderChatSend,
+          ),
+        ),
+      );
+      if (drawn == null || !mounted) return;
+      bytes = drawn;
+    }
+    final repo = ref.read(folderChatRepositoryProvider);
+    if (repo == null) return;
+    setState(() => _sending = true);
+    try {
+      await repo.sendImage(
+        widget.folderId,
+        bytes,
+        text: _controller.text.trim(),
+      );
+      _controller.clear();
+      _scrollToEnd();
+    } on FolderImageTooLargeException catch (e) {
+      if (mounted) _snack(l10n.attachmentTooLarge(e.maxBytes ~/ (1024 * 1024)));
+    } catch (e) {
+      if (mounted) _snack(l10n.genericError('$e'));
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Yeni mesaj gelince/gönderilince listenin dibine iner. Kare sonuna
@@ -139,7 +273,12 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
                       ),
               ),
             ),
-            _Composer(controller: _controller, onSend: _send),
+            _Composer(
+              controller: _controller,
+              onSend: _send,
+              onImage: _sending ? null : () => unawaited(_sendImage()),
+              busy: _sending,
+            ),
           ],
         ),
       ),
@@ -148,10 +287,19 @@ class _FolderChatScreenState extends ConsumerState<FolderChatScreen> {
 }
 
 class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.onSend});
+  const _Composer({
+    required this.controller,
+    required this.onSend,
+    required this.onImage,
+    required this.busy,
+  });
 
   final TextEditingController controller;
   final VoidCallback onSend;
+
+  /// Görsel gönderme akışı; yükleme sürerken null (düğme kapalı).
+  final VoidCallback? onImage;
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +315,17 @@ class _Composer extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          IconButton(
+            tooltip: l10n.addImage,
+            onPressed: onImage,
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.add_photo_alternate_outlined),
+          ),
           Expanded(
             child: TextField(
               controller: controller,
@@ -230,21 +389,93 @@ class _MessageBubble extends ConsumerWidget {
   final bool mine;
   final String folderId;
 
+  /// Balondaki görsel: dokununca tam ekran açılır.
+  Widget _image(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(10),
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 260),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => _ChatImageViewer(url: message.imageUrl),
+          ),
+        ),
+        child: CachedNetworkImage(
+          imageUrl: message.imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, _) => const SizedBox(
+            height: 120,
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          errorWidget: (context, _, _) =>
+              const SizedBox(height: 80, child: Icon(Icons.broken_image)),
+        ),
+      ),
+    ),
+  );
+
+  Future<void> _menu(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (message.hasImage)
+              ListTile(
+                leading: const Icon(Icons.copy_outlined),
+                title: Text(l10n.copy),
+                onTap: () => Navigator.pop(sheetContext, 'copy'),
+              ),
+            if (message.text.isNotEmpty)
+              ListTile(
+                leading: const Icon(Icons.text_fields),
+                title: Text(l10n.copyAsText),
+                onTap: () => Navigator.pop(sheetContext, 'text'),
+              ),
+            if (mine)
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: Text(l10n.delete),
+                onTap: () => Navigator.pop(sheetContext, 'delete'),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case 'delete':
+        await ref
+            .read(folderChatRepositoryProvider)
+            ?.delete(folderId, message.id, path: message.imagePath);
+      case 'text':
+        await Clipboard.setData(ClipboardData(text: message.text));
+      case 'copy':
+        try {
+          final response = await http.get(Uri.parse(message.imageUrl));
+          if (response.statusCode == 200) {
+            await Pasteboard.writeImage(response.bodyBytes);
+          }
+        } catch (_) {
+          // Kopyalanamadıysa sessiz kal: panoya yazamamak sohbeti bozmaz.
+        }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: GestureDetector(
-        // Silme UZUN BASIŞLA: her balonun yanında bir çöp simgesi sohbeti
-        // okunmaz hâle getirirdi. Yalnız kendi mesajın (sahip başkasınınkini
-        // de silebilir ama arayüz onu kendi ekranına saklamaz — kural izin
-        // verir, akış sadeliği için burada yalnız kendi mesajı sunulur).
-        onLongPress: mine
-            ? () => ref
-                  .read(folderChatRepositoryProvider)
-                  ?.delete(folderId, message.id)
-            : null,
+        // Uzun basış MENÜ açar: sil (yalnız kendi mesajım) ve — görselli
+        // mesajda — KOPYALA (kullanıcı isteği 2026-09-04: "görsel …
+        // kopyalanabilsin"). Eskiden uzun basış doğrudan siliyordu; görsel
+        // gelince tek eylemli kestirme yetmez oldu.
+        onLongPress: () => unawaited(_menu(context, ref)),
         child: Container(
           margin: const EdgeInsets.only(bottom: 8),
           constraints: BoxConstraints(
@@ -276,7 +507,12 @@ class _MessageBubble extends ConsumerWidget {
                     color: scheme.primary,
                   ),
                 ),
-              Text(message.text),
+              if (message.hasImage) _image(context),
+              if (message.text.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: message.hasImage ? 6 : 0),
+                  child: Text(message.text),
+                ),
               if (message.createdAt != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
@@ -296,4 +532,24 @@ class _MessageBubble extends ConsumerWidget {
       ),
     );
   }
+}
+
+
+/// Sohbet görselinin tam ekran görüntüleyicisi: yakınlaştırılabilir.
+class _ChatImageViewer extends StatelessWidget {
+  const _ChatImageViewer({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.black,
+    appBar: AppBar(backgroundColor: Colors.transparent),
+    body: Center(
+      child: InteractiveViewer(
+        maxScale: 5,
+        child: CachedNetworkImage(imageUrl: url, fit: BoxFit.contain),
+      ),
+    ),
+  );
 }

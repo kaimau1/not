@@ -8,6 +8,7 @@ import '../../../core/utils/rich_text.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../settings/settings_providers.dart';
+import '../../ai/data/attachment_text_index.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_similarity.dart';
@@ -704,9 +705,14 @@ final filteredNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {
         if (noteMatchesFilter(n, filter)) n,
     ];
     if (query.isNotEmpty) {
+      // **EK İÇERİĞİ** (seçenek, varsayılan kapalı): açıkken PDF metni ve
+      // görsel OCR'ı da aranır — bkz. [attachmentTextProvider].
+      final extra = ref.watch(attachmentTextProvider);
       result = [
         for (final n in result)
-          if (_matches(n, query)) n,
+          if (_matches(n, query) ||
+              (extra[n.id]?.toLowerCase().contains(query) ?? false))
+            n,
       ];
     }
     return _sortedNotes(result, sort, activity);
@@ -788,7 +794,31 @@ String _searchableBody(Note note) {
   for (final item in note.items) {
     buffer
       ..write('\n')
+      ..write(stripRichMarkers(item.title))
+      ..write('\n')
       ..write(stripRichMarkers(item.text));
+  }
+  // **ARŞİV DEFTERİNİN SAYFA ADLARI** (kullanıcı isteği 2026-09-04: "ana
+  // sayfadaki aramada arşiv defterlerinin içeriğini arayabilmeli").
+  // Sayfanın YAZISI zaten `items` içinde; ama sayfanın ADI kaydın ayrı bir
+  // alanında duruyordu ve hiçbir aramaya girmiyordu — "Faturalar" sayfası
+  // olan bir defter "fatura" aramasında çıkmıyordu.
+  if (note.archiveGeneralName.trim().isNotEmpty) {
+    buffer
+      ..write('\n')
+      ..write(note.archiveGeneralName);
+  }
+  for (final page in note.archivePages) {
+    buffer
+      ..write('\n')
+      ..write(page);
+  }
+  // Sayfa balonlarının (PDF/sunum notlarındaki) metni de aranabilir: not
+  // gövdesinde durmuyor ama kullanıcı için notun İÇERİĞİ.
+  for (final text in note.pageNotes.values) {
+    buffer
+      ..write('\n')
+      ..write(stripRichMarkers(text));
   }
   final text = buffer.toString().toLowerCase();
   _searchBodyCache[note.id] = (note.updatedAt, text);

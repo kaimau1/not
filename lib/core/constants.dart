@@ -38,6 +38,12 @@ abstract final class AppConstants {
   /// sorusunu zaten oradan yanıtlıyor (bkz. firestore.rules).
   static const String folderMessagesCollection = 'messages';
 
+  /// Sohbet görsellerinin Storage kökü: `folderChats/{folderId}/{dosya}`.
+  /// Not eklerinden AYRI bir ağaç — oraya (`users/{uid}/…`) yalnız sahibi
+  /// erişebiliyor, sohbetteki görseli ise klasörün her üyesi görmeli
+  /// (bkz. storage.rules).
+  static const String folderChatStoragePrefix = 'folderChats';
+
   /// **GELEN NOTLAR** — `users/{uid}/inboxNotes/{id}`. Bir arkadaşın bana
   /// GÖNDERDİĞİ not, kendi notlarımın arasına KARIŞMADAN burada bekler;
   /// kabul edersem gerçek bir nota dönüşür (bkz. InboxRepository).

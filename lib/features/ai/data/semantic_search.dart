@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
+import 'attachment_text_index.dart';
 import 'gemini_service.dart';
 
 final semanticIndexProvider = Provider<SemanticIndex>(
@@ -58,7 +59,7 @@ class SemanticIndex {
   final Ref _ref;
 
   /// noteId → (güncellenme zamanı, normalize vektör)
-  final _cache = <String, (DateTime?, Float32List)>{};
+  final _cache = <String, (DateTime?, Float32List, int)>{};
 
   /// sorgu metni → normalize vektör (küçük, eklenme sıralı; taşınca en eski
   /// atılır — LinkedHashMap sırası eklenme sırasıdır).
@@ -67,12 +68,14 @@ class SemanticIndex {
 
   Future<List<Note>> search(String query, List<Note> notes) async {
     final service = _ref.read(geminiServiceProvider);
+    final extra = _ref.read(attachmentTextProvider);
 
     // Eksik veya bayat vektörleri toplu üret (100'erlik gruplar).
     final stale = [
       for (final note in notes)
         if (!_cache.containsKey(note.id) ||
-            _cache[note.id]!.$1 != note.updatedAt)
+            _cache[note.id]!.$1 != note.updatedAt ||
+            _cache[note.id]!.$3 != (extra[note.id]?.length ?? 0))
           note,
     ];
     for (var i = 0; i < stale.length; i += 100) {
@@ -80,13 +83,23 @@ class SemanticIndex {
       final texts = [
         for (final note in batch)
           () {
-            final text = note.toPlainText();
+            // Ek içeriği (PDF metni + görsel OCR) seçenek açıkken vektöre de
+            // girer: "faturadaki tutarı" arayan kullanıcı notun yazısında
+            // değil EKİNDE olanı arıyor (bkz. attachment_text_index.dart).
+            final text = [
+              note.toPlainText(),
+              ?extra[note.id],
+            ].join('\n');
             return text.length > 1500 ? text.substring(0, 1500) : text;
           }(),
       ];
       final vectors = await service.embedTexts(texts);
       for (var j = 0; j < batch.length && j < vectors.length; j++) {
-        _cache[batch[j].id] = (batch[j].updatedAt, _normalized(vectors[j]));
+        _cache[batch[j].id] = (
+          batch[j].updatedAt,
+          _normalized(vectors[j]),
+          extra[batch[j].id]?.length ?? 0,
+        );
       }
     }
 

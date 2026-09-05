@@ -2771,3 +2771,92 @@ geri döner.
 Editörde AI düğmesinin etiketi tümüyle kalktı (mikrofonlarla aynı kare
 ölçüde, adı ipucunda). Defterin çubuğu da dar düğmelere geçti (40 dp) —
 beş düğme + sayfa adı 320 dp'lik ekrana sığıyor, testi var.
+
+## 2026-09-04 — Defterin görsel mantığı, sayfa yönetimi, paylaşım bildirimleri
+
+### Sol kenar "bozuk" görünüyordu — cilt ÜÇ parçaya bölünmüştü
+Kullanıcı ekran görüntüsünde sayfanın sol kenarını, özellikle başlık
+hizasını ve en altı işaretledi. KÖK NEDEN: cilt gölgesi ile kenar payı
+çizgisi kâğıdın deseniyle birlikte YALNIZ ortadaki kaydırılan alanda
+çiziliyordu (`_PaperPainter` yalnız `Expanded`in içindeydi). Başlığın ve
+sayfa numarasının hizasında sol kenar bir anda kesiliyordu. Kenarlar artık
+ayrı bir katmanda (`_SheetEdgePainter`), yaprağın baştan sona TAM
+yüksekliğinde; `_PaperPainter` bir `edges` bayrağı aldı (levhadaki örnek
+karesinde hâlâ true).
+
+### "İleri ve geri aynı şekilde oluyor" — İKİ yaprak birden dönüyordu
+Eski `_PageTurn` hem giden hem gelen yaprağı, birbirinin aynası olacak
+biçimde döndürüyordu; ekranda sayfa çevrilmiyor, iki kâğıt akordeon gibi
+açılıp kapanıyordu. Üstelik `PageView` yüksek dizinli çocuğu ÜSTE çizdiği
+için dönen yaprak kimi zaman öbürünün altında kalıyordu (ekran
+görüntüsündeki eğik, üst üste binmiş sayfalar).
+
+KURAL (tek cümle, testi var — `archivePageTurn`): **dönen yaprak her zaman
+GELECEK sayfadır** (`t > 0`), çünkü dizini büyük olduğu için zaten üste
+çizilir. Geçmiş yapraklar (`t <= 0`) düz durur, `PageView`ın kaydırması
+geri alınır. İleri giderken gelecek yaprak sırtından 90°'den 0°'ye DÜŞER,
+geri dönerken KALKAR.
+
+### "Sadece 2 sayfa açabiliyorum"
+"Yeni sayfa" komutu sayfayı AÇMIYOR, yalnız defterin sonundaki boş yaprağa
+GİDİYORDU (`_goToPage`); yaprak ancak üstüne yazılınca kayda geçtiği için
+boş bırakan kullanıcı için defter iki sayfada donuyordu ve komutun hiçbir
+görünür etkisi olmuyordu. Artık `_createPage()` adı kayda YAZAR ve oraya
+gider (menü, "+" levhası ve genel bakış aynı yolu kullanır). Boş yaprak
+duruyor: kaydırıp yazmak hâlâ sayfa açar.
+
+### Sayfa genel bakışı + defter içi anlamsal arama
+* `_pagesOverview`: bütün yapraklar ızgarada, gerçek kâğıt deseniyle mini
+  birer sayfa (`_PagePreview`) — adı, yazısının başı, dosya/blok sayısı; ⋮
+  ile yeniden adlandır/sil. Başlık çubuğunda kendi düğmesi var.
+  TUZAK: `Material` `shape` ile `borderRadius`u BİRLİKTE kabul etmiyor
+  (kendi doğrulaması) — widget testi kırmızı ekranı yakaladı.
+* Arama kutusunda Metin/Anlam seçimi. Anlamsal arama birimi SAYFA
+  (`ArchiveSemanticIndex`): not düzeyinde arama defterin içinde işe
+  yaramıyor, sorgu defteri buluyor sayfayı bulmuyordu. Gömme dahili kipte
+  desteklenmediğinde metin aramasına düşülür ve nedeni yazılır.
+* `archivePageCorpus` tek kaynak: hem metin hem anlam araması aynı içeriğe
+  bakar (sayfa adı + yazı + blok başlıkları + dosya adları).
+
+### Defterin ADI hiçbir yerde yazılamıyordu
+Defter kendi ekranında açıldığı için not editörünün başlık alanına hiç
+uğranmıyor, kart da başlıksız notta tür etiketini ("Arşiv defteri")
+gösteriyordu. Başlık çubuğundaki ad artık yerinde düzenlenen bir alan
+(`_NotebookTitleField`) — notun `title`ını yazar.
+Ana ekran araması da genişledi: `_searchableBody` artık sayfa adlarını,
+`archiveGeneralName`i, blok BAŞLIKLARINI ve sayfa balonlarını da taşıyor.
+
+### Paylaşılan klasörde hareket: rozet + bildirim
+* `Note.updatedBy` eklendi (depo katmanı yazar — `NotesRepository.editorUid`,
+  koleksiyonun SAHİBİ ile YAZAN farklı olabiliyor: paylaşılan not sahibinin
+  koleksiyonuna yazılıyor). Onsuz "bu değişikliği ben mi yaptım" sorusunun
+  yanıtı yoktu ve kendi düzenlemem kendi telefonuma bildirim düşerdi.
+* `countFolderUnread` (testli): son bakıştan SONRA olan ve BAŞKASININ
+  yaptığı hareket sayılır. "Okundu" damgası cihazda (prefs) — okuma durumu
+  kişisel, buluta yazılsa iki cihaz birbirinin rozetini söndürürdü.
+* İlk açılışta damga hiç yoksa rozet ÇIKMAZ: yoksa yeni kullanıcı klasörün
+  bütün geçmişi kadar okunmamış görürdü.
+* `SharedActivityService` sayaç ARTTIĞINDA klasör başına TEK yerel bildirim
+  gösterir (aynı kimlik, üstüne yazar). SINIR: yerel bildirim, FCM DEĞİL —
+  uygulama tümden kapalıyken dinleyici de kapalı (bkz. KALANLAR).
+
+### Sohbette görsel
+Dosya `folderChats/{folderId}/…` altında, not eklerinden AYRI bir ağaçta:
+`users/{uid}/…` yalnız sahibine açık, sohbetteki görseli ise klasörün her
+üyesi görmeli. Storage kuralı erişim sorusunu Firestore'daki paylaşım
+aynasından (`firestore.get(folderShares/…)`) yanıtlıyor.
+`DrawingScreen` bir `background` aldı: gönderilecek görselin üstüne çizmek
+için. Çizim yoksa görselin KENDİSİ döner — "üzerine çiz" ekranından
+çizmeden çıkmak gönderiyi iptal etmemeli.
+**KURAL DEĞİŞTİ → `firebase deploy` gerekiyor** (firestore.rules +
+storage.rules); dağıtılmadan sohbet görseli gönderilemez.
+
+### Ek içeriğinde arama (seçenek, varsayılan KAPALI)
+`AttachmentTextIndex`: PDF metni (Syncfusion `PdfTextExtractor` — saf Dart,
+platform kanalı yok) + görsel OCR (ML Kit, yalnız mobil). Yalnız CİHAZDA
+DURAN dosyalar okunur (bulut kopyasını indirmek arama için kabul edilemez
+bir maliyet), turda en çok 8 ek, sonuç prefs'te kalıcı önbellekte. Hem
+metin hem anlamsal arama besleniyor; anlamsal indeksin bayatlama anahtarına
+ek metninin uzunluğu da katıldı, yoksa seçenek açılınca vektörler eski
+kalırdı.
+

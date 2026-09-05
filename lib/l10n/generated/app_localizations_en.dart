@@ -2621,7 +2621,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivePageName => 'Page name (e.g. Invoices)';
 
   @override
-  String get archivePageEmpty => 'This page is empty.';
+  String get archivePageEmpty => 'Empty page';
 
   @override
   String get archiveSearchHint => 'Search the notebook…';
@@ -3118,4 +3118,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get patternGraph => 'Graph paper';
+
+  @override
+  String get archivePagesOverview => 'Pages';
+
+  @override
+  String get archiveSemanticHint => 'Search the notebook by meaning…';
+
+  @override
+  String get semanticUnavailable =>
+      'Semantic search is unavailable right now; showing text search.';
+
+  @override
+  String get sharedNotifications => 'Shared folder notifications';
+
+  @override
+  String get sharedNotificationsInfo =>
+      'Get a phone notification when someone adds or edits a note or writes in the chat. The home screen counter keeps working when this is off.';
+
+  @override
+  String get copyAsText => 'Copy text';
+
+  @override
+  String get searchAttachments => 'Search inside attachments';
+
+  @override
+  String get searchAttachmentsInfo =>
+      'Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache.';
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../data/folder_activity.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_screen.dart';
@@ -32,6 +33,16 @@ class FolderTile extends ConsumerWidget {
     final count = ref
         .watch(folderNotesProvider(folder.id))
         .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
+    // PAYLAŞILAN klasörde okunmamış hareket rozeti (kullanıcı isteği
+    // 2026-09-04). Paylaşılmamış klasörde karşı taraf yok — hiç sorulmaz.
+    final unread = folder.isShared
+        ? ref.watch(
+            folderUnreadProvider((
+              ownerId: folder.ownerId,
+              folderId: folder.id,
+            )),
+          )
+        : 0;
     return SizedBox(
       height: height,
       child: Material(
@@ -64,6 +75,7 @@ class FolderTile extends ConsumerWidget {
                   ),
                 ),
               ),
+              if (unread > 0) FolderUnreadBadge(count: unread),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
                 child: Column(
@@ -146,6 +158,12 @@ class SharedFolderTile extends ConsumerWidget {
           )),
         )
         .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
+    final unread = ref.watch(
+      folderUnreadProvider((
+        ownerId: share.ownerId,
+        folderId: share.folderId,
+      )),
+    );
     return SizedBox(
       height: FolderTile.height,
       child: Material(
@@ -180,15 +198,18 @@ class SharedFolderTile extends ConsumerWidget {
                   ),
                 ),
               ),
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Icon(
-                  Icons.people_alt_outlined,
-                  size: 14,
-                  color: scheme.onTertiaryContainer.withValues(alpha: 0.7),
+              if (unread > 0)
+                FolderUnreadBadge(count: unread)
+              else
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Icon(
+                    Icons.people_alt_outlined,
+                    size: 14,
+                    color: scheme.onTertiaryContainer.withValues(alpha: 0.7),
+                  ),
                 ),
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
                 child: Column(
@@ -461,6 +482,47 @@ class _ChipShell extends StatelessWidget {
                 ),
               ],
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// **OKUNMAMIŞ ROZETİ** — klasör karosunun sağ ÜST köşesinde duran, klasik
+/// Android bildirim sayacı (kullanıcı isteği 2026-09-04: "o klasör
+/// simgesinin sağ üstünde 1, 2 gibi rakam yazabilir").
+///
+/// Tavanı [kFolderBadgeMax]: iki haneden sonrası karoyu kaplar ve zaten
+/// "çok" demenin başka bir yolu yok.
+class FolderUnreadBadge extends StatelessWidget {
+  const FolderUnreadBadge({super.key, required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final label = count > kFolderBadgeMax ? '$kFolderBadgeMax+' : '$count';
+    return Positioned(
+      top: 4,
+      right: 4,
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 5),
+        decoration: BoxDecoration(
+          color: scheme.error,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            height: 1.1,
+            fontWeight: FontWeight.w700,
+            color: scheme.onError,
           ),
         ),
       ),

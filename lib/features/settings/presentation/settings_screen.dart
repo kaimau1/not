@@ -16,6 +16,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/note_colors.dart';
+import '../../ai/data/attachment_text_index.dart';
 import '../../../core/constants.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
@@ -222,6 +223,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _QuickCaptureRowSwitch(),
             title: l10n.quickCaptureRowSetting,
             keywords: l10n.quickCaptureRowInfo,
+          ),
+          _SettingRow(
+            const _AttachmentSearchSwitch(),
+            title: l10n.searchAttachments,
+            keywords:
+                '${l10n.searchAttachmentsInfo} arama pdf gorsel ocr ek '
+                'icerik',
+          ),
+          _SettingRow(
+            const _SharedNotificationsSwitch(),
+            title: l10n.sharedNotifications,
+            keywords:
+                '${l10n.sharedNotificationsInfo} bildirim paylasim klasor '
+                'sohbet',
           ),
           _SettingRow(
             const _CardRichPreviewSwitch(),
@@ -1602,6 +1617,48 @@ class _ExpandListItemsSwitch extends ConsumerWidget {
       value: ref.watch(expandListItemsProvider),
       onChanged: (value) =>
           ref.read(expandListItemsProvider.notifier).set(value),
+    );
+  }
+}
+
+/// **EK İÇERİĞİNDE ARAMA** (kullanıcı isteği 2026-09-04: "anlamsal arama
+/// görsel ve pdf'leri de arayabilir, seçenek olarak sunmalıyız").
+///
+/// Varsayılan KAPALI: açmak bir kerelik tarama bedeli demek (PDF ayrıştırma
+/// + cihaz-içi OCR) — bkz. attachment_text_index.dart.
+class _AttachmentSearchSwitch extends ConsumerWidget {
+  const _AttachmentSearchSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.searchAttachments),
+      subtitle: Text(l10n.searchAttachmentsInfo),
+      value: ref.watch(attachmentSearchProvider),
+      onChanged: (value) =>
+          ref.read(attachmentSearchProvider.notifier).set(value),
+    );
+  }
+}
+
+/// **PAYLAŞILAN KLASÖR BİLDİRİMLERİ** (kullanıcı isteği 2026-09-04:
+/// "ayarlardan kapatılabilir olarak"). Kapatmak yalnız telefon bildirimini
+/// susturur; ana ekrandaki rozet çalışmaya devam eder.
+class _SharedNotificationsSwitch extends ConsumerWidget {
+  const _SharedNotificationsSwitch();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(l10n.sharedNotifications),
+      subtitle: Text(l10n.sharedNotificationsInfo),
+      value: ref.watch(sharedNotificationsProvider),
+      onChanged: (value) =>
+          ref.read(sharedNotificationsProvider.notifier).set(value),
     );
   }
 }

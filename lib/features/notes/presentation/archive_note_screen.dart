@@ -20,7 +20,9 @@ import '../../../core/utils/debouncer.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/local_file.dart';
+import '../../../core/utils/rich_text.dart';
 import '../../ai/data/ai_gate.dart';
+import '../../ai/data/archive_semantic_search.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../ai/presentation/ai_sheet.dart';
 import '../../settings/data/permissions_service.dart';
@@ -164,6 +166,51 @@ List<Attachment> archivePageFloats(Note note, String page) => [
     if (a.floatsOnPage && archiveOnPage(note, a.section, page)) a,
 ];
 
+/// Sayfanın **arama metni**: sayfa adı + serbest yazı + blok başlıkları ve
+/// metinleri + dosya adları.
+///
+/// Hem metin araması hem anlamsal sıralama bunu kullanır — iki mod aynı
+/// içeriğe baksın (kullanıcı isteği 2026-09-04: "tüm defterde arama … hem
+/// anlamsal hem metin olarak"). İki ayrı derleme olsaydı bir modun bulduğunu
+/// öbürü bulamazdı.
+String archivePageCorpus(
+  Note note,
+  String page, {
+  required String generalLabel,
+}) {
+  final buffer = StringBuffer(page.isEmpty ? generalLabel : page);
+  for (final entry in archiveEntriesOf(note, page)) {
+    final item = entry.text;
+    if (item != null) {
+      if (item.title.trim().isNotEmpty) {
+        buffer
+          ..write('\n')
+          ..write(item.title.trim());
+      }
+      if (item.text.trim().isNotEmpty) {
+        buffer
+          ..write('\n')
+          ..write(item.text.trim());
+      }
+      continue;
+    }
+    final file = entry.file;
+    if (file != null) {
+      buffer
+        ..write('\n')
+        ..write(file.fileName);
+    }
+  }
+  return buffer.toString();
+}
+
+/// Defterin BÜTÜN sayfalarının arama metni, sayfa sırasında
+/// (0 = Genel). Anlamsal arama bunu gömer.
+List<String> archiveCorpus(Note note, {required String generalLabel}) => [
+  for (final name in archivePageNames(note))
+    archivePageCorpus(note, name, generalLabel: generalLabel),
+];
+
 /// Defterin ilk sayfasının adı: kullanıcı verdiyse o, yoksa dilden gelen
 /// "Genel" ([fallback]).
 String archiveGeneralLabel(Note note, String fallback) =>
@@ -258,6 +305,18 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   bool _searching = false;
   bool _busy = false;
 
+  /// Arama modu: false = metin, true = anlam (bkz. arama çubuğu).
+  bool _semantic = false;
+
+  /// Anlamsal aramanın sonucu ve HANGİ sorgu/kayıt için hesaplandığı.
+  /// İstek ağa çıkıyor; her build'de yeniden başlatılmasın diye imzayla
+  /// eşleniyor (bkz. [_semanticResults]).
+  String? _semanticKey;
+  Future<List<ArchiveScore>>? _semanticFuture;
+
+  /// Defterin adının (AppBar başlığı) odağı.
+  final _notebookTitleFocus = FocusNode();
+
   /// Sayfa adı → o sayfanın serbest yazısı için ÜRETİLEN girdi kimliği.
   ///
   /// İlk harfte girdi henüz kayıtta yok ve iki kayıt arasında Firestore
@@ -279,6 +338,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   void dispose() {
     _pageController.dispose();
     _searchController.dispose();
+    _notebookTitleFocus.dispose();
     for (final node in _writerFocus.values) {
       node.dispose();
     }
@@ -391,6 +451,36 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   }
 
   // ————————————————————————————————— SAYFA İŞLERİ
+
+  /// **YENİ SAYFA AÇAR** — kayda yazar ve oraya gider.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-09-04: "sadece 2 sayfa açabiliyorum,
+  /// sayfaya bir şey yazmazsam sayfa oluşmuyor, yeni sayfa desem bile
+  /// açılmıyor"): "Yeni sayfa" komutu sayfayı AÇMIYOR, yalnız defterin
+  /// sonundaki boş yaprağa GİDİYORDU. Yaprak ancak üstüne yazılınca kayda
+  /// geçtiği için, boş bırakan kullanıcı için defter iki sayfada donuyordu —
+  /// üstelik komutun hiçbir görünür etkisi olmuyordu.
+  ///
+  /// Boş yaprak duruyor (kaydırıp yazmak hâlâ sayfa açar); komutla açılan
+  /// sayfa ise ARTIK GERÇEK: adı kayda yazılır, sayfa listesinde görünür.
+  Future<void> _createPage([String? name]) async {
+    final note = _note;
+    if (note == null) return;
+    final page = (name ?? archiveAutoPageName(note, context.l10n.archiveAutoPageName))
+        .trim();
+    if (page.isEmpty) return;
+    final existing = note.archivePages.indexOf(page);
+    if (existing >= 0) {
+      _goToPage(existing + 1);
+      return;
+    }
+    // Sayfa listenin SONUNA eklenir (bkz. [archiveWithPage]); numarası da
+    // Genel'i sayarak bir fazlası.
+    final index = note.archivePages.length + 1;
+    await _mutate((n) => archiveWithPage(n, page));
+    _goToPageSoon(index);
+  }
+
 
   /// Sayfayı yeniden adlandırır; girdilerin bağı da yeni ada taşınır.
   ///
@@ -1383,50 +1473,122 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       case 'text':
         await _editText(note, page);
       case 'page':
-        // Diyalog YOK: defterin sonundaki boş yaprağa geçilir, üstüne
-        // yazınca sayfa kendiliğinden açılır.
-        _goToPage(note.archivePages.length + 1);
+        // Diyalog YOK: sayfa doğrudan açılır (adı sonradan başlığa
+        // dokunularak değiştirilir).
+        await _createPage();
     }
   }
 
-  /// Sayfa listesi levhası: uzun defterde sayfa sayfa çevirmek yerine
-  /// doğrudan atlamak için (alt çubuktaki "3 / 12" yazısına dokununca).
-  Future<void> _pagesSheet(Note note) async {
+  /// **SAYFA GENEL BAKIŞI** (kullanıcı isteği 2026-09-04: "sayfaları toplu
+  /// görebileceğim bir buton olmalı").
+  ///
+  /// Defterin bütün yaprakları küçük birer kâğıt olarak, ızgarada: adı,
+  /// yazısının ilk satırları, kaç dosya taşıdığı. Dokunmak o sayfaya
+  /// götürür; ⋮ menüsü adlandırır/siler. Eski tek satırlık liste uzun
+  /// defterde "hangi sayfa neydi" sorusunu yanıtlamıyordu.
+  Future<void> _pagesOverview(Note note) async {
+    final l10n = context.l10n;
     final names = archivePageNames(note);
+    final paper = NoteColors.surface(context, note.color);
     final picked = await showModalBottomSheet<int>(
       context: context,
       showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (var i = 0; i < names.length; i++)
-              ListTile(
-                selected: i == _page,
-                leading: CircleAvatar(
-                  radius: 14,
-                  child: Text('${i + 1}', style: const TextStyle(fontSize: 12)),
-                ),
-                title: Text(_pageLabel(names[i])),
-                subtitle: Text(
-                  sheetContext.l10n.archiveEntryCount(
-                    archiveEntriesOf(note, names[i]).length,
-                  ),
-                ),
-                onTap: () => Navigator.pop(sheetContext, i),
-              ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.add),
-              title: Text(sheetContext.l10n.archiveNewPage),
-              subtitle: Text(sheetContext.l10n.archiveNewPageHint),
-              onTap: () => Navigator.pop(sheetContext, names.length),
-            ),
-          ],
-        ),
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
       ),
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.grid_view_outlined, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        l10n.archivePagesOverview,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => Navigator.pop(sheetContext, -1),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(l10n.archiveNewPage),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  gridDelegate:
+                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 190,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 0.72,
+                      ),
+                  itemCount: names.length,
+                  itemBuilder: (context, i) {
+                    final name = names[i];
+                    final writing = archivePageText(note, name)?.text ?? '';
+                    final extras = archivePageExtras(note, name);
+                    final files = [
+                      for (final e in archiveEntriesOf(note, name))
+                        if (e.file != null) e.file!,
+                    ];
+                    return _PagePreview(
+                      paper: paper,
+                      style: note.archivePaper,
+                      number: i + 1,
+                      selected: i == _page,
+                      title: _pageLabel(name),
+                      // Biçim işaretleri önizlemede görünmez (kartlarla
+                      // aynı kural — bkz. stripRichMarkers).
+                      preview: stripRichMarkers(writing).trim(),
+                      files: files.length,
+                      blocks: extras.length - files.length,
+                      onTap: () => Navigator.pop(sheetContext, i),
+                      // Genel sayfası kaydın parçası değil: adı dile ait,
+                      // silinemez (bkz. [_deletePage]).
+                      onDelete: i == 0
+                          ? null
+                          : () {
+                              Navigator.pop(sheetContext);
+                              unawaited(_deletePage(name));
+                            },
+                      onRename: () {
+                        Navigator.pop(sheetContext, i);
+                        _renameSoon(name);
+                      },
+                      emptyLabel: scheme.onSurfaceVariant,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
-    if (picked != null) _goToPage(picked);
+    if (picked == null || !mounted) return;
+    if (picked < 0) {
+      await _createPage();
+      return;
+    }
+    _goToPage(picked);
+  }
+
+  /// Sayfaya gidildikten SONRA başlığı odaklar (ızgaradan "yeniden adlandır").
+  void _renameSoon(String page) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusFor(_titleFocus, page).requestFocus();
+    });
   }
 
   // ————————————————————————————————— ÇİZİM
@@ -1550,23 +1712,65 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText: l10n.archiveSearchHint,
+                  hintText: _semantic
+                      ? l10n.archiveSemanticHint
+                      : l10n.archiveSearchHint,
                 ),
               )
             : Row(
                 children: [
                   const Icon(Icons.menu_book_outlined, size: 20),
                   const SizedBox(width: 8),
+                  // **DEFTERİN ADI YERİNDE DEĞİŞİR** (kullanıcı isteği
+                  // 2026-09-04: "ana sayfada başlık hep arşiv defteri
+                  // oluyor, oradaki başlık değiştirilebilir olmalı").
+                  // Defterin başlığı ana ekrandaki kartın da başlığı;
+                  // burada yazılan ad oraya birebir gider.
                   Expanded(
-                    child: Text(
-                      note.displayTitle.trim().isEmpty
-                          ? l10n.archiveNotebook
-                          : note.displayTitle,
-                      overflow: TextOverflow.ellipsis,
+                    child: _NotebookTitleField(
+                      key: ValueKey('notebook-title-${note.id}'),
+                      title: note.displayTitle,
+                      hint: l10n.archiveNotebook,
+                      focusNode: _notebookTitleFocus,
+                      onRename: (value) =>
+                          _mutate((n) => n.copyWith(title: value)),
                     ),
                   ),
                 ],
               ),
+        bottom: _searching
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(46),
+                // **METİN / ANLAM** — ana ekranın arama kutusundaki ikili
+                // seçimin defterdeki eşi (kullanıcı isteği 2026-09-04:
+                // "tüm defterde arama … hem anlamsal hem metin olarak").
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: SegmentedButton<bool>(
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      segments: [
+                        ButtonSegment(
+                          value: false,
+                          label: Text(l10n.searchModeText),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          label: Text(l10n.searchModeMeaning),
+                        ),
+                      ],
+                      selected: {_semantic},
+                      onSelectionChanged: (values) =>
+                          setState(() => _semantic = values.first),
+                    ),
+                  ),
+                ),
+              )
+            : null,
         actions: [
           IconButton(
             tooltip: _searching ? l10n.close : l10n.archiveSearchHint,
@@ -1577,6 +1781,12 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             }),
           ),
           if (!_searching)
+            IconButton(
+              tooltip: l10n.archivePagesOverview,
+              icon: const Icon(Icons.grid_view_outlined),
+              onPressed: () => unawaited(_pagesOverview(note)),
+            ),
+          if (!_searching)
             PopupMenuButton<String>(
               tooltip: l10n.more,
               onSelected: (value) async {
@@ -1584,7 +1794,9 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                   case 'paper':
                     await _paperSheet(note);
                   case 'new':
-                    _goToPage(names.length);
+                    await _createPage();
+                  case 'pages':
+                    await _pagesOverview(note);
                   case 'rename':
                     _focusFor(_titleFocus, sheets[page]).requestFocus();
                   case 'delete':
@@ -1594,6 +1806,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
               itemBuilder: (context) => [
                 PopupMenuItem(value: 'paper', child: Text(l10n.archivePaper)),
                 PopupMenuItem(value: 'new', child: Text(l10n.archiveNewPage)),
+                PopupMenuItem(
+                  value: 'pages',
+                  child: Text(l10n.archivePagesOverview),
+                ),
                 // Genel sayfası kaydın bir parçası değil (adı dilden geliyor):
                 // yeniden adlandırılamaz, silinemez. Defterin sonundaki boş
                 // yaprak da henüz yok — silinecek bir şey de yok.
@@ -1614,7 +1830,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       body: _busy
           ? const Center(child: CircularProgressIndicator())
           : (_searching && _query.isNotEmpty)
-          ? _searchResults(note)
+          ? (_semantic ? _semanticResults(note) : _searchResults(note))
           : _book(note, names, sheets, paper),
       bottomNavigationBar: (_searching && _query.isNotEmpty)
           ? null
@@ -2075,6 +2291,110 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     );
   }
 
+  /// **ANLAMSAL ARAMA SONUÇLARI**: sorguya anlamca en yakın SAYFALAR.
+  ///
+  /// Birim sayfa, girdi değil: defterin içinde arayan kullanıcı "hangi
+  /// yaprakta" sorusunu soruyor. Gömme dahili (anahtarsız) kipte
+  /// desteklenmiyor — o durumda metin aramasına düşülür ve nedeni yazılır,
+  /// kullanıcı arama yapamaz duruma gelmez (ana ekrandaki aynı kural).
+  Widget _semanticResults(Note note) {
+    final l10n = context.l10n;
+    final query = _query;
+    final names = archivePageNames(note);
+    final general = archiveGeneralLabel(note, l10n.archiveGeneralPage);
+    // İmza: aynı sorgu + aynı kayıt için ikinci kez ağa çıkılmaz.
+    final signature = '$query|${note.updatedAt?.microsecondsSinceEpoch}';
+    if (_semanticKey != signature) {
+      _semanticKey = signature;
+      _semanticFuture = ref
+          .read(archiveSemanticIndexProvider)
+          .search(
+            ref.read(geminiServiceProvider),
+            archiveCorpus(note, generalLabel: general),
+            query,
+          );
+    }
+    return FutureBuilder<List<ArchiveScore>>(
+      future: _semanticFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          // Metin aramasına DÜŞ: sonuç yok ekranı yerine çalışan bir arama.
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(
+                  l10n.semanticUnavailable,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Expanded(child: _searchResults(note)),
+            ],
+          );
+        }
+        final hits = snapshot.data ?? const <ArchiveScore>[];
+        if (hits.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Text(l10n.noteSearchNoHit),
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+          itemCount: hits.length,
+          itemBuilder: (context, i) {
+            final hit = hits[i];
+            final name = names[hit.page];
+            final preview = stripRichMarkers(
+              archivePageText(note, name)?.text ?? '',
+            ).trim();
+            return Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  radius: 14,
+                  child: Text(
+                    '${hit.page + 1}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+                title: Text(
+                  name.isEmpty ? general : name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  preview.isEmpty
+                      ? l10n.archiveEntryCount(
+                          archiveEntriesOf(note, name).length,
+                        )
+                      : preview,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                onTap: () {
+                  setState(() {
+                    _searching = false;
+                    _searchController.clear();
+                  });
+                  _goToPageSoon(hit.page);
+                },
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   static IconData _iconFor(AttachmentKind kind) => switch (kind) {
     AttachmentKind.image => Icons.image_outlined,
     AttachmentKind.video => Icons.videocam_outlined,
@@ -2175,7 +2495,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
-                onTap: () => _pagesSheet(note),
+                onTap: () => unawaited(_pagesOverview(note)),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Column(
@@ -2265,15 +2585,50 @@ const double _kGutter = 38;
 /// alanına dokunmak sayılsın (bkz. [NotePageCanvas.onTapEmpty]).
 const double _kPageBottomGap = 120;
 
-/// **SAYFA ÇEVİRME.** Sayfa, defterin sırtı (SOL kenar) çevresinde döner.
+/// Sayfa çevirme dönüşünün tavanı. Tam 90°'de yaprak sıfır genişliğe iner
+/// ve bir kare için tümüyle kaybolur (göze "takılma" gibi görünür).
+const double kArchiveMaxTurn = math.pi / 2 * 0.94;
+
+/// Bir yaprağın çevirme durumu: [t] = `yaprağın dizini - PageView konumu`.
+///
+/// Saf işlev, çünkü defterin görsel mantığı burada: **her an yalnız BİR
+/// yaprak döner** ve o yaprak GELECEK sayfadır (`t > 0`). Geçmiş yapraklar
+/// (`t <= 0`) düz durur; menzil dışındakiler hiç çizilmez.
+({bool visible, double angle}) archivePageTurn(double t) {
+  final clamped = t.clamp(-1.0, 1.0);
+  // Tümüyle çevrilmiş ya da henüz sıra gelmemiş yaprak HİÇ çizilmez:
+  // 90°'ye yakın döndürülmüş yaprak cilt kenarında ince, açık renkli bir
+  // şerit bırakıyordu (kullanıcı bulgusu 2026-09-02).
+  if (clamped.abs() >= 0.999) return (visible: false, angle: 0.0);
+  // GEÇMİŞ yapraklar düz durur: dönen yaprağın altında, defterin açık
+  // sayfası olarak. Onları da döndürmek "ileri ve geri aynı görünüyor"
+  // hatasının ta kendisiydi.
+  if (clamped <= 0) return (visible: true, angle: 0.0);
+  return (visible: true, angle: clamped * kArchiveMaxTurn);
+}
+
+/// **SAYFA ÇEVİRME.** Defterin sırtı SOL kenardadır; her an YALNIZ BİR
+/// yaprak döner, altındaki sayfa düz durur.
 ///
 /// [PageView] çocuklarını kendi kaydırmasıyla yatayda kaydırır; burada o
-/// kaydırma önce GERİ ALINIR (`Transform.translate`), sonra sayfa sırtından
-/// döndürülür. Böylece sayfalar yan yana kaymak yerine üst üste durup çevrilir
-/// — istenen "defter" hissini veren şey budur.
+/// kaydırma her yaprak için GERİ ALINIR (`Transform.translate`), böylece
+/// sayfalar yan yana kaymak yerine üst üste yığılır.
 ///
-/// Dönüş 90°'nin biraz altında bırakılır: tam 90°'de sayfa sıfır genişliğe
-/// iner ve bir kare için tümüyle kaybolur (göze "takılma" gibi görünür).
+/// **KÖK NEDEN — "ileri ve geri aynı şekilde oluyor"** (kullanıcı bulgusu
+/// 2026-09-04): eski sürümde İKİ yaprak birden, birbirinin aynası olacak
+/// şekilde dönüyordu. Ekranda bir sayfa çevrilmiyor, iki yaprak akordeon
+/// gibi açılıp kapanıyordu — hangi yöne gidildiği hareketten anlaşılmıyor,
+/// üstelik `PageView` yüksek dizinli çocuğu ÜSTE çizdiği için dönen yaprak
+/// bir öbürünün altında bir üstünde kalıyordu (ekran görüntüsündeki eğik,
+/// üst üste binmiş sayfalar).
+///
+/// Yeni kural tek cümle: **dönen yaprak her zaman GELECEK sayfadır**
+/// (`t > 0`), çünkü dizini büyük olduğu için zaten üste çizilir.
+///  * İleri giderken gelecek yaprak, sırtından tutulmuş gibi 90°'den
+///    0°'ye DÜŞER; altındaki sayfa boyunca düz durur.
+///  * Geri dönerken aynı yaprak 0°'den 90°'ye KALKAR ve altındaki sayfayı
+///    açığa çıkarır.
+/// İki yön böylece birbirinin tersi ama ayırt edilebilir hâle gelir.
 class _PageTurn extends StatelessWidget {
   const _PageTurn({
     required this.controller,
@@ -2299,33 +2654,54 @@ class _PageTurn extends StatelessWidget {
             ? (controller.page ?? controller.initialPage.toDouble())
             : controller.initialPage.toDouble();
         final t = (index - position).clamp(-1.0, 1.0);
-        if (t == 0) return child!;
-        // TÜMÜYLE ÇEVRİLMİŞ sayfa hiç çizilmez. 90°'ye yakın döndürülmüş
-        // yaprak ekranda cilt kenarında ince, açık renkli bir şerit
-        // bırakıyordu (kullanıcı bulgusu 2026-09-02: "sayfa düzgün
-        // görülmüyor") — üstelik görünmeyen bir sayfayı boyamanın bedeli de
-        // boşuna.
-        if (t.abs() >= 0.999) return const SizedBox.shrink();
+        final state = archivePageTurn(t);
+        if (!state.visible) return const SizedBox.shrink();
         // Sırt SOLDA — ama sağdan sola yazılan dillerde defter de ters
         // açılır: hem `PageView`ın kaydırma yönü hem de cildin yeri döner.
         final rtl = Directionality.of(context) == TextDirection.rtl;
         final sign = rtl ? -1.0 : 1.0;
+        // PageView'ın kendi kaydırmasını geri al: yapraklar üst üste yığılsın.
+        final offset = Offset(-t * constraints.maxWidth * sign, 0);
+        if (state.angle == 0) {
+          return Transform.translate(offset: offset, child: child);
+        }
         return Transform.translate(
-          // PageView'ın kendi kaydırmasını geri al: sayfa yerinde kalsın.
-          offset: Offset(-t * constraints.maxWidth * sign, 0),
+          offset: offset,
           child: Transform(
             alignment: rtl ? Alignment.centerRight : Alignment.centerLeft,
             transform: Matrix4.identity()
-              // Perspektif: uzaklaşan kenar daralsın, yoksa dönüş düz bir
-              // yatay ezilme gibi görünür.
-              ..setEntry(3, 2, 0.0012)
-              ..rotateY(-t * sign * math.pi / 2 * 0.96),
-            child: Opacity(
-              // Çevrilen sayfa kenara yaklaştıkça hafifçe soluklaşır: iki
-              // sayfa üst üste dururken hangisinin öne geldiği belli olsun.
-              // Fazlası kâğıdı camlaştırır, altındaki sayfa okunur hâle gelir.
-              opacity: (1 - t.abs() * 0.4).clamp(0.0, 1.0),
-              child: child,
+              // Perspektif: kalkan kenar okura yaklaşsın, yoksa dönüş düz
+              // bir yatay ezilme gibi görünür.
+              ..setEntry(3, 2, 0.0011)
+              ..rotateY(state.angle * sign),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                child!,
+                // Kalkan yaprağın sırta bakan yüzü gölgelenir: altındaki
+                // sayfayla arasında derinlik olsun, iki kâğıt tek katman
+                // gibi görünmesin.
+                IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: rtl
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        end: rtl
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
+                        colors: [
+                          Colors.black.withValues(
+                            alpha: 0.22 * (state.angle / kArchiveMaxTurn),
+                          ),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -2400,7 +2776,31 @@ class _PageSheet extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: _radius,
-          child: Column(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // **CİLT VE KENAR PAYI YAPRAĞIN TAMAMINDA** (kullanıcı bulgusu
+              // 2026-09-04, ekran görüntüsüyle: "sayfa sol kenarı bozuk
+              // görünüyor özellikle başlık kısmı ve en alt tamamen bozuk").
+              //
+              // KÖK NEDEN: cilt gölgesi ile kenar payı çizgisi kâğıdın
+              // deseniyle birlikte YALNIZ ortadaki kaydırılan alanda
+              // çiziliyordu. Başlığın ve sayfa numarasının hizasında sol
+              // kenar bir anda kesiliyor, defterin sırtı üç parçaya
+              // bölünmüş gibi görünüyordu. Kenarlar artık ayrı bir
+              // katmanda, yaprağın baştan sona TAM yüksekliğinde.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _SheetEdgePainter(
+                      style: style,
+                      margin: const Color(0xFFC96A6A).withValues(alpha: 0.35),
+                      spine: scheme.onSurface.withValues(alpha: 0.10),
+                    ),
+                  ),
+                ),
+              ),
+              Column(
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(38, 10, 12, 4),
@@ -2411,6 +2811,9 @@ class _PageSheet extends StatelessWidget {
                   painter: _PaperPainter(
                     style: style,
                     scroll: scroll,
+                    // Kenarlar (cilt + kenar payı) ARTIK BURADA DEĞİL:
+                    // yaprağın tamamını kaplayan katman çiziyor.
+                    edges: false,
                     line: scheme.onSurface.withValues(alpha: 0.07),
                     margin: const Color(0xFFC96A6A).withValues(alpha: 0.35),
                     spine: scheme.onSurface.withValues(alpha: 0.10),
@@ -2443,11 +2846,56 @@ class _PageSheet extends StatelessWidget {
                 ),
               ),
             ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+/// Yaprağın **kenarları**: sırttaki cilt gölgesi ve (çizgili kâğıtta) sol
+/// kenar payı çizgisi — başlıktan sayfa numarasına kadar TAM yükseklikte.
+///
+/// Desenden ayrı bir katman: desen içerikle birlikte KAYIYOR ve yalnız
+/// yazı alanını kaplıyor; cilt ise kâğıdın kendisine ait, kaymaz ve
+/// kesilmez (bkz. [_PageSheet]).
+class _SheetEdgePainter extends CustomPainter {
+  const _SheetEdgePainter({
+    required this.style,
+    required this.margin,
+    required this.spine,
+  });
+
+  final ArchivePaper style;
+  final Color margin;
+  final Color spine;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (style == ArchivePaper.lined) {
+      canvas.drawLine(
+        const Offset(_PaperPainter.marginX, 0),
+        Offset(_PaperPainter.marginX, size.height),
+        Paint()
+          ..color = margin
+          ..strokeWidth = 1.2,
+      );
+    }
+    final strip = Rect.fromLTWH(0, 0, _PaperPainter.spineWidth, size.height);
+    canvas.drawRect(
+      strip,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [spine, spine.withValues(alpha: 0)],
+        ).createShader(strip),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_SheetEdgePainter old) =>
+      old.style != style || old.margin != margin || old.spine != spine;
 }
 
 /// Kâğıdın deseni: çizgili / kareli / noktalı / düz + cilt gölgesi.
@@ -2463,6 +2911,7 @@ class _PaperPainter extends CustomPainter {
     required this.spine,
     this.scroll,
     this.gap = _kLineGap,
+    this.edges = true,
   }) : super(repaint: scroll);
 
   final ArchivePaper style;
@@ -2470,12 +2919,23 @@ class _PaperPainter extends CustomPainter {
   final Color margin;
   final Color spine;
 
+  /// Cilt gölgesi ve kenar payı çizgisi BURADA çizilsin mi?
+  ///
+  /// Defter yaprağında HAYIR: kenarlar yaprağın tamamını kaplayan ayrı bir
+  /// katmanda ([_SheetEdgePainter]) — başlık ve sayfa numarası hizasında
+  /// kesilmesinler diye. Levhadaki örnek karesinde EVET: orada yaprağın
+  /// tamamı zaten bu boyacı.
+  final bool edges;
+
   /// İçeriğin kaydırma denetleyicisi (null = sabit desen, örnek karesi).
   final ScrollController? scroll;
   final double gap;
 
   /// Sol kenar boşluğu çizgisinin yeri (içerik dolgusuyla aynı).
-  static const double _marginX = 30;
+  static const double marginX = 30;
+
+  /// Cilt gölgesinin genişliği.
+  static const double spineWidth = 14;
 
   /// Kaydırma konumu — **`position` DEĞİL `positions`**.
   ///
@@ -2501,7 +2961,7 @@ class _PaperPainter extends CustomPainter {
     // Kaydırma konumunun aralığa göre ARTANI: desen içerikle birlikte kayar
     // ama her zaman ekranın üstünden başlar.
     final shift = _offset % gap;
-    final left = style == ArchivePaper.lined ? _marginX : 12.0;
+    final left = style == ArchivePaper.lined ? marginX : 12.0;
     switch (style) {
       case ArchivePaper.lined:
         for (var y = gap - shift; y < size.height; y += gap) {
@@ -2511,13 +2971,15 @@ class _PaperPainter extends CustomPainter {
             linePaint,
           );
         }
-        canvas.drawLine(
-          const Offset(_marginX, 0),
-          Offset(_marginX, size.height),
-          Paint()
-            ..color = margin
-            ..strokeWidth = 1.2,
-        );
+        if (edges) {
+          canvas.drawLine(
+            const Offset(marginX, 0),
+            Offset(marginX, size.height),
+            Paint()
+              ..color = margin
+              ..strokeWidth = 1.2,
+          );
+        }
       case ArchivePaper.grid:
         for (var y = gap - shift; y < size.height; y += gap) {
           canvas.drawLine(
@@ -2549,13 +3011,16 @@ class _PaperPainter extends CustomPainter {
     }
     // Cilt: sol kenarda içeri doğru sönen bir gölge şeridi. Desenden
     // bağımsız — düz kâğıtta da defter olduğu belli olsun.
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, 14, size.height),
-      Paint()
-        ..shader = LinearGradient(
-          colors: [spine, spine.withValues(alpha: 0)],
-        ).createShader(Rect.fromLTWH(0, 0, 14, size.height)),
-    );
+    if (edges) {
+      final strip = Rect.fromLTWH(0, 0, spineWidth, size.height);
+      canvas.drawRect(
+        strip,
+        Paint()
+          ..shader = LinearGradient(
+            colors: [spine, spine.withValues(alpha: 0)],
+          ).createShader(strip),
+      );
+    }
   }
 
   @override
@@ -2564,7 +3029,193 @@ class _PaperPainter extends CustomPainter {
       old.line != line ||
       old.margin != margin ||
       old.spine != spine ||
+      old.edges != edges ||
       old.gap != gap;
+}
+
+/// **Sayfa genel bakışındaki mini yaprak** — gerçek sayfanın küçültülmüş
+/// hâli: aynı kâğıt rengi ve deseni, üstünde adı ve yazısının başı.
+///
+/// Gerçek bir küçük resim (thumbnail) DEĞİL: sayfayı bir kez daha çizmek
+/// (görselleri, PDF kapaklarını yükleyerek) ızgarayı ağırlaştırırdı ve
+/// kullanıcının aradığı bilgi zaten "bu sayfada ne yazıyordu".
+class _PagePreview extends StatelessWidget {
+  const _PagePreview({
+    required this.paper,
+    required this.style,
+    required this.number,
+    required this.selected,
+    required this.title,
+    required this.preview,
+    required this.files,
+    required this.blocks,
+    required this.onTap,
+    required this.onRename,
+    required this.onDelete,
+    required this.emptyLabel,
+  });
+
+  final Color paper;
+  final ArchivePaper style;
+  final int number;
+  final bool selected;
+  final String title;
+  final String preview;
+
+  /// Sayfadaki dosya ve (serbest yazı dışındaki) metin bloğu sayısı.
+  final int files;
+  final int blocks;
+
+  final VoidCallback onTap;
+  final VoidCallback onRename;
+
+  /// Genel sayfası silinemez — o zaman null.
+  final VoidCallback? onDelete;
+
+  final Color emptyLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: paper,
+      clipBehavior: Clip.antiAlias,
+      // `shape` ile `borderRadius` BİRLİKTE verilemez (Material'ın kendi
+      // doğrulaması); kenarlık gerektiği için şekil kalıyor.
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.horizontal(
+          left: Radius.circular(3),
+          right: Radius.circular(10),
+        ),
+        side: BorderSide(
+          color: selected ? scheme.primary : scheme.outlineVariant,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: CustomPaint(
+          painter: _PaperPainter(
+            style: style,
+            gap: 11,
+            line: scheme.onSurface.withValues(alpha: 0.06),
+            margin: const Color(0xFFC96A6A).withValues(alpha: 0.25),
+            spine: scheme.onSurface.withValues(alpha: 0.10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 6, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    _PagePreviewMenu(onRename: onRename, onDelete: onDelete),
+                  ],
+                ),
+                const Divider(height: 8),
+                Expanded(
+                  child: Text(
+                    preview.isEmpty ? l10n.archivePageEmpty : preview,
+                    maxLines: 7,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: preview.isEmpty ? emptyLabel : null,
+                      fontStyle: preview.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
+                  ),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      '$number',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    if (files > 0) ...[
+                      Icon(
+                        Icons.attach_file,
+                        size: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      Text(
+                        '$files',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    if (blocks > 0) ...[
+                      Icon(
+                        Icons.notes_outlined,
+                        size: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      Text(
+                        '$blocks',
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Mini yaprağın ⋮ menüsü: yeniden adlandır / sil.
+class _PagePreviewMenu extends StatelessWidget {
+  const _PagePreviewMenu({required this.onRename, required this.onDelete});
+
+  final VoidCallback onRename;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return PopupMenuButton<String>(
+      tooltip: l10n.more,
+      padding: EdgeInsets.zero,
+      iconSize: 16,
+      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+      onSelected: (value) {
+        if (value == 'rename') onRename();
+        if (value == 'delete') onDelete?.call();
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(value: 'rename', child: Text(l10n.archiveRenamePage)),
+        if (onDelete != null)
+          PopupMenuItem(value: 'delete', child: Text(l10n.archiveDeletePage)),
+      ],
+    );
+  }
 }
 
 /// Kâğıt deseni seçim levhasındaki küçük örnek kare.
@@ -2689,6 +3340,104 @@ class _PageTitleFieldState extends State<_PageTitleField> {
             color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// **DEFTERİN ADI** — başlık çubuğunda YERİNDE düzenlenir.
+///
+/// Kullanıcı isteği 2026-09-04: "ana sayfada başlık hep arşiv defteri
+/// oluyor, oradaki başlıkta değiştirilebilir olmalı." Defterin adı aslında
+/// notun başlığıydı ama hiçbir ekranda yazılamıyordu: defter kendi
+/// ekranında açıldığı için not editörünün başlık alanına hiç uğranmıyor,
+/// kart da başlıksız notta tür etiketini ("Arşiv defteri") gösteriyordu.
+///
+/// [_PageTitleField]'dan AYRI: o sayfanın adını yazar (girdileri sayfaya
+/// bağlayan anahtar, boş bırakılamaz), bu ise notun başlığını — boş
+/// bırakmak serbest, o zaman kart yine tür etiketini gösterir.
+class _NotebookTitleField extends StatefulWidget {
+  const _NotebookTitleField({
+    super.key,
+    required this.title,
+    required this.hint,
+    required this.focusNode,
+    required this.onRename,
+  });
+
+  final String title;
+  final String hint;
+  final FocusNode focusNode;
+  final Future<void> Function(String) onRename;
+
+  @override
+  State<_NotebookTitleField> createState() => _NotebookTitleFieldState();
+}
+
+class _NotebookTitleFieldState extends State<_NotebookTitleField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.title,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    widget.focusNode.addListener(_onFocusChange);
+  }
+
+  void _onFocusChange() {
+    if (!widget.focusNode.hasFocus) unawaited(_commit());
+  }
+
+  Future<void> _commit() async {
+    final value = _controller.text.trim();
+    if (value == widget.title.trim()) return;
+    await widget.onRename(value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _NotebookTitleField old) {
+    super.didUpdateWidget(old);
+    // Uzaktan gelen ad, alan ODAKTA DEĞİLKEN uygulanır: yazarken imleç
+    // satır başına atlardı (yazı alanındaki aynı kural).
+    if (widget.title != old.title &&
+        !widget.focusNode.hasFocus &&
+        _controller.text != widget.title) {
+      _controller.text = widget.title;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_onFocusChange);
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return TextField(
+      controller: _controller,
+      focusNode: widget.focusNode,
+      maxLines: 1,
+      textInputAction: TextInputAction.done,
+      textCapitalization: TextCapitalization.sentences,
+      onSubmitted: (_) {
+        unawaited(_commit());
+        widget.focusNode.unfocus();
+      },
+      style: theme.appBarTheme.titleTextStyle ?? theme.textTheme.titleLarge,
+      decoration: InputDecoration(
+        isDense: true,
+        // Dolgu KAPALI: temanın `filled: true`si başlık çubuğuna opak bir
+        // kutu boyuyor (bkz. [_PageWriter]).
+        filled: false,
+        contentPadding: EdgeInsets.zero,
+        hintText: widget.hint,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
       ),
     );
   }

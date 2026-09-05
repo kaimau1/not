@@ -279,12 +279,23 @@ service cloud.firestore {
             || request.auth.uid
                 in folderShare(folderId).get('sharedWith', []))
         && request.resource.data.senderId == request.auth.uid
+        // GÖRSELLİ MESAJ (kullanıcı isteği 2026-09-04): dosyanın kendisi
+        // Storage'da (`folderChats/{folderId}/…`, bkz. storage.rules);
+        // mesajda yalnız indirme adresi ve yol durur.
         && request.resource.data.keys().hasOnly(
-            ['senderId', 'senderName', 'text', 'createdAt'])
+            ['senderId', 'senderName', 'text', 'createdAt',
+             'imageUrl', 'imagePath'])
         && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
+        // Metin BOŞ olabilir — ama o zaman görsel olmalı: içi de dışı da
+        // boş bir mesaj sohbete çöp düşürmenin en ucuz yolu olurdu.
+        && (request.resource.data.text.size() > 0
+            || request.resource.data.get('imageUrl', '').size() > 0)
         // Tavan: mesaj alanı bir dosya taşıyıcısına çevrilmesin.
         && request.resource.data.text.size() <= 2000
+        && request.resource.data.get('imageUrl', '') is string
+        && request.resource.data.get('imageUrl', '').size() <= 1000
+        && request.resource.data.get('imagePath', '') is string
+        && request.resource.data.get('imagePath', '').size() <= 500
         && request.resource.data.senderName is string;
       // Mesaj DEĞİŞTİRİLEMEZ (gönderilmiş söz geri alınır, düzeltilmez);
       // silmek yazarında ve klasör sahibinde.

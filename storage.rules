@@ -15,6 +15,35 @@ service firebase.storage {
     // delete AYRI tutulur: request.resource silmede null olduğundan boyut
     // koşulu delete'e de uygulanırsa kullanıcı kendi ekini SİLEMEZ
     // (eski kuralın yetim dosya bırakan açığı buydu).
+    // **PAYLAŞILAN KLASÖRÜN SOHBET GÖRSELLERİ** (kullanıcı isteği
+    // 2026-09-04: "sohbette görsel gönderilebilir olsun").
+    //
+    // Not ekleri `users/{uid}/…` altında ve YALNIZ sahibine açık; sohbetteki
+    // görseli ise klasörün HER ÜYESİ görmeli. Bu yüzden ayrı bir ağaç ve
+    // erişim sorusu Firestore'daki paylaşım aynasından (`folderShares`)
+    // yanıtlanıyor — aynı soruyu iki yerde iki farklı biçimde yanıtlamamak
+    // için (bkz. firestore.rules → folderShare).
+    match /folderChats/{folderId}/{fileName} {
+      function share() {
+        return firestore.get(
+          /databases/(default)/documents/folderShares/$(folderId)).data;
+      }
+      function member() {
+        return request.auth != null
+          && (request.auth.uid == share().ownerId
+              || request.auth.uid in share().get('sharedWith', []));
+      }
+      allow read: if member();
+      // Sohbet bir dosya deposu DEĞİL: 8 MB tavan (istemci de aynı tavanı
+      // uyguluyor, bkz. FolderChatRepository.maxImageBytes) ve yalnız görsel.
+      allow create, update: if member()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      // Silme üyede: mesajı silen kişi dosyayı da siler (mesaj silme yetkisi
+      // Firestore tarafında yazarında ve klasör sahibinde).
+      allow delete: if member();
+    }
+
     match /users/{uid}/{allPaths=**} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null

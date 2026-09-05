@@ -23,6 +23,14 @@ import 'package:notlar/l10n/generated/app_localizations.dart';
 /// zaten yazmanın KAYDI değil (onu `archiveWriteText` testleri ölçüyor),
 /// ekranda YAZILABİLİR bir sayfa olup olmadığı.
 void main() {
+  /// Sayfanın YAZI ALANI. `find.byType(TextField).first` yetmiyor: başlık
+  /// çubuğunda defterin adı, sayfanın tepesinde de sayfa başlığı birer
+  /// alan — "ilk alan" 2026-09-04'ten beri defterin ADI.
+  final pageWriter = find.descendant(
+    of: find.byType(NotePageCanvas),
+    matching: find.byType(TextField),
+  );
+
   Future<void> pumpNotebook(WidgetTester tester, Note note) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -63,7 +71,7 @@ void main() {
 
     // Açık sayfada doğrudan yazılabilen bir alan var ve ipucu onu söylüyor.
     expect(find.text('Bu sayfaya yaz…'), findsOneWidget);
-    await tester.enterText(find.byType(TextField).first, 'ilk cümle');
+    await tester.enterText(pageWriter, 'ilk cümle');
     await tester.pump();
     expect(find.text('ilk cümle'), findsOneWidget);
     // Yazmak için hiçbir diyalog açılmadı.
@@ -116,13 +124,15 @@ void main() {
     // Kullanıcı isteği 2026-09-02: "sayfa başlığını direk üzerine tıklayarak
     // yazıp değiştirebilmeliyim". Eskiden ilk sayfanın başlığı düz yazıydı.
     await pumpNotebook(tester, notebook(pages: ['Faturalar']));
-    // Başlık + yazı alanı: iki alan.
-    expect(find.byType(TextField), findsNWidgets(2));
+    // DEFTERİN adı (başlık çubuğu) + sayfa başlığı + yazı alanı: üç alan.
+    // Defterin adı 2026-09-04'te eklendi (kullanıcı isteği: "ana sayfada
+    // başlık hep arşiv defteri oluyor, değiştirilebilir olmalı").
+    expect(find.byType(TextField), findsNWidgets(3));
     expect(find.text('Genel'), findsWidgets);
 
     await tester.tap(find.byIcon(Icons.chevron_right));
     await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.byType(TextField), findsNWidgets(3));
     expect(find.text('Faturalar'), findsWidgets);
   });
 
@@ -131,6 +141,76 @@ void main() {
     await pumpNotebook(tester, note);
     expect(find.text('Günlük'), findsWidgets);
     expect(find.text('Genel'), findsNothing);
+  });
+
+  testWidgets('"Yeni sayfa" sayfayı GERÇEKTEN açar (yazmadan da)', (
+    tester,
+  ) async {
+    // KÖK NEDEN (kullanıcı bulgusu 2026-09-04: "sadece 2 sayfa
+    // açabiliyorum, sayfaya bir şey yazmazsam sayfa oluşmuyor, yeni sayfa
+    // desem bile açılmıyor"): komut sayfayı AÇMIYOR, yalnız defterin
+    // sonundaki boş yaprağa gidiyordu — hiçbir görünür etkisi olmadan.
+    final saved = <Note>[];
+    final note = notebook();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notesRepositoryProvider.overrideWith(
+            (ref) => _RecordingRepo(saved.add),
+          ),
+          noteStreamProvider(note.id).overrideWith((ref) => Stream.value(note)),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: ArchiveNoteScreen(noteId: note.id),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yeni sayfa'));
+    await tester.pumpAndSettle();
+
+    expect(saved, isNotEmpty);
+    expect(saved.last.archivePages, ['Sayfa 2']);
+  });
+
+  testWidgets('SAYFA GENEL BAKIŞI ızgarada bütün yaprakları gösterir', (
+    tester,
+  ) async {
+    // Kullanıcı isteği 2026-09-04: "sayfaları toplu görebileceğim bir buton
+    // olmalı."
+    await pumpNotebook(
+      tester,
+      notebook(
+        pages: ['Seyahat'],
+        items: const [
+          NoteItem(id: 'a', text: 'genel yazı'),
+          NoteItem(id: 'b', text: 'seyahat yazısı', section: 'Seyahat'),
+        ],
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.grid_view_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sayfalar'), findsOneWidget);
+    // İki yaprak da ızgarada, önizleme yazılarıyla.
+    expect(find.text('genel yazı'), findsWidgets);
+    expect(find.text('seyahat yazısı'), findsWidgets);
+  });
+
+  testWidgets('arama kutusunda METİN/ANLAM seçimi var', (tester) async {
+    // Kullanıcı isteği 2026-09-04: "tüm defterde arama yapabileceğim bir
+    // alan olmalı hem anlamsal hem metin olarak."
+    await pumpNotebook(tester, notebook());
+    await tester.tap(find.byIcon(Icons.search));
+    await tester.pumpAndSettle();
+    expect(find.text('Metin'), findsOneWidget);
+    expect(find.text('Anlam'), findsOneWidget);
   });
 
   testWidgets('kâğıt deseni menüden seçilir', (tester) async {
@@ -206,7 +286,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextField).first, 'yeni yazı');
+    await tester.enterText(pageWriter, 'yeni yazı');
     await tester.pump();
     // Kayıt henüz yazılmadan (600 ms geciktiriliyor) BAŞKA bir cihazın
     // yazımı akıştan geliyor.
@@ -332,4 +412,19 @@ void main() {
     expect(find.byIcon(Icons.text_format), findsOneWidget);
     expect(find.byIcon(Icons.auto_awesome), findsOneWidget);
   });
+}
+
+
+/// Yazımları YAKALAYAN sahte depo: testte Firestore yok, ama "sayfa gerçekten
+/// kayda geçti mi" sorusunun tek yanıtı yazılan kayıt.
+class _RecordingRepo implements NotesRepository {
+  _RecordingRepo(this.onWrite);
+
+  final void Function(Note) onWrite;
+
+  @override
+  Future<void> updateNote(Note note) async => onWrite(note);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

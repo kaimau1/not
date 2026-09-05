@@ -4923,7 +4923,7 @@ abstract class AppLocalizations {
   /// No description provided for @archivePageEmpty.
   ///
   /// In tr, this message translates to:
-  /// **'Bu sayfa henüz boş.'**
+  /// **'Boş sayfa'**
   String get archivePageEmpty;
 
   /// No description provided for @archiveSearchHint.
@@ -5813,6 +5813,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Milimetrik'**
   String get patternGraph;
+
+  /// No description provided for @archivePagesOverview.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfalar'**
+  String get archivePagesOverview;
+
+  /// No description provided for @archiveSemanticHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Defterde anlamıyla ara…'**
+  String get archiveSemanticHint;
+
+  /// No description provided for @semanticUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anlamsal arama şu an kullanılamıyor; metin araması gösteriliyor.'**
+  String get semanticUnavailable;
+
+  /// No description provided for @sharedNotifications.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan klasör bildirimleri'**
+  String get sharedNotifications;
+
+  /// No description provided for @sharedNotificationsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.'**
+  String get sharedNotificationsInfo;
+
+  /// No description provided for @copyAsText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni kopyala'**
+  String get copyAsText;
+
+  /// No description provided for @searchAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek içeriğinde de ara'**
+  String get searchAttachments;
+
+  /// No description provided for @searchAttachmentsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.'**
+  String get searchAttachmentsInfo;
 }
 
 class _AppLocalizationsDelegate

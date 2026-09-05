@@ -1168,5 +1168,14 @@
   "patternGrid": "Grid",
   "patternLines": "Lines",
   "patternDiagonal": "Diagonal",
-  "patternGraph": "Graph paper"
+  "patternGraph": "Graph paper",
+  "archivePagesOverview": "Pages",
+  "archivePageEmpty": "Empty page",
+  "archiveSemanticHint": "Search the notebook by meaning…",
+  "semanticUnavailable": "Semantic search is unavailable right now; showing text search.",
+  "sharedNotifications": "Shared folder notifications",
+  "sharedNotificationsInfo": "Get a phone notification when someone adds or edits a note or writes in the chat. The home screen counter keeps working when this is off.",
+  "copyAsText": "Copy text",
+  "searchAttachments": "Search inside attachments",
+  "searchAttachmentsInfo": "Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache."
 }
