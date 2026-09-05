@@ -3373,4 +3373,42 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaPlay => 'Play';
+
+  @override
+  String get mediaPause => 'Pause';
+
+  @override
+  String get decrease => 'Decrease';
+
+  @override
+  String get increase => 'Increase';
+
+  @override
+  String get tagManageTitle => 'Manage tag';
+
+  @override
+  String get tagRename => 'Rename tag';
+
+  @override
+  String get tagRenameHint => 'New tag name';
+
+  @override
+  String get tagDelete => 'Delete tag';
+
+  @override
+  String tagDeleteConfirm(String tag) {
+    return 'Remove the tag \"$tag\" from all notes? The notes are kept.';
+  }
+
+  @override
+  String get tagRenamed => 'Tag renamed';
+
+  @override
+  String get tagDeleted => 'Tag removed';
+
+  @override
+  String get tagLongPressHint => 'Long-press a tag to rename or delete it.';
 }

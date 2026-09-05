@@ -227,6 +227,9 @@ class _Controls extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
+                    tooltip: value.isPlaying
+                        ? context.l10n.mediaPause
+                        : context.l10n.mediaPlay,
                     iconSize: 34,
                     icon: Icon(value.isPlaying ? Icons.pause : Icons.play_arrow),
                     onPressed: () =>

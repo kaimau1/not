@@ -455,6 +455,43 @@ class NotesRepository {
   );
 
   /// Boş notlar editörden çıkarken tamamen silinir.
+  /// Bir etiketi TÜM notlarda yeniden adlandırır. Aynı ada sahip bir etiket
+  /// zaten varsa ikisi BİRLEŞİR (küme mantığı — bir notta aynı etiket iki kez
+  /// duramaz).
+  ///
+  /// NEDEN: etiketler yalnız notlardan türetiliyordu; yazım hatasıyla açılmış
+  /// bir etiketi ("prjeler") düzeltmenin tek yolu onu taşıyan HER notu tek tek
+  /// açıp elle değiştirmekti. Etiket düzeni bu yüzden bozuluyordu.
+  ///
+  /// [notes] çağıranın elindeki liste: depo zaten canlı akışı besliyor, ikinci
+  /// bir sunucu okuması yapmaya gerek yok (çevrimdışıyken de çalışır).
+  Future<void> renameTag(List<Note> notes, String from, String to) async {
+    final target = to.trim();
+    if (target.isEmpty || target == from) return;
+    for (final note in notes) {
+      if (!note.tags.contains(from)) continue;
+      final next = <String>[];
+      for (final tag in note.tags) {
+        final mapped = tag == from ? target : tag;
+        if (!next.contains(mapped)) next.add(mapped);
+      }
+      await updateFieldsAndWait(note.id, {'tags': next});
+    }
+  }
+
+  /// Etiketi TÜM notlardan kaldırır. Notlar silinmez, yalnız etiket düşer.
+  Future<void> deleteTag(List<Note> notes, String tag) async {
+    for (final note in notes) {
+      if (!note.tags.contains(tag)) continue;
+      await updateFieldsAndWait(note.id, {
+        'tags': [
+          for (final t in note.tags)
+            if (t != tag) t,
+        ],
+      });
+    }
+  }
+
   void hardDelete(String noteId) {
     unawaited(_notes.doc(noteId).delete());
   }

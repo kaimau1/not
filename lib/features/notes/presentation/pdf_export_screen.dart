@@ -500,6 +500,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                     ),
                   ),
                   IconButton(
+                    tooltip: l10n.decrease,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.remove, size: 18),
                     onPressed: (option.line ?? 0) <= 0
@@ -511,6 +512,7 @@ class _PdfExportScreenState extends ConsumerState<PdfExportScreen> {
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   IconButton(
+                    tooltip: l10n.increase,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.add, size: 18),
                     onPressed: (option.line ?? _lineCount) >= _lineCount

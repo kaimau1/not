@@ -335,6 +335,7 @@ class _PageTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
+                  tooltip: context.l10n.archivePrevPage,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -343,6 +344,7 @@ class _PageTile extends StatelessWidget {
                 ),
                 Text(label, style: Theme.of(context).textTheme.labelSmall),
                 IconButton(
+                  tooltip: context.l10n.archiveNextPage,
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(minWidth: 28, minHeight: 28),

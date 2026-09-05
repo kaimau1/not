@@ -127,6 +127,7 @@ class _BubblesOverviewScreenState extends State<_BubblesOverviewScreen> {
                     suffixIcon: _search.text.isEmpty
                         ? null
                         : IconButton(
+                            tooltip: l10n.clearSearch,
                             icon: const Icon(Icons.close),
                             onPressed: () {
                               _search.clear();

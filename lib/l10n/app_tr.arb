@@ -1592,5 +1592,24 @@
         "type": "int"
       }
     }
-  }
+  },
+  "mediaPlay": "Oynat",
+  "mediaPause": "Duraklat",
+  "decrease": "Azalt",
+  "increase": "Artır",
+  "tagManageTitle": "Etiketi yönet",
+  "tagRename": "Etiketi yeniden adlandır",
+  "tagRenameHint": "Yeni etiket adı",
+  "tagDelete": "Etiketi sil",
+  "tagDeleteConfirm": "\"{tag}\" etiketi tüm notlardan kaldırılsın mı? Notlar silinmez.",
+  "@tagDeleteConfirm": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "tagRenamed": "Etiket yeniden adlandırıldı",
+  "tagDeleted": "Etiket kaldırıldı",
+  "tagLongPressHint": "Etikete uzun bas: yeniden adlandır ya da sil."
 }

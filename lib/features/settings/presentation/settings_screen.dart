@@ -8,8 +8,10 @@ import 'package:firebase_auth/firebase_auth.dart'
     show AuthCredential, FirebaseAuth, FirebaseAuthException;
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -403,6 +405,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     if (query.isNotEmpty)
                       IconButton(
+                        // Etiketsiz simge düğmesi ekran okuyucuda "düğme"
+                        // diye okunuyordu; ipucu hem imleç üstünde hem
+                        // TalkBack'te ne yaptığını söyler.
+                        tooltip: l10n.clearSearch,
                         icon: const Icon(Icons.close, size: 18),
                         onPressed: () {
                           _searchController.clear();
@@ -3701,7 +3707,68 @@ class _AccountSection extends ConsumerWidget {
           onPressed: () =>
               showLicensePage(context: context, applicationName: l10n.appName),
         ),
+        const _AppVersionRow(),
       ],
+    );
+  }
+}
+
+/// **UYGULAMA SÜRÜMÜ** — kullanıcı "hangi sürümdeyim" sorusuna hiçbir yerde
+/// cevap bulamıyordu.
+///
+/// Güncelleme akışı "yeni APK'yı üstüne kur" olduğu için bu bilgi pratikte
+/// zorunlu: telefondaki sürümün CI'ın ürettiğinden eski olup olmadığı ancak
+/// böyle görülür. Aynı zamanda hata bildirmenin de ön koşulu.
+///
+/// Dokununca panoya kopyalanır: numarayı elle okuyup yazmak gerekmesin.
+class _AppVersionRow extends StatefulWidget {
+  const _AppVersionRow();
+
+  @override
+  State<_AppVersionRow> createState() => _AppVersionRowState();
+}
+
+class _AppVersionRowState extends State<_AppVersionRow> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _version = '${info.version} (${info.buildNumber})');
+      }
+    } catch (_) {
+      // Sürüm okunamadı (beklenmedik platform): satır hiç çizilmez, ayarların
+      // geri kalanı çalışmaya devam eder.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final version = _version;
+    if (version == null) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    return TextButton.icon(
+      style: TextButton.styleFrom(
+        foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      icon: const Icon(Icons.info_outline),
+      label: Text('${l10n.appVersion}: $version'),
+      onPressed: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        await Clipboard.setData(
+          ClipboardData(text: '${l10n.appName} $version'),
+        );
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(l10n.appVersionCopied)));
+      },
     );
   }
 }

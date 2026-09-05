@@ -3392,4 +3392,43 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mediaPlay => 'Oynat';
+
+  @override
+  String get mediaPause => 'Duraklat';
+
+  @override
+  String get decrease => 'Azalt';
+
+  @override
+  String get increase => 'Artır';
+
+  @override
+  String get tagManageTitle => 'Etiketi yönet';
+
+  @override
+  String get tagRename => 'Etiketi yeniden adlandır';
+
+  @override
+  String get tagRenameHint => 'Yeni etiket adı';
+
+  @override
+  String get tagDelete => 'Etiketi sil';
+
+  @override
+  String tagDeleteConfirm(String tag) {
+    return '\"$tag\" etiketi tüm notlardan kaldırılsın mı? Notlar silinmez.';
+  }
+
+  @override
+  String get tagRenamed => 'Etiket yeniden adlandırıldı';
+
+  @override
+  String get tagDeleted => 'Etiket kaldırıldı';
+
+  @override
+  String get tagLongPressHint =>
+      'Etikete uzun bas: yeniden adlandır ya da sil.';
 }

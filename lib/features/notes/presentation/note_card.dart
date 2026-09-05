@@ -115,16 +115,39 @@ double estimateNoteCardHeight(Note note, double width) {
   return height;
 }
 
+/// Tarih biçimlendiricileri (desen + DİL) başına BİR kez kurulur.
+///
+/// KÖK NEDEN (perf): [formatNoteDate] her çağrısında yeni bir [DateFormat]
+/// kuruyordu ve bu çağrı KART BAŞINA yapılır. Ana ekranın önbellek payında
+/// ~130 kart canlı duruyor (bkz. dashboard `_kGridCacheExtent`), yani her
+/// yeniden çizimde yüzden fazla biçimlendirici kuruluyor ve her biri yerel
+/// ayarın tarih sembollerini arıyordu.
+///
+/// Anahtara DİL de giriyor: `static final` bir biçimlendirici ilk açılıştaki
+/// dili ömür boyu taşırdı, kullanıcı Ayarlar'dan dili değiştirince kart
+/// tarihleri eski dilde kalırdı.
+final Map<String, DateFormat> _dateFormatCache = {};
+
+DateFormat _dateFormat(String pattern) => _dateFormatCache.putIfAbsent(
+  '$pattern|${Intl.defaultLocale ?? ''}',
+  () => DateFormat(pattern),
+);
+
 /// Not tarihini kısa gösterir: bugünse saat, aynı yılsa "5 Tem",
 /// eski yıllarsa "5 Tem 2025".
 String formatNoteDate(DateTime date) {
   final now = DateTime.now();
   if (date.year == now.year && date.month == now.month && date.day == now.day) {
-    return DateFormat('HH:mm').format(date);
+    return _dateFormat('HH:mm').format(date);
   }
-  if (date.year == now.year) return DateFormat('d MMM').format(date);
-  return DateFormat('d MMM y').format(date);
+  if (date.year == now.year) return _dateFormat('d MMM').format(date);
+  return _dateFormat('d MMM y').format(date);
 }
+
+/// Testlerin (ve dil kataloğu değişirse çalışma anının) önbelleği
+/// boşaltabilmesi için.
+@visibleForTesting
+void clearNoteDateFormatCache() => _dateFormatCache.clear();
 
 /// Notu açar; kilitliyse önce kimlik doğrulaması ister.
 ///
@@ -585,80 +608,103 @@ class NoteCard extends ConsumerWidget {
       ),
     );
 
+    // **EKRAN OKUYUCU** (TalkBack/Narrator): kart onlarca küçük parçadan
+    // (başlık, gövde, madde satırları, rozetler, tarih) oluşuyor ve hepsi tek
+    // tek okunuyordu — bir notu geçmek için on kaydırma gerekiyordu. Kart
+    // artık TEK bir düğüm: "başlık, özet, durum" tek seferde okunur, seçili
+    // olup olmadığı da söylenir.
+    final semanticLabel = [
+      if (note.locked)
+        context.l10n.lockedNote
+      else ...[
+        if (hasTitle) note.displayTitle.trim(),
+        note.toPlainText().trim(),
+      ],
+      if (note.pinned) context.l10n.pin,
+      if (note.starred) context.l10n.star,
+      if (note.reminderAt != null) context.l10n.remindersTitle,
+    ].where((s) => s.isNotEmpty).join('. ');
+
     return RepaintBoundary(
-      child: GestureDetector(
-        onSecondaryTapUp: _isDesktop
-            ? (details) =>
-                  _showContextMenu(context, ref, details.globalPosition)
-            : null,
-        child: Stack(
-          children: [
-            card,
-            // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
-            // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
-            // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
-            // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
-            // seçim sırasında sabit kalır).
-            // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
-            // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
-            // yazar — başkasının notunda o işlemler kendi altımda aynı
-            // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
-            // düzenlemek editörden geçer (o, sahibin deposuna yazar).
-            if (!selectionActive && ownerId == null)
-              PositionedDirectional(
-                top: 2,
-                end: 2,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: () => showNoteActionsSheet(context, ref, note),
-                    child: SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: Align(
-                        alignment: AlignmentDirectional.topEnd,
-                        child: Padding(
-                          padding: const EdgeInsets.all(6),
-                          child: Icon(
-                            Icons.more_vert,
-                            size: 18,
-                            color: scheme.onSurfaceVariant,
+      child: Semantics(
+        container: true,
+        button: true,
+        selected: selectionActive ? selected : null,
+        label: semanticLabel,
+        child: GestureDetector(
+          onSecondaryTapUp: _isDesktop
+              ? (details) =>
+                    _showContextMenu(context, ref, details.globalPosition)
+              : null,
+          child: Stack(
+            children: [
+              card,
+              // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
+              // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
+              // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
+              // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
+              // seçim sırasında sabit kalır).
+              // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
+              // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
+              // yazar — başkasının notunda o işlemler kendi altımda aynı
+              // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
+              // düzenlemek editörden geçer (o, sahibin deposuna yazar).
+              if (!selectionActive && ownerId == null)
+                PositionedDirectional(
+                  top: 2,
+                  end: 2,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(18),
+                      onTap: () => showNoteActionsSheet(context, ref, note),
+                      child: SizedBox(
+                        width: 36,
+                        height: 36,
+                        child: Align(
+                          alignment: AlignmentDirectional.topEnd,
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.more_vert,
+                              size: 18,
+                              color: scheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
-            // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
-            // kartın tamamını kapladığı için dokunuşu yutardı.
-            if (selected)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scheme.primary, width: 2),
+              // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
+              // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
+              // kartın tamamını kapladığı için dokunuşu yutardı.
+              if (selected)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: scheme.primary, width: 2),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            if (selected)
-              PositionedDirectional(
-                top: 6,
-                end: 6,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    shape: BoxShape.circle,
+              if (selected)
+                PositionedDirectional(
+                  top: 6,
+                  end: 6,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(2),
+                    child: Icon(Icons.check, size: 14, color: scheme.onPrimary),
                   ),
-                  padding: const EdgeInsets.all(2),
-                  child: Icon(Icons.check, size: 14, color: scheme.onPrimary),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

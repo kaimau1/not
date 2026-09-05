@@ -5,6 +5,8 @@ import '../../../core/l10n_ext.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
+import '../data/notes_repository.dart';
+import '../domain/note.dart';
 import 'notes_providers.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
@@ -517,6 +519,10 @@ class _FilterSheet extends ConsumerWidget {
                       onTap: () => ref
                           .read(selectedTagProvider.notifier)
                           .set(tag == t ? null : t),
+                      // **ETİKET YÖNETİMİ**: etiketler yalnız notlardan
+                      // türetiliyordu; yazım hatasıyla açılmış bir etiketi
+                      // düzeltmenin tek yolu onu taşıyan HER notu açmaktı.
+                      onLongPress: () => _manageTag(context, ref, t),
                       favorite: favorites.contains(tagFavoriteToken(t)),
                       onToggleFavorite: () =>
                           favoritesNotifier.toggle(tagFavoriteToken(t)),
@@ -584,10 +590,132 @@ class _FilterSheet extends ConsumerWidget {
             l10n.filterSheetSortHint,
             style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
           ),
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.tagLongPressHint,
+              style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+            ),
+          ],
         ],
       ),
     );
   }
+}
+
+/// Etiket "yönet" menüsü: yeniden adlandır / sil. İkisi de TÜM notlara
+/// uygulanır (bkz. [NotesRepository.renameTag] / [NotesRepository.deleteTag]).
+Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
+  final l10n = context.l10n;
+  final action = await showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                '${l10n.tagManageTitle}: $tag',
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: Text(l10n.tagRename),
+            onTap: () => Navigator.pop(sheetContext, 'rename'),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.delete_outline,
+              color: Theme.of(sheetContext).colorScheme.error,
+            ),
+            title: Text(l10n.tagDelete),
+            onTap: () => Navigator.pop(sheetContext, 'delete'),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+  if (action == null || !context.mounted) return;
+  final repo = ref.read(notesRepositoryProvider);
+  if (repo == null) return;
+  // Depo zaten canlı akışı besliyor; ikinci bir sunucu okuması yapılmaz.
+  final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+  final messenger = ScaffoldMessenger.of(context);
+
+  if (action == 'rename') {
+    final controller = TextEditingController(text: tag);
+    final next = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.tagRename),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: l10n.tagRenameHint),
+          onSubmitted: (v) => Navigator.pop(dialogContext, v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text),
+            child: Text(l10n.ok),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (next == null || next.trim().isEmpty || next.trim() == tag) return;
+    // Seçili etiket yeniden adlandırılıyorsa süzgeç yeni ada taşınır, yoksa
+    // ekran "hiç not yok" gösterirdi.
+    if (ref.read(selectedTagProvider) == tag) {
+      ref.read(selectedTagProvider.notifier).set(next.trim());
+    }
+    await repo.renameTag(notes, tag, next.trim());
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.tagRenamed)));
+    return;
+  }
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.tagDelete),
+      content: Text(l10n.tagDeleteConfirm(tag)),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+          ),
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(l10n.delete),
+        ),
+      ],
+    ),
+  );
+  if (!(confirmed ?? false)) return;
+  if (ref.read(selectedTagProvider) == tag) {
+    ref.read(selectedTagProvider.notifier).set(null);
+  }
+  await repo.deleteTag(notes, tag);
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(l10n.tagDeleted)));
 }
 
 /// Süzgeç türünün yerelleştirilmiş etiketi (eski çip barından taşındı).
@@ -689,12 +817,17 @@ class _Option extends StatelessWidget {
     this.icon,
     this.favorite,
     this.onToggleFavorite,
+    this.onLongPress,
   });
 
   final String label;
   final IconData? icon;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Etiket çipinde "yönet" menüsünü açar (yeniden adlandır / sil); diğer
+  /// seçeneklerde null.
+  final VoidCallback? onLongPress;
 
   /// null = bu seçenek favorilenemez. Dolu ise çipin sonunda yıldız çıkar.
   final bool? favorite;
@@ -716,6 +849,7 @@ class _Option extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Container(
           height: 38,
           padding: EdgeInsetsDirectional.only(

@@ -1344,5 +1344,24 @@
         "type": "int"
       }
     }
-  }
+  },
+  "mediaPlay": "Play",
+  "mediaPause": "Pause",
+  "decrease": "Decrease",
+  "increase": "Increase",
+  "tagManageTitle": "Manage tag",
+  "tagRename": "Rename tag",
+  "tagRenameHint": "New tag name",
+  "tagDelete": "Delete tag",
+  "tagDeleteConfirm": "Remove the tag \"{tag}\" from all notes? The notes are kept.",
+  "@tagDeleteConfirm": {
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "tagRenamed": "Tag renamed",
+  "tagDeleted": "Tag removed",
+  "tagLongPressHint": "Long-press a tag to rename or delete it."
 }

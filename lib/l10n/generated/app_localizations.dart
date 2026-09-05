@@ -6113,6 +6113,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'{count, plural, one{1 not taşındı} other{{count} not taşındı}}'**
   String notesMovedCount(int count);
+
+  /// No description provided for @mediaPlay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oynat'**
+  String get mediaPlay;
+
+  /// No description provided for @mediaPause.
+  ///
+  /// In tr, this message translates to:
+  /// **'Duraklat'**
+  String get mediaPause;
+
+  /// No description provided for @decrease.
+  ///
+  /// In tr, this message translates to:
+  /// **'Azalt'**
+  String get decrease;
+
+  /// No description provided for @increase.
+  ///
+  /// In tr, this message translates to:
+  /// **'Artır'**
+  String get increase;
+
+  /// No description provided for @tagManageTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketi yönet'**
+  String get tagManageTitle;
+
+  /// No description provided for @tagRename.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketi yeniden adlandır'**
+  String get tagRename;
+
+  /// No description provided for @tagRenameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni etiket adı'**
+  String get tagRenameHint;
+
+  /// No description provided for @tagDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketi sil'**
+  String get tagDelete;
+
+  /// No description provided for @tagDeleteConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"{tag}\" etiketi tüm notlardan kaldırılsın mı? Notlar silinmez.'**
+  String tagDeleteConfirm(String tag);
+
+  /// No description provided for @tagRenamed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket yeniden adlandırıldı'**
+  String get tagRenamed;
+
+  /// No description provided for @tagDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiket kaldırıldı'**
+  String get tagDeleted;
+
+  /// No description provided for @tagLongPressHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etikete uzun bas: yeniden adlandır ya da sil.'**
+  String get tagLongPressHint;
 }
 
 class _AppLocalizationsDelegate

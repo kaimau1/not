@@ -252,6 +252,7 @@ class _DocChatScreenState extends ConsumerState<DocChatScreen> {
                         ),
                         const SizedBox(width: 8),
                         IconButton.filled(
+                          tooltip: l10n.folderChatSend,
                           onPressed: _busy ? null : _send,
                           icon: const Icon(Icons.arrow_upward),
                         ),

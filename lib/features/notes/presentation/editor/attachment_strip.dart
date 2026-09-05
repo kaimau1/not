@@ -191,6 +191,7 @@ class _AudioTileState extends State<_AudioTile> {
         children: [
           if (player == null)
             IconButton.filledTonal(
+              tooltip: context.l10n.mediaPlay,
               onPressed: _toggle,
               icon: const Icon(Icons.play_arrow),
             )
@@ -202,6 +203,9 @@ class _AudioTileState extends State<_AudioTile> {
                 final completed =
                     snapshot.data?.processingState == ProcessingState.completed;
                 return IconButton.filledTonal(
+                  tooltip: playing && !completed
+                      ? context.l10n.mediaPause
+                      : context.l10n.mediaPlay,
                   onPressed: _toggle,
                   icon: Icon(
                     playing && !completed ? Icons.pause : Icons.play_arrow,

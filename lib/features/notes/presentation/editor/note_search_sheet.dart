@@ -257,6 +257,7 @@ class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
                   suffixIcon: query.isEmpty
                       ? null
                       : IconButton(
+                          tooltip: l10n.clearSearch,
                           icon: const Icon(Icons.close),
                           onPressed: () => setState(_controller.clear),
                         ),

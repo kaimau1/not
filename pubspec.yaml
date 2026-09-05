@@ -79,6 +79,12 @@ dependencies:
   uuid: ^4.6.0
   intl: ^0.20.2
   shared_preferences: ^2.5.5
+  # Uygulamanın kendi sürümünü OKUR (Ayarlar → Hakkında). Sürüm numarası
+  # `pubspec.yaml`da sabit `1.0.0+1`; gerçek numarayı CI `--build-number` ile
+  # geçiyor, yani derleme dışından bilinemiyor. Kullanıcı "hangi sürümdeyim"
+  # sorusuna hiçbir yerde cevap bulamıyordu — güncelleme akışı "yeni APK'yı
+  # üstüne kur" olduğu için bu bilgi hata bildirmenin de ön koşulu.
+  package_info_plus: ^10.2.1
   path_provider: ^2.1.6
   web: ^1.1.0
   path: ^1.9.1
