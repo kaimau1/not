@@ -3424,4 +3424,36 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get imagesFitRow => 'Satıra sığdır';
+
+  @override
+  String imagesFitColumns(int count) {
+    return '$count sütun';
+  }
+
+  @override
+  String get imagesFitSingleRow => 'Tek satıra sığdır';
+
+  @override
+  String get briefingNotificationTitle =>
+      'Günaydın! ☀️';
+
+  @override
+  String get briefingNotificationBody =>
+      'Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.';
+
+  @override
+  String get reminderDone =>
+      'Tamamlandı';
+
+  @override
+  String get dateToday =>
+      'Bugün';
+
+  @override
+  String get dateTomorrow =>
+      'Yarın';
+
+  @override
+  String get noteDuplicatedNoAttachments =>
+      'Kopyalandı — ekler kopyaya taşınmadı';
 }

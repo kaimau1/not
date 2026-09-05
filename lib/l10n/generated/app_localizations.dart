@@ -6209,6 +6209,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Satıra sığdır'**
   String get imagesFitRow;
+
+  /// No description provided for @imagesFitColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sütun'**
+  String imagesFitColumns(int count);
+
+  /// No description provided for @imagesFitSingleRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek satıra sığdır'**
+  String get imagesFitSingleRow;
+
+  /// No description provided for @briefingNotificationTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günaydın! ☀️'**
+  String get briefingNotificationTitle;
+
+  /// No description provided for @briefingNotificationBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.'**
+  String get briefingNotificationBody;
+
+  /// No description provided for @reminderDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlandı'**
+  String get reminderDone;
+
+  /// No description provided for @dateToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get dateToday;
+
+  /// No description provided for @dateTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın'**
+  String get dateTomorrow;
+
+  /// No description provided for @noteDuplicatedNoAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyalandı — ekler kopyaya taşınmadı'**
+  String get noteDuplicatedNoAttachments;
 }
 
 class _AppLocalizationsDelegate

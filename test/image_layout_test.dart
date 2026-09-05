@@ -277,4 +277,44 @@ void main() {
       expect(equalWidthFrac(const []), 0.5);
     });
   });
+
+  group('fitRowsLayout — uç durumlar', () {
+    test('satırdaki görseller en az genişliğin altına düşmez', () {
+      final fits = fitRowsLayout(
+        aspects: const [1, 1, 1, 1, 1, 1],
+        columnWidth: 300,
+        top: 0,
+        maxPerRow: 6,
+        minWidthFrac: 0.15,
+      );
+      for (final f in fits) {
+        expect(f.widthFrac, greaterThanOrEqualTo(0.15));
+      }
+    });
+
+    test('tek görselde satır tam genişlik olur', () {
+      final fits = fitRowsLayout(
+        aspects: const [1.5],
+        columnWidth: 300,
+        top: 40,
+      );
+      expect(fits.length, 1);
+      expect(fits.first.widthFrac, closeTo(1, 0.0001));
+      expect(fits.first.leftFrac, 0);
+      expect(fits.first.top, 40);
+    });
+
+    test('oranı bilinmeyen (0) görsel kare sayılır, bölme hatası olmaz', () {
+      final fits = fitRowsLayout(
+        aspects: const [0, 1],
+        columnWidth: 300,
+        top: 0,
+      );
+      expect(fits.length, 2);
+      for (final f in fits) {
+        expect(f.widthFrac.isFinite, isTrue);
+        expect(f.widthFrac, greaterThan(0));
+      }
+    });
+  });
 }

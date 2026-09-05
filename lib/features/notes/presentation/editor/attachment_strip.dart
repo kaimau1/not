@@ -82,6 +82,12 @@ class AttachmentStrip extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) => _AttachmentTile(
               attachment: attachments[index],
+              // Şeritteki GÖRSELLER bir galeri: tam ekranda yana kaydırarak
+              // hepsinde gezilir.
+              gallery: [
+                for (final a in attachments)
+                  if (a.kind == AttachmentKind.image) a,
+              ],
               onRemove: () => onRemove(attachments[index]),
               onChanged: onChanged,
               onCopy: onCopy,
@@ -232,6 +238,7 @@ class _AttachmentTile extends ConsumerWidget {
   const _AttachmentTile({
     required this.attachment,
     required this.onRemove,
+    this.gallery = const [],
     this.onChanged,
     this.onCopy,
     this.onInsertTag,
@@ -240,6 +247,9 @@ class _AttachmentTile extends ConsumerWidget {
   });
 
   final Attachment attachment;
+
+  /// Tam ekranda kaydırarak geçilecek görseller (bkz. [ImageViewerScreen]).
+  final List<Attachment> gallery;
   final VoidCallback onRemove;
   final ValueChanged<Attachment>? onChanged;
   final ValueChanged<Attachment>? onCopy;
@@ -276,7 +286,11 @@ class _AttachmentTile extends ConsumerWidget {
             onChanged: onChanged,
           ),
           AttachmentKind.video => VideoViewerScreen(attachment: attachment),
-          _ => ImageViewerScreen(attachment: attachment, onChanged: onChanged),
+          _ => ImageViewerScreen(
+            attachment: attachment,
+            gallery: gallery,
+            onChanged: onChanged,
+          ),
         },
       ),
     );

@@ -363,7 +363,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.read(selectedNoteIdsProvider.notifier).clear();
     showUndoSnackBar(
       context,
-      message: l10n.notesDuplicatedCount(created.length),
+      // Ekli notlarda ekler kopyaya taşınmaz (bkz. note_actions_sheet).
+      message: notes.any((n) => n.attachments.isNotEmpty)
+          ? l10n.noteDuplicatedNoAttachments
+          : l10n.notesDuplicatedCount(created.length),
       undoLabel: l10n.undo,
       // Kopyalar henüz hiç düzenlenmedi: geri alma onları kalıcı siler,
       // çöpe düşürüp kullanıcıya ikinci bir temizlik işi bırakmaz.

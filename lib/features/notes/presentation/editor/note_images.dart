@@ -25,6 +25,7 @@ void openImageViewer(
   ValueChanged<Attachment> onChanged, {
   Future<void> Function(Attachment, Rect)? onCrop,
   Future<Attachment?> Function(Attachment, int)? onRotate,
+  List<Attachment> gallery = const [],
 }) {
   final hasLocal = localFileExists(img.localPath);
   if (!hasLocal && !img.isUploaded) {
@@ -37,6 +38,8 @@ void openImageViewer(
     MaterialPageRoute<void>(
       builder: (_) => ImageViewerScreen(
         attachment: img,
+        // Tam ekranda yana kaydırarak nottaki diğer görsellere geçilir.
+        gallery: gallery,
         onChanged: onChanged,
         onCrop: onCrop,
         onRotate: onRotate,
@@ -952,14 +955,19 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     _endMulti();
   }
 
-  /// İşaretli görselleri satıra SIĞDIRIR: kenarları birbirine ve sayfanın iki
-  /// yanına yapışacak şekilde yeniden boyutlandırılıp dizilir (kullanıcı
-  /// isteği: "2 ya da 3 görseli bir satıra sığdır"). Üçten fazla seçilirse
-  /// satırlara dengeli bölünür (6 görsel → 3 + 3).
+  /// İşaretli görselleri [perRow] sütunlu satırlara SIĞDIRIR: kenarları
+  /// birbirine ve sayfanın iki yanına yapışacak şekilde yeniden
+  /// boyutlandırılıp dizilir (kullanıcı isteği: "2 ya da 3 görseli bir satıra
+  /// sığdır"). Seçim sütun sayısını aşarsa satırlara dengeli bölünür
+  /// (6 görsel, 3 sütun → 3 + 3; 2 sütun → 2 + 2 + 2).
+  ///
+  /// SÜTUN SAYISI KULLANICIDA (2026-09-05 geri bildirimi: "hep 3 sütunlu
+  /// yapıyor, 2 sütunlu da olmalı"): eskiden satır başına en çok 3 görsel
+  /// sabitti ve altı görsel her zaman 3+3 diziliyordu.
   ///
   /// Blok, seçili görsellerin EN ÜSTTEKİNİN hizasından başlar: kullanıcı
   /// düzenlediği yeri kaybetmesin.
-  void _fitRow() {
+  void _fitRow(int perRow) {
     final chosen = _multiSelected;
     final cw = _cw;
     if (chosen.length < 2 || cw <= 0) return;
@@ -974,6 +982,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       columnWidth: cw,
       top: math.max(top, widget.topLimit),
       minWidthFrac: _minWidthFrac,
+      // Satır başına en çok 6: 1/7 genişlik [_minWidthFrac]'ın altına düşer
+      // ve tuval genişliği yukarı kırparken görseller birbirine binerdi.
+      maxPerRow: perRow.clamp(1, chosen.length).clamp(1, 6),
     );
     _applyMany([
       for (var i = 0; i < chosen.length && i < fits.length; i++)
@@ -993,11 +1004,33 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// geçici bir katmanda büyük çizilir.
   String? _previewId;
 
-  void _togglePreview(String id) =>
-      setState(() => _previewId = _previewId == id ? null : id);
+  /// Önizlemedeki yatay kaydırma denetleyicisi (kullanıcı isteği 2026-09-05:
+  /// "birden fazla görsel olduğunda tam ekran ve ön izlemede kaydırarak
+  /// diğer görsele geçme olsun"). Yalnız önizleme AÇIKKEN yaşar.
+  PageController? _previewPages;
+
+  void _togglePreview(String id) {
+    if (_previewId == id) {
+      _closePreview();
+      return;
+    }
+    final index = widget.images.indexWhere((a) => a.id == id);
+    _previewPages?.dispose();
+    _previewPages = PageController(initialPage: index < 0 ? 0 : index);
+    setState(() => _previewId = id);
+  }
 
   void _closePreview() {
-    if (_previewId != null) setState(() => _previewId = null);
+    if (_previewId == null) return;
+    _previewPages?.dispose();
+    _previewPages = null;
+    setState(() => _previewId = null);
+  }
+
+  @override
+  void dispose() {
+    _previewPages?.dispose();
+    super.dispose();
   }
 
   Attachment? _previewOf(List<Attachment> images) {
@@ -1023,10 +1056,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// Tek görsel sütunun yarısını kaplar. Nota İKİNCİ görsel girdiği anda
   /// varsayılan bir tık daralır: iki görsel araya boşluk da girerek AYNI
   /// SATIRA sığsın (bkz. [packSlot]). 0,5 + 0,5 satıra sığmadığı için ikinci
-  /// görsel her seferinde alta iniyordu.
-  double _defaultWFrac(double cw) => widget.images.length >= 2 && cw > 0
-      ? (((cw - kImageGap) / 2) / cw).clamp(_minWidthFrac, 1.0).toDouble()
-      : 0.5;
+  /// görsel her seferinde alta iniyordu. BEŞ ve üzeri görselde satıra üç
+  /// tane sığar: paylaşımdan gelen bir demet fotoğraf (konum/genişlik
+  /// yazılmadan gelirler) düzgün bir ızgaraya otursun.
+  double _defaultWFrac(double cw) {
+    final count = widget.images.length;
+    if (count < 2 || cw <= 0) return 0.5;
+    final perRow = count >= 5 ? 3 : 2;
+    return (((cw - kImageGap * (perRow - 1)) / perRow) / cw)
+        .clamp(_minWidthFrac, 1.0)
+        .toDouble();
+  }
 
   /// Görselin sayfadaki ölçüsü (dp) — canlı boyutlandırma değeri öncelikli.
   ({double w, double h}) _sizeOf(Attachment img, double cw) {
@@ -1202,6 +1242,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       widget.onChanged,
       onCrop: widget.onCrop,
       onRotate: widget.onRotate,
+      gallery: widget.images,
     );
   }
 
@@ -1416,11 +1457,52 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 icon: const Icon(Icons.straighten, size: 20),
                 onPressed: chosen.length < 2 ? null : _equalizeSizes,
               ),
-              IconButton(
+              // Sığdırma SÜTUN SAYISINI sorar: aynı altı görsel kimi zaman
+              // 3+3, kimi zaman 2+2+2 isteniyor.
+              PopupMenuButton<int>(
                 tooltip: l10n.imagesFitRow,
-                visualDensity: _kBarDensity,
+                enabled: chosen.length >= 2,
                 icon: const Icon(Icons.view_column_outlined, size: 20),
-                onPressed: chosen.length < 2 ? null : _fitRow,
+                onSelected: _fitRow,
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 2,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.view_agenda_outlined),
+                      title: Text(l10n.imagesFitColumns(2)),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 3,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.view_column_outlined),
+                      title: Text(l10n.imagesFitColumns(3)),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 4,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.view_module_outlined),
+                      title: Text(l10n.imagesFitColumns(4)),
+                    ),
+                  ),
+                  // Hepsi TEK satıra: seçim kaç taneyse o kadar sütun.
+                  PopupMenuItem(
+                    value: 99,
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.table_rows_outlined),
+                      title: Text(l10n.imagesFitSingleRow),
+                    ),
+                  ),
+                ],
               ),
               IconButton(
                 tooltip: l10n.copy,
@@ -1508,8 +1590,22 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     height: h,
                     child: Stack(
                       children: [
+                        // Yana kaydırınca nottaki diğer göresele geçilir;
+                        // kutu boyutu geçilen görselin oranına göre yenilenir.
                         Positioned.fill(
-                          child: _boxFor(img, fit: BoxFit.contain),
+                          child: widget.images.length < 2
+                              ? _boxFor(img, fit: BoxFit.contain)
+                              : PageView.builder(
+                                  controller: _previewPages,
+                                  itemCount: widget.images.length,
+                                  onPageChanged: (i) => setState(
+                                    () => _previewId = widget.images[i].id,
+                                  ),
+                                  itemBuilder: (context, i) => _boxFor(
+                                    widget.images[i],
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
                         ),
                         Positioned(
                           right: 4,
@@ -1524,6 +1620,37 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                             onPressed: _closePreview,
                           ),
                         ),
+                        // Kaçıncı görselde olduğumuz: kaydırmanın bir sonu
+                        // olduğu görünsün.
+                        if (widget.images.length > 1)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 6,
+                            child: Center(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: Colors.black45,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  child: Text(
+                                    '${widget.images.indexWhere((a) => a.id == img.id) + 1}'
+                                    '/${widget.images.length}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -1553,12 +1680,18 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       child: GestureDetector(
         onTap: () =>
             _multiMode ? _toggleMulti(img.id) : _select(img.id),
-        // ÇİFT DOKUNUŞ = büyük önizleme (kullanıcı isteği). Aynı iş sağ-alt
-        // köşedeki tutamağa dokunarak da yapılıyor ama o tutamak YALNIZ
-        // görsel seçiliyken var: önizlemeye ulaşmak için önce seçmek, sonra
-        // küçük bir köşeyi bulmak gerekiyordu. Çift dokunuş görselin her
-        // yerinden, seçmeden çalışır.
-        onDoubleTap: () => _togglePreview(img.id),
+        // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
+        //
+        // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme
+        // var"): çift dokunuş tanıyıcısı kayıtlıyken tek dokunuşun kararı
+        // ikinci dokunuş penceresi (~300 ms) dolmadan VERİLEMEZ — her seçim,
+        // her işaretleme o kadar bekliyordu. Tanıyıcı artık yalnız seçili
+        // görselde kurulur: seçme ve çoklu seçimde işaretleme ANINDA olur,
+        // önizleme de seçtikten sonra çift dokunuşla (ya da her zaman olduğu
+        // gibi sağ-alt köşedeki tutamağa dokunarak) hâlâ açılır.
+        onDoubleTap: editing && !_multiMode
+            ? () => _togglePreview(img.id)
+            : null,
         // Taşıma TEK jestte: basılı tut, parmağını kaldırmadan sürükle.
         // (Önce seçip sonra sürüklemek gerekiyordu — kullanımı zordu.)
         // Uzun basma dikey kaydırmayla çakışmaz: sayfa kaydırma anlık

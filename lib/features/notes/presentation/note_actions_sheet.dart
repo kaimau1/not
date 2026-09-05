@@ -290,7 +290,13 @@ Future<void> _runNoteAction(
       if (!context.mounted) return;
       showUndoSnackBar(
         context,
-        message: l10n.noteDuplicated,
+        // EKLER KOPYALANMAZ (bilinçli: Storage'da notun kimliği altında
+        // duruyorlar, kopyalamak her dosyayı indirip yeniden yüklemek olurdu).
+        // Ekli bir not çoğaltılınca bu SÖYLENİR — kullanıcı kopyada eklerin
+        // olmadığını fark edemiyordu (KALANLAR 2026-09-05).
+        message: note.attachments.isEmpty
+            ? l10n.noteDuplicated
+            : l10n.noteDuplicatedNoAttachments,
         undoLabel: l10n.undo,
         // Kopya HENÜZ hiç düzenlenmedi: geri alma onu kalıcı siler, çöpe
         // düşürüp kullanıcıya ikinci bir temizlik işi bırakmaz.

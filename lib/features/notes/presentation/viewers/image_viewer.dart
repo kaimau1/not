@@ -26,12 +26,23 @@ class ImageViewerScreen extends StatefulWidget {
   const ImageViewerScreen({
     super.key,
     required this.attachment,
+    this.gallery = const [],
     this.onChanged,
     this.onCrop,
     this.onRotate,
   });
 
   final Attachment attachment;
+
+  /// Tam ekranda YANA KAYDIRARAK geçilebilecek görseller (kullanıcı isteği
+  /// 2026-09-05: "birden fazla görsel olduğunda tam ekran ve ön izlemede
+  /// kaydırarak diğer görsele geçme olsun"). Boşsa ya da [attachment] içinde
+  /// yoksa tek görsel açılır ve kaydırma hiç kurulmaz.
+  ///
+  /// Sayfa geçişi yakınlaştırma/çizim/metin/alan seçimi sırasında KİLİTLENİR:
+  /// üçü de yatay parmağı kendi işi için kullanıyor, yoksa kullanıcı çizerken
+  /// kazara sonraki görsele atlardı.
+  final List<Attachment> gallery;
 
   /// null ise salt görüntüleme (ör. dışa aktarma önizlemesi): çizim kapalı.
   final ValueChanged<Attachment>? onChanged;
@@ -56,7 +67,125 @@ class ImageViewerScreen extends StatefulWidget {
   State<ImageViewerScreen> createState() => _ImageViewerScreenState();
 }
 
+/// Galeri kabuğu: tek görselde doğrudan sayfayı, birden çok görselde yatay
+/// bir [PageView] kurar. Her sayfa KENDİ çizim/metin/yakınlaştırma durumunu
+/// taşır — swipe ile geçilen görselin kalemi öncekinden etkilenmez.
 class _ImageViewerScreenState extends State<ImageViewerScreen> {
+  late final List<Attachment> _pages = _buildPages();
+  late final int _initial = _pages.indexWhere(
+    (a) => a.id == widget.attachment.id,
+  );
+  late final PageController _controller = PageController(
+    initialPage: _initial < 0 ? 0 : _initial,
+  );
+
+  /// Yatay kaydırma kilitli mi — yakınlaştırılmış, çizim/metin/alan kipinde.
+  final _swipeLock = ValueNotifier<bool>(false);
+  late int _index = _initial < 0 ? 0 : _initial;
+
+  /// Kaydırma listesi: yalnız GÖRSELLER (video kutusu kendi oynatıcısını
+  /// açar) ve yalnız açılan ek listede varsa. Aksi hâlde tek sayfa.
+  List<Attachment> _buildPages() {
+    final list = [
+      for (final a in widget.gallery)
+        if (a.kind == AttachmentKind.image) a,
+    ];
+    if (list.length < 2 || !list.any((a) => a.id == widget.attachment.id)) {
+      return [widget.attachment];
+    }
+    return list;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _swipeLock.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_pages.length < 2) {
+      return _ImageViewerPage(
+        attachment: widget.attachment,
+        onChanged: widget.onChanged,
+        onCrop: widget.onCrop,
+        onRotate: widget.onRotate,
+      );
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: _swipeLock,
+      builder: (context, locked, _) => PageView.builder(
+        controller: _controller,
+        physics: locked ? const NeverScrollableScrollPhysics() : null,
+        itemCount: _pages.length,
+        onPageChanged: (i) {
+          // Kilit sayfayla birlikte sıfırlanır: önceki görsel yakınlaştırılmış
+          // bırakıldıysa yenisinde kaydırma kilitli kalmasın.
+          _swipeLock.value = false;
+          setState(() => _index = i);
+        },
+        itemBuilder: (context, i) => _ImageViewerPage(
+          // Anahtar EK KİMLİĞİ: sayfalar yeniden kurulduğunda (kilit değişimi)
+          // her görselin çizim/metin durumu kendi sayfasında kalsın.
+          key: ValueKey(_pages[i].id),
+          attachment: _pages[i],
+          // Değişen ek KABUĞUN listesine de yazılır: uzak bir sayfaya kayıp
+          // geri dönüldüğünde sayfa bu listeden yeniden kurulur ve bayat bir
+          // kopya (döndürmede takas olmuş en-boy, silinmiş bulut kopyası)
+          // kullanılırdı.
+          onChanged: widget.onChanged == null
+              ? null
+              : (a) {
+                  _pages[i] = a;
+                  widget.onChanged!(a);
+                },
+          onCrop: widget.onCrop,
+          onRotate: widget.onRotate == null
+              ? null
+              : (a, turns) async {
+                  final rotated = await widget.onRotate!(a, turns);
+                  if (rotated != null) _pages[i] = rotated;
+                  return rotated;
+                },
+          swipeLock: _swipeLock,
+          active: i == _index,
+          position: '${i + 1}/${_pages.length}',
+        ),
+      ),
+    );
+  }
+}
+
+class _ImageViewerPage extends StatefulWidget {
+  const _ImageViewerPage({
+    super.key,
+    required this.attachment,
+    this.onChanged,
+    this.onCrop,
+    this.onRotate,
+    this.swipeLock,
+    this.active = true,
+    this.position,
+  });
+
+  final Attachment attachment;
+  final ValueChanged<Attachment>? onChanged;
+  final Future<void> Function(Attachment, Rect)? onCrop;
+  final Future<Attachment?> Function(Attachment, int)? onRotate;
+
+  /// Galeri kabuğunun kaydırma kilidi; yalnız [active] sayfa yazar.
+  final ValueNotifier<bool>? swipeLock;
+  final bool active;
+
+  /// Başlıkta gösterilen "3/6" konumu (tek görselde null).
+  final String? position;
+
+  @override
+  State<_ImageViewerPage> createState() => _ImageViewerPageState();
+}
+
+class _ImageViewerPageState extends State<_ImageViewerPage> {
   /// EKRANIN GÖSTERDİĞİ ek. Döndürme dosyayı yeniden yazdığı için
   /// `_attachment` o andan sonra bayat: boyutlar takas olmuş, bulut
   /// kopyası silinmiş olur. Yerel kopya döndürme sonrası tazelenir.
@@ -85,6 +214,43 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   );
   final _zoom = TransformationController();
   bool _editing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Yakınlaştırma ve metin kipi kaydırma kilidini etkiliyor; ikisi de
+    // ekranı yeniden kurmadan değişebiliyor, o yüzden dinlenir.
+    _zoom.addListener(_syncSwipeLock);
+    _bubbles.addListener(_syncSwipeLock);
+  }
+
+  @override
+  void didUpdateWidget(_ImageViewerPage old) {
+    super.didUpdateWidget(old);
+    if (old.active && !widget.active) {
+      // Sayfa geride kaldı: yarım kalan çizgi ve boş metin kutusu burada
+      // kapatılır. Kare sonuna ERTELENİR — build sırasında not güncellemek
+      // (setState) editörü yeniden kurmanın ortasına düşerdi.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _ink.save();
+        _bubbles.dropEmpty();
+      });
+    }
+    if (!old.active && widget.active) _syncSwipeLock();
+  }
+
+  /// Kaydırma kilidini tazeler: yakınlaştırılmışken ya da çizim/metin/alan
+  /// kipindeyken yatay parmak SAYFA DEĞİŞTİRMEZ.
+  void _syncSwipeLock() {
+    final lock = widget.swipeLock;
+    if (lock == null || !widget.active) return;
+    lock.value =
+        _editing ||
+        _areaMode ||
+        _bubbles.adding ||
+        _zoom.value.getMaxScaleOnAxis() > 1.01;
+  }
 
   /// Döndürme sürerken (dosya yeniden kodlanıyor) düğmeler kilitlenir:
   /// iki döndürme üst üste binerse ikincisi birincinin ESKİ baytlarını okur
@@ -127,6 +293,8 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
 
   @override
   void dispose() {
+    _zoom.removeListener(_syncSwipeLock);
+    _bubbles.removeListener(_syncSwipeLock);
     _ink.dispose();
     _bubbles.dispose();
     _zoom.dispose();
@@ -138,6 +306,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
       _editing = !_editing;
       _ink.setEditing(_editing);
     });
+    _syncSwipeLock();
   }
 
   /// Kırpma ekranını açar, seçilen alanı çağırana uygular ve tam ekrandan
@@ -209,15 +378,18 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   /// Alan seçimini açar/kapatır; çizim ve metin bırakma kipleri kapanır —
   /// üçü de tek parmağı bekliyor.
   void _toggleAreaMode() {
-    setState(() {
-      _areaMode = !_areaMode;
-      if (!_areaMode) return;
-      if (_editing) {
-        _editing = false;
-        _ink.setEditing(false);
-      }
-      _bubbles.setAdding(false);
-    });
+    setState(_syncAreaMode);
+    _syncSwipeLock();
+  }
+
+  void _syncAreaMode() {
+    _areaMode = !_areaMode;
+    if (!_areaMode) return;
+    if (_editing) {
+      _editing = false;
+      _ink.setEditing(false);
+    }
+    _bubbles.setAdding(false);
   }
 
   /// Görselin kaynağı: yerel kopya → indirme adresi. Kırpma ekranı da aynı
@@ -282,7 +454,27 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
-          title: Text(a.fileName, style: const TextStyle(fontSize: 14)),
+          title: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  a.fileName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+              // Galeride kaçıncı görselde olduğumuz: kaydırmanın bir sonu
+              // olduğu görünsün.
+              if (widget.position != null) ...[
+                const SizedBox(width: 8),
+                Text(
+                  widget.position!,
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
+              ],
+            ],
+          ),
           actions: [
             // Kırpma çizim MODUNDA gizlenir: o an araç çubuğu kalem/silgi
             // için kullanılıyor, iki kip aynı anda anlamlı değil.

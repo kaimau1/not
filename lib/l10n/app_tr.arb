@@ -1615,5 +1615,14 @@
   "recentSearches": "Son aramalar",
   "clearRecentSearches": "Geçmişi temizle",
   "imagesEqualizeSize": "Boyutları eşitle",
-  "imagesFitRow": "Satıra sığdır"
+  "imagesFitRow": "Satıra sığdır",
+  "imagesFitColumns": "{count} sütun",
+  "@imagesFitColumns": {"placeholders": {"count": {"type": "int"}}},
+  "imagesFitSingleRow": "Tek satıra sığdır",
+  "briefingNotificationTitle": "Günaydın! ☀️",
+  "briefingNotificationBody": "Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.",
+  "reminderDone": "Tamamlandı",
+  "dateToday": "Bugün",
+  "dateTomorrow": "Yarın",
+  "noteDuplicatedNoAttachments": "Kopyalandı — ekler kopyaya taşınmadı"
 }

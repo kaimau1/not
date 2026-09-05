@@ -143,6 +143,8 @@ void main() {
     await tapImage(tester, 'c');
     await tester.tap(find.byIcon(Icons.view_column_outlined));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('3 sütun'));
+    await tester.pumpAndSettle();
 
     expect(applied, isNotNull);
     expect(applied!.length, 3);
@@ -181,6 +183,127 @@ void main() {
     expect(applied!.length, 2);
     for (final a in applied!) {
       expect(a.displayWidth, closeTo(0.3, 0.0001));
+    }
+  });
+
+  testWidgets('sığdırma SÜTUN SAYISI seçilebilir: 2 sütun → 3 satır', (
+    tester,
+  ) async {
+    // Kullanıcı geri bildirimi 2026-09-05: "hep 3 sütunlu yapıyor, 2 sütunlu
+    // da olmalı". Altı görsel 2 sütun seçilince 2 + 2 + 2 dizilmeli.
+    List<Attachment>? applied;
+    final images = [for (final id in 'abcdef'.split('')) image(id)];
+    await pumpCanvas(tester, images, onChangedMany: (v) => applied = v);
+
+    await tapImage(tester, 'a');
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Görselleri seç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.select_all));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.view_column_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('2 sütun'));
+    await tester.pumpAndSettle();
+
+    expect(applied, isNotNull);
+    expect(applied!.length, 6);
+    for (final a in applied!) {
+      expect(a.displayWidth, closeTo(0.5, 0.0001));
+    }
+    // Üç ayrı satır, her satırda iki görsel.
+    final rows = applied!.map((a) => a.pageY).toSet();
+    expect(rows.length, 3);
+    expect(applied![0].x, closeTo(0, 0.0001));
+    expect(applied![1].x, closeTo(0.5, 0.0001));
+    expect(applied![1].pageY, applied![0].pageY);
+    expect(applied![2].pageY, isNot(applied![0].pageY));
+  });
+
+  testWidgets('"tek satıra sığdır" seçimi tek satırda dizer', (tester) async {
+    List<Attachment>? applied;
+    final images = [for (final id in 'abcd'.split('')) image(id)];
+    await pumpCanvas(tester, images, onChangedMany: (v) => applied = v);
+
+    await tapImage(tester, 'a');
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Görselleri seç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.select_all));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.view_column_outlined));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tek satıra sığdır'));
+    await tester.pumpAndSettle();
+
+    expect(applied!.length, 4);
+    for (final a in applied!) {
+      expect(a.displayWidth, closeTo(0.25, 0.0001));
+      expect(a.pageY, applied!.first.pageY);
+    }
+  });
+
+  testWidgets('görsel seçimi ANINDA olur (çift dokunuş beklenmez)', (
+    tester,
+  ) async {
+    // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme var"):
+    // seçili olmayan görselde çift dokunuş tanıyıcısı kayıtlıyken tek
+    // dokunuşun kararı ~300 ms bekliyordu. Artık tanıyıcı yalnız SEÇİLİ
+    // görselde kurulur.
+    await pumpCanvas(tester, [image('a'), image('b')]);
+    await tester.tap(find.byKey(const ValueKey('page-image-a')));
+    // Saat İLERLETİLMEDEN tek kare: araç paneli çıkmış olmalı.
+    await tester.pump();
+    expect(find.byType(Slider), findsOneWidget);
+  });
+
+  testWidgets('çoklu seçim çubuğu DAR ekrana sığar (taşma yok)', (
+    tester,
+  ) async {
+    // Çubuk yedi denetim taşıyor (kapat, sayaç, tümünü seç, eşitle, sığdır,
+    // kopyala, sil). 360 dp'lik bir telefonda taşarsa Flutter sarı-siyah
+    // şerit çizer; test taşmayı istisna olarak yakalar.
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final images = [for (final id in 'abcdef'.split('')) image(id)];
+    await pumpCanvas(tester, images);
+    await tapImage(tester, 'a');
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Görselleri seç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.select_all));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byIcon(Icons.view_column_outlined), findsOneWidget);
+  });
+
+  testWidgets('paylaşımdan gelen altı konumsuz görsel 3\u00d72 ızgara olur', (
+    tester,
+  ) async {
+    // Paylaşım yolunda ekler konumsuz ve genişliksiz geliyor (bkz.
+    // share_intake): tuval hepsini kendisi diziyor. Beş ve üzerinde satıra
+    // üç görsel sığar.
+    final images = [for (final id in 'abcdef'.split('')) image(id)];
+    await pumpCanvas(tester, images);
+    final boxes = {for (final a in images) a.id: boxOf(tester, a.id)};
+    // Çakışma yok.
+    final ids = images.map((a) => a.id).toList();
+    for (var i = 0; i < ids.length; i++) {
+      for (var j = i + 1; j < ids.length; j++) {
+        expect(boxes[ids[i]]!.overlaps(boxes[ids[j]]!), isFalse);
+      }
+    }
+    // İki satır, her satırda üç görsel.
+    final rows = boxes.values.map((r) => r.top).toSet();
+    expect(rows.length, 2);
+    for (final top in rows) {
+      expect(boxes.values.where((r) => r.top == top).length, 3);
     }
   });
 }

@@ -44,15 +44,15 @@ Future<void> showDashboardBackgroundSheet(BuildContext context) =>
 class _DashboardBackgroundSheet extends ConsumerWidget {
   const _DashboardBackgroundSheet();
 
-  Future<void> _pick(WidgetRef ref) async {
+  Future<void> _pick(WidgetRef ref, String imagesLabel) async {
     final Uint8List bytes;
     if (kIsWeb) return;
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      const group = XTypeGroup(
-        label: 'Görseller',
+      final group = XTypeGroup(
+        label: imagesLabel,
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
-      final file = await openFile(acceptedTypeGroups: const [group]);
+      final file = await openFile(acceptedTypeGroups: [group]);
       if (file == null) return;
       bytes = await file.readAsBytes();
     } else {
@@ -177,7 +177,7 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
               ),
             if (hasImage) const SizedBox(height: 12),
             FilledButton.tonalIcon(
-              onPressed: () => _pick(ref),
+              onPressed: () => _pick(ref, context.l10n.exportImages),
               icon: const Icon(Icons.wallpaper),
               label: Text(
                 hasImage

@@ -37,6 +37,7 @@ import 'color_picker_sheet.dart';
 import 'editor/drawing_screen.dart';
 import 'editor/format_bar.dart';
 import 'editor/format_menu.dart';
+import 'editor/image_layout.dart';
 import 'editor/note_images.dart';
 import 'editor/text_wrap.dart';
 import 'viewers/pdf_viewer_screen.dart';
@@ -1114,11 +1115,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
         files.add((name: file.name, bytes: await file.readAsBytes()));
       }
     } else {
-      const group = XTypeGroup(
-        label: 'Görseller',
+      final group = XTypeGroup(
+        label: context.l10n.exportImages,
         extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       );
-      for (final file in await openFiles(acceptedTypeGroups: const [group])) {
+      for (final file in await openFiles(acceptedTypeGroups: [group])) {
         files.add((name: file.name, bytes: await file.readAsBytes()));
       }
     }
@@ -1366,7 +1367,16 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       return;
     }
     if (attachment.kind == AttachmentKind.image) {
-      openImageViewer(context, attachment, (_) {});
+      // Defterdeki bütün görseller galeri: tam ekranda yana kaydırılır.
+      openImageViewer(
+        context,
+        attachment,
+        (_) {},
+        gallery: [
+          for (final a in (_note?.attachments ?? const <Attachment>[]))
+            if (a.kind == AttachmentKind.image) a,
+        ],
+      );
       return;
     }
     Navigator.of(context).push(
@@ -2066,6 +2076,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             minHeight: height,
             onRemove: _removeAttachment,
             onChanged: _updateAttachment,
+            onChangedMany: _updateAttachments,
             onDetach: (a) => _setImageOnPage(a, false),
             onCopy: null,
             topLimit: 0,
@@ -2170,6 +2181,20 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     ),
   );
 
+  /// Birden çok eki TEK yazımda günceller (tuvaldeki "satıra sığdır" ve
+  /// "boyutları eşitle"): tek tek yazmak her ek için ayrı bir kayıt üretirdi.
+  void _updateAttachments(List<Attachment> updated) {
+    if (updated.isEmpty) return;
+    final byId = {for (final a in updated) a.id: a};
+    unawaited(
+      _mutate(
+        (n) => n.copyWith(
+          attachments: [for (final a in n.attachments) byId[a.id] ?? a],
+        ),
+      ),
+    );
+  }
+
   /// Görseli SAYFAYA yerleştirir ([onPage] true) ya da sayfadan alıp dosya
   /// listesine taşır. Sayfaya ilk kez konan görsele bir yer de verilir.
   void _setImageOnPage(Attachment attachment, bool onPage) {
@@ -2184,28 +2209,57 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     _updateAttachment(placed);
   }
 
-  /// Yeni görselin sayfadaki yeri: var olan görsellerin ALTINA, sol kenara
-  /// yakın. Ölçüm gerekmez — kullanıcı zaten sürükleyip istediği yere
-  /// koyabiliyor; önemli olan üst üste binmemesi.
+  /// Yeni görselin defter sayfasındaki yeri: önce SATIRDA yan yana boş yer
+  /// aranır, sığmazsa alta inilir (bkz. [packSlot]).
+  ///
+  /// KÖK NEDEN (not sayfasındaki hatanın ikizi, 2026-09-05): burada var olan
+  /// görselin altı `width * displayWidth / oran` ile ölçülüyordu ve sayfa
+  /// henüz ölçülmemişse `width` 0 oluyordu — her görselin "altı" kendi tepesi
+  /// çıkıyor, yenisi 12 dp altına, yani pratikte ÜSTÜNE düşüyordu. Ölçüm
+  /// yoksa artık konum hiç yazılmaz: tuval genişliği bildiği ilk karede
+  /// görseli kendisi oturtur.
   Attachment _placeOnPage(
     Attachment image,
     Note note, {
     List<Attachment> placed = const [],
   }) {
+    const widthFrac = 0.32;
     final page = image.section;
-    var top = 8.0;
     final width = _pageBox(page)?.size.width ?? 0;
+    if (width <= 0) return image.copyWith(displayWidth: widthFrac);
+    double aspectOf(Attachment a) =>
+        (a.width != null && a.height != null && a.height! > 0)
+        ? a.width! / a.height!
+        : 1.0;
+    final occupied = <Rect>[];
     for (final other in [...archivePageFloats(note, page), ...placed]) {
       if (other.id == image.id || !other.floatsOnPage) continue;
-      final aspect =
-          (other.width != null && other.height != null && other.height! > 0)
-          ? other.width! / other.height!
-          : 1.0;
-      final bottom =
-          (other.pageY ?? 0) + (width * (other.displayWidth ?? 0.32)) / aspect;
-      if (bottom + 12 > top) top = bottom + 12;
+      // Konumu yazılmamış ek tuvalde zaten otomatik yerleşiyor.
+      if (other.pageY == null && other.y == null) continue;
+      final w = width * (other.displayWidth ?? 0.32);
+      occupied.add(
+        Rect.fromLTWH(
+          (other.x ?? 0.04) * width,
+          other.pageY ?? (other.y != null ? other.y! * kLegacyCanvasHeight : 0),
+          w,
+          w / aspectOf(other),
+        ),
+      );
     }
-    return image.copyWith(x: 0.04, pageY: top, displayWidth: 0.32);
+    final w = width * widthFrac;
+    final slot = packSlot(
+      occupied: occupied,
+      columnWidth: width,
+      width: w,
+      height: w / aspectOf(image),
+      anchorTop: 8,
+      topLimit: 0,
+    );
+    return image.copyWith(
+      x: slot.left / width,
+      pageY: slot.top,
+      displayWidth: widthFrac,
+    );
   }
 
   Widget _entryTile(Note note, ArchiveEntry entry) {

@@ -329,8 +329,8 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     final choice = await _askCaptureMode(context.l10n.newImageNote);
     if (choice == null || !mounted) return;
     final l10n = context.l10n;
-    const group = XTypeGroup(
-      label: 'Görsel',
+    final group = XTypeGroup(
+      label: context.l10n.exportImages,
       extensions: ['jpg', 'jpeg', 'png', 'webp'],
       mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     );

@@ -1500,11 +1500,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// sıkıştırması aynı anda belleğe yığılırdı.
   Future<void> _pickImage({bool asFile = false}) async {
     if (_isDesktop) {
-      const group = XTypeGroup(
-        label: 'Görseller',
+      final group = XTypeGroup(
+        label: context.l10n.exportImages,
         extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
       );
-      final files = await openFiles(acceptedTypeGroups: const [group]);
+      final files = await openFiles(acceptedTypeGroups: [group]);
       for (final file in files) {
         if (!mounted) return;
         await _addImageBytes(
@@ -1589,11 +1589,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } else if (_isDesktop) {
       // Masaüstünde ML Kit yok ama tarama artık VAR: seçilen fotoğraflar
       // kenar bulma + perspektif düzeltme + netleştirme borusundan geçer.
-      const group = XTypeGroup(
-        label: 'Görseller',
+      final group = XTypeGroup(
+        label: context.l10n.exportImages,
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
-      final files = await openFiles(acceptedTypeGroups: const [group]);
+      final files = await openFiles(acceptedTypeGroups: [group]);
       if (files.isEmpty) return;
       pages = [for (final f in files) f.path];
       autoCrop = true;
@@ -1758,6 +1758,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         editing ? _updateAttachment : (_) {},
         onCrop: editing ? _cropImage : null,
         onRotate: editing ? _rotateImage : null,
+        // Nottaki BÜTÜN görseller (sayfadakiler + şerittekiler) galeri olur:
+        // tam ekranda yana kaydırarak hepsinde gezilir.
+        gallery: [
+          for (final a in (_note?.attachments ?? const <Attachment>[]))
+            if (a.kind == AttachmentKind.image) a,
+        ],
       );
       return;
     }
@@ -4186,11 +4192,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final Uint8List bytes;
     final String name;
     if (_isDesktop) {
-      const group = XTypeGroup(
-        label: 'Görseller',
+      final group = XTypeGroup(
+        label: context.l10n.exportImages,
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
-      final file = await openFile(acceptedTypeGroups: const [group]);
+      final file = await openFile(acceptedTypeGroups: [group]);
       if (file == null) return;
       bytes = await file.readAsBytes();
       name = file.name;

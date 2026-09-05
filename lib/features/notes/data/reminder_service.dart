@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'dart:ui' show Locale, PlatformDispatcher;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -13,6 +15,7 @@ import 'package:timezone/data/latest_10y.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../../app/router.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
 import 'notes_repository.dart';
@@ -42,7 +45,7 @@ const _monthsTr = [
 /// `initializeDateFormatting` çağrılması gerekir, bildirim planlaması ise
 /// arka planda da koşuyor — 12 sabit dizgi bu bağımlılıktan ucuz.
 @visibleForTesting
-String reminderTimePrefix(DateTime when, {DateTime? now}) {
+String reminderTimePrefix(DateTime when, {DateTime? now, AppLocalizations? l10n}) {
   final reference = now ?? DateTime.now();
   final today = DateTime(reference.year, reference.month, reference.day);
   final day = DateTime(when.year, when.month, when.day);
@@ -51,12 +54,27 @@ String reminderTimePrefix(DateTime when, {DateTime? now}) {
       '${when.minute.toString().padLeft(2, '0')}';
   switch (day.difference(today).inDays) {
     case 0:
-      return 'Bugün $clock';
+      return '${l10n?.dateToday ?? 'Bugün'} $clock';
     case 1:
-      return 'Yarın $clock';
+      return '${l10n?.dateTomorrow ?? 'Yarın'} $clock';
     default:
       return '${when.day} ${_monthsTr[when.month - 1]} $clock';
   }
+}
+
+/// Bildirim metinleri için uygulamanın SEÇİLİ dilini yükler.
+///
+/// KÖK NEDEN (2026-09-05 taraması): bildirim metinleri — "Günaydın!",
+/// "1 saat ertele", "Bugün/Yarın" ve kanal adları — koda Türkçe gömülüydü.
+/// Arayüzü Fransızca yapan bir kullanıcı her sabah Türkçe bir bildirim
+/// alıyordu. Servisin `BuildContext`i yok; çeviriler doğrudan delegeden
+/// yüklenir. Desteklenmeyen bir yerel ayarda şablon dile (Türkçe) düşülür —
+/// eski davranış.
+Future<AppLocalizations> loadNotificationL10n(Locale? preferred) {
+  final locale = preferred ?? PlatformDispatcher.instance.locale;
+  return AppLocalizations.delegate.isSupported(locale)
+      ? AppLocalizations.delegate.load(locale)
+      : AppLocalizations.delegate.load(const Locale('tr'));
 }
 
 /// Not hatırlatıcılarını yerel bildirime çeviren servis. Not akışını izler;
@@ -187,22 +205,21 @@ class ReminderService {
       );
       if (!next.isAfter(now)) next = next.add(const Duration(days: 1));
 
+      final l10n = await loadNotificationL10n(_ref.read(localeProvider));
       await _plugin.zonedSchedule(
         id: _briefingNotificationId,
-        title: 'Günaydın! ☀️',
-        body:
-            'Bugünün brifingi hazır — hatırlatıcıların, notların ve '
-            'önemli e-postaların özeti için dokun.',
+        title: l10n.briefingNotificationTitle,
+        body: l10n.briefingNotificationBody,
         scheduledDate: next,
-        notificationDetails: const NotificationDetails(
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'briefing',
-            'Günlük Brifing',
-            channelDescription: 'Günlük brifing bildirimi',
+            l10n.briefingTitle,
+            channelDescription: l10n.briefingSettingInfo,
             importance: Importance.defaultImportance,
             priority: Priority.defaultPriority,
           ),
-          windows: WindowsNotificationDetails(),
+          windows: const WindowsNotificationDetails(),
         ),
         // BİLEREK inexact (hatırlatıcılardan farklı): sabah brifingi birkaç
         // dakika kaysa kimse fark etmez; exact alarm hem her sabah Doze'u
@@ -260,8 +277,9 @@ class ReminderService {
   }
 
   Future<void> _scheduleReminder(String noteId, Note note) async {
+    final l10n = await loadNotificationL10n(_ref.read(localeProvider));
     final title = note.displayTitle.trim().isEmpty
-        ? 'Not hatırlatıcısı'
+        ? l10n.remindersUntitled
         : note.displayTitle.trim();
     final preview = note.toPlainText();
     final trimmed = preview.length > 120
@@ -270,12 +288,16 @@ class ReminderService {
     // Önek ÇALMA anına göre: bildirim tam reminderAt'te görünür, yani o an
     // "bugün"dür. Planlama anına göre hesaplansaydı yarına kurulan
     // hatırlatıcı çaldığında hâlâ "Yarın 09:00" yazıyordu.
-    final prefix = reminderTimePrefix(note.reminderAt!, now: note.reminderAt);
-    const details = NotificationDetails(
+    final prefix = reminderTimePrefix(
+      note.reminderAt!,
+      now: note.reminderAt,
+      l10n: l10n,
+    );
+    final details = NotificationDetails(
       android: AndroidNotificationDetails(
         'reminders',
-        'Hatırlatıcılar',
-        channelDescription: 'Not hatırlatıcı bildirimleri',
+        l10n.remindersTitle,
+        channelDescription: l10n.remindersTitle,
         importance: Importance.high,
         priority: Priority.high,
         // Uygulamayı açmadan hızlı işlem; showsUserInterface uygulamayı
@@ -283,12 +305,12 @@ class ReminderService {
         actions: <AndroidNotificationAction>[
           AndroidNotificationAction(
             'done',
-            'Tamamlandı',
+            l10n.reminderDone,
             showsUserInterface: true,
           ),
           AndroidNotificationAction(
             'snooze1h',
-            '1 saat ertele',
+            l10n.reminderSnooze,
             showsUserInterface: true,
           ),
         ],

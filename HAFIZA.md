@@ -3031,3 +3031,70 @@ commit'leme" kuralı, SDK yokmuş gibi görünen ortamda da geçerli — indirme
 Görsel kutusunda `onDoubleTap` (büyük önizleme) da var; tek dokunuşun kararı
 çift dokunuş süresi dolmadan verilmiyor. Widget testinde `pumpAndSettle`
 YETMİYOR (zamanlayıcı kare zamanlamıyor) — `pump(400ms)` gerekiyor.
+
+## 2026-09-05 (3. tur) — galeri kaydırma, sütun seçimi, gecikmeyen seçim, bildirim dili
+
+### "Görselleri seçerken gecikme var" — çift dokunuş tanıyıcısının bedeli
+Görsel kutusunda hem `onTap` (seç) hem `onDoubleTap` (büyük önizleme) vardı.
+Flutter'da çift dokunuş tanıyıcısı KAYITLIYKEN tek dokunuşun kararı ikinci
+dokunuş penceresi (~300 ms) dolmadan verilemez: her seçim, çoklu seçimde her
+işaretleme o kadar bekliyordu. Tanıyıcı artık yalnız **seçili** görselde
+kuruluyor — ilk dokunuş anında seçiyor, önizleme seçtikten sonra çift
+dokunuşla (ya da köşe tutamağıyla) hâlâ açılıyor.
+
+Aynı tuzak testte de var: `pumpAndSettle` çift dokunuş penceresini GEÇMEZ
+(zamanlayıcı kare zamanlamıyor), `pump(400ms)` gerekiyor. Bu, bulguyu
+testten önce koda bakarak fark etmenin de yolu oldu.
+
+### Sığdırmada sütun sayısı kullanıcıda
+"Satıra sığdır" satır başına en çok 3 görsel sabitiyle çalışıyordu; altı
+görsel her zaman 3+3 oluyordu (kullanıcı: "hep 3 sütunlu yapıyor, 2 sütunlu
+da olmalı"). Düğme artık menü: 2 / 3 / 4 sütun ve "tek satıra sığdır".
+Satır başına tavan 6 — 1/7 genişlik `_minWidthFrac`ın (0,15) altına düşüyor
+ve tuval genişliği yukarı kırparken görseller birbirine biniyordu.
+
+Konumsuz görsellerin VARSAYILAN genişliği de sayıya bağlandı: 2-4 görselde
+satıra iki, 5+ görselde satıra üç tane sığacak genişlik. Paylaşımdan gelen
+ekler konumsuz/genişliksiz geliyor (bkz. share_intake) — altı fotoğraf artık
+kendiliğinden 3×2 ızgara oluyor.
+
+### Galeri kabuğu: her sayfa KENDİ durumunu taşır
+Tam ekran görüntüleyici ikiye ayrıldı: `ImageViewerScreen` bir PageView
+kabuğu, `_ImageViewerPage` eski ekranın tamamı. Neden sayfa başına ayrı
+state: çizim, metin balonları ve yakınlaştırma matrisi göresele ait; tek
+state'i swipe'ta yeniden kurmak yarım kalan çizgiyi kaybettirirdi.
+Üç incelik:
+1. **Kaydırma kilidi** paylaşılan bir `ValueNotifier`: yakınlaştırılmışken
+   ya da çizim/metin/alan kipindeyken PageView `NeverScrollableScrollPhysics`
+   alır. Yoksa resmi gezdirmek sayfa atlatıyordu. Kilidi yalnız AKTİF sayfa
+   yazar (komşu sayfalar da canlı).
+2. **Kabuğun listesi tazelenir**: değişen/döndürülen ek `_pages[i]`'ye de
+   yazılır. Yoksa uzak bir sayfaya kayıp geri dönünce sayfa bayat kopyadan
+   kurulurdu (döndürmede en-boy takas oluyor).
+3. **Sayfa geride kalınca** yarım çizgi ve boş metin kutusu kapatılır, ama
+   `addPostFrameCallback` ile: build sırasında notu güncellemek editörün
+   yeniden kurulmasının ortasına düşerdi.
+
+### Aynı yerleşim hatası arşiv defterinde de varmış
+Not sayfasındaki "ölçüm yoksa hepsi üst üste" hatasının ikizi
+`archive_note_screen._placeOnPage`'te duruyordu: `width = _pageBox()?.size
+.width ?? 0` ve genişlik 0 olunca her görselin "altı" kendi tepesi çıkıyordu.
+Aynı `packSlot`a bağlandı. **Ders**: bir hata iki yerde kopyalanmışsa
+düzeltirken ikizini de aramak gerekiyor — bu turda üçüncü kez oldu.
+
+### Bildirim metinleri koda gömülü Türkçeydi
+`reminder_service` bir Provider; `BuildContext`i yok diye bütün bildirim
+metinleri ("Günaydın!", "1 saat ertele", "Tamamlandı", "Bugün/Yarın", kanal
+adları) Türkçe sabitti. Arayüzü Fransızca yapan kullanıcı her sabah Türkçe
+bildirim alıyordu. Çözüm: `AppLocalizations.delegate.load(locale)` —
+context gerekmiyor; desteklenmeyen yerelde şablon dile düşülüyor.
+NOT: Android kanal ADI yalnız kanal İLK kez oluşturulurken yazılır; dilini
+değiştiren eski cihazlarda kanal adı Türkçe kalır (yeni kurulumda düzelir).
+
+### Tarama yöntemi (bu turda işe yarayanlar)
+- Denetleyici sızıntısı taraması (State sınıflarında üretilip dispose
+  edilmeyen controller/subscription): 1 bulgu, o da yanlış pozitif.
+- `Text(...)`/`tooltip:`/`label:` içinde Türkçe harf geçen SABİT dizgi
+  taraması: 7 bulgu — biri gerçek (bildirimler), altısı masaüstü dosya
+  seçici etiketi. Ham "Türkçe harf içeren her dizgi" taraması işe yaramıyor
+  (yapay zekâ istemleri bilerek Türkçe).

@@ -3423,4 +3423,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get imagesFitRow => 'Fit to row';
+
+  @override
+  String imagesFitColumns(int count) {
+    return '$count columns';
+  }
+
+  @override
+  String get imagesFitSingleRow => 'Fit in one row';
+
+  @override
+  String get briefingNotificationTitle =>
+      'Good morning! ☀️';
+
+  @override
+  String get briefingNotificationBody =>
+      'Today\'s briefing is ready — tap for a summary of your reminders, notes and important emails.';
+
+  @override
+  String get reminderDone =>
+      'Done';
+
+  @override
+  String get dateToday =>
+      'Today';
+
+  @override
+  String get dateTomorrow =>
+      'Tomorrow';
+
+  @override
+  String get noteDuplicatedNoAttachments =>
+      'Duplicated — attachments were not copied';
 }

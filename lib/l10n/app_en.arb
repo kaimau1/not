@@ -1367,5 +1367,14 @@
   "recentSearches": "Recent searches",
   "clearRecentSearches": "Clear history",
   "imagesEqualizeSize": "Match sizes",
-  "imagesFitRow": "Fit to row"
+  "imagesFitRow": "Fit to row",
+  "imagesFitColumns": "{count} columns",
+  "@imagesFitColumns": {"placeholders": {"count": {"type": "int"}}},
+  "imagesFitSingleRow": "Fit in one row",
+  "briefingNotificationTitle": "Good morning! ☀️",
+  "briefingNotificationBody": "Today's briefing is ready — tap for a summary of your reminders, notes and important emails.",
+  "reminderDone": "Done",
+  "dateToday": "Today",
+  "dateTomorrow": "Tomorrow",
+  "noteDuplicatedNoAttachments": "Duplicated — attachments were not copied"
 }

@@ -23,6 +23,29 @@
   Eski "uzun basış = seç" alışkanlığı menüde bir dokunuş uzadı.
 - [ ] **Alt çubuk**: Biçim/Ekle/Seç artık yalnız simge (Keep tarzı).
 
+## 2026-09-05 (2. tur) — görsel yerleşimi ve galeri (CİHAZDA GÖRÜLMEDİ)
+
+Tur `flutter analyze` (0 sorun) ve `flutter test` (940+ test yeşil) ile
+kapandı. Telefonda gözle bakılacaklar:
+
+- [ ] **Tam ekranda yana kaydırma**: nottaki görseller arasında geçiş. Bakıl-
+  malı: yakınlaştırılmışken kaydırma KİLİTLİ mi (parmak resmi gezdirmeli,
+  sayfa atlamamalı), çizim/metin/alan kipinde de kilitli mi, başlıktaki
+  "3/6" doğru mu, geçilen görselin kalemi öncekinden etkileniyor mu.
+- [ ] **Önizlemede kaydırma** (görsele çift dokunuş): aynı sorular + kartın
+  boyu görselin oranına göre yenileniyor mu.
+- [ ] **Sığdır menüsü**: 2/3/4 sütun ve "tek satıra sığdır". Altı görselde
+  2 sütun → 2+2+2 bekleniyor.
+- [ ] **Seçim gecikmesi**: görsele tek dokunuş ANINDA seçmeli (çift dokunuş
+  tanıyıcısı artık yalnız seçili görselde). Çoklu seçimde işaretleme de
+  anında olmalı.
+- [ ] **Bildirim dili**: uygulama dili İngilizce/başka bir dilken hatırlatıcı
+  ve günlük brifing bildirimleri o dilde mi geliyor (kanal adları Android
+  ayarlarında ilk kurulan adla kalabilir — kanal adı yalnız kanal ilk kez
+  oluşturulurken yazılır; eski cihazda Türkçe kalabilir).
+- [ ] **Arşiv defterinde görsel yerleşimi**: aynı paketleme (yan yana, sonra
+  alta) deftere de kondu; sayfa ölçülmeden eklenen görselde konum yazılmıyor.
+
 ## 2026-09-05 kullanım turundan kalan (CİHAZDA GÖRÜLMEDİ)
 
 Tur `flutter analyze` (0 sorun) ve `flutter test` (892 test yeşil) ile
@@ -40,9 +63,6 @@ kapandı; aşağıdakiler derleme riski değil, **gözle bakılmadı** riski:
 - [ ] **Etiket yeniden adlandırma/silme** çok notta sıralı yazım yapıyor
   (`updateFieldsAndWait`). Yüzlerce notlu bir etikette ne kadar sürüyor,
   ilerleme göstergesi gerekir mi — ölçülmedi.
-- [ ] **Notu çoğalt**: ekler BİLEREK kopyalanmıyor (bkz. HAFIZA 2026-09-05).
-  Kullanıcı ekli bir notu çoğaltıp eklerin gelmediğini görürse, kopyada bunu
-  söyleyen bir satır gerekebilir.
 - [ ] **Uygulama sürümü satırı** (`package_info_plus`) Windows'ta denenmedi;
   Android'de CI'ın `--build-number`ı görünmeli.
 
