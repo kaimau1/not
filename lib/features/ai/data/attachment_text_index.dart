@@ -127,26 +127,22 @@ class AttachmentTextIndex extends Notifier<Map<String, String>> {
         }
       }
       if (pending.isEmpty) return;
-      var changed = false;
-      for (final entry in pending.take(_batch)) {
-        // Sonuç BOŞ da olsa yazılır: "bu ekte metin yok" da bir yanıt,
-        // yoksa aynı dosya her turda yeniden taranırdı.
-        _texts[entry.file.id] = await _extract(entry.file);
-        changed = true;
-      }
-      if (!changed) return;
-      unawaited(
-        ref
-            .read(sharedPreferencesProvider)
-            .setString(_cacheKey, jsonEncode(_texts)),
-      );
-      state = _byNote(notes);
-      // Kuyrukta kalan varsa bir sonraki tur: kullanıcı beklemesin, indeks
-      // arka planda dolsun.
-      if (pending.length > _batch) {
-        _running = false;
-        unawaited(_index(notes));
-        return;
+      // Tur tur ilerler: her turdan sonra durum yenilenir ki arama sonuçları
+      // indeks doldukça zenginleşsin, kullanıcı bütün defterin taranmasını
+      // beklemesin.
+      for (var i = 0; i < pending.length; i += _batch) {
+        final slice = pending.skip(i).take(_batch);
+        for (final entry in slice) {
+          // Sonuç BOŞ da olsa yazılır: "bu ekte metin yok" da bir yanıt,
+          // yoksa aynı dosya her turda yeniden taranırdı.
+          _texts[entry.file.id] = await _extract(entry.file);
+        }
+        unawaited(
+          ref
+              .read(sharedPreferencesProvider)
+              .setString(_cacheKey, jsonEncode(_texts)),
+        );
+        state = _byNote(notes);
       }
     } catch (e) {
       debugPrint('Ek metni çıkarılamadı: $e');

@@ -20,7 +20,6 @@ import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/gemini_service.dart';
-import '../../ai/data/attachment_text_index.dart';
 import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/shared_activity_service.dart';
@@ -2409,26 +2408,6 @@ class _SearchField extends ConsumerWidget {
                 ],
               ),
             ),
-          ),
-          // **EK İÇERİĞİNDE DE ARA** (kullanıcı isteği 2026-09-04: "anlamsal
-          // arama görsel ve pdf'leri de arayabilir, seçenek olarak sunmalıyız").
-          // Hem metin hem anlam kipinde geçerli; açıkken PDF metni ve görsel
-          // OCR'ı da taranır (bkz. attachment_text_index.dart).
-          IconButton(
-            tooltip: l10n.searchAttachments,
-            isSelected: ref.watch(attachmentSearchProvider),
-            visualDensity: VisualDensity.compact,
-            constraints: const BoxConstraints.tightFor(width: 34, height: 34),
-            padding: EdgeInsets.zero,
-            icon: Icon(
-              ref.watch(attachmentSearchProvider)
-                  ? Icons.image_search
-                  : Icons.image_search_outlined,
-              size: 20,
-            ),
-            onPressed: () => ref
-                .read(attachmentSearchProvider.notifier)
-                .set(!ref.read(attachmentSearchProvider)),
           ),
           const SizedBox(width: 4),
         ],

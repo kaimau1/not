@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../ai/data/attachment_text_index.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import 'notes_providers.dart';
@@ -157,6 +158,20 @@ class DashboardFilterRow extends ConsumerWidget {
                       label: tag,
                       onRemove: () =>
                           ref.read(selectedTagProvider.notifier).set(null),
+                    ),
+                  // **EK İÇERİĞİNDE DE ARA** (kullanıcı isteği 2026-09-04:
+                  // "anlamsal arama görsel ve pdf'leri de arayabilir,
+                  // seçenek olarak sunmalıyız"). Yalnız ARAMA YAZILIYKEN
+                  // görünür: aramanın kapsamını değiştiren bir seçenek,
+                  // arama yokken anlamsız bir çip olurdu. Arama çubuğuna
+                  // konmadı — orada "Metin/Anlam" ikilisiyle birlikte en dar
+                  // telefonda alanı bitiriyordu.
+                  if (ref.watch(searchQueryProvider).trim().isNotEmpty)
+                    _AttachmentScopeChip(
+                      selected: ref.watch(attachmentSearchProvider),
+                      onTap: () => ref
+                          .read(attachmentSearchProvider.notifier)
+                          .set(!ref.read(attachmentSearchProvider)),
                     ),
                   ...favoriteFilterChips(context, ref),
                 ],
@@ -746,6 +761,61 @@ class _Option extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Aramanın KAPSAM çipi: ek içeriği (PDF metni + görsel OCR) de taransın mı.
+///
+/// Uygulanmış süzgeç çipiyle aynı boy, ama "kaldır" çarpısı yok: bu bir
+/// süzgeç değil, aramanın nereye baktığını söyleyen bir anahtar.
+class _AttachmentScopeChip extends StatelessWidget {
+  const _AttachmentScopeChip({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: Material(
+        color: selected ? scheme.secondaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected ? Colors.transparent : scheme.outlineVariant,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  selected ? Icons.image_search : Icons.image_search_outlined,
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.searchAttachments,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

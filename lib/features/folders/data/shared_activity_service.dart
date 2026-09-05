@@ -38,7 +38,12 @@ class SharedActivityService {
   /// bildirilmez; okununca (sayaç 0) kayıt düşer.
   final _notified = <String, int>{};
 
-  final _subs = <ProviderSubscription<dynamic>>[];
+  /// İzlenen klasör listesinin aboneliği — klasör aboneliklerinden AYRI
+  /// tutuluyor: tek listede olsalardı "kökü koru, kalanını yenile" işlemi
+  /// bir dizin varsayımına dayanırdı ve ilk `fireImmediately` turunda
+  /// (liste henüz boşken) o varsayım tutmuyordu.
+  ProviderSubscription<dynamic>? _rootSub;
+  final _folderSubs = <ProviderSubscription<dynamic>>[];
 
   /// Bildirim kimliği klasör kimliğinden türetilir: aynı klasörün ikinci
   /// bildirimi birincinin ÜSTÜNE yazar.
@@ -48,19 +53,21 @@ class SharedActivityService {
   void start() {
     // İzlenen klasör listesi değiştikçe abonelikler yenilenir: yeni
     // paylaşılan klasör kendiliğinden izlemeye girer.
-    _subs.add(
-      _ref.listen(watchedSharedFoldersProvider, (_, _) => _resubscribe(), fireImmediately: true),
+    _rootSub = _ref.listen(
+      watchedSharedFoldersProvider,
+      (_, _) => _resubscribe(),
+      fireImmediately: true,
     );
   }
 
   void _resubscribe() {
-    for (final sub in _subs.skip(1)) {
+    for (final sub in _folderSubs) {
       sub.close();
     }
-    _subs.removeRange(1, _subs.length);
+    _folderSubs.clear();
     for (final folder in _ref.read(watchedSharedFoldersProvider)) {
       final key = (ownerId: folder.ownerId, folderId: folder.folderId);
-      _subs.add(
+      _folderSubs.add(
         _ref.listen<int>(folderUnreadProvider(key), (previous, next) {
           unawaited(_onUnread(folder.folderId, folder.name, next));
         }, fireImmediately: true),
@@ -135,9 +142,11 @@ class SharedActivityService {
   }
 
   void dispose() {
-    for (final sub in _subs) {
+    _rootSub?.close();
+    _rootSub = null;
+    for (final sub in _folderSubs) {
       sub.close();
     }
-    _subs.clear();
+    _folderSubs.clear();
   }
 }
