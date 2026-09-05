@@ -65,6 +65,7 @@ import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
 import '../color_picker_sheet.dart';
+import '../note_stats_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
@@ -3213,6 +3214,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (mounted) {
           await showNoteSearchSheet(context, ref, _note ?? note);
         }
+      case 'stats':
+        // Bekleyen yazım önce diske insin: sayaç yazılan son cümleyi de
+        // saysın (aramada da aynı sıra).
+        _flushPending(_bodyController);
+        if (mounted) await showNoteStatsSheet(context, _note ?? note);
       case 'share':
         await _share();
       case 'export':

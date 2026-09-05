@@ -975,7 +975,7 @@
     }
   },
   "archivePageName": "Page name (e.g. Invoices)",
-  "archivePageEmpty": "This page is empty.",
+  "archivePageEmpty": "Empty page",
   "archiveSearchHint": "Search the notebook…",
   "archiveAddText": "Add text",
   "archiveAddFile": "Add file",
@@ -1027,11 +1027,11 @@
   "archivePageTitleHint": "Page name",
   "archiveAutoPageName": "Page {number}",
   "@archiveAutoPageName": {
-      "placeholders": {
-          "number": {
-              "type": "int"
-          }
+    "placeholders": {
+      "number": {
+        "type": "int"
       }
+    }
   },
   "archiveNewPageHint": "Start writing or add something — the page opens by itself.",
   "archiveNewPageLabel": "New page",
@@ -1170,12 +1170,179 @@
   "patternDiagonal": "Diagonal",
   "patternGraph": "Graph paper",
   "archivePagesOverview": "Pages",
-  "archivePageEmpty": "Empty page",
   "archiveSemanticHint": "Search the notebook by meaning…",
   "semanticUnavailable": "Semantic search is unavailable right now; showing text search.",
   "sharedNotifications": "Shared folder notifications",
   "sharedNotificationsInfo": "Get a phone notification when someone adds or edits a note or writes in the chat. The home screen counter keeps working when this is off.",
   "copyAsText": "Copy text",
   "searchAttachments": "Search inside attachments",
-  "searchAttachmentsInfo": "Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache."
+  "searchAttachmentsInfo": "Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache.",
+  "selectAll": "Select all",
+  "selectNone": "Clear selection",
+  "duplicateNote": "Duplicate note",
+  "noteDuplicated": "Note duplicated",
+  "notesDuplicatedCount": "{count, plural, one{1 note duplicated} other{{count} notes duplicated}}",
+  "@notesDuplicatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsTitle": "Note statistics",
+  "noteStatsWords": "{count, plural, one{1 word} other{{count} words}}",
+  "@noteStatsWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsChars": "{count, plural, one{1 character} other{{count} characters}}",
+  "@noteStatsChars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsItems": "{count, plural, one{1 item} other{{count} items}}",
+  "@noteStatsItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsAttachments": "{count, plural, one{1 attachment} other{{count} attachments}}",
+  "@noteStatsAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsReadTime": "~{count} min read",
+  "@noteStatsReadTime": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scrollToTop": "Back to top",
+  "searchResultCount": "{count, plural, one{1 result} other{{count} results}}",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearSearch": "Clear search",
+  "trashDaysLeft": "{count, plural, one{Deleted permanently in 1 day} other{Deleted permanently in {count} days}}",
+  "@trashDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashLastDay": "Will be deleted permanently today",
+  "noteRestored": "Note restored",
+  "restoreAll": "Restore all",
+  "notesRestoredCount": "{count, plural, one{1 note restored} other{{count} notes restored}}",
+  "@notesRestoredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyingTrash": "Emptying trash…",
+  "reminderRemoved": "Reminder removed",
+  "reminderOverdue": "Overdue",
+  "reminderQuickTonight": "Tonight 6:00 PM",
+  "reminderQuickTomorrow": "Tomorrow 9:00 AM",
+  "reminderQuickNextWeek": "Next week",
+  "reminderQuickCustom": "Pick a date…",
+  "reminderQuickTitle": "When should we remind you?",
+  "reminderSnooze": "Snooze 1 hour",
+  "reminderSnoozed": "Reminder snoozed",
+  "reminderCountLabel": "{count, plural, one{1 reminder} other{{count} reminders}}",
+  "@reminderCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeJustNow": "just now",
+  "relativeInMinutes": "in {count} min",
+  "@relativeInMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeInHours": "in {count} h",
+  "@relativeInHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeInDays": "in {count} days",
+  "@relativeInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoMinutes": "{count} min ago",
+  "@relativeAgoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoHours": "{count} h ago",
+  "@relativeAgoHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoDays": "{count} days ago",
+  "@relativeAgoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxDeclined": "Incoming note deleted",
+  "inboxCountLabel": "{count, plural, one{1 incoming note} other{{count} incoming notes}}",
+  "@inboxCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appVersion": "App version",
+  "appVersionCopied": "Version info copied",
+  "notesMovedCount": "{count, plural, one{1 note moved} other{{count} notes moved}}",
+  "@notesMovedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

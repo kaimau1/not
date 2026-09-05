@@ -306,6 +306,60 @@ class NotesRepository {
     return doc.id;
   }
 
+  /// Notun bir KOPYASINI oluşturur ve yeni id'sini döner.
+  ///
+  /// NEDEN: bir notu şablon gibi kullanmanın (haftalık liste, alışveriş
+  /// listesi, toplantı notu) tek yolu metnini kopyalayıp yeni bir nota
+  /// yapıştırmaktı — biçim, renk, etiket ve madde işaretleri yolda kayboluyordu.
+  ///
+  /// **EKLER KOPYALANMAZ** (bilinçli): ek dosyaları Storage'da notun id'si
+  /// altında durur; kopyalamak her dosyayı indirip yeniden yüklemek demektir
+  /// (kota + süre) ve yarıda kalırsa kopyanın ekleri kırık kalır. Kopyada
+  /// bunun yerine metin, maddeler, etiketler, renkler ve tipografi taşınır.
+  /// Sayfa notları (`pageNotes`) da ekle bağlı olduğu için dışarıda kalır.
+  ///
+  /// Hatırlatıcı da taşınmaz: aynı anda iki kez çalan bir hatırlatıcı istenen
+  /// şey değil. Kopya ARŞİVLENMİŞ/SİLİNMİŞ olarak doğmaz; kaynağın çöpteki
+  /// hâli kopyalansa bile kopya ana listeye gelir.
+  Future<String> duplicateNote(Note note) async {
+    final doc = _notes.doc();
+    final copy = Note(
+      id: doc.id,
+      type: note.type,
+      title: note.title,
+      body: note.body,
+      // Madde kimlikleri YENİDEN üretilir: aynı id iki notta dolaşırsa
+      // editörün madde eşlemesi (ve sürükle-sırala) karışır.
+      items: [
+        for (final item in note.items)
+          NoteItem(
+            id: _uuid.v4(),
+            text: item.text,
+            checked: item.checked,
+            starred: item.starred,
+            section: item.section,
+            title: item.title,
+          ),
+      ],
+      tags: List<String>.from(note.tags),
+      folderId: note.folderId,
+      color: note.color,
+      frameColor: note.frameColor,
+      pinned: note.pinned,
+      starred: note.starred,
+      fontFamily: note.fontFamily,
+      fontScale: note.fontScale,
+      textOpacity: note.textOpacity,
+      titleFontFamily: note.titleFontFamily,
+      titleFontScale: note.titleFontScale,
+      titleTextOpacity: note.titleTextOpacity,
+      listColumns: note.listColumns,
+      orderIndex: -DateTime.now().millisecondsSinceEpoch.toDouble(),
+    );
+    unawaited(doc.set({...copy.toMap(), 'updatedBy': editorUid}));
+    return doc.id;
+  }
+
   /// Notun tamamını yazar. Dönen future SUNUCU onayında tamamlanır —
   /// çevrimdışıyken hiç tamamlanmayabilir; olağan çağrılar bekletmeden
   /// çalışır (çevrimdışı-önce), yalnız pencere kapanışı gibi "süreç ölmeden

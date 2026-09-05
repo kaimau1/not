@@ -120,6 +120,9 @@ class _MenuGrid extends StatelessWidget {
       // NOT İÇİ ARAMA (kullanıcı isteği 2026-08-16). Ana ekrandaki arama
       // notlar ARASINDA çalışıyor; bu, tek notun içine bakar.
       ('search', l10n.noteSearchTitle, Icons.manage_search),
+      // **İSTATİSTİK**: yazarken "kaç kelime oldu, ne kadar sürer" sorusunun
+      // cevabı hiçbir yerde yoktu (bkz. showNoteStatsSheet).
+      ('stats', l10n.noteStatsTitle, Icons.insights_outlined),
       // Ekleri bir arşiv defterine KOPYALAR (kullanıcı isteği 2026-08-16):
       // kaynak not silinse bile kopya sağlam kalır.
       if (hasAttachments)

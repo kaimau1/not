@@ -13,6 +13,7 @@ import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'color_picker_sheet.dart';
+import 'note_stats_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
 import 'share_sheet.dart';
@@ -80,11 +81,19 @@ class _ActionsGrid extends StatelessWidget {
       // bu, uygulamanın içinde bir kişinin gelen kutusuna bırakır.
       ('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
       ('copy', l10n.copy, Icons.copy_outlined),
+      // **NOTU ÇOĞALT** — bir notu şablon gibi kullanmanın (haftalık liste,
+      // toplantı notu) tek yolu metnini kopyalayıp yeni bir nota
+      // yapıştırmaktı; biçim, renk, etiket ve madde işaretleri yolda
+      // kayboluyordu (bkz. NotesRepository.duplicateNote).
+      ('duplicate', l10n.duplicateNote, Icons.content_copy_outlined),
       ('select', l10n.select, Icons.check_circle_outline),
       ('folder', l10n.moveToFolder, Icons.folder_outlined),
       ('color', l10n.backgroundColor, Icons.palette_outlined),
       ('frame', l10n.frameColor, Icons.border_color_outlined),
       ('listen', l10n.listenToNote, Icons.headphones_outlined),
+      // **İSTATİSTİK**: uzun bir notun ne kadar uzun olduğu yalnız
+      // kaydırarak anlaşılıyordu.
+      ('stats', l10n.noteStatsTitle, Icons.insights_outlined),
       // "PDF olarak dışa aktar" DEĞİL: belge notunda çıktı balonlu PDF de
       // olabiliyor, metin notunda Word de üretiliyor (bkz. `_runNoteAction`).
       ('pdf', l10n.exportTitle, Icons.ios_share_outlined),
@@ -273,6 +282,23 @@ Future<void> _runNoteAction(
           ..hideCurrentSnackBar()
           ..showSnackBar(SnackBar(content: Text(l10n.copied)));
       }
+    case 'duplicate':
+      if (!await unlockIfNeeded()) return;
+      final repo = ref.read(notesRepositoryProvider);
+      if (repo == null) return;
+      final id = await repo.duplicateNote(note);
+      if (!context.mounted) return;
+      showUndoSnackBar(
+        context,
+        message: l10n.noteDuplicated,
+        undoLabel: l10n.undo,
+        // Kopya HENÜZ hiç düzenlenmedi: geri alma onu kalıcı siler, çöpe
+        // düşürüp kullanıcıya ikinci bir temizlik işi bırakmaz.
+        onUndo: () => repo.hardDelete(id),
+      );
+    case 'stats':
+      if (!await unlockIfNeeded()) return;
+      if (context.mounted) await showNoteStatsSheet(context, note);
     case 'archive':
       final wasArchived = note.archivedAt != null;
       repo.setArchived(note.id, !wasArchived);

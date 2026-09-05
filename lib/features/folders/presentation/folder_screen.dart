@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
@@ -11,8 +10,9 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
-import '../../notes/presentation/filter_sheet.dart';
 import '../../notes/presentation/note_card.dart';
+import '../../notes/presentation/note_grid.dart';
+import '../../notes/presentation/note_sort_menu.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
 import '../../notes/presentation/quick_add_fab.dart';
@@ -161,7 +161,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
           // SIRALAMA klasörün içinde de değiştirilebilsin: ölçüt ana ekranla
           // ORTAK (bkz. folderNotesProvider) — kullanıcının seçtiği düzen her
           // yerde aynı olsun, iki ayrı ayar iki ayrı sürpriz demek.
-          _SortMenu(
+          NoteSortMenu(
             current: ref.watch(noteSortProvider),
             onPick: (sort) =>
                 ref.read(noteSortProvider.notifier).set(sort),
@@ -234,47 +234,20 @@ class _FolderSearchField extends StatelessWidget {
     decoration: InputDecoration(
       border: InputBorder.none,
       hintText: context.l10n.searchHint,
+      // Kutuyu tek dokunuşta boşalt: eskiden ya harf harf silmek ya da
+      // aramayı tümden kapatıp yeniden açmak gerekiyordu.
+      suffixIcon: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: controller,
+        builder: (context, value, _) => value.text.isEmpty
+            ? const SizedBox.shrink()
+            : IconButton(
+                tooltip: context.l10n.clearSearch,
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: controller.clear,
+              ),
+      ),
     ),
   );
-}
-
-/// Sıralama ölçütü menüsü — ana ekranın süzgeç levhasındaki listenin klasör
-/// içindeki kısa hâli. [NoteSort.manual] BURADA YOK: elle sıralama ana
-/// ekranın sürükle-bırak kipiyle kurulur, klasörde o kip çalışmıyor.
-class _SortMenu extends StatelessWidget {
-  const _SortMenu({required this.current, required this.onPick});
-
-  final NoteSort current;
-  final ValueChanged<NoteSort> onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return PopupMenuButton<NoteSort>(
-      tooltip: l10n.sortBy,
-      icon: const Icon(Icons.sort),
-      initialValue: current,
-      onSelected: onPick,
-      itemBuilder: (context) => [
-        for (final sort in NoteSort.values)
-          if (sort != NoteSort.manual)
-            PopupMenuItem<NoteSort>(
-              value: sort,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: sort == current
-                        ? const Icon(Icons.check, size: 18)
-                        : null,
-                  ),
-                  Expanded(child: Text(sortLabel(l10n, sort))),
-                ],
-              ),
-            ),
-      ],
-    );
-  }
 }
 
 class _FolderTitle extends StatelessWidget {
@@ -369,24 +342,47 @@ class _NotesGrid extends ConsumerWidget {
                   icon: Icons.search_off,
                   title: l10n.noteSearchNoHit,
                 ))
-          : LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = fixedColumns > 0
-                    ? fixedColumns
-                    : (constraints.maxWidth / 220).floor().clamp(2, 6);
-                return MasonryGridView.count(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 88),
-                  crossAxisCount: columns,
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  itemCount: notes.length,
-                  itemBuilder: (context, index) => NoteCard(
-                    note: notes[index],
-                    ownerId: ownerId,
-                    readOnly: readOnly,
+          : Column(
+              children: [
+                // ARAMA SONUÇ SAYISI: sorgu doluyken kaç not eşleşti,
+                // ızgaranın üstünde tek satır. Eşleşme yoksa zaten boş
+                // durum çiziliyor.
+                if (needle.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        l10n.searchResultCount(notes.length),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
                   ),
-                );
-              },
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final columns = fixedColumns > 0
+                          ? fixedColumns
+                          : (constraints.maxWidth / 220).floor().clamp(2, 6);
+                      // ANA EKRANLA AYNI IZGARA (bkz. [NoteBalancedGrid]):
+                      // klasör de masonry'nin "kart sütun değiştiriyor,
+                      // sağ sütunda boşluk kalıyor" hatasından kurtuldu.
+                      return NoteBalancedGrid(
+                        notes: notes,
+                        columns: columns,
+                        itemBuilder: (context, index) => NoteCard(
+                          note: notes[index],
+                          ownerId: ownerId,
+                          readOnly: readOnly,
+                          highlightQuery: needle,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             );
       },
     );

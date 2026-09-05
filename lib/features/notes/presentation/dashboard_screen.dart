@@ -24,6 +24,7 @@ import '../../ai/data/semantic_search.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
+import '../../folders/presentation/folder_sheets.dart';
 import '../../folders/presentation/folder_tile.dart';
 import '../../auth/presentation/account_sheet.dart';
 import '../../friends/data/friends_repository.dart';
@@ -45,6 +46,7 @@ import 'dashboard_background_sheet.dart';
 import 'dashboard_pattern.dart';
 import 'filter_sheet.dart';
 import 'note_card.dart';
+import 'note_grid.dart';
 import 'notes_providers.dart';
 import 'quick_add_actions.dart';
 import 'quick_add_fab.dart';
@@ -68,70 +70,6 @@ import 'voice_capture_sheet.dart';
 /// gerileme getirir; cihazda ölçüm yapılabildiğinde yeniden değerlendirilsin.
 const double _kGridCacheExtent = 10000;
 
-/// Bir bölüm bu kadar karttan uzunsa DETERMİNİSTİK ızgara bırakılır ve tembel
-/// masonry'ye dönülür (bkz. [_balancedColumns]).
-///
-/// Deterministik ızgara bölümün TAMAMINI tek kutuda çizer: yerleşim ve sıra
-/// kusursuz olur ama kartların hiçbiri tembel kalmaz. Bölümler zaten
-/// sabitlenmiş/bugün/bu hafta/daha önce diye bölündüğünden gerçek kullanımda
-/// bu sınıra çok seyrek varılır; vardığında da eski davranış (tembel masonry)
-/// aynen sürer, yani çok notlu kitaplıkta ilk kare bedeli büyümez.
-const int _kStaticGridLimit = 200;
-
-/// Kartları TAHMİNİ yüksekliklerine göre sütunlara dağıtıp her sütunu kendi
-/// `Column`'unda çizer — masonry ızgaranın deterministik karşılığı.
-///
-/// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "notların sıralaması düzgün
-/// olmuyor, kaymalar oluyor; özellikle 2 kolonluda sağ kolonda sürekli
-/// boşluklar kalıyor"): `SliverMasonryGrid` her kartı YERLEŞİM ANINDA en kısa
-/// sütuna atar. Yani sütun ataması kart yüksekliklerinin o anki değerine
-/// bağlıydı; yükseklik kıpırdadığında (seçim çerçevesi, küçük resmin gelmesi,
-/// notun güncellenmesi, tembel yerleşimin sırası) aynı not başka bir sütuna
-/// geçiyor, üstündeki kartlar kayıyor ve bir sütunda kapanmayan boşluklar
-/// kalıyordu.
-///
-/// Burada dağıtım ÇİZİMDEN ÖNCE, [estimateNoteCardHeight] ile yapılır: hangi
-/// kartın hangi sütuna düşeceği yalnız notun içeriğine bağlıdır, yerleşime
-/// değil. Tahmin şaşarsa bedeli yalnız sütunların DİBİNDEKİ boşluk farkıdır;
-/// kartların arasında boşluk oluşamaz (her sütun sıkı bir `Column`).
-Widget _balancedColumns({
-  required List<Note> items,
-  required int columns,
-  required double cellWidth,
-  required Widget Function(int index) cell,
-}) {
-  final heights = List<double>.filled(columns, 0);
-  final buckets = List.generate(columns, (_) => <Widget>[]);
-  for (var index = 0; index < items.length; index++) {
-    var target = 0;
-    for (var c = 1; c < columns; c++) {
-      // Eşitlikte SOLDAKİ sütun kazanır — okuma sırası (soldan sağa) korunur.
-      if (heights[c] < heights[target] - 0.5) target = c;
-    }
-    heights[target] += estimateNoteCardHeight(items[index], cellWidth) + 8;
-    buckets[target].add(cell(index));
-  }
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      for (var c = 0; c < columns; c++) ...[
-        if (c > 0) const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var i = 0; i < buckets[c].length; i++) ...[
-                if (i > 0) const SizedBox(height: 8),
-                buckets[c][i],
-              ],
-            ],
-          ),
-        ),
-      ],
-    ],
-  );
-}
-
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -141,6 +79,21 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with WidgetsBindingObserver, QuickAddActions {
+
+  /// Kart ızgarasının kaydırma denetleyicisi — "başa dön" düğmesi buradan
+  /// tepeye döner.
+  ///
+  /// TUZAK: ızgara bölüm değişiminde `AnimatedSwitcher` ile yenilenir ve geçiş
+  /// süresince ESKİ ve YENİ görünüm aynı anda ayakta olabilir; ikisi de bu
+  /// denetleyiciye bağlanır. Bu yüzden konum `_gridScroll.offset` ile
+  /// OKUNMAZ (tek konum varsayar, iki konumda fırlatır) — konum kaydırma
+  /// bildiriminden izlenir. `animateTo` çok konumla çalışır.
+  final _gridScroll = ScrollController();
+
+  /// Kullanıcı bu kadar aşağıdaysa "başa dön" düğmesi görünür. Bir ekran
+  /// yüksekliğinden fazlası: kısa bir kaydırmada düğme çıkıp kaybolmasın.
+  static const _kBackToTopAfter = 800.0;
+  bool _showBackToTop = false;
 
   // ---- Yüzen "+" düğmesinin kancaları (bkz. QuickAddActions) -------------
 
@@ -294,9 +247,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// yukarıya (iç içe kaydırıcılara) geçirmeye devam eder.
   bool _onGridScroll(ScrollNotification notification) {
     if (notification.metrics.axis != Axis.vertical) return false;
-    final scrolled = notification.metrics.pixels > 2;
+    final pixels = notification.metrics.pixels;
+    final scrolled = pixels > 2;
     if (_gridScrolled.value != scrolled) _gridScrolled.value = scrolled;
+    // "Başa dön" düğmesinin görünürlüğü de AYNI bildirimden beslenir; ayrı
+    // bir dinleyici ikinci bir yeniden çizim demekti.
+    final showTop = pixels > _kBackToTopAfter;
+    if (showTop != _showBackToTop && mounted) {
+      setState(() => _showBackToTop = showTop);
+    }
     return false;
+  }
+
+  /// Izgarayı tepeye döndürür. `animateTo` birden çok konumla çalışır
+  /// (bkz. [_gridScroll]).
+  void _backToTop() {
+    if (!_gridScroll.hasClients) return;
+    _gridScroll.animateTo(
+      0,
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -305,6 +276,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     _searchController.dispose();
     _searchFocus.dispose();
     _gridScrolled.dispose();
+    _gridScroll.dispose();
     super.dispose();
   }
 
@@ -331,6 +303,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       onUndo: () {
         for (final id in ids) {
           repo.restore(id);
+        }
+      },
+    );
+  }
+
+  /// Seçilen notları TEK levhada bir klasöre taşır.
+  ///
+  /// NEDEN: klasöre taşıma yalnız TEKLİ eylem levhasındaydı. Yirmi notu
+  /// düzenlemek isteyen kullanıcı yirmi kez basılı tutup yirmi kez levha
+  /// açmak zorundaydı — oysa toplu seçim çubuğunda arşivleme, silme,
+  /// renklendirme zaten vardı.
+  Future<void> _moveSelectedToFolder(Set<String> ids) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    // Eski klasörler geri alma için önce not edilir.
+    final previous = {for (final n in _selectedNotes(ids)) n.id: n.folderId};
+    final picked = await showFolderPickSheet(context, ref);
+    if (picked == null || !mounted) return;
+    for (final id in ids) {
+      repo.updateFields(id, {'folderId': picked.isEmpty ? null : picked});
+    }
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    showUndoSnackBar(
+      context,
+      message: l10n.notesMovedCount(ids.length),
+      undoLabel: l10n.undo,
+      onUndo: () {
+        for (final entry in previous.entries) {
+          repo.updateFields(entry.key, {'folderId': entry.value});
+        }
+      },
+    );
+  }
+
+  /// Seçilen notların kopyalarını oluşturur (bkz.
+  /// [NotesRepository.duplicateNote] — ekler kopyalanmaz).
+  Future<void> _duplicateSelected(Set<String> ids) async {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null || ids.isEmpty) return;
+    final l10n = context.l10n;
+    final notes = _selectedNotes(ids);
+    if (notes.any((n) => n.locked) &&
+        !await authenticateForNote(l10n.unlockAuthReason)) {
+      return;
+    }
+    final created = <String>[];
+    for (final note in notes) {
+      created.add(await repo.duplicateNote(note));
+    }
+    if (!mounted) return;
+    ref.read(selectedNoteIdsProvider.notifier).clear();
+    showUndoSnackBar(
+      context,
+      message: l10n.notesDuplicatedCount(created.length),
+      undoLabel: l10n.undo,
+      // Kopyalar henüz hiç düzenlenmedi: geri alma onları kalıcı siler,
+      // çöpe düşürüp kullanıcıya ikinci bir temizlik işi bırakmaz.
+      onUndo: () {
+        for (final id in created) {
+          repo.hardDelete(id);
         }
       },
     );
@@ -862,6 +895,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     final selectionActive = ref.watch(
       selectedNoteIdsProvider.select((s) => s.isNotEmpty),
     );
+    // "Tümünü seç"in KAPSAMI: ekranda o an görünen (süzülmüş/aranmış)
+    // notlar. Ekran dışındaki notları sessizce seçmek toplu silmeyi
+    // tehlikeli yapardı. Seçim çubuğu yokken hesaplanmaz.
+    final visibleIds = selectionActive
+        ? [for (final n in notesAsync.value ?? const <Note>[]) n.id]
+        : const <String>[];
     // Sıralama modu yalnız süzgeçsiz görünümde geçerlidir: kullanıcı mod
     // açıkken bir klasör/etiket çipine dokunursa mod kendiliğinden kapanır —
     // aksi hâlde şerit durur ama kartlar sürüklenmez, kullanıcı bozuk sanır.
@@ -1006,6 +1045,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 // seçim yapılınca BURADA toplanır (madde 3): sık
                                 // kullanılanlar simge, gerisi taşma menüsünde.
                                 actions: [
+                                  // **TÜMÜNÜ SEÇ** — "hepsini arşivle" gibi
+                                  // en olağan toplu iş için notları tek tek
+                                  // işaretlemek gerekiyordu. Kapsam ekranda
+                                  // GÖRÜNEN notlarla sınırlı: süzgeç/arama
+                                  // açıkken ekran dışındakiler seçilmez.
+                                  IconButton(
+                                    tooltip:
+                                        selectedIds.length == visibleIds.length
+                                        ? l10n.selectNone
+                                        : l10n.selectAll,
+                                    icon: Icon(
+                                      selectedIds.length == visibleIds.length
+                                          ? Icons.deselect
+                                          : Icons.select_all,
+                                    ),
+                                    onPressed: () => ref
+                                        .read(selectedNoteIdsProvider.notifier)
+                                        .selectAll(visibleIds),
+                                  ),
                                   IconButton(
                                     tooltip: l10n.archive,
                                     icon: const Icon(Icons.archive_outlined),
@@ -1046,6 +1104,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           );
                                         case 'share':
                                           _shareSelected(selectedIds);
+                                        case 'folder':
+                                          _moveSelectedToFolder(selectedIds);
+                                        case 'duplicate':
+                                          _duplicateSelected(selectedIds);
                                         case 'color':
                                           _colorSelected(
                                             selectedIds,
@@ -1080,6 +1142,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         l10n.unstar,
                                       ),
                                       const PopupMenuDivider(),
+                                      _menuItem(
+                                        'folder',
+                                        Icons.folder_outlined,
+                                        l10n.moveToFolder,
+                                      ),
+                                      _menuItem(
+                                        'duplicate',
+                                        Icons.content_copy_outlined,
+                                        l10n.duplicateNote,
+                                      ),
                                       _menuItem(
                                         'color',
                                         Icons.palette_outlined,
@@ -1377,6 +1449,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     ),
                                 child: CustomScrollView(
                                   key: ValueKey(segmentKey),
+                                  // "Başa dön" düğmesi buradan tepeye döner.
+                                  controller: _gridScroll,
                                   // KÖK NEDEN (aşağı kaydırırken liste yukarı
                                   // sıçraması): SliverMasonryGrid tembeldir ve
                                   // toplam kaydırma uzunluğunu yalnızca O AN
@@ -1488,6 +1562,33 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       // 14 px kayıyor ve göz bunu hizasızlık olarak görüyordu.
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // **BAŞA DÖN** — yüz notluk bir kitaplıkta en alta
+                        // inen kullanıcının tepeye (ve arama kutusuna)
+                        // dönmesinin tek yolu aynı yolu geri kaydırmaktı.
+                        // Yalnız gerçekten aşağıdayken çıkar; seçim/sıralama
+                        // kipinde çıkmaz (o çubuklar zaten sayfayı yönetir).
+                        AnimatedSlide(
+                          offset: _showBackToTop && !selectionActive
+                              ? Offset.zero
+                              : const Offset(0, 0.6),
+                          duration: const Duration(milliseconds: 180),
+                          child: AnimatedOpacity(
+                            opacity: _showBackToTop && !selectionActive ? 1 : 0,
+                            duration: const Duration(milliseconds: 180),
+                            child: IgnorePointer(
+                              ignoring: !_showBackToTop || selectionActive,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: FloatingActionButton.small(
+                                  heroTag: 'backToTop',
+                                  tooltip: l10n.scrollToTop,
+                                  onPressed: _backToTop,
+                                  child: const Icon(Icons.arrow_upward),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                         // İKİ MİKROFON — editörün alt çubuğundakiyle AYNI
                         // ayrım (kullanıcı isteği 2026-09-01: "ana ekrandaki
                         // ses butonunu da güncelle"):
@@ -1953,8 +2054,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       }
 
       // Çok uzun bölümde tembelliği bırakmamak için eski masonry (bkz.
-      // [_kStaticGridLimit]).
-      if (items.length > _kStaticGridLimit) {
+      // [kStaticGridLimit]).
+      if (items.length > kStaticGridLimit) {
         return SliverMasonryGrid.count(
           crossAxisCount: columns,
           mainAxisSpacing: 8,
@@ -1964,7 +2065,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         );
       }
       return SliverToBoxAdapter(
-        child: _balancedColumns(
+        child: balancedNoteColumns(
           items: items,
           columns: columns,
           cellWidth: cellWidth,

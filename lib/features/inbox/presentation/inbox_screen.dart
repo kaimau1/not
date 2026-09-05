@@ -27,7 +27,24 @@ class InboxScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final async = ref.watch(inboxNotesProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.inboxTitle)),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.inboxTitle),
+            // Kaç not beklediği listeye bakmadan görünsün.
+            if ((async.value?.length ?? 0) > 0)
+              Text(
+                l10n.inboxCountLabel(async.value!.length),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
+        ),
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) =>
@@ -61,6 +78,42 @@ class _InboxCard extends ConsumerWidget {
       return [for (final i in note.items) '• ${i.text}'].join('\n');
     }
     return note.body;
+  }
+
+  /// Reddetme GERİ ALINAMAZ: gelen not alıcının kutusundan silinir ve
+  /// güvenlik kuralları alıcının onu yeniden yaratmasına izin vermez (yalnız
+  /// GÖNDEREN yazabilir, bkz. firestore.rules → inboxNotes). Tek dokunuşta
+  /// yok olmasın diye önce onay sorulur — "geri al" bildirimi burada
+  /// kurulamıyor.
+  Future<void> _decline(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.deleteForeverConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (!(confirmed ?? false)) return;
+    await ref.read(inboxRepositoryProvider)?.decline(note.id);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l10n.inboxDeclined)));
   }
 
   Future<void> _accept(BuildContext context, WidgetRef ref) async {
@@ -143,11 +196,22 @@ class _InboxCard extends ConsumerWidget {
               ),
             ],
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // Geliş zamanı: "bu not ne zaman geldi" sorusunun cevabı
+                // hiçbir yerde yazmıyordu.
+                Expanded(
+                  child: note.sentAt == null
+                      ? const SizedBox.shrink()
+                      : Text(
+                          formatNoteDate(note.sentAt!),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                ),
                 TextButton(
-                  onPressed: () =>
-                      ref.read(inboxRepositoryProvider)?.decline(note.id),
+                  onPressed: () => _decline(context, ref),
                   child: Text(l10n.delete),
                 ),
                 FilledButton.tonalIcon(

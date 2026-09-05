@@ -1223,7 +1223,7 @@
     }
   },
   "archivePageName": "Sayfa adı (ör. Faturalar)",
-  "archivePageEmpty": "Bu sayfa henüz boş.",
+  "archivePageEmpty": "Boş sayfa",
   "archiveSearchHint": "Defterde ara…",
   "archiveAddText": "Metin ekle",
   "archiveAddFile": "Dosya ekle",
@@ -1275,11 +1275,11 @@
   "archivePageTitleHint": "Sayfa adı",
   "archiveAutoPageName": "Sayfa {number}",
   "@archiveAutoPageName": {
-      "placeholders": {
-          "number": {
-              "type": "int"
-          }
+    "placeholders": {
+      "number": {
+        "type": "int"
       }
+    }
   },
   "archiveNewPageHint": "Yazmaya başla ya da bir şey ekle — sayfa kendiliğinden açılır.",
   "archiveNewPageLabel": "Yeni sayfa",
@@ -1418,12 +1418,179 @@
   "patternDiagonal": "Çapraz",
   "patternGraph": "Milimetrik",
   "archivePagesOverview": "Sayfalar",
-  "archivePageEmpty": "Boş sayfa",
   "archiveSemanticHint": "Defterde anlamıyla ara…",
   "semanticUnavailable": "Anlamsal arama şu an kullanılamıyor; metin araması gösteriliyor.",
   "sharedNotifications": "Paylaşılan klasör bildirimleri",
   "sharedNotificationsInfo": "Karşı taraf not eklediğinde/değiştirdiğinde ya da sohbete yazdığında telefona bildirim gelsin. Kapalıyken ana ekrandaki sayaç yine çalışır.",
   "copyAsText": "Metni kopyala",
   "searchAttachments": "Ek içeriğinde de ara",
-  "searchAttachmentsInfo": "PDF'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir."
+  "searchAttachmentsInfo": "PDF'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.",
+  "selectAll": "Tümünü seç",
+  "selectNone": "Seçimi kaldır",
+  "duplicateNote": "Notu çoğalt",
+  "noteDuplicated": "Not çoğaltıldı",
+  "notesDuplicatedCount": "{count, plural, one{1 not çoğaltıldı} other{{count} not çoğaltıldı}}",
+  "@notesDuplicatedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsTitle": "Not istatistikleri",
+  "noteStatsWords": "{count, plural, one{1 kelime} other{{count} kelime}}",
+  "@noteStatsWords": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsChars": "{count, plural, one{1 karakter} other{{count} karakter}}",
+  "@noteStatsChars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsItems": "{count, plural, one{1 madde} other{{count} madde}}",
+  "@noteStatsItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsAttachments": "{count, plural, one{1 ek} other{{count} ek}}",
+  "@noteStatsAttachments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteStatsReadTime": "~{count} dk okuma",
+  "@noteStatsReadTime": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scrollToTop": "Başa dön",
+  "searchResultCount": "{count, plural, one{1 sonuç} other{{count} sonuç}}",
+  "@searchResultCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearSearch": "Aramayı temizle",
+  "trashDaysLeft": "{count, plural, one{1 gün sonra kalıcı silinir} other{{count} gün sonra kalıcı silinir}}",
+  "@trashDaysLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trashLastDay": "Bugün kalıcı silinecek",
+  "noteRestored": "Not geri yüklendi",
+  "restoreAll": "Hepsini geri yükle",
+  "notesRestoredCount": "{count, plural, one{1 not geri yüklendi} other{{count} not geri yüklendi}}",
+  "@notesRestoredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyingTrash": "Çöp boşaltılıyor…",
+  "reminderRemoved": "Hatırlatıcı kaldırıldı",
+  "reminderOverdue": "Gecikti",
+  "reminderQuickTonight": "Bu akşam 18:00",
+  "reminderQuickTomorrow": "Yarın 09:00",
+  "reminderQuickNextWeek": "Gelecek hafta",
+  "reminderQuickCustom": "Tarih seç…",
+  "reminderQuickTitle": "Ne zaman hatırlatılsın?",
+  "reminderSnooze": "1 saat ertele",
+  "reminderSnoozed": "Hatırlatıcı ertelendi",
+  "reminderCountLabel": "{count, plural, one{1 hatırlatıcı} other{{count} hatırlatıcı}}",
+  "@reminderCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeJustNow": "az önce",
+  "relativeInMinutes": "{count} dk sonra",
+  "@relativeInMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeInHours": "{count} sa sonra",
+  "@relativeInHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeInDays": "{count} gün sonra",
+  "@relativeInDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoMinutes": "{count} dk önce",
+  "@relativeAgoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoHours": "{count} sa önce",
+  "@relativeAgoHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeAgoDays": "{count} gün önce",
+  "@relativeAgoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inboxDeclined": "Gelen not silindi",
+  "inboxCountLabel": "{count, plural, one{1 gelen not} other{{count} gelen not}}",
+  "@inboxCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "appVersion": "Uygulama sürümü",
+  "appVersionCopied": "Sürüm bilgisi kopyalandı",
+  "notesMovedCount": "{count, plural, one{1 not taşındı} other{{count} not taşındı}}",
+  "@notesMovedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

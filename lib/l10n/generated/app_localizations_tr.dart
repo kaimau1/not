@@ -3145,4 +3145,232 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get searchAttachmentsInfo =>
       'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.';
+
+  @override
+  String get selectAll => 'Tümünü seç';
+
+  @override
+  String get selectNone => 'Seçimi kaldır';
+
+  @override
+  String get duplicateNote => 'Notu çoğalt';
+
+  @override
+  String get noteDuplicated => 'Not çoğaltıldı';
+
+  @override
+  String notesDuplicatedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not çoğaltıldı',
+      one: '1 not çoğaltıldı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteStatsTitle => 'Not istatistikleri';
+
+  @override
+  String noteStatsWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count kelime',
+      one: '1 kelime',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsChars(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count karakter',
+      one: '1 karakter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count madde',
+      one: '1 madde',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek',
+      one: '1 ek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsReadTime(int count) {
+    return '~$count dk okuma';
+  }
+
+  @override
+  String get scrollToTop => 'Başa dön';
+
+  @override
+  String searchResultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sonuç',
+      one: '1 sonuç',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearSearch => 'Aramayı temizle';
+
+  @override
+  String trashDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gün sonra kalıcı silinir',
+      one: '1 gün sonra kalıcı silinir',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashLastDay => 'Bugün kalıcı silinecek';
+
+  @override
+  String get noteRestored => 'Not geri yüklendi';
+
+  @override
+  String get restoreAll => 'Hepsini geri yükle';
+
+  @override
+  String notesRestoredCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not geri yüklendi',
+      one: '1 not geri yüklendi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get emptyingTrash => 'Çöp boşaltılıyor…';
+
+  @override
+  String get reminderRemoved => 'Hatırlatıcı kaldırıldı';
+
+  @override
+  String get reminderOverdue => 'Gecikti';
+
+  @override
+  String get reminderQuickTonight => 'Bu akşam 18:00';
+
+  @override
+  String get reminderQuickTomorrow => 'Yarın 09:00';
+
+  @override
+  String get reminderQuickNextWeek => 'Gelecek hafta';
+
+  @override
+  String get reminderQuickCustom => 'Tarih seç…';
+
+  @override
+  String get reminderQuickTitle => 'Ne zaman hatırlatılsın?';
+
+  @override
+  String get reminderSnooze => '1 saat ertele';
+
+  @override
+  String get reminderSnoozed => 'Hatırlatıcı ertelendi';
+
+  @override
+  String reminderCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hatırlatıcı',
+      one: '1 hatırlatıcı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get relativeJustNow => 'az önce';
+
+  @override
+  String relativeInMinutes(int count) {
+    return '$count dk sonra';
+  }
+
+  @override
+  String relativeInHours(int count) {
+    return '$count sa sonra';
+  }
+
+  @override
+  String relativeInDays(int count) {
+    return '$count gün sonra';
+  }
+
+  @override
+  String relativeAgoMinutes(int count) {
+    return '$count dk önce';
+  }
+
+  @override
+  String relativeAgoHours(int count) {
+    return '$count sa önce';
+  }
+
+  @override
+  String relativeAgoDays(int count) {
+    return '$count gün önce';
+  }
+
+  @override
+  String get inboxDeclined => 'Gelen not silindi';
+
+  @override
+  String inboxCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count gelen not',
+      one: '1 gelen not',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get appVersion => 'Uygulama sürümü';
+
+  @override
+  String get appVersionCopied => 'Sürüm bilgisi kopyalandı';
+
+  @override
+  String notesMovedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not taşındı',
+      one: '1 not taşındı',
+    );
+    return '$_temp0';
+  }
 }

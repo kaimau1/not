@@ -5861,6 +5861,258 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'PDF\'lerin metnini ve görsellerdeki yazıyı (OCR) da tarar. Açıldığında cihazdaki ekler bir kez taranır; sonrası önbellekten gelir.'**
   String get searchAttachmentsInfo;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü seç'**
+  String get selectAll;
+
+  /// No description provided for @selectNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçimi kaldır'**
+  String get selectNone;
+
+  /// No description provided for @duplicateNote.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notu çoğalt'**
+  String get duplicateNote;
+
+  /// No description provided for @noteDuplicated.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not çoğaltıldı'**
+  String get noteDuplicated;
+
+  /// No description provided for @notesDuplicatedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 not çoğaltıldı} other{{count} not çoğaltıldı}}'**
+  String notesDuplicatedCount(int count);
+
+  /// No description provided for @noteStatsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not istatistikleri'**
+  String get noteStatsTitle;
+
+  /// No description provided for @noteStatsWords.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 kelime} other{{count} kelime}}'**
+  String noteStatsWords(int count);
+
+  /// No description provided for @noteStatsChars.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 karakter} other{{count} karakter}}'**
+  String noteStatsChars(int count);
+
+  /// No description provided for @noteStatsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 madde} other{{count} madde}}'**
+  String noteStatsItems(int count);
+
+  /// No description provided for @noteStatsAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 ek} other{{count} ek}}'**
+  String noteStatsAttachments(int count);
+
+  /// No description provided for @noteStatsReadTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'~{count} dk okuma'**
+  String noteStatsReadTime(int count);
+
+  /// No description provided for @scrollToTop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başa dön'**
+  String get scrollToTop;
+
+  /// No description provided for @searchResultCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 sonuç} other{{count} sonuç}}'**
+  String searchResultCount(int count);
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aramayı temizle'**
+  String get clearSearch;
+
+  /// No description provided for @trashDaysLeft.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 gün sonra kalıcı silinir} other{{count} gün sonra kalıcı silinir}}'**
+  String trashDaysLeft(int count);
+
+  /// No description provided for @trashLastDay.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün kalıcı silinecek'**
+  String get trashLastDay;
+
+  /// No description provided for @noteRestored.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not geri yüklendi'**
+  String get noteRestored;
+
+  /// No description provided for @restoreAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hepsini geri yükle'**
+  String get restoreAll;
+
+  /// No description provided for @notesRestoredCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 not geri yüklendi} other{{count} not geri yüklendi}}'**
+  String notesRestoredCount(int count);
+
+  /// No description provided for @emptyingTrash.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çöp boşaltılıyor…'**
+  String get emptyingTrash;
+
+  /// No description provided for @reminderRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı kaldırıldı'**
+  String get reminderRemoved;
+
+  /// No description provided for @reminderOverdue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gecikti'**
+  String get reminderOverdue;
+
+  /// No description provided for @reminderQuickTonight.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu akşam 18:00'**
+  String get reminderQuickTonight;
+
+  /// No description provided for @reminderQuickTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın 09:00'**
+  String get reminderQuickTomorrow;
+
+  /// No description provided for @reminderQuickNextWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelecek hafta'**
+  String get reminderQuickNextWeek;
+
+  /// No description provided for @reminderQuickCustom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih seç…'**
+  String get reminderQuickCustom;
+
+  /// No description provided for @reminderQuickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne zaman hatırlatılsın?'**
+  String get reminderQuickTitle;
+
+  /// No description provided for @reminderSnooze.
+  ///
+  /// In tr, this message translates to:
+  /// **'1 saat ertele'**
+  String get reminderSnooze;
+
+  /// No description provided for @reminderSnoozed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcı ertelendi'**
+  String get reminderSnoozed;
+
+  /// No description provided for @reminderCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 hatırlatıcı} other{{count} hatırlatıcı}}'**
+  String reminderCountLabel(int count);
+
+  /// No description provided for @relativeJustNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'az önce'**
+  String get relativeJustNow;
+
+  /// No description provided for @relativeInMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dk sonra'**
+  String relativeInMinutes(int count);
+
+  /// No description provided for @relativeInHours.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sa sonra'**
+  String relativeInHours(int count);
+
+  /// No description provided for @relativeInDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün sonra'**
+  String relativeInDays(int count);
+
+  /// No description provided for @relativeAgoMinutes.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} dk önce'**
+  String relativeAgoMinutes(int count);
+
+  /// No description provided for @relativeAgoHours.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} sa önce'**
+  String relativeAgoHours(int count);
+
+  /// No description provided for @relativeAgoDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün önce'**
+  String relativeAgoDays(int count);
+
+  /// No description provided for @inboxDeclined.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelen not silindi'**
+  String get inboxDeclined;
+
+  /// No description provided for @inboxCountLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 gelen not} other{{count} gelen not}}'**
+  String inboxCountLabel(int count);
+
+  /// No description provided for @appVersion.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama sürümü'**
+  String get appVersion;
+
+  /// No description provided for @appVersionCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sürüm bilgisi kopyalandı'**
+  String get appVersionCopied;
+
+  /// No description provided for @notesMovedCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, one{1 not taşındı} other{{count} not taşındı}}'**
+  String notesMovedCount(int count);
 }
 
 class _AppLocalizationsDelegate

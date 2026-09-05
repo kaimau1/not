@@ -5,26 +5,111 @@ import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/relative_time.dart';
 import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import 'note_card.dart';
 import 'notes_providers.dart';
 
+/// Kullanıcının "ne zaman?" sorusuna en sık verdiği üç cevap. Tarih+saat
+/// seçici İKİ ayrı diyalog demek (önce takvim, sonra saat); "yarın sabah"
+/// gibi olağan bir istek için altı dokunuş gerekiyordu.
+enum _QuickWhen { tonight, tomorrow, nextWeek, custom }
+
 /// Tüm hatırlatıcıların tek yerden görüldüğü ekran: yaklaşan ve geçmiş
-/// hatırlatıcılar listelenir; buradan düzenlenir, kaldırılır veya yeni
-/// hatırlatıcılı not oluşturulur. (Sesli notun/asistanın kurduğu
+/// hatırlatıcılar listelenir; buradan düzenlenir, ertelenir, kaldırılır veya
+/// yeni hatırlatıcılı not oluşturulur. (Sesli notun/asistanın kurduğu
 /// hatırlatıcılar da burada görünür.)
 class RemindersScreen extends ConsumerWidget {
   const RemindersScreen({super.key});
 
-  /// `static final` DEĞİL: biçimlendirici bir kez kurulsaydı ilk açılıştaki
-  /// dili ömür boyu taşırdı — kullanıcı Ayarlar'dan dili değiştirince
-  /// hatırlatıcı tarihleri eski dilde kalırdı.
-  static DateFormat get _format => DateFormat('d MMMM y, EEEE HH:mm');
+  /// Biçimlendirici SATIR BAŞINA değil, DİL BAŞINA bir kez kurulur.
+  ///
+  /// Eskiden `static DateFormat get _format => DateFormat(...)` idi ve her
+  /// satırın her yeniden çiziminde yeni bir [DateFormat] kuruluyordu (yerel
+  /// ayar sembollerinin aranması dahil). `static final` de olamazdı: o zaman
+  /// ilk açılıştaki dil ömür boyu takılı kalır, kullanıcı Ayarlar'dan dili
+  /// değiştirince tarihler eski dilde yazardı. Önbellek anahtarı DİL olunca
+  /// iki sorun da kalmıyor.
+  static final Map<String, DateFormat> _formatCache = {};
 
-  Future<DateTime?> _pickDateTime(
+  static DateFormat _format() => _formatCache.putIfAbsent(
+    Intl.defaultLocale ?? '',
+    () => DateFormat('d MMMM y, EEEE HH:mm'),
+  );
+
+  /// Hızlı seçenekler levhası → seçilen zaman. `custom` takvimi açar.
+  static Future<DateTime?> _pickWhen(
+    BuildContext context,
+    DateTime initial,
+  ) async {
+    final l10n = context.l10n;
+    final choice = await showModalBottomSheet<_QuickWhen>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  l10n.reminderQuickTitle,
+                  style: Theme.of(sheetContext).textTheme.titleMedium,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.wb_twilight_outlined),
+              title: Text(l10n.reminderQuickTonight),
+              onTap: () => Navigator.pop(sheetContext, _QuickWhen.tonight),
+            ),
+            ListTile(
+              leading: const Icon(Icons.wb_sunny_outlined),
+              title: Text(l10n.reminderQuickTomorrow),
+              onTap: () => Navigator.pop(sheetContext, _QuickWhen.tomorrow),
+            ),
+            ListTile(
+              leading: const Icon(Icons.next_week_outlined),
+              title: Text(l10n.reminderQuickNextWeek),
+              onTap: () => Navigator.pop(sheetContext, _QuickWhen.nextWeek),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.event_outlined),
+              title: Text(l10n.reminderQuickCustom),
+              onTap: () => Navigator.pop(sheetContext, _QuickWhen.custom),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return null;
+    final now = DateTime.now();
+    switch (choice) {
+      case _QuickWhen.tonight:
+        final tonight = DateTime(now.year, now.month, now.day, 18);
+        // Saat 18'i geçtiysek "bu akşam" bir saat sonrasıdır; geçmişe
+        // hatırlatıcı kurulamaz (aşağıdaki denetim onu zaten reddederdi).
+        return tonight.isAfter(now) ? tonight : now.add(const Duration(hours: 1));
+      case _QuickWhen.tomorrow:
+        final tomorrow = now.add(const Duration(days: 1));
+        return DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 9);
+      case _QuickWhen.nextWeek:
+        final next = now.add(const Duration(days: 7));
+        return DateTime(next.year, next.month, next.day, 9);
+      case _QuickWhen.custom:
+        return _pickDateTime(context, initial);
+    }
+  }
+
+  static Future<DateTime?> _pickDateTime(
     BuildContext context,
     DateTime initial,
   ) async {
@@ -71,7 +156,7 @@ class RemindersScreen extends ConsumerWidget {
     WidgetRef ref,
     Note note,
   ) async {
-    final picked = await _pickDateTime(
+    final picked = await _pickWhen(
       context,
       note.reminderAt ?? DateTime.now().add(const Duration(hours: 1)),
     );
@@ -84,7 +169,7 @@ class RemindersScreen extends ConsumerWidget {
   Future<void> _addReminder(BuildContext context, WidgetRef ref) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final picked = await _pickDateTime(
+    final picked = await _pickWhen(
       context,
       DateTime.now().add(const Duration(hours: 1)),
     );
@@ -101,7 +186,31 @@ class RemindersScreen extends ConsumerWidget {
     final notesAsync = ref.watch(notesStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.remindersTitle)),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.remindersTitle),
+            // Kaç hatırlatıcı var: listeyi kaydırmadan görünsün.
+            Consumer(
+              builder: (context, ref, _) {
+                final count = (ref.watch(notesStreamProvider).value ?? const [])
+                    .where((n) => n.reminderAt != null)
+                    .length;
+                if (count == 0) return const SizedBox.shrink();
+                return Text(
+                  l10n.reminderCountLabel(count),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addReminder(context, ref),
         icon: const Icon(Icons.alarm_add_outlined),
@@ -203,6 +312,37 @@ class _ReminderTile extends ConsumerWidget {
   final bool past;
   final VoidCallback onEdit;
 
+  /// Hatırlatıcıyı kaldırmak TEK DOKUNUŞLUK ve GERİ ALINAMAZ bir işti:
+  /// yanlış satıra basan kullanıcı zamanı yeniden kurmak zorunda kalıyordu
+  /// (üstelik eski zamanı artık göremeden).
+  void _remove(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final previous = note.reminderAt;
+    repo.setReminder(note.id, null);
+    showUndoSnackBar(
+      context,
+      message: context.l10n.reminderRemoved,
+      undoLabel: context.l10n.undo,
+      onUndo: () => repo.setReminder(note.id, previous),
+    );
+  }
+
+  /// Geçmiş hatırlatıcıyı bir saat sonrasına atar — "şimdi vaktim yok"
+  /// durumunun karşılığı. Zamanı elle yeniden seçmek üç diyalog demekti.
+  void _snooze(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final previous = note.reminderAt;
+    repo.setReminder(note.id, DateTime.now().add(const Duration(hours: 1)));
+    showUndoSnackBar(
+      context,
+      message: context.l10n.reminderSnoozed,
+      undoLabel: context.l10n.undo,
+      onUndo: () => repo.setReminder(note.id, previous),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -216,25 +356,76 @@ class _ReminderTile extends ConsumerWidget {
         : (note.displayTitle.trim().isNotEmpty
               ? note.displayTitle.trim()
               : (preview.isEmpty ? l10n.remindersUntitled : preview));
+    final at = note.reminderAt!;
+    // GECİKMİŞ = zamanı geçmiş ama hâlâ duran hatırlatıcı. Eskiden yalnız
+    // gri bir "Geçmiş" başlığının altındaydı; satırın kendisi yaklaşan bir
+    // hatırlatıcıdan ayırt edilemiyordu.
+    final overdue = past;
+    final timeColor = overdue ? scheme.error : scheme.primary;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         onTap: () => openNoteRoute(context, note),
         leading: Icon(
-          past ? Icons.alarm_on_outlined : Icons.alarm,
-          color: past ? scheme.onSurfaceVariant : scheme.primary,
+          overdue ? Icons.alarm_on_outlined : Icons.alarm,
+          color: overdue ? scheme.error : scheme.primary,
         ),
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(
-          RemindersScreen._format.format(note.reminderAt!),
-          style: TextStyle(
-            color: past ? scheme.onSurfaceVariant : scheme.primary,
-          ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              RemindersScreen._format().format(at),
+              style: TextStyle(color: timeColor),
+            ),
+            // "Ne zaman?" değil "ne kadar kaldı?": mutlak tarihi bugünün
+            // tarihiyle kafadan çıkarmak gerekmesin.
+            Row(
+              children: [
+                if (overdue) ...[
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.errorContainer,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      l10n.reminderOverdue,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  relativeTimeLabel(l10n, at),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
+        isThreeLine: true,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (overdue)
+              IconButton(
+                tooltip: l10n.reminderSnooze,
+                icon: const Icon(Icons.snooze_outlined, size: 20),
+                onPressed: () => _snooze(context, ref),
+              ),
             IconButton(
               tooltip: l10n.remindersEdit,
               icon: const Icon(Icons.edit_outlined, size: 20),
@@ -243,8 +434,7 @@ class _ReminderTile extends ConsumerWidget {
             IconButton(
               tooltip: l10n.remindersRemove,
               icon: const Icon(Icons.alarm_off_outlined, size: 20),
-              onPressed: () =>
-                  ref.read(notesRepositoryProvider)?.setReminder(note.id, null),
+              onPressed: () => _remove(context, ref),
             ),
           ],
         ),

@@ -3145,4 +3145,232 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchAttachmentsInfo =>
       'Also scans PDF text and text in images (OCR). Turning this on indexes the files stored on this device once; later searches use the cache.';
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get selectNone => 'Clear selection';
+
+  @override
+  String get duplicateNote => 'Duplicate note';
+
+  @override
+  String get noteDuplicated => 'Note duplicated';
+
+  @override
+  String notesDuplicatedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes duplicated',
+      one: '1 note duplicated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteStatsTitle => 'Note statistics';
+
+  @override
+  String noteStatsWords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count words',
+      one: '1 word',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsChars(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count characters',
+      one: '1 character',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsItems(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsAttachments(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteStatsReadTime(int count) {
+    return '~$count min read';
+  }
+
+  @override
+  String get scrollToTop => 'Back to top';
+
+  @override
+  String searchResultCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count results',
+      one: '1 result',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String trashDaysLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Deleted permanently in $count days',
+      one: 'Deleted permanently in 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trashLastDay => 'Will be deleted permanently today';
+
+  @override
+  String get noteRestored => 'Note restored';
+
+  @override
+  String get restoreAll => 'Restore all';
+
+  @override
+  String notesRestoredCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes restored',
+      one: '1 note restored',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get emptyingTrash => 'Emptying trash…';
+
+  @override
+  String get reminderRemoved => 'Reminder removed';
+
+  @override
+  String get reminderOverdue => 'Overdue';
+
+  @override
+  String get reminderQuickTonight => 'Tonight 6:00 PM';
+
+  @override
+  String get reminderQuickTomorrow => 'Tomorrow 9:00 AM';
+
+  @override
+  String get reminderQuickNextWeek => 'Next week';
+
+  @override
+  String get reminderQuickCustom => 'Pick a date…';
+
+  @override
+  String get reminderQuickTitle => 'When should we remind you?';
+
+  @override
+  String get reminderSnooze => 'Snooze 1 hour';
+
+  @override
+  String get reminderSnoozed => 'Reminder snoozed';
+
+  @override
+  String reminderCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reminders',
+      one: '1 reminder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get relativeJustNow => 'just now';
+
+  @override
+  String relativeInMinutes(int count) {
+    return 'in $count min';
+  }
+
+  @override
+  String relativeInHours(int count) {
+    return 'in $count h';
+  }
+
+  @override
+  String relativeInDays(int count) {
+    return 'in $count days';
+  }
+
+  @override
+  String relativeAgoMinutes(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String relativeAgoHours(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String relativeAgoDays(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get inboxDeclined => 'Incoming note deleted';
+
+  @override
+  String inboxCountLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count incoming notes',
+      one: '1 incoming note',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get appVersion => 'App version';
+
+  @override
+  String get appVersionCopied => 'Version info copied';
+
+  @override
+  String notesMovedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count notes moved',
+      one: '1 note moved',
+    );
+    return '$_temp0';
+  }
 }

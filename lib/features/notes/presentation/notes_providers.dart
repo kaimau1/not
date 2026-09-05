@@ -521,6 +521,17 @@ class SelectedNoteIdsNotifier extends Notifier<Set<String>> {
         : {...state, id};
   }
 
+  /// Ekranda GÖRÜNEN notların tamamını seçer (ya da hepsi zaten seçiliyse
+  /// seçimi kaldırır). Çağıran görünür listeyi verir: süzgeç/arama açıkken
+  /// "tümü", kullanıcının o an gördüğü kümedir — ekran dışındaki notları
+  /// sessizce seçmek toplu silmeyi tehlikeli yapardı.
+  void selectAll(Iterable<String> ids) {
+    final next = ids.toSet();
+    state = next.every(state.contains) && next.length == state.length
+        ? const {}
+        : next;
+  }
+
   void clear() => state = const {};
 }
 
