@@ -13,6 +13,7 @@ import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/video_viewer.dart';
+import 'image_layout.dart';
 import 'text_wrap.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
@@ -720,6 +721,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onExtractText,
     this.onCopy,
     this.onCopyMany,
+    this.onChangedMany,
     this.onDetach,
     this.onVideoToNote,
     this.onTapEmpty,
@@ -775,6 +777,11 @@ class NotePageCanvas extends StatefulWidget {
 
   final ValueChanged<Attachment> onRemove;
   final ValueChanged<Attachment> onChanged;
+
+  /// Birden çok eki TEK yazımda günceller ("satıra sığdır", "boyutları
+  /// eşitle"). null ise ekler tek tek [onChanged]'e verilir — o zaman her ek
+  /// ayrı bir kayıt ve ayrı bir geri-al adımı olur.
+  final ValueChanged<List<Attachment>>? onChangedMany;
 
   /// Tam ekranda seçilen kırpma alanını uygular (bkz. [ImageViewerScreen]).
   final Future<void> Function(Attachment, Rect)? onCrop;
@@ -835,6 +842,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       _moveTop = null;
       _moveOriginLeft = null;
       _moveOriginTop = null;
+      _guides = const [];
     });
   }
 
@@ -842,11 +850,28 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   String? _resizeId;
   double? _resizeWFrac;
 
+  /// Parmağın YAPIŞMA UYGULANMAMIŞ genişliği. Kılavuza oturan değer geri
+  /// beslenirse yapışma hareketi "yiyor": parmak ilerlerken genişlik aynı
+  /// kilitli değerden hesaplandığı için görsel kılavuzdan bir türlü
+  /// kopamıyordu. Ham değer ayrı birikir, ekrana yapışmış hâli çizilir.
+  double? _resizeRawFrac;
+
+  /// Taşıma/boyutlandırma sırasında çizilen hizalama çizgileri.
+  List<AlignGuide> _guides = const [];
+
+  /// Son yerleşimde ölçülen sayfa genişliği (dp) — çoklu seçim çubuğu gibi
+  /// LayoutBuilder dışında kalan yerler oranları buradan çevirir.
+  double _cw = 0;
+
+  /// Konumu yazılmamış görsellerin bu karede hesaplanan yerleri (ek kimliği →
+  /// sol/üst, dp). Her yerleşimde bir kez kurulur; [_resolve] buradan okur.
+  final _autoSlots = <String, ({double left, double top})>{};
+
   static const double _minWidthFrac = 0.15;
 
-  /// Eski küçük tuvalden gelen y oranını (0–1) dp'ye çevirirken kullanılan
-  /// varsayılan tuval yüksekliği (eski tuvalin üst sınırı).
-  static const double _legacyCanvasHeight = 440;
+  /// Çoklu seçim çubuğundaki düğmelerin sıkıştırması: altı simge ve seçim
+  /// sayacı 360 dp'lik bir ekrana yan yana sığmalı.
+  static const _kBarDensity = VisualDensity(horizontal: -4, vertical: -2);
 
   void _select(String id) =>
       setState(() => _selectedId = _selectedId == id ? null : id);
@@ -901,6 +926,66 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       if (_multi.contains(img.id)) img,
   ];
 
+  /// Toplu düzen değişikliğini yazar: varsa tek yazım, yoksa tek tek.
+  void _applyMany(List<Attachment> updated) {
+    final many = widget.onChangedMany;
+    if (many != null) {
+      many(updated);
+      return;
+    }
+    for (final a in updated) {
+      widget.onChanged(a);
+    }
+  }
+
+  /// İşaretli görsellerin GENİŞLİĞİNİ eşitler (kullanıcı isteği 2026-09-05:
+  /// "görsel boyutu eşitleme seçeneği olsun"). Yükseklik en-boy oranından
+  /// çıktığı için aynı orandaki görseller birebir aynı boyuta gelir.
+  void _equalizeSizes() {
+    final chosen = _multiSelected;
+    if (chosen.length < 2 || _cw <= 0) return;
+    final target = equalWidthFrac(
+      [for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw)],
+      minFrac: _minWidthFrac,
+    );
+    _applyMany([for (final a in chosen) a.copyWith(displayWidth: target)]);
+    _endMulti();
+  }
+
+  /// İşaretli görselleri satıra SIĞDIRIR: kenarları birbirine ve sayfanın iki
+  /// yanına yapışacak şekilde yeniden boyutlandırılıp dizilir (kullanıcı
+  /// isteği: "2 ya da 3 görseli bir satıra sığdır"). Üçten fazla seçilirse
+  /// satırlara dengeli bölünür (6 görsel → 3 + 3).
+  ///
+  /// Blok, seçili görsellerin EN ÜSTTEKİNİN hizasından başlar: kullanıcı
+  /// düzenlediği yeri kaybetmesin.
+  void _fitRow() {
+    final chosen = _multiSelected;
+    final cw = _cw;
+    if (chosen.length < 2 || cw <= 0) return;
+    var top = double.infinity;
+    for (final img in chosen) {
+      final t = _resolve(img, cw).top;
+      if (t < top) top = t;
+    }
+    if (!top.isFinite) top = widget.topLimit + kImageGap;
+    final fits = fitRowsLayout(
+      aspects: [for (final a in chosen) _aspectOf(a)],
+      columnWidth: cw,
+      top: math.max(top, widget.topLimit),
+      minWidthFrac: _minWidthFrac,
+    );
+    _applyMany([
+      for (var i = 0; i < chosen.length && i < fits.length; i++)
+        chosen[i].copyWith(
+          displayWidth: fits[i].widthFrac,
+          x: fits[i].leftFrac,
+          pageY: fits[i].top,
+        ),
+    ]);
+    _endMulti();
+  }
+
   /// Büyük önizlemede duran görselin kimliği (null = kapalı).
   ///
   /// Önizleme SAYFA DÜZENİNE dokunmaz: görselin `displayWidth`/konumu
@@ -924,73 +1009,117 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return null;
   }
 
-  /// Konumu YAZILMAMIŞ görsellerin (paylaşımdan gelen, eski kayıt) sayfadaki
-  /// otomatik yeri.
+  /// Görselin en-boy oranı (bilinmiyorsa kare sayılır).
+  double _aspectOf(Attachment img) =>
+      (img.width != null &&
+          img.height != null &&
+          img.width! > 0 &&
+          img.height! > 0)
+      ? img.width! / img.height!
+      : 1.0;
+
+  /// Genişliği yazılmamış görselin varsayılan genişlik oranı.
+  ///
+  /// Tek görsel sütunun yarısını kaplar. Nota İKİNCİ görsel girdiği anda
+  /// varsayılan bir tık daralır: iki görsel araya boşluk da girerek AYNI
+  /// SATIRA sığsın (bkz. [packSlot]). 0,5 + 0,5 satıra sığmadığı için ikinci
+  /// görsel her seferinde alta iniyordu.
+  double _defaultWFrac(double cw) => widget.images.length >= 2 && cw > 0
+      ? (((cw - kImageGap) / 2) / cw).clamp(_minWidthFrac, 1.0).toDouble()
+      : 0.5;
+
+  /// Görselin sayfadaki ölçüsü (dp) — canlı boyutlandırma değeri öncelikli.
+  ({double w, double h}) _sizeOf(Attachment img, double cw) {
+    final wFrac =
+        ((_resizeId == img.id && _resizeWFrac != null)
+                ? _resizeWFrac!
+                : (img.displayWidth ?? _defaultWFrac(cw)))
+            .clamp(_minWidthFrac, 1.0)
+            .toDouble();
+    final w = cw * wFrac;
+    return (w: w, h: w / _aspectOf(img));
+  }
+
+  /// Konumu YAZILMAMIŞ görselin (paylaşımdan gelen, sayfa ölçülmeden eklenen,
+  /// eski kayıt) sayfadaki otomatik yeri — kare başına BİR kez hesaplanır.
   ///
   /// KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi ve üst
-  /// üste geldiler"): burada eskiden `8 + index * 130` vardı — sabit 130 dp
-  /// aralık. Ama görselin yüksekliği en boy oranından çıkıyor ve varsayılan
-  /// genişlik sütunun yarısı: dikey bir fotoğraf ~240 dp geliyor, yani bir
-  /// sonraki görsel öncekinin tam ortasına düşüyordu. İki görsel üst üste
-  /// binince alttaki tümüyle görünmez oluyor, kullanıcı "gelmedi" sanıyordu.
+  /// üste geldiler"; yine 2026-09-05: "birden fazla görsel eklendiğinde üst
+  /// üste başlıyor"): burada gerçek yüksekliklerle bir DİKEY yığın kuruluyordu
+  /// ama sonuç [NotePageCanvas.topLimit]'e kırpılıyordu — başlığın altına
+  /// düşen bütün görseller aynı çizgiye çöküyor, yani üst üste biniyordu.
+  /// Üstelik yığın hep alta indiği için satırın sağındaki koca boşluk hiç
+  /// kullanılmıyordu.
   ///
-  /// Artık yığın GERÇEK yüksekliklerle kuruluyor: konumu yazılı görseller
-  /// yığına katılmaz (onlar kullanıcının koyduğu yerdedir), konumsuz olanlar
-  /// sırayla bir öncekinin ALTINA iner.
-  double _defaultTop(int index, double cw) {
-    var cursor = 8.0;
-    for (var i = 0; i < widget.images.length && i < index; i++) {
-      final other = widget.images[i];
-      // Kullanıcının yerleştirdiği görsel otomatik yığını kaydırmaz.
-      if (other.pageY != null || other.y != null) continue;
-      final aspect =
-          (other.width != null &&
-              other.height != null &&
-              other.width! > 0 &&
-              other.height! > 0)
-          ? other.width! / other.height!
-          : 1.0;
-      final w = cw * (other.displayWidth ?? 0.5).clamp(_minWidthFrac, 1.0);
-      cursor += w / aspect + 16;
+  /// Artık yerleşim [packSlot] ile yapılır: görsel önce SATIRDA yan yana yer
+  /// arar, sığmazsa alta iner ve kullanıcının elle yerleştirdiği görsellerin
+  /// üstüne de binmez.
+  void _computeAutoSlots(double cw) {
+    _cw = cw;
+    _autoSlots.clear();
+    if (cw <= 0) return;
+    final occupied = <Rect>[];
+    // Önce kullanıcının yerleştirdiği görseller: otomatik yerleşim onlara
+    // çarpmadan boşluk arar.
+    for (final img in widget.images) {
+      if (_isAuto(img)) continue;
+      final r = _resolve(img, cw);
+      occupied.add(Rect.fromLTWH(r.left, r.top, r.w, r.h));
     }
-    return cursor;
+    for (final img in widget.images) {
+      if (!_isAuto(img)) continue;
+      final size = _sizeOf(img, cw);
+      final slot = packSlot(
+        occupied: occupied,
+        columnWidth: cw,
+        width: size.w,
+        height: size.h,
+        anchorTop: widget.topLimit + kImageGap,
+        topLimit: widget.topLimit,
+      );
+      _autoSlots[img.id] = slot;
+      occupied.add(Rect.fromLTWH(slot.left, slot.top, size.w, size.h));
+    }
   }
+
+  /// Konumu hiç yazılmamış görsel mi (yeri otomatik hesaplanır).
+  bool _isAuto(Attachment img) => img.pageY == null && img.y == null;
 
   /// Görselin sayfadaki nihai yerleşimi (dp). Canlı taşıma/boyutlandırma
   /// değerleri öncelikli. Üst sınır 0'a kırpılır; alt sınır yok — sayfa uzar.
   ({double left, double top, double w, double h}) _resolve(
     Attachment img,
-    int index,
     double cw,
   ) {
-    final wFrac =
-        ((_resizeId == img.id && _resizeWFrac != null)
-                ? _resizeWFrac!
-                : (img.displayWidth ?? 0.5))
-            .clamp(_minWidthFrac, 1.0)
-            .toDouble();
-    final w = cw * wFrac;
-    final aspect =
-        (img.width != null &&
-            img.height != null &&
-            img.width! > 0 &&
-            img.height! > 0)
-        ? img.width! / img.height!
-        : 1.0;
-    final h = w / aspect;
+    final size = _sizeOf(img, cw);
+    final w = size.w;
+    final auto = _autoSlots[img.id];
     var left = (_moveId == img.id && _moveLeft != null)
         ? _moveLeft!
-        : (img.x ?? 0.06) * cw;
+        : (auto?.left ?? (img.x ?? 0.06) * cw);
     var top = (_moveId == img.id && _moveTop != null)
         ? _moveTop!
-        : img.pageY ??
+        : (auto?.top ??
+              img.pageY ??
               (img.y != null
-                  ? img.y! * _legacyCanvasHeight
-                  : _defaultTop(index, cw));
+                  ? img.y! * kLegacyCanvasHeight
+                  : widget.topLimit + kImageGap));
     left = left.clamp(0.0, (cw - w).clamp(0.0, cw)).toDouble();
     // Başlık/çip bölgesi görsele kapalı: üst sınırın altına inemez.
     if (top < widget.topLimit) top = widget.topLimit;
-    return (left: left, top: top, w: w, h: h);
+    return (left: left, top: top, w: w, h: size.h);
+  }
+
+  /// [img] DIŞINDAKİ görsellerin sayfa kutuları — yapışma, çarpışma ve
+  /// kılavuzlar bunlara göre hesaplanır.
+  List<Rect> _othersOf(Attachment img, double cw) {
+    final out = <Rect>[];
+    for (final other in widget.images) {
+      if (other.id == img.id) continue;
+      final r = _resolve(other, cw);
+      out.add(Rect.fromLTWH(r.left, r.top, r.w, r.h));
+    }
+    return out;
   }
 
   /// Görsellerin SAYFA uzayındaki dışlama bantları. Metin alanları kendi
@@ -999,8 +1128,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// 8 dp pay bırakılır.
   List<FloatBox> _floatsFor(double cw) {
     final boxes = <FloatBox>[];
-    for (final (index, img) in widget.images.indexed) {
-      final r = _resolve(img, index, cw);
+    for (final img in widget.images) {
+      final r = _resolve(img, cw);
       boxes.add(
         FloatBox(
           top: r.top,
@@ -1128,22 +1257,21 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         child: LayoutBuilder(
         builder: (context, constraints) {
           final cw = constraints.maxWidth;
+          // Otomatik yerleşim bu karede BİR kez kurulur; aşağıdaki bütün
+          // _resolve çağrıları aynı sonucu okur.
+          _computeAutoSlots(cw);
           _reportFloats(cw);
           // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
           var maxBottom = 0.0;
-          for (final (index, img) in widget.images.indexed) {
-            final r = _resolve(img, index, cw);
+          for (final img in widget.images) {
+            final r = _resolve(img, cw);
             final bottom = r.top + r.h + 72;
             if (bottom > maxBottom) maxBottom = bottom;
           }
           final selected = _selectedId;
           Attachment? selectedImg;
-          var selectedIndex = 0;
-          for (final (index, img) in widget.images.indexed) {
-            if (img.id == selected) {
-              selectedImg = img;
-              selectedIndex = index;
-            }
+          for (final img in widget.images) {
+            if (img.id == selected) selectedImg = img;
           }
           final previewImg = _previewOf(widget.images);
           // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
@@ -1191,17 +1319,28 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     );
                   },
                 ),
-              for (final (index, img) in widget.images.indexed)
-                _positioned(context, img, index, cw),
-              if (selectedImg != null)
-                _toolbar(context, selectedImg, selectedIndex, cw),
+              for (final img in widget.images) _positioned(context, img, cw),
+              // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
+              // çizgiyi kapatırsa hizalama görünmez olurdu.
+              if (_guides.isNotEmpty)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _GuidePainter(
+                        guides: _guides,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              if (selectedImg != null) _toolbar(context, selectedImg, cw),
               // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
               // metnin sarması olduğu gibi kalır.
               if (previewImg != null) _preview(context, previewImg, cw),
             ],
           );
           if (imgForDismiss == null) return content;
-          final r = _resolve(imgForDismiss, selectedIndex, cw);
+          final r = _resolve(imgForDismiss, cw);
           // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
           // bir bant: ikisinin de dışı "dışarısı" sayılır.
           final imageRect = Rect.fromLTWH(
@@ -1249,6 +1388,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             children: [
               IconButton(
                 tooltip: l10n.cancel,
+                visualDensity: _kBarDensity,
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: _endMulti,
               ),
@@ -1262,6 +1402,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               ),
               IconButton(
                 tooltip: l10n.selectAllItems,
+                visualDensity: _kBarDensity,
                 icon: const Icon(Icons.select_all, size: 20),
                 onPressed: () => setState(
                   () => _multi
@@ -1270,7 +1411,20 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 ),
               ),
               IconButton(
+                tooltip: l10n.imagesEqualizeSize,
+                visualDensity: _kBarDensity,
+                icon: const Icon(Icons.straighten, size: 20),
+                onPressed: chosen.length < 2 ? null : _equalizeSizes,
+              ),
+              IconButton(
+                tooltip: l10n.imagesFitRow,
+                visualDensity: _kBarDensity,
+                icon: const Icon(Icons.view_column_outlined, size: 20),
+                onPressed: chosen.length < 2 ? null : _fitRow,
+              ),
+              IconButton(
                 tooltip: l10n.copy,
+                visualDensity: _kBarDensity,
                 icon: const Icon(Icons.copy_outlined, size: 20),
                 onPressed: chosen.isEmpty
                     ? null
@@ -1281,6 +1435,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               ),
               IconButton(
                 tooltip: l10n.delete,
+                visualDensity: _kBarDensity,
                 icon: const Icon(Icons.delete_outline, size: 20),
                 onPressed: chosen.isEmpty
                     ? null
@@ -1381,18 +1536,16 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     );
   }
 
-  Widget _positioned(
-    BuildContext context,
-    Attachment img,
-    int index,
-    double cw,
-  ) {
+  Widget _positioned(BuildContext context, Attachment img, double cw) {
     final scheme = Theme.of(context).colorScheme;
     final editing = _selectedId == img.id;
     final checked = _multiMode && _multi.contains(img.id);
     final moving = _moveId == img.id;
-    final r = _resolve(img, index, cw);
+    final r = _resolve(img, cw);
     return Positioned(
+      // Anahtar ölçüm içindir: yerleşim testleri kutunun ekrandaki dikdörtgenini
+      // bu anahtarla okur (bkz. test/note_canvas_layout_test.dart).
+      key: ValueKey('page-image-${img.id}'),
       left: r.left,
       top: r.top,
       width: r.w,
@@ -1429,14 +1582,32 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             _moveTop = r.top;
           });
         },
+        // KENAR ÇARPIŞMASI + KILAVUZ (kullanıcı isteği 2026-09-05): parmağın
+        // istediği ham kutu [snapMove]'a verilir; kenarlar sayfaya ve komşulara
+        // yapışır, hafif temasta çarpışıp durur, parmak komşunun derinine
+        // girmeye devam ederse engel kalkar. Ham konum SAKLANMAZ, her karede
+        // sürüklemenin başlangıcından yeniden hesaplanır: yapışmış değer geri
+        // beslenseydi görsel kılavuzdan kopamazdı.
         onLongPressMoveUpdate: (d) {
           if (_moveId != img.id) return;
+          final snapped = snapMove(
+            rect: Rect.fromLTWH(
+              (_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx,
+              (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
+              r.w,
+              r.h,
+            ),
+            others: _othersOf(img, cw),
+            columnWidth: cw,
+            topLimit: widget.topLimit,
+          );
+          if (_guides.isEmpty && snapped.guides.isNotEmpty) {
+            HapticFeedback.selectionClick();
+          }
           setState(() {
-            _moveLeft = ((_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx)
-                .clamp(0.0, (cw - r.w).clamp(0.0, cw))
-                .toDouble();
-            final nt = (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy;
-            _moveTop = nt < widget.topLimit ? widget.topLimit : nt;
+            _moveLeft = snapped.left;
+            _moveTop = snapped.top;
+            _guides = snapped.guides;
           });
         },
         onLongPressEnd: (_) => _commitMove(img, cw),
@@ -1512,16 +1683,38 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                   onTap: () => _togglePreview(img.id),
                   onPanStart: (_) => setState(() {
                     _resizeId = img.id;
-                    _resizeWFrac = (img.displayWidth ?? 0.5)
+                    _resizeWFrac = (img.displayWidth ?? _defaultWFrac(cw))
                         .clamp(_minWidthFrac, 1.0)
                         .toDouble();
+                    _resizeRawFrac = _resizeWFrac;
                   }),
-                  onPanUpdate: (d) => setState(() {
-                    final base = (_resizeWFrac ?? (img.displayWidth ?? 0.5));
-                    _resizeWFrac = (base + d.delta.dx / cw)
+                  // Boyutlandırırken de kılavuz çıkar: sağ kenar sayfanın
+                  // kenarına/ortasına, komşunun kenarına ya da komşuyla EŞİT
+                  // genişliğe yapışır.
+                  onPanUpdate: (d) {
+                    final base =
+                        _resizeRawFrac ??
+                        (img.displayWidth ?? _defaultWFrac(cw));
+                    final raw = (base + d.delta.dx / cw)
                         .clamp(_minWidthFrac, 1.0)
                         .toDouble();
-                  }),
+                    final snapped = snapWidth(
+                      left: r.left,
+                      width: raw * cw,
+                      others: _othersOf(img, cw),
+                      columnWidth: cw,
+                    );
+                    if (_guides.isEmpty && snapped.guides.isNotEmpty) {
+                      HapticFeedback.selectionClick();
+                    }
+                    setState(() {
+                      _resizeRawFrac = raw;
+                      _resizeWFrac = (snapped.width / cw)
+                          .clamp(_minWidthFrac, 1.0)
+                          .toDouble();
+                      _guides = snapped.guides;
+                    });
+                  },
                   onPanEnd: (_) {
                     final f = _resizeWFrac;
                     if (f != null) {
@@ -1530,6 +1723,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                     setState(() {
                       _resizeId = null;
                       _resizeWFrac = null;
+                      _resizeRawFrac = null;
+                      _guides = const [];
                     });
                   },
                   child: Container(
@@ -1556,12 +1751,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   /// Araç çubuğu seçili görselin hemen altında belirir (sayfa uzun olduğundan
   /// alta sabitlemek görünmez kalabilirdi).
-  Widget _toolbar(BuildContext context, Attachment img, int index, double cw) {
-    final r = _resolve(img, index, cw);
+  Widget _toolbar(BuildContext context, Attachment img, double cw) {
+    final r = _resolve(img, cw);
     final wFrac =
         ((_resizeId == img.id && _resizeWFrac != null)
                 ? _resizeWFrac!
-                : (img.displayWidth ?? 0.5))
+                : (img.displayWidth ?? _defaultWFrac(cw)))
             .clamp(_minWidthFrac, 1.0)
             .toDouble();
     // OCR ve pano kopyası görsele özgü; videoda menüde gösterilmez
@@ -1607,5 +1802,50 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onRemove: () => widget.onRemove(img),
       ),
     );
+  }
+}
+
+/// Taşıma/boyutlandırma sırasında sayfa boyunca uzanan kesik hizalama
+/// çizgileri (kullanıcı isteği 2026-09-05: "boyut ayarlarken kılavuz kenar
+/// çizgileri çıksın ve diğer görselle ve sayfa ile hizalamak kolay olsun").
+///
+/// Çizgiler sayfanın TAMAMINI kateder: kullanıcı hangi kenarın tuttuğunu —
+/// sayfanın kenarı mı, ortası mı, komşunun kenarı mı — tek bakışta görür.
+class _GuidePainter extends CustomPainter {
+  const _GuidePainter({required this.guides, required this.color});
+
+  final List<AlignGuide> guides;
+  final Color color;
+
+  /// Kesik çizginin dolu ve boş parçaları (dp).
+  static const double _dash = 6;
+  static const double _gap = 4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    for (final g in guides) {
+      final end = g.vertical ? size.height : size.width;
+      for (var p = 0.0; p < end; p += _dash + _gap) {
+        final q = math.min(p + _dash, end);
+        canvas.drawLine(
+          g.vertical ? Offset(g.pos, p) : Offset(p, g.pos),
+          g.vertical ? Offset(g.pos, q) : Offset(q, g.pos),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_GuidePainter old) {
+    if (old.color != color || old.guides.length != guides.length) return true;
+    for (var i = 0; i < guides.length; i++) {
+      if (old.guides[i] != guides[i]) return true;
+    }
+    return false;
   }
 }

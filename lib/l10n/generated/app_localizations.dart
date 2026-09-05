@@ -6197,6 +6197,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Geçmişi temizle'**
   String get clearRecentSearches;
+
+  /// No description provided for @imagesEqualizeSize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boyutları eşitle'**
+  String get imagesEqualizeSize;
+
+  /// No description provided for @imagesFitRow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Satıra sığdır'**
+  String get imagesFitRow;
 }
 
 class _AppLocalizationsDelegate

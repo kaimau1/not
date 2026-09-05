@@ -2970,3 +2970,64 @@ taşı, toplu çoğalt, başa dön, son aramalar, arama sonuç sayısı. Erişim
 ipucusuz IconButton kalmadı (12 tane vardı), kart ekran okuyucuya TEK düğüm.
 Ayarlar: uygulama sürümü (`package_info_plus`; `share_plus` win32 ^6 istediği
 için sürüm ^10.2.1 olmak zorunda, ^9 çözülmüyor).
+
+## 2026-09-05 (2. tur) — Çoklu görsel yerleşimi, kenar çarpışması, kılavuzlar; PDF paylaşımı
+
+### Görseller "üst üste başlıyor" — TEK bir bug değil, İKİ ayrı yerde aynı hata
+Kullanıcı 3 + 3 biniş kartını nota koyunca hepsi aynı noktaya yığılıyordu.
+Yerleşim iki ayrı yerde, iki ayrı kuralla yapılıyordu ve ikisi de yalnız
+DİKEY yığıyordu:
+
+1. **Editör** (`_placeNewImage`): var olan görselin ALTI
+   `pageWidth * displayWidth / oran` ile ölçülüyordu. Sayfa daha ölçülmemişse
+   `_pageBox()` null → `pageWidth = 0` → her görselin "altı" kendi tepesine
+   eşit çıkıyor, yeni görsel bir öncekinin 16 dp altına, yani pratikte
+   ÜSTÜNE düşüyordu. Paylaşımdan gelen ve çoklu seçimle eklenen görseller tam
+   bu yoldan geçiyor — kullanıcının gördüğü hâl buydu.
+2. **Tuval** (`_defaultTop`): yığın 8 dp'den başlıyor ama sonuç `topLimit`e
+   (başlığın altına) KIRPILIYORDU. Başlık bandının üstünde kalan her görsel
+   aynı çizgiye çöküyordu; yatık görsellerde iki-üç tanesi birden.
+
+Çözüm tek kaynağa bağlandı: `image_layout.dart` → `packSlot`. Görsel önce
+SATIRDA yan yana boş yer arar (satırın sağındaki koca boşluk artık
+kullanılıyor), sığmazsa satırı kapatanların en yakın altına iner. Editör de
+tuval de aynı işlevi çağırıyor. Sayfa ölçülmemişse editör artık konum YAZMAZ
+— tuval genişliği bildiği ilk karede kendisi oturtur (`_computeAutoSlots`).
+
+### Kenar çarpışması: eşik "derinlik", "mesafe" değil
+"İlk anda kenarlar çarpışsın, zorlayınca üst üste gelebilsin" isteği, parmağın
+istediği HAM kutu ile ekrandaki kutuyu ayırmayı gerektiriyor. `snapMove` her
+karede sürüklemenin BAŞLANGICINDAN yeniden hesaplar; yapışmış değer geri
+beslenseydi görsel kılavuzdan hiç kopamazdı (aynı tuzak boyutlandırmada da
+var: `_resizeRawFrac` ayrı birikiyor). Engel, komşuya girme DERİNLİĞİ
+`kImagePush` (28 dp) aşılınca kalkar: temas ettiği an durur, ısrar edilince
+geçer.
+
+### Toplu düzen değişikliği tek yazım olmalı
+"Satıra sığdır" 6 görselin konumunu birden değiştiriyor. `onChanged`i altı kez
+çağırmak altı Firestore yazımı ve altı geri-al adımı demekti;
+`NotePageCanvas.onChangedMany` → `_updateAttachments` ile hepsi tek `_mutate`.
+
+### PDF paylaşımında Notlar çıkmıyordu: SEND var, SEND_MULTIPLE yok
+Manifest'te `SEND` + `application/pdf` vardı ama Android birden çok dosya
+seçilince `ACTION_SEND_MULTIPLE` gönderiyor ve o filtre yalnız `image/*` için
+tanımlıydı. Kullanıcının ekran görüntüsündeki "3 dosya paylaşılıyor"
+levhasında Notlar bu yüzden hiç görünmüyordu. `SEND_MULTIPLE` için
+pdf/pptx ve text/* filtreleri eklendi (tür listesi yine dar — `*/*` Notlar'ı
+her dosyada çıkarırdı).
+Ayrıca belge paylaşımında not kipi artık SORULUYOR: uygulama içindeki "PDF
+ekle not al" levhasının (capture_mode_sheet) aynısı açılıyor — balonlu belge
+notu mu, klasik metin notunun eki mi. Karar eskiden sessizce veriliyordu (tek
+belge → hep balonlu, çok belge → hep metin).
+
+### Test edilemeyen ortamda test etmek
+Bu oturumda `flutter` yoktu (Linux konteyner). SDK indirilip (~1,5 GB,
+`storage.googleapis.com`, ~30 GB boş disk var) `flutter analyze` + `flutter
+test` YEREL koşuldu: 919 test yeşil. CLAUDE.md'deki "testleri koşmadan
+commit'leme" kuralı, SDK yokmuş gibi görünen ortamda da geçerli — indirmek
+5 dakika sürüyor.
+
+### Tuzak: tuvalde tek dokunuş 300 ms sonra düşer
+Görsel kutusunda `onDoubleTap` (büyük önizleme) da var; tek dokunuşun kararı
+çift dokunuş süresi dolmadan verilmiyor. Widget testinde `pumpAndSettle`
+YETMİYOR (zamanlayıcı kare zamanlamıyor) — `pump(400ms)` gerekiyor.

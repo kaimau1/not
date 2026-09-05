@@ -81,6 +81,7 @@ import 'calculator_sheet.dart';
 import 'drawing_screen.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
+import 'image_layout.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
 import '../archive_note_screen.dart';
@@ -1382,12 +1383,29 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   Attachment _placeNewImage(Attachment image, Note note) {
     const width = 0.32;
     final pageWidth = _pageBox()?.size.width ?? 0;
+    // SAYFA HENÜZ ÖLÇÜLMEDİ: dp hesabı yapılamaz, konum YAZILMAZ. Tuval
+    // genişliği bildiği ilk karede görseli boş bir yere kendisi oturtur
+    // (bkz. [packSlot]).
+    //
+    // KÖK NEDEN (kullanıcı 2026-09-05: "birden fazla görsel eklendiğinde üst
+    // üste başlıyor"): burada eski görsellerin ALTI `pageWidth * displayWidth
+    // / oran` ile ölçülüyordu. Ölçüm yokken `pageWidth` 0 olduğu için her
+    // görselin "altı" kendi tepesine eşitleniyor, yeni görsel bir öncekinin
+    // 16 dp altına — yani pratikte ÜSTÜNE — düşüyordu. Paylaşımdan gelen ve
+    // çoklu seçimle eklenen görseller tam bu yoldan geçiyor.
+    if (pageWidth <= 0) return image.copyWith(displayWidth: width);
 
-    double bottomOf(Attachment a) {
+    Rect boxOf(Attachment a) {
       final aspect = (a.width != null && a.height != null && a.height! > 0)
           ? a.width! / a.height!
           : 1.0;
-      return (a.pageY ?? 0) + (pageWidth * (a.displayWidth ?? 0.5)) / aspect;
+      final w = pageWidth * (a.displayWidth ?? 0.5);
+      return Rect.fromLTWH(
+        (a.x ?? 0.06) * pageWidth,
+        a.pageY ?? (a.y != null ? a.y! * kLegacyCanvasHeight : 0),
+        w,
+        w / aspect,
+      );
     }
 
     // İmleç yoksa GÖRÜNEN alanın tepesi (kullanıcı isteği 2026-08-09: "görsel
@@ -1396,25 +1414,37 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // metrelerce aşağısı demekti: görsel eklenince ekranda hiçbir şey
     // değişmiyor, kullanıcı "eklenmedi" sanıyordu.
     final visibleTop = _pageScroll.hasClients ? _pageScroll.offset + 24 : null;
-    final caret = _caretPageY;
-    final anchor = caret ?? visibleTop;
-    var top = anchor ?? (_bodyTop + 24);
-    for (final a in note.attachments) {
-      if (!a.floatsOnPage) continue;
-      final bottom = bottomOf(a);
-      if (anchor == null) {
-        // Ölçüm yok: sırayla altına yığ.
-        if (bottom + 16 > top) top = bottom + 16;
-      } else if (top >= (a.pageY ?? 0) - 8 && top < bottom + 16) {
-        // İmlecin satırını zaten bir görsel kaplıyor: üst üste binmesin.
-        top = bottom + 16;
-      }
-    }
-    if (top < _bodyTop) top = _bodyTop;
+    final anchor = _caretPageY ?? visibleTop ?? (_bodyTop + 24);
+    final aspect = (image.width != null &&
+            image.height != null &&
+            image.height! > 0)
+        ? image.width! / image.height!
+        : 1.0;
+    final w = pageWidth * width;
+    // Yeni görsel önce SATIRDA yan yana yer arar (0,32 genişlikle satıra üç
+    // görsel sığar), yer kalmayınca alta iner — hiçbirinin üstüne binmez.
+    final slot = packSlot(
+      occupied: [
+        for (final a in note.attachments)
+          // Konumu yazılmamış ekler tuvalde zaten otomatik yerleşiyor;
+          // onların dp kutusu burada bilinemez.
+          if (a.floatsOnPage && (a.pageY != null || a.y != null)) boxOf(a),
+      ],
+      columnWidth: pageWidth,
+      width: w,
+      height: w / aspect,
+      anchorTop: anchor,
+      topLimit: _bodyTop,
+    );
+    var top = slot.top;
     // Sayfanın altına taşmasın: içerik yüksekliğini aşarsa oraya sabitlenir.
     final pageHeight = _pageBox()?.size.height;
     if (pageHeight != null && top > pageHeight) top = pageHeight;
-    return image.copyWith(x: 0.06, pageY: top, displayWidth: width);
+    return image.copyWith(
+      x: slot.left / pageWidth,
+      pageY: top,
+      displayWidth: width,
+    );
   }
 
   /// [asFile] true ise görsel sayfaya yerleşmez, alt şeritte dosya eki olur.
@@ -2527,6 +2557,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// Bir eki (görsel) yeni değerleriyle (genişlik/hiza) değiştirir — kullanıcı
   /// görseli notta elle boyutlandırıp hizalayınca çağrılır.
+  /// Birden çok eki TEK yazımda günceller (tuvalde "satıra sığdır" ve
+  /// "boyutları eşitle"): altı görseli tek tek yazmak altı kayıt ve altı
+  /// geri-al adımı üretiyordu.
+  void _updateAttachments(List<Attachment> updated) {
+    if (updated.isEmpty) return;
+    final byId = {for (final a in updated) a.id: a};
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [for (final a in n.attachments) byId[a.id] ?? a],
+      ),
+      immediate: true,
+    );
+  }
+
   void _updateAttachment(Attachment updated) {
     _mutate(
       (n) => n.copyWith(
@@ -2771,6 +2815,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       images: imageAttachments,
       onRemove: _removeAttachment,
       onChanged: _updateAttachment,
+      onChangedMany: _updateAttachments,
       onCrop: _cropImage,
       onRotate: _rotateImage,
       onExtractText: _ocrImage,

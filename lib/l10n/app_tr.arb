@@ -1613,5 +1613,7 @@
   "tagDeleted": "Etiket kaldırıldı",
   "tagLongPressHint": "Etikete uzun bas: yeniden adlandır ya da sil.",
   "recentSearches": "Son aramalar",
-  "clearRecentSearches": "Geçmişi temizle"
+  "clearRecentSearches": "Geçmişi temizle",
+  "imagesEqualizeSize": "Boyutları eşitle",
+  "imagesFitRow": "Satıra sığdır"
 }

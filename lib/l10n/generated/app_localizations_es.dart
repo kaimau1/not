@@ -3435,4 +3435,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get clearRecentSearches => 'Geçmişi temizle';
+
+  @override
+  String get imagesEqualizeSize => 'Boyutları eşitle';
+
+  @override
+  String get imagesFitRow => 'Satıra sığdır';
 }

@@ -10,6 +10,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 import '../../../app/router.dart';
+import '../../../core/l10n_ext.dart';
+import '../presentation/capture_mode_sheet.dart';
 import '../domain/attachment.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
@@ -150,19 +152,59 @@ final shareIntakeProvider = Provider<void>((ref) {
     // an boş kalıyor ve o anki akış anlık görüntüsünde not süzgeçten
     // düşebiliyordu (bkz. NotesRepository.createNote yorumu).
     final body = bodyParts.join('\n').trim();
-    // Yalnız BİR belge paylaşıldıysa not "PDF/sunum ekle not al" tipinde
-    // doğar: editör üstte sayfa, altta o sayfanın notu olacak şekilde açılır
-    // ve belgenin üzerine balon bırakılabilir. Metin notu tipinde açılsaydı
-    // belge yalnız bir ek rozeti olurdu (kullanıcı isteği 2026-08-08: "notlarda
-    // açıp aynı şekilde düzenlemeye devam edebilmek").
-    final type = body.isEmpty && docs.length == 1
-        ? switch (shareAttachmentKind(docs.first)) {
-            AttachmentKind.pdf => NoteType.pdf,
-            AttachmentKind.slide => NoteType.slides,
-            _ => NoteType.text,
-          }
-        : NoteType.text;
+    // BELGE paylaşımında (PDF/sunum) not kipi SORULUR — uygulama içindeki
+    // "PDF ekle not al" akışının aynı levhası (kullanıcı isteği 2026-09-05:
+    // "seçenek olarak açılıp ya PDF ekle not al ile ya da direkt ek olarak
+    // ekle seçeneği ile not başlatabilmeli"). Eskiden karar sessizce
+    // veriliyordu: tek belge her zaman balonlu belge notu, birden çok belge
+    // her zaman düz metin notu — kullanıcının söz hakkı yoktu.
+    final docKind = body.isEmpty && docs.isNotEmpty
+        ? shareAttachmentKind(docs.first)
+        : null;
+    final asksMode =
+        docKind == AttachmentKind.pdf || docKind == AttachmentKind.slide;
+    // Levha uygulamanın gezinme ağacında açılır. Paylaşımla SOĞUK başlatmada
+    // gezgin henüz kurulmamış olabilir; o zaman soru sorulmaz ve eski
+    // varsayılan davranış işler.
+    final sheetContext = asksMode
+        ? ref.read(routerProvider).routerDelegate.navigatorKey.currentContext
+        : null;
+    CaptureChoice? choice;
+    if (sheetContext != null && sheetContext.mounted) {
+      choice = await showCaptureModeSheet(
+        sheetContext,
+        title: docKind == AttachmentKind.slide
+            ? sheetContext.l10n.newSlidesNote
+            : sheetContext.l10n.newPdfNote,
+      );
+      // Levha kapatıldı: paylaşımdan not oluşturulmaz (boş not bırakmayalım).
+      if (choice == null) {
+        ReceiveSharingIntent.instance.reset();
+        return;
+      }
+    }
+    // Balonlu kip: editör üstte sayfa, altta o sayfanın notu olacak şekilde
+    // açılır ve belgenin üzerine balon bırakılabilir. Klasik kipte belge
+    // sıradan bir ek olur (kullanıcı isteği 2026-08-08: "notlarda açıp aynı
+    // şekilde düzenlemeye devam edebilmek").
+    final docType = docKind == AttachmentKind.slide
+        ? NoteType.slides
+        : NoteType.pdf;
+    final type = choice != null
+        ? (choice.mode == CaptureMode.bubbles ? docType : NoteType.text)
+        // Soru sorulamadı (gezgin yok): tek belge yine belge notu açar.
+        : (body.isEmpty && docs.length == 1
+              ? switch (shareAttachmentKind(docs.first)) {
+                  AttachmentKind.pdf => NoteType.pdf,
+                  AttachmentKind.slide => NoteType.slides,
+                  _ => NoteType.text,
+                }
+              : NoteType.text);
     final id = await repo.createNote(type, body: body);
+    // Levhada yazılan ad hem notun başlığı hem de balonlu kipte üretilen
+    // belgenin dosya adı olur (bkz. capture_mode_sheet.dart).
+    final noteTitle = choice?.noteTitle ?? '';
+    if (noteTitle.isNotEmpty) repo.updateFields(id, {'title': noteTitle});
 
     final attachRepo = ref.read(attachmentRepositoryProvider);
     if (attachRepo != null) {

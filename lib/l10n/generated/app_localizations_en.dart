@@ -3417,4 +3417,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearRecentSearches => 'Clear history';
+
+  @override
+  String get imagesEqualizeSize => 'Match sizes';
+
+  @override
+  String get imagesFitRow => 'Fit to row';
 }
