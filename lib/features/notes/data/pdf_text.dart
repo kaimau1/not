@@ -30,6 +30,25 @@ class PdfText {
     }
   }
 
+  /// TEK bir sayfanın metni (1 tabanlı). Sayfaya gömülü PDF kutusunun
+  /// "sayfa metnini kopyala" işlemi bunu kullanır: bütün belgeyi çıkarmak
+  /// 300 sayfalık bir dosyada saniyeler sürer ve istenen tek sayfadır.
+  ///
+  /// Taranmış (metin katmanı olmayan) sayfada BOŞ döner — çağıran kullanıcıya
+  /// söyler; OCR yolu tam ekran görüntüleyicide.
+  static Future<String> pageText(String path, int pageNumber) async {
+    final file = File(path);
+    if (!file.existsSync()) return '';
+    final document = await PdfDocument.openFile(path);
+    try {
+      if (pageNumber < 1 || pageNumber > document.pages.length) return '';
+      final page = await document.pages[pageNumber - 1].loadText();
+      return page.fullText.trim();
+    } finally {
+      await document.dispose();
+    }
+  }
+
   /// Belgede METİN KATMANI var mı? (Yoksa çağıran OCR'a düşer.)
   ///
   /// KÖK NEDEN (donma): bu soru için ÖNCE tüm belgenin metni çıkarılıyordu —

@@ -3098,3 +3098,77 @@ değiştiren eski cihazlarda kanal adı Türkçe kalır (yeni kurulumda düzelir
   taraması: 7 bulgu — biri gerçek (bildirimler), altısı masaüstü dosya
   seçici etiketi. Ham "Türkçe harf içeren her dizgi" taraması işe yaramıyor
   (yapay zekâ istemleri bilerek Türkçe).
+
+## 2026-09-06 — Çift dokunuş yakınlaştırma, ters sayfa çevirme, sayfaya gömülü PDF
+
+### Çift dokunuş: hesap TEK yerde, kırpma ŞART
+Tam ekran görsel görüntüleyicide yakınlaştırmanın tek yolu iki parmaktı
+(kullanıcı: "görsel açılınca çift tık zoom mantığı Google fotoğraflar gibi").
+Yeni `zoom_math.dart` üç saf işlev: `zoomAt` (dokunulan noktayı YERİNDE tutar),
+`clampToViewport`, `settle`. Slayt kutusu (`ZoomBox`) da aynı işlevleri
+kullanıyor — iki ayrı kopya iki ayrı davranış demekti.
+
+**Kırpma neden şart**: `InteractiveViewer` sınırı yalnız KENDİ jestlerinde
+uyguluyor; denetleyiciye dışarıdan yazılan matriste uygulamıyor. Kenara yakın
+bir noktaya çift dokunmak görseli yarı yarıya ekran dışına itiyordu.
+
+**Tanıyıcının yeri**: çift dokunuş tanıyıcısı balon/çizim katmanlarının ATASI
+olsaydı, altındaki her tek dokunuşun kararı ~300 ms gecikirdi (2026-09-05'te
+tuvalde yaşanan tuzağın aynısı). Tanıyıcı bu yüzden görselin kendi
+katmanında — balonun KARDEŞİ, atası değil; balona dokunuş buraya hiç düşmez.
+
+### Sayfa çevirme gerçekten TERSTİ — ve düzeltmesi kırpmadan geçiyor
+Kullanıcı: "defterde sayfa çevirme animasyonu ters". Doğruydu: kural "dönen
+yaprak her zaman GELECEK sayfadır" idi. Gerçek defterde gelecek sayfa zaten
+açık sayfanın ALTINDA düz durur; hareket eden yaprak elden bırakılan ESKİ
+sayfadır. Sırttan açılıp üstüne kapanan bir yaprak tam olarak sayfayı GERİ
+çevirmenin görüntüsü — bu yüzden ileri gitmek geri gidiyormuş gibiydi.
+
+**Neden ters yapılmıştı**: `PageView` dizini BÜYÜK olan çocuğu ÜSTE çizer,
+yani doğru yaprağı (geride kalanı) döndürünce üstteki sayfa onu tümüyle
+örtüyor. Çözüm, gelecek sayfayı KIRPMAK: kalkan yaprağın perspektifle
+izdüşümü alınmış sağ kenarı (`archiveTurnEdge`) kırpma sınırı olur, iki
+katman tam kenarından dikilir. Perspektif katsayısı sayfa GENİŞLİĞİNE oranlı
+(`kArchivePerspective / genişlik`) — sabit katsayı dar ekranda cılız, geniş
+ekranda abartılı oluyor ve kırpma sınırıyla tutmuyordu.
+
+İki tuzak: (1) 90°'ye yakın yaprak cilt kenarında ince bir şerit bırakıyordu
+(2026-09-02'de de aynısı) — son %15'te kırpma sınırı sıfıra çekilerek şerit
+üstteki sayfanın altında ERİTİLİYOR; (2) ilk yaprağın altında kalkan bir
+yaprak yok, esnemede (bouncing) kırpma solda boş şerit bırakıyordu → dizin 0
+hiç kırpılmıyor.
+
+### PDF sayfaya gömülüyor: `asFile` tersine çevrilemezdi
+İstek: "PDF'yi sayfaya entegre etme, aynı görsel gibi sayfaya yerleşir ancak
+sayfa değiştirilebilir ve ek özellikler istiyorum en az 10 adet".
+
+Görselin yerini `asFile` söylüyor (false = sayfada). PDF için aynı alanı
+kullanmak imkânsızdı: var olan BÜTÜN PDF eklerinde `asFile: false` yazılı,
+anlamını değiştirmek her eski notun PDF'ini bir anda sayfanın ortasına
+taşırdı. Bu yüzden yeni alan: `Attachment.onPage` (+ `pdfPage`, `pdfTurns`,
+`pdfMarks`). Hepsi varsayılan değerdeyken kayda YAZILMIYOR — eski şema
+büyümüyor. Yeni eklenen PDF (uygulama içi ve paylaşımdan) klasik metin
+notunda sayfaya düşer; eskiler şeritteki düğmeyle taşınır.
+
+`PdfPageBox` 14 iş yapıyor: sayfa çevirme (düğme + yatay kaydırma), sayfa
+göstergesi, küçük resimli atlama levhası, kaldığı sayfayı saklama, yer
+imleri, görünümü döndürme, tam ekran (aynı sayfadan açılır ve sayfa geri
+döner), sayfa metnini kopyalama, sayfayı yakalayıp yapay zekâya sorma,
+otomatik geçiş, sayfa notu rozeti, el yazısı katmanı, ilk/son sayfa, şeride
+geri alma.
+
+**KÖK NEDEN — belge her yeniden kurulumda yeniden yükleniyordu**:
+`PdfDocumentViewBuilder` `didUpdateWidget`te dinleyicisini önce KALDIRIP
+sonra ekliyor; dinleyici sayısı sıfıra düşünce pdfrx belgeyi `autoDispose`
+ile KAPATIYOR ve hemen yeniden açıyor. Not sayfası yazarken de yeniden
+kuruluyor — yani her tuşta PDF baştan yüklenirdi. Dinleyici artık doğrudan
+kutunun State'inde duruyor (`PdfDocumentRefFile(...).resolveListenable()`),
+sayı hiç sıfıra düşmüyor.
+
+### Ortam: Flutter SÜRÜMÜ CI ile aynı olmalı
+Konteynerde flutter yoktu. Önce stable (3.47.2) indirildi ve testlerin 33'ü
+KIRMIZI geldi: pdfrx 1.3.5 yeni Dart'ın sıkılaşan null yükseltmesiyle
+derlenmiyor. CI `FLUTTER_VERSION: 3.44.6` kullanıyor (bkz. build.yml); o
+sürümle takım yeşil. Ders: SDK'yı indirirken sürümü CI'dan oku, "en son
+stable" alma — ayrıca `flutter pub get` yeni SDK'da pubspec.lock'u da
+güncelliyor (geri alındı).

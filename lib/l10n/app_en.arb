@@ -1376,5 +1376,19 @@
   "reminderDone": "Done",
   "dateToday": "Today",
   "dateTomorrow": "Tomorrow",
-  "noteDuplicatedNoAttachments": "Duplicated — attachments were not copied"
+  "noteDuplicatedNoAttachments": "Duplicated — attachments were not copied",
+  "pdfGoToPage": "Go to page",
+  "pdfThumbnails": "Browse pages",
+  "pdfBookmarks": "Bookmarks",
+  "pdfBookmarkAdd": "Add bookmark",
+  "pdfBookmarkRemove": "Remove bookmark",
+  "pdfNoBookmarks": "No bookmarks yet. Tap the bookmark button on the page bar.",
+  "pdfRotateView": "Rotate view",
+  "pdfCopyPageText": "Copy page text",
+  "pdfCapturePage": "Capture page (AI / copy)",
+  "pdfSlideshow": "Auto advance",
+  "pdfSlideshowStop": "Stop auto advance",
+  "pdfFirstPage": "First page",
+  "pdfLastPage": "Last page",
+  "pdfPlaceOnPage": "Place PDF on the page"
 }

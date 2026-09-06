@@ -6257,6 +6257,90 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kopyalandı — ekler kopyaya taşınmadı'**
   String get noteDuplicatedNoAttachments;
+
+  /// No description provided for @pdfGoToPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya git'**
+  String get pdfGoToPage;
+
+  /// No description provided for @pdfThumbnails.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfalara göz at'**
+  String get pdfThumbnails;
+
+  /// No description provided for @pdfBookmarks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yer imleri'**
+  String get pdfBookmarks;
+
+  /// No description provided for @pdfBookmarkAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yer imi koy'**
+  String get pdfBookmarkAdd;
+
+  /// No description provided for @pdfBookmarkRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yer imini kaldır'**
+  String get pdfBookmarkRemove;
+
+  /// No description provided for @pdfNoBookmarks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz yer imi yok. Sayfa çubuğundaki yer imi düğmesine dokunun.'**
+  String get pdfNoBookmarks;
+
+  /// No description provided for @pdfRotateView.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünümü döndür'**
+  String get pdfRotateView;
+
+  /// No description provided for @pdfCopyPageText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa metnini kopyala'**
+  String get pdfCopyPageText;
+
+  /// No description provided for @pdfCapturePage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfayı yakala (yapay zekâ / kopyala)'**
+  String get pdfCapturePage;
+
+  /// No description provided for @pdfSlideshow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik geçiş'**
+  String get pdfSlideshow;
+
+  /// No description provided for @pdfSlideshowStop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik geçişi durdur'**
+  String get pdfSlideshowStop;
+
+  /// No description provided for @pdfFirstPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'İlk sayfa'**
+  String get pdfFirstPage;
+
+  /// No description provided for @pdfLastPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son sayfa'**
+  String get pdfLastPage;
+
+  /// No description provided for @pdfPlaceOnPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF\'i sayfaya yerleştir'**
+  String get pdfPlaceOnPage;
 }
 
 class _AppLocalizationsDelegate

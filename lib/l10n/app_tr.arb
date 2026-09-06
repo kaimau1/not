@@ -1624,5 +1624,19 @@
   "reminderDone": "Tamamlandı",
   "dateToday": "Bugün",
   "dateTomorrow": "Yarın",
-  "noteDuplicatedNoAttachments": "Kopyalandı — ekler kopyaya taşınmadı"
+  "noteDuplicatedNoAttachments": "Kopyalandı — ekler kopyaya taşınmadı",
+  "pdfGoToPage": "Sayfaya git",
+  "pdfThumbnails": "Sayfalara göz at",
+  "pdfBookmarks": "Yer imleri",
+  "pdfBookmarkAdd": "Yer imi koy",
+  "pdfBookmarkRemove": "Yer imini kaldır",
+  "pdfNoBookmarks": "Henüz yer imi yok. Sayfa çubuğundaki yer imi düğmesine dokunun.",
+  "pdfRotateView": "Görünümü döndür",
+  "pdfCopyPageText": "Sayfa metnini kopyala",
+  "pdfCapturePage": "Sayfayı yakala (yapay zekâ / kopyala)",
+  "pdfSlideshow": "Otomatik geçiş",
+  "pdfSlideshowStop": "Otomatik geçişi durdur",
+  "pdfFirstPage": "İlk sayfa",
+  "pdfLastPage": "Son sayfa",
+  "pdfPlaceOnPage": "PDF'i sayfaya yerleştir"
 }

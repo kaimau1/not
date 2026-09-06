@@ -12,8 +12,10 @@ import '../../../../core/utils/local_file.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import 'image_layout.dart';
+import 'pdf_page_box.dart';
 import 'text_wrap.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
@@ -1043,13 +1045,25 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   }
 
   /// Görselin en-boy oranı (bilinmiyorsa kare sayılır).
-  double _aspectOf(Attachment img) =>
-      (img.width != null &&
-          img.height != null &&
-          img.width! > 0 &&
-          img.height! > 0)
-      ? img.width! / img.height!
-      : 1.0;
+  ///
+  /// PDF kutusunda GÖRÜNTÜ döndürmesi de hesaba katılır: 90°/270°'de sayfa
+  /// yan yatar, kutu da onunla birlikte yatmalı (bkz. [pdfBoxAspect]).
+  double _aspectOf(Attachment img) {
+    if (img.width == null ||
+        img.height == null ||
+        img.width! <= 0 ||
+        img.height! <= 0) {
+      return 1.0;
+    }
+    if (img.kind == AttachmentKind.pdf) {
+      return pdfBoxAspect(
+        img.width!.toDouble(),
+        img.height!.toDouble(),
+        img.pdfTurns,
+      );
+    }
+    return img.width! / img.height!;
+  }
 
   /// Genişliği yazılmamış görselin varsayılan genişlik oranı.
   ///
@@ -1228,6 +1242,20 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   List<FloatBox>? _lastFloats;
 
   void _openViewer(Attachment img) {
+    if (img.kind == AttachmentKind.pdf) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => PdfViewerScreen(
+            attachment: img,
+            initialPage: img.pdfPage,
+            onPageChanged: (p) =>
+                widget.onChanged(img.copyWith(pdfPage: p)),
+            onChanged: widget.onChanged,
+          ),
+        ),
+      );
+      return;
+    }
     if (img.kind == AttachmentKind.video) {
       Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -1250,6 +1278,24 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   /// yerinde oynayan [_VideoBox]. Videonun doğal boyutu ekte yoksa ilk
   /// çözümde kalıcılaştırılır (oran 1:1 varsayılanında kalmasın).
   Widget _boxFor(Attachment a, {BoxFit fit = BoxFit.cover}) {
+    // SAYFAYA GÖMÜLÜ PDF: görselin kutusunun belge karşılığı — sayfası
+    // çevrilebilir, yer imi konur, tam ekrana geçer (bkz. [PdfPageBox]).
+    if (a.kind == AttachmentKind.pdf) {
+      return PdfPageBox(
+        attachment: a,
+        onChanged: widget.onChanged,
+        // Büyük önizlemede de sayfa çevrilebilir (önizleme okumak için
+        // açılıyor) ama YATAY KAYDIRMA orada nottaki diğer eke geçiyor;
+        // sayfa yalnız çubuğun oklarıyla değişir.
+        swipeToTurn: fit == BoxFit.cover,
+        onDetach: widget.onDetach == null
+            ? null
+            : () {
+                _deselect();
+                widget.onDetach!(a);
+              },
+      );
+    }
     if (a.kind == AttachmentKind.video) {
       return _VideoBox(
         video: a,
@@ -1892,9 +1938,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 : (img.displayWidth ?? _defaultWFrac(cw)))
             .clamp(_minWidthFrac, 1.0)
             .toDouble();
-    // OCR ve pano kopyası görsele özgü; videoda menüde gösterilmez
-    // (taşı/boyutlandır/tam ekran/sil ve "Ek olarak taşı" ortak).
+    // OCR ve pano kopyası görsele özgü; videoda ve PDF'te menüde gösterilmez
+    // (taşı/boyutlandır/tam ekran/sil ve "Ek olarak taşı" ortak). PDF'in
+    // metni kendi kutusundaki menüden sayfa sayfa alınır — dosyanın tamamını
+    // OCR'a vermek yanlış araç olurdu (bkz. [PdfPageBox]).
     final isVideo = img.kind == AttachmentKind.video;
+    final isPdf = img.kind == AttachmentKind.pdf;
     return Positioned(
       left: 8,
       right: 8,
@@ -1913,7 +1962,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             _resizeWFrac = null;
           });
         },
-        onExtractText: widget.onExtractText == null || isVideo
+        onExtractText: widget.onExtractText == null || isVideo || isPdf
             ? null
             : () => widget.onExtractText!(img),
         onCopy: widget.onCopy == null || isVideo

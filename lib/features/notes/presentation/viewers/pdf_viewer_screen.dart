@@ -35,9 +35,23 @@ import 'pdf_selection_bar.dart';
 /// Üçü aynı anda dokunuş beklemez: çizim ya da balon bırakma açıkken metin
 /// seçimi kapanır (aksi hâlde iki katman aynı parmağı paylaşırdı).
 class PdfViewerScreen extends StatefulWidget {
-  const PdfViewerScreen({super.key, required this.attachment, this.onChanged});
+  const PdfViewerScreen({
+    super.key,
+    required this.attachment,
+    this.onChanged,
+    this.initialPage = 1,
+    this.onPageChanged,
+  });
 
   final Attachment attachment;
+
+  /// Açılışta gidilecek sayfa (1 tabanlı). Sayfaya gömülü PDF kutusu
+  /// buradan kaldığı sayfayı geçirir — tam ekran belgenin başına dönmez.
+  final int initialPage;
+
+  /// Sayfa değişince bildirir; kutu bunu ekin `pdfPage` alanına yazar, yani
+  /// tam ekranda çevrilen sayfa nota dönünce de açık kalır.
+  final ValueChanged<int>? onPageChanged;
 
   /// null ise salt görüntüleme (ör. dışa aktarma önizlemesi): çizim ve balon
   /// düzenleme kapalı, metin seçimi yine açık.
@@ -62,6 +76,10 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   final _pdf = PdfViewerController();
   final _selection = PdfSelectionState();
+
+  /// Görüntüleyicinin KENDİ sayfası: `onPageChanged` her kaydırmada gelir,
+  /// aynı sayfa iki kez bildirilmesin.
+  late int _page = widget.initialPage;
 
   /// Çizim modu ekran durumu.
   bool _editing = false;
@@ -200,6 +218,18 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           dragging: dragging,
           editable: editable,
           onSelectDragAt: _onSelectDragAt,
+          onPageChanged: (page) {
+            if (page == null || page == _page) return;
+            _page = page;
+            widget.onPageChanged?.call(page);
+          },
+          // Belge açılır açılmaz kaldığı sayfaya gider.
+          onViewerReady: (document, controller) {
+            if (widget.initialPage > 1 &&
+                widget.initialPage <= document.pages.length) {
+              controller.goToPage(pageNumber: widget.initialPage);
+            }
+          },
         );
         if (hasLocal) {
           return PdfViewer.file(

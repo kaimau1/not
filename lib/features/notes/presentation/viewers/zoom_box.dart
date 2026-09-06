@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'zoom_math.dart';
+
 /// İçeriği **çift dokunuşla** yakınlaştıran, sonra iki parmakla serbestçe
 /// yakınlaştırıp uzaklaştırılabilen kutu.
 ///
@@ -68,7 +70,7 @@ class _ZoomBoxState extends State<ZoomBox> with SingleTickerProviderStateMixin {
   }
 
   void _onMatrixChanged() {
-    final zoomed = _controller.value.getMaxScaleOnAxis() > 1.02;
+    final zoomed = isZoomed(_controller.value);
     if (zoomed == _zoomed) return;
     _zoomed = zoomed;
     widget.onZoomChanged?.call(zoomed);
@@ -84,25 +86,36 @@ class _ZoomBoxState extends State<ZoomBox> with SingleTickerProviderStateMixin {
     _anim.forward(from: 0);
   }
 
+  /// Kutunun son ölçülen boyu — çift dokunuşun sınır hesabı için.
+  Size _viewport = Size.zero;
+
   void _handleDoubleTap(TapDownDetails details) {
     if (_zoomed) {
       _animateTo(Matrix4.identity());
       return;
     }
-    // Dokunulan nokta sabit kalacak şekilde ölçekle: önce noktaya taşı,
-    // ölçekle, sonra geri taşı.
-    final scale = widget.doubleTapScale;
-    final position = details.localPosition;
+    // Dokunulan nokta sabit kalacak şekilde ölçekle; sonuç kutunun içine
+    // sıkıştırılır (kenara yakın dokunuşta boşluk açılmasın). Hesap tam
+    // ekran görsel görüntüleyicisiyle ORTAK: bkz. zoom_math.dart.
     _animateTo(
-      Matrix4.identity()
-        ..translateByDouble(position.dx, position.dy, 0, 1)
-        ..scaleByDouble(scale, scale, scale, 1)
-        ..translateByDouble(-position.dx, -position.dy, 0, 1),
+      zoomAt(
+        current: _controller.value,
+        viewportPoint: details.localPosition,
+        viewport: _viewport,
+        scale: widget.doubleTapScale,
+      ),
     );
   }
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      _viewport = constraints.biggest;
+      return _gestures();
+    },
+  );
+
+  Widget _gestures() => GestureDetector(
     // Çift dokunuşun KONUMU gerekiyor; `onDoubleTap` konum vermiyor, bu
     // yüzden `onDoubleTapDown` ile yakalanıp burada saklanıyor.
     onDoubleTapDown: widget.enabled ? _handleDoubleTap : null,

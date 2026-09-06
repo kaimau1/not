@@ -2643,46 +2643,94 @@ const double _kPageBottomGap = 120;
 /// ve bir kare için tümüyle kaybolur (göze "takılma" gibi görünür).
 const double kArchiveMaxTurn = math.pi / 2 * 0.94;
 
+/// Kalkan yaprağın perspektif katsayısı — sayfa GENİŞLİĞİNE oranlı.
+///
+/// `Matrix4..setEntry(3, 2, kArchivePerspective / genişlik)` olarak
+/// kullanılır: böylece derinlik duygusu telefon/tablet farkına bakmadan aynı
+/// kalır (sabit bir katsayı dar ekranda cılız, geniş ekranda abartılı olurdu).
+/// Değer, kalkan kenar okura yaklaşırken sayfanın sayfa kutusunun dışına
+/// belirgin biçimde taşmayacağı kadar ölçülü seçildi.
+const double kArchivePerspective = 0.15;
+
+/// Çevirmenin SON diliminde kalan ince şeridin eritildiği pay (0–1).
+/// Bkz. [archivePageTurn] — "cilt kenarındaki şerit".
+const double _kTurnTaper = 0.15;
+
 /// Bir yaprağın çevirme durumu: [t] = `yaprağın dizini - PageView konumu`.
 ///
-/// Saf işlev, çünkü defterin görsel mantığı burada: **her an yalnız BİR
-/// yaprak döner** ve o yaprak GELECEK sayfadır (`t > 0`). Geçmiş yapraklar
-/// (`t <= 0`) düz durur; menzil dışındakiler hiç çizilmez.
-({bool visible, double angle}) archivePageTurn(double t) {
+/// Saf işlev, çünkü defterin görsel mantığı burada.
+///
+/// **KÖK NEDEN — "sayfa çevirme animasyonu ters"** (kullanıcı bulgusu
+/// 2026-09-06): önceki kural "dönen yaprak her zaman GELECEK sayfadır" idi.
+/// Gerçek bir defterde ise gelecek sayfa zaten açık sayfanın ALTINDA düz
+/// durur; hareket eden yaprak, elden bırakılan ESKİ sayfadır. Gelecek
+/// sayfayı döndürmek ileri gitmeyi "geri dönüyormuş" gibi gösteriyordu —
+/// çünkü sırttan açılıp üstüne kapanan bir yaprak, tam olarak sayfayı GERİ
+/// çevirmenin görüntüsüdür.
+///
+/// Yeni kural, cildi SOLDA olan bir defterin fiziği:
+///  * Dönen yaprak **geride kalan** sayfadır (`t <= 0`): sırtından tutulup
+///    sağ kenarı kaldırılır, 0°'den [kArchiveMaxTurn]'e açılır ve altındaki
+///    sayfayı SAĞDAN SOLA doğru açığa çıkarır.
+///  * Gelecek sayfa (`0 < t < 1`) hiç dönmez; yalnız kalkan yaprağın
+///    boşalttığı şerit kadarı görünür — [revealFrom] o şeridin başladığı
+///    yerdir (sayfa genişliğinin oranı, 0 = tamamı görünür).
+///
+/// [revealFrom] neden gerekiyor: [PageView] dizini BÜYÜK olan çocuğu ÜSTE
+/// çizer, yani gelecek sayfa dönen yaprağın üstünde. Kırpılmasaydı dönen
+/// yaprak hiç görünmezdi. Kırpma sınırı yaprağın perspektifle İZDÜŞÜMÜ
+/// alınmış sağ kenarıdır: iki katman tam kenarından dikilir, aralarında ne
+/// boşluk ne bindirme kalır.
+({bool visible, double angle, double revealFrom}) archivePageTurn(double t) {
   final clamped = t.clamp(-1.0, 1.0);
-  // Tümüyle çevrilmiş ya da henüz sıra gelmemiş yaprak HİÇ çizilmez:
-  // 90°'ye yakın döndürülmüş yaprak cilt kenarında ince, açık renkli bir
-  // şerit bırakıyordu (kullanıcı bulgusu 2026-09-02).
-  if (clamped.abs() >= 0.999) return (visible: false, angle: 0.0);
-  // GEÇMİŞ yapraklar düz durur: dönen yaprağın altında, defterin açık
-  // sayfası olarak. Onları da döndürmek "ileri ve geri aynı görünüyor"
-  // hatasının ta kendisiydi.
-  if (clamped <= 0) return (visible: true, angle: 0.0);
-  return (visible: true, angle: clamped * kArchiveMaxTurn);
+  // Tümüyle çevrilmiş ya da henüz sıra gelmemiş yaprak HİÇ çizilmez.
+  if (clamped.abs() >= 0.999) {
+    return (visible: false, angle: 0.0, revealFrom: 0.0);
+  }
+  if (clamped <= 0) {
+    // GERİDE KALAN yaprak: kalkan, dönen yaprak.
+    return (
+      visible: true,
+      angle: -clamped * kArchiveMaxTurn,
+      revealFrom: 0.0,
+    );
+  }
+  // GELECEK sayfa: düz durur, üstündeki kalkan yaprak kadarı kırpılır.
+  // Kalkan yaprak bir ÖNCEKİ dizindir; onun ilerlemesi `1 - t`.
+  return (visible: true, angle: 0.0, revealFrom: archiveTurnEdge(1 - clamped));
+}
+
+/// Kalkan yaprağın izdüşümdeki sağ kenarı: ilerleme [progress] (0 = düz,
+/// 1 = tam kalkmış) için sayfa genişliğinin oranı.
+///
+/// Perspektifli dönüşte kenarın yeri `cos θ / (1 − k·sin θ)`'dir; paydadaki
+/// terim kalkan kenarın okura yaklaşıp BÜYÜMESİ. Son [_kTurnTaper] dilimde
+/// değer sıfıra çekilir: 90°'ye yakın yaprak cilt kenarında ince, açık renkli
+/// bir şerit bırakıyordu (kullanıcı bulgusu 2026-09-02) — şerit artık üstteki
+/// sayfanın altında kalarak erir, ansızın kaybolmaz.
+double archiveTurnEdge(double progress) {
+  final p = progress.clamp(0.0, 1.0);
+  final angle = p * kArchiveMaxTurn;
+  final edge =
+      math.cos(angle) / (1 - kArchivePerspective * math.sin(angle));
+  final taper = p <= 1 - _kTurnTaper ? 1.0 : (1 - p) / _kTurnTaper;
+  return (edge * taper).clamp(0.0, 1.0);
 }
 
 /// **SAYFA ÇEVİRME.** Defterin sırtı SOL kenardadır; her an YALNIZ BİR
-/// yaprak döner, altındaki sayfa düz durur.
+/// yaprak döner — elden bırakılan sayfa — altındaki sayfa düz durur.
 ///
 /// [PageView] çocuklarını kendi kaydırmasıyla yatayda kaydırır; burada o
 /// kaydırma her yaprak için GERİ ALINIR (`Transform.translate`), böylece
 /// sayfalar yan yana kaymak yerine üst üste yığılır.
 ///
-/// **KÖK NEDEN — "ileri ve geri aynı şekilde oluyor"** (kullanıcı bulgusu
-/// 2026-09-04): eski sürümde İKİ yaprak birden, birbirinin aynası olacak
-/// şekilde dönüyordu. Ekranda bir sayfa çevrilmiyor, iki yaprak akordeon
-/// gibi açılıp kapanıyordu — hangi yöne gidildiği hareketten anlaşılmıyor,
-/// üstelik `PageView` yüksek dizinli çocuğu ÜSTE çizdiği için dönen yaprak
-/// bir öbürünün altında bir üstünde kalıyordu (ekran görüntüsündeki eğik,
-/// üst üste binmiş sayfalar).
-///
-/// Yeni kural tek cümle: **dönen yaprak her zaman GELECEK sayfadır**
-/// (`t > 0`), çünkü dizini büyük olduğu için zaten üste çizilir.
-///  * İleri giderken gelecek yaprak, sırtından tutulmuş gibi 90°'den
-///    0°'ye DÜŞER; altındaki sayfa boyunca düz durur.
-///  * Geri dönerken aynı yaprak 0°'den 90°'ye KALKAR ve altındaki sayfayı
-///    açığa çıkarır.
-/// İki yön böylece birbirinin tersi ama ayırt edilebilir hâle gelir.
+/// Görsel kuralın tamamı [archivePageTurn]'de ve ölçülüyor; burada yalnız
+/// onun söylediği dönüş, kırpma ve gölgeler çiziliyor:
+///  * **Kalkan yaprak** perspektifle döner; sırta bakan yüzü koyulaşır,
+///    kalkan kenarında ince bir ışık çizgisi kalır (kâğıdın kenarı).
+///  * **Altındaki sayfa** kalkan yaprağın boşalttığı şeritten görünür ve o
+///    şeridin başında yaprağın DÜŞÜRDÜĞÜ gölge vardır: iki kâğıt böylece
+///    tek katman gibi görünmez.
 class _PageTurn extends StatelessWidget {
   const _PageTurn({
     required this.controller,
@@ -2710,14 +2758,24 @@ class _PageTurn extends StatelessWidget {
         final t = (index - position).clamp(-1.0, 1.0);
         final state = archivePageTurn(t);
         if (!state.visible) return const SizedBox.shrink();
+        // İLK yaprağın altında kalkan bir yaprak YOK: geriye doğru esneme
+        // (bouncing) sırasında `t` sıfırın üstüne çıkıyor ve kırpma sayfanın
+        // solunda boş bir şerit bırakırdı.
+        final revealFrom = index == 0 ? 0.0 : state.revealFrom;
         // Sırt SOLDA — ama sağdan sola yazılan dillerde defter de ters
         // açılır: hem `PageView`ın kaydırma yönü hem de cildin yeri döner.
         final rtl = Directionality.of(context) == TextDirection.rtl;
         final sign = rtl ? -1.0 : 1.0;
+        final width = constraints.maxWidth;
         // PageView'ın kendi kaydırmasını geri al: yapraklar üst üste yığılsın.
-        final offset = Offset(-t * constraints.maxWidth * sign, 0);
+        final offset = Offset(-t * width * sign, 0);
         if (state.angle == 0) {
-          return Transform.translate(offset: offset, child: child);
+          return Transform.translate(
+            offset: offset,
+            child: revealFrom <= 0
+                ? child
+                : _revealed(context, child!, revealFrom, rtl),
+          );
         }
         return Transform.translate(
           offset: offset,
@@ -2725,16 +2783,18 @@ class _PageTurn extends StatelessWidget {
             alignment: rtl ? Alignment.centerRight : Alignment.centerLeft,
             transform: Matrix4.identity()
               // Perspektif: kalkan kenar okura yaklaşsın, yoksa dönüş düz
-              // bir yatay ezilme gibi görünür.
-              ..setEntry(3, 2, 0.0011)
+              // bir yatay ezilme gibi görünür. Katsayı genişliğe oranlı
+              // (bkz. kArchivePerspective) — kırpma sınırı da aynı hesabı
+              // kullanıyor, iki katman ancak böyle kenarından dikiliyor.
+              ..setEntry(3, 2, width > 0 ? kArchivePerspective / width : 0.0)
               ..rotateY(state.angle * sign),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 child!,
-                // Kalkan yaprağın sırta bakan yüzü gölgelenir: altındaki
-                // sayfayla arasında derinlik olsun, iki kâğıt tek katman
-                // gibi görünmesin.
+                // Kalkan yaprağın sırta bakan yüzü gölgelenir, kalkan kenarı
+                // ışık alır: kâğıt düz bir dikdörtgen değil, kalkmış bir
+                // yüzey gibi okunsun.
                 IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -2747,10 +2807,14 @@ class _PageTurn extends StatelessWidget {
                             : Alignment.centerRight,
                         colors: [
                           Colors.black.withValues(
-                            alpha: 0.22 * (state.angle / kArchiveMaxTurn),
+                            alpha: 0.26 * (state.angle / kArchiveMaxTurn),
                           ),
                           Colors.transparent,
+                          Colors.white.withValues(
+                            alpha: 0.16 * (state.angle / kArchiveMaxTurn),
+                          ),
                         ],
+                        stops: const [0, 0.72, 1],
                       ),
                     ),
                   ),
@@ -2762,6 +2826,65 @@ class _PageTurn extends StatelessWidget {
       },
     ),
   );
+
+  /// Kalkan yaprağın altından çıkan sayfa: yalnız boşalan şerit görünür ve
+  /// şeridin başında yaprağın düşürdüğü gölge durur.
+  Widget _revealed(
+    BuildContext context,
+    Widget child,
+    double from,
+    bool rtl,
+  ) => ClipRect(
+    clipper: _RevealClipper(from: from, rtl: rtl),
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        child,
+        // Gölge şeridin BAŞINDAN içeri doğru söner: kalkan yaprak ne kadar
+        // dik durursa gölge o kadar dar ve koyu olur.
+        IgnorePointer(
+          child: FractionallySizedBox(
+            alignment: rtl ? Alignment.centerRight : Alignment.centerLeft,
+            widthFactor: (1 - from).clamp(0.0, 1.0),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: rtl ? Alignment.centerRight : Alignment.centerLeft,
+                  end: rtl ? Alignment.centerLeft : Alignment.centerRight,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.30),
+                    Colors.transparent,
+                  ],
+                  stops: const [0, 0.35],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Sayfanın yalnız [from] oranından SONRASINI gösteren kırpıcı (sağdan sola
+/// dillerde ayna görüntüsü).
+class _RevealClipper extends CustomClipper<Rect> {
+  const _RevealClipper({required this.from, required this.rtl});
+
+  /// Görünür şeridin başlangıcı — sayfa genişliğinin oranı.
+  final double from;
+  final bool rtl;
+
+  @override
+  Rect getClip(Size size) {
+    final cut = (size.width * from).clamp(0.0, size.width);
+    return rtl
+        ? Rect.fromLTWH(0, 0, size.width - cut, size.height)
+        : Rect.fromLTWH(cut, 0, size.width - cut, size.height);
+  }
+
+  @override
+  bool shouldReclip(_RevealClipper old) => old.from != from || old.rtl != rtl;
 }
 
 /// Tek bir defter YAPRAĞI: kâğıt deseni, cilt gölgesi, üstte sayfa başlığı,

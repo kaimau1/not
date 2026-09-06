@@ -214,6 +214,11 @@ bool sameRenderedNote(Note a, Note b) {
     if (x.id != y.id ||
         x.kind != y.kind ||
         x.floatsOnPage != y.floatsOnPage ||
+        // Sayfaya gömülü PDF'in GÖRÜNEN durumu: sayfa numarası, görüntü
+        // döndürmesi ve yer imleri kutuyu değiştirir (bkz. PdfPageBox).
+        x.pdfPage != y.pdfPage ||
+        x.pdfTurns != y.pdfTurns ||
+        !_sameInts(x.pdfMarks, y.pdfMarks) ||
         x.x != y.x ||
         x.pageY != y.pageY ||
         x.y != y.y ||
@@ -225,6 +230,15 @@ bool sameRenderedNote(Note a, Note b) {
         !identical(x.ink, y.ink)) {
       return false;
     }
+  }
+  return true;
+}
+
+/// İki sayı listesi aynı mı (yer imleri gibi kısa listeler için).
+bool _sameInts(List<int> a, List<int> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
   }
   return true;
 }
@@ -1381,7 +1395,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// not) eski davranışa — mevcut içeriğin altına — düşülür. Boyut küçük (%32)
   /// başlar; tam genişlik metni tümüyle aşağı iterdi.
   Attachment _placeNewImage(Attachment image, Note note) {
-    const width = 0.32;
+    // PDF kutusu GENİŞ başlar: 0,32 genişlikte bir sayfada yazı okunmuyor,
+    // kullanıcı her belgeyi elle büyütmek zorunda kalıyordu. Görselde 0,32
+    // kalıyor — satıra üç görsel sığsın (bkz. packSlot).
+    final width = image.kind == AttachmentKind.pdf ? 0.6 : 0.32;
     final pageWidth = _pageBox()?.size.width ?? 0;
     // SAYFA HENÜZ ÖLÇÜLMEDİ: dp hesabı yapılamaz, konum YAZILMAZ. Tuval
     // genişliği bildiği ilk karede görseli boş bir yere kendisi oturtur
@@ -2279,7 +2296,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               ],
             );
       _mutate(
-        (n) => n.copyWith(attachments: [...n.attachments, stored]),
+        (n) => n.copyWith(
+          attachments: [...n.attachments, _placePdf(stored, n)],
+        ),
         immediate: true,
       );
     } on FileTooLargeException catch (e) {
@@ -2557,8 +2576,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _setImageAsFile(Attachment image, bool asFile) {
     final note = _note;
     if (note == null) return;
-    final moved = image.copyWith(asFile: asFile);
+    // PDF'in sayfada olup olmadığını `asFile` DEĞİL `onPage` söyler: eski
+    // PDF eklerinin hepsinde `asFile: false` yazılı, anlamını değiştirmek
+    // onları bir anda sayfanın ortasına taşırdı (bkz. Attachment.onPage).
+    final moved = image.kind == AttachmentKind.pdf
+        ? image.copyWith(onPage: !asFile)
+        : image.copyWith(asFile: asFile);
     _updateAttachment(asFile ? moved : _placeNewImage(moved, note));
+  }
+
+  /// Yeni eklenen PDF'in yeri: klasik metin notunda SAYFAYA yerleşir (görsel
+  /// gibi — kullanıcı isteği 2026-09-06), belge notunda ise notun kendi
+  /// belgesidir ve şeritte/bölmede kalır.
+  Attachment _placePdf(Attachment pdf, Note note) {
+    if (note.type.isPageNoteType) return pdf;
+    return _placeNewImage(pdf.copyWith(onPage: true), note);
   }
 
   /// Bir eki (görsel) yeni değerleriyle (genişlik/hiza) değiştirir — kullanıcı
@@ -3376,7 +3408,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       (n) => n.copyWith(
         attachments: [
           for (final a in n.attachments)
-            if (a.floatsOnPage) a.copyWith(asFile: true) else a,
+            if (a.floatsOnPage)
+              // PDF'in yerini `onPage` söylüyor (bkz. [_setImageAsFile]);
+              // ona `asFile` yazmak kutuyu sayfada bırakırdı.
+              a.kind == AttachmentKind.pdf
+                  ? a.copyWith(onPage: false)
+                  : a.copyWith(asFile: true)
+            else
+              a,
         ],
       ),
       immediate: true,

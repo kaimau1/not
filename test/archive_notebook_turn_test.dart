@@ -8,36 +8,49 @@ import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/archive_note_screen.dart';
 
-/// **SAYFA ÇEVİRMENİN GÖRSEL MANTIĞI** (kullanıcı bulgusu 2026-09-04:
-/// "sayfa çevirirken sanki görsel mantık hatası var, ileri ve geri aynı
-/// şekilde oluyor").
+/// **SAYFA ÇEVİRMENİN GÖRSEL MANTIĞI** (kullanıcı bulgusu 2026-09-06:
+/// "defterde sayfa çevirme animasyonu ters").
 ///
-/// Eski sürümde İKİ yaprak birden, birbirinin aynası olacak biçimde
-/// dönüyordu; ekranda sayfa çevrilmiyor, iki kâğıt akordeon gibi açılıp
-/// kapanıyordu. Kural artık tek cümle ve ölçülüyor: **dönen yaprak her
-/// zaman gelecek sayfadır.**
+/// Gerçek defterde gelecek sayfa zaten AÇIK SAYFANIN ALTINDA düz durur;
+/// hareket eden yaprak elden bırakılan ESKİ sayfadır. Önceki sürüm bunun
+/// tersini yapıyordu (dönen yaprak gelecek sayfaydı) ve ileri gitmek geri
+/// dönüyormuş gibi görünüyordu. Kural artık tek cümle ve ölçülüyor: **dönen
+/// yaprak geride kalan sayfadır; gelecek sayfa yalnız boşalan şeritten
+/// görünür.**
 void main() {
   group('archivePageTurn', () {
-    test('açık sayfa (t=0) düz durur', () {
+    test('açık sayfa (t=0) düz durur ve tamamı görünür', () {
       final state = archivePageTurn(0);
       expect(state.visible, isTrue);
       expect(state.angle, 0);
+      expect(state.revealFrom, 0);
     });
 
-    test('GEÇMİŞ yapraklar düz durur — dönen yaprağın altında', () {
-      for (final t in [-0.1, -0.5, -0.9]) {
-        final state = archivePageTurn(t);
-        expect(state.visible, isTrue, reason: 't=$t görünmeli');
-        expect(state.angle, 0, reason: 't=$t dönmemeli');
-      }
-    });
-
-    test('GELECEK yaprak döner ve açı t ile büyür', () {
-      final quarter = archivePageTurn(0.25);
-      final half = archivePageTurn(0.5);
+    test('GERİDE KALAN yaprak döner ve açı t ile büyür', () {
+      final quarter = archivePageTurn(-0.25);
+      final half = archivePageTurn(-0.5);
       expect(quarter.angle, greaterThan(0));
       expect(half.angle, greaterThan(quarter.angle));
       expect(half.angle, lessThan(math.pi / 2));
+    });
+
+    test('GELECEK sayfa dönmez — yalnız boşalan şeritten görünür', () {
+      for (final t in [0.1, 0.5, 0.9]) {
+        final state = archivePageTurn(t);
+        expect(state.visible, isTrue, reason: 't=\$t görünmeli');
+        expect(state.angle, 0, reason: 't=\$t dönmemeli');
+      }
+      // Çevirme ilerledikçe (t küçüldükçe) şerit genişler: kırpma sınırı
+      // sayfanın soluna doğru kayar.
+      expect(
+        archivePageTurn(0.2).revealFrom,
+        lessThan(archivePageTurn(0.8).revealFrom),
+      );
+    });
+
+    test('çevirme başlarken gelecek sayfa TÜMÜYLE örtülü', () {
+      // t=1'e yakın: kalkan yaprak henüz düz, altındaki sayfa görünmemeli.
+      expect(archivePageTurn(0.99).revealFrom, closeTo(1, 0.01));
     });
 
     test('menzil dışındaki yapraklar HİÇ çizilmez (cilt kenarındaki şerit)', () {
@@ -54,7 +67,37 @@ void main() {
         for (var index = -1; index <= 2; index++)
           if (archivePageTurn(index - position).angle != 0) index,
       ];
-      expect(turning, [1]);
+      expect(turning, [0]);
+    });
+  });
+
+  group('archiveTurnEdge', () {
+    test('düz yaprak altındaki sayfayı TÜMÜYLE örter', () {
+      expect(archiveTurnEdge(0), closeTo(1, 0.001));
+    });
+
+    test('ilerleme boyunca tek yönlü daralır — sıçrama yok', () {
+      var previous = archiveTurnEdge(0);
+      for (var i = 1; i <= 40; i++) {
+        final value = archiveTurnEdge(i / 40);
+        expect(
+          value,
+          lessThanOrEqualTo(previous + 1e-9),
+          reason: 'ilerleme \${i / 40} sınırı geri genişletmemeli',
+        );
+        previous = value;
+      }
+    });
+
+    test('sonunda ŞERİT KALMAZ: kenar sıfıra iner', () {
+      // Cilt kenarındaki ince açık şerit hatası (2026-09-02) böyle eriyor.
+      expect(archiveTurnEdge(1), 0);
+      expect(archiveTurnEdge(0.95), lessThan(0.1));
+    });
+
+    test('menzil dışı ilerleme kırpılır', () {
+      expect(archiveTurnEdge(-1), closeTo(1, 0.001));
+      expect(archiveTurnEdge(2), 0);
     });
   });
 

@@ -3446,26 +3446,65 @@ class AppLocalizationsRu extends AppLocalizations {
   String get imagesFitSingleRow => 'Tek satıra sığdır';
 
   @override
-  String get briefingNotificationTitle =>
-      'Günaydın! ☀️';
+  String get briefingNotificationTitle => 'Günaydın! ☀️';
 
   @override
   String get briefingNotificationBody =>
       'Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.';
 
   @override
-  String get reminderDone =>
-      'Tamamlandı';
+  String get reminderDone => 'Tamamlandı';
 
   @override
-  String get dateToday =>
-      'Bugün';
+  String get dateToday => 'Bugün';
 
   @override
-  String get dateTomorrow =>
-      'Yarın';
+  String get dateTomorrow => 'Yarın';
 
   @override
   String get noteDuplicatedNoAttachments =>
       'Kopyalandı — ekler kopyaya taşınmadı';
+
+  @override
+  String get pdfGoToPage => 'Sayfaya git';
+
+  @override
+  String get pdfThumbnails => 'Sayfalara göz at';
+
+  @override
+  String get pdfBookmarks => 'Yer imleri';
+
+  @override
+  String get pdfBookmarkAdd => 'Yer imi koy';
+
+  @override
+  String get pdfBookmarkRemove => 'Yer imini kaldır';
+
+  @override
+  String get pdfNoBookmarks =>
+      'Henüz yer imi yok. Sayfa çubuğundaki yer imi düğmesine dokunun.';
+
+  @override
+  String get pdfRotateView => 'Görünümü döndür';
+
+  @override
+  String get pdfCopyPageText => 'Sayfa metnini kopyala';
+
+  @override
+  String get pdfCapturePage => 'Sayfayı yakala (yapay zekâ / kopyala)';
+
+  @override
+  String get pdfSlideshow => 'Otomatik geçiş';
+
+  @override
+  String get pdfSlideshowStop => 'Otomatik geçişi durdur';
+
+  @override
+  String get pdfFirstPage => 'İlk sayfa';
+
+  @override
+  String get pdfLastPage => 'Son sayfa';
+
+  @override
+  String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
 }

@@ -508,6 +508,10 @@ class Attachment {
     this.y,
     this.pageY,
     this.asFile = false,
+    this.onPage = false,
+    this.pdfPage = 1,
+    this.pdfTurns = 0,
+    this.pdfMarks = const [],
     this.section = '',
     this.ink = const [],
     this.bubbles = const [],
@@ -561,6 +565,32 @@ class Attachment {
   /// Görsel olmayan eklerde yok sayılır — onlar zaten hep şerittedir.
   final bool asFile;
 
+  // ── PDF SAYFAYA GÖMÜLÜNCE (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
+  // entegre etme, aynı görsel gibi sayfaya yerleşir ancak sayfa
+  // değiştirilebilir") ────────────────────────────────────────────────────
+  // Görselin `asFile`ı burada TERSİNE çalışıyor: görsel varsayılan olarak
+  // sayfada yüzer, PDF ise varsayılan olarak şeritte durur. Yeni bir alan
+  // gerekiyordu, çünkü `asFile: false` var olan bütün PDF eklerinde zaten
+  // yazılı — anlamını değiştirmek her eski notun PDF'ini bir anda sayfanın
+  // ortasına taşırdı.
+
+  /// PDF eki sayfada mı duruyor? (Görsel/videoda yok sayılır — onların yeri
+  /// [asFile] ile belirlenir.)
+  final bool onPage;
+
+  /// Sayfada gösterilen PDF sayfası (1 tabanlı). Notla birlikte senkronlanır:
+  /// belge kaldığı sayfadan açılır, öbür cihazda da aynı sayfa görünür.
+  final int pdfPage;
+
+  /// Sayfadaki PDF kutusunun görüntü döndürmesi (90°'nin katı, 0–3).
+  /// Yalnız GÖRÜNTÜyü döndürür; PDF dosyasına dokunulmaz (sayfaları kalıcı
+  /// döndürmek için sayfa yöneticisi var, bkz. `pdf_pages_screen.dart`).
+  final int pdfTurns;
+
+  /// Yer imi konan PDF sayfaları (1 tabanlı, artan). Uzun belgede "kaldığım
+  /// yerler" listesi.
+  final List<int> pdfMarks;
+
   /// ARŞİV DEFTERİNDE ekin hangi ELLE AÇILMIŞ sayfaya konduğu
   /// (bkz. `Note.archivePages`). Boş = sayfa seçilmemiş; ek o zaman türüne
   /// göre kendiliğinden dolan sayfada (Görseller / Videolar / Belgeler)
@@ -593,7 +623,9 @@ class Attachment {
   /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF/ses/sunum
   /// hiçbir zaman yüzmez.
   bool get floatsOnPage =>
-      (kind == AttachmentKind.image || kind == AttachmentKind.video) && !asFile;
+      ((kind == AttachmentKind.image || kind == AttachmentKind.video) &&
+          !asFile) ||
+      (kind == AttachmentKind.pdf && onPage);
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
   /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.
@@ -625,6 +657,10 @@ class Attachment {
     y: local.y,
     pageY: local.pageY,
     asFile: local.asFile,
+    onPage: local.onPage,
+    pdfPage: local.pdfPage,
+    pdfTurns: local.pdfTurns,
+    pdfMarks: local.pdfMarks,
   );
 
   /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
@@ -645,6 +681,10 @@ class Attachment {
     double? y,
     double? pageY,
     bool? asFile,
+    bool? onPage,
+    int? pdfPage,
+    int? pdfTurns,
+    List<int>? pdfMarks,
     String? section,
     List<InkStroke>? ink,
     List<PageBubble>? bubbles,
@@ -666,6 +706,10 @@ class Attachment {
     y: y ?? this.y,
     pageY: pageY ?? this.pageY,
     asFile: asFile ?? this.asFile,
+    onPage: onPage ?? this.onPage,
+    pdfPage: pdfPage ?? this.pdfPage,
+    pdfTurns: pdfTurns ?? this.pdfTurns,
+    pdfMarks: pdfMarks ?? this.pdfMarks,
     section: section ?? this.section,
     ink: ink ?? this.ink,
     bubbles: bubbles ?? this.bubbles,
@@ -694,6 +738,13 @@ class Attachment {
         y: (map['y'] as num?)?.toDouble(),
         pageY: (map['pageY'] as num?)?.toDouble(),
         asFile: map['asFile'] as bool? ?? false,
+        onPage: map['onPage'] as bool? ?? false,
+        pdfPage: (map['pdfPage'] as num?)?.toInt() ?? 1,
+        pdfTurns: (map['pdfTurns'] as num?)?.toInt() ?? 0,
+        pdfMarks: [
+          for (final e in (map['pdfMarks'] as List?) ?? const [])
+            (e as num).toInt(),
+        ],
         section: map['section'] as String? ?? '',
         ink: [
           for (final e in (map['ink'] as List?) ?? const [])
@@ -746,6 +797,11 @@ class Attachment {
     if (pageY != null) 'pageY': pageY,
     // Yalnız true iken yazılır: eski notların şemasına yeni bir alan eklemez.
     if (asFile) 'asFile': true,
+    // PDF sayfaya gömülüyse: aynı kural — varsayılan değerler yazılmaz.
+    if (onPage) 'onPage': true,
+    if (pdfPage > 1) 'pdfPage': pdfPage,
+    if (pdfTurns != 0) 'pdfTurns': pdfTurns,
+    if (pdfMarks.isNotEmpty) 'pdfMarks': pdfMarks,
     // Yalnız doluysa yazılır (arşiv defteri dışında hiç oluşmaz).
     if (section.isNotEmpty) 'section': section,
     if (ink.isNotEmpty) 'ink': [for (final s in ink) s.toMap()],

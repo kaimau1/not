@@ -46,7 +46,7 @@ class AttachmentStrip extends StatelessWidget {
   /// null ise düğme çizilmez (ör. belge notunda gövde metni yok).
   final ValueChanged<Attachment>? onInsertTag;
 
-  /// "Ek olarak" duran GÖRSELİ sayfaya (yüzen katmana) geri koyar.
+  /// "Ek olarak" duran GÖRSELİ (ya da PDF'i) sayfaya geri koyar.
   final ValueChanged<Attachment>? onPlaceOnPage;
 
   /// Şerit açık mı? Kapalıyken yalnız başlık satırı çizilir (tercih kalıcıdır).
@@ -259,11 +259,13 @@ class _AttachmentTile extends ConsumerWidget {
 
   bool get _hasLocal => localFileExists(attachment.localPath);
 
-  /// Yalnız "ek olarak" işaretlenmiş GÖRSEL ya da VİDEO sayfaya geri
-  /// konabilir (video da sayfada olduğu yerde oynar).
+  /// Sayfaya konabilen ekler: GÖRSEL, VİDEO (olduğu yerde oynar) ve PDF
+  /// (kullanıcı isteği 2026-09-06 — sayfada sayfası çevrilen bir kutu olur,
+  /// bkz. `PdfPageBox`).
   bool get _canPlaceOnPage =>
       attachment.kind == AttachmentKind.image ||
-      attachment.kind == AttachmentKind.video;
+      attachment.kind == AttachmentKind.video ||
+      attachment.kind == AttachmentKind.pdf;
 
   void _open(BuildContext context) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
@@ -555,7 +557,9 @@ class _AttachmentTile extends ConsumerWidget {
                   ),
                 if (onPlaceOnPage != null && _canPlaceOnPage)
                   IconButton(
-                    tooltip: context.l10n.moveImageToPage,
+                    tooltip: attachment.kind == AttachmentKind.pdf
+                        ? context.l10n.pdfPlaceOnPage
+                        : context.l10n.moveImageToPage,
                     visualDensity: VisualDensity.compact,
                     icon: const Icon(Icons.image_outlined, size: 16),
                     color: Colors.white,

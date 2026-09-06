@@ -3433,26 +3433,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String get imagesFitSingleRow => 'Fit in one row';
 
   @override
-  String get briefingNotificationTitle =>
-      'Good morning! ☀️';
+  String get briefingNotificationTitle => 'Good morning! ☀️';
 
   @override
   String get briefingNotificationBody =>
       'Today\'s briefing is ready — tap for a summary of your reminders, notes and important emails.';
 
   @override
-  String get reminderDone =>
-      'Done';
+  String get reminderDone => 'Done';
 
   @override
-  String get dateToday =>
-      'Today';
+  String get dateToday => 'Today';
 
   @override
-  String get dateTomorrow =>
-      'Tomorrow';
+  String get dateTomorrow => 'Tomorrow';
 
   @override
   String get noteDuplicatedNoAttachments =>
       'Duplicated — attachments were not copied';
+
+  @override
+  String get pdfGoToPage => 'Go to page';
+
+  @override
+  String get pdfThumbnails => 'Browse pages';
+
+  @override
+  String get pdfBookmarks => 'Bookmarks';
+
+  @override
+  String get pdfBookmarkAdd => 'Add bookmark';
+
+  @override
+  String get pdfBookmarkRemove => 'Remove bookmark';
+
+  @override
+  String get pdfNoBookmarks =>
+      'No bookmarks yet. Tap the bookmark button on the page bar.';
+
+  @override
+  String get pdfRotateView => 'Rotate view';
+
+  @override
+  String get pdfCopyPageText => 'Copy page text';
+
+  @override
+  String get pdfCapturePage => 'Capture page (AI / copy)';
+
+  @override
+  String get pdfSlideshow => 'Auto advance';
+
+  @override
+  String get pdfSlideshowStop => 'Stop auto advance';
+
+  @override
+  String get pdfFirstPage => 'First page';
+
+  @override
+  String get pdfLastPage => 'Last page';
+
+  @override
+  String get pdfPlaceOnPage => 'Place PDF on the page';
 }

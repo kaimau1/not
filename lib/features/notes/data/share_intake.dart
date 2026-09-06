@@ -277,7 +277,16 @@ final shareIntakeProvider = Provider<void>((ref) {
                       InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
                   ],
                 );
-          prepared.add(stored);
+          // KLASİK metin notunda PDF de SAYFAYA yerleşir (kullanıcı isteği
+          // 2026-09-06): uygulama içinden eklenen PDF ile paylaşımdan gelen
+          // PDF aynı yere düşsün. Konum yazılmaz — tuval sayfa genişliğini
+          // bildiği ilk karede boş bir yere kendisi oturtur (bkz. packSlot).
+          // Belge (balonlu) notunda PDF notun KENDİSİdir; oraya konmaz.
+          prepared.add(
+            kind == AttachmentKind.pdf && type == NoteType.text
+                ? stored.copyWith(onPage: true)
+                : stored,
+          );
         } catch (_) {
           // Tek dosya okunamazsa/çok büyükse not yine oluşsun.
         }

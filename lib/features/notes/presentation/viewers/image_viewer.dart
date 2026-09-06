@@ -15,6 +15,7 @@ import 'area_select.dart';
 import 'image_crop.dart';
 import 'ink_layer.dart';
 import 'text_recognize_screen.dart';
+import 'zoom_math.dart';
 
 /// Tam ekran görsel görüntüleyici (yakınlaştırma/kaydırma destekli).
 ///
@@ -185,7 +186,8 @@ class _ImageViewerPage extends StatefulWidget {
   State<_ImageViewerPage> createState() => _ImageViewerPageState();
 }
 
-class _ImageViewerPageState extends State<_ImageViewerPage> {
+class _ImageViewerPageState extends State<_ImageViewerPage>
+    with SingleTickerProviderStateMixin {
   /// EKRANIN GÖSTERDİĞİ ek. Döndürme dosyayı yeniden yazdığı için
   /// `_attachment` o andan sonra bayat: boyutlar takas olmuş, bulut
   /// kopyası silinmiş olur. Yerel kopya döndürme sonrası tazelenir.
@@ -215,6 +217,21 @@ class _ImageViewerPageState extends State<_ImageViewerPage> {
   final _zoom = TransformationController();
   bool _editing = false;
 
+  // ── ÇİFT DOKUNUŞLA YAKINLAŞTIRMA (Google Fotoğraflar mantığı) ──────────
+  // Kullanıcı isteği 2026-09-06: "görsel açılınca çift tık zoom mantığı
+  // Google fotoğraflar gibi". Tam ekran görüntüleyicide yakınlaştırmanın TEK
+  // yolu iki parmaktı; tek elle telefon tutan kullanıcı için çift dokunuş
+  // (dokunulan noktaya, animasyonlu) beklenen davranış. Hesap tek yerde:
+  // bkz. zoom_math.dart — slayt kutusu ([ZoomBox]) da aynı işlevleri kullanır.
+  late final AnimationController _zoomAnim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
+  Animation<Matrix4>? _zoomTween;
+
+  /// Görselin en son ölçülen kutusu (dp) — çift dokunuşun sınır hesabı için.
+  Size _viewport = Size.zero;
+
   @override
   void initState() {
     super.initState();
@@ -222,6 +239,49 @@ class _ImageViewerPageState extends State<_ImageViewerPage> {
     // ekranı yeniden kurmadan değişebiliyor, o yüzden dinlenir.
     _zoom.addListener(_syncSwipeLock);
     _bubbles.addListener(_syncSwipeLock);
+    _zoomAnim.addListener(() {
+      final tween = _zoomTween;
+      if (tween != null) _zoom.value = tween.value;
+    });
+  }
+
+  /// Matrisi animasyonla [target]'a götürür: ani sıçrama görselde nerede
+  /// olunduğunu kaybettirir.
+  void _animateZoomTo(Matrix4 target) {
+    _zoomTween = Matrix4Tween(begin: _zoom.value, end: target).animate(
+      CurvedAnimation(parent: _zoomAnim, curve: Curves.easeOutCubic),
+    );
+    _zoomAnim.forward(from: 0);
+  }
+
+  /// Çift dokunuş: yakınsa SIĞDIR'a döner, değilse dokunulan noktaya
+  /// yakınlaşır. Dokunuş görselin KENDİ (ölçeklenmemiş) uzayında geldiği
+  /// için önce ekran uzayına çevrilir.
+  void _handleDoubleTap(TapDownDetails details) {
+    if (_viewport.isEmpty) return;
+    if (isZoomed(_zoom.value)) {
+      _animateZoomTo(Matrix4.identity());
+      return;
+    }
+    _animateZoomTo(
+      zoomAt(
+        current: _zoom.value,
+        viewportPoint: MatrixUtils.transformPoint(
+          _zoom.value,
+          details.localPosition,
+        ),
+        viewport: _viewport,
+      ),
+    );
+  }
+
+  /// İki parmak bırakılınca: sınırın altına inen ölçek sığdır hâline geri
+  /// yaylanır, kenarda açılan boşluk kapanır (yine Google Fotoğraflar).
+  void _settleZoom() {
+    if (_viewport.isEmpty || _editing) return;
+    final settled = settle(_zoom.value, _viewport);
+    if (settled == _zoom.value) return;
+    _animateZoomTo(settled);
   }
 
   @override
@@ -297,6 +357,7 @@ class _ImageViewerPageState extends State<_ImageViewerPage> {
     _bubbles.removeListener(_syncSwipeLock);
     _ink.dispose();
     _bubbles.dispose();
+    _zoomAnim.dispose();
     _zoom.dispose();
     super.dispose();
   }
@@ -609,36 +670,60 @@ class _ImageViewerPageState extends State<_ImageViewerPage> {
       // çizer, iki parmak yakınlaştırma/kaydırmayı InkNavLayer matrise
       // uygular (IV iki parmağın birlikte hareketini "pan" sayıp
       // panEnabled:false'ta yutuyor — bkz. ink_layer.dart).
-      child: InkNavLayer(
-        enabled: _editing,
-        controller: _ink,
-        getMatrix: () => _zoom.value,
-        setMatrix: (m) => _zoom.value = m,
-        minScale: 1,
-        maxScale: 8,
-        clampToBounds: true,
-        child: InteractiveViewer(
-          transformationController: _zoom,
-          maxScale: 8,
-          panEnabled: !_editing,
-          scaleEnabled: !_editing,
-          child: Stack(
-            children: [
-              Positioned.fill(child: image),
-              Positioned.fill(child: InkPageLayer(controller: _ink, page: 1)),
-              // Metin katmanı görselin KUTUSUYLA aynı: konumlar sayfa
-              // oranı olduğu için yakınlaştırmada da yerinde kalır
-              // (çizim katmanıyla aynı gerekçe). Görsel tek sayfa.
-              Positioned.fill(
-                child: BubblePageLayer(
-                  controller: _bubbles,
-                  page: 1,
-                  readOnly: widget.onChanged == null,
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          _viewport = constraints.biggest;
+          return InkNavLayer(
+            enabled: _editing,
+            controller: _ink,
+            getMatrix: () => _zoom.value,
+            setMatrix: (m) => _zoom.value = m,
+            minScale: 1,
+            maxScale: 8,
+            clampToBounds: true,
+            child: InteractiveViewer(
+              transformationController: _zoom,
+              maxScale: 8,
+              panEnabled: !_editing,
+              scaleEnabled: !_editing,
+              // İki parmak bırakılınca sınırlar yerine oturur.
+              onInteractionEnd: (_) => _settleZoom(),
+              child: Stack(
+                children: [
+                  // ÇİFT DOKUNUŞ EN ALT KATMANDA — üstündeki balon/çizim
+                  // katmanlarını SARMADAN. Çift dokunuş tanıyıcısı bir ATA
+                  // olsaydı, altındaki her tek dokunuşun kararı ~300 ms
+                  // gecikirdi (aynı tuzak tuvalde de yaşandı, bkz. HAFIZA
+                  // 2026-09-05): balona dokunmak "takılıyor" gibi görünürdü.
+                  // Kardeş olduğu için balonun dokunuşu buraya hiç düşmez.
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onDoubleTapDown: _handleDoubleTap,
+                      // Konum yalnız `onDoubleTapDown` ile geliyor; tanıyıcı
+                      // ancak `onDoubleTap` da verilince kurulur.
+                      onDoubleTap: () {},
+                      child: image,
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: InkPageLayer(controller: _ink, page: 1),
+                  ),
+                  // Metin katmanı görselin KUTUSUYLA aynı: konumlar sayfa
+                  // oranı olduğu için yakınlaştırmada da yerinde kalır
+                  // (çizim katmanıyla aynı gerekçe). Görsel tek sayfa.
+                  Positioned.fill(
+                    child: BubblePageLayer(
+                      controller: _bubbles,
+                      page: 1,
+                      readOnly: widget.onChanged == null,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     ),
   );
