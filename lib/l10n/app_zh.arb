@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "一起写",
   "loginFeatureShareBody": "与好友实时共享笔记和文件夹。",
   "loginFeatureInkTitle": "手写笔与 PDF",
-  "loginFeatureInkBody": "手写记笔记，在 PDF 和幻灯片上书写。"
+  "loginFeatureInkBody": "手写记笔记，在 PDF 和幻灯片上书写。",
+  "foldersTitle": "文件夹",
+  "foldersEmpty": "还没有文件夹。创建一个来整理笔记。"
 }

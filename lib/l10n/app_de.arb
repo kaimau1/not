@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Gemeinsam schreiben",
   "loginFeatureShareBody": "Notizen und Ordner live mit Freunden teilen.",
   "loginFeatureInkTitle": "Stift und PDF",
-  "loginFeatureInkBody": "Handschriftlich notieren, auf PDFs und Folien schreiben."
+  "loginFeatureInkBody": "Handschriftlich notieren, auf PDFs und Folien schreiben.",
+  "foldersTitle": "Ordner",
+  "foldersEmpty": "Noch keine Ordner. Erstelle einen, um deine Notizen zu ordnen."
 }

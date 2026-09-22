@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "साथ मिलकर लिखें",
   "loginFeatureShareBody": "नोट्स और फ़ोल्डर दोस्तों के साथ लाइव साझा करें।",
   "loginFeatureInkTitle": "पेन और PDF",
-  "loginFeatureInkBody": "हाथ से नोट लें, PDF और स्लाइड पर लिखें।"
+  "loginFeatureInkBody": "हाथ से नोट लें, PDF और स्लाइड पर लिखें।",
+  "foldersTitle": "फ़ोल्डर",
+  "foldersEmpty": "अभी कोई फ़ोल्डर नहीं। नोट्स व्यवस्थित करने के लिए एक बनाएँ।"
 }

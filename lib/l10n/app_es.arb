@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Escribid juntos",
   "loginFeatureShareBody": "Comparte notas y carpetas en vivo con amigos.",
   "loginFeatureInkTitle": "Lápiz y PDF",
-  "loginFeatureInkBody": "Toma notas a mano, escribe sobre PDF y diapositivas."
+  "loginFeatureInkBody": "Toma notas a mano, escribe sobre PDF y diapositivas.",
+  "foldersTitle": "Carpetas",
+  "foldersEmpty": "Aún no hay carpetas. Crea una para organizar tus notas."
 }

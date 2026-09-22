@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Piszcie razem",
   "loginFeatureShareBody": "Udostępniaj notatki i foldery znajomym na żywo.",
   "loginFeatureInkTitle": "Pióro i PDF",
-  "loginFeatureInkBody": "Notuj odręcznie, pisz na PDF-ach i slajdach."
+  "loginFeatureInkBody": "Notuj odręcznie, pisz na PDF-ach i slajdach.",
+  "foldersTitle": "Foldery",
+  "foldersEmpty": "Brak folderów. Utwórz folder, aby uporządkować notatki."
 }

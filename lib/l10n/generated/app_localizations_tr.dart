@@ -3606,4 +3606,11 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'El yazısıyla not al, PDF ve slaytların üstüne yaz.';
+
+  @override
+  String get foldersTitle => 'Klasörler';
+
+  @override
+  String get foldersEmpty =>
+      'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.';
 }

@@ -10,6 +10,8 @@ import '../features/ai/presentation/briefing_screen.dart';
 import '../features/ai/presentation/chat_screen.dart';
 import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_screen.dart';
+import '../features/folders/presentation/folders_screen.dart';
+import '../features/inbox/presentation/inbox_screen.dart';
 import '../features/notes/data/notes_repository.dart';
 import '../features/notes/domain/note_type.dart';
 import '../features/notes/presentation/archive_note_screen.dart';
@@ -168,6 +170,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/trash',
             builder: (context, state) => const TrashScreen(),
+          ),
+          // Geniş ekran rayının iki bölümü (bkz. AppSection); telefonda
+          // eskisi gibi ⋮ menüsünden/raftan açılırlar.
+          GoRoute(
+            path: '/folders',
+            builder: (context, state) => const FoldersScreen(),
+          ),
+          GoRoute(
+            path: '/inbox',
+            builder: (context, state) => const InboxScreen(),
           ),
         ],
       ),

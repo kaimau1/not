@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "함께 쓰기",
   "loginFeatureShareBody": "메모와 폴더를 친구와 실시간으로 공유하세요.",
   "loginFeatureInkTitle": "펜과 PDF",
-  "loginFeatureInkBody": "손글씨로 메모하고 PDF와 슬라이드에 쓰세요."
+  "loginFeatureInkBody": "손글씨로 메모하고 PDF와 슬라이드에 쓰세요.",
+  "foldersTitle": "폴더",
+  "foldersEmpty": "아직 폴더가 없습니다. 폴더를 만들어 메모를 정리하세요."
 }

@@ -3624,4 +3624,11 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Tulis tangan, beri catatan di PDF dan slide.';
+
+  @override
+  String get foldersTitle => 'Folder';
+
+  @override
+  String get foldersEmpty =>
+      'Belum ada folder. Buat folder untuk mengatur catatan Anda.';
 }

@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Menulis bersama",
   "loginFeatureShareBody": "Bagikan catatan dan folder secara langsung dengan teman.",
   "loginFeatureInkTitle": "Pena dan PDF",
-  "loginFeatureInkBody": "Tulis tangan, beri catatan di PDF dan slide."
+  "loginFeatureInkBody": "Tulis tangan, beri catatan di PDF dan slide.",
+  "foldersTitle": "Folder",
+  "foldersEmpty": "Belum ada folder. Buat folder untuk mengatur catatan Anda."
 }

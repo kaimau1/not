@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Samen schrijven",
   "loginFeatureShareBody": "Deel notities en mappen live met vrienden.",
   "loginFeatureInkTitle": "Pen en PDF",
-  "loginFeatureInkBody": "Maak handgeschreven notities, schrijf op PDF's en dia's."
+  "loginFeatureInkBody": "Maak handgeschreven notities, schrijf op PDF's en dia's.",
+  "foldersTitle": "Mappen",
+  "foldersEmpty": "Nog geen mappen. Maak er een om je notities te ordenen."
 }

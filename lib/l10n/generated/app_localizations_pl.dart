@@ -3625,4 +3625,11 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Notuj odręcznie, pisz na PDF-ach i slajdach.';
+
+  @override
+  String get foldersTitle => 'Foldery';
+
+  @override
+  String get foldersEmpty =>
+      'Brak folderów. Utwórz folder, aby uporządkować notatki.';
 }

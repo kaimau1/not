@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Escrevam juntos",
   "loginFeatureShareBody": "Compartilhe notas e pastas ao vivo com amigos.",
   "loginFeatureInkTitle": "Caneta e PDF",
-  "loginFeatureInkBody": "Faça anotações à mão, escreva sobre PDFs e slides."
+  "loginFeatureInkBody": "Faça anotações à mão, escreva sobre PDFs e slides.",
+  "foldersTitle": "Pastas",
+  "foldersEmpty": "Nenhuma pasta ainda. Crie uma para organizar suas notas."
 }

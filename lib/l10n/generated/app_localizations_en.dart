@@ -3605,4 +3605,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Take handwritten notes, write on PDFs and slides.';
+
+  @override
+  String get foldersTitle => 'Folders';
+
+  @override
+  String get foldersEmpty =>
+      'No folders yet. Create one to organize your notes.';
 }

@@ -3558,4 +3558,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get loginFeatureInkBody => '手書きでメモし、PDF やスライドに書き込み。';
+
+  @override
+  String get foldersTitle => 'フォルダ';
+
+  @override
+  String get foldersEmpty => 'フォルダはまだありません。作成してメモを整理しましょう。';
 }

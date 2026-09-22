@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "اكتبوا معًا",
   "loginFeatureShareBody": "شارك الملاحظات والمجلدات مع أصدقائك مباشرة.",
   "loginFeatureInkTitle": "القلم وPDF",
-  "loginFeatureInkBody": "دوّن بخط اليد واكتب على ملفات PDF والشرائح."
+  "loginFeatureInkBody": "دوّن بخط اليد واكتب على ملفات PDF والشرائح.",
+  "foldersTitle": "المجلدات",
+  "foldersEmpty": "لا توجد مجلدات بعد. أنشئ مجلدًا لتنظيم ملاحظاتك."
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/l10n_ext.dart';
 import '../features/friends/presentation/friends_screen.dart';
+import '../features/inbox/data/inbox_repository.dart';
 import '../features/settings/settings_providers.dart';
 import 'app_commands.dart';
 import 'split_shell.dart';
@@ -119,104 +120,140 @@ class _AppRail extends ConsumerWidget {
     final extended =
         ref.watch(railExtendedProvider) ?? width >= kRailAutoExtendBreakpoint;
     final collapsed = ref.watch(listPaneCollapsedProvider);
+    final inboxCount = ref.watch(
+      inboxNotesProvider.select((a) => a.value?.length ?? 0),
+    );
 
     return ColoredBox(
       color: scheme.surfaceContainerLow,
       child: SafeArea(
         right: false,
-        child: Column(
-          children: [
-            Expanded(
-              // Konum imperatif push'larla da değişir; ray yönlendiricinin
-              // kendisini dinler (ShellRoute builder'ı alt rotanın tam yolunu
-              // vermiyor — bkz. SplitShell notu).
-              child: ListenableBuilder(
-                listenable: router.routerDelegate,
-                builder: (context, _) {
-                  final section = AppSection.of(currentLocation(router));
-                  return NavigationRail(
-                    backgroundColor: Colors.transparent,
-                    extended: extended,
-                    minExtendedWidth: 220,
-                    labelType: extended
-                        ? NavigationRailLabelType.none
-                        : NavigationRailLabelType.all,
-                    selectedIndex: section?.index,
-                    groupAlignment: -0.85,
-                    onDestinationSelected: (i) =>
-                        openSection(router, AppSection.values[i]),
-                    leading: Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 12),
-                      child: extended
-                          ? FloatingActionButton.extended(
-                              heroTag: 'rail-new-note',
-                              elevation: 0,
-                              onPressed: () => createAndOpenNote(ref, router),
-                              icon: const Icon(Icons.edit_outlined),
-                              label: Text(l10n.newNoteShort),
-                            )
-                          : FloatingActionButton(
-                              heroTag: 'rail-new-note',
-                              elevation: 0,
-                              tooltip: '${l10n.newNoteShort} (Ctrl+N)',
-                              onPressed: () => createAndOpenNote(ref, router),
-                              child: const Icon(Icons.edit_outlined),
+        // KAYDIRILABİLİR: sekiz bölüm + alt düğmeler küçük tabletin yatayına
+        // (~600 dp boy) sığmıyor. Yer varken düğmeler dibe yaslanır
+        // (minHeight + IntrinsicHeight), yetmezse ray bütünüyle kayar.
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  children: [
+                    Expanded(
+                      // Konum imperatif push'larla da değişir; ray yönlendiricinin
+                      // kendisini dinler (ShellRoute builder'ı alt rotanın tam yolunu
+                      // vermiyor — bkz. SplitShell notu).
+                      child: ListenableBuilder(
+                        listenable: router.routerDelegate,
+                        builder: (context, _) {
+                          final section = AppSection.of(
+                            currentLocation(router),
+                          );
+                          return NavigationRail(
+                            backgroundColor: Colors.transparent,
+                            extended: extended,
+                            minExtendedWidth: 220,
+                            labelType: extended
+                                ? NavigationRailLabelType.none
+                                : NavigationRailLabelType.all,
+                            selectedIndex: section?.index,
+                            groupAlignment: -0.85,
+                            onDestinationSelected: (i) =>
+                                openSection(router, AppSection.values[i]),
+                            leading: Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8,
+                                bottom: 12,
+                              ),
+                              child: extended
+                                  ? FloatingActionButton.extended(
+                                      heroTag: 'rail-new-note',
+                                      elevation: 0,
+                                      onPressed: () =>
+                                          createAndOpenNote(ref, router),
+                                      icon: const Icon(Icons.edit_outlined),
+                                      label: Text(l10n.newNoteShort),
+                                    )
+                                  : FloatingActionButton(
+                                      heroTag: 'rail-new-note',
+                                      elevation: 0,
+                                      tooltip: '${l10n.newNoteShort} (Ctrl+N)',
+                                      onPressed: () =>
+                                          createAndOpenNote(ref, router),
+                                      child: const Icon(Icons.edit_outlined),
+                                    ),
                             ),
+                            destinations: [
+                              for (final s in AppSection.values)
+                                NavigationRailDestination(
+                                  // Gelen notlarda bekleyen sayısı: rayda göz önünde
+                                  // dursun, menüye girmeden görülsün.
+                                  icon: Badge(
+                                    isLabelVisible:
+                                        s == AppSection.inbox && inboxCount > 0,
+                                    label: Text('$inboxCount'),
+                                    child: Icon(s.icon),
+                                  ),
+                                  selectedIcon: Icon(s.selectedIcon),
+                                  label: Text(s.label(context)),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
-                    destinations: [
-                      for (final s in AppSection.values)
-                        NavigationRailDestination(
-                          icon: Icon(s.icon),
-                          selectedIcon: Icon(s.selectedIcon),
-                          label: Text(s.label(context)),
-                        ),
-                    ],
-                  );
-                },
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (showListToggle)
+                            _RailAction(
+                              extended: extended,
+                              selected: collapsed,
+                              icon: collapsed
+                                  ? Icons.view_sidebar
+                                  : Icons.view_sidebar_outlined,
+                              label: collapsed
+                                  ? l10n.listPaneShow
+                                  : l10n.listPaneHide,
+                              shortcut: 'Ctrl+\\',
+                              onPressed: () => ref
+                                  .read(listPaneCollapsedProvider.notifier)
+                                  .toggle(),
+                            ),
+                          _RailAction(
+                            extended: extended,
+                            icon: Icons.people_alt_outlined,
+                            label: l10n.friendsTitle,
+                            onPressed: () =>
+                                openFriendsScreenOrExplain(context, ref),
+                          ),
+                          _RailAction(
+                            extended: extended,
+                            icon: Icons.keyboard_outlined,
+                            label: l10n.keyboardShortcuts,
+                            shortcut: 'Ctrl+/',
+                            onPressed: () => showShortcutsHelp(context),
+                          ),
+                          _RailAction(
+                            extended: extended,
+                            icon: extended ? Icons.menu_open : Icons.menu,
+                            label: extended
+                                ? l10n.railCollapse
+                                : l10n.railExpand,
+                            onPressed: () => ref
+                                .read(railExtendedProvider.notifier)
+                                .set(!extended),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (showListToggle)
-                    _RailAction(
-                      extended: extended,
-                      selected: collapsed,
-                      icon: collapsed
-                          ? Icons.view_sidebar
-                          : Icons.view_sidebar_outlined,
-                      label: collapsed ? l10n.listPaneShow : l10n.listPaneHide,
-                      shortcut: 'Ctrl+\\',
-                      onPressed: () =>
-                          ref.read(listPaneCollapsedProvider.notifier).toggle(),
-                    ),
-                  _RailAction(
-                    extended: extended,
-                    icon: Icons.people_alt_outlined,
-                    label: l10n.friendsTitle,
-                    onPressed: () => openFriendsScreenOrExplain(context, ref),
-                  ),
-                  _RailAction(
-                    extended: extended,
-                    icon: Icons.keyboard_outlined,
-                    label: l10n.keyboardShortcuts,
-                    shortcut: 'Ctrl+/',
-                    onPressed: () => showShortcutsHelp(context),
-                  ),
-                  _RailAction(
-                    extended: extended,
-                    icon: extended ? Icons.menu_open : Icons.menu,
-                    label: extended ? l10n.railCollapse : l10n.railExpand,
-                    onPressed: () =>
-                        ref.read(railExtendedProvider.notifier).set(!extended),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

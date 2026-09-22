@@ -31,9 +31,13 @@ class _Counter extends Notifier<int> {
   void request() => state++;
 }
 
-/// Rayın bölümleri. Sıra rayın ve Alt+1…6 kısayollarının sırasıdır.
+/// Rayın bölümleri. Sıra rayın ve Alt+1…8 kısayollarının sırasıdır.
+///
+/// Klasörler ve Gelen notlar 2026-09-22'de eklendi (kullanıcı: "eklensin").
 enum AppSection {
   notes('/', Icons.sticky_note_2_outlined, Icons.sticky_note_2),
+  folders('/folders', Icons.folder_outlined, Icons.folder),
+  inbox('/inbox', Icons.move_to_inbox_outlined, Icons.move_to_inbox),
   ai('/ai', Icons.auto_awesome_outlined, Icons.auto_awesome),
   reminders('/reminders', Icons.alarm_outlined, Icons.alarm),
   archive('/archive', Icons.archive_outlined, Icons.archive),
@@ -50,6 +54,8 @@ enum AppSection {
     final l10n = context.l10n;
     return switch (this) {
       AppSection.notes => l10n.navNotes,
+      AppSection.folders => l10n.foldersTitle,
+      AppSection.inbox => l10n.inboxTitle,
       AppSection.ai => l10n.aiHubTitle,
       AppSection.reminders => l10n.remindersTitle,
       AppSection.archive => l10n.archiveTitle,
@@ -146,7 +152,7 @@ List<({String keys, String label})> shortcutHelpRows(BuildContext context) {
     (keys: 'Ctrl + K', label: l10n.shortcutSearch),
     (keys: 'Ctrl + \\', label: l10n.shortcutToggleList),
     (keys: 'Ctrl + ,', label: l10n.settings),
-    (keys: 'Alt + 1…6', label: l10n.shortcutSections),
+    (keys: 'Alt + 1…8', label: l10n.shortcutSections),
     (keys: 'Ctrl + /', label: l10n.shortcutHelp),
   ];
 }
@@ -252,4 +258,6 @@ const _digitKeys = [
   LogicalKeyboardKey.digit4,
   LogicalKeyboardKey.digit5,
   LogicalKeyboardKey.digit6,
+  LogicalKeyboardKey.digit7,
+  LogicalKeyboardKey.digit8,
 ];

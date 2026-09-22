@@ -3631,4 +3631,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Handschriftlich notieren, auf PDFs und Folien schreiben.';
+
+  @override
+  String get foldersTitle => 'Ordner';
+
+  @override
+  String get foldersEmpty =>
+      'Noch keine Ordner. Erstelle einen, um deine Notizen zu ordnen.';
 }

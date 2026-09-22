@@ -3623,4 +3623,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Toma notas a mano, escribe sobre PDF y diapositivas.';
+
+  @override
+  String get foldersTitle => 'Carpetas';
+
+  @override
+  String get foldersEmpty =>
+      'Aún no hay carpetas. Crea una para organizar tus notas.';
 }

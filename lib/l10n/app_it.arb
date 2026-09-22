@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Scrivete insieme",
   "loginFeatureShareBody": "Condividi note e cartelle in tempo reale con gli amici.",
   "loginFeatureInkTitle": "Penna e PDF",
-  "loginFeatureInkBody": "Prendi appunti a mano, scrivi su PDF e diapositive."
+  "loginFeatureInkBody": "Prendi appunti a mano, scrivi su PDF e diapositive.",
+  "foldersTitle": "Cartelle",
+  "foldersEmpty": "Nessuna cartella. Creane una per organizzare le note."
 }

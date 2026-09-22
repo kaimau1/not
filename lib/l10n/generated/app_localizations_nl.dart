@@ -3627,4 +3627,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Maak handgeschreven notities, schrijf op PDF\'s en dia\'s.';
+
+  @override
+  String get foldersTitle => 'Mappen';
+
+  @override
+  String get foldersEmpty =>
+      'Nog geen mappen. Maak er een om je notities te ordenen.';
 }

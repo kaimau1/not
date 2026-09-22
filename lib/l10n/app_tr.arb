@@ -1684,5 +1684,7 @@
   "loginFeatureShareTitle": "Birlikte yaz",
   "loginFeatureShareBody": "Notları ve klasörleri arkadaşlarınla canlı paylaş.",
   "loginFeatureInkTitle": "Kalem ve PDF",
-  "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz."
+  "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz.",
+  "foldersTitle": "Klasörler",
+  "foldersEmpty": "Henüz klasör yok. Bir klasör oluşturup notlarını düzenle."
 }

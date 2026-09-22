@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:notlar/app/app_commands.dart';
 import 'package:notlar/app/app_frame.dart';
+import 'package:notlar/features/auth/data/auth_repository.dart';
+import 'package:notlar/features/auth/presentation/auth_providers.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +19,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   ya da yatay) eskisi gibi raysız kalır.
 /// * Bölüm geçişi yığını büyütmez: notların üstünde en fazla bir bölüm
 ///   katmanı durur, "Notlar"a dönüş o katmanı kaldırır.
-/// * Klavye kısayolları (Alt+1…6, Ctrl+,, Ctrl+/) doğru yere gider.
+/// * Klavye kısayolları (Alt+1…8, Ctrl+,, Ctrl+/) doğru yere gider.
+class _NoAuth implements AuthRepository {
+  @override
+  Stream<Never> authStateChanges() => const Stream.empty();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
 GoRouter _router() => GoRouter(
   initialLocation: '/',
   routes: [
@@ -26,6 +36,8 @@ GoRouter _router() => GoRouter(
       routes: [
         for (final path in [
           '/',
+          '/folders',
+          '/inbox',
           '/ai',
           '/reminders',
           '/archive',
@@ -52,7 +64,11 @@ Future<GoRouter> _pump(WidgetTester tester, Size size) async {
   addTearDown(router.dispose);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        // Ray, gelen notların sayısını okuyor; oturum yokken akış boş.
+        authRepositoryProvider.overrideWithValue(_NoAuth()),
+      ],
       child: MaterialApp.router(
         routerConfig: router,
         locale: const Locale('tr'),
@@ -104,13 +120,13 @@ void main() {
     expect(router.canPop(), isFalse);
   });
 
-  testWidgets('Alt+4 arşive, Ctrl+, ayarlara gider; Ctrl+/ kısayolları açar', (
+  testWidgets('Alt+6 arşive, Ctrl+, ayarlara gider; Ctrl+/ kısayolları açar', (
     tester,
   ) async {
     final router = await _pump(tester, const Size(1280, 800));
 
     await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
+    await tester.sendKeyEvent(LogicalKeyboardKey.digit6);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
     await tester.pumpAndSettle();
     expect(currentLocation(router), '/archive');
@@ -140,7 +156,23 @@ void main() {
     expect(rail().extended, isFalse);
   });
 
+  testWidgets('kısa tablette (1024×600) sekiz bölümlü ray taşmaz, kayar', (
+    tester,
+  ) async {
+    final router = await _pump(tester, const Size(1024, 600));
+    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('Klasörler'));
+    await tester.pumpAndSettle();
+    expect(currentLocation(router), '/folders');
+    await tester.tap(find.text('Gelen notlar'));
+    await tester.pumpAndSettle();
+    expect(currentLocation(router), '/inbox');
+  });
+
   test('konumdan bölüm çözümü', () {
+    expect(AppSection.of('/folders'), AppSection.folders);
+    expect(AppSection.of('/inbox'), AppSection.inbox);
     expect(AppSection.of('/'), AppSection.notes);
     expect(AppSection.of('/note/abc'), AppSection.notes);
     expect(AppSection.of('/notebook/abc'), AppSection.notes);

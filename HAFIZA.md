@@ -3257,3 +3257,13 @@ TUZAK: `AnimationController.reverse` süresiz çağrılınca assert — süre
 Flutter 3.44.6 `/opt/flutter`'a indirildi (CI ile aynı sürüm); takım
 981/981 yeşil, analyze temiz. graphify konteynerde yok — graf bu turda
 güncellenmedi.
+
+### 2026-09-22 (devam) — kullanıcı kararları
+Sorulan üç soruya yanıt: (1) ortak notta davet/kabul OLMAYACAK (Keep gibi,
+mevcut davranış); (2) raya Klasörler + Gelen notlar EKLENDİ — `/folders`
+(yeni `FoldersScreen`: kendi + paylaşılan klasör karoları, ana ekrandakiyle
+aynı widget'lar) ve `/inbox` rotaları; ray 8 bölüm, Alt+1…8; gelen notlarda
+bekleyen sayısı rozet. Sekiz bölüm küçük tabletin yatayına (~600 dp) sığmadığı
+için ray KAYDIRILABİLİR (LayoutBuilder + minHeight + IntrinsicHeight; yer
+varken alt düğmeler dibe yaslanır). (3) Ayrı tanıtım sitesi YOK:
+hekimasistani.com doğrudan uygulama kalır (giriş ekranının vitrini yeter).

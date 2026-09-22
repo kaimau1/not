@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Écrire ensemble",
   "loginFeatureShareBody": "Partagez notes et dossiers en direct avec vos amis.",
   "loginFeatureInkTitle": "Stylet et PDF",
-  "loginFeatureInkBody": "Prenez des notes manuscrites, écrivez sur les PDF et diapositives."
+  "loginFeatureInkBody": "Prenez des notes manuscrites, écrivez sur les PDF et diapositives.",
+  "foldersTitle": "Dossiers",
+  "foldersEmpty": "Aucun dossier pour l'instant. Créez-en un pour organiser vos notes."
 }

@@ -3600,4 +3600,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'دوّن بخط اليد واكتب على ملفات PDF والشرائح.';
+
+  @override
+  String get foldersTitle => 'المجلدات';
+
+  @override
+  String get foldersEmpty => 'لا توجد مجلدات بعد. أنشئ مجلدًا لتنظيم ملاحظاتك.';
 }

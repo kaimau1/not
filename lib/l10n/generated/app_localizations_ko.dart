@@ -3562,4 +3562,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loginFeatureInkBody => '손글씨로 메모하고 PDF와 슬라이드에 쓰세요.';
+
+  @override
+  String get foldersTitle => '폴더';
+
+  @override
+  String get foldersEmpty => '아직 폴더가 없습니다. 폴더를 만들어 메모를 정리하세요.';
 }

@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "Пишите вместе",
   "loginFeatureShareBody": "Делитесь заметками и папками с друзьями в реальном времени.",
   "loginFeatureInkTitle": "Перо и PDF",
-  "loginFeatureInkBody": "Пишите от руки, делайте пометки на PDF и слайдах."
+  "loginFeatureInkBody": "Пишите от руки, делайте пометки на PDF и слайдах.",
+  "foldersTitle": "Папки",
+  "foldersEmpty": "Папок пока нет. Создайте папку, чтобы упорядочить заметки."
 }

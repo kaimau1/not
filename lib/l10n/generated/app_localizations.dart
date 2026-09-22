@@ -6539,6 +6539,18 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'El yazısıyla not al, PDF ve slaytların üstüne yaz.'**
   String get loginFeatureInkBody;
+
+  /// No description provided for @foldersTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler'**
+  String get foldersTitle;
+
+  /// No description provided for @foldersEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.'**
+  String get foldersEmpty;
 }
 
 class _AppLocalizationsDelegate

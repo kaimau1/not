@@ -3628,4 +3628,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Prenez des notes manuscrites, écrivez sur les PDF et diapositives.';
+
+  @override
+  String get foldersTitle => 'Dossiers';
+
+  @override
+  String get foldersEmpty =>
+      'Aucun dossier pour l\'instant. Créez-en un pour organiser vos notes.';
 }

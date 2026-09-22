@@ -3626,4 +3626,11 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Faça anotações à mão, escreva sobre PDFs e slides.';
+
+  @override
+  String get foldersTitle => 'Pastas';
+
+  @override
+  String get foldersEmpty =>
+      'Nenhuma pasta ainda. Crie uma para organizar suas notas.';
 }

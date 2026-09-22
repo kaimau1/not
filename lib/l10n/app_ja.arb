@@ -644,5 +644,7 @@
   "loginFeatureShareTitle": "一緒に書く",
   "loginFeatureShareBody": "メモやフォルダを友だちとリアルタイムで共有。",
   "loginFeatureInkTitle": "ペンと PDF",
-  "loginFeatureInkBody": "手書きでメモし、PDF やスライドに書き込み。"
+  "loginFeatureInkBody": "手書きでメモし、PDF やスライドに書き込み。",
+  "foldersTitle": "フォルダ",
+  "foldersEmpty": "フォルダはまだありません。作成してメモを整理しましょう。"
 }

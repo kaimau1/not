@@ -3538,4 +3538,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loginFeatureInkBody => '手写记笔记，在 PDF 和幻灯片上书写。';
+
+  @override
+  String get foldersTitle => '文件夹';
+
+  @override
+  String get foldersEmpty => '还没有文件夹。创建一个来整理笔记。';
 }

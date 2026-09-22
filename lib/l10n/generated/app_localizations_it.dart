@@ -3627,4 +3627,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Prendi appunti a mano, scrivi su PDF e diapositive.';
+
+  @override
+  String get foldersTitle => 'Cartelle';
+
+  @override
+  String get foldersEmpty =>
+      'Nessuna cartella. Creane una per organizzare le note.';
 }

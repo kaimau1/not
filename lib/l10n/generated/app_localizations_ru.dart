@@ -3619,4 +3619,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get loginFeatureInkBody =>
       'Пишите от руки, делайте пометки на PDF и слайдах.';
+
+  @override
+  String get foldersTitle => 'Папки';
+
+  @override
+  String get foldersEmpty =>
+      'Папок пока нет. Создайте папку, чтобы упорядочить заметки.';
 }

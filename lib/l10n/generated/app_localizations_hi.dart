@@ -3609,4 +3609,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get loginFeatureInkBody => 'हाथ से नोट लें, PDF और स्लाइड पर लिखें।';
+
+  @override
+  String get foldersTitle => 'फ़ोल्डर';
+
+  @override
+  String get foldersEmpty =>
+      'अभी कोई फ़ोल्डर नहीं। नोट्स व्यवस्थित करने के लिए एक बनाएँ।';
 }
