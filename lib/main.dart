@@ -6,6 +6,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,6 +55,11 @@ Future<void> _activateAppCheck() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Web'de tarayıcının kendi sağ tık menüsü kapatılır: not kartlarına sağ
+  // tıklayınca uygulamanın bağlam menüsü açılsın (masaüstündeki gibi),
+  // tarayıcınınki üstüne binmesin. Metin alanları Flutter'ın kendi
+  // kes/kopyala/yapıştır menüsünü gösterir.
+  if (kIsWeb) unawaited(BrowserContextMenu.disableContextMenu());
 
   if (!kIsWeb && Platform.isWindows) {
     await windowManager.ensureInitialized();

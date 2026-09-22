@@ -3455,4 +3455,107 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => '共同編集者';
+
+  @override
+  String get collaboratorsInfo => '追加したユーザーはこのメモをホーム画面で見て、あなたとリアルタイムで編集できます。';
+
+  @override
+  String get collaboratorsOwner => 'オーナー';
+
+  @override
+  String get collaboratorsFriendsTitle => '友だち';
+
+  @override
+  String get collaboratorsLeave => '共有メモから退出';
+
+  @override
+  String get collaboratorsLeaveConfirm => 'このメモはホーム画面に表示されなくなります。退出しますか？';
+
+  @override
+  String get collaboratorsSaved => '共有を更新しました';
+
+  @override
+  String collaboratorsCount(int count) {
+    return '$count 人と共有中';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner => '共同編集者を変更できるのはメモのオーナーだけです。';
+
+  @override
+  String get sharedWithMe => '共有されたメモ';
+
+  @override
+  String get sharedWithMeEmpty => 'まだ共有されたメモはありません。誰かがメモにあなたを追加するとここに表示されます。';
+
+  @override
+  String sharedByName(Object name) {
+    return '$name が共有';
+  }
+
+  @override
+  String get navNotes => 'メモ';
+
+  @override
+  String get railExpand => 'メニューを展開';
+
+  @override
+  String get railCollapse => 'メニューを折りたたむ';
+
+  @override
+  String get newNoteShort => '新しいメモ';
+
+  @override
+  String get newChecklistShort => '新しいリスト';
+
+  @override
+  String get listPaneHide => 'メモ一覧を隠す';
+
+  @override
+  String get listPaneShow => 'メモ一覧を表示';
+
+  @override
+  String get keyboardShortcuts => 'キーボードショートカット';
+
+  @override
+  String get shortcutSearch => 'メモを検索';
+
+  @override
+  String get shortcutToggleList => 'メモ一覧の表示 / 非表示';
+
+  @override
+  String get shortcutSections => 'セクションを切り替え';
+
+  @override
+  String get shortcutHelp => 'ショートカットを表示';
+
+  @override
+  String get noNoteSelectedHint => 'または新しいメモを始める';
+
+  @override
+  String get loginFeatureSyncTitle => 'すべての端末で同じメモ';
+
+  @override
+  String get loginFeatureSyncBody => 'スマホ、タブレット、パソコン、ウェブ間で即座に同期。';
+
+  @override
+  String get loginFeatureAiTitle => 'AI がそばに';
+
+  @override
+  String get loginFeatureAiBody => '要約、質問、音声入力。ドキュメントと会話。';
+
+  @override
+  String get loginFeatureShareTitle => '一緒に書く';
+
+  @override
+  String get loginFeatureShareBody => 'メモやフォルダを友だちとリアルタイムで共有。';
+
+  @override
+  String get loginFeatureInkTitle => 'ペンと PDF';
+
+  @override
+  String get loginFeatureInkBody => '手書きでメモし、PDF やスライドに書き込み。';
 }

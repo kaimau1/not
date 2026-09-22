@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../notes/data/note_shares_repository.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/folder_activity.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
@@ -374,6 +376,34 @@ class SharedFolderChip extends ConsumerWidget {
         context,
         share.folderId,
         ownerId: share.ownerId,
+      ),
+    );
+  }
+}
+
+/// **BENİMLE PAYLAŞILAN NOTLAR** çipi — ortak notlar (bkz. [NoteShare])
+/// klasör değil ama aynı rafta durur: "başkasının bana açtığı şeyler" tek
+/// yerde toplansın. Paylaşılan not yoksa hiç çizilmez; şeritte ölü bir çip
+/// kalmasın.
+class SharedNotesChip extends ConsumerWidget {
+  const SharedNotesChip({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(
+      sharedNotesWithMeProvider.select((s) => s.value?.length ?? 0),
+    );
+    if (count == 0) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: _ChipShell(
+        background: scheme.secondaryContainer,
+        foreground: scheme.onSecondaryContainer,
+        icon: Icons.people_alt_outlined,
+        label: context.l10n.sharedWithMe,
+        count: count,
+        onTap: () => SharedNotesScreen.open(context),
       ),
     );
   }

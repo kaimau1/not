@@ -1369,7 +1369,13 @@
   "imagesEqualizeSize": "Match sizes",
   "imagesFitRow": "Fit to row",
   "imagesFitColumns": "{count} columns",
-  "@imagesFitColumns": {"placeholders": {"count": {"type": "int"}}},
+  "@imagesFitColumns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "imagesFitSingleRow": "Fit in one row",
   "briefingNotificationTitle": "Good morning! ☀️",
   "briefingNotificationBody": "Today's briefing is ready — tap for a summary of your reminders, notes and important emails.",
@@ -1390,5 +1396,38 @@
   "pdfSlideshowStop": "Stop auto advance",
   "pdfFirstPage": "First page",
   "pdfLastPage": "Last page",
-  "pdfPlaceOnPage": "Place PDF on the page"
+  "pdfPlaceOnPage": "Place PDF on the page",
+  "collaborators": "Collaborators",
+  "collaboratorsInfo": "People you add see this note on their home screen and edit it with you in real time.",
+  "collaboratorsOwner": "Owner",
+  "collaboratorsFriendsTitle": "YOUR FRIENDS",
+  "collaboratorsLeave": "Leave shared note",
+  "collaboratorsLeaveConfirm": "This note will no longer appear on your home screen. Leave?",
+  "collaboratorsSaved": "Sharing updated",
+  "collaboratorsCount": "Shared with {count} people",
+  "collaboratorsOnlyOwner": "Only the note's owner can change collaborators.",
+  "sharedWithMe": "Shared with me",
+  "sharedWithMeEmpty": "No notes have been shared with you yet. They appear here when someone adds you to a note.",
+  "sharedByName": "Shared by {name}",
+  "navNotes": "Notes",
+  "railExpand": "Expand menu",
+  "railCollapse": "Collapse menu",
+  "newNoteShort": "New note",
+  "newChecklistShort": "New list",
+  "listPaneHide": "Hide note list",
+  "listPaneShow": "Show note list",
+  "keyboardShortcuts": "Keyboard shortcuts",
+  "shortcutSearch": "Search notes",
+  "shortcutToggleList": "Hide / show note list",
+  "shortcutSections": "Switch between sections",
+  "shortcutHelp": "Show shortcuts",
+  "noNoteSelectedHint": "or start a new note",
+  "loginFeatureSyncTitle": "Same notes on every device",
+  "loginFeatureSyncBody": "Instant sync across phone, tablet, computer and web.",
+  "loginFeatureAiTitle": "AI at your side",
+  "loginFeatureAiBody": "Summarize, ask, dictate; chat with your documents.",
+  "loginFeatureShareTitle": "Write together",
+  "loginFeatureShareBody": "Share notes and folders live with friends.",
+  "loginFeatureInkTitle": "Pen and PDF",
+  "loginFeatureInkBody": "Take handwritten notes, write on PDFs and slides."
 }

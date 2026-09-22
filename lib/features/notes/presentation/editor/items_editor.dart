@@ -850,7 +850,15 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// bir süre eski blokta kalsın, animasyon bitince gerçek yerine taşınsın.
   final _settling = <String, bool>{};
 
-  static const _settleDuration = Duration(milliseconds: 220);
+  /// 220 → 420 ms (kullanıcı isteği 2026-09-22: "liste maddeleri tıklanma
+  /// geçiş animasyonu"): önce kutu zıplar ve çizgi akar, ardından satır
+  /// yerinde katlanır; yeni yerinde açılarak belirir. Eski süre yalnız
+  /// solmaya yetiyordu, satır sonra bir anda ışınlanıyordu.
+  static const _settleDuration = Duration(milliseconds: 420);
+
+  /// Yeni yerine YENİ varmış öğeler: orada açılarak belirirler
+  /// (bkz. [_CheckMove]). Açılma bitince listeden düşerler.
+  final _arriving = <String>{};
 
   /// Öğe hangi blokta çizilsin: yerleşiyorsa eski durumu, değilse gerçeği.
   bool _placedAsChecked(NoteItem item) => _settling[item.id] ?? item.checked;
@@ -884,6 +892,7 @@ class ItemsEditorState extends State<ItemsEditor> {
         _settling.remove(target.id);
         final current = _items.indexWhere((i) => i.id == target.id);
         if (current < 0) return;
+        _arriving.add(target.id);
         final item = _items.removeAt(current);
         if (item.checked) {
           _items.insert(_checkedStart, item);
@@ -904,6 +913,10 @@ class ItemsEditorState extends State<ItemsEditor> {
         );
       });
       _commit();
+      Future<void>.delayed(_CheckMove.arriveDuration, () {
+        if (!mounted || !_arriving.remove(target.id)) return;
+        setState(() {});
+      });
     });
   }
 
@@ -974,9 +987,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     final index = _items.indexWhere((i) => i.id == target.id);
     if (index < 0) return;
     setState(() {
-      _items[index] = _items[index].copyWith(
-        starred: !_items[index].starred,
-      );
+      _items[index] = _items[index].copyWith(starred: !_items[index].starred);
     });
     _commit();
   }
@@ -1272,11 +1283,7 @@ class ItemsEditorState extends State<ItemsEditor> {
   List<FloatBox> _rowCacheFloats = const [];
 
   /// Satır düzeyi girdiler değişmediyse önbellekten döndürür.
-  Widget _cachedItemRow(
-    NoteItem item, {
-    int? reorderIndex,
-    int? orderNumber,
-  }) {
+  Widget _cachedItemRow(NoteItem item, {int? reorderIndex, int? orderNumber}) {
     // Kayıt (record) yapısal eşitlik kullanır — hash çakışması yok, yani
     // bayat satır dönme riski de yok.
     final key = (
@@ -1286,6 +1293,7 @@ class ItemsEditorState extends State<ItemsEditor> {
       reorderIndex,
       orderNumber,
       _selected.contains(item.id),
+      _movePhase(item.id),
     );
     final hit = _rowCache[item.id];
     if (hit != null && hit.$1 == key) return hit.$2;
@@ -1397,21 +1405,26 @@ class ItemsEditorState extends State<ItemsEditor> {
               ),
             )
           else if (widget.showCheckboxes)
-            Checkbox(
+            // Tık anında kutu kısa bir "zıplama" yapar — dokunuşun
+            // alındığını parmağın altında gösterir (bkz. [_CheckPop]).
+            _CheckPop(
               value: item.checked,
-              // Kutunun KENDİ kutusu 48 dp'lik dokunma hedefinden 40 dp'ye
-              // iner: 48 dp'lik kutu ilk satırın ortasından her zaman daha
-              // aşağıda kalıyordu (bkz. [leadingTop] — "madde kutuları
-              // yazıdan biraz altta" kök nedeni). 40 dp hem hizalanabiliyor
-              // hem de dokunulabilir bir hedef olarak kalıyor.
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              // Boş satırın kutusu PASİF: dokunulunca hiçbir şey olmadığını
-              // görmek, işaretlenip alta düşen boş bir maddeyi geri almaktan
-              // iyidir (bkz. _toggleItem). Zaten işaretliyse etkin kalır ki
-              // eski notlardaki boş işaretli satır geri alınabilsin.
-              onChanged: (item.text.trim().isEmpty && !item.checked)
-                  ? null
-                  : (value) => _toggleItem(item, value),
+              child: Checkbox(
+                value: item.checked,
+                // Kutunun KENDİ kutusu 48 dp'lik dokunma hedefinden 40 dp'ye
+                // iner: 48 dp'lik kutu ilk satırın ortasından her zaman daha
+                // aşağıda kalıyordu (bkz. [leadingTop] — "madde kutuları
+                // yazıdan biraz altta" kök nedeni). 40 dp hem hizalanabiliyor
+                // hem de dokunulabilir bir hedef olarak kalıyor.
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // Boş satırın kutusu PASİF: dokunulunca hiçbir şey olmadığını
+                // görmek, işaretlenip alta düşen boş bir maddeyi geri almaktan
+                // iyidir (bkz. _toggleItem). Zaten işaretliyse etkin kalır ki
+                // eski notlardaki boş işaretli satır geri alınabilsin.
+                onChanged: (item.text.trim().isEmpty && !item.checked)
+                    ? null
+                    : (value) => _toggleItem(item, value),
+              ),
             )
           else
             Padding(
@@ -1507,16 +1520,35 @@ class ItemsEditorState extends State<ItemsEditor> {
                   child: _wrapped(
                     controller,
                     baseStyle,
-                    Builder(
-                      builder: (context) {
+                    // **ÜSTÜ ÇİZİLİ GEÇİŞ** (kullanıcı isteği 2026-09-22:
+                    // "liste maddeleri tıklanma geçiş animasyonu"). Çizgi
+                    // eskiden anında beliriyordu; artık çizginin ve yazının
+                    // rengi soluk hâle AKAR. `end` yalnız verildiği için ilk
+                    // kurulumda animasyon oynamaz (eski işaretli madde açılışta
+                    // yeniden çizilmez), yalnız DEĞİŞİMDE oynar.
+                    TweenAnimationBuilder<double>(
+                      tween: Tween<double>(end: checked ? 1 : 0),
+                      duration: _kStrikeDuration,
+                      curve: Curves.easeOutCubic,
+                      builder: (context, strike, _) {
                         // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
                         // burada alfa verilirse iki kez soluyor.
-                        final fieldStyle = checked
-                            ? baseStyle.copyWith(
+                        final fieldStyle = strike == 0
+                            ? baseStyle
+                            : baseStyle.copyWith(
                                 decoration: TextDecoration.lineThrough,
-                                color: scheme.onSurfaceVariant,
-                              )
-                            : baseStyle;
+                                decorationColor: Color.lerp(
+                                  Colors.transparent,
+                                  scheme.onSurfaceVariant,
+                                  strike,
+                                ),
+                                decorationThickness: 1 + strike,
+                                color: Color.lerp(
+                                  baseStyle.color ?? scheme.onSurface,
+                                  scheme.onSurfaceVariant,
+                                  strike,
+                                ),
+                              );
                         final field = TextField(
                           controller: controller,
                           focusNode: _focusFor(item),
@@ -1665,26 +1697,39 @@ class ItemsEditorState extends State<ItemsEditor> {
 
     return KeyedSubtree(
       key: ValueKey(item.id),
-      child: _floatRow(
-        id: item.id,
-        // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
-        // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
-        // verilmeli (bkz. _FloatRow.reserved).
-        reserved:
-            _kRowPadding +
-            (_selectionMode ? _kHandleWidth : 0) +
-            _kLeadingWidth +
-            _kTrailingWidth,
-        // Odak DEĞİŞİMİ yalnız bu satırı yeniden çizer (bkz. [_focusFlags]).
-        // Sarmalayıcı KOŞULSUZ duruyor: ağacın şekli odakla değişemez —
-        // değişirse TextField'ın state'i sıfırdan kurulur ve imleç ilk harfe
-        // kadar yanıp sönmez (aşağıdaki kök neden notu).
-        ValueListenableBuilder<bool>(
-          valueListenable: focusFlag,
-          builder: (context, focused, _) => rowBody(focused),
+      // Yer değiştirme geçişi: eski yerinde katlanıp kaybolur, yeni yerinde
+      // açılarak belirir (bkz. [_CheckMove]). Sarmalayıcı KOŞULSUZ — ağacın
+      // şekli evreye göre değişseydi TextField'ın state'i sıfırlanırdı.
+      child: _CheckMove(
+        phase: _movePhase(item.id),
+        child: _floatRow(
+          id: item.id,
+          // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
+          // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
+          // verilmeli (bkz. _FloatRow.reserved).
+          reserved:
+              _kRowPadding +
+              (_selectionMode ? _kHandleWidth : 0) +
+              _kLeadingWidth +
+              _kTrailingWidth,
+          // Odak DEĞİŞİMİ yalnız bu satırı yeniden çizer (bkz. [_focusFlags]).
+          // Sarmalayıcı KOŞULSUZ duruyor: ağacın şekli odakla değişemez —
+          // değişirse TextField'ın state'i sıfırdan kurulur ve imleç ilk harfe
+          // kadar yanıp sönmez (aşağıdaki kök neden notu).
+          ValueListenableBuilder<bool>(
+            valueListenable: focusFlag,
+            builder: (context, focused, _) => rowBody(focused),
+          ),
         ),
       ),
     );
+  }
+
+  /// Satırın yer değiştirme evresi (bkz. [_CheckMove]).
+  _MovePhase _movePhase(String id) {
+    if (_settling.containsKey(id)) return _MovePhase.leaving;
+    if (_arriving.contains(id)) return _MovePhase.arriving;
+    return _MovePhase.idle;
   }
 
   @override
@@ -2118,3 +2163,155 @@ class _FloatRowState extends State<_FloatRow> {
 
 /// Satır menüsünün ([ItemsEditorState._showItemMenu]) seçenekleri.
 enum _ItemAction { star, select, delete }
+
+/// Üstü çizili geçişin süresi (bkz. `_itemRow`).
+const _kStrikeDuration = Duration(milliseconds: 260);
+
+enum _MovePhase { idle, leaving, arriving }
+
+/// İşaretlenen maddenin YER DEĞİŞTİRME geçişi.
+///
+/// İşaretli maddeler ayrı bir blokta (footer) durduğundan satır bir ağaçtan
+/// ötekine taşınır ve arada hiçbir şey canlandırılamıyordu — madde bir anda
+/// ışınlanıyordu. Geçiş iki yarıya bölündü:
+/// * **leaving**: eski yerinde, işaret/çizgi animasyonuna bir süre izin
+///   verildikten sonra satır dikeyde katlanır ve solar; altındakiler yukarı
+///   kayar.
+/// * **arriving**: yeni yerinde sıfır yükseklikten açılır, hafifçe yukarı
+///   süzülerek belirir.
+/// Katlanma bitince öğe gerçek yerine taşınır (bkz. `_toggleItem`), yani
+/// iki yarı birbirini kesintisiz izler.
+class _CheckMove extends StatefulWidget {
+  const _CheckMove({required this.phase, required this.child});
+
+  final _MovePhase phase;
+  final Widget child;
+
+  static const arriveDuration = Duration(milliseconds: 280);
+
+  @override
+  State<_CheckMove> createState() => _CheckMoveState();
+}
+
+class _CheckMoveState extends State<_CheckMove>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    value: widget.phase == _MovePhase.arriving ? 0 : 1,
+  );
+  late Animation<double> _size = _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.phase == _MovePhase.arriving) _arrive();
+  }
+
+  @override
+  void didUpdateWidget(_CheckMove old) {
+    super.didUpdateWidget(old);
+    if (old.phase == widget.phase) return;
+    switch (widget.phase) {
+      case _MovePhase.leaving:
+        // İlk %40 satır yerinde durur: kutunun zıplaması ve çizginin akışı
+        // görülsün, sonra katlanma başlasın.
+        _size = CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0, 0.6, curve: Curves.easeInOutCubic),
+          reverseCurve: const Interval(0, 0.6, curve: Curves.easeInOutCubic),
+        );
+        // Katlanma [_settleDuration] içinde bitmeli ki öğe taşındığında
+        // eski yerinde boşluk kalmasın.
+        _controller.reverseDuration = ItemsEditorState._settleDuration;
+        _controller.reverse(from: 1);
+      case _MovePhase.arriving:
+        _arrive();
+      case _MovePhase.idle:
+        _controller.value = 1;
+    }
+  }
+
+  void _arrive() {
+    _size = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+    _controller.duration = _CheckMove.arriveDuration;
+    _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizeTransition(
+      sizeFactor: _size,
+      alignment: Alignment.topCenter,
+      child: FadeTransition(
+        opacity: _size,
+        child: widget.phase == _MovePhase.arriving
+            ? SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.25),
+                  end: Offset.zero,
+                ).animate(_size),
+                child: widget.child,
+              )
+            : widget.child,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}
+
+/// İşaret kutusunun "zıplaması": değer DEĞİŞİNCE kutu kısa süre büyüyüp
+/// yerine oturur. İlk kurulumda oynamaz.
+class _CheckPop extends StatefulWidget {
+  const _CheckPop({required this.value, required this.child});
+
+  final bool value;
+  final Widget child;
+
+  @override
+  State<_CheckPop> createState() => _CheckPopState();
+}
+
+class _CheckPopState extends State<_CheckPop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  );
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(
+        begin: 1.0,
+        end: 1.22,
+      ).chain(CurveTween(curve: Curves.easeOut)),
+      weight: 40,
+    ),
+    TweenSequenceItem(
+      tween: Tween(
+        begin: 1.22,
+        end: 1.0,
+      ).chain(CurveTween(curve: Curves.elasticOut)),
+      weight: 60,
+    ),
+  ]).animate(_controller);
+
+  @override
+  void didUpdateWidget(_CheckPop old) {
+    super.didUpdateWidget(old);
+    if (old.value != widget.value) _controller.forward(from: 0);
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      ScaleTransition(scale: _scale, child: widget.child);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+}

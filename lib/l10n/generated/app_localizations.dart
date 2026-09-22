@@ -6341,6 +6341,204 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'PDF\'i sayfaya yerleştir'**
   String get pdfPlaceOnPage;
+
+  /// No description provided for @collaborators.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak çalışanlar'**
+  String get collaborators;
+
+  /// No description provided for @collaboratorsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklediğin kişiler bu notu kendi ana ekranlarında görür ve seninle aynı anda düzenler.'**
+  String get collaboratorsInfo;
+
+  /// No description provided for @collaboratorsOwner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sahibi'**
+  String get collaboratorsOwner;
+
+  /// No description provided for @collaboratorsFriendsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'ARKADAŞLARIN'**
+  String get collaboratorsFriendsTitle;
+
+  /// No description provided for @collaboratorsLeave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşımdan ayrıl'**
+  String get collaboratorsLeave;
+
+  /// No description provided for @collaboratorsLeaveConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not artık ana ekranında görünmeyecek. Ayrılmak istiyor musun?'**
+  String get collaboratorsLeaveConfirm;
+
+  /// No description provided for @collaboratorsSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşım güncellendi'**
+  String get collaboratorsSaved;
+
+  /// No description provided for @collaboratorsCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kişiyle paylaşıldı'**
+  String collaboratorsCount(int count);
+
+  /// No description provided for @collaboratorsOnlyOwner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak çalışanları yalnız notun sahibi değiştirebilir.'**
+  String get collaboratorsOnlyOwner;
+
+  /// No description provided for @sharedWithMe.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benimle paylaşılanlar'**
+  String get sharedWithMe;
+
+  /// No description provided for @sharedWithMeEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz seninle paylaşılan bir not yok. Biri seni bir notuna eklediğinde burada görünür.'**
+  String get sharedWithMeEmpty;
+
+  /// No description provided for @sharedByName.
+  ///
+  /// In tr, this message translates to:
+  /// **'{name} paylaştı'**
+  String sharedByName(Object name);
+
+  /// No description provided for @navNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar'**
+  String get navNotes;
+
+  /// No description provided for @railExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüyü genişlet'**
+  String get railExpand;
+
+  /// No description provided for @railCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Menüyü daralt'**
+  String get railCollapse;
+
+  /// No description provided for @newNoteShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get newNoteShort;
+
+  /// No description provided for @newChecklistShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni liste'**
+  String get newChecklistShort;
+
+  /// No description provided for @listPaneHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not listesini gizle'**
+  String get listPaneHide;
+
+  /// No description provided for @listPaneShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not listesini göster'**
+  String get listPaneShow;
+
+  /// No description provided for @keyboardShortcuts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klavye kısayolları'**
+  String get keyboardShortcuts;
+
+  /// No description provided for @shortcutSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarda ara'**
+  String get shortcutSearch;
+
+  /// No description provided for @shortcutToggleList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not listesini gizle / göster'**
+  String get shortcutToggleList;
+
+  /// No description provided for @shortcutSections.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölümler arasında geç'**
+  String get shortcutSections;
+
+  /// No description provided for @shortcutHelp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kısayolları göster'**
+  String get shortcutHelp;
+
+  /// No description provided for @noNoteSelectedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'ya da yeni bir not başlat'**
+  String get noNoteSelectedHint;
+
+  /// No description provided for @loginFeatureSyncTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her cihazda aynı notlar'**
+  String get loginFeatureSyncTitle;
+
+  /// No description provided for @loginFeatureSyncBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Telefon, tablet, bilgisayar ve web arasında anında senkron.'**
+  String get loginFeatureSyncBody;
+
+  /// No description provided for @loginFeatureAiTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ yanında'**
+  String get loginFeatureAiTitle;
+
+  /// No description provided for @loginFeatureAiBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özetle, sor, sesle yaz; belgelerinle konuş.'**
+  String get loginFeatureAiBody;
+
+  /// No description provided for @loginFeatureShareTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birlikte yaz'**
+  String get loginFeatureShareTitle;
+
+  /// No description provided for @loginFeatureShareBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notları ve klasörleri arkadaşlarınla canlı paylaş.'**
+  String get loginFeatureShareBody;
+
+  /// No description provided for @loginFeatureInkTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kalem ve PDF'**
+  String get loginFeatureInkTitle;
+
+  /// No description provided for @loginFeatureInkBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısıyla not al, PDF ve slaytların üstüne yaz.'**
+  String get loginFeatureInkBody;
 }
 
 class _AppLocalizationsDelegate

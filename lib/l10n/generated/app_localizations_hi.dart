@@ -3500,4 +3500,113 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'सहयोगी';
+
+  @override
+  String get collaboratorsInfo =>
+      'आप जिन्हें जोड़ते हैं वे यह नोट अपनी होम स्क्रीन पर देखते हैं और आपके साथ रियल-टाइम में संपादित करते हैं।';
+
+  @override
+  String get collaboratorsOwner => 'स्वामी';
+
+  @override
+  String get collaboratorsFriendsTitle => 'आपके मित्र';
+
+  @override
+  String get collaboratorsLeave => 'साझा नोट छोड़ें';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'यह नोट अब आपकी होम स्क्रीन पर नहीं दिखेगा। छोड़ें?';
+
+  @override
+  String get collaboratorsSaved => 'साझाकरण अपडेट हुआ';
+
+  @override
+  String collaboratorsCount(int count) {
+    return '$count लोगों के साथ साझा';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner => 'केवल नोट का स्वामी सहयोगी बदल सकता है।';
+
+  @override
+  String get sharedWithMe => 'मेरे साथ साझा';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'अभी तक आपके साथ कोई नोट साझा नहीं किया गया। जब कोई आपको किसी नोट में जोड़ेगा तो यहाँ दिखेगा।';
+
+  @override
+  String sharedByName(Object name) {
+    return '$name ने साझा किया';
+  }
+
+  @override
+  String get navNotes => 'नोट्स';
+
+  @override
+  String get railExpand => 'मेनू फैलाएँ';
+
+  @override
+  String get railCollapse => 'मेनू समेटें';
+
+  @override
+  String get newNoteShort => 'नया नोट';
+
+  @override
+  String get newChecklistShort => 'नई सूची';
+
+  @override
+  String get listPaneHide => 'नोट सूची छिपाएँ';
+
+  @override
+  String get listPaneShow => 'नोट सूची दिखाएँ';
+
+  @override
+  String get keyboardShortcuts => 'कीबोर्ड शॉर्टकट';
+
+  @override
+  String get shortcutSearch => 'नोट्स में खोजें';
+
+  @override
+  String get shortcutToggleList => 'नोट सूची छिपाएँ / दिखाएँ';
+
+  @override
+  String get shortcutSections => 'अनुभागों के बीच जाएँ';
+
+  @override
+  String get shortcutHelp => 'शॉर्टकट दिखाएँ';
+
+  @override
+  String get noNoteSelectedHint => 'या नया नोट शुरू करें';
+
+  @override
+  String get loginFeatureSyncTitle => 'हर डिवाइस पर वही नोट्स';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'फ़ोन, टैबलेट, कंप्यूटर और वेब के बीच तुरंत सिंक।';
+
+  @override
+  String get loginFeatureAiTitle => 'AI आपके साथ';
+
+  @override
+  String get loginFeatureAiBody =>
+      'सारांश, प्रश्न, डिक्टेशन; अपने दस्तावेज़ों से बात करें।';
+
+  @override
+  String get loginFeatureShareTitle => 'साथ मिलकर लिखें';
+
+  @override
+  String get loginFeatureShareBody =>
+      'नोट्स और फ़ोल्डर दोस्तों के साथ लाइव साझा करें।';
+
+  @override
+  String get loginFeatureInkTitle => 'पेन और PDF';
+
+  @override
+  String get loginFeatureInkBody => 'हाथ से नोट लें, PDF और स्लाइड पर लिखें।';
 }

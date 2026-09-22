@@ -3494,4 +3494,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'Place PDF on the page';
+
+  @override
+  String get collaborators => 'Collaborators';
+
+  @override
+  String get collaboratorsInfo =>
+      'People you add see this note on their home screen and edit it with you in real time.';
+
+  @override
+  String get collaboratorsOwner => 'Owner';
+
+  @override
+  String get collaboratorsFriendsTitle => 'YOUR FRIENDS';
+
+  @override
+  String get collaboratorsLeave => 'Leave shared note';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'This note will no longer appear on your home screen. Leave?';
+
+  @override
+  String get collaboratorsSaved => 'Sharing updated';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Shared with $count people';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Only the note\'s owner can change collaborators.';
+
+  @override
+  String get sharedWithMe => 'Shared with me';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'No notes have been shared with you yet. They appear here when someone adds you to a note.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Shared by $name';
+  }
+
+  @override
+  String get navNotes => 'Notes';
+
+  @override
+  String get railExpand => 'Expand menu';
+
+  @override
+  String get railCollapse => 'Collapse menu';
+
+  @override
+  String get newNoteShort => 'New note';
+
+  @override
+  String get newChecklistShort => 'New list';
+
+  @override
+  String get listPaneHide => 'Hide note list';
+
+  @override
+  String get listPaneShow => 'Show note list';
+
+  @override
+  String get keyboardShortcuts => 'Keyboard shortcuts';
+
+  @override
+  String get shortcutSearch => 'Search notes';
+
+  @override
+  String get shortcutToggleList => 'Hide / show note list';
+
+  @override
+  String get shortcutSections => 'Switch between sections';
+
+  @override
+  String get shortcutHelp => 'Show shortcuts';
+
+  @override
+  String get noNoteSelectedHint => 'or start a new note';
+
+  @override
+  String get loginFeatureSyncTitle => 'Same notes on every device';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Instant sync across phone, tablet, computer and web.';
+
+  @override
+  String get loginFeatureAiTitle => 'AI at your side';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Summarize, ask, dictate; chat with your documents.';
+
+  @override
+  String get loginFeatureShareTitle => 'Write together';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Share notes and folders live with friends.';
+
+  @override
+  String get loginFeatureInkTitle => 'Pen and PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Take handwritten notes, write on PDFs and slides.';
 }

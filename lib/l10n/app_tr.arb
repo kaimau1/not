@@ -1617,7 +1617,13 @@
   "imagesEqualizeSize": "Boyutları eşitle",
   "imagesFitRow": "Satıra sığdır",
   "imagesFitColumns": "{count} sütun",
-  "@imagesFitColumns": {"placeholders": {"count": {"type": "int"}}},
+  "@imagesFitColumns": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "imagesFitSingleRow": "Tek satıra sığdır",
   "briefingNotificationTitle": "Günaydın! ☀️",
   "briefingNotificationBody": "Bugünün brifingi hazır — hatırlatıcıların, notların ve önemli e-postaların özeti için dokun.",
@@ -1638,5 +1644,45 @@
   "pdfSlideshowStop": "Otomatik geçişi durdur",
   "pdfFirstPage": "İlk sayfa",
   "pdfLastPage": "Son sayfa",
-  "pdfPlaceOnPage": "PDF'i sayfaya yerleştir"
+  "pdfPlaceOnPage": "PDF'i sayfaya yerleştir",
+  "collaborators": "Ortak çalışanlar",
+  "collaboratorsInfo": "Eklediğin kişiler bu notu kendi ana ekranlarında görür ve seninle aynı anda düzenler.",
+  "collaboratorsOwner": "Sahibi",
+  "collaboratorsFriendsTitle": "ARKADAŞLARIN",
+  "collaboratorsLeave": "Paylaşımdan ayrıl",
+  "collaboratorsLeaveConfirm": "Bu not artık ana ekranında görünmeyecek. Ayrılmak istiyor musun?",
+  "collaboratorsSaved": "Paylaşım güncellendi",
+  "collaboratorsCount": "{count} kişiyle paylaşıldı",
+  "@collaboratorsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "collaboratorsOnlyOwner": "Ortak çalışanları yalnız notun sahibi değiştirebilir.",
+  "sharedWithMe": "Benimle paylaşılanlar",
+  "sharedWithMeEmpty": "Henüz seninle paylaşılan bir not yok. Biri seni bir notuna eklediğinde burada görünür.",
+  "sharedByName": "{name} paylaştı",
+  "navNotes": "Notlar",
+  "railExpand": "Menüyü genişlet",
+  "railCollapse": "Menüyü daralt",
+  "newNoteShort": "Yeni not",
+  "newChecklistShort": "Yeni liste",
+  "listPaneHide": "Not listesini gizle",
+  "listPaneShow": "Not listesini göster",
+  "keyboardShortcuts": "Klavye kısayolları",
+  "shortcutSearch": "Notlarda ara",
+  "shortcutToggleList": "Not listesini gizle / göster",
+  "shortcutSections": "Bölümler arasında geç",
+  "shortcutHelp": "Kısayolları göster",
+  "noNoteSelectedHint": "ya da yeni bir not başlat",
+  "loginFeatureSyncTitle": "Her cihazda aynı notlar",
+  "loginFeatureSyncBody": "Telefon, tablet, bilgisayar ve web arasında anında senkron.",
+  "loginFeatureAiTitle": "Yapay zekâ yanında",
+  "loginFeatureAiBody": "Özetle, sor, sesle yaz; belgelerinle konuş.",
+  "loginFeatureShareTitle": "Birlikte yaz",
+  "loginFeatureShareBody": "Notları ve klasörleri arkadaşlarınla canlı paylaş.",
+  "loginFeatureInkTitle": "Kalem ve PDF",
+  "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz."
 }

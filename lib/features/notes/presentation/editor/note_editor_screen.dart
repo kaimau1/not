@@ -54,6 +54,7 @@ import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
 import '../../data/note_speech.dart';
 import '../../data/note_share.dart';
+import '../../data/note_shares_repository.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
@@ -64,6 +65,7 @@ import '../../domain/list_convert.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_type.dart';
 import '../../domain/page_notes.dart';
+import '../collaborators_sheet.dart';
 import '../color_picker_sheet.dart';
 import '../note_stats_sheet.dart';
 import '../notes_providers.dart';
@@ -6342,6 +6344,45 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // bulunması hem durumunun okunması iki dokunuş istiyordu;
               // başlıktaki küçük raptiye göstergesi yalnız DURUMU söylüyor,
               // dokunulabilir değil.
+              // **ORTAK ÇALIŞAN** (kullanıcı isteği 2026-09-22: "ortak not
+              // butonu keepteki gibi"). Keep'teki yeri: notun kendi
+              // araçlarının yanında, tek dokunuşla. Paylaşılmışsa simge
+              // doluya döner ve kişi sayısını rozetle gösterir — notun
+              // başkalarına açık olduğu, menüye girmeden görünsün.
+              // Abonelik yalnız bu düğmede (bkz. yukarıdaki kasma notu).
+              Consumer(
+                builder: (context, ref, _) {
+                  final owner = widget.ownerId;
+                  final count = owner == null
+                      ? ref.watch(
+                          myNoteSharesProvider.select(
+                            (m) =>
+                                m.value?[widget.noteId]?.sharedWith.length ?? 0,
+                          ),
+                        )
+                      : 1;
+                  return IconButton(
+                    tooltip: count > 0
+                        ? l10n.collaboratorsCount(count)
+                        : l10n.collaborators,
+                    icon: Badge(
+                      isLabelVisible: owner == null && count > 0,
+                      label: Text('$count'),
+                      child: Icon(
+                        count > 0
+                            ? Icons.people_alt
+                            : Icons.person_add_alt_1_outlined,
+                      ),
+                    ),
+                    onPressed: () => showCollaboratorsSheet(
+                      context,
+                      ref,
+                      noteId: widget.noteId,
+                      ownerId: owner,
+                    ),
+                  );
+                },
+              ),
               IconButton(
                 tooltip: note.pinned ? l10n.unpin : l10n.pin,
                 isSelected: note.pinned,

@@ -3520,4 +3520,115 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Mitbearbeiter';
+
+  @override
+  String get collaboratorsInfo =>
+      'Hinzugefügte Personen sehen diese Notiz auf ihrem Startbildschirm und bearbeiten sie gleichzeitig mit dir.';
+
+  @override
+  String get collaboratorsOwner => 'Besitzer';
+
+  @override
+  String get collaboratorsFriendsTitle => 'DEINE FREUNDE';
+
+  @override
+  String get collaboratorsLeave => 'Geteilte Notiz verlassen';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Diese Notiz erscheint nicht mehr auf deinem Startbildschirm. Verlassen?';
+
+  @override
+  String get collaboratorsSaved => 'Freigabe aktualisiert';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Mit $count Personen geteilt';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Nur der Besitzer der Notiz kann Mitbearbeiter ändern.';
+
+  @override
+  String get sharedWithMe => 'Mit mir geteilt';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Noch keine Notizen mit dir geteilt. Sie erscheinen hier, wenn dich jemand zu einer Notiz hinzufügt.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Geteilt von $name';
+  }
+
+  @override
+  String get navNotes => 'Notizen';
+
+  @override
+  String get railExpand => 'Menü erweitern';
+
+  @override
+  String get railCollapse => 'Menü einklappen';
+
+  @override
+  String get newNoteShort => 'Neue Notiz';
+
+  @override
+  String get newChecklistShort => 'Neue Liste';
+
+  @override
+  String get listPaneHide => 'Notizliste ausblenden';
+
+  @override
+  String get listPaneShow => 'Notizliste einblenden';
+
+  @override
+  String get keyboardShortcuts => 'Tastenkürzel';
+
+  @override
+  String get shortcutSearch => 'Notizen durchsuchen';
+
+  @override
+  String get shortcutToggleList => 'Notizliste aus-/einblenden';
+
+  @override
+  String get shortcutSections => 'Zwischen Bereichen wechseln';
+
+  @override
+  String get shortcutHelp => 'Tastenkürzel anzeigen';
+
+  @override
+  String get noNoteSelectedHint => 'oder beginne eine neue Notiz';
+
+  @override
+  String get loginFeatureSyncTitle => 'Gleiche Notizen auf jedem Gerät';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Sofortige Synchronisierung zwischen Handy, Tablet, Computer und Web.';
+
+  @override
+  String get loginFeatureAiTitle => 'KI an deiner Seite';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Zusammenfassen, fragen, diktieren; mit Dokumenten chatten.';
+
+  @override
+  String get loginFeatureShareTitle => 'Gemeinsam schreiben';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Notizen und Ordner live mit Freunden teilen.';
+
+  @override
+  String get loginFeatureInkTitle => 'Stift und PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Handschriftlich notieren, auf PDFs und Folien schreiben.';
 }

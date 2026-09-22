@@ -1,12 +1,12 @@
 {
-    "name": "notlar",
-    "short_name": "notlar",
+    "name": "Notlar — akıllı not defteri",
+    "short_name": "Notlar",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#F3EFE3",
+    "theme_color": "#7D5703",
+    "description": "Her cihazda aynı notlar: yapay zekâ asistanı, el yazısı, PDF üstüne not ve canlı ortak notlar.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
@@ -31,5 +31,10 @@
             "type": "image/png",
             "purpose": "maskable"
         }
+    ],
+    "lang": "tr",
+    "categories": [
+        "productivity",
+        "utilities"
     ]
 }

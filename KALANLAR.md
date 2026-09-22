@@ -2,6 +2,24 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-09-22 — geniş ekran / ortak not / madde geçişi (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Tablette gözle bakılmalı**: gezinme rayı (≥600 dp genişlik VE ≥500
+  boy), ana-detay artık 840 dp İÇERİK genişliğinde; odak modu (ray'daki
+  kenar çubuğu simgesi / Ctrl+\). Yatay telefonda ray ÇIKMAMALI.
+- [ ] **Ortak not iki hesapla denenmeli**: A notu B'ye açar → B'nin ana
+  ekranında "Benimle paylaşılanlar" çipi → B düzenler, A canlı görür → B
+  "Paylaşımdan ayrıl". Kurallar main push'unda CI ile yayınlanıyor.
+- [ ] **Ortak çalışanın EKLEDİĞİ görsel sahibine görünmez**: ek yükleme
+  `attachmentRepositoryProvider` (giriş yapan kullanıcının Storage yolu)
+  üzerinden gidiyor; sahip o yolu okuyamaz. Paylaşılan KLASÖRDEKİ notta da
+  aynı sınır zaten vardı. Çözüm: paylaşılan notta eki sahibin yoluna yazmak
+  + storage kuralında ortak çalışana yazma izni.
+- [ ] **Ortak not bildirimi yok**: B'ye not açılınca bildirim düşmez (çip
+  belirir). Klasör etkinlik servisinin (SharedActivityService) not
+  karşılığı yazılabilir.
+- [ ] **Yeni 33 çeviri anahtarı × 15 dil makine üretimi** — anadili
+  konuşana gösterilmedi.
+
 ## 2026-08-30 turundan kalan (CİHAZDA GÖRÜLMEDİ)
 
 2. turda bu makineye Flutter SDK geldi (`C:\src\flutter`): `flutter analyze` +
@@ -307,10 +325,9 @@ sonra çeviri dalgası (mekanizma hazır), en son Play Billing (en büyük iş).
   anında uyguluyor; derleniyor ama gerçek ana ekranda kimse bakmadı.
   Kontrol: telefonu AÇIK moda al, uygulamada Koyu seç, dört widget'a da bak
   (2026-08-05).
-- [ ] **Web ikonları güncellenmedi** — `web/` hâlâ Flutter şablonunun stok
-  ikonlarını taşıyor (eski çivit simge de oraya hiç işlenmemişti). Proje
-  hedefi Android + Windows olduğu için atlandı. YAPILMAYACAK: `web/`
-  derlenmiyor bile; madde kayıt olarak duruyor.
+- [x] **Web ikonları güncellendi** (2026-09-22) — gerçek simgeden
+  (assets/icon) 192/512 + maskable + favicon üretildi; web CI'da derlenip
+  hekimasistani.com'a yayınlanıyor.
 - [ ] **Yeni çeviriler (44 + 12 anahtar × 15 dil) makine üretimi**, gözden
   geçirilmedi — yukarıdaki "Çevirileri anadili konuşana göstert" maddesinin
   kapsamına girer.

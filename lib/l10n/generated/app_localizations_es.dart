@@ -3512,4 +3512,115 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Colaboradores';
+
+  @override
+  String get collaboratorsInfo =>
+      'Las personas que añadas verán esta nota en su pantalla de inicio y la editarán contigo en tiempo real.';
+
+  @override
+  String get collaboratorsOwner => 'Propietario';
+
+  @override
+  String get collaboratorsFriendsTitle => 'TUS AMIGOS';
+
+  @override
+  String get collaboratorsLeave => 'Salir de la nota compartida';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Esta nota ya no aparecerá en tu pantalla de inicio. ¿Salir?';
+
+  @override
+  String get collaboratorsSaved => 'Uso compartido actualizado';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Compartida con $count personas';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Solo el propietario de la nota puede cambiar los colaboradores.';
+
+  @override
+  String get sharedWithMe => 'Compartidas conmigo';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Aún no han compartido notas contigo. Aparecerán aquí cuando alguien te añada a una nota.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Compartida por $name';
+  }
+
+  @override
+  String get navNotes => 'Notas';
+
+  @override
+  String get railExpand => 'Expandir menú';
+
+  @override
+  String get railCollapse => 'Contraer menú';
+
+  @override
+  String get newNoteShort => 'Nueva nota';
+
+  @override
+  String get newChecklistShort => 'Nueva lista';
+
+  @override
+  String get listPaneHide => 'Ocultar lista de notas';
+
+  @override
+  String get listPaneShow => 'Mostrar lista de notas';
+
+  @override
+  String get keyboardShortcuts => 'Atajos de teclado';
+
+  @override
+  String get shortcutSearch => 'Buscar notas';
+
+  @override
+  String get shortcutToggleList => 'Ocultar / mostrar lista de notas';
+
+  @override
+  String get shortcutSections => 'Cambiar entre secciones';
+
+  @override
+  String get shortcutHelp => 'Mostrar atajos';
+
+  @override
+  String get noNoteSelectedHint => 'o empieza una nota nueva';
+
+  @override
+  String get loginFeatureSyncTitle => 'Las mismas notas en cada dispositivo';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Sincronización instantánea entre móvil, tableta, ordenador y web.';
+
+  @override
+  String get loginFeatureAiTitle => 'IA a tu lado';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Resume, pregunta, dicta; conversa con tus documentos.';
+
+  @override
+  String get loginFeatureShareTitle => 'Escribid juntos';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Comparte notas y carpetas en vivo con amigos.';
+
+  @override
+  String get loginFeatureInkTitle => 'Lápiz y PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Toma notas a mano, escribe sobre PDF y diapositivas.';
 }

@@ -3495,4 +3495,115 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Ortak çalışanlar';
+
+  @override
+  String get collaboratorsInfo =>
+      'Eklediğin kişiler bu notu kendi ana ekranlarında görür ve seninle aynı anda düzenler.';
+
+  @override
+  String get collaboratorsOwner => 'Sahibi';
+
+  @override
+  String get collaboratorsFriendsTitle => 'ARKADAŞLARIN';
+
+  @override
+  String get collaboratorsLeave => 'Paylaşımdan ayrıl';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Bu not artık ana ekranında görünmeyecek. Ayrılmak istiyor musun?';
+
+  @override
+  String get collaboratorsSaved => 'Paylaşım güncellendi';
+
+  @override
+  String collaboratorsCount(int count) {
+    return '$count kişiyle paylaşıldı';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Ortak çalışanları yalnız notun sahibi değiştirebilir.';
+
+  @override
+  String get sharedWithMe => 'Benimle paylaşılanlar';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Henüz seninle paylaşılan bir not yok. Biri seni bir notuna eklediğinde burada görünür.';
+
+  @override
+  String sharedByName(Object name) {
+    return '$name paylaştı';
+  }
+
+  @override
+  String get navNotes => 'Notlar';
+
+  @override
+  String get railExpand => 'Menüyü genişlet';
+
+  @override
+  String get railCollapse => 'Menüyü daralt';
+
+  @override
+  String get newNoteShort => 'Yeni not';
+
+  @override
+  String get newChecklistShort => 'Yeni liste';
+
+  @override
+  String get listPaneHide => 'Not listesini gizle';
+
+  @override
+  String get listPaneShow => 'Not listesini göster';
+
+  @override
+  String get keyboardShortcuts => 'Klavye kısayolları';
+
+  @override
+  String get shortcutSearch => 'Notlarda ara';
+
+  @override
+  String get shortcutToggleList => 'Not listesini gizle / göster';
+
+  @override
+  String get shortcutSections => 'Bölümler arasında geç';
+
+  @override
+  String get shortcutHelp => 'Kısayolları göster';
+
+  @override
+  String get noNoteSelectedHint => 'ya da yeni bir not başlat';
+
+  @override
+  String get loginFeatureSyncTitle => 'Her cihazda aynı notlar';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Telefon, tablet, bilgisayar ve web arasında anında senkron.';
+
+  @override
+  String get loginFeatureAiTitle => 'Yapay zekâ yanında';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Özetle, sor, sesle yaz; belgelerinle konuş.';
+
+  @override
+  String get loginFeatureShareTitle => 'Birlikte yaz';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Notları ve klasörleri arkadaşlarınla canlı paylaş.';
+
+  @override
+  String get loginFeatureInkTitle => 'Kalem ve PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'El yazısıyla not al, PDF ve slaytların üstüne yaz.';
 }

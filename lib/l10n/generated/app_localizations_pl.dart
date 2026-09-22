@@ -3514,4 +3514,115 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Współpracownicy';
+
+  @override
+  String get collaboratorsInfo =>
+      'Dodane osoby widzą tę notatkę na swoim ekranie głównym i edytują ją razem z tobą na żywo.';
+
+  @override
+  String get collaboratorsOwner => 'Właściciel';
+
+  @override
+  String get collaboratorsFriendsTitle => 'TWOI ZNAJOMI';
+
+  @override
+  String get collaboratorsLeave => 'Opuść udostępnioną notatkę';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Ta notatka nie będzie już widoczna na twoim ekranie głównym. Opuścić?';
+
+  @override
+  String get collaboratorsSaved => 'Udostępnianie zaktualizowane';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Udostępniono $count osobom';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Tylko właściciel notatki może zmieniać współpracowników.';
+
+  @override
+  String get sharedWithMe => 'Udostępnione mi';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Nikt jeszcze nie udostępnił ci notatki. Pojawią się tutaj, gdy ktoś doda cię do notatki.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Udostępnia: $name';
+  }
+
+  @override
+  String get navNotes => 'Notatki';
+
+  @override
+  String get railExpand => 'Rozwiń menu';
+
+  @override
+  String get railCollapse => 'Zwiń menu';
+
+  @override
+  String get newNoteShort => 'Nowa notatka';
+
+  @override
+  String get newChecklistShort => 'Nowa lista';
+
+  @override
+  String get listPaneHide => 'Ukryj listę notatek';
+
+  @override
+  String get listPaneShow => 'Pokaż listę notatek';
+
+  @override
+  String get keyboardShortcuts => 'Skróty klawiszowe';
+
+  @override
+  String get shortcutSearch => 'Szukaj w notatkach';
+
+  @override
+  String get shortcutToggleList => 'Ukryj / pokaż listę notatek';
+
+  @override
+  String get shortcutSections => 'Przełączaj sekcje';
+
+  @override
+  String get shortcutHelp => 'Pokaż skróty';
+
+  @override
+  String get noNoteSelectedHint => 'lub zacznij nową notatkę';
+
+  @override
+  String get loginFeatureSyncTitle => 'Te same notatki na każdym urządzeniu';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Natychmiastowa synchronizacja między telefonem, tabletem, komputerem i siecią.';
+
+  @override
+  String get loginFeatureAiTitle => 'AI u twojego boku';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Streszczaj, pytaj, dyktuj; rozmawiaj z dokumentami.';
+
+  @override
+  String get loginFeatureShareTitle => 'Piszcie razem';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Udostępniaj notatki i foldery znajomym na żywo.';
+
+  @override
+  String get loginFeatureInkTitle => 'Pióro i PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Notuj odręcznie, pisz na PDF-ach i slajdach.';
 }

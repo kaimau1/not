@@ -3507,4 +3507,116 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Соавторы';
+
+  @override
+  String get collaboratorsInfo =>
+      'Добавленные люди видят эту заметку на главном экране и редактируют её вместе с вами в реальном времени.';
+
+  @override
+  String get collaboratorsOwner => 'Владелец';
+
+  @override
+  String get collaboratorsFriendsTitle => 'ВАШИ ДРУЗЬЯ';
+
+  @override
+  String get collaboratorsLeave => 'Покинуть общую заметку';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Эта заметка больше не будет отображаться на главном экране. Покинуть?';
+
+  @override
+  String get collaboratorsSaved => 'Доступ обновлён';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Открыт доступ: $count чел.';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Изменять соавторов может только владелец заметки.';
+
+  @override
+  String get sharedWithMe => 'Доступные мне';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'С вами пока не поделились заметками. Они появятся здесь, когда вас добавят к заметке.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Поделился(-ась): $name';
+  }
+
+  @override
+  String get navNotes => 'Заметки';
+
+  @override
+  String get railExpand => 'Развернуть меню';
+
+  @override
+  String get railCollapse => 'Свернуть меню';
+
+  @override
+  String get newNoteShort => 'Новая заметка';
+
+  @override
+  String get newChecklistShort => 'Новый список';
+
+  @override
+  String get listPaneHide => 'Скрыть список заметок';
+
+  @override
+  String get listPaneShow => 'Показать список заметок';
+
+  @override
+  String get keyboardShortcuts => 'Сочетания клавиш';
+
+  @override
+  String get shortcutSearch => 'Поиск по заметкам';
+
+  @override
+  String get shortcutToggleList => 'Скрыть / показать список заметок';
+
+  @override
+  String get shortcutSections => 'Переключение разделов';
+
+  @override
+  String get shortcutHelp => 'Показать сочетания';
+
+  @override
+  String get noNoteSelectedHint => 'или начните новую заметку';
+
+  @override
+  String get loginFeatureSyncTitle =>
+      'Одни и те же заметки на всех устройствах';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Мгновенная синхронизация между телефоном, планшетом, компьютером и вебом.';
+
+  @override
+  String get loginFeatureAiTitle => 'ИИ рядом';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Резюмируйте, спрашивайте, диктуйте; общайтесь с документами.';
+
+  @override
+  String get loginFeatureShareTitle => 'Пишите вместе';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Делитесь заметками и папками с друзьями в реальном времени.';
+
+  @override
+  String get loginFeatureInkTitle => 'Перо и PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Пишите от руки, делайте пометки на PDF и слайдах.';
 }

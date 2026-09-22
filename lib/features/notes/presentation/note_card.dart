@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +17,7 @@ import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/settings_providers.dart';
+import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -25,9 +25,6 @@ import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
 import 'note_actions_sheet.dart';
 import 'notes_providers.dart';
-
-bool get _isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
 
 /// Kartın YAKLAŞIK yüksekliği (dp), [width] genişliğinde çizildiğinde.
 ///
@@ -439,6 +436,15 @@ class NoteCard extends ConsumerWidget {
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
 
     final hasTitle = note.title.trim().isNotEmpty;
+    // Yalnız BU notun paylaşım durumu izlenir: ayna akışı her değiştiğinde
+    // bütün kartlar yeniden kurulmasın.
+    final shared =
+        ownerId != null ||
+        ref.watch(
+          myNoteSharesProvider.select(
+            (m) => m.value?.containsKey(note.id) ?? false,
+          ),
+        );
     // Durum simgeleri ALT meta satırına indi. Eskiden başlık satırının sağında
     // akıyorlardı ve başlığı sola sıkıştırıyorlardı: üç rozetli bir notta
     // başlık iki kelimede kesiliyordu. Altta, tarihle aynı bantta duruyorlar.
@@ -451,6 +457,9 @@ class NoteCard extends ConsumerWidget {
         Icon(Icons.auto_awesome, size: 13, color: scheme.primary),
       if (note.reminderAt != null)
         Icon(Icons.alarm, size: 13, color: scheme.onSurfaceVariant),
+      // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
+      // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
+      if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
     ];
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
     // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.
@@ -644,10 +653,14 @@ class NoteCard extends ConsumerWidget {
         selected: selectionActive ? selected : null,
         label: semanticLabel,
         child: GestureDetector(
-          onSecondaryTapUp: _isDesktop
-              ? (details) =>
-                    _showContextMenu(context, ref, details.globalPosition)
-              : null,
+          // Sağ tık HER platformda: fareli tablet (Android) ve web de
+          // masaüstü gibi bağlam menüsü alır. Dokunmatik ekran ikincil
+          // dokunuş üretmediği için telefonda davranış değişmez.
+          // Paylaşılan notun menüsü yok (bkz. aşağıdaki ⋮ notu).
+          onSecondaryTapUp: ownerId != null
+              ? null
+              : (details) =>
+                    _showContextMenu(context, ref, details.globalPosition),
           child: Stack(
             children: [
               card,

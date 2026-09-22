@@ -3458,4 +3458,108 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => '공동 작업자';
+
+  @override
+  String get collaboratorsInfo => '추가한 사람은 이 메모를 홈 화면에서 보고 실시간으로 함께 편집합니다.';
+
+  @override
+  String get collaboratorsOwner => '소유자';
+
+  @override
+  String get collaboratorsFriendsTitle => '내 친구';
+
+  @override
+  String get collaboratorsLeave => '공유 메모 나가기';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      '이 메모가 더 이상 홈 화면에 표시되지 않습니다. 나가시겠습니까?';
+
+  @override
+  String get collaboratorsSaved => '공유가 업데이트되었습니다';
+
+  @override
+  String collaboratorsCount(int count) {
+    return '$count명과 공유됨';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner => '메모 소유자만 공동 작업자를 변경할 수 있습니다.';
+
+  @override
+  String get sharedWithMe => '나와 공유됨';
+
+  @override
+  String get sharedWithMeEmpty => '아직 공유된 메모가 없습니다. 누군가 메모에 나를 추가하면 여기에 표시됩니다.';
+
+  @override
+  String sharedByName(Object name) {
+    return '$name님이 공유';
+  }
+
+  @override
+  String get navNotes => '메모';
+
+  @override
+  String get railExpand => '메뉴 펼치기';
+
+  @override
+  String get railCollapse => '메뉴 접기';
+
+  @override
+  String get newNoteShort => '새 메모';
+
+  @override
+  String get newChecklistShort => '새 목록';
+
+  @override
+  String get listPaneHide => '메모 목록 숨기기';
+
+  @override
+  String get listPaneShow => '메모 목록 표시';
+
+  @override
+  String get keyboardShortcuts => '키보드 단축키';
+
+  @override
+  String get shortcutSearch => '메모 검색';
+
+  @override
+  String get shortcutToggleList => '메모 목록 숨기기 / 표시';
+
+  @override
+  String get shortcutSections => '섹션 간 이동';
+
+  @override
+  String get shortcutHelp => '단축키 보기';
+
+  @override
+  String get noNoteSelectedHint => '또는 새 메모 시작';
+
+  @override
+  String get loginFeatureSyncTitle => '모든 기기에서 같은 메모';
+
+  @override
+  String get loginFeatureSyncBody => '휴대폰, 태블릿, 컴퓨터, 웹 간 즉시 동기화.';
+
+  @override
+  String get loginFeatureAiTitle => '곁에 있는 AI';
+
+  @override
+  String get loginFeatureAiBody => '요약하고, 묻고, 받아쓰고; 문서와 대화하세요.';
+
+  @override
+  String get loginFeatureShareTitle => '함께 쓰기';
+
+  @override
+  String get loginFeatureShareBody => '메모와 폴더를 친구와 실시간으로 공유하세요.';
+
+  @override
+  String get loginFeatureInkTitle => '펜과 PDF';
+
+  @override
+  String get loginFeatureInkBody => '손글씨로 메모하고 PDF와 슬라이드에 쓰세요.';
 }

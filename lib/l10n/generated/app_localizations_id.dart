@@ -3513,4 +3513,115 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Kolaborator';
+
+  @override
+  String get collaboratorsInfo =>
+      'Orang yang Anda tambahkan melihat catatan ini di layar utama mereka dan mengeditnya bersama Anda secara langsung.';
+
+  @override
+  String get collaboratorsOwner => 'Pemilik';
+
+  @override
+  String get collaboratorsFriendsTitle => 'TEMAN ANDA';
+
+  @override
+  String get collaboratorsLeave => 'Keluar dari catatan bersama';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Catatan ini tidak akan muncul lagi di layar utama Anda. Keluar?';
+
+  @override
+  String get collaboratorsSaved => 'Berbagi diperbarui';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Dibagikan dengan $count orang';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Hanya pemilik catatan yang dapat mengubah kolaborator.';
+
+  @override
+  String get sharedWithMe => 'Dibagikan dengan saya';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Belum ada catatan yang dibagikan dengan Anda. Catatan muncul di sini saat seseorang menambahkan Anda.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Dibagikan oleh $name';
+  }
+
+  @override
+  String get navNotes => 'Catatan';
+
+  @override
+  String get railExpand => 'Perluas menu';
+
+  @override
+  String get railCollapse => 'Ciutkan menu';
+
+  @override
+  String get newNoteShort => 'Catatan baru';
+
+  @override
+  String get newChecklistShort => 'Daftar baru';
+
+  @override
+  String get listPaneHide => 'Sembunyikan daftar catatan';
+
+  @override
+  String get listPaneShow => 'Tampilkan daftar catatan';
+
+  @override
+  String get keyboardShortcuts => 'Pintasan keyboard';
+
+  @override
+  String get shortcutSearch => 'Cari catatan';
+
+  @override
+  String get shortcutToggleList => 'Sembunyikan / tampilkan daftar catatan';
+
+  @override
+  String get shortcutSections => 'Beralih antarbagian';
+
+  @override
+  String get shortcutHelp => 'Tampilkan pintasan';
+
+  @override
+  String get noNoteSelectedHint => 'atau mulai catatan baru';
+
+  @override
+  String get loginFeatureSyncTitle => 'Catatan yang sama di setiap perangkat';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Sinkron instan antara ponsel, tablet, komputer, dan web.';
+
+  @override
+  String get loginFeatureAiTitle => 'AI di sisi Anda';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Ringkas, tanya, dikte; mengobrol dengan dokumen Anda.';
+
+  @override
+  String get loginFeatureShareTitle => 'Menulis bersama';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Bagikan catatan dan folder secara langsung dengan teman.';
+
+  @override
+  String get loginFeatureInkTitle => 'Pena dan PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Tulis tangan, beri catatan di PDF dan slide.';
 }

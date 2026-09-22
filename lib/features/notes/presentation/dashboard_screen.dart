@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../app/app_commands.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
@@ -853,6 +854,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // isteği: uygulama zaten ana sayfadayken gelirse burada yakalanır.
     // (Uygulama başka ekrandayken/soğuk açılışta gelen istek initState'teki
     // kontrolle okunur; take() çift başlatmayı önler.)
+    // Ctrl+K (bkz. AppShortcuts): arama kutusuna odaklan, yazılı sorguyu
+    // seç ki doğrudan üstüne yazılabilsin.
+    ref.listen(searchFocusRequestProvider, (_, _) {
+      _searchFocus.requestFocus();
+      _searchController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: _searchController.text.length,
+      );
+    });
     ref.listen(voiceAutostartProvider, (previous, next) {
       if (next) {
         WidgetsBinding.instance.addPostFrameCallback(
@@ -1731,14 +1741,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
-          child: Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton.icon(
-              onPressed: () =>
-                  ref.read(folderShelfExpandedProvider.notifier).toggle(),
-              icon: const Icon(Icons.unfold_less, size: 18),
-              label: Text(context.l10n.folderShelfCollapse),
-            ),
+          child: Row(
+            children: [
+              // Ortak notlar karo görünümünde de ulaşılabilir kalsın.
+              const Padding(
+                padding: EdgeInsetsDirectional.only(start: 12),
+                child: SizedBox(
+                  height: FolderChip.stripHeight - 8,
+                  child: SharedNotesChip(),
+                ),
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: () =>
+                    ref.read(folderShelfExpandedProvider.notifier).toggle(),
+                icon: const Icon(Icons.unfold_less, size: 18),
+                label: Text(context.l10n.folderShelfCollapse),
+              ),
+            ],
           ),
         ),
         _folderGrid(columns, folders, shared, total),
@@ -1809,6 +1829,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     ),
                     const SizedBox(width: 6),
                   ],
+                  // Ortak notlar (bkz. SharedNotesChip) — yoksa yer kaplamaz.
+                  const SharedNotesChip(),
                   const NewFolderChip(),
                 ],
               ),

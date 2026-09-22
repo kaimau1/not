@@ -3516,4 +3516,115 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'Medewerkers';
+
+  @override
+  String get collaboratorsInfo =>
+      'Mensen die je toevoegt zien deze notitie op hun startscherm en bewerken hem tegelijk met jou.';
+
+  @override
+  String get collaboratorsOwner => 'Eigenaar';
+
+  @override
+  String get collaboratorsFriendsTitle => 'JE VRIENDEN';
+
+  @override
+  String get collaboratorsLeave => 'Gedeelde notitie verlaten';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'Deze notitie verschijnt niet meer op je startscherm. Verlaten?';
+
+  @override
+  String get collaboratorsSaved => 'Delen bijgewerkt';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'Gedeeld met $count personen';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'Alleen de eigenaar van de notitie kan medewerkers wijzigen.';
+
+  @override
+  String get sharedWithMe => 'Met mij gedeeld';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'Er zijn nog geen notities met je gedeeld. Ze verschijnen hier zodra iemand je aan een notitie toevoegt.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'Gedeeld door $name';
+  }
+
+  @override
+  String get navNotes => 'Notities';
+
+  @override
+  String get railExpand => 'Menu uitvouwen';
+
+  @override
+  String get railCollapse => 'Menu samenvouwen';
+
+  @override
+  String get newNoteShort => 'Nieuwe notitie';
+
+  @override
+  String get newChecklistShort => 'Nieuwe lijst';
+
+  @override
+  String get listPaneHide => 'Notitielijst verbergen';
+
+  @override
+  String get listPaneShow => 'Notitielijst tonen';
+
+  @override
+  String get keyboardShortcuts => 'Sneltoetsen';
+
+  @override
+  String get shortcutSearch => 'Notities doorzoeken';
+
+  @override
+  String get shortcutToggleList => 'Notitielijst verbergen / tonen';
+
+  @override
+  String get shortcutSections => 'Wisselen tussen onderdelen';
+
+  @override
+  String get shortcutHelp => 'Sneltoetsen tonen';
+
+  @override
+  String get noNoteSelectedHint => 'of begin een nieuwe notitie';
+
+  @override
+  String get loginFeatureSyncTitle => 'Dezelfde notities op elk apparaat';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'Direct gesynchroniseerd tussen telefoon, tablet, computer en web.';
+
+  @override
+  String get loginFeatureAiTitle => 'AI aan je zijde';
+
+  @override
+  String get loginFeatureAiBody =>
+      'Samenvatten, vragen, dicteren; chat met je documenten.';
+
+  @override
+  String get loginFeatureShareTitle => 'Samen schrijven';
+
+  @override
+  String get loginFeatureShareBody =>
+      'Deel notities en mappen live met vrienden.';
+
+  @override
+  String get loginFeatureInkTitle => 'Pen en PDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'Maak handgeschreven notities, schrijf op PDF\'s en dia\'s.';
 }

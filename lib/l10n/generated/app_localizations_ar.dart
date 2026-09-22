@@ -3490,4 +3490,114 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => 'المتعاونون';
+
+  @override
+  String get collaboratorsInfo =>
+      'يرى الأشخاص الذين تضيفهم هذه الملاحظة على شاشتهم الرئيسية ويحررونها معك مباشرة.';
+
+  @override
+  String get collaboratorsOwner => 'المالك';
+
+  @override
+  String get collaboratorsFriendsTitle => 'أصدقاؤك';
+
+  @override
+  String get collaboratorsLeave => 'مغادرة الملاحظة المشتركة';
+
+  @override
+  String get collaboratorsLeaveConfirm =>
+      'لن تظهر هذه الملاحظة على شاشتك الرئيسية بعد الآن. هل تريد المغادرة؟';
+
+  @override
+  String get collaboratorsSaved => 'تم تحديث المشاركة';
+
+  @override
+  String collaboratorsCount(int count) {
+    return 'تمت المشاركة مع $count أشخاص';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner =>
+      'يمكن لمالك الملاحظة فقط تغيير المتعاونين.';
+
+  @override
+  String get sharedWithMe => 'تمت مشاركتها معي';
+
+  @override
+  String get sharedWithMeEmpty =>
+      'لم تتم مشاركة أي ملاحظات معك بعد. ستظهر هنا عندما يضيفك أحد إلى ملاحظة.';
+
+  @override
+  String sharedByName(Object name) {
+    return 'شاركها $name';
+  }
+
+  @override
+  String get navNotes => 'الملاحظات';
+
+  @override
+  String get railExpand => 'توسيع القائمة';
+
+  @override
+  String get railCollapse => 'طي القائمة';
+
+  @override
+  String get newNoteShort => 'ملاحظة جديدة';
+
+  @override
+  String get newChecklistShort => 'قائمة جديدة';
+
+  @override
+  String get listPaneHide => 'إخفاء قائمة الملاحظات';
+
+  @override
+  String get listPaneShow => 'إظهار قائمة الملاحظات';
+
+  @override
+  String get keyboardShortcuts => 'اختصارات لوحة المفاتيح';
+
+  @override
+  String get shortcutSearch => 'البحث في الملاحظات';
+
+  @override
+  String get shortcutToggleList => 'إخفاء / إظهار قائمة الملاحظات';
+
+  @override
+  String get shortcutSections => 'التنقل بين الأقسام';
+
+  @override
+  String get shortcutHelp => 'عرض الاختصارات';
+
+  @override
+  String get noNoteSelectedHint => 'أو ابدأ ملاحظة جديدة';
+
+  @override
+  String get loginFeatureSyncTitle => 'الملاحظات نفسها على كل جهاز';
+
+  @override
+  String get loginFeatureSyncBody =>
+      'مزامنة فورية بين الهاتف والجهاز اللوحي والكمبيوتر والويب.';
+
+  @override
+  String get loginFeatureAiTitle => 'الذكاء الاصطناعي بجانبك';
+
+  @override
+  String get loginFeatureAiBody => 'لخّص واسأل وأملِ؛ وتحدث مع مستنداتك.';
+
+  @override
+  String get loginFeatureShareTitle => 'اكتبوا معًا';
+
+  @override
+  String get loginFeatureShareBody =>
+      'شارك الملاحظات والمجلدات مع أصدقائك مباشرة.';
+
+  @override
+  String get loginFeatureInkTitle => 'القلم وPDF';
+
+  @override
+  String get loginFeatureInkBody =>
+      'دوّن بخط اليد واكتب على ملفات PDF والشرائح.';
 }

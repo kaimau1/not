@@ -44,6 +44,13 @@ abstract final class AppConstants {
   /// (bkz. storage.rules).
   static const String folderChatStoragePrefix = 'folderChats';
 
+  /// **ORTAK NOT** (Keep'teki "ortak çalışan") — `noteShares/{sahip}_{notId}`.
+  /// Tek bir notun canlı paylaşım aynası; klasör aynasının ([folderSharesCollection])
+  /// not düzeyindeki karşılığı. Kimlik sahibin uid'iyle ÖNEKLİ: başka biri
+  /// aynı not kimliğiyle önce bir ayna yaratıp sahibin paylaşmasını
+  /// engelleyemesin (bkz. firestore.rules → noteShares).
+  static const String noteSharesCollection = 'noteShares';
+
   /// **GELEN NOTLAR** — `users/{uid}/inboxNotes/{id}`. Bir arkadaşın bana
   /// GÖNDERDİĞİ not, kendi notlarımın arasına KARIŞMADAN burada bekler;
   /// kabul edersem gerçek bir nota dönüşür (bkz. InboxRepository).

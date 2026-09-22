@@ -3172,3 +3172,88 @@ derlenmiyor. CI `FLUTTER_VERSION: 3.44.6` kullanıyor (bkz. build.yml); o
 sürümle takım yeşil. Ders: SDK'yı indirirken sürümü CI'dan oku, "en son
 stable" alma — ayrıca `flutter pub get` yeni SDK'da pubspec.lock'u da
 güncelliyor (geri alındı).
+
+## 2026-09-22 — Geniş ekran/web tasarımı, ortak not (Keep), madde işaretleme geçişi
+
+İstek: "web sitemizi ve not uygulamasının tablet gibi geniş ekranlı
+cihazlarda kullanımını baştan tasarlamalıyız … ortak not butonu keepteki
+gibi … liste maddeleri tıklanma geçiş animasyonu".
+
+### Geniş ekran: dış kabuk `AppFrame` (lib/app/app_frame.dart)
+Router'a İKİNCİ (dış) bir ShellRoute eklendi; login dışındaki her ekran
+onun içinde. Genişlik ≥ 600 VE boy ≥ 500'de solda NavigationRail (Notlar,
+Yapay Zekâ, Hatırlatıcılar, Arşiv, Çöp, Ayarlar + Yeni not + liste gizle +
+kişiler + kısayollar). ≥ 1280'de etiketli açılır; elle seçim kalıcı
+(`rail_extended`). Boy şartı bilinçli: yatay TELEFON 600'ü aşıyor ama
+360–420 dp'ye ray sığmıyor — telefon yatayda da eskisi gibi raysız.
+
+**KARAR — içerik kendi alanını "ekran" sanır**: ray varken çocuk
+`MediaQuery.size` = kendi alanı (LayoutBuilder ile). Ana-detay kararı,
+sütun sayısı, dar ekran kısayolları hep `MediaQuery.sizeOf` okuyor; pencere
+genişliğine baksalardı ray yer kaplarken editör söz verilenden dar kalırdı.
+Bu yüzden `kSplitBreakpoint` artık İÇERİK genişliği ve 900 → 840 indi.
+
+**TUZAK — `routerDelegate.currentConfiguration.uri` push'u görmez**: yalnız
+son `go` konumunu veriyor; notların üstüne push'lanmış Arşiv'de hâlâ "/"
+diyordu (test yakaladı). Doğrusu `router.state.uri` (en üst eşleşme).
+Tek yer: `currentLocation()` (app_commands.dart).
+
+**Bölüm geçişi yığını büyütmez** (`openSection`): notların üstünde en
+fazla BİR bölüm katmanı; bölümden bölüme `pushReplacement`, Notlar'a dönüş
+geri çıkarak (go('/') değil — sağ panelde açık not kapanmasın).
+
+Kısayollar (`AppShortcuts`, her genişlikte): Ctrl+N, Ctrl+K (arama —
+`searchFocusRequestProvider` sayacı, dashboard dinler), Ctrl+\ (liste
+paneli gizle/göster = ODAK MODU, `list_pane_collapsed`), Ctrl+, , Alt+1…6,
+Ctrl+/. Çerçeve kendisi `Focus(autofocus)` alır — hiçbir şey odaklı
+değilken (ayarlar yeni açıldı) de kısayollar çalışsın. Yan etki: dashboard'un
+kendi `Focus(autofocus)`ı artık odağı kapmıyor; onun Ctrl+N'i yerine
+çerçeveninki çalışıyor (aynı iş).
+
+Odak modunda liste ağaçtan ÇIKMAZ (Offstage + genişlik 0'a akar), ağaç şekli
+sabit — çıksaydı kaydırma konumu/arama kutusu sıfırlanırdı. Açık not yokken
+(`/`) liste gizlenmez.
+
+Web: `web/index.html` açılış ekranı (flutter-first-frame'de solar), meta/OG,
+`lang=tr`; web ikonları gerçek simgeden (assets/icon) üretildi; web'de
+tarayıcı sağ tık menüsü kapalı (kart bağlam menüsü açılsın). Kart sağ tık
+menüsü artık her platformda (fareli tablet dahil). Giriş ekranı ≥ 840'ta
+vitrin + giriş kartı (hekimasistani.com'un ilk yüzü).
+
+### Ortak not (Keep'teki ortak çalışan)
+Ayna: `noteShares/{sahipUid}_{notId}` {ownerId, noteId, ownerName,
+sharedWith, names}. Not TAŞINMAZ; ortak çalışan sahibin
+`users/{sahip}/notes/{id}`'sine `?owner=` ile yazar (klasör paylaşımının
+editör altyapısı aynen). Davet/kabul YOK (Keep gibi), seçim yalnız
+arkadaş listesinden; kayıt Kaydet'te TOPLU (her dokunuşta yazılsa karşı
+tarafta not belirip kaybolurdu).
+
+**Kural kararları** (24 senaryo emülatörde geçti, bkz. aşağıdaki not):
+kimlik öneki yazanın uid'i olmak ZORUNDA + not gerçekten onun koleksiyonunda
+(`exists`) — yoksa biri başkasının not kimliğiyle ayna yaratabilirdi. Uid'de
+`_` olmadığından `split('_')[0]` sahibi verir; bu sayede VAR OLMAYAN aynayı
+okumak/silmek de sahibe açık (resource null iken `resource.data` hata verirdi).
+**TUZAK**: sahibin `where(ownerId == uid)` SORGUSU yol önekini kanıt saymıyor
+— kurala ayrıca `auth.uid == resource.data.ownerId` eklendi. Ortak çalışan
+notu okur/günceller (klasör değiştiremez), silemez; aynadan yalnız KENDİNİ
+çıkarabilir. Storage: `users/{sahip}/notes/{id}/**` ortak çalışana OKUMA açık.
+
+Emülatör doğrulaması (yerel, commit'lenmedi): `firebase-tools@13` +
+`@firebase/rules-unit-testing`, `emulators:exec --only firestore,storage`.
+Java 21 konteynerde var; jar'lar indirilebiliyor.
+
+### Madde işaretleme geçişi (items_editor.dart)
+Satır iki blok arasında taşındığı için (işaretliler footer'da) State yeniden
+kuruluyor, geçiş oynayamıyordu. `_settleDuration` 220 → 420 ms: kutu zıplar
+(`_CheckPop`), çizgi ve yazı rengi AKAR (TweenAnimationBuilder, yalnız
+DEĞİŞİMDE oynar), satır eski yerinde KATLANIR (`_CheckMove` leaving), yeni
+yerinde AÇILIR (arriving, `_arriving` kümesi). Sarmalayıcı KOŞULSUZ — ağaç
+şekli evreye göre değişseydi TextField state'i sıfırlanırdı. Evre satır
+önbelleği anahtarında (`_rowCache`), yoksa bayat satır dönerdi.
+TUZAK: `AnimationController.reverse` süresiz çağrılınca assert — süre
+`didUpdateWidget`'ta reverse'ten ÖNCE verilmeli.
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`'a indirildi (CI ile aynı sürüm); takım
+981/981 yeşil, analyze temiz. graphify konteynerde yok — graf bu turda
+güncellenmedi.

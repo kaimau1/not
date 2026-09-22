@@ -22,6 +22,7 @@ import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import 'app_frame.dart';
 import 'split_shell.dart';
 
 /// Editör rotasının yolu.
@@ -66,92 +67,110 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      // Liste ve not tek kabuk altında: geniş ekranda yan yana (SplitShell),
-      // dar ekranda eskisi gibi ayrı ayrı. ShellRoute, rota değişirken sol
-      // paneli yeniden kurmadığından listenin kaydırma konumu korunur.
+      // **GENİŞ EKRAN ÇERÇEVESİ** (bkz. AppFrame): oturum açıkken bütün
+      // ekranlar tek dış kabuğun içinde — geniş ekranda gezinme rayı ve her
+      // genişlikte klavye kısayolları buradan gelir. Giriş ekranı dışarıda:
+      // oturum yokken gidilecek bölüm yok.
       ShellRoute(
-        builder: (context, state, child) => SplitShell(child: child),
+        builder: (context, state, child) => AppFrame(child: child),
         routes: [
+          // Liste ve not tek kabuk altında: geniş ekranda yan yana (SplitShell),
+          // dar ekranda eskisi gibi ayrı ayrı. ShellRoute, rota değişirken sol
+          // paneli yeniden kurmadığından listenin kaydırma konumu korunur.
+          ShellRoute(
+            builder: (context, state, child) => SplitShell(child: child),
+            routes: [
+              GoRoute(
+                path: '/',
+                // Geniş ekranda liste zaten SOL panelde; burada onu bir daha
+                // çizmek yerine sağ panele yer tutucu koyulur.
+                builder: (context, state) =>
+                    MediaQuery.sizeOf(context).width < kSplitBreakpoint
+                    ? const DashboardScreen()
+                    : const NoNoteSelected(),
+              ),
+              GoRoute(
+                path: '/notebook/:id',
+                builder: (context, state) => ArchiveNoteScreen(
+                  key: ValueKey('notebook-${state.pathParameters['id']}'),
+                  noteId: state.pathParameters['id']!,
+                ),
+              ),
+              GoRoute(
+                path: '/note/:id',
+                // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
+                // noteId ile yapıyor; go/pushReplacement aynı GoRoute'un Element'ini
+                // geri dönüştürürse key olmadan ekranda ÖNCEKİ notun içeriği kalırdı.
+                builder: (context, state) => NoteEditorScreen(
+                  key: ValueKey('note-${state.pathParameters['id']}'),
+                  noteId: state.pathParameters['id']!,
+                  // ?owner=<uid>: PAYLAŞILAN klasördeki not — sahibinin
+                  // koleksiyonundan okunur/yazılır (bkz. NoteEditorScreen.ownerId).
+                  ownerId: state.uri.queryParameters['owner'],
+                  // ?ro=1: yalnız OKUMA yetkisi verilmiş paylaşılan not — alanlar
+                  // kilitli açılır (bkz. NoteEditorScreen.readOnly).
+                  readOnly: state.uri.queryParameters['ro'] == '1',
+                  // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
+                  startDrawing: state.uri.queryParameters['draw'] == '1',
+                  // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
+                  startVoiceCapture: state.uri.queryParameters['voice'] == '1',
+                  // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
+                  // imlecin olduğu yere anında yazılır (yapay zekâ yok).
+                  startDictation: state.uri.queryParameters['dictate'] == '1',
+                  // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
+                  startVideo: state.uri.queryParameters['video'] == '1',
+                  // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
+                  startPhoto: state.uri.queryParameters['photo'] == '1',
+                  // ?scan=1: belge tara not al — belge tarayıcı açılır.
+                  startScan: state.uri.queryParameters['scan'] == '1',
+                  // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
+                  // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
+                  startPdf: state.uri.queryParameters['pdf'] == '1',
+                  // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
+                  startSlides: state.uri.queryParameters['slides'] == '1',
+                ),
+              ),
+            ],
+          ),
           GoRoute(
-            path: '/',
-            // Geniş ekranda liste zaten SOL panelde; burada onu bir daha
-            // çizmek yerine sağ panele yer tutucu koyulur.
+            path: '/settings',
             builder: (context, state) =>
-                MediaQuery.sizeOf(context).width < kSplitBreakpoint
-                ? const DashboardScreen()
-                : const NoNoteSelected(),
+                SettingsScreen(initialArea: state.uri.queryParameters['area']),
           ),
           GoRoute(
-            path: '/notebook/:id',
-            builder: (context, state) => ArchiveNoteScreen(
-              key: ValueKey('notebook-${state.pathParameters['id']}'),
-              noteId: state.pathParameters['id']!,
-            ),
+            path: '/privacy',
+            builder: (context, state) => const PrivacyScreen(),
           ),
           GoRoute(
-            path: '/note/:id',
-            // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
-            // noteId ile yapıyor; go/pushReplacement aynı GoRoute'un Element'ini
-            // geri dönüştürürse key olmadan ekranda ÖNCEKİ notun içeriği kalırdı.
-            builder: (context, state) => NoteEditorScreen(
-              key: ValueKey('note-${state.pathParameters['id']}'),
-              noteId: state.pathParameters['id']!,
-              // ?owner=<uid>: PAYLAŞILAN klasördeki not — sahibinin
-              // koleksiyonundan okunur/yazılır (bkz. NoteEditorScreen.ownerId).
-              ownerId: state.uri.queryParameters['owner'],
-              // ?ro=1: yalnız OKUMA yetkisi verilmiş paylaşılan not — alanlar
-              // kilitli açılır (bkz. NoteEditorScreen.readOnly).
-              readOnly: state.uri.queryParameters['ro'] == '1',
-              // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
-              startDrawing: state.uri.queryParameters['draw'] == '1',
-              // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
-              startVoiceCapture: state.uri.queryParameters['voice'] == '1',
-              // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
-              // imlecin olduğu yere anında yazılır (yapay zekâ yok).
-              startDictation: state.uri.queryParameters['dictate'] == '1',
-              // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
-              startVideo: state.uri.queryParameters['video'] == '1',
-              // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
-              startPhoto: state.uri.queryParameters['photo'] == '1',
-              // ?scan=1: belge tara not al — belge tarayıcı açılır.
-              startScan: state.uri.queryParameters['scan'] == '1',
-              // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
-              // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
-              startPdf: state.uri.queryParameters['pdf'] == '1',
-              // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
-              startSlides: state.uri.queryParameters['slides'] == '1',
-            ),
+            path: '/premium',
+            builder: (context, state) => const PremiumScreen(),
+          ),
+          GoRoute(
+            path: '/ai',
+            builder: (context, state) => const AiHubScreen(),
+          ),
+          GoRoute(
+            path: '/chat',
+            builder: (context, state) => const ChatScreen(),
+          ),
+          GoRoute(
+            path: '/briefing',
+            builder: (context, state) => const BriefingScreen(),
+          ),
+          GoRoute(
+            path: '/reminders',
+            builder: (context, state) => const RemindersScreen(),
+          ),
+          GoRoute(
+            path: '/archive',
+            builder: (context, state) => const ArchiveScreen(),
+          ),
+          GoRoute(
+            path: '/trash',
+            builder: (context, state) => const TrashScreen(),
           ),
         ],
       ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) =>
-            SettingsScreen(initialArea: state.uri.queryParameters['area']),
-      ),
-      GoRoute(
-        path: '/privacy',
-        builder: (context, state) => const PrivacyScreen(),
-      ),
-      GoRoute(
-        path: '/premium',
-        builder: (context, state) => const PremiumScreen(),
-      ),
-      GoRoute(path: '/ai', builder: (context, state) => const AiHubScreen()),
-      GoRoute(path: '/chat', builder: (context, state) => const ChatScreen()),
-      GoRoute(
-        path: '/briefing',
-        builder: (context, state) => const BriefingScreen(),
-      ),
-      GoRoute(
-        path: '/reminders',
-        builder: (context, state) => const RemindersScreen(),
-      ),
-      GoRoute(
-        path: '/archive',
-        builder: (context, state) => const ArchiveScreen(),
-      ),
-      GoRoute(path: '/trash', builder: (context, state) => const TrashScreen()),
     ],
   );
 });

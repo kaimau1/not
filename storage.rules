@@ -44,6 +44,19 @@ service firebase.storage {
       allow delete: if member();
     }
 
+    // **ORTAK NOTUN EKLERİ** (kullanıcı isteği 2026-09-22): notu benimle
+    // paylaşan kişinin görselleri/PDF'leri bende de açılmalı. Yalnız OKUMA;
+    // yazma ve silme sahibinde kalır. Soru Firestore'daki ortak not
+    // aynasından yanıtlanır (bkz. firestore.rules → noteShares).
+    match /users/{uid}/notes/{noteId}/{allPaths=**} {
+      allow read: if request.auth != null
+        && firestore.exists(
+            /databases/(default)/documents/noteShares/$(uid + '_' + noteId))
+        && request.auth.uid in firestore.get(
+            /databases/(default)/documents/noteShares/$(uid + '_' + noteId))
+            .data.get('sharedWith', []);
+    }
+
     match /users/{uid}/{allPaths=**} {
       allow read, delete: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null

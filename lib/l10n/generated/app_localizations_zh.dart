@@ -3435,4 +3435,107 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pdfPlaceOnPage => 'PDF\'i sayfaya yerleştir';
+
+  @override
+  String get collaborators => '协作者';
+
+  @override
+  String get collaboratorsInfo => '你添加的人会在主屏幕上看到这条笔记，并与你实时编辑。';
+
+  @override
+  String get collaboratorsOwner => '所有者';
+
+  @override
+  String get collaboratorsFriendsTitle => '你的好友';
+
+  @override
+  String get collaboratorsLeave => '退出共享笔记';
+
+  @override
+  String get collaboratorsLeaveConfirm => '这条笔记将不再显示在你的主屏幕上。要退出吗？';
+
+  @override
+  String get collaboratorsSaved => '共享已更新';
+
+  @override
+  String collaboratorsCount(int count) {
+    return '已与 $count 人共享';
+  }
+
+  @override
+  String get collaboratorsOnlyOwner => '只有笔记所有者可以更改协作者。';
+
+  @override
+  String get sharedWithMe => '与我共享';
+
+  @override
+  String get sharedWithMeEmpty => '还没有人与你共享笔记。有人将你添加到笔记后会显示在这里。';
+
+  @override
+  String sharedByName(Object name) {
+    return '$name 共享';
+  }
+
+  @override
+  String get navNotes => '笔记';
+
+  @override
+  String get railExpand => '展开菜单';
+
+  @override
+  String get railCollapse => '收起菜单';
+
+  @override
+  String get newNoteShort => '新建笔记';
+
+  @override
+  String get newChecklistShort => '新建清单';
+
+  @override
+  String get listPaneHide => '隐藏笔记列表';
+
+  @override
+  String get listPaneShow => '显示笔记列表';
+
+  @override
+  String get keyboardShortcuts => '键盘快捷键';
+
+  @override
+  String get shortcutSearch => '搜索笔记';
+
+  @override
+  String get shortcutToggleList => '隐藏 / 显示笔记列表';
+
+  @override
+  String get shortcutSections => '在各部分之间切换';
+
+  @override
+  String get shortcutHelp => '显示快捷键';
+
+  @override
+  String get noNoteSelectedHint => '或开始一条新笔记';
+
+  @override
+  String get loginFeatureSyncTitle => '每台设备上的相同笔记';
+
+  @override
+  String get loginFeatureSyncBody => '在手机、平板、电脑和网页之间即时同步。';
+
+  @override
+  String get loginFeatureAiTitle => 'AI 随时相伴';
+
+  @override
+  String get loginFeatureAiBody => '总结、提问、语音输入；与文档对话。';
+
+  @override
+  String get loginFeatureShareTitle => '一起写';
+
+  @override
+  String get loginFeatureShareBody => '与好友实时共享笔记和文件夹。';
+
+  @override
+  String get loginFeatureInkTitle => '手写笔与 PDF';
+
+  @override
+  String get loginFeatureInkBody => '手写记笔记，在 PDF 和幻灯片上书写。';
 }

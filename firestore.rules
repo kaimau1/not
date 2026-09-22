@@ -14,6 +14,20 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/folderShares/$(folderId)).data;
     }
 
+    // ORTAK NOT aynası (bkz. aşağıdaki `noteShares`). Kimlik
+    // `{sahip}_{notId}` — sahip yol parçasından gelir, yani bir notun
+    // aynasını ancak kendi sahibi yaratabilir.
+    function noteSharePath(ownerUid, noteId) {
+      return /databases/$(database)/documents/noteShares/$(ownerUid + '_' + noteId);
+    }
+
+    function isNoteCollaborator(ownerUid, noteId) {
+      return request.auth != null
+        && exists(noteSharePath(ownerUid, noteId))
+        && request.auth.uid
+            in get(noteSharePath(ownerUid, noteId)).data.get('sharedWith', []);
+    }
+
     // Bir kullanıcının o klasördeki YETKİSİ (kullanıcı isteği 2026-08-18:
     // "klasör sahibi paylaşılan klasörde yetki belirleyebilsin yazma, okuma
     // veya her ikisi şeklinde"). `roles` haritası uid → 'read' | 'write' |
@@ -203,6 +217,17 @@ service cloud.firestore {
         && folderShare(request.resource.data.folderId).ownerId == noteOwnerUid
         && canWriteFolder(
             folderShare(request.resource.data.folderId), request.auth.uid);
+      // **ORTAK NOT** (kullanıcı isteği 2026-09-22: "ortak not butonu
+      // keepteki gibi"). Klasörden BAĞIMSIZ, tek nota verilen canlı erişim:
+      // sahip notu `noteShares` aynasında kimlerle paylaştığını yazar,
+      // oradaki herkes notu okur ve düzenler (Keep'teki ortak çalışan gibi
+      // rol ayrımı yok). Not paylaşım sırasında klasör değiştiremez —
+      // klasör kuralıyla aynı gerekçe: yazma yetkisi başka bir erişim
+      // yolunun kapısını açmasın.
+      allow read: if isNoteCollaborator(noteOwnerUid, noteId);
+      allow update: if isNoteCollaborator(noteOwnerUid, noteId)
+        && request.resource.data.get('folderId', null)
+            == resource.data.get('folderId', null);
       // Kalıcı silme (`hardDelete`) paylaşılan kullanıcıya AÇIK DEĞİL —
       // yalnız güncelleme (biçim, düzenleme, çöpe taşıma). Başkasının notunu
       // GERİ DÖNÜŞSÜZ silme yetkisi sahipte kalır; bu bilinçli bir
@@ -257,6 +282,54 @@ service cloud.firestore {
         && answersOwnInvite(request.auth.uid);
       allow delete: if request.auth != null
         && request.auth.uid == resource.data.ownerId;
+    }
+
+    // **ORTAK NOT AYNASI** — `noteShares/{sahip}_{notId}`. Klasör aynasının
+    // tek not karşılığı; "benimle hangi notlar paylaşıldı" sorusunu tek
+    // sorguda (`sharedWith` array-contains) yanıtlar ve yukarıdaki not
+    // kuralını besler.
+    //
+    // SAHİPLİK: kimliğin öneki yazanın uid'i olmak ZORUNDA ve not
+    // gerçekten onun koleksiyonunda bulunmalı — aksi hâlde biri başkasının
+    // not kimliğiyle ayna yaratıp kendini `sharedWith`e ekleyebilirdi.
+    // Uid'lerde alt çizgi olmadığından `split('_')[0]` sahibi verir; bu
+    // sayede var OLMAYAN aynayı okumak/silmek de (resource null) sahibe
+    // açık kalır — editör paylaşılmamış notun aynasını da dinliyor.
+    match /noteShares/{shareId} {
+      // Üç yol: (1) kimlik önekinden sahip — var OLMAYAN aynanın tek belge
+      // okuması için; (2) `ownerId` alanı — sahibin "paylaştığım notlar"
+      // SORGUSU için (sorgu kuralları yol parçasını kanıt saymaz, alana
+      // bakar); (3) ortak çalışan.
+      allow read: if request.auth != null
+        && (shareId.split('_')[0] == request.auth.uid
+            || request.auth.uid == resource.data.ownerId
+            || request.auth.uid in resource.data.get('sharedWith', []));
+      allow create, update: if request.auth != null
+        && shareId.split('_')[0] == request.auth.uid
+        && request.resource.data.ownerId == request.auth.uid
+        && shareId == request.auth.uid + '_' + request.resource.data.noteId
+        && exists(
+            /databases/$(database)/documents/users/$(request.auth.uid)/notes/$(request.resource.data.noteId))
+        && request.resource.data.keys().hasOnly(
+            ['ownerId', 'noteId', 'ownerName', 'sharedWith', 'names'])
+        && request.resource.data.sharedWith is list
+        && request.resource.data.sharedWith.size() <= 50
+        // Sahip kendi notunun ortak çalışanı olamaz — kendi erişimi zaten
+        // genel kuraldan geliyor, listede durması yalnız sayıyı şişirir.
+        && !(request.auth.uid in request.resource.data.sharedWith);
+      // **PAYLAŞIMDAN AYRILMA**: ortak çalışan yalnız KENDİNİ listeden
+      // düşürebilir; kimseyi ekleyemez, başka alana dokunamaz.
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.get('sharedWith', [])
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['sharedWith'])
+        && resource.data.sharedWith.toSet()
+            .difference(request.resource.data.sharedWith.toSet())
+            .hasOnly([request.auth.uid])
+        && request.resource.data.sharedWith.toSet()
+            .difference(resource.data.sharedWith.toSet()).size() == 0;
+      allow delete: if request.auth != null
+        && shareId.split('_')[0] == request.auth.uid;
     }
 
     // **PAYLAŞILAN KLASÖRÜN SOHBETİ** — kullanıcı isteği 2026-08-18:
