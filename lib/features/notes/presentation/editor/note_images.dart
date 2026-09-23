@@ -1495,7 +1495,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return Positioned(
       left: 8,
       right: 8,
-      bottom: 8 + keyboard + systemBar,
+      // Klavye yüksekliği gezinme çubuğunu ZATEN içeriyor: ikisini toplamak
+      // klavye açıkken çubuğu klavyeden ~48 dp yukarıda asılı bırakıyordu.
+      bottom: 8 + (keyboard > systemBar ? keyboard : systemBar),
       child: Material(
         color: scheme.primaryContainer,
         elevation: 6,

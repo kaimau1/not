@@ -1024,7 +1024,22 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   /// "Yeni öğe" düğmesiyle öğe ekler; işaretsizlerin SONUNA girer — düğme
   /// zaten işaretsiz bloğun hemen altında durur.
+  ///
+  /// KÖK NEDEN (kullanıcı ekran görüntüsü 2026-09-23: listenin sonunda boş
+  /// bir "Yeni öğe" satırı ve hemen altında "+ Yeni öğe" düğmesi): düğme her
+  /// dokunuşta YENİ bir boş öğe açıyordu. Boş öğeye yazmadan başka yere
+  /// dokunan ya da düğmeye iki kez basan kullanıcıda boş satırlar birikiyor,
+  /// kayda da boş öğe olarak gidiyordu. İşaretsizlerin sonunda zaten boş bir
+  /// öğe varsa artık YENİSİ açılmaz, o öğeye odaklanılır.
   void _addItem() {
+    NoteItem? lastOpen;
+    for (final i in _items) {
+      if (!i.checked) lastOpen = i;
+    }
+    if (lastOpen != null && lastOpen.text.trim().isEmpty) {
+      _focusFor(lastOpen).requestFocus();
+      return;
+    }
     final item = NoteItem(id: _uuid.v4(), text: '');
     setState(() => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item));
     _commit();
@@ -1948,7 +1963,9 @@ class ItemsEditorState extends State<ItemsEditor> {
     return Positioned(
       left: 8,
       right: 8,
-      bottom: 8 + keyboard + systemBar,
+      // Klavye yüksekliği gezinme çubuğunu ZATEN içeriyor: ikisini toplamak
+      // klavye açıkken çubuğu klavyeden ~48 dp yukarıda asılı bırakıyordu.
+      bottom: 8 + (keyboard > systemBar ? keyboard : systemBar),
       child: Material(
         color: scheme.primaryContainer,
         elevation: 6,
