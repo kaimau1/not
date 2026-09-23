@@ -44,17 +44,43 @@ service firebase.storage {
       allow delete: if member();
     }
 
-    // **ORTAK NOTUN EKLERİ** (kullanıcı isteği 2026-09-22): notu benimle
-    // paylaşan kişinin görselleri/PDF'leri bende de açılmalı. Yalnız OKUMA;
-    // yazma ve silme sahibinde kalır. Soru Firestore'daki ortak not
-    // aynasından yanıtlanır (bkz. firestore.rules → noteShares).
+    // **PAYLAŞILAN NOTUN EKLERİ** — ortak not (kullanıcı isteği 2026-09-22)
+    // ve paylaşılan klasördeki not. Dosyalar notun SAHİBİNİN yolunda durur;
+    // ortak çalışan buraya OKUR ve (2026-09-23: "ortak nottaki görsel
+    // sorunu") YAZAR — eklediği görsel eskiden kendi yoluna gidiyor, sahip
+    // onu hiç göremiyordu. SİLME sahipte kalır (Firestore'daki not silme
+    // kuralıyla aynı güvenlik marjı).
+    //
+    // Soru Firestore'daki aynalardan yanıtlanır (bkz. firestore.rules →
+    // noteShares / folderShares). Klasör yolu iki belge okur (not → klasör
+    // aynası); ortak not yolu bir.
     match /users/{uid}/notes/{noteId}/{allPaths=**} {
+      function noteShare() {
+        return /databases/(default)/documents/noteShares/$(uid + '_' + noteId);
+      }
+      function noteCollaborator() {
+        return firestore.exists(noteShare())
+          && request.auth.uid in firestore.get(noteShare()).data.get('sharedWith', []);
+      }
+      function folderRoleOk(roles) {
+        let note = firestore.get(
+            /databases/(default)/documents/users/$(uid)/notes/$(noteId)).data;
+        let folderId = note.get('folderId', null);
+        let share = folderId == null ? null : firestore.get(
+            /databases/(default)/documents/folderShares/$(folderId)).data;
+        return share != null
+          && share.ownerId == uid
+          && request.auth.uid in share.get('sharedWith', [])
+          && share.get('roles', {}).get(request.auth.uid, 'both') in roles;
+      }
       allow read: if request.auth != null
-        && firestore.exists(
-            /databases/(default)/documents/noteShares/$(uid + '_' + noteId))
-        && request.auth.uid in firestore.get(
-            /databases/(default)/documents/noteShares/$(uid + '_' + noteId))
-            .data.get('sharedWith', []);
+        && request.auth.uid != uid
+        && (noteCollaborator() || folderRoleOk(['read', 'both']));
+      allow create, update: if request.auth != null
+        && request.auth.uid != uid
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|application/pdf|audio/.*')
+        && (noteCollaborator() || folderRoleOk(['write', 'both']));
     }
 
     match /users/{uid}/{allPaths=**} {

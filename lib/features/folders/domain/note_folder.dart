@@ -38,6 +38,7 @@ class NoteFolder {
     required this.name,
     this.icon = defaultIcon,
     this.hidden = false,
+    this.color,
     this.createdAt,
     required this.ownerId,
     this.sharedWith = const [],
@@ -61,6 +62,12 @@ class NoteFolder {
   /// omuz üstünden bakan birinin notu görmemesi. Gerçek koruma isteyen not
   /// başına "Kilitle" (biyometrik) seçeneğini kullanır.
   final bool hidden;
+
+  /// [accentPalette] dizini; null = kimlikten türetilen OTOMATİK renk
+  /// (bkz. [folderAccent]). Kullanıcı isteği 2026-09-23 ("klasörlerin
+  /// görünümünden memnun değilim"): altı klasör aynı bej blokla yan yana
+  /// duruyor, hiçbiri bakışta ayırt edilmiyordu. Renk klasörü tanıtır.
+  final int? color;
   final DateTime? createdAt;
 
   /// Klasörün GERÇEK sahibi — belge her zaman `users/{ownerId}/folders/{id}`
@@ -118,10 +125,27 @@ class NoteFolder {
 
   IconData get iconData => iconChoices[icon] ?? Icons.folder_outlined;
 
+  /// Klasör vurgu renkleri — açık ve koyu temada okunur orta tonlar; simge
+  /// kutusu, kart şeridi ve çip bu renkten türetilir. Dizin Firestore'da
+  /// saklandığı için SIRA DEĞİŞTİRİLMEZ, yalnız sona eklenir.
+  static const List<Color> accentPalette = [
+    Color(0xFFD9982B), // kehribar
+    Color(0xFFE0685C), // mercan
+    Color(0xFFD06A95), // gül
+    Color(0xFF8E74D0), // mor
+    Color(0xFF4F8FD6), // mavi
+    Color(0xFF2FA392), // camgöbeği
+    Color(0xFF6DA84C), // yeşil
+    Color(0xFF7D8799), // arduvaz
+  ];
+
+  Color get accent => folderAccent(id, color);
+
   NoteFolder copyWith({
     String? name,
     String? icon,
     bool? hidden,
+    int? color,
     List<String>? sharedWith,
     List<String>? pending,
     Map<String, FolderRole>? roles,
@@ -130,6 +154,7 @@ class NoteFolder {
     name: name ?? this.name,
     icon: icon ?? this.icon,
     hidden: hidden ?? this.hidden,
+    color: color ?? this.color,
     createdAt: createdAt,
     ownerId: ownerId,
     sharedWith: sharedWith ?? this.sharedWith,
@@ -151,6 +176,7 @@ class NoteFolder {
       name: map['name'] as String? ?? '',
       icon: map['icon'] as String? ?? defaultIcon,
       hidden: map['hidden'] as bool? ?? false,
+      color: (map['color'] as num?)?.toInt(),
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       ownerId: ownerId ?? doc.reference.parent.parent?.id ?? '',
       sharedWith: [
@@ -169,6 +195,7 @@ class NoteFolder {
     'name': name,
     'icon': icon,
     'hidden': hidden,
+    'color': ?color,
     'ownerId': ownerId,
     'sharedWith': sharedWith,
     'pending': pending,
@@ -187,4 +214,22 @@ Map<String, FolderRole> parseFolderRoles(Object? raw) {
     for (final entry in raw.entries)
       entry.key.toString(): FolderRole.fromId(entry.value?.toString()),
   };
+}
+
+/// Klasörün vurgu rengi: seçilmişse [NoteFolder.accentPalette]'teki renk,
+/// değilse KİMLİKTEN türetilen sabit bir renk — aynı klasör her cihazda ve
+/// her açılışta aynı renkte görünür. Paylaşılan klasörün aynası renk
+/// taşımadığı için onlarda da bu türetme kullanılır.
+Color folderAccent(String id, [int? color]) {
+  const palette = NoteFolder.accentPalette;
+  if (color != null && color >= 0 && color < palette.length) {
+    return palette[color];
+  }
+  // String.hashCode oturumdan oturuma değişebilir (Dart garanti vermez);
+  // basit ve kararlı bir karakter toplamı.
+  var h = 0;
+  for (final c in id.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return palette[h % palette.length];
 }

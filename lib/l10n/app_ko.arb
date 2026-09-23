@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "펜과 PDF",
   "loginFeatureInkBody": "손글씨로 메모하고 PDF와 슬라이드에 쓰세요.",
   "foldersTitle": "폴더",
-  "foldersEmpty": "아직 폴더가 없습니다. 폴더를 만들어 메모를 정리하세요."
+  "foldersEmpty": "아직 폴더가 없습니다. 폴더를 만들어 메모를 정리하세요.",
+  "folderColor": "색상",
+  "folderColorAuto": "자동",
+  "foldersMine": "내 폴더",
+  "foldersSharedSection": "나와 공유된 폴더",
+  "trashDaysShort": "{count}일",
+  "trashTodayShort": "오늘"
 }

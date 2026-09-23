@@ -1686,5 +1686,18 @@
   "loginFeatureInkTitle": "Kalem ve PDF",
   "loginFeatureInkBody": "El yazısıyla not al, PDF ve slaytların üstüne yaz.",
   "foldersTitle": "Klasörler",
-  "foldersEmpty": "Henüz klasör yok. Bir klasör oluşturup notlarını düzenle."
+  "foldersEmpty": "Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.",
+  "folderColor": "Renk",
+  "folderColorAuto": "Otomatik",
+  "foldersMine": "Klasörlerim",
+  "foldersSharedSection": "Benimle paylaşılan klasörler",
+  "trashDaysShort": "{count} gün",
+  "trashTodayShort": "Bugün",
+  "@trashDaysShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

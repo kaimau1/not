@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "ペンと PDF",
   "loginFeatureInkBody": "手書きでメモし、PDF やスライドに書き込み。",
   "foldersTitle": "フォルダ",
-  "foldersEmpty": "フォルダはまだありません。作成してメモを整理しましょう。"
+  "foldersEmpty": "フォルダはまだありません。作成してメモを整理しましょう。",
+  "folderColor": "色",
+  "folderColorAuto": "自動",
+  "foldersMine": "マイフォルダ",
+  "foldersSharedSection": "共有されたフォルダ",
+  "trashDaysShort": "{count}日",
+  "trashTodayShort": "今日"
 }

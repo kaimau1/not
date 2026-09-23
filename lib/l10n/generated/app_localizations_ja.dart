@@ -3564,4 +3564,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get foldersEmpty => 'フォルダはまだありません。作成してメモを整理しましょう。';
+
+  @override
+  String get folderColor => '色';
+
+  @override
+  String get folderColorAuto => '自動';
+
+  @override
+  String get foldersMine => 'マイフォルダ';
+
+  @override
+  String get foldersSharedSection => '共有されたフォルダ';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count日';
+  }
+
+  @override
+  String get trashTodayShort => '今日';
 }

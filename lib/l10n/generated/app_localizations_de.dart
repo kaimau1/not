@@ -3638,4 +3638,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Noch keine Ordner. Erstelle einen, um deine Notizen zu ordnen.';
+
+  @override
+  String get folderColor => 'Farbe';
+
+  @override
+  String get folderColorAuto => 'Automatisch';
+
+  @override
+  String get foldersMine => 'Meine Ordner';
+
+  @override
+  String get foldersSharedSection => 'Mit mir geteilte Ordner';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count T.';
+  }
+
+  @override
+  String get trashTodayShort => 'Heute';
 }

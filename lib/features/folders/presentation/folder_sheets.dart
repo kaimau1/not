@@ -25,6 +25,8 @@ Future<String?> showFolderEditorDialog(
   final nameController = TextEditingController(text: existing?.name ?? '');
   var icon = existing?.icon ?? NoteFolder.defaultIcon;
   var hidden = existing?.hidden ?? false;
+  // null = otomatik (kimlikten türetilen renk, bkz. folderAccent).
+  var color = existing?.color;
 
   try {
     final saved = await showDialog<bool>(
@@ -87,6 +89,36 @@ Future<String?> showFolderEditorDialog(
                         ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  // **RENK** (kullanıcı isteği 2026-09-23: klasörler bakışta
+                  // ayırt edilmiyordu). "Otomatik" kimlikten sabit bir renk
+                  // verir; seçim yapılmazsa klasör yine renkli görünür.
+                  Text(
+                    l10n.folderColor,
+                    style: Theme.of(dialogContext).textTheme.labelMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _ColorDot(
+                        tooltip: l10n.folderColorAuto,
+                        selected: color == null,
+                        color: existing == null
+                            ? Theme.of(dialogContext).colorScheme.outline
+                            : folderAccent(existing.id),
+                        icon: Icons.auto_awesome,
+                        onTap: () => setState(() => color = null),
+                      ),
+                      for (var i = 0; i < NoteFolder.accentPalette.length; i++)
+                        _ColorDot(
+                          selected: color == i,
+                          color: NoteFolder.accentPalette[i],
+                          onTap: () => setState(() => color = i),
+                        ),
+                    ],
+                  ),
                   const Divider(height: 24),
                   // Gizli klasör: çip ana ekranda görünmez, notları da not
                   // duvarına/aramaya girmez (bkz. NoteFolder.hidden).
@@ -128,9 +160,16 @@ Future<String?> showFolderEditorDialog(
     final repo = ref.read(foldersRepositoryProvider);
     if (repo == null) return null;
     if (existing == null) {
-      return repo.createFolder(name, icon: icon, hidden: hidden);
+      return repo.createFolder(name, icon: icon, hidden: hidden, color: color);
     }
-    repo.updateFolder(existing.id, name: name, icon: icon, hidden: hidden);
+    repo.updateFolder(
+      existing.id,
+      name: name,
+      icon: icon,
+      hidden: hidden,
+      color: color,
+      clearColor: color == null && existing.color != null,
+    );
     return existing.id;
   } finally {
     // finally İÇİNDE: showDialog fırlarsa ya da çağıranın rotası programlı
@@ -478,3 +517,47 @@ String folderRoleLabel(AppLocalizations l10n, FolderRole role) =>
       FolderRole.write => l10n.folderRoleWrite,
       FolderRole.both => l10n.folderRoleBoth,
     };
+
+/// Renk seçicideki tek nokta; seçiliyse kalın halka ve tik.
+class _ColorDot extends StatelessWidget {
+  const _ColorDot({
+    required this.selected,
+    required this.color,
+    required this.onTap,
+    this.icon,
+    this.tooltip,
+  });
+
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+  final IconData? icon;
+  final String? tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final dot = InkWell(
+      customBorder: const CircleBorder(),
+      onTap: onTap,
+      child: Container(
+        width: 32,
+        height: 32,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: icon == null ? color : null,
+          border: Border.all(
+            color: selected ? scheme.onSurface : color.withValues(alpha: 0.6),
+            width: selected ? 2.5 : 1.5,
+          ),
+        ),
+        child: icon != null
+            ? Icon(icon, size: 16, color: color)
+            : (selected
+                  ? const Icon(Icons.check, size: 16, color: Colors.white)
+                  : null),
+      ),
+    );
+    return tooltip == null ? dot : Tooltip(message: tooltip!, child: dot);
+  }
+}

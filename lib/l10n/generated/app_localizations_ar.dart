@@ -3606,4 +3606,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get foldersEmpty => 'لا توجد مجلدات بعد. أنشئ مجلدًا لتنظيم ملاحظاتك.';
+
+  @override
+  String get folderColor => 'اللون';
+
+  @override
+  String get folderColorAuto => 'تلقائي';
+
+  @override
+  String get foldersMine => 'مجلداتي';
+
+  @override
+  String get foldersSharedSection => 'مجلدات تمت مشاركتها معي';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String get trashTodayShort => 'اليوم';
 }

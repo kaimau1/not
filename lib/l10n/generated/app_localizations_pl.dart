@@ -3632,4 +3632,24 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Brak folderów. Utwórz folder, aby uporządkować notatki.';
+
+  @override
+  String get folderColor => 'Kolor';
+
+  @override
+  String get folderColorAuto => 'Automatyczny';
+
+  @override
+  String get foldersMine => 'Moje foldery';
+
+  @override
+  String get foldersSharedSection => 'Foldery udostępnione mi';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count dni';
+  }
+
+  @override
+  String get trashTodayShort => 'Dziś';
 }

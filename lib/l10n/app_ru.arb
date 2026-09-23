@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Перо и PDF",
   "loginFeatureInkBody": "Пишите от руки, делайте пометки на PDF и слайдах.",
   "foldersTitle": "Папки",
-  "foldersEmpty": "Папок пока нет. Создайте папку, чтобы упорядочить заметки."
+  "foldersEmpty": "Папок пока нет. Создайте папку, чтобы упорядочить заметки.",
+  "folderColor": "Цвет",
+  "folderColorAuto": "Автоматически",
+  "foldersMine": "Мои папки",
+  "foldersSharedSection": "Папки, доступные мне",
+  "trashDaysShort": "{count} дн.",
+  "trashTodayShort": "Сегодня"
 }

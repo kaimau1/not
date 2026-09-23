@@ -293,9 +293,17 @@ class NoteCard extends ConsumerWidget {
     this.highlightQuery = '',
     this.ownerId,
     this.readOnly = false,
+    this.onTap,
   });
 
   final Note note;
+
+  /// Verilirse kart notu AÇMAZ, bunu çağırır; ⋮ ve sağ tık menüsü de
+  /// gizlenir, seçim moduna katılmaz. Çöp kutusu kartı not kartıyla aynı
+  /// görünsün ama kendi işini (geri yükle / kalıcı sil) yapsın diye
+  /// (kullanıcı isteği 2026-09-23: "çöp kutusu da normal notlar sayfası
+  /// gibi olabilir").
+  final VoidCallback? onTap;
 
   /// PAYLAŞILAN klasörde çizilen kartta notun SAHİBİ; kendi notlarımda null.
   /// Kart bunu editöre taşır, yoksa editör notu kendi koleksiyonumda arar ve
@@ -424,12 +432,13 @@ class NoteCard extends ConsumerWidget {
     // select() ŞART: küme her değişimde yeni bir Set olduğundan kümenin
     // kendisini izlemek, TEK not seçilince görünürdeki BÜTÜN kartları yeniden
     // çiziyordu; artık yalnız durumu değişen kart çizilir.
-    final selectionActive = ref.watch(
-      selectedNoteIdsProvider.select((s) => s.isNotEmpty),
-    );
-    final selected = ref.watch(
-      selectedNoteIdsProvider.select((s) => s.contains(note.id)),
-    );
+    final custom = onTap != null;
+    final selectionActive =
+        !custom &&
+        ref.watch(selectedNoteIdsProvider.select((s) => s.isNotEmpty));
+    final selected =
+        !custom &&
+        ref.watch(selectedNoteIdsProvider.select((s) => s.contains(note.id)));
     final richPreview = ref.watch(cardRichPreviewProvider);
 
     void toggleSelection() =>
@@ -586,7 +595,9 @@ class NoteCard extends ConsumerWidget {
         // basış dashboard sarmalayıcısında yönetilir: yerinde bırakınca çoklu
         // seçim, sürükleyince yeniden sıralama (üç nokta menüsündeki "Seç" de
         // durur).
-        onTap: selectionActive ? toggleSelection : () => _openNote(context),
+        onTap:
+            onTap ??
+            (selectionActive ? toggleSelection : () => _openNote(context)),
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
@@ -657,7 +668,7 @@ class NoteCard extends ConsumerWidget {
           // masaüstü gibi bağlam menüsü alır. Dokunmatik ekran ikincil
           // dokunuş üretmediği için telefonda davranış değişmez.
           // Paylaşılan notun menüsü yok (bkz. aşağıdaki ⋮ notu).
-          onSecondaryTapUp: ownerId != null
+          onSecondaryTapUp: ownerId != null || custom
               ? null
               : (details) =>
                     _showContextMenu(context, ref, details.globalPosition),
@@ -674,7 +685,7 @@ class NoteCard extends ConsumerWidget {
               // yazar — başkasının notunda o işlemler kendi altımda aynı
               // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
               // düzenlemek editörden geçer (o, sahibin deposuna yazar).
-              if (!selectionActive && ownerId == null)
+              if (!selectionActive && ownerId == null && !custom)
                 PositionedDirectional(
                   top: 2,
                   end: 2,

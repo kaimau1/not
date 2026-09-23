@@ -1431,5 +1431,11 @@
   "loginFeatureInkTitle": "Pen and PDF",
   "loginFeatureInkBody": "Take handwritten notes, write on PDFs and slides.",
   "foldersTitle": "Folders",
-  "foldersEmpty": "No folders yet. Create one to organize your notes."
+  "foldersEmpty": "No folders yet. Create one to organize your notes.",
+  "folderColor": "Color",
+  "folderColorAuto": "Automatic",
+  "foldersMine": "My folders",
+  "foldersSharedSection": "Folders shared with me",
+  "trashDaysShort": "{count} d",
+  "trashTodayShort": "Today"
 }

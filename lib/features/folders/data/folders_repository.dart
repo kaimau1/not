@@ -189,6 +189,7 @@ class FoldersRepository {
     String name, {
     String icon = NoteFolder.defaultIcon,
     bool hidden = false,
+    int? color,
   }) async {
     final doc = _folders.doc();
     unawaited(
@@ -198,6 +199,7 @@ class FoldersRepository {
           name: name.trim(),
           icon: icon,
           hidden: hidden,
+          color: color,
           ownerId: uid,
         ).toMap(),
       ),
@@ -210,8 +212,14 @@ class FoldersRepository {
     String? name,
     String? icon,
     bool? hidden,
+    int? color,
+    bool clearColor = false,
   }) {
     final data = <String, dynamic>{};
+    // Renk "otomatik"e dönünce alan SİLİNİR (null yazmak yerine): eski
+    // sürümler alanı hiç tanımıyor, yeni sürüm de yokluğu otomatik sayıyor.
+    if (color != null) data['color'] = color;
+    if (clearColor) data['color'] = FieldValue.delete();
     if (name != null) data['name'] = name.trim();
     if (icon != null) data['icon'] = icon;
     if (hidden != null) data['hidden'] = hidden;

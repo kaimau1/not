@@ -3568,4 +3568,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get foldersEmpty => '아직 폴더가 없습니다. 폴더를 만들어 메모를 정리하세요.';
+
+  @override
+  String get folderColor => '색상';
+
+  @override
+  String get folderColorAuto => '자동';
+
+  @override
+  String get foldersMine => '내 폴더';
+
+  @override
+  String get foldersSharedSection => '나와 공유된 폴더';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count일';
+  }
+
+  @override
+  String get trashTodayShort => '오늘';
 }

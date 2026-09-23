@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "手写笔与 PDF",
   "loginFeatureInkBody": "手写记笔记，在 PDF 和幻灯片上书写。",
   "foldersTitle": "文件夹",
-  "foldersEmpty": "还没有文件夹。创建一个来整理笔记。"
+  "foldersEmpty": "还没有文件夹。创建一个来整理笔记。",
+  "folderColor": "颜色",
+  "folderColorAuto": "自动",
+  "foldersMine": "我的文件夹",
+  "foldersSharedSection": "与我共享的文件夹",
+  "trashDaysShort": "{count}天",
+  "trashTodayShort": "今天"
 }

@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Stylet et PDF",
   "loginFeatureInkBody": "Prenez des notes manuscrites, écrivez sur les PDF et diapositives.",
   "foldersTitle": "Dossiers",
-  "foldersEmpty": "Aucun dossier pour l'instant. Créez-en un pour organiser vos notes."
+  "foldersEmpty": "Aucun dossier pour l'instant. Créez-en un pour organiser vos notes.",
+  "folderColor": "Couleur",
+  "folderColorAuto": "Automatique",
+  "foldersMine": "Mes dossiers",
+  "foldersSharedSection": "Dossiers partagés avec moi",
+  "trashDaysShort": "{count} j",
+  "trashTodayShort": "Aujourd'hui"
 }

@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "القلم وPDF",
   "loginFeatureInkBody": "دوّن بخط اليد واكتب على ملفات PDF والشرائح.",
   "foldersTitle": "المجلدات",
-  "foldersEmpty": "لا توجد مجلدات بعد. أنشئ مجلدًا لتنظيم ملاحظاتك."
+  "foldersEmpty": "لا توجد مجلدات بعد. أنشئ مجلدًا لتنظيم ملاحظاتك.",
+  "folderColor": "اللون",
+  "folderColorAuto": "تلقائي",
+  "foldersMine": "مجلداتي",
+  "foldersSharedSection": "مجلدات تمت مشاركتها معي",
+  "trashDaysShort": "{count} يوم",
+  "trashTodayShort": "اليوم"
 }

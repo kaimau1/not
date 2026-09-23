@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Pen en PDF",
   "loginFeatureInkBody": "Maak handgeschreven notities, schrijf op PDF's en dia's.",
   "foldersTitle": "Mappen",
-  "foldersEmpty": "Nog geen mappen. Maak er een om je notities te ordenen."
+  "foldersEmpty": "Nog geen mappen. Maak er een om je notities te ordenen.",
+  "folderColor": "Kleur",
+  "folderColorAuto": "Automatisch",
+  "foldersMine": "Mijn mappen",
+  "foldersSharedSection": "Met mij gedeelde mappen",
+  "trashDaysShort": "{count} d",
+  "trashTodayShort": "Vandaag"
 }

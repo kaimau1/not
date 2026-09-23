@@ -6551,6 +6551,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.'**
   String get foldersEmpty;
+
+  /// No description provided for @folderColor.
+  ///
+  /// In tr, this message translates to:
+  /// **'Renk'**
+  String get folderColor;
+
+  /// No description provided for @folderColorAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get folderColorAuto;
+
+  /// No description provided for @foldersMine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörlerim'**
+  String get foldersMine;
+
+  /// No description provided for @foldersSharedSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Benimle paylaşılan klasörler'**
+  String get foldersSharedSection;
+
+  /// No description provided for @trashDaysShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün'**
+  String trashDaysShort(int count);
+
+  /// No description provided for @trashTodayShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get trashTodayShort;
 }
 
 class _AppLocalizationsDelegate

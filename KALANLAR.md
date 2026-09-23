@@ -9,11 +9,10 @@
 - [ ] **Ortak not iki hesapla denenmeli**: A notu B'ye açar → B'nin ana
   ekranında "Benimle paylaşılanlar" çipi → B düzenler, A canlı görür → B
   "Paylaşımdan ayrıl". Kurallar main push'unda CI ile yayınlanıyor.
-- [ ] **Ortak çalışanın EKLEDİĞİ görsel sahibine görünmez**: ek yükleme
-  `attachmentRepositoryProvider` (giriş yapan kullanıcının Storage yolu)
-  üzerinden gidiyor; sahip o yolu okuyamaz. Paylaşılan KLASÖRDEKİ notta da
-  aynı sınır zaten vardı. Çözüm: paylaşılan notta eki sahibin yoluna yazmak
-  + storage kuralında ortak çalışana yazma izni.
+- [x] **Ortak çalışanın eklediği görsel sahibine görünmüyordu** — 2026-09-23
+  düzeldi (kuyruk paylaşılan notları da tarıyor, ek sahibin yoluna gidiyor).
+  Kalan: düzeltmeden ÖNCE eklenmiş görseller ekleyenin cihazında kalmışsa
+  o cihaz uygulamayı açınca yüklenir; cihaz kaybolduysa geri gelmez.
 - [ ] **Ortak not bildirimi yok**: B'ye not açılınca bildirim düşmez (çip
   belirir). Klasör etkinlik servisinin (SharedActivityService) not
   karşılığı yazılabilir.

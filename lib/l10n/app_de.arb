@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Stift und PDF",
   "loginFeatureInkBody": "Handschriftlich notieren, auf PDFs und Folien schreiben.",
   "foldersTitle": "Ordner",
-  "foldersEmpty": "Noch keine Ordner. Erstelle einen, um deine Notizen zu ordnen."
+  "foldersEmpty": "Noch keine Ordner. Erstelle einen, um deine Notizen zu ordnen.",
+  "folderColor": "Farbe",
+  "folderColorAuto": "Automatisch",
+  "foldersMine": "Meine Ordner",
+  "foldersSharedSection": "Mit mir geteilte Ordner",
+  "trashDaysShort": "{count} T.",
+  "trashTodayShort": "Heute"
 }

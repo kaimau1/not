@@ -3613,4 +3613,24 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Henüz klasör yok. Bir klasör oluşturup notlarını düzenle.';
+
+  @override
+  String get folderColor => 'Renk';
+
+  @override
+  String get folderColorAuto => 'Otomatik';
+
+  @override
+  String get foldersMine => 'Klasörlerim';
+
+  @override
+  String get foldersSharedSection => 'Benimle paylaşılan klasörler';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count gün';
+  }
+
+  @override
+  String get trashTodayShort => 'Bugün';
 }

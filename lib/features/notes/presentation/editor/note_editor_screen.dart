@@ -521,7 +521,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             owner,
             editorUid: ref.read(currentUidProvider),
           );
-    _attachmentRepo = ref.read(attachmentRepositoryProvider);
+    // Paylaşılan notun ekleri SAHİBİNİN Storage yoluna yüklenir (bkz.
+    // AttachmentRepository.forOwner — ortak nottaki görsel kök nedeni).
+    final attachments = ref.read(attachmentRepositoryProvider);
+    _attachmentRepo = owner == null
+        ? attachments
+        : attachments?.forOwner(owner);
     _gemini = ref.read(geminiServiceProvider);
     _autoTagEnabled = ref.read(autoTagProvider);
     _autoTitleEnabled = ref.read(autoTitleProvider);

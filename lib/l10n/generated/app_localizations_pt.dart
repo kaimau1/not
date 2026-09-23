@@ -3633,4 +3633,24 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Nenhuma pasta ainda. Crie uma para organizar suas notas.';
+
+  @override
+  String get folderColor => 'Cor';
+
+  @override
+  String get folderColorAuto => 'Automática';
+
+  @override
+  String get foldersMine => 'Minhas pastas';
+
+  @override
+  String get foldersSharedSection => 'Pastas compartilhadas comigo';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get trashTodayShort => 'Hoje';
 }

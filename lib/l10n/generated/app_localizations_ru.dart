@@ -3626,4 +3626,24 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Папок пока нет. Создайте папку, чтобы упорядочить заметки.';
+
+  @override
+  String get folderColor => 'Цвет';
+
+  @override
+  String get folderColorAuto => 'Автоматически';
+
+  @override
+  String get foldersMine => 'Мои папки';
+
+  @override
+  String get foldersSharedSection => 'Папки, доступные мне';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count дн.';
+  }
+
+  @override
+  String get trashTodayShort => 'Сегодня';
 }

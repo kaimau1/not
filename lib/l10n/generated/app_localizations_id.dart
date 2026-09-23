@@ -3631,4 +3631,24 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Belum ada folder. Buat folder untuk mengatur catatan Anda.';
+
+  @override
+  String get folderColor => 'Warna';
+
+  @override
+  String get folderColorAuto => 'Otomatis';
+
+  @override
+  String get foldersMine => 'Folder saya';
+
+  @override
+  String get foldersSharedSection => 'Folder yang dibagikan dengan saya';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count hari';
+  }
+
+  @override
+  String get trashTodayShort => 'Hari ini';
 }

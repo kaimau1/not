@@ -8,6 +8,8 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../data/notes_repository.dart';
 import 'notes_providers.dart';
 import '../domain/note.dart';
+import 'note_card.dart';
+import 'note_grid.dart';
 
 /// Çöp kutusu: silinen notlar geri alınabilir veya kalıcı silinebilir.
 ///
@@ -216,25 +218,44 @@ class _TrashScreenState extends ConsumerState<TrashScreen> {
                 title: needle.isEmpty ? l10n.trashEmpty : l10n.noteSearchNoHit,
               );
             }
-            return ListView.separated(
-              padding: const EdgeInsets.all(12),
-              itemCount: notes.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(height: 6),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      needle.isEmpty
-                          ? l10n.trashInfo
-                          : l10n.searchResultCount(notes.length),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // **NOTLAR SAYFASI GİBİ** (kullanıcı isteği 2026-09-23: "çöp
+            // kutusu da güzel değil, o da normal notlar sayfası gibi
+            // olabilir"). Eskiden tam genişlikte düz satırlardı; geniş
+            // ekranda her satır bir ucundan öbürüne uzanıyor, notun rengi,
+            // maddeleri ve görselleri hiç görünmüyordu. Artık ana ekranla
+            // AYNI kart ve AYNI dengeli ızgara; kartın altında kalan gün ve
+            // geri yükle / kalıcı sil.
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = (constraints.maxWidth / 220).floor().clamp(
+                  2,
+                  6,
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                      child: Text(
+                        needle.isEmpty
+                            ? l10n.trashInfo
+                            : l10n.searchResultCount(notes.length),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  );
-                }
-                return _TrashTile(note: notes[index - 1]);
+                    Expanded(
+                      child: NoteBalancedGrid(
+                        notes: notes,
+                        columns: columns,
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                        itemBuilder: (context, index) =>
+                            _TrashCard(note: notes[index]),
+                      ),
+                    ),
+                  ],
+                );
               },
             );
           },
@@ -254,8 +275,8 @@ int? trashDaysLeft(Note note, {DateTime? now}) {
   return left <= 0 ? 0 : left.ceil();
 }
 
-class _TrashTile extends ConsumerWidget {
-  const _TrashTile({required this.note});
+class _TrashCard extends ConsumerWidget {
+  const _TrashCard({required this.note});
 
   final Note note;
 
@@ -303,59 +324,124 @@ class _TrashTile extends ConsumerWidget {
     );
   }
 
+  /// Karta dokununca: ne yapılacağı sorulur. Çöpteki not düzenlenemez —
+  /// açmak önce geri yüklemeyi gerektirir, bunu dokunuşun kendisi söyler.
+  Future<void> _showActions(BuildContext context, WidgetRef ref) async {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      constraints: const BoxConstraints(maxWidth: 520),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.restore_from_trash_outlined),
+              title: Text(l10n.restore),
+              onTap: () => Navigator.pop(sheetContext, 'restore'),
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_forever_outlined, color: scheme.error),
+              title: Text(
+                l10n.deleteForever,
+                style: TextStyle(color: scheme.error),
+              ),
+              onTap: () => Navigator.pop(sheetContext, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    switch (action) {
+      case 'restore':
+        _restore(context, ref);
+      case 'delete':
+        await _deleteForever(context, ref);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    // Kilitli notun başlığı/içeriği kimlik doğrulamasız yüzeylerde gösterilmez
-    // (ana ekran kartıyla aynı kural).
-    final preview = note.locked ? '' : note.toPlainText();
-    final title = note.locked
-        ? l10n.lockedNote
-        : (note.displayTitle.trim().isNotEmpty
-              ? note.displayTitle
-              : preview.split('\n').first);
     final daysLeft = trashDaysLeft(note);
-    // Son gün kırmızı: "yarın gidiyor" bilgisi listedeki diğer satırların
-    // arasında kaybolmasın.
+    // Son gün kırmızı: "yarın gidiyor" bilgisi kartların arasında
+    // kaybolmasın.
     final urgent = daysLeft != null && daysLeft <= 1;
-    return ListTile(
-      tileColor: scheme.surfaceContainerLow,
-      leading: note.locked ? const Icon(Icons.lock_outline) : null,
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (preview.isNotEmpty)
-            Text(preview, maxLines: 2, overflow: TextOverflow.ellipsis),
-          if (daysLeft != null)
-            Text(
-              daysLeft == 0 ? l10n.trashLastDay : l10n.trashDaysLeft(daysLeft),
-              style: TextStyle(
-                fontSize: 11.5,
-                fontWeight: urgent ? FontWeight.w600 : FontWeight.w400,
-                color: urgent ? scheme.error : scheme.onSurfaceVariant,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Çöpteki not SOLUK: canlı notlardan bakışta ayrılsın.
+        Opacity(
+          opacity: 0.85,
+          child: NoteCard(note: note, onTap: () => _showActions(context, ref)),
+        ),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: 6, top: 2),
+          child: Row(
+            children: [
+              // Kısa biçim + tam metin ipucunda: dar kartta "26 gün sonra
+              // kalıcı silinir" iki düğmenin yanına sığmıyor, kesiliyordu.
+              if (daysLeft != null)
+                Expanded(
+                  child: Tooltip(
+                    message: daysLeft == 0
+                        ? l10n.trashLastDay
+                        : l10n.trashDaysLeft(daysLeft),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.hourglass_bottom,
+                          size: 13,
+                          color: urgent ? scheme.error : scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            daysLeft == 0
+                                ? l10n.trashTodayShort
+                                : l10n.trashDaysShort(daysLeft),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: urgent
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: urgent
+                                  ? scheme.error
+                                  : scheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                const Spacer(),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 20,
+                tooltip: l10n.restore,
+                icon: const Icon(Icons.restore_from_trash_outlined),
+                onPressed: () => _restore(context, ref),
               ),
-            ),
-        ],
-      ),
-      isThreeLine: preview.isNotEmpty && daysLeft != null,
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: l10n.restore,
-            icon: const Icon(Icons.restore_from_trash_outlined),
-            onPressed: () => _restore(context, ref),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 20,
+                tooltip: l10n.deleteForever,
+                icon: Icon(Icons.delete_forever_outlined, color: scheme.error),
+                onPressed: () => _deleteForever(context, ref),
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: l10n.deleteForever,
-            icon: Icon(Icons.delete_forever_outlined, color: scheme.error),
-            onPressed: () => _deleteForever(context, ref),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

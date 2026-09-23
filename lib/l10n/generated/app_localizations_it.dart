@@ -3634,4 +3634,24 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Nessuna cartella. Creane una per organizzare le note.';
+
+  @override
+  String get folderColor => 'Colore';
+
+  @override
+  String get folderColorAuto => 'Automatico';
+
+  @override
+  String get foldersMine => 'Le mie cartelle';
+
+  @override
+  String get foldersSharedSection => 'Cartelle condivise con me';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count g';
+  }
+
+  @override
+  String get trashTodayShort => 'Oggi';
 }

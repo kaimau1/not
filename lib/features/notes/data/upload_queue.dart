@@ -1,13 +1,18 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/presentation/auth_providers.dart';
+import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
+import '../presentation/notes_providers.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import 'attachment_repository.dart';
+import 'note_shares_repository.dart';
 import 'notes_repository.dart';
 
 /// Bekleyen ekleri arka planda Firebase Storage'a taşıyan kuyruk.
@@ -57,6 +62,57 @@ class UploadFailuresNotifier extends Notifier<Map<String, int>> {
   }
 }
 
+/// BAŞKASININ koleksiyonunda yaşayıp BENİM düzenleyebildiğim notlar: ortak
+/// notlar ve yazma yetkim olan paylaşılan klasörlerin notları.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-09-23: "ortak nottaki görsel sorunu"):
+/// kuyruk yalnız KENDİ not akışımı tarıyordu. Paylaşılan nota eklediğim
+/// görsel cihazımda "yüklenmeyi bekliyor" olarak sonsuza dek kalıyor, notun
+/// sahibi ve diğer ortak çalışanlar onu hiç göremiyordu. Bu notların
+/// bekleyen ekleri de artık yüklenir — sahibin Storage yoluna
+/// (`AttachmentRepository.forOwner`) ve sahibin dokümanına.
+///
+/// Başkasının eklediği ekin `localPath`'i onun cihazını gösterir; bu cihazda
+/// dosya olmadığı için `upload` onu zaten atlar — yalnız BENİM eklediklerim
+/// yüklenir.
+final foreignEditableNotesProvider =
+    Provider<List<({String ownerId, Note note})>>((ref) {
+      final out = <({String ownerId, Note note})>[];
+      for (final share
+          in ref.watch(sharedNotesWithMeProvider).value ??
+              const <NoteShare>[]) {
+        final note = ref
+            .watch(
+              ownedNoteStreamProvider((
+                ownerId: share.ownerId,
+                noteId: share.noteId,
+              )),
+            )
+            .value;
+        if (note != null) out.add((ownerId: share.ownerId, note: note));
+      }
+      for (final folder
+          in ref.watch(sharedFolderRefsProvider).value ??
+              const <SharedFolderRef>[]) {
+        // Yalnız okuyup yazabildiğim klasör: salt-okurda eklenecek bir şey
+        // yok, salt-yazarda notlar okunamıyor (kural reddeder).
+        if (!folder.role.canRead || !folder.role.canWrite) continue;
+        for (final note
+            in ref
+                    .watch(
+                      sharedFolderNotesProvider((
+                        ownerId: folder.ownerId,
+                        folderId: folder.folderId,
+                      )),
+                    )
+                    .value ??
+                const <Note>[]) {
+          out.add((ownerId: folder.ownerId, note: note));
+        }
+      }
+      return out;
+    });
+
 class UploadQueue {
   UploadQueue(this._ref);
 
@@ -81,6 +137,8 @@ class UploadQueue {
   }
 
   ProviderSubscription<AsyncValue<List<Note>>>? _notesSub;
+  ProviderSubscription<List<({String ownerId, Note note})>>? _foreignSub;
+  Timer? _foreignDebounce;
   ProviderSubscription<int>? _limitSub;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
 
@@ -113,12 +171,67 @@ class UploadQueue {
       if (notes != null) _process(notes);
     });
 
+    _foreignSub = _ref.listen(foreignEditableNotesProvider, (previous, next) {
+      _foreignDebounce?.cancel();
+      _foreignDebounce = Timer(
+        const Duration(seconds: 2),
+        () => _processForeign(next),
+      );
+    }, fireImmediately: true);
+
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       if (results.any((r) => r != ConnectivityResult.none)) {
         final notes = _ref.read(notesStreamProvider).value;
         if (notes != null) _process(notes);
+        _processForeign(_ref.read(foreignEditableNotesProvider));
       }
     });
+  }
+
+  /// Paylaşılan notların bekleyen ekleri (bkz. [foreignEditableNotesProvider]).
+  /// Kendi notlarımın yolundan tek farkı: dosya ve kayıt notun SAHİBİNE
+  /// yazılır. Bekleme/deneme kayıtları aynı haritada tutulur (anahtar not +
+  /// ek kimliği, ikisi de benzersiz).
+  Future<void> _processForeign(
+    List<({String ownerId, Note note})> entries,
+  ) async {
+    if (entries.isEmpty) return;
+    final baseRepo = _ref.read(attachmentRepositoryProvider);
+    final me = _ref.read(currentUidProvider);
+    if (baseRepo == null || me == null) return;
+    for (final (:ownerId, :note) in entries) {
+      for (final attachment in note.attachments) {
+        if (attachment.kind == AttachmentKind.video) continue;
+        if (attachment.isUploaded || attachment.localPath.isEmpty) continue;
+        final key = '${note.id}/${attachment.id}';
+        final lastFailure = _lastFailure[key];
+        if (lastFailure != null &&
+            DateTime.now().difference(lastFailure.at) <
+                _retryDelayFor(lastFailure.attempts)) {
+          continue;
+        }
+        if (!_inFlight.add(key)) continue;
+        try {
+          final uploaded = await baseRepo
+              .forOwner(ownerId)
+              .upload(note.id, attachment);
+          if (uploaded != null) {
+            await NotesRepository(
+              FirebaseFirestore.instance,
+              ownerId,
+              editorUid: me,
+            ).patchAttachment(note.id, uploaded);
+          }
+          _lastFailure.remove(key);
+        } catch (e) {
+          final attempts = (lastFailure?.attempts ?? 0) + 1;
+          _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+          debugPrint('Paylaşılan notun eki yüklenemedi ($key): $e');
+        } finally {
+          _inFlight.remove(key);
+        }
+      }
+    }
   }
 
   /// Kullanıcı "yeniden dene" dedi: üstel bekleme SIFIRLANIR ve kuyruk hemen
@@ -195,6 +308,8 @@ class UploadQueue {
   void dispose() {
     _processDebounce?.cancel();
     _notesSub?.close();
+    _foreignSub?.close();
+    _foreignDebounce?.cancel();
     _limitSub?.close();
     _connectivitySub?.cancel();
   }

@@ -3634,4 +3634,24 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Nog geen mappen. Maak er een om je notities te ordenen.';
+
+  @override
+  String get folderColor => 'Kleur';
+
+  @override
+  String get folderColorAuto => 'Automatisch';
+
+  @override
+  String get foldersMine => 'Mijn mappen';
+
+  @override
+  String get foldersSharedSection => 'Met mij gedeelde mappen';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get trashTodayShort => 'Vandaag';
 }

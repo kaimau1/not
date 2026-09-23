@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Pena dan PDF",
   "loginFeatureInkBody": "Tulis tangan, beri catatan di PDF dan slide.",
   "foldersTitle": "Folder",
-  "foldersEmpty": "Belum ada folder. Buat folder untuk mengatur catatan Anda."
+  "foldersEmpty": "Belum ada folder. Buat folder untuk mengatur catatan Anda.",
+  "folderColor": "Warna",
+  "folderColorAuto": "Otomatis",
+  "foldersMine": "Folder saya",
+  "foldersSharedSection": "Folder yang dibagikan dengan saya",
+  "trashDaysShort": "{count} hari",
+  "trashTodayShort": "Hari ini"
 }

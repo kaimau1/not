@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Caneta e PDF",
   "loginFeatureInkBody": "Faça anotações à mão, escreva sobre PDFs e slides.",
   "foldersTitle": "Pastas",
-  "foldersEmpty": "Nenhuma pasta ainda. Crie uma para organizar suas notas."
+  "foldersEmpty": "Nenhuma pasta ainda. Crie uma para organizar suas notas.",
+  "folderColor": "Cor",
+  "folderColorAuto": "Automática",
+  "foldersMine": "Minhas pastas",
+  "foldersSharedSection": "Pastas compartilhadas comigo",
+  "trashDaysShort": "{count} d",
+  "trashTodayShort": "Hoje"
 }

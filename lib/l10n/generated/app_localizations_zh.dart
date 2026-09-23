@@ -3544,4 +3544,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get foldersEmpty => '还没有文件夹。创建一个来整理笔记。';
+
+  @override
+  String get folderColor => '颜色';
+
+  @override
+  String get folderColorAuto => '自动';
+
+  @override
+  String get foldersMine => '我的文件夹';
+
+  @override
+  String get foldersSharedSection => '与我共享的文件夹';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count天';
+  }
+
+  @override
+  String get trashTodayShort => '今天';
 }

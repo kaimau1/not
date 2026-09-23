@@ -3630,4 +3630,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'Aún no hay carpetas. Crea una para organizar tus notas.';
+
+  @override
+  String get folderColor => 'Color';
+
+  @override
+  String get folderColorAuto => 'Automático';
+
+  @override
+  String get foldersMine => 'Mis carpetas';
+
+  @override
+  String get foldersSharedSection => 'Carpetas compartidas conmigo';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count d';
+  }
+
+  @override
+  String get trashTodayShort => 'Hoy';
 }

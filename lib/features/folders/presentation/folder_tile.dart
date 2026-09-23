@@ -14,12 +14,16 @@ import 'folder_sheets.dart';
 /// **ANA EKRANDAKİ KLASÖR KAROSU.**
 ///
 /// Kullanıcı isteği 2026-08-18: "klasör dashboard'ta bir not gibi yer kaplar
-/// ama görüntüsü klasör gibidir." Karo not kartıyla aynı ızgarada, aynı
-/// genişlikte durur; ama kart değil KLASÖRDÜR — üstünde sekmesi olan bir
-/// kağıt cebi gibi çizilir ve içindeki not sayısını söyler.
+/// ama görüntüsü klasör gibidir."
+///
+/// 2026-09-23 YENİDEN ÇİZİM (kullanıcı: "klasörlerin görünümünden memnun
+/// değilim"): eskiden her karo aynı bej blok + sekmeydi; altı klasör yan
+/// yana tek bir renk duvarı oluyordu. Artık sade bir kart ve klasörü
+/// TANITAN renkli bir simge kutusu (bkz. [NoteFolder.accent]) — renk ve
+/// simge bakışta ayırt ettiriyor, zemin notların arasında bağırmıyor.
 ///
 /// Dokunmak klasörün kendi sayfasını açar ([FolderScreen]); uzun basmak
-/// yönetim levhasını (yeniden adlandır / gizle / sil).
+/// yönetim levhasını (yeniden adlandır / renk / gizle / sil).
 class FolderTile extends ConsumerWidget {
   const FolderTile({super.key, required this.folder});
 
@@ -27,11 +31,10 @@ class FolderTile extends ConsumerWidget {
 
   /// Karonun sabit yüksekliği. Not kartları içeriğe göre uzuyor; klasörler
   /// eşit boyda kalır — ızgaranın ilk satırı düzgün bir raf gibi görünsün.
-  static const double height = 92;
+  static const double height = 76;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final count = ref
         .watch(folderNotesProvider(folder.id))
         .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
@@ -45,104 +48,23 @@ class FolderTile extends ConsumerWidget {
             )),
           )
         : 0;
-    return SizedBox(
-      height: height,
-      child: Material(
-        color: scheme.secondaryContainer,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(6),
-          topRight: Radius.circular(14),
-          bottomLeft: Radius.circular(14),
-          bottomRight: Radius.circular(14),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => FolderScreen.open(context, folder.id),
-          onLongPress: () => showFolderActionsSheet(context, ref, folder),
-          child: Stack(
-            children: [
-              // Klasör SEKMESİ: karoyu "kart" olmaktan çıkaran tek çizgi.
-              Positioned(
-                left: 0,
-                top: 0,
-                child: Container(
-                  width: 46,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withValues(alpha: 0.55),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(6),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              if (unread > 0) FolderUnreadBadge(count: unread),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          folder.iconData,
-                          size: 20,
-                          color: scheme.onSecondaryContainer,
-                        ),
-                        if (folder.hidden) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.visibility_off_outlined,
-                            size: 14,
-                            color: scheme.onSecondaryContainer.withValues(
-                              alpha: 0.7,
-                            ),
-                          ),
-                        ],
-                        const Spacer(),
-                        Text(
-                          '$count',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSecondaryContainer.withValues(
-                              alpha: 0.8,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      folder.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return _FolderTileBody(
+      accent: folder.accent,
+      icon: folder.iconData,
+      name: folder.name,
+      count: count,
+      unread: unread,
+      hidden: folder.hidden,
+      shared: folder.isShared,
+      onTap: () => FolderScreen.open(context, folder.id),
+      onLongPress: () => showFolderActionsSheet(context, ref, folder),
     );
   }
 }
 
 /// **BİR ARKADAŞIN BENİMLE PAYLAŞTIĞI KLASÖR** — [FolderTile]'ın ikizi.
-///
-/// Kullanıcı isteği 2026-08-18: "ortak notlar klasörü kişiler bağlanır
-/// notları ortak görür." Görsel olarak neredeyse aynı, tek fark sekmenin
-/// rengi ve köşedeki kişi rozeti — kullanıcı bakışta "bu benim değil,
-/// paylaşılan" ayrımını yapabilsin. Uzun basış YOK: paylaşımı kaldırma
-/// yetkisi yalnız sahipte (bkz. `showFolderActionsSheet`), burada tek eylem
-/// açmak.
+/// Köşedeki kişi simgesi "bu benim değil, paylaşılan" ayrımını yapar. Uzun
+/// basış YOK: paylaşımı yönetme yetkisi yalnız sahipte.
 class SharedFolderTile extends ConsumerWidget {
   const SharedFolderTile({super.key, required this.share});
 
@@ -150,8 +72,6 @@ class SharedFolderTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
-    final icon = NoteFolder.iconChoices[share.icon] ?? Icons.folder_outlined;
     final count = ref
         .watch(
           sharedFolderNotesProvider((
@@ -166,91 +86,152 @@ class SharedFolderTile extends ConsumerWidget {
         folderId: share.folderId,
       )),
     );
+    return _FolderTileBody(
+      accent: folderAccent(share.folderId),
+      icon: share.iconData,
+      name: share.name,
+      count: count,
+      unread: unread,
+      shared: true,
+      onTap: () =>
+          FolderScreen.open(context, share.folderId, ownerId: share.ownerId),
+    );
+  }
+}
+
+/// Karonun ortak gövdesi: renkli simge kutusu + ad + not sayısı.
+class _FolderTileBody extends StatelessWidget {
+  const _FolderTileBody({
+    required this.accent,
+    required this.icon,
+    required this.name,
+    required this.count,
+    required this.onTap,
+    this.unread = 0,
+    this.hidden = false,
+    this.shared = false,
+    this.onLongPress,
+  });
+
+  final Color accent;
+  final IconData icon;
+  final String name;
+  final int count;
+  final int unread;
+  final bool hidden;
+  final bool shared;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return SizedBox(
       height: FolderTile.height,
       child: Material(
-        color: scheme.tertiaryContainer,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(6),
-          topRight: Radius.circular(14),
-          bottomLeft: Radius.circular(14),
-          bottomRight: Radius.circular(14),
+        color: scheme.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => FolderScreen.open(
-            context,
-            share.folderId,
-            ownerId: share.ownerId,
-          ),
+          onTap: onTap,
+          onLongPress: onLongPress,
           child: Stack(
             children: [
-              Positioned(
-                left: 0,
-                top: 0,
-                child: Container(
-                  width: 46,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: scheme.tertiary.withValues(alpha: 0.55),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(6),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              if (unread > 0)
-                FolderUnreadBadge(count: unread)
-              else
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(
-                    Icons.people_alt_outlined,
-                    size: 14,
-                    color: scheme.onTertiaryContainer.withValues(alpha: 0.7),
-                  ),
-                ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(icon, size: 20, color: scheme.onTertiaryContainer),
-                        const Spacer(),
-                        Text(
-                          '$count',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onTertiaryContainer.withValues(
-                              alpha: 0.8,
+                    FolderIconBox(accent: accent, icon: icon, size: 40),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurface,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      share.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onTertiaryContainer,
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Text(
+                                context.l10n.folderNoteCount(count),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                              if (shared) ...[
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.people_alt_outlined,
+                                  size: 13,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ],
+                              if (hidden) ...[
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.visibility_off_outlined,
+                                  size: 13,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
+              if (unread > 0) FolderUnreadBadge(count: unread),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Klasörün renkli simge kutusu — karoda, çipte ve Klasörler sayfasında
+/// aynı imza. Zemin vurgunun açık tonu, simge vurgunun kendisi: hem açık
+/// hem koyu temada okunur.
+class FolderIconBox extends StatelessWidget {
+  const FolderIconBox({
+    super.key,
+    required this.accent,
+    required this.icon,
+    this.size = 40,
+  });
+
+  final Color accent;
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: dark ? 0.28 : 0.18),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(icon, size: size * 0.52, color: accent),
     );
   }
 }
@@ -260,17 +241,19 @@ class SharedFolderTile extends ConsumerWidget {
 /// Klasör oluşturma eskiden yalnız Süz levhasının içindeydi; klasör artık bir
 /// süzgeç değil bir YER olduğu için girişi de durduğu yerde olmalı.
 class NewFolderTile extends ConsumerWidget {
-  const NewFolderTile({super.key});
+  const NewFolderTile({super.key, this.height = FolderTile.height});
+
+  final double height;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return SizedBox(
-      height: FolderTile.height,
+      height: height,
       child: Material(
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: scheme.outlineVariant),
         ),
         clipBehavior: Clip.antiAlias,
@@ -282,34 +265,36 @@ class NewFolderTile extends ConsumerWidget {
               await FolderScreen.open(context, id);
             }
           },
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.create_new_folder_outlined,
-                size: 22,
-                color: scheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: 6),
-              Text(
-                context.l10n.newFolder,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.create_new_folder_outlined,
+                  size: 22,
                   color: scheme.onSurfaceVariant,
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    context.l10n.newFolder,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
 
 /// **KOMPAKT KLASÖR ÇİPİ** — kullanıcı isteği 2026-08-18: "klasörler ana
 /// ekranda çok fazla yer kaplıyor, farklı bir çözüm bulalım."
@@ -327,13 +312,11 @@ class FolderChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final count = ref
         .watch(folderNotesProvider(folder.id))
         .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
     return _ChipShell(
-      background: scheme.secondaryContainer,
-      foreground: scheme.onSecondaryContainer,
+      accent: folder.accent,
       icon: folder.iconData,
       label: folder.name,
       count: count,
@@ -352,7 +335,6 @@ class SharedFolderChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     // Yalnız YAZMA yetkisinde not listesi okunamaz (kural reddeder); sayı
     // sorulmaz, yerine ortak klasör rozeti yeter.
     final count = share.role.canRead
@@ -366,8 +348,7 @@ class SharedFolderChip extends ConsumerWidget {
               .maybeWhen(data: (notes) => notes.length, orElse: () => 0)
         : null;
     return _ChipShell(
-      background: scheme.tertiaryContainer,
-      foreground: scheme.onTertiaryContainer,
+      accent: folderAccent(share.folderId),
       icon: share.iconData,
       label: share.name,
       count: count,
@@ -398,8 +379,7 @@ class SharedNotesChip extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 6),
       child: _ChipShell(
-        background: scheme.secondaryContainer,
-        foreground: scheme.onSecondaryContainer,
+        accent: scheme.primary,
         icon: Icons.people_alt_outlined,
         label: context.l10n.sharedWithMe,
         count: count,
@@ -415,11 +395,8 @@ class NewFolderChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     return _ChipShell(
-      background: Colors.transparent,
-      foreground: scheme.onSurfaceVariant,
-      border: scheme.outlineVariant,
+      subtle: true,
       icon: Icons.create_new_folder_outlined,
       label: context.l10n.newFolder,
       onTap: () async {
@@ -432,51 +409,68 @@ class NewFolderChip extends ConsumerWidget {
   }
 }
 
-/// Üç çipin ortak gövdesi: tek yerde biçim, üç yerde aynı görünüm.
+/// Çiplerin ortak gövdesi: tek yerde biçim, her yerde aynı görünüm.
+///
+/// 2026-09-23 (kullanıcı: "klasörlerin görünümünden memnun değilim"): çipler
+/// eskiden dolgun bej bloklardı ve şerit, notlardan daha çok göze
+/// batıyordu. Artık sade konturlu hap + klasörün RENGİNDE küçük simge
+/// kutusu: şerit sakinleşti, klasörler renkle ayırt ediliyor.
 class _ChipShell extends StatelessWidget {
   const _ChipShell({
-    required this.background,
-    required this.foreground,
     required this.icon,
     required this.label,
     required this.onTap,
+    this.accent,
     this.count,
     this.trailingIcon,
-    this.border,
+    this.subtle = false,
     this.onLongPress,
   });
 
-  final Color background;
-  final Color foreground;
-  final Color? border;
+  /// Simge kutusunun rengi; null ise simge kutusuz, soluk çizilir.
+  final Color? accent;
   final IconData icon;
   final String label;
   final int? count;
   final IconData? trailingIcon;
+
+  /// "Yeni klasör" gibi eylem çipi: zeminsiz, yalnız kontur.
+  final bool subtle;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final muted = scheme.onSurfaceVariant;
+    final accent = this.accent;
     return Material(
-      color: background,
+      color: subtle ? Colors.transparent : scheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: border == null
-            ? BorderSide.none
-            : BorderSide(color: border!),
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: scheme.outlineVariant.withValues(alpha: subtle ? 1 : 0.6),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: EdgeInsetsDirectional.fromSTEB(
+            accent == null ? 10 : 4,
+            0,
+            10,
+            0,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 17, color: foreground),
-              const SizedBox(width: 6),
+              if (accent != null)
+                FolderIconBox(accent: accent, icon: icon, size: 24)
+              else
+                Icon(icon, size: 17, color: muted),
+              const SizedBox(width: 7),
               // Uzun klasör adları şeridi ele geçirmesin: çip en fazla
               // 150 px, ad taşarsa kısalır.
               ConstrainedBox(
@@ -487,8 +481,8 @@ class _ChipShell extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: foreground,
+                    fontWeight: FontWeight.w500,
+                    color: subtle ? muted : scheme.onSurface,
                   ),
                 ),
               ),
@@ -498,18 +492,14 @@ class _ChipShell extends StatelessWidget {
                   '$count',
                   style: TextStyle(
                     fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                    color: foreground.withValues(alpha: 0.75),
+                    fontWeight: FontWeight.w600,
+                    color: muted,
                   ),
                 ),
               ],
               if (trailingIcon != null) ...[
                 const SizedBox(width: 5),
-                Icon(
-                  trailingIcon,
-                  size: 13,
-                  color: foreground.withValues(alpha: 0.75),
-                ),
+                Icon(trailingIcon, size: 13, color: muted),
               ],
             ],
           ),
@@ -518,7 +508,6 @@ class _ChipShell extends StatelessWidget {
     );
   }
 }
-
 
 /// **OKUNMAMIŞ ROZETİ** — klasör karosunun sağ ÜST köşesinde duran, klasik
 /// Android bildirim sayacı (kullanıcı isteği 2026-09-04: "o klasör

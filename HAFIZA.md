@@ -3267,3 +3267,42 @@ bekleyen sayısı rozet. Sekiz bölüm küçük tabletin yatayına (~600 dp) sı
 için ray KAYDIRILABİLİR (LayoutBuilder + minHeight + IntrinsicHeight; yer
 varken alt düğmeler dibe yaslanır). (3) Ayrı tanıtım sitesi YOK:
 hekimasistani.com doğrudan uygulama kalır (giriş ekranının vitrini yeter).
+
+## 2026-09-23 — Ortak notta görsel, klasör tasarımı, çöp kutusu
+
+### KÖK NEDEN — ortak nota eklenen görsel sahibine hiç ulaşmıyordu
+İki kat: (1) `UploadQueue` yalnız KENDİ not akışımı (`notesStreamProvider`)
+tarıyordu; paylaşılan nota (ortak not ya da paylaşılan klasör) eklenen ek
+cihazda "yüklenmeyi bekliyor" olarak sonsuza dek kalıyordu. (2) Yüklense
+bile yol `users/{BEN}/…` olurdu — sahip okuyamaz. Çözüm:
+`foreignEditableNotesProvider` (ortak notlar + okuma VE yazma yetkili
+paylaşılan klasör notları) kuyruğa bağlandı; ek `AttachmentRepository
+.forOwner(sahip)` ile SAHİBİN yoluna, kayıt sahibin dokümanına
+(`patchAttachment`, `editorUid` = ben). Editör de paylaşılan notta
+`forOwner` kullanıyor (web'de doğrudan yükleme yolu için şart).
+storage.rules: `users/{uid}/notes/{noteId}/**` ortak çalışana ve klasör
+rolüne göre okuma/yazma (silme YOK, sahipte). Klasör yolu storage
+kuralında 2 Firestore okuması (not → folderShares). Emülatörde 33 senaryo
+geçti. Başkasının eklediği ekin `localPath`'i onun cihazını gösterir,
+`upload` dosya yoksa atlar — yalnız kendi eklediğim yüklenir.
+
+### Klasör görünümü (kullanıcı: "memnun değilim, fikir gelmiyor")
+KARAR: her klasöre RENK (`NoteFolder.color`, `accentPalette` dizini; null =
+kimlikten KARARLI türetme — `String.hashCode` oturumlar arası sabit değil,
+elle karakter toplamı). Şerit çipi: sade konturlu hap + klasör renginde
+küçük simge kutusu (`FolderIconBox`); karo: yatay kart, renkli kutu + ad +
+"N not". Klasörler sayfası (web): max 320 px kartlar, üstte renk şeridi,
+son 3 notun başlığı, "Klasörlerim" / "Benimle paylaşılan klasörler"
+bölümleri. Düzenleme penceresinde renk seçici (Otomatik + 8 renk); otomatiğe
+dönüş alanı `FieldValue.delete()` ile siler. Paylaşılan klasör aynası renk
+taşımıyor → paylaşılanlarda hep otomatik renk.
+
+### Çöp kutusu = notlar sayfası
+Ana ekranla aynı `NoteCard` + `NoteBalancedGrid`. `NoteCard.onTap`
+parametresi eklendi: verilirse not açılmaz, ⋮/sağ tık/seçim kapanır. Kart
+altında kısa kalan gün (⏳ 26 gün, tam metin ipucunda) + geri yükle / kalıcı
+sil; karta dokununca aynı iki seçenek levhada.
+
+TUZAK: `dart format`'ı mevcut büyük dosyalarda (note_editor_screen,
+attachment_repository) ÇALIŞTIRMA — dosyalar formatlı değil, yüzlerce
+alakasız satır değişiyor. Yalnız yeni dosyaları formatla.

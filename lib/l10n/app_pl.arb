@@ -646,5 +646,11 @@
   "loginFeatureInkTitle": "Pióro i PDF",
   "loginFeatureInkBody": "Notuj odręcznie, pisz na PDF-ach i slajdach.",
   "foldersTitle": "Foldery",
-  "foldersEmpty": "Brak folderów. Utwórz folder, aby uporządkować notatki."
+  "foldersEmpty": "Brak folderów. Utwórz folder, aby uporządkować notatki.",
+  "folderColor": "Kolor",
+  "folderColorAuto": "Automatyczny",
+  "foldersMine": "Moje foldery",
+  "foldersSharedSection": "Foldery udostępnione mi",
+  "trashDaysShort": "{count} dni",
+  "trashTodayShort": "Dziś"
 }

@@ -194,6 +194,25 @@ class AttachmentRepository {
 
   static const _uuid = Uuid();
 
+  /// Aynı sınırlarla, ekleri BAŞKA bir kullanıcının Storage yoluna
+  /// (`users/{ownerUid}/…`) yazan kopya.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-09-23: "ortak nottaki görsel
+  /// sorunu"): ortak nota (ya da paylaşılan klasördeki nota) eklenen görsel
+  /// ekleyenin KENDİ yoluna gidiyordu — sahip o yolu okuyamaz. Paylaşılan
+  /// notun ekleri notun SAHİBİNİN yoluna yazılır; storage.rules ortak
+  /// çalışana tam bu yolu açar. Kota yine ekleyenin kendi kullanımıyla
+  /// denetlenir (tavanı aşan dosyayı kimse başkasının deposuna bırakamasın).
+  AttachmentRepository forOwner(String ownerUid) => ownerUid == uid
+      ? this
+      : AttachmentRepository(
+          _storage,
+          ownerUid,
+          maxBytes,
+          quotaBytes: quotaBytes,
+          usedBytes: usedBytes,
+        );
+
   Future<Directory> _attachmentsDir(String noteId) async {
     final base = await getApplicationSupportDirectory();
     final dir = Directory(p.join(base.path, 'attachments', noteId));

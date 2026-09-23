@@ -3616,4 +3616,24 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get foldersEmpty =>
       'अभी कोई फ़ोल्डर नहीं। नोट्स व्यवस्थित करने के लिए एक बनाएँ।';
+
+  @override
+  String get folderColor => 'रंग';
+
+  @override
+  String get folderColorAuto => 'स्वचालित';
+
+  @override
+  String get foldersMine => 'मेरे फ़ोल्डर';
+
+  @override
+  String get foldersSharedSection => 'मेरे साथ साझा फ़ोल्डर';
+
+  @override
+  String trashDaysShort(int count) {
+    return '$count दिन';
+  }
+
+  @override
+  String get trashTodayShort => 'आज';
 }
