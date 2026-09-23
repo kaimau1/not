@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -82,10 +83,30 @@ class NotlarApp extends ConsumerWidget {
         // dilin tarih sembollerini zaten yüklüyor, ayrıca bir başlatma
         // (initializeDateFormatting) gerekmiyor.
         Intl.defaultLocale = Localizations.localeOf(context).toLanguageTag();
-        return fixedTypography(
-          context,
-          child ?? const SizedBox.shrink(),
-          fontScale,
+        // **SİSTEM GEZİNME ÇUBUĞU** (kullanıcı bulgusu 2026-09-23, ekran
+        // görüntüsü: editörün alt çubuğunun altında beyaz bir şerit).
+        // KÖK NEDEN: uygulama ekranı kenardan kenara çiziyor ama gezinme
+        // çubuğu için hiçbir stil vermiyordu. Android, üç tuşlu gezinmede
+        // okunurluk için çubuğa kendiliğinden yarı saydam BEYAZ bir perde
+        // koyuyor ("contrast enforced") — kâğıt renkli notun dibinde ekranın
+        // bir parçası kopmuş gibi duruyordu, koyu temada da parlıyordu.
+        // Perde kapatılır, çubuk saydam olur ve altındaki sayfa (notun
+        // rengi) görünür; tuş simgeleri temaya göre açık/koyu seçilir.
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarContrastEnforced: false,
+            systemNavigationBarIconBrightness: dark
+                ? Brightness.light
+                : Brightness.dark,
+          ),
+          child: fixedTypography(
+            context,
+            child ?? const SizedBox.shrink(),
+            fontScale,
+          ),
         );
       },
     );

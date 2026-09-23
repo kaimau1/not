@@ -3404,3 +3404,40 @@ sıralama modunda ve kart sürüklenirken KAPALI; hız eşiği 200 → 300.
   `Image.opacity` — kart başına ayrı birleştirme katmanı açılmıyor.
 * Klasör sohbetindeki fotoğraflar tam çözünürlükte çözülüyordu →
   `memCacheWidth: 720`; zemin levhası önizlemesi `cacheWidth: 900`.
+
+## 2026-09-23 (4. tur) — Klavyede alt çubuk, gezinme çubuğu, biçim çubuğu, boş öğe
+
+`flutter analyze` temiz, `flutter test` **996 test yeşil**.
+
+### KÖK NEDEN — klavye açılırken alt çubuk "takılarak kayarak" çıkıyordu
+`KeyboardSnap`/`KeyboardSlide` doğru kurulmuştu ama çubuğun içindeki
+`BottomAppBar` KENDİ `SafeArea`sını taşıyor. Alt güvenli alan
+(`MediaQuery.padding.bottom` = gezinme çubuğu − klavye) klavyenin ilk
+~48 dp'sinde kare kare sıfıra iniyor → çubuğun YÜKSEKLİĞİ her karede
+değişiyor → gövdenin `Column`u her karede yeniden yerleşiyordu. Pay artık
+`KeyboardSlide`da: `viewPadding` (sabit) yalnız KARARLI boşluk 0'ken
+veriliyor, çubuğun içi `removePadding` ile 0 görüyor; öteleme
+`inset + pad − max(nav, live)`. Testi var (eski kodda kırmızı).
+Aynı aile: seçim çubukları `8 + klavye + gezinme` diyordu (klavye gezinmeyi
+zaten içeriyor) → `max`.
+
+### Gezinme çubuğundaki beyaz şerit
+Android 3 tuşlu gezinmeye okunurluk için yarı saydam BEYAZ perde koyuyor
+(`contrastEnforced`). app.dart kökünde `AnnotatedRegion`: saydam çubuk,
+perde kapalı, simge parlaklığı temaya göre; main.dart'ta her Android'de
+`edgeToEdge`.
+
+### Editör alt çubuğu taşması
+Sabit ölçüler 411 dp'de sınırdaydı (408), 393 dp'de ya da ek varken kapsül
+kayıp sağ kenarı kesik görünüyordu. `planEditorBar` (editor_bar_layout.dart,
+testli): önce düğmeler 48→44, sonra Paylaş, sonra Ara kapsülden çıkar (ikisi
+de ⋮ menüsünde duruyor).
+
+### Biçim çubuğu
+Satırın tamamı kayıyordu, "kapat" en sonda → 411 dp'de ekran dışında. Kapat
+artık sağda SABİT; renk/yazı tipi menü düğmeleri 48 yerine 42×40
+(`_compactStyle`); kayan kısım sağ kenarda solarak devamı olduğunu söylüyor.
+
+### "+ Yeni öğe" boş öğe biriktiriyordu
+Her dokunuş yeni boş öğe açıyordu; işaretsizlerin sonunda boş öğe varsa artık
+ona odaklanılıyor. Testi var.

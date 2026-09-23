@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -168,14 +169,42 @@ class KeyboardSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final live = MediaQuery.viewInsetsOf(context).bottom;
-    // Negatif = YUKARI. Boşluk 0'ken (animasyon sürerken) çubuk klavye kadar
-    // yukarı kalkar; boşluk oturunca fark sıfırlanır ve öteleme kendiliğinden
-    // biter — çubuk iki durumda da BİREBİR aynı yerde olduğu için oturma anı
-    // ekranda görünmez.
+    // **GEZİNME ÇUBUĞU PAYI BURADA, SABİT** (kullanıcı bulgusu 2026-09-23:
+    // "klavye açılırken alt alan hâlâ takılarak, kayarak yukarı çıkıyor").
+    //
+    // KÖK NEDEN: çubuğun içindeki `BottomAppBar` kendi `SafeArea`sını
+    // taşıyor ve alt güvenli alanı `MediaQuery.padding`den okuyor. O değer
+    // "gezinme çubuğu − klavye" demek: klavye yükselirken İLK ~48 dp'de kare
+    // kare sıfıra iniyor. Yani animasyonun başında çubuğun YÜKSEKLİĞİ her
+    // karede değişiyor, gövdenin `Column`u her karede yeniden yerleşiyordu —
+    // [KeyboardSnap]'in bütün emeği ilk karelerde boşa gidiyor, çubuk da
+    // klavyeyle değil kendi küçülmesiyle hareket ediyordu (kayma + takılma).
+    //
+    // Artık çubuğun altındaki pay (gezinme çubuğu yüksekliği —
+    // `viewPadding`, klavyeden etkilenmez) BURADA veriliyor ve yalnız
+    // KARARLI boşlukla değişiyor: klavye kapalıyken pay var, klavye OTURUNCA
+    // yok. Çubuğun içi `padding.bottom = 0` görür, yüksekliği animasyon
+    // boyunca hiç değişmez; aradaki her fark yine yalnız ötelemeyle kapanır.
+    final nav = MediaQuery.viewPaddingOf(context).bottom;
+    final pad = inset > 0 ? 0.0 : nav;
+    // Çubuğun İÇERİĞİNİN ekranın dibinden olması gereken uzaklığı: klavye
+    // gezinme çubuğundan alçaksa (kapalı ya da açılışın ilk kareleri)
+    // gezinme çubuğunun üstü, değilse klavyenin üstü.
+    final floor = math.max(nav, live);
+    // Pozitif = AŞAĞI. Yerleşimdeki yer (boşluk + pay) ile olması gereken
+    // yer arasındaki fark; boşluk oturunca kendiliğinden sıfırlanır — oturma
+    // anı ekranda görünmez.
     return RepaintBoundary(
       child: Transform.translate(
-        offset: Offset(0, inset - live),
-        child: child,
+        offset: Offset(0, inset + pad - floor),
+        child: Padding(
+          padding: EdgeInsets.only(bottom: pad),
+          child: MediaQuery.removePadding(
+            context: context,
+            removeBottom: true,
+            child: child,
+          ),
+        ),
       ),
     );
   }

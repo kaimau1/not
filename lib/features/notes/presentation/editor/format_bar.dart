@@ -199,100 +199,136 @@ class _FormatBarState extends State<FormatBar> {
                 color: scheme.outlineVariant.withValues(alpha: 0.5),
               ),
               // 1. satır: karakter biçimleri + yazı tipi menüsü.
+              //
+              // KÖK NEDEN (kullanıcı bulgusu 2026-09-23: "biçim menüsüne el
+              // at"): satırın TAMAMI yatay kayıyordu ve "kapat" oku en
+              // sondaydı. Renk ve yazı tipi düğmeleri de IconButton'ın 48 dp
+              // kutusunu kullandığından satır ~480 dp tutuyor, 411 dp'lik
+              // telefonda kapat düğmesi EKRAN DIŞINDA kalıyordu — çubuğu
+              // kapatmak için önce sağa kaydırmak gerektiği hiçbir yerde
+              // belli değildi. Artık kapat sağda SABİT, bütün düğmeler aynı
+              // 42×40 kutuda ve kayan kısım sağ kenarda solarak "devamı var"
+              // der.
               SizedBox(
                 height: 40,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      _Btn(
-                        icon: Icons.format_bold,
-                        tooltip: l10n.formatBold,
-                        active: _active.bold,
-                        onTap: () => widget.onFormat(RichFormat.bold),
-                      ),
-                      _Btn(
-                        icon: Icons.format_italic,
-                        tooltip: l10n.formatItalic,
-                        active: _active.italic,
-                        onTap: () => widget.onFormat(RichFormat.italic),
-                      ),
-                      _Btn(
-                        icon: Icons.format_underlined,
-                        tooltip: l10n.formatUnderline,
-                        active: _active.underline,
-                        onTap: () => widget.onFormat(RichFormat.underline),
-                      ),
-                      const SizedBox(width: 8),
-                      _ColorPicker(
-                        icon: Icons.format_color_text,
-                        tooltip: l10n.formatTextColor,
-                        removeLabel: l10n.formatRemove,
-                        activeIndex: _active.color,
-                        onPick: (i) =>
-                            widget.onFormat(RichFormat.color, colorIndex: i),
-                        onRemove: () =>
-                            widget.onRemoveFormat(RichFormat.color),
-                      ),
-                      _ColorPicker(
-                        icon: Icons.format_color_fill,
-                        tooltip: l10n.formatHighlight,
-                        removeLabel: l10n.formatRemove,
-                        filled: true,
-                        activeIndex: _active.highlight,
-                        onPick: (i) => widget.onFormat(
-                          RichFormat.highlight,
-                          colorIndex: i,
-                        ),
-                        onRemove: () =>
-                            widget.onRemoveFormat(RichFormat.highlight),
-                      ),
-                      const SizedBox(width: 8),
-                      // Biçimi temizle: seçimdeki (ya da imlecin bulunduğu
-                      // parçadaki) her biçim tek dokunuşta gider — düğmeleri
-                      // tek tek geri basmak gerekmez. Biçimsiz metinde SOLUK
-                      // ve tıklanamaz: eskiden her zaman etkin görünüyor ama
-                      // çoğu zaman hiçbir şey yapmıyordu, kullanıcı da
-                      // düğmenin çalışıp çalışmadığını anlayamıyordu.
-                      _Btn(
-                        icon: Icons.format_clear,
-                        tooltip: l10n.formatClear,
-                        onTap: _active.isEmpty ? null : widget.onClearFormat,
-                      ),
-                      const SizedBox(width: 4),
-                      _FontMenu(
-                        family: widget.fontFamily,
-                        onChanged: widget.onFontChanged,
-                      ),
-                      // Sayfa görünümü (zemin/çerçeve rengi, zemin görseli):
-                      // metin biçimlerinden ince bir çizgiyle ayrılır — biri
-                      // SEÇİME, öteki SAYFANIN tamamına uygulanır.
-                      if (widget.onPageStyle != null) ...[
-                        const SizedBox(width: 4),
-                        SizedBox(
-                          height: 24,
-                          child: VerticalDivider(
-                            width: 9,
-                            thickness: 1,
-                            color: scheme.outlineVariant,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ShaderMask(
+                        blendMode: BlendMode.dstIn,
+                        shaderCallback: (rect) => LinearGradient(
+                          colors: const [
+                            Colors.white,
+                            Colors.white,
+                            Colors.transparent,
+                          ],
+                          stops: [
+                            0,
+                            ((rect.width - 18) / rect.width).clamp(0.0, 1.0),
+                            1,
+                          ],
+                        ).createShader(rect),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8),
+                              _Btn(
+                                icon: Icons.format_bold,
+                                tooltip: l10n.formatBold,
+                                active: _active.bold,
+                                onTap: () => widget.onFormat(RichFormat.bold),
+                              ),
+                              _Btn(
+                                icon: Icons.format_italic,
+                                tooltip: l10n.formatItalic,
+                                active: _active.italic,
+                                onTap: () => widget.onFormat(RichFormat.italic),
+                              ),
+                              _Btn(
+                                icon: Icons.format_underlined,
+                                tooltip: l10n.formatUnderline,
+                                active: _active.underline,
+                                onTap: () =>
+                                    widget.onFormat(RichFormat.underline),
+                              ),
+                              const SizedBox(width: 8),
+                              _ColorPicker(
+                                icon: Icons.format_color_text,
+                                tooltip: l10n.formatTextColor,
+                                removeLabel: l10n.formatRemove,
+                                activeIndex: _active.color,
+                                onPick: (i) => widget.onFormat(
+                                  RichFormat.color,
+                                  colorIndex: i,
+                                ),
+                                onRemove: () =>
+                                    widget.onRemoveFormat(RichFormat.color),
+                              ),
+                              _ColorPicker(
+                                icon: Icons.format_color_fill,
+                                tooltip: l10n.formatHighlight,
+                                removeLabel: l10n.formatRemove,
+                                filled: true,
+                                activeIndex: _active.highlight,
+                                onPick: (i) => widget.onFormat(
+                                  RichFormat.highlight,
+                                  colorIndex: i,
+                                ),
+                                onRemove: () =>
+                                    widget.onRemoveFormat(RichFormat.highlight),
+                              ),
+                              const SizedBox(width: 8),
+                              // Biçimi temizle: seçimdeki (ya da imlecin bulunduğu
+                              // parçadaki) her biçim tek dokunuşta gider — düğmeleri
+                              // tek tek geri basmak gerekmez. Biçimsiz metinde SOLUK
+                              // ve tıklanamaz: eskiden her zaman etkin görünüyor ama
+                              // çoğu zaman hiçbir şey yapmıyordu, kullanıcı da
+                              // düğmenin çalışıp çalışmadığını anlayamıyordu.
+                              _Btn(
+                                icon: Icons.format_clear,
+                                tooltip: l10n.formatClear,
+                                onTap: _active.isEmpty
+                                    ? null
+                                    : widget.onClearFormat,
+                              ),
+                              const SizedBox(width: 4),
+                              _FontMenu(
+                                family: widget.fontFamily,
+                                onChanged: widget.onFontChanged,
+                              ),
+                              // Sayfa görünümü (zemin/çerçeve rengi, zemin görseli):
+                              // metin biçimlerinden ince bir çizgiyle ayrılır — biri
+                              // SEÇİME, öteki SAYFANIN tamamına uygulanır.
+                              if (widget.onPageStyle != null) ...[
+                                const SizedBox(width: 4),
+                                SizedBox(
+                                  height: 24,
+                                  child: VerticalDivider(
+                                    width: 9,
+                                    thickness: 1,
+                                    color: scheme.outlineVariant,
+                                  ),
+                                ),
+                                _Btn(
+                                  icon: Icons.palette_outlined,
+                                  tooltip: l10n.color,
+                                  onTap: widget.onPageStyle,
+                                ),
+                              ],
+                              const SizedBox(width: 18),
+                            ],
                           ),
                         ),
-                        _Btn(
-                          icon: Icons.palette_outlined,
-                          tooltip: l10n.color,
-                          onTap: widget.onPageStyle,
-                        ),
-                      ],
-                      const SizedBox(width: 4),
-                      IconButton(
-                        tooltip: l10n.close,
-                        visualDensity: VisualDensity.compact,
-                        icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-                        onPressed: widget.onClose,
                       ),
-                    ],
-                  ),
+                    ),
+                    _Btn(
+                      icon: Icons.keyboard_arrow_down,
+                      tooltip: l10n.close,
+                      onTap: widget.onClose,
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                 ),
               ),
               // 2. satır: TEK kaydırıcı — baştaki düğme boyut ile şeffaflık
@@ -376,6 +412,9 @@ class _FontMenu extends StatelessWidget {
       // null bir menü değeri "iptal" ile karışıyor; varsayılan için boş dize.
       onSelected: (value) => onChanged(value.isEmpty ? null : value),
       icon: const Icon(Icons.font_download_outlined, size: 22),
+      // Öbür düğmelerle AYNI kutu (42×40): IconButton'ın 48 dp'si satırı
+      // taşırıyordu.
+      style: _compactStyle(),
       itemBuilder: (context) => [
         for (final font in kNoteFonts)
           PopupMenuItem<String>(
@@ -396,7 +435,10 @@ class _FontMenu extends StatelessWidget {
                       serifLabel: l10n.noteFontSerif,
                       monoLabel: l10n.noteFontMono,
                     ),
-                    style: applyNoteFont(const TextStyle(fontSize: 15), font.id),
+                    style: applyNoteFont(
+                      const TextStyle(fontSize: 15),
+                      font.id,
+                    ),
                   ),
                 ),
               ],
@@ -530,9 +572,9 @@ class _ColorPicker extends StatelessWidget {
                 ),
               ],
             ),
-      style: index == null
-          ? null
-          : IconButton.styleFrom(backgroundColor: scheme.primaryContainer),
+      style: _compactStyle(
+        background: index == null ? null : scheme.primaryContainer,
+      ),
       // 0 = "Kaldır" (palet indeksleri 1'den başlar, çakışma yok).
       onSelected: (value) {
         if (value == 0) {
@@ -630,3 +672,13 @@ class FormatTarget {
   /// TextField'ın `onChanged`'i çalışmaz).
   final VoidCallback commit;
 }
+
+/// Açılır menü düğmelerini (renk, yazı tipi) şeridin [_Btn] ölçüsüne indirir.
+ButtonStyle _compactStyle({Color? background}) => IconButton.styleFrom(
+  backgroundColor: background,
+  fixedSize: const Size(42, 40),
+  minimumSize: const Size(42, 40),
+  padding: EdgeInsets.zero,
+  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+);

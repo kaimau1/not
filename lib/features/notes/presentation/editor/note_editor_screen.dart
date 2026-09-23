@@ -81,6 +81,7 @@ import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
 import 'drawing_screen.dart';
+import 'editor_bar_layout.dart';
 import 'format_bar.dart';
 import 'format_menu.dart';
 import 'image_layout.dart';
@@ -559,7 +560,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düşüp düşmeyeceğine ÖLÇÜLEREK karar veriliyordu — yani çubuk cihaza göre
   /// başka görünüyordu. Artık her yerde yalnız simge: satır ferahladı, karar
   /// ve ölçüm kodu da gereksiz kaldı.
-  static const double _kToolSegment = 40;
+  static const double _kToolSegment = kEditorBarSegment;
 
   /// Başlık üstündeki meta çiplerinin (klasör/etiket/hatırlatıcı/"+") ortak
   /// sıkıştırma ayarları: satır üst bar ile başlık arasındaki dar banda
@@ -4511,6 +4512,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     required VoidCallback onTap,
     IconData? badge,
     bool active = false,
+    double size = 48,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final background = active ? scheme.primary : scheme.primaryContainer;
@@ -4518,8 +4520,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     return Tooltip(
       message: tooltip,
       child: SizedBox(
-        width: 48,
-        height: 48,
+        width: size,
+        height: size,
         child: Material(
           color: background,
           borderRadius: BorderRadius.circular(14),
@@ -6057,12 +6059,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   color: background,
                   height: 64,
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                  child: Builder(
-                    builder: (context) {
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
                       final showSelect =
                           !note.type.isPageNoteType &&
                           note.items.isNotEmpty;
                       final showAttachments = fileAttachments.isNotEmpty;
+                      // Genişliğe göre plan: taşma/kesik kapsül yerine önce
+                      // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
+                      // Ara/Paylaş kapsülden çıkar (bkz. planEditorBar).
+                      final plan = planEditorBar(
+                        width: constraints.maxWidth,
+                        fixedSegments: showSelect ? 3 : 2,
+                        attachments: showAttachments,
+                        pen: isDocumentNote,
+                      );
                       return Row(
                         children: [
                           // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
@@ -6143,18 +6154,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                                     // Menüdeki maddeleri KALDIRMADIK: aynı
                                     // eylem iki yerden çalışır, alışkanlık
                                     // bozulmaz.
-                                    const SizedBox(width: 3),
-                                    _toolSegment(
-                                      icon: Icons.search,
-                                      label: l10n.noteSearchTitle,
-                                      onTap: _openNoteSearch,
-                                    ),
-                                    const SizedBox(width: 3),
-                                    _toolSegment(
-                                      icon: Icons.share_outlined,
-                                      label: l10n.share,
-                                      onTap: () => unawaited(_share()),
-                                    ),
+                                    if (plan.search) ...[
+                                      const SizedBox(width: 3),
+                                      _toolSegment(
+                                        icon: Icons.search,
+                                        label: l10n.noteSearchTitle,
+                                        onTap: _openNoteSearch,
+                                      ),
+                                    ],
+                                    if (plan.share) ...[
+                                      const SizedBox(width: 3),
+                                      _toolSegment(
+                                        icon: Icons.share_outlined,
+                                        label: l10n.share,
+                                        onTap: () => unawaited(_share()),
+                                      ),
+                                    ],
                                     // EKLER düğmesi: şeridin kendi başlık satırı
                                     // kalktı, aç/kapa buraya taşındı (kullanıcı
                                     // isteği 2026-08-08 — "ekler yazısı ve göster
@@ -6189,6 +6204,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           // ölçüde ve çubuk üçünü de sığdırıyor. Adı
                           // ipucunda duruyor.
                           _voiceButton(
+                            size: plan.button,
                             tooltip: l10n.aiTitle,
                             icon: Icons.auto_awesome,
                             onTap: () => showAiSheet(
@@ -6199,7 +6215,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               onCreateNote: _createNoteFromText,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: plan.gap),
                           // İKİ MİKROFON (kullanıcı isteği 2026-09-01):
                           // soldaki YAPAY ZEKÂ yolu (levhada gözden geçir,
                           // özetle/böl), sağdaki DÜZ SESLE YAZMA (konuşulan
@@ -6208,13 +6224,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           // var" der, sade mikrofon klavyenin dikte tuşunu
                           // anımsatır. Bkz. [_toggleDictation].
                           _voiceButton(
+                            size: plan.button,
                             tooltip: l10n.voiceCaptureAi,
                             icon: Icons.mic_none,
                             badge: Icons.auto_awesome,
                             onTap: _captureVoice,
                           ),
-                          const SizedBox(width: 6),
+                          SizedBox(width: plan.gap),
                           _voiceButton(
+                            size: plan.button,
                             tooltip: l10n.liveDictation,
                             icon: _dictating ? Icons.stop : Icons.mic,
                             active: _dictating,

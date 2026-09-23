@@ -180,4 +180,69 @@ void main() {
       120,
     );
   });
+
+  testWidgets(
+    'gezinme çubuklu cihazda çubuğun BOYU animasyonda değişmez, gövde ölçülmez',
+    (tester) async {
+      // Üç tuşlu gezinme: 48 dp. `padding` klavyeyle azalır (gerçek cihazdaki
+      // gibi), `viewPadding` sabit kalır.
+      const nav = 48.0;
+      Widget navHost(double live, Widget child) => MediaQuery(
+        data: MediaQueryData(
+          size: screen,
+          viewInsets: EdgeInsets.only(bottom: live),
+          viewPadding: const EdgeInsets.only(bottom: nav),
+          padding: EdgeInsets.only(bottom: (nav - live).clamp(0.0, nav)),
+        ),
+        child: Directionality(textDirection: TextDirection.ltr, child: child),
+      );
+      // Gerçek çubuk gibi KENDİ güvenli alanını taşıyan içerik.
+      final safeBar = SafeArea(
+        top: false,
+        child: Container(
+          key: const Key('bar'),
+          height: barHeight,
+          width: double.infinity,
+          color: const Color(0xFFFF0000),
+        ),
+      );
+      final insets = <double>[];
+      final snap = page(safeBar, onBuild: insets.add);
+
+      await tester.pumpWidget(navHost(0, snap));
+      expect(barBottom(tester), screen.height - nav);
+
+      for (final live in [12.0, 30.0, 47.0, 133.0, 300.0]) {
+        await tester.pumpWidget(navHost(live, snap));
+        expect(
+          barBottom(tester),
+          screen.height - (live > nav ? live : nav),
+          reason: '$live dp: çubuk gezinme çubuğunun ya da klavyenin üstünde',
+        );
+        expect(
+          tester.getSize(find.byKey(const Key('bar'))).height,
+          barHeight,
+        );
+      }
+      // Açılışın İLK karelerinde (klavye < gezinme çubuğu) bile gövde
+      // yeniden kurulmadı: eskiden güvenli alan her karede küçülüyordu.
+      expect(insets, [0]);
+      expect(
+        tester.getSize(find.byKey(const Key('body'))).height,
+        screen.height - nav - barHeight,
+        reason: 'gövde animasyon boyunca aynı boyda',
+      );
+
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(insets, [0, 300]);
+      expect(barBottom(tester), screen.height - 300);
+
+      for (final live in [133.0, 47.0, 12.0, 0.0]) {
+        await tester.pumpWidget(navHost(live, snap));
+        expect(barBottom(tester), screen.height - (live > nav ? live : nav));
+      }
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(barBottom(tester), screen.height - nav);
+    },
+  );
 }

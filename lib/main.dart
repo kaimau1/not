@@ -77,6 +77,13 @@ Future<void> main() async {
     );
   }
 
+  // Kenardan kenara çizim her Android sürümünde AÇIK: Android 15+ bunu
+  // zaten zorunlu kılıyor; eski sürümlerde de aynı yerleşim olsun ki
+  // gezinme çubuğu (saydam, bkz. app.dart) her cihazda aynı görünsün.
+  if (!kIsWeb && Platform.isAndroid) {
+    unawaited(SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge));
+  }
+
   if (!DefaultFirebaseOptions.isConfigured) {
     runApp(const SetupRequiredApp());
     return;
