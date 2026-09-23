@@ -652,5 +652,9 @@
   "foldersMine": "내 폴더",
   "foldersSharedSection": "나와 공유된 폴더",
   "trashDaysShort": "{count}일",
-  "trashTodayShort": "오늘"
+  "trashTodayShort": "오늘",
+  "trashSoonSection": "곧 영구 삭제됨",
+  "trashRestSection": "기타 삭제된 메모",
+  "aiHubTagline": "메모에 묻고, 요약하고, 정리하세요.",
+  "aiToolsSection": "도구"
 }

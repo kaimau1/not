@@ -3626,4 +3626,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'اليوم';
+
+  @override
+  String get trashSoonSection => 'سيتم حذفها نهائيًا قريبًا';
+
+  @override
+  String get trashRestSection => 'ملاحظات محذوفة أخرى';
+
+  @override
+  String get aiHubTagline => 'اسأل ولخّص ونظّم ملاحظاتك.';
+
+  @override
+  String get aiToolsSection => 'الأدوات';
 }

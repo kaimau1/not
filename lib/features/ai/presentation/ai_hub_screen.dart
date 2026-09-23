@@ -61,33 +61,125 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
     final scheme = Theme.of(context).colorScheme;
     // Kendi anahtarını girenler (BYOK) ve premium kullanıcılar dahili kapıdan
     // hiç geçmez, sayaç hiç azalmaz — çubuk onlara sürekli "30 / 30" diyordu.
-    // Sınır uygulanmayan kullanıcıya puan çubuğu HİÇ gösterilmez (Ayarlar
-    // zaten durumu ayrı ayrı yazıyor, bkz. _BuiltInAiStatus).
+    // Sınır uygulanmayan kullanıcıya puan göstergesi HİÇ gösterilmez.
     final metered = !ref.watch(aiUnlimitedProvider);
     final remaining = ref.watch(freeAiRemainingProvider);
     final limit = ref.watch(aiDailyLimitProvider);
     final chat = ref.watch(chatProvider);
     final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
-    // Öneri sayıları GERÇEK sorgudan: prototipteki sabit "6 not" yerine
-    // notların kendisi sayılıyor. Arşivlenmiş ve kilitli notlar sayılmaz —
-    // biri zaten görünmüyor, ötekinin içeriğine bakılamaz.
+    // Öneri sayıları GERÇEK sorgudan: notların kendisi sayılıyor.
+    // Arşivlenmiş ve kilitli notlar sayılmaz — biri zaten görünmüyor,
+    // ötekinin içeriğine bakılamaz.
     final active = [
       for (final n in notes)
         if (n.archivedAt == null && !n.locked) n,
     ];
     final untagged = active.where((n) => n.tags.isEmpty).length;
     final untitled = active.where((n) => n.title.trim().isEmpty).length;
-    // Kopya sayısı artık uydurma değil: metin benzerliğinden ölçülüyor
-    // (yerel, AI'sız — bkz. note_similarity.dart).
+    // Kopya sayısı metin benzerliğinden ölçülüyor (yerel, AI'sız — bkz.
+    // note_similarity.dart).
     final duplicates = duplicateCount(ref.watch(duplicateNotesProvider));
     final history = ref.watch(aiHistoryProvider);
 
+    // **YENİDEN TASARIM** (kullanıcı isteği 2026-09-23: "yapay zeka ekranı
+    // çok eski ve düzensiz kaldı, baştan tasarlanmayı hak ediyor"). Eskiden
+    // 640 px'lik tek sütunda farklı biçimde kutular alt alta diziliyordu:
+    // satır kartları, iki ayrı iki-sütunlu kutu grubu, bağımsız bir puan
+    // çubuğu. Artık tek bir dil: üstte ekranın ne yaptığını söyleyen başlık
+    // alanı (puan orada), altında asistan, sonra aynı biçimdeki araç kartları
+    // — her birinin kendi renkli simgesi. Geniş ekranda asistan solda, araçlar
+    // sağda.
+    final chatCard = _ChatCard(
+      chat: chat,
+      controller: _input,
+      hasText: _hasText,
+      onChanged: (v) {
+        final has = v.trim().isNotEmpty;
+        if (has != _hasText) setState(() => _hasText = has);
+      },
+      onSend: _send,
+      onSuggestion: _send,
+      onFullScreen: () => context.push('/chat'),
+    );
+    final tools = [
+      _ToolCard(
+        icon: Icons.wb_sunny_outlined,
+        accent: _AiAccent.amber,
+        title: l10n.briefingTitle,
+        subtitle: l10n.hubBriefingInfo,
+        showChevron: true,
+        onTap: () => context.push('/briefing'),
+      ),
+      _ToolCard(
+        icon: Icons.headphones_outlined,
+        accent: _AiAccent.blue,
+        title: l10n.readDocument,
+        subtitle: l10n.hubReadInfo,
+        showChevron: true,
+        onTap: () => pickAndReadDocument(context),
+      ),
+    ];
+    final tasks = [
+      _ToolCard(
+        icon: Icons.summarize_outlined,
+        accent: _AiAccent.violet,
+        title: l10n.aiTaskWeekSummary,
+        subtitle: l10n.aiTaskWeekSummaryInfo,
+        onTap: () => _send(l10n.aiTaskWeekSummaryInfo),
+      ),
+      _ToolCard(
+        icon: Icons.new_label_outlined,
+        accent: _AiAccent.teal,
+        title: l10n.aiTaskTagUntagged,
+        subtitle: l10n.aiTaskTagUntaggedInfo(untagged),
+        onTap: untagged == 0 ? null : () => _send(l10n.aiTaskTagUntagged),
+      ),
+      _ToolCard(
+        icon: Icons.title,
+        accent: _AiAccent.rose,
+        title: l10n.aiTaskSuggestTitles,
+        subtitle: l10n.aiTaskSuggestTitlesInfo(untitled),
+        onTap: untitled == 0 ? null : () => _send(l10n.aiTaskSuggestTitles),
+      ),
+      // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde ölçülür, puan
+      // harcamaz. Yine de burada duruyor çünkü kullanıcı açısından aynı iş —
+      // "notlarımı toparla".
+      _ToolCard(
+        icon: Icons.copy_all_outlined,
+        accent: _AiAccent.slate,
+        title: l10n.aiTaskDuplicates,
+        subtitle: l10n.aiTaskDuplicatesInfo(duplicates),
+        onTap: duplicates == 0 ? null : () => showDuplicatesSheet(context),
+      ),
+    ];
+    final historySection = history.isEmpty
+        ? const <Widget>[]
+        : [
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(child: _SectionLabel(l10n.aiRecentActions)),
+                TextButton(
+                  onPressed: ref.read(aiHistoryProvider.notifier).clear,
+                  child: Text(l10n.aiHistoryClear),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            _HistoryCard(entries: history),
+          ];
+    final footer = Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Text(
+        l10n.aiPointsRenew,
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
+      ),
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          l10n.aiHubTitle,
-          style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
-        ),
+        title: Text(l10n.aiHubTitle),
         actions: [
           IconButton(
             tooltip: l10n.settingsAi,
@@ -97,154 +189,322 @@ class _AiHubScreenState extends ConsumerState<AiHubScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: ListView(
-            // Alt dolguya sistem gezinme çubuğu EKLENİR: "gece yarısı
-            // yenilenir" satırı listenin en altındaydı ve çubuğun arkasında
-            // yarım kalıyordu (kullanıcı ekran görüntüsü 2026-08-09).
-            padding: EdgeInsets.fromLTRB(
-              14,
-              8,
-              14,
-              24 + MediaQuery.viewPaddingOf(context).bottom,
-            ),
-            children: [
-              // Puan çubuğuna dokunmak Premium sayfasını açar: "puan nedir,
-              // nasıl artar" sorusunun cevabı artık bir dokunuş uzakta.
-              if (metered)
-                InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => context.push('/premium'),
-                  child: AiPointsBar(remaining: remaining, limit: limit),
-                ),
-              const SizedBox(height: 16),
-              _ChatCard(
-                chat: chat,
-                controller: _input,
-                hasText: _hasText,
-                onChanged: (v) {
-                  final has = v.trim().isNotEmpty;
-                  if (has != _hasText) setState(() => _hasText = has);
-                },
-                onSend: _send,
-                onSuggestion: _send,
-                onFullScreen: () => context.push('/chat'),
-              ),
-              const SizedBox(height: 12),
-              _HubRow(
-                icon: Icons.wb_sunny_outlined,
-                title: l10n.briefingTitle,
-                subtitle: l10n.hubBriefingInfo,
-                onTap: () => context.push('/briefing'),
-              ),
-              const SizedBox(height: 8),
-              // "Belge oku" bu satırın YANINDA durur. Eskiden sayfanın en
-              // altında, "SON İŞLEMLER" listesinin hemen ardındaydı: geçmiş
-              // kayıtlarının son maddesi gibi okunuyor, üstelik listede kaç
-              // kayıt varsa o kadar aşağı kayıyordu (kullanıcı ekran
-              // görüntüsü 2026-08-09: "altta kalan kısım yanlış"). İkisi de
-              // aynı iş — bir ekran açan kısayol — bu yüzden aynı bantta.
-              _HubRow(
-                icon: Icons.headphones_outlined,
-                title: l10n.readDocument,
-                subtitle: l10n.hubReadInfo,
-                onTap: () => pickAndReadDocument(context),
-              ),
-              const SizedBox(height: 16),
-              _SectionLabel(l10n.aiOnYourNotes),
-              const SizedBox(height: 8),
-              // IntrinsicHeight ŞART: `CrossAxisAlignment.stretch` çocukları
-              // Row'un yüksekliğine gerer, ListView'da dikey alan SINIRSIZ
-              // olduğu için Row sonsuz yükseklik alıyordu. Debug'da assert
-              // atıyor, RELEASE'de assert çalışmadığından kutular sonsuz
-              // yükseklikle yerleşiyor ve ALTINDAKİ HER ŞEY erişilemez uzağa
-              // itiliyordu — kullanıcı sayfada yalnız sohbet kartı ile brifing
-              // satırını görüyordu. IntrinsicHeight, Row'a en uzun çocuğun
-              // yüksekliğini vererek stretch'i sınırlı hale getirir.
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _TaskTile(
-                        icon: Icons.summarize_outlined,
-                        title: l10n.aiTaskWeekSummary,
-                        info: l10n.aiTaskWeekSummaryInfo,
-                        onTap: () => _send(l10n.aiTaskWeekSummaryInfo),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _TaskTile(
-                        icon: Icons.new_label_outlined,
-                        title: l10n.aiTaskTagUntagged,
-                        info: l10n.aiTaskTagUntaggedInfo(untagged),
-                        onTap: untagged == 0
-                            ? null
-                            : () => _send(l10n.aiTaskTagUntagged),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _TaskTile(
-                        icon: Icons.title,
-                        title: l10n.aiTaskSuggestTitles,
-                        info: l10n.aiTaskSuggestTitlesInfo(untitled),
-                        onTap: untitled == 0
-                            ? null
-                            : () => _send(l10n.aiTaskSuggestTitles),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      // Bu kutu yapay zekâya HİÇ gitmez: benzerlik yerelde
-                      // ölçülür, puan harcamaz. Yine de burada duruyor çünkü
-                      // kullanıcı açısından aynı iş — "notlarımı toparla".
-                      child: _TaskTile(
-                        icon: Icons.copy_all_outlined,
-                        title: l10n.aiTaskDuplicates,
-                        info: l10n.aiTaskDuplicatesInfo(duplicates),
-                        onTap: duplicates == 0
-                            ? null
-                            : () => showDuplicatesSheet(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (history.isNotEmpty) ...[
+      body: LayoutBuilder(
+        builder: (context, box) {
+          final wide = box.maxWidth >= 920;
+          // Alt dolguya sistem gezinme çubuğu EKLENİR: en alttaki satır
+          // çubuğun arkasında yarım kalıyordu (2026-08-09).
+          final padding = EdgeInsets.fromLTRB(
+            16,
+            4,
+            16,
+            24 + MediaQuery.viewPaddingOf(context).bottom,
+          );
+          final hero = _Hero(
+            metered: metered,
+            remaining: remaining,
+            limit: limit,
+            onPoints: () => context.push('/premium'),
+          );
+          if (!wide) {
+            final columns = box.maxWidth >= 560 ? 2 : 1;
+            return ListView(
+              padding: padding,
+              children: [
+                hero,
                 const SizedBox(height: 16),
-                Row(
+                chatCard,
+                const SizedBox(height: 22),
+                _SectionLabel(l10n.aiToolsSection),
+                const SizedBox(height: 10),
+                _TileGrid(columns: columns, children: tools),
+                const SizedBox(height: 22),
+                _SectionLabel(l10n.aiOnYourNotes),
+                const SizedBox(height: 10),
+                _TileGrid(columns: 2, children: tasks),
+                ...historySection,
+                footer,
+              ],
+            );
+          }
+          return SingleChildScrollView(
+            padding: padding,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1180),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: _SectionLabel(l10n.aiRecentActions)),
-                    TextButton(
-                      onPressed: ref.read(aiHistoryProvider.notifier).clear,
-                      child: Text(l10n.aiHistoryClear),
+                    hero,
+                    const SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [chatCard, ...historySection],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _SectionLabel(l10n.aiToolsSection),
+                              const SizedBox(height: 10),
+                              _TileGrid(columns: 1, children: tools),
+                              const SizedBox(height: 22),
+                              _SectionLabel(l10n.aiOnYourNotes),
+                              const SizedBox(height: 10),
+                              _TileGrid(columns: 2, children: tasks),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    footer,
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Ekranın vurgu renkleri: her araç kendi rengiyle tanınsın (klasörlerin
+/// renkli simge kutusuyla aynı dil).
+abstract final class _AiAccent {
+  static const amber = Color(0xFFD9982B);
+  static const blue = Color(0xFF4F8FD6);
+  static const violet = Color(0xFF8E74D0);
+  static const teal = Color(0xFF2FA392);
+  static const rose = Color(0xFFD06A95);
+  static const slate = Color(0xFF7D8799);
+}
+
+/// Başlık alanı: ekranın ne olduğunu söyler, günlük puan burada durur.
+class _Hero extends StatelessWidget {
+  const _Hero({
+    required this.metered,
+    required this.remaining,
+    required this.limit,
+    required this.onPoints,
+  });
+
+  final bool metered;
+  final int remaining;
+  final int limit;
+  final VoidCallback onPoints;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    final points = metered
+        ? _PointsPill(remaining: remaining, limit: limit, onTap: onPoints)
+        : null;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.primaryContainer,
+            Color.alphaBlend(
+              scheme.tertiaryContainer.withValues(alpha: dark ? 0.5 : 0.7),
+              scheme.surface,
+            ),
+          ],
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final title = Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: scheme.surface.withValues(alpha: 0.75),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(
+                  Icons.auto_awesome,
+                  size: 28,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.aiHubTitle,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.aiHubTagline,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onPrimaryContainer.withValues(
+                          alpha: 0.8,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                _HistoryCard(entries: history),
-              ],
-              const SizedBox(height: 20),
-              Text(
-                l10n.aiPointsRenew,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
               ),
             ],
+          );
+          if (points == null) return title;
+          // Dar ekranda puan başlığın ALTINA iner; yan yana sıkışmasın.
+          if (box.maxWidth < 520) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [title, const SizedBox(height: 14), points],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: 12),
+              points,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Günlük puan: dairesel gösterge + "27 / 30". Dokununca Premium açılır —
+/// "puan nedir, nasıl artar" sorusunun cevabı bir dokunuş uzakta.
+class _PointsPill extends StatelessWidget {
+  const _PointsPill({
+    required this.remaining,
+    required this.limit,
+    required this.onTap,
+  });
+
+  final int remaining;
+  final int limit;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final ratio = limit <= 0 ? 0.0 : (remaining / limit).clamp(0.0, 1.0);
+    return Tooltip(
+      message: l10n.aiPointsToday,
+      child: Material(
+        color: scheme.surface.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(999),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(999),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 14, 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: ratio),
+                    duration: const Duration(milliseconds: 400),
+                    builder: (context, value, _) => CircularProgressIndicator(
+                      value: value,
+                      strokeWidth: 3.5,
+                      backgroundColor: scheme.outlineVariant,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.aiPointsToday,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      l10n.aiPointsOf(remaining, limit),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Kartları [columns] sütunlu, satır içinde EŞİT yükseklikte dizer.
+///
+/// IntrinsicHeight ŞART: `CrossAxisAlignment.stretch` liste içinde dikey
+/// alanı sınırsız bulunca release'de kutuları sonsuz yüksekliğe geriyor,
+/// altındaki her şeyi erişilemez uzağa itiyordu (2026-08-09 kök nedeni).
+class _TileGrid extends StatelessWidget {
+  const _TileGrid({required this.columns, required this.children});
+
+  final int columns;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += columns) {
+      final slice = children.skip(i).take(columns).toList();
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var j = 0; j < columns; j++) ...[
+                if (j > 0) const SizedBox(width: 10),
+                Expanded(
+                  child: j < slice.length ? slice[j] : const SizedBox(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+    return Column(
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          rows[i],
+        ],
+      ],
     );
   }
 }
@@ -276,10 +536,11 @@ class _HistoryCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(14),
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
           for (final entry in entries.take(5))
@@ -392,25 +653,37 @@ class _ChatCard extends StatelessWidget {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outlineVariant),
+        color: scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.forum_outlined, size: 19, color: scheme.primary),
-              const SizedBox(width: 8),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(
+                  Icons.forum_outlined,
+                  size: 19,
+                  color: scheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   l10n.aiChatWithNotes,
                   style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
@@ -489,15 +762,18 @@ class _ChatCard extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Container(
-            height: 44,
+            height: 54,
             decoration: BoxDecoration(
               color: scheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: scheme.outlineVariant),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: hasText ? scheme.primary : scheme.outlineVariant,
+                width: hasText ? 1.5 : 1,
+              ),
             ),
-            padding: const EdgeInsetsDirectional.only(start: 12, end: 5),
+            padding: const EdgeInsetsDirectional.only(start: 16, end: 7),
             child: Row(
               children: [
                 Expanded(
@@ -505,13 +781,16 @@ class _ChatCard extends StatelessWidget {
                     controller: controller,
                     onChanged: onChanged,
                     onSubmitted: (_) => onSend(),
-                    style: const TextStyle(fontSize: 13.5),
+                    style: const TextStyle(fontSize: 14.5),
                     decoration: InputDecoration(
                       hintText: l10n.aiChatInputHint,
                       hintStyle: TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 14.5,
                         color: scheme.onSurfaceVariant,
                       ),
+                      // Temanın dolgulu alan biçimi kutunun İÇİNDE ikinci bir
+                      // kutu çiziyordu; çerçeve zaten dıştaki kapta.
+                      filled: false,
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
@@ -519,17 +798,17 @@ class _ChatCard extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 34,
-                  height: 34,
+                  width: 40,
+                  height: 40,
                   child: Material(
                     color: hasText ? scheme.primary : scheme.surfaceContainer,
-                    borderRadius: BorderRadius.circular(9),
+                    shape: const CircleBorder(),
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(9),
+                      customBorder: const CircleBorder(),
                       onTap: chat.busy || !hasText ? null : onSend,
                       child: Icon(
                         Icons.arrow_upward,
-                        size: 18,
+                        size: 20,
                         color: hasText
                             ? scheme.onPrimary
                             : scheme.onSurfaceVariant,
@@ -543,30 +822,31 @@ class _ChatCard extends StatelessWidget {
           // Öneri çipleri yalnız sohbet boşken: konuşma başlayınca yerlerini
           // yanıta bırakırlar.
           if (chat.turns.isEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Wrap(
-              spacing: 6,
-              runSpacing: 6,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                for (final s in [
-                  l10n.chatSuggestion1,
-                  l10n.chatSuggestion2,
-                  l10n.chatSuggestion3,
+                for (final (icon, text) in [
+                  (Icons.shopping_cart_outlined, l10n.chatSuggestion1),
+                  (Icons.work_outline, l10n.chatSuggestion2),
+                  (Icons.alarm, l10n.chatSuggestion3),
                 ])
                   ActionChip(
+                    avatar: Icon(icon, size: 16, color: scheme.primary),
                     label: Text(
-                      s,
+                      text,
                       style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    backgroundColor: scheme.secondaryContainer,
-                    side: BorderSide.none,
+                    backgroundColor: scheme.surface,
+                    side: BorderSide(color: scheme.outlineVariant),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: () => onSuggestion(s),
+                    onPressed: () => onSuggestion(text),
                   ),
               ],
             ),
@@ -583,133 +863,108 @@ class _SectionLabel extends StatelessWidget {
   final String text;
 
   @override
-  Widget build(BuildContext context) => Text(
-    text,
-    style: TextStyle(
-      fontSize: 10.5,
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.5,
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
-  );
-}
-
-/// "Notların üzerinde" kutusu. [onTap] null ise iş yapacak bir şey yok
-/// (ör. etiketsiz not kalmamış) — kutu soluk ve dokunulamaz durur.
-class _TaskTile extends StatelessWidget {
-  const _TaskTile({
-    required this.icon,
-    required this.title,
-    required this.info,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String info;
-  final VoidCallback? onTap;
-
-  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final enabled = onTap != null;
-    return Opacity(
-      opacity: enabled ? 1 : 0.5,
-      child: Material(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: onTap,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 92),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: scheme.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 20, color: scheme.primary),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  info,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    height: 1.4,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+    return Row(
+      children: [
+        Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
+            color: scheme.primary,
           ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(child: Divider(color: scheme.outlineVariant)),
+      ],
     );
   }
 }
 
-class _HubRow extends StatelessWidget {
-  const _HubRow({
+/// Araç kartı: renkli simge kutusu + başlık + açıklama. [onTap] null ise
+/// yapılacak iş yok (ör. etiketsiz not kalmamış) — kart soluk ve
+/// dokunulamaz durur.
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({
     required this.icon,
+    required this.accent,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.showChevron = false,
   });
 
   final IconData icon;
+  final Color accent;
   final String title;
   final String subtitle;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool showChevron;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: scheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final enabled = onTap != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: Material(
+        color: scheme.surfaceContainerLowest,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.6),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: dark ? 0.28 : 0.16),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(icon, size: 22, color: accent),
                 ),
-              ),
-              Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.35,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (showChevron)
+                  Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+              ],
+            ),
           ),
         ),
       ),

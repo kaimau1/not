@@ -257,7 +257,13 @@ class AttachmentRepository {
     final storagePath = 'users/$uid/notes/$noteId/$objectName';
     final ref = _storage.ref(storagePath);
     // putFile'ın bayt karşılığı; web'de dosya tutamacı olmadığından tek yol.
-    await ref.putData(bytes, SettableMetadata(contentType: meta.mimeType));
+    await ref.putData(
+      bytes,
+      SettableMetadata(
+        contentType: meta.mimeType,
+        cacheControl: AppConstants.attachmentCacheControl,
+      ),
+    );
     return meta.copyWith(
       storagePath: storagePath,
       downloadUrl: await ref.getDownloadURL(),
@@ -653,15 +659,26 @@ class AttachmentRepository {
     required String noteId,
     required Attachment meta,
     required Uint8List bytes,
-  }) {
-    if (meta.kind != AttachmentKind.video && bytes.length > maxBytes) {
+  }) async {
+    var data = bytes;
+    // Paketten gelen görsel başka bir uygulamadan/eski sürümden tam boyutlu
+    // gelebilir; senkrona girmeden önce `prepareImage` ile aynı ölçüye
+    // indirilir. Ad ve MIME KORUNUR (paketin sayfa/zemin bağları ek
+    // kimliğine bağlı, dosya adına değil — ama adı değiştirmeye gerek yok):
+    // yalnız JPEG ise küçültülmüş hâli alınır, PNG/GIF olduğu gibi kalır.
+    if (meta.kind == AttachmentKind.image &&
+        meta.mimeType == 'image/jpeg' &&
+        bytes.length > 400 * 1024) {
+      final result = await compute(
+        _compressImage,
+        _CompressRequest(bytes, AppConstants.maxImageDimension),
+      );
+      if (result.isJpg) data = result.bytes;
+    }
+    if (meta.kind != AttachmentKind.video && data.length > maxBytes) {
       throw const FileTooLargeException();
     }
-    return _store(
-      noteId,
-      meta.copyWith(sizeBytes: bytes.length),
-      bytes,
-    );
+    return _store(noteId, meta.copyWith(sizeBytes: data.length), data);
   }
 
   /// Yerel kopyası olup henüz yüklenmemiş eki Storage'a gönderir ve
@@ -677,7 +694,13 @@ class AttachmentRepository {
     final storagePath =
         'users/$uid/notes/$noteId/${attachment.id}_${attachment.fileName}';
     final ref = _storage.ref(storagePath);
-    await ref.putFile(file, SettableMetadata(contentType: attachment.mimeType));
+    await ref.putFile(
+      file,
+      SettableMetadata(
+        contentType: attachment.mimeType,
+        cacheControl: AppConstants.attachmentCacheControl,
+      ),
+    );
     final url = await ref.getDownloadURL();
     return attachment.copyWith(storagePath: storagePath, downloadUrl: url);
   }

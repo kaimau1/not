@@ -652,5 +652,9 @@
   "foldersMine": "मेरे फ़ोल्डर",
   "foldersSharedSection": "मेरे साथ साझा फ़ोल्डर",
   "trashDaysShort": "{count} दिन",
-  "trashTodayShort": "आज"
+  "trashTodayShort": "आज",
+  "trashSoonSection": "जल्द स्थायी रूप से हटेंगे",
+  "trashRestSection": "अन्य हटाए गए नोट्स",
+  "aiHubTagline": "अपने नोट्स से पूछें, सारांश बनाएँ, व्यवस्थित करें।",
+  "aiToolsSection": "टूल्स"
 }

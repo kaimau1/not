@@ -3636,4 +3636,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'आज';
+
+  @override
+  String get trashSoonSection => 'जल्द स्थायी रूप से हटेंगे';
+
+  @override
+  String get trashRestSection => 'अन्य हटाए गए नोट्स';
+
+  @override
+  String get aiHubTagline =>
+      'अपने नोट्स से पूछें, सारांश बनाएँ, व्यवस्थित करें।';
+
+  @override
+  String get aiToolsSection => 'टूल्स';
 }

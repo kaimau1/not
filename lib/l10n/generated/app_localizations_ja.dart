@@ -3584,4 +3584,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get trashTodayShort => '今日';
+
+  @override
+  String get trashSoonSection => 'まもなく完全に削除';
+
+  @override
+  String get trashRestSection => 'その他の削除済みメモ';
+
+  @override
+  String get aiHubTagline => 'メモに質問、要約、整理。';
+
+  @override
+  String get aiToolsSection => 'ツール';
 }

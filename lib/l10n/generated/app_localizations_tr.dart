@@ -3633,4 +3633,16 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Bugün';
+
+  @override
+  String get trashSoonSection => 'Yakında kalıcı silinecek';
+
+  @override
+  String get trashRestSection => 'Diğer silinenler';
+
+  @override
+  String get aiHubTagline => 'Notlarına sor, özetlet, düzenlet.';
+
+  @override
+  String get aiToolsSection => 'Araçlar';
 }

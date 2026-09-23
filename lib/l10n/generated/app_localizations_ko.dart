@@ -3588,4 +3588,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trashTodayShort => '오늘';
+
+  @override
+  String get trashSoonSection => '곧 영구 삭제됨';
+
+  @override
+  String get trashRestSection => '기타 삭제된 메모';
+
+  @override
+  String get aiHubTagline => '메모에 묻고, 요약하고, 정리하세요.';
+
+  @override
+  String get aiToolsSection => '도구';
 }

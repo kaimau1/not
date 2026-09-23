@@ -3653,4 +3653,16 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Hoje';
+
+  @override
+  String get trashSoonSection => 'Serão excluídas em breve';
+
+  @override
+  String get trashRestSection => 'Outras notas excluídas';
+
+  @override
+  String get aiHubTagline => 'Pergunte, resuma e organize suas notas.';
+
+  @override
+  String get aiToolsSection => 'Ferramentas';
 }

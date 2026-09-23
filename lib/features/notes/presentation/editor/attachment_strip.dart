@@ -415,6 +415,17 @@ class _AttachmentTile extends ConsumerWidget {
         width: 140,
         fit: BoxFit.cover,
         memCacheWidth: 420,
+        // İnerken boş kutu değil ilerleme (bkz. note_images aynı düzeltme).
+        progressIndicatorBuilder: (context, _, progress) => Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              value: progress.progress,
+            ),
+          ),
+        ),
       );
     } else {
       content = Container(

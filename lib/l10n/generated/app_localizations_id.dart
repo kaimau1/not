@@ -3651,4 +3651,16 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Hari ini';
+
+  @override
+  String get trashSoonSection => 'Segera dihapus permanen';
+
+  @override
+  String get trashRestSection => 'Catatan terhapus lainnya';
+
+  @override
+  String get aiHubTagline => 'Tanya, ringkas, dan rapikan catatan Anda.';
+
+  @override
+  String get aiToolsSection => 'Alat';
 }

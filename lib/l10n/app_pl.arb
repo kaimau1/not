@@ -652,5 +652,9 @@
   "foldersMine": "Moje foldery",
   "foldersSharedSection": "Foldery udostępnione mi",
   "trashDaysShort": "{count} dni",
-  "trashTodayShort": "Dziś"
+  "trashTodayShort": "Dziś",
+  "trashSoonSection": "Wkrótce trwale usunięte",
+  "trashRestSection": "Inne usunięte notatki",
+  "aiHubTagline": "Pytaj, streszczaj i porządkuj notatki.",
+  "aiToolsSection": "Narzędzia"
 }

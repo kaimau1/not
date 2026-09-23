@@ -3658,4 +3658,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Heute';
+
+  @override
+  String get trashSoonSection => 'Bald endgültig gelöscht';
+
+  @override
+  String get trashRestSection => 'Weitere gelöschte Notizen';
+
+  @override
+  String get aiHubTagline => 'Frag, fasse zusammen und ordne deine Notizen.';
+
+  @override
+  String get aiToolsSection => 'Werkzeuge';
 }

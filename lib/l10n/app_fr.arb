@@ -652,5 +652,9 @@
   "foldersMine": "Mes dossiers",
   "foldersSharedSection": "Dossiers partagés avec moi",
   "trashDaysShort": "{count} j",
-  "trashTodayShort": "Aujourd'hui"
+  "trashTodayShort": "Aujourd'hui",
+  "trashSoonSection": "Bientôt supprimées définitivement",
+  "trashRestSection": "Autres notes supprimées",
+  "aiHubTagline": "Interrogez, résumez et rangez vos notes.",
+  "aiToolsSection": "Outils"
 }

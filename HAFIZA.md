@@ -3306,3 +3306,33 @@ sil; karta dokununca aynı iki seçenek levhada.
 TUZAK: `dart format`'ı mevcut büyük dosyalarda (note_editor_screen,
 attachment_repository) ÇALIŞTIRMA — dosyalar formatlı değil, yüzlerce
 alakasız satır değişiyor. Yalnız yeni dosyaları formatla.
+
+## 2026-09-23 (2. tur) — Çöp düzeni, YZ ekranı yeniden, görsel senkron hızı
+
+### Çöp kutusu "dağınık" — masonry burada yanlış araçtı
+Ana ekranın dengeli (masonry) ızgarası + kartın ALTINDA duran satır,
+farklı boyda kartlarla basamaklı bir görüntü veriyordu. Çöpte not okunmaz,
+TANINIR: artık `SliverGridDelegateWithMaxCrossAxisExtent` (300 px, sabit
+188 px yükseklik), alt bilgi (⏳ gün + geri yükle + kalıcı sil) kartın
+İÇİNDE, taşan önizleme altta solar (ShaderMask). "Yakında kalıcı silinecek"
+(≤3 gün) ayrı başlıkla en üstte. Önceki turda NoteCard'a eklenen `onTap`
+kaldırıldı (artık kullanılmıyor).
+
+### YZ ekranı
+Tek dil: degrade başlık alanı (puan dairesel gösterge olarak orada),
+asistan kartı, `_ToolCard` (renkli simge kutusu, klasörlerle aynı imza)
+ızgaraları "ARAÇLAR" / "NOTLARIN ÜZERİNDE". ≥920 px iki sütun (asistan +
+geçmiş solda, araçlar sağda). `AiPointsBar` ai_sheet'te kullanıldığı için
+yerinde duruyor. TUZAK: temanın `filled` InputDecoration'ı özel çerçeveli
+giriş kutusunun İÇİNE ikinci bir kutu çiziyordu → `filled: false`.
+
+### Görsel senkron gecikmesi — ölçü değil, KUYRUK ve GÖSTERİM
+Sıkıştırma zaten vardı (1600 px/q75). Asıl gecikmeler: (1) kuyruk ekleri
+TEK TEK yüklüyordu (her ek: yükleme + URL + Firestore işlemi) → 3'lü havuz,
+küçük dosya önce; (2) karşı cihazda `CachedNetworkImage` yer tutucusuzdu —
+indirilirken kutu BOŞ görünüyordu (kullanıcının "boş ızgara" ekranı) →
+ilerleme göstergesi + solarak giriş + hata simgesi; (3) kart küçük resmi
+dosya cihazdayken bile ağdan iniyordu → yerel önce. Ek olarak ölçü
+1440 px/q72, Storage yüklemelerine `cacheControl: public, max-age=1y`
+(ek dosyaları değişmez; web her açılışta yeniden indiriyordu), paketten
+gelen >400 KB JPEG de küçültülüyor.

@@ -3650,4 +3650,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Hoy';
+
+  @override
+  String get trashSoonSection => 'Se eliminarán pronto';
+
+  @override
+  String get trashRestSection => 'Otras notas eliminadas';
+
+  @override
+  String get aiHubTagline => 'Pregunta, resume y ordena tus notas.';
+
+  @override
+  String get aiToolsSection => 'Herramientas';
 }

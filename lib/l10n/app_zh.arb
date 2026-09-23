@@ -652,5 +652,9 @@
   "foldersMine": "我的文件夹",
   "foldersSharedSection": "与我共享的文件夹",
   "trashDaysShort": "{count}天",
-  "trashTodayShort": "今天"
+  "trashTodayShort": "今天",
+  "trashSoonSection": "即将永久删除",
+  "trashRestSection": "其他已删除笔记",
+  "aiHubTagline": "向笔记提问、总结并整理。",
+  "aiToolsSection": "工具"
 }

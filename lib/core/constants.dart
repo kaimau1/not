@@ -154,11 +154,22 @@ abstract final class AppConstants {
   /// özetle" akışları bozulmuyor — Gemini görseli 768 px'lik karolara bölerek
   /// okuduğundan 1600 px zaten fazlasıyla yeterli. Yerel kopya da bu ölçüde
   /// tutulur (tek dosya yüklenir), yani cihaz depolaması da azalır.
-  static const int maxImageDimension = 1600;
+  ///
+  /// 1600 → 1440 (kullanıcı isteği 2026-09-23: "görseller firebase
+  /// senkronu yapılırken çok gecikiyor … boyutları minimize edilmeli"):
+  /// piksel sayısı ~%19 azalıyor; telefonda ve tablette tam ekran gösterimde
+  /// fark görünmüyor, Gemini'nin 768 px'lik karolarına hâlâ fazlasıyla yetiyor.
+  static const int maxImageDimension = 1440;
 
-  /// Görsel eklerin JPEG kalitesi. q80 → q75: gözle ayırt edilmesi güç,
-  /// dosya ~%15 daha küçük.
-  static const int imageJpegQuality = 75;
+  /// Görsel eklerin JPEG kalitesi. q80 → q75 → q72 (2026-09-23, aynı istek):
+  /// gözle ayırt edilmesi güç, dosya bir ~%10 daha küçük.
+  static const int imageJpegQuality = 72;
+
+  /// Storage'a yüklenen eklerin önbellek başlığı. Ek dosyaları DEĞİŞMEZ
+  /// (kırpma/döndürme yeni ad yazar), yani tarayıcı ve CDN bir yıl boyunca
+  /// yeniden indirmeden kullanabilir — web'de not her açıldığında görseller
+  /// baştan iniyordu.
+  static const String attachmentCacheControl = 'public, max-age=31536000';
 
   /// Ses eklerinin kayıt bit hızı (bit/sn) ve örnekleme oranı (Hz).
   /// Konuşma için AAC-LC tek kanal 32 kbps / 22.05 kHz yeterli; 48 kbps'e göre

@@ -652,5 +652,9 @@
   "foldersMine": "Folder saya",
   "foldersSharedSection": "Folder yang dibagikan dengan saya",
   "trashDaysShort": "{count} hari",
-  "trashTodayShort": "Hari ini"
+  "trashTodayShort": "Hari ini",
+  "trashSoonSection": "Segera dihapus permanen",
+  "trashRestSection": "Catatan terhapus lainnya",
+  "aiHubTagline": "Tanya, ringkas, dan rapikan catatan Anda.",
+  "aiToolsSection": "Alat"
 }

@@ -652,5 +652,9 @@
   "foldersMine": "Мои папки",
   "foldersSharedSection": "Папки, доступные мне",
   "trashDaysShort": "{count} дн.",
-  "trashTodayShort": "Сегодня"
+  "trashTodayShort": "Сегодня",
+  "trashSoonSection": "Скоро будут удалены навсегда",
+  "trashRestSection": "Другие удалённые заметки",
+  "aiHubTagline": "Спрашивайте, резюмируйте и упорядочивайте заметки.",
+  "aiToolsSection": "Инструменты"
 }

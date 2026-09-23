@@ -6587,6 +6587,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bugün'**
   String get trashTodayShort;
+
+  /// No description provided for @trashSoonSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yakında kalıcı silinecek'**
+  String get trashSoonSection;
+
+  /// No description provided for @trashRestSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diğer silinenler'**
+  String get trashRestSection;
+
+  /// No description provided for @aiHubTagline.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarına sor, özetlet, düzenlet.'**
+  String get aiHubTagline;
+
+  /// No description provided for @aiToolsSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Araçlar'**
+  String get aiToolsSection;
 }
 
 class _AppLocalizationsDelegate

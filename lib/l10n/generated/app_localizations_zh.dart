@@ -3564,4 +3564,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trashTodayShort => '今天';
+
+  @override
+  String get trashSoonSection => '即将永久删除';
+
+  @override
+  String get trashRestSection => '其他已删除笔记';
+
+  @override
+  String get aiHubTagline => '向笔记提问、总结并整理。';
+
+  @override
+  String get aiToolsSection => '工具';
 }

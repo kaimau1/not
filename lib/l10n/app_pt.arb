@@ -652,5 +652,9 @@
   "foldersMine": "Minhas pastas",
   "foldersSharedSection": "Pastas compartilhadas comigo",
   "trashDaysShort": "{count} d",
-  "trashTodayShort": "Hoje"
+  "trashTodayShort": "Hoje",
+  "trashSoonSection": "Serão excluídas em breve",
+  "trashRestSection": "Outras notas excluídas",
+  "aiHubTagline": "Pergunte, resuma e organize suas notas.",
+  "aiToolsSection": "Ferramentas"
 }

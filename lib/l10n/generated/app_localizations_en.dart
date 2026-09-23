@@ -3632,4 +3632,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Today';
+
+  @override
+  String get trashSoonSection => 'Deleted permanently soon';
+
+  @override
+  String get trashRestSection => 'Other deleted notes';
+
+  @override
+  String get aiHubTagline => 'Ask, summarize and tidy up your notes.';
+
+  @override
+  String get aiToolsSection => 'Tools';
 }

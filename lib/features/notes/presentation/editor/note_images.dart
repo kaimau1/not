@@ -275,18 +275,50 @@ class _ImageBox extends StatelessWidget {
             cacheWidth: targetWidth,
           );
         } else if (img.isUploaded) {
+          // İNERKEN BOŞ KUTU YOKTU (kullanıcı ekran görüntüsü 2026-09-23:
+          // altı görselli not başka cihazda boş bir ızgara gibi görünüyordu).
+          // Artık indirme ilerlemesi kutunun ortasında; gelince yumuşakça
+          // belirir, inemezse kırık görsel simgesi durur.
           return CachedNetworkImage(
             imageUrl: img.downloadUrl,
             fit: fit,
             width: double.infinity,
             height: double.infinity,
             memCacheWidth: targetWidth,
+            fadeInDuration: const Duration(milliseconds: 180),
+            progressIndicatorBuilder: (context, _, progress) => Container(
+              color: scheme.surfaceContainerHigh,
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  value: progress.progress,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
+            errorWidget: (context, _, _) => Container(
+              color: scheme.surfaceContainerHigh,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
           );
         }
+        // Başka cihazda eklenmiş, henüz buluta çıkmamış görsel: boş bir
+        // görsel simgesi "bozuk" gibi okunuyordu; bulut-senkron simgesi
+        // "geliyor" der.
         return Container(
           color: scheme.surfaceContainerHigh,
           alignment: Alignment.center,
-          child: Icon(Icons.image_outlined, color: scheme.onSurfaceVariant),
+          child: Icon(
+            Icons.cloud_sync_outlined,
+            color: scheme.onSurfaceVariant,
+          ),
         );
       },
     );

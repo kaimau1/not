@@ -652,5 +652,9 @@
   "foldersMine": "Mijn mappen",
   "foldersSharedSection": "Met mij gedeelde mappen",
   "trashDaysShort": "{count} d",
-  "trashTodayShort": "Vandaag"
+  "trashTodayShort": "Vandaag",
+  "trashSoonSection": "Binnenkort definitief verwijderd",
+  "trashRestSection": "Andere verwijderde notities",
+  "aiHubTagline": "Vraag, vat samen en ruim je notities op.",
+  "aiToolsSection": "Hulpmiddelen"
 }

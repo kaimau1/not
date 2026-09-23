@@ -652,5 +652,9 @@
   "foldersMine": "مجلداتي",
   "foldersSharedSection": "مجلدات تمت مشاركتها معي",
   "trashDaysShort": "{count} يوم",
-  "trashTodayShort": "اليوم"
+  "trashTodayShort": "اليوم",
+  "trashSoonSection": "سيتم حذفها نهائيًا قريبًا",
+  "trashRestSection": "ملاحظات محذوفة أخرى",
+  "aiHubTagline": "اسأل ولخّص ونظّم ملاحظاتك.",
+  "aiToolsSection": "الأدوات"
 }

@@ -1699,5 +1699,9 @@
         "type": "int"
       }
     }
-  }
+  },
+  "trashSoonSection": "Yakında kalıcı silinecek",
+  "trashRestSection": "Diğer silinenler",
+  "aiHubTagline": "Notlarına sor, özetlet, düzenlet.",
+  "aiToolsSection": "Araçlar"
 }

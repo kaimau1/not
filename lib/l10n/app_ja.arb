@@ -652,5 +652,9 @@
   "foldersMine": "マイフォルダ",
   "foldersSharedSection": "共有されたフォルダ",
   "trashDaysShort": "{count}日",
-  "trashTodayShort": "今日"
+  "trashTodayShort": "今日",
+  "trashSoonSection": "まもなく完全に削除",
+  "trashRestSection": "その他の削除済みメモ",
+  "aiHubTagline": "メモに質問、要約、整理。",
+  "aiToolsSection": "ツール"
 }

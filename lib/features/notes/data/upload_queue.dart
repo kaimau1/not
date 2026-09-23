@@ -268,6 +268,13 @@ class UploadQueue {
         for (final attachment in note.attachments) attachment.id,
     });
 
+    // **PARALEL YÜKLEME** (kullanıcı isteği 2026-09-23: "görseller
+    // firebase senkronu yapılırken çok gecikiyor"). Ekler eskiden TEK TEK
+    // yükleniyordu: altı fotoğraflı bir not, her biri yükleme + indirme
+    // adresi + Firestore işlemi (üç gidiş-dönüş) bekleyerek sırayla
+    // gidiyordu. Artık aynı anda [_parallelUploads] ek; KÜÇÜK olan önce —
+    // görseller PDF/ses kuyruğunun arkasında beklemesin.
+    final jobs = <({Note note, Attachment attachment})>[];
     for (final note in notes) {
       for (final attachment in note.attachments) {
         // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
@@ -281,28 +288,56 @@ class UploadQueue {
                 _retryDelayFor(lastFailure.attempts)) {
           continue;
         }
-        if (!_inFlight.add(key)) continue;
-        try {
-          final uploaded = await attachmentRepo.upload(note.id, attachment);
-          if (uploaded != null) {
-            await notesRepo.patchAttachment(note.id, uploaded);
-          }
-          _lastFailure.remove(key);
-          _ref.read(uploadFailuresProvider.notifier).clear(attachment.id);
-        } catch (e) {
-          // Bağlantı yoksa veya yükleme başarısızsa bir sonraki tetikte
-          // (üstel bekleme dolduysa) yeniden denenir.
-          final attempts = (lastFailure?.attempts ?? 0) + 1;
-          _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
-          _ref
-              .read(uploadFailuresProvider.notifier)
-              .fail(attachment.id, attempts);
-          debugPrint('Ek yüklenemedi ($key): $e');
-        } finally {
-          _inFlight.remove(key);
-        }
+        jobs.add((note: note, attachment: attachment));
       }
     }
+    jobs.sort((a, b) => a.attachment.sizeBytes.compareTo(b.attachment.sizeBytes));
+    await _runPool(jobs, (job) async {
+      final note = job.note;
+      final attachment = job.attachment;
+      final key = '${note.id}/${attachment.id}';
+      if (!_inFlight.add(key)) return;
+      final lastFailure = _lastFailure[key];
+      try {
+        final uploaded = await attachmentRepo.upload(note.id, attachment);
+        if (uploaded != null) {
+          await notesRepo.patchAttachment(note.id, uploaded);
+        }
+        _lastFailure.remove(key);
+        _ref.read(uploadFailuresProvider.notifier).clear(attachment.id);
+      } catch (e) {
+        // Bağlantı yoksa veya yükleme başarısızsa bir sonraki tetikte
+        // (üstel bekleme dolduysa) yeniden denenir.
+        final attempts = (lastFailure?.attempts ?? 0) + 1;
+        _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
+        _ref.read(uploadFailuresProvider.notifier).fail(attachment.id, attempts);
+        debugPrint('Ek yüklenemedi ($key): $e');
+      } finally {
+        _inFlight.remove(key);
+      }
+    });
+  }
+
+  /// Aynı anda en çok kaç ek yüklenir. 3: mobil bağlantıda bant genişliğini
+  /// paylaştırıp gidiş-dönüş beklemelerini örtüşür; daha fazlası tek tek
+  /// yüklemeleri yavaşlatıp ilk görselin görünmesini geciktirir.
+  static const _parallelUploads = 3;
+
+  static Future<void> _runPool<T>(
+    List<T> items,
+    Future<void> Function(T item) task,
+  ) async {
+    var next = 0;
+    Future<void> worker() async {
+      while (next < items.length) {
+        final item = items[next++];
+        await task(item);
+      }
+    }
+
+    await Future.wait([
+      for (var i = 0; i < _parallelUploads && i < items.length; i++) worker(),
+    ]);
   }
 
   void dispose() {

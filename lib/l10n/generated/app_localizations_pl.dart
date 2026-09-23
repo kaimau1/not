@@ -3652,4 +3652,16 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Dziś';
+
+  @override
+  String get trashSoonSection => 'Wkrótce trwale usunięte';
+
+  @override
+  String get trashRestSection => 'Inne usunięte notatki';
+
+  @override
+  String get aiHubTagline => 'Pytaj, streszczaj i porządkuj notatki.';
+
+  @override
+  String get aiToolsSection => 'Narzędzia';
 }

@@ -3646,4 +3646,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Сегодня';
+
+  @override
+  String get trashSoonSection => 'Скоро будут удалены навсегда';
+
+  @override
+  String get trashRestSection => 'Другие удалённые заметки';
+
+  @override
+  String get aiHubTagline =>
+      'Спрашивайте, резюмируйте и упорядочивайте заметки.';
+
+  @override
+  String get aiToolsSection => 'Инструменты';
 }

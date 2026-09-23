@@ -652,5 +652,9 @@
   "foldersMine": "Meine Ordner",
   "foldersSharedSection": "Mit mir geteilte Ordner",
   "trashDaysShort": "{count} T.",
-  "trashTodayShort": "Heute"
+  "trashTodayShort": "Heute",
+  "trashSoonSection": "Bald endgültig gelöscht",
+  "trashRestSection": "Weitere gelöschte Notizen",
+  "aiHubTagline": "Frag, fasse zusammen und ordne deine Notizen.",
+  "aiToolsSection": "Werkzeuge"
 }

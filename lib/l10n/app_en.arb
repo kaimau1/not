@@ -1437,5 +1437,9 @@
   "foldersMine": "My folders",
   "foldersSharedSection": "Folders shared with me",
   "trashDaysShort": "{count} d",
-  "trashTodayShort": "Today"
+  "trashTodayShort": "Today",
+  "trashSoonSection": "Deleted permanently soon",
+  "trashRestSection": "Other deleted notes",
+  "aiHubTagline": "Ask, summarize and tidy up your notes.",
+  "aiToolsSection": "Tools"
 }

@@ -3654,4 +3654,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get trashTodayShort => 'Vandaag';
+
+  @override
+  String get trashSoonSection => 'Binnenkort definitief verwijderd';
+
+  @override
+  String get trashRestSection => 'Andere verwijderde notities';
+
+  @override
+  String get aiHubTagline => 'Vraag, vat samen en ruim je notities op.';
+
+  @override
+  String get aiToolsSection => 'Hulpmiddelen';
 }

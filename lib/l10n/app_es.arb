@@ -652,5 +652,9 @@
   "foldersMine": "Mis carpetas",
   "foldersSharedSection": "Carpetas compartidas conmigo",
   "trashDaysShort": "{count} d",
-  "trashTodayShort": "Hoy"
+  "trashTodayShort": "Hoy",
+  "trashSoonSection": "Se eliminarán pronto",
+  "trashRestSection": "Otras notas eliminadas",
+  "aiHubTagline": "Pregunta, resume y ordena tus notas.",
+  "aiToolsSection": "Herramientas"
 }
