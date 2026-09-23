@@ -200,6 +200,18 @@ void main() {
     expect(archiveAutoPageName(note, label), 'Sayfa 4');
   });
 
+  test('ilk sayfanın verilen adı da dolu sayılır', () {
+    String label(int n) => 'Sayfa $n';
+    // Genel sayfasına "Sayfa 2" adı verilmiş: yeni yaprak ikinci bir
+    // "Sayfa 2" olamaz (iki yaprak aynı adla görünürdü).
+    final note = Note(
+      id: 'n1',
+      type: NoteType.archive,
+      archiveGeneralName: 'Sayfa 2',
+    );
+    expect(archiveAutoPageName(note, label), 'Sayfa 3');
+  });
+
   // ————————————————————————————————— KÂĞIT DESENİ
 
   test('kâğıt deseni varsayılan çizgili, tanınmayan kimlik ona düşer', () {

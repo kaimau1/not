@@ -3336,3 +3336,71 @@ dosya cihazdayken bile ağdan iniyordu → yerel önce. Ek olarak ölçü
 1440 px/q72, Storage yüklemelerine `cacheControl: public, max-age=1y`
 (ek dosyaları değişmez; web her açılışta yeniden indiriyordu), paketten
 gelen >400 KB JPEG de küçültülüyor.
+
+## 2026-09-23 (3. tur) — Defter hataları, yana çekiş mantığı, ana ekran düzeni, pil/RAM
+
+Kullanıcının dört maddesi. Flutter SDK (3.44.6) ortama indirildi:
+`flutter analyze` temiz, `flutter test` **989 test yeşil**.
+
+### KÖK NEDEN — ana ekranda yana çekiş (4 ayrı hata)
+Kural saf işleve çıkarıldı: `nextSwipeStop` (notes_providers, 6 testi var).
+1. Dokuz durum süzgecinin HEPSİ geziliyordu → kilitli/hatırlatıcılı notu
+   olmayan kullanıcı her çekişte boş ekrana düşüyordu. Artık yalnız notu
+   olan süzgeçler durak (Tümü ve o an açık olan her zaman durak).
+2. Çekiş seçili KLASÖRÜ sessizce `null` yapıyordu. Klasör artık korunur,
+   duraklar o klasörün notlarından hesaplanır.
+3. Birleşik süzgeç (yıldızlı + #etiket) hiçbir durağa uymuyor, çekiş
+   listenin başına fırlatıyordu. Etiket seçiliyse etiketin durağından.
+4. `AnimatedSwitcher` geçişi ÇIKAN görünüme de aynı `begin` ile
+   uygulanıyordu: giden liste parmağın TERSİNE kayıyordu. Gelen/giden
+   `child.key == ValueKey(segmentKey)` ile ayrılıyor. RTL'de yön ters.
+Ayrıca çekiş seçim modunda (görünmeyen seçili notlar toplu silinirdi),
+sıralama modunda ve kart sürüklenirken KAPALI; hız eşiği 200 → 300.
+
+### Ana ekran düzeni
+* Izgaranın alt boşluğu 88 px idi (tek FAB zamanından) — üç düğmeli sütun
+  sağ sütunun son kartını listenin sonunda bile örtüyordu → `_kFabClearance`
+  200.
+* Düğme sütunu `Positioned(right:)` idi, asistan paneli `end:` — RTL'de
+  panel düğmelerin üstüne biniyordu → `PositionedDirectional`.
+
+### Defter (archive_note_screen) hataları
+* **Sayfa durumu ADA bağlı ve hiç temizlenmiyordu** (`_writers`, odaklar,
+  kaydırma, bantlar, gövde önbelleği). Son sayfa silinince boş yaprak aynı
+  "Sayfa N" adını alıp eski yazı denetleyicisini buluyordu: silinen yazı
+  yeni yaprakta görünüyor, bir harf yazmak onu geri kaydediyordu. →
+  `_forgetPage` (silme + yeniden adlandırma), `_PageWriter` açılışta da
+  kayıtla eşitleniyor (bir kare sonra).
+* `_mutate`/`_saveWriting` artık `_liveNote`'u yazılan hâle çekiyor: akış
+  dönmeden gelen iki değişiklik aynı eski kopyaya kurulup birbirini
+  geri alıyordu.
+* Dosya silinince ona BAĞLI bloklar asılı kimlik taşıyordu → blok
+  düzenleme diyaloğunun Dropdown'u "değer listede yok" doğrulamasıyla
+  kırmızıya düşerdi. Bağ temizleniyor; diyalog asılı bağı "bağ yok"tan açıyor.
+* Var olan bloğun başlığı silinip bağı kaldırılınca blok sade metne dönüp
+  sayfanın YAZISIYLA yer değiştirebiliyordu → yeni bloktaki "ilk satır
+  başlık olur" kuralı düzenlemede de.
+* İlk sayfanın verilen adı bir daha silinemiyordu (başlık alanı boş adı
+  her sayfada yok sayıyordu) → `allowEmpty` yalnız ilk sayfada.
+* Sayfa adı ilk sayfanın adıyla çakışabiliyordu (yeniden adlandırma ve
+  otomatik "Sayfa N") → ikisi de reddediyor/atlıyor.
+* Görselden yakalamada sayfa kutusuna ilk sayfanın adı yazılınca ikinci
+  bir "Genel" açılıyordu; hedef numarası da OCR öncesi kopyadan
+  hesaplanıyordu.
+* Genel bakıştan "yeniden adlandır": odak bir kare sonra isteniyordu ama
+  çevirme 420 ms — odak boşa gidiyor ya da `onPageChanged` geri alıyordu.
+* Anlam aramasında her tuş ayrı bir embedding isteğiydi → 450 ms gecikme.
+* `copyAttachmentsToArchive`: ses/video "görsel" dalına düşüp TAMAMI
+  belleğe okunuyordu (video yüzlerce MB) → atlanıyor; sonuç notun
+  tamamını eski kopyadan geri yazıyordu → `arrayUnion`.
+
+### Pil / RAM
+* `setHighRefreshRate` koşulsuzdu: sistem pil tasarrufundayken de ekran
+  90/120 Hz'e kilitleniyordu → `DisplayRate` (MainActivity
+  `powerSaveMode` köprüsü); tasarrufta `DisplayMode.auto`, karar her öne
+  gelişte yeniden.
+* Arka plana geçince `imageCache.clear()` (kullanılan görseller etkilenmez).
+* Kart zemin görseli ve ana ekran zemini `Opacity` widget'ı yerine
+  `Image.opacity` — kart başına ayrı birleştirme katmanı açılmıyor.
+* Klasör sohbetindeki fotoğraflar tam çözünürlükte çözülüyordu →
+  `memCacheWidth: 720`; zemin levhası önizlemesi `cacheWidth: 900`.

@@ -172,6 +172,8 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                     height: 120,
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    // Önizleme 120 px yüksekliğinde: tam boy çözmeye gerek yok.
+                    cacheWidth: 900,
                   ),
                 ),
               ),

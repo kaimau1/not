@@ -71,6 +71,16 @@ import 'voice_capture_sheet.dart';
 /// gerileme getirir; cihazda ölçüm yapılabildiğinde yeniden değerlendirilsin.
 const double _kGridCacheExtent = 10000;
 
+/// Izgaranın altında bırakılan boşluk: sağ alttaki düğme sütunu (iki
+/// mikrofon 48 + "+" 56 + aralıklar 20 + alt pay 16 = 188, + 12 nefes payı)
+/// ızgaranın ÜSTÜNDE yüzüyor.
+///
+/// KÖK NEDEN (ana sayfa düzeni, 2026-09-23): boşluk 88 px idi — sütun tek bir
+/// FAB'ken yazılmış bir değer. Sütun üç düğmeye çıkınca sağ sütunun son
+/// kartının alt yarısı listenin en sonuna kaydırıldığında bile düğmelerin
+/// ARKASINDA kalıyordu; kartın altındaki metne/tarihe hiç ulaşılamıyordu.
+const double _kFabClearance = 200;
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -506,37 +516,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   // levhasının SIRALAMA bölümünde, süzgeçlerle aynı yerde.
 
   /// Ana ekranı yatay çekince (madde 1) aktif görünümü sonraki/önceki
-  /// segmente taşır. Gezinme sırası: Tümü → görünür filtreler (kullanıcı
-  /// sırası) → klasörler. [direction] +1 sola çekiş (sonraki), -1 sağa çekiş.
+  /// durağa taşır: Tümü → notu olan durum süzgeçleri → etiketler. [direction]
+  /// +1 sonraki, -1 önceki. Durakların kuralı saf bir işlevde ve ölçülüyor
+  /// (bkz. [nextSwipeStop]).
+  ///
+  /// **KLASÖRLER BU GEZİDE YOK** (2026-08-18): klasör bir süzgeç değil, ana
+  /// ekranda karosu olan bir YER. Seçili bir klasör varsa ise KORUNUR —
+  /// çekiş yalnız o klasörün içindeki görünümler arasında gezer.
   void _cycleFilterFolder(int direction) {
-    // Çip barı kalkınca "kullanıcının seçtiği görünür süzgeçler" listesi de
-    // kalktı; çekiş artık durum süzgeçlerinin ve etiketlerin TAMAMINI geziyor.
-    //
-    // **KLASÖRLER BU GEZİDE YOK** (2026-08-18): klasör bir süzgeç değil, ana
-    // ekranda karosu olan bir YER. Yandan çekince klasörün İÇİNE girmek —
-    // hem de geri dönüş yolu belli olmadan — kullanıcıyı notlarını kaybetmiş
-    // sanacağı bir ekrana düşürüyordu.
-    final tags = ref.read(allTagsProvider);
-    final segments = <(NoteFilter, String?, String?)>[
-      for (final f in NoteFilter.values) (f, null, null),
-      for (final tag in tags) (NoteFilter.all, null, tag),
+    final folderId = ref.read(selectedFolderProvider);
+    final suppressed = ref.read(suppressedFolderIdsProvider);
+    final notes = [
+      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+        if (n.archivedAt == null &&
+            !n.isEmpty &&
+            !suppressed.contains(n.folderId) &&
+            (folderId == null || n.folderId == folderId))
+          n,
     ];
-    if (segments.length < 2) return;
-    final curFilter = ref.read(noteFilterProvider);
-    final curFolder = ref.read(selectedFolderProvider);
-    final curTag = ref.read(selectedTagProvider);
-    var index = segments.indexWhere(
-      (s) => s.$1 == curFilter && s.$2 == curFolder && s.$3 == curTag,
+    final stop = nextSwipeStop(
+      notes: notes,
+      filter: ref.read(noteFilterProvider),
+      tag: ref.read(selectedTagProvider),
+      direction: direction,
     );
-    if (index < 0) index = 0;
-    var next = (index + direction) % segments.length;
-    if (next < 0) next += segments.length;
-    final (filter, folderId, tag) = segments[next];
+    if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
-    ref.read(noteFilterProvider.notifier).set(filter);
-    ref.read(selectedFolderProvider.notifier).set(folderId);
-    ref.read(selectedTagProvider.notifier).set(tag);
+    ref.read(noteFilterProvider.notifier).set(stop.filter);
+    ref.read(selectedTagProvider.notifier).set(stop.tag);
     HapticFeedback.selectionClick();
   }
 
@@ -821,11 +829,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
               .round();
       layers.add(
         Positioned.fill(
-          child: Opacity(
-            opacity: background.opacity.clamp(0.05, 1),
+          // PİL: `Opacity` widget'ı yerine görselin KENDİ opaklığı — ayrı bir
+          // birleştirme katmanı (saveLayer) açmadan, çizimde alfa uygulanır.
+          // Zemin ızgaranın arkasında ekran boyunda duruyor; ayrı katman her
+          // kaydırma karesinde GPU'ya fazladan tam ekran bir geçiş demekti.
+          child: RepaintBoundary(
             child: Image(
               image: ResizeImage(FileImage(File(path)), width: targetWidth),
               fit: BoxFit.cover,
+              opacity: AlwaysStoppedAnimation(
+                background.opacity.clamp(0.05, 1).toDouble(),
+              ),
             ),
           ),
         ),
@@ -1446,19 +1460,58 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 // Yatay çekişle filtreler/klasörler arasında
                                 // gezin. Dikey kaydırma CustomScrollView'de
                                 // kalır; eksenler farklı olduğundan çakışmaz.
-                                onHorizontalDragEnd: (details) {
-                                  final velocity = details.primaryVelocity ?? 0;
-                                  if (velocity.abs() < 200) return;
-                                  _cycleFilterFolder(velocity < 0 ? 1 : -1);
-                                },
+                                //
+                                // Çekiş YOK SAYILIR: seçim modunda (görünüm
+                                // değişince seçili notlar ekrandan kaybolur
+                                // ama seçili kalır — "Sil" görünmeyen notları
+                                // da silerdi), sıralama modunda ve bir kart
+                                // sürüklenirken (sıralama yalnız süzgeçsiz
+                                // görünümde geçerli; çekiş modu sessizce
+                                // kapatıyordu).
+                                onHorizontalDragEnd:
+                                    selectionActive ||
+                                        reorderActive ||
+                                        _dragNoteId != null
+                                    ? null
+                                    : (details) {
+                                        final velocity =
+                                            details.primaryVelocity ?? 0;
+                                        if (velocity.abs() < 300) return;
+                                        // Sağdan sola yazılan dillerde "sonraki"
+                                        // sağa çekiştir (sayfa yönü ters).
+                                        final rtl =
+                                            Directionality.of(context) ==
+                                            TextDirection.rtl;
+                                        final forward = rtl
+                                            ? velocity > 0
+                                            : velocity < 0;
+                                        _cycleFilterFolder(forward ? 1 : -1);
+                                      },
                                 child: AnimatedSwitcher(
                                   duration: const Duration(milliseconds: 260),
                                   switchInCurve: Curves.easeOutCubic,
                                   switchOutCurve: Curves.easeInCubic,
                                   transitionBuilder: (child, animation) {
                                     // Çekiş yönüne göre yumuşak kaydır + soldur.
+                                    //
+                                    // KÖK NEDEN ("kaydırınca liste ters
+                                    // yöne gidiyor"): aynı geçiş ÇIKAN görünüme
+                                    // de uygulanıyor (animasyonu tersten
+                                    // oynayarak). Tek bir `begin` ile giden
+                                    // liste, gelenin GELDİĞİ yöne kayıyordu —
+                                    // sola çekince eski notlar parmağın tersine,
+                                    // sağa gidiyordu. Çıkan görünüm artık öbür
+                                    // yana çıkar.
+                                    final incoming =
+                                        child.key == ValueKey(segmentKey);
+                                    final dir = _swipeForward ? 1.0 : -1.0;
+                                    final rtl =
+                                        Directionality.of(context) ==
+                                        TextDirection.rtl;
                                     final begin = Offset(
-                                      _swipeForward ? 0.12 : -0.12,
+                                      (incoming ? 0.12 : -0.12) *
+                                          dir *
+                                          (rtl ? -1 : 1),
                                       0,
                                     );
                                     return FadeTransition(
@@ -1549,8 +1602,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ),
                                         ],
                                       ),
+                                      // Listenin sonu düğme sütununun
+                                      // ÜSTÜNE çıkabilsin (bkz.
+                                      // [_kFabClearance]).
                                       const SliverToBoxAdapter(
-                                        child: SizedBox(height: 88),
+                                        child: SizedBox(
+                                          height: _kFabClearance,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -1580,8 +1638,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 // Scaffold bir FAB tanıdığında yüzen bildirimleri ("not
                 // silindi") onun ÜSTÜne iter. Düğmeler Stack'te olunca
                 // bildirim ekranın dibinde, düğmelerin solunda kalır.
-                Positioned(
-                  right: 16,
+                // YÖNE BAĞLI: sabit `right` sağdan sola dillerde düğmeleri
+                // sağda bırakıyor, asistan paneli ise (end: 88) SOLDA yer
+                // ayırıyordu — panel düğmelerin üstüne biniyordu.
+                PositionedDirectional(
+                  end: 16,
                   bottom: 16,
                   // Bağlantı noktası TÜM sütunu sarar: "+" menüsü kendi
                   // düğmesine değil sütunun tepesine demirlenir, böylece
