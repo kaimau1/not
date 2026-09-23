@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -221,7 +222,10 @@ String archiveGeneralLabel(Note note, String fallback) =>
 /// olacaksa o). Aynı ad zaten varsa numara ilerletilir — ad, girdileri
 /// sayfaya bağlayan ANAHTAR olduğu için iki sayfa aynı adı taşıyamaz.
 String archiveAutoPageName(Note note, String Function(int) label) {
-  final taken = note.archivePages.toSet();
+  // İlk sayfaya kullanıcının verdiği ad da DOLU sayılır: "Sayfa 3" adlı bir
+  // Genel sayfasının yanında ikinci bir "Sayfa 3" açılırsa sayfa listesi,
+  // alt çubuk ve arama sonuçları iki farklı yaprağı aynı adla gösterirdi.
+  final taken = {...note.archivePages, note.archiveGeneralName.trim()};
   var number = note.archivePages.length + 2;
   while (taken.contains(label(number))) {
     number++;
@@ -315,6 +319,26 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   String? _semanticKey;
   Future<List<ArchiveScore>>? _semanticFuture;
 
+  /// Anlamsal aramanın ÇALIŞTIRILDIĞI sorgu — yazım durduktan sonra güncellenir.
+  ///
+  /// KÖK NEDEN (pil/kota, 2026-09-23): anlam modunda arama kutusundaki her
+  /// tuş vuruşu yeni bir imza üretiyor ve ağa ayrı bir gömme (embedding)
+  /// isteği çıkıyordu — "fatura" yazmak altı istek demekti. Ana ekranın
+  /// araması bunu zaten geciktiriyordu (`debouncedSearchQueryProvider`);
+  /// defterinki geciktirmiyordu.
+  String _semanticQuery = '';
+  final _semanticDebounce = Debouncer(
+    delay: const Duration(milliseconds: 450),
+  );
+
+  void _onSearchChanged() {
+    setState(() {});
+    if (!_semantic) return;
+    _semanticDebounce(() {
+      if (mounted) setState(() => _semanticQuery = _query);
+    });
+  }
+
   /// Defterin adının (AppBar başlığı) odağı.
   final _notebookTitleFocus = FocusNode();
 
@@ -353,6 +377,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       controller.dispose();
     }
     _styleDebounce.dispose();
+    _semanticDebounce.dispose();
     super.dispose();
   }
 
@@ -417,7 +442,14 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     final repo = _repo;
     final note = _note;
     if (repo == null || note == null) return;
-    await repo.updateNote(change(note));
+    final next = change(note);
+    // Yazılan hâl HEMEN "en son hâl" olur: akış geri dönmeden arka arkaya
+    // gelen iki değişiklik (dosya ekle + yazının kaydı) aksi hâlde aynı eski
+    // kopyanın üstüne kurulur ve ikincisi birincisini geri alırdı. Akış
+    // yerel yazımı birkaç milisaniye içinde zaten geri getirir; bir sonraki
+    // build bu değeri onunla değiştirir.
+    _liveNote = next;
+    await repo.updateNote(next);
   }
 
   /// Kaydın O ANKİ hâli. Yazma akışları build'in kapanışındaki kopyayı değil
@@ -498,7 +530,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     if (trimmed.isEmpty ||
         trimmed == current ||
         current.isEmpty ||
-        note.archivePages.contains(trimmed)) {
+        note.archivePages.contains(trimmed) ||
+        // İlk sayfanın adıyla çakışan ad da reddedilir (bkz.
+        // [_renameGeneral]'daki kuralın aynası).
+        trimmed == note.archiveGeneralName.trim()) {
       return false;
     }
     if (!note.archivePages.contains(current)) {
@@ -527,7 +562,41 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     // yoksa aynı sayfaya ikinci bir yazı girdisi açılabilirdi.
     final writerId = _writerIds.remove(current);
     if (writerId != null) _writerIds[trimmed] = writerId;
+    _forgetPage(current);
     return true;
+  }
+
+  /// Artık var olmayan (silinen ya da adı değişen) sayfanın ekranda tutulan
+  /// durumunu bırakır: yazı denetleyicisi, odaklar, kaydırma, bantlar,
+  /// gövde önbelleği.
+  ///
+  /// KÖK NEDEN (2026-09-23): bu durum sayfa ADINA bağlı tutuluyor ve sayfa
+  /// silinince/yeniden adlandırılınca hiç temizlenmiyordu. Defterin sonundaki
+  /// boş yaprak kendiliğinden "Sayfa N" adını alıyor — son sayfa silinince
+  /// yaprak tam da SİLİNEN sayfanın adını alıyor ve o adın eski yazı
+  /// denetleyicisini buluyordu: yeni boş yaprakta silinmiş sayfanın yazısı
+  /// görünüyor, üstüne bir harf yazmak o yazıyı yeni sayfaya geri
+  /// kaydediyordu. Ayrıca her silme/ad değişikliği bir denetleyici ve odak
+  /// düğümü sızdırıyordu.
+  ///
+  /// Denetleyiciler bir kare SONRA atılır: o an hâlâ ağaçtaki yaprağa bağlı
+  /// olabilirler.
+  void _forgetPage(String name) {
+    final writer = _writers.remove(name);
+    final scroll = _scrolls.remove(name);
+    final writerFocus = _writerFocus.remove(name);
+    final titleFocus = _titleFocus.remove(name);
+    _floats.remove(name);
+    _pageKeys.remove(name);
+    _canvasHeights.remove(name);
+    _bodyCache.remove(name);
+    if (_formatPage == name) _formatPage = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      writer?.dispose();
+      scroll?.dispose();
+      writerFocus?.dispose();
+      titleFocus?.dispose();
+    });
   }
 
   /// İlk sayfanın (bölümsüz girdilerin sayfası) ADINI değiştirir.
@@ -587,6 +656,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       ),
     );
     _writerIds.remove(name);
+    _forgetPage(name);
     if (mounted) _goToPage(0);
   }
 
@@ -695,6 +765,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     // girdi olsun (silinen girdinin kimliğini geri diriltmek, başka bir
     // cihazda o kimliği silmiş olan yazımla çakışırdı).
     if (text.trim().isEmpty) _writerIds.remove(page);
+    _liveNote = next; // bkz. [_mutate]
     await repo.updateNote(next);
   }
 
@@ -710,6 +781,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     final titleController = TextEditingController(text: existing?.title ?? '');
     final textController = TextEditingController(text: existing?.text ?? '');
     var linkedId = existing?.attachmentId ?? '';
+    // Bağ, artık defterde olmayan bir dosyayı gösteriyorsa (başka cihazdan
+    // silinmiş) "bağ yok"tan açılır: listede olmayan bir değer
+    // DropdownButton'ı doğrulama hatasıyla düşürür.
+    final files = (_note ?? note).attachments;
+    if (!files.any((a) => a.id == linkedId)) linkedId = '';
 
     final saved = await showDialog<bool>(
       context: context,
@@ -745,7 +821,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                   // yalnız VAR OLANA bağlanır, yoksa aynı dosya iki kez
                   // yüklenirdi.
                   DropdownButtonFormField<String>(
-                    initialValue: linkedId.isEmpty ? '' : linkedId,
+                    initialValue: linkedId,
                     isExpanded: true,
                     decoration: InputDecoration(
                       labelText: l10n.archiveLinkedFile,
@@ -755,7 +831,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                         value: '',
                         child: Text(l10n.archiveNoLink),
                       ),
-                      for (final a in note.attachments)
+                      for (final a in files)
                         DropdownMenuItem(
                           value: a.id,
                           child: Text(
@@ -791,24 +867,34 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     textController.dispose();
     if (saved != true || (text.isEmpty && title.isEmpty)) return;
 
+    // Başlıksız ve bağsız bir blok, sayfanın SERBEST YAZISI ile aynı şey
+    // olurdu (bkz. [archivePageText]) — başlık boşsa metnin ilk satırı
+    // başlık yapılır ki blok kendi kimliğini korusun.
+    //
+    // KÖK NEDEN (2026-09-23): kural yalnız YENİ blokta uygulanıyordu. Var
+    // olan bloğun başlığını silip bağını kaldıran kullanıcı bloğu sade bir
+    // metne çeviriyordu; blok kayıtta sayfanın yazısından ÖNCE duruyorsa
+    // sayfanın yazısı oluyor, asıl yazı ise altta bir blok olarak
+    // beliriyordu — sayfa kendi kendine yer değiştirmiş görünüyordu.
+    final blockTitle = title.isNotEmpty || linkedId.isNotEmpty
+        ? title
+        : text.split('\n').first.trim();
     await _mutate((n) {
       if (existing != null) {
         return n.copyWith(
           items: [
             for (final i in n.items)
               if (i.id == existing.id)
-                i.copyWith(text: text, title: title, attachmentId: linkedId)
+                i.copyWith(
+                  text: text,
+                  title: blockTitle,
+                  attachmentId: linkedId,
+                )
               else
                 i,
           ],
         );
       }
-      // Başlıksız ve bağsız bir blok, sayfanın SERBEST YAZISI ile aynı şey
-      // olurdu (bkz. [archivePageText]) — başlık boşsa metnin ilk satırı
-      // başlık yapılır ki blok kendi kimliğini korusun.
-      final blockTitle = title.isNotEmpty
-          ? title
-          : text.split('\n').first.trim();
       final base = archiveWithPage(n, page);
       return base.copyWith(
         items: [
@@ -1043,10 +1129,18 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       },
     );
     final text = textController.text.trim();
-    final target = pageController.text.trim();
+    final typed = pageController.text.trim();
     textController.dispose();
     pageController.dispose();
     if (confirmed != true || text.isEmpty || !mounted) return;
+    // Kutuya ilk sayfanın ADI yazıldıysa (ya da model onu önerdiyse) girdi
+    // ilk sayfaya gider. Eskiden bu ad yeni bir sayfa açıyordu: defterde iki
+    // "Genel" beliriyordu.
+    final general = archiveGeneralLabel(
+      _note ?? note,
+      context.l10n.archiveGeneralPage,
+    );
+    final target = typed == general ? '' : typed;
 
     setState(() => _busy = true);
     Attachment? stored;
@@ -1090,13 +1184,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     });
     if (!mounted) return;
     // Girdi hangi sayfaya düştüyse oraya çevrilir: kullanıcı az önce
-    // kaydettiği şeyi görmeli. Model YENİ bir sayfa önerdiyse o sayfa
-    // listenin sonuna eklendi.
-    final names = [
-      '',
-      ...note.archivePages,
-      if (target.isNotEmpty && !note.archivePages.contains(target)) target,
-    ];
+    // kaydettiği şeyi görmeli. Sayfa listesi yazımın KENDİSİNDEN okunur —
+    // OCR ve model saniyeler sürüyor, o arada açılan bir sayfa, akışın
+    // başındaki kopyaya göre hesaplanan numarayı kaydırırdı.
+    final names = archivePageNames(_note ?? note);
     final index = names.indexOf(target);
     _goToPageSoon(index < 0 ? 0 : index);
   }
@@ -1344,6 +1435,17 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
         attachments: [
           for (final a in n.attachments)
             if (a.id != attachment.id) a,
+        ],
+        // Bu dosyaya BAĞLI bloklar bağsız kalır: bağ silinen bir kimliği
+        // gösterirse blok "bağlı dosya" diyaloğunda seçilemeyen bir değerle
+        // açılıyor (DropdownButton doğrulaması: değer listede yok) ve
+        // ekranı kırmızıya düşürüyordu.
+        items: [
+          for (final i in n.items)
+            if (i.attachmentId == attachment.id)
+              i.copyWith(attachmentId: '')
+            else
+              i,
         ],
       ),
     );
@@ -1595,8 +1697,14 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   }
 
   /// Sayfaya gidildikten SONRA başlığı odaklar (ızgaradan "yeniden adlandır").
+  ///
+  /// KÖK NEDEN: odak bir kare sonra isteniyordu ama sayfaya gidiş 420 ms'lik
+  /// bir çevirme animasyonu. Uzak sayfanın başlık alanı o karede henüz
+  /// kurulmamış oluyor (odak boşa gidiyordu), yakın sayfada ise animasyonun
+  /// ortasındaki `onPageChanged` odağı hemen geri alıyordu. Odak artık
+  /// çevirme BİTİNCE isteniyor.
   void _renameSoon(String page) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future<void>.delayed(const Duration(milliseconds: 460), () {
       if (mounted) _focusFor(_titleFocus, page).requestFocus();
     });
   }
@@ -1719,7 +1827,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                onChanged: (_) => setState(() {}),
+                onChanged: (_) => _onSearchChanged(),
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText: _semantic
@@ -1774,8 +1882,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                         ),
                       ],
                       selected: {_semantic},
-                      onSelectionChanged: (values) =>
-                          setState(() => _semantic = values.first),
+                      // Moda geçerken o an yazılı sorgu beklemeden aranır.
+                      onSelectionChanged: (values) => setState(() {
+                        _semantic = values.first;
+                        _semanticQuery = _query;
+                      }),
                     ),
                   ),
                 ),
@@ -1787,7 +1898,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             icon: Icon(_searching ? Icons.close : Icons.search),
             onPressed: () => setState(() {
               _searching = !_searching;
-              if (!_searching) _searchController.clear();
+              if (!_searching) {
+                _searchController.clear();
+                _semanticQuery = '';
+              }
             }),
           ),
           if (!_searching)
@@ -1908,6 +2022,10 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
             focusNode: _focusFor(_titleFocus, name),
             onRename: (value) =>
                 index == 0 ? _renameGeneral(value) : _renamePage(name, value),
+            // İlk sayfanın adı SİLİNEBİLİR: boş ad dilin "Genel"ine döner
+            // (bkz. [_renameGeneral]). Alan eskiden boş adı her sayfada yok
+            // sayıyordu — verilen ad bir daha kaldırılamıyordu.
+            allowEmpty: index == 0,
           ),
           child: _cachedPageBody(note, name),
         ),
@@ -2353,7 +2471,11 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   /// kullanıcı arama yapamaz duruma gelmez (ana ekrandaki aynı kural).
   Widget _semanticResults(Note note) {
     final l10n = context.l10n;
-    final query = _query;
+    final query = _semanticQuery;
+    // Yazım sürüyor: istek yazım durunca çıkacak.
+    if (query.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
     final names = archivePageNames(note);
     final general = archiveGeneralLabel(note, l10n.archiveGeneralPage);
     // İmza: aynı sorgu + aynı kayıt için ikinci kez ağa çıkılmaz.
@@ -3438,6 +3560,7 @@ class _PageTitleField extends StatefulWidget {
     required this.hint,
     required this.focusNode,
     required this.onRename,
+    this.allowEmpty = false,
   });
 
   final String name;
@@ -3446,6 +3569,9 @@ class _PageTitleField extends StatefulWidget {
 
   /// Adı kayda yazar; yazılamadıysa (boş ad, çakışan ad) false döner.
   final Future<bool> Function(String) onRename;
+
+  /// Boş ad kayda yazılabilir mi (yalnız ilk sayfa: boş = varsayılan ad).
+  final bool allowEmpty;
 
   @override
   State<_PageTitleField> createState() => _PageTitleFieldState();
@@ -3470,7 +3596,7 @@ class _PageTitleFieldState extends State<_PageTitleField> {
   /// ona bağlayan anahtar — boş ad "Genel" demek olurdu ve sayfa kaybolurdu.
   Future<void> _commit() async {
     final value = _controller.text.trim();
-    if (value.isEmpty || value == widget.name) {
+    if ((value.isEmpty && !widget.allowEmpty) || value == widget.name) {
       if (_controller.text != widget.name) _controller.text = widget.name;
       return;
     }
@@ -3687,6 +3813,21 @@ class _PageWriterState extends State<_PageWriter> {
   void initState() {
     super.initState();
     widget.focusNode.addListener(_onFocusChange);
+    // Denetleyici EKRANDA yaşıyor ve alandan uzun ömürlü: yaprak ağaçtan
+    // düşüp geri geldiğinde arada uzaktan gelen (ya da bu cihazda başka
+    // yoldan — yapay zekâ, sayfa silme — değişen) metin ancak burada
+    // uygulanabilir. `didUpdateWidget` yeni kurulan alanda hiç çalışmaz.
+    // Bir kare sonra: denetleyiciyi build sırasında değiştirmek onu dinleyen
+    // başka bir widget'ı (biçim çubuğu) build'in ortasında yeniden kurdururdu.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _syncFromRecord();
+    });
+  }
+
+  void _syncFromRecord() {
+    if (widget.text == widget.controller.logicalText) return;
+    if (widget.focusNode.hasFocus || _debounce.hasPending) return;
+    widget.controller.setLogical(widget.text, widget.text.length);
   }
 
   /// Odak gidince bekleyen kayıt HEMEN yazılır: kullanıcı sayfayı çevirmeden
@@ -3702,9 +3843,7 @@ class _PageWriterState extends State<_PageWriter> {
   @override
   void didUpdateWidget(covariant _PageWriter oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.text == widget.controller.logicalText) return;
-    if (widget.focusNode.hasFocus || _debounce.hasPending) return;
-    widget.controller.setLogical(widget.text, widget.text.length);
+    _syncFromRecord();
   }
 
   @override
@@ -4092,6 +4231,15 @@ Future<int> copyAttachmentsToArchive({
 }) async {
   final copied = <Attachment>[];
   for (final original in source.attachments) {
+    // SES ve VİDEO kopyalanamaz (defterde oynatıcı yolu yok, video zaten
+    // yalnız cihazda). KÖK NEDEN (2026-09-23): bunlar da aşağıdaki "görsel"
+    // dalına düşüyordu — dosyanın TAMAMI belleğe okunup (bir video yüzlerce
+    // MB) görsel diye çözülmeye çalışılıyor, çözülemeyince sessizce
+    // atılıyordu. Sonuç aynıydı ama bedeli bellek taşması ve pil.
+    if (original.kind == AttachmentKind.audio ||
+        original.kind == AttachmentKind.video) {
+      continue;
+    }
     try {
       final bytes = await attachments.readBytes(original);
       if (bytes == null) continue;
@@ -4118,8 +4266,17 @@ Future<int> copyAttachmentsToArchive({
     }
   }
   if (copied.isEmpty) return 0;
-  await notes.updateNote(
-    archive.copyWith(attachments: [...archive.attachments, ...copied]),
-  );
+  // EKLEME yazımı (`arrayUnion`), notun tamamı değil. KÖK NEDEN: kopyalama
+  // (okuma + sıkıştırma) saniyeler sürüyor ve [archive], kullanıcının defteri
+  // seçtiği andaki kopya. Tamamını geri yazmak, o arada deftere yazılan
+  // yazıyı, eklenen dosyayı ya da açılan sayfayı geri alıyordu.
+  await notes
+      .updateFieldsAndWait(archive.id, {
+        'attachments': FieldValue.arrayUnion([
+          for (final a in copied) a.toMap(),
+        ]),
+      })
+      .timeout(const Duration(seconds: 3), onTimeout: () {})
+      .catchError((Object _) {});
   return copied.length;
 }

@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
@@ -250,6 +251,14 @@ class MainActivity : FlutterFragmentActivity() {
                     // uygulama muaf tutulabilir. ACTION_IGNORE_BATTERY_
                     // OPTIMIZATION_SETTINGS özel izin gerektirmez (Play güvenli);
                     // cihazda yoksa uygulama detaylarına düşer.
+                    // Sistemin PİL TASARRUFU kipi açık mı? Açıkken uygulama
+                    // ekranı yüksek yenileme hızına ZORLAMAZ (bkz.
+                    // display_rate.dart) — kullanıcı pili korumak isterken
+                    // 120 Hz'e kilitlemek o isteği çiğnemek olurdu.
+                    "powerSaveMode" -> {
+                        val power = getSystemService(POWER_SERVICE) as? PowerManager
+                        result.success(power?.isPowerSaveMode ?: false)
+                    }
                     "openBatterySettings" -> {
                         try {
                             startActivity(

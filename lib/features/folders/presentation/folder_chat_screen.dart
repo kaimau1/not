@@ -403,6 +403,10 @@ class _MessageBubble extends ConsumerWidget {
         child: CachedNetworkImage(
           imageUrl: message.imageUrl,
           fit: BoxFit.cover,
+          // RAM: sohbet balonu ekranın yarısı kadar; tam çözünürlükte açılan
+          // her fotoğraf (12 MP ≈ 48 MB) uzun sohbette belleği dolduruyordu.
+          // Tam boyu `_ChatImageViewer` açıyor.
+          memCacheWidth: 720,
           placeholder: (context, _) => const SizedBox(
             height: 120,
             child: Center(child: CircularProgressIndicator()),

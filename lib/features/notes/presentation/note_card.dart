@@ -406,10 +406,15 @@ class NoteCard extends ConsumerWidget {
       borderRadius: BorderRadius.circular(12),
       child: Stack(
         children: [
+          // PİL: görselin kendi opaklığı; `Opacity` widget'ı her kart için
+          // ayrı bir birleştirme katmanı açıyordu (ızgarada onlarca kart).
           Positioned.fill(
-            child: Opacity(
-              opacity: note.backgroundOpacity.clamp(0.05, 1),
-              child: Image(image: provider, fit: BoxFit.cover),
+            child: Image(
+              image: provider,
+              fit: BoxFit.cover,
+              opacity: AlwaysStoppedAnimation(
+                note.backgroundOpacity.clamp(0.05, 1).toDouble(),
+              ),
             ),
           ),
           child,

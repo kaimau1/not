@@ -641,6 +641,59 @@ bool noteMatchesFilter(Note n, NoteFilter filter) => switch (filter) {
   NoteFilter.others => n.folderId == null && n.tags.isEmpty,
 };
 
+/// Ana ekranda yana çekişin durduğu yer: bir durum süzgeci ya da bir etiket.
+typedef SwipeStop = ({NoteFilter filter, String? tag});
+
+/// Ana ekranı yana çekince gidilecek SONRAKİ durak ([direction] +1 sonraki,
+/// -1 önceki). Gezilecek yer yoksa null.
+///
+/// KÖK NEDENLER (kullanıcı bulgusu 2026-09-23: "ana ekranda sağa sola
+/// kaydırmada mantık hatası var"), eski kural dört yerden bozuktu:
+///  1. **Boş duraklar.** Dokuz durum süzgecinin HEPSİ geziliyordu; kilitli ya
+///     da hatırlatıcılı notu olmayan kullanıcı her çekişte boş bir "not yok"
+///     ekranına düşüyordu. Artık yalnız en az bir notu olan süzgeçler durak
+///     (Tümü ve o an açık olan süzgeç her zaman durak kalır).
+///  2. **Klasör siliniyordu.** Klasör bu gezide yok ama çekiş seçili klasörü
+///     sessizce `null` yapıyordu: Süz levhasından bir klasör seçen kullanıcı
+///     yana çekince bütün notlara dönüyordu. Klasör artık KORUNUR ve duraklar
+///     o klasörün notlarından hesaplanır.
+///  3. **Birleşik süzgeç.** Süz levhası "yıldızlı + #iş" gibi birleşik bir
+///     görünüm kurabiliyor; eski eşleşme üçlüyü birebir aradığı için bu hâl
+///     hiçbir durağa uymuyor ve çekiş kullanıcıyı listenin BAŞINA (ya da
+///     sonuna) fırlatıyordu. Etiket seçiliyse etiketin durağından, değilse
+///     süzgecin durağından devam edilir.
+///  4. Yön ve animasyon düzeltmeleri dashboard'da (bkz. `_cycleFilterFolder`).
+///
+/// [notes], çekişin gezdiği görünümün adayları: arşivlenmemiş, boş olmayan,
+/// gizli klasörde olmayan (ve klasör seçiliyse o klasördeki) notlar.
+SwipeStop? nextSwipeStop({
+  required List<Note> notes,
+  required NoteFilter filter,
+  required String? tag,
+  required int direction,
+}) {
+  final tags = <String>{
+    for (final n in notes) ...n.tags,
+    ?tag,
+  }.toList()..sort();
+  final stops = <SwipeStop>[
+    for (final f in NoteFilter.values)
+      if (f == NoteFilter.all ||
+          (f == filter && tag == null) ||
+          notes.any((n) => noteMatchesFilter(n, f)))
+        (filter: f, tag: null),
+    for (final t in tags) (filter: NoteFilter.all, tag: t),
+  ];
+  if (stops.length < 2) return null;
+  var index = tag != null
+      ? stops.indexWhere((s) => s.tag == tag)
+      : stops.indexWhere((s) => s.tag == null && s.filter == filter);
+  if (index < 0) index = 0;
+  var next = (index + direction) % stops.length;
+  if (next < 0) next += stops.length;
+  return stops[next];
+}
+
 /// Arşivlenmiş notlar (arşiv ekranı için). Gizli klasör bastırması burada da
 /// geçerli — arşiv, gizli notların içeriğini doğrulamasız sızdırıyordu.
 final archivedNotesProvider = Provider<AsyncValue<List<Note>>>((ref) {

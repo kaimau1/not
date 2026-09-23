@@ -7,7 +7,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
@@ -15,6 +14,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'core/utils/display_rate.dart';
 import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/settings/settings_providers.dart';
@@ -117,9 +117,21 @@ Future<void> main() async {
   // - Yüksek yenileme hızı: ilk kareyi etkilemez; bazı OEM'ler Flutter'ı
   //   60 Hz'e sabitlediği için istek yine de gerekli.
   unawaited(_activateAppCheck());
-  if (!kIsWeb && Platform.isAndroid) {
-    unawaited(
-      FlutterDisplayMode.setHighRefreshRate().catchError((Object _) {}),
-    );
-  }
+  unawaited(DisplayRate.apply());
+  _lifecycle = AppLifecycleListener(
+    // Pil tasarrufu kipi uygulama arkadayken açılıp kapanabilir: yenileme
+    // hızı kararı her öne gelişte yeniden verilir (bkz. [DisplayRate]).
+    onResume: () => unawaited(DisplayRate.apply()),
+    // **RAM**: uygulama arka plana geçince çözülmüş görsel önbelleği
+    // boşaltılır (ekranda KULLANILAN görseller etkilenmez, yalnız
+    // önbellekte bekleyenler). Arkadaki uygulamanın bellek ayak izi
+    // küçüldükçe sistemin onu öldürme olasılığı düşer — öldürülen uygulama
+    // soğuk açılışta her şeyi baştan yükler, bu da pili yakar.
+    onPause: PaintingBinding.instance.imageCache.clear,
+  );
 }
+
+/// Uygulama yaşam döngüsü dinleyicisi (bkz. [main]). Referans tutulur ki
+/// dinleyici uygulama boyunca yaşasın.
+// ignore: unused_element
+AppLifecycleListener? _lifecycle;
