@@ -930,6 +930,144 @@ abstract class AppLocalizations {
   /// **'Hatırlat'**
   String get addReminder;
 
+  /// No description provided for @placeReminder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum hatırlatıcısı'**
+  String get placeReminder;
+
+  /// No description provided for @placeReminderHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir yere varınca ya da oradan ayrılınca bu not bildirim olarak gelsin. Konumu sistem izler; uygulama açık olmasa da çalışır.'**
+  String get placeReminderHint;
+
+  /// No description provided for @placeCurrent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şu anki konumum'**
+  String get placeCurrent;
+
+  /// No description provided for @placeSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adres ya da yer ara'**
+  String get placeSearchHint;
+
+  /// No description provided for @placeSearchNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonuç bulunamadı'**
+  String get placeSearchNone;
+
+  /// No description provided for @placeArrive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varınca'**
+  String get placeArrive;
+
+  /// No description provided for @placeLeave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrılınca'**
+  String get placeLeave;
+
+  /// No description provided for @placeRadius.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarıçap'**
+  String get placeRadius;
+
+  /// No description provided for @placeSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hatırlatıcıyı kur'**
+  String get placeSave;
+
+  /// No description provided for @placeRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum hatırlatıcısını kaldır'**
+  String get placeRemove;
+
+  /// No description provided for @placeSet.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum hatırlatıcısı kuruldu'**
+  String get placeSet;
+
+  /// No description provided for @placeRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum hatırlatıcısı kaldırıldı'**
+  String get placeRemoved;
+
+  /// No description provided for @placeNeedPermission.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum izni verilmedi. Ayarlardan izin verebilirsin.'**
+  String get placeNeedPermission;
+
+  /// No description provided for @placeNeedBackground.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama kapalıyken de çalışması için konum iznini \"Her zaman izin ver\" yapman gerekiyor.'**
+  String get placeNeedBackground;
+
+  /// No description provided for @placeBackgroundTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'\"Her zaman\" izni gerekli'**
+  String get placeBackgroundTitle;
+
+  /// No description provided for @placeOpenSettings.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzin ver'**
+  String get placeOpenSettings;
+
+  /// No description provided for @placeLocationOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Cihazın konum hizmeti kapalı. Açıp yeniden dene.'**
+  String get placeLocationOff;
+
+  /// No description provided for @placeFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum hatırlatıcısı kurulamadı.'**
+  String get placeFailed;
+
+  /// No description provided for @placeNoLocation.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum alınamadı. Konumun açık olduğundan emin ol.'**
+  String get placeNoLocation;
+
+  /// No description provided for @placeArrivedBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{place} konumuna vardın'**
+  String placeArrivedBody(String place);
+
+  /// No description provided for @placeLeftBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'{place} konumundan ayrıldın'**
+  String placeLeftBody(String place);
+
+  /// No description provided for @placeActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'{place} · {trigger}'**
+  String placeActive(String place, String trigger);
+
+  /// No description provided for @placeSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Konum'**
+  String get placeSection;
+
   /// No description provided for @share.
   ///
   /// In tr, this message translates to:
@@ -1931,6 +2069,24 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Not arşivlendi'**
   String get noteArchived;
+
+  /// No description provided for @pendingUploads.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek buluta yükleniyor'**
+  String pendingUploads(int count);
+
+  /// No description provided for @pendingUploadsFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} ek yüklenemedi, yeniden denenecek'**
+  String pendingUploadsFailed(int count);
+
+  /// No description provided for @pendingUploadsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.'**
+  String get pendingUploadsInfo;
 
   /// No description provided for @deleteChecked.
   ///
@@ -3432,6 +3588,30 @@ abstract class AppLocalizations {
   /// **'Biçimi temizle'**
   String get formatClear;
 
+  /// No description provided for @formatHeading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get formatHeading;
+
+  /// No description provided for @formatHeading1.
+  ///
+  /// In tr, this message translates to:
+  /// **'Büyük başlık'**
+  String get formatHeading1;
+
+  /// No description provided for @formatHeading2.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt başlık'**
+  String get formatHeading2;
+
+  /// No description provided for @formatNormalText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Normal metin'**
+  String get formatNormalText;
+
   /// No description provided for @noteTextOpacity.
   ///
   /// In tr, this message translates to:
@@ -4859,6 +5039,126 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yeni sayfa'**
   String get archiveNewPage;
+
+  /// No description provided for @archiveTemplateTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa şablonu'**
+  String get archiveTemplateTitle;
+
+  /// No description provided for @archiveTemplateBlank.
+  ///
+  /// In tr, this message translates to:
+  /// **'Boş sayfa'**
+  String get archiveTemplateBlank;
+
+  /// No description provided for @archiveTemplateJournal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük'**
+  String get archiveTemplateJournal;
+
+  /// No description provided for @archiveTemplateMeeting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplantı'**
+  String get archiveTemplateMeeting;
+
+  /// No description provided for @archiveTemplateExpense.
+  ///
+  /// In tr, this message translates to:
+  /// **'Harcamalar'**
+  String get archiveTemplateExpense;
+
+  /// No description provided for @archiveTemplateTodo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılacaklar'**
+  String get archiveTemplateTodo;
+
+  /// No description provided for @archiveTemplateReading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Okuma notu'**
+  String get archiveTemplateReading;
+
+  /// No description provided for @tplJournalHow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün nasıldı?'**
+  String get tplJournalHow;
+
+  /// No description provided for @tplJournalGrateful.
+  ///
+  /// In tr, this message translates to:
+  /// **'Minnettar olduklarım'**
+  String get tplJournalGrateful;
+
+  /// No description provided for @tplJournalTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın için'**
+  String get tplJournalTomorrow;
+
+  /// No description provided for @tplMeetingAttendees.
+  ///
+  /// In tr, this message translates to:
+  /// **'Katılımcılar'**
+  String get tplMeetingAttendees;
+
+  /// No description provided for @tplMeetingAgenda.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gündem'**
+  String get tplMeetingAgenda;
+
+  /// No description provided for @tplMeetingDecisions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kararlar'**
+  String get tplMeetingDecisions;
+
+  /// No description provided for @tplMeetingActions.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kim, ne, ne zaman'**
+  String get tplMeetingActions;
+
+  /// No description provided for @tplExpenseColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih · Açıklama · Tutar'**
+  String get tplExpenseColumns;
+
+  /// No description provided for @tplExpenseTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam:'**
+  String get tplExpenseTotal;
+
+  /// No description provided for @tplReadingSource.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaynak'**
+  String get tplReadingSource;
+
+  /// No description provided for @tplReadingSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özet'**
+  String get tplReadingSummary;
+
+  /// No description provided for @tplReadingQuotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alıntılar'**
+  String get tplReadingQuotes;
+
+  /// No description provided for @tplReadingThoughts.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düşüncelerim'**
+  String get tplReadingThoughts;
 
   /// No description provided for @archiveGeneralPage.
   ///

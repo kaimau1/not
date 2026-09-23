@@ -43,7 +43,12 @@ class FormatBar extends StatefulWidget {
     required this.onClose,
     this.target,
     this.onPageStyle,
+    this.onHeading,
   });
+
+  /// Satırı başlık / alt başlık / düz metin yapar (bkz. [setLineHeading]).
+  /// null ise menü çizilmez.
+  final ValueChanged<RichHeading>? onHeading;
 
   /// SAYFA görünümü (zemin rengi, çerçeve rengi, zemin görseli) levhasını açar.
   ///
@@ -103,6 +108,9 @@ class _FormatBarState extends State<FormatBar> {
   /// İmleçte/seçimde etkin olan biçimler; düğme vurgusu bundan çizilir.
   RichMark _active = RichMark.none;
 
+  /// İmlecin satırının başlık düzeyi (menü düğmesinin vurgusu).
+  RichHeading _heading = RichHeading.normal;
+
   @override
   void initState() {
     super.initState();
@@ -131,6 +139,14 @@ class _FormatBarState extends State<FormatBar> {
     // initState/didUpdateWidget'ın arkasından zaten bir build geliyor;
     // setState'siz atama yeterli (ve initState'te setState yasak).
     _active = _computeActive();
+    _heading = _computeHeading();
+  }
+
+  RichHeading _computeHeading() {
+    final controller = widget.target?.controller;
+    return controller == null
+        ? RichHeading.normal
+        : activeRichHeading(controller);
   }
 
   RichMark _computeActive() {
@@ -141,8 +157,14 @@ class _FormatBarState extends State<FormatBar> {
   void _refreshActive() {
     if (!mounted) return;
     final next = _computeActive();
+    final heading = _computeHeading();
     // Her tuş vuruşunda değil, vurgu GERÇEKTEN değişince çiz.
-    if (next != _active) setState(() => _active = next);
+    if (next != _active || heading != _heading) {
+      setState(() {
+        _active = next;
+        _heading = heading;
+      });
+    }
   }
 
   /// Sürükleme sürerken parmağın değeri. Seçim varken sayfa değişmediği için
@@ -233,6 +255,11 @@ class _FormatBarState extends State<FormatBar> {
                           child: Row(
                             children: [
                               const SizedBox(width: 8),
+                              if (widget.onHeading != null)
+                                _HeadingMenu(
+                                  current: _heading,
+                                  onPick: widget.onHeading!,
+                                ),
                               _Btn(
                                 icon: Icons.format_bold,
                                 tooltip: l10n.formatBold,
@@ -682,3 +709,67 @@ ButtonStyle _compactStyle({Color? background}) => IconButton.styleFrom(
   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
 );
+
+/// **BAŞLIK menüsü** (kullanıcı isteği 2026-09-23: "başlık ve alt başlık").
+/// İmlecin satırı büyük başlık / alt başlık / düz metin olur. Satır zaten
+/// başlıksa düğme basılı görünür ve o düzey menüde tiklidir.
+class _HeadingMenu extends StatelessWidget {
+  const _HeadingMenu({required this.current, required this.onPick});
+
+  final RichHeading current;
+  final ValueChanged<RichHeading> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final active = current != RichHeading.normal;
+    String label(RichHeading h) => switch (h) {
+      RichHeading.h1 => l10n.formatHeading1,
+      RichHeading.h2 => l10n.formatHeading2,
+      RichHeading.normal => l10n.formatNormalText,
+    };
+    double size(RichHeading h) => switch (h) {
+      RichHeading.h1 => 20,
+      RichHeading.h2 => 17,
+      RichHeading.normal => 14,
+    };
+    return PopupMenuButton<RichHeading>(
+      tooltip: l10n.formatHeading,
+      style: _compactStyle(
+        background: active ? scheme.primaryContainer : null,
+      ),
+      icon: Icon(
+        Icons.title,
+        size: 22,
+        color: active ? scheme.onPrimaryContainer : null,
+      ),
+      onSelected: onPick,
+      itemBuilder: (context) => [
+        for (final h in RichHeading.values)
+          PopupMenuItem<RichHeading>(
+            value: h,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: h == current
+                      ? const Icon(Icons.check, size: 18)
+                      : null,
+                ),
+                Text(
+                  label(h),
+                  style: TextStyle(
+                    fontSize: size(h),
+                    fontWeight: h == RichHeading.normal
+                        ? FontWeight.w400
+                        : FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}

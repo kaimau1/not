@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/local_file.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
@@ -61,6 +62,33 @@ class UploadFailuresNotifier extends Notifier<Map<String, int>> {
     };
   }
 }
+
+/// **BU CİHAZDA yüklenmeyi bekleyen ek sayısı** (kullanıcı isteği
+/// 2026-09-23: "çevrimdışı durum — senkron bekleyen ekler için belirgin
+/// gösterge"). Kuyruğun kendi süzgeciyle aynı kural: video buluta gitmez,
+/// senkron sınırını aşan ek cihazda kalır; dosyası BU cihazda olmayan ek
+/// (başka cihazın henüz yüklemediği) bu cihazın işi değil, sayılmaz.
+///
+/// `failed`: en az bir kez yüklenemeyenler (bağlantı yok, kural reddi) —
+/// gösterge bunları ayrı söyler.
+final pendingUploadsProvider = Provider<({int pending, int failed})>((ref) {
+  final notes = ref.watch(notesStreamProvider).value ?? const <Note>[];
+  final failures = ref.watch(uploadFailuresProvider);
+  final limitMb = ref.watch(syncLimitMbProvider);
+  final limitBytes = limitMb <= 0 ? null : limitMb * 1024 * 1024;
+  var pending = 0;
+  var failed = 0;
+  for (final note in notes) {
+    for (final a in note.attachments) {
+      if (a.kind == AttachmentKind.video || a.isUploaded) continue;
+      if (limitBytes != null && a.sizeBytes > limitBytes) continue;
+      if (!localFileExists(a.localPath)) continue;
+      pending++;
+      if (failures.containsKey(a.id)) failed++;
+    }
+  }
+  return (pending: pending, failed: failed);
+});
 
 /// BAŞKASININ koleksiyonunda yaşayıp BENİM düzenleyebildiğim notlar: ortak
 /// notlar ve yazma yetkim olan paylaşılan klasörlerin notları.

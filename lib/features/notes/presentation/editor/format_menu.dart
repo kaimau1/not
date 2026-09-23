@@ -114,6 +114,36 @@ bool applyRichStep(
   );
 }
 
+/// İmlecin satırını (ya da seçimin dokunduğu satırları) başlık yapar — bkz.
+/// [setLineHeading]. Seçim görüntü uzayında, kural mantıksal metinde.
+bool applyRichHeading(WrapTextController controller, RichHeading heading) {
+  final selection = controller.selection;
+  if (!selection.isValid) return false;
+  if (controller.hasPendingFormat) controller.clearPendingFormat();
+  final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  return _write(
+    controller,
+    logical,
+    start,
+    end,
+    setLineHeading(logical, start, end, heading),
+  );
+}
+
+/// İmlecin satırının başlık düzeyi (biçim çubuğundaki vurgu).
+RichHeading activeRichHeading(WrapTextController controller) {
+  final selection = controller.selection;
+  if (!selection.isValid) return RichHeading.normal;
+  final display = controller.text;
+  return lineHeadingAt(
+    stripWrapAnchors(display),
+    wrapToLogicalOffset(display, selection.start),
+  );
+}
+
 /// Seçimden (ya da imlecin bulunduğu biçimli parçadan) **tek bir biçmi**
 /// kaldırır — renk/vurgu paletindeki "Kaldır" bunu çağırır.
 ///

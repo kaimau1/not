@@ -13,6 +13,12 @@
     <!-- Görüntülü not: kamerayla video/fotoğraf çekimi. Kamera zorunlu değil
          (tabletlerde olmayabilir), bu yüzden required=false. -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Konum hatırlatıcısı (PlaceReminders.kt): yere varınca/ayrılınca
+         bildirim. Konumu uygulama değil sistemin geofence hizmeti izler;
+         uygulama kapalıyken tetik için "her zaman" izni şart. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <!-- Not kilidi (parmak izi/yüz) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
@@ -204,6 +210,28 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/quick_actions_widget_info" />
+        </receiver>
+
+        <!-- Konum hatırlatıcısı: geofence tetiği + yeniden başlatmada geri kurma -->
+        <receiver android:name=".PlaceReminderReceiver"
+            android:exported="false" />
+        <receiver android:name=".PlaceBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Bugün widget'ı: bugünün hatırlatıcıları -->
+        <receiver android:name=".TodayWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_today_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/today_widget_info" />
         </receiver>
 
         <!-- Hızlı Not widget'ı: tek dokunuşla yeni metin notu -->

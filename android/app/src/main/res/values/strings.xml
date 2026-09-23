@@ -14,4 +14,9 @@
     <string name="widget_qa_ordered">Yeni sıralı liste</string>
     <string name="widget_quicknote_label">Hızlı Not</string>
     <string name="widget_quicknote_desc">Tek dokunuşla yeni not: ana ekrandan doğrudan yazmaya başla</string>
+    <string name="widget_today_label">Bugün</string>
+    <string name="widget_today_desc">Bugünün hatırlatıcıları, saatleriyle</string>
+    <string name="widget_today_empty">Bugün için hatırlatıcı yok</string>
+    <string name="widget_today_more">+%1$d hatırlatıcı daha</string>
+    <string name="place_channel_name">Konum hatırlatıcıları</string>
 </resources>

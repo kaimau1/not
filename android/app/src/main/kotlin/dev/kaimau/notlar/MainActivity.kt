@@ -255,6 +255,44 @@ class MainActivity : FlutterFragmentActivity() {
                     // ekranı yüksek yenileme hızına ZORLAMAZ (bkz.
                     // display_rate.dart) — kullanıcı pili korumak isterken
                     // 120 Hz'e kilitlemek o isteği çiğnemek olurdu.
+                    // ── KONUM HATIRLATICISI (bkz. PlaceReminders.kt) ──
+                    // İzin durumu: "background" (tam), "foreground" (yalnız
+                    // uygulama açıkken — geofence'e yetmez), "none".
+                    "placePermission" -> result.success(placePermissionState())
+                    // Önce ön plan (konum), sonra ayrı adımda "her zaman".
+                    // Android 11+ ikinci isteği sistemin AYAR sayfasına
+                    // yönlendirir; dönüşte sonuç yine buraya gelir.
+                    "requestPlacePermission" -> {
+                        val background = call.argument<Boolean>("background") == true
+                        val permissions = if (background &&
+                            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+                        ) {
+                            arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                        } else {
+                            arrayOf(
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )
+                        }
+                        placeResult?.success(placePermissionState())
+                        placeResult = result
+                        requestPermissions(permissions, placeRequestCode)
+                    }
+                    "placeCurrentLocation" -> currentLocation(result)
+                    "placeGeocode" -> geocode(call.argument<String>("query") ?: "", result)
+                    "placeList" -> result.success(
+                        PlaceReminders.list(this).map { it.toMap() }
+                    )
+                    "placeAdd" -> {
+                        val item = PlaceReminders.Item.fromMap(call.arguments as Map<*, *>)
+                        PlaceReminders.add(this, item) { error ->
+                            result.success(error)
+                        }
+                    }
+                    "placeRemove" -> {
+                        PlaceReminders.remove(this, call.argument<String>("id") ?: "")
+                        result.success(true)
+                    }
                     "powerSaveMode" -> {
                         val power = getSystemService(POWER_SERVICE) as? PowerManager
                         result.success(power?.isPowerSaveMode ?: false)
@@ -277,6 +315,60 @@ class MainActivity : FlutterFragmentActivity() {
 
     // Kamera izin isteğinin bekleyen yanıtı (aynı anda tek istek olur).
     private var cameraResult: MethodChannel.Result? = null
+    private var placeResult: MethodChannel.Result? = null
+    private val placeRequestCode = 4712
+
+    private fun placePermissionState(): String = when {
+        !PlaceReminders.hasForeground(this) -> "none"
+        !PlaceReminders.hasBackground(this) -> "foreground"
+        else -> "background"
+    }
+
+    /** O anki konum (tek okuma, düşük güç önceliği) — {lat, lng} ya da null. */
+    @android.annotation.SuppressLint("MissingPermission")
+    private fun currentLocation(result: MethodChannel.Result) {
+        if (!PlaceReminders.hasForeground(this)) return result.success(null)
+        val client = com.google.android.gms.location.LocationServices
+            .getFusedLocationProviderClient(this)
+        client.getCurrentLocation(
+            com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY,
+            null
+        ).addOnSuccessListener { location ->
+            if (location == null) {
+                result.success(null)
+            } else {
+                result.success(mapOf("lat" to location.latitude, "lng" to location.longitude))
+            }
+        }.addOnFailureListener { result.success(null) }
+    }
+
+    /**
+     * Adres/yer adı → en çok beş sonuç. Sistemin Geocoder'ı: ek anahtar ya da
+     * ücretli harita servisi gerekmiyor. Ağ çağrısı olduğu için ayrı iş
+     * parçacığında; sonuç ana iş parçacığına döner.
+     */
+    private fun geocode(query: String, result: MethodChannel.Result) {
+        if (query.isBlank() || !android.location.Geocoder.isPresent()) {
+            return result.success(emptyList<Map<String, Any>>())
+        }
+        Thread {
+            val found = try {
+                @Suppress("DEPRECATION")
+                android.location.Geocoder(this).getFromLocationName(query, 5)
+                    .orEmpty()
+                    .map { a ->
+                        val name = (0..a.maxAddressLineIndex)
+                            .mapNotNull { a.getAddressLine(it) }
+                            .joinToString(", ")
+                            .ifBlank { a.featureName ?: query }
+                        mapOf("name" to name, "lat" to a.latitude, "lng" to a.longitude)
+                    }
+            } catch (_: Exception) {
+                emptyList()
+            }
+            runOnUiThread { result.success(found) }
+        }.start()
+    }
     private val cameraRequestCode = 4711
 
     // Sesli giriş ekranının bekleyen yanıtı (aynı anda tek istek olur).
@@ -329,6 +421,10 @@ class MainActivity : FlutterFragmentActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == placeRequestCode) {
+            placeResult?.success(placePermissionState())
+            placeResult = null
+        }
         if (requestCode == cameraRequestCode) {
             val granted = grantResults.isNotEmpty() &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED

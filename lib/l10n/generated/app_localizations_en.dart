@@ -451,6 +451,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addReminder => 'Remind me';
 
   @override
+  String get placeReminder => 'Location reminder';
+
+  @override
+  String get placeReminderHint =>
+      'Get this note as a notification when you arrive at or leave a place. The system watches the location; it works even when the app is closed.';
+
+  @override
+  String get placeCurrent => 'My current location';
+
+  @override
+  String get placeSearchHint => 'Search an address or place';
+
+  @override
+  String get placeSearchNone => 'No results';
+
+  @override
+  String get placeArrive => 'On arrival';
+
+  @override
+  String get placeLeave => 'On leaving';
+
+  @override
+  String get placeRadius => 'Radius';
+
+  @override
+  String get placeSave => 'Set reminder';
+
+  @override
+  String get placeRemove => 'Remove location reminder';
+
+  @override
+  String get placeSet => 'Location reminder set';
+
+  @override
+  String get placeRemoved => 'Location reminder removed';
+
+  @override
+  String get placeNeedPermission =>
+      'Location permission was not granted. You can allow it in settings.';
+
+  @override
+  String get placeNeedBackground =>
+      'To work while the app is closed, set location permission to \"Allow all the time\".';
+
+  @override
+  String get placeBackgroundTitle => '\"All the time\" permission needed';
+
+  @override
+  String get placeOpenSettings => 'Allow';
+
+  @override
+  String get placeLocationOff =>
+      'Device location is off. Turn it on and try again.';
+
+  @override
+  String get placeFailed => 'Could not set the location reminder.';
+
+  @override
+  String get placeNoLocation =>
+      'Could not get your location. Make sure location is on.';
+
+  @override
+  String placeArrivedBody(String place) {
+    return 'You arrived at $place';
+  }
+
+  @override
+  String placeLeftBody(String place) {
+    return 'You left $place';
+  }
+
+  @override
+  String placeActive(String place, String trigger) {
+    return '$place · $trigger';
+  }
+
+  @override
+  String get placeSection => 'Location';
+
+  @override
   String get share => 'Share';
 
   @override
@@ -986,6 +1066,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noteArchived => 'Note archived';
+
+  @override
+  String pendingUploads(int count) {
+    return '$count attachments uploading';
+  }
+
+  @override
+  String pendingUploadsFailed(int count) {
+    return '$count attachments failed, will retry';
+  }
+
+  @override
+  String get pendingUploadsInfo =>
+      'Attachments are safe on this device. They upload automatically when you are online; until then they do not appear on your other devices.';
 
   @override
   String deleteChecked(int count) {
@@ -1801,6 +1895,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formatClear => 'Clear formatting';
 
   @override
+  String get formatHeading => 'Heading';
+
+  @override
+  String get formatHeading1 => 'Heading';
+
+  @override
+  String get formatHeading2 => 'Subheading';
+
+  @override
+  String get formatNormalText => 'Normal text';
+
+  @override
   String get noteTextOpacity => 'Opacity';
 
   @override
@@ -2585,6 +2691,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get archiveNewPage => 'New page';
+
+  @override
+  String get archiveTemplateTitle => 'Page template';
+
+  @override
+  String get archiveTemplateBlank => 'Blank page';
+
+  @override
+  String get archiveTemplateJournal => 'Journal';
+
+  @override
+  String get archiveTemplateMeeting => 'Meeting';
+
+  @override
+  String get archiveTemplateExpense => 'Expenses';
+
+  @override
+  String get archiveTemplateTodo => 'To-do';
+
+  @override
+  String get archiveTemplateReading => 'Reading notes';
+
+  @override
+  String get tplJournalHow => 'How was today?';
+
+  @override
+  String get tplJournalGrateful => 'Grateful for';
+
+  @override
+  String get tplJournalTomorrow => 'For tomorrow';
+
+  @override
+  String get tplMeetingAttendees => 'Attendees';
+
+  @override
+  String get tplMeetingAgenda => 'Agenda';
+
+  @override
+  String get tplMeetingDecisions => 'Decisions';
+
+  @override
+  String get tplMeetingActions => 'Who, what, when';
+
+  @override
+  String get tplExpenseColumns => 'Date · Description · Amount';
+
+  @override
+  String get tplExpenseTotal => 'Total:';
+
+  @override
+  String get tplReadingSource => 'Source';
+
+  @override
+  String get tplReadingSummary => 'Summary';
+
+  @override
+  String get tplReadingQuotes => 'Quotes';
+
+  @override
+  String get tplReadingThoughts => 'My thoughts';
 
   @override
   String get archiveGeneralPage => 'General';

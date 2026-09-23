@@ -3441,3 +3441,51 @@ artık sağda SABİT; renk/yazı tipi menü düğmeleri 48 yerine 42×40
 ### "+ Yeni öğe" boş öğe biriktiriyordu
 Her dokunuş yeni boş öğe açıyordu; işaretsizlerin sonunda boş öğe varsa artık
 ona odaklanılıyor. Testi var.
+
+## 2026-09-23 (5. tur) — Başlık biçimi, defter şablonları, kaydırarak işlem, yükleme göstergesi, Bugün widget'ı, konum hatırlatıcısı
+
+Kullanıcı önerilen fikirlerden 3-8'i istedi (1 zaten vardı, 2 istenmedi).
+`flutter analyze` temiz, `flutter test` **1004 test yeşil**.
+
+### KARAR — başlık yeni bir işaret DEĞİL
+`setLineHeading` (rich_text.dart): satırın tamamına boy kademesi (H1 = 7,
+H2 = 6) + kalın. Kayıt biçimi değişmedi; kartlar, PDF/Word dışa aktarım,
+eski sürümler olduğu gibi çizer. Biçim çubuğunda `_HeadingMenu` (editör
+gövdesi/maddeler + defter; notun başlık alanında yok).
+
+### Defter şablonları
+"Yeni sayfa" üç yerden de (menü, genel bakış, "+") önce şablon sorar:
+boş / günlük / toplantı / harcama / yapılacaklar / okuma. Sayfa şablonun
+ADIYLA açılır (çakışırsa "Sayfa N"), yazısı `buildTemplateText` ile tek
+yazımda dolar. Başlık satırları yine `setLineHeading`.
+
+### Kaydırarak işlem YALNIZ liste görünümünde
+Izgarada yatay çekiş süzgeç değiştiriyor; kart çekmek belirsiz olurdu.
+`Dismissible.confirmDismiss` işi yapıp FALSE döner — true dönülse akış o
+kareye yetişmediğinde "kapatılmış Dismissible hâlâ ağaçta" hatası.
+Sağa = sabitle/kaldır, sola = arşivle (geri alınabilir).
+
+### Yükleme göstergesi
+`pendingUploadsProvider` kuyruğun süzgecini tekrarlar ve dosyası BU cihazda
+olmayanı saymaz (başka cihazın işi). Dönen çark YOK: çevrimdışı şerit
+saatlerce durabilir, sürekli animasyon pili yakar.
+
+### Bugün widget'ı
+Dart 7 günlük hatırlatıcıları `epochMillis<TAB>başlık` yazar; Kotlin
+BUGÜNÜ çizim anında süzer — gece yarısı uygulama açılmadan doğru gün.
+`updatePeriodMillis` 1 saat (yalnız yeniden süzme, ağ yok). Kilitli ve
+gizli klasördeki notun başlığı yerine 🔒.
+**KÖK NEDEN (yan bulgu):** son notlar widget'ı GİZLİ klasördeki notların
+başlıklarını ana ekrana yazıyordu → artık süzülüyor.
+
+### Konum hatırlatıcısı (PlaceReminders.kt)
+Sistem geofence'i (play-services-location); konumu uygulama izlemiyor.
+CİHAZA ÖZEL kayıt (SharedPreferences) — not şemasına alan eklenmedi.
+Tek seferlik; açılışta/güncellemede `PlaceBootReceiver` geri kurar. İzin iki
+adım: konum, sonra açıklamalı "her zaman" (yoksa geofence kurulmaz:
+`no_background`). Silinen/arşivlenen notun geofence'i
+`placeReminderCleanupProvider` ile kalkar. Bildirim `notlar://note/<id>`
+açar (router: saat hatırlatıcısıyla aynı yol). Adres araması sistem
+Geocoder'ı (anahtar yok).
+TUZAK: Kotlin bu ortamda derlenemiyor (Android SDK yok) — dalda
+`workflow_dispatch` ile APK derletip sonra birleştirildi.
