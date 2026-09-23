@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
 
@@ -31,6 +32,7 @@ import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/scan/scan_ocr.dart';
 import '../domain/archive_paper.dart';
+import '../domain/archive_template.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
@@ -484,6 +486,151 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
   }
 
   // ————————————————————————————————— SAYFA İŞLERİ
+
+  /// **ŞABLONLA YENİ SAYFA** (kullanıcı isteği 2026-09-23): "Yeni sayfa"
+  /// komutları önce hazır düzeni sorar. Boş sayfa eski davranıştır
+  /// ([_createPage]); ötekiler sayfayı ŞABLONUN ADIYLA (çakışırsa "Sayfa N")
+  /// açar ve yazısını TEK yazımda doldurur.
+  Future<void> _newPage() async {
+    final l10n = context.l10n;
+    String label(ArchiveTemplate t) => switch (t) {
+      ArchiveTemplate.blank => l10n.archiveTemplateBlank,
+      ArchiveTemplate.journal => l10n.archiveTemplateJournal,
+      ArchiveTemplate.meeting => l10n.archiveTemplateMeeting,
+      ArchiveTemplate.expense => l10n.archiveTemplateExpense,
+      ArchiveTemplate.todo => l10n.archiveTemplateTodo,
+      ArchiveTemplate.reading => l10n.archiveTemplateReading,
+    };
+    IconData icon(ArchiveTemplate t) => switch (t) {
+      ArchiveTemplate.blank => Icons.note_add_outlined,
+      ArchiveTemplate.journal => Icons.wb_sunny_outlined,
+      ArchiveTemplate.meeting => Icons.groups_outlined,
+      ArchiveTemplate.expense => Icons.receipt_long_outlined,
+      ArchiveTemplate.todo => Icons.checklist_outlined,
+      ArchiveTemplate.reading => Icons.menu_book_outlined,
+    };
+    final picked = await showModalBottomSheet<ArchiveTemplate>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    l10n.archiveTemplateTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              for (final t in ArchiveTemplate.values)
+                ListTile(
+                  leading: Icon(icon(t)),
+                  title: Text(label(t)),
+                  onTap: () => Navigator.pop(sheetContext, t),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    if (picked == ArchiveTemplate.blank) {
+      await _createPage();
+      return;
+    }
+    final note = _note;
+    if (note == null) return;
+    final wanted = label(picked);
+    final taken = {...note.archivePages, note.archiveGeneralName.trim()};
+    final page = taken.contains(wanted)
+        ? archiveAutoPageName(note, l10n.archiveAutoPageName)
+        : wanted;
+    final text = buildTemplateText(_templateLines(picked, l10n));
+    final id = const Uuid().v4();
+    _writerIds[page] = id;
+    final index = note.archivePages.length + 1;
+    await _mutate(
+      (n) => archiveWriteText(
+        archiveWithPage(n, page),
+        page: page,
+        text: text,
+        id: id,
+      ),
+    );
+    _goToPageSoon(index);
+  }
+
+  /// Şablonların satırları. Metinler dilden gelir; tarih uygulamanın
+  /// dilinde yazılır.
+  List<TemplateLine> _templateLines(
+    ArchiveTemplate template,
+    AppLocalizations l10n,
+  ) {
+    TemplateLine h1(String t) => (text: t, heading: RichHeading.h1);
+    TemplateLine h2(String t) => (text: t, heading: RichHeading.h2);
+    TemplateLine p(String t) => (text: t, heading: RichHeading.normal);
+    final today = DateFormat.yMMMMEEEEd(l10n.localeName).format(
+      DateTime.now(),
+    );
+    return switch (template) {
+      ArchiveTemplate.blank => const [],
+      ArchiveTemplate.journal => [
+        h1(today),
+        p(''),
+        h2(l10n.tplJournalHow),
+        p(''),
+        h2(l10n.tplJournalGrateful),
+        p('• '),
+        h2(l10n.tplJournalTomorrow),
+        p('• '),
+      ],
+      ArchiveTemplate.meeting => [
+        h1(l10n.archiveTemplateMeeting),
+        p(today),
+        h2(l10n.tplMeetingAttendees),
+        p('• '),
+        h2(l10n.tplMeetingAgenda),
+        p('1. '),
+        h2(l10n.tplMeetingDecisions),
+        p('• '),
+        h2(l10n.tplMeetingActions),
+        p('☐ '),
+      ],
+      ArchiveTemplate.expense => [
+        h1(l10n.archiveTemplateExpense),
+        p(l10n.tplExpenseColumns),
+        p(''),
+        p(''),
+        h2(l10n.tplExpenseTotal),
+      ],
+      ArchiveTemplate.todo => [
+        h1(l10n.archiveTemplateTodo),
+        p('☐ '),
+        p('☐ '),
+        p('☐ '),
+      ],
+      ArchiveTemplate.reading => [
+        h1(l10n.archiveTemplateReading),
+        h2(l10n.tplReadingSource),
+        p(''),
+        h2(l10n.tplReadingSummary),
+        p(''),
+        h2(l10n.tplReadingQuotes),
+        p('“ ”'),
+        h2(l10n.tplReadingThoughts),
+        p(''),
+      ],
+    };
+  }
 
   /// **YENİ SAYFA AÇAR** — kayda yazar ve oraya gider.
   ///
@@ -1585,9 +1732,9 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
       case 'text':
         await _editText(note, page);
       case 'page':
-        // Diyalog YOK: sayfa doğrudan açılır (adı sonradan başlığa
-        // dokunularak değiştirilir).
-        await _createPage();
+        // Ad diyaloğu YOK: sayfa doğrudan açılır (adı sonradan başlığa
+        // dokunularak değiştirilir); yalnız hazır düzen sorulur.
+        await _newPage();
     }
   }
 
@@ -1690,7 +1837,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     );
     if (picked == null || !mounted) return;
     if (picked < 0) {
-      await _createPage();
+      await _newPage();
       return;
     }
     _goToPage(picked);
@@ -1918,7 +2065,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
                   case 'paper':
                     await _paperSheet(note);
                   case 'new':
-                    await _createPage();
+                    await _newPage();
                   case 'pages':
                     await _pagesOverview(note);
                   case 'rename':
@@ -2624,6 +2771,7 @@ class _ArchiveNoteScreenState extends ConsumerState<ArchiveNoteScreen> {
     // SAYFA GÖRÜNÜMÜ defterde "kâğıt": rengi ve deseni (çizgili/kareli/
     // noktalı/düz) aynı levhada.
     onPageStyle: () => unawaited(_paperSheet(note)),
+    onHeading: (h) => _runOnWriter((c) => applyRichHeading(c, h)),
     onClose: () => setState(() => _formatBarOpen = false),
   );
 

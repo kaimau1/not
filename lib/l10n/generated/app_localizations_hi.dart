@@ -452,6 +452,86 @@ class AppLocalizationsHi extends AppLocalizations {
   String get addReminder => 'याद दिलाएँ';
 
   @override
+  String get placeReminder => 'Konum hatırlatıcısı';
+
+  @override
+  String get placeReminderHint =>
+      'Bir yere varınca ya da oradan ayrılınca bu not bildirim olarak gelsin. Konumu sistem izler; uygulama açık olmasa da çalışır.';
+
+  @override
+  String get placeCurrent => 'Şu anki konumum';
+
+  @override
+  String get placeSearchHint => 'Adres ya da yer ara';
+
+  @override
+  String get placeSearchNone => 'Sonuç bulunamadı';
+
+  @override
+  String get placeArrive => 'Varınca';
+
+  @override
+  String get placeLeave => 'Ayrılınca';
+
+  @override
+  String get placeRadius => 'Yarıçap';
+
+  @override
+  String get placeSave => 'Hatırlatıcıyı kur';
+
+  @override
+  String get placeRemove => 'Konum hatırlatıcısını kaldır';
+
+  @override
+  String get placeSet => 'Konum hatırlatıcısı kuruldu';
+
+  @override
+  String get placeRemoved => 'Konum hatırlatıcısı kaldırıldı';
+
+  @override
+  String get placeNeedPermission =>
+      'Konum izni verilmedi. Ayarlardan izin verebilirsin.';
+
+  @override
+  String get placeNeedBackground =>
+      'Uygulama kapalıyken de çalışması için konum iznini \"Her zaman izin ver\" yapman gerekiyor.';
+
+  @override
+  String get placeBackgroundTitle => '\"Her zaman\" izni gerekli';
+
+  @override
+  String get placeOpenSettings => 'İzin ver';
+
+  @override
+  String get placeLocationOff =>
+      'Cihazın konum hizmeti kapalı. Açıp yeniden dene.';
+
+  @override
+  String get placeFailed => 'Konum hatırlatıcısı kurulamadı.';
+
+  @override
+  String get placeNoLocation =>
+      'Konum alınamadı. Konumun açık olduğundan emin ol.';
+
+  @override
+  String placeArrivedBody(String place) {
+    return '$place konumuna vardın';
+  }
+
+  @override
+  String placeLeftBody(String place) {
+    return '$place konumundan ayrıldın';
+  }
+
+  @override
+  String placeActive(String place, String trigger) {
+    return '$place · $trigger';
+  }
+
+  @override
+  String get placeSection => 'Konum';
+
+  @override
   String get share => 'साझा करें';
 
   @override
@@ -988,6 +1068,20 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noteArchived => 'नोट संग्रहित';
+
+  @override
+  String pendingUploads(int count) {
+    return '$count ek buluta yükleniyor';
+  }
+
+  @override
+  String pendingUploadsFailed(int count) {
+    return '$count ek yüklenemedi, yeniden denenecek';
+  }
+
+  @override
+  String get pendingUploadsInfo =>
+      'Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.';
 
   @override
   String deleteChecked(int count) {
@@ -1802,6 +1896,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get formatClear => 'स्वरूपण हटाएँ';
 
   @override
+  String get formatHeading => 'Başlık';
+
+  @override
+  String get formatHeading1 => 'Büyük başlık';
+
+  @override
+  String get formatHeading2 => 'Alt başlık';
+
+  @override
+  String get formatNormalText => 'Normal metin';
+
+  @override
   String get noteTextOpacity => 'अपारदर्शिता';
 
   @override
@@ -2587,6 +2693,66 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get archiveNewPage => 'Yeni sayfa';
+
+  @override
+  String get archiveTemplateTitle => 'Sayfa şablonu';
+
+  @override
+  String get archiveTemplateBlank => 'Boş sayfa';
+
+  @override
+  String get archiveTemplateJournal => 'Günlük';
+
+  @override
+  String get archiveTemplateMeeting => 'Toplantı';
+
+  @override
+  String get archiveTemplateExpense => 'Harcamalar';
+
+  @override
+  String get archiveTemplateTodo => 'Yapılacaklar';
+
+  @override
+  String get archiveTemplateReading => 'Okuma notu';
+
+  @override
+  String get tplJournalHow => 'Bugün nasıldı?';
+
+  @override
+  String get tplJournalGrateful => 'Minnettar olduklarım';
+
+  @override
+  String get tplJournalTomorrow => 'Yarın için';
+
+  @override
+  String get tplMeetingAttendees => 'Katılımcılar';
+
+  @override
+  String get tplMeetingAgenda => 'Gündem';
+
+  @override
+  String get tplMeetingDecisions => 'Kararlar';
+
+  @override
+  String get tplMeetingActions => 'Kim, ne, ne zaman';
+
+  @override
+  String get tplExpenseColumns => 'Tarih · Açıklama · Tutar';
+
+  @override
+  String get tplExpenseTotal => 'Toplam:';
+
+  @override
+  String get tplReadingSource => 'Kaynak';
+
+  @override
+  String get tplReadingSummary => 'Özet';
+
+  @override
+  String get tplReadingQuotes => 'Alıntılar';
+
+  @override
+  String get tplReadingThoughts => 'Düşüncelerim';
 
   @override
   String get archiveGeneralPage => 'Genel';

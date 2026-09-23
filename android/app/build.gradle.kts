@@ -133,4 +133,7 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    // Konum hatırlatıcısı: sistem geofence'i + tek seferlik konum okuması
+    // (bkz. PlaceReminders.kt).
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 }

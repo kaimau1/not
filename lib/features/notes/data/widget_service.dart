@@ -8,6 +8,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../../core/utils/debouncer.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note.dart';
+import '../presentation/notes_providers.dart';
 import 'notes_repository.dart';
 
 /// Android ana ekran widget'ını son notlarla besler.
@@ -91,6 +92,7 @@ class WidgetService {
       'QuickActionsWidgetProvider',
       'QuickNoteWidgetProvider',
       'VoiceWidgetProvider',
+      'TodayWidgetProvider',
     ]) {
       await HomeWidget.updateWidget(androidName: name);
     }
@@ -101,9 +103,15 @@ class WidgetService {
       // Kilitli notlar widget'a HİÇ çıkmaz: biyometrik kilitli notun ilk
       // satırı, telefon kilitliyken bile ana ekranda okunabiliyordu (uygulama
       // içinde kilitliyi ayıklayan diğer yüzeylerle aynı kural).
+      // GİZLİ klasördeki notlar da çıkmaz: uygulama içinde doğrulamasız
+      // görünmeyen notun başlığı ana ekranda okunuyordu.
+      final hidden = _ref.read(hiddenFolderIdsProvider);
       final active = [
         for (final n in notes)
-          if (n.archivedAt == null && !n.locked) n,
+          if (n.archivedAt == null &&
+              !n.locked &&
+              !hidden.contains(n.folderId))
+            n,
       ];
       // Başlıklar SADE gönderilir: madde imi ("• ") ve "not yok" metni artık
       // Android tarafının işi — her başlık kendi kart görünümüne düşüyor
@@ -118,9 +126,16 @@ class WidgetService {
       }
       final text = lines.join('\n');
       final count = '${active.length} not';
-      final payload = '$count\n$text';
+      final today = todayWidgetPayload(
+        notes,
+        DateTime.now(),
+        hiddenFolders: hidden,
+      );
+      final payload = '$count\n$text\n\u0000$today';
       if (payload == _lastPayload) return;
       _lastPayload = payload;
+      await HomeWidget.saveWidgetData<String>('widget_today', today);
+      await HomeWidget.updateWidget(androidName: 'TodayWidgetProvider');
       await HomeWidget.saveWidgetData<String>('widget_notes', text);
       await HomeWidget.saveWidgetData<String>('widget_count', count);
       await HomeWidget.updateWidget(androidName: 'NotlarWidgetProvider');
@@ -137,4 +152,45 @@ class WidgetService {
     }
     _themeSubs.clear();
   }
+}
+
+/// "Bugün" widget'ının verisi: ŞİMDİDEN (bugünün başından) itibaren 7 gün
+/// içindeki hatırlatıcılar, `epochMillis<TAB>başlık` satırları.
+///
+/// Bugüne AİT olanları Android tarafı çizim anında süzer (bkz.
+/// TodayWidgetProvider.kt): böylece gece yarısı geçince uygulama açılmasa da
+/// widget ertesi günün listesini gösterir — bir haftalık pay bunun için.
+///
+/// Arşivdeki notlar çıkmaz; KİLİTLİ notun ve GİZLİ klasördeki notun başlığı
+/// ana ekrana sızmasın diye yerine [lockedLabel] yazılır (hatırlatıcının
+/// saati yine görünür).
+@visibleForTesting
+String todayWidgetPayload(
+  List<Note> notes,
+  DateTime now, {
+  String lockedLabel = '🔒',
+  Set<String> hiddenFolders = const {},
+}) {
+  final from = DateTime(now.year, now.month, now.day);
+  final to = from.add(const Duration(days: 7));
+  final items = <({DateTime at, String title})>[];
+  for (final n in notes) {
+    final at = n.reminderAt;
+    if (at == null || n.archivedAt != null) continue;
+    if (at.isBefore(from) || !at.isBefore(to)) continue;
+    var title = n.locked || hiddenFolders.contains(n.folderId)
+        ? lockedLabel
+        : (n.title.trim().isNotEmpty
+              ? n.title.trim()
+              : n.toPlainText().split('\n').first.trim());
+    if (title.isEmpty) title = '…';
+    // Satır ayırıcıları başlığın içinde olamaz (Android tarafı böler).
+    title = title.replaceAll(RegExp(r'[\t\n\r]'), ' ');
+    if (title.length > 48) title = '${title.substring(0, 48)}…';
+    items.add((at: at, title: title));
+  }
+  items.sort((a, b) => a.at.compareTo(b.at));
+  return [
+    for (final i in items) '${i.at.millisecondsSinceEpoch}\t${i.title}',
+  ].join('\n');
 }

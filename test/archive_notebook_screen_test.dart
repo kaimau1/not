@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:notlar/core/utils/rich_text.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/domain/archive_paper.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
@@ -174,9 +175,48 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Yeni sayfa'));
     await tester.pumpAndSettle();
+    // Şablon levhası (2026-09-23): boş sayfa eski davranış.
+    await tester.tap(find.text('Boş sayfa'));
+    await tester.pumpAndSettle();
 
     expect(saved, isNotEmpty);
     expect(saved.last.archivePages, ['Sayfa 2']);
+  });
+
+  testWidgets('şablonla açılan sayfa şablonun ADINI ve yazısını taşır', (
+    tester,
+  ) async {
+    final saved = <Note>[];
+    final note = notebook();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          notesRepositoryProvider.overrideWith(
+            (ref) => _RecordingRepo(saved.add),
+          ),
+          noteStreamProvider(note.id).overrideWith((ref) => Stream.value(note)),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: ArchiveNoteScreen(noteId: note.id),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Yeni sayfa'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Toplantı'));
+    await tester.pumpAndSettle();
+
+    expect(saved.last.archivePages, ['Toplantı']);
+    final writing = archivePageText(saved.last, 'Toplantı');
+    expect(writing, isNotNull);
+    expect(stripRichMarkers(writing!.text), contains('Gündem'));
   });
 
   testWidgets('SAYFA GENEL BAKIŞI ızgarada bütün yaprakları gösterir', (

@@ -1236,6 +1236,82 @@ final RegExp _wordChar = RegExp(r'[\p{L}\p{N}_]', unicode: true);
   );
 }
 
+/// Satır başlığı düzeyi (bkz. [setLineHeading]).
+enum RichHeading {
+  /// Büyük başlık: boy kademesi 7 (×1,6) + kalın.
+  h1(7),
+
+  /// Alt başlık: boy kademesi 6 (×1,4) + kalın.
+  h2(6),
+
+  /// Düz metin: boy ve kalınlık kaldırılır.
+  normal(null);
+
+  const RichHeading(this.sizeStep);
+
+  /// [kRichSizeSteps] içindeki 1 tabanlı kademe; null = notun kendi boyu.
+  final int? sizeStep;
+}
+
+/// İmlecin (ya da seçimin dokunduğu) SATIR(LAR)I başlık yapar.
+///
+/// Kullanıcı isteği 2026-09-23 ("başlık ve alt başlık"): yeni bir işaret
+/// eklenmedi — başlık, zaten var olan iki biçimin birleşimi: satırın
+/// TAMAMINA boy kademesi + kalın. Böylece eski sürümler, kartlar, PDF/Word
+/// dışa aktarımı ve arama başlığı hiçbir değişiklik olmadan doğru çizer.
+///
+/// Seçim yoksa imlecin satırı alınır; boş satırda hiçbir şey yapılmaz (boş
+/// işaret çifti yazılmaz). Dönen aralık: seçim vardıysa satırların tamamı,
+/// yoksa satırın sonunda duran imleç.
+({String text, int start, int end}) setLineHeading(
+  String text,
+  int start,
+  int end,
+  RichHeading heading,
+) {
+  if (start < 0 || end > text.length || end < start) {
+    return (text: text, start: start, end: end);
+  }
+  final lineStart = start == 0 ? 0 : text.lastIndexOf('\n', start - 1) + 1;
+  final nl = text.indexOf('\n', end);
+  final lineEnd = nl < 0 ? text.length : nl;
+  if (lineEnd <= lineStart) return (text: text, start: start, end: end);
+  final sized = setRangeFormat(
+    text,
+    lineStart,
+    lineEnd,
+    RichFormat.size,
+    heading.sizeStep,
+  );
+  final bolded = setRangeFormat(
+    sized.text,
+    sized.start,
+    sized.end,
+    RichFormat.bold,
+    heading == RichHeading.normal ? null : 1,
+  );
+  final collapsed = start == end;
+  return (
+    text: bolded.text,
+    start: collapsed ? bolded.end : bolded.start,
+    end: bolded.end,
+  );
+}
+
+/// İmlecin satırının başlık düzeyi (biçim çubuğundaki vurgu için).
+RichHeading lineHeadingAt(String text, int caret) {
+  if (caret < 0 || caret > text.length) return RichHeading.normal;
+  final lineStart = caret == 0 ? 0 : text.lastIndexOf('\n', caret - 1) + 1;
+  final nl = text.indexOf('\n', caret);
+  final lineEnd = nl < 0 ? text.length : nl;
+  if (lineEnd <= lineStart) return RichHeading.normal;
+  final size = rangeFormatIndex(text, lineStart, lineEnd, RichFormat.size);
+  for (final h in RichHeading.values) {
+    if (h.sizeStep != null && h.sizeStep == size) return h;
+  }
+  return RichHeading.normal;
+}
+
 /// Aralıktaki metnin ortak [format] indeksi (hepsi aynı değilse null).
 int? rangeFormatIndex(String text, int start, int end, RichFormat format) {
   if (start < 0 || end > text.length || end < start) return null;

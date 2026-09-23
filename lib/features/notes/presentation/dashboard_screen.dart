@@ -38,6 +38,7 @@ import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/reminder_service.dart';
 import '../data/share_intake.dart';
+import '../data/place_reminders.dart';
 import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
@@ -414,6 +415,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           repo.setArchived(id, false);
         }
       },
+    );
+  }
+
+  /// Liste satırını SAĞA çekmek: sabitle / sabitlemeyi kaldır.
+  void _swipePin(Note note) {
+    ref.read(notesRepositoryProvider)?.setPinned(note.id, !note.pinned);
+    HapticFeedback.selectionClick();
+  }
+
+  /// Liste satırını SOLA çekmek: arşivle (geri alınabilir).
+  void _swipeArchive(Note note) {
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    repo.setArchived(note.id, true);
+    HapticFeedback.mediumImpact();
+    showUndoSnackBar(
+      context,
+      message: context.l10n.noteArchived,
+      undoLabel: context.l10n.undo,
+      onUndo: () => repo.setArchived(note.id, false),
     );
   }
 
@@ -854,6 +875,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     // bildirimleri, ana ekran widget'ı ve derin bağlantı dinleyicisi.
     ref.watch(uploadQueueProvider);
     ref.watch(reminderServiceProvider);
+    // Silinen/arşivlenen notların konum hatırlatıcılarını kaldırır.
+    ref.watch(placeReminderCleanupProvider);
     // Paylaşılan klasörlerdeki hareketi izler: rozet + telefon bildirimi
     // (kullanıcı isteği 2026-09-04).
     ref.watch(sharedActivityServiceProvider);
@@ -1416,6 +1439,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         // çizilmez — boşken sıfır yer kaplar.
                         const HomeInvites(),
                         const DashboardFilterRow(),
+                        // Buluta yüklenmeyi bekleyen ekler — yoksa sıfır yer.
+                        const _PendingUploadsBar(),
                         // **SON ARAMALAR** — yalnız arama kutusu odaklıyken
                         // ve kutu BOŞKEN. Yazmaya başlayınca kaybolur:
                         // sonuçların üstünde bir çip şeridi durmasın.
@@ -2019,14 +2044,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 return _FocusHalo(
                   focused: focused,
                   noteId: note.id,
-                  child: GestureDetector(
-                    onLongPress: () => cellRef
-                        .read(selectedNoteIdsProvider.notifier)
-                        .toggle(note.id),
-                    child: NoteListRow(
-                      note: note,
-                      selected: selected,
-                      selectionActive: selectionActive,
+                  child: _SwipeActions(
+                    note: note,
+                    enabled: !selectionActive,
+                    onPin: () => _swipePin(note),
+                    onArchive: () => _swipeArchive(note),
+                    child: GestureDetector(
+                      onLongPress: () => cellRef
+                          .read(selectedNoteIdsProvider.notifier)
+                          .toggle(note.id),
+                      child: NoteListRow(
+                        note: note,
+                        selected: selected,
+                        selectionActive: selectionActive,
+                      ),
                     ),
                   ),
                 );
@@ -3184,6 +3215,191 @@ class _DashVoiceButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+
+/// **KAYDIRARAK HIZLI İŞLEM** (kullanıcı isteği 2026-09-23): liste
+/// görünümünde satırı sağa çekmek sabitler (ya da sabitlemeyi kaldırır),
+/// sola çekmek arşivler — geri alınabilir.
+///
+/// Yalnız LİSTE görünümünde: ızgarada yatay çekiş süzgeçler arasında
+/// geziyor ([_cycleFilterFolder]) ve kartlar sütunlarda yan yana duruyor;
+/// orada kartın kendisini çekmek, hangi işin olacağını belirsizleştirirdi.
+///
+/// `confirmDismiss` işi yapıp FALSE döner: satır yerine geri kayar, notun
+/// listeden çıkması (arşiv) ya da sabitlilere taşınması Firestore akışından
+/// gelir. `true` dönülseydi akış o kareye yetişmediğinde Flutter "kapatılmış
+/// Dismissible hâlâ ağaçta" hatası verirdi.
+class _SwipeActions extends StatelessWidget {
+  const _SwipeActions({
+    required this.note,
+    required this.enabled,
+    required this.onPin,
+    required this.onArchive,
+    required this.child,
+  });
+
+  final Note note;
+
+  /// Seçim kipinde kapalı: orada çekiş seçimle karışırdı.
+  final bool enabled;
+  final VoidCallback onPin;
+  final VoidCallback onArchive;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    Widget background({
+      required AlignmentGeometry alignment,
+      required IconData icon,
+      required String label,
+      required Color color,
+      required Color ink,
+    }) => Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: alignment,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: ink, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(color: ink, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+    return Dismissible(
+      key: ValueKey('swipe-${note.id}'),
+      direction: enabled ? DismissDirection.horizontal : DismissDirection.none,
+      // Yanlışlıkla tetiklenmesin: satırın en az %35'i çekilmeli.
+      dismissThresholds: const {
+        DismissDirection.startToEnd: 0.35,
+        DismissDirection.endToStart: 0.35,
+      },
+      background: background(
+        alignment: AlignmentDirectional.centerStart,
+        icon: note.pinned ? Icons.push_pin_outlined : Icons.push_pin,
+        label: note.pinned ? l10n.unpin : l10n.pin,
+        color: scheme.secondaryContainer,
+        ink: scheme.onSecondaryContainer,
+      ),
+      secondaryBackground: background(
+        alignment: AlignmentDirectional.centerEnd,
+        icon: Icons.archive_outlined,
+        label: l10n.archive,
+        color: scheme.tertiaryContainer,
+        ink: scheme.onTertiaryContainer,
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          onPin();
+        } else {
+          onArchive();
+        }
+        return false;
+      },
+      child: child,
+    );
+  }
+}
+
+
+/// **SENKRON BEKLEYEN EKLER** göstergesi (kullanıcı isteği 2026-09-23).
+///
+/// Çevrimdışı eklenen fotoğraf öbür cihazda görünmüyordu ve bunun nedeni
+/// hiçbir yerde yazmıyordu — kullanıcı "senkron bozuk" sanıyordu. Bekleyen
+/// ek varken filtre satırının altında ince bir şerit durur; dokununca
+/// açıklama çıkar. Hiç bekleyen yokken hiç yer kaplamaz.
+///
+/// Kendi `Consumer`ı: sayaç her değiştiğinde ana ekranın tamamı yeniden
+/// kurulmasın.
+class _PendingUploadsBar extends ConsumerWidget {
+  const _PendingUploadsBar();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(pendingUploadsProvider);
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final failing = state.failed > 0;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      alignment: Alignment.topCenter,
+      child: state.pending == 0
+          ? const SizedBox(width: double.infinity)
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+              child: Material(
+                color: failing
+                    ? scheme.errorContainer
+                    : scheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  onTap: () => ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(content: Text(l10n.pendingUploadsInfo)),
+                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          failing
+                              ? Icons.cloud_off_outlined
+                              : Icons.cloud_upload_outlined,
+                          size: 18,
+                          color: failing
+                              ? scheme.onErrorContainer
+                              : scheme.onSecondaryContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            failing
+                                ? l10n.pendingUploadsFailed(state.failed)
+                                : l10n.pendingUploads(state.pending),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: failing
+                                  ? scheme.onErrorContainer
+                                  : scheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                        // Dönen çark YOK (bilerek): bağlantı yokken şerit
+                        // saatlerce durabilir; sürekli animasyon pili yakardı.
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: failing
+                              ? scheme.onErrorContainer
+                              : scheme.onSecondaryContainer,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 }

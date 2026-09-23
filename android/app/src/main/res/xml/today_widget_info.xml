@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- updatePeriodMillis = 1 saat: veri uygulamadan anında itilir; saatlik
+     uyanma yalnız GÜN DEĞİŞİMİ için (gece yarısı "bugün" listesi yenilensin).
+     onUpdate ağ kullanmaz, uygulamayı başlatmaz — kayıtlı metni yeniden süzer. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="3600000"
+    android:initialLayout="@layout/today_widget"
+    android:previewLayout="@layout/today_widget"
+    android:description="@string/widget_today_desc"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

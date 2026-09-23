@@ -202,6 +202,19 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
       ref.read(voiceAutostartProvider.notifier).request();
       return;
     }
+    // notlar://note/<id> — konum hatırlatıcısı bildirimi notu açar (saat
+    // hatırlatıcısının dokunuşuyla aynı yol: kilitli not kilitli kalır).
+    if (uri.host == 'note' && uri.pathSegments.isNotEmpty) {
+      router.go('/');
+      router.push(noteRoutePath(uri.pathSegments.first));
+      return;
+    }
+    // notlar://reminders — "Bugün" widget'ı Hatırlatıcılar ekranını açar.
+    if (uri.host == 'reminders') {
+      router.go('/');
+      router.push('/reminders');
+      return;
+    }
     // notlar://new?type=text|checklist|ordered — Hızlı Eylemler widget'ı
     // ana ekrandan doğrudan yeni not editörü açar.
     if (uri.host == 'new') {

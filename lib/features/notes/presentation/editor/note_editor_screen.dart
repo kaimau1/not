@@ -80,6 +80,8 @@ import 'attachment_clipboard.dart';
 import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
+import '../../data/place_reminders.dart';
+import '../place_reminder_sheet.dart';
 import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
 import 'format_bar.dart';
@@ -5439,6 +5441,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           title: Text(l10n.addReminder),
         ),
       ),
+      if (PlaceReminderService.supported)
+        PopupMenuItem(
+          value: 'place-reminder',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.add_location_alt_outlined),
+            title: Text(l10n.placeReminder),
+          ),
+        ),
       PopupMenuItem(
         value: 'folder',
         child: ListTile(
@@ -5488,6 +5500,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         switch (action) {
           case 'reminder':
             _pickReminder();
+          case 'place-reminder':
+            unawaited(showPlaceReminderSheet(context, ref, note));
           case 'folder':
             _pickFolder();
           case 'add-tag':
@@ -6044,6 +6058,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                               // Sayfa rengi/çerçeve/zemin görseli: "Ekle"
                               // levhasından buraya taşındı (bkz. FormatBar).
                               onPageStyle: _showColorSheet,
+                              // Başlık yalnız GÖVDEDE ve maddelerde: notun
+                              // başlık alanı zaten başlık.
+                              onHeading: _titleIsTarget
+                                  ? null
+                                  : (h) => _runOnTarget(
+                                      (c) => applyRichHeading(c, h),
+                                    ),
                               onClose: () =>
                                   setState(() => _formatBarOpen = false),
                             ),
