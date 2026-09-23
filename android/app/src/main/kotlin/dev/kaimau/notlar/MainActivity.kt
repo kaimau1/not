@@ -1,20 +1,26 @@
 package dev.kaimau.notlar
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.location.Location
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -265,7 +271,7 @@ class MainActivity : FlutterFragmentActivity() {
                     "requestPlacePermission" -> {
                         val background = call.argument<Boolean>("background") == true
                         val permissions = if (background &&
-                            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
                         ) {
                             arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                         } else {
@@ -325,21 +331,21 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     /** O anki konum (tek okuma, düşük güç önceliği) — {lat, lng} ya da null. */
-    @android.annotation.SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission")
     private fun currentLocation(result: MethodChannel.Result) {
         if (!PlaceReminders.hasForeground(this)) return result.success(null)
-        val client = com.google.android.gms.location.LocationServices
-            .getFusedLocationProviderClient(this)
-        client.getCurrentLocation(
-            com.google.android.gms.location.Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-            null
-        ).addOnSuccessListener { location ->
-            if (location == null) {
-                result.success(null)
-            } else {
-                result.success(mapOf("lat" to location.latitude, "lng" to location.longitude))
+        val client = LocationServices.getFusedLocationProviderClient(this)
+        client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+            .addOnSuccessListener { location: Location? ->
+                if (location == null) {
+                    result.success(null)
+                } else {
+                    result.success(
+                        mapOf("lat" to location.latitude, "lng" to location.longitude)
+                    )
+                }
             }
-        }.addOnFailureListener { result.success(null) }
+            .addOnFailureListener { result.success(null) }
     }
 
     /**
@@ -348,13 +354,13 @@ class MainActivity : FlutterFragmentActivity() {
      * parçacığında; sonuç ana iş parçacığına döner.
      */
     private fun geocode(query: String, result: MethodChannel.Result) {
-        if (query.isBlank() || !android.location.Geocoder.isPresent()) {
+        if (query.isBlank() || !Geocoder.isPresent()) {
             return result.success(emptyList<Map<String, Any>>())
         }
         Thread {
             val found = try {
                 @Suppress("DEPRECATION")
-                android.location.Geocoder(this).getFromLocationName(query, 5)
+                Geocoder(this).getFromLocationName(query, 5)
                     .orEmpty()
                     .map { a ->
                         val name = (0..a.maxAddressLineIndex)

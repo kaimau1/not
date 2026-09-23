@@ -193,6 +193,9 @@ object PlaceReminders {
         }
     }
 
+    // Bildirim izni (Android 13+) kapalıysa `notify` SecurityException atar;
+    // aşağıda yakalanıyor. Lint'in statik denetimi bunu göremiyor.
+    @SuppressLint("MissingPermission")
     fun notify(context: Context, item: Item) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
