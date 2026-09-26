@@ -28,6 +28,7 @@ import '../../folders/data/folders_repository.dart';
 import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
 import '../../folders/presentation/folder_sheets.dart';
+import '../../inbox/data/inbox_repository.dart';
 import '../../folders/presentation/folder_tile.dart';
 import '../../auth/presentation/account_sheet.dart';
 import '../../friends/data/friends_repository.dart';
@@ -45,6 +46,7 @@ import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
+import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
@@ -1354,6 +1356,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                 'trash' => context.push(
                                                   '/trash',
                                                 ),
+                                                'template' =>
+                                                  createFromTemplate(),
+                                                'folderOrder' =>
+                                                  showFolderOrderSheet(
+                                                    context,
+                                                  ),
                                                 'settings' => context.push(
                                                   '/settings',
                                                 ),
@@ -1369,6 +1377,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           // Elle sıralama modu Süz → SIRALAMA
                                           // bölümündeki taşıma düğmesinden
                                           // açılıyor (bkz. filter_sheet).
+                                          // SAYILAR menü AÇILIRKEN okunur
+                                          // (ref.read): ekranın kendisi bu
+                                          // sayılar için yeniden kurulmaz.
                                           itemBuilder: (context) => [
                                             // **HESAP** (kullanıcı isteği
                                             // 2026-08-18: "hesap seçeneklerini
@@ -1389,6 +1400,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               'inbox',
                                               Icons.move_to_inbox_outlined,
                                               l10n.inboxTitle,
+                                              count:
+                                                  ref
+                                                      .read(inboxNotesProvider)
+                                                      .value
+                                                      ?.length ??
+                                                  0,
+                                              highlight: true,
                                             ),
                                             const PopupMenuDivider(),
                                             // Gizli klasörler yalnız gizli klasörü
@@ -1405,15 +1423,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               ),
                                               const PopupMenuDivider(),
                                             ],
+                                            // YENİ (2026-09-26): şablondan
+                                            // not ve klasör sırası — ikisi de
+                                            // ana ekranın işleri, ayarlara
+                                            // gitmeden ulaşılsın.
+                                            _menuItem(
+                                              'template',
+                                              Icons
+                                                  .dashboard_customize_outlined,
+                                              l10n.fromTemplate,
+                                            ),
+                                            _menuItem(
+                                              'folderOrder',
+                                              Icons.swap_vert,
+                                              l10n.folderOrderTitle,
+                                            ),
+                                            const PopupMenuDivider(),
                                             _menuItem(
                                               'reminders',
                                               Icons.alarm_outlined,
                                               l10n.remindersTitle,
+                                              count: _upcomingReminderCount(),
                                             ),
                                             _menuItem(
                                               'archive',
                                               Icons.archive_outlined,
                                               l10n.archiveTitle,
+                                              count:
+                                                  ref
+                                                      .read(
+                                                        archivedNotesProvider,
+                                                      )
+                                                      .value
+                                                      ?.length ??
+                                                  0,
                                             ),
                                             // Zemin görseli AYARLARDAN
                                             // BURAYA taşındı (kullanıcı
@@ -1768,6 +1811,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           anchor: _fabColumnLink,
                           onCreate: createNote,
                           onHandwriting: createHandwritingNote,
+                          onTemplate: createFromTemplate,
+                          onShopping: () =>
+                              createFromTemplate(NoteTemplate.shopping),
                         ),
                       ],
                     ),
@@ -1804,22 +1850,72 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     );
   }
 
-  PopupMenuItem<String> _menuItem(String value, IconData icon, String label) =>
-      PopupMenuItem<String>(
-        value: value,
-        height: 40,
-        // ListTile satırı daima erişilebilir tüm genişliği kaplıyordu; menü de
-        // bu yüzden sağ-sol ekseninde gereksiz genişliyordu (madde 5). İçeriğe
-        // göre daralan Row ile menü yalnız ikon + etiket kadar yer kaplar.
-        child: Row(
+  /// Gelecekteki hatırlatıcı sayısı (⋮ menüsündeki rozet).
+  int _upcomingReminderCount() {
+    final now = DateTime.now();
+    return [
+      for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+        if (n.reminderAt != null &&
+            n.reminderAt!.isAfter(now) &&
+            n.archivedAt == null)
+          n,
+    ].length;
+  }
+
+  /// ⋮ menüsünün satırı. [count] > 0 ise sağda küçük sayı rozeti
+  /// (kullanıcı isteği 2026-09-26: menü "görsel ve işlevsel olarak
+  /// geliştirilsin" — Gelen notlar/Hatırlatıcılar/Arşiv'de ne beklediği
+  /// açmadan görünsün). [highlight]: bekleyen iş (gelen not) vurgulu rozet.
+  PopupMenuItem<String> _menuItem(
+    String value,
+    IconData icon,
+    String label, {
+    int count = 0,
+    bool highlight = false,
+  }) => PopupMenuItem<String>(
+    value: value,
+    height: 42,
+    // ListTile satırı daima erişilebilir tüm genişliği kaplıyordu; menü de
+    // bu yüzden sağ-sol ekseninde gereksiz genişliyordu (madde 5). İçeriğe
+    // göre daralan Row ile menü yalnız ikon + etiket kadar yer kaplar.
+    child: Builder(
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+        return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 20),
-            const SizedBox(width: 12),
+            Icon(icon, size: 20, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 14),
             Text(label),
+            if (count > 0) ...[
+              const SizedBox(width: 10),
+              Container(
+                constraints: const BoxConstraints(minWidth: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: highlight
+                      ? scheme.primary
+                      : scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  count > 99 ? '99+' : '$count',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: highlight
+                        ? scheme.onPrimary
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
           ],
-        ),
-      );
+        );
+      },
+    ),
+  );
 
   /// Ana ekranın tepesindeki **klasör rafı**: her klasör bir karo, sonda
   /// "Yeni klasör". Karolar not kartlarıyla AYNI sütun düzenini kullanır ki

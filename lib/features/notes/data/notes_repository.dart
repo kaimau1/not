@@ -15,6 +15,8 @@ import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
+import 'attachment_repository.dart';
+import 'local_notes_store.dart';
 
 /// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
 /// dokunmaz. Editör açılırken ekler, kapanırken çıkarır. Provider değil düz
@@ -29,7 +31,13 @@ final openEditorNoteIds = <String>[];
 final notesRepositoryProvider = Provider<NotesRepository?>((ref) {
   final uid = ref.watch(currentUidProvider);
   if (uid == null) return null;
-  return NotesRepository(FirebaseFirestore.instance, uid);
+  // Yalnız KENDİ notlarımın deposu yerel notları bilir (bkz.
+  // LocalNotesStore); başkasının koleksiyonuna açılan depolar bilmez.
+  return NotesRepository(
+    FirebaseFirestore.instance,
+    uid,
+    local: LocalNotesStore.forUid(uid),
+  );
 });
 
 /// Silinmemiş tüm notların canlı akışı — arşivlenenler DAHİL (yükleme
@@ -80,6 +88,8 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
 int cloudAttachmentBytes(List<Note> notes) {
   var total = 0;
   for (final note in notes) {
+    // Yalnız bu cihazdaki notun ekleri bulutta yer tutmaz.
+    if (note.localOnly) continue;
     for (final attachment in note.attachments) {
       if (attachment.kind == AttachmentKind.video) continue;
       total += attachment.sizeBytes;
@@ -157,8 +167,51 @@ final pendingWritesProvider = StreamProvider.family<bool, String>((
 /// bağlantı gelince arka planda senkronlar — kesintisiz otomatik senkronun
 /// temeli budur.
 class NotesRepository {
-  NotesRepository(this._firestore, this.uid, {String? editorUid})
-    : editorUid = editorUid ?? uid;
+  NotesRepository(
+    this._firestore,
+    this.uid, {
+    String? editorUid,
+    this.local,
+  }) : editorUid = editorUid ?? uid;
+
+  /// YALNIZ BU CİHAZDA tutulan notlar (bkz. [LocalNotesStore]). Doluysa her
+  /// yazım kimliğe bakar: yerel notun yazımı Firestore'a HİÇ gitmez.
+  final LocalNotesStore? local;
+
+  /// [noteId] yalnız bu cihazda mı tutuluyor?
+  bool isLocal(String noteId) => local?.contains(noteId) ?? false;
+
+  /// Bulut akışını yerel depoyla birleştirir: bulut ilk kez yayınlayınca ve
+  /// sonra iki kaynaktan biri değiştikçe [merge] yeniden çalışır. Yerel
+  /// depo yoksa bulut akışı olduğu gibi döner.
+  Stream<T> _withLocal<C, T>(Stream<C> cloud, T Function(C cloud) merge) {
+    final store = local;
+    if (store == null) return cloud.map(merge);
+    late StreamController<T> controller;
+    StreamSubscription<C>? cloudSub;
+    StreamSubscription<void>? localSub;
+    var hasCloud = false;
+    late C last;
+    controller = StreamController<T>(
+      onListen: () {
+        cloudSub = cloud.listen((value) {
+          last = value;
+          hasCloud = true;
+          controller.add(merge(value));
+        }, onError: controller.addError);
+        localSub = store.changes.listen((_) {
+          // Bulut henüz yayınlamadıysa bekle: yalnız yerel notlarla dolu
+          // bir ilk kare (ve ardından sıçrama) olmasın.
+          if (hasCloud) controller.add(merge(last));
+        });
+      },
+      onCancel: () async {
+        await cloudSub?.cancel();
+        await localSub?.cancel();
+      },
+    );
+    return controller.stream;
+  }
 
   /// **YAZAN kişinin uid'i** — [uid] (koleksiyonun SAHİBİ) ile aynı olmak
   /// zorunda değil: paylaşılan bir klasörde not, klasörün SAHİBİNİN
@@ -188,7 +241,9 @@ class NotesRepository {
   /// ilk snapshot'ta tüm dokümanlar "added" olarak gelir ve haritayı doldurur.
   Stream<List<Note>> watchNotes() {
     final cache = <String, Note>{};
-    return _notes.where('deletedAt', isNull: true).snapshots().map((snapshot) {
+    final cloud = _notes.where('deletedAt', isNull: true).snapshots().map((
+      snapshot,
+    ) {
       for (final change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.removed) {
           cache.remove(change.doc.id);
@@ -196,8 +251,21 @@ class NotesRepository {
           cache[change.doc.id] = Note.fromDoc(change.doc);
         }
       }
-      final notes = cache.values.toList()..sort(_compare);
-      return notes;
+      return cache.values.toList();
+    });
+    return _withLocal(cloud, (List<Note> cloudNotes) {
+      final store = local;
+      if (store == null || store.isEmpty) {
+        return [...cloudNotes]..sort(_compare);
+      }
+      // Aynı kimlik iki yerde (senkron kapatılırken bir an) → YEREL kazanır.
+      final localNotes = store.notes();
+      final ids = {for (final n in localNotes) n.id};
+      return [
+        ...localNotes,
+        for (final n in cloudNotes)
+          if (!ids.contains(n.id)) n,
+      ]..sort(_compare);
     });
   }
 
@@ -234,10 +302,16 @@ class NotesRepository {
 
   /// Çöp kutusu: Firestore null-olmayan filtreyi desteklemediği için tüm
   /// koleksiyon izlenip istemcide ayıklanır (kişisel not sayısı küçüktür).
-  Stream<List<Note>> watchTrash() => _notes.snapshots().map((snapshot) {
+  Stream<List<Note>> watchTrash() => _withLocal(_notes.snapshots(), (
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    final localTrash = local?.notes(deleted: true) ?? const <Note>[];
+    final ids = {for (final n in localTrash) n.id};
     final notes = [
+      ...localTrash,
       for (final doc in snapshot.docs)
-        if (doc.data()['deletedAt'] != null) Note.fromDoc(doc),
+        if (doc.data()['deletedAt'] != null && !ids.contains(doc.id))
+          Note.fromDoc(doc),
     ];
     notes.sort((a, b) {
       final aTime = a.deletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -247,10 +321,11 @@ class NotesRepository {
     return notes;
   });
 
-  Stream<Note?> watchNote(String noteId) => _notes
-      .doc(noteId)
-      .snapshots()
-      .map((doc) => doc.exists ? Note.fromDoc(doc) : null);
+  Stream<Note?> watchNote(String noteId) => _withLocal(
+    _notes.doc(noteId).snapshots(),
+    (DocumentSnapshot<Map<String, dynamic>> doc) =>
+        local?.note(noteId) ?? (doc.exists ? Note.fromDoc(doc) : null),
+  );
 
   /// Belgedeki yerel değişiklikler sunucuya ulaştı mı? (editördeki
   /// bulut/senkron göstergesi için)
@@ -258,11 +333,11 @@ class NotesRepository {
   /// distinct ŞART: includeMetadataChanges her metadata geçişinde (cache'ten
   /// geldi bayrağı dahil) olay üretir; boolean değişmeden editörün göstergesi
   /// boşuna yeniden çizilirdi.
-  Stream<bool> watchPendingWrites(String noteId) => _notes
-      .doc(noteId)
-      .snapshots(includeMetadataChanges: true)
-      .map((doc) => doc.metadata.hasPendingWrites)
-      .distinct();
+  Stream<bool> watchPendingWrites(String noteId) => _withLocal(
+    _notes.doc(noteId).snapshots(includeMetadataChanges: true),
+    (DocumentSnapshot<Map<String, dynamic>> doc) =>
+        !isLocal(noteId) && doc.metadata.hasPendingWrites,
+  ).distinct();
 
   static int _compare(Note a, Note b) {
     if (a.pinned != b.pinned) return a.pinned ? -1 : 1;
@@ -284,18 +359,26 @@ class NotesRepository {
   Future<String> createNote(
     NoteType type, {
     double? orderIndex,
+    String title = '',
     String body = '',
+    List<String>? items,
     String? folderId,
     DateTime? reminderAt,
   }) async {
     final doc = _notes.doc();
+    // [items]: ŞABLONDAN doğan listenin maddeleri (bkz. note_templates) —
+    // not TEK yazımda dolu doğar; ardından ayrı bir güncelleme yazılsaydı
+    // arada boş not görünüp boş-not temizliğine yakalanabilirdi.
     final note = Note(
       id: doc.id,
       type: type,
+      title: title,
       body: body,
       folderId: folderId,
       reminderAt: reminderAt,
-      items: type == NoteType.text
+      items: items != null && items.isNotEmpty
+          ? [for (final t in items) NoteItem(id: _uuid.v4(), text: t)]
+          : type == NoteType.text
           ? const []
           : [NoteItem(id: _uuid.v4(), text: '')],
       orderIndex:
@@ -365,6 +448,10 @@ class NotesRepository {
   /// çalışır (çevrimdışı-önce), yalnız pencere kapanışı gibi "süreç ölmeden
   /// diske insin" noktaları kısa bir zaman aşımıyla bekler.
   Future<void> updateNote(Note note) {
+    if (isLocal(note.id)) {
+      local!.merge(note.id, note.toMap());
+      return Future.value();
+    }
     final write = _notes
         .doc(note.id)
         .set({...note.toMap(), 'updatedBy': editorUid}, SetOptions(merge: true));
@@ -387,6 +474,13 @@ class NotesRepository {
     String noteId,
     Map<String, dynamic> fields,
   ) {
+    if (isLocal(noteId)) {
+      local!.merge(noteId, {
+        ...fields,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return Future.value();
+    }
     final write = _notes.doc(noteId).set({
       ...fields,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -410,7 +504,9 @@ class NotesRepository {
     var ops = 0;
     for (var i = 0; i < ordered.length; i++) {
       final want = i * 1000.0;
-      if (ordered[i].orderIndex != want) {
+      if (ordered[i].orderIndex != want && isLocal(ordered[i].id)) {
+        local!.merge(ordered[i].id, {'orderIndex': want});
+      } else if (ordered[i].orderIndex != want) {
         batch.set(_notes.doc(ordered[i].id), {
           'orderIndex': want,
         }, SetOptions(merge: true));
@@ -493,6 +589,10 @@ class NotesRepository {
   }
 
   void hardDelete(String noteId) {
+    if (isLocal(noteId)) {
+      local!.remove(noteId);
+      return;
+    }
     unawaited(_notes.doc(noteId).delete());
   }
 
@@ -543,6 +643,12 @@ class NotesRepository {
 
   Future<void> purgeOldTrash() async {
     final cutoff = Timestamp.fromDate(DateTime.now().subtract(trashRetention));
+    for (final note in local?.notes(deleted: true) ?? const <Note>[]) {
+      final deleted = note.deletedAt;
+      if (deleted != null && deleted.isBefore(cutoff.toDate())) {
+        await deleteNotePermanently(note);
+      }
+    }
     final snapshot = await _notes.where('deletedAt', isLessThan: cutoff).get();
     for (final doc in snapshot.docs) {
       await deleteNotePermanently(Note.fromDoc(doc));
@@ -578,8 +684,19 @@ class NotesRepository {
   /// kalıcı götürürdü (çöpe bile uğramadan). Transaction sunucudaki güncel
   /// hâli okuyup "hâlâ boş ve eski" önkoşulunu doğrular; koşul bozulduysa
   /// silme sessizce vazgeçer.
-  Future<void> _deleteIfStillEmpty(String noteId, DateTime cutoff) =>
-      _firestore.runTransaction((tx) async {
+  Future<void> _deleteIfStillEmpty(String noteId, DateTime cutoff) async {
+    if (isLocal(noteId)) {
+      final note = local!.note(noteId);
+      final updated = note?.updatedAt;
+      if (note != null &&
+          note.isEmpty &&
+          updated != null &&
+          updated.isBefore(cutoff)) {
+        local!.remove(noteId);
+      }
+      return;
+    }
+    await _firestore.runTransaction((tx) async {
         final ref = _notes.doc(noteId);
         final snapshot = await tx.get(ref);
         if (!snapshot.exists) return;
@@ -590,6 +707,7 @@ class NotesRepository {
         }
         tx.delete(ref);
       });
+  }
 
   /// Ek metadata'sındaki tek bir girişi günceller (yükleme kuyruğu kullanır).
   /// Yüklemesi biten ekin DEPO alanlarını yazar.
@@ -608,8 +726,19 @@ class NotesRepository {
   /// boyutu "kaydedilmemiş" görünüyordu. Artık yalnız yüklemenin ürettiği
   /// alanlar geçirilir; düzen (x/pageY/displayWidth/hiza/çizim) belgede ne ise
   /// o kalır.
-  Future<void> patchAttachment(String noteId, Attachment updated) =>
-      _firestore.runTransaction((tx) async {
+  Future<void> patchAttachment(String noteId, Attachment updated) async {
+    if (isLocal(noteId)) {
+      final note = local!.note(noteId);
+      if (note == null) return;
+      local!.merge(noteId, {
+        'attachments': [
+          for (final a in note.attachments)
+            (a.id == updated.id ? a.withUploadOf(updated) : a).toMap(),
+        ],
+      });
+      return;
+    }
+    await _firestore.runTransaction((tx) async {
         final ref = _notes.doc(noteId);
         final snapshot = await tx.get(ref);
         if (!snapshot.exists) return;
@@ -622,4 +751,105 @@ class NotesRepository {
           'attachments': [for (final a in attachments) a.toMap()],
         });
       });
+  }
+
+  /// Nota ek EKLER (var olanlara dokunmadan). Bulutta `arrayUnion` —
+  /// eklemeyle aynı anda yazılan başka bir değişikliği geri almaz; yerel
+  /// notta mevcut listenin sonuna.
+  Future<void> appendAttachments(String noteId, List<Attachment> added) {
+    if (added.isEmpty) return Future.value();
+    if (isLocal(noteId)) {
+      final note = local!.note(noteId);
+      if (note == null) return Future.value();
+      final ids = {for (final a in note.attachments) a.id};
+      local!.merge(noteId, {
+        'attachments': [
+          for (final a in note.attachments) a.toMap(),
+          for (final a in added)
+            if (!ids.contains(a.id)) a.toMap(),
+        ],
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return Future.value();
+    }
+    return updateFieldsAndWait(noteId, {
+      'attachments': FieldValue.arrayUnion([for (final a in added) a.toMap()]),
+    });
+  }
+
+  /// **SENKRONU KAPAT / AÇ** — notu yalnız bu cihaza taşır ya da buluta
+  /// geri gönderir (kullanıcı isteği 2026-09-26: "senkronizasyon kapatma
+  /// nota özel").
+  ///
+  /// KAPATIRKEN sıra önemli: (1) bu cihazda dosyası olmayan her ek buluttan
+  /// İNDİRİLİR — indirilemezse ([LocalOnlyException]) hiçbir şey
+  /// değişmez, yoksa not buluttan silinince ek kaybolurdu; (2) not yerel
+  /// depoya yazılır (akış artık yereli gösterir); (3) buluttaki ek dosyaları
+  /// ve belge silinir — başka cihazlarda not kaybolur.
+  ///
+  /// AÇARKEN: belge buluta yazılır, yerel kopya ancak buluttaki belge
+  /// (çevrimdışıysa yerel önbellekte) görünür olunca silinir — arada not
+  /// bir an ekrandan kaybolmasın. Ekler yükleme kuyruğuyla buluta gider.
+  Future<void> setLocalOnly(
+    Note note, {
+    required bool localOnly,
+    AttachmentRepository? attachments,
+  }) async {
+    final store = local;
+    if (store == null) return;
+    if (localOnly) {
+      if (store.contains(note.id)) return;
+      final kept = <Attachment>[];
+      for (final a in note.attachments) {
+        final hasFile = a.localPath.isNotEmpty && await File(a.localPath).exists();
+        if (!hasFile && a.storagePath.isNotEmpty) {
+          final bytes = await attachments?.readBytes(a);
+          if (bytes == null || a.localPath.isEmpty) {
+            throw const LocalOnlyException();
+          }
+          final file = File(a.localPath);
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes, flush: true);
+          forgetLocalFile(a.localPath);
+        }
+        kept.add(a.copyWith(storagePath: '', downloadUrl: ''));
+      }
+      store.put(note.id, {
+        ...note.copyWith(attachments: kept).toMap(),
+        'updatedBy': editorUid,
+      });
+      await store.flush();
+      for (final a in note.attachments) {
+        if (a.storagePath.isEmpty) continue;
+        unawaited(
+          FirebaseStorage.instance
+              .ref(a.storagePath)
+              .delete()
+              .catchError((Object _) {}),
+        );
+      }
+      unawaited(_notes.doc(note.id).delete());
+      return;
+    }
+    if (!store.contains(note.id)) return;
+    final current = store.note(note.id) ?? note;
+    final doc = _notes.doc(note.id);
+    unawaited(doc.set({...current.toMap(), 'updatedBy': editorUid}));
+    try {
+      await doc
+          .snapshots()
+          .firstWhere((d) => d.exists)
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // Görünmediyse de yerel kopya bırakılır: belge yerel önbelleğe zaten
+      // yazıldı, akış ilk fırsatta getirir.
+    }
+    store.remove(note.id);
+  }
+}
+
+/// Senkron kapatılırken bir ek bu cihaza indirilemedi (çevrimdışı ya da
+/// buluttaki dosya yok). Not OLDUĞU GİBİ bırakıldı.
+class LocalOnlyException implements Exception {
+  const LocalOnlyException();
 }

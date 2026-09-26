@@ -3962,4 +3962,111 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Could not be measured on this device.';
+
+  @override
+  String get localOnlyTurnOn => 'Stop syncing';
+
+  @override
+  String get localOnlyTurnOff => 'Sync this note';
+
+  @override
+  String get localOnlyBadge => 'Only on this device';
+
+  @override
+  String get localOnlyConfirmTitle => 'Keep this note only on this device?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'The note and its attachments are removed from the cloud and won\'t appear on your other devices. If you uninstall the app or change phones, this note goes too. You can turn sync back on at any time.';
+
+  @override
+  String get localOnlyConfirm => 'Stop syncing';
+
+  @override
+  String get localOnlyOnDone => 'The note is now only on this device';
+
+  @override
+  String get localOnlyOffDone => 'The note is syncing again';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Sync can\'t be turned off for a shared note';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Some attachments couldn\'t be downloaded to this device. Check your connection and try again; the note was not changed.';
+
+  @override
+  String get templatesTitle => 'Templates';
+
+  @override
+  String get templatesSubtitle =>
+      'Start with a ready layout; you can change everything later.';
+
+  @override
+  String get fromTemplate => 'From template';
+
+  @override
+  String get tplShoppingName => 'Shopping list';
+
+  @override
+  String get tplShoppingItems => 'Bread, Milk, Eggs, Fruit, Vegetables';
+
+  @override
+  String get tplShoppingDesc => 'Tick off what you bought; it moves down';
+
+  @override
+  String get tplTodoDesc => 'An empty list with today\'s date';
+
+  @override
+  String get tplTravelName => 'Packing list';
+
+  @override
+  String get tplTravelItems =>
+      'ID / passport, Phone charger, Medicines, Toothbrush, Clothes, Headphones';
+
+  @override
+  String get tplTravelDesc => 'A ready checklist';
+
+  @override
+  String get tplMeetingDesc => 'Attendees, agenda, decisions';
+
+  @override
+  String get tplJournalDesc => 'How was today, gratitude, tomorrow';
+
+  @override
+  String get tplRecipeName => 'Recipe';
+
+  @override
+  String get tplRecipeMeta => 'Servings: · Time:';
+
+  @override
+  String get tplRecipeIngredients => 'Ingredients';
+
+  @override
+  String get tplRecipeSteps => 'Steps';
+
+  @override
+  String get tplRecipeNotes => 'Notes';
+
+  @override
+  String get tplRecipeDesc => 'Ingredients and steps';
+
+  @override
+  String get tplWeeklyName => 'Weekly plan';
+
+  @override
+  String get tplWeeklyDesc => 'This week\'s days as headings';
+
+  @override
+  String get tplExpenseDesc => 'Date, description, amount';
+
+  @override
+  String get tplReadingDesc => 'Source, summary, quotes';
+
+  @override
+  String get settingsThemeHeader => 'Theme';
+
+  @override
+  String get settingsCardsHeader => 'Cards and lists';
 }

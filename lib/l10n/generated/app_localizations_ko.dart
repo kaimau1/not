@@ -3912,4 +3912,108 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => '이 기기에서는 측정할 수 없습니다.';
+
+  @override
+  String get localOnlyTurnOn => '동기화 끄기';
+
+  @override
+  String get localOnlyTurnOff => '이 메모 동기화';
+
+  @override
+  String get localOnlyBadge => '이 기기에만';
+
+  @override
+  String get localOnlyConfirmTitle => '이 메모를 이 기기에만 보관할까요?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      '메모와 첨부 파일이 클라우드에서 삭제되어 다른 기기에 나타나지 않습니다. 앱을 삭제하거나 휴대폰을 바꾸면 이 메모도 사라집니다. 동기화는 언제든 다시 켤 수 있습니다.';
+
+  @override
+  String get localOnlyConfirm => '끄기';
+
+  @override
+  String get localOnlyOnDone => '이제 메모가 이 기기에만 있습니다';
+
+  @override
+  String get localOnlyOffDone => '메모가 다시 동기화됩니다';
+
+  @override
+  String get localOnlySharedBlocked => '공유된 메모는 동기화를 끌 수 없습니다';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      '일부 첨부 파일을 받지 못했습니다. 연결을 확인하고 다시 시도하세요. 메모는 바뀌지 않았습니다.';
+
+  @override
+  String get templatesTitle => '템플릿';
+
+  @override
+  String get templatesSubtitle => '준비된 구성으로 시작하세요. 나중에 모두 바꿀 수 있습니다.';
+
+  @override
+  String get fromTemplate => '템플릿에서';
+
+  @override
+  String get tplShoppingName => '장보기 목록';
+
+  @override
+  String get tplShoppingItems => '빵, 우유, 달걀, 과일, 채소';
+
+  @override
+  String get tplShoppingDesc => '산 것을 체크하면 아래로';
+
+  @override
+  String get tplTodoDesc => '오늘 날짜가 들어간 빈 목록';
+
+  @override
+  String get tplTravelName => '짐 목록';
+
+  @override
+  String get tplTravelItems => '신분증 / 여권, 충전기, 약, 칫솔, 옷, 이어폰';
+
+  @override
+  String get tplTravelDesc => '준비된 체크리스트';
+
+  @override
+  String get tplMeetingDesc => '참석자, 안건, 결정';
+
+  @override
+  String get tplJournalDesc => '오늘 어땠는지, 감사, 내일';
+
+  @override
+  String get tplRecipeName => '레시피';
+
+  @override
+  String get tplRecipeMeta => '인분: · 시간:';
+
+  @override
+  String get tplRecipeIngredients => '재료';
+
+  @override
+  String get tplRecipeSteps => '만드는 법';
+
+  @override
+  String get tplRecipeNotes => '메모';
+
+  @override
+  String get tplRecipeDesc => '재료와 단계';
+
+  @override
+  String get tplWeeklyName => '주간 계획';
+
+  @override
+  String get tplWeeklyDesc => '이번 주 요일을 제목으로';
+
+  @override
+  String get tplExpenseDesc => '날짜, 설명, 금액';
+
+  @override
+  String get tplReadingDesc => '출처, 요약, 인용';
+
+  @override
+  String get settingsThemeHeader => '테마';
+
+  @override
+  String get settingsCardsHeader => '카드와 목록';
 }

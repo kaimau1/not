@@ -138,3 +138,30 @@ String _tidy(String text) => text
     .join('\n')
     .replaceAll(RegExp(r'\n{3,}'), '\n\n')
     .trim();
+
+/// Seçili maddelerin PANO metni (liste editöründeki seçim çubuğu "Kopyala").
+///
+/// KÖK NEDEN (kullanıcı 2026-09-26: "kopyalarken `[ ] …` gibi kopyalanıyor,
+/// daha iyi olabilir"): seçimle kopyalama Markdown'ın `[ ]` / `[x]`
+/// işaretlerini yazıyordu; mesaja yapıştırılan liste köşeli parantezlerle
+/// doluyordu. Artık paylaşım metniyle AYNI dil ([noteShareText]):
+/// * TEK madde → yalnız metni (işaret yok) — tek bir satırı başka yere
+///   yapıştırmak için kopyalayan kutucuk istemez;
+/// * birden çok madde → `☐ Süt` / `☑ Ekmek`, sıralı listede `1. …`;
+/// * boş maddeler atlanır, biçim işaretleri sökülür.
+String itemsCopyText(List<NoteItem> items, {required bool checkboxes}) {
+  final clean = [
+    for (final i in items)
+      if (stripRichMarkers(i.text).trim().isNotEmpty) i,
+  ];
+  if (clean.isEmpty) return '';
+  String text(NoteItem i) => _tidy(stripRichMarkers(i.text));
+  if (clean.length == 1) return text(clean.single);
+  var n = 0;
+  return [
+    for (final i in clean)
+      checkboxes
+          ? '${i.checked ? kShareChecked : kShareUnchecked} ${text(i)}'
+          : '${++n}. ${text(i)}',
+  ].join('\n');
+}

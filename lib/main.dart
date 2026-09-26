@@ -19,6 +19,7 @@ import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
 import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
+import 'features/notes/data/local_notes_store.dart';
 import 'features/settings/settings_providers.dart';
 import 'firebase_options.dart';
 
@@ -148,7 +149,12 @@ Future<void> main() async {
     // önbellekte bekleyenler). Arkadaki uygulamanın bellek ayak izi
     // küçüldükçe sistemin onu öldürme olasılığı düşer — öldürülen uygulama
     // soğuk açılışta her şeyi baştan yükler, bu da pili yakar.
-    onPause: PaintingBinding.instance.imageCache.clear,
+    onPause: () {
+      PaintingBinding.instance.imageCache.clear();
+      // Yalnız bu cihazdaki notların bekleyen yazımı diske insin: arka
+      // plandaki uygulama her an öldürülebilir (bkz. LocalNotesStore).
+      unawaited(LocalNotesStore.flushAll());
+    },
   );
 }
 

@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'dart:ui' show PointMode;
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart' show FieldValue;
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -4418,12 +4417,9 @@ Future<int> copyAttachmentsToArchive({
   // (okuma + sıkıştırma) saniyeler sürüyor ve [archive], kullanıcının defteri
   // seçtiği andaki kopya. Tamamını geri yazmak, o arada deftere yazılan
   // yazıyı, eklenen dosyayı ya da açılan sayfayı geri alıyordu.
+  // Yerel (yalnız bu cihazda) defterde de çalışır (bkz. appendAttachments).
   await notes
-      .updateFieldsAndWait(archive.id, {
-        'attachments': FieldValue.arrayUnion([
-          for (final a in copied) a.toMap(),
-        ]),
-      })
+      .appendAttachments(archive.id, copied)
       .timeout(const Duration(seconds: 3), onTimeout: () {})
       .catchError((Object _) {});
   return copied.length;

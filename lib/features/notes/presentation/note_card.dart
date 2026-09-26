@@ -465,6 +465,9 @@ class NoteCard extends ConsumerWidget {
       // ORTAK NOT: başkalarıyla paylaşılan (ya da bana paylaşılmış) not
       // kartında da belli olsun — Keep'teki ortak çalışan simgesi gibi.
       if (shared) Icon(Icons.people_alt, size: 13, color: scheme.primary),
+      // YALNIZ BU CİHAZDA (senkron kapalı) — kart bakışta söylesin.
+      if (note.localOnly)
+        Icon(Icons.cloud_off_outlined, size: 13, color: scheme.tertiary),
     ];
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
     // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.

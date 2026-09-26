@@ -3978,4 +3978,112 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Не удалось измерить на этом устройстве.';
+
+  @override
+  String get localOnlyTurnOn => 'Отключить синхронизацию';
+
+  @override
+  String get localOnlyTurnOff => 'Синхронизировать заметку';
+
+  @override
+  String get localOnlyBadge => 'Только на этом устройстве';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Хранить заметку только на этом устройстве?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'Заметка и вложения будут удалены из облака и не появятся на других устройствах. Если удалить приложение или сменить телефон, заметка тоже пропадёт. Синхронизацию можно включить снова в любой момент.';
+
+  @override
+  String get localOnlyConfirm => 'Отключить';
+
+  @override
+  String get localOnlyOnDone => 'Заметка теперь только на этом устройстве';
+
+  @override
+  String get localOnlyOffDone => 'Заметка снова синхронизируется';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Нельзя отключить синхронизацию общей заметки';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Не удалось загрузить некоторые вложения. Проверьте соединение и повторите; заметка не изменилась.';
+
+  @override
+  String get templatesTitle => 'Шаблоны';
+
+  @override
+  String get templatesSubtitle =>
+      'Начните с готового макета — всё можно изменить позже.';
+
+  @override
+  String get fromTemplate => 'Из шаблона';
+
+  @override
+  String get tplShoppingName => 'Список покупок';
+
+  @override
+  String get tplShoppingItems => 'Хлеб, Молоко, Яйца, Фрукты, Овощи';
+
+  @override
+  String get tplShoppingDesc => 'Отмечайте купленное — оно уходит вниз';
+
+  @override
+  String get tplTodoDesc => 'Пустой список с сегодняшней датой';
+
+  @override
+  String get tplTravelName => 'Список вещей в поездку';
+
+  @override
+  String get tplTravelItems =>
+      'Паспорт, Зарядка, Лекарства, Зубная щётка, Одежда, Наушники';
+
+  @override
+  String get tplTravelDesc => 'Готовый чек-лист';
+
+  @override
+  String get tplMeetingDesc => 'Участники, повестка, решения';
+
+  @override
+  String get tplJournalDesc => 'Как прошёл день, благодарность, завтра';
+
+  @override
+  String get tplRecipeName => 'Рецепт';
+
+  @override
+  String get tplRecipeMeta => 'Порции: · Время:';
+
+  @override
+  String get tplRecipeIngredients => 'Ингредиенты';
+
+  @override
+  String get tplRecipeSteps => 'Приготовление';
+
+  @override
+  String get tplRecipeNotes => 'Заметки';
+
+  @override
+  String get tplRecipeDesc => 'Ингредиенты и шаги';
+
+  @override
+  String get tplWeeklyName => 'План на неделю';
+
+  @override
+  String get tplWeeklyDesc => 'Дни этой недели заголовками';
+
+  @override
+  String get tplExpenseDesc => 'Дата, описание, сумма';
+
+  @override
+  String get tplReadingDesc => 'Источник, кратко, цитаты';
+
+  @override
+  String get settingsThemeHeader => 'Тема';
+
+  @override
+  String get settingsCardsHeader => 'Карточки и списки';
 }

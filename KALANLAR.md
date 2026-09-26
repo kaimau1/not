@@ -2,6 +2,20 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-09-26 (2. tur) — senkron kapatma, OCR, şablonlar, kasma (CİHAZDA GÖRÜLMEDİ)
+- [ ] **OCR (Play Hizmetleri modeli)**: belge tarama / görselden yazı /
+  aranabilir PDF yeni kurulumda çalışıyor mu? Model inene kadar hata
+  verebilir; CI derlemesinin boyut raporunda libmlkit_google_ocr_pipeline.so
+  YOK olmalı.
+- [ ] **Senkronu kapat**: bir notu yerel yap → ikinci cihazda kaybolmalı;
+  uygulamayı kapatıp aç → not duruyor mu; ekli (başka cihazda eklenmiş)
+  görsel indirildi mi; senkronu aç → ikinci cihazda geri gelmeli, ekler
+  yüklenmeli. Yerel not çöpe atılıp geri alınabiliyor mu.
+- [ ] **Kasma**: nottan geri dönüşte takılma bitti mi? Dönüşte kart
+  güncellemesi animasyondan ~0,4 sn sonra geliyor (bilinçli).
+- [ ] **Şablon içerikleri** 14 dilde makine çevirisi; haftalık plan gün
+  adları cihaz dilinde.
+
 ## 2026-09-26 — kaydırma, klasör sırası, canlı arama, paylaşım, boyut (CİHAZDA GÖRÜLMEDİ)
 - [ ] **QR okuma (Play Hizmetleri modeli)**: barkod modeli artık APK'da değil.
   Yeni kurulumda "QR not" hemen okuyor mu, yoksa model inene kadar hata mı

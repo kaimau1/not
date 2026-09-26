@@ -20,6 +20,8 @@ import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
 import '../data/video_frame.dart';
 import '../domain/note.dart';
+import '../domain/note_templates.dart';
+import 'note_template_sheet.dart';
 import '../domain/note_type.dart';
 import 'capture_mode_sheet.dart';
 import 'image_prepare_screen.dart';
@@ -62,6 +64,25 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  /// **ŞABLONDAN NOT** (kullanıcı isteği 2026-09-26: "modlar, alışveriş
+  /// listesi gibi"). [template] null ise önce seçim levhası açılır. Not
+  /// başlığı ve içeriğiyle TEK yazımda doğar, o anki klasöre düşer.
+  Future<void> createFromTemplate([NoteTemplate? template]) async {
+    final picked = template ?? await showNoteTemplateSheet(context);
+    if (picked == null || !mounted) return;
+    final repo = ref.read(notesRepositoryProvider);
+    if (repo == null) return;
+    final content = buildNoteTemplate(picked, context.l10n);
+    final id = await repo.createNote(
+      content.type,
+      title: content.title,
+      body: content.body,
+      items: content.items,
+      folderId: quickAddFolderId,
+    );
+    await openNewNote(id, type: content.type);
   }
 
   Future<void> createNote(NoteType type) async {

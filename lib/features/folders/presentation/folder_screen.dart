@@ -10,6 +10,7 @@ import '../../../core/widgets/empty_state.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
+import '../../notes/domain/note_templates.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/note_card.dart';
 import '../../notes/presentation/note_grid.dart';
@@ -252,6 +253,8 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
           onImageNote: createImageNote,
           onSlidesNote: createSlidesNote,
           onQrNote: createQrNote,
+          onTemplate: createFromTemplate,
+          onShopping: () => createFromTemplate(NoteTemplate.shopping),
         ),
       ),
       // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,

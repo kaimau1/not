@@ -20,6 +20,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../../core/constants.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
@@ -205,10 +206,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           _SettingRow(
             // Boşluk seçicinin İÇİNDE: ayrı bir satır olsaydı süzmede tek
-            // başına kalıp araya boşluk bırakırdı.
-            const Column(
+            // başına kalıp araya boşluk bırakırdı. Alt başlık da içinde:
+            // aramada seçiciyle birlikte gelir.
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [_ThemeSelector(), SizedBox(height: 12)],
+              children: [
+                _SubHeader(l10n.settingsThemeHeader),
+                const _ThemeSelector(),
+                const SizedBox(height: 12),
+              ],
             ),
             title: l10n.settingsAppearance,
             keywords:
@@ -227,6 +233,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.fontSizeSmall} ${l10n.fontSizeMedium} '
                 '${l10n.fontSizeLarge} ${l10n.fontSizeXLarge}',
           ),
+          _SettingRow(_SubHeader(l10n.settingsCardsHeader)),
           _SettingRow(
             const _ExpandListItemsSwitch(),
             title: l10n.expandListItems,
@@ -693,9 +700,25 @@ class _SettingsArea extends StatelessWidget {
             if (open)
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: rows,
+                // DERLİ TOPLU SATIRLAR (kullanıcı isteği 2026-09-26: ekran
+                // görüntüsündeki alanlar "görsel ve işlevsel olarak
+                // geliştirilsin"). Anahtar satırlarının başlığı gövde
+                // metninden BÜYÜK, açıklaması başlık kadar iriydi; uzun
+                // açıklamalı beş satır ekranı dolduruyordu. Başlık 14/w600,
+                // açıklama küçük ve soluk — göz önce başlığı tarar.
+                child: ListTileTheme.merge(
+                  dense: true,
+                  titleTextStyle: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                  subtitleTextStyle: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.3,
+                      ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: rows,
+                  ),
                 ),
               ),
           ],
@@ -1326,62 +1349,177 @@ class _AppearancePreview extends ConsumerWidget {
 class _ThemeSelector extends ConsumerWidget {
   const _ThemeSelector();
 
+  /// TEMA KARTLARI (kullanıcı isteği 2026-09-26, ekran görüntüsü): eski
+  /// seçici dört ETİKETSİZ simgeydi — telefon genişliğinde etiketler sığmadığı
+  /// için düşüyordu ve "kitap" simgesinin Kağıt tema olduğu anlaşılmıyordu.
+  /// Artık her seçenek küçük bir ÖNİZLEME (o temanın zemini, kartı ve yazı
+  /// rengi) + altında adı; seçili kart birincil renkle çerçevelenir.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final choice = ref.watch(themeChoiceProvider);
-    final options = <(AppThemeChoice, String, IconData)>[
-      (AppThemeChoice.system, l10n.themeSystem, Icons.brightness_auto_outlined),
-      (AppThemeChoice.light, l10n.themeLight, Icons.light_mode_outlined),
-      (AppThemeChoice.dark, l10n.themeDark, Icons.dark_mode_outlined),
-      (AppThemeChoice.paper, l10n.themePaper, Icons.menu_book_outlined),
+    final font = ref.watch(appFontProvider);
+    final light = AppTheme.light(font: font).colorScheme;
+    final dark = AppTheme.dark(font: font).colorScheme;
+    final paper = AppTheme.paper(font: font).colorScheme;
+    final options = <(AppThemeChoice, String, List<ColorScheme>)>[
+      (AppThemeChoice.system, l10n.themeSystem, [light, dark]),
+      (AppThemeChoice.light, l10n.themeLight, [light]),
+      (AppThemeChoice.dark, l10n.themeDark, [dark]),
+      (AppThemeChoice.paper, l10n.themePaper, [paper]),
     ];
-    // Dört seçenek TEK SATIRA sığar: eskiden yatay kaydırmaya bırakılmıştı ve
-    // son seçenek ("Kağıt") ekranın dışında kalıyordu — kullanıcı orada bir
-    // seçenek olduğunu göremiyordu. Sığdırma üç adımda yapılır:
-    //  1. seçim tiki kaldırılır (segment başına ~28 px kazanç; seçili olan
-    //     zaten dolgu rengiyle belli),
-    //  2. dolgu daraltılır,
-    //  3. yer gerçekten yetmiyorsa (küçük ekran + büyük yazı ölçeği) etiketler
-    //     düşer, simge + ipucu kalır.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final perSegment = constraints.maxWidth / options.length;
-        // Bir segmentin etiketli hâli: simge (18) + boşluk + ~6 karakter.
-        final charWidth = MediaQuery.textScalerOf(context).scale(14) * 0.62;
-        final iconsOnly = perSegment < 26 + 6 * charWidth + 16;
-        return SizedBox(
-          width: double.infinity,
-          child: SegmentedButton<AppThemeChoice>(
-            showSelectedIcon: false,
-            style: SegmentedButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: EdgeInsets.symmetric(horizontal: iconsOnly ? 4 : 8),
+    return Row(
+      children: [
+        for (var i = 0; i < options.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          Expanded(
+            child: _ThemeCard(
+              label: options[i].$2,
+              schemes: options[i].$3,
+              selected: choice == options[i].$1,
+              onTap: () =>
+                  ref.read(themeChoiceProvider.notifier).set(options[i].$1),
             ),
-            segments: [
-              for (final (value, label, icon) in options)
-                ButtonSegment(
-                  value: value,
-                  tooltip: label,
-                  icon: Icon(icon, size: 18),
-                  label: iconsOnly
-                      ? null
-                      : Text(
-                          label,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
-                        ),
-                ),
-            ],
-            selected: {choice},
-            onSelectionChanged: (selection) =>
-                ref.read(themeChoiceProvider.notifier).set(selection.first),
           ),
-        );
-      },
+        ],
+      ],
     );
   }
+}
+
+/// Tek tema seçeneği: mini önizleme + ad. [schemes] iki tane ise (Sistem)
+/// önizleme ortadan açık/koyu ikiye bölünür.
+class _ThemeCard extends StatelessWidget {
+  const _ThemeCard({
+    required this.label,
+    required this.schemes,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final List<ColorScheme> schemes;
+  final bool selected;
+  final VoidCallback onTap;
+
+  Widget _preview(ColorScheme c) => ColoredBox(
+    color: c.surface,
+    child: Padding(
+      padding: const EdgeInsets.all(6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: c.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 22, height: 4, color: c.onSurface),
+              const SizedBox(height: 4),
+              Container(
+                width: 30,
+                height: 3,
+                color: c.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+              const SizedBox(height: 3),
+              Container(width: 18, height: 3, color: c.primary),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              height: 62,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected ? scheme.primary : scheme.outlineVariant,
+                  width: selected ? 2.5 : 1,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Row(
+                      children: [
+                        for (final c in schemes)
+                          Expanded(child: _preview(c)),
+                      ],
+                    ),
+                    if (selected)
+                      Positioned(
+                        right: 4,
+                        top: 4,
+                        child: CircleAvatar(
+                          radius: 8,
+                          backgroundColor: scheme.primary,
+                          child: Icon(
+                            Icons.check,
+                            size: 11,
+                            color: scheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                color: selected ? scheme.primary : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Uzun bir ayar alanının içindeki küçük bölüm başlığı (Tema, Kartlar ve
+/// listeler…). Aramada gizlenir (başlığı/anahtar kelimesi yok): arama tek
+/// tek satırları getirir.
+class _SubHeader extends StatelessWidget {
+  const _SubHeader(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(0, 14, 0, 8),
+    child: Text(
+      text,
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.3,
+      ),
+    ),
+  );
 }
 
 /// Sesli Not Asistanı düğmesinin kullanım şekli: basılı tut (varsayılan)

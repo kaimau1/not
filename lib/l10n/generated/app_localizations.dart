@@ -7181,6 +7181,210 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu cihazda ölçülemedi.'**
   String get deviceStorageUnavailable;
+
+  /// No description provided for @localOnlyTurnOn.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkronu kapat'**
+  String get localOnlyTurnOn;
+
+  /// No description provided for @localOnlyTurnOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkronu aç'**
+  String get localOnlyTurnOff;
+
+  /// No description provided for @localOnlyBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız bu cihazda'**
+  String get localOnlyBadge;
+
+  /// No description provided for @localOnlyConfirmTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu not yalnız bu cihazda kalsın mı?'**
+  String get localOnlyConfirmTitle;
+
+  /// No description provided for @localOnlyConfirmBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ve ekleri buluttan silinir ve diğer cihazlarında görünmez. Uygulamayı silersen ya da telefonu değiştirirsen bu not da gider. Senkronu istediğin zaman yeniden açabilirsin.'**
+  String get localOnlyConfirmBody;
+
+  /// No description provided for @localOnlyConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkronu kapat'**
+  String get localOnlyConfirm;
+
+  /// No description provided for @localOnlyOnDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not artık yalnız bu cihazda'**
+  String get localOnlyOnDone;
+
+  /// No description provided for @localOnlyOffDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not yeniden senkronlanıyor'**
+  String get localOnlyOffDone;
+
+  /// No description provided for @localOnlySharedBlocked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Paylaşılan bir notun senkronu kapatılamaz'**
+  String get localOnlySharedBlocked;
+
+  /// No description provided for @localOnlyDownloadFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bazı ekler bu cihaza indirilemedi. Bağlantını kontrol edip yeniden dene; not değişmedi.'**
+  String get localOnlyDownloadFailed;
+
+  /// No description provided for @templatesTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonlar'**
+  String get templatesTitle;
+
+  /// No description provided for @templatesSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır düzenle başla; her şey sonradan değiştirilebilir.'**
+  String get templatesSubtitle;
+
+  /// No description provided for @fromTemplate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablondan'**
+  String get fromTemplate;
+
+  /// No description provided for @tplShoppingName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş listesi'**
+  String get tplShoppingName;
+
+  /// No description provided for @tplShoppingItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekmek, Süt, Yumurta, Meyve, Sebze'**
+  String get tplShoppingItems;
+
+  /// No description provided for @tplShoppingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alınanları işaretle, alta insin'**
+  String get tplShoppingDesc;
+
+  /// No description provided for @tplTodoDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugünün tarihiyle boş liste'**
+  String get tplTodoDesc;
+
+  /// No description provided for @tplTravelName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seyahat çantası'**
+  String get tplTravelName;
+
+  /// No description provided for @tplTravelItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kimlik / pasaport, Telefon şarj aleti, İlaçlar, Diş fırçası, Kıyafetler, Kulaklık'**
+  String get tplTravelItems;
+
+  /// No description provided for @tplTravelDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazır kontrol listesi'**
+  String get tplTravelDesc;
+
+  /// No description provided for @tplMeetingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Katılımcılar, gündem, kararlar'**
+  String get tplMeetingDesc;
+
+  /// No description provided for @tplJournalDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün nasıldı, minnettarlık, yarın'**
+  String get tplJournalDesc;
+
+  /// No description provided for @tplRecipeName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarif'**
+  String get tplRecipeName;
+
+  /// No description provided for @tplRecipeMeta.
+  ///
+  /// In tr, this message translates to:
+  /// **'Porsiyon: · Süre:'**
+  String get tplRecipeMeta;
+
+  /// No description provided for @tplRecipeIngredients.
+  ///
+  /// In tr, this message translates to:
+  /// **'Malzemeler'**
+  String get tplRecipeIngredients;
+
+  /// No description provided for @tplRecipeSteps.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapılışı'**
+  String get tplRecipeSteps;
+
+  /// No description provided for @tplRecipeNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar'**
+  String get tplRecipeNotes;
+
+  /// No description provided for @tplRecipeDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Malzemeler ve adımlar'**
+  String get tplRecipeDesc;
+
+  /// No description provided for @tplWeeklyName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık plan'**
+  String get tplWeeklyName;
+
+  /// No description provided for @tplWeeklyDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu haftanın günleri başlık başlık'**
+  String get tplWeeklyDesc;
+
+  /// No description provided for @tplExpenseDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih, açıklama, tutar'**
+  String get tplExpenseDesc;
+
+  /// No description provided for @tplReadingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaynak, özet, alıntılar'**
+  String get tplReadingDesc;
+
+  /// No description provided for @settingsThemeHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tema'**
+  String get settingsThemeHeader;
+
+  /// No description provided for @settingsCardsHeader.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kartlar ve listeler'**
+  String get settingsCardsHeader;
 }
 
 class _AppLocalizationsDelegate

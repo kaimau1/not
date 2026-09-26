@@ -79,6 +79,7 @@ final pendingUploadsProvider = Provider<({int pending, int failed})>((ref) {
   var pending = 0;
   var failed = 0;
   for (final note in notes) {
+    if (note.localOnly) continue;
     for (final a in note.attachments) {
       if (a.kind == AttachmentKind.video || a.isUploaded) continue;
       if (limitBytes != null && a.sizeBytes > limitBytes) continue;
@@ -304,6 +305,9 @@ class UploadQueue {
     // görseller PDF/ses kuyruğunun arkasında beklemesin.
     final jobs = <({Note note, Attachment attachment})>[];
     for (final note in notes) {
+      // Yalnız bu cihazda tutulan notun ekleri buluta GİTMEZ (bkz.
+      // LocalNotesStore) — senkronu kapatmanın anlamı bu.
+      if (note.localOnly) continue;
       for (final attachment in note.attachments) {
         // Görüntülü not buluta hiç gitmez (yalnızca cihazda saklanır).
         if (attachment.kind == AttachmentKind.video) continue;

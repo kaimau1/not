@@ -3983,4 +3983,111 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Não foi possível medir neste dispositivo.';
+
+  @override
+  String get localOnlyTurnOn => 'Parar de sincronizar';
+
+  @override
+  String get localOnlyTurnOff => 'Sincronizar esta nota';
+
+  @override
+  String get localOnlyBadge => 'Só neste dispositivo';
+
+  @override
+  String get localOnlyConfirmTitle => 'Manter esta nota só neste dispositivo?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'A nota e seus anexos são removidos da nuvem e não aparecerão nos seus outros dispositivos. Se você desinstalar o app ou trocar de celular, esta nota também se perde. Você pode reativar a sincronização quando quiser.';
+
+  @override
+  String get localOnlyConfirm => 'Parar';
+
+  @override
+  String get localOnlyOnDone => 'A nota agora está só neste dispositivo';
+
+  @override
+  String get localOnlyOffDone => 'A nota voltou a sincronizar';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Não é possível parar a sincronização de uma nota compartilhada';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Alguns anexos não puderam ser baixados. Verifique a conexão e tente de novo; a nota não mudou.';
+
+  @override
+  String get templatesTitle => 'Modelos';
+
+  @override
+  String get templatesSubtitle =>
+      'Comece com um layout pronto; tudo pode ser mudado depois.';
+
+  @override
+  String get fromTemplate => 'De um modelo';
+
+  @override
+  String get tplShoppingName => 'Lista de compras';
+
+  @override
+  String get tplShoppingItems => 'Pão, Leite, Ovos, Frutas, Legumes';
+
+  @override
+  String get tplShoppingDesc => 'Marque o que comprou; vai para baixo';
+
+  @override
+  String get tplTodoDesc => 'Lista vazia com a data de hoje';
+
+  @override
+  String get tplTravelName => 'Lista de bagagem';
+
+  @override
+  String get tplTravelItems =>
+      'Documento / passaporte, Carregador, Remédios, Escova de dentes, Roupas, Fones';
+
+  @override
+  String get tplTravelDesc => 'Checklist pronta';
+
+  @override
+  String get tplMeetingDesc => 'Participantes, pauta, decisões';
+
+  @override
+  String get tplJournalDesc => 'Como foi hoje, gratidão, amanhã';
+
+  @override
+  String get tplRecipeName => 'Receita';
+
+  @override
+  String get tplRecipeMeta => 'Porções: · Tempo:';
+
+  @override
+  String get tplRecipeIngredients => 'Ingredientes';
+
+  @override
+  String get tplRecipeSteps => 'Modo de preparo';
+
+  @override
+  String get tplRecipeNotes => 'Notas';
+
+  @override
+  String get tplRecipeDesc => 'Ingredientes e passos';
+
+  @override
+  String get tplWeeklyName => 'Plano semanal';
+
+  @override
+  String get tplWeeklyDesc => 'Os dias desta semana como títulos';
+
+  @override
+  String get tplExpenseDesc => 'Data, descrição, valor';
+
+  @override
+  String get tplReadingDesc => 'Fonte, resumo, citações';
+
+  @override
+  String get settingsThemeHeader => 'Tema';
+
+  @override
+  String get settingsCardsHeader => 'Cartões e listas';
 }

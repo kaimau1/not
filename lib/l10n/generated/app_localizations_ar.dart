@@ -3953,4 +3953,111 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'تعذّر القياس على هذا الجهاز.';
+
+  @override
+  String get localOnlyTurnOn => 'إيقاف المزامنة';
+
+  @override
+  String get localOnlyTurnOff => 'مزامنة هذه الملاحظة';
+
+  @override
+  String get localOnlyBadge => 'على هذا الجهاز فقط';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'الاحتفاظ بهذه الملاحظة على هذا الجهاز فقط؟';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'ستُحذف الملاحظة ومرفقاتها من السحابة ولن تظهر على أجهزتك الأخرى. إذا حذفت التطبيق أو غيّرت هاتفك فستضيع هذه الملاحظة أيضًا. يمكنك إعادة تشغيل المزامنة في أي وقت.';
+
+  @override
+  String get localOnlyConfirm => 'إيقاف';
+
+  @override
+  String get localOnlyOnDone => 'الملاحظة الآن على هذا الجهاز فقط';
+
+  @override
+  String get localOnlyOffDone => 'تتم مزامنة الملاحظة مجددًا';
+
+  @override
+  String get localOnlySharedBlocked => 'لا يمكن إيقاف مزامنة ملاحظة مشتركة';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'تعذّر تنزيل بعض المرفقات. تحقّق من الاتصال وحاول مجددًا؛ لم تتغير الملاحظة.';
+
+  @override
+  String get templatesTitle => 'القوالب';
+
+  @override
+  String get templatesSubtitle =>
+      'ابدأ بتخطيط جاهز؛ يمكنك تغيير كل شيء لاحقًا.';
+
+  @override
+  String get fromTemplate => 'من قالب';
+
+  @override
+  String get tplShoppingName => 'قائمة التسوق';
+
+  @override
+  String get tplShoppingItems => 'خبز, حليب, بيض, فاكهة, خضار';
+
+  @override
+  String get tplShoppingDesc => 'ضع علامة على ما اشتريته؛ ينتقل للأسفل';
+
+  @override
+  String get tplTodoDesc => 'قائمة فارغة بتاريخ اليوم';
+
+  @override
+  String get tplTravelName => 'قائمة الأمتعة';
+
+  @override
+  String get tplTravelItems =>
+      'الهوية / جواز السفر, الشاحن, الأدوية, فرشاة الأسنان, الملابس, السماعات';
+
+  @override
+  String get tplTravelDesc => 'قائمة تحقق جاهزة';
+
+  @override
+  String get tplMeetingDesc => 'الحضور، جدول الأعمال، القرارات';
+
+  @override
+  String get tplJournalDesc => 'كيف كان اليوم، الامتنان، الغد';
+
+  @override
+  String get tplRecipeName => 'وصفة';
+
+  @override
+  String get tplRecipeMeta => 'الحصص: · الوقت:';
+
+  @override
+  String get tplRecipeIngredients => 'المكونات';
+
+  @override
+  String get tplRecipeSteps => 'طريقة التحضير';
+
+  @override
+  String get tplRecipeNotes => 'ملاحظات';
+
+  @override
+  String get tplRecipeDesc => 'المكونات والخطوات';
+
+  @override
+  String get tplWeeklyName => 'خطة أسبوعية';
+
+  @override
+  String get tplWeeklyDesc => 'أيام هذا الأسبوع كعناوين';
+
+  @override
+  String get tplExpenseDesc => 'التاريخ، الوصف، المبلغ';
+
+  @override
+  String get tplReadingDesc => 'المصدر، الملخص، الاقتباسات';
+
+  @override
+  String get settingsThemeHeader => 'المظهر';
+
+  @override
+  String get settingsCardsHeader => 'البطاقات والقوائم';
 }

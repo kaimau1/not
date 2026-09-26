@@ -145,7 +145,8 @@ void main() {
     await tester.tap(find.byTooltip('Kopyala'));
     await tester.pumpAndSettle();
 
-    expect(copied.single, '[ ] Süt');
+    // Tek madde yalnız METNİYLE kopyalanır (2026-09-26, bkz. itemsCopyText).
+    expect(copied.single, 'Süt');
     // Kopyaladıktan sonra mod kapanır: seçim çubuğu kalkar.
     expect(find.byTooltip('Kopyala'), findsNothing);
   });

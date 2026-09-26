@@ -131,8 +131,26 @@ flutter {
     source = "../.."
 }
 
+// METİN TANIMA (OCR) MODELİ GOOGLE PLAY HİZMETLERİNDEN (kullanıcı isteği
+// 2026-09-26: "OCR'yi de taşıyalım"). google_mlkit_text_recognition eklentisi
+// ML Kit'in GÖMÜLÜ sürümünü getiriyor: libmlkit_google_ocr_pipeline.so
+// (11 MB) + ~1 MB model (koşu #409 boyut raporu). Gömülü paket dışlanıp aynı
+// API'yi (com.google.mlkit.vision.text + .latin.TextRecognizerOptions) Play
+// Hizmetleri üzerinden sunan paket konuyor; eklentinin Java kodu değişmeden
+// çalışır. Model manifestteki `com.google.mlkit.vision.DEPENDENCIES`
+// (ocr) ile kurulumda iner. BEDEL: Play Hizmetleri olmayan cihazda OCR yok
+// (barkodla aynı karar, bkz. gradle.properties).
+//
+// Dışlama YALNIZ bu modülün yapılandırmalarında: eklenti kendi modülünde
+// gömülü pakete karşı derlenir, uygulama paketlenirken yerine bu gelir.
+configurations.configureEach {
+    exclude(group = "com.google.mlkit", module = "text-recognition")
+    exclude(group = "com.google.mlkit", module = "text-recognition-bundled-common")
+}
+
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
     // Konum hatırlatıcısı: sistem geofence'i + tek seferlik konum okuması
     // (bkz. PlaceReminders.kt).
     implementation("com.google.android.gms:play-services-location:21.3.0")

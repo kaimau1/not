@@ -3908,4 +3908,108 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'この端末では測定できませんでした。';
+
+  @override
+  String get localOnlyTurnOn => '同期をオフ';
+
+  @override
+  String get localOnlyTurnOff => 'このメモを同期';
+
+  @override
+  String get localOnlyBadge => 'この端末のみ';
+
+  @override
+  String get localOnlyConfirmTitle => 'このメモをこの端末だけに保存しますか？';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'メモと添付ファイルはクラウドから削除され、他の端末には表示されません。アプリを削除したり機種変更したりすると、このメモも失われます。同期はいつでも再びオンにできます。';
+
+  @override
+  String get localOnlyConfirm => 'オフにする';
+
+  @override
+  String get localOnlyOnDone => 'メモはこの端末だけに保存されました';
+
+  @override
+  String get localOnlyOffDone => 'メモの同期を再開しました';
+
+  @override
+  String get localOnlySharedBlocked => '共有メモの同期はオフにできません';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      '一部の添付ファイルをダウンロードできませんでした。接続を確認して再試行してください。メモは変更されていません。';
+
+  @override
+  String get templatesTitle => 'テンプレート';
+
+  @override
+  String get templatesSubtitle => '既成のレイアウトから始めましょう。あとから何でも変更できます。';
+
+  @override
+  String get fromTemplate => 'テンプレートから';
+
+  @override
+  String get tplShoppingName => '買い物リスト';
+
+  @override
+  String get tplShoppingItems => 'パン, 牛乳, 卵, 果物, 野菜';
+
+  @override
+  String get tplShoppingDesc => '買ったものにチェックすると下へ';
+
+  @override
+  String get tplTodoDesc => '今日の日付の空のリスト';
+
+  @override
+  String get tplTravelName => '持ち物リスト';
+
+  @override
+  String get tplTravelItems => '身分証 / パスポート, 充電器, 薬, 歯ブラシ, 着替え, イヤホン';
+
+  @override
+  String get tplTravelDesc => 'すぐ使えるチェックリスト';
+
+  @override
+  String get tplMeetingDesc => '参加者・議題・決定事項';
+
+  @override
+  String get tplJournalDesc => '今日の振り返り・感謝・明日';
+
+  @override
+  String get tplRecipeName => 'レシピ';
+
+  @override
+  String get tplRecipeMeta => '分量: · 時間:';
+
+  @override
+  String get tplRecipeIngredients => '材料';
+
+  @override
+  String get tplRecipeSteps => '作り方';
+
+  @override
+  String get tplRecipeNotes => 'メモ';
+
+  @override
+  String get tplRecipeDesc => '材料と手順';
+
+  @override
+  String get tplWeeklyName => '週間プラン';
+
+  @override
+  String get tplWeeklyDesc => '今週の曜日を見出しに';
+
+  @override
+  String get tplExpenseDesc => '日付・内容・金額';
+
+  @override
+  String get tplReadingDesc => '出典・要約・引用';
+
+  @override
+  String get settingsThemeHeader => 'テーマ';
+
+  @override
+  String get settingsCardsHeader => 'カードとリスト';
 }

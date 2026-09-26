@@ -24,6 +24,7 @@ Future<String?> showNoteEditorMenu(
   required bool twoColumns,
   required bool hasFloatingImages,
   required bool hasAttachments,
+  bool? localOnly,
 }) {
   final l10n = context.l10n;
   return showModalBottomSheet<String>(
@@ -43,6 +44,7 @@ Future<String?> showNoteEditorMenu(
           twoColumns: twoColumns,
           hasFloatingImages: hasFloatingImages,
           hasAttachments: hasAttachments,
+          localOnly: localOnly,
         ),
       ),
     ),
@@ -60,7 +62,12 @@ class _MenuGrid extends StatelessWidget {
     required this.twoColumns,
     required this.hasFloatingImages,
     required this.hasAttachments,
+    this.localOnly,
   });
+
+  /// null = özellik yok (web ya da başkasının notu); true = not yalnız bu
+  /// cihazda (bkz. `toggleNoteLocalOnly`).
+  final bool? localOnly;
 
   final AppLocalizations l10n;
   final bool pinned;
@@ -132,6 +139,13 @@ class _MenuGrid extends StatelessWidget {
       // şeylerin düzeni"): kopyalamak için metni seçmek gerekiyordu; madde
       // listesinde bu hiç mümkün değildi (her madde ayrı alan).
       ('copyText', l10n.copy, Icons.copy_outlined),
+      // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26).
+      if (localOnly != null)
+        (
+          'localOnly',
+          localOnly! ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
+          localOnly! ? Icons.cloud_sync_outlined : Icons.cloud_off_outlined,
+        ),
       // "PDF olarak dışa aktar" DEĞİL: belge notlarında çıktı balonlu PDF de
       // olabiliyor, metin notlarında Word de üretiliyor. Etiket artık yolu
       // değil işi anlatıyor (bkz. not editöründeki `_export`).

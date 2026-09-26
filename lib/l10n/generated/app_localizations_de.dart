@@ -3987,4 +3987,112 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'Auf diesem Gerät nicht messbar.';
+
+  @override
+  String get localOnlyTurnOn => 'Synchronisierung aus';
+
+  @override
+  String get localOnlyTurnOff => 'Notiz synchronisieren';
+
+  @override
+  String get localOnlyBadge => 'Nur auf diesem Gerät';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Diese Notiz nur auf diesem Gerät behalten?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'Die Notiz und ihre Anhänge werden aus der Cloud entfernt und erscheinen nicht auf deinen anderen Geräten. Wenn du die App löschst oder das Handy wechselst, ist auch diese Notiz weg. Du kannst die Synchronisierung jederzeit wieder einschalten.';
+
+  @override
+  String get localOnlyConfirm => 'Synchronisierung aus';
+
+  @override
+  String get localOnlyOnDone => 'Die Notiz ist jetzt nur auf diesem Gerät';
+
+  @override
+  String get localOnlyOffDone => 'Die Notiz wird wieder synchronisiert';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Für geteilte Notizen kann die Synchronisierung nicht ausgeschaltet werden';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Einige Anhänge konnten nicht auf dieses Gerät geladen werden. Prüfe die Verbindung und versuche es erneut; die Notiz wurde nicht geändert.';
+
+  @override
+  String get templatesTitle => 'Vorlagen';
+
+  @override
+  String get templatesSubtitle =>
+      'Mit fertigem Aufbau starten; alles lässt sich später ändern.';
+
+  @override
+  String get fromTemplate => 'Aus Vorlage';
+
+  @override
+  String get tplShoppingName => 'Einkaufsliste';
+
+  @override
+  String get tplShoppingItems => 'Brot, Milch, Eier, Obst, Gemüse';
+
+  @override
+  String get tplShoppingDesc => 'Gekauftes abhaken, es rutscht nach unten';
+
+  @override
+  String get tplTodoDesc => 'Leere Liste mit heutigem Datum';
+
+  @override
+  String get tplTravelName => 'Packliste';
+
+  @override
+  String get tplTravelItems =>
+      'Ausweis / Reisepass, Ladegerät, Medikamente, Zahnbürste, Kleidung, Kopfhörer';
+
+  @override
+  String get tplTravelDesc => 'Fertige Checkliste';
+
+  @override
+  String get tplMeetingDesc => 'Teilnehmer, Agenda, Beschlüsse';
+
+  @override
+  String get tplJournalDesc => 'Wie war der Tag, Dankbarkeit, morgen';
+
+  @override
+  String get tplRecipeName => 'Rezept';
+
+  @override
+  String get tplRecipeMeta => 'Portionen: · Zeit:';
+
+  @override
+  String get tplRecipeIngredients => 'Zutaten';
+
+  @override
+  String get tplRecipeSteps => 'Zubereitung';
+
+  @override
+  String get tplRecipeNotes => 'Notizen';
+
+  @override
+  String get tplRecipeDesc => 'Zutaten und Schritte';
+
+  @override
+  String get tplWeeklyName => 'Wochenplan';
+
+  @override
+  String get tplWeeklyDesc => 'Die Tage dieser Woche als Überschriften';
+
+  @override
+  String get tplExpenseDesc => 'Datum, Beschreibung, Betrag';
+
+  @override
+  String get tplReadingDesc => 'Quelle, Zusammenfassung, Zitate';
+
+  @override
+  String get settingsThemeHeader => 'Design';
+
+  @override
+  String get settingsCardsHeader => 'Karten und Listen';
 }

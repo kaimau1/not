@@ -3964,4 +3964,110 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'इस डिवाइस पर मापा नहीं जा सका।';
+
+  @override
+  String get localOnlyTurnOn => 'सिंक बंद करें';
+
+  @override
+  String get localOnlyTurnOff => 'इस नोट को सिंक करें';
+
+  @override
+  String get localOnlyBadge => 'केवल इस डिवाइस पर';
+
+  @override
+  String get localOnlyConfirmTitle => 'क्या यह नोट केवल इस डिवाइस पर रखें?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'नोट और उसके अटैचमेंट क्लाउड से हट जाएंगे और आपके दूसरे डिवाइस पर नहीं दिखेंगे। ऐप हटाने या फ़ोन बदलने पर यह नोट भी चला जाएगा। आप कभी भी सिंक फिर से चालू कर सकते हैं।';
+
+  @override
+  String get localOnlyConfirm => 'बंद करें';
+
+  @override
+  String get localOnlyOnDone => 'नोट अब केवल इस डिवाइस पर है';
+
+  @override
+  String get localOnlyOffDone => 'नोट फिर से सिंक हो रहा है';
+
+  @override
+  String get localOnlySharedBlocked => 'साझा नोट का सिंक बंद नहीं किया जा सकता';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'कुछ अटैचमेंट डाउनलोड नहीं हो सके। कनेक्शन जाँचकर फिर कोशिश करें; नोट नहीं बदला।';
+
+  @override
+  String get templatesTitle => 'टेम्पलेट';
+
+  @override
+  String get templatesSubtitle =>
+      'तैयार ढांचे से शुरू करें; बाद में सब बदल सकते हैं।';
+
+  @override
+  String get fromTemplate => 'टेम्पलेट से';
+
+  @override
+  String get tplShoppingName => 'खरीदारी सूची';
+
+  @override
+  String get tplShoppingItems => 'ब्रेड, दूध, अंडे, फल, सब्ज़ियाँ';
+
+  @override
+  String get tplShoppingDesc => 'खरीदा हुआ चिह्नित करें; नीचे चला जाता है';
+
+  @override
+  String get tplTodoDesc => 'आज की तारीख वाली खाली सूची';
+
+  @override
+  String get tplTravelName => 'पैकिंग सूची';
+
+  @override
+  String get tplTravelItems =>
+      'पहचान पत्र / पासपोर्ट, चार्जर, दवाइयाँ, टूथब्रश, कपड़े, हेडफ़ोन';
+
+  @override
+  String get tplTravelDesc => 'तैयार चेकलिस्ट';
+
+  @override
+  String get tplMeetingDesc => 'प्रतिभागी, एजेंडा, निर्णय';
+
+  @override
+  String get tplJournalDesc => 'आज कैसा रहा, आभार, कल';
+
+  @override
+  String get tplRecipeName => 'रेसिपी';
+
+  @override
+  String get tplRecipeMeta => 'सर्विंग: · समय:';
+
+  @override
+  String get tplRecipeIngredients => 'सामग्री';
+
+  @override
+  String get tplRecipeSteps => 'विधि';
+
+  @override
+  String get tplRecipeNotes => 'नोट्स';
+
+  @override
+  String get tplRecipeDesc => 'सामग्री और चरण';
+
+  @override
+  String get tplWeeklyName => 'साप्ताहिक योजना';
+
+  @override
+  String get tplWeeklyDesc => 'इस सप्ताह के दिन शीर्षकों के रूप में';
+
+  @override
+  String get tplExpenseDesc => 'तारीख, विवरण, राशि';
+
+  @override
+  String get tplReadingDesc => 'स्रोत, सारांश, उद्धरण';
+
+  @override
+  String get settingsThemeHeader => 'थीम';
+
+  @override
+  String get settingsCardsHeader => 'कार्ड और सूचियाँ';
 }

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
 import '../../auth/presentation/auth_providers.dart';
+import '../../notes/data/local_notes_store.dart';
 import '../domain/note_folder.dart';
 
 final foldersRepositoryProvider = Provider<FoldersRepository?>((ref) {
@@ -354,6 +355,9 @@ class FoldersRepository {
   /// YOKSA izin hatası verir (kural erişimi aynadan çözüyor) — paylaşılmamış
   /// her klasörün silinmesi patlardı.
   Future<void> deleteFolder(String folderId, {bool shared = false}) async {
+    // Yalnız bu cihazda tutulan notlar sorguya girmez: klasörleri yerelde
+    // düşürülür (bkz. LocalNotesStore).
+    LocalNotesStore.forUid(uid)?.clearFolder(folderId);
     // SIRA ÖNEMLİ — sohbet, ayna dokümanı DURURKEN silinir: mesaj kuralı
     // erişim sorusunu `folderShares/{id}` üzerinden yanıtlıyor, ayna
     // silindikten sonra o kural kimseye (sahibe bile) izin vermez ve

@@ -95,6 +95,7 @@ import 'in_note_find.dart';
 import 'note_search_sheet.dart';
 import 'text_search.dart';
 import '../../domain/note_share_text.dart';
+import '../local_only_action.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
@@ -3348,6 +3349,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
       hasAttachments: note.attachments.isNotEmpty,
+      // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
+      // destekleniyorsa (web'de yok).
+      localOnly: widget.ownerId == null && localOnlySupported(ref)
+          ? ref.read(notesRepositoryProvider)?.isLocal(note.id) ?? false
+          : null,
     );
     if (action == null || !mounted) return;
     switch (action) {
@@ -3366,6 +3372,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _share();
       case 'copyText':
         await _copyNoteText();
+      case 'localOnly':
+        // Son yazım önce nota insin: yerel kopya en güncel hâli taşısın.
+        _flushPending(_titleController);
+        _flushPending(_bodyController);
+        if (!mounted) return;
+        final changed = await toggleNoteLocalOnly(context, ref, _note ?? note);
+        if (changed != null && mounted) setState(() {});
       case 'export':
         await _export();
       case 'listen':
@@ -6072,7 +6085,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
-        wholeNoteText: () => _note?.toPlainText() ?? '',
+        // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
+        wholeNoteText: () => _note == null
+            ? ''
+            : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
         header: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -6107,7 +6123,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
-        wholeNoteText: () => _note?.toPlainText() ?? '',
+        // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
+        wholeNoteText: () => _note == null
+            ? ''
+            : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
         header: (note.body.trim().isNotEmpty || _listBodyOpen)
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -6681,6 +6700,21 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             )
                             .value ??
                         false;
+                    // Yalnız bu cihazdaki not: bulut simgesi yerine telefon.
+                    if (owner == null &&
+                        (ref
+                                .read(notesRepositoryProvider)
+                                ?.isLocal(widget.noteId) ??
+                            false)) {
+                      return Tooltip(
+                        message: l10n.localOnlyBadge,
+                        child: Icon(
+                          Icons.cloud_off_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.tertiary,
+                        ),
+                      );
+                    }
                     return Tooltip(
                       message: pending ? l10n.syncPending : l10n.synced,
                       child: Icon(
@@ -6721,6 +6755,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                           ),
                         )
                       : 1;
+                  // Yalnız bu cihazdaki not kimseyle paylaşılamaz.
+                  if (owner == null &&
+                      (ref
+                              .read(notesRepositoryProvider)
+                              ?.isLocal(widget.noteId) ??
+                          false)) {
+                    return const SizedBox.shrink();
+                  }
                   return IconButton(
                     tooltip: count > 0
                         ? l10n.collaboratorsCount(count)

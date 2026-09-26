@@ -148,6 +148,7 @@ class Note {
     this.archivedAt,
     this.reminderAt,
     this.aiSummary,
+    this.localOnly = false,
   });
 
   final String id;
@@ -318,6 +319,13 @@ class Note {
   /// Doluysa bu tarihte yerel bildirim planlanır.
   final DateTime? reminderAt;
   final AiSummary? aiSummary;
+
+  /// **YALNIZ BU CİHAZDA** (kullanıcı isteği 2026-09-26: "senkronizasyon
+  /// kapatma nota özel"). Not Firestore'da DEĞİL, cihazdaki yerel depoda
+  /// yaşar (bkz. `LocalNotesStore`); başka cihazlara gitmez, ekleri buluta
+  /// yüklenmez. Kayda YAZILMAZ — notun nerede durduğunu belirten bir özellik,
+  /// içeriğin parçası değil ([toMap]'te yok).
+  final bool localOnly;
 
   /// "Boş" not sessizce silinebilir (editör kapanışı + arka plan temizliği).
   /// Hatırlatıcısı olan not boş SAYILMAZ: "sadece alarm" için metinsiz not
@@ -522,6 +530,7 @@ class Note {
     DateTime? reminderAt,
     bool clearReminderAt = false,
     AiSummary? aiSummary,
+    bool? localOnly,
   }) => Note(
     id: id,
     type: type ?? this.type,
@@ -561,13 +570,28 @@ class Note {
     archivedAt: clearArchivedAt ? null : (archivedAt ?? this.archivedAt),
     reminderAt: clearReminderAt ? null : (reminderAt ?? this.reminderAt),
     aiSummary: aiSummary ?? this.aiSummary,
+    localOnly: localOnly ?? this.localOnly,
     // Parametresi YOK: "kim yazdı" kaydın bir olgusu, çağıranın seçimi
     // değil — kopyada da olduğu gibi taşınır (bkz. [updatedBy]).
     updatedBy: updatedBy,
   );
 
-  factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final map = doc.data() ?? const <String, dynamic>{};
+  factory Note.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) =>
+      Note.fromMap(
+        doc.id,
+        doc.data() ?? const <String, dynamic>{},
+        pending: doc.metadata.hasPendingWrites,
+      );
+
+  /// Firestore biçimindeki kayıttan not (belge ya da yerel depo — bkz.
+  /// `LocalNotesStore`). [pending]: yazım sunucuya ulaşmadı (tarihsiz
+  /// kayıtta zaman ŞİMDİ sayılır, aşağıdaki gerekçe).
+  factory Note.fromMap(
+    String id,
+    Map<String, dynamic> map, {
+    bool pending = false,
+    bool localOnly = false,
+  }) {
     // Sunucuya ULAŞMAMIŞ yazımlarda `serverTimestamp()` yerel kopyada NULL
     // okunur. Tarihsiz not, "Son düzenlenen" sıralamasında en eskiye ("DAHA
     // ÖNCE" kovasına) düşüyor ve listenin en dibinde beliriyordu; ağ hızına
@@ -575,7 +599,6 @@ class Note {
     // "bazen oluşuyor bazen oluşmuyor" gibi görünüyordu. Bekleyen yazımda
     // zaman ŞİMDİ kabul edilir — sunucu damgası geldiğinde gerçek değerle
     // değişir. (Yalnız bekleyen yazımda: eski kayıtların tarihi uydurulmaz.)
-    final pending = doc.metadata.hasPendingWrites;
     final localNow = pending ? DateTime.now() : null;
     // GERİYE DÖNÜK ONARIM: eski sürüm `type` alanını KOŞULSUZ yazıyor ve
     // tanımadığı `pdf`/`slides` kimliğini `text`e düşürüp öyle geri
@@ -595,7 +618,8 @@ class Note {
       hasPageNotes: rawPageNotes.isNotEmpty,
     );
     return Note(
-      id: doc.id,
+      id: id,
+      localOnly: localOnly,
       type: type,
       title: map['title'] as String? ?? '',
       body: map['body'] as String? ?? '',
@@ -613,7 +637,7 @@ class Note {
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
           Attachment.fromMap(
             Map<String, dynamic>.from(raw as Map),
-            noteId: doc.id,
+            noteId: id,
           ),
       ],
       tags: [

@@ -3979,4 +3979,112 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'Tidak dapat diukur di perangkat ini.';
+
+  @override
+  String get localOnlyTurnOn => 'Hentikan sinkronisasi';
+
+  @override
+  String get localOnlyTurnOff => 'Sinkronkan catatan ini';
+
+  @override
+  String get localOnlyBadge => 'Hanya di perangkat ini';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Simpan catatan ini hanya di perangkat ini?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'Catatan dan lampirannya dihapus dari cloud dan tidak muncul di perangkat lain. Jika aplikasi dihapus atau Anda ganti ponsel, catatan ini juga hilang. Sinkronisasi bisa diaktifkan lagi kapan saja.';
+
+  @override
+  String get localOnlyConfirm => 'Hentikan';
+
+  @override
+  String get localOnlyOnDone => 'Catatan kini hanya di perangkat ini';
+
+  @override
+  String get localOnlyOffDone => 'Catatan disinkronkan lagi';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Sinkronisasi catatan bersama tidak bisa dimatikan';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Beberapa lampiran tidak dapat diunduh. Periksa koneksi lalu coba lagi; catatan tidak berubah.';
+
+  @override
+  String get templatesTitle => 'Templat';
+
+  @override
+  String get templatesSubtitle =>
+      'Mulai dengan tata letak siap pakai; semuanya bisa diubah nanti.';
+
+  @override
+  String get fromTemplate => 'Dari templat';
+
+  @override
+  String get tplShoppingName => 'Daftar belanja';
+
+  @override
+  String get tplShoppingItems => 'Roti, Susu, Telur, Buah, Sayur';
+
+  @override
+  String get tplShoppingDesc => 'Centang yang sudah dibeli; turun ke bawah';
+
+  @override
+  String get tplTodoDesc => 'Daftar kosong dengan tanggal hari ini';
+
+  @override
+  String get tplTravelName => 'Daftar bawaan';
+
+  @override
+  String get tplTravelItems =>
+      'KTP / paspor, Pengisi daya, Obat, Sikat gigi, Pakaian, Headphone';
+
+  @override
+  String get tplTravelDesc => 'Daftar periksa siap pakai';
+
+  @override
+  String get tplMeetingDesc => 'Peserta, agenda, keputusan';
+
+  @override
+  String get tplJournalDesc => 'Bagaimana hari ini, syukur, besok';
+
+  @override
+  String get tplRecipeName => 'Resep';
+
+  @override
+  String get tplRecipeMeta => 'Porsi: · Waktu:';
+
+  @override
+  String get tplRecipeIngredients => 'Bahan';
+
+  @override
+  String get tplRecipeSteps => 'Cara membuat';
+
+  @override
+  String get tplRecipeNotes => 'Catatan';
+
+  @override
+  String get tplRecipeDesc => 'Bahan dan langkah';
+
+  @override
+  String get tplWeeklyName => 'Rencana mingguan';
+
+  @override
+  String get tplWeeklyDesc => 'Hari-hari minggu ini sebagai judul';
+
+  @override
+  String get tplExpenseDesc => 'Tanggal, keterangan, jumlah';
+
+  @override
+  String get tplReadingDesc => 'Sumber, ringkasan, kutipan';
+
+  @override
+  String get settingsThemeHeader => 'Tema';
+
+  @override
+  String get settingsCardsHeader => 'Kartu dan daftar';
 }

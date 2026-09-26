@@ -3627,3 +3627,87 @@ APK **64,9 MB → 54,4 MB** (açılmış içerik 76,2 → 63,5 MB). libapp.so
 barkod modelleri pakette yok. Kalan en büyükler: libflutter 11,6, ML Kit OCR
 11,1 + ~1 MB model, dex 9,3, pdfium 5,0. Sonraki aday: OCR'ı Play
 Hizmetleri'ne taşımak (eklenti bunu sunmuyor, ayrı iş). v1.0.409 yayınlandı.
+
+## 2026-09-26 (2. tur) — OCR Play Hizmetleri'nde, nota özel senkron kapatma, şablonlar, kopyalama, kasma, ekran düzenleri
+
+`flutter analyze` temiz, `flutter test` **1046 test yeşil**.
+
+### OCR da Play Hizmetleri'nden
+`android/app/build.gradle.kts`: gömülü `com.google.mlkit:text-recognition`
+(+ `text-recognition-bundled-common`) UYGULAMA modülünün yapılandırmalarından
+dışlandı, yerine `play-services-mlkit-text-recognition:19.0.1`. Eklenti kendi
+modülünde gömülü pakete karşı derlenir; iki paket aynı API'yi
+(`com.google.mlkit.vision.text`, `.latin.TextRecognizerOptions`) sunduğu için
+Java kodu değişmeden çalışır. Manifest `DEPENDENCIES=barcode,ocr`.
+TUZAK: bu konteynerden dl.google.com / maven.google.com ERİŞİLEMİYOR (403) —
+POM'lar okunamadı, doğrulama CI derlemesine kaldı. Beklenen kazanç ~12 MB.
+
+### Nota özel senkron kapatma ("yalnız bu cihazda")
+Firestore'da tek bir belgeyi senkron dışı tutmanın yolu yok (bekleyen
+yazımlar ilk fırsatta gider). Karar: senkronu kapatılan not Firestore'dan
+ÇIKARILIR, `LocalNotesStore`'da (destek klasörü, `local_notes_<uid>.json`,
+Firestore biçiminde harita, `Timestamp` → `{"__ts": ms}`) yaşar.
+* `NotesRepository(local:)` yalnız KENDİ notlarımın deposunda dolu.
+  `watchNotes/watchTrash/watchNote/watchPendingWrites` bulut akışını yerel
+  depoyla birleştirir (`_withLocal`; aynı kimlik iki yerdeyse YEREL kazanır;
+  bulut ilk yayınlamadan yerel tek başına yayınlanmaz). Yazımlar
+  (`updateNote`, `updateFields*`, `reorderNotes`, `hardDelete`,
+  `patchAttachment`, boş-not temizliği, çöp boşaltma) kimliğe bakıp yönlenir.
+* `Note.fromDoc` → `Note.fromMap(id, map, pending:, localOnly:)`;
+  `Note.localOnly` kayda YAZILMAZ.
+* Yerel depo SENKRON okunur (ilk istendiğinde): asenkron yüklense açılışın ilk
+  anlarında yerel nota yazım "yerel değil" sanılıp bulutta yarım hayalet not
+  doğardı. Yazımlar 600 ms birikir, geçici dosya + yeniden adlandırma;
+  arka plana geçişte `flushAll`. Bozuk dosya `.bozuk` olarak yedeklenir.
+* Kapatma sırası: cihazda dosyası olmayan ekler İNDİRİLİR (olmazsa
+  `LocalOnlyException`, not değişmez) → yerel depoya yaz → Storage dosyaları
+  ve belge silinir. Açma: belge yazılır, yerel kopya ancak belge akışta
+  görününce silinir (ekrandan bir an kaybolmasın).
+* Yükleme kuyruğu, bekleyen yükleme sayacı ve bulut depolama sayacı yerel
+  notları atlar. Klasör silme ve hesap silme yerel depoya da iner.
+* `FieldValue.arrayUnion` yerelde desteklenmez → `appendAttachments` (defterin
+  "arşive kopyala"sı buna geçti). `FieldValue.serverTimestamp()/delete()`
+  eşitlikle tanınıyor (method-channel FieldValue'da `==` tanımlı).
+* Paylaşılan not (ortak not / paylaşılan klasör) yerel YAPILAMAZ; web'de
+  özellik yok (`forUid` null). Giriş: editör ⋮ ve kart işlem levhası; kartta
+  ve editör başlığında bulut-kapalı simgesi; yerel notta ortak çalışan düğmesi
+  gizli.
+
+### Şablonlar / modlar
+`note_templates.dart` (saf, testli): alışveriş listesi (hazır maddeler),
+yapılacaklar (tarihli), seyahat çantası, toplantı, günlük, tarif, haftalık
+plan (bu haftanın günleri, dilde), harcama, okuma notu. Yazı şablonları
+defterin `buildTemplateText` başlık biçimini kullanır. `createNote(title:,
+items:)` — not TEK yazımda dolu doğar. "+" menüsünde Arşiv defterinin yanına
+"Alışveriş listesi" + "Şablondan" (ekran görüntüsündeki boş hücreler),
+ana ekran ⋮ menüsünde "Şablondan".
+
+### Kopyalama
+Madde seçimiyle kopyalama `[ ] Süt` yazıyordu (kullanıcının mesajındaki
+satırlar tam böyleydi) → `itemsCopyText`: çok madde ☐/☑ (sıralıda 1.),
+TEK madde yalnız metin. "Tüm notu kopyala" da `noteShareText`.
+
+### Kasma ("güncellemeden sonra kasma başladı") — KÖK NEDEN (muhtemel)
+Geçen turun `FreezeWhenHidden`'ı ekran görünür olur olmaz, yani nottan geri
+dönüş animasyonunun İLK karesinde bütün ana ekranı (yüzlerce kart) birden
+kuruyordu → her dönüşte takılma. Artık animasyon boyunca eski görüntü kalır,
+güncelleme 380 ms sonra (animasyon bittikten sonra) tek seferde. Ayrıca
+açılıştaki geçici dosya süpürmesi görsel önbelleği klasörüne HİÇ girmiyor
+(eskiden yüzlerce dosyayı tek tek listeleyip atlıyordu). Cihazda ÖLÇÜLMEDİ.
+Diğer aday: Firestore önbellek tavanı (100 MB) — aşılmışsa 5 dakikada bir
+çöp toplama Firestore iş parçacığında çalışır; arayüzü kilitlemez ama
+akışları geciktirebilir. Kasma sürerse ilk bakılacak yer.
+
+### Ekran görüntülerindeki alanlar
+* "+" menüsü: bölüm başlıkları renkli çizgiyle, simgeler bölüm renginde
+  (yaz = birincil, yakala = üçüncül) yuvarlak içinde; iki yeni hücre.
+* Ayarlar → Görünüm: tema seçimi dört etiketsiz simge yerine ÖNİZLEMELİ tema
+  kartları (zemin/kart/yazı rengi, Sistem ikiye bölünmüş); "Tema" ve
+  "Kartlar ve listeler" alt başlıkları; bütün alanlarda anahtar satırları
+  derli toplu (`ListTileTheme.merge`: başlık 14/w600, açıklama küçük/soluk).
+* Ana ekran ⋮: Gelen notlar (vurgulu), Hatırlatıcılar (gelecektekiler),
+  Arşiv sayı rozetleri — menü açılırken `ref.read` (ekran bunlar için
+  yeniden kurulmaz); "Şablondan" ve "Klasör sırası" girişleri.
+
+### Çeviri
+34 yeni anahtar × 16 dil (14'ü makine çevirisi).

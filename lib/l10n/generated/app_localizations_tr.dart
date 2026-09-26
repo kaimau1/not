@@ -3961,4 +3961,111 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => 'Bu cihazda ölçülemedi.';
+
+  @override
+  String get localOnlyTurnOn => 'Senkronu kapat';
+
+  @override
+  String get localOnlyTurnOff => 'Senkronu aç';
+
+  @override
+  String get localOnlyBadge => 'Yalnız bu cihazda';
+
+  @override
+  String get localOnlyConfirmTitle => 'Bu not yalnız bu cihazda kalsın mı?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'Not ve ekleri buluttan silinir ve diğer cihazlarında görünmez. Uygulamayı silersen ya da telefonu değiştirirsen bu not da gider. Senkronu istediğin zaman yeniden açabilirsin.';
+
+  @override
+  String get localOnlyConfirm => 'Senkronu kapat';
+
+  @override
+  String get localOnlyOnDone => 'Not artık yalnız bu cihazda';
+
+  @override
+  String get localOnlyOffDone => 'Not yeniden senkronlanıyor';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Paylaşılan bir notun senkronu kapatılamaz';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Bazı ekler bu cihaza indirilemedi. Bağlantını kontrol edip yeniden dene; not değişmedi.';
+
+  @override
+  String get templatesTitle => 'Şablonlar';
+
+  @override
+  String get templatesSubtitle =>
+      'Hazır düzenle başla; her şey sonradan değiştirilebilir.';
+
+  @override
+  String get fromTemplate => 'Şablondan';
+
+  @override
+  String get tplShoppingName => 'Alışveriş listesi';
+
+  @override
+  String get tplShoppingItems => 'Ekmek, Süt, Yumurta, Meyve, Sebze';
+
+  @override
+  String get tplShoppingDesc => 'Alınanları işaretle, alta insin';
+
+  @override
+  String get tplTodoDesc => 'Bugünün tarihiyle boş liste';
+
+  @override
+  String get tplTravelName => 'Seyahat çantası';
+
+  @override
+  String get tplTravelItems =>
+      'Kimlik / pasaport, Telefon şarj aleti, İlaçlar, Diş fırçası, Kıyafetler, Kulaklık';
+
+  @override
+  String get tplTravelDesc => 'Hazır kontrol listesi';
+
+  @override
+  String get tplMeetingDesc => 'Katılımcılar, gündem, kararlar';
+
+  @override
+  String get tplJournalDesc => 'Bugün nasıldı, minnettarlık, yarın';
+
+  @override
+  String get tplRecipeName => 'Tarif';
+
+  @override
+  String get tplRecipeMeta => 'Porsiyon: · Süre:';
+
+  @override
+  String get tplRecipeIngredients => 'Malzemeler';
+
+  @override
+  String get tplRecipeSteps => 'Yapılışı';
+
+  @override
+  String get tplRecipeNotes => 'Notlar';
+
+  @override
+  String get tplRecipeDesc => 'Malzemeler ve adımlar';
+
+  @override
+  String get tplWeeklyName => 'Haftalık plan';
+
+  @override
+  String get tplWeeklyDesc => 'Bu haftanın günleri başlık başlık';
+
+  @override
+  String get tplExpenseDesc => 'Tarih, açıklama, tutar';
+
+  @override
+  String get tplReadingDesc => 'Kaynak, özet, alıntılar';
+
+  @override
+  String get settingsThemeHeader => 'Tema';
+
+  @override
+  String get settingsCardsHeader => 'Kartlar ve listeler';
 }

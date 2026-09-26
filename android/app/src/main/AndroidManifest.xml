@@ -30,13 +30,15 @@
         android:name="${applicationName}"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
-        <!-- QR/barkod modeli Play Hizmetleri'nden gelir (gradle.properties →
-             mobile_scanner.useUnbundled, APK'dan ~5,6 MB düştü). Bu satır
-             modelin uygulama KURULURKEN indirilmesini ister; yoksa ilk QR
-             taramasında indirme beklenirdi. -->
+        <!-- QR/barkod ve metin tanıma (OCR) modelleri Play Hizmetleri'nden
+             gelir (gradle.properties → mobile_scanner.useUnbundled ve
+             app/build.gradle.kts → play-services-mlkit-text-recognition;
+             APK'dan ~5,6 + ~12 MB düştü). Bu satır modellerin uygulama
+             KURULURKEN indirilmesini ister; yoksa ilk kullanımda indirme
+             beklenirdi. -->
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="barcode" />
+            android:value="barcode,ocr" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

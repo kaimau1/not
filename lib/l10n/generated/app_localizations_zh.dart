@@ -3887,4 +3887,107 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deviceStorageUnavailable => '无法在此设备上测量。';
+
+  @override
+  String get localOnlyTurnOn => '停止同步';
+
+  @override
+  String get localOnlyTurnOff => '同步此笔记';
+
+  @override
+  String get localOnlyBadge => '仅在此设备';
+
+  @override
+  String get localOnlyConfirmTitle => '仅在此设备上保留此笔记？';
+
+  @override
+  String get localOnlyConfirmBody =>
+      '笔记及其附件会从云端删除，不会出现在你的其他设备上。卸载应用或更换手机后，这条笔记也会丢失。你可以随时重新开启同步。';
+
+  @override
+  String get localOnlyConfirm => '停止同步';
+
+  @override
+  String get localOnlyOnDone => '笔记现在仅保存在此设备';
+
+  @override
+  String get localOnlyOffDone => '笔记已重新同步';
+
+  @override
+  String get localOnlySharedBlocked => '共享笔记无法停止同步';
+
+  @override
+  String get localOnlyDownloadFailed => '部分附件无法下载。请检查网络后重试；笔记未更改。';
+
+  @override
+  String get templatesTitle => '模板';
+
+  @override
+  String get templatesSubtitle => '从现成的布局开始，之后都可以修改。';
+
+  @override
+  String get fromTemplate => '从模板';
+
+  @override
+  String get tplShoppingName => '购物清单';
+
+  @override
+  String get tplShoppingItems => '面包, 牛奶, 鸡蛋, 水果, 蔬菜';
+
+  @override
+  String get tplShoppingDesc => '勾选已买的，自动移到下方';
+
+  @override
+  String get tplTodoDesc => '带今天日期的空清单';
+
+  @override
+  String get tplTravelName => '行李清单';
+
+  @override
+  String get tplTravelItems => '证件 / 护照, 充电器, 药品, 牙刷, 衣物, 耳机';
+
+  @override
+  String get tplTravelDesc => '现成的清单';
+
+  @override
+  String get tplMeetingDesc => '参会人、议程、决定';
+
+  @override
+  String get tplJournalDesc => '今天怎样、感恩、明天';
+
+  @override
+  String get tplRecipeName => '食谱';
+
+  @override
+  String get tplRecipeMeta => '份量： · 时间：';
+
+  @override
+  String get tplRecipeIngredients => '食材';
+
+  @override
+  String get tplRecipeSteps => '做法';
+
+  @override
+  String get tplRecipeNotes => '备注';
+
+  @override
+  String get tplRecipeDesc => '食材和步骤';
+
+  @override
+  String get tplWeeklyName => '每周计划';
+
+  @override
+  String get tplWeeklyDesc => '本周每天作为标题';
+
+  @override
+  String get tplExpenseDesc => '日期、说明、金额';
+
+  @override
+  String get tplReadingDesc => '来源、摘要、摘录';
+
+  @override
+  String get settingsThemeHeader => '主题';
+
+  @override
+  String get settingsCardsHeader => '卡片和列表';
 }

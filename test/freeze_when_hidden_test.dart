@@ -44,10 +44,16 @@ void main() {
     }
     expect(builds, before);
 
-    // Üstteki rota kapanınca en son veriyle kurulur.
+    // Üstteki rota kapanınca: geri dönüş animasyonu sırasında ESKİ görüntü
+    // kalır (animasyonun ilk karesinde ağır kurulum olmasın), bekleme
+    // bitince en son veriyle bir kez kurulur.
     navigator.currentState!.pop();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(builds, before);
     await tester.pumpAndSettle();
-    expect(builds, greaterThan(before));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(builds, before + 1);
     expect(find.text('d'), findsOneWidget);
   });
 

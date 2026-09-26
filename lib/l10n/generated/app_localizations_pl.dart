@@ -3984,4 +3984,112 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Nie można zmierzyć na tym urządzeniu.';
+
+  @override
+  String get localOnlyTurnOn => 'Wyłącz synchronizację';
+
+  @override
+  String get localOnlyTurnOff => 'Synchronizuj notatkę';
+
+  @override
+  String get localOnlyBadge => 'Tylko na tym urządzeniu';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Zachować tę notatkę tylko na tym urządzeniu?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'Notatka i jej załączniki zostaną usunięte z chmury i nie pojawią się na innych urządzeniach. Jeśli odinstalujesz aplikację lub zmienisz telefon, ta notatka też zniknie. Synchronizację możesz włączyć ponownie w dowolnej chwili.';
+
+  @override
+  String get localOnlyConfirm => 'Wyłącz';
+
+  @override
+  String get localOnlyOnDone => 'Notatka jest teraz tylko na tym urządzeniu';
+
+  @override
+  String get localOnlyOffDone => 'Notatka znów się synchronizuje';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Nie można wyłączyć synchronizacji udostępnionej notatki';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Nie udało się pobrać niektórych załączników. Sprawdź połączenie i spróbuj ponownie; notatka nie została zmieniona.';
+
+  @override
+  String get templatesTitle => 'Szablony';
+
+  @override
+  String get templatesSubtitle =>
+      'Zacznij od gotowego układu; wszystko zmienisz później.';
+
+  @override
+  String get fromTemplate => 'Z szablonu';
+
+  @override
+  String get tplShoppingName => 'Lista zakupów';
+
+  @override
+  String get tplShoppingItems => 'Chleb, Mleko, Jajka, Owoce, Warzywa';
+
+  @override
+  String get tplShoppingDesc => 'Odhacz kupione; spada na dół';
+
+  @override
+  String get tplTodoDesc => 'Pusta lista z dzisiejszą datą';
+
+  @override
+  String get tplTravelName => 'Lista do spakowania';
+
+  @override
+  String get tplTravelItems =>
+      'Dowód / paszport, Ładowarka, Leki, Szczoteczka do zębów, Ubrania, Słuchawki';
+
+  @override
+  String get tplTravelDesc => 'Gotowa lista kontrolna';
+
+  @override
+  String get tplMeetingDesc => 'Uczestnicy, agenda, decyzje';
+
+  @override
+  String get tplJournalDesc => 'Jak minął dzień, wdzięczność, jutro';
+
+  @override
+  String get tplRecipeName => 'Przepis';
+
+  @override
+  String get tplRecipeMeta => 'Porcje: · Czas:';
+
+  @override
+  String get tplRecipeIngredients => 'Składniki';
+
+  @override
+  String get tplRecipeSteps => 'Przygotowanie';
+
+  @override
+  String get tplRecipeNotes => 'Notatki';
+
+  @override
+  String get tplRecipeDesc => 'Składniki i kroki';
+
+  @override
+  String get tplWeeklyName => 'Plan tygodnia';
+
+  @override
+  String get tplWeeklyDesc => 'Dni tego tygodnia jako nagłówki';
+
+  @override
+  String get tplExpenseDesc => 'Data, opis, kwota';
+
+  @override
+  String get tplReadingDesc => 'Źródło, streszczenie, cytaty';
+
+  @override
+  String get settingsThemeHeader => 'Motyw';
+
+  @override
+  String get settingsCardsHeader => 'Karty i listy';
 }

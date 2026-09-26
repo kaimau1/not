@@ -3984,4 +3984,112 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Impossibile misurare su questo dispositivo.';
+
+  @override
+  String get localOnlyTurnOn => 'Interrompi sincronizzazione';
+
+  @override
+  String get localOnlyTurnOff => 'Sincronizza questa nota';
+
+  @override
+  String get localOnlyBadge => 'Solo su questo dispositivo';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Tenere questa nota solo su questo dispositivo?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'La nota e i suoi allegati vengono rimossi dal cloud e non compariranno sugli altri dispositivi. Se disinstalli l’app o cambi telefono, anche questa nota andrà persa. Puoi riattivare la sincronizzazione quando vuoi.';
+
+  @override
+  String get localOnlyConfirm => 'Interrompi';
+
+  @override
+  String get localOnlyOnDone => 'La nota ora è solo su questo dispositivo';
+
+  @override
+  String get localOnlyOffDone => 'La nota si sincronizza di nuovo';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Non si può disattivare la sincronizzazione di una nota condivisa';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Alcuni allegati non sono stati scaricati. Controlla la connessione e riprova; la nota non è cambiata.';
+
+  @override
+  String get templatesTitle => 'Modelli';
+
+  @override
+  String get templatesSubtitle =>
+      'Parti da un layout pronto; potrai cambiare tutto dopo.';
+
+  @override
+  String get fromTemplate => 'Da modello';
+
+  @override
+  String get tplShoppingName => 'Lista della spesa';
+
+  @override
+  String get tplShoppingItems => 'Pane, Latte, Uova, Frutta, Verdura';
+
+  @override
+  String get tplShoppingDesc => 'Spunta ciò che hai comprato; va in fondo';
+
+  @override
+  String get tplTodoDesc => 'Lista vuota con la data di oggi';
+
+  @override
+  String get tplTravelName => 'Lista bagagli';
+
+  @override
+  String get tplTravelItems =>
+      'Documento / passaporto, Caricatore, Medicine, Spazzolino, Vestiti, Cuffie';
+
+  @override
+  String get tplTravelDesc => 'Checklist pronta';
+
+  @override
+  String get tplMeetingDesc => 'Partecipanti, ordine del giorno, decisioni';
+
+  @override
+  String get tplJournalDesc => 'Com’è andata, gratitudine, domani';
+
+  @override
+  String get tplRecipeName => 'Ricetta';
+
+  @override
+  String get tplRecipeMeta => 'Porzioni: · Tempo:';
+
+  @override
+  String get tplRecipeIngredients => 'Ingredienti';
+
+  @override
+  String get tplRecipeSteps => 'Preparazione';
+
+  @override
+  String get tplRecipeNotes => 'Note';
+
+  @override
+  String get tplRecipeDesc => 'Ingredienti e passaggi';
+
+  @override
+  String get tplWeeklyName => 'Piano settimanale';
+
+  @override
+  String get tplWeeklyDesc => 'I giorni della settimana come titoli';
+
+  @override
+  String get tplExpenseDesc => 'Data, descrizione, importo';
+
+  @override
+  String get tplReadingDesc => 'Fonte, riassunto, citazioni';
+
+  @override
+  String get settingsThemeHeader => 'Tema';
+
+  @override
+  String get settingsCardsHeader => 'Schede ed elenchi';
 }

@@ -3980,4 +3980,112 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'No se pudo medir en este dispositivo.';
+
+  @override
+  String get localOnlyTurnOn => 'Dejar de sincronizar';
+
+  @override
+  String get localOnlyTurnOff => 'Sincronizar esta nota';
+
+  @override
+  String get localOnlyBadge => 'Solo en este dispositivo';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      '¿Mantener esta nota solo en este dispositivo?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'La nota y sus adjuntos se eliminan de la nube y no aparecerán en tus otros dispositivos. Si desinstalas la app o cambias de teléfono, esta nota también se pierde. Puedes volver a activar la sincronización cuando quieras.';
+
+  @override
+  String get localOnlyConfirm => 'Dejar de sincronizar';
+
+  @override
+  String get localOnlyOnDone => 'La nota ahora está solo en este dispositivo';
+
+  @override
+  String get localOnlyOffDone => 'La nota vuelve a sincronizarse';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'No se puede desactivar la sincronización de una nota compartida';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Algunos adjuntos no se pudieron descargar. Revisa la conexión e inténtalo de nuevo; la nota no cambió.';
+
+  @override
+  String get templatesTitle => 'Plantillas';
+
+  @override
+  String get templatesSubtitle =>
+      'Empieza con un diseño listo; todo se puede cambiar después.';
+
+  @override
+  String get fromTemplate => 'Desde plantilla';
+
+  @override
+  String get tplShoppingName => 'Lista de la compra';
+
+  @override
+  String get tplShoppingItems => 'Pan, Leche, Huevos, Fruta, Verduras';
+
+  @override
+  String get tplShoppingDesc => 'Marca lo comprado; baja al final';
+
+  @override
+  String get tplTodoDesc => 'Lista vacía con la fecha de hoy';
+
+  @override
+  String get tplTravelName => 'Lista de equipaje';
+
+  @override
+  String get tplTravelItems =>
+      'DNI / pasaporte, Cargador, Medicinas, Cepillo de dientes, Ropa, Auriculares';
+
+  @override
+  String get tplTravelDesc => 'Lista de control lista';
+
+  @override
+  String get tplMeetingDesc => 'Asistentes, agenda, decisiones';
+
+  @override
+  String get tplJournalDesc => 'Cómo fue hoy, gratitud, mañana';
+
+  @override
+  String get tplRecipeName => 'Receta';
+
+  @override
+  String get tplRecipeMeta => 'Raciones: · Tiempo:';
+
+  @override
+  String get tplRecipeIngredients => 'Ingredientes';
+
+  @override
+  String get tplRecipeSteps => 'Preparación';
+
+  @override
+  String get tplRecipeNotes => 'Notas';
+
+  @override
+  String get tplRecipeDesc => 'Ingredientes y pasos';
+
+  @override
+  String get tplWeeklyName => 'Plan semanal';
+
+  @override
+  String get tplWeeklyDesc => 'Los días de esta semana como encabezados';
+
+  @override
+  String get tplExpenseDesc => 'Fecha, descripción, importe';
+
+  @override
+  String get tplReadingDesc => 'Fuente, resumen, citas';
+
+  @override
+  String get settingsThemeHeader => 'Tema';
+
+  @override
+  String get settingsCardsHeader => 'Tarjetas y listas';
 }

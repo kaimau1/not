@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants.dart';
+import '../../notes/data/local_notes_store.dart';
 import '../presentation/auth_providers.dart';
 import 'auth_repository.dart';
 
@@ -36,6 +37,8 @@ class AccountService {
     final userDoc = firestore
         .collection(AppConstants.usersCollection)
         .doc(uid);
+    // Yalnız bu cihazda tutulan notlar da hesabın verisidir.
+    await LocalNotesStore.forUid(uid)?.clearAll();
     for (final name in const [
       AppConstants.notesCollection,
       AppConstants.foldersCollection,

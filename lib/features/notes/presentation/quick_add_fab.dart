@@ -48,7 +48,15 @@ class QuickAddFab extends StatefulWidget {
     required this.onImageNote,
     required this.onSlidesNote,
     required this.onQrNote,
+    this.onTemplate,
+    this.onShopping,
   });
+
+  /// Şablon levhasını açar (bkz. `QuickAddActions.createFromTemplate`).
+  final VoidCallback? onTemplate;
+
+  /// Doğrudan "Alışveriş listesi" şablonu — en sık istenen mod tek dokunuşta.
+  final VoidCallback? onShopping;
 
   /// Menünün demirlendiği nokta. Dashboard bunu mikrofon + "+" sütununun
   /// TAMAMINI saracak şekilde verir; menü sütunun tepesinden açılır ve
@@ -154,6 +162,21 @@ class _QuickAddFabState extends State<QuickAddFab> {
                   context.l10n.archiveNotebook,
                   () => widget.onCreate(NoteType.archive),
                 ),
+                // ŞABLONLAR / MODLAR (kullanıcı isteği 2026-09-26: "modlar,
+                // alışveriş listesi gibi"). Arşiv defterinin yanındaki boş
+                // iki hücreyi de doldurur (ekran görüntüsündeki boşluk).
+                if (widget.onShopping case final onShopping?)
+                  (
+                    Icons.shopping_cart_outlined,
+                    context.l10n.tplShoppingName,
+                    onShopping,
+                  ),
+                if (widget.onTemplate case final onTemplate?)
+                  (
+                    Icons.dashboard_customize_outlined,
+                    context.l10n.fromTemplate,
+                    onTemplate,
+                  ),
               ],
               // YAKALA: hepsi bir İÇERİKTEN not üretir (ses, fotoğraf, tarama,
               // el yazısı, video, QR). Bölüm başlığı bunu açıkça söylüyor —
@@ -344,7 +367,9 @@ class _QuickAddPanel extends StatefulWidget {
 class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
   static const _columns = 3;
-  static const _cellHeight = 64.0;
+  // Simge artık renkli bir yuvarlak içinde (bölümü renkle ayırır): hücre
+  // 8 dp uzadı.
+  static const _cellHeight = 72.0;
   static const _gap = 8.0;
 
   late final AnimationController _controller = AnimationController(
@@ -378,7 +403,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionLabel(l10n.quickAddWrite),
+            _SectionLabel(l10n.quickAddWrite, color: scheme.primary),
             Wrap(
               spacing: _gap,
               runSpacing: _gap,
@@ -390,6 +415,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                     child: _PanelButton(
                       icon: icon,
                       label: label,
+                      accent: scheme.primary,
                       onTap: () => widget.onSelected(action),
                     ),
                   ),
@@ -397,7 +423,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
             ),
             const SizedBox(height: 10),
             Divider(height: 1, color: scheme.outlineVariant),
-            _SectionLabel(l10n.quickAddCapture),
+            _SectionLabel(l10n.quickAddCapture, color: scheme.tertiary),
             Wrap(
               spacing: _gap,
               runSpacing: _gap,
@@ -409,6 +435,7 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                     child: _PanelButton(
                       icon: icon,
                       label: label,
+                      accent: scheme.tertiary,
                       onTap: () => widget.onSelected(action),
                     ),
                   ),
@@ -444,23 +471,47 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
 
 /// Panel bölüm başlığı (YAZ / YAKALA…).
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+  const _SectionLabel(this.text, {this.color});
 
   final String text;
 
+  /// Bölümün rengi — hücre simgeleriyle aynı (yaz = birincil, yakala =
+  /// üçüncül): iki bölüm başlığı okunmadan da ayırt edilsin.
+  final Color? color;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
-    child: Text(
-      text,
-      style: TextStyle(
-        fontSize: 10.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.5,
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color ?? muted,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: muted,
+              ),
+            ),
+          ),
+        ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Panel hücresi: üstte simge, altında etiket. Tonal zemin dokunulabilir
@@ -470,11 +521,15 @@ class _PanelButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
+    this.accent,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+
+  /// Simge yuvarlağının rengi (bölümün rengi).
+  final Color? accent;
 
   @override
   Widget build(BuildContext context) {
@@ -490,8 +545,22 @@ class _PanelButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 21, color: scheme.onSurfaceVariant),
-              const SizedBox(height: 6),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: (accent ?? scheme.onSurfaceVariant).withValues(
+                    alpha: 0.14,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: accent ?? scheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 5),
               Flexible(
                 child: Text(
                   label,

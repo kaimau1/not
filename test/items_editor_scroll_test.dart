@@ -104,6 +104,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Sıralı listede kopya numaralı biçimde çıkar.
-    expect(copied.single, '1. Şeker');
+    // Tek madde yalnız METNİYLE kopyalanır (2026-09-26, bkz. itemsCopyText).
+    expect(copied.single, 'Şeker');
   });
 }

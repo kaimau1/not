@@ -14,6 +14,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import 'color_picker_sheet.dart';
+import 'local_only_action.dart';
 import 'note_stats_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
@@ -40,7 +41,11 @@ Future<void> showNoteActionsSheet(
     isScrollControlled: true,
     builder: (sheetContext) => SafeArea(
       child: SingleChildScrollView(
-        child: _ActionsGrid(note: note, l10n: l10n),
+        child: _ActionsGrid(
+          note: note,
+          l10n: l10n,
+          localOnlyAvailable: localOnlySupported(ref),
+        ),
       ),
     ),
   );
@@ -52,10 +57,17 @@ Future<void> showNoteActionsSheet(
 /// taşıyan dokunma hedefidir; "Sil" ayrı satırda ve uyarı renginde durur ki
 /// yıkıcı işlem yanlışlıkla seçilmesin.
 class _ActionsGrid extends StatelessWidget {
-  const _ActionsGrid({required this.note, required this.l10n});
+  const _ActionsGrid({
+    required this.note,
+    required this.l10n,
+    this.localOnlyAvailable = false,
+  });
 
   final Note note;
   final AppLocalizations l10n;
+
+  /// "Senkronu kapat/aç" gösterilsin mi (bkz. `localOnlySupported`).
+  final bool localOnlyAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +122,15 @@ class _ActionsGrid extends StatelessWidget {
         note.locked ? l10n.unlockNote : l10n.lockNote,
         note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
       ),
+      // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26). Web'de yok.
+      if (localOnlyAvailable)
+        (
+          'localOnly',
+          note.localOnly ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
+          note.localOnly
+              ? Icons.cloud_sync_outlined
+              : Icons.cloud_off_outlined,
+        ),
     ];
 
     Widget tile(
@@ -275,6 +296,9 @@ Future<void> _runNoteAction(
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => PdfExportScreen(note: note)),
       );
+    case 'localOnly':
+      if (!context.mounted) return;
+      await toggleNoteLocalOnly(context, ref, note);
     case 'copy':
       if (!await unlockIfNeeded()) return;
       // Paylaşımla AYNI biçim (bkz. noteShareText): `- [ ]` işaretleri yok.

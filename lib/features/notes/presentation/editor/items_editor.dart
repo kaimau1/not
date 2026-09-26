@@ -10,6 +10,7 @@ import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
+import '../../domain/note_share_text.dart';
 import 'format_menu.dart';
 import 'text_wrap.dart';
 
@@ -1130,18 +1131,13 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// [stripRichMarkers]'tan geçer: biçimli madde panoya `**süt al**` diye
   /// işaretli gitmesin (Note.toPlainText ile aynı kural).
   Future<void> _copySelected() async {
-    final buffer = StringBuffer();
-    var order = 1;
-    for (final item in _items) {
-      if (!_selected.contains(item.id)) continue;
-      final text = stripRichMarkers(item.text);
-      if (widget.showCheckboxes) {
-        buffer.writeln('${item.checked ? '[x]' : '[ ]'} $text');
-      } else {
-        buffer.writeln('${order++}. $text');
-      }
-    }
-    await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
+    // Paylaşımla aynı düzen (bkz. itemsCopyText): `[ ]` yerine ☐/☑, tek
+    // maddede yalnız metin.
+    final text = itemsCopyText([
+      for (final item in _items)
+        if (_selected.contains(item.id)) item,
+    ], checkboxes: widget.showCheckboxes);
+    await Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     _exitSelection();
     ScaffoldMessenger.of(context)
@@ -1218,16 +1214,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     if (whole != null && whole.trim().isNotEmpty) {
       text = whole.trim();
     } else {
-      final buffer = StringBuffer();
-      for (var i = 0; i < _items.length; i++) {
-        final line = stripRichMarkers(_items[i].text);
-        if (widget.showCheckboxes) {
-          buffer.writeln('${_items[i].checked ? '[x]' : '[ ]'} $line');
-        } else {
-          buffer.writeln('${i + 1}. $line');
-        }
-      }
-      text = buffer.toString().trim();
+      text = itemsCopyText(_items, checkboxes: widget.showCheckboxes);
     }
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {

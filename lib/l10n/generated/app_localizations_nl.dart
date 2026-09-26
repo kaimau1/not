@@ -3984,4 +3984,112 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get deviceStorageUnavailable =>
       'Kon op dit apparaat niet worden gemeten.';
+
+  @override
+  String get localOnlyTurnOn => 'Synchronisatie uit';
+
+  @override
+  String get localOnlyTurnOff => 'Deze notitie synchroniseren';
+
+  @override
+  String get localOnlyBadge => 'Alleen op dit apparaat';
+
+  @override
+  String get localOnlyConfirmTitle =>
+      'Deze notitie alleen op dit apparaat houden?';
+
+  @override
+  String get localOnlyConfirmBody =>
+      'De notitie en bijlagen worden uit de cloud verwijderd en verschijnen niet op je andere apparaten. Als je de app verwijdert of van telefoon wisselt, is deze notitie ook weg. Je kunt synchronisatie altijd weer aanzetten.';
+
+  @override
+  String get localOnlyConfirm => 'Synchronisatie uit';
+
+  @override
+  String get localOnlyOnDone => 'De notitie staat nu alleen op dit apparaat';
+
+  @override
+  String get localOnlyOffDone => 'De notitie synchroniseert weer';
+
+  @override
+  String get localOnlySharedBlocked =>
+      'Synchronisatie van een gedeelde notitie kan niet uit';
+
+  @override
+  String get localOnlyDownloadFailed =>
+      'Sommige bijlagen konden niet worden gedownload. Controleer je verbinding en probeer opnieuw; de notitie is niet gewijzigd.';
+
+  @override
+  String get templatesTitle => 'Sjablonen';
+
+  @override
+  String get templatesSubtitle =>
+      'Begin met een kant-en-klare opzet; alles is later aan te passen.';
+
+  @override
+  String get fromTemplate => 'Van sjabloon';
+
+  @override
+  String get tplShoppingName => 'Boodschappenlijst';
+
+  @override
+  String get tplShoppingItems => 'Brood, Melk, Eieren, Fruit, Groente';
+
+  @override
+  String get tplShoppingDesc => 'Vink af wat je kocht; het zakt naar onder';
+
+  @override
+  String get tplTodoDesc => 'Lege lijst met de datum van vandaag';
+
+  @override
+  String get tplTravelName => 'Paklijst';
+
+  @override
+  String get tplTravelItems =>
+      'ID / paspoort, Oplader, Medicijnen, Tandenborstel, Kleding, Koptelefoon';
+
+  @override
+  String get tplTravelDesc => 'Kant-en-klare checklist';
+
+  @override
+  String get tplMeetingDesc => 'Deelnemers, agenda, besluiten';
+
+  @override
+  String get tplJournalDesc => 'Hoe was vandaag, dankbaarheid, morgen';
+
+  @override
+  String get tplRecipeName => 'Recept';
+
+  @override
+  String get tplRecipeMeta => 'Porties: · Tijd:';
+
+  @override
+  String get tplRecipeIngredients => 'Ingrediënten';
+
+  @override
+  String get tplRecipeSteps => 'Bereiding';
+
+  @override
+  String get tplRecipeNotes => 'Notities';
+
+  @override
+  String get tplRecipeDesc => 'Ingrediënten en stappen';
+
+  @override
+  String get tplWeeklyName => 'Weekplanning';
+
+  @override
+  String get tplWeeklyDesc => 'De dagen van deze week als kopjes';
+
+  @override
+  String get tplExpenseDesc => 'Datum, omschrijving, bedrag';
+
+  @override
+  String get tplReadingDesc => 'Bron, samenvatting, citaten';
+
+  @override
+  String get settingsThemeHeader => 'Thema';
+
+  @override
+  String get settingsCardsHeader => 'Kaarten en lijsten';
 }

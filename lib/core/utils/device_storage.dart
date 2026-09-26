@@ -57,19 +57,32 @@ Future<int> pruneTempFiles({
     final root = dir ?? await getTemporaryDirectory();
     final limit = (now ?? DateTime.now()).subtract(olderThan);
     var freed = 0;
-    await for (final entity in root.list(recursive: true, followLinks: false)) {
-      if (entity is! File) continue;
-      final rel = p.relative(entity.path, from: root.path);
-      if (p.split(rel).first == DeviceStorage.imageCacheDir) continue;
-      try {
-        final stat = await entity.stat();
-        if (stat.modified.isAfter(limit)) continue;
-        await entity.delete();
-        freed += stat.size;
-      } catch (_) {
-        // Kullanımda / izinsiz dosya: atla.
+    // Görsel önbelleğinin klasörüne HİÇ girilmez (kasma, 2026-09-26): eski
+    // sürüm her şeyi özyinelemeli listeleyip onun yüzlerce dosyasını tek
+    // tek atlıyordu — açılışın ilk saniyelerinde ana iş parçacığında boşa
+    // iş.
+    Future<void> sweep(Directory dir, {required bool top}) async {
+      await for (final entity in dir.list(followLinks: false)) {
+        if (entity is Directory) {
+          if (top && p.basename(entity.path) == DeviceStorage.imageCacheDir) {
+            continue;
+          }
+          await sweep(entity, top: false);
+          continue;
+        }
+        if (entity is! File) continue;
+        try {
+          final stat = await entity.stat();
+          if (stat.modified.isAfter(limit)) continue;
+          await entity.delete();
+          freed += stat.size;
+        } catch (_) {
+          // Kullanımda / izinsiz dosya: atla.
+        }
       }
     }
+
+    await sweep(root, top: true);
     return freed;
   } catch (_) {
     return 0;
