@@ -30,6 +30,13 @@
         android:name="${applicationName}"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher">
+        <!-- QR/barkod modeli Play Hizmetleri'nden gelir (gradle.properties →
+             mobile_scanner.useUnbundled, APK'dan ~5,6 MB düştü). Bu satır
+             modelin uygulama KURULURKEN indirilmesini ister; yoksa ilk QR
+             taramasında indirme beklenirdi. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -3830,4 +3830,158 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Narzędzia';
+
+  @override
+  String get folderOrderTitle => 'Kolejność folderów';
+
+  @override
+  String get folderReorder => 'Zmień kolejność folderów';
+
+  @override
+  String get folderOrderManual => 'Własna';
+
+  @override
+  String get folderOrderName => 'Według nazwy';
+
+  @override
+  String get folderOrderNewest => 'Najnowsze najpierw';
+
+  @override
+  String get folderOrderNoteCount => 'Według liczby notatek';
+
+  @override
+  String get folderOrderHint =>
+      'Przeciągnij uchwyty, aby zmienić kolejność. Ta sama kolejność obowiązuje na pasku folderów i przy przesuwaniu.';
+
+  @override
+  String get swipeModeTitle => 'Przesuwanie na ekranie głównym';
+
+  @override
+  String get swipeModeFolders => 'Przełączaj foldery';
+
+  @override
+  String get swipeModeFilters => 'Przełączaj filtry i tagi';
+
+  @override
+  String get swipeModeBoth => 'Foldery, filtry i tagi';
+
+  @override
+  String get swipeModeOff => 'Wyłączone';
+
+  @override
+  String get shareIncludeTitle => 'Tytuł';
+
+  @override
+  String get shareIncludeChecked => 'Ukończone';
+
+  @override
+  String get shareIncludeTags => 'Tagi';
+
+  @override
+  String get shareTextAction => 'Udostępnij tekst';
+
+  @override
+  String get shareAsFileSection => 'Jako plik';
+
+  @override
+  String get shareInAppSection => 'W aplikacji';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Umieszcza kopię notatki w skrzynce znajomego.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Edytuj tę samą notatkę z przyjaciółmi; zmiany widać od razu.';
+
+  @override
+  String get findPrevious => 'Poprzednie trafienie';
+
+  @override
+  String get findNext => 'Następne trafienie';
+
+  @override
+  String get findShowAll => 'Wszystkie trafienia';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trafienia',
+      many: '$count trafień',
+      few: '$count trafienia',
+      one: '1 trafienie',
+      zero: 'Brak trafień',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Szukaj w załącznikach i z AI';
+
+  @override
+  String get notesSettingsTitle => 'Notatki i foldery';
+
+  @override
+  String get noteViewSetting => 'Układ ekranu głównego';
+
+  @override
+  String get noteViewGrid => 'Siatka';
+
+  @override
+  String get noteViewList => 'Lista';
+
+  @override
+  String get gridColumnsSetting => 'Kolumny';
+
+  @override
+  String get gridColumnsInfo =>
+      'Możesz też zmienić to gestem szczypania na ekranie głównym.';
+
+  @override
+  String get gridColumnsAuto => 'Automatycznie';
+
+  @override
+  String get folderShelfSetting => 'Foldery na ekranie głównym';
+
+  @override
+  String get folderShelfStrip => 'Jeden wiersz';
+
+  @override
+  String get folderShelfTiles => 'Kafelki';
+
+  @override
+  String get deviceStorageTitle => 'Na tym urządzeniu';
+
+  @override
+  String get deviceStorageAttachments => 'Załączniki';
+
+  @override
+  String get deviceStorageDatabase => 'Lokalna kopia notatek';
+
+  @override
+  String get deviceStorageCache => 'Pamięć podręczna i pliki tymczasowe';
+
+  @override
+  String get deviceStorageAi => 'Pamięć podręczna AI';
+
+  @override
+  String get deviceStorageTotal => 'Razem (bez samej aplikacji)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Wyczyszczenie pamięci nie usuwa notatek ani załączników; obrazy pobiorą się ponownie w razie potrzeby. Stare pliki tymczasowe są usuwane przy każdym uruchomieniu.';
+
+  @override
+  String get deviceStorageClear => 'Wyczyść pamięć podręczną';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return 'Zwolniono $size';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Nie można zmierzyć na tym urządzeniu.';
 }

@@ -3811,4 +3811,154 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Araçlar';
+
+  @override
+  String get folderOrderTitle => 'Klasör sırası';
+
+  @override
+  String get folderReorder => 'Klasörleri sırala';
+
+  @override
+  String get folderOrderManual => 'Elle';
+
+  @override
+  String get folderOrderName => 'Ada göre';
+
+  @override
+  String get folderOrderNewest => 'En yeni önce';
+
+  @override
+  String get folderOrderNoteCount => 'Not sayısına göre';
+
+  @override
+  String get folderOrderHint =>
+      'Tutamaktan sürükleyerek sıralayın. Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.';
+
+  @override
+  String get swipeModeTitle => 'Ana ekranda yana kaydırınca';
+
+  @override
+  String get swipeModeFolders => 'Klasörler arasında geç';
+
+  @override
+  String get swipeModeFilters => 'Süzgeçler ve etiketler arasında geç';
+
+  @override
+  String get swipeModeBoth => 'Klasörler, süzgeçler ve etiketler';
+
+  @override
+  String get swipeModeOff => 'Kapalı';
+
+  @override
+  String get shareIncludeTitle => 'Başlık';
+
+  @override
+  String get shareIncludeChecked => 'Tamamlananlar';
+
+  @override
+  String get shareIncludeTags => 'Etiketler';
+
+  @override
+  String get shareTextAction => 'Metni paylaş';
+
+  @override
+  String get shareAsFileSection => 'Dosya olarak';
+
+  @override
+  String get shareInAppSection => 'Uygulama içinde';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Notun bir kopyasını arkadaşının gelen kutusuna bırakır.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Arkadaşlarınla aynı notu birlikte düzenle; değişiklikler anında görünür.';
+
+  @override
+  String get findPrevious => 'Önceki eşleşme';
+
+  @override
+  String get findNext => 'Sonraki eşleşme';
+
+  @override
+  String get findShowAll => 'Tüm eşleşmeler';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count eşleşme',
+      zero: 'Eşleşme yok',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Eklerde ve YZ ile ara';
+
+  @override
+  String get notesSettingsTitle => 'Notlar ve klasörler';
+
+  @override
+  String get noteViewSetting => 'Ana ekran görünümü';
+
+  @override
+  String get noteViewGrid => 'Izgara';
+
+  @override
+  String get noteViewList => 'Liste';
+
+  @override
+  String get gridColumnsSetting => 'Sütun sayısı';
+
+  @override
+  String get gridColumnsInfo =>
+      'Ana ekranda iki parmakla yakınlaştırarak da değiştirebilirsin.';
+
+  @override
+  String get gridColumnsAuto => 'Otomatik';
+
+  @override
+  String get folderShelfSetting => 'Klasörler ana ekranda';
+
+  @override
+  String get folderShelfStrip => 'Tek satır';
+
+  @override
+  String get folderShelfTiles => 'Karolar';
+
+  @override
+  String get deviceStorageTitle => 'Bu cihazda';
+
+  @override
+  String get deviceStorageAttachments => 'Ekler';
+
+  @override
+  String get deviceStorageDatabase => 'Notların yerel kopyası';
+
+  @override
+  String get deviceStorageCache => 'Önbellek ve geçici dosyalar';
+
+  @override
+  String get deviceStorageAi => 'Yapay zekâ önbelleği';
+
+  @override
+  String get deviceStorageTotal => 'Toplam (uygulamanın kendisi hariç)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Önbelleği temizlemek notları ve ekleri silmez; görseller gerektikçe yeniden iner. Eski geçici dosyalar zaten her açılışta temizlenir.';
+
+  @override
+  String get deviceStorageClear => 'Önbelleği temizle';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size boşaltıldı';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'Bu cihazda ölçülemedi.';
 }

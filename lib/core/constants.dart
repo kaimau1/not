@@ -146,6 +146,11 @@ abstract final class AppConstants {
   // sunucu zorlaması için her yüklemede Firestore okuyan bir Storage kuralı
   // ya da Cloud Function gerekir; kişisel not uygulamasında gereksiz.
   // ponytail: Play Billing eklenirken sunucu tarafı sayaç da düşünülmeli.
+  /// Firestore yerel önbelleğinin tavanı (main.dart). 100 MB, binlerce
+  /// notu fazlasıyla taşır; canlı dinlenen belgeler tavandan bağımsız
+  /// yerelde kalır. Eskiden `CACHE_SIZE_UNLIMITED` idi (bkz. DeviceStorage).
+  static const int firestoreCacheBytes = 100 * 1024 * 1024; // 100 MB
+
   static const int maxFreeStorageBytes = 50 * 1024 * 1024; // 50 MB
   static const int maxPremiumStorageBytes = 2 * 1024 * 1024 * 1024; // 2 GB
   /// Görsel eklerin saklandığı/senkronlandığı en büyük kenar (px).

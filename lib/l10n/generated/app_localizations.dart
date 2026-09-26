@@ -6911,6 +6911,276 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Araçlar'**
   String get aiToolsSection;
+
+  /// No description provided for @folderOrderTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasör sırası'**
+  String get folderOrderTitle;
+
+  /// No description provided for @folderReorder.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörleri sırala'**
+  String get folderReorder;
+
+  /// No description provided for @folderOrderManual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elle'**
+  String get folderOrderManual;
+
+  /// No description provided for @folderOrderName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ada göre'**
+  String get folderOrderName;
+
+  /// No description provided for @folderOrderNewest.
+  ///
+  /// In tr, this message translates to:
+  /// **'En yeni önce'**
+  String get folderOrderNewest;
+
+  /// No description provided for @folderOrderNoteCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not sayısına göre'**
+  String get folderOrderNoteCount;
+
+  /// No description provided for @folderOrderHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tutamaktan sürükleyerek sıralayın. Bu sıra klasör şeridinde ve yana kaydırırken de kullanılır.'**
+  String get folderOrderHint;
+
+  /// No description provided for @swipeModeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranda yana kaydırınca'**
+  String get swipeModeTitle;
+
+  /// No description provided for @swipeModeFolders.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler arasında geç'**
+  String get swipeModeFolders;
+
+  /// No description provided for @swipeModeFilters.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süzgeçler ve etiketler arasında geç'**
+  String get swipeModeFilters;
+
+  /// No description provided for @swipeModeBoth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler, süzgeçler ve etiketler'**
+  String get swipeModeBoth;
+
+  /// No description provided for @swipeModeOff.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get swipeModeOff;
+
+  /// No description provided for @shareIncludeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlık'**
+  String get shareIncludeTitle;
+
+  /// No description provided for @shareIncludeChecked.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tamamlananlar'**
+  String get shareIncludeChecked;
+
+  /// No description provided for @shareIncludeTags.
+  ///
+  /// In tr, this message translates to:
+  /// **'Etiketler'**
+  String get shareIncludeTags;
+
+  /// No description provided for @shareTextAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni paylaş'**
+  String get shareTextAction;
+
+  /// No description provided for @shareAsFileSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Dosya olarak'**
+  String get shareAsFileSection;
+
+  /// No description provided for @shareInAppSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama içinde'**
+  String get shareInAppSection;
+
+  /// No description provided for @shareSendFriendInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun bir kopyasını arkadaşının gelen kutusuna bırakır.'**
+  String get shareSendFriendInfo;
+
+  /// No description provided for @shareCollaborateInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşlarınla aynı notu birlikte düzenle; değişiklikler anında görünür.'**
+  String get shareCollaborateInfo;
+
+  /// No description provided for @findPrevious.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki eşleşme'**
+  String get findPrevious;
+
+  /// No description provided for @findNext.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonraki eşleşme'**
+  String get findNext;
+
+  /// No description provided for @findShowAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm eşleşmeler'**
+  String get findShowAll;
+
+  /// No description provided for @findMatchCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =0{Eşleşme yok} other{{count} eşleşme}}'**
+  String findMatchCount(int count);
+
+  /// No description provided for @findDeepSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklerde ve YZ ile ara'**
+  String get findDeepSearch;
+
+  /// No description provided for @notesSettingsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar ve klasörler'**
+  String get notesSettingsTitle;
+
+  /// No description provided for @noteViewSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran görünümü'**
+  String get noteViewSetting;
+
+  /// No description provided for @noteViewGrid.
+  ///
+  /// In tr, this message translates to:
+  /// **'Izgara'**
+  String get noteViewGrid;
+
+  /// No description provided for @noteViewList.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste'**
+  String get noteViewList;
+
+  /// No description provided for @gridColumnsSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sütun sayısı'**
+  String get gridColumnsSetting;
+
+  /// No description provided for @gridColumnsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekranda iki parmakla yakınlaştırarak da değiştirebilirsin.'**
+  String get gridColumnsInfo;
+
+  /// No description provided for @gridColumnsAuto.
+  ///
+  /// In tr, this message translates to:
+  /// **'Otomatik'**
+  String get gridColumnsAuto;
+
+  /// No description provided for @folderShelfSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasörler ana ekranda'**
+  String get folderShelfSetting;
+
+  /// No description provided for @folderShelfStrip.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek satır'**
+  String get folderShelfStrip;
+
+  /// No description provided for @folderShelfTiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Karolar'**
+  String get folderShelfTiles;
+
+  /// No description provided for @deviceStorageTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda'**
+  String get deviceStorageTitle;
+
+  /// No description provided for @deviceStorageAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler'**
+  String get deviceStorageAttachments;
+
+  /// No description provided for @deviceStorageDatabase.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notların yerel kopyası'**
+  String get deviceStorageDatabase;
+
+  /// No description provided for @deviceStorageCache.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önbellek ve geçici dosyalar'**
+  String get deviceStorageCache;
+
+  /// No description provided for @deviceStorageAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ önbelleği'**
+  String get deviceStorageAi;
+
+  /// No description provided for @deviceStorageTotal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam (uygulamanın kendisi hariç)'**
+  String get deviceStorageTotal;
+
+  /// No description provided for @deviceStorageInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önbelleği temizlemek notları ve ekleri silmez; görseller gerektikçe yeniden iner. Eski geçici dosyalar zaten her açılışta temizlenir.'**
+  String get deviceStorageInfo;
+
+  /// No description provided for @deviceStorageClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önbelleği temizle'**
+  String get deviceStorageClear;
+
+  /// No description provided for @deviceStorageCleared.
+  ///
+  /// In tr, this message translates to:
+  /// **'{size} boşaltıldı'**
+  String deviceStorageCleared(String size);
+
+  /// No description provided for @deviceStorageUnavailable.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda ölçülemedi.'**
+  String get deviceStorageUnavailable;
 }
 
 class _AppLocalizationsDelegate

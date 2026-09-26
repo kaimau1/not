@@ -3829,4 +3829,154 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Alat';
+
+  @override
+  String get folderOrderTitle => 'Urutan folder';
+
+  @override
+  String get folderReorder => 'Atur ulang folder';
+
+  @override
+  String get folderOrderManual => 'Kustom';
+
+  @override
+  String get folderOrderName => 'Menurut nama';
+
+  @override
+  String get folderOrderNewest => 'Terbaru dulu';
+
+  @override
+  String get folderOrderNoteCount => 'Menurut jumlah catatan';
+
+  @override
+  String get folderOrderHint =>
+      'Seret pegangan untuk mengatur ulang. Urutan yang sama dipakai di baris folder dan saat menggeser.';
+
+  @override
+  String get swipeModeTitle => 'Menggeser di layar utama';
+
+  @override
+  String get swipeModeFolders => 'Beralih antar folder';
+
+  @override
+  String get swipeModeFilters => 'Beralih antar filter dan tag';
+
+  @override
+  String get swipeModeBoth => 'Folder, filter, dan tag';
+
+  @override
+  String get swipeModeOff => 'Mati';
+
+  @override
+  String get shareIncludeTitle => 'Judul';
+
+  @override
+  String get shareIncludeChecked => 'Selesai';
+
+  @override
+  String get shareIncludeTags => 'Tag';
+
+  @override
+  String get shareTextAction => 'Bagikan teks';
+
+  @override
+  String get shareAsFileSection => 'Sebagai file';
+
+  @override
+  String get shareInAppSection => 'Di dalam aplikasi';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Mengirim salinan catatan ke kotak masuk teman.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Edit catatan yang sama bersama teman; perubahan langsung terlihat.';
+
+  @override
+  String get findPrevious => 'Hasil sebelumnya';
+
+  @override
+  String get findNext => 'Hasil berikutnya';
+
+  @override
+  String get findShowAll => 'Semua hasil';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count hasil',
+      zero: 'Tidak ada hasil',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Cari di lampiran & dengan AI';
+
+  @override
+  String get notesSettingsTitle => 'Catatan & folder';
+
+  @override
+  String get noteViewSetting => 'Tata letak layar utama';
+
+  @override
+  String get noteViewGrid => 'Kisi';
+
+  @override
+  String get noteViewList => 'Daftar';
+
+  @override
+  String get gridColumnsSetting => 'Kolom';
+
+  @override
+  String get gridColumnsInfo =>
+      'Anda juga bisa mengubahnya dengan mencubit di layar utama.';
+
+  @override
+  String get gridColumnsAuto => 'Otomatis';
+
+  @override
+  String get folderShelfSetting => 'Folder di layar utama';
+
+  @override
+  String get folderShelfStrip => 'Satu baris';
+
+  @override
+  String get folderShelfTiles => 'Ubin';
+
+  @override
+  String get deviceStorageTitle => 'Di perangkat ini';
+
+  @override
+  String get deviceStorageAttachments => 'Lampiran';
+
+  @override
+  String get deviceStorageDatabase => 'Salinan lokal catatan';
+
+  @override
+  String get deviceStorageCache => 'Cache dan file sementara';
+
+  @override
+  String get deviceStorageAi => 'Cache AI';
+
+  @override
+  String get deviceStorageTotal => 'Total (tanpa aplikasi)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Menghapus cache tidak menghapus catatan atau lampiran; gambar diunduh lagi bila perlu. File sementara lama dibersihkan setiap aplikasi dibuka.';
+
+  @override
+  String get deviceStorageClear => 'Hapus cache';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size dikosongkan';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'Tidak dapat diukur di perangkat ini.';
 }

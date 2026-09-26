@@ -3833,4 +3833,156 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Outils';
+
+  @override
+  String get folderOrderTitle => 'Ordre des dossiers';
+
+  @override
+  String get folderReorder => 'Réorganiser les dossiers';
+
+  @override
+  String get folderOrderManual => 'Personnalisé';
+
+  @override
+  String get folderOrderName => 'Par nom';
+
+  @override
+  String get folderOrderNewest => 'Plus récents d’abord';
+
+  @override
+  String get folderOrderNoteCount => 'Par nombre de notes';
+
+  @override
+  String get folderOrderHint =>
+      'Faites glisser les poignées pour réorganiser. Le même ordre est utilisé dans la barre de dossiers et en balayant.';
+
+  @override
+  String get swipeModeTitle => 'Balayage sur l’écran d’accueil';
+
+  @override
+  String get swipeModeFolders => 'Passer d’un dossier à l’autre';
+
+  @override
+  String get swipeModeFilters => 'Passer entre filtres et étiquettes';
+
+  @override
+  String get swipeModeBoth => 'Dossiers, filtres et étiquettes';
+
+  @override
+  String get swipeModeOff => 'Désactivé';
+
+  @override
+  String get shareIncludeTitle => 'Titre';
+
+  @override
+  String get shareIncludeChecked => 'Éléments terminés';
+
+  @override
+  String get shareIncludeTags => 'Étiquettes';
+
+  @override
+  String get shareTextAction => 'Partager le texte';
+
+  @override
+  String get shareAsFileSection => 'En tant que fichier';
+
+  @override
+  String get shareInAppSection => 'Dans l’application';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Dépose une copie de la note dans la boîte de réception d’un ami.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Modifiez la même note avec des amis ; les changements apparaissent aussitôt.';
+
+  @override
+  String get findPrevious => 'Résultat précédent';
+
+  @override
+  String get findNext => 'Résultat suivant';
+
+  @override
+  String get findShowAll => 'Tous les résultats';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count résultats',
+      one: '1 résultat',
+      zero: 'Aucun résultat',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Chercher dans les pièces jointes et avec l’IA';
+
+  @override
+  String get notesSettingsTitle => 'Notes et dossiers';
+
+  @override
+  String get noteViewSetting => 'Affichage de l’écran d’accueil';
+
+  @override
+  String get noteViewGrid => 'Grille';
+
+  @override
+  String get noteViewList => 'Liste';
+
+  @override
+  String get gridColumnsSetting => 'Colonnes';
+
+  @override
+  String get gridColumnsInfo =>
+      'Vous pouvez aussi pincer l’écran d’accueil pour le changer.';
+
+  @override
+  String get gridColumnsAuto => 'Auto';
+
+  @override
+  String get folderShelfSetting => 'Dossiers sur l’écran d’accueil';
+
+  @override
+  String get folderShelfStrip => 'Une ligne';
+
+  @override
+  String get folderShelfTiles => 'Tuiles';
+
+  @override
+  String get deviceStorageTitle => 'Sur cet appareil';
+
+  @override
+  String get deviceStorageAttachments => 'Pièces jointes';
+
+  @override
+  String get deviceStorageDatabase => 'Copie locale des notes';
+
+  @override
+  String get deviceStorageCache => 'Cache et fichiers temporaires';
+
+  @override
+  String get deviceStorageAi => 'Cache IA';
+
+  @override
+  String get deviceStorageTotal => 'Total (hors application)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Vider le cache ne supprime ni notes ni pièces jointes ; les images sont retéléchargées au besoin. Les anciens fichiers temporaires sont nettoyés à chaque lancement.';
+
+  @override
+  String get deviceStorageClear => 'Vider le cache';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size libérés';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Impossible à mesurer sur cet appareil.';
 }

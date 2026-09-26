@@ -2,6 +2,28 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-09-26 — kaydırma, klasör sırası, canlı arama, paylaşım, boyut (CİHAZDA GÖRÜLMEDİ)
+- [ ] **QR okuma (Play Hizmetleri modeli)**: barkod modeli artık APK'da değil.
+  Yeni kurulumda "QR not" hemen okuyor mu, yoksa model inene kadar hata mı
+  veriyor? Play Hizmetleri olmayan cihazda çalışmaz (bilinçli).
+- [ ] **APK boyutu**: wasm çıkarma + split-debug-info + barkod sonrası yeni
+  koşunun boyut raporuna bak (beklenen ~55 MB, önce 64,9 MB). Telefonda
+  Ayarlar → Uygulamalar → Notlar'da uygulama/veri/önbellek ayrımına bak;
+  uygulama içindeki "Bu cihazda" bölümüyle karşılaştır.
+- [ ] **Canlı not içi arama**: klavye açıkken çubuk klavyenin üstünde mi,
+  eşleşmeye kaydırma uzun notta ve madde listesinde doğru yere mi gidiyor,
+  arama açıkken yazınca vurgular kayıyor mu, işaretli (katlanmış)
+  maddelerde ne oluyor.
+- [ ] **Ana ekranın dondurulması** (`FreezeWhenHidden`): editörden geri
+  dönünce kartlar güncel mi (başlık/renk değişikliği), dönüş animasyonunun
+  ilk karesinde takılma var mı.
+- [ ] **Klasörler arası kaydırma**: ana ekranda ve klasör sayfasında;
+  vurgulanan çipin şeritte görünür alana kayması; gizli klasörler.
+- [ ] **Web geri tuşu** gerçek sitede (hekimasistani.com) denenmeli: koşum
+  takımında dört senaryo geçti, uygulamanın kendisinde oturum açıkken
+  bakılmadı.
+- [ ] **45 yeni çeviri anahtarı × 14 dil** makine çevirisi.
+
 ## 2026-09-22 — geniş ekran / ortak not / madde geçişi (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Tablette gözle bakılmalı**: gezinme rayı (≥600 dp genişlik VE ≥500
   boy), ana-detay artık 840 dp İÇERİK genişliğinde; odak modu (ray'daki

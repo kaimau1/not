@@ -5,6 +5,7 @@ import '../../../core/l10n_ext.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../data/folder_activity.dart';
+import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_screen.dart';
@@ -33,12 +34,9 @@ class FoldersScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
-    final folders = [
-      for (final f
-          in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
-        if (!f.hidden || revealHidden) f,
-    ];
+    // Kullanıcının klasör SIRASI (bkz. FolderSort) — ana ekran şeridiyle
+    // aynı; gizliler yalnız açığa çıkarıldıysa.
+    final folders = ref.watch(visibleOrderedFoldersProvider);
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
 
     SliverGridDelegate grid() => const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -52,6 +50,11 @@ class FoldersScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.foldersTitle),
         actions: [
+          IconButton(
+            tooltip: l10n.folderReorder,
+            icon: const Icon(Icons.swap_vert),
+            onPressed: () => showFolderOrderSheet(context),
+          ),
           Padding(
             padding: const EdgeInsetsDirectional.only(end: 12),
             child: FilledButton.tonalIcon(

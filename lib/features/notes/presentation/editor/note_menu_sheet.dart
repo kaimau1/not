@@ -128,6 +128,10 @@ class _MenuGrid extends StatelessWidget {
       if (hasAttachments)
         ('toArchive', l10n.archiveCopyHere, Icons.inventory_2_outlined),
       ('share', l10n.share, Icons.share_outlined),
+      // TÜM NOTU KOPYALA (kullanıcı isteği 2026-09-26: "kopyalama vb.
+      // şeylerin düzeni"): kopyalamak için metni seçmek gerekiyordu; madde
+      // listesinde bu hiç mümkün değildi (her madde ayrı alan).
+      ('copyText', l10n.copy, Icons.copy_outlined),
       // "PDF olarak dışa aktar" DEĞİL: belge notlarında çıktı balonlu PDF de
       // olabiliyor, metin notlarında Word de üretiliyor. Etiket artık yolu
       // değil işi anlatıyor (bkz. not editöründeki `_export`).

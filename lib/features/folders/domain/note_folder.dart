@@ -39,6 +39,7 @@ class NoteFolder {
     this.icon = defaultIcon,
     this.hidden = false,
     this.color,
+    this.order,
     this.createdAt,
     required this.ownerId,
     this.sharedWith = const [],
@@ -68,6 +69,12 @@ class NoteFolder {
   /// görünümünden memnun değilim"): altı klasör aynı bej blokla yan yana
   /// duruyor, hiçbiri bakışta ayırt edilmiyordu. Renk klasörü tanıtır.
   final int? color;
+
+  /// ELLE SIRALAMADAKİ yeri (küçük önce). null = hiç elle sıralanmamış;
+  /// böyle klasörler elle sıralı listenin SONUNA ada göre dizilir (bkz.
+  /// `sortFolders`). Kullanıcı isteği 2026-09-26: "klasör sıralaması
+  /// ayarlama". Firestore'da durur ki sıra her cihazda aynı olsun.
+  final int? order;
   final DateTime? createdAt;
 
   /// Klasörün GERÇEK sahibi — belge her zaman `users/{ownerId}/folders/{id}`
@@ -146,6 +153,7 @@ class NoteFolder {
     String? icon,
     bool? hidden,
     int? color,
+    int? order,
     List<String>? sharedWith,
     List<String>? pending,
     Map<String, FolderRole>? roles,
@@ -155,6 +163,7 @@ class NoteFolder {
     icon: icon ?? this.icon,
     hidden: hidden ?? this.hidden,
     color: color ?? this.color,
+    order: order ?? this.order,
     createdAt: createdAt,
     ownerId: ownerId,
     sharedWith: sharedWith ?? this.sharedWith,
@@ -177,6 +186,7 @@ class NoteFolder {
       icon: map['icon'] as String? ?? defaultIcon,
       hidden: map['hidden'] as bool? ?? false,
       color: (map['color'] as num?)?.toInt(),
+      order: (map['order'] as num?)?.toInt(),
       createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       ownerId: ownerId ?? doc.reference.parent.parent?.id ?? '',
       sharedWith: [
@@ -196,6 +206,7 @@ class NoteFolder {
     'icon': icon,
     'hidden': hidden,
     'color': ?color,
+    'order': ?order,
     'ownerId': ownerId,
     'sharedWith': sharedWith,
     'pending': pending,

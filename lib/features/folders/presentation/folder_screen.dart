@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,6 +18,7 @@ import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/quick_add_actions.dart';
 import '../../notes/presentation/quick_add_fab.dart';
 import '../data/folder_activity.dart';
+import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
@@ -61,6 +63,36 @@ class FolderScreen extends ConsumerStatefulWidget {
     ),
   );
 
+  /// Yana çekişle KOMŞU klasöre geçer (kullanıcı isteği 2026-09-26:
+  /// "sağ sol kaydırmada klasörler arası geçiş"). Yığın BÜYÜMEZ: sayfa
+  /// yerini komşusuna bırakır, geri tuşu yine ana ekrana döner. Geçiş
+  /// parmağın yönünde kayar.
+  static Future<void> replaceWith(
+    BuildContext context,
+    String folderId, {
+    required bool forward,
+  }) {
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final from = (forward ? 1.0 : -1.0) * (rtl ? -1 : 1);
+    return Navigator.of(context).pushReplacement(
+      PageRouteBuilder<void>(
+        transitionDuration: const Duration(milliseconds: 240),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+        pageBuilder: (_, _, _) => FolderScreen(folderId: folderId),
+        transitionsBuilder: (context, animation, secondary, child) =>
+            SlideTransition(
+              position: Tween(
+                begin: Offset(from, 0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              ),
+              child: child,
+            ),
+      ),
+    );
+  }
+
   @override
   ConsumerState<FolderScreen> createState() => _FolderScreenState();
 }
@@ -93,6 +125,21 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Yana çekiş: kullanıcının klasör sırasında sonraki/önceki klasör
+  /// (bkz. `visibleOrderedFoldersProvider`). Uçlarda başa/sona SARAR — ana
+  /// ekrandaki çekişle aynı halka mantığı.
+  void _swipeTo(int direction) {
+    final ids = [
+      for (final f in ref.read(visibleOrderedFoldersProvider)) f.id,
+    ];
+    final index = ids.indexOf(widget.folderId);
+    if (index < 0 || ids.length < 2) return;
+    var next = (index + direction) % ids.length;
+    if (next < 0) next += ids.length;
+    HapticFeedback.selectionClick();
+    FolderScreen.replaceWith(context, ids[next], forward: direction > 0);
   }
 
   void _toggleSearch() {
@@ -209,12 +256,27 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
       ),
       // Kutu değişince ızgara yeniden süzülsün: sorgu denetleyicide durur,
       // dinleyici yalnız gövdeyi çizer (üst bar aynı kalır).
-      body: ValueListenableBuilder<TextEditingValue>(
-        valueListenable: _searchController,
-        builder: (context, value, _) => _NotesGrid(
-          async: notesAsync,
-          query: value.text,
-          onCreateNote: () => createNote(NoteType.text),
+      body: GestureDetector(
+        // Dikey kaydırma ızgarada kalır; eksenler farklı, çakışmaz. Arama
+        // açıkken kapalı: kullanıcı sonuçlar arasındayken klasör değişmesin.
+        onHorizontalDragEnd:
+            _searching || ref.watch(swipeModeProvider) == SwipeMode.off
+            ? null
+            : (details) {
+                final velocity = details.primaryVelocity ?? 0;
+                if (velocity.abs() < 300) return;
+                final rtl =
+                    Directionality.of(context) == TextDirection.rtl;
+                final forward = rtl ? velocity > 0 : velocity < 0;
+                _swipeTo(forward ? 1 : -1);
+              },
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _searchController,
+          builder: (context, value, _) => _NotesGrid(
+            async: notesAsync,
+            query: value.text,
+            onCreateNote: () => createNote(NoteType.text),
+          ),
         ),
       ),
     );

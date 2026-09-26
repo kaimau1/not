@@ -9,9 +9,11 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/domain/friend.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_chat_screen.dart';
+import 'folder_tile.dart';
 
 /// Klasör oluşturma/düzenleme diyaloğu: ad alanı + simge seçici.
 /// [existing] verilirse düzenleme modunda açılır. Oluşturulan/düzenlenen
@@ -233,6 +235,14 @@ Future<void> showFolderActionsSheet(
               title: Text(l10n.folderChatTitle),
               onTap: () => Navigator.pop(sheetContext, 'chat'),
             ),
+          // KLASÖR SIRASI (kullanıcı isteği 2026-09-26): klasörün kendi
+          // menüsünden de ulaşılsın — kullanıcı sırayı değiştirmeyi tam
+          // klasöre uzun basınca arar.
+          ListTile(
+            leading: const Icon(Icons.swap_vert),
+            title: Text(l10n.folderReorder),
+            onTap: () => Navigator.pop(sheetContext, 'order'),
+          ),
           ListTile(
             leading: const Icon(Icons.delete_outline),
             title: Text(l10n.deleteFolder),
@@ -244,6 +254,8 @@ Future<void> showFolderActionsSheet(
   );
   if (!context.mounted) return;
   switch (action) {
+    case 'order':
+      await showFolderOrderSheet(context);
     case 'edit':
       await showFolderEditorDialog(context, ref, existing: folder);
     case 'hide':
@@ -299,7 +311,14 @@ Future<String?> showFolderPickSheet(
   String? currentFolderId,
 }) async {
   final l10n = context.l10n;
-  final folders = ref.read(foldersStreamProvider).value ?? const <NoteFolder>[];
+  // Kullanıcının klasör SIRASIYLA (bkz. FolderSort); gizli klasörler yalnız
+  // açığa çıkarıldıysa — notu gizli bir klasöre taşıma yolu bile adını ele
+  // verirdi. Not zaten gizli bir klasördeyse o klasör listede kalır.
+  final revealed = ref.read(hiddenFoldersRevealedProvider);
+  final folders = [
+    for (final f in ref.read(orderedFoldersProvider))
+      if (!f.hidden || revealed || f.id == currentFolderId) f,
+  ];
   const newSentinel = '__new__';
   final picked = await showModalBottomSheet<String>(
     context: context,
@@ -559,5 +578,169 @@ class _ColorDot extends StatelessWidget {
       ),
     );
     return tooltip == null ? dot : Tooltip(message: tooltip!, child: dot);
+  }
+}
+
+
+/// **KLASÖR SIRASI** levhası (kullanıcı isteği 2026-09-26: "klasör sıralaması
+/// ayarlama"): sıralama ölçütü + elle sürükleyerek sıralama. Sıra ana
+/// ekranın klasör şeridinde, Klasörler sayfasında, "klasöre taşı"
+/// listesinde ve yana çekişte AYNI.
+Future<void> showFolderOrderSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => const FractionallySizedBox(
+        heightFactor: 0.8,
+        child: FolderOrderPanel(),
+      ),
+    );
+
+/// [showFolderOrderSheet]'in gövdesi.
+class FolderOrderPanel extends ConsumerStatefulWidget {
+  const FolderOrderPanel({super.key});
+
+  @override
+  ConsumerState<FolderOrderPanel> createState() => _FolderOrderPanelState();
+}
+
+class _FolderOrderPanelState extends ConsumerState<FolderOrderPanel> {
+  /// Sürüklemenin HEMEN gösterilen sonucu. Yazım akışa dönene kadar liste
+  /// eski sıraya sıçramasın diye; akış aynı sırayı getirince bırakılır.
+  List<NoteFolder>? _pending;
+
+  void _reorder(List<NoteFolder> visible, int from, int to) {
+    final moved = [...visible];
+    final item = moved.removeAt(from);
+    moved.insert(to, item);
+    setState(() => _pending = moved);
+    // Gizli (şu an görünmeyen) klasörler YERİNDE kalır: tam listede
+    // görünenlerin yuvaları yeni sırayla doldurulur.
+    final full = ref.read(orderedFoldersProvider);
+    final visibleIds = {for (final f in visible) f.id};
+    final queue = moved.iterator;
+    final ids = <String>[
+      for (final f in full)
+        if (visibleIds.contains(f.id)) (queue..moveNext()).current.id else f.id,
+    ];
+    ref.read(folderSortProvider.notifier).set(FolderSort.manual);
+    ref.read(foldersRepositoryProvider)?.reorderFolders(ids);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final sort = ref.watch(folderSortProvider);
+    final live = ref.watch(visibleOrderedFoldersProvider);
+    var folders = live;
+    final pending = _pending;
+    if (pending != null) {
+      final same =
+          pending.length == live.length &&
+          [
+            for (var i = 0; i < live.length; i++) live[i].id == pending[i].id,
+          ].every((b) => b);
+      if (same) {
+        _pending = null;
+      } else {
+        folders = pending;
+      }
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Text(l10n.folderOrderTitle, style: theme.textTheme.titleLarge),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: FolderSortChoice(
+            value: sort,
+            onChanged: (v) => ref.read(folderSortProvider.notifier).set(v),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 4),
+          child: Text(
+            l10n.folderOrderHint,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: folders.isEmpty
+              ? Center(child: Text(l10n.foldersEmpty))
+              : ReorderableListView.builder(
+                  padding: const EdgeInsets.fromLTRB(8, 4, 8, 24),
+                  itemCount: folders.length,
+                  buildDefaultDragHandles: false,
+                  onReorderItem: (from, to) => _reorder(folders, from, to),
+                  itemBuilder: (context, index) {
+                    final folder = folders[index];
+                    return ListTile(
+                      key: ValueKey('order-${folder.id}'),
+                      leading: FolderIconBox(
+                        accent: folder.accent,
+                        icon: folder.iconData,
+                        size: 32,
+                      ),
+                      title: Text(
+                        folder.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: ReorderableDragStartListener(
+                        index: index,
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(Icons.drag_handle),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Klasör sıralama ölçütü seçici — levhada ve Ayarlar → Notlar'da aynı.
+class FolderSortChoice extends StatelessWidget {
+  const FolderSortChoice({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final FolderSort value;
+  final ValueChanged<FolderSort> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    String label(FolderSort s) => switch (s) {
+      FolderSort.manual => l10n.folderOrderManual,
+      FolderSort.name => l10n.folderOrderName,
+      FolderSort.newest => l10n.folderOrderNewest,
+      FolderSort.noteCount => l10n.folderOrderNoteCount,
+    };
+    return Wrap(
+      spacing: 8,
+      runSpacing: 4,
+      children: [
+        for (final s in FolderSort.values)
+          ChoiceChip(
+            label: Text(label(s)),
+            selected: s == value,
+            onSelected: (_) => onChanged(s),
+          ),
+      ],
+    );
   }
 }

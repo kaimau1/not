@@ -3836,4 +3836,155 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Werkzeuge';
+
+  @override
+  String get folderOrderTitle => 'Ordnerreihenfolge';
+
+  @override
+  String get folderReorder => 'Ordner sortieren';
+
+  @override
+  String get folderOrderManual => 'Eigene';
+
+  @override
+  String get folderOrderName => 'Nach Name';
+
+  @override
+  String get folderOrderNewest => 'Neueste zuerst';
+
+  @override
+  String get folderOrderNoteCount => 'Nach Anzahl der Notizen';
+
+  @override
+  String get folderOrderHint =>
+      'Zum Sortieren an den Griffen ziehen. Dieselbe Reihenfolge gilt in der Ordnerleiste und beim Wischen.';
+
+  @override
+  String get swipeModeTitle => 'Wischen auf dem Startbildschirm';
+
+  @override
+  String get swipeModeFolders => 'Zwischen Ordnern wechseln';
+
+  @override
+  String get swipeModeFilters => 'Zwischen Filtern und Tags wechseln';
+
+  @override
+  String get swipeModeBoth => 'Ordner, Filter und Tags';
+
+  @override
+  String get swipeModeOff => 'Aus';
+
+  @override
+  String get shareIncludeTitle => 'Titel';
+
+  @override
+  String get shareIncludeChecked => 'Erledigte';
+
+  @override
+  String get shareIncludeTags => 'Tags';
+
+  @override
+  String get shareTextAction => 'Text teilen';
+
+  @override
+  String get shareAsFileSection => 'Als Datei';
+
+  @override
+  String get shareInAppSection => 'In der App';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Legt eine Kopie der Notiz in den Posteingang eines Freundes.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Dieselbe Notiz gemeinsam mit Freunden bearbeiten; Änderungen erscheinen sofort.';
+
+  @override
+  String get findPrevious => 'Vorheriger Treffer';
+
+  @override
+  String get findNext => 'Nächster Treffer';
+
+  @override
+  String get findShowAll => 'Alle Treffer';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Treffer',
+      one: '1 Treffer',
+      zero: 'Keine Treffer',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'In Anhängen & mit KI suchen';
+
+  @override
+  String get notesSettingsTitle => 'Notizen & Ordner';
+
+  @override
+  String get noteViewSetting => 'Ansicht des Startbildschirms';
+
+  @override
+  String get noteViewGrid => 'Raster';
+
+  @override
+  String get noteViewList => 'Liste';
+
+  @override
+  String get gridColumnsSetting => 'Spalten';
+
+  @override
+  String get gridColumnsInfo =>
+      'Auch per Zwei-Finger-Zoom auf dem Startbildschirm änderbar.';
+
+  @override
+  String get gridColumnsAuto => 'Automatisch';
+
+  @override
+  String get folderShelfSetting => 'Ordner auf dem Startbildschirm';
+
+  @override
+  String get folderShelfStrip => 'Eine Zeile';
+
+  @override
+  String get folderShelfTiles => 'Kacheln';
+
+  @override
+  String get deviceStorageTitle => 'Auf diesem Gerät';
+
+  @override
+  String get deviceStorageAttachments => 'Anhänge';
+
+  @override
+  String get deviceStorageDatabase => 'Lokale Kopie der Notizen';
+
+  @override
+  String get deviceStorageCache => 'Cache und temporäre Dateien';
+
+  @override
+  String get deviceStorageAi => 'KI-Cache';
+
+  @override
+  String get deviceStorageTotal => 'Gesamt (ohne die App selbst)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Das Leeren des Caches löscht keine Notizen oder Anhänge; Bilder werden bei Bedarf neu geladen. Alte temporäre Dateien werden bei jedem Start entfernt.';
+
+  @override
+  String get deviceStorageClear => 'Cache leeren';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size freigegeben';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'Auf diesem Gerät nicht messbar.';
 }

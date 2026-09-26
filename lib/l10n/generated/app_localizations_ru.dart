@@ -3825,4 +3825,157 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Инструменты';
+
+  @override
+  String get folderOrderTitle => 'Порядок папок';
+
+  @override
+  String get folderReorder => 'Упорядочить папки';
+
+  @override
+  String get folderOrderManual => 'Вручную';
+
+  @override
+  String get folderOrderName => 'По имени';
+
+  @override
+  String get folderOrderNewest => 'Сначала новые';
+
+  @override
+  String get folderOrderNoteCount => 'По числу заметок';
+
+  @override
+  String get folderOrderHint =>
+      'Перетаскивайте за маркеры. Этот же порядок используется в полосе папок и при свайпе.';
+
+  @override
+  String get swipeModeTitle => 'Свайп на главном экране';
+
+  @override
+  String get swipeModeFolders => 'Переключать папки';
+
+  @override
+  String get swipeModeFilters => 'Переключать фильтры и метки';
+
+  @override
+  String get swipeModeBoth => 'Папки, фильтры и метки';
+
+  @override
+  String get swipeModeOff => 'Выкл.';
+
+  @override
+  String get shareIncludeTitle => 'Заголовок';
+
+  @override
+  String get shareIncludeChecked => 'Выполненные';
+
+  @override
+  String get shareIncludeTags => 'Метки';
+
+  @override
+  String get shareTextAction => 'Поделиться текстом';
+
+  @override
+  String get shareAsFileSection => 'Файлом';
+
+  @override
+  String get shareInAppSection => 'В приложении';
+
+  @override
+  String get shareSendFriendInfo => 'Кладёт копию заметки во входящие друга.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Редактируйте одну заметку вместе с друзьями; изменения видны сразу.';
+
+  @override
+  String get findPrevious => 'Предыдущее совпадение';
+
+  @override
+  String get findNext => 'Следующее совпадение';
+
+  @override
+  String get findShowAll => 'Все совпадения';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count совпадения',
+      many: '$count совпадений',
+      few: '$count совпадения',
+      one: '$count совпадение',
+      zero: 'Совпадений нет',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Искать во вложениях и с ИИ';
+
+  @override
+  String get notesSettingsTitle => 'Заметки и папки';
+
+  @override
+  String get noteViewSetting => 'Вид главного экрана';
+
+  @override
+  String get noteViewGrid => 'Сетка';
+
+  @override
+  String get noteViewList => 'Список';
+
+  @override
+  String get gridColumnsSetting => 'Столбцы';
+
+  @override
+  String get gridColumnsInfo =>
+      'Можно также изменить щипком на главном экране.';
+
+  @override
+  String get gridColumnsAuto => 'Авто';
+
+  @override
+  String get folderShelfSetting => 'Папки на главном экране';
+
+  @override
+  String get folderShelfStrip => 'Одна строка';
+
+  @override
+  String get folderShelfTiles => 'Плитки';
+
+  @override
+  String get deviceStorageTitle => 'На этом устройстве';
+
+  @override
+  String get deviceStorageAttachments => 'Вложения';
+
+  @override
+  String get deviceStorageDatabase => 'Локальная копия заметок';
+
+  @override
+  String get deviceStorageCache => 'Кэш и временные файлы';
+
+  @override
+  String get deviceStorageAi => 'Кэш ИИ';
+
+  @override
+  String get deviceStorageTotal => 'Всего (без самого приложения)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Очистка кэша не удаляет заметки и вложения; изображения загрузятся заново при необходимости. Старые временные файлы удаляются при каждом запуске.';
+
+  @override
+  String get deviceStorageClear => 'Очистить кэш';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return 'Освобождено $size';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Не удалось измерить на этом устройстве.';
 }

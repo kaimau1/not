@@ -3832,4 +3832,156 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Hulpmiddelen';
+
+  @override
+  String get folderOrderTitle => 'Mapvolgorde';
+
+  @override
+  String get folderReorder => 'Mappen herschikken';
+
+  @override
+  String get folderOrderManual => 'Eigen';
+
+  @override
+  String get folderOrderName => 'Op naam';
+
+  @override
+  String get folderOrderNewest => 'Nieuwste eerst';
+
+  @override
+  String get folderOrderNoteCount => 'Op aantal notities';
+
+  @override
+  String get folderOrderHint =>
+      'Sleep aan de grepen om te herschikken. Dezelfde volgorde geldt in de mappenbalk en bij vegen.';
+
+  @override
+  String get swipeModeTitle => 'Vegen op het startscherm';
+
+  @override
+  String get swipeModeFolders => 'Wisselen tussen mappen';
+
+  @override
+  String get swipeModeFilters => 'Wisselen tussen filters en labels';
+
+  @override
+  String get swipeModeBoth => 'Mappen, filters en labels';
+
+  @override
+  String get swipeModeOff => 'Uit';
+
+  @override
+  String get shareIncludeTitle => 'Titel';
+
+  @override
+  String get shareIncludeChecked => 'Afgevinkt';
+
+  @override
+  String get shareIncludeTags => 'Labels';
+
+  @override
+  String get shareTextAction => 'Tekst delen';
+
+  @override
+  String get shareAsFileSection => 'Als bestand';
+
+  @override
+  String get shareInAppSection => 'In de app';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Zet een kopie van de notitie in de inbox van een vriend.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Bewerk dezelfde notitie samen met vrienden; wijzigingen verschijnen direct.';
+
+  @override
+  String get findPrevious => 'Vorige treffer';
+
+  @override
+  String get findNext => 'Volgende treffer';
+
+  @override
+  String get findShowAll => 'Alle treffers';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count treffers',
+      one: '1 treffer',
+      zero: 'Geen treffers',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Zoeken in bijlagen en met AI';
+
+  @override
+  String get notesSettingsTitle => 'Notities en mappen';
+
+  @override
+  String get noteViewSetting => 'Weergave startscherm';
+
+  @override
+  String get noteViewGrid => 'Raster';
+
+  @override
+  String get noteViewList => 'Lijst';
+
+  @override
+  String get gridColumnsSetting => 'Kolommen';
+
+  @override
+  String get gridColumnsInfo =>
+      'Je kunt het ook wijzigen door te knijpen op het startscherm.';
+
+  @override
+  String get gridColumnsAuto => 'Automatisch';
+
+  @override
+  String get folderShelfSetting => 'Mappen op het startscherm';
+
+  @override
+  String get folderShelfStrip => 'Eén rij';
+
+  @override
+  String get folderShelfTiles => 'Tegels';
+
+  @override
+  String get deviceStorageTitle => 'Op dit apparaat';
+
+  @override
+  String get deviceStorageAttachments => 'Bijlagen';
+
+  @override
+  String get deviceStorageDatabase => 'Lokale kopie van notities';
+
+  @override
+  String get deviceStorageCache => 'Cache en tijdelijke bestanden';
+
+  @override
+  String get deviceStorageAi => 'AI-cache';
+
+  @override
+  String get deviceStorageTotal => 'Totaal (zonder de app zelf)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Cache legen verwijdert geen notities of bijlagen; afbeeldingen worden opnieuw geladen wanneer nodig. Oude tijdelijke bestanden worden bij elke start opgeruimd.';
+
+  @override
+  String get deviceStorageClear => 'Cache legen';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size vrijgemaakt';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Kon op dit apparaat niet worden gemeten.';
 }

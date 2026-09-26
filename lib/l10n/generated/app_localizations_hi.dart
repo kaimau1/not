@@ -3815,4 +3815,153 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'टूल्स';
+
+  @override
+  String get folderOrderTitle => 'फ़ोल्डर क्रम';
+
+  @override
+  String get folderReorder => 'फ़ोल्डर फिर से क्रमित करें';
+
+  @override
+  String get folderOrderManual => 'कस्टम';
+
+  @override
+  String get folderOrderName => 'नाम से';
+
+  @override
+  String get folderOrderNewest => 'सबसे नए पहले';
+
+  @override
+  String get folderOrderNoteCount => 'नोट की संख्या से';
+
+  @override
+  String get folderOrderHint =>
+      'क्रम बदलने के लिए हैंडल खींचें। यही क्रम फ़ोल्डर पट्टी में और स्वाइप करते समय भी उपयोग होता है।';
+
+  @override
+  String get swipeModeTitle => 'होम स्क्रीन पर स्वाइप करना';
+
+  @override
+  String get swipeModeFolders => 'फ़ोल्डरों के बीच बदलें';
+
+  @override
+  String get swipeModeFilters => 'फ़िल्टर और टैग के बीच बदलें';
+
+  @override
+  String get swipeModeBoth => 'फ़ोल्डर, फ़िल्टर और टैग';
+
+  @override
+  String get swipeModeOff => 'बंद';
+
+  @override
+  String get shareIncludeTitle => 'शीर्षक';
+
+  @override
+  String get shareIncludeChecked => 'पूरे आइटम';
+
+  @override
+  String get shareIncludeTags => 'टैग';
+
+  @override
+  String get shareTextAction => 'टेक्स्ट साझा करें';
+
+  @override
+  String get shareAsFileSection => 'फ़ाइल के रूप में';
+
+  @override
+  String get shareInAppSection => 'ऐप के अंदर';
+
+  @override
+  String get shareSendFriendInfo =>
+      'नोट की एक प्रति मित्र के इनबॉक्स में भेजता है।';
+
+  @override
+  String get shareCollaborateInfo =>
+      'दोस्तों के साथ एक ही नोट संपादित करें; बदलाव तुरंत दिखते हैं।';
+
+  @override
+  String get findPrevious => 'पिछला मिलान';
+
+  @override
+  String get findNext => 'अगला मिलान';
+
+  @override
+  String get findShowAll => 'सभी मिलान';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count मिलान',
+      zero: 'कोई मिलान नहीं',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'अटैचमेंट में और AI से खोजें';
+
+  @override
+  String get notesSettingsTitle => 'नोट और फ़ोल्डर';
+
+  @override
+  String get noteViewSetting => 'होम स्क्रीन लेआउट';
+
+  @override
+  String get noteViewGrid => 'ग्रिड';
+
+  @override
+  String get noteViewList => 'सूची';
+
+  @override
+  String get gridColumnsSetting => 'कॉलम';
+
+  @override
+  String get gridColumnsInfo => 'होम स्क्रीन पर पिंच करके भी बदल सकते हैं।';
+
+  @override
+  String get gridColumnsAuto => 'स्वचालित';
+
+  @override
+  String get folderShelfSetting => 'होम स्क्रीन पर फ़ोल्डर';
+
+  @override
+  String get folderShelfStrip => 'एक पंक्ति';
+
+  @override
+  String get folderShelfTiles => 'टाइलें';
+
+  @override
+  String get deviceStorageTitle => 'इस डिवाइस पर';
+
+  @override
+  String get deviceStorageAttachments => 'अटैचमेंट';
+
+  @override
+  String get deviceStorageDatabase => 'नोट्स की स्थानीय प्रति';
+
+  @override
+  String get deviceStorageCache => 'कैश और अस्थायी फ़ाइलें';
+
+  @override
+  String get deviceStorageAi => 'AI कैश';
+
+  @override
+  String get deviceStorageTotal => 'कुल (ऐप को छोड़कर)';
+
+  @override
+  String get deviceStorageInfo =>
+      'कैश साफ़ करने से नोट या अटैचमेंट नहीं हटते; ज़रूरत पर चित्र फिर से डाउनलोड होते हैं। पुरानी अस्थायी फ़ाइलें हर शुरुआत पर साफ़ होती हैं।';
+
+  @override
+  String get deviceStorageClear => 'कैश साफ़ करें';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size खाली किया गया';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'इस डिवाइस पर मापा नहीं जा सका।';
 }

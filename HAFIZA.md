@@ -3489,3 +3489,134 @@ açar (router: saat hatırlatıcısıyla aynı yol). Adres araması sistem
 Geocoder'ı (anahtar yok).
 TUZAK: Kotlin bu ortamda derlenemiyor (Android SDK yok) — dalda
 `workflow_dispatch` ile APK derletip sonra birleştirildi.
+
+## 2026-09-26 — Klasörler arası kaydırma + klasör sırası, canlı not içi arama, paylaşım/kopyalama düzeni, web geri tuşu, boyut, akıcılık, ayarlar
+
+Kullanıcının dokuz maddesi. `flutter analyze` temiz, `flutter test` **1034 test
+yeşil** (30 yeni). Flutter 3.44.6 `/opt/flutter`'a indirildi (CI sürümü).
+
+### Klasörler arası yana kaydırma — KARAR DEĞİŞTİ
+2026-08-18'de klasörler çekişten bilerek çıkarılmıştı; kullanıcı şimdi açıkça
+istedi ("sağ sol kaydırmada klasörler arası geçiş"). Eski davranış kaybolmasın
+diye seçim AYARDA: `SwipeMode` {folders (VARSAYILAN), filters, both, off},
+saf işlev `nextHomeSwipeStop` (testli, `folder_order_test.dart`). Klasör
+durağına geçince süzgeç/etiket sıfırlanır. Ana ekran klasöre çekilince şerit
+(karo değil) çizilir, seçili çip vurgulanır ve görünür alana kayar
+(`_EnsureVisible`). Klasörün KENDİ sayfasında da yana çekiş komşu klasöre
+geçer (`FolderScreen.replaceWith`, yığın büyümez).
+
+### Klasör sırası
+`NoteFolder.order` (Firestore alanı, yalnız doluyken yazılır) + cihaz tercihi
+`FolderSort` {manual, name (VARSAYILAN — güncellemeyle sıra değişmesin),
+newest, noteCount}. Saf `sortFolders` testli; sıralanmamış klasör elle sırada
+SONA düşer. `orderedFoldersProvider` / `visibleOrderedFoldersProvider` şerit,
+karo, Klasörler sayfası, "klasöre taşı" listesi ve çekişte TEK kaynak.
+Sürükleyince ölçüt kendiliğinden "elle"ye geçer; gizli (görünmeyen)
+klasörler tam listedeki yerlerinde kalır.
+Yan kazanç (performans): klasör çipi/karosu sayısını `folderNotesProvider`
+ile alıyordu — her klasör için notların TAMAMINI süzüp SIRALAYAN ayrı bir
+aile sağlayıcısı; her not kaydında N tam tarama. Artık tek geçişlik
+`folderNoteCountsProvider`.
+
+### "+ Yeni öğe" en çok 3 boş öğe
+2026-09-23'te tek boş öğeyle sınırlanmıştı; kullanıcı "1'den fazla, max 3"
+dedi. `trailingEmptyCount` + `kMaxTrailingEmptyItems` (testli).
+
+### Not içi CANLI arama (editör)
+Eski yol ayrı bir levhaydı; artık alt çubuğun YERİNE arama çubuğu
+(`NoteFindBar`) açılır, yazdıkça eşleşmeler sayfada boyanır, oklar sayfayı
+eşleşmeye kaydırır, liste düğmesi eşleşmeleri yarım pencerede
+(`showFindHitsSheet`, DraggableScrollableSheet) gösterir; oradan "Eklerde ve
+YZ ile ara" eski levhayı sorguyla açar. Geri tuşu önce aramayı kapatır.
+* `TextSearchIndex` (text_search.dart): aranan şey EKRANDA OKUNAN metin —
+  biçim işaretleri (`visibleRuns`, rich_text.dart) ve sarma çapaları atlanır,
+  eşleşme TAMPON konumlarıyla döner. `foldForSearch` UZUNLUĞU KORUR:
+  `'İ'.toLowerCase()` iki karakterdir, konum kayardı; I/İ/ı/i hepsi `i`.
+* Vurgu `WrapTextController.setSearchHighlights` — yalnız çizim
+  (`restyleRange` ile arka plan), metne/imlece/geri almaya dokunmaz.
+  Atılmış denetleyiciye dokunmamak için `_disposed` bayrağı (madde silinince).
+* Kaydırma `getBoxesForSelection` ile, `_revealCaret` ile aynı görünüm alanı
+  hesabı; eşleşme zaten rahat görünüyorsa kıpırdatılmaz.
+* Metin değişince (arama açıkken) `_mutate` → bir sonraki karede yeniden
+  arama; odak aynı alanda kalır.
+
+### Paylaşım ve kopyalama düzeni
+KÖK NEDEN: paylaşım/kopyalama `toPlainText`i gönderiyordu — YZ ve dışa
+aktarma için kurulmuş döküm (`- [ ] Süt`, çıplak `#3`). Yeni saf
+`noteShareText` (note_share_text.dart, testli): başlık ayrı satırda, `☐/☑`,
+tamamlananlar sonda, "Sayfa 3", boş madde yok. `toPlainText` DEĞİŞMEDİ.
+Paylaş levhası yeniden: canlı ÖNİZLEME, içerik çipleri (başlık /
+tamamlananlar / etiketler), Metni paylaş + Kopyala yan yana, "Dosya olarak"
+(PDF/Word, not paketi, balonlu PDF), "Uygulama içinde" (arkadaşa gönder,
+ortak not — yalnız sahip). Editör ⋮ menüsüne "Kopyala" (tüm not), kart menüsü
+ve ana ekranda çoklu seçim de aynı biçimi kullanır (`joinShareTexts`).
+
+### Web: geri → ana sayfa, ikinci geri → siteden çık
+KÖK NEDEN (Chromium'da ölçüldü): go_router push/pop'ta tarayıcıya adresi
+değişmeyen ("/") ama `state`i değişen YENİ kayıtlar yazıyordu; geri tuşu bu
+görünmez kayıtları tek tek gezip kapanmış notları yeniden açıyordu.
+`HomeFirstRouteInformationProvider` (web_history.dart, yalnız web'de,
+app.dart) go_router'ın sağlayıcısını sarar; tarayıcıya yalnız "ana sayfa +
+üstünde tek ekran" yazar: ana→ekran push, ekran→ekran replace, uygulama
+içinden ana sayfaya dönüş `history.back()`, doğrudan not adresiyle açılışta
+altına "/" eklenir, tarayıcının kendi geri/ilerisi (adres zaten orada) yalnız
+kaydedilir. Kural saf `HomeFirstHistory`'de, sahte tarayıcıyla test edildi.
+TUZAK: `RouteInformation.uri` push'u GÖRMEZ → konum `router.state.uri`'den
+alınır (2026-09-22 notundaki tuzağın aynısı). Doğrulama: ayrı bir web
+koşum takımı (go_router 17.3.0 + aynı dosyalar) Playwright/Chromium ile dört
+senaryoda koşuldu — hepsi "geri → /, geri → önceki site".
+
+### Boyut ("uygulama yüklenince 300 MB'ı aşıyor")
+Boyut raporu (koşu #406): APK 64,9 MB; en büyükler libapp 19 MB, libflutter
+11,6, ML Kit OCR 11 MB + modeller, dex 9,5, pdfium 5, barkod libbarhopper
+4,9 MB, **pdfium.wasm 4 MB (yalnız web'de kullanılıyor)**.
+* CI: pdfrx'in pubspec'indeki `- assets/` satırı pub önbelleğinde yorum
+  yapılıyor (derlemeden sonra geri, `if: always()` — pub önbelleği web işiyle
+  ortak) + `--split-debug-info`. TUZAK: pdfrx'in kendi aracı
+  `dart run pdfrx:remove_wasm_modules` 1.3.5'te DERLENMİYOR
+  (dart_pubspec_licenses 3.2 API'si değişmiş) — CI'a konsaydı APK derlemesi
+  düşerdi; satır içi Python betiği aynı işi yapıyor. Dosya CRLF: `sed` ile
+  `- assets/$` eşleşmiyor. Doğrulama: `flutter build bundle
+  --target-platform=linux-x64` ile wasm'ın pakete girmediği görüldü.
+* mobile_scanner `useUnbundled=true` (gradle.properties) + manifest
+  `com.google.mlkit.vision.DEPENDENCIES=barcode`: barkod modeli Play
+  Hizmetleri'nden. BEDEL: Play Hizmetleri olmayan cihazda QR okuma yok.
+* Firestore önbelleği SINIRSIZDI → 100 MB (`AppConstants.firestoreCacheBytes`).
+* Geçici klasör HİÇ temizlenmiyordu (paylaşım paketleri, PDF/Word, taramalar,
+  ses, podcast WAV'ları) → açılıştan 8 sn sonra 2 günden eski dosyalar
+  silinir (`pruneTempFiles`; görsel önbelleği klasörü hariç).
+* Ayarlar → Senkron → "Bu cihazda": ekler / notların yerel kopyası
+  (Android `databases`) / önbellek / YZ önbelleği + "Önbelleği temizle".
+YANLIŞ YOL (yapılmadı): yüklenmiş eklerin yerel kopyasını silmek — 38 yer
+yerel dosyanın varlığına bakıyor; ayrı tasarım ister.
+
+### Akıcılık
+`FreezeWhenHidden`: telefonda editör ana ekranın ÜSTÜNDE açılır ve ana ekran
+yığında canlı kalır; her not kaydı görünmeyen ana ekranın TAMAMINI (yüzlerce
+kart) yeniden kuruyordu. Opak rota altında `TickerMode` kapanır — o sinyalle
+son kurulan ağaç aynen döndürülür (abonelikler üst widget'ta sürer, veri
+kaybolmaz); görünür olunca bir kez kurulur. Yarı saydam levha altında canlı
+kalır (testli). Izgaranın kendisine (10 bin px önbellek payı) bu turda da
+DOKUNULMADI — 2026-08-07 kararı: cihazda ölçmeden değil.
+
+### Ayarlar düzeni
+Yeni alan "Notlar ve klasörler" (notes_settings.dart): yana kaydırma,
+klasör sırası (+ elle sırala), not sıralaması, ızgara/liste, sütun sayısı,
+klasör rafı biçimi, ek içeriğinde arama. Ana ekranın bu tercihlerinin hiçbiri
+Ayarlar'da yoktu (yalnız kısayolları vardı; kısayollar YERİNDE kaldı).
+"Paylaşım bildirimleri" Görünüm'den Kişiler'e taşındı.
+
+### Çeviri
+45 yeni anahtar × 16 dil (14'ü makine çevirisi, anadili konuşana
+gösterilmedi). ARB'ler METİN olarak sona eklendi: `json.dump` ile yazmak var
+olan tek satırlık `@anahtar` bloklarını yeniden biçimlendirip yüzlerce satırlık
+gürültü üretiyordu.
+
+### Ortam notları
+* Konteynerde `flutter` kökten çalışınca `/opt/flutter` için
+  `git config --global --add safe.directory /opt/flutter` gerekti.
+* graphify konteynerde yok — graf bu turda güncellenmedi.
+* Web koşum takımında TUZAK: `python -m http.server` klasörü silinip yeniden
+  oluşturulunca (flutter build web) ESKİ klasörü sunmaya devam eder →
+  `--directory` ile mutlak yol. `pkill -f "http.server 8765"` komut satırının
+  kendisini de öldürür.

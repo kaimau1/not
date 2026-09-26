@@ -3804,4 +3804,153 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'الأدوات';
+
+  @override
+  String get folderOrderTitle => 'ترتيب المجلدات';
+
+  @override
+  String get folderReorder => 'إعادة ترتيب المجلدات';
+
+  @override
+  String get folderOrderManual => 'مخصص';
+
+  @override
+  String get folderOrderName => 'حسب الاسم';
+
+  @override
+  String get folderOrderNewest => 'الأحدث أولاً';
+
+  @override
+  String get folderOrderNoteCount => 'حسب عدد الملاحظات';
+
+  @override
+  String get folderOrderHint =>
+      'اسحب المقابض لإعادة الترتيب. يُستخدم الترتيب نفسه في شريط المجلدات وعند السحب.';
+
+  @override
+  String get swipeModeTitle => 'السحب في الشاشة الرئيسية';
+
+  @override
+  String get swipeModeFolders => 'التنقل بين المجلدات';
+
+  @override
+  String get swipeModeFilters => 'التنقل بين الفلاتر والوسوم';
+
+  @override
+  String get swipeModeBoth => 'المجلدات والفلاتر والوسوم';
+
+  @override
+  String get swipeModeOff => 'إيقاف';
+
+  @override
+  String get shareIncludeTitle => 'العنوان';
+
+  @override
+  String get shareIncludeChecked => 'العناصر المكتملة';
+
+  @override
+  String get shareIncludeTags => 'الوسوم';
+
+  @override
+  String get shareTextAction => 'مشاركة النص';
+
+  @override
+  String get shareAsFileSection => 'كملف';
+
+  @override
+  String get shareInAppSection => 'داخل التطبيق';
+
+  @override
+  String get shareSendFriendInfo => 'يضع نسخة من الملاحظة في صندوق وارد صديقك.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'حرّر الملاحظة نفسها مع أصدقائك؛ تظهر التغييرات فورًا.';
+
+  @override
+  String get findPrevious => 'التطابق السابق';
+
+  @override
+  String get findNext => 'التطابق التالي';
+
+  @override
+  String get findShowAll => 'كل التطابقات';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تطابق',
+      zero: 'لا توجد تطابقات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'البحث في المرفقات وبالذكاء الاصطناعي';
+
+  @override
+  String get notesSettingsTitle => 'الملاحظات والمجلدات';
+
+  @override
+  String get noteViewSetting => 'تخطيط الشاشة الرئيسية';
+
+  @override
+  String get noteViewGrid => 'شبكة';
+
+  @override
+  String get noteViewList => 'قائمة';
+
+  @override
+  String get gridColumnsSetting => 'الأعمدة';
+
+  @override
+  String get gridColumnsInfo =>
+      'يمكنك تغييره أيضًا بالقرص على الشاشة الرئيسية.';
+
+  @override
+  String get gridColumnsAuto => 'تلقائي';
+
+  @override
+  String get folderShelfSetting => 'المجلدات في الشاشة الرئيسية';
+
+  @override
+  String get folderShelfStrip => 'صف واحد';
+
+  @override
+  String get folderShelfTiles => 'مربعات';
+
+  @override
+  String get deviceStorageTitle => 'على هذا الجهاز';
+
+  @override
+  String get deviceStorageAttachments => 'المرفقات';
+
+  @override
+  String get deviceStorageDatabase => 'نسخة محلية من الملاحظات';
+
+  @override
+  String get deviceStorageCache => 'ذاكرة التخزين المؤقت والملفات المؤقتة';
+
+  @override
+  String get deviceStorageAi => 'ذاكرة الذكاء الاصطناعي المؤقتة';
+
+  @override
+  String get deviceStorageTotal => 'الإجمالي (دون التطبيق نفسه)';
+
+  @override
+  String get deviceStorageInfo =>
+      'مسح الذاكرة المؤقتة لا يحذف الملاحظات أو المرفقات؛ تُنزَّل الصور مجددًا عند الحاجة. تُنظَّف الملفات المؤقتة القديمة عند كل تشغيل.';
+
+  @override
+  String get deviceStorageClear => 'مسح الذاكرة المؤقتة';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return 'تم تحرير $size';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'تعذّر القياس على هذا الجهاز.';
 }

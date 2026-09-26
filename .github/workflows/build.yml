@@ -171,12 +171,49 @@ jobs:
       # uzun tek adımdı ve CI'da zaman aşımına/iptale yol açıyordu. Neredeyse
       # tüm güncel telefonlar arm64 olduğundan tek mimariye indirmek AOT
       # derleme süresini ~1/3'e indirir.
+      #
+      # BOYUT (kullanıcı bulgusu 2026-09-26: "uygulama yüklenince boyutu
+      # 300 MB'ı aşıyor"). Boyut raporu (koşu #406) iki gereksiz yükü gösterdi:
+      # * `pdfium.wasm` (4 MB) — pdfrx'in WEB motoru; Android'de hiç
+      #   kullanılmıyor ama paketin varlıkları olduğu için APK'ya giriyordu.
+      #   pdfrx'in pubspec'indeki `- assets/` satırı pub önbelleğinde yorum
+      #   yapılır; derlemeden sonra GERİ ALINIR (web işi aynı önbelleği
+      #   kullanıyor, önbellek bu koşuda kaydedilirse wasm'sız kalmasın).
+      #   TUZAK: pdfrx'in kendi `dart run pdfrx:remove_wasm_modules` aracı
+      #   1.3.5'te DERLENMİYOR (dart_pubspec_licenses 3.2 API'si değişmiş) —
+      #   aynı işi yapan satır içi betik. Dosya CRLF; satır sonu korunur.
+      # * Dart hata ayıklama bilgisi — `--split-debug-info` onu libapp.so'dan
+      #   ayırır (sembolik yığın izi uygulamada hiçbir yere gönderilmiyor).
+      - name: pdfrx web motorunu Android paketinden çıkar
+        run: |
+          cat > /tmp/pdfrx_wasm.py <<'PY'
+          import json, re, sys, urllib.parse, pathlib
+          revert = len(sys.argv) > 1 and sys.argv[1] == 'revert'
+          cfg = json.load(open('.dart_tool/package_config.json'))
+          root = [p['rootUri'] for p in cfg['packages'] if p['name'] == 'pdfrx'][0]
+          path = pathlib.Path(urllib.parse.unquote(root).removeprefix('file://')) / 'pubspec.yaml'
+          text = path.read_bytes().decode('utf-8')
+          if revert:
+              new, n = re.subn(r'(?m)^(\s*)# - assets/(\r?)$', r'\1- assets/\2', text)
+          else:
+              new, n = re.subn(r'(?m)^(\s*)- assets/(\r?)$', r'\1# - assets/\2', text)
+              assert n == 1, 'pdfrx assets satiri bulunamadi'
+          path.write_bytes(new.encode('utf-8'))
+          print('pdfrx', 'geri alindi' if revert else 'wasm cikarildi', n, path)
+          PY
+          python3 /tmp/pdfrx_wasm.py
+
       - name: APK derle
         run: >
           flutter build apk --release
           --target-platform android-arm64
+          --split-debug-info=build/app/outputs/symbols
           --build-number=${{ github.run_number }}
           --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}
+
+      - name: pdfrx web motorunu geri koy
+        if: always()
+        run: python3 /tmp/pdfrx_wasm.py revert || true
 
       # BOYUT RAPORU: APK'nın içinde hangi mimarilerin ve hangi büyük
       # dosyaların olduğunu yazar. 2026-08-16'da APK 60 MB'tan 100 MB'a

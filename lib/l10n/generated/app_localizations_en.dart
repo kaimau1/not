@@ -3810,4 +3810,156 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Tools';
+
+  @override
+  String get folderOrderTitle => 'Folder order';
+
+  @override
+  String get folderReorder => 'Reorder folders';
+
+  @override
+  String get folderOrderManual => 'Custom';
+
+  @override
+  String get folderOrderName => 'By name';
+
+  @override
+  String get folderOrderNewest => 'Newest first';
+
+  @override
+  String get folderOrderNoteCount => 'By note count';
+
+  @override
+  String get folderOrderHint =>
+      'Drag the handles to reorder. The same order is used in the folder strip and when swiping.';
+
+  @override
+  String get swipeModeTitle => 'Swiping left/right on the home screen';
+
+  @override
+  String get swipeModeFolders => 'Switch between folders';
+
+  @override
+  String get swipeModeFilters => 'Switch between filters and tags';
+
+  @override
+  String get swipeModeBoth => 'Folders, filters and tags';
+
+  @override
+  String get swipeModeOff => 'Off';
+
+  @override
+  String get shareIncludeTitle => 'Title';
+
+  @override
+  String get shareIncludeChecked => 'Completed items';
+
+  @override
+  String get shareIncludeTags => 'Tags';
+
+  @override
+  String get shareTextAction => 'Share text';
+
+  @override
+  String get shareAsFileSection => 'As a file';
+
+  @override
+  String get shareInAppSection => 'Inside the app';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Drops a copy of the note into a friend\'s inbox.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Edit the same note together with friends; changes appear instantly.';
+
+  @override
+  String get findPrevious => 'Previous match';
+
+  @override
+  String get findNext => 'Next match';
+
+  @override
+  String get findShowAll => 'All matches';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+      zero: 'No matches',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Search attachments & AI';
+
+  @override
+  String get notesSettingsTitle => 'Notes & folders';
+
+  @override
+  String get noteViewSetting => 'Home screen layout';
+
+  @override
+  String get noteViewGrid => 'Grid';
+
+  @override
+  String get noteViewList => 'List';
+
+  @override
+  String get gridColumnsSetting => 'Columns';
+
+  @override
+  String get gridColumnsInfo =>
+      'You can also pinch on the home screen to change it.';
+
+  @override
+  String get gridColumnsAuto => 'Auto';
+
+  @override
+  String get folderShelfSetting => 'Folders on the home screen';
+
+  @override
+  String get folderShelfStrip => 'Single row';
+
+  @override
+  String get folderShelfTiles => 'Tiles';
+
+  @override
+  String get deviceStorageTitle => 'On this device';
+
+  @override
+  String get deviceStorageAttachments => 'Attachments';
+
+  @override
+  String get deviceStorageDatabase => 'Local copy of notes';
+
+  @override
+  String get deviceStorageCache => 'Cache and temporary files';
+
+  @override
+  String get deviceStorageAi => 'AI cache';
+
+  @override
+  String get deviceStorageTotal => 'Total (excluding the app itself)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Clearing the cache does not delete notes or attachments; images download again when needed. Old temporary files are also cleaned up on every launch.';
+
+  @override
+  String get deviceStorageClear => 'Clear cache';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size freed';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Could not be measured on this device.';
 }

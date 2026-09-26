@@ -12,6 +12,7 @@ import '../data/attachment_repository.dart';
 import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
+import '../domain/note_share_text.dart';
 import 'color_picker_sheet.dart';
 import 'note_stats_sheet.dart';
 import 'notes_providers.dart';
@@ -276,7 +277,12 @@ Future<void> _runNoteAction(
       );
     case 'copy':
       if (!await unlockIfNeeded()) return;
-      await Clipboard.setData(ClipboardData(text: note.toPlainText()));
+      // Paylaşımla AYNI biçim (bkz. noteShareText): `- [ ]` işaretleri yok.
+      await Clipboard.setData(
+        ClipboardData(
+          text: noteShareText(note, pageLabel: l10n.pageLabel),
+        ),
+      );
       if (context.mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()

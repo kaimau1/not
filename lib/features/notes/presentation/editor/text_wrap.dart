@@ -718,6 +718,10 @@ int _anchorCountBefore(String s, int offset) {
 
 bool _isAnchorCode(int c) => c == _kWrapAnchorCode || c == _kWrapGlueCode;
 
+/// [c] sarma çapası ya da yapıştırıcısı mı (görünmez, düzenleme tamponuna
+/// özgü karakterler — bkz. [kWrapAnchorChar], [kWrapGlueChar]).
+bool isWrapAnchorCode(int c) => _isAnchorCode(c);
+
 /// Çapasız (mantıksal) metindeki konumu görüntü metnindeki konuma çevirir.
 /// İmleç SATIR BAŞI dolgusunun ARDINA konur — kullanıcı satır başında yazmaya
 /// başladığında harf (ve imleç) dolgunun soluna, yani görselin üstüne düşmez.
@@ -1718,7 +1722,78 @@ class WrapTextController extends TextEditingController {
       // aralığın konumunu kaydırır ve altı çizili bölge yanlış yere düşer.
       span = _cachedSpan(text, _widths, style, linkColor);
     }
-    return _withPendingPreview(span, style);
+    return _withSearchHits(_withPendingPreview(span, style), style);
+  }
+
+  // ---- Not içi arama vurgusu ---------------------------------------------
+
+  List<(int, int)> _searchHits = const [];
+  int _searchCurrent = -1;
+  Color _searchHitColor = const Color(0x66FFD54F);
+  Color _searchCurrentColor = const Color(0xFFFFB300);
+
+  /// Not içi aramanın vurguları (kullanıcı isteği 2026-09-26: "not içi
+  /// aramada sayfada canlı aranmalı"). [hits] TAMPON konumlarıdır (bkz.
+  /// `TextSearchIndex`); [current] o an odaklanan eşleşmenin sırası (-1 =
+  /// bu alanda değil). Yalnız ÇİZİM değişir: metne, imlece, geri alma
+  /// yığınına dokunulmaz.
+  void setSearchHighlights(
+    List<(int, int)> hits, {
+    int current = -1,
+    required Color hitColor,
+    required Color currentColor,
+  }) {
+    if (_disposed || (_searchHits.isEmpty && hits.isEmpty)) return;
+    _searchHits = hits;
+    _searchCurrent = current;
+    _searchHitColor = hitColor;
+    _searchCurrentColor = currentColor;
+    notifyListeners();
+  }
+
+  /// Madde silinince denetleyicisi atılır; arama çubuğu o sırada açıksa
+  /// vurgusunu temizlemeye çalışabilir — atılmış bildiriciye dokunulmaz.
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void clearSearchHighlights() {
+    if (_disposed || _searchHits.isEmpty) return;
+    _searchHits = const [];
+    _searchCurrent = -1;
+    notifyListeners();
+  }
+
+  TextSpan _withSearchHits(TextSpan span, TextStyle? style) {
+    final hits = _searchHits;
+    if (hits.isEmpty) return span;
+    InlineSpan out = span;
+    final length = text.length;
+    // Tavan: binlerce eşleşmede her biri span ağacını baştan gezer; ekranda
+    // zaten bir kaçı görünür. Odaktaki eşleşme her zaman boyanır.
+    const limit = 400;
+    for (var i = 0; i < hits.length; i++) {
+      if (i >= limit && i != _searchCurrent) continue;
+      final (start, end) = hits[i];
+      if (start < 0 || end > length || end <= start) continue;
+      final color = i == _searchCurrent
+          ? _searchCurrentColor
+          : _searchHitColor;
+      out = restyleRange(
+        out,
+        start,
+        end,
+        (current) =>
+            (current ?? style ?? const TextStyle()).copyWith(
+              backgroundColor: color,
+            ),
+      );
+    }
+    return out is TextSpan ? out : span;
   }
 
   /// BEKLEYEN biçimin canlı önizlemesi: koşunun aralığı ekranda biçimli

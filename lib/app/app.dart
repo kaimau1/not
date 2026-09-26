@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,6 +8,7 @@ import '../core/l10n_ext.dart';
 import '../core/widgets/undo_snackbar.dart';
 import '../features/settings/settings_providers.dart';
 import 'router.dart';
+import 'web_history.dart';
 import 'theme/app_theme.dart';
 
 /// Sistem dil listesinden uygulamanın dilini seçer; hiçbiri tutmazsa
@@ -50,12 +52,26 @@ Widget fixedTypography(BuildContext context, Widget child, double fontScale) =>
       child: child,
     );
 
+/// Web'de tarayıcı geçmişini "önce ana sayfa, sonra çıkış" kuralıyla yazan
+/// konum sağlayıcısı (bkz. [HomeFirstRouteInformationProvider]). Yönlendirici
+/// başına TEK örnek: her build'de yenisi kurulsa geçmiş durumu sıfırlanırdı.
+final _webRouteInfoProvider = Provider<RouteInformationProvider?>((ref) {
+  if (!kIsWeb) return null;
+  final router = ref.watch(routerProvider);
+  return HomeFirstRouteInformationProvider(
+    router.routeInformationProvider,
+    // EN ÜSTTEKİ eşleşme — push'lanmış not dahil (bkz. currentLocation).
+    location: () => router.state.uri,
+  );
+});
+
 class NotlarApp extends ConsumerWidget {
   const NotlarApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final webInfo = ref.watch(_webRouteInfoProvider);
     final themeMode = ref.watch(effectiveThemeModeProvider);
     final fontScale = ref.watch(fontScaleProvider);
     final font = ref.watch(appFontProvider);
@@ -65,7 +81,17 @@ class NotlarApp extends ConsumerWidget {
       title: 'Notlar',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootScaffoldMessengerKey,
-      routerConfig: router,
+      // Web: go_router'ın parçaları AYRI verilir ki tarayıcı geçmişine
+      // yazan sağlayıcı sarılabilsin; öbür platformlarda olduğu gibi.
+      routerConfig: webInfo == null ? router : null,
+      routeInformationProvider: webInfo,
+      routeInformationParser: webInfo == null
+          ? null
+          : router.routeInformationParser,
+      routerDelegate: webInfo == null ? null : router.routerDelegate,
+      backButtonDispatcher: webInfo == null
+          ? null
+          : router.backButtonDispatcher,
       theme: paper ? AppTheme.paper(font: font) : AppTheme.light(font: font),
       darkTheme: AppTheme.dark(font: font),
       themeMode: themeMode,

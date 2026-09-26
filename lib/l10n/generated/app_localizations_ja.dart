@@ -3762,4 +3762,150 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'ツール';
+
+  @override
+  String get folderOrderTitle => 'フォルダの順序';
+
+  @override
+  String get folderReorder => 'フォルダを並べ替え';
+
+  @override
+  String get folderOrderManual => 'カスタム';
+
+  @override
+  String get folderOrderName => '名前順';
+
+  @override
+  String get folderOrderNewest => '新しい順';
+
+  @override
+  String get folderOrderNoteCount => 'メモの数順';
+
+  @override
+  String get folderOrderHint => 'ハンドルをドラッグして並べ替えます。同じ順序がフォルダバーとスワイプにも使われます。';
+
+  @override
+  String get swipeModeTitle => 'ホーム画面でのスワイプ';
+
+  @override
+  String get swipeModeFolders => 'フォルダを切り替え';
+
+  @override
+  String get swipeModeFilters => 'フィルタとタグを切り替え';
+
+  @override
+  String get swipeModeBoth => 'フォルダ・フィルタ・タグ';
+
+  @override
+  String get swipeModeOff => 'オフ';
+
+  @override
+  String get shareIncludeTitle => 'タイトル';
+
+  @override
+  String get shareIncludeChecked => '完了した項目';
+
+  @override
+  String get shareIncludeTags => 'タグ';
+
+  @override
+  String get shareTextAction => 'テキストを共有';
+
+  @override
+  String get shareAsFileSection => 'ファイルとして';
+
+  @override
+  String get shareInAppSection => 'アプリ内';
+
+  @override
+  String get shareSendFriendInfo => 'メモのコピーを友達の受信箱に届けます。';
+
+  @override
+  String get shareCollaborateInfo => '友達と同じメモを一緒に編集します。変更はすぐに反映されます。';
+
+  @override
+  String get findPrevious => '前の一致';
+
+  @override
+  String get findNext => '次の一致';
+
+  @override
+  String get findShowAll => 'すべての一致';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 件の一致',
+      zero: '一致なし',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => '添付ファイルとAIで検索';
+
+  @override
+  String get notesSettingsTitle => 'メモとフォルダ';
+
+  @override
+  String get noteViewSetting => 'ホーム画面の表示';
+
+  @override
+  String get noteViewGrid => 'グリッド';
+
+  @override
+  String get noteViewList => 'リスト';
+
+  @override
+  String get gridColumnsSetting => '列数';
+
+  @override
+  String get gridColumnsInfo => 'ホーム画面でピンチしても変更できます。';
+
+  @override
+  String get gridColumnsAuto => '自動';
+
+  @override
+  String get folderShelfSetting => 'ホーム画面のフォルダ';
+
+  @override
+  String get folderShelfStrip => '1 行';
+
+  @override
+  String get folderShelfTiles => 'タイル';
+
+  @override
+  String get deviceStorageTitle => 'この端末';
+
+  @override
+  String get deviceStorageAttachments => '添付ファイル';
+
+  @override
+  String get deviceStorageDatabase => 'メモのローカルコピー';
+
+  @override
+  String get deviceStorageCache => 'キャッシュと一時ファイル';
+
+  @override
+  String get deviceStorageAi => 'AI キャッシュ';
+
+  @override
+  String get deviceStorageTotal => '合計（アプリ本体を除く）';
+
+  @override
+  String get deviceStorageInfo =>
+      'キャッシュを消去してもメモや添付ファイルは削除されません。画像は必要に応じて再ダウンロードされます。古い一時ファイルは起動のたびに削除されます。';
+
+  @override
+  String get deviceStorageClear => 'キャッシュを消去';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size を解放しました';
+  }
+
+  @override
+  String get deviceStorageUnavailable => 'この端末では測定できませんでした。';
 }

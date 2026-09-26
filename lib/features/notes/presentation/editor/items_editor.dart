@@ -299,6 +299,16 @@ class ItemsEditorState extends State<ItemsEditor> {
 
   /// Alt çubuktaki "Seç" segmentinin girişi (bkz. note_editor_screen).
   /// Liste boşken seçilecek bir şey yok, kip açılmaz.
+  /// NOT İÇİ ARAMANIN taradığı madde alanları, EKRANDAKİ sırayla
+  /// (işaretsizler önce — bkz. [_items] düzeni). Satırı henüz kurulmamış
+  /// (denetleyicisi olmayan) madde atlanır: ekranda değil, vurgulanamaz.
+  List<({String id, WrapTextController controller, FocusNode focus})>
+  searchFields() => [
+    for (final item in _items)
+      if (_controllers[item.id] case final controller?)
+        (id: item.id, controller: controller, focus: _focusFor(item)),
+  ];
+
   void startSelection() {
     if (_items.isEmpty || _selectionMode) return;
     setState(() => _selectMode = true);
@@ -1029,15 +1039,21 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// bir "Yeni öğe" satırı ve hemen altında "+ Yeni öğe" düğmesi): düğme her
   /// dokunuşta YENİ bir boş öğe açıyordu. Boş öğeye yazmadan başka yere
   /// dokunan ya da düğmeye iki kez basan kullanıcıda boş satırlar birikiyor,
-  /// kayda da boş öğe olarak gidiyordu. İşaretsizlerin sonunda zaten boş bir
-  /// öğe varsa artık YENİSİ açılmaz, o öğeye odaklanılır.
+  /// kayda da boş öğe olarak gidiyordu.
+  ///
+  /// SINIR 1 DEĞİL 3 (kullanıcı isteği 2026-09-26: "1'den fazla yeni boş öğe
+  /// eklenebilmeli, max 3 tane"): tek boş öğe sınırı, önceden birkaç satır
+  /// açıp sonra sırayla doldurmak isteyeni engelliyordu. İşaretsizlerin
+  /// sonunda üst üste [kMaxTrailingEmptyItems] boş öğe varsa YENİSİ açılmaz,
+  /// ilk boş olana odaklanılır — birikme yine sınırlı.
   void _addItem() {
-    NoteItem? lastOpen;
-    for (final i in _items) {
-      if (!i.checked) lastOpen = i;
-    }
-    if (lastOpen != null && lastOpen.text.trim().isEmpty) {
-      _focusFor(lastOpen).requestFocus();
+    final open = [
+      for (final i in _items)
+        if (!i.checked) i,
+    ];
+    final trailing = trailingEmptyCount(open);
+    if (trailing >= kMaxTrailingEmptyItems) {
+      _focusFor(open[open.length - trailing]).requestFocus();
       return;
     }
     final item = NoteItem(id: _uuid.v4(), text: '');
@@ -2331,4 +2347,19 @@ class _CheckPopState extends State<_CheckPop>
     _controller.dispose();
     super.dispose();
   }
+}
+
+
+/// "+ Yeni öğe" ile üst üste açılabilecek en çok boş öğe (bkz.
+/// [ItemsEditorState._addItem]).
+const int kMaxTrailingEmptyItems = 3;
+
+/// [items]in SONUNDA üst üste duran boş (yalnız boşluk içeren) öğe sayısı.
+int trailingEmptyCount(List<NoteItem> items) {
+  var count = 0;
+  for (var i = items.length - 1; i >= 0; i--) {
+    if (items[i].text.trim().isNotEmpty) break;
+    count++;
+  }
+  return count;
 }

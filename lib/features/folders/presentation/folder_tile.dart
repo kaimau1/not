@@ -6,6 +6,7 @@ import '../../notes/data/note_shares_repository.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../notes/presentation/shared_notes_screen.dart';
 import '../data/folder_activity.dart';
+import '../data/folder_order.dart';
 import '../data/folders_repository.dart';
 import '../domain/note_folder.dart';
 import 'folder_screen.dart';
@@ -35,9 +36,12 @@ class FolderTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref
-        .watch(folderNotesProvider(folder.id))
-        .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
+    // TEK GEÇİŞLİK sayaç (bkz. folderNoteCountsProvider): eskiden her karo
+    // `folderNotesProvider` ile notların TAMAMINI süzüp SIRALIYORDU — on
+    // klasörde her not yazımı on tam tarama + on sıralama demekti.
+    final count = ref.watch(
+      folderNoteCountsProvider.select((m) => m[folder.id] ?? 0),
+    );
     // PAYLAŞILAN klasörde okunmamış hareket rozeti (kullanıcı isteği
     // 2026-09-04). Paylaşılmamış klasörde karşı taraf yok — hiç sorulmaz.
     final unread = folder.isShared
@@ -303,23 +307,29 @@ class NewFolderTile extends ConsumerWidget {
 /// not sayısı, ~36 px yüksekliğinde. Aynı eylemler — dokun aç, uzun bas
 /// yönet — böylece iki görünüm arasında öğrenilen şey değişmez.
 class FolderChip extends ConsumerWidget {
-  const FolderChip({super.key, required this.folder});
+  const FolderChip({super.key, required this.folder, this.selected = false});
 
   final NoteFolder folder;
+
+  /// Ana ekran bu klasörün notlarını gösteriyor (yana çekişle gelindi —
+  /// bkz. `nextHomeSwipeStop`). Çip vurgulanır ki kullanıcı klasörler
+  /// arasında NEREDE olduğunu görsün.
+  final bool selected;
 
   /// Şeridin yüksekliği; kaydırma alanının sabit kalması için tek yerde.
   static const double stripHeight = 40;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref
-        .watch(folderNotesProvider(folder.id))
-        .maybeWhen(data: (notes) => notes.length, orElse: () => 0);
+    final count = ref.watch(
+      folderNoteCountsProvider.select((m) => m[folder.id] ?? 0),
+    );
     return _ChipShell(
       accent: folder.accent,
       icon: folder.iconData,
       label: folder.name,
       count: count,
+      selected: selected,
       trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
       onTap: () => FolderScreen.open(context, folder.id),
       onLongPress: () => showFolderActionsSheet(context, ref, folder),
@@ -424,8 +434,12 @@ class _ChipShell extends StatelessWidget {
     this.count,
     this.trailingIcon,
     this.subtle = false,
+    this.selected = false,
     this.onLongPress,
   });
+
+  /// Seçili çip: klasör renginde kontur ve hafif zemin.
+  final bool selected;
 
   /// Simge kutusunun rengi; null ise simge kutusuz, soluk çizilir.
   final Color? accent;
@@ -444,12 +458,23 @@ class _ChipShell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final muted = scheme.onSurfaceVariant;
     final accent = this.accent;
+    final highlight = selected ? (accent ?? scheme.primary) : null;
     return Material(
-      color: subtle ? Colors.transparent : scheme.surfaceContainerLowest,
+      color: highlight != null
+          ? Color.alphaBlend(
+              highlight.withValues(alpha: 0.16),
+              scheme.surfaceContainerLowest,
+            )
+          : subtle
+          ? Colors.transparent
+          : scheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
         side: BorderSide(
-          color: scheme.outlineVariant.withValues(alpha: subtle ? 1 : 0.6),
+          color:
+              highlight ??
+              scheme.outlineVariant.withValues(alpha: subtle ? 1 : 0.6),
+          width: highlight != null ? 1.5 : 1,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -481,7 +506,7 @@ class _ChipShell extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: subtle ? muted : scheme.onSurface,
                   ),
                 ),

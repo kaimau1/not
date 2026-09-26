@@ -1374,6 +1374,19 @@ int snapOutOfMarkers(String text, int offset, {bool backward = false}) {
   return after ?? text.length;
 }
 
+/// İşaretli metnin GÖRÜNEN parçalarının `[başlangıç, bitiş)` aralıkları —
+/// işaretli metindeki konumlarla. İşaret yoksa tek aralık: metnin tamamı.
+///
+/// Not içi aramanın (bkz. `TextSearchIndex`) eşleşmeyi işaretlerin
+/// ARASINDAN geçerek bulabilmesi için: "**sü**t" ekranda "süt" okunur.
+List<(int, int)> visibleRuns(String marked) {
+  if (!_hasMarker(marked)) return [(0, marked.length)];
+  return [
+    for (final leaf in _parse(marked))
+      (leaf.markedStart, leaf.markedStart + leaf.text.length),
+  ];
+}
+
 /// [index] konumundaki karakter GÖRÜNMEZ bir işaretin parçası mı?
 bool isMarkerOffset(String text, int index) {
   if (index < 0 || index >= text.length) return false;

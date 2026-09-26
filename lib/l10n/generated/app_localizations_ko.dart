@@ -3766,4 +3766,150 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiToolsSection => '도구';
+
+  @override
+  String get folderOrderTitle => '폴더 순서';
+
+  @override
+  String get folderReorder => '폴더 재정렬';
+
+  @override
+  String get folderOrderManual => '사용자 지정';
+
+  @override
+  String get folderOrderName => '이름순';
+
+  @override
+  String get folderOrderNewest => '최신순';
+
+  @override
+  String get folderOrderNoteCount => '메모 수순';
+
+  @override
+  String get folderOrderHint => '핸들을 끌어 순서를 바꾸세요. 같은 순서가 폴더 줄과 스와이프에도 쓰입니다.';
+
+  @override
+  String get swipeModeTitle => '홈 화면에서 스와이프';
+
+  @override
+  String get swipeModeFolders => '폴더 간 전환';
+
+  @override
+  String get swipeModeFilters => '필터와 태그 간 전환';
+
+  @override
+  String get swipeModeBoth => '폴더, 필터, 태그';
+
+  @override
+  String get swipeModeOff => '끔';
+
+  @override
+  String get shareIncludeTitle => '제목';
+
+  @override
+  String get shareIncludeChecked => '완료된 항목';
+
+  @override
+  String get shareIncludeTags => '태그';
+
+  @override
+  String get shareTextAction => '텍스트 공유';
+
+  @override
+  String get shareAsFileSection => '파일로';
+
+  @override
+  String get shareInAppSection => '앱 안에서';
+
+  @override
+  String get shareSendFriendInfo => '메모 사본을 친구의 받은함에 넣습니다.';
+
+  @override
+  String get shareCollaborateInfo => '친구와 같은 메모를 함께 편집하세요. 변경 사항이 바로 보입니다.';
+
+  @override
+  String get findPrevious => '이전 일치';
+
+  @override
+  String get findNext => '다음 일치';
+
+  @override
+  String get findShowAll => '모든 일치';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count개 일치',
+      zero: '일치 없음',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => '첨부 파일과 AI로 검색';
+
+  @override
+  String get notesSettingsTitle => '메모 및 폴더';
+
+  @override
+  String get noteViewSetting => '홈 화면 보기';
+
+  @override
+  String get noteViewGrid => '격자';
+
+  @override
+  String get noteViewList => '목록';
+
+  @override
+  String get gridColumnsSetting => '열 수';
+
+  @override
+  String get gridColumnsInfo => '홈 화면에서 두 손가락으로 확대/축소해도 바뀝니다.';
+
+  @override
+  String get gridColumnsAuto => '자동';
+
+  @override
+  String get folderShelfSetting => '홈 화면의 폴더';
+
+  @override
+  String get folderShelfStrip => '한 줄';
+
+  @override
+  String get folderShelfTiles => '타일';
+
+  @override
+  String get deviceStorageTitle => '이 기기';
+
+  @override
+  String get deviceStorageAttachments => '첨부 파일';
+
+  @override
+  String get deviceStorageDatabase => '메모 로컬 사본';
+
+  @override
+  String get deviceStorageCache => '캐시 및 임시 파일';
+
+  @override
+  String get deviceStorageAi => 'AI 캐시';
+
+  @override
+  String get deviceStorageTotal => '합계 (앱 자체 제외)';
+
+  @override
+  String get deviceStorageInfo =>
+      '캐시를 지워도 메모와 첨부 파일은 삭제되지 않으며, 이미지는 필요할 때 다시 받습니다. 오래된 임시 파일은 실행할 때마다 정리됩니다.';
+
+  @override
+  String get deviceStorageClear => '캐시 지우기';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size 확보됨';
+  }
+
+  @override
+  String get deviceStorageUnavailable => '이 기기에서는 측정할 수 없습니다.';
 }

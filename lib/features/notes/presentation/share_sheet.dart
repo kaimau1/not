@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../auth/presentation/auth_providers.dart';
+import '../../inbox/presentation/send_note_sheet.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_pdf.dart';
 import '../data/note_share.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
+import '../domain/note_share_text.dart';
+import '../domain/note_type.dart';
+import 'collaborators_sheet.dart';
+import 'pdf_export_screen.dart';
 
-/// Notun PAYLAŞ menüsü — üç ayrı yol, tek yerde.
+/// Notun PAYLAŞ levhası.
 ///
 /// Kök neden (kullanıcı bulgusu 2026-08-08: "paylaş seçenekleri doğru
 /// çalışmıyor"): tek bir "Paylaş" düğmesi vardı ve o da notun DÜZ METNİNİ
@@ -18,59 +24,247 @@ import '../domain/note.dart';
 /// şey yapmadan kapanıyor, üstelik belgenin üzerindeki balonlar hiçbir yoldan
 /// karşı tarafa gitmiyordu.
 ///
-/// Üç yol birbirinin yerine geçmez:
-/// * **Düz metin** — nottaki yazı, herhangi bir uygulamaya.
-/// * **Not olarak** (`.notpaket`) — başka bir Not kullanıcısına; ekler, sayfa
-///   notları, çizimler ve balonlar DÜZENLENEBİLİR gelir.
-/// * **Balonlu PDF** — balon/vurgu/çizim belgenin içine basılır; alıcının Not
-///   uygulaması olması gerekmez, herhangi bir PDF okuyucu gösterir.
+/// 2026-09-26 YENİDEN DÜZEN (kullanıcı: "not paylaşım seçenekleri ve
+/// paylaşım içeriğinin düzeni iyileştirilmeli", "kopyalama vb. şeylerin
+/// düzeni"): levha üç düz satırdı; ne gideceği görülmüyor, metin Markdown
+/// işaretleriyle (`- [ ]`) gidiyordu, kopyalama ve PDF/Word başka
+/// menülerdeydi. Artık:
+/// * **Önizleme** — gönderilecek metin levhanın tepesinde, seçeneklerle
+///   canlı değişir (bkz. [noteShareText]).
+/// * **İçerik çipleri** — başlık, tamamlanan maddeler, etiketler.
+/// * **Metin** — Paylaş ve Kopyala yan yana, aynı metin.
+/// * **Dosya olarak** — PDF / Word, not paketi (`.notpaket`), balonlu PDF.
+/// * **Uygulama içinde** — arkadaşa gönder, birlikte düzenle (ortak not).
+///
+/// [ownerId] doluysa not BAŞKASININ (ortak not / paylaşılan klasör): ortak
+/// çalışan ekleme yetkisi yalnız sahipte, o satır çizilmez. [onExport]
+/// verilirse PDF/Word satırı onu çağırır (editör sayfa ölçülerini geçirir).
 Future<void> showNoteShareSheet(
   BuildContext context,
   WidgetRef ref,
-  Note note,
-) async {
-  final l10n = context.l10n;
-  final hasText = note.toPlainText().trim().isNotEmpty;
-  final stamped = countStampablePdfs(note);
-  final choice = await showModalBottomSheet<String>(
+  Note note, {
+  String? ownerId,
+  VoidCallback? onExport,
+}) async {
+  final result = await showModalBottomSheet<(String, ShareTextOptions)>(
     context: context,
     showDragHandle: true,
-    builder: (sheetContext) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _tile(
-            sheetContext,
-            value: 'text',
-            icon: Icons.notes_outlined,
-            title: l10n.shareAsText,
-            subtitle: hasText ? l10n.shareAsTextInfo : l10n.shareAsTextEmpty,
-            enabled: hasText,
-          ),
-          _tile(
-            sheetContext,
-            value: 'package',
-            icon: Icons.ios_share,
-            title: l10n.shareAsNote,
-            subtitle: l10n.shareAsNoteInfo,
-            enabled: true,
-          ),
-          _tile(
-            sheetContext,
-            value: 'pdf',
-            icon: Icons.picture_as_pdf_outlined,
-            title: l10n.sharePdfWithBubbles,
-            subtitle: stamped > 0
-                ? l10n.sharePdfWithBubblesInfo
-                : l10n.sharePdfWithBubblesNone,
-            enabled: stamped > 0,
-          ),
-        ],
-      ),
+    isScrollControlled: true,
+    useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 640),
+    builder: (_) => _ShareSheet(
+      note: note,
+      canCollaborate: ownerId == null && !ref.read(isAnonymousProvider),
     ),
   );
-  if (choice == null || !context.mounted) return;
-  await runNoteShare(context, ref, note, choice);
+  if (result == null || !context.mounted) return;
+  final (choice, options) = result;
+  switch (choice) {
+    case 'export':
+      if (onExport != null) {
+        onExport();
+      } else {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => PdfExportScreen(note: note)),
+        );
+      }
+    case 'friend':
+      await showSendNoteToFriendSheet(context, ref, note);
+    case 'collab':
+      await showCollaboratorsSheet(context, ref, noteId: note.id);
+    default:
+      await runNoteShare(context, ref, note, choice, options: options);
+  }
+}
+
+class _ShareSheet extends StatefulWidget {
+  const _ShareSheet({required this.note, required this.canCollaborate});
+
+  final Note note;
+  final bool canCollaborate;
+
+  @override
+  State<_ShareSheet> createState() => _ShareSheetState();
+}
+
+class _ShareSheetState extends State<_ShareSheet> {
+  var _options = const ShareTextOptions();
+
+  void _pop(String choice) => Navigator.pop(context, (choice, _options));
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final note = widget.note;
+    final text = noteShareText(
+      note,
+      options: _options,
+      pageLabel: l10n.pageLabel,
+    );
+    final hasText = text.trim().isNotEmpty;
+    final hasChecked =
+        note.type != NoteType.ordered &&
+        note.type != NoteType.archive &&
+        note.items.any((i) => i.checked && i.text.trim().isNotEmpty);
+    final hasTitle = note.displayTitle.trim().isNotEmpty;
+    final stamped = countStampablePdfs(note);
+
+    Widget section(String label) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Text(
+        label,
+        style: theme.textTheme.labelMedium?.copyWith(
+          color: scheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            child: Text(l10n.share, style: theme.textTheme.titleLarge),
+          ),
+          // ÖNİZLEME: gönderilecek metnin kendisi — seçenekler değişince
+          // anında güncellenir. Uzun notta ilk satırlar; sonu solar.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 168),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: ClipRect(
+                child: ShaderMask(
+                  shaderCallback: (rect) => LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: const [Colors.black, Colors.black, Colors.transparent],
+                    stops: const [0, 0.78, 1],
+                  ).createShader(rect),
+                  blendMode: BlendMode.dstIn,
+                  child: SingleChildScrollView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    child: Text(
+                      hasText ? text : l10n.shareAsTextEmpty,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: hasText ? null : scheme.onSurfaceVariant,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (hasTitle || hasChecked || note.tags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  if (hasTitle)
+                    FilterChip(
+                      label: Text(l10n.shareIncludeTitle),
+                      selected: _options.title,
+                      onSelected: (v) => setState(
+                        () => _options = _options.copyWith(title: v),
+                      ),
+                    ),
+                  if (hasChecked)
+                    FilterChip(
+                      label: Text(l10n.shareIncludeChecked),
+                      selected: _options.checked,
+                      onSelected: (v) => setState(
+                        () => _options = _options.copyWith(checked: v),
+                      ),
+                    ),
+                  if (note.tags.isNotEmpty)
+                    FilterChip(
+                      label: Text(l10n.shareIncludeTags),
+                      selected: _options.tags,
+                      onSelected: (v) => setState(
+                        () => _options = _options.copyWith(tags: v),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: hasText ? () => _pop('text') : null,
+                    icon: const Icon(Icons.share_outlined, size: 18),
+                    label: Text(l10n.shareTextAction),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: hasText ? () => _pop('copy') : null,
+                    icon: const Icon(Icons.copy_outlined, size: 18),
+                    label: Text(l10n.copy),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          section(l10n.shareAsFileSection),
+          _tile(
+            context,
+            onTap: () => _pop('export'),
+            icon: Icons.description_outlined,
+            title: l10n.exportNotesOption,
+            subtitle: l10n.exportNotesOptionInfo,
+          ),
+          _tile(
+            context,
+            onTap: () => _pop('package'),
+            icon: Icons.inventory_2_outlined,
+            title: l10n.shareAsNote,
+            subtitle: l10n.shareAsNoteInfo,
+          ),
+          if (stamped > 0)
+            _tile(
+              context,
+              onTap: () => _pop('pdf'),
+              icon: Icons.picture_as_pdf_outlined,
+              title: l10n.sharePdfWithBubbles,
+              subtitle: l10n.sharePdfWithBubblesInfo,
+            ),
+          section(l10n.shareInAppSection),
+          _tile(
+            context,
+            onTap: () => _pop('friend'),
+            icon: Icons.send_outlined,
+            title: l10n.sendNoteAction,
+            subtitle: l10n.shareSendFriendInfo,
+          ),
+          if (widget.canCollaborate)
+            _tile(
+              context,
+              onTap: () => _pop('collab'),
+              icon: Icons.group_add_outlined,
+              title: l10n.collaborators,
+              subtitle: l10n.shareCollaborateInfo,
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// **Dışa aktarma yolu seçimi** — yalnız balonlu/çizimli belge taşıyan
@@ -93,19 +287,17 @@ Future<String?> showExportChoiceSheet(BuildContext context) {
         children: [
           _tile(
             sheetContext,
-            value: 'document',
+            onTap: () => Navigator.pop(sheetContext, 'document'),
             icon: Icons.picture_as_pdf_outlined,
             title: l10n.sharePdfWithBubbles,
             subtitle: l10n.sharePdfWithBubblesInfo,
-            enabled: true,
           ),
           _tile(
             sheetContext,
-            value: 'notes',
+            onTap: () => Navigator.pop(sheetContext, 'notes'),
             icon: Icons.notes_outlined,
             title: l10n.exportNotesOption,
             subtitle: l10n.exportNotesOptionInfo,
-            enabled: true,
           ),
         ],
       ),
@@ -128,8 +320,9 @@ Future<void> runNoteShare(
   BuildContext context,
   WidgetRef ref,
   Note note,
-  String choice,
-) async {
+  String choice, {
+  ShareTextOptions options = const ShareTextOptions(),
+}) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   final subject = note.displayTitle.trim().isEmpty
@@ -141,11 +334,21 @@ Future<void> runNoteShare(
 
   switch (choice) {
     case 'text':
-      final text = note.toPlainText();
+    case 'copy':
+      final text = noteShareText(
+        note,
+        options: options,
+        pageLabel: l10n.pageLabel,
+      );
       // Sessiz kapanmak YOK: boş notta düğmenin neden bir şey yapmadığı
       // söylenir (eski davranışta hiçbir geri bildirim yoktu).
       if (text.trim().isEmpty) {
         snack(l10n.shareAsTextEmpty);
+        return;
+      }
+      if (choice == 'copy') {
+        await Clipboard.setData(ClipboardData(text: text));
+        snack(l10n.copied);
         return;
       }
       await SharePlus.instance.share(
@@ -191,18 +394,17 @@ Future<void> runNoteShare(
 
 Widget _tile(
   BuildContext context, {
-  required String value,
+  required VoidCallback onTap,
   required IconData icon,
   required String title,
   required String subtitle,
-  required bool enabled,
 }) {
   final scheme = Theme.of(context).colorScheme;
   return ListTile(
-    enabled: enabled,
-    leading: Icon(icon, color: enabled ? scheme.primary : null),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+    leading: Icon(icon, color: scheme.primary),
     title: Text(title),
-    subtitle: Text(subtitle),
-    onTap: () => Navigator.pop(context, value),
+    subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+    onTap: onTap,
   );
 }

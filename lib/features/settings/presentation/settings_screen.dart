@@ -45,8 +45,10 @@ import '../../friends/presentation/friends_screen.dart';
 import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
+import '../../notes/presentation/notes_providers.dart' show swipeModeProvider;
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
+import 'notes_settings.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.initialArea});
@@ -127,6 +129,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _InboxRow(),
             title: l10n.inboxTitle,
             keywords: 'gelen not paylasilan arkadas',
+          ),
+          // Paylaşım bildirimleri PAYLAŞIMIN yanında (2026-09-26): eskiden
+          // Görünüm alanındaydı — bildirimi arayan kullanıcı orada bakmıyordu.
+          _SettingRow(
+            const _SharedNotificationsSwitch(),
+            title: l10n.sharedNotifications,
+            keywords:
+                '${l10n.sharedNotificationsInfo} bildirim paylasim klasor '
+                'sohbet',
           ),
         ],
       ),
@@ -227,20 +238,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             keywords: l10n.quickCaptureRowInfo,
           ),
           _SettingRow(
-            const _AttachmentSearchSwitch(),
-            title: l10n.searchAttachments,
-            keywords:
-                '${l10n.searchAttachmentsInfo} arama pdf gorsel ocr ek '
-                'icerik',
-          ),
-          _SettingRow(
-            const _SharedNotificationsSwitch(),
-            title: l10n.sharedNotifications,
-            keywords:
-                '${l10n.sharedNotificationsInfo} bildirim paylasim klasor '
-                'sohbet',
-          ),
-          _SettingRow(
             const _CardRichPreviewSwitch(),
             title: l10n.cardRichPreview,
             keywords: '${l10n.cardRichPreviewInfo} renk alti cizili kalin',
@@ -253,6 +250,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _DarkScheduleEditor(),
             title: l10n.darkSchedule,
             keywords: l10n.darkScheduleInfo,
+          ),
+        ],
+      ),
+      // **NOTLAR VE KLASÖRLER** (kullanıcı isteği 2026-09-26: "eksik
+      // ayarların düzenlenmesi", "klasör sıralaması ayarlama", "sağ sol
+      // kaydırmada klasörler arası geçiş"). Ana ekranın davranış
+      // tercihleri ilk kez tek yerde — bkz. notes_settings.dart.
+      _Area(
+        id: 'notes',
+        icon: Icons.dashboard_customize_outlined,
+        title: l10n.notesSettingsTitle,
+        summary: swipeModeLabel(context, ref.watch(swipeModeProvider)),
+        keywords:
+            'klasor sira kaydir yana cek sutun izgara liste siralama arama '
+            'raf',
+        rows: [
+          _SettingRow(
+            const SwipeModeSetting(),
+            title: l10n.swipeModeTitle,
+            keywords:
+                '${l10n.swipeModeFolders} ${l10n.swipeModeFilters} kaydir '
+                'yana cek',
+          ),
+          _SettingRow(
+            const FolderOrderSetting(),
+            title: l10n.folderOrderTitle,
+            keywords:
+                '${l10n.folderReorder} ${l10n.folderOrderName} '
+                '${l10n.folderOrderNewest} klasor sira',
+          ),
+          _SettingRow(
+            const NoteSortSetting(),
+            title: l10n.sortBy,
+            keywords: 'siralama not sira',
+          ),
+          _SettingRow(
+            const NoteLayoutSetting(),
+            title: l10n.noteViewSetting,
+            keywords:
+                '${l10n.gridColumnsSetting} ${l10n.noteViewGrid} '
+                '${l10n.noteViewList} ${l10n.folderShelfSetting} sutun',
+          ),
+          _SettingRow(
+            const _AttachmentSearchSwitch(),
+            title: l10n.searchAttachments,
+            keywords:
+                '${l10n.searchAttachmentsInfo} arama pdf gorsel ocr ek '
+                'icerik',
           ),
         ],
       ),
@@ -329,6 +374,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _StorageUsage(),
             title: l10n.storageUsage,
             keywords: 'depolama alan kota gb mb dolu',
+          ),
+          _SettingRow(
+            const DeviceStorageSection(),
+            title: l10n.deviceStorageTitle,
+            keywords:
+                '${l10n.deviceStorageClear} onbellek temizle yer boyut mb '
+                'cihaz',
           ),
           _SettingRow(
             const _SyncLimitSelector(),

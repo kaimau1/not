@@ -3828,4 +3828,156 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Herramientas';
+
+  @override
+  String get folderOrderTitle => 'Orden de carpetas';
+
+  @override
+  String get folderReorder => 'Reordenar carpetas';
+
+  @override
+  String get folderOrderManual => 'Personalizado';
+
+  @override
+  String get folderOrderName => 'Por nombre';
+
+  @override
+  String get folderOrderNewest => 'Más recientes primero';
+
+  @override
+  String get folderOrderNoteCount => 'Por número de notas';
+
+  @override
+  String get folderOrderHint =>
+      'Arrastra las asas para reordenar. El mismo orden se usa en la barra de carpetas y al deslizar.';
+
+  @override
+  String get swipeModeTitle => 'Deslizar en la pantalla de inicio';
+
+  @override
+  String get swipeModeFolders => 'Cambiar entre carpetas';
+
+  @override
+  String get swipeModeFilters => 'Cambiar entre filtros y etiquetas';
+
+  @override
+  String get swipeModeBoth => 'Carpetas, filtros y etiquetas';
+
+  @override
+  String get swipeModeOff => 'Desactivado';
+
+  @override
+  String get shareIncludeTitle => 'Título';
+
+  @override
+  String get shareIncludeChecked => 'Completados';
+
+  @override
+  String get shareIncludeTags => 'Etiquetas';
+
+  @override
+  String get shareTextAction => 'Compartir texto';
+
+  @override
+  String get shareAsFileSection => 'Como archivo';
+
+  @override
+  String get shareInAppSection => 'Dentro de la app';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Deja una copia de la nota en la bandeja de entrada de un amigo.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Edita la misma nota con amigos; los cambios aparecen al instante.';
+
+  @override
+  String get findPrevious => 'Coincidencia anterior';
+
+  @override
+  String get findNext => 'Siguiente coincidencia';
+
+  @override
+  String get findShowAll => 'Todas las coincidencias';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count coincidencias',
+      one: '1 coincidencia',
+      zero: 'Sin coincidencias',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Buscar en adjuntos y con IA';
+
+  @override
+  String get notesSettingsTitle => 'Notas y carpetas';
+
+  @override
+  String get noteViewSetting => 'Diseño de la pantalla de inicio';
+
+  @override
+  String get noteViewGrid => 'Cuadrícula';
+
+  @override
+  String get noteViewList => 'Lista';
+
+  @override
+  String get gridColumnsSetting => 'Columnas';
+
+  @override
+  String get gridColumnsInfo =>
+      'También puedes cambiarlo pellizcando en la pantalla de inicio.';
+
+  @override
+  String get gridColumnsAuto => 'Automático';
+
+  @override
+  String get folderShelfSetting => 'Carpetas en la pantalla de inicio';
+
+  @override
+  String get folderShelfStrip => 'Una fila';
+
+  @override
+  String get folderShelfTiles => 'Mosaicos';
+
+  @override
+  String get deviceStorageTitle => 'En este dispositivo';
+
+  @override
+  String get deviceStorageAttachments => 'Adjuntos';
+
+  @override
+  String get deviceStorageDatabase => 'Copia local de las notas';
+
+  @override
+  String get deviceStorageCache => 'Caché y archivos temporales';
+
+  @override
+  String get deviceStorageAi => 'Caché de IA';
+
+  @override
+  String get deviceStorageTotal => 'Total (sin la app)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Vaciar la caché no borra notas ni adjuntos; las imágenes se vuelven a descargar cuando hace falta. Los archivos temporales antiguos se limpian en cada inicio.';
+
+  @override
+  String get deviceStorageClear => 'Vaciar caché';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size liberados';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'No se pudo medir en este dispositivo.';
 }

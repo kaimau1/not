@@ -31,16 +31,21 @@ import '../viewers/text_recognize_screen.dart';
 ///
 /// Ek metinleri OTURUM BOYUNCA önbelleklenir: aynı notta ikinci arama
 /// PDF'i yeniden çözümlemez.
+///
+/// 2026-09-26: not içi aramanın ASIL yolu artık sayfadaki canlı arama
+/// çubuğu (bkz. `NoteFindBar`); bu levha oradan "eklerde ve yapay zekâ ile
+/// ara" ile, çubukta yazılı sorguyla ([initialQuery]) açılır.
 Future<void> showNoteSearchSheet(
   BuildContext context,
   WidgetRef ref,
-  Note note,
-) => showModalBottomSheet<void>(
+  Note note, {
+  String initialQuery = '',
+}) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   useSafeArea: true,
   showDragHandle: true,
-  builder: (_) => _NoteSearchSheet(note: note),
+  builder: (_) => _NoteSearchSheet(note: note, initialQuery: initialQuery),
 );
 
 /// Tek bir bulgu: nerede geçtiği + çevresinden bir parça.
@@ -53,16 +58,17 @@ class _Hit {
 }
 
 class _NoteSearchSheet extends ConsumerStatefulWidget {
-  const _NoteSearchSheet({required this.note});
+  const _NoteSearchSheet({required this.note, this.initialQuery = ''});
 
   final Note note;
+  final String initialQuery;
 
   @override
   ConsumerState<_NoteSearchSheet> createState() => _NoteSearchSheetState();
 }
 
 class _NoteSearchSheetState extends ConsumerState<_NoteSearchSheet> {
-  final _controller = TextEditingController();
+  late final _controller = TextEditingController(text: widget.initialQuery);
 
   /// Ek kimliği → o ekten çıkarılan düz metin. Bir kez çıkarılır.
   final Map<String, String> _attachmentText = {};

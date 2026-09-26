@@ -14,6 +14,7 @@ import '../../../app/app_commands.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/widgets/freeze_when_hidden.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
 import '../../../core/utils/rich_text.dart';
@@ -22,6 +23,7 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/ai_gate.dart';
 import '../../ai/data/gemini_service.dart';
 import '../../ai/data/semantic_search.dart';
+import '../../folders/data/folder_order.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/data/shared_activity_service.dart';
 import '../../folders/domain/note_folder.dart';
@@ -42,6 +44,7 @@ import '../data/place_reminders.dart';
 import '../data/upload_queue.dart';
 import '../data/widget_service.dart';
 import '../domain/note.dart';
+import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
 import 'dashboard_background_sheet.dart';
@@ -459,12 +462,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Seçili notların metnini birleştirir. Kilitli notlardan yalnız başlık
   /// alınır (içerik kimlik doğrulaması olmadan sızmasın).
   String _joinSelected(Set<String> ids) {
-    final parts = [
+    final l10n = context.l10n;
+    // Paylaş levhasıyla AYNI biçim (bkz. noteShareText): `- [ ]` yerine
+    // ☐/☑, sayfa notlarında "Sayfa 3". Kilitli notun yalnız başlığı gider.
+    return joinShareTexts([
       for (final n in _selectedNotes(ids))
         // displayTitle: başlık biçimlendirilebiliyor, işaretler panoya sızmasın.
-        if (n.locked) n.displayTitle.trim() else n.toPlainText(),
-    ];
-    return parts.where((t) => t.trim().isNotEmpty).join('\n\n———\n\n');
+        if (n.locked)
+          n.displayTitle.trim()
+        else
+          noteShareText(n, pageLabel: l10n.pageLabel),
+    ]);
   }
 
   Future<void> _copySelected(Set<String> ids) async {
@@ -541,22 +549,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// +1 sonraki, -1 önceki. Durakların kuralı saf bir işlevde ve ölçülüyor
   /// (bkz. [nextSwipeStop]).
   ///
-  /// **KLASÖRLER BU GEZİDE YOK** (2026-08-18): klasör bir süzgeç değil, ana
-  /// ekranda karosu olan bir YER. Seçili bir klasör varsa ise KORUNUR —
-  /// çekiş yalnız o klasörün içindeki görünümler arasında gezer.
+  /// **KLASÖRLER GEZİDE** (kullanıcı isteği 2026-09-26: "sağ sol
+  /// kaydırmada klasörler arası geçiş"). 2026-08-18'de çıkarılmışlardı;
+  /// neyin gezileceği artık Ayarlar → Notlar'da seçiliyor (bkz. [SwipeMode],
+  /// varsayılan: klasörler). Sıra, kullanıcının klasör sırasıdır (bkz.
+  /// `visibleOrderedFoldersProvider`).
   void _cycleFilterFolder(int direction) {
-    final folderId = ref.read(selectedFolderProvider);
     final suppressed = ref.read(suppressedFolderIdsProvider);
     final notes = [
       for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
         if (n.archivedAt == null &&
             !n.isEmpty &&
-            !suppressed.contains(n.folderId) &&
-            (folderId == null || n.folderId == folderId))
+            !suppressed.contains(n.folderId))
           n,
     ];
-    final stop = nextSwipeStop(
+    final stop = nextHomeSwipeStop(
+      mode: ref.read(swipeModeProvider),
       notes: notes,
+      folderIds: [
+        for (final f in ref.read(visibleOrderedFoldersProvider)) f.id,
+      ],
+      folderId: ref.read(selectedFolderProvider),
       filter: ref.read(noteFilterProvider),
       tag: ref.read(selectedTagProvider),
       direction: direction,
@@ -564,6 +577,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     if (stop == null) return;
     // Geçiş animasyonunun yönünü çekiş yönüne göre ayarla (madde 2).
     _swipeForward = direction > 0;
+    ref.read(selectedFolderProvider.notifier).set(stop.folderId);
     ref.read(noteFilterProvider.notifier).set(stop.filter);
     ref.read(selectedTagProvider.notifier).set(stop.tag);
     HapticFeedback.selectionClick();
@@ -1496,7 +1510,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                 onHorizontalDragEnd:
                                     selectionActive ||
                                         reorderActive ||
-                                        _dragNoteId != null
+                                        _dragNoteId != null ||
+                                        ref.watch(swipeModeProvider) ==
+                                            SwipeMode.off
                                     ? null
                                     : (details) {
                                         final velocity =
@@ -1587,15 +1603,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       // görünümde çizilir — arama/süzgeç/etiket
                                       // sonuçlarının arasında klasör karosu
                                       // görmek kafa karıştırırdı.
+                                      //
+                                      // Yana çekişle bir KLASÖRE gelinince
+                                      // şerit (karo değil) yine çizilir ve
+                                      // o klasörün çipi vurgulanır: kullanıcı
+                                      // klasörler arasında nerede olduğunu
+                                      // görsün (2026-09-26).
                                       if (!searchActive &&
                                           !reorderActive &&
                                           ref.watch(noteFilterProvider) ==
                                               NoteFilter.all &&
                                           ref.watch(selectedTagProvider) ==
-                                              null &&
-                                          ref.watch(selectedFolderProvider) ==
                                               null)
-                                        _folderShelf(columns),
+                                        _folderShelf(
+                                          columns,
+                                          selectedFolderId: ref.watch(
+                                            selectedFolderProvider,
+                                          ),
+                                        ),
                                       ...notesAsync.when(
                                         data: (notes) => _buildNoteSlivers(
                                           context,
@@ -1773,7 +1798,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ref.read(reorderModeProvider.notifier).set(false);
         }
       },
-      child: page,
+      // Editör (ya da bir bölüm) ana ekranı TAMAMEN örtünce ızgara yeniden
+      // kurulmaz; görünür olunca bir kez güncellenir (bkz. FreezeWhenHidden).
+      child: FreezeWhenHidden(child: page),
     );
   }
 
@@ -1800,13 +1827,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   ///
   /// Gizli klasörler yalnız o oturumda açığa çıkarıldıysa çizilir — karonun
   /// adı bile gizli notların varlığını ele verirdi.
-  Widget _folderShelf(int columns) {
-    final revealHidden = ref.watch(hiddenFoldersRevealedProvider);
-    final folders = [
-      for (final f
-          in ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[])
-        if (!f.hidden || revealHidden) f,
-    ];
+  Widget _folderShelf(int columns, {String? selectedFolderId}) {
+    // Kullanıcının KLASÖR SIRASI (Ayarlar → Notlar → Klasör sırası; bkz.
+    // FolderSort). Gizli klasörler yalnız açığa çıkarıldıysa.
+    final folders = ref.watch(visibleOrderedFoldersProvider);
+    if (selectedFolderId != null) {
+      return _folderStrip(folders, selectedFolderId: selectedFolderId);
+    }
     // **YER SORUNU** (kullanıcı isteği 2026-08-18: "klasörler ana ekranda çok
     // fazla yer kaplıyor, farklı bir çözüm bulalım"): karo rafı üç klasörde
     // bir 92 px'lik satır açıyor ve notlar ekranın altına iniyordu. Varsayılan
@@ -1889,7 +1916,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
 
   /// Klasör rafının KOMPAKT (varsayılan) hâli: tek satır, yatay kaydırılan
   /// çipler. Yükseklik klasör sayısından BAĞIMSIZ — asıl kazanç bu.
-  Widget _folderStrip(List<NoteFolder> folders) {
+  Widget _folderStrip(List<NoteFolder> folders, {String? selectedFolderId}) {
     final shared = ref.watch(sharedFolderRefsProvider).value ?? const [];
     return SliverToBoxAdapter(
       child: SizedBox(
@@ -1902,9 +1929,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 padding: const EdgeInsets.fromLTRB(12, 4, 4, 4),
                 children: [
                   for (final folder in folders) ...[
-                    FolderChip(
+                    _EnsureVisible(
                       key: ValueKey('folder-chip-${folder.id}'),
-                      folder: folder,
+                      active: folder.id == selectedFolderId,
+                      child: FolderChip(
+                        folder: folder,
+                        selected: folder.id == selectedFolderId,
+                      ),
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -3402,4 +3433,46 @@ class _PendingUploadsBar extends ConsumerWidget {
             ),
     );
   }
+}
+
+
+/// Yatay şeritteki seçili çipi görünür alana kaydırır: yana çekişle ekran
+/// dışındaki bir klasöre gelinince şerit de oraya kayar.
+class _EnsureVisible extends StatefulWidget {
+  const _EnsureVisible({super.key, required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<_EnsureVisible> createState() => _EnsureVisibleState();
+}
+
+class _EnsureVisibleState extends State<_EnsureVisible> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.active) _reveal();
+  }
+
+  @override
+  void didUpdateWidget(_EnsureVisible oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) _reveal();
+  }
+
+  void _reveal() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

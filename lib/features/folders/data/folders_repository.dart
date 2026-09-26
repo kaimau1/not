@@ -237,6 +237,19 @@ class FoldersRepository {
     }
   }
 
+  /// Klasörlerin ELLE sırasını yazar: [orderedIds]'deki konum `order` olur.
+  /// Tek batch — klasör başına ayrı yazım her biri ayrı akış yayını demekti
+  /// ve sürükleme sırasında raf birkaç kez yeniden dizilirdi.
+  void reorderFolders(List<String> orderedIds) {
+    final batch = _firestore.batch();
+    for (var i = 0; i < orderedIds.length; i++) {
+      batch.set(_folders.doc(orderedIds[i]), {
+        'order': i,
+      }, SetOptions(merge: true));
+    }
+    unawaited(batch.commit());
+  }
+
   /// [folder]ü [friendUid] ile paylaşmak için DAVET gönderir: uid klasörün
   /// `pending` listesine düşer ve `folderShares` aynası KURULUR/GÜNCELLENİR
   /// (yoksa arkadaş daveti hiç göremez — bkz. [folderInvitesProvider]).

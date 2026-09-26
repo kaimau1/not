@@ -14,6 +14,8 @@ import 'package:window_manager/window_manager.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'app/app.dart';
+import 'core/constants.dart';
+import 'core/utils/device_storage.dart';
 import 'core/utils/display_rate.dart';
 import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
@@ -91,10 +93,17 @@ Future<void> main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Offline-first: yerel önbellek her platformda açık ve sınırsız.
+  // Offline-first: yerel önbellek her platformda açık.
+  //
+  // TAVANLI (kullanıcı bulgusu 2026-09-26: "uygulama boyutu 300 MB'ı
+  // aşıyor"): önbellek eskiden SINIRSIZDI; okunan her sorgu sonucu (paylaşılan
+  // klasörler, çöp kutusu, arkadaşların notları, sohbet) cihazda sonsuza dek
+  // birikiyordu. Tavan yalnız DİNLENMEYEN eski belgeleri budar — ana ekranın
+  // canlı dinlediği notlar her zaman yerelde kalır, çevrimdışı çalışma
+  // bozulmaz (bkz. AppConstants.firestoreCacheBytes).
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    cacheSizeBytes: AppConstants.firestoreCacheBytes,
   );
 
   final prefs = await SharedPreferences.getInstance();
@@ -125,6 +134,11 @@ Future<void> main() async {
   //   60 Hz'e sabitlediği için istek yine de gerekli.
   unawaited(_activateAppCheck());
   unawaited(DisplayRate.apply());
+  // Eski geçici dosyalar (paylaşım/dışa aktarma/tarama/ses artıkları): açılışı
+  // yavaşlatmasın diye birkaç saniye sonra, arka planda (bkz. DeviceStorage).
+  unawaited(
+    Future<void>.delayed(const Duration(seconds: 8), pruneTempFiles),
+  );
   _lifecycle = AppLifecycleListener(
     // Pil tasarrufu kipi uygulama arkadayken açılıp kapanabilir: yenileme
     // hızı kararı her öne gelişte yeniden verilir (bkz. [DisplayRate]).

@@ -91,7 +91,10 @@ import 'items_editor.dart';
 import 'note_images.dart';
 import '../archive_note_screen.dart';
 import 'note_menu_sheet.dart';
+import 'in_note_find.dart';
 import 'note_search_sheet.dart';
+import 'text_search.dart';
+import '../../domain/note_share_text.dart';
 import 'note_undo.dart';
 import 'pdf_note_pane.dart';
 import 'pdf_pages_screen.dart';
@@ -1170,6 +1173,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.dispose();
     _bodyFocus.dispose();
     _pageScroll.dispose();
+    _findController.dispose();
+    _findFocus.dispose();
     _attachPulse.dispose();
     super.dispose();
   }
@@ -1295,6 +1300,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } else {
       setState(() => _note = next);
     }
+    // Arama açıkken metin değiştiyse eşleşme konumları kaydı: vurgular bir
+    // sonraki karede yeniden hesaplanır.
+    if (_findOpen) _queueFindRefresh();
     // KÖK NEDEN (bekleyen son kayıt yutuluyordu): bu kapanış `ref.read` ile
     // depoyu okuyordu, oysa `dispose()` içindeki `_debouncer.flush()` de aynı
     // kapanışı çalıştırır — ve `dispose` sırasında `ref` kullanmak istisna
@@ -1356,6 +1364,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Sayfa tuvalinin kaydırma denetleyicisi. Yeni görselin GÖRÜNEN alana
   /// düşmesi için gerekiyor (bkz. [_placeNewImage]).
   final _pageScroll = ScrollController();
+
+  // ---- Not içi CANLI arama (bkz. NoteFindBar) ------------------------------
+
+  /// Arama çubuğu alt çubuğun yerinde açık mı.
+  bool _findOpen = false;
+  final _findController = TextEditingController();
+  final _findFocus = FocusNode();
+
+  /// Bulunan eşleşmeler, sayfadaki sırayla (başlık, gövde, maddeler).
+  List<_FindHit> _findHits = const [];
+
+  /// Odaktaki eşleşme (-1 = yok).
+  int _findIndex = -1;
+
+  /// Vurgusu olan denetleyiciler — kapanışta/yeni aramada temizlenir.
+  final Set<WrapTextController> _findPainted = {};
+  bool _findRefreshQueued = false;
 
   /// Odaktaki metin alanındaki imlecin SAYFA (tuval) uzayındaki üst kenarı.
   double? _caretPageTop() {
@@ -3275,7 +3300,35 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _flushPending(_titleController);
     _flushPending(_bodyController);
     if (!mounted) return;
-    await showNoteShareSheet(context, ref, _note ?? note);
+    final current = _note ?? note;
+    await showNoteShareSheet(
+      context,
+      ref,
+      current,
+      ownerId: widget.ownerId,
+      // PDF/Word satırı editörün sayfa ölçüleriyle açılsın (görseller
+      // nottaki yerlerinde çıksın — bkz. [_openNotesExport]).
+      onExport: () => _openNotesExport(current),
+    );
+  }
+
+  /// Notun metnini PAYLAŞIM biçimiyle panoya kopyalar (bkz. [noteShareText]):
+  /// ⋮ menüsündeki "Kopyala". Seçip kopyalamaya gerek kalmadan tüm not.
+  Future<void> _copyNoteText() async {
+    final note = _note;
+    if (note == null) return;
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    final text = noteShareText(
+      _note ?? note,
+      pageLabel: context.l10n.pageLabel,
+    );
+    if (text.trim().isEmpty) {
+      _showSnack(context.l10n.shareAsTextEmpty);
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) _showSnack(context.l10n.copied);
   }
 
   /// Üst bardaki ⋮ — iki sütunlu levha (bkz. note_menu_sheet.dart).
@@ -3303,10 +3356,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       case 'star':
         _mutate((n) => n.copyWith(starred: !n.starred), immediate: true);
       case 'search':
-        _flushPending(_bodyController);
-        if (mounted) {
-          await showNoteSearchSheet(context, ref, _note ?? note);
-        }
+        await _openNoteSearch();
       case 'stats':
         // Bekleyen yazım önce diske insin: sayaç yazılan son cümleyi de
         // saysın (aramada da aynı sıra).
@@ -3314,6 +3364,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (mounted) await showNoteStatsSheet(context, _note ?? note);
       case 'share':
         await _share();
+      case 'copyText':
+        await _copyNoteText();
       case 'export':
         await _export();
       case 'listen':
@@ -4549,15 +4601,259 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
   }
 
-  /// Alt çubuktaki büyüteç: "Notta ara" levhası (⋮ menüsündekiyle aynı yol).
+  /// Alt çubuktaki büyüteç ve ⋮ → "Notta ara": CANLI arama çubuğunu açar
+  /// (kullanıcı isteği 2026-09-26: "sayfada canlı aranmalı, ayrı bir alanda
+  /// değil; altta çıksın").
   Future<void> _openNoteSearch() async {
-    final note = _note;
-    if (note == null) return;
-    // Bekleyen yazım önce nota geçsin: aranan kelime az önce yazıldıysa
-    // kaydedilmemiş metinde bulunamazdı.
+    if (_note == null) return;
+    // Bekleyen biçim metne insin: aranan kelime az önce yazıldıysa tampon
+    // son hâlini taşısın.
     _flushPending(_bodyController);
     if (!mounted) return;
-    await showNoteSearchSheet(context, ref, _note ?? note);
+    setState(() {
+      _findOpen = true;
+      _formatBarOpen = false;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_findOpen) return;
+      _findFocus.requestFocus();
+      if (_findController.text.trim().isNotEmpty) _runFind();
+    });
+  }
+
+  void _closeFind() {
+    for (final c in _findPainted) {
+      c.clearSearchHighlights();
+    }
+    _findPainted.clear();
+    _findController.clear();
+    if (_findFocus.hasFocus) _findFocus.unfocus();
+    setState(() {
+      _findOpen = false;
+      _findHits = const [];
+      _findIndex = -1;
+    });
+  }
+
+  void _queueFindRefresh() {
+    if (_findRefreshQueued) return;
+    _findRefreshQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _findRefreshQueued = false;
+      if (mounted && _findOpen) _runFind(keepIndex: true, reveal: false);
+    });
+  }
+
+  /// Sayfadaki alanlarda arar, vurgular ve (istenirse) odaktaki eşleşmeye
+  /// kaydırır. Alanların TAMPONU taranır (bkz. TextSearchIndex): vurgu ve
+  /// kaydırma aynı konumlarla çalışır.
+  void _runFind({bool keepIndex = false, bool reveal = true}) {
+    final l10n = context.l10n;
+    final query = _findController.text.trim();
+    final previous = keepIndex && _findIndex >= 0 && _findIndex < _findHits.length
+        ? _findHits[_findIndex]
+        : null;
+    final hits = <_FindHit>[];
+    void scan(
+      WrapTextController controller,
+      FocusNode focus,
+      String where,
+      IconData icon,
+    ) {
+      if (query.isEmpty) return;
+      final index = TextSearchIndex(controller.text);
+      for (final match in index.find(query)) {
+        hits.add(
+          _FindHit(
+            controller: controller,
+            focus: focus,
+            where: where,
+            icon: icon,
+            match: match,
+            index: index,
+          ),
+        );
+      }
+    }
+
+    scan(_titleController, _titleFocus, l10n.noteTitleLabel, Icons.title);
+    final note = _note;
+    if (note != null && !note.type.isPageNoteType) {
+      scan(_bodyController, _bodyFocus, l10n.noteBodyLabel, Icons.notes_outlined);
+    }
+    final items = _itemsEditorKey.currentState?.searchFields() ?? const [];
+    for (var i = 0; i < items.length; i++) {
+      scan(
+        items[i].controller,
+        items[i].focus,
+        '${l10n.itemLabel} ${i + 1}',
+        Icons.check_box_outlined,
+      );
+    }
+    var index = hits.isEmpty ? -1 : 0;
+    if (previous != null) {
+      // Düzenleme sonrası tazeleme: odak AYNI alanda, aynı ya da ilk
+      // sonraki eşleşmede kalsın — imleç yazarken başa fırlamasın.
+      final same = hits.indexWhere(
+        (h) =>
+            h.controller == previous.controller &&
+            h.match.start >= previous.match.start,
+      );
+      if (same >= 0) index = same;
+    }
+    setState(() {
+      _findHits = hits;
+      _findIndex = index;
+    });
+    _paintFind();
+    if (reveal) _revealFindHit();
+  }
+
+  /// Vurguları denetleyicilere dağıtır (odaktaki eşleşme koyu).
+  void _paintFind() {
+    final byController = <WrapTextController, List<(int, int)>>{};
+    final currentIn = <WrapTextController, int>{};
+    for (var i = 0; i < _findHits.length; i++) {
+      final hit = _findHits[i];
+      final list = byController.putIfAbsent(hit.controller, () => []);
+      if (i == _findIndex) currentIn[hit.controller] = list.length;
+      list.add((hit.match.start, hit.match.end));
+    }
+    for (final c in _findPainted.difference(byController.keys.toSet())) {
+      c.clearSearchHighlights();
+    }
+    _findPainted
+      ..clear()
+      ..addAll(byController.keys);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final hitColor = dark
+        ? const Color(0x80C28B00)
+        : const Color(0x66FFD54F);
+    final currentColor = dark
+        ? const Color(0xFFE65100)
+        : const Color(0xFFFFA726);
+    for (final entry in byController.entries) {
+      entry.key.setSearchHighlights(
+        entry.value,
+        current: currentIn[entry.key] ?? -1,
+        hitColor: hitColor,
+        currentColor: currentColor,
+      );
+    }
+  }
+
+  void _stepFind(int delta) {
+    final count = _findHits.length;
+    if (count == 0) return;
+    var next = (_findIndex + delta) % count;
+    if (next < 0) next += count;
+    setState(() => _findIndex = next);
+    _paintFind();
+    _revealFindHit();
+  }
+
+  /// Odaktaki eşleşmeyi sayfanın üst üçte birine kaydırır; zaten rahat
+  /// görünüyorsa kıpırdatmaz.
+  void _revealFindHit() {
+    if (_findIndex < 0 || _findIndex >= _findHits.length) return;
+    final hit = _findHits[_findIndex];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final fieldContext = hit.focus.context;
+      if (fieldContext == null || !fieldContext.mounted) return;
+      final editable = _findEditable(fieldContext.findRenderObject());
+      if (editable == null ||
+          !editable.attached ||
+          !editable.hasSize ||
+          !_pageScroll.hasClients) {
+        Scrollable.ensureVisible(
+          fieldContext,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+      final position = _pageScroll.position;
+      final viewport = position.context.notificationContext
+          ?.findRenderObject();
+      if (viewport is! RenderBox ||
+          !viewport.hasSize ||
+          !_isDescendantOf(editable, viewport)) {
+        Scrollable.ensureVisible(
+          fieldContext,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+        return;
+      }
+      final length = editable.text?.toPlainText().length ?? 0;
+      final start = hit.match.start.clamp(0, length);
+      final end = hit.match.end.clamp(start, length);
+      final boxes = editable.getBoxesForSelection(
+        TextSelection(baseOffset: start, extentOffset: end),
+      );
+      final rect = boxes.isEmpty
+          ? editable.getLocalRectForCaret(TextPosition(offset: start))
+          : boxes.first.toRect();
+      final top = editable
+          .localToGlobal(rect.topLeft, ancestor: viewport)
+          .dy;
+      final height = viewport.size.height;
+      if (top >= height * 0.12 && top + rect.height <= height * 0.8) return;
+      final target = (position.pixels + top - height * 0.3).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      );
+      if ((target - position.pixels).abs() < 1) return;
+      position.animateTo(
+        target,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  /// Eşleşmeleri yarım pencerede listeler (bkz. showFindHitsSheet).
+  Future<void> _openFindList() async {
+    final note = _note;
+    if (note == null) return;
+    final query = _findController.text.trim();
+    final views = <FindHitView>[
+      for (final h in _findHits)
+        () {
+          final s = h.index.snippet(h.match, query.length);
+          return (
+            where: h.where,
+            icon: h.icon,
+            lead: s.lead,
+            hit: s.hit,
+            tail: s.tail,
+          );
+        }(),
+    ];
+    _dismissKeyboard();
+    final picked = await showFindHitsSheet(
+      context,
+      hits: views,
+      current: _findIndex,
+      canDeepSearch: true,
+    );
+    if (picked == null || !mounted) return;
+    if (picked == kFindDeepSearch) {
+      await showNoteSearchSheet(
+        context,
+        ref,
+        _note ?? note,
+        initialQuery: query,
+      );
+      return;
+    }
+    if (picked < 0 || picked >= _findHits.length) return;
+    setState(() => _findIndex = picked);
+    _paintFind();
+    _revealFindHit();
   }
 
   Widget _addToolButton(AppLocalizations l10n) {
@@ -5995,7 +6291,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     duration: const Duration(milliseconds: 180),
                     curve: Curves.easeOut,
                     alignment: Alignment.bottomCenter,
-                    child: !_formatBarOpen
+                    child: !_formatBarOpen || _findOpen
                         ? const SizedBox.shrink()
                         : SingleChildScrollView(
                             child: FormatBar(
@@ -6076,6 +6372,20 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 // ancak basınca anlaşılıyordu. Şimdi üç etiketli segment tek
                 // kapsülde; hesap makinesi üst bara, ek/renk seçenekleri
                 // "Ekle" açılırına taşındı.
+                if (_findOpen)
+                  NoteFindBar(
+                    controller: _findController,
+                    focusNode: _findFocus,
+                    count: _findHits.length,
+                    index: _findIndex,
+                    background: background,
+                    onChanged: (_) => _runFind(),
+                    onNext: () => _stepFind(1),
+                    onPrevious: () => _stepFind(-1),
+                    onList: () => unawaited(_openFindList()),
+                    onClose: _closeFind,
+                  )
+                else
                 BottomAppBar(
                   color: background,
                   height: 64,
@@ -6295,7 +6605,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             shift: true,
           ): _redo,
         },
-        child: Scaffold(
+        // Geri tuşu önce CANLI ARAMAYI kapatır, notu değil.
+        child: PopScope(
+          canPop: !_findOpen,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop && _findOpen) _closeFind();
+          },
+          child: Scaffold(
           backgroundColor: background,
           // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
           // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
@@ -6548,6 +6864,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
           ),
         ),
+        ),
       ),
     );
   }
@@ -6725,4 +7042,26 @@ class _AiBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Canlı aramanın tek eşleşmesi: hangi alanda, tamponun neresinde.
+class _FindHit {
+  const _FindHit({
+    required this.controller,
+    required this.focus,
+    required this.where,
+    required this.icon,
+    required this.match,
+    required this.index,
+  });
+
+  final WrapTextController controller;
+  final FocusNode focus;
+  final String where;
+  final IconData icon;
+  final TextSearchMatch match;
+
+  /// Parça (snippet) üretmek için alanın arama dizini.
+  final TextSearchIndex index;
 }

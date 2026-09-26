@@ -237,9 +237,12 @@ class FolderShelfExpandedNotifier extends Notifier<bool> {
   @override
   bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
 
-  void toggle() {
-    state = !state;
-    ref.read(sharedPreferencesProvider).setBool(_key, state);
+  void toggle() => set(!state);
+
+  /// Ayarlar → Notlar ve klasörler'den doğrudan seçim.
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
   }
 }
 
@@ -258,9 +261,12 @@ class NoteListViewNotifier extends Notifier<bool> {
   @override
   bool build() => ref.watch(sharedPreferencesProvider).getBool(_key) ?? false;
 
-  void toggle() {
-    state = !state;
-    ref.read(sharedPreferencesProvider).setBool(_key, state);
+  void toggle() => set(!state);
+
+  /// Ayarlar → Notlar ve klasörler'den doğrudan seçim.
+  void set(bool value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setBool(_key, value);
   }
 }
 
@@ -672,18 +678,7 @@ SwipeStop? nextSwipeStop({
   required String? tag,
   required int direction,
 }) {
-  final tags = <String>{
-    for (final n in notes) ...n.tags,
-    ?tag,
-  }.toList()..sort();
-  final stops = <SwipeStop>[
-    for (final f in NoteFilter.values)
-      if (f == NoteFilter.all ||
-          (f == filter && tag == null) ||
-          notes.any((n) => noteMatchesFilter(n, f)))
-        (filter: f, tag: null),
-    for (final t in tags) (filter: NoteFilter.all, tag: t),
-  ];
+  final stops = swipeFilterStops(notes: notes, filter: filter, tag: tag);
   if (stops.length < 2) return null;
   var index = tag != null
       ? stops.indexWhere((s) => s.tag == tag)
@@ -692,6 +687,147 @@ SwipeStop? nextSwipeStop({
   var next = (index + direction) % stops.length;
   if (next < 0) next += stops.length;
   return stops[next];
+}
+
+/// Süzgeç çekişinin durakları: Tümü, notu olan durum süzgeçleri (o an açık
+/// olan her zaman), sonra etiketler (bkz. [nextSwipeStop]).
+List<SwipeStop> swipeFilterStops({
+  required List<Note> notes,
+  required NoteFilter filter,
+  required String? tag,
+}) {
+  final tags = <String>{
+    for (final n in notes) ...n.tags,
+    ?tag,
+  }.toList()..sort();
+  return [
+    for (final f in NoteFilter.values)
+      if (f == NoteFilter.all ||
+          (f == filter && tag == null) ||
+          notes.any((n) => noteMatchesFilter(n, f)))
+        (filter: f, tag: null),
+    for (final t in tags) (filter: NoteFilter.all, tag: t),
+  ];
+}
+
+/// Ana ekranı yana çekince NE arasında gezilir (Ayarlar → Notlar).
+///
+/// Kullanıcı isteği 2026-09-26: "sağ sol kaydırmada klasörler arası geçiş".
+/// 2026-08-18'de klasörler bu geziden bilerek çıkarılmıştı (klasör bir
+/// süzgeç değil, bir YER); kullanıcı artık klasörler arasında çekerek
+/// gezmek istiyor. Eski davranış kaybolmasın diye seçim ayarda.
+enum SwipeMode {
+  /// Tümü → klasörler (kullanıcının klasör sırasıyla). VARSAYILAN.
+  folders,
+
+  /// Tümü → durum süzgeçleri → etiketler (2026-09-23 davranışı).
+  filters,
+
+  /// Tümü → klasörler → süzgeçler → etiketler.
+  both,
+
+  /// Yana çekiş hiçbir şey yapmaz.
+  off,
+}
+
+final swipeModeProvider = NotifierProvider<SwipeModeNotifier, SwipeMode>(
+  SwipeModeNotifier.new,
+);
+
+class SwipeModeNotifier extends Notifier<SwipeMode> {
+  static const _key = 'swipe_mode';
+
+  @override
+  SwipeMode build() {
+    final stored = ref.watch(sharedPreferencesProvider).getString(_key);
+    return SwipeMode.values.firstWhere(
+      (m) => m.name == stored,
+      orElse: () => SwipeMode.folders,
+    );
+  }
+
+  void set(SwipeMode value) {
+    state = value;
+    ref.read(sharedPreferencesProvider).setString(_key, value.name);
+  }
+}
+
+/// Ana ekran çekişinin bir durağı: klasör (varsa) + süzgeç + etiket.
+typedef HomeSwipeStop = ({String? folderId, NoteFilter filter, String? tag});
+
+/// [mode]a göre SONRAKİ durak ([direction] +1 sonraki, -1 önceki); gezilecek
+/// yer yoksa null.
+///
+/// [notes] ana ekranın adayları (arşivsiz, boş olmayan, gizli klasörde
+/// olmayan) — KLASÖRE GÖRE SÜZÜLMEMİŞ; [folderIds] görünen kendi
+/// klasörlerim, kullanıcının sırasıyla.
+///
+/// * [SwipeMode.folders]: Tümü ↔ klasörler. Klasöre geçince süzgeç/etiket
+///   sıfırlanır — "İş" klasörüne çekip boş bir "yıldızlı" görünümüne düşmek
+///   anlamsız olurdu.
+/// * [SwipeMode.filters]: seçili klasör KORUNUR, duraklar o klasörün
+///   notlarından (2026-09-23 kuralı, bkz. [nextSwipeStop]).
+/// * [SwipeMode.both]: tek halka — Tümü, klasörler, süzgeçler, etiketler.
+HomeSwipeStop? nextHomeSwipeStop({
+  required SwipeMode mode,
+  required List<Note> notes,
+  required List<String> folderIds,
+  required String? folderId,
+  required NoteFilter filter,
+  required String? tag,
+  required int direction,
+}) {
+  switch (mode) {
+    case SwipeMode.off:
+      return null;
+    case SwipeMode.filters:
+      final scoped = folderId == null
+          ? notes
+          : [
+              for (final n in notes)
+                if (n.folderId == folderId) n,
+            ];
+      final stop = nextSwipeStop(
+        notes: scoped,
+        filter: filter,
+        tag: tag,
+        direction: direction,
+      );
+      if (stop == null) return null;
+      return (folderId: folderId, filter: stop.filter, tag: stop.tag);
+    case SwipeMode.folders:
+    case SwipeMode.both:
+      final stops = <HomeSwipeStop>[
+        (folderId: null, filter: NoteFilter.all, tag: null),
+        for (final id in folderIds)
+          (folderId: id, filter: NoteFilter.all, tag: null),
+        if (mode == SwipeMode.both)
+          for (final s in swipeFilterStops(
+            notes: notes,
+            filter: folderId == null ? filter : NoteFilter.all,
+            tag: folderId == null ? tag : null,
+          ))
+            if (s.filter != NoteFilter.all || s.tag != null)
+              (folderId: null, filter: s.filter, tag: s.tag),
+      ];
+      if (stops.length < 2) return null;
+      int index;
+      if (folderId != null) {
+        index = stops.indexWhere((s) => s.folderId == folderId);
+      } else if (tag != null) {
+        index = stops.indexWhere((s) => s.folderId == null && s.tag == tag);
+      } else {
+        index = stops.indexWhere(
+          (s) => s.folderId == null && s.tag == null && s.filter == filter,
+        );
+      }
+      // Durakta olmayan bir görünümden (ör. [SwipeMode.folders]'ta açık bir
+      // süzgeç ya da gizlenmiş bir klasör) çekiş Tümü'nün komşusuna gider.
+      if (index < 0) index = 0;
+      var next = (index + direction) % stops.length;
+      if (next < 0) next += stops.length;
+      return stops[next];
+  }
 }
 
 /// Arşivlenmiş notlar (arşiv ekranı için). Gizli klasör bastırması burada da

@@ -3831,4 +3831,156 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aiToolsSection => 'Ferramentas';
+
+  @override
+  String get folderOrderTitle => 'Ordem das pastas';
+
+  @override
+  String get folderReorder => 'Reordenar pastas';
+
+  @override
+  String get folderOrderManual => 'Personalizado';
+
+  @override
+  String get folderOrderName => 'Por nome';
+
+  @override
+  String get folderOrderNewest => 'Mais recentes primeiro';
+
+  @override
+  String get folderOrderNoteCount => 'Por número de notas';
+
+  @override
+  String get folderOrderHint =>
+      'Arraste as alças para reordenar. A mesma ordem é usada na barra de pastas e ao deslizar.';
+
+  @override
+  String get swipeModeTitle => 'Deslizar na tela inicial';
+
+  @override
+  String get swipeModeFolders => 'Alternar entre pastas';
+
+  @override
+  String get swipeModeFilters => 'Alternar entre filtros e etiquetas';
+
+  @override
+  String get swipeModeBoth => 'Pastas, filtros e etiquetas';
+
+  @override
+  String get swipeModeOff => 'Desativado';
+
+  @override
+  String get shareIncludeTitle => 'Título';
+
+  @override
+  String get shareIncludeChecked => 'Concluídos';
+
+  @override
+  String get shareIncludeTags => 'Etiquetas';
+
+  @override
+  String get shareTextAction => 'Compartilhar texto';
+
+  @override
+  String get shareAsFileSection => 'Como arquivo';
+
+  @override
+  String get shareInAppSection => 'No app';
+
+  @override
+  String get shareSendFriendInfo =>
+      'Deixa uma cópia da nota na caixa de entrada de um amigo.';
+
+  @override
+  String get shareCollaborateInfo =>
+      'Edite a mesma nota com amigos; as alterações aparecem na hora.';
+
+  @override
+  String get findPrevious => 'Resultado anterior';
+
+  @override
+  String get findNext => 'Próximo resultado';
+
+  @override
+  String get findShowAll => 'Todos os resultados';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count resultados',
+      one: '1 resultado',
+      zero: 'Nenhum resultado',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => 'Buscar em anexos e com IA';
+
+  @override
+  String get notesSettingsTitle => 'Notas e pastas';
+
+  @override
+  String get noteViewSetting => 'Layout da tela inicial';
+
+  @override
+  String get noteViewGrid => 'Grade';
+
+  @override
+  String get noteViewList => 'Lista';
+
+  @override
+  String get gridColumnsSetting => 'Colunas';
+
+  @override
+  String get gridColumnsInfo =>
+      'Você também pode mudar isso com gesto de pinça na tela inicial.';
+
+  @override
+  String get gridColumnsAuto => 'Automático';
+
+  @override
+  String get folderShelfSetting => 'Pastas na tela inicial';
+
+  @override
+  String get folderShelfStrip => 'Uma linha';
+
+  @override
+  String get folderShelfTiles => 'Blocos';
+
+  @override
+  String get deviceStorageTitle => 'Neste dispositivo';
+
+  @override
+  String get deviceStorageAttachments => 'Anexos';
+
+  @override
+  String get deviceStorageDatabase => 'Cópia local das notas';
+
+  @override
+  String get deviceStorageCache => 'Cache e arquivos temporários';
+
+  @override
+  String get deviceStorageAi => 'Cache de IA';
+
+  @override
+  String get deviceStorageTotal => 'Total (sem o app)';
+
+  @override
+  String get deviceStorageInfo =>
+      'Limpar o cache não apaga notas nem anexos; as imagens são baixadas de novo quando necessário. Arquivos temporários antigos são limpos a cada abertura.';
+
+  @override
+  String get deviceStorageClear => 'Limpar cache';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '$size liberados';
+  }
+
+  @override
+  String get deviceStorageUnavailable =>
+      'Não foi possível medir neste dispositivo.';
 }

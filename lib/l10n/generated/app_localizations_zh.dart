@@ -3742,4 +3742,149 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiToolsSection => '工具';
+
+  @override
+  String get folderOrderTitle => '文件夹顺序';
+
+  @override
+  String get folderReorder => '重新排列文件夹';
+
+  @override
+  String get folderOrderManual => '自定义';
+
+  @override
+  String get folderOrderName => '按名称';
+
+  @override
+  String get folderOrderNewest => '最新优先';
+
+  @override
+  String get folderOrderNoteCount => '按笔记数量';
+
+  @override
+  String get folderOrderHint => '拖动手柄以重新排序。文件夹栏和滑动时使用相同顺序。';
+
+  @override
+  String get swipeModeTitle => '主屏幕左右滑动';
+
+  @override
+  String get swipeModeFolders => '在文件夹之间切换';
+
+  @override
+  String get swipeModeFilters => '在筛选和标签之间切换';
+
+  @override
+  String get swipeModeBoth => '文件夹、筛选和标签';
+
+  @override
+  String get swipeModeOff => '关闭';
+
+  @override
+  String get shareIncludeTitle => '标题';
+
+  @override
+  String get shareIncludeChecked => '已完成项';
+
+  @override
+  String get shareIncludeTags => '标签';
+
+  @override
+  String get shareTextAction => '分享文本';
+
+  @override
+  String get shareAsFileSection => '作为文件';
+
+  @override
+  String get shareInAppSection => '应用内';
+
+  @override
+  String get shareSendFriendInfo => '将笔记副本放入好友的收件箱。';
+
+  @override
+  String get shareCollaborateInfo => '与好友一起编辑同一篇笔记，修改即时可见。';
+
+  @override
+  String get findPrevious => '上一个匹配';
+
+  @override
+  String get findNext => '下一个匹配';
+
+  @override
+  String get findShowAll => '所有匹配';
+
+  @override
+  String findMatchCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 个匹配',
+      zero: '无匹配',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get findDeepSearch => '在附件中及用 AI 搜索';
+
+  @override
+  String get notesSettingsTitle => '笔记与文件夹';
+
+  @override
+  String get noteViewSetting => '主屏幕布局';
+
+  @override
+  String get noteViewGrid => '网格';
+
+  @override
+  String get noteViewList => '列表';
+
+  @override
+  String get gridColumnsSetting => '列数';
+
+  @override
+  String get gridColumnsInfo => '也可以在主屏幕上双指缩放来更改。';
+
+  @override
+  String get gridColumnsAuto => '自动';
+
+  @override
+  String get folderShelfSetting => '主屏幕上的文件夹';
+
+  @override
+  String get folderShelfStrip => '单行';
+
+  @override
+  String get folderShelfTiles => '磁贴';
+
+  @override
+  String get deviceStorageTitle => '此设备';
+
+  @override
+  String get deviceStorageAttachments => '附件';
+
+  @override
+  String get deviceStorageDatabase => '笔记本地副本';
+
+  @override
+  String get deviceStorageCache => '缓存与临时文件';
+
+  @override
+  String get deviceStorageAi => 'AI 缓存';
+
+  @override
+  String get deviceStorageTotal => '总计（不含应用本身）';
+
+  @override
+  String get deviceStorageInfo => '清除缓存不会删除笔记或附件，图片会在需要时重新下载。旧的临时文件每次启动都会清理。';
+
+  @override
+  String get deviceStorageClear => '清除缓存';
+
+  @override
+  String deviceStorageCleared(String size) {
+    return '已释放 $size';
+  }
+
+  @override
+  String get deviceStorageUnavailable => '无法在此设备上测量。';
 }
