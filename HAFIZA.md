@@ -3620,3 +3620,10 @@ gürültü üretiyordu.
   oluşturulunca (flutter build web) ESKİ klasörü sunmaya devam eder →
   `--directory` ile mutlak yol. `pkill -f "http.server 8765"` komut satırının
   kendisini de öldürür.
+
+### 2026-09-26 (sonuç) — koşu #409 ölçümü
+APK **64,9 MB → 54,4 MB** (açılmış içerik 76,2 → 63,5 MB). libapp.so
+19,1 → 16,5 MB (split-debug-info), pdfium.wasm ve libbarhopper_v3.so +
+barkod modelleri pakette yok. Kalan en büyükler: libflutter 11,6, ML Kit OCR
+11,1 + ~1 MB model, dex 9,3, pdfium 5,0. Sonraki aday: OCR'ı Play
+Hizmetleri'ne taşımak (eklenti bunu sunmuyor, ayrı iş). v1.0.409 yayınlandı.

@@ -6,8 +6,7 @@
 - [ ] **QR okuma (Play Hizmetleri modeli)**: barkod modeli artık APK'da değil.
   Yeni kurulumda "QR not" hemen okuyor mu, yoksa model inene kadar hata mı
   veriyor? Play Hizmetleri olmayan cihazda çalışmaz (bilinçli).
-- [ ] **APK boyutu**: wasm çıkarma + split-debug-info + barkod sonrası yeni
-  koşunun boyut raporuna bak (beklenen ~55 MB, önce 64,9 MB). Telefonda
+- [ ] **APK boyutu**: koşu #409'da 64,9 → 54,4 MB ölçüldü. Telefonda
   Ayarlar → Uygulamalar → Notlar'da uygulama/veri/önbellek ayrımına bak;
   uygulama içindeki "Bu cihazda" bölümüyle karşılaştır.
 - [ ] **Canlı not içi arama**: klavye açıkken çubuk klavyenin üstünde mi,
