@@ -36,6 +36,11 @@ import 'split_shell.dart';
 /// Tek yer, tek test: `test/note_route_test.dart`.
 String noteRoutePath(String id, {String query = ''}) => '/note/$id$query';
 
+/// Adres uygulamanın bir SAYFASI değil de dışarıdan gelen bir kaynak mı
+/// (content://, file://, notlar://…)? Web'in http(s) adresleri sayfadır.
+bool isExternalLocation(Uri uri) =>
+    uri.hasScheme && uri.scheme != 'http' && uri.scheme != 'https';
+
 /// ARŞİV DEFTERİ rotası. Ayrı bir yol, çünkü defter not editöründe değil
 /// kendi ekranında açılıyor (bkz. [ArchiveNoteScreen] — gerekçe orada).
 /// Kart/liste yollarının hangisini kullanacağı `openNoteRoute`'ta notun
@@ -50,6 +55,17 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     refreshListenable: refresh,
+    // **DIŞ ADRESLER SAYFA DEĞİLDİR** (kullanıcı bulgusu 2026-09-29:
+    // "GoException: no routes for location: content://…whatsapp…"). Asıl
+    // düzeltme manifestte (flutter_deeplinking_enabled=false); bu, adres
+    // yine de yönlendiriciye ulaşırsa diye ikinci kilit: content://, file://
+    // ya da notlar:// gibi şemalı bir adres yönlendirmeyi DURDURUR — ekran
+    // olduğu yerde kalır (soğuk açılışta başlangıç sayfası), içeriği ilgili
+    // eklenti (paylaşım / derin bağlantı) işler.
+    onEnter: (context, current, next, router) =>
+        isExternalLocation(next.uri) ? const Block.stop() : const Allow(),
+    // Bilinmeyen bir sayfa adresi "Page Not Found" yerine ana sayfaya döner.
+    onException: (context, state, router) => router.go('/'),
     redirect: (context, state) {
       // Oturum durumunu, yönlendirmeyi TETİKLEYEN aynı stream üzerinden
       // (repo.currentUser) oku. Eskiden redirect ayrı bir StreamProvider'ı

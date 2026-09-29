@@ -133,37 +133,12 @@ class _ShareSheetState extends State<_ShareSheet> {
             child: Text(l10n.share, style: theme.textTheme.titleLarge),
           ),
           // ÖNİZLEME: gönderilecek metnin kendisi — seçenekler değişince
-          // anında güncellenir. Uzun notta ilk satırlar; sonu solar.
+          // anında güncellenir. KAYDIRILABİLİR (bkz. [_SharePreview]).
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 168),
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: ClipRect(
-                child: ShaderMask(
-                  shaderCallback: (rect) => LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: const [Colors.black, Colors.black, Colors.transparent],
-                    stops: const [0, 0.78, 1],
-                  ).createShader(rect),
-                  blendMode: BlendMode.dstIn,
-                  child: SingleChildScrollView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: Text(
-                      hasText ? text : l10n.shareAsTextEmpty,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: hasText ? null : scheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            child: _SharePreview(
+              text: hasText ? text : l10n.shareAsTextEmpty,
+              muted: !hasText,
             ),
           ),
           if (hasTitle || hasChecked || note.tags.isNotEmpty)
@@ -260,6 +235,154 @@ class _ShareSheetState extends State<_ShareSheet> {
               icon: Icons.group_add_outlined,
               title: l10n.collaborators,
               subtitle: l10n.shareCollaborateInfo,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Paylaşım levhasının ÖNİZLEMESİ — gönderilecek metnin tamamı.
+///
+/// KÖK NEDEN (kullanıcı isteği 2026-09-29: "paylaş kısmında önizleme aşağı
+/// yukarı kaydırılabilmeli"): önizleme 168 dp'lik bir kutuda
+/// `NeverScrollableScrollPhysics` ile duruyordu — uzun notun yalnız ilk
+/// satırları görünüyor, sonu soluyor ve geri kalanı hiçbir yoldan
+/// okunamıyordu. Artık:
+/// * kutunun içi parmakla aşağı-yukarı kayar, kaydırma çubuğu görünür;
+/// * solma YALNIZ gerçekten devamı olan kenarda (üstte/altta) çizilir;
+/// * sağ üstteki düğme kutuyu ekranın yarısına kadar BÜYÜTÜR / küçültür.
+///
+/// Levhanın kendisi de kayar (SingleChildScrollView); iç kaydırma parmak
+/// kutunun içindeyken kutuyu, dışındayken levhayı kaydırır.
+class _SharePreview extends StatefulWidget {
+  const _SharePreview({required this.text, required this.muted});
+
+  final String text;
+  final bool muted;
+
+  @override
+  State<_SharePreview> createState() => _SharePreviewState();
+}
+
+class _SharePreviewState extends State<_SharePreview> {
+  final _scroll = ScrollController();
+  bool _expanded = false;
+
+  /// Kenarlarda devam var mı (solma buna göre çizilir).
+  bool _moreAbove = false;
+  bool _moreBelow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_updateEdges);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateEdges());
+  }
+
+  @override
+  void didUpdateWidget(_SharePreview old) {
+    super.didUpdateWidget(old);
+    // Seçenek değişince metin kısalıp uzayabilir: kenarlar yeniden ölçülür.
+    if (old.text != widget.text) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateEdges());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _updateEdges() {
+    if (!mounted || !_scroll.hasClients) return;
+    final position = _scroll.position;
+    final above = position.pixels > 1;
+    final below = position.pixels < position.maxScrollExtent - 1;
+    if (above != _moreAbove || below != _moreBelow) {
+      setState(() {
+        _moreAbove = above;
+        _moreBelow = below;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    final maxHeight = _expanded
+        ? (MediaQuery.sizeOf(context).height * 0.5).clamp(220.0, 560.0)
+        : 180.0;
+    final scrollable = _moreAbove || _moreBelow || _expanded;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: ShaderMask(
+              shaderCallback: (rect) => LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  _moreAbove ? Colors.transparent : Colors.black,
+                  Colors.black,
+                  Colors.black,
+                  _moreBelow ? Colors.transparent : Colors.black,
+                ],
+                stops: const [0, 0.1, 0.86, 1],
+              ).createShader(rect),
+              blendMode: BlendMode.dstIn,
+              child: NotificationListener<ScrollMetricsNotification>(
+                onNotification: (_) {
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => _updateEdges(),
+                  );
+                  return false;
+                },
+                child: Scrollbar(
+                  controller: _scroll,
+                  thumbVisibility: _moreAbove || _moreBelow,
+                  child: SingleChildScrollView(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(14, 12, 34, 12),
+                    child: Text(
+                      widget.text,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: widget.muted ? scheme.onSurfaceVariant : null,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (scrollable)
+            Positioned(
+              top: 2,
+              right: 2,
+              child: IconButton(
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                tooltip: _expanded
+                    ? l10n.sharePreviewCollapse
+                    : l10n.sharePreviewExpand,
+                icon: Icon(
+                  _expanded ? Icons.unfold_less : Icons.unfold_more,
+                  color: scheme.onSurfaceVariant,
+                ),
+                onPressed: () => setState(() => _expanded = !_expanded),
+              ),
             ),
         ],
       ),

@@ -4069,4 +4069,249 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Cards and lists';
+
+  @override
+  String get shareTargetTitle => 'Add to Notes';
+
+  @override
+  String get shareTargetNew => 'New note';
+
+  @override
+  String get shareTargetExisting => 'Existing note';
+
+  @override
+  String get shareTargetCreate => 'Create note';
+
+  @override
+  String get shareTargetSearch => 'Search notes';
+
+  @override
+  String get shareTargetNoNotes => 'No notes to add to';
+
+  @override
+  String get shareTargetNoMatch => 'No matching notes';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count files';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Expand preview';
+
+  @override
+  String get sharePreviewCollapse => 'Collapse preview';
+
+  @override
+  String get templatesSearch => 'Search templates';
+
+  @override
+  String get templatesAll => 'All';
+
+  @override
+  String get templatesLists => 'Lists';
+
+  @override
+  String get templatesPlanning => 'Planning';
+
+  @override
+  String get templatesWriting => 'Writing';
+
+  @override
+  String get templatesMine => 'My templates';
+
+  @override
+  String get templatesRecent => 'Recently used';
+
+  @override
+  String get templatesNoMatch => 'No matching templates';
+
+  @override
+  String get templatesMineEmpty =>
+      'You have no templates yet. Choose “Save as template” from a note\'s menu and it will appear here.';
+
+  @override
+  String get templatesMineInfo => 'Your template';
+
+  @override
+  String get templateRename => 'Rename';
+
+  @override
+  String get templateDelete => 'Delete template';
+
+  @override
+  String get templateNameTitle => 'Template name';
+
+  @override
+  String get templateNameHint => 'e.g. Weekly groceries';
+
+  @override
+  String get templateSave => 'Save';
+
+  @override
+  String templateSaved(String name) {
+    return '“$name” added to your templates';
+  }
+
+  @override
+  String get saveAsTemplate => 'Save as template';
+
+  @override
+  String get templateCreate => 'Create';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Create · $count items';
+  }
+
+  @override
+  String get templateListChecks => 'Checkboxes';
+
+  @override
+  String get templateListNumbers => 'Numbered';
+
+  @override
+  String get templateItems => 'Items';
+
+  @override
+  String get templateAddItem => 'Add item';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Tap a suggestion to add it to the list; tap again to remove it.';
+
+  @override
+  String get tplShopProduce => 'Fruit and vegetables';
+
+  @override
+  String get tplShopProduceItems =>
+      'Tomatoes, Cucumbers, Onions, Potatoes, Lemons, Bananas, Apples, Parsley';
+
+  @override
+  String get tplShopBreakfast => 'Breakfast';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Cheese, Olives, Butter, Honey, Jam, Yogurt';
+
+  @override
+  String get tplShopPantry => 'Pantry';
+
+  @override
+  String get tplShopPantryItems =>
+      'Rice, Pasta, Flour, Sugar, Olive oil, Lentils, Tea, Coffee';
+
+  @override
+  String get tplShopCleaning => 'Cleaning';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Dish soap, Laundry detergent, Toilet paper, Paper towels, Trash bags';
+
+  @override
+  String get tplShopPersonal => 'Personal care';
+
+  @override
+  String get tplShopPersonalItems => 'Shampoo, Toothpaste, Soap, Deodorant';
+
+  @override
+  String get tplTravelDocs => 'Documents';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Tickets, Hotel booking, Driver\'s license, Travel insurance, Cash / cards';
+
+  @override
+  String get tplTravelClothes => 'Clothes';
+
+  @override
+  String get tplTravelClothesItems =>
+      'T-shirts, Trousers, Underwear, Socks, Pyjamas, Jacket, Shoes';
+
+  @override
+  String get tplTravelCare => 'Toiletries';
+
+  @override
+  String get tplTravelCareItems =>
+      'Toothpaste, Shampoo, Sunscreen, Shaving kit, Deodorant';
+
+  @override
+  String get tplTravelTech => 'Electronics';
+
+  @override
+  String get tplTravelTechItems =>
+      'Power bank, Plug adapter, Headphones, Cables';
+
+  @override
+  String get tplHabitsName => 'Habit tracker';
+
+  @override
+  String get tplHabitsDesc => 'Tick every day, don\'t break the chain';
+
+  @override
+  String get tplHabitsItems =>
+      '8 glasses of water, 30-minute walk, Read 20 pages, Go to bed early, One screen-free hour';
+
+  @override
+  String get tplCleaningName => 'House cleaning';
+
+  @override
+  String get tplCleaningDesc => 'Weekly cleaning checklist';
+
+  @override
+  String get tplCleaningItems =>
+      'Dust, Vacuum, Mop, Clean the bathroom, Kitchen counters, Laundry, Take out the trash, Change the sheets';
+
+  @override
+  String get tplMovingName => 'Moving checklist';
+
+  @override
+  String get tplMovingDesc => 'Things to do before and after the move';
+
+  @override
+  String get tplMovingItems =>
+      'Book movers, Buy boxes and tape, Update your address, Electricity / water / gas accounts, Transfer internet, Hand over keys';
+
+  @override
+  String get tplGiftsName => 'Gift list';
+
+  @override
+  String get tplGiftsDesc => 'Who gets what, ideas';
+
+  @override
+  String get tplGiftsItems => 'Mom, Dad, Sibling, Friend';
+
+  @override
+  String get tplWatchlistName => 'Watchlist';
+
+  @override
+  String get tplWatchlistDesc => 'Films, series and books to get to';
+
+  @override
+  String get tplWorkoutName => 'Workout';
+
+  @override
+  String get tplWorkoutDesc => 'Exercise list from warm-up to stretching';
+
+  @override
+  String get tplWorkoutItems =>
+      'Warm-up 5 min, Squats 3×12, Push-ups 3×10, Crunches 3×15, Plank 3×45 s, Stretching 5 min';
+
+  @override
+  String get tplGoalsName => 'Goals';
+
+  @override
+  String get tplGoalsDesc => 'Goals for the year, month and week';
+
+  @override
+  String get tplGoalsYear => 'This year';
+
+  @override
+  String get tplGoalsMonth => 'This month';
+
+  @override
+  String get tplGoalsWeek => 'This week';
+
+  @override
+  String get tplGoalsWhy => 'Why does it matter?';
 }

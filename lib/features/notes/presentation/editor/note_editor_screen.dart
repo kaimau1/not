@@ -59,6 +59,7 @@ import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
 import '../../data/scan/scan_title.dart';
+import '../../data/user_templates.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/list_convert.dart';
@@ -68,6 +69,7 @@ import '../../domain/page_notes.dart';
 import '../collaborators_sheet.dart';
 import '../color_picker_sheet.dart';
 import '../note_stats_sheet.dart';
+import '../note_template_sheet.dart';
 import '../notes_providers.dart';
 import '../pdf_export_screen.dart';
 import '../qr_scan_screen.dart';
@@ -3349,6 +3351,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
       hasAttachments: note.attachments.isNotEmpty,
+      canTemplate: canSaveAsTemplate(note),
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
       localOnly: widget.ownerId == null && localOnlySupported(ref)
@@ -3368,6 +3371,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // saysın (aramada da aynı sıra).
         _flushPending(_bodyController);
         if (mounted) await showNoteStatsSheet(context, _note ?? note);
+      case 'saveTemplate':
+        // Son yazılan satır da şablona girsin.
+        _flushPending(_titleController);
+        _flushPending(_bodyController);
+        if (mounted) await saveNoteAsTemplate(context, ref, _note ?? note);
       case 'share':
         await _share();
       case 'copyText':

@@ -4060,4 +4060,247 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'البطاقات والقوائم';
+
+  @override
+  String get shareTargetTitle => 'أضِف إلى الملاحظات';
+
+  @override
+  String get shareTargetNew => 'ملاحظة جديدة';
+
+  @override
+  String get shareTargetExisting => 'ملاحظة موجودة';
+
+  @override
+  String get shareTargetCreate => 'إنشاء ملاحظة';
+
+  @override
+  String get shareTargetSearch => 'ابحث في الملاحظات';
+
+  @override
+  String get shareTargetNoNotes => 'لا توجد ملاحظات متاحة';
+
+  @override
+  String get shareTargetNoMatch => 'لا توجد ملاحظات مطابقة';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count ملفات';
+  }
+
+  @override
+  String get sharePreviewExpand => 'تكبير المعاينة';
+
+  @override
+  String get sharePreviewCollapse => 'تصغير المعاينة';
+
+  @override
+  String get templatesSearch => 'ابحث في القوالب';
+
+  @override
+  String get templatesAll => 'الكل';
+
+  @override
+  String get templatesLists => 'قوائم';
+
+  @override
+  String get templatesPlanning => 'تخطيط';
+
+  @override
+  String get templatesWriting => 'كتابة';
+
+  @override
+  String get templatesMine => 'قوالبي';
+
+  @override
+  String get templatesRecent => 'المستخدمة مؤخرًا';
+
+  @override
+  String get templatesNoMatch => 'لا توجد قوالب مطابقة';
+
+  @override
+  String get templatesMineEmpty =>
+      'ليست لديك قوالب خاصة بعد. اختر «حفظ كقالب» من قائمة أي ملاحظة وسيظهر هنا.';
+
+  @override
+  String get templatesMineInfo => 'قالبك';
+
+  @override
+  String get templateRename => 'إعادة التسمية';
+
+  @override
+  String get templateDelete => 'حذف القالب';
+
+  @override
+  String get templateNameTitle => 'اسم القالب';
+
+  @override
+  String get templateNameHint => 'مثل: تسوق الأسبوع';
+
+  @override
+  String get templateSave => 'حفظ';
+
+  @override
+  String templateSaved(String name) {
+    return 'أُضيف «$name» إلى قوالبك';
+  }
+
+  @override
+  String get saveAsTemplate => 'حفظ كقالب';
+
+  @override
+  String get templateCreate => 'إنشاء';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'إنشاء · $count عناصر';
+  }
+
+  @override
+  String get templateListChecks => 'مربعات اختيار';
+
+  @override
+  String get templateListNumbers => 'مرقّمة';
+
+  @override
+  String get templateItems => 'العناصر';
+
+  @override
+  String get templateAddItem => 'إضافة عنصر';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'اضغط على اقتراح لإضافته إلى القائمة، واضغط مرة أخرى لإزالته.';
+
+  @override
+  String get tplShopProduce => 'خضار وفواكه';
+
+  @override
+  String get tplShopProduceItems =>
+      'طماطم, خيار, بصل, بطاطس, ليمون, موز, تفاح, بقدونس';
+
+  @override
+  String get tplShopBreakfast => 'الفطور';
+
+  @override
+  String get tplShopBreakfastItems => 'جبن, زيتون, زبدة, عسل, مربى, زبادي';
+
+  @override
+  String get tplShopPantry => 'مؤن';
+
+  @override
+  String get tplShopPantryItems =>
+      'أرز, معكرونة, دقيق, سكر, زيت زيتون, عدس, شاي, قهوة';
+
+  @override
+  String get tplShopCleaning => 'منظفات';
+
+  @override
+  String get tplShopCleaningItems =>
+      'سائل الصحون, مسحوق الغسيل, ورق التواليت, مناديل المطبخ, أكياس القمامة';
+
+  @override
+  String get tplShopPersonal => 'العناية الشخصية';
+
+  @override
+  String get tplShopPersonalItems => 'شامبو, معجون أسنان, صابون, مزيل عرق';
+
+  @override
+  String get tplTravelDocs => 'المستندات';
+
+  @override
+  String get tplTravelDocsItems =>
+      'التذاكر, حجز الفندق, رخصة القيادة, تأمين السفر, نقود / بطاقات';
+
+  @override
+  String get tplTravelClothes => 'الملابس';
+
+  @override
+  String get tplTravelClothesItems =>
+      'قمصان, بناطيل, ملابس داخلية, جوارب, بيجامة, سترة, أحذية';
+
+  @override
+  String get tplTravelCare => 'أدوات العناية';
+
+  @override
+  String get tplTravelCareItems =>
+      'معجون أسنان, شامبو, واقي شمس, أدوات الحلاقة, مزيل عرق';
+
+  @override
+  String get tplTravelTech => 'إلكترونيات';
+
+  @override
+  String get tplTravelTechItems => 'بطارية متنقلة, محوّل قابس, سماعات, كابلات';
+
+  @override
+  String get tplHabitsName => 'متابعة العادات';
+
+  @override
+  String get tplHabitsDesc => 'ضع علامة كل يوم ولا تقطع السلسلة';
+
+  @override
+  String get tplHabitsItems =>
+      '8 أكواب ماء, مشي 30 دقيقة, قراءة 20 صفحة, النوم مبكرًا, ساعة بلا شاشات';
+
+  @override
+  String get tplCleaningName => 'تنظيف المنزل';
+
+  @override
+  String get tplCleaningDesc => 'قائمة تنظيف أسبوعية';
+
+  @override
+  String get tplCleaningItems =>
+      'إزالة الغبار, الكنس بالمكنسة, مسح الأرضيات, تنظيف الحمّام, سطح المطبخ, الغسيل, إخراج القمامة, تغيير الشراشف';
+
+  @override
+  String get tplMovingName => 'قائمة الانتقال';
+
+  @override
+  String get tplMovingDesc => 'مهام قبل الانتقال وبعده';
+
+  @override
+  String get tplMovingItems =>
+      'حجز شركة النقل, شراء صناديق وشريط لاصق, تحديث العنوان, الكهرباء / الماء / الغاز, نقل الإنترنت, تسليم المفاتيح';
+
+  @override
+  String get tplGiftsName => 'قائمة الهدايا';
+
+  @override
+  String get tplGiftsDesc => 'من يحصل على ماذا، أفكار';
+
+  @override
+  String get tplGiftsItems => 'أمي, أبي, أخي, صديق';
+
+  @override
+  String get tplWatchlistName => 'للمشاهدة';
+
+  @override
+  String get tplWatchlistDesc => 'أفلام ومسلسلات وكتب';
+
+  @override
+  String get tplWorkoutName => 'تمرين';
+
+  @override
+  String get tplWorkoutDesc => 'من الإحماء إلى التمدد';
+
+  @override
+  String get tplWorkoutItems =>
+      'إحماء 5 دقائق, قرفصاء 3×12, ضغط 3×10, تمارين بطن 3×15, بلانك 3×45 ث, تمدد 5 دقائق';
+
+  @override
+  String get tplGoalsName => 'الأهداف';
+
+  @override
+  String get tplGoalsDesc => 'أهداف السنة والشهر والأسبوع';
+
+  @override
+  String get tplGoalsYear => 'هذه السنة';
+
+  @override
+  String get tplGoalsMonth => 'هذا الشهر';
+
+  @override
+  String get tplGoalsWeek => 'هذا الأسبوع';
+
+  @override
+  String get tplGoalsWhy => 'لماذا هذا مهم؟';
 }

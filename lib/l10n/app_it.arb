@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Data, descrizione, importo",
   "tplReadingDesc": "Fonte, riassunto, citazioni",
   "settingsThemeHeader": "Tema",
-  "settingsCardsHeader": "Schede ed elenchi"
+  "settingsCardsHeader": "Schede ed elenchi",
+  "shareTargetTitle": "Aggiungi a Note",
+  "shareTargetNew": "Nuova nota",
+  "shareTargetExisting": "Nota esistente",
+  "shareTargetCreate": "Crea nota",
+  "shareTargetSearch": "Cerca nelle note",
+  "shareTargetNoNotes": "Nessuna nota disponibile",
+  "shareTargetNoMatch": "Nessuna nota corrispondente",
+  "shareTargetMore": "+{count} file",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Espandi anteprima",
+  "sharePreviewCollapse": "Riduci anteprima",
+  "templatesSearch": "Cerca modelli",
+  "templatesAll": "Tutti",
+  "templatesLists": "Elenchi",
+  "templatesPlanning": "Pianificazione",
+  "templatesWriting": "Scrittura",
+  "templatesMine": "I miei modelli",
+  "templatesRecent": "Usati di recente",
+  "templatesNoMatch": "Nessun modello corrispondente",
+  "templatesMineEmpty": "Non hai ancora modelli tuoi. Scegli «Salva come modello» dal menu di una nota e comparirà qui.",
+  "templatesMineInfo": "Il tuo modello",
+  "templateRename": "Rinomina",
+  "templateDelete": "Elimina modello",
+  "templateNameTitle": "Nome del modello",
+  "templateNameHint": "es. Spesa settimanale",
+  "templateSave": "Salva",
+  "templateSaved": "«{name}» aggiunto ai tuoi modelli",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Salva come modello",
+  "templateCreate": "Crea",
+  "templateCreateWithCount": "Crea · {count} voci",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Caselle",
+  "templateListNumbers": "Numerato",
+  "templateItems": "Voci",
+  "templateAddItem": "Aggiungi voce",
+  "templateSuggestionsInfo": "Tocca un suggerimento per aggiungerlo; toccalo di nuovo per toglierlo.",
+  "tplShopProduce": "Frutta e verdura",
+  "tplShopProduceItems": "Pomodori, Cetrioli, Cipolle, Patate, Limoni, Banane, Mele, Prezzemolo",
+  "tplShopBreakfast": "Colazione",
+  "tplShopBreakfastItems": "Formaggio, Olive, Burro, Miele, Marmellata, Yogurt",
+  "tplShopPantry": "Dispensa",
+  "tplShopPantryItems": "Riso, Pasta, Farina, Zucchero, Olio d'oliva, Lenticchie, Tè, Caffè",
+  "tplShopCleaning": "Pulizia",
+  "tplShopCleaningItems": "Detersivo per piatti, Detersivo per bucato, Carta igienica, Carta da cucina, Sacchi della spazzatura",
+  "tplShopPersonal": "Cura personale",
+  "tplShopPersonalItems": "Shampoo, Dentifricio, Sapone, Deodorante",
+  "tplTravelDocs": "Documenti",
+  "tplTravelDocsItems": "Biglietti, Prenotazione hotel, Patente, Assicurazione viaggio, Contanti / carte",
+  "tplTravelClothes": "Abbigliamento",
+  "tplTravelClothesItems": "Magliette, Pantaloni, Biancheria, Calzini, Pigiama, Giacca, Scarpe",
+  "tplTravelCare": "Igiene",
+  "tplTravelCareItems": "Dentifricio, Shampoo, Crema solare, Rasoio, Deodorante",
+  "tplTravelTech": "Elettronica",
+  "tplTravelTechItems": "Power bank, Adattatore presa, Cuffie, Cavi",
+  "tplHabitsName": "Monitoraggio abitudini",
+  "tplHabitsDesc": "Spunta ogni giorno, non spezzare la catena",
+  "tplHabitsItems": "8 bicchieri d'acqua, Camminata di 30 minuti, Leggere 20 pagine, Andare a letto presto, Un'ora senza schermi",
+  "tplCleaningName": "Pulizie di casa",
+  "tplCleaningDesc": "Lista settimanale delle pulizie",
+  "tplCleaningItems": "Spolverare, Passare l'aspirapolvere, Lavare i pavimenti, Pulire il bagno, Piano cucina, Bucato, Portare fuori la spazzatura, Cambiare le lenzuola",
+  "tplMovingName": "Lista trasloco",
+  "tplMovingDesc": "Cose da fare prima e dopo il trasloco",
+  "tplMovingItems": "Prenotare il trasloco, Comprare scatoloni e nastro, Cambiare indirizzo, Luce / acqua / gas, Trasferire internet, Consegna delle chiavi",
+  "tplGiftsName": "Lista regali",
+  "tplGiftsDesc": "Chi riceve cosa, idee",
+  "tplGiftsItems": "Mamma, Papà, Fratello, Amico",
+  "tplWatchlistName": "Da vedere",
+  "tplWatchlistDesc": "Film, serie e libri",
+  "tplWorkoutName": "Allenamento",
+  "tplWorkoutDesc": "Dal riscaldamento allo stretching",
+  "tplWorkoutItems": "Riscaldamento 5 min, Squat 3×12, Flessioni 3×10, Addominali 3×15, Plank 3×45 s, Stretching 5 min",
+  "tplGoalsName": "Obiettivi",
+  "tplGoalsDesc": "Obiettivi dell'anno, del mese e della settimana",
+  "tplGoalsYear": "Quest'anno",
+  "tplGoalsMonth": "Questo mese",
+  "tplGoalsWeek": "Questa settimana",
+  "tplGoalsWhy": "Perché è importante?"
 }

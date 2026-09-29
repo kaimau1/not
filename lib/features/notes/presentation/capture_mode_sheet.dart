@@ -121,34 +121,47 @@ class _CaptureModeSheetState extends State<_CaptureModeSheet> {
               ),
             ),
             const SizedBox(height: 10),
-            // İki kart YAN YANA: karar tek bakışta verilsin diye önizlemeler
-            // karşılaştırmalı duruyor.
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: _ModeCard(
-                    title: l10n.captureModeBubbles,
-                    info: l10n.captureModeBubblesInfo,
-                    preview: const _BubblePreview(),
-                    badge: l10n.captureModeNew,
-                    onTap: () => _pick(CaptureMode.bubbles),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ModeCard(
-                    title: l10n.captureModeClassic,
-                    info: l10n.captureModeClassicInfo,
-                    preview: const _ClassicPreview(),
-                    onTap: () => _pick(CaptureMode.classic),
-                  ),
-                ),
-              ],
-            ),
+            CaptureModeCards(onPick: _pick),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Balonlu / klasik kip kartları, YAN YANA — karar tek bakışta verilsin diye
+/// önizlemeler karşılaştırmalı duruyor. Hem bu levha hem de paylaşımla gelen
+/// belgenin hedef levhası (bkz. `share_target_sheet.dart`) kullanır.
+class CaptureModeCards extends StatelessWidget {
+  const CaptureModeCards({super.key, required this.onPick});
+
+  final ValueChanged<CaptureMode> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _ModeCard(
+            title: l10n.captureModeBubbles,
+            info: l10n.captureModeBubblesInfo,
+            preview: const _BubblePreview(),
+            badge: l10n.captureModeNew,
+            onTap: () => onPick(CaptureMode.bubbles),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _ModeCard(
+            title: l10n.captureModeClassic,
+            info: l10n.captureModeClassicInfo,
+            preview: const _ClassicPreview(),
+            onTap: () => onPick(CaptureMode.classic),
+          ),
+        ),
+      ],
     );
   }
 }

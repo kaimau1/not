@@ -4016,4 +4016,239 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => '카드와 목록';
+
+  @override
+  String get shareTargetTitle => '메모에 추가';
+
+  @override
+  String get shareTargetNew => '새 메모';
+
+  @override
+  String get shareTargetExisting => '기존 메모';
+
+  @override
+  String get shareTargetCreate => '메모 만들기';
+
+  @override
+  String get shareTargetSearch => '메모 검색';
+
+  @override
+  String get shareTargetNoNotes => '추가할 수 있는 메모가 없습니다';
+
+  @override
+  String get shareTargetNoMatch => '일치하는 메모가 없습니다';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count개 파일';
+  }
+
+  @override
+  String get sharePreviewExpand => '미리보기 크게';
+
+  @override
+  String get sharePreviewCollapse => '미리보기 작게';
+
+  @override
+  String get templatesSearch => '템플릿 검색';
+
+  @override
+  String get templatesAll => '전체';
+
+  @override
+  String get templatesLists => '목록';
+
+  @override
+  String get templatesPlanning => '계획';
+
+  @override
+  String get templatesWriting => '글쓰기';
+
+  @override
+  String get templatesMine => '내 템플릿';
+
+  @override
+  String get templatesRecent => '최근 사용';
+
+  @override
+  String get templatesNoMatch => '일치하는 템플릿이 없습니다';
+
+  @override
+  String get templatesMineEmpty =>
+      '아직 내 템플릿이 없습니다. 메모 메뉴에서 ‘템플릿으로 저장’을 선택하면 여기에 표시됩니다.';
+
+  @override
+  String get templatesMineInfo => '내 템플릿';
+
+  @override
+  String get templateRename => '이름 바꾸기';
+
+  @override
+  String get templateDelete => '템플릿 삭제';
+
+  @override
+  String get templateNameTitle => '템플릿 이름';
+
+  @override
+  String get templateNameHint => '예: 주간 장보기';
+
+  @override
+  String get templateSave => '저장';
+
+  @override
+  String templateSaved(String name) {
+    return '‘$name’을(를) 템플릿에 추가했습니다';
+  }
+
+  @override
+  String get saveAsTemplate => '템플릿으로 저장';
+
+  @override
+  String get templateCreate => '만들기';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return '만들기 · 항목 $count개';
+  }
+
+  @override
+  String get templateListChecks => '체크박스';
+
+  @override
+  String get templateListNumbers => '번호 매기기';
+
+  @override
+  String get templateItems => '항목';
+
+  @override
+  String get templateAddItem => '항목 추가';
+
+  @override
+  String get templateSuggestionsInfo => '제안을 탭하면 목록에 추가되고, 다시 탭하면 빠집니다.';
+
+  @override
+  String get tplShopProduce => '채소와 과일';
+
+  @override
+  String get tplShopProduceItems => '토마토, 오이, 양파, 감자, 레몬, 바나나, 사과, 파슬리';
+
+  @override
+  String get tplShopBreakfast => '아침 식사';
+
+  @override
+  String get tplShopBreakfastItems => '치즈, 올리브, 버터, 꿀, 잼, 요구르트';
+
+  @override
+  String get tplShopPantry => '식료품';
+
+  @override
+  String get tplShopPantryItems => '쌀, 파스타, 밀가루, 설탕, 올리브유, 렌틸콩, 차, 커피';
+
+  @override
+  String get tplShopCleaning => '청소용품';
+
+  @override
+  String get tplShopCleaningItems => '주방 세제, 세탁 세제, 화장지, 키친타월, 쓰레기봉투';
+
+  @override
+  String get tplShopPersonal => '개인 위생';
+
+  @override
+  String get tplShopPersonalItems => '샴푸, 치약, 비누, 데오도런트';
+
+  @override
+  String get tplTravelDocs => '서류';
+
+  @override
+  String get tplTravelDocsItems => '티켓, 호텔 예약, 운전면허증, 여행자 보험, 현금 / 카드';
+
+  @override
+  String get tplTravelClothes => '옷';
+
+  @override
+  String get tplTravelClothesItems => '티셔츠, 바지, 속옷, 양말, 잠옷, 재킷, 신발';
+
+  @override
+  String get tplTravelCare => '세면도구';
+
+  @override
+  String get tplTravelCareItems => '치약, 샴푸, 선크림, 면도기, 데오도런트';
+
+  @override
+  String get tplTravelTech => '전자기기';
+
+  @override
+  String get tplTravelTechItems => '보조배터리, 플러그 어댑터, 이어폰, 케이블';
+
+  @override
+  String get tplHabitsName => '습관 트래커';
+
+  @override
+  String get tplHabitsDesc => '매일 체크하고 흐름을 끊지 마세요';
+
+  @override
+  String get tplHabitsItems => '물 8잔, 30분 걷기, 책 20쪽 읽기, 일찍 자기, 화면 없는 1시간';
+
+  @override
+  String get tplCleaningName => '집 청소';
+
+  @override
+  String get tplCleaningDesc => '주간 청소 체크리스트';
+
+  @override
+  String get tplCleaningItems =>
+      '먼지 털기, 청소기 돌리기, 걸레질, 욕실 청소, 주방 조리대, 빨래, 쓰레기 버리기, 침구 교체';
+
+  @override
+  String get tplMovingName => '이사 체크리스트';
+
+  @override
+  String get tplMovingDesc => '이사 전후에 할 일';
+
+  @override
+  String get tplMovingItems =>
+      '이삿짐센터 예약, 상자와 테이프 구입, 주소 변경, 전기 / 수도 / 가스, 인터넷 이전, 열쇠 반납';
+
+  @override
+  String get tplGiftsName => '선물 목록';
+
+  @override
+  String get tplGiftsDesc => '누구에게 무엇을, 아이디어';
+
+  @override
+  String get tplGiftsItems => '엄마, 아빠, 형제자매, 친구';
+
+  @override
+  String get tplWatchlistName => '볼 목록';
+
+  @override
+  String get tplWatchlistDesc => '영화, 시리즈, 책';
+
+  @override
+  String get tplWorkoutName => '운동';
+
+  @override
+  String get tplWorkoutDesc => '준비 운동부터 스트레칭까지';
+
+  @override
+  String get tplWorkoutItems =>
+      '준비 운동 5분, 스쿼트 3×12, 팔굽혀펴기 3×10, 크런치 3×15, 플랭크 3×45초, 스트레칭 5분';
+
+  @override
+  String get tplGoalsName => '목표';
+
+  @override
+  String get tplGoalsDesc => '올해, 이번 달, 이번 주 목표';
+
+  @override
+  String get tplGoalsYear => '올해';
+
+  @override
+  String get tplGoalsMonth => '이번 달';
+
+  @override
+  String get tplGoalsWeek => '이번 주';
+
+  @override
+  String get tplGoalsWhy => '왜 중요한가요?';
 }

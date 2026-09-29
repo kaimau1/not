@@ -3990,4 +3990,236 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => '卡片和列表';
+
+  @override
+  String get shareTargetTitle => '添加到笔记';
+
+  @override
+  String get shareTargetNew => '新笔记';
+
+  @override
+  String get shareTargetExisting => '已有笔记';
+
+  @override
+  String get shareTargetCreate => '创建笔记';
+
+  @override
+  String get shareTargetSearch => '搜索笔记';
+
+  @override
+  String get shareTargetNoNotes => '没有可添加的笔记';
+
+  @override
+  String get shareTargetNoMatch => '没有匹配的笔记';
+
+  @override
+  String shareTargetMore(int count) {
+    return '另外 $count 个文件';
+  }
+
+  @override
+  String get sharePreviewExpand => '放大预览';
+
+  @override
+  String get sharePreviewCollapse => '缩小预览';
+
+  @override
+  String get templatesSearch => '搜索模板';
+
+  @override
+  String get templatesAll => '全部';
+
+  @override
+  String get templatesLists => '清单';
+
+  @override
+  String get templatesPlanning => '计划';
+
+  @override
+  String get templatesWriting => '写作';
+
+  @override
+  String get templatesMine => '我的模板';
+
+  @override
+  String get templatesRecent => '最近使用';
+
+  @override
+  String get templatesNoMatch => '没有匹配的模板';
+
+  @override
+  String get templatesMineEmpty => '你还没有自己的模板。在笔记菜单中选择“存为模板”，它就会出现在这里。';
+
+  @override
+  String get templatesMineInfo => '你的模板';
+
+  @override
+  String get templateRename => '重命名';
+
+  @override
+  String get templateDelete => '删除模板';
+
+  @override
+  String get templateNameTitle => '模板名称';
+
+  @override
+  String get templateNameHint => '例如：每周采购';
+
+  @override
+  String get templateSave => '保存';
+
+  @override
+  String templateSaved(String name) {
+    return '已将“$name”添加到模板';
+  }
+
+  @override
+  String get saveAsTemplate => '存为模板';
+
+  @override
+  String get templateCreate => '创建';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return '创建 · $count 项';
+  }
+
+  @override
+  String get templateListChecks => '复选框';
+
+  @override
+  String get templateListNumbers => '编号';
+
+  @override
+  String get templateItems => '项目';
+
+  @override
+  String get templateAddItem => '添加项目';
+
+  @override
+  String get templateSuggestionsInfo => '点按建议即可加入清单，再点一次即可移除。';
+
+  @override
+  String get tplShopProduce => '蔬菜水果';
+
+  @override
+  String get tplShopProduceItems => '番茄, 黄瓜, 洋葱, 土豆, 柠檬, 香蕉, 苹果, 香菜';
+
+  @override
+  String get tplShopBreakfast => '早餐';
+
+  @override
+  String get tplShopBreakfastItems => '奶酪, 橄榄, 黄油, 蜂蜜, 果酱, 酸奶';
+
+  @override
+  String get tplShopPantry => '粮油';
+
+  @override
+  String get tplShopPantryItems => '大米, 意面, 面粉, 白糖, 橄榄油, 扁豆, 茶叶, 咖啡';
+
+  @override
+  String get tplShopCleaning => '清洁用品';
+
+  @override
+  String get tplShopCleaningItems => '洗洁精, 洗衣液, 卫生纸, 厨房纸巾, 垃圾袋';
+
+  @override
+  String get tplShopPersonal => '个人护理';
+
+  @override
+  String get tplShopPersonalItems => '洗发水, 牙膏, 香皂, 止汗露';
+
+  @override
+  String get tplTravelDocs => '证件';
+
+  @override
+  String get tplTravelDocsItems => '车票机票, 酒店预订, 驾照, 旅行保险, 现金 / 银行卡';
+
+  @override
+  String get tplTravelClothes => '衣物';
+
+  @override
+  String get tplTravelClothesItems => 'T恤, 裤子, 内衣, 袜子, 睡衣, 外套, 鞋';
+
+  @override
+  String get tplTravelCare => '洗漱用品';
+
+  @override
+  String get tplTravelCareItems => '牙膏, 洗发水, 防晒霜, 剃须刀, 止汗露';
+
+  @override
+  String get tplTravelTech => '电子产品';
+
+  @override
+  String get tplTravelTechItems => '充电宝, 转换插头, 耳机, 数据线';
+
+  @override
+  String get tplHabitsName => '习惯打卡';
+
+  @override
+  String get tplHabitsDesc => '每天打勾，不要中断';
+
+  @override
+  String get tplHabitsItems => '喝8杯水, 步行30分钟, 读20页书, 早点睡, 一小时不看屏幕';
+
+  @override
+  String get tplCleaningName => '家务清洁';
+
+  @override
+  String get tplCleaningDesc => '每周清洁清单';
+
+  @override
+  String get tplCleaningItems => '除尘, 吸尘, 拖地, 清洁浴室, 厨房台面, 洗衣服, 倒垃圾, 换床单';
+
+  @override
+  String get tplMovingName => '搬家清单';
+
+  @override
+  String get tplMovingDesc => '搬家前后要做的事';
+
+  @override
+  String get tplMovingItems => '预约搬家公司, 买纸箱和胶带, 更新地址, 水 / 电 / 燃气, 迁移宽带, 交接钥匙';
+
+  @override
+  String get tplGiftsName => '礼物清单';
+
+  @override
+  String get tplGiftsDesc => '送谁什么，灵感';
+
+  @override
+  String get tplGiftsItems => '妈妈, 爸爸, 兄弟姐妹, 朋友';
+
+  @override
+  String get tplWatchlistName => '待看清单';
+
+  @override
+  String get tplWatchlistDesc => '电影、剧集和书';
+
+  @override
+  String get tplWorkoutName => '锻炼';
+
+  @override
+  String get tplWorkoutDesc => '从热身到拉伸';
+
+  @override
+  String get tplWorkoutItems =>
+      '热身 5 分钟, 深蹲 3×12, 俯卧撑 3×10, 卷腹 3×15, 平板支撑 3×45 秒, 拉伸 5 分钟';
+
+  @override
+  String get tplGoalsName => '目标';
+
+  @override
+  String get tplGoalsDesc => '年度、月度和每周目标';
+
+  @override
+  String get tplGoalsYear => '今年';
+
+  @override
+  String get tplGoalsMonth => '本月';
+
+  @override
+  String get tplGoalsWeek => '本周';
+
+  @override
+  String get tplGoalsWhy => '为什么重要？';
 }

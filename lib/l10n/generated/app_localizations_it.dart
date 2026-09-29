@@ -4092,4 +4092,248 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Schede ed elenchi';
+
+  @override
+  String get shareTargetTitle => 'Aggiungi a Note';
+
+  @override
+  String get shareTargetNew => 'Nuova nota';
+
+  @override
+  String get shareTargetExisting => 'Nota esistente';
+
+  @override
+  String get shareTargetCreate => 'Crea nota';
+
+  @override
+  String get shareTargetSearch => 'Cerca nelle note';
+
+  @override
+  String get shareTargetNoNotes => 'Nessuna nota disponibile';
+
+  @override
+  String get shareTargetNoMatch => 'Nessuna nota corrispondente';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count file';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Espandi anteprima';
+
+  @override
+  String get sharePreviewCollapse => 'Riduci anteprima';
+
+  @override
+  String get templatesSearch => 'Cerca modelli';
+
+  @override
+  String get templatesAll => 'Tutti';
+
+  @override
+  String get templatesLists => 'Elenchi';
+
+  @override
+  String get templatesPlanning => 'Pianificazione';
+
+  @override
+  String get templatesWriting => 'Scrittura';
+
+  @override
+  String get templatesMine => 'I miei modelli';
+
+  @override
+  String get templatesRecent => 'Usati di recente';
+
+  @override
+  String get templatesNoMatch => 'Nessun modello corrispondente';
+
+  @override
+  String get templatesMineEmpty =>
+      'Non hai ancora modelli tuoi. Scegli «Salva come modello» dal menu di una nota e comparirà qui.';
+
+  @override
+  String get templatesMineInfo => 'Il tuo modello';
+
+  @override
+  String get templateRename => 'Rinomina';
+
+  @override
+  String get templateDelete => 'Elimina modello';
+
+  @override
+  String get templateNameTitle => 'Nome del modello';
+
+  @override
+  String get templateNameHint => 'es. Spesa settimanale';
+
+  @override
+  String get templateSave => 'Salva';
+
+  @override
+  String templateSaved(String name) {
+    return '«$name» aggiunto ai tuoi modelli';
+  }
+
+  @override
+  String get saveAsTemplate => 'Salva come modello';
+
+  @override
+  String get templateCreate => 'Crea';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Crea · $count voci';
+  }
+
+  @override
+  String get templateListChecks => 'Caselle';
+
+  @override
+  String get templateListNumbers => 'Numerato';
+
+  @override
+  String get templateItems => 'Voci';
+
+  @override
+  String get templateAddItem => 'Aggiungi voce';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Tocca un suggerimento per aggiungerlo; toccalo di nuovo per toglierlo.';
+
+  @override
+  String get tplShopProduce => 'Frutta e verdura';
+
+  @override
+  String get tplShopProduceItems =>
+      'Pomodori, Cetrioli, Cipolle, Patate, Limoni, Banane, Mele, Prezzemolo';
+
+  @override
+  String get tplShopBreakfast => 'Colazione';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Formaggio, Olive, Burro, Miele, Marmellata, Yogurt';
+
+  @override
+  String get tplShopPantry => 'Dispensa';
+
+  @override
+  String get tplShopPantryItems =>
+      'Riso, Pasta, Farina, Zucchero, Olio d\'oliva, Lenticchie, Tè, Caffè';
+
+  @override
+  String get tplShopCleaning => 'Pulizia';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Detersivo per piatti, Detersivo per bucato, Carta igienica, Carta da cucina, Sacchi della spazzatura';
+
+  @override
+  String get tplShopPersonal => 'Cura personale';
+
+  @override
+  String get tplShopPersonalItems => 'Shampoo, Dentifricio, Sapone, Deodorante';
+
+  @override
+  String get tplTravelDocs => 'Documenti';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Biglietti, Prenotazione hotel, Patente, Assicurazione viaggio, Contanti / carte';
+
+  @override
+  String get tplTravelClothes => 'Abbigliamento';
+
+  @override
+  String get tplTravelClothesItems =>
+      'Magliette, Pantaloni, Biancheria, Calzini, Pigiama, Giacca, Scarpe';
+
+  @override
+  String get tplTravelCare => 'Igiene';
+
+  @override
+  String get tplTravelCareItems =>
+      'Dentifricio, Shampoo, Crema solare, Rasoio, Deodorante';
+
+  @override
+  String get tplTravelTech => 'Elettronica';
+
+  @override
+  String get tplTravelTechItems => 'Power bank, Adattatore presa, Cuffie, Cavi';
+
+  @override
+  String get tplHabitsName => 'Monitoraggio abitudini';
+
+  @override
+  String get tplHabitsDesc => 'Spunta ogni giorno, non spezzare la catena';
+
+  @override
+  String get tplHabitsItems =>
+      '8 bicchieri d\'acqua, Camminata di 30 minuti, Leggere 20 pagine, Andare a letto presto, Un\'ora senza schermi';
+
+  @override
+  String get tplCleaningName => 'Pulizie di casa';
+
+  @override
+  String get tplCleaningDesc => 'Lista settimanale delle pulizie';
+
+  @override
+  String get tplCleaningItems =>
+      'Spolverare, Passare l\'aspirapolvere, Lavare i pavimenti, Pulire il bagno, Piano cucina, Bucato, Portare fuori la spazzatura, Cambiare le lenzuola';
+
+  @override
+  String get tplMovingName => 'Lista trasloco';
+
+  @override
+  String get tplMovingDesc => 'Cose da fare prima e dopo il trasloco';
+
+  @override
+  String get tplMovingItems =>
+      'Prenotare il trasloco, Comprare scatoloni e nastro, Cambiare indirizzo, Luce / acqua / gas, Trasferire internet, Consegna delle chiavi';
+
+  @override
+  String get tplGiftsName => 'Lista regali';
+
+  @override
+  String get tplGiftsDesc => 'Chi riceve cosa, idee';
+
+  @override
+  String get tplGiftsItems => 'Mamma, Papà, Fratello, Amico';
+
+  @override
+  String get tplWatchlistName => 'Da vedere';
+
+  @override
+  String get tplWatchlistDesc => 'Film, serie e libri';
+
+  @override
+  String get tplWorkoutName => 'Allenamento';
+
+  @override
+  String get tplWorkoutDesc => 'Dal riscaldamento allo stretching';
+
+  @override
+  String get tplWorkoutItems =>
+      'Riscaldamento 5 min, Squat 3×12, Flessioni 3×10, Addominali 3×15, Plank 3×45 s, Stretching 5 min';
+
+  @override
+  String get tplGoalsName => 'Obiettivi';
+
+  @override
+  String get tplGoalsDesc => 'Obiettivi dell\'anno, del mese e della settimana';
+
+  @override
+  String get tplGoalsYear => 'Quest\'anno';
+
+  @override
+  String get tplGoalsMonth => 'Questo mese';
+
+  @override
+  String get tplGoalsWeek => 'Questa settimana';
+
+  @override
+  String get tplGoalsWhy => 'Perché è importante?';
 }

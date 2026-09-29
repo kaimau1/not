@@ -4092,4 +4092,249 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Kaarten en lijsten';
+
+  @override
+  String get shareTargetTitle => 'Toevoegen aan Notities';
+
+  @override
+  String get shareTargetNew => 'Nieuwe notitie';
+
+  @override
+  String get shareTargetExisting => 'Bestaande notitie';
+
+  @override
+  String get shareTargetCreate => 'Notitie maken';
+
+  @override
+  String get shareTargetSearch => 'Notities zoeken';
+
+  @override
+  String get shareTargetNoNotes => 'Geen notities beschikbaar';
+
+  @override
+  String get shareTargetNoMatch => 'Geen overeenkomende notities';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count bestanden';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Voorbeeld vergroten';
+
+  @override
+  String get sharePreviewCollapse => 'Voorbeeld verkleinen';
+
+  @override
+  String get templatesSearch => 'Sjablonen zoeken';
+
+  @override
+  String get templatesAll => 'Alle';
+
+  @override
+  String get templatesLists => 'Lijsten';
+
+  @override
+  String get templatesPlanning => 'Planning';
+
+  @override
+  String get templatesWriting => 'Schrijven';
+
+  @override
+  String get templatesMine => 'Mijn sjablonen';
+
+  @override
+  String get templatesRecent => 'Recent gebruikt';
+
+  @override
+  String get templatesNoMatch => 'Geen overeenkomende sjablonen';
+
+  @override
+  String get templatesMineEmpty =>
+      'Je hebt nog geen eigen sjablonen. Kies ‘Opslaan als sjabloon’ in het menu van een notitie en het verschijnt hier.';
+
+  @override
+  String get templatesMineInfo => 'Je eigen sjabloon';
+
+  @override
+  String get templateRename => 'Naam wijzigen';
+
+  @override
+  String get templateDelete => 'Sjabloon verwijderen';
+
+  @override
+  String get templateNameTitle => 'Naam van sjabloon';
+
+  @override
+  String get templateNameHint => 'bijv. Wekelijkse boodschappen';
+
+  @override
+  String get templateSave => 'Opslaan';
+
+  @override
+  String templateSaved(String name) {
+    return '‘$name’ toegevoegd aan je sjablonen';
+  }
+
+  @override
+  String get saveAsTemplate => 'Opslaan als sjabloon';
+
+  @override
+  String get templateCreate => 'Maken';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Maken · $count items';
+  }
+
+  @override
+  String get templateListChecks => 'Selectievakjes';
+
+  @override
+  String get templateListNumbers => 'Genummerd';
+
+  @override
+  String get templateItems => 'Items';
+
+  @override
+  String get templateAddItem => 'Item toevoegen';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Tik op een suggestie om die toe te voegen; tik nogmaals om te verwijderen.';
+
+  @override
+  String get tplShopProduce => 'Groente en fruit';
+
+  @override
+  String get tplShopProduceItems =>
+      'Tomaten, Komkommers, Uien, Aardappelen, Citroenen, Bananen, Appels, Peterselie';
+
+  @override
+  String get tplShopBreakfast => 'Ontbijt';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Kaas, Olijven, Boter, Honing, Jam, Yoghurt';
+
+  @override
+  String get tplShopPantry => 'Voorraad';
+
+  @override
+  String get tplShopPantryItems =>
+      'Rijst, Pasta, Bloem, Suiker, Olijfolie, Linzen, Thee, Koffie';
+
+  @override
+  String get tplShopCleaning => 'Schoonmaak';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Afwasmiddel, Wasmiddel, Wc-papier, Keukenpapier, Vuilniszakken';
+
+  @override
+  String get tplShopPersonal => 'Verzorging';
+
+  @override
+  String get tplShopPersonalItems => 'Shampoo, Tandpasta, Zeep, Deodorant';
+
+  @override
+  String get tplTravelDocs => 'Documenten';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Tickets, Hotelboeking, Rijbewijs, Reisverzekering, Contant / kaarten';
+
+  @override
+  String get tplTravelClothes => 'Kleding';
+
+  @override
+  String get tplTravelClothesItems =>
+      'T-shirts, Broeken, Ondergoed, Sokken, Pyjama, Jas, Schoenen';
+
+  @override
+  String get tplTravelCare => 'Toiletartikelen';
+
+  @override
+  String get tplTravelCareItems =>
+      'Tandpasta, Shampoo, Zonnebrand, Scheerset, Deodorant';
+
+  @override
+  String get tplTravelTech => 'Elektronica';
+
+  @override
+  String get tplTravelTechItems =>
+      'Powerbank, Stekkeradapter, Koptelefoon, Kabels';
+
+  @override
+  String get tplHabitsName => 'Gewoontetracker';
+
+  @override
+  String get tplHabitsDesc => 'Elke dag afvinken, verbreek de ketting niet';
+
+  @override
+  String get tplHabitsItems =>
+      '8 glazen water, 30 minuten wandelen, 20 bladzijden lezen, Vroeg naar bed, Eén uur zonder scherm';
+
+  @override
+  String get tplCleaningName => 'Huis schoonmaken';
+
+  @override
+  String get tplCleaningDesc => 'Wekelijkse schoonmaaklijst';
+
+  @override
+  String get tplCleaningItems =>
+      'Afstoffen, Stofzuigen, Dweilen, Badkamer schoonmaken, Aanrecht, Was, Vuilnis buiten zetten, Bed verschonen';
+
+  @override
+  String get tplMovingName => 'Verhuislijst';
+
+  @override
+  String get tplMovingDesc => 'Taken voor en na de verhuizing';
+
+  @override
+  String get tplMovingItems =>
+      'Verhuizers boeken, Dozen en tape kopen, Adres wijzigen, Stroom / water / gas, Internet verhuizen, Sleuteloverdracht';
+
+  @override
+  String get tplGiftsName => 'Cadeaulijst';
+
+  @override
+  String get tplGiftsDesc => 'Wie krijgt wat, ideeën';
+
+  @override
+  String get tplGiftsItems => 'Mama, Papa, Broer of zus, Vriend';
+
+  @override
+  String get tplWatchlistName => 'Kijklijst';
+
+  @override
+  String get tplWatchlistDesc => 'Films, series en boeken';
+
+  @override
+  String get tplWorkoutName => 'Training';
+
+  @override
+  String get tplWorkoutDesc => 'Van warming-up tot stretchen';
+
+  @override
+  String get tplWorkoutItems =>
+      'Warming-up 5 min, Squats 3×12, Opdrukken 3×10, Buikspieren 3×15, Plank 3×45 s, Stretchen 5 min';
+
+  @override
+  String get tplGoalsName => 'Doelen';
+
+  @override
+  String get tplGoalsDesc => 'Doelen voor jaar, maand en week';
+
+  @override
+  String get tplGoalsYear => 'Dit jaar';
+
+  @override
+  String get tplGoalsMonth => 'Deze maand';
+
+  @override
+  String get tplGoalsWeek => 'Deze week';
+
+  @override
+  String get tplGoalsWhy => 'Waarom is het belangrijk?';
 }

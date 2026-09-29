@@ -1570,5 +1570,101 @@
   "tplExpenseDesc": "Date, description, amount",
   "tplReadingDesc": "Source, summary, quotes",
   "settingsThemeHeader": "Theme",
-  "settingsCardsHeader": "Cards and lists"
+  "settingsCardsHeader": "Cards and lists",
+  "shareTargetTitle": "Add to Notes",
+  "shareTargetNew": "New note",
+  "shareTargetExisting": "Existing note",
+  "shareTargetCreate": "Create note",
+  "shareTargetSearch": "Search notes",
+  "shareTargetNoNotes": "No notes to add to",
+  "shareTargetNoMatch": "No matching notes",
+  "shareTargetMore": "+{count} files",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Expand preview",
+  "sharePreviewCollapse": "Collapse preview",
+  "templatesSearch": "Search templates",
+  "templatesAll": "All",
+  "templatesLists": "Lists",
+  "templatesPlanning": "Planning",
+  "templatesWriting": "Writing",
+  "templatesMine": "My templates",
+  "templatesRecent": "Recently used",
+  "templatesNoMatch": "No matching templates",
+  "templatesMineEmpty": "You have no templates yet. Choose “Save as template” from a note's menu and it will appear here.",
+  "templatesMineInfo": "Your template",
+  "templateRename": "Rename",
+  "templateDelete": "Delete template",
+  "templateNameTitle": "Template name",
+  "templateNameHint": "e.g. Weekly groceries",
+  "templateSave": "Save",
+  "templateSaved": "“{name}” added to your templates",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Save as template",
+  "templateCreate": "Create",
+  "templateCreateWithCount": "Create · {count} items",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Checkboxes",
+  "templateListNumbers": "Numbered",
+  "templateItems": "Items",
+  "templateAddItem": "Add item",
+  "templateSuggestionsInfo": "Tap a suggestion to add it to the list; tap again to remove it.",
+  "tplShopProduce": "Fruit and vegetables",
+  "tplShopProduceItems": "Tomatoes, Cucumbers, Onions, Potatoes, Lemons, Bananas, Apples, Parsley",
+  "tplShopBreakfast": "Breakfast",
+  "tplShopBreakfastItems": "Cheese, Olives, Butter, Honey, Jam, Yogurt",
+  "tplShopPantry": "Pantry",
+  "tplShopPantryItems": "Rice, Pasta, Flour, Sugar, Olive oil, Lentils, Tea, Coffee",
+  "tplShopCleaning": "Cleaning",
+  "tplShopCleaningItems": "Dish soap, Laundry detergent, Toilet paper, Paper towels, Trash bags",
+  "tplShopPersonal": "Personal care",
+  "tplShopPersonalItems": "Shampoo, Toothpaste, Soap, Deodorant",
+  "tplTravelDocs": "Documents",
+  "tplTravelDocsItems": "Tickets, Hotel booking, Driver's license, Travel insurance, Cash / cards",
+  "tplTravelClothes": "Clothes",
+  "tplTravelClothesItems": "T-shirts, Trousers, Underwear, Socks, Pyjamas, Jacket, Shoes",
+  "tplTravelCare": "Toiletries",
+  "tplTravelCareItems": "Toothpaste, Shampoo, Sunscreen, Shaving kit, Deodorant",
+  "tplTravelTech": "Electronics",
+  "tplTravelTechItems": "Power bank, Plug adapter, Headphones, Cables",
+  "tplHabitsName": "Habit tracker",
+  "tplHabitsDesc": "Tick every day, don't break the chain",
+  "tplHabitsItems": "8 glasses of water, 30-minute walk, Read 20 pages, Go to bed early, One screen-free hour",
+  "tplCleaningName": "House cleaning",
+  "tplCleaningDesc": "Weekly cleaning checklist",
+  "tplCleaningItems": "Dust, Vacuum, Mop, Clean the bathroom, Kitchen counters, Laundry, Take out the trash, Change the sheets",
+  "tplMovingName": "Moving checklist",
+  "tplMovingDesc": "Things to do before and after the move",
+  "tplMovingItems": "Book movers, Buy boxes and tape, Update your address, Electricity / water / gas accounts, Transfer internet, Hand over keys",
+  "tplGiftsName": "Gift list",
+  "tplGiftsDesc": "Who gets what, ideas",
+  "tplGiftsItems": "Mom, Dad, Sibling, Friend",
+  "tplWatchlistName": "Watchlist",
+  "tplWatchlistDesc": "Films, series and books to get to",
+  "tplWorkoutName": "Workout",
+  "tplWorkoutDesc": "Exercise list from warm-up to stretching",
+  "tplWorkoutItems": "Warm-up 5 min, Squats 3×12, Push-ups 3×10, Crunches 3×15, Plank 3×45 s, Stretching 5 min",
+  "tplGoalsName": "Goals",
+  "tplGoalsDesc": "Goals for the year, month and week",
+  "tplGoalsYear": "This year",
+  "tplGoalsMonth": "This month",
+  "tplGoalsWeek": "This week",
+  "tplGoalsWhy": "Why does it matter?"
 }

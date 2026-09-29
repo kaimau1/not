@@ -12,6 +12,7 @@ import '../../data/pdf_text.dart';
 import '../../domain/attachment.dart';
 import '../viewers/area_actions.dart';
 import '../viewers/ink_layer.dart';
+import '../viewers/pdf_page_image.dart';
 import '../viewers/pdf_viewer_screen.dart';
 
 /// **SAYFAYA GÖMÜLÜ PDF** (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
@@ -25,7 +26,8 @@ import '../viewers/pdf_viewer_screen.dart';
 /// gezinme çubuğu var.
 ///
 /// Kutunun yaptıkları (hepsi tam ekrana geçmeden):
-///  1. **Sayfa çevirme** — ‹ › düğmeleri ve kutunun üzerinde yatay kaydırma.
+///  1. **Sayfa çevirme** — ‹ › düğmeleri ve kutunun üzerinde yatay kaydırma
+///     (sayfalar parmağı izleyerek kayar; bkz. [_PdfPageBoxState._pager]).
 ///  2. **Sayfa göstergesi** — "3 / 24"; dokununca sayfaya atlama levhası.
 ///  3. **Küçük resimle atlama** — levhada bütün sayfaların ızgarası.
 ///  4. **Kaldığın sayfa kalıcı** — sayfa numarası nota yazılır, senkronlanır.
@@ -82,6 +84,17 @@ class _PdfPageBoxState extends State<PdfPageBox> {
 
   /// Belgenin sayfa sayısı (0 = henüz açılmadı).
   int _count = 0;
+
+  /// **SAYFALAR PARMAĞI İZLEYEREK KAYAR** (kullanıcı bulgusu 2026-09-29:
+  /// "sayfalarını değiştirmek zor"). Eskiden kutu yalnız HIZLI bir yatay
+  /// fiskeyi (80 px/sn üstü) sayıyordu: yavaş sürükleme hiçbir şey
+  /// yapmıyor, parmak sayfayı hareket ettirmiyor, kullanıcı çevirip
+  /// çevirmediğini anlamıyordu. Artık kutunun içi bir sayfa çevirici:
+  /// sayfa parmakla birlikte kayar, yarıyı geçince yerine oturur; komşu
+  /// sayfalar önceden çizilir (allowImplicitScrolling).
+  ///
+  /// Belge açılınca kurulur (başlangıç sayfası ancak o zaman kırpılabilir).
+  PageController? _pager;
 
   /// Otomatik geçiş zamanlayıcısı (null = kapalı).
   Timer? _autoPlay;
@@ -167,6 +180,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final incoming = widget.attachment.pdfPage;
     if (incoming != old.attachment.pdfPage && incoming != _page) {
       _page = _clamp(incoming);
+      _syncPagerSoon();
     }
     // Dosya yolu/adresi değiştiyse (yükleme bitti, dosya yeniden yazıldı)
     // belge yeniden bağlanır.
@@ -174,6 +188,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         widget.attachment.downloadUrl != old.attachment.downloadUrl) {
       _detachDocument();
       _attachDocument();
+      _syncPagerSoon();
     }
   }
 
@@ -181,17 +196,59 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   void dispose() {
     _autoPlay?.cancel();
     _detachDocument();
+    _pager?.dispose();
     super.dispose();
+  }
+
+  /// Çevirici, kutunun gösterdiği sayfadan ayrı düştüyse (dışarıdan gelen
+  /// sayfa, tam ekrandan dönüş, belge yeniden bağlandı) oraya ATLAR —
+  /// kaydırma animasyonu yok, aradaki sayfalar çizilmesin.
+  void _syncPagerSoon() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pager = _pager;
+      if (!mounted || pager == null || !pager.hasClients) return;
+      final target = _page - 1;
+      if ((pager.page ?? target.toDouble()).round() != target) {
+        pager.jumpToPage(target);
+      }
+    });
   }
 
   int _clamp(int page) => clampPdfPage(page, _count);
 
   /// Sayfayı değiştirir ve nota yazar (kaldığı yer korunsun).
+  ///
+  /// Komşu sayfaya KAYARAK gidilir (‹ › düğmeleri parmakla çevirmeyle aynı
+  /// görünsün); uzak sayfaya (atlama levhası, yer imi, başa dönüş) ATLANIR:
+  /// kaydırılsaydı aradaki her sayfa çizilir ve `onPageChanged` her birinde
+  /// nota yazardı.
   void _goTo(int page, {bool save = true}) {
     final next = _clamp(page);
     if (next == _page) return;
+    final previous = _page;
     setState(() => _page = next);
+    final pager = _pager;
+    if (pager != null && pager.hasClients) {
+      if ((next - previous).abs() == 1) {
+        pager.animateToPage(
+          next - 1,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        pager.jumpToPage(next - 1);
+      }
+    }
     if (save) widget.onChanged(widget.attachment.copyWith(pdfPage: next));
+  }
+
+  /// Parmakla çevrilen sayfa yerine oturdu. Düğmeyle başlatılan geçişin
+  /// kendi bildirimi ([_goTo] `_page`'i önceden yazdığı için) yok sayılır.
+  void _onPagerChanged(int index) {
+    final next = _clamp(index + 1);
+    if (next == _page) return;
+    setState(() => _page = next);
+    widget.onChanged(widget.attachment.copyWith(pdfPage: next));
   }
 
   void _toggleAutoPlay() {
@@ -252,7 +309,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
         ),
       ),
     );
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _syncPagerSoon();
   }
 
   /// Bu sayfanın metin katmanını panoya alır. Taranmış sayfada metin yoktur;
@@ -386,31 +445,33 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     }
     _reportSize(document);
     final a = widget.attachment;
-    final page = RotatedBox(
-      quarterTurns: a.pdfTurns,
-      child: PdfPageView(
-        document: document,
-        pageNumber: _page,
-        // Kutunun kendi çerçevesi var; pdfrx'in gölgesi üstüne binmesin.
-        decoration: const BoxDecoration(color: Colors.white),
-      ),
-    );
+    final pager = _pager ??= PageController(initialPage: _page - 1);
+    final swipe = widget.controls && widget.swipeToTurn;
     return Stack(
       fit: StackFit.expand,
       children: [
         // Yatay kaydırma sayfa çevirir: kutunun küçük düğmelerine nişan
         // almadan da gezilebilsin. Dikey kaydırma NOTUN kendi kaydırması
-        // olarak kalır (yalnız yatay sürükleme dinleniyor).
-        GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onHorizontalDragEnd: widget.controls && widget.swipeToTurn
-              ? (d) {
-                  final v = d.primaryVelocity ?? 0;
-                  if (v < -80) _goTo(_page + 1);
-                  if (v > 80) _goTo(_page - 1);
-                }
-              : null,
-          child: page,
+        // olarak kalır (çevirici yalnız yatay sürüklemeyi alır); uzun basıp
+        // kutuyu taşımak da bozulmaz (taşıma hareketsiz basılı tutmayla
+        // başlar, çevirici ise ancak parmak yana kayınca devreye girer).
+        ColoredBox(
+          color: Colors.white,
+          child: PageView.builder(
+            controller: pager,
+            physics: swipe
+                ? const PageScrollPhysics()
+                : const NeverScrollableScrollPhysics(),
+            allowImplicitScrolling: true,
+            itemCount: _count,
+            onPageChanged: _onPagerChanged,
+            itemBuilder: (context, i) => RotatedBox(
+              quarterTurns: a.pdfTurns,
+              // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
+              // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
+              child: PdfPageImage(document: document, pageNumber: i + 1),
+            ),
+          ),
         ),
         // El yazısı katmanı: PDF'in üzerine yapılan çizim kutuda da görünür
         // (tam ekranda çizip nota dönünce sayfa boş görünmesin).
@@ -437,6 +498,12 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   /// (en az %15). Beş denetim 130 dp'lik bir kutuda taşardı; çubuk kutunun
   /// genişliğine göre inceliyor — önce yer imi düğmesi (menüde de var),
   /// sonra oklar düşüyor. Menü her boyda kalıyor: bütün işlemler orada.
+  ///
+  /// SAYAÇ KESİLMEMELİ (kullanıcı ekran görüntüsü 2026-09-29: "5 /…"):
+  /// menü düğmesi Material'in 48 dp'lik asgari dokunma kutusunu alıyor ve
+  /// 170 dp'lik kutuda sayaca yer bırakmıyordu. Menü artık çubuğun
+  /// düğmeleriyle aynı boyda; geniş kutuda düğmeler büyür (parmakla
+  /// isabet kolaylaşsın).
   Widget _bar(BuildContext context, PdfDocument document) => LayoutBuilder(
     builder: (context, constraints) =>
         _barRow(context, document, constraints.maxWidth),
@@ -447,8 +514,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final a = widget.attachment;
     final marked = a.pdfMarks.contains(_page);
     final notes = a.bubbles.where((b) => b.page == _page).length;
-    final showMark = width >= 170;
+    final showMark = width >= 210;
     final showArrows = width >= 110;
+    final big = width >= 150;
     return Material(
       color: Colors.black.withValues(alpha: 0.55),
       child: Padding(
@@ -460,6 +528,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               _barButton(
                 icon: Icons.chevron_left,
                 tooltip: l10n.pdfPreviousPage,
+                big: big,
                 onPressed: _page > 1 ? () => _goTo(_page - 1) : null,
               ),
             Flexible(
@@ -484,9 +553,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                           '$_page / ${_count == 0 ? '…' : _count}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: big ? 12 : 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -522,6 +591,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               _barButton(
                 icon: Icons.chevron_right,
                 tooltip: l10n.pdfNextPage,
+                big: big,
                 onPressed: _count > 0 && _page < _count
                     ? () => _goTo(_page + 1)
                     : null,
@@ -531,9 +601,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                 icon: marked ? Icons.bookmark : Icons.bookmark_border,
                 tooltip: marked ? l10n.pdfBookmarkRemove : l10n.pdfBookmarkAdd,
                 color: marked ? Colors.amber : Colors.white,
+                big: big,
                 onPressed: _toggleMark,
               ),
-            _menu(context, document),
+            _menu(context, document, big: big),
           ],
         ),
       ),
@@ -545,11 +616,15 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     required String tooltip,
     required VoidCallback? onPressed,
     Color color = Colors.white,
+    bool big = false,
   }) => IconButton(
     tooltip: tooltip,
-    iconSize: 16,
+    iconSize: big ? 20 : 16,
     padding: EdgeInsets.zero,
-    constraints: const BoxConstraints(minWidth: 26, minHeight: 26),
+    constraints: BoxConstraints(
+      minWidth: big ? 34 : 26,
+      minHeight: big ? 32 : 26,
+    ),
     visualDensity: VisualDensity.compact,
     color: color,
     disabledColor: Colors.white30,
@@ -557,65 +632,69 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     onPressed: _busy ? null : onPressed,
   );
 
-  Widget _menu(BuildContext context, PdfDocument document) {
+  Widget _menu(BuildContext context, PdfDocument document, {bool big = false}) {
     final l10n = context.l10n;
     final playing = _autoPlay != null;
-    return PopupMenuButton<String>(
-      tooltip: l10n.more,
-      iconSize: 16,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints(minWidth: 200),
-      icon: const Icon(Icons.more_vert, color: Colors.white),
-      onSelected: (action) {
-        switch (action) {
-          case 'pages':
-            _openJumpSheet(document);
-          case 'mark':
-            _toggleMark();
-          case 'marks':
-            _openMarks();
-          case 'rotate':
-            _rotate();
-          case 'full':
-            _openFullScreen();
-          case 'text':
-            _copyPageText();
-          case 'capture':
-            _capturePage(document);
-          case 'play':
-            _toggleAutoPlay();
-          case 'detach':
-            widget.onDetach?.call();
-        }
-      },
-      itemBuilder: (context) => [
-        _menuItem('pages', Icons.grid_view_outlined, l10n.pdfThumbnails),
-        _menuItem(
-          'mark',
-          widget.attachment.pdfMarks.contains(_page)
-              ? Icons.bookmark_remove_outlined
-              : Icons.bookmark_add_outlined,
-          widget.attachment.pdfMarks.contains(_page)
-              ? l10n.pdfBookmarkRemove
-              : l10n.pdfBookmarkAdd,
-        ),
-        _menuItem('marks', Icons.bookmarks_outlined, l10n.pdfBookmarks),
-        _menuItem('rotate', Icons.rotate_90_degrees_ccw, l10n.pdfRotateView),
-        _menuItem(
-          'play',
-          playing ? Icons.pause_circle_outline : Icons.play_circle_outline,
-          playing ? l10n.pdfSlideshowStop : l10n.pdfSlideshow,
-        ),
-        _menuItem('text', Icons.text_snippet_outlined, l10n.pdfCopyPageText),
-        _menuItem('capture', Icons.auto_awesome, l10n.pdfCapturePage),
-        _menuItem('full', Icons.fullscreen, l10n.pdfFullScreen),
-        if (widget.onDetach != null)
+    return SizedBox(
+      width: big ? 32 : 26,
+      height: big ? 32 : 26,
+      child: PopupMenuButton<String>(
+        tooltip: l10n.more,
+        iconSize: big ? 20 : 16,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 200),
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        onSelected: (action) {
+          switch (action) {
+            case 'pages':
+              _openJumpSheet(document);
+            case 'mark':
+              _toggleMark();
+            case 'marks':
+              _openMarks();
+            case 'rotate':
+              _rotate();
+            case 'full':
+              _openFullScreen();
+            case 'text':
+              _copyPageText();
+            case 'capture':
+              _capturePage(document);
+            case 'play':
+              _toggleAutoPlay();
+            case 'detach':
+              widget.onDetach?.call();
+          }
+        },
+        itemBuilder: (context) => [
+          _menuItem('pages', Icons.grid_view_outlined, l10n.pdfThumbnails),
           _menuItem(
-            'detach',
-            Icons.attachment_outlined,
-            l10n.moveImageToAttachments,
+            'mark',
+            widget.attachment.pdfMarks.contains(_page)
+                ? Icons.bookmark_remove_outlined
+                : Icons.bookmark_add_outlined,
+            widget.attachment.pdfMarks.contains(_page)
+                ? l10n.pdfBookmarkRemove
+                : l10n.pdfBookmarkAdd,
           ),
-      ],
+          _menuItem('marks', Icons.bookmarks_outlined, l10n.pdfBookmarks),
+          _menuItem('rotate', Icons.rotate_90_degrees_ccw, l10n.pdfRotateView),
+          _menuItem(
+            'play',
+            playing ? Icons.pause_circle_outline : Icons.play_circle_outline,
+            playing ? l10n.pdfSlideshowStop : l10n.pdfSlideshow,
+          ),
+          _menuItem('text', Icons.text_snippet_outlined, l10n.pdfCopyPageText),
+          _menuItem('capture', Icons.auto_awesome, l10n.pdfCapturePage),
+          _menuItem('full', Icons.fullscreen, l10n.pdfFullScreen),
+          if (widget.onDetach != null)
+            _menuItem(
+              'detach',
+              Icons.attachment_outlined,
+              l10n.moveImageToAttachments,
+            ),
+        ],
+      ),
     );
   }
 
@@ -749,12 +828,10 @@ class _PdfJumpSheetState extends State<_PdfJumpSheet> {
                                 width: selected ? 2 : 1,
                               ),
                             ),
-                            child: PdfPageView(
+                            child: PdfPageImage(
                               document: widget.document,
                               pageNumber: number,
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                              ),
+                              maximumDpi: 72,
                             ),
                           ),
                         ),

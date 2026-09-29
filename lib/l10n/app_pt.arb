@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Data, descrição, valor",
   "tplReadingDesc": "Fonte, resumo, citações",
   "settingsThemeHeader": "Tema",
-  "settingsCardsHeader": "Cartões e listas"
+  "settingsCardsHeader": "Cartões e listas",
+  "shareTargetTitle": "Adicionar às Notas",
+  "shareTargetNew": "Nova nota",
+  "shareTargetExisting": "Nota existente",
+  "shareTargetCreate": "Criar nota",
+  "shareTargetSearch": "Pesquisar notas",
+  "shareTargetNoNotes": "Nenhuma nota disponível",
+  "shareTargetNoMatch": "Nenhuma nota corresponde",
+  "shareTargetMore": "+{count} arquivos",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Ampliar pré-visualização",
+  "sharePreviewCollapse": "Reduzir pré-visualização",
+  "templatesSearch": "Pesquisar modelos",
+  "templatesAll": "Todos",
+  "templatesLists": "Listas",
+  "templatesPlanning": "Planejamento",
+  "templatesWriting": "Escrita",
+  "templatesMine": "Meus modelos",
+  "templatesRecent": "Usados recentemente",
+  "templatesNoMatch": "Nenhum modelo corresponde",
+  "templatesMineEmpty": "Você ainda não tem modelos próprios. Escolha “Salvar como modelo” no menu de uma nota e ele aparecerá aqui.",
+  "templatesMineInfo": "Seu modelo",
+  "templateRename": "Renomear",
+  "templateDelete": "Excluir modelo",
+  "templateNameTitle": "Nome do modelo",
+  "templateNameHint": "ex. Compras da semana",
+  "templateSave": "Salvar",
+  "templateSaved": "“{name}” adicionado aos seus modelos",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Salvar como modelo",
+  "templateCreate": "Criar",
+  "templateCreateWithCount": "Criar · {count} itens",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Caixas de seleção",
+  "templateListNumbers": "Numerada",
+  "templateItems": "Itens",
+  "templateAddItem": "Adicionar item",
+  "templateSuggestionsInfo": "Toque numa sugestão para adicioná-la; toque de novo para removê-la.",
+  "tplShopProduce": "Frutas e legumes",
+  "tplShopProduceItems": "Tomates, Pepinos, Cebolas, Batatas, Limões, Bananas, Maçãs, Salsa",
+  "tplShopBreakfast": "Café da manhã",
+  "tplShopBreakfastItems": "Queijo, Azeitonas, Manteiga, Mel, Geleia, Iogurte",
+  "tplShopPantry": "Despensa",
+  "tplShopPantryItems": "Arroz, Macarrão, Farinha, Açúcar, Azeite, Lentilhas, Chá, Café",
+  "tplShopCleaning": "Limpeza",
+  "tplShopCleaningItems": "Detergente de louça, Sabão em pó, Papel higiênico, Papel toalha, Sacos de lixo",
+  "tplShopPersonal": "Higiene pessoal",
+  "tplShopPersonalItems": "Xampu, Pasta de dente, Sabonete, Desodorante",
+  "tplTravelDocs": "Documentos",
+  "tplTravelDocsItems": "Passagens, Reserva de hotel, Carteira de motorista, Seguro-viagem, Dinheiro / cartões",
+  "tplTravelClothes": "Roupas",
+  "tplTravelClothesItems": "Camisetas, Calças, Roupa íntima, Meias, Pijama, Jaqueta, Sapatos",
+  "tplTravelCare": "Higiene",
+  "tplTravelCareItems": "Pasta de dente, Xampu, Protetor solar, Kit de barbear, Desodorante",
+  "tplTravelTech": "Eletrônicos",
+  "tplTravelTechItems": "Carregador portátil, Adaptador de tomada, Fones de ouvido, Cabos",
+  "tplHabitsName": "Rastreador de hábitos",
+  "tplHabitsDesc": "Marque todo dia, não quebre a corrente",
+  "tplHabitsItems": "8 copos de água, Caminhada de 30 minutos, Ler 20 páginas, Dormir cedo, Uma hora sem telas",
+  "tplCleaningName": "Limpeza da casa",
+  "tplCleaningDesc": "Lista semanal de limpeza",
+  "tplCleaningItems": "Tirar o pó, Aspirar, Passar pano, Limpar o banheiro, Bancada da cozinha, Lavar roupa, Levar o lixo, Trocar a roupa de cama",
+  "tplMovingName": "Lista de mudança",
+  "tplMovingDesc": "O que fazer antes e depois da mudança",
+  "tplMovingItems": "Contratar a mudança, Comprar caixas e fita, Atualizar o endereço, Luz / água / gás, Transferir a internet, Entregar as chaves",
+  "tplGiftsName": "Lista de presentes",
+  "tplGiftsDesc": "Quem ganha o quê, ideias",
+  "tplGiftsItems": "Mãe, Pai, Irmão, Amigo",
+  "tplWatchlistName": "Para assistir",
+  "tplWatchlistDesc": "Filmes, séries e livros",
+  "tplWorkoutName": "Treino",
+  "tplWorkoutDesc": "Do aquecimento ao alongamento",
+  "tplWorkoutItems": "Aquecimento 5 min, Agachamento 3×12, Flexões 3×10, Abdominais 3×15, Prancha 3×45 s, Alongamento 5 min",
+  "tplGoalsName": "Metas",
+  "tplGoalsDesc": "Metas do ano, do mês e da semana",
+  "tplGoalsYear": "Este ano",
+  "tplGoalsMonth": "Este mês",
+  "tplGoalsWeek": "Esta semana",
+  "tplGoalsWhy": "Por que é importante?"
 }

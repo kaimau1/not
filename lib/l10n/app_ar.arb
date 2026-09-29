@@ -735,5 +735,101 @@
   "tplExpenseDesc": "التاريخ، الوصف، المبلغ",
   "tplReadingDesc": "المصدر، الملخص، الاقتباسات",
   "settingsThemeHeader": "المظهر",
-  "settingsCardsHeader": "البطاقات والقوائم"
+  "settingsCardsHeader": "البطاقات والقوائم",
+  "shareTargetTitle": "أضِف إلى الملاحظات",
+  "shareTargetNew": "ملاحظة جديدة",
+  "shareTargetExisting": "ملاحظة موجودة",
+  "shareTargetCreate": "إنشاء ملاحظة",
+  "shareTargetSearch": "ابحث في الملاحظات",
+  "shareTargetNoNotes": "لا توجد ملاحظات متاحة",
+  "shareTargetNoMatch": "لا توجد ملاحظات مطابقة",
+  "shareTargetMore": "+{count} ملفات",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "تكبير المعاينة",
+  "sharePreviewCollapse": "تصغير المعاينة",
+  "templatesSearch": "ابحث في القوالب",
+  "templatesAll": "الكل",
+  "templatesLists": "قوائم",
+  "templatesPlanning": "تخطيط",
+  "templatesWriting": "كتابة",
+  "templatesMine": "قوالبي",
+  "templatesRecent": "المستخدمة مؤخرًا",
+  "templatesNoMatch": "لا توجد قوالب مطابقة",
+  "templatesMineEmpty": "ليست لديك قوالب خاصة بعد. اختر «حفظ كقالب» من قائمة أي ملاحظة وسيظهر هنا.",
+  "templatesMineInfo": "قالبك",
+  "templateRename": "إعادة التسمية",
+  "templateDelete": "حذف القالب",
+  "templateNameTitle": "اسم القالب",
+  "templateNameHint": "مثل: تسوق الأسبوع",
+  "templateSave": "حفظ",
+  "templateSaved": "أُضيف «{name}» إلى قوالبك",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "حفظ كقالب",
+  "templateCreate": "إنشاء",
+  "templateCreateWithCount": "إنشاء · {count} عناصر",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "مربعات اختيار",
+  "templateListNumbers": "مرقّمة",
+  "templateItems": "العناصر",
+  "templateAddItem": "إضافة عنصر",
+  "templateSuggestionsInfo": "اضغط على اقتراح لإضافته إلى القائمة، واضغط مرة أخرى لإزالته.",
+  "tplShopProduce": "خضار وفواكه",
+  "tplShopProduceItems": "طماطم, خيار, بصل, بطاطس, ليمون, موز, تفاح, بقدونس",
+  "tplShopBreakfast": "الفطور",
+  "tplShopBreakfastItems": "جبن, زيتون, زبدة, عسل, مربى, زبادي",
+  "tplShopPantry": "مؤن",
+  "tplShopPantryItems": "أرز, معكرونة, دقيق, سكر, زيت زيتون, عدس, شاي, قهوة",
+  "tplShopCleaning": "منظفات",
+  "tplShopCleaningItems": "سائل الصحون, مسحوق الغسيل, ورق التواليت, مناديل المطبخ, أكياس القمامة",
+  "tplShopPersonal": "العناية الشخصية",
+  "tplShopPersonalItems": "شامبو, معجون أسنان, صابون, مزيل عرق",
+  "tplTravelDocs": "المستندات",
+  "tplTravelDocsItems": "التذاكر, حجز الفندق, رخصة القيادة, تأمين السفر, نقود / بطاقات",
+  "tplTravelClothes": "الملابس",
+  "tplTravelClothesItems": "قمصان, بناطيل, ملابس داخلية, جوارب, بيجامة, سترة, أحذية",
+  "tplTravelCare": "أدوات العناية",
+  "tplTravelCareItems": "معجون أسنان, شامبو, واقي شمس, أدوات الحلاقة, مزيل عرق",
+  "tplTravelTech": "إلكترونيات",
+  "tplTravelTechItems": "بطارية متنقلة, محوّل قابس, سماعات, كابلات",
+  "tplHabitsName": "متابعة العادات",
+  "tplHabitsDesc": "ضع علامة كل يوم ولا تقطع السلسلة",
+  "tplHabitsItems": "8 أكواب ماء, مشي 30 دقيقة, قراءة 20 صفحة, النوم مبكرًا, ساعة بلا شاشات",
+  "tplCleaningName": "تنظيف المنزل",
+  "tplCleaningDesc": "قائمة تنظيف أسبوعية",
+  "tplCleaningItems": "إزالة الغبار, الكنس بالمكنسة, مسح الأرضيات, تنظيف الحمّام, سطح المطبخ, الغسيل, إخراج القمامة, تغيير الشراشف",
+  "tplMovingName": "قائمة الانتقال",
+  "tplMovingDesc": "مهام قبل الانتقال وبعده",
+  "tplMovingItems": "حجز شركة النقل, شراء صناديق وشريط لاصق, تحديث العنوان, الكهرباء / الماء / الغاز, نقل الإنترنت, تسليم المفاتيح",
+  "tplGiftsName": "قائمة الهدايا",
+  "tplGiftsDesc": "من يحصل على ماذا، أفكار",
+  "tplGiftsItems": "أمي, أبي, أخي, صديق",
+  "tplWatchlistName": "للمشاهدة",
+  "tplWatchlistDesc": "أفلام ومسلسلات وكتب",
+  "tplWorkoutName": "تمرين",
+  "tplWorkoutDesc": "من الإحماء إلى التمدد",
+  "tplWorkoutItems": "إحماء 5 دقائق, قرفصاء 3×12, ضغط 3×10, تمارين بطن 3×15, بلانك 3×45 ث, تمدد 5 دقائق",
+  "tplGoalsName": "الأهداف",
+  "tplGoalsDesc": "أهداف السنة والشهر والأسبوع",
+  "tplGoalsYear": "هذه السنة",
+  "tplGoalsMonth": "هذا الشهر",
+  "tplGoalsWeek": "هذا الأسبوع",
+  "tplGoalsWhy": "لماذا هذا مهم؟"
 }

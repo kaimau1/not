@@ -7385,6 +7385,456 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Kartlar ve listeler'**
   String get settingsCardsHeader;
+
+  /// No description provided for @shareTargetTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlar\'a ekle'**
+  String get shareTargetTitle;
+
+  /// No description provided for @shareTargetNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni not'**
+  String get shareTargetNew;
+
+  /// No description provided for @shareTargetExisting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Var olan nota'**
+  String get shareTargetExisting;
+
+  /// No description provided for @shareTargetCreate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not oluştur'**
+  String get shareTargetCreate;
+
+  /// No description provided for @shareTargetSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notlarda ara'**
+  String get shareTargetSearch;
+
+  /// No description provided for @shareTargetNoNotes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eklenebilecek not yok'**
+  String get shareTargetNoNotes;
+
+  /// No description provided for @shareTargetNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen not yok'**
+  String get shareTargetNoMatch;
+
+  /// No description provided for @shareTargetMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} dosya'**
+  String shareTargetMore(int count);
+
+  /// No description provided for @sharePreviewExpand.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önizlemeyi büyüt'**
+  String get sharePreviewExpand;
+
+  /// No description provided for @sharePreviewCollapse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önizlemeyi küçült'**
+  String get sharePreviewCollapse;
+
+  /// No description provided for @templatesSearch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon ara'**
+  String get templatesSearch;
+
+  /// No description provided for @templatesAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get templatesAll;
+
+  /// No description provided for @templatesLists.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeler'**
+  String get templatesLists;
+
+  /// No description provided for @templatesPlanning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Planlama'**
+  String get templatesPlanning;
+
+  /// No description provided for @templatesWriting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı'**
+  String get templatesWriting;
+
+  /// No description provided for @templatesMine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonlarım'**
+  String get templatesMine;
+
+  /// No description provided for @templatesRecent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son kullanılanlar'**
+  String get templatesRecent;
+
+  /// No description provided for @templatesNoMatch.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eşleşen şablon yok'**
+  String get templatesNoMatch;
+
+  /// No description provided for @templatesMineEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Henüz kendi şablonun yok. Bir notun menüsünden “Şablon olarak kaydet” dersen burada durur.'**
+  String get templatesMineEmpty;
+
+  /// No description provided for @templatesMineInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kendi şablonun'**
+  String get templatesMineInfo;
+
+  /// No description provided for @templateRename.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeniden adlandır'**
+  String get templateRename;
+
+  /// No description provided for @templateDelete.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonu sil'**
+  String get templateDelete;
+
+  /// No description provided for @templateNameTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon adı'**
+  String get templateNameTitle;
+
+  /// No description provided for @templateNameHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ör. Haftalık market'**
+  String get templateNameHint;
+
+  /// No description provided for @templateSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get templateSave;
+
+  /// No description provided for @templateSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” şablonlarına eklendi'**
+  String templateSaved(String name);
+
+  /// No description provided for @saveAsTemplate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon olarak kaydet'**
+  String get saveAsTemplate;
+
+  /// No description provided for @templateCreate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluştur'**
+  String get templateCreate;
+
+  /// No description provided for @templateCreateWithCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oluştur · {count} madde'**
+  String templateCreateWithCount(int count);
+
+  /// No description provided for @templateListChecks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Onay kutulu'**
+  String get templateListChecks;
+
+  /// No description provided for @templateListNumbers.
+  ///
+  /// In tr, this message translates to:
+  /// **'Numaralı'**
+  String get templateListNumbers;
+
+  /// No description provided for @templateItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Maddeler'**
+  String get templateItems;
+
+  /// No description provided for @templateAddItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Madde ekle'**
+  String get templateAddItem;
+
+  /// No description provided for @templateSuggestionsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öneriye dokununca listeye girer, yine dokununca çıkar.'**
+  String get templateSuggestionsInfo;
+
+  /// No description provided for @tplShopProduce.
+  ///
+  /// In tr, this message translates to:
+  /// **'Meyve ve sebze'**
+  String get tplShopProduce;
+
+  /// No description provided for @tplShopProduceItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Domates, Salatalık, Soğan, Patates, Limon, Muz, Elma, Maydanoz'**
+  String get tplShopProduceItems;
+
+  /// No description provided for @tplShopBreakfast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kahvaltılık'**
+  String get tplShopBreakfast;
+
+  /// No description provided for @tplShopBreakfastItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Peynir, Zeytin, Tereyağı, Bal, Reçel, Yoğurt'**
+  String get tplShopBreakfastItems;
+
+  /// No description provided for @tplShopPantry.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temel gıda'**
+  String get tplShopPantry;
+
+  /// No description provided for @tplShopPantryItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Pirinç, Makarna, Un, Şeker, Zeytinyağı, Mercimek, Çay, Kahve'**
+  String get tplShopPantryItems;
+
+  /// No description provided for @tplShopCleaning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Temizlik'**
+  String get tplShopCleaning;
+
+  /// No description provided for @tplShopCleaningItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bulaşık deterjanı, Çamaşır deterjanı, Tuvalet kâğıdı, Kâğıt havlu, Çöp poşeti'**
+  String get tplShopCleaningItems;
+
+  /// No description provided for @tplShopPersonal.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişisel bakım'**
+  String get tplShopPersonal;
+
+  /// No description provided for @tplShopPersonalItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şampuan, Diş macunu, Sabun, Deodorant'**
+  String get tplShopPersonalItems;
+
+  /// No description provided for @tplTravelDocs.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belgeler'**
+  String get tplTravelDocs;
+
+  /// No description provided for @tplTravelDocsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bilet, Otel rezervasyonu, Ehliyet, Seyahat sigortası, Nakit / kart'**
+  String get tplTravelDocsItems;
+
+  /// No description provided for @tplTravelClothes.
+  ///
+  /// In tr, this message translates to:
+  /// **'Giyim'**
+  String get tplTravelClothes;
+
+  /// No description provided for @tplTravelClothesItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tişört, Pantolon, İç çamaşırı, Çorap, Pijama, Ceket, Ayakkabı'**
+  String get tplTravelClothesItems;
+
+  /// No description provided for @tplTravelCare.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bakım'**
+  String get tplTravelCare;
+
+  /// No description provided for @tplTravelCareItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Diş macunu, Şampuan, Güneş kremi, Tıraş takımı, Deodorant'**
+  String get tplTravelCareItems;
+
+  /// No description provided for @tplTravelTech.
+  ///
+  /// In tr, this message translates to:
+  /// **'Elektronik'**
+  String get tplTravelTech;
+
+  /// No description provided for @tplTravelTechItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Powerbank, Priz adaptörü, Kulaklık, Kablolar'**
+  String get tplTravelTechItems;
+
+  /// No description provided for @tplHabitsName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışkanlık takibi'**
+  String get tplHabitsName;
+
+  /// No description provided for @tplHabitsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her gün işaretle, zinciri kırma'**
+  String get tplHabitsDesc;
+
+  /// No description provided for @tplHabitsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'8 bardak su, 30 dakika yürüyüş, 20 sayfa kitap, Erken yat, Ekransız bir saat'**
+  String get tplHabitsItems;
+
+  /// No description provided for @tplCleaningName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ev temizliği'**
+  String get tplCleaningName;
+
+  /// No description provided for @tplCleaningDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Haftalık temizlik kontrol listesi'**
+  String get tplCleaningDesc;
+
+  /// No description provided for @tplCleaningItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toz al, Süpür, Paspas yap, Banyoyu temizle, Mutfak tezgâhı, Çamaşır, Çöpleri çıkar, Çarşafları değiştir'**
+  String get tplCleaningItems;
+
+  /// No description provided for @tplMovingName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınma listesi'**
+  String get tplMovingName;
+
+  /// No description provided for @tplMovingDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Taşınmadan önce ve sonra yapılacaklar'**
+  String get tplMovingDesc;
+
+  /// No description provided for @tplMovingItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nakliyeci ayarla, Koli ve bant al, Adres değişikliği bildir, Elektrik / su / doğalgaz aboneliği, İnterneti taşı, Anahtar teslimi'**
+  String get tplMovingItems;
+
+  /// No description provided for @tplGiftsName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hediye listesi'**
+  String get tplGiftsName;
+
+  /// No description provided for @tplGiftsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kime ne alınacak, fikirler'**
+  String get tplGiftsDesc;
+
+  /// No description provided for @tplGiftsItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Anne, Baba, Kardeş, Arkadaş'**
+  String get tplGiftsItems;
+
+  /// No description provided for @tplWatchlistName.
+  ///
+  /// In tr, this message translates to:
+  /// **'İzlenecekler'**
+  String get tplWatchlistName;
+
+  /// No description provided for @tplWatchlistDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Film, dizi ve kitap listesi'**
+  String get tplWatchlistDesc;
+
+  /// No description provided for @tplWorkoutName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Antrenman'**
+  String get tplWorkoutName;
+
+  /// No description provided for @tplWorkoutDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Isınmadan esnemeye egzersiz listesi'**
+  String get tplWorkoutDesc;
+
+  /// No description provided for @tplWorkoutItems.
+  ///
+  /// In tr, this message translates to:
+  /// **'Isınma 5 dk, Squat 3×12, Şınav 3×10, Mekik 3×15, Plank 3×45 sn, Esneme 5 dk'**
+  String get tplWorkoutItems;
+
+  /// No description provided for @tplGoalsName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedefler'**
+  String get tplGoalsName;
+
+  /// No description provided for @tplGoalsDesc.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yıl, ay ve hafta hedefleri'**
+  String get tplGoalsDesc;
+
+  /// No description provided for @tplGoalsYear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu yıl'**
+  String get tplGoalsYear;
+
+  /// No description provided for @tplGoalsMonth.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ay'**
+  String get tplGoalsMonth;
+
+  /// No description provided for @tplGoalsWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu hafta'**
+  String get tplGoalsWeek;
+
+  /// No description provided for @tplGoalsWhy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Neden önemli?'**
+  String get tplGoalsWhy;
 }
 
 class _AppLocalizationsDelegate

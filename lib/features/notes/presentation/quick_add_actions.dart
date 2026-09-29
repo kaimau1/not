@@ -67,14 +67,15 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
   /// **ŞABLONDAN NOT** (kullanıcı isteği 2026-09-26: "modlar, alışveriş
-  /// listesi gibi"). [template] null ise önce seçim levhası açılır. Not
-  /// başlığı ve içeriğiyle TEK yazımda doğar, o anki klasöre düşer.
+  /// listesi gibi"). Galeri + önizleme levhası açılır; [template] verilirse
+  /// galeri atlanır, doğrudan o şablonun önizlemesi gelir (2026-09-29:
+  /// maddeler not oluşmadan seçilir/eklenir). Not başlığı ve içeriğiyle TEK
+  /// yazımda doğar, o anki klasöre düşer.
   Future<void> createFromTemplate([NoteTemplate? template]) async {
-    final picked = template ?? await showNoteTemplateSheet(context);
-    if (picked == null || !mounted) return;
+    final content = await showNoteTemplateSheet(context, initial: template);
+    if (content == null || !mounted) return;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final content = buildNoteTemplate(picked, context.l10n);
     final id = await repo.createNote(
       content.type,
       title: content.title,

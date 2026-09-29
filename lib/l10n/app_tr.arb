@@ -1839,5 +1839,101 @@
   "tplExpenseDesc": "Tarih, açıklama, tutar",
   "tplReadingDesc": "Kaynak, özet, alıntılar",
   "settingsThemeHeader": "Tema",
-  "settingsCardsHeader": "Kartlar ve listeler"
+  "settingsCardsHeader": "Kartlar ve listeler",
+  "shareTargetTitle": "Notlar'a ekle",
+  "shareTargetNew": "Yeni not",
+  "shareTargetExisting": "Var olan nota",
+  "shareTargetCreate": "Not oluştur",
+  "shareTargetSearch": "Notlarda ara",
+  "shareTargetNoNotes": "Eklenebilecek not yok",
+  "shareTargetNoMatch": "Eşleşen not yok",
+  "shareTargetMore": "+{count} dosya",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Önizlemeyi büyüt",
+  "sharePreviewCollapse": "Önizlemeyi küçült",
+  "templatesSearch": "Şablon ara",
+  "templatesAll": "Tümü",
+  "templatesLists": "Listeler",
+  "templatesPlanning": "Planlama",
+  "templatesWriting": "Yazı",
+  "templatesMine": "Şablonlarım",
+  "templatesRecent": "Son kullanılanlar",
+  "templatesNoMatch": "Eşleşen şablon yok",
+  "templatesMineEmpty": "Henüz kendi şablonun yok. Bir notun menüsünden “Şablon olarak kaydet” dersen burada durur.",
+  "templatesMineInfo": "Kendi şablonun",
+  "templateRename": "Yeniden adlandır",
+  "templateDelete": "Şablonu sil",
+  "templateNameTitle": "Şablon adı",
+  "templateNameHint": "Ör. Haftalık market",
+  "templateSave": "Kaydet",
+  "templateSaved": "“{name}” şablonlarına eklendi",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Şablon olarak kaydet",
+  "templateCreate": "Oluştur",
+  "templateCreateWithCount": "Oluştur · {count} madde",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Onay kutulu",
+  "templateListNumbers": "Numaralı",
+  "templateItems": "Maddeler",
+  "templateAddItem": "Madde ekle",
+  "templateSuggestionsInfo": "Öneriye dokununca listeye girer, yine dokununca çıkar.",
+  "tplShopProduce": "Meyve ve sebze",
+  "tplShopProduceItems": "Domates, Salatalık, Soğan, Patates, Limon, Muz, Elma, Maydanoz",
+  "tplShopBreakfast": "Kahvaltılık",
+  "tplShopBreakfastItems": "Peynir, Zeytin, Tereyağı, Bal, Reçel, Yoğurt",
+  "tplShopPantry": "Temel gıda",
+  "tplShopPantryItems": "Pirinç, Makarna, Un, Şeker, Zeytinyağı, Mercimek, Çay, Kahve",
+  "tplShopCleaning": "Temizlik",
+  "tplShopCleaningItems": "Bulaşık deterjanı, Çamaşır deterjanı, Tuvalet kâğıdı, Kâğıt havlu, Çöp poşeti",
+  "tplShopPersonal": "Kişisel bakım",
+  "tplShopPersonalItems": "Şampuan, Diş macunu, Sabun, Deodorant",
+  "tplTravelDocs": "Belgeler",
+  "tplTravelDocsItems": "Bilet, Otel rezervasyonu, Ehliyet, Seyahat sigortası, Nakit / kart",
+  "tplTravelClothes": "Giyim",
+  "tplTravelClothesItems": "Tişört, Pantolon, İç çamaşırı, Çorap, Pijama, Ceket, Ayakkabı",
+  "tplTravelCare": "Bakım",
+  "tplTravelCareItems": "Diş macunu, Şampuan, Güneş kremi, Tıraş takımı, Deodorant",
+  "tplTravelTech": "Elektronik",
+  "tplTravelTechItems": "Powerbank, Priz adaptörü, Kulaklık, Kablolar",
+  "tplHabitsName": "Alışkanlık takibi",
+  "tplHabitsDesc": "Her gün işaretle, zinciri kırma",
+  "tplHabitsItems": "8 bardak su, 30 dakika yürüyüş, 20 sayfa kitap, Erken yat, Ekransız bir saat",
+  "tplCleaningName": "Ev temizliği",
+  "tplCleaningDesc": "Haftalık temizlik kontrol listesi",
+  "tplCleaningItems": "Toz al, Süpür, Paspas yap, Banyoyu temizle, Mutfak tezgâhı, Çamaşır, Çöpleri çıkar, Çarşafları değiştir",
+  "tplMovingName": "Taşınma listesi",
+  "tplMovingDesc": "Taşınmadan önce ve sonra yapılacaklar",
+  "tplMovingItems": "Nakliyeci ayarla, Koli ve bant al, Adres değişikliği bildir, Elektrik / su / doğalgaz aboneliği, İnterneti taşı, Anahtar teslimi",
+  "tplGiftsName": "Hediye listesi",
+  "tplGiftsDesc": "Kime ne alınacak, fikirler",
+  "tplGiftsItems": "Anne, Baba, Kardeş, Arkadaş",
+  "tplWatchlistName": "İzlenecekler",
+  "tplWatchlistDesc": "Film, dizi ve kitap listesi",
+  "tplWorkoutName": "Antrenman",
+  "tplWorkoutDesc": "Isınmadan esnemeye egzersiz listesi",
+  "tplWorkoutItems": "Isınma 5 dk, Squat 3×12, Şınav 3×10, Mekik 3×15, Plank 3×45 sn, Esneme 5 dk",
+  "tplGoalsName": "Hedefler",
+  "tplGoalsDesc": "Yıl, ay ve hafta hedefleri",
+  "tplGoalsYear": "Bu yıl",
+  "tplGoalsMonth": "Bu ay",
+  "tplGoalsWeek": "Bu hafta",
+  "tplGoalsWhy": "Neden önemli?"
 }

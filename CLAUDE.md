@@ -6,7 +6,7 @@ Flutter + Firebase (Firestore/Storage senkron) not uygulaması; Android + Window
 
 ## Komutlar
 > ⚠️ **`flutter` PATH'te DEĞİL** (2026-08-30'da doğrulandı): tam yol `C:\src\flutter\bin\flutter.bat`. Bash aracından `"C:/src/flutter/bin/flutter.bat" test`. "flutter: command not found" görünce SDK yok sanma — 2026-08-30'un ilk turu bu yüzden testleri hiç koşmadan 3 KIRMIZI test commit'ledi ve aynı bug iki tur kaçtı.
-- Kurulum: `flutter pub get` · Çalıştır: `flutter run` · Test: `flutter test` (tam takım ~2 dk, 1046 test)
+- Kurulum: `flutter pub get` · Çalıştır: `flutter run` · Test: `flutter test` (tam takım ~2 dk, 1076 test)
 - **Yerel release APK**: `flutter build apk --release --target-platform android-arm64 --build-number=<N> --dart-define-from-file=env.json`
   - `--dart-define-from-file` ZORUNLU: `GOOGLE_SERVER_CLIENT_ID` olmadan uygulama derlenir ama **Google girişi çalışma anında çöker** (bkz. `env.example.json`, `core/constants.dart`). CI aynı değeri Secrets'tan geçer.
   - `--build-number=<N>` YEREL KURULUM İÇİN ZORUNLU: `pubspec.yaml` sabit `1.0.0+1`, CI ise `--build-number=${{ github.run_number }}` geçiyor. Bayraksız derlenen APK versionCode 1 olur ve telefondaki CI sürümünün üstüne kurulmaz: `INSTALL_FAILED_VERSION_DOWNGRADE` (adb'nin `-d` bayrağı da bunu geçmez). N, telefondaki sürümün üstü olmalı — telefondaki en güncel sürüm CI'ın ürettiği **372** (v1.0.372, 2026-09-01), yerel derlemede bunun üstünü ver.

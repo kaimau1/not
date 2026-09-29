@@ -735,5 +735,101 @@
   "tplExpenseDesc": "날짜, 설명, 금액",
   "tplReadingDesc": "출처, 요약, 인용",
   "settingsThemeHeader": "테마",
-  "settingsCardsHeader": "카드와 목록"
+  "settingsCardsHeader": "카드와 목록",
+  "shareTargetTitle": "메모에 추가",
+  "shareTargetNew": "새 메모",
+  "shareTargetExisting": "기존 메모",
+  "shareTargetCreate": "메모 만들기",
+  "shareTargetSearch": "메모 검색",
+  "shareTargetNoNotes": "추가할 수 있는 메모가 없습니다",
+  "shareTargetNoMatch": "일치하는 메모가 없습니다",
+  "shareTargetMore": "+{count}개 파일",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "미리보기 크게",
+  "sharePreviewCollapse": "미리보기 작게",
+  "templatesSearch": "템플릿 검색",
+  "templatesAll": "전체",
+  "templatesLists": "목록",
+  "templatesPlanning": "계획",
+  "templatesWriting": "글쓰기",
+  "templatesMine": "내 템플릿",
+  "templatesRecent": "최근 사용",
+  "templatesNoMatch": "일치하는 템플릿이 없습니다",
+  "templatesMineEmpty": "아직 내 템플릿이 없습니다. 메모 메뉴에서 ‘템플릿으로 저장’을 선택하면 여기에 표시됩니다.",
+  "templatesMineInfo": "내 템플릿",
+  "templateRename": "이름 바꾸기",
+  "templateDelete": "템플릿 삭제",
+  "templateNameTitle": "템플릿 이름",
+  "templateNameHint": "예: 주간 장보기",
+  "templateSave": "저장",
+  "templateSaved": "‘{name}’을(를) 템플릿에 추가했습니다",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "템플릿으로 저장",
+  "templateCreate": "만들기",
+  "templateCreateWithCount": "만들기 · 항목 {count}개",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "체크박스",
+  "templateListNumbers": "번호 매기기",
+  "templateItems": "항목",
+  "templateAddItem": "항목 추가",
+  "templateSuggestionsInfo": "제안을 탭하면 목록에 추가되고, 다시 탭하면 빠집니다.",
+  "tplShopProduce": "채소와 과일",
+  "tplShopProduceItems": "토마토, 오이, 양파, 감자, 레몬, 바나나, 사과, 파슬리",
+  "tplShopBreakfast": "아침 식사",
+  "tplShopBreakfastItems": "치즈, 올리브, 버터, 꿀, 잼, 요구르트",
+  "tplShopPantry": "식료품",
+  "tplShopPantryItems": "쌀, 파스타, 밀가루, 설탕, 올리브유, 렌틸콩, 차, 커피",
+  "tplShopCleaning": "청소용품",
+  "tplShopCleaningItems": "주방 세제, 세탁 세제, 화장지, 키친타월, 쓰레기봉투",
+  "tplShopPersonal": "개인 위생",
+  "tplShopPersonalItems": "샴푸, 치약, 비누, 데오도런트",
+  "tplTravelDocs": "서류",
+  "tplTravelDocsItems": "티켓, 호텔 예약, 운전면허증, 여행자 보험, 현금 / 카드",
+  "tplTravelClothes": "옷",
+  "tplTravelClothesItems": "티셔츠, 바지, 속옷, 양말, 잠옷, 재킷, 신발",
+  "tplTravelCare": "세면도구",
+  "tplTravelCareItems": "치약, 샴푸, 선크림, 면도기, 데오도런트",
+  "tplTravelTech": "전자기기",
+  "tplTravelTechItems": "보조배터리, 플러그 어댑터, 이어폰, 케이블",
+  "tplHabitsName": "습관 트래커",
+  "tplHabitsDesc": "매일 체크하고 흐름을 끊지 마세요",
+  "tplHabitsItems": "물 8잔, 30분 걷기, 책 20쪽 읽기, 일찍 자기, 화면 없는 1시간",
+  "tplCleaningName": "집 청소",
+  "tplCleaningDesc": "주간 청소 체크리스트",
+  "tplCleaningItems": "먼지 털기, 청소기 돌리기, 걸레질, 욕실 청소, 주방 조리대, 빨래, 쓰레기 버리기, 침구 교체",
+  "tplMovingName": "이사 체크리스트",
+  "tplMovingDesc": "이사 전후에 할 일",
+  "tplMovingItems": "이삿짐센터 예약, 상자와 테이프 구입, 주소 변경, 전기 / 수도 / 가스, 인터넷 이전, 열쇠 반납",
+  "tplGiftsName": "선물 목록",
+  "tplGiftsDesc": "누구에게 무엇을, 아이디어",
+  "tplGiftsItems": "엄마, 아빠, 형제자매, 친구",
+  "tplWatchlistName": "볼 목록",
+  "tplWatchlistDesc": "영화, 시리즈, 책",
+  "tplWorkoutName": "운동",
+  "tplWorkoutDesc": "준비 운동부터 스트레칭까지",
+  "tplWorkoutItems": "준비 운동 5분, 스쿼트 3×12, 팔굽혀펴기 3×10, 크런치 3×15, 플랭크 3×45초, 스트레칭 5분",
+  "tplGoalsName": "목표",
+  "tplGoalsDesc": "올해, 이번 달, 이번 주 목표",
+  "tplGoalsYear": "올해",
+  "tplGoalsMonth": "이번 달",
+  "tplGoalsWeek": "이번 주",
+  "tplGoalsWhy": "왜 중요한가요?"
 }

@@ -4070,4 +4070,247 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'कार्ड और सूचियाँ';
+
+  @override
+  String get shareTargetTitle => 'नोट्स में जोड़ें';
+
+  @override
+  String get shareTargetNew => 'नया नोट';
+
+  @override
+  String get shareTargetExisting => 'मौजूदा नोट';
+
+  @override
+  String get shareTargetCreate => 'नोट बनाएँ';
+
+  @override
+  String get shareTargetSearch => 'नोट्स खोजें';
+
+  @override
+  String get shareTargetNoNotes => 'जोड़ने के लिए कोई नोट नहीं';
+
+  @override
+  String get shareTargetNoMatch => 'कोई मेल खाता नोट नहीं';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count फ़ाइलें';
+  }
+
+  @override
+  String get sharePreviewExpand => 'पूर्वावलोकन बड़ा करें';
+
+  @override
+  String get sharePreviewCollapse => 'पूर्वावलोकन छोटा करें';
+
+  @override
+  String get templatesSearch => 'टेम्पलेट खोजें';
+
+  @override
+  String get templatesAll => 'सभी';
+
+  @override
+  String get templatesLists => 'सूचियाँ';
+
+  @override
+  String get templatesPlanning => 'योजना';
+
+  @override
+  String get templatesWriting => 'लेखन';
+
+  @override
+  String get templatesMine => 'मेरे टेम्पलेट';
+
+  @override
+  String get templatesRecent => 'हाल में इस्तेमाल';
+
+  @override
+  String get templatesNoMatch => 'कोई मेल खाता टेम्पलेट नहीं';
+
+  @override
+  String get templatesMineEmpty =>
+      'अभी आपका कोई टेम्पलेट नहीं है। किसी नोट के मेनू से “टेम्पलेट के रूप में सहेजें” चुनें, वह यहाँ दिखेगा।';
+
+  @override
+  String get templatesMineInfo => 'आपका टेम्पलेट';
+
+  @override
+  String get templateRename => 'नाम बदलें';
+
+  @override
+  String get templateDelete => 'टेम्पलेट हटाएँ';
+
+  @override
+  String get templateNameTitle => 'टेम्पलेट का नाम';
+
+  @override
+  String get templateNameHint => 'जैसे साप्ताहिक खरीदारी';
+
+  @override
+  String get templateSave => 'सहेजें';
+
+  @override
+  String templateSaved(String name) {
+    return '“$name” आपके टेम्पलेट में जोड़ा गया';
+  }
+
+  @override
+  String get saveAsTemplate => 'टेम्पलेट के रूप में सहेजें';
+
+  @override
+  String get templateCreate => 'बनाएँ';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'बनाएँ · $count आइटम';
+  }
+
+  @override
+  String get templateListChecks => 'चेकबॉक्स';
+
+  @override
+  String get templateListNumbers => 'क्रमांकित';
+
+  @override
+  String get templateItems => 'आइटम';
+
+  @override
+  String get templateAddItem => 'आइटम जोड़ें';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'सुझाव पर टैप करें तो वह सूची में जुड़ जाएगा; दोबारा टैप करने पर हट जाएगा।';
+
+  @override
+  String get tplShopProduce => 'फल और सब्ज़ियाँ';
+
+  @override
+  String get tplShopProduceItems =>
+      'टमाटर, खीरा, प्याज़, आलू, नींबू, केला, सेब, धनिया';
+
+  @override
+  String get tplShopBreakfast => 'नाश्ता';
+
+  @override
+  String get tplShopBreakfastItems => 'पनीर, जैतून, मक्खन, शहद, जैम, दही';
+
+  @override
+  String get tplShopPantry => 'राशन';
+
+  @override
+  String get tplShopPantryItems =>
+      'चावल, पास्ता, आटा, चीनी, तेल, दाल, चाय, कॉफ़ी';
+
+  @override
+  String get tplShopCleaning => 'सफ़ाई';
+
+  @override
+  String get tplShopCleaningItems =>
+      'बर्तन साबुन, कपड़े धोने का डिटर्जेंट, टॉयलेट पेपर, पेपर टॉवल, कचरा बैग';
+
+  @override
+  String get tplShopPersonal => 'निजी देखभाल';
+
+  @override
+  String get tplShopPersonalItems => 'शैम्पू, टूथपेस्ट, साबुन, डियोडरेंट';
+
+  @override
+  String get tplTravelDocs => 'दस्तावेज़';
+
+  @override
+  String get tplTravelDocsItems =>
+      'टिकट, होटल बुकिंग, ड्राइविंग लाइसेंस, यात्रा बीमा, नकद / कार्ड';
+
+  @override
+  String get tplTravelClothes => 'कपड़े';
+
+  @override
+  String get tplTravelClothesItems =>
+      'टी-शर्ट, पैंट, अंडरवियर, मोज़े, पजामा, जैकेट, जूते';
+
+  @override
+  String get tplTravelCare => 'प्रसाधन';
+
+  @override
+  String get tplTravelCareItems =>
+      'टूथपेस्ट, शैम्पू, सनस्क्रीन, शेविंग किट, डियोडरेंट';
+
+  @override
+  String get tplTravelTech => 'इलेक्ट्रॉनिक्स';
+
+  @override
+  String get tplTravelTechItems => 'पावर बैंक, प्लग एडेप्टर, हेडफ़ोन, केबल';
+
+  @override
+  String get tplHabitsName => 'आदत ट्रैकर';
+
+  @override
+  String get tplHabitsDesc => 'हर दिन टिक करें, सिलसिला न तोड़ें';
+
+  @override
+  String get tplHabitsItems =>
+      '8 गिलास पानी, 30 मिनट सैर, 20 पन्ने पढ़ना, जल्दी सोना, एक घंटा बिना स्क्रीन';
+
+  @override
+  String get tplCleaningName => 'घर की सफ़ाई';
+
+  @override
+  String get tplCleaningDesc => 'साप्ताहिक सफ़ाई सूची';
+
+  @override
+  String get tplCleaningItems =>
+      'धूल झाड़ना, वैक्यूम करना, पोछा लगाना, बाथरूम साफ़ करना, रसोई का काउंटर, कपड़े धोना, कचरा बाहर रखना, चादरें बदलना';
+
+  @override
+  String get tplMovingName => 'शिफ़्टिंग सूची';
+
+  @override
+  String get tplMovingDesc => 'घर बदलने से पहले और बाद के काम';
+
+  @override
+  String get tplMovingItems =>
+      'पैकर्स बुक करें, डिब्बे और टेप खरीदें, पता अपडेट करें, बिजली / पानी / गैस, इंटरनेट ट्रांसफ़र करें, चाबियाँ सौंपें';
+
+  @override
+  String get tplGiftsName => 'उपहार सूची';
+
+  @override
+  String get tplGiftsDesc => 'किसे क्या देना है, विचार';
+
+  @override
+  String get tplGiftsItems => 'माँ, पापा, भाई-बहन, दोस्त';
+
+  @override
+  String get tplWatchlistName => 'देखने की सूची';
+
+  @override
+  String get tplWatchlistDesc => 'फ़िल्में, सीरीज़ और किताबें';
+
+  @override
+  String get tplWorkoutName => 'वर्कआउट';
+
+  @override
+  String get tplWorkoutDesc => 'वार्म-अप से स्ट्रेचिंग तक';
+
+  @override
+  String get tplWorkoutItems =>
+      'वार्म-अप 5 मिनट, स्क्वाट 3×12, पुश-अप 3×10, क्रंच 3×15, प्लैंक 3×45 सेकंड, स्ट्रेचिंग 5 मिनट';
+
+  @override
+  String get tplGoalsName => 'लक्ष्य';
+
+  @override
+  String get tplGoalsDesc => 'साल, महीने और हफ़्ते के लक्ष्य';
+
+  @override
+  String get tplGoalsYear => 'इस साल';
+
+  @override
+  String get tplGoalsMonth => 'इस महीने';
+
+  @override
+  String get tplGoalsWeek => 'इस हफ़्ते';
+
+  @override
+  String get tplGoalsWhy => 'यह क्यों ज़रूरी है?';
 }

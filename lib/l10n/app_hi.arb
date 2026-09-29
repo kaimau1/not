@@ -735,5 +735,101 @@
   "tplExpenseDesc": "तारीख, विवरण, राशि",
   "tplReadingDesc": "स्रोत, सारांश, उद्धरण",
   "settingsThemeHeader": "थीम",
-  "settingsCardsHeader": "कार्ड और सूचियाँ"
+  "settingsCardsHeader": "कार्ड और सूचियाँ",
+  "shareTargetTitle": "नोट्स में जोड़ें",
+  "shareTargetNew": "नया नोट",
+  "shareTargetExisting": "मौजूदा नोट",
+  "shareTargetCreate": "नोट बनाएँ",
+  "shareTargetSearch": "नोट्स खोजें",
+  "shareTargetNoNotes": "जोड़ने के लिए कोई नोट नहीं",
+  "shareTargetNoMatch": "कोई मेल खाता नोट नहीं",
+  "shareTargetMore": "+{count} फ़ाइलें",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "पूर्वावलोकन बड़ा करें",
+  "sharePreviewCollapse": "पूर्वावलोकन छोटा करें",
+  "templatesSearch": "टेम्पलेट खोजें",
+  "templatesAll": "सभी",
+  "templatesLists": "सूचियाँ",
+  "templatesPlanning": "योजना",
+  "templatesWriting": "लेखन",
+  "templatesMine": "मेरे टेम्पलेट",
+  "templatesRecent": "हाल में इस्तेमाल",
+  "templatesNoMatch": "कोई मेल खाता टेम्पलेट नहीं",
+  "templatesMineEmpty": "अभी आपका कोई टेम्पलेट नहीं है। किसी नोट के मेनू से “टेम्पलेट के रूप में सहेजें” चुनें, वह यहाँ दिखेगा।",
+  "templatesMineInfo": "आपका टेम्पलेट",
+  "templateRename": "नाम बदलें",
+  "templateDelete": "टेम्पलेट हटाएँ",
+  "templateNameTitle": "टेम्पलेट का नाम",
+  "templateNameHint": "जैसे साप्ताहिक खरीदारी",
+  "templateSave": "सहेजें",
+  "templateSaved": "“{name}” आपके टेम्पलेट में जोड़ा गया",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "टेम्पलेट के रूप में सहेजें",
+  "templateCreate": "बनाएँ",
+  "templateCreateWithCount": "बनाएँ · {count} आइटम",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "चेकबॉक्स",
+  "templateListNumbers": "क्रमांकित",
+  "templateItems": "आइटम",
+  "templateAddItem": "आइटम जोड़ें",
+  "templateSuggestionsInfo": "सुझाव पर टैप करें तो वह सूची में जुड़ जाएगा; दोबारा टैप करने पर हट जाएगा।",
+  "tplShopProduce": "फल और सब्ज़ियाँ",
+  "tplShopProduceItems": "टमाटर, खीरा, प्याज़, आलू, नींबू, केला, सेब, धनिया",
+  "tplShopBreakfast": "नाश्ता",
+  "tplShopBreakfastItems": "पनीर, जैतून, मक्खन, शहद, जैम, दही",
+  "tplShopPantry": "राशन",
+  "tplShopPantryItems": "चावल, पास्ता, आटा, चीनी, तेल, दाल, चाय, कॉफ़ी",
+  "tplShopCleaning": "सफ़ाई",
+  "tplShopCleaningItems": "बर्तन साबुन, कपड़े धोने का डिटर्जेंट, टॉयलेट पेपर, पेपर टॉवल, कचरा बैग",
+  "tplShopPersonal": "निजी देखभाल",
+  "tplShopPersonalItems": "शैम्पू, टूथपेस्ट, साबुन, डियोडरेंट",
+  "tplTravelDocs": "दस्तावेज़",
+  "tplTravelDocsItems": "टिकट, होटल बुकिंग, ड्राइविंग लाइसेंस, यात्रा बीमा, नकद / कार्ड",
+  "tplTravelClothes": "कपड़े",
+  "tplTravelClothesItems": "टी-शर्ट, पैंट, अंडरवियर, मोज़े, पजामा, जैकेट, जूते",
+  "tplTravelCare": "प्रसाधन",
+  "tplTravelCareItems": "टूथपेस्ट, शैम्पू, सनस्क्रीन, शेविंग किट, डियोडरेंट",
+  "tplTravelTech": "इलेक्ट्रॉनिक्स",
+  "tplTravelTechItems": "पावर बैंक, प्लग एडेप्टर, हेडफ़ोन, केबल",
+  "tplHabitsName": "आदत ट्रैकर",
+  "tplHabitsDesc": "हर दिन टिक करें, सिलसिला न तोड़ें",
+  "tplHabitsItems": "8 गिलास पानी, 30 मिनट सैर, 20 पन्ने पढ़ना, जल्दी सोना, एक घंटा बिना स्क्रीन",
+  "tplCleaningName": "घर की सफ़ाई",
+  "tplCleaningDesc": "साप्ताहिक सफ़ाई सूची",
+  "tplCleaningItems": "धूल झाड़ना, वैक्यूम करना, पोछा लगाना, बाथरूम साफ़ करना, रसोई का काउंटर, कपड़े धोना, कचरा बाहर रखना, चादरें बदलना",
+  "tplMovingName": "शिफ़्टिंग सूची",
+  "tplMovingDesc": "घर बदलने से पहले और बाद के काम",
+  "tplMovingItems": "पैकर्स बुक करें, डिब्बे और टेप खरीदें, पता अपडेट करें, बिजली / पानी / गैस, इंटरनेट ट्रांसफ़र करें, चाबियाँ सौंपें",
+  "tplGiftsName": "उपहार सूची",
+  "tplGiftsDesc": "किसे क्या देना है, विचार",
+  "tplGiftsItems": "माँ, पापा, भाई-बहन, दोस्त",
+  "tplWatchlistName": "देखने की सूची",
+  "tplWatchlistDesc": "फ़िल्में, सीरीज़ और किताबें",
+  "tplWorkoutName": "वर्कआउट",
+  "tplWorkoutDesc": "वार्म-अप से स्ट्रेचिंग तक",
+  "tplWorkoutItems": "वार्म-अप 5 मिनट, स्क्वाट 3×12, पुश-अप 3×10, क्रंच 3×15, प्लैंक 3×45 सेकंड, स्ट्रेचिंग 5 मिनट",
+  "tplGoalsName": "लक्ष्य",
+  "tplGoalsDesc": "साल, महीने और हफ़्ते के लक्ष्य",
+  "tplGoalsYear": "इस साल",
+  "tplGoalsMonth": "इस महीने",
+  "tplGoalsWeek": "इस हफ़्ते",
+  "tplGoalsWhy": "यह क्यों ज़रूरी है?"
 }

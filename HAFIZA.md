@@ -3711,3 +3711,93 @@ akışları geciktirebilir. Kasma sürerse ilk bakılacak yer.
 
 ### Çeviri
 34 yeni anahtar × 16 dil (14'ü makine çevirisi).
+
+## 2026-09-29 — PDF "Birlikte aç" çökmesi, paylaşım hedefi (yeni/var olan not), sayfadaki PDF'in sayfa çevirmesi, gelişmiş şablonlar, kaydırılabilir paylaşım önizlemesi
+
+`flutter analyze` temiz, `flutter test` **1076 test yeşil** (24 yeni).
+
+### "GoException: no routes for location: content://…whatsapp…" — KÖK NEDEN
+WhatsApp'taki bir PDF "Notlar ile aç" denince uygulama "Page Not Found" ile
+açılıyordu. Flutter 3.27'den beri `flutter_deeplinking_enabled` VARSAYILAN
+AÇIK: VIEW intent'inin verisi (content:// adresi) yönlendiriciye SAYFA ADRESİ
+diye veriliyor. GoRouter o adreste rota bulamayınca hata sayfası açıyor, ana
+ekran HİÇ kurulmadığı için `shareIntakeProvider` (ana ekranın izlediği)
+çalışmıyor → PDF de işlenmiyordu. Düzeltme üç katman:
+* Manifest: `flutter_deeplinking_enabled=false` (asıl düzeltme; app_links'in
+  kurulum yönergesi de bunu istiyor). notlar:// bağlantılarını app_links,
+  dosyaları receive_sharing_intent zaten KENDİLERİ okuyor — Flutter'ın
+  yönlendirmesine hiç ihtiyaç yoktu, notlar://note/<id> ayrıca bir an hata
+  sayfası gösterip sonra düzeliyordu.
+* `GoRouter.onEnter`: şemalı adres (`isExternalLocation`: content/file/notlar,
+  http(s) HARİÇ) → `Block.stop()` — ekran yerinde kalır.
+* `onException` → `go('/')`: bilinmeyen adres hata sayfası yerine ana sayfa.
+
+### Paylaşım hedefi levhası (share_target_sheet.dart)
+Kullanıcı: "ana sayfa açılıp ister eski notuma ekleme istersem yeni not".
+Paylaşım (metin, görsel, PDF, sunum) gelince önce ANA SAYFAya gidilir
+(`_showHome`, 380 ms bekleme — levha kapanan editörle birlikte gitmesin),
+sonra levha: **Yeni not** (belge ise balonlu/klasik kartları —
+`CaptureModeCards` artık ortak widget) | **Var olan nota** (aranabilir liste,
+en son düzenlenen üstte, klasör adı + tarih). KARARLAR:
+* Kilitli ve arşivli not listelenmez; gizli klasör (bastırılmışsa) de.
+* Yalnız METİN gelirse PDF/sunum notu listelenmez (gövdesi ekranda yok).
+* Var olan nota ekleme: dosyalar `appendAttachments` (yerel notta da
+  çalışır), metin `appendSharedText` — listede her satır yeni madde (sondaki
+  boş madde atlanır), arşiv defterinde yeni girdi, diğerlerinde gövdeye
+  boş satırla paragraf. Metin notuna gelen PDF yine `onPage: true`.
+* Metin paylaşımı da artık SORULUYOR (eskiden anında yeni not açıyordu) —
+  "Not oluştur" tek dokunuş.
+* Soğuk başlatmada notlar akışının ilk değeri 3 sn beklenir (liste boş
+  açılmasın).
+
+### Sayfadaki PDF: "2. sayfadan sonrası görülmüyor, numara değişiyor" — KÖK NEDEN
+pdfrx 1.3.5 `PdfPageView._updateImage` yeniden çizime YALNIZ hedef ölçüye
+bakarak karar veriyor (`if (pageSize == _pageSize) return;`) — sayfa
+numarası değişip ölçü aynı kalınca eski görüntü duruyor. Kapak farklı
+boydaysa 1→2 çalışır, sonrası hiç değişmez. **TUZAK: `PdfPageView`'da
+`pageNumber` DEĞİŞTİRMEK işe yaramaz** — yerine `PdfPageImage`
+(viewers/pdf_page_image.dart): anahtar = belge+sayfa+sayfa ölçüsü+yüklenme
+durumu+hedef piksel; yeni sayfa hazırlanırken eskisi ekranda kalır. Kutu,
+atlama levhasının küçük resimleri ve sayfa düzenleyicinin ızgarası buna
+geçti (düzenleyicide sıralama sonrası aynı kutuya başka sayfa düşüyordu).
+"Değiştirmek zor": kutu yalnız HIZLI fiskeyi (80 px/sn) sayıyordu → artık
+`PageView` (parmağı izler, komşu sayfalar önceden çizilir); ‹ › komşuya
+kayarak, uzak sayfaya ATLAYARAK gider (kaydırılsaydı aradaki her sayfa
+çizilir, `onPageChanged` her birinde nota yazardı). Çubuk düğmeleri geniş
+kutuda 34×32; menü düğmesi 48 dp asgari kutusunu alıp sayacı "5 /…" diye
+kesiyordu → çubuk boyunda SizedBox.
+
+### Şablonlar ("olmamış, daha gelişmiş olmalı")
+* Galeri: arama, bölüm çipleri (Listeler/Planlama/Yazı/Şablonlarım), son
+  kullanılanlar (`recent_templates`, `b:<ad>` / `u:<kimlik>`).
+* Yeni şablonlar: alışkanlık takibi, ev temizliği, taşınma, hediye,
+  izlenecekler, antrenman, hedefler (16 şablon).
+* ÖNİZLEME adımı (`TemplateComposer`): not oluşmadan başlık, madde seçimi
+  (onay kutusu), madde ekleme, ÖNERİ grupları (alışveriş: manav/kahvaltılık/
+  temel gıda/temizlik/bakım; seyahat: belge/giyim/bakım/elektronik), liste
+  türü (onay kutulu ↔ numaralı). "+" menüsündeki "Alışveriş listesi"
+  kısayolu artık doğrudan önizlemeyi açar (eskiden anında not doğuyordu).
+* **Kendi şablonum**: kart ve editör ⋮ → "Şablon olarak kaydet". KARAR:
+  cihaz yerel (SharedPreferences `user_templates_v1`) — buluta yeni
+  koleksiyon + kural (firebase deploy) bu iş için fazla. Saklanan: tip,
+  başlık, gövde, madde METİNLERİ (işaret/ek/renk/etiket YOK). Yalnız
+  metin/liste notları (belge ve arşiv notunun içeriği eklerde).
+
+### Paylaşım önizlemesi
+`NeverScrollableScrollPhysics` ile 168 dp'de sabitti; uzun notun devamı
+okunamıyordu. `_SharePreview`: kayar, kaydırma çubuğu, solma yalnız devamı
+olan kenarda, büyüt/küçült düğmesi (ekranın yarısına kadar).
+
+### TUZAK: `dart format` klasöre UYGULANMAZ
+Depo tek tip biçimlenmemiş: `dart format lib/features/notes` 62 dosyayı
+değiştirdi (not editöründe 1200 satır gürültü). Yalnız YENİ dosyaları
+biçimle; dokunulan eski dosyada biçimlendirme gerekiyorsa HEAD'in biçimli
+hâliyle farkını alıp biçimsiz HEAD'e yama olarak uygula.
+
+### Çeviri
+75 yeni anahtar × 16 dil (15'i makine çevirisi, anadili konuşana
+gösterilmedi). Madde listeleri ASCII virgülle (`_split` ',' ile böler).
+
+### Ortam
+Flutter 3.44.6 yine `/opt/flutter`'a indirildi. graphify konteynerde yok —
+graf bu turda güncellenmedi.

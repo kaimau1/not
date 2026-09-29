@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Date, description, montant",
   "tplReadingDesc": "Source, résumé, citations",
   "settingsThemeHeader": "Thème",
-  "settingsCardsHeader": "Cartes et listes"
+  "settingsCardsHeader": "Cartes et listes",
+  "shareTargetTitle": "Ajouter à Notes",
+  "shareTargetNew": "Nouvelle note",
+  "shareTargetExisting": "Note existante",
+  "shareTargetCreate": "Créer la note",
+  "shareTargetSearch": "Rechercher des notes",
+  "shareTargetNoNotes": "Aucune note disponible",
+  "shareTargetNoMatch": "Aucune note correspondante",
+  "shareTargetMore": "+{count} fichiers",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Agrandir l'aperçu",
+  "sharePreviewCollapse": "Réduire l'aperçu",
+  "templatesSearch": "Rechercher un modèle",
+  "templatesAll": "Tous",
+  "templatesLists": "Listes",
+  "templatesPlanning": "Planification",
+  "templatesWriting": "Écriture",
+  "templatesMine": "Mes modèles",
+  "templatesRecent": "Utilisés récemment",
+  "templatesNoMatch": "Aucun modèle correspondant",
+  "templatesMineEmpty": "Vous n'avez pas encore de modèle. Choisissez « Enregistrer comme modèle » dans le menu d'une note pour le retrouver ici.",
+  "templatesMineInfo": "Votre modèle",
+  "templateRename": "Renommer",
+  "templateDelete": "Supprimer le modèle",
+  "templateNameTitle": "Nom du modèle",
+  "templateNameHint": "ex. Courses de la semaine",
+  "templateSave": "Enregistrer",
+  "templateSaved": "« {name} » ajouté à vos modèles",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Enregistrer comme modèle",
+  "templateCreate": "Créer",
+  "templateCreateWithCount": "Créer · {count} éléments",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Cases à cocher",
+  "templateListNumbers": "Numérotée",
+  "templateItems": "Éléments",
+  "templateAddItem": "Ajouter un élément",
+  "templateSuggestionsInfo": "Touchez une suggestion pour l'ajouter ; touchez à nouveau pour la retirer.",
+  "tplShopProduce": "Fruits et légumes",
+  "tplShopProduceItems": "Tomates, Concombres, Oignons, Pommes de terre, Citrons, Bananes, Pommes, Persil",
+  "tplShopBreakfast": "Petit-déjeuner",
+  "tplShopBreakfastItems": "Fromage, Olives, Beurre, Miel, Confiture, Yaourt",
+  "tplShopPantry": "Épicerie",
+  "tplShopPantryItems": "Riz, Pâtes, Farine, Sucre, Huile d'olive, Lentilles, Thé, Café",
+  "tplShopCleaning": "Entretien",
+  "tplShopCleaningItems": "Liquide vaisselle, Lessive, Papier toilette, Essuie-tout, Sacs poubelle",
+  "tplShopPersonal": "Hygiène",
+  "tplShopPersonalItems": "Shampooing, Dentifrice, Savon, Déodorant",
+  "tplTravelDocs": "Documents",
+  "tplTravelDocsItems": "Billets, Réservation d'hôtel, Permis de conduire, Assurance voyage, Espèces / cartes",
+  "tplTravelClothes": "Vêtements",
+  "tplTravelClothesItems": "T-shirts, Pantalons, Sous-vêtements, Chaussettes, Pyjama, Veste, Chaussures",
+  "tplTravelCare": "Toilette",
+  "tplTravelCareItems": "Dentifrice, Shampooing, Crème solaire, Rasoir, Déodorant",
+  "tplTravelTech": "Électronique",
+  "tplTravelTechItems": "Batterie externe, Adaptateur de prise, Écouteurs, Câbles",
+  "tplHabitsName": "Suivi des habitudes",
+  "tplHabitsDesc": "Cochez chaque jour, ne brisez pas la chaîne",
+  "tplHabitsItems": "8 verres d'eau, 30 minutes de marche, Lire 20 pages, Se coucher tôt, Une heure sans écran",
+  "tplCleaningName": "Ménage",
+  "tplCleaningDesc": "Liste de ménage hebdomadaire",
+  "tplCleaningItems": "Dépoussiérer, Aspirer, Passer la serpillière, Nettoyer la salle de bain, Plan de travail, Lessive, Sortir les poubelles, Changer les draps",
+  "tplMovingName": "Liste de déménagement",
+  "tplMovingDesc": "À faire avant et après le déménagement",
+  "tplMovingItems": "Réserver les déménageurs, Acheter cartons et scotch, Changer d'adresse, Électricité / eau / gaz, Transférer internet, Remise des clés",
+  "tplGiftsName": "Liste de cadeaux",
+  "tplGiftsDesc": "Qui reçoit quoi, idées",
+  "tplGiftsItems": "Maman, Papa, Frère ou sœur, Ami",
+  "tplWatchlistName": "À voir",
+  "tplWatchlistDesc": "Films, séries et livres",
+  "tplWorkoutName": "Entraînement",
+  "tplWorkoutDesc": "De l'échauffement aux étirements",
+  "tplWorkoutItems": "Échauffement 5 min, Squats 3×12, Pompes 3×10, Abdos 3×15, Gainage 3×45 s, Étirements 5 min",
+  "tplGoalsName": "Objectifs",
+  "tplGoalsDesc": "Objectifs de l'année, du mois et de la semaine",
+  "tplGoalsYear": "Cette année",
+  "tplGoalsMonth": "Ce mois-ci",
+  "tplGoalsWeek": "Cette semaine",
+  "tplGoalsWhy": "Pourquoi c'est important ?"
 }

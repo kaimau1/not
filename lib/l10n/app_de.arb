@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Datum, Beschreibung, Betrag",
   "tplReadingDesc": "Quelle, Zusammenfassung, Zitate",
   "settingsThemeHeader": "Design",
-  "settingsCardsHeader": "Karten und Listen"
+  "settingsCardsHeader": "Karten und Listen",
+  "shareTargetTitle": "Zu Notizen hinzufügen",
+  "shareTargetNew": "Neue Notiz",
+  "shareTargetExisting": "Bestehende Notiz",
+  "shareTargetCreate": "Notiz erstellen",
+  "shareTargetSearch": "Notizen durchsuchen",
+  "shareTargetNoNotes": "Keine passenden Notizen vorhanden",
+  "shareTargetNoMatch": "Keine Treffer",
+  "shareTargetMore": "+{count} Dateien",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Vorschau vergrößern",
+  "sharePreviewCollapse": "Vorschau verkleinern",
+  "templatesSearch": "Vorlagen suchen",
+  "templatesAll": "Alle",
+  "templatesLists": "Listen",
+  "templatesPlanning": "Planung",
+  "templatesWriting": "Schreiben",
+  "templatesMine": "Meine Vorlagen",
+  "templatesRecent": "Zuletzt verwendet",
+  "templatesNoMatch": "Keine passenden Vorlagen",
+  "templatesMineEmpty": "Du hast noch keine eigenen Vorlagen. Wähle im Menü einer Notiz „Als Vorlage speichern“, dann erscheint sie hier.",
+  "templatesMineInfo": "Deine Vorlage",
+  "templateRename": "Umbenennen",
+  "templateDelete": "Vorlage löschen",
+  "templateNameTitle": "Name der Vorlage",
+  "templateNameHint": "z. B. Wocheneinkauf",
+  "templateSave": "Speichern",
+  "templateSaved": "„{name}“ zu deinen Vorlagen hinzugefügt",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Als Vorlage speichern",
+  "templateCreate": "Erstellen",
+  "templateCreateWithCount": "Erstellen · {count} Einträge",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Kontrollkästchen",
+  "templateListNumbers": "Nummeriert",
+  "templateItems": "Einträge",
+  "templateAddItem": "Eintrag hinzufügen",
+  "templateSuggestionsInfo": "Tippe auf einen Vorschlag, um ihn hinzuzufügen; erneut tippen entfernt ihn.",
+  "tplShopProduce": "Obst und Gemüse",
+  "tplShopProduceItems": "Tomaten, Gurken, Zwiebeln, Kartoffeln, Zitronen, Bananen, Äpfel, Petersilie",
+  "tplShopBreakfast": "Frühstück",
+  "tplShopBreakfastItems": "Käse, Oliven, Butter, Honig, Marmelade, Joghurt",
+  "tplShopPantry": "Vorrat",
+  "tplShopPantryItems": "Reis, Nudeln, Mehl, Zucker, Olivenöl, Linsen, Tee, Kaffee",
+  "tplShopCleaning": "Putzmittel",
+  "tplShopCleaningItems": "Spülmittel, Waschmittel, Toilettenpapier, Küchenrolle, Müllbeutel",
+  "tplShopPersonal": "Körperpflege",
+  "tplShopPersonalItems": "Shampoo, Zahnpasta, Seife, Deo",
+  "tplTravelDocs": "Dokumente",
+  "tplTravelDocsItems": "Tickets, Hotelbuchung, Führerschein, Reiseversicherung, Bargeld / Karten",
+  "tplTravelClothes": "Kleidung",
+  "tplTravelClothesItems": "T-Shirts, Hosen, Unterwäsche, Socken, Schlafanzug, Jacke, Schuhe",
+  "tplTravelCare": "Pflege",
+  "tplTravelCareItems": "Zahnpasta, Shampoo, Sonnencreme, Rasierzeug, Deo",
+  "tplTravelTech": "Elektronik",
+  "tplTravelTechItems": "Powerbank, Steckdosenadapter, Kopfhörer, Kabel",
+  "tplHabitsName": "Gewohnheiten",
+  "tplHabitsDesc": "Jeden Tag abhaken, die Kette nicht reißen lassen",
+  "tplHabitsItems": "8 Gläser Wasser, 30 Minuten Spaziergang, 20 Seiten lesen, Früh schlafen gehen, Eine Stunde ohne Bildschirm",
+  "tplCleaningName": "Hausputz",
+  "tplCleaningDesc": "Wöchentliche Putz-Checkliste",
+  "tplCleaningItems": "Staub wischen, Staubsaugen, Wischen, Bad putzen, Küchenarbeitsplatte, Wäsche, Müll rausbringen, Bettwäsche wechseln",
+  "tplMovingName": "Umzugs-Checkliste",
+  "tplMovingDesc": "Aufgaben vor und nach dem Umzug",
+  "tplMovingItems": "Umzugsfirma buchen, Kartons und Klebeband kaufen, Adresse ummelden, Strom / Wasser / Gas, Internet umziehen, Schlüsselübergabe",
+  "tplGiftsName": "Geschenkeliste",
+  "tplGiftsDesc": "Wer bekommt was, Ideen",
+  "tplGiftsItems": "Mama, Papa, Geschwister, Freund",
+  "tplWatchlistName": "Merkliste",
+  "tplWatchlistDesc": "Filme, Serien und Bücher",
+  "tplWorkoutName": "Training",
+  "tplWorkoutDesc": "Übungen vom Aufwärmen bis zum Dehnen",
+  "tplWorkoutItems": "Aufwärmen 5 Min, Kniebeugen 3×12, Liegestütze 3×10, Crunches 3×15, Plank 3×45 s, Dehnen 5 Min",
+  "tplGoalsName": "Ziele",
+  "tplGoalsDesc": "Ziele für Jahr, Monat und Woche",
+  "tplGoalsYear": "Dieses Jahr",
+  "tplGoalsMonth": "Diesen Monat",
+  "tplGoalsWeek": "Diese Woche",
+  "tplGoalsWhy": "Warum ist es wichtig?"
 }

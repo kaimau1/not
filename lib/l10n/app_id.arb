@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Tanggal, keterangan, jumlah",
   "tplReadingDesc": "Sumber, ringkasan, kutipan",
   "settingsThemeHeader": "Tema",
-  "settingsCardsHeader": "Kartu dan daftar"
+  "settingsCardsHeader": "Kartu dan daftar",
+  "shareTargetTitle": "Tambahkan ke Catatan",
+  "shareTargetNew": "Catatan baru",
+  "shareTargetExisting": "Catatan yang ada",
+  "shareTargetCreate": "Buat catatan",
+  "shareTargetSearch": "Cari catatan",
+  "shareTargetNoNotes": "Tidak ada catatan yang tersedia",
+  "shareTargetNoMatch": "Tidak ada catatan yang cocok",
+  "shareTargetMore": "+{count} file",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Perbesar pratinjau",
+  "sharePreviewCollapse": "Perkecil pratinjau",
+  "templatesSearch": "Cari templat",
+  "templatesAll": "Semua",
+  "templatesLists": "Daftar",
+  "templatesPlanning": "Perencanaan",
+  "templatesWriting": "Tulisan",
+  "templatesMine": "Templat saya",
+  "templatesRecent": "Baru dipakai",
+  "templatesNoMatch": "Tidak ada templat yang cocok",
+  "templatesMineEmpty": "Kamu belum punya templat sendiri. Pilih “Simpan sebagai templat” di menu catatan, lalu templat muncul di sini.",
+  "templatesMineInfo": "Templat kamu",
+  "templateRename": "Ganti nama",
+  "templateDelete": "Hapus templat",
+  "templateNameTitle": "Nama templat",
+  "templateNameHint": "mis. Belanja mingguan",
+  "templateSave": "Simpan",
+  "templateSaved": "“{name}” ditambahkan ke templat kamu",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Simpan sebagai templat",
+  "templateCreate": "Buat",
+  "templateCreateWithCount": "Buat · {count} item",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Kotak centang",
+  "templateListNumbers": "Bernomor",
+  "templateItems": "Item",
+  "templateAddItem": "Tambah item",
+  "templateSuggestionsInfo": "Ketuk saran untuk menambahkannya; ketuk lagi untuk menghapusnya.",
+  "tplShopProduce": "Buah dan sayur",
+  "tplShopProduceItems": "Tomat, Mentimun, Bawang, Kentang, Jeruk nipis, Pisang, Apel, Peterseli",
+  "tplShopBreakfast": "Sarapan",
+  "tplShopBreakfastItems": "Keju, Zaitun, Mentega, Madu, Selai, Yoghurt",
+  "tplShopPantry": "Bahan pokok",
+  "tplShopPantryItems": "Beras, Pasta, Tepung, Gula, Minyak zaitun, Kacang lentil, Teh, Kopi",
+  "tplShopCleaning": "Kebersihan",
+  "tplShopCleaningItems": "Sabun cuci piring, Deterjen, Tisu toilet, Tisu dapur, Kantong sampah",
+  "tplShopPersonal": "Perawatan diri",
+  "tplShopPersonalItems": "Sampo, Pasta gigi, Sabun, Deodoran",
+  "tplTravelDocs": "Dokumen",
+  "tplTravelDocsItems": "Tiket, Pemesanan hotel, SIM, Asuransi perjalanan, Uang tunai / kartu",
+  "tplTravelClothes": "Pakaian",
+  "tplTravelClothesItems": "Kaos, Celana, Pakaian dalam, Kaus kaki, Piyama, Jaket, Sepatu",
+  "tplTravelCare": "Perlengkapan mandi",
+  "tplTravelCareItems": "Pasta gigi, Sampo, Tabir surya, Alat cukur, Deodoran",
+  "tplTravelTech": "Elektronik",
+  "tplTravelTechItems": "Power bank, Adaptor colokan, Headphone, Kabel",
+  "tplHabitsName": "Pelacak kebiasaan",
+  "tplHabitsDesc": "Centang tiap hari, jangan putus rantainya",
+  "tplHabitsItems": "8 gelas air, Jalan kaki 30 menit, Baca 20 halaman, Tidur lebih awal, Satu jam tanpa layar",
+  "tplCleaningName": "Bersih-bersih rumah",
+  "tplCleaningDesc": "Daftar bersih-bersih mingguan",
+  "tplCleaningItems": "Bersihkan debu, Sedot debu, Pel lantai, Bersihkan kamar mandi, Meja dapur, Cuci baju, Buang sampah, Ganti seprai",
+  "tplMovingName": "Daftar pindahan",
+  "tplMovingDesc": "Yang harus dilakukan sebelum dan sesudah pindah",
+  "tplMovingItems": "Pesan jasa pindahan, Beli kardus dan lakban, Perbarui alamat, Listrik / air / gas, Pindahkan internet, Serahkan kunci",
+  "tplGiftsName": "Daftar hadiah",
+  "tplGiftsDesc": "Siapa dapat apa, ide",
+  "tplGiftsItems": "Ibu, Ayah, Saudara, Teman",
+  "tplWatchlistName": "Daftar tontonan",
+  "tplWatchlistDesc": "Film, serial, dan buku",
+  "tplWorkoutName": "Latihan",
+  "tplWorkoutDesc": "Dari pemanasan sampai peregangan",
+  "tplWorkoutItems": "Pemanasan 5 mnt, Squat 3×12, Push-up 3×10, Crunch 3×15, Plank 3×45 dtk, Peregangan 5 mnt",
+  "tplGoalsName": "Target",
+  "tplGoalsDesc": "Target tahun, bulan, dan minggu",
+  "tplGoalsYear": "Tahun ini",
+  "tplGoalsMonth": "Bulan ini",
+  "tplGoalsWeek": "Minggu ini",
+  "tplGoalsWhy": "Kenapa ini penting?"
 }

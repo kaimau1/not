@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Дата, описание, сумма",
   "tplReadingDesc": "Источник, кратко, цитаты",
   "settingsThemeHeader": "Тема",
-  "settingsCardsHeader": "Карточки и списки"
+  "settingsCardsHeader": "Карточки и списки",
+  "shareTargetTitle": "Добавить в Заметки",
+  "shareTargetNew": "Новая заметка",
+  "shareTargetExisting": "В заметку",
+  "shareTargetCreate": "Создать заметку",
+  "shareTargetSearch": "Поиск заметок",
+  "shareTargetNoNotes": "Нет подходящих заметок",
+  "shareTargetNoMatch": "Ничего не найдено",
+  "shareTargetMore": "+{count} файлов",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Развернуть предпросмотр",
+  "sharePreviewCollapse": "Свернуть предпросмотр",
+  "templatesSearch": "Поиск шаблонов",
+  "templatesAll": "Все",
+  "templatesLists": "Списки",
+  "templatesPlanning": "Планирование",
+  "templatesWriting": "Тексты",
+  "templatesMine": "Мои шаблоны",
+  "templatesRecent": "Недавние",
+  "templatesNoMatch": "Шаблоны не найдены",
+  "templatesMineEmpty": "У вас пока нет своих шаблонов. Выберите «Сохранить как шаблон» в меню заметки — он появится здесь.",
+  "templatesMineInfo": "Ваш шаблон",
+  "templateRename": "Переименовать",
+  "templateDelete": "Удалить шаблон",
+  "templateNameTitle": "Название шаблона",
+  "templateNameHint": "например, Покупки на неделю",
+  "templateSave": "Сохранить",
+  "templateSaved": "«{name}» добавлен в шаблоны",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Сохранить как шаблон",
+  "templateCreate": "Создать",
+  "templateCreateWithCount": "Создать · пунктов: {count}",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "С флажками",
+  "templateListNumbers": "Нумерованный",
+  "templateItems": "Пункты",
+  "templateAddItem": "Добавить пункт",
+  "templateSuggestionsInfo": "Нажмите на подсказку, чтобы добавить её; нажмите ещё раз, чтобы убрать.",
+  "tplShopProduce": "Овощи и фрукты",
+  "tplShopProduceItems": "Помидоры, Огурцы, Лук, Картофель, Лимоны, Бананы, Яблоки, Петрушка",
+  "tplShopBreakfast": "К завтраку",
+  "tplShopBreakfastItems": "Сыр, Оливки, Сливочное масло, Мёд, Варенье, Йогурт",
+  "tplShopPantry": "Бакалея",
+  "tplShopPantryItems": "Рис, Макароны, Мука, Сахар, Оливковое масло, Чечевица, Чай, Кофе",
+  "tplShopCleaning": "Бытовая химия",
+  "tplShopCleaningItems": "Средство для посуды, Стиральный порошок, Туалетная бумага, Бумажные полотенца, Мешки для мусора",
+  "tplShopPersonal": "Гигиена",
+  "tplShopPersonalItems": "Шампунь, Зубная паста, Мыло, Дезодорант",
+  "tplTravelDocs": "Документы",
+  "tplTravelDocsItems": "Билеты, Бронь отеля, Водительские права, Страховка, Наличные / карты",
+  "tplTravelClothes": "Одежда",
+  "tplTravelClothesItems": "Футболки, Брюки, Бельё, Носки, Пижама, Куртка, Обувь",
+  "tplTravelCare": "Уход",
+  "tplTravelCareItems": "Зубная паста, Шампунь, Солнцезащитный крем, Бритва, Дезодорант",
+  "tplTravelTech": "Электроника",
+  "tplTravelTechItems": "Пауэрбанк, Переходник для розетки, Наушники, Кабели",
+  "tplHabitsName": "Трекер привычек",
+  "tplHabitsDesc": "Отмечайте каждый день, не прерывайте цепочку",
+  "tplHabitsItems": "8 стаканов воды, 30 минут ходьбы, 20 страниц книги, Лечь пораньше, Час без экранов",
+  "tplCleaningName": "Уборка дома",
+  "tplCleaningDesc": "Еженедельный список уборки",
+  "tplCleaningItems": "Вытереть пыль, Пропылесосить, Помыть полы, Убрать ванную, Кухонная столешница, Стирка, Вынести мусор, Сменить постельное бельё",
+  "tplMovingName": "Список для переезда",
+  "tplMovingDesc": "Дела до и после переезда",
+  "tplMovingItems": "Заказать грузчиков, Купить коробки и скотч, Сменить адрес, Свет / вода / газ, Перенести интернет, Передать ключи",
+  "tplGiftsName": "Список подарков",
+  "tplGiftsDesc": "Кому что подарить, идеи",
+  "tplGiftsItems": "Мама, Папа, Брат или сестра, Друг",
+  "tplWatchlistName": "Посмотреть",
+  "tplWatchlistDesc": "Фильмы, сериалы и книги",
+  "tplWorkoutName": "Тренировка",
+  "tplWorkoutDesc": "От разминки до растяжки",
+  "tplWorkoutItems": "Разминка 5 мин, Приседания 3×12, Отжимания 3×10, Скручивания 3×15, Планка 3×45 с, Растяжка 5 мин",
+  "tplGoalsName": "Цели",
+  "tplGoalsDesc": "Цели на год, месяц и неделю",
+  "tplGoalsYear": "В этом году",
+  "tplGoalsMonth": "В этом месяце",
+  "tplGoalsWeek": "На этой неделе",
+  "tplGoalsWhy": "Почему это важно?"
 }

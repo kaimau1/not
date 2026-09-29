@@ -735,5 +735,101 @@
   "tplExpenseDesc": "日付・内容・金額",
   "tplReadingDesc": "出典・要約・引用",
   "settingsThemeHeader": "テーマ",
-  "settingsCardsHeader": "カードとリスト"
+  "settingsCardsHeader": "カードとリスト",
+  "shareTargetTitle": "メモに追加",
+  "shareTargetNew": "新しいメモ",
+  "shareTargetExisting": "既存のメモ",
+  "shareTargetCreate": "メモを作成",
+  "shareTargetSearch": "メモを検索",
+  "shareTargetNoNotes": "追加できるメモがありません",
+  "shareTargetNoMatch": "一致するメモがありません",
+  "shareTargetMore": "ほか {count} 件",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "プレビューを拡大",
+  "sharePreviewCollapse": "プレビューを縮小",
+  "templatesSearch": "テンプレートを検索",
+  "templatesAll": "すべて",
+  "templatesLists": "リスト",
+  "templatesPlanning": "計画",
+  "templatesWriting": "文章",
+  "templatesMine": "マイテンプレート",
+  "templatesRecent": "最近使用",
+  "templatesNoMatch": "一致するテンプレートがありません",
+  "templatesMineEmpty": "まだ自分のテンプレートがありません。メモのメニューで「テンプレートとして保存」を選ぶとここに表示されます。",
+  "templatesMineInfo": "マイテンプレート",
+  "templateRename": "名前を変更",
+  "templateDelete": "テンプレートを削除",
+  "templateNameTitle": "テンプレート名",
+  "templateNameHint": "例：毎週の買い物",
+  "templateSave": "保存",
+  "templateSaved": "「{name}」をテンプレートに追加しました",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "テンプレートとして保存",
+  "templateCreate": "作成",
+  "templateCreateWithCount": "作成 · {count} 項目",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "チェックボックス",
+  "templateListNumbers": "番号付き",
+  "templateItems": "項目",
+  "templateAddItem": "項目を追加",
+  "templateSuggestionsInfo": "候補をタップするとリストに追加され、もう一度タップすると外れます。",
+  "tplShopProduce": "野菜・果物",
+  "tplShopProduceItems": "トマト, きゅうり, 玉ねぎ, じゃがいも, レモン, バナナ, りんご, パセリ",
+  "tplShopBreakfast": "朝食",
+  "tplShopBreakfastItems": "チーズ, オリーブ, バター, はちみつ, ジャム, ヨーグルト",
+  "tplShopPantry": "食料品",
+  "tplShopPantryItems": "米, パスタ, 小麦粉, 砂糖, オリーブオイル, レンズ豆, お茶, コーヒー",
+  "tplShopCleaning": "掃除用品",
+  "tplShopCleaningItems": "食器用洗剤, 洗濯洗剤, トイレットペーパー, キッチンペーパー, ゴミ袋",
+  "tplShopPersonal": "日用品",
+  "tplShopPersonalItems": "シャンプー, 歯磨き粉, 石けん, デオドラント",
+  "tplTravelDocs": "書類",
+  "tplTravelDocsItems": "チケット, ホテルの予約, 運転免許証, 旅行保険, 現金 / カード",
+  "tplTravelClothes": "衣類",
+  "tplTravelClothesItems": "Tシャツ, ズボン, 下着, 靴下, パジャマ, 上着, 靴",
+  "tplTravelCare": "洗面用具",
+  "tplTravelCareItems": "歯磨き粉, シャンプー, 日焼け止め, ひげそり, デオドラント",
+  "tplTravelTech": "電子機器",
+  "tplTravelTechItems": "モバイルバッテリー, 変換プラグ, イヤホン, ケーブル",
+  "tplHabitsName": "習慣トラッカー",
+  "tplHabitsDesc": "毎日チェックして習慣を途切れさせない",
+  "tplHabitsItems": "水を8杯, 30分のウォーキング, 20ページ読書, 早寝, 画面を見ない1時間",
+  "tplCleaningName": "家の掃除",
+  "tplCleaningDesc": "毎週の掃除チェックリスト",
+  "tplCleaningItems": "ほこり取り, 掃除機がけ, 床拭き, 浴室掃除, キッチンカウンター, 洗濯, ゴミ出し, シーツ交換",
+  "tplMovingName": "引っ越しリスト",
+  "tplMovingDesc": "引っ越し前後にやること",
+  "tplMovingItems": "引っ越し業者を予約, 段ボールとテープを買う, 住所変更, 電気 / 水道 / ガス, ネット回線の移転, 鍵の返却",
+  "tplGiftsName": "ギフトリスト",
+  "tplGiftsDesc": "誰に何を贈るか、アイデア",
+  "tplGiftsItems": "母, 父, きょうだい, 友人",
+  "tplWatchlistName": "見たいもの",
+  "tplWatchlistDesc": "映画・ドラマ・本のリスト",
+  "tplWorkoutName": "トレーニング",
+  "tplWorkoutDesc": "ウォームアップからストレッチまで",
+  "tplWorkoutItems": "ウォームアップ 5分, スクワット 3×12, 腕立て伏せ 3×10, 腹筋 3×15, プランク 3×45秒, ストレッチ 5分",
+  "tplGoalsName": "目標",
+  "tplGoalsDesc": "年・月・週の目標",
+  "tplGoalsYear": "今年",
+  "tplGoalsMonth": "今月",
+  "tplGoalsWeek": "今週",
+  "tplGoalsWhy": "なぜ大切か"
 }

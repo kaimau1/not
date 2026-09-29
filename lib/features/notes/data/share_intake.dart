@@ -5,14 +5,22 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../folders/data/folders_repository.dart';
+import '../../folders/domain/note_folder.dart';
 import '../presentation/capture_mode_sheet.dart';
+import '../presentation/notes_providers.dart';
+import '../presentation/share_target_sheet.dart';
 import '../domain/attachment.dart';
+import '../domain/note.dart';
+import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
 import 'note_package.dart';
@@ -152,37 +160,76 @@ final shareIntakeProvider = Provider<void>((ref) {
     // an boş kalıyor ve o anki akış anlık görüntüsünde not süzgeçten
     // düşebiliyordu (bkz. NotesRepository.createNote yorumu).
     final body = bodyParts.join('\n').trim();
-    // BELGE paylaşımında (PDF/sunum) not kipi SORULUR — uygulama içindeki
-    // "PDF ekle not al" akışının aynı levhası (kullanıcı isteği 2026-09-05:
-    // "seçenek olarak açılıp ya PDF ekle not al ile ya da direkt ek olarak
-    // ekle seçeneği ile not başlatabilmeli"). Eskiden karar sessizce
-    // veriliyordu: tek belge her zaman balonlu belge notu, birden çok belge
-    // her zaman düz metin notu — kullanıcının söz hakkı yoktu.
+    // BELGE paylaşımında (PDF/sunum) YENİ not kipi SORULUR — uygulama içindeki
+    // "PDF ekle not al" akışının aynı kartları (kullanıcı isteği 2026-09-05).
     final docKind = body.isEmpty && docs.isNotEmpty
         ? shareAttachmentKind(docs.first)
         : null;
     final asksMode =
         docKind == AttachmentKind.pdf || docKind == AttachmentKind.slide;
-    // Levha uygulamanın gezinme ağacında açılır. Paylaşımla SOĞUK başlatmada
-    // gezgin henüz kurulmamış olabilir; o zaman soru sorulmaz ve eski
-    // varsayılan davranış işler.
-    final sheetContext = asksMode
-        ? ref.read(routerProvider).routerDelegate.navigatorKey.currentContext
-        : null;
-    CaptureChoice? choice;
+
+    // **HEDEF SORULUR: YENİ NOT MU, VAR OLAN NOT MU?** (kullanıcı isteği
+    // 2026-09-29: "PDF açmak istediğimde Notlar ana sayfası açılıp ister eski
+    // bir notuma ekleme istersem yeni not oluşturma seçenekleri gelsin").
+    // Önce ANA SAYFA: paylaşım hangi ekrandayken gelirse gelsin kullanıcı
+    // notlarının önünde karar verir. Levha uygulamanın gezinme ağacında
+    // açılır; gezgin henüz yoksa (çok erken soğuk başlatma) soru sorulmaz ve
+    // eski varsayılan davranış işler (yeni not).
+    final router = ref.read(routerProvider);
+    await _showHome(router);
+    final sheetContext = router.routerDelegate.navigatorKey.currentContext;
+    ShareDestination? destination;
     if (sheetContext != null && sheetContext.mounted) {
-      choice = await showCaptureModeSheet(
+      // Soğuk başlatmada notlar henüz gelmemiş olabilir: "var olan not"
+      // listesi boş açılmasın diye ilk anlık görüntü kısa süre beklenir.
+      try {
+        await ref
+            .read(notesStreamProvider.future)
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {
+        // Gelmezse liste eldekiyle açılır; yeni not yolu etkilenmez.
+      }
+      if (!sheetContext.mounted) return;
+      final folders =
+          ref.read(foldersStreamProvider).value ?? const <NoteFolder>[];
+      final suppressed = ref.read(suppressedFolderIdsProvider);
+      final notes = [
+        for (final n in ref.read(notesStreamProvider).value ?? const <Note>[])
+          if (n.folderId == null || !suppressed.contains(n.folderId)) n,
+      ];
+      destination = await showShareTargetSheet(
         sheetContext,
-        title: docKind == AttachmentKind.slide
+        incoming: ShareIncoming(
+          text: body,
+          files: [
+            for (final f in docs)
+              (name: p.basename(f.path), kind: shareAttachmentKind(f)!),
+          ],
+        ),
+        notes: notes,
+        folderNames: {for (final f in folders) f.id: f.name},
+        askMode: asksMode,
+        newNoteLabel: !asksMode
+            ? null
+            : docKind == AttachmentKind.slide
             ? sheetContext.l10n.newSlidesNote
             : sheetContext.l10n.newPdfNote,
       );
       // Levha kapatıldı: paylaşımdan not oluşturulmaz (boş not bırakmayalım).
-      if (choice == null) {
+      if (destination == null) {
         ReceiveSharingIntent.instance.reset();
         return;
       }
     }
+
+    final targetId = destination?.noteId;
+    if (targetId != null) {
+      await _addToExistingNote(ref, repo, targetId, body, docs, safeToRead);
+      ReceiveSharingIntent.instance.reset();
+      return;
+    }
+
+    final choice = destination?.choice;
     // Balonlu kip: editör üstte sayfa, altta o sayfanın notu olacak şekilde
     // açılır ve belgenin üzerine balon bırakılabilir. Klasik kipte belge
     // sıradan bir ek olur (kullanıcı isteği 2026-08-08: "notlarda açıp aynı
@@ -191,7 +238,9 @@ final shareIntakeProvider = Provider<void>((ref) {
         ? NoteType.slides
         : NoteType.pdf;
     final type = choice != null
-        ? (choice.mode == CaptureMode.bubbles ? docType : NoteType.text)
+        ? (asksMode && choice.mode == CaptureMode.bubbles
+              ? docType
+              : NoteType.text)
         // Soru sorulamadı (gezgin yok): tek belge yine belge notu açar.
         : (body.isEmpty && docs.length == 1
               ? switch (shareAttachmentKind(docs.first)) {
@@ -200,117 +249,40 @@ final shareIntakeProvider = Provider<void>((ref) {
                   _ => NoteType.text,
                 }
               : NoteType.text);
-    final id = await repo.createNote(type, body: body);
     // Levhada yazılan ad hem notun başlığı hem de balonlu kipte üretilen
-    // belgenin dosya adı olur (bkz. capture_mode_sheet.dart).
-    final noteTitle = choice?.noteTitle ?? '';
-    if (noteTitle.isNotEmpty) repo.updateFields(id, {'title': noteTitle});
+    // belgenin dosya adı olur (bkz. capture_mode_sheet.dart). TEK yazımda.
+    final id = await repo.createNote(
+      type,
+      body: body,
+      title: choice?.noteTitle ?? '',
+    );
 
-    final attachRepo = ref.read(attachmentRepositoryProvider);
-    if (attachRepo != null) {
-      // Hazırlanan ekler ÖNCE toplanır, sonra TEK yazımda gider.
-      //
-      // KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi"):
-      // eskiden döngünün her turunda ayrı bir `updateFields` (arrayUnion)
-      // ateşleniyordu ve HİÇBİRİ beklenmiyordu. Son yazım daha yoldayken
-      // aşağıdaki `push` editörü açıyor, editör de kendi anlık görüntüsünü
-      // (henüz 2 ekli) geri yazınca son ek siliniyordu. Tek arrayUnion'da
-      // böyle bir aralık yok; ayrıca `await` ile editör açılmadan önce
-      // yazımın gittiği garanti.
-      final prepared = <Attachment>[];
-      for (final file in docs) {
-        try {
-          // Ek dosyaları da aynı kurala tabi: önbellek dışındaki bir yolu
-          // (sahte MIME ile işaretlenmiş keyfi bir dosyayı) eke çevirme.
-          if (!safeToRead(file.path)) continue;
-          final bytes = await File(file.path).readAsBytes();
-          final kind = shareAttachmentKind(file)!;
-          var name = p.basename(file.path);
-          // Ad uzantısız geldiyse (bkz. kindOf) türün uzantısı eklenir; yoksa
-          // ek uzantısız kaydedilir ve dışa aktarıldığında açılmaz.
-          if (p.extension(name).isEmpty) {
-            name += switch (kind) {
-              AttachmentKind.pdf => '.pdf',
-              AttachmentKind.slide => '.pptx',
-              _ => '.jpg',
-            };
-          }
-          // NOTLAR'IN ÜRETTİĞİ PAYLAŞIM PDF'i: balon/çizim verisi dosyanın
-          // içinde ek olarak geliyor. Damga katmanı sökülür ve veriler ekin
-          // kendi alanlarına konur — balonlar gönderendeki gibi taşınabilir,
-          // renklenebilir, silinebilir olur. Sıradan bir PDF'te `restored`
-          // null döner ve dosya olduğu gibi eklenir.
-          final restored = kind == AttachmentKind.pdf
-              ? await PdfEdit.readSharedPdfInBackground(bytes)
-              : null;
-          final docBytes = restored == null
-              ? bytes
-              : restored['bytes'] as Uint8List;
-          final attachment = switch (kind) {
-            AttachmentKind.pdf => await attachRepo.preparePdf(
-              noteId: id,
-              bytes: docBytes,
-              fileName: name,
-            ),
-            AttachmentKind.slide => await attachRepo.prepareSlide(
-              noteId: id,
-              bytes: bytes,
-              fileName: name,
-            ),
-            _ => await attachRepo.prepareImage(
-              noteId: id,
-              bytes: bytes,
-              fileName: name,
-            ),
-          };
-          // Balonlar/çizimler ekin alanlarına: not artık gönderendeki gibi
-          // düzenlenebilir (bkz. yukarıdaki `restored`).
-          final stored = restored == null
-              ? attachment
-              : attachment.copyWith(
-                  bubbles: [
-                    for (final e in (restored['b'] as List?) ?? const [])
-                      PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
-                  ],
-                  ink: [
-                    for (final e in (restored['i'] as List?) ?? const [])
-                      InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
-                  ],
-                );
-          // KLASİK metin notunda PDF de SAYFAYA yerleşir (kullanıcı isteği
-          // 2026-09-06): uygulama içinden eklenen PDF ile paylaşımdan gelen
-          // PDF aynı yere düşsün. Konum yazılmaz — tuval sayfa genişliğini
-          // bildiği ilk karede boş bir yere kendisi oturtur (bkz. packSlot).
-          // Belge (balonlu) notunda PDF notun KENDİSİdir; oraya konmaz.
-          prepared.add(
-            kind == AttachmentKind.pdf && type == NoteType.text
-                ? stored.copyWith(onPage: true)
-                : stored,
-          );
-        } catch (_) {
-          // Tek dosya okunamazsa/çok büyükse not yine oluşsun.
-        }
-      }
-      if (prepared.isNotEmpty) {
-        // Zaman aşımı ŞART: dönen Future sunucu onayını bekliyor ve
-        // çevrimdışıyken hiç tamamlanmıyor. Yazım o durumda da yerel
-        // önbelleğe ANINDA düşmüştür — beklediğimiz tek şey editör açılmadan
-        // önce o düşüşün gerçekleşmesi.
-        await repo
-            .updateFieldsAndWait(id, {
-              'attachments': FieldValue.arrayUnion([
-                for (final a in prepared) a.toMap(),
-              ]),
-            })
-            .timeout(const Duration(seconds: 3), onTimeout: () {})
-            .catchError((Object _) {});
-      }
+    final prepared = await _prepareAttachments(
+      ref,
+      noteId: id,
+      noteType: type,
+      docs: docs,
+      safeToRead: safeToRead,
+    );
+    if (prepared.isNotEmpty) {
+      // Zaman aşımı ŞART: dönen Future sunucu onayını bekliyor ve
+      // çevrimdışıyken hiç tamamlanmıyor. Yazım o durumda da yerel
+      // önbelleğe ANINDA düşmüştür — beklediğimiz tek şey editör açılmadan
+      // önce o düşüşün gerçekleşmesi.
+      await repo
+          .updateFieldsAndWait(id, {
+            'attachments': FieldValue.arrayUnion([
+              for (final a in prepared) a.toMap(),
+            ]),
+          })
+          .timeout(const Duration(seconds: 3), onTimeout: () {})
+          .catchError((Object _) {});
     }
 
     // Aynı içerik uygulama tekrar öne gelince yeniden işlenmesin.
     ReceiveSharingIntent.instance.reset();
     try {
-      ref.read(routerProvider).push(noteRoutePath(id));
+      router.push(noteRoutePath(id));
     } catch (_) {}
   }
 
@@ -326,3 +298,218 @@ final shareIntakeProvider = Provider<void>((ref) {
   );
   ref.onDispose(sub.cancel);
 });
+
+/// Paylaşım gelince ANA SAYFA açılır (kullanıcı isteği 2026-09-29). Zaten
+/// oradaysak bir şey yapılmaz; değilsek geçiş animasyonu bitene dek beklenir
+/// — levha kapanan editörün üstünde açılıp onunla birlikte gitmesin.
+Future<void> _showHome(GoRouter router) async {
+  try {
+    final path = router.routerDelegate.currentConfiguration.uri.path;
+    if (path == '/' || path.isEmpty || path == '/login') return;
+    router.go('/');
+    await Future<void>.delayed(const Duration(milliseconds: 380));
+  } catch (_) {
+    // Yönlendirici hazır değilse levha yine bulunduğu yerde açılır.
+  }
+}
+
+/// Paylaşılan dosyaları eke çevirir (yükleme kuyruğuna hazır). Hem yeni not
+/// hem VAR OLAN not yolu kullanır — dosyanın nota nasıl oturduğu aynı kalsın.
+Future<List<Attachment>> _prepareAttachments(
+  Ref ref, {
+  required String noteId,
+  required NoteType noteType,
+  required List<SharedMediaFile> docs,
+  required bool Function(String path) safeToRead,
+}) async {
+  final attachRepo = ref.read(attachmentRepositoryProvider);
+  if (attachRepo == null) return const [];
+  // Hazırlanan ekler ÖNCE toplanır, sonra TEK yazımda gider.
+  //
+  // KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi"):
+  // eskiden döngünün her turunda ayrı bir `updateFields` (arrayUnion)
+  // ateşleniyordu ve HİÇBİRİ beklenmiyordu. Son yazım daha yoldayken
+  // editör açılıyor, editör de kendi anlık görüntüsünü (henüz 2 ekli) geri
+  // yazınca son ek siliniyordu. Tek arrayUnion'da böyle bir aralık yok.
+  final prepared = <Attachment>[];
+  for (final file in docs) {
+    try {
+      // Ek dosyaları da aynı kurala tabi: önbellek dışındaki bir yolu
+      // (sahte MIME ile işaretlenmiş keyfi bir dosyayı) eke çevirme.
+      if (!safeToRead(file.path)) continue;
+      final bytes = await File(file.path).readAsBytes();
+      final kind = shareAttachmentKind(file)!;
+      var name = p.basename(file.path);
+      // Ad uzantısız geldiyse (bkz. shareAttachmentKind) türün uzantısı
+      // eklenir; yoksa ek uzantısız kaydedilir ve dışa aktarılınca açılmaz.
+      if (p.extension(name).isEmpty) {
+        name += switch (kind) {
+          AttachmentKind.pdf => '.pdf',
+          AttachmentKind.slide => '.pptx',
+          _ => '.jpg',
+        };
+      }
+      // NOTLAR'IN ÜRETTİĞİ PAYLAŞIM PDF'i: balon/çizim verisi dosyanın
+      // içinde ek olarak geliyor. Damga katmanı sökülür ve veriler ekin
+      // kendi alanlarına konur — balonlar gönderendeki gibi taşınabilir,
+      // renklenebilir, silinebilir olur. Sıradan bir PDF'te `restored`
+      // null döner ve dosya olduğu gibi eklenir.
+      final restored = kind == AttachmentKind.pdf
+          ? await PdfEdit.readSharedPdfInBackground(bytes)
+          : null;
+      final docBytes = restored == null
+          ? bytes
+          : restored['bytes'] as Uint8List;
+      final attachment = switch (kind) {
+        AttachmentKind.pdf => await attachRepo.preparePdf(
+          noteId: noteId,
+          bytes: docBytes,
+          fileName: name,
+        ),
+        AttachmentKind.slide => await attachRepo.prepareSlide(
+          noteId: noteId,
+          bytes: bytes,
+          fileName: name,
+        ),
+        _ => await attachRepo.prepareImage(
+          noteId: noteId,
+          bytes: bytes,
+          fileName: name,
+        ),
+      };
+      // Balonlar/çizimler ekin alanlarına: not artık gönderendeki gibi
+      // düzenlenebilir (bkz. yukarıdaki `restored`).
+      final stored = restored == null
+          ? attachment
+          : attachment.copyWith(
+              bubbles: [
+                for (final e in (restored['b'] as List?) ?? const [])
+                  PageBubble.fromMap(Map<String, dynamic>.from(e as Map)),
+              ],
+              ink: [
+                for (final e in (restored['i'] as List?) ?? const [])
+                  InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
+              ],
+            );
+      // KLASİK metin notunda PDF de SAYFAYA yerleşir (kullanıcı isteği
+      // 2026-09-06): uygulama içinden eklenen PDF ile paylaşımdan gelen
+      // PDF aynı yere düşsün. Konum yazılmaz — tuval sayfa genişliğini
+      // bildiği ilk karede boş bir yere kendisi oturtur (bkz. packSlot).
+      // Belge (balonlu) notunda PDF notun KENDİSİdir; oraya konmaz.
+      prepared.add(
+        kind == AttachmentKind.pdf && noteType == NoteType.text
+            ? stored.copyWith(onPage: true)
+            : stored,
+      );
+    } catch (_) {
+      // Tek dosya okunamazsa/çok büyükse not yine oluşsun.
+    }
+  }
+  return prepared;
+}
+
+/// Paylaşılanı VAR OLAN nota ekler ve notu açar.
+///
+/// * Dosyalar notun eklerine KATILIR (var olanlara dokunulmaz; bulutta
+///   arrayUnion, yerel notta listenin sonu — bkz. `appendAttachments`).
+/// * Metin, notun türüne göre oturur: liste notunda her satır YENİ MADDE,
+///   arşiv defterinde yeni bir metin girdisi, diğerlerinde gövdenin sonuna
+///   yeni paragraf.
+Future<void> _addToExistingNote(
+  Ref ref,
+  NotesRepository repo,
+  String noteId,
+  String body,
+  List<SharedMediaFile> docs,
+  bool Function(String path) safeToRead,
+) async {
+  final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
+  Note? target;
+  for (final n in notes) {
+    if (n.id == noteId) target = n;
+  }
+  if (target == null) return;
+
+  if (body.isNotEmpty) {
+    final fields = appendSharedText(target, body, newId: _uuid.v4);
+    if (fields.isNotEmpty) {
+      await repo
+          .updateFieldsAndWait(noteId, fields)
+          .timeout(const Duration(seconds: 3), onTimeout: () {})
+          .catchError((Object _) {});
+    }
+  }
+
+  final prepared = await _prepareAttachments(
+    ref,
+    noteId: noteId,
+    noteType: target.type,
+    docs: docs,
+    safeToRead: safeToRead,
+  );
+  if (prepared.isNotEmpty) {
+    await repo
+        .appendAttachments(noteId, prepared)
+        .timeout(const Duration(seconds: 3), onTimeout: () {})
+        .catchError((Object _) {});
+  }
+
+  try {
+    ref
+        .read(routerProvider)
+        .push(
+          target.type == NoteType.archive
+              ? archiveNoteRoutePath(noteId)
+              : noteRoutePath(noteId),
+        );
+  } catch (_) {}
+}
+
+const _uuid = Uuid();
+
+/// Paylaşılan METNİN var olan nota nasıl yazılacağı (saf, testli): yazılacak
+/// alanlar döner.
+///
+/// * Liste (madde / sıralı) notunda her dolu satır yeni madde olur; sondaki
+///   BOŞ maddeler (yeni listenin boş satırı) atlanır ki yeni maddeler boşluğun
+///   altına düşmesin.
+/// * Arşiv defterinde metin, "Metinler" sayfasına yeni bir girdi.
+/// * Diğerlerinde gövdenin sonuna, bir boş satırla ayrılmış paragraf.
+Map<String, Object> appendSharedText(
+  Note note,
+  String text, {
+  required String Function() newId,
+}) {
+  final clean = text.trim();
+  if (clean.isEmpty) return const {};
+  switch (note.type) {
+    case NoteType.checklist:
+    case NoteType.ordered:
+      final items = [...note.items];
+      while (items.isNotEmpty &&
+          items.last.text.trim().isEmpty &&
+          !items.last.checked) {
+        items.removeLast();
+      }
+      for (final line in clean.split('\n')) {
+        final t = line.trim();
+        if (t.isEmpty) continue;
+        items.add(NoteItem(id: newId(), text: t));
+      }
+      return {
+        'items': [for (final i in items) i.toMap()],
+      };
+    case NoteType.archive:
+      return {
+        'items': [
+          for (final i in note.items) i.toMap(),
+          NoteItem(id: newId(), text: clean).toMap(),
+        ],
+      };
+    case NoteType.text:
+    case NoteType.pdf:
+    case NoteType.slides:
+      final current = note.body.trimRight();
+      return {'body': current.isEmpty ? clean : '$current\n\n$clean'};
+  }
+}

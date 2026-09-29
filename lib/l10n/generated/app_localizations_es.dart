@@ -4088,4 +4088,251 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Tarjetas y listas';
+
+  @override
+  String get shareTargetTitle => 'Añadir a Notas';
+
+  @override
+  String get shareTargetNew => 'Nota nueva';
+
+  @override
+  String get shareTargetExisting => 'Nota existente';
+
+  @override
+  String get shareTargetCreate => 'Crear nota';
+
+  @override
+  String get shareTargetSearch => 'Buscar notas';
+
+  @override
+  String get shareTargetNoNotes => 'No hay notas disponibles';
+
+  @override
+  String get shareTargetNoMatch => 'Ninguna nota coincide';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count archivos';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Ampliar vista previa';
+
+  @override
+  String get sharePreviewCollapse => 'Reducir vista previa';
+
+  @override
+  String get templatesSearch => 'Buscar plantillas';
+
+  @override
+  String get templatesAll => 'Todas';
+
+  @override
+  String get templatesLists => 'Listas';
+
+  @override
+  String get templatesPlanning => 'Planificación';
+
+  @override
+  String get templatesWriting => 'Escritura';
+
+  @override
+  String get templatesMine => 'Mis plantillas';
+
+  @override
+  String get templatesRecent => 'Usadas recientemente';
+
+  @override
+  String get templatesNoMatch => 'Ninguna plantilla coincide';
+
+  @override
+  String get templatesMineEmpty =>
+      'Aún no tienes plantillas propias. Elige «Guardar como plantilla» en el menú de una nota y aparecerá aquí.';
+
+  @override
+  String get templatesMineInfo => 'Tu plantilla';
+
+  @override
+  String get templateRename => 'Cambiar nombre';
+
+  @override
+  String get templateDelete => 'Eliminar plantilla';
+
+  @override
+  String get templateNameTitle => 'Nombre de la plantilla';
+
+  @override
+  String get templateNameHint => 'p. ej. Compra semanal';
+
+  @override
+  String get templateSave => 'Guardar';
+
+  @override
+  String templateSaved(String name) {
+    return '«$name» añadida a tus plantillas';
+  }
+
+  @override
+  String get saveAsTemplate => 'Guardar como plantilla';
+
+  @override
+  String get templateCreate => 'Crear';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Crear · $count elementos';
+  }
+
+  @override
+  String get templateListChecks => 'Casillas';
+
+  @override
+  String get templateListNumbers => 'Numerada';
+
+  @override
+  String get templateItems => 'Elementos';
+
+  @override
+  String get templateAddItem => 'Añadir elemento';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Toca una sugerencia para añadirla a la lista; tócala otra vez para quitarla.';
+
+  @override
+  String get tplShopProduce => 'Frutas y verduras';
+
+  @override
+  String get tplShopProduceItems =>
+      'Tomates, Pepinos, Cebollas, Patatas, Limones, Plátanos, Manzanas, Perejil';
+
+  @override
+  String get tplShopBreakfast => 'Desayuno';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Queso, Aceitunas, Mantequilla, Miel, Mermelada, Yogur';
+
+  @override
+  String get tplShopPantry => 'Despensa';
+
+  @override
+  String get tplShopPantryItems =>
+      'Arroz, Pasta, Harina, Azúcar, Aceite de oliva, Lentejas, Té, Café';
+
+  @override
+  String get tplShopCleaning => 'Limpieza';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Lavavajillas, Detergente, Papel higiénico, Papel de cocina, Bolsas de basura';
+
+  @override
+  String get tplShopPersonal => 'Cuidado personal';
+
+  @override
+  String get tplShopPersonalItems =>
+      'Champú, Pasta de dientes, Jabón, Desodorante';
+
+  @override
+  String get tplTravelDocs => 'Documentos';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Billetes, Reserva de hotel, Carné de conducir, Seguro de viaje, Efectivo / tarjetas';
+
+  @override
+  String get tplTravelClothes => 'Ropa';
+
+  @override
+  String get tplTravelClothesItems =>
+      'Camisetas, Pantalones, Ropa interior, Calcetines, Pijama, Chaqueta, Zapatos';
+
+  @override
+  String get tplTravelCare => 'Aseo';
+
+  @override
+  String get tplTravelCareItems =>
+      'Pasta de dientes, Champú, Protector solar, Maquinilla, Desodorante';
+
+  @override
+  String get tplTravelTech => 'Electrónica';
+
+  @override
+  String get tplTravelTechItems =>
+      'Batería externa, Adaptador de enchufe, Auriculares, Cables';
+
+  @override
+  String get tplHabitsName => 'Seguimiento de hábitos';
+
+  @override
+  String get tplHabitsDesc => 'Marca cada día, no rompas la cadena';
+
+  @override
+  String get tplHabitsItems =>
+      '8 vasos de agua, Paseo de 30 minutos, Leer 20 páginas, Acostarse temprano, Una hora sin pantallas';
+
+  @override
+  String get tplCleaningName => 'Limpieza de casa';
+
+  @override
+  String get tplCleaningDesc => 'Lista semanal de limpieza';
+
+  @override
+  String get tplCleaningItems =>
+      'Quitar el polvo, Aspirar, Fregar el suelo, Limpiar el baño, Encimera de la cocina, Colada, Sacar la basura, Cambiar las sábanas';
+
+  @override
+  String get tplMovingName => 'Lista de mudanza';
+
+  @override
+  String get tplMovingDesc => 'Tareas antes y después de mudarse';
+
+  @override
+  String get tplMovingItems =>
+      'Contratar la mudanza, Comprar cajas y cinta, Cambiar la dirección, Luz / agua / gas, Trasladar internet, Entregar las llaves';
+
+  @override
+  String get tplGiftsName => 'Lista de regalos';
+
+  @override
+  String get tplGiftsDesc => 'Quién recibe qué, ideas';
+
+  @override
+  String get tplGiftsItems => 'Mamá, Papá, Hermano, Amigo';
+
+  @override
+  String get tplWatchlistName => 'Pendientes';
+
+  @override
+  String get tplWatchlistDesc => 'Películas, series y libros';
+
+  @override
+  String get tplWorkoutName => 'Entrenamiento';
+
+  @override
+  String get tplWorkoutDesc =>
+      'Ejercicios del calentamiento a los estiramientos';
+
+  @override
+  String get tplWorkoutItems =>
+      'Calentamiento 5 min, Sentadillas 3×12, Flexiones 3×10, Abdominales 3×15, Plancha 3×45 s, Estiramientos 5 min';
+
+  @override
+  String get tplGoalsName => 'Objetivos';
+
+  @override
+  String get tplGoalsDesc => 'Objetivos del año, el mes y la semana';
+
+  @override
+  String get tplGoalsYear => 'Este año';
+
+  @override
+  String get tplGoalsMonth => 'Este mes';
+
+  @override
+  String get tplGoalsWeek => 'Esta semana';
+
+  @override
+  String get tplGoalsWhy => '¿Por qué es importante?';
 }

@@ -4012,4 +4012,239 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'カードとリスト';
+
+  @override
+  String get shareTargetTitle => 'メモに追加';
+
+  @override
+  String get shareTargetNew => '新しいメモ';
+
+  @override
+  String get shareTargetExisting => '既存のメモ';
+
+  @override
+  String get shareTargetCreate => 'メモを作成';
+
+  @override
+  String get shareTargetSearch => 'メモを検索';
+
+  @override
+  String get shareTargetNoNotes => '追加できるメモがありません';
+
+  @override
+  String get shareTargetNoMatch => '一致するメモがありません';
+
+  @override
+  String shareTargetMore(int count) {
+    return 'ほか $count 件';
+  }
+
+  @override
+  String get sharePreviewExpand => 'プレビューを拡大';
+
+  @override
+  String get sharePreviewCollapse => 'プレビューを縮小';
+
+  @override
+  String get templatesSearch => 'テンプレートを検索';
+
+  @override
+  String get templatesAll => 'すべて';
+
+  @override
+  String get templatesLists => 'リスト';
+
+  @override
+  String get templatesPlanning => '計画';
+
+  @override
+  String get templatesWriting => '文章';
+
+  @override
+  String get templatesMine => 'マイテンプレート';
+
+  @override
+  String get templatesRecent => '最近使用';
+
+  @override
+  String get templatesNoMatch => '一致するテンプレートがありません';
+
+  @override
+  String get templatesMineEmpty =>
+      'まだ自分のテンプレートがありません。メモのメニューで「テンプレートとして保存」を選ぶとここに表示されます。';
+
+  @override
+  String get templatesMineInfo => 'マイテンプレート';
+
+  @override
+  String get templateRename => '名前を変更';
+
+  @override
+  String get templateDelete => 'テンプレートを削除';
+
+  @override
+  String get templateNameTitle => 'テンプレート名';
+
+  @override
+  String get templateNameHint => '例：毎週の買い物';
+
+  @override
+  String get templateSave => '保存';
+
+  @override
+  String templateSaved(String name) {
+    return '「$name」をテンプレートに追加しました';
+  }
+
+  @override
+  String get saveAsTemplate => 'テンプレートとして保存';
+
+  @override
+  String get templateCreate => '作成';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return '作成 · $count 項目';
+  }
+
+  @override
+  String get templateListChecks => 'チェックボックス';
+
+  @override
+  String get templateListNumbers => '番号付き';
+
+  @override
+  String get templateItems => '項目';
+
+  @override
+  String get templateAddItem => '項目を追加';
+
+  @override
+  String get templateSuggestionsInfo => '候補をタップするとリストに追加され、もう一度タップすると外れます。';
+
+  @override
+  String get tplShopProduce => '野菜・果物';
+
+  @override
+  String get tplShopProduceItems => 'トマト, きゅうり, 玉ねぎ, じゃがいも, レモン, バナナ, りんご, パセリ';
+
+  @override
+  String get tplShopBreakfast => '朝食';
+
+  @override
+  String get tplShopBreakfastItems => 'チーズ, オリーブ, バター, はちみつ, ジャム, ヨーグルト';
+
+  @override
+  String get tplShopPantry => '食料品';
+
+  @override
+  String get tplShopPantryItems => '米, パスタ, 小麦粉, 砂糖, オリーブオイル, レンズ豆, お茶, コーヒー';
+
+  @override
+  String get tplShopCleaning => '掃除用品';
+
+  @override
+  String get tplShopCleaningItems => '食器用洗剤, 洗濯洗剤, トイレットペーパー, キッチンペーパー, ゴミ袋';
+
+  @override
+  String get tplShopPersonal => '日用品';
+
+  @override
+  String get tplShopPersonalItems => 'シャンプー, 歯磨き粉, 石けん, デオドラント';
+
+  @override
+  String get tplTravelDocs => '書類';
+
+  @override
+  String get tplTravelDocsItems => 'チケット, ホテルの予約, 運転免許証, 旅行保険, 現金 / カード';
+
+  @override
+  String get tplTravelClothes => '衣類';
+
+  @override
+  String get tplTravelClothesItems => 'Tシャツ, ズボン, 下着, 靴下, パジャマ, 上着, 靴';
+
+  @override
+  String get tplTravelCare => '洗面用具';
+
+  @override
+  String get tplTravelCareItems => '歯磨き粉, シャンプー, 日焼け止め, ひげそり, デオドラント';
+
+  @override
+  String get tplTravelTech => '電子機器';
+
+  @override
+  String get tplTravelTechItems => 'モバイルバッテリー, 変換プラグ, イヤホン, ケーブル';
+
+  @override
+  String get tplHabitsName => '習慣トラッカー';
+
+  @override
+  String get tplHabitsDesc => '毎日チェックして習慣を途切れさせない';
+
+  @override
+  String get tplHabitsItems => '水を8杯, 30分のウォーキング, 20ページ読書, 早寝, 画面を見ない1時間';
+
+  @override
+  String get tplCleaningName => '家の掃除';
+
+  @override
+  String get tplCleaningDesc => '毎週の掃除チェックリスト';
+
+  @override
+  String get tplCleaningItems =>
+      'ほこり取り, 掃除機がけ, 床拭き, 浴室掃除, キッチンカウンター, 洗濯, ゴミ出し, シーツ交換';
+
+  @override
+  String get tplMovingName => '引っ越しリスト';
+
+  @override
+  String get tplMovingDesc => '引っ越し前後にやること';
+
+  @override
+  String get tplMovingItems =>
+      '引っ越し業者を予約, 段ボールとテープを買う, 住所変更, 電気 / 水道 / ガス, ネット回線の移転, 鍵の返却';
+
+  @override
+  String get tplGiftsName => 'ギフトリスト';
+
+  @override
+  String get tplGiftsDesc => '誰に何を贈るか、アイデア';
+
+  @override
+  String get tplGiftsItems => '母, 父, きょうだい, 友人';
+
+  @override
+  String get tplWatchlistName => '見たいもの';
+
+  @override
+  String get tplWatchlistDesc => '映画・ドラマ・本のリスト';
+
+  @override
+  String get tplWorkoutName => 'トレーニング';
+
+  @override
+  String get tplWorkoutDesc => 'ウォームアップからストレッチまで';
+
+  @override
+  String get tplWorkoutItems =>
+      'ウォームアップ 5分, スクワット 3×12, 腕立て伏せ 3×10, 腹筋 3×15, プランク 3×45秒, ストレッチ 5分';
+
+  @override
+  String get tplGoalsName => '目標';
+
+  @override
+  String get tplGoalsDesc => '年・月・週の目標';
+
+  @override
+  String get tplGoalsYear => '今年';
+
+  @override
+  String get tplGoalsMonth => '今月';
+
+  @override
+  String get tplGoalsWeek => '今週';
+
+  @override
+  String get tplGoalsWhy => 'なぜ大切か';
 }

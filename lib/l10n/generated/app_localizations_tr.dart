@@ -4068,4 +4068,249 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Kartlar ve listeler';
+
+  @override
+  String get shareTargetTitle => 'Notlar\'a ekle';
+
+  @override
+  String get shareTargetNew => 'Yeni not';
+
+  @override
+  String get shareTargetExisting => 'Var olan nota';
+
+  @override
+  String get shareTargetCreate => 'Not oluştur';
+
+  @override
+  String get shareTargetSearch => 'Notlarda ara';
+
+  @override
+  String get shareTargetNoNotes => 'Eklenebilecek not yok';
+
+  @override
+  String get shareTargetNoMatch => 'Eşleşen not yok';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count dosya';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Önizlemeyi büyüt';
+
+  @override
+  String get sharePreviewCollapse => 'Önizlemeyi küçült';
+
+  @override
+  String get templatesSearch => 'Şablon ara';
+
+  @override
+  String get templatesAll => 'Tümü';
+
+  @override
+  String get templatesLists => 'Listeler';
+
+  @override
+  String get templatesPlanning => 'Planlama';
+
+  @override
+  String get templatesWriting => 'Yazı';
+
+  @override
+  String get templatesMine => 'Şablonlarım';
+
+  @override
+  String get templatesRecent => 'Son kullanılanlar';
+
+  @override
+  String get templatesNoMatch => 'Eşleşen şablon yok';
+
+  @override
+  String get templatesMineEmpty =>
+      'Henüz kendi şablonun yok. Bir notun menüsünden “Şablon olarak kaydet” dersen burada durur.';
+
+  @override
+  String get templatesMineInfo => 'Kendi şablonun';
+
+  @override
+  String get templateRename => 'Yeniden adlandır';
+
+  @override
+  String get templateDelete => 'Şablonu sil';
+
+  @override
+  String get templateNameTitle => 'Şablon adı';
+
+  @override
+  String get templateNameHint => 'Ör. Haftalık market';
+
+  @override
+  String get templateSave => 'Kaydet';
+
+  @override
+  String templateSaved(String name) {
+    return '“$name” şablonlarına eklendi';
+  }
+
+  @override
+  String get saveAsTemplate => 'Şablon olarak kaydet';
+
+  @override
+  String get templateCreate => 'Oluştur';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Oluştur · $count madde';
+  }
+
+  @override
+  String get templateListChecks => 'Onay kutulu';
+
+  @override
+  String get templateListNumbers => 'Numaralı';
+
+  @override
+  String get templateItems => 'Maddeler';
+
+  @override
+  String get templateAddItem => 'Madde ekle';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Öneriye dokununca listeye girer, yine dokununca çıkar.';
+
+  @override
+  String get tplShopProduce => 'Meyve ve sebze';
+
+  @override
+  String get tplShopProduceItems =>
+      'Domates, Salatalık, Soğan, Patates, Limon, Muz, Elma, Maydanoz';
+
+  @override
+  String get tplShopBreakfast => 'Kahvaltılık';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Peynir, Zeytin, Tereyağı, Bal, Reçel, Yoğurt';
+
+  @override
+  String get tplShopPantry => 'Temel gıda';
+
+  @override
+  String get tplShopPantryItems =>
+      'Pirinç, Makarna, Un, Şeker, Zeytinyağı, Mercimek, Çay, Kahve';
+
+  @override
+  String get tplShopCleaning => 'Temizlik';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Bulaşık deterjanı, Çamaşır deterjanı, Tuvalet kâğıdı, Kâğıt havlu, Çöp poşeti';
+
+  @override
+  String get tplShopPersonal => 'Kişisel bakım';
+
+  @override
+  String get tplShopPersonalItems => 'Şampuan, Diş macunu, Sabun, Deodorant';
+
+  @override
+  String get tplTravelDocs => 'Belgeler';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Bilet, Otel rezervasyonu, Ehliyet, Seyahat sigortası, Nakit / kart';
+
+  @override
+  String get tplTravelClothes => 'Giyim';
+
+  @override
+  String get tplTravelClothesItems =>
+      'Tişört, Pantolon, İç çamaşırı, Çorap, Pijama, Ceket, Ayakkabı';
+
+  @override
+  String get tplTravelCare => 'Bakım';
+
+  @override
+  String get tplTravelCareItems =>
+      'Diş macunu, Şampuan, Güneş kremi, Tıraş takımı, Deodorant';
+
+  @override
+  String get tplTravelTech => 'Elektronik';
+
+  @override
+  String get tplTravelTechItems =>
+      'Powerbank, Priz adaptörü, Kulaklık, Kablolar';
+
+  @override
+  String get tplHabitsName => 'Alışkanlık takibi';
+
+  @override
+  String get tplHabitsDesc => 'Her gün işaretle, zinciri kırma';
+
+  @override
+  String get tplHabitsItems =>
+      '8 bardak su, 30 dakika yürüyüş, 20 sayfa kitap, Erken yat, Ekransız bir saat';
+
+  @override
+  String get tplCleaningName => 'Ev temizliği';
+
+  @override
+  String get tplCleaningDesc => 'Haftalık temizlik kontrol listesi';
+
+  @override
+  String get tplCleaningItems =>
+      'Toz al, Süpür, Paspas yap, Banyoyu temizle, Mutfak tezgâhı, Çamaşır, Çöpleri çıkar, Çarşafları değiştir';
+
+  @override
+  String get tplMovingName => 'Taşınma listesi';
+
+  @override
+  String get tplMovingDesc => 'Taşınmadan önce ve sonra yapılacaklar';
+
+  @override
+  String get tplMovingItems =>
+      'Nakliyeci ayarla, Koli ve bant al, Adres değişikliği bildir, Elektrik / su / doğalgaz aboneliği, İnterneti taşı, Anahtar teslimi';
+
+  @override
+  String get tplGiftsName => 'Hediye listesi';
+
+  @override
+  String get tplGiftsDesc => 'Kime ne alınacak, fikirler';
+
+  @override
+  String get tplGiftsItems => 'Anne, Baba, Kardeş, Arkadaş';
+
+  @override
+  String get tplWatchlistName => 'İzlenecekler';
+
+  @override
+  String get tplWatchlistDesc => 'Film, dizi ve kitap listesi';
+
+  @override
+  String get tplWorkoutName => 'Antrenman';
+
+  @override
+  String get tplWorkoutDesc => 'Isınmadan esnemeye egzersiz listesi';
+
+  @override
+  String get tplWorkoutItems =>
+      'Isınma 5 dk, Squat 3×12, Şınav 3×10, Mekik 3×15, Plank 3×45 sn, Esneme 5 dk';
+
+  @override
+  String get tplGoalsName => 'Hedefler';
+
+  @override
+  String get tplGoalsDesc => 'Yıl, ay ve hafta hedefleri';
+
+  @override
+  String get tplGoalsYear => 'Bu yıl';
+
+  @override
+  String get tplGoalsMonth => 'Bu ay';
+
+  @override
+  String get tplGoalsWeek => 'Bu hafta';
+
+  @override
+  String get tplGoalsWhy => 'Neden önemli?';
 }

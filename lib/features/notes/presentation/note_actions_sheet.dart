@@ -11,11 +11,13 @@ import '../../inbox/presentation/send_note_sheet.dart';
 import '../data/attachment_repository.dart';
 import '../data/note_speech.dart';
 import '../data/notes_repository.dart';
+import '../data/user_templates.dart';
 import '../domain/note.dart';
 import '../domain/note_share_text.dart';
 import 'color_picker_sheet.dart';
 import 'local_only_action.dart';
 import 'note_stats_sheet.dart';
+import 'note_template_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
 import 'share_sheet.dart';
@@ -99,6 +101,10 @@ class _ActionsGrid extends StatelessWidget {
       // yapıştırmaktı; biçim, renk, etiket ve madde işaretleri yolda
       // kayboluyordu (bkz. NotesRepository.duplicateNote).
       ('duplicate', l10n.duplicateNote, Icons.content_copy_outlined),
+      // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29): çoğaltmanın aksine
+      // şablondan doğan not tertemiz başlar (bkz. user_templates.dart).
+      if (canSaveAsTemplate(note))
+        ('saveTemplate', l10n.saveAsTemplate, Icons.bookmark_add_outlined),
       ('select', l10n.select, Icons.check_circle_outline),
       ('folder', l10n.moveToFolder, Icons.folder_outlined),
       ('color', l10n.backgroundColor, Icons.palette_outlined),
@@ -332,6 +338,9 @@ Future<void> _runNoteAction(
         // düşürüp kullanıcıya ikinci bir temizlik işi bırakmaz.
         onUndo: () => repo.hardDelete(id),
       );
+    case 'saveTemplate':
+      if (!await unlockIfNeeded()) return;
+      if (context.mounted) await saveNoteAsTemplate(context, ref, note);
     case 'stats':
       if (!await unlockIfNeeded()) return;
       if (context.mounted) await showNoteStatsSheet(context, note);

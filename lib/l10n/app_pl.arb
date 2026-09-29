@@ -735,5 +735,101 @@
   "tplExpenseDesc": "Data, opis, kwota",
   "tplReadingDesc": "Źródło, streszczenie, cytaty",
   "settingsThemeHeader": "Motyw",
-  "settingsCardsHeader": "Karty i listy"
+  "settingsCardsHeader": "Karty i listy",
+  "shareTargetTitle": "Dodaj do Notatek",
+  "shareTargetNew": "Nowa notatka",
+  "shareTargetExisting": "Istniejąca notatka",
+  "shareTargetCreate": "Utwórz notatkę",
+  "shareTargetSearch": "Szukaj w notatkach",
+  "shareTargetNoNotes": "Brak dostępnych notatek",
+  "shareTargetNoMatch": "Brak pasujących notatek",
+  "shareTargetMore": "+{count} pliki",
+  "@shareTargetMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sharePreviewExpand": "Powiększ podgląd",
+  "sharePreviewCollapse": "Zmniejsz podgląd",
+  "templatesSearch": "Szukaj szablonów",
+  "templatesAll": "Wszystkie",
+  "templatesLists": "Listy",
+  "templatesPlanning": "Planowanie",
+  "templatesWriting": "Pisanie",
+  "templatesMine": "Moje szablony",
+  "templatesRecent": "Ostatnio używane",
+  "templatesNoMatch": "Brak pasujących szablonów",
+  "templatesMineEmpty": "Nie masz jeszcze własnych szablonów. Wybierz „Zapisz jako szablon” w menu notatki, a pojawi się tutaj.",
+  "templatesMineInfo": "Twój szablon",
+  "templateRename": "Zmień nazwę",
+  "templateDelete": "Usuń szablon",
+  "templateNameTitle": "Nazwa szablonu",
+  "templateNameHint": "np. Cotygodniowe zakupy",
+  "templateSave": "Zapisz",
+  "templateSaved": "„{name}” dodano do szablonów",
+  "@templateSaved": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveAsTemplate": "Zapisz jako szablon",
+  "templateCreate": "Utwórz",
+  "templateCreateWithCount": "Utwórz · {count} pozycji",
+  "@templateCreateWithCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "templateListChecks": "Pola wyboru",
+  "templateListNumbers": "Numerowana",
+  "templateItems": "Pozycje",
+  "templateAddItem": "Dodaj pozycję",
+  "templateSuggestionsInfo": "Dotknij sugestii, aby ją dodać; dotknij ponownie, aby usunąć.",
+  "tplShopProduce": "Owoce i warzywa",
+  "tplShopProduceItems": "Pomidory, Ogórki, Cebula, Ziemniaki, Cytryny, Banany, Jabłka, Pietruszka",
+  "tplShopBreakfast": "Śniadanie",
+  "tplShopBreakfastItems": "Ser, Oliwki, Masło, Miód, Dżem, Jogurt",
+  "tplShopPantry": "Spiżarnia",
+  "tplShopPantryItems": "Ryż, Makaron, Mąka, Cukier, Oliwa, Soczewica, Herbata, Kawa",
+  "tplShopCleaning": "Środki czystości",
+  "tplShopCleaningItems": "Płyn do naczyń, Proszek do prania, Papier toaletowy, Ręczniki papierowe, Worki na śmieci",
+  "tplShopPersonal": "Higiena",
+  "tplShopPersonalItems": "Szampon, Pasta do zębów, Mydło, Dezodorant",
+  "tplTravelDocs": "Dokumenty",
+  "tplTravelDocsItems": "Bilety, Rezerwacja hotelu, Prawo jazdy, Ubezpieczenie podróżne, Gotówka / karty",
+  "tplTravelClothes": "Ubrania",
+  "tplTravelClothesItems": "Koszulki, Spodnie, Bielizna, Skarpetki, Piżama, Kurtka, Buty",
+  "tplTravelCare": "Kosmetyki",
+  "tplTravelCareItems": "Pasta do zębów, Szampon, Krem z filtrem, Maszynka do golenia, Dezodorant",
+  "tplTravelTech": "Elektronika",
+  "tplTravelTechItems": "Powerbank, Przejściówka do gniazdka, Słuchawki, Kable",
+  "tplHabitsName": "Śledzenie nawyków",
+  "tplHabitsDesc": "Odhaczaj codziennie, nie przerywaj łańcucha",
+  "tplHabitsItems": "8 szklanek wody, 30 minut spaceru, 20 stron książki, Wcześnie spać, Godzina bez ekranu",
+  "tplCleaningName": "Sprzątanie domu",
+  "tplCleaningDesc": "Cotygodniowa lista sprzątania",
+  "tplCleaningItems": "Odkurzyć meble, Odkurzyć podłogi, Umyć podłogi, Wyczyścić łazienkę, Blat kuchenny, Pranie, Wynieść śmieci, Zmienić pościel",
+  "tplMovingName": "Lista przeprowadzki",
+  "tplMovingDesc": "Zadania przed i po przeprowadzce",
+  "tplMovingItems": "Zamówić przeprowadzkę, Kupić kartony i taśmę, Zmienić adres, Prąd / woda / gaz, Przenieść internet, Przekazać klucze",
+  "tplGiftsName": "Lista prezentów",
+  "tplGiftsDesc": "Kto dostaje co, pomysły",
+  "tplGiftsItems": "Mama, Tata, Rodzeństwo, Przyjaciel",
+  "tplWatchlistName": "Do obejrzenia",
+  "tplWatchlistDesc": "Filmy, seriale i książki",
+  "tplWorkoutName": "Trening",
+  "tplWorkoutDesc": "Od rozgrzewki po rozciąganie",
+  "tplWorkoutItems": "Rozgrzewka 5 min, Przysiady 3×12, Pompki 3×10, Brzuszki 3×15, Deska 3×45 s, Rozciąganie 5 min",
+  "tplGoalsName": "Cele",
+  "tplGoalsDesc": "Cele na rok, miesiąc i tydzień",
+  "tplGoalsYear": "W tym roku",
+  "tplGoalsMonth": "W tym miesiącu",
+  "tplGoalsWeek": "W tym tygodniu",
+  "tplGoalsWhy": "Dlaczego to ważne?"
 }

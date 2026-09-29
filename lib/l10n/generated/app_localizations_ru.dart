@@ -4086,4 +4086,249 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Карточки и списки';
+
+  @override
+  String get shareTargetTitle => 'Добавить в Заметки';
+
+  @override
+  String get shareTargetNew => 'Новая заметка';
+
+  @override
+  String get shareTargetExisting => 'В заметку';
+
+  @override
+  String get shareTargetCreate => 'Создать заметку';
+
+  @override
+  String get shareTargetSearch => 'Поиск заметок';
+
+  @override
+  String get shareTargetNoNotes => 'Нет подходящих заметок';
+
+  @override
+  String get shareTargetNoMatch => 'Ничего не найдено';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count файлов';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Развернуть предпросмотр';
+
+  @override
+  String get sharePreviewCollapse => 'Свернуть предпросмотр';
+
+  @override
+  String get templatesSearch => 'Поиск шаблонов';
+
+  @override
+  String get templatesAll => 'Все';
+
+  @override
+  String get templatesLists => 'Списки';
+
+  @override
+  String get templatesPlanning => 'Планирование';
+
+  @override
+  String get templatesWriting => 'Тексты';
+
+  @override
+  String get templatesMine => 'Мои шаблоны';
+
+  @override
+  String get templatesRecent => 'Недавние';
+
+  @override
+  String get templatesNoMatch => 'Шаблоны не найдены';
+
+  @override
+  String get templatesMineEmpty =>
+      'У вас пока нет своих шаблонов. Выберите «Сохранить как шаблон» в меню заметки — он появится здесь.';
+
+  @override
+  String get templatesMineInfo => 'Ваш шаблон';
+
+  @override
+  String get templateRename => 'Переименовать';
+
+  @override
+  String get templateDelete => 'Удалить шаблон';
+
+  @override
+  String get templateNameTitle => 'Название шаблона';
+
+  @override
+  String get templateNameHint => 'например, Покупки на неделю';
+
+  @override
+  String get templateSave => 'Сохранить';
+
+  @override
+  String templateSaved(String name) {
+    return '«$name» добавлен в шаблоны';
+  }
+
+  @override
+  String get saveAsTemplate => 'Сохранить как шаблон';
+
+  @override
+  String get templateCreate => 'Создать';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Создать · пунктов: $count';
+  }
+
+  @override
+  String get templateListChecks => 'С флажками';
+
+  @override
+  String get templateListNumbers => 'Нумерованный';
+
+  @override
+  String get templateItems => 'Пункты';
+
+  @override
+  String get templateAddItem => 'Добавить пункт';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Нажмите на подсказку, чтобы добавить её; нажмите ещё раз, чтобы убрать.';
+
+  @override
+  String get tplShopProduce => 'Овощи и фрукты';
+
+  @override
+  String get tplShopProduceItems =>
+      'Помидоры, Огурцы, Лук, Картофель, Лимоны, Бананы, Яблоки, Петрушка';
+
+  @override
+  String get tplShopBreakfast => 'К завтраку';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Сыр, Оливки, Сливочное масло, Мёд, Варенье, Йогурт';
+
+  @override
+  String get tplShopPantry => 'Бакалея';
+
+  @override
+  String get tplShopPantryItems =>
+      'Рис, Макароны, Мука, Сахар, Оливковое масло, Чечевица, Чай, Кофе';
+
+  @override
+  String get tplShopCleaning => 'Бытовая химия';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Средство для посуды, Стиральный порошок, Туалетная бумага, Бумажные полотенца, Мешки для мусора';
+
+  @override
+  String get tplShopPersonal => 'Гигиена';
+
+  @override
+  String get tplShopPersonalItems => 'Шампунь, Зубная паста, Мыло, Дезодорант';
+
+  @override
+  String get tplTravelDocs => 'Документы';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Билеты, Бронь отеля, Водительские права, Страховка, Наличные / карты';
+
+  @override
+  String get tplTravelClothes => 'Одежда';
+
+  @override
+  String get tplTravelClothesItems =>
+      'Футболки, Брюки, Бельё, Носки, Пижама, Куртка, Обувь';
+
+  @override
+  String get tplTravelCare => 'Уход';
+
+  @override
+  String get tplTravelCareItems =>
+      'Зубная паста, Шампунь, Солнцезащитный крем, Бритва, Дезодорант';
+
+  @override
+  String get tplTravelTech => 'Электроника';
+
+  @override
+  String get tplTravelTechItems =>
+      'Пауэрбанк, Переходник для розетки, Наушники, Кабели';
+
+  @override
+  String get tplHabitsName => 'Трекер привычек';
+
+  @override
+  String get tplHabitsDesc => 'Отмечайте каждый день, не прерывайте цепочку';
+
+  @override
+  String get tplHabitsItems =>
+      '8 стаканов воды, 30 минут ходьбы, 20 страниц книги, Лечь пораньше, Час без экранов';
+
+  @override
+  String get tplCleaningName => 'Уборка дома';
+
+  @override
+  String get tplCleaningDesc => 'Еженедельный список уборки';
+
+  @override
+  String get tplCleaningItems =>
+      'Вытереть пыль, Пропылесосить, Помыть полы, Убрать ванную, Кухонная столешница, Стирка, Вынести мусор, Сменить постельное бельё';
+
+  @override
+  String get tplMovingName => 'Список для переезда';
+
+  @override
+  String get tplMovingDesc => 'Дела до и после переезда';
+
+  @override
+  String get tplMovingItems =>
+      'Заказать грузчиков, Купить коробки и скотч, Сменить адрес, Свет / вода / газ, Перенести интернет, Передать ключи';
+
+  @override
+  String get tplGiftsName => 'Список подарков';
+
+  @override
+  String get tplGiftsDesc => 'Кому что подарить, идеи';
+
+  @override
+  String get tplGiftsItems => 'Мама, Папа, Брат или сестра, Друг';
+
+  @override
+  String get tplWatchlistName => 'Посмотреть';
+
+  @override
+  String get tplWatchlistDesc => 'Фильмы, сериалы и книги';
+
+  @override
+  String get tplWorkoutName => 'Тренировка';
+
+  @override
+  String get tplWorkoutDesc => 'От разминки до растяжки';
+
+  @override
+  String get tplWorkoutItems =>
+      'Разминка 5 мин, Приседания 3×12, Отжимания 3×10, Скручивания 3×15, Планка 3×45 с, Растяжка 5 мин';
+
+  @override
+  String get tplGoalsName => 'Цели';
+
+  @override
+  String get tplGoalsDesc => 'Цели на год, месяц и неделю';
+
+  @override
+  String get tplGoalsYear => 'В этом году';
+
+  @override
+  String get tplGoalsMonth => 'В этом месяце';
+
+  @override
+  String get tplGoalsWeek => 'На этой неделе';
+
+  @override
+  String get tplGoalsWhy => 'Почему это важно?';
 }

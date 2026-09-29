@@ -4087,4 +4087,249 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get settingsCardsHeader => 'Kartu dan daftar';
+
+  @override
+  String get shareTargetTitle => 'Tambahkan ke Catatan';
+
+  @override
+  String get shareTargetNew => 'Catatan baru';
+
+  @override
+  String get shareTargetExisting => 'Catatan yang ada';
+
+  @override
+  String get shareTargetCreate => 'Buat catatan';
+
+  @override
+  String get shareTargetSearch => 'Cari catatan';
+
+  @override
+  String get shareTargetNoNotes => 'Tidak ada catatan yang tersedia';
+
+  @override
+  String get shareTargetNoMatch => 'Tidak ada catatan yang cocok';
+
+  @override
+  String shareTargetMore(int count) {
+    return '+$count file';
+  }
+
+  @override
+  String get sharePreviewExpand => 'Perbesar pratinjau';
+
+  @override
+  String get sharePreviewCollapse => 'Perkecil pratinjau';
+
+  @override
+  String get templatesSearch => 'Cari templat';
+
+  @override
+  String get templatesAll => 'Semua';
+
+  @override
+  String get templatesLists => 'Daftar';
+
+  @override
+  String get templatesPlanning => 'Perencanaan';
+
+  @override
+  String get templatesWriting => 'Tulisan';
+
+  @override
+  String get templatesMine => 'Templat saya';
+
+  @override
+  String get templatesRecent => 'Baru dipakai';
+
+  @override
+  String get templatesNoMatch => 'Tidak ada templat yang cocok';
+
+  @override
+  String get templatesMineEmpty =>
+      'Kamu belum punya templat sendiri. Pilih “Simpan sebagai templat” di menu catatan, lalu templat muncul di sini.';
+
+  @override
+  String get templatesMineInfo => 'Templat kamu';
+
+  @override
+  String get templateRename => 'Ganti nama';
+
+  @override
+  String get templateDelete => 'Hapus templat';
+
+  @override
+  String get templateNameTitle => 'Nama templat';
+
+  @override
+  String get templateNameHint => 'mis. Belanja mingguan';
+
+  @override
+  String get templateSave => 'Simpan';
+
+  @override
+  String templateSaved(String name) {
+    return '“$name” ditambahkan ke templat kamu';
+  }
+
+  @override
+  String get saveAsTemplate => 'Simpan sebagai templat';
+
+  @override
+  String get templateCreate => 'Buat';
+
+  @override
+  String templateCreateWithCount(int count) {
+    return 'Buat · $count item';
+  }
+
+  @override
+  String get templateListChecks => 'Kotak centang';
+
+  @override
+  String get templateListNumbers => 'Bernomor';
+
+  @override
+  String get templateItems => 'Item';
+
+  @override
+  String get templateAddItem => 'Tambah item';
+
+  @override
+  String get templateSuggestionsInfo =>
+      'Ketuk saran untuk menambahkannya; ketuk lagi untuk menghapusnya.';
+
+  @override
+  String get tplShopProduce => 'Buah dan sayur';
+
+  @override
+  String get tplShopProduceItems =>
+      'Tomat, Mentimun, Bawang, Kentang, Jeruk nipis, Pisang, Apel, Peterseli';
+
+  @override
+  String get tplShopBreakfast => 'Sarapan';
+
+  @override
+  String get tplShopBreakfastItems =>
+      'Keju, Zaitun, Mentega, Madu, Selai, Yoghurt';
+
+  @override
+  String get tplShopPantry => 'Bahan pokok';
+
+  @override
+  String get tplShopPantryItems =>
+      'Beras, Pasta, Tepung, Gula, Minyak zaitun, Kacang lentil, Teh, Kopi';
+
+  @override
+  String get tplShopCleaning => 'Kebersihan';
+
+  @override
+  String get tplShopCleaningItems =>
+      'Sabun cuci piring, Deterjen, Tisu toilet, Tisu dapur, Kantong sampah';
+
+  @override
+  String get tplShopPersonal => 'Perawatan diri';
+
+  @override
+  String get tplShopPersonalItems => 'Sampo, Pasta gigi, Sabun, Deodoran';
+
+  @override
+  String get tplTravelDocs => 'Dokumen';
+
+  @override
+  String get tplTravelDocsItems =>
+      'Tiket, Pemesanan hotel, SIM, Asuransi perjalanan, Uang tunai / kartu';
+
+  @override
+  String get tplTravelClothes => 'Pakaian';
+
+  @override
+  String get tplTravelClothesItems =>
+      'Kaos, Celana, Pakaian dalam, Kaus kaki, Piyama, Jaket, Sepatu';
+
+  @override
+  String get tplTravelCare => 'Perlengkapan mandi';
+
+  @override
+  String get tplTravelCareItems =>
+      'Pasta gigi, Sampo, Tabir surya, Alat cukur, Deodoran';
+
+  @override
+  String get tplTravelTech => 'Elektronik';
+
+  @override
+  String get tplTravelTechItems =>
+      'Power bank, Adaptor colokan, Headphone, Kabel';
+
+  @override
+  String get tplHabitsName => 'Pelacak kebiasaan';
+
+  @override
+  String get tplHabitsDesc => 'Centang tiap hari, jangan putus rantainya';
+
+  @override
+  String get tplHabitsItems =>
+      '8 gelas air, Jalan kaki 30 menit, Baca 20 halaman, Tidur lebih awal, Satu jam tanpa layar';
+
+  @override
+  String get tplCleaningName => 'Bersih-bersih rumah';
+
+  @override
+  String get tplCleaningDesc => 'Daftar bersih-bersih mingguan';
+
+  @override
+  String get tplCleaningItems =>
+      'Bersihkan debu, Sedot debu, Pel lantai, Bersihkan kamar mandi, Meja dapur, Cuci baju, Buang sampah, Ganti seprai';
+
+  @override
+  String get tplMovingName => 'Daftar pindahan';
+
+  @override
+  String get tplMovingDesc => 'Yang harus dilakukan sebelum dan sesudah pindah';
+
+  @override
+  String get tplMovingItems =>
+      'Pesan jasa pindahan, Beli kardus dan lakban, Perbarui alamat, Listrik / air / gas, Pindahkan internet, Serahkan kunci';
+
+  @override
+  String get tplGiftsName => 'Daftar hadiah';
+
+  @override
+  String get tplGiftsDesc => 'Siapa dapat apa, ide';
+
+  @override
+  String get tplGiftsItems => 'Ibu, Ayah, Saudara, Teman';
+
+  @override
+  String get tplWatchlistName => 'Daftar tontonan';
+
+  @override
+  String get tplWatchlistDesc => 'Film, serial, dan buku';
+
+  @override
+  String get tplWorkoutName => 'Latihan';
+
+  @override
+  String get tplWorkoutDesc => 'Dari pemanasan sampai peregangan';
+
+  @override
+  String get tplWorkoutItems =>
+      'Pemanasan 5 mnt, Squat 3×12, Push-up 3×10, Crunch 3×15, Plank 3×45 dtk, Peregangan 5 mnt';
+
+  @override
+  String get tplGoalsName => 'Target';
+
+  @override
+  String get tplGoalsDesc => 'Target tahun, bulan, dan minggu';
+
+  @override
+  String get tplGoalsYear => 'Tahun ini';
+
+  @override
+  String get tplGoalsMonth => 'Bulan ini';
+
+  @override
+  String get tplGoalsWeek => 'Minggu ini';
+
+  @override
+  String get tplGoalsWhy => 'Kenapa ini penting?';
 }

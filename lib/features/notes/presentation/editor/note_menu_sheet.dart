@@ -25,6 +25,7 @@ Future<String?> showNoteEditorMenu(
   required bool hasFloatingImages,
   required bool hasAttachments,
   bool? localOnly,
+  bool canTemplate = false,
 }) {
   final l10n = context.l10n;
   return showModalBottomSheet<String>(
@@ -45,6 +46,7 @@ Future<String?> showNoteEditorMenu(
           hasFloatingImages: hasFloatingImages,
           hasAttachments: hasAttachments,
           localOnly: localOnly,
+          canTemplate: canTemplate,
         ),
       ),
     ),
@@ -63,7 +65,11 @@ class _MenuGrid extends StatelessWidget {
     required this.hasFloatingImages,
     required this.hasAttachments,
     this.localOnly,
+    this.canTemplate = false,
   });
+
+  /// "Şablon olarak kaydet" gösterilsin mi (bkz. `canSaveAsTemplate`).
+  final bool canTemplate;
 
   /// null = özellik yok (web ya da başkasının notu); true = not yalnız bu
   /// cihazda (bkz. `toggleNoteLocalOnly`).
@@ -130,6 +136,10 @@ class _MenuGrid extends StatelessWidget {
       // **İSTATİSTİK**: yazarken "kaç kelime oldu, ne kadar sürer" sorusunun
       // cevabı hiçbir yerde yoktu (bkz. showNoteStatsSheet).
       ('stats', l10n.noteStatsTitle, Icons.insights_outlined),
+      // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29): bu not iskelet olarak
+      // saklanır, şablon galerisinde "Şablonlarım"da durur.
+      if (canTemplate)
+        ('saveTemplate', l10n.saveAsTemplate, Icons.bookmark_add_outlined),
       // Ekleri bir arşiv defterine KOPYALAR (kullanıcı isteği 2026-08-16):
       // kaynak not silinse bile kopya sağlam kalır.
       if (hasAttachments)

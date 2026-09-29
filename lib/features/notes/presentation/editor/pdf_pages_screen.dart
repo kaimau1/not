@@ -4,6 +4,7 @@ import 'package:pdfrx/pdfrx.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../data/pdf_edit.dart';
 import '../../domain/attachment.dart';
+import '../viewers/pdf_page_image.dart';
 
 /// PDF sayfa yöneticisi: sayfaları seç, sil, döndür, sırala.
 ///
@@ -303,16 +304,18 @@ class _PageTile extends StatelessWidget {
                         color: scheme.outline,
                       ),
                     )
-                  else
+                  else if (document != null)
                     RotatedBox(
                       quarterTurns: quarterTurns,
-                      child: PdfPageView(
-                        document: document,
+                      // PdfPageView DEĞİL: sıralama/silme sonrası aynı
+                      // kutuya başka sayfa düştüğünde eski görüntüyü
+                      // tutuyordu (bkz. PdfPageImage).
+                      child: PdfPageImage(
+                        document: document!,
                         pageNumber: pageNumber,
                         // Küçük resim: yüksek DPI hem yavaş hem gereksiz
                         // bellek.
                         maximumDpi: 72,
-                        decoration: const BoxDecoration(color: Colors.white),
                       ),
                     ),
                   if (selected)

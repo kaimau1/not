@@ -56,6 +56,22 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- FLUTTER'IN KENDİ DERİN BAĞLANTI YÖNLENDİRMESİ KAPALI.
+                 KÖK NEDEN (kullanıcı bulgusu 2026-09-29, ekran görüntüsü:
+                 "GoException: no routes for location: content://0@com.whatsapp
+                 .provider.media/item/…"): Flutter 3.27'den beri VIEW
+                 intent'inin adresini doğrudan yönlendiriciye (GoRouter) sayfa
+                 adresi diye veriyor. "Birlikte aç" ile gelen PDF'in content://
+                 adresi bir sayfa olmadığından uygulama "Page Not Found" ile
+                 açılıyor, ana ekran hiç kurulmadığı için paylaşım da
+                 işlenmiyordu. İntent'leri zaten iki eklenti işliyor:
+                 notlar:// bağlantılarını app_links (router.dart →
+                 deepLinkHandlerProvider), dosya/metin paylaşımını
+                 receive_sharing_intent (share_intake.dart). app_links'in
+                 kurulum yönergesi de bu bayrağı false istiyor. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
