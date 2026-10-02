@@ -7835,6 +7835,78 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Neden önemli?'**
   String get tplGoalsWhy;
+
+  /// No description provided for @templateNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni şablon'**
+  String get templateNew;
+
+  /// No description provided for @templateEdit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonu düzenle'**
+  String get templateEdit;
+
+  /// No description provided for @templateDuplicate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çoğalt'**
+  String get templateDuplicate;
+
+  /// No description provided for @templateSaveAsMine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonlarıma kaydet'**
+  String get templateSaveAsMine;
+
+  /// No description provided for @templateUntitled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Adsız şablon'**
+  String get templateUntitled;
+
+  /// No description provided for @templateTypeText.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı'**
+  String get templateTypeText;
+
+  /// No description provided for @templateTitleHelp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablondan açılan notun başlığı (boş bırakılabilir)'**
+  String get templateTitleHelp;
+
+  /// No description provided for @templateBody.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yazı'**
+  String get templateBody;
+
+  /// No description provided for @templateHeadingHelp.
+  ///
+  /// In tr, this message translates to:
+  /// **'“# ” ile başlayan satır başlık, “## ” ile başlayan alt başlık olur.'**
+  String get templateHeadingHelp;
+
+  /// No description provided for @templateDiscardTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değişiklikler kaydedilmesin mi?'**
+  String get templateDiscardTitle;
+
+  /// No description provided for @templateDiscard.
+  ///
+  /// In tr, this message translates to:
+  /// **'Vazgeç'**
+  String get templateDiscard;
+
+  /// No description provided for @templateDeleted.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{name}” silindi'**
+  String templateDeleted(String name);
 }
 
 class _AppLocalizationsDelegate

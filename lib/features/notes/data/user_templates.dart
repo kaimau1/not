@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/utils/rich_text.dart';
 import '../../settings/settings_providers.dart';
+import '../domain/archive_template.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 
@@ -45,13 +47,20 @@ class UserTemplate {
 
   bool get isList => type == NoteType.checklist || type == NoteType.ordered;
 
-  UserTemplate copyWith({String? name}) => UserTemplate(
-    id: id,
+  UserTemplate copyWith({
+    String? id,
+    String? name,
+    NoteType? type,
+    String? title,
+    String? body,
+    List<String>? items,
+  }) => UserTemplate(
+    id: id ?? this.id,
     name: name ?? this.name,
-    type: type,
-    title: title,
-    body: body,
-    items: items,
+    type: type ?? this.type,
+    title: title ?? this.title,
+    body: body ?? this.body,
+    items: items ?? this.items,
   );
 
   /// Nottan şablon: boş maddeler atılır, işaretler sıfırlanır.
@@ -129,6 +138,26 @@ class UserTemplatesNotifier extends Notifier<List<UserTemplate>> {
     ].take(maxTemplates).toList(),
   );
 
+  /// Düzenlenen şablon YERİNDE güncellenir (sırası değişmez); yoksa başa
+  /// eklenir.
+  void update(UserTemplate template) {
+    if (!state.any((t) => t.id == template.id)) return add(template);
+    _save([for (final t in state) t.id == template.id ? template : t]);
+  }
+
+  /// Kopya hemen aslının ARKASINA girer ("Haftalık market (2)").
+  UserTemplate duplicate(String id, {required String newId}) {
+    final source = state.firstWhere((t) => t.id == id);
+    final copy = source.copyWith(id: newId, name: '${source.name} (2)');
+    final next = <UserTemplate>[];
+    for (final t in state) {
+      next.add(t);
+      if (t.id == id) next.add(copy);
+    }
+    _save(next.take(maxTemplates).toList());
+    return copy;
+  }
+
   void rename(String id, String name) {
     final clean = name.trim();
     if (clean.isEmpty) return;
@@ -158,6 +187,60 @@ List<UserTemplate> decodeUserTemplates(String? raw) {
 
 String encodeUserTemplates(List<UserTemplate> templates) =>
     jsonEncode([for (final t in templates) t.toMap()]);
+
+/// Yeni şablon kimliği (zaman damgası, 36 tabanında).
+String newUserTemplateId() =>
+    DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+
+/// **ŞABLON DÜZENLEYİCİSİNİN YAZI BİÇİMİ** (saf, testli).
+///
+/// Şablon gövdesi notun biçim işaretlerini taşır (başlık = satırın tamamına
+/// boy + kalın, bkz. [setLineHeading]). Düzenleyici bunları ham göstermez:
+/// büyük başlık satırı `# `, alt başlık `## ` ile başlar — yazması da
+/// okuması da kolay, klavyede özel düğme gerekmez. Diğer satırların satır
+/// içi biçimi düzenleyicide görünmez (yalnız düz metin); düzenleyici gövdeyi
+/// DEĞİŞTİRMEDEN kaydederse asıl biçimli gövde korunur.
+String templateBodyToEditable(String body) {
+  if (body.isEmpty) return '';
+  return [
+    for (final line in body.split('\n'))
+      switch (lineHeadingAt(line, 0)) {
+        RichHeading.h1 => '# ${stripRichMarkers(line)}',
+        RichHeading.h2 => '## ${stripRichMarkers(line)}',
+        RichHeading.normal => stripRichMarkers(line),
+      },
+  ].join('\n');
+}
+
+/// [templateBodyToEditable]'ın tersi: `# ` / `## ` satırları başlık olur.
+String editableToTemplateBody(String text) {
+  if (text.isEmpty) return '';
+  return buildTemplateText([
+    for (final line in text.split('\n'))
+      if (line.startsWith('## '))
+        (text: line.substring(3).trim(), heading: RichHeading.h2)
+      else if (line.startsWith('# '))
+        (text: line.substring(2).trim(), heading: RichHeading.h1)
+      else
+        (text: line, heading: RichHeading.normal),
+  ]);
+}
+
+/// Liste ↔ yazı geçişinde içerik kaybolmasın: maddeler yazıda "• madde"
+/// satırı olur, yazının dolu satırları listede madde olur (işaretler ve
+/// başlık önekleri düşer).
+String itemsToEditableText(List<String> items) =>
+    [for (final i in items) '• $i'].join('\n');
+
+List<String> editableTextToItems(String text) => [
+  for (final raw in text.split('\n'))
+    if (_stripLinePrefix(raw).isNotEmpty) _stripLinePrefix(raw),
+];
+
+final _linePrefix = RegExp(r'^\s*(#{1,2} |[•☐] ?|[-*] |\d+[.)] )');
+
+String _stripLinePrefix(String line) =>
+    stripRichMarkers(line).replaceFirst(_linePrefix, '').trim();
 
 /// **SON KULLANILAN ŞABLONLAR** — galerinin tepesinde. Hazır şablon için
 /// `b:<ad>`, kendi şablonum için `u:<kimlik>`.

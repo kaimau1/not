@@ -4222,4 +4222,42 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => '为什么重要？';
+
+  @override
+  String get templateNew => '新建模板';
+
+  @override
+  String get templateEdit => '编辑模板';
+
+  @override
+  String get templateDuplicate => '复制';
+
+  @override
+  String get templateSaveAsMine => '保存到我的模板';
+
+  @override
+  String get templateUntitled => '未命名模板';
+
+  @override
+  String get templateTypeText => '文本';
+
+  @override
+  String get templateTitleHelp => '用此模板创建的笔记标题（可选）';
+
+  @override
+  String get templateBody => '正文';
+
+  @override
+  String get templateHeadingHelp => '以“# ”开头的行成为标题，以“## ”开头的成为副标题。';
+
+  @override
+  String get templateDiscardTitle => '放弃更改？';
+
+  @override
+  String get templateDiscard => '放弃';
+
+  @override
+  String templateDeleted(String name) {
+    return '已删除“$name”';
+  }
 }

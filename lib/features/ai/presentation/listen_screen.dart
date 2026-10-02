@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../app/router.dart';
@@ -321,7 +320,7 @@ class _ListenScreenState extends ConsumerState<ListenScreen> {
       repo.updateFields(id, {'title': widget.title});
       if (!mounted) return;
       _snack(context.l10n.podcastSavedAsNote);
-      context.push(noteRoutePath(id));
+      context.pushNote(noteRoutePath(id));
     } catch (e) {
       if (!mounted) return;
       _snack(context.l10n.aiError('$e'));

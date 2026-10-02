@@ -657,7 +657,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Future<void> _openNew(String id, {String query = '', NoteType? type}) async {
     if (!mounted) return;
     // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
-    await context.push(
+    await context.pushNote(
       type == NoteType.archive
           ? archiveNoteRoutePath(id)
           : noteRoutePath(id, query: query),

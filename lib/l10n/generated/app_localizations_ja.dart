@@ -4247,4 +4247,42 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'なぜ大切か';
+
+  @override
+  String get templateNew => '新しいテンプレート';
+
+  @override
+  String get templateEdit => 'テンプレートを編集';
+
+  @override
+  String get templateDuplicate => '複製';
+
+  @override
+  String get templateSaveAsMine => 'マイテンプレートに保存';
+
+  @override
+  String get templateUntitled => '無題のテンプレート';
+
+  @override
+  String get templateTypeText => 'テキスト';
+
+  @override
+  String get templateTitleHelp => 'このテンプレートから作るメモのタイトル（任意）';
+
+  @override
+  String get templateBody => '本文';
+
+  @override
+  String get templateHeadingHelp => '「# 」で始まる行は見出し、「## 」は小見出しになります。';
+
+  @override
+  String get templateDiscardTitle => '変更を破棄しますか？';
+
+  @override
+  String get templateDiscard => '破棄';
+
+  @override
+  String templateDeleted(String name) {
+    return '「$name」を削除しました';
+  }
 }

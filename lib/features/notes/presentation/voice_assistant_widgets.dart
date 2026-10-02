@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
@@ -153,7 +152,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                 TextButton(
                   onPressed: () {
                     notifier.dismiss();
-                    context.push(noteRoutePath(assistant.noteId!));
+                    context.pushNote(noteRoutePath(assistant.noteId!));
                   },
                   child: Text(l10n.openNote),
                 ),
@@ -177,7 +176,7 @@ class VoiceAssistantPanel extends ConsumerWidget {
                   );
                   if (id == null || !context.mounted) return;
                   notifier.dismiss();
-                  context.push(noteRoutePath(id));
+                  context.pushNote(noteRoutePath(id));
                 },
                 icon: const Icon(Icons.note_add_outlined, size: 18),
                 label: Text(l10n.assistantMakeNote),

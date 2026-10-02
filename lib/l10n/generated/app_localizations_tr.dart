@@ -4313,4 +4313,44 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Neden önemli?';
+
+  @override
+  String get templateNew => 'Yeni şablon';
+
+  @override
+  String get templateEdit => 'Şablonu düzenle';
+
+  @override
+  String get templateDuplicate => 'Çoğalt';
+
+  @override
+  String get templateSaveAsMine => 'Şablonlarıma kaydet';
+
+  @override
+  String get templateUntitled => 'Adsız şablon';
+
+  @override
+  String get templateTypeText => 'Yazı';
+
+  @override
+  String get templateTitleHelp =>
+      'Şablondan açılan notun başlığı (boş bırakılabilir)';
+
+  @override
+  String get templateBody => 'Yazı';
+
+  @override
+  String get templateHeadingHelp =>
+      '“# ” ile başlayan satır başlık, “## ” ile başlayan alt başlık olur.';
+
+  @override
+  String get templateDiscardTitle => 'Değişiklikler kaydedilmesin mi?';
+
+  @override
+  String get templateDiscard => 'Vazgeç';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” silindi';
+  }
 }

@@ -4337,4 +4337,44 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Dlaczego to ważne?';
+
+  @override
+  String get templateNew => 'Nowy szablon';
+
+  @override
+  String get templateEdit => 'Edytuj szablon';
+
+  @override
+  String get templateDuplicate => 'Duplikuj';
+
+  @override
+  String get templateSaveAsMine => 'Zapisz w moich szablonach';
+
+  @override
+  String get templateUntitled => 'Szablon bez nazwy';
+
+  @override
+  String get templateTypeText => 'Tekst';
+
+  @override
+  String get templateTitleHelp =>
+      'Tytuł notatek tworzonych z tego szablonu (opcjonalnie)';
+
+  @override
+  String get templateBody => 'Tekst';
+
+  @override
+  String get templateHeadingHelp =>
+      'Wiersze zaczynające się od „# ” to nagłówki, od „## ” podtytuły.';
+
+  @override
+  String get templateDiscardTitle => 'Odrzucić zmiany?';
+
+  @override
+  String get templateDiscard => 'Odrzuć';
+
+  @override
+  String templateDeleted(String name) {
+    return 'Usunięto „$name”';
+  }
 }

@@ -831,5 +831,17 @@
   "tplGoalsYear": "W tym roku",
   "tplGoalsMonth": "W tym miesiącu",
   "tplGoalsWeek": "W tym tygodniu",
-  "tplGoalsWhy": "Dlaczego to ważne?"
+  "tplGoalsWhy": "Dlaczego to ważne?",
+  "templateNew": "Nowy szablon",
+  "templateEdit": "Edytuj szablon",
+  "templateDuplicate": "Duplikuj",
+  "templateSaveAsMine": "Zapisz w moich szablonach",
+  "templateUntitled": "Szablon bez nazwy",
+  "templateTypeText": "Tekst",
+  "templateTitleHelp": "Tytuł notatek tworzonych z tego szablonu (opcjonalnie)",
+  "templateBody": "Tekst",
+  "templateHeadingHelp": "Wiersze zaczynające się od „# ” to nagłówki, od „## ” podtytuły.",
+  "templateDiscardTitle": "Odrzucić zmiany?",
+  "templateDiscard": "Odrzuć",
+  "templateDeleted": "Usunięto „{name}”"
 }

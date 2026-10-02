@@ -144,7 +144,7 @@ class ReminderService {
               );
             default:
               try {
-                _ref.read(routerProvider).push(noteRoutePath(noteId));
+                _ref.read(routerProvider).pushNote(noteRoutePath(noteId));
               } catch (_) {}
           }
         }

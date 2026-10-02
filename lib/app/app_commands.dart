@@ -140,7 +140,7 @@ Future<void> createAndOpenNote(
     folderId: ref.read(selectedFolderProvider),
   );
   openSection(router, AppSection.notes);
-  await router.push(noteRoutePath(id));
+  await router.pushNote(noteRoutePath(id));
 }
 
 /// Kısayolların tek listesi — hem bağlama hem de yardım penceresi buradan

@@ -831,5 +831,17 @@
   "tplGoalsYear": "इस साल",
   "tplGoalsMonth": "इस महीने",
   "tplGoalsWeek": "इस हफ़्ते",
-  "tplGoalsWhy": "यह क्यों ज़रूरी है?"
+  "tplGoalsWhy": "यह क्यों ज़रूरी है?",
+  "templateNew": "नया टेम्पलेट",
+  "templateEdit": "टेम्पलेट संपादित करें",
+  "templateDuplicate": "डुप्लिकेट करें",
+  "templateSaveAsMine": "मेरे टेम्पलेट में सहेजें",
+  "templateUntitled": "बिना नाम का टेम्पलेट",
+  "templateTypeText": "टेक्स्ट",
+  "templateTitleHelp": "इस टेम्पलेट से बने नोट्स का शीर्षक (वैकल्पिक)",
+  "templateBody": "टेक्स्ट",
+  "templateHeadingHelp": "“# ” से शुरू होने वाली पंक्तियाँ शीर्षक, “## ” वाली उपशीर्षक बनती हैं।",
+  "templateDiscardTitle": "बदलाव छोड़ दें?",
+  "templateDiscard": "छोड़ें",
+  "templateDeleted": "“{name}” हटाया गया"
 }

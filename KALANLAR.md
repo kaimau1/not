@@ -2,6 +2,15 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-02 — arşiv siyah ekran, şablon düzenleyicisi (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Arşivden not aç** (telefon + tablet): açılıyor mu, geri tuşu arşive
+  dönüyor mu. Aynısı Çöp/Hatırlatıcılar ("yeni hatırlatıcı")/Klasörler
+  ekranından. Tablette klasör sayfasından açılan not ÖNDE mi.
+- [ ] **Şablon düzenleyicisi**: yeni şablon, düzenle, çoğalt, sil→geri al;
+  hazır şablonu önizlemede "Şablonlarıma kaydet"; yazı şablonunda `# `
+  başlıkları nota başlık olarak geçiyor mu.
+- [ ] 12 yeni çeviri anahtarı × 15 dil makine çevirisi.
+
 ## 2026-09-26 (2. tur) — senkron kapatma, OCR, şablonlar, kasma (CİHAZDA GÖRÜLMEDİ)
 - [ ] **OCR (Play Hizmetleri modeli)**: belge tarama / görselden yazı /
   aranabilir PDF yeni kurulumda çalışıyor mu? Model inene kadar hata

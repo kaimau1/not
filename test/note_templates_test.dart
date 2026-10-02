@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:notlar/core/utils/rich_text.dart';
+import 'package:notlar/features/notes/domain/archive_template.dart';
 import 'package:notlar/features/notes/data/user_templates.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_templates.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/note_template_sheet.dart';
+import 'package:notlar/features/notes/presentation/template_editor_screen.dart';
 import 'package:notlar/features/settings/settings_providers.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -191,6 +193,157 @@ void main() {
     });
   });
 
+  group('şablon düzenleyicisi (2026-10-02)', () {
+    test('başlıklı gövde # / ## satırlarına gidip aynen döner', () {
+      final body = buildTemplateText([
+        (text: 'Gündem', heading: RichHeading.h1),
+        (text: '1. ', heading: RichHeading.normal),
+        (text: 'Kararlar', heading: RichHeading.h2),
+        (text: '', heading: RichHeading.normal),
+      ]);
+      final editable = templateBodyToEditable(body);
+      expect(editable, '# Gündem\n1. \n## Kararlar\n');
+      expect(editableToTemplateBody(editable), body);
+      expect(templateBodyToEditable(''), '');
+    });
+
+    test('liste ↔ yazı geçişinde içerik kaybolmaz', () {
+      final text = itemsToEditableText(['Süt', 'Ekmek']);
+      expect(text, '• Süt\n• Ekmek');
+      expect(editableTextToItems(text), ['Süt', 'Ekmek']);
+      expect(
+        editableTextToItems('# Başlık\n\n1. Bir\n- İki\n☐ Üç\n-5 derece'),
+        ['Başlık', 'Bir', 'İki', 'Üç', '-5 derece'],
+      );
+    });
+
+    test('güncelleme yerinde, çoğaltma aslının arkasına', () {
+      SharedPreferences.setMockInitialValues({});
+      return SharedPreferences.getInstance().then((prefs) {
+        final container = ProviderContainer(
+          overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        );
+        addTearDown(container.dispose);
+        final n = container.read(userTemplatesProvider.notifier);
+        n.add(const UserTemplate(id: 'a', name: 'A', type: NoteType.text));
+        n.add(const UserTemplate(id: 'b', name: 'B', type: NoteType.text));
+        // Sıra: b, a. "a" düzenlenince yeri değişmez.
+        n.update(
+          const UserTemplate(
+            id: 'a',
+            name: 'A2',
+            type: NoteType.checklist,
+            items: ['x'],
+          ),
+        );
+        var list = container.read(userTemplatesProvider);
+        expect(list.map((t) => t.name), ['B', 'A2']);
+        expect(list.last.items, ['x']);
+        final copy = n.duplicate('b', newId: 'c');
+        list = container.read(userTemplatesProvider);
+        expect(list.map((t) => t.id), ['b', 'c', 'a']);
+        expect(copy.name, 'B (2)');
+        // Kalıcı.
+        expect(
+          decodeUserTemplates(prefs.getString('user_templates_v1')),
+          hasLength(3),
+        );
+      });
+    });
+
+    Future<UserTemplate?> runEditor(
+      WidgetTester tester,
+      Future<void> Function() edit, {
+      UserTemplate? initial,
+    }) async {
+      await tester.binding.setSurfaceSize(const Size(420, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      UserTemplate? result;
+      var done = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    result = await showTemplateEditor(
+                      context,
+                      initial: initial,
+                    );
+                    done = true;
+                  },
+                  child: const Text('aç'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('aç'));
+      await tester.pumpAndSettle();
+      await edit();
+      await tester.tap(find.byKey(const ValueKey('tpl-editor-save')));
+      await tester.pumpAndSettle();
+      expect(done, isTrue);
+      return result;
+    }
+
+    testWidgets('sıfırdan liste şablonu kurulur', (tester) async {
+      final t = await runEditor(tester, () async {
+        await tester.enterText(
+          find.byKey(const ValueKey('tpl-editor-name')),
+          'Pazar market',
+        );
+        final add = find.byKey(const ValueKey('tpl-editor-add'));
+        await tester.enterText(add, 'Süt');
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pumpAndSettle();
+        await tester.enterText(add, 'Yumurta');
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pumpAndSettle();
+        // Yazılıp eklenmeden bırakılan madde de girer.
+        await tester.enterText(add, 'Peynir');
+        // Numaralı listeye çevrilir.
+        await tester.tap(find.text('Numaralı'));
+        await tester.pumpAndSettle();
+      });
+      expect(t, isNotNull);
+      expect(t!.id, isNotEmpty);
+      expect(t.name, 'Pazar market');
+      expect(t.type, NoteType.ordered);
+      expect(t.items, ['Süt', 'Yumurta', 'Peynir']);
+    });
+
+    testWidgets('var olan şablon düzenlenir: madde silinir, kimlik kalır', (
+      tester,
+    ) async {
+      final t = await runEditor(
+        tester,
+        initial: const UserTemplate(
+          id: 'u9',
+          name: 'Market',
+          type: NoteType.checklist,
+          items: ['Süt', 'Ekmek'],
+        ),
+        () async {
+          await tester.tap(find.byIcon(Icons.close).first);
+          await tester.pumpAndSettle();
+          // Yazıya çevrilince kalan madde gövdeye taşınır.
+          await tester.tap(find.text('Yazı').first);
+          await tester.pumpAndSettle();
+        },
+      );
+      expect(t!.id, 'u9');
+      expect(t.type, NoteType.text);
+      expect(t.items, isEmpty);
+      expect(stripRichMarkers(t.body), '• Ekmek');
+    });
+  });
+
   testWidgets('galeri → önizleme: öneri eklenir, not maddeleriyle doğar', (
     tester,
   ) async {
@@ -243,5 +396,53 @@ void main() {
     expect(result!.items, contains('Süt'));
     // Son kullanılanlara girdi.
     expect(prefs.getStringList('recent_templates'), ['b:shopping']);
+  });
+
+  testWidgets('hazır şablon önizlemeden Şablonlarım\'a kaydedilir', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.binding.setSurfaceSize(const Size(420, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('tr'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  onPressed: () => showNoteTemplateSheet(
+                    context,
+                    initial: NoteTemplate.shopping,
+                  ),
+                  child: const Text('aç'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilterChip, 'Domates'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('tpl-save-as')));
+    await tester.pumpAndSettle();
+    // Düzenleyici biçilmiş içerikle açıldı.
+    expect(find.text('Şablonu düzenle'), findsNothing);
+    expect(find.text('Yeni şablon'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('tpl-editor-save')));
+    await tester.pumpAndSettle();
+    final saved = decodeUserTemplates(prefs.getString('user_templates_v1'));
+    expect(saved.single.name, 'Alışveriş listesi');
+    expect(saved.single.items, contains('Domates'));
+    // Önizleme artık kendi şablonumda: düğme "düzenle" oldu.
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
   });
 }

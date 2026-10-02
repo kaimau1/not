@@ -831,5 +831,17 @@
   "tplGoalsYear": "Tahun ini",
   "tplGoalsMonth": "Bulan ini",
   "tplGoalsWeek": "Minggu ini",
-  "tplGoalsWhy": "Kenapa ini penting?"
+  "tplGoalsWhy": "Kenapa ini penting?",
+  "templateNew": "Template baru",
+  "templateEdit": "Edit template",
+  "templateDuplicate": "Duplikat",
+  "templateSaveAsMine": "Simpan ke template saya",
+  "templateUntitled": "Template tanpa judul",
+  "templateTypeText": "Teks",
+  "templateTitleHelp": "Judul catatan dari template ini (opsional)",
+  "templateBody": "Teks",
+  "templateHeadingHelp": "Baris yang diawali “# ” menjadi judul, “## ” menjadi subjudul.",
+  "templateDiscardTitle": "Buang perubahan?",
+  "templateDiscard": "Buang",
+  "templateDeleted": "“{name}” dihapus"
 }

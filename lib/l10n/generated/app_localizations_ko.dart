@@ -4251,4 +4251,42 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => '왜 중요한가요?';
+
+  @override
+  String get templateNew => '새 템플릿';
+
+  @override
+  String get templateEdit => '템플릿 편집';
+
+  @override
+  String get templateDuplicate => '복제';
+
+  @override
+  String get templateSaveAsMine => '내 템플릿에 저장';
+
+  @override
+  String get templateUntitled => '제목 없는 템플릿';
+
+  @override
+  String get templateTypeText => '텍스트';
+
+  @override
+  String get templateTitleHelp => '이 템플릿으로 만든 메모의 제목(선택)';
+
+  @override
+  String get templateBody => '본문';
+
+  @override
+  String get templateHeadingHelp => '“# ”로 시작하는 줄은 제목, “## ”는 소제목이 됩니다.';
+
+  @override
+  String get templateDiscardTitle => '변경 사항을 버릴까요?';
+
+  @override
+  String get templateDiscard => '버리기';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” 삭제됨';
+  }
 }

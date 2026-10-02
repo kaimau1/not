@@ -1935,5 +1935,24 @@
   "tplGoalsYear": "Bu yıl",
   "tplGoalsMonth": "Bu ay",
   "tplGoalsWeek": "Bu hafta",
-  "tplGoalsWhy": "Neden önemli?"
+  "tplGoalsWhy": "Neden önemli?",
+  "templateNew": "Yeni şablon",
+  "templateEdit": "Şablonu düzenle",
+  "templateDuplicate": "Çoğalt",
+  "templateSaveAsMine": "Şablonlarıma kaydet",
+  "templateUntitled": "Adsız şablon",
+  "templateTypeText": "Yazı",
+  "templateTitleHelp": "Şablondan açılan notun başlığı (boş bırakılabilir)",
+  "templateBody": "Yazı",
+  "templateHeadingHelp": "“# ” ile başlayan satır başlık, “## ” ile başlayan alt başlık olur.",
+  "templateDiscardTitle": "Değişiklikler kaydedilmesin mi?",
+  "templateDiscard": "Vazgeç",
+  "templateDeleted": "“{name}” silindi",
+  "@templateDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

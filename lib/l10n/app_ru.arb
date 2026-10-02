@@ -831,5 +831,17 @@
   "tplGoalsYear": "В этом году",
   "tplGoalsMonth": "В этом месяце",
   "tplGoalsWeek": "На этой неделе",
-  "tplGoalsWhy": "Почему это важно?"
+  "tplGoalsWhy": "Почему это важно?",
+  "templateNew": "Новый шаблон",
+  "templateEdit": "Изменить шаблон",
+  "templateDuplicate": "Дублировать",
+  "templateSaveAsMine": "Сохранить в мои шаблоны",
+  "templateUntitled": "Шаблон без названия",
+  "templateTypeText": "Текст",
+  "templateTitleHelp": "Заголовок заметок из этого шаблона (необязательно)",
+  "templateBody": "Текст",
+  "templateHeadingHelp": "Строки, начинающиеся с «# », станут заголовками, с «## » — подзаголовками.",
+  "templateDiscardTitle": "Отменить изменения?",
+  "templateDiscard": "Отменить",
+  "templateDeleted": "«{name}» удалён"
 }

@@ -831,5 +831,17 @@
   "tplGoalsYear": "Dit jaar",
   "tplGoalsMonth": "Deze maand",
   "tplGoalsWeek": "Deze week",
-  "tplGoalsWhy": "Waarom is het belangrijk?"
+  "tplGoalsWhy": "Waarom is het belangrijk?",
+  "templateNew": "Nieuwe sjabloon",
+  "templateEdit": "Sjabloon bewerken",
+  "templateDuplicate": "Dupliceren",
+  "templateSaveAsMine": "Opslaan in mijn sjablonen",
+  "templateUntitled": "Naamloze sjabloon",
+  "templateTypeText": "Tekst",
+  "templateTitleHelp": "Titel van notities uit deze sjabloon (optioneel)",
+  "templateBody": "Tekst",
+  "templateHeadingHelp": "Regels die beginnen met “# ” worden koppen, met “## ” subkoppen.",
+  "templateDiscardTitle": "Wijzigingen negeren?",
+  "templateDiscard": "Negeren",
+  "templateDeleted": "“{name}” verwijderd"
 }

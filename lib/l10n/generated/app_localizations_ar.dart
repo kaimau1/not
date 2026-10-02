@@ -4303,4 +4303,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'لماذا هذا مهم؟';
+
+  @override
+  String get templateNew => 'قالب جديد';
+
+  @override
+  String get templateEdit => 'تعديل القالب';
+
+  @override
+  String get templateDuplicate => 'تكرار';
+
+  @override
+  String get templateSaveAsMine => 'حفظ في قوالبي';
+
+  @override
+  String get templateUntitled => 'قالب بلا عنوان';
+
+  @override
+  String get templateTypeText => 'نص';
+
+  @override
+  String get templateTitleHelp =>
+      'عنوان الملاحظات المنشأة من هذا القالب (اختياري)';
+
+  @override
+  String get templateBody => 'النص';
+
+  @override
+  String get templateHeadingHelp =>
+      'الأسطر التي تبدأ بـ «# » تصبح عناوين، و«## » عناوين فرعية.';
+
+  @override
+  String get templateDiscardTitle => 'تجاهل التغييرات؟';
+
+  @override
+  String get templateDiscard => 'تجاهل';
+
+  @override
+  String templateDeleted(String name) {
+    return 'تم حذف «$name»';
+  }
 }

@@ -100,7 +100,7 @@ final shareIntakeProvider = Provider<void>((ref) {
         );
         ReceiveSharingIntent.instance.reset();
         try {
-          ref.read(routerProvider).push(noteRoutePath(noteId));
+          ref.read(routerProvider).pushNote(noteRoutePath(noteId));
         } catch (_) {}
         return;
       } catch (_) {
@@ -282,7 +282,7 @@ final shareIntakeProvider = Provider<void>((ref) {
     // Aynı içerik uygulama tekrar öne gelince yeniden işlenmesin.
     ReceiveSharingIntent.instance.reset();
     try {
-      router.push(noteRoutePath(id));
+      router.pushNote(noteRoutePath(id));
     } catch (_) {}
   }
 
@@ -457,7 +457,7 @@ Future<void> _addToExistingNote(
   try {
     ref
         .read(routerProvider)
-        .push(
+        .pushNote(
           target.type == NoteType.archive
               ? archiveNoteRoutePath(noteId)
               : noteRoutePath(noteId),

@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
@@ -161,7 +160,7 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
     NoteType? type,
   }) async {
     if (!mounted) return;
-    await context.push(
+    await context.pushNote(
       type == NoteType.archive
           ? archiveNoteRoutePath(id)
           : noteRoutePath(id, query: query),

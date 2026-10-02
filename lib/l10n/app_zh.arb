@@ -831,5 +831,17 @@
   "tplGoalsYear": "今年",
   "tplGoalsMonth": "本月",
   "tplGoalsWeek": "本周",
-  "tplGoalsWhy": "为什么重要？"
+  "tplGoalsWhy": "为什么重要？",
+  "templateNew": "新建模板",
+  "templateEdit": "编辑模板",
+  "templateDuplicate": "复制",
+  "templateSaveAsMine": "保存到我的模板",
+  "templateUntitled": "未命名模板",
+  "templateTypeText": "文本",
+  "templateTitleHelp": "用此模板创建的笔记标题（可选）",
+  "templateBody": "正文",
+  "templateHeadingHelp": "以“# ”开头的行成为标题，以“## ”开头的成为副标题。",
+  "templateDiscardTitle": "放弃更改？",
+  "templateDiscard": "放弃",
+  "templateDeleted": "已删除“{name}”"
 }

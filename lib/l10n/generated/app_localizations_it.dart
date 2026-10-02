@@ -4336,4 +4336,44 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Perché è importante?';
+
+  @override
+  String get templateNew => 'Nuovo modello';
+
+  @override
+  String get templateEdit => 'Modifica modello';
+
+  @override
+  String get templateDuplicate => 'Duplica';
+
+  @override
+  String get templateSaveAsMine => 'Salva nei miei modelli';
+
+  @override
+  String get templateUntitled => 'Modello senza titolo';
+
+  @override
+  String get templateTypeText => 'Testo';
+
+  @override
+  String get templateTitleHelp =>
+      'Titolo delle note create da questo modello (facoltativo)';
+
+  @override
+  String get templateBody => 'Testo';
+
+  @override
+  String get templateHeadingHelp =>
+      'Le righe che iniziano con “# ” diventano titoli, con “## ” sottotitoli.';
+
+  @override
+  String get templateDiscardTitle => 'Annullare le modifiche?';
+
+  @override
+  String get templateDiscard => 'Annulla modifiche';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” eliminato';
+  }
 }

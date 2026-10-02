@@ -3890,7 +3890,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fields['body'] = '';
     }
     repo.updateFields(id, fields);
-    if (mounted) context.push(noteRoutePath(id));
+    if (mounted) context.pushNote(noteRoutePath(id));
   }
 
   /// AI çıktısını (OCR/döküm) notun gövdesine ya da liste öğelerine ekler.

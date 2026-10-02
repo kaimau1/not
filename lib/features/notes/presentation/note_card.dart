@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
@@ -178,7 +177,9 @@ Future<void> openNoteRoute(
         if (readOnly) 'ro=1',
       ];
       // Arşiv defteri kendi ekranında açılır (bkz. archiveNoteRoutePath).
-      final push = context.push(
+      // Arşiv/çöp gibi kabuk dışı ekranlardan da doğru yol (bkz.
+      // notePushPath — "arşivdeki not siyah ekran" kök nedeni).
+      final push = context.pushNote(
         note.type == NoteType.archive
             ? archiveNoteRoutePath(note.id)
             : noteRoutePath(

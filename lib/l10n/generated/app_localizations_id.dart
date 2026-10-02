@@ -4332,4 +4332,43 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Kenapa ini penting?';
+
+  @override
+  String get templateNew => 'Template baru';
+
+  @override
+  String get templateEdit => 'Edit template';
+
+  @override
+  String get templateDuplicate => 'Duplikat';
+
+  @override
+  String get templateSaveAsMine => 'Simpan ke template saya';
+
+  @override
+  String get templateUntitled => 'Template tanpa judul';
+
+  @override
+  String get templateTypeText => 'Teks';
+
+  @override
+  String get templateTitleHelp => 'Judul catatan dari template ini (opsional)';
+
+  @override
+  String get templateBody => 'Teks';
+
+  @override
+  String get templateHeadingHelp =>
+      'Baris yang diawali “# ” menjadi judul, “## ” menjadi subjudul.';
+
+  @override
+  String get templateDiscardTitle => 'Buang perubahan?';
+
+  @override
+  String get templateDiscard => 'Buang';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” dihapus';
+  }
 }

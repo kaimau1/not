@@ -4341,4 +4341,44 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Warum ist es wichtig?';
+
+  @override
+  String get templateNew => 'Neue Vorlage';
+
+  @override
+  String get templateEdit => 'Vorlage bearbeiten';
+
+  @override
+  String get templateDuplicate => 'Duplizieren';
+
+  @override
+  String get templateSaveAsMine => 'In meinen Vorlagen speichern';
+
+  @override
+  String get templateUntitled => 'Unbenannte Vorlage';
+
+  @override
+  String get templateTypeText => 'Text';
+
+  @override
+  String get templateTitleHelp =>
+      'Titel der Notizen aus dieser Vorlage (optional)';
+
+  @override
+  String get templateBody => 'Text';
+
+  @override
+  String get templateHeadingHelp =>
+      'Zeilen mit „# “ werden Überschriften, mit „## “ Unterüberschriften.';
+
+  @override
+  String get templateDiscardTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get templateDiscard => 'Verwerfen';
+
+  @override
+  String templateDeleted(String name) {
+    return '„$name“ gelöscht';
+  }
 }

@@ -1666,5 +1666,17 @@
   "tplGoalsYear": "This year",
   "tplGoalsMonth": "This month",
   "tplGoalsWeek": "This week",
-  "tplGoalsWhy": "Why does it matter?"
+  "tplGoalsWhy": "Why does it matter?",
+  "templateNew": "New template",
+  "templateEdit": "Edit template",
+  "templateDuplicate": "Duplicate",
+  "templateSaveAsMine": "Save to my templates",
+  "templateUntitled": "Untitled template",
+  "templateTypeText": "Text",
+  "templateTitleHelp": "Title of notes created from this template (optional)",
+  "templateBody": "Text",
+  "templateHeadingHelp": "Lines starting with “# ” become headings, “## ” subheadings.",
+  "templateDiscardTitle": "Discard changes?",
+  "templateDiscard": "Discard",
+  "templateDeleted": "“{name}” deleted"
 }

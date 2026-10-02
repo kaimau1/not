@@ -831,5 +831,17 @@
   "tplGoalsYear": "هذه السنة",
   "tplGoalsMonth": "هذا الشهر",
   "tplGoalsWeek": "هذا الأسبوع",
-  "tplGoalsWhy": "لماذا هذا مهم؟"
+  "tplGoalsWhy": "لماذا هذا مهم؟",
+  "templateNew": "قالب جديد",
+  "templateEdit": "تعديل القالب",
+  "templateDuplicate": "تكرار",
+  "templateSaveAsMine": "حفظ في قوالبي",
+  "templateUntitled": "قالب بلا عنوان",
+  "templateTypeText": "نص",
+  "templateTitleHelp": "عنوان الملاحظات المنشأة من هذا القالب (اختياري)",
+  "templateBody": "النص",
+  "templateHeadingHelp": "الأسطر التي تبدأ بـ «# » تصبح عناوين، و«## » عناوين فرعية.",
+  "templateDiscardTitle": "تجاهل التغييرات؟",
+  "templateDiscard": "تجاهل",
+  "templateDeleted": "تم حذف «{name}»"
 }

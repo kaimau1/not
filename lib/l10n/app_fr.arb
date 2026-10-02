@@ -831,5 +831,17 @@
   "tplGoalsYear": "Cette année",
   "tplGoalsMonth": "Ce mois-ci",
   "tplGoalsWeek": "Cette semaine",
-  "tplGoalsWhy": "Pourquoi c'est important ?"
+  "tplGoalsWhy": "Pourquoi c'est important ?",
+  "templateNew": "Nouveau modèle",
+  "templateEdit": "Modifier le modèle",
+  "templateDuplicate": "Dupliquer",
+  "templateSaveAsMine": "Enregistrer dans mes modèles",
+  "templateUntitled": "Modèle sans titre",
+  "templateTypeText": "Texte",
+  "templateTitleHelp": "Titre des notes créées avec ce modèle (facultatif)",
+  "templateBody": "Texte",
+  "templateHeadingHelp": "Les lignes commençant par « # » deviennent des titres, par « ## » des sous-titres.",
+  "templateDiscardTitle": "Abandonner les modifications ?",
+  "templateDiscard": "Abandonner",
+  "templateDeleted": "« {name} » supprimé"
 }

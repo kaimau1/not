@@ -4331,4 +4331,44 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Почему это важно?';
+
+  @override
+  String get templateNew => 'Новый шаблон';
+
+  @override
+  String get templateEdit => 'Изменить шаблон';
+
+  @override
+  String get templateDuplicate => 'Дублировать';
+
+  @override
+  String get templateSaveAsMine => 'Сохранить в мои шаблоны';
+
+  @override
+  String get templateUntitled => 'Шаблон без названия';
+
+  @override
+  String get templateTypeText => 'Текст';
+
+  @override
+  String get templateTitleHelp =>
+      'Заголовок заметок из этого шаблона (необязательно)';
+
+  @override
+  String get templateBody => 'Текст';
+
+  @override
+  String get templateHeadingHelp =>
+      'Строки, начинающиеся с «# », станут заголовками, с «## » — подзаголовками.';
+
+  @override
+  String get templateDiscardTitle => 'Отменить изменения?';
+
+  @override
+  String get templateDiscard => 'Отменить';
+
+  @override
+  String templateDeleted(String name) {
+    return '«$name» удалён';
+  }
 }

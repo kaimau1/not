@@ -9,6 +9,7 @@ import '../data/user_templates.dart';
 import '../domain/note.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
+import 'template_editor_screen.dart';
 
 /// **ŞABLON GALERİSİ + ÖNİZLEME/DÜZENLEME** (bkz. [NoteTemplate]).
 ///
@@ -115,7 +116,9 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
               child: _gallery(context),
             )
           : KeyedSubtree(
-              key: ValueKey('compose-${picked.key}'),
+              key: ValueKey(
+                'compose-${picked.key}-${picked.user?.hashCode ?? 0}',
+              ),
               child: _composer(context, picked),
             ),
     );
@@ -147,7 +150,60 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
       // Kısayolla doğrudan açıldıysa "geri" levhayı kapatmaz, galeriye döner.
       onBack: () => setState(() => _picked = null),
       onCreate: _create,
+      // Kendi şablonumda "Düzenle" (yerinde günceller), hazır şablonda
+      // "Şablonlarıma kaydet" (biçilmiş hâli kişisel şablon olur).
+      onSaveAsTemplate: (content) => user != null
+          ? _editUser(user)
+          : _saveBuiltinAs(content, builtin!.label(l10n)),
+      saveAsEdits: user != null,
     );
+  }
+
+  /// Önizlemede biçilen hazır şablon düzenleyicide açılır; kaydedilince
+  /// "Şablonlarım"a girer ve önizleme o şablona geçer.
+  Future<void> _saveBuiltinAs(NoteTemplateContent content, String name) async {
+    final saved = await showTemplateEditor(
+      context,
+      initial: UserTemplate(
+        id: '',
+        name: name,
+        type: content.type,
+        title: content.title,
+        body: content.body,
+        items: content.items,
+      ),
+    );
+    if (saved == null || !mounted) return;
+    ref.read(userTemplatesProvider.notifier).add(saved);
+    _announce(context.l10n.templateSaved(saved.name));
+    setState(() => _picked = _Pick.user(saved));
+  }
+
+  Future<void> _newTemplate() async {
+    final saved = await showTemplateEditor(context);
+    if (saved == null || !mounted) return;
+    ref.read(userTemplatesProvider.notifier).add(saved);
+    _announce(context.l10n.templateSaved(saved.name));
+    setState(() {
+      _mine = true;
+      _category = null;
+    });
+  }
+
+  Future<void> _editUser(UserTemplate template) async {
+    final saved = await showTemplateEditor(context, initial: template);
+    if (saved == null || !mounted) return;
+    ref.read(userTemplatesProvider.notifier).update(saved);
+    // Önizleme açıksa yeni içerikle yeniden kurulur.
+    if (_picked?.user?.id == saved.id) {
+      setState(() => _picked = _Pick.user(saved));
+    }
+  }
+
+  void _announce(String message) {
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   // ── 1. adım: galeri ───────────────────────────────────────────────────
@@ -184,7 +240,9 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
           if (matchesUser(t)) _Pick.user(t),
       ];
       if (mine.isEmpty) {
-        sections.add(_EmptyMine(searching: searching));
+        sections.add(
+          _EmptyMine(searching: searching, onCreate: _newTemplate),
+        );
       } else {
         addSection(null, mine);
       }
@@ -240,8 +298,23 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 2),
-            child: Text(l10n.templatesTitle, style: theme.textTheme.titleLarge),
+            padding: const EdgeInsets.fromLTRB(4, 0, 0, 2),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.templatesTitle,
+                    style: theme.textTheme.titleLarge,
+                  ),
+                ),
+                TextButton.icon(
+                  key: const ValueKey('tpl-new'),
+                  onPressed: _newTemplate,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.templateNew),
+                ),
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
@@ -383,6 +456,16 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: Text(l10n.templateEdit),
+              onTap: () => Navigator.pop(sheetContext, 'edit'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.copy_outlined),
+              title: Text(l10n.templateDuplicate),
+              onTap: () => Navigator.pop(sheetContext, 'duplicate'),
+            ),
+            ListTile(
               leading: const Icon(Icons.drive_file_rename_outline),
               title: Text(l10n.templateRename),
               onTap: () => Navigator.pop(sheetContext, 'rename'),
@@ -401,9 +484,27 @@ class _NoteTemplateSheetState extends ConsumerState<NoteTemplateSheet> {
     );
     if (!mounted || action == null) return;
     final notifier = ref.read(userTemplatesProvider.notifier);
+    if (action == 'edit') return _editUser(template);
+    if (action == 'duplicate') {
+      notifier.duplicate(template.id, newId: newUserTemplateId());
+      return;
+    }
     if (action == 'delete') {
       notifier.remove(template.id);
       ref.read(recentTemplatesProvider.notifier).forget('u:${template.id}');
+      // Geri al: yanlışlıkla silinen şablonun içeriği bir daha yazılmaz.
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      messenger
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.templateDeleted(template.name)),
+            action: SnackBarAction(
+              label: l10n.undo,
+              onPressed: () => notifier.add(template),
+            ),
+          ),
+        );
       return;
     }
     final name = await promptTemplateName(context, initial: template.name);
@@ -473,7 +574,7 @@ Future<void> saveNoteAsTemplate(
       .add(
         UserTemplate.fromNote(
           note,
-          id: DateTime.now().microsecondsSinceEpoch.toRadixString(36),
+          id: newUserTemplateId(),
           name: name,
         ),
       );
@@ -539,9 +640,10 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _EmptyMine extends StatelessWidget {
-  const _EmptyMine({required this.searching});
+  const _EmptyMine({required this.searching, required this.onCreate});
 
   final bool searching;
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -561,6 +663,14 @@ class _EmptyMine extends StatelessWidget {
               color: scheme.onSurfaceVariant,
             ),
           ),
+          if (!searching) ...[
+            const SizedBox(height: 14),
+            FilledButton.tonalIcon(
+              onPressed: onCreate,
+              icon: const Icon(Icons.add),
+              label: Text(l10n.templateNew),
+            ),
+          ],
         ],
       ),
     );
@@ -684,6 +794,8 @@ class TemplateComposer extends StatefulWidget {
     required this.onCreate,
     this.suggestions = const [],
     this.onBack,
+    this.onSaveAsTemplate,
+    this.saveAsEdits = false,
   });
 
   final NoteTemplateContent base;
@@ -693,6 +805,14 @@ class TemplateComposer extends StatefulWidget {
   final List<TemplateSuggestionGroup> suggestions;
   final VoidCallback? onBack;
   final ValueChanged<NoteTemplateContent> onCreate;
+
+  /// Başlıktaki yer imi düğmesi: o an biçilen içerikle çağrılır. null ise
+  /// düğme yok.
+  final ValueChanged<NoteTemplateContent>? onSaveAsTemplate;
+
+  /// true: düğme "Şablonu düzenle" (kendi şablonum), false: "Şablonlarıma
+  /// kaydet" (hazır şablon).
+  final bool saveAsEdits;
 
   @override
   State<TemplateComposer> createState() => _TemplateComposerState();
@@ -753,21 +873,21 @@ class _TemplateComposerState extends State<TemplateComposer> {
     _addFocus.requestFocus();
   }
 
-  void _submit() {
+  NoteTemplateContent _composed() {
     // Yazılıp eklenmeden bırakılan madde de listeye girer.
     if (_add.text.trim().isNotEmpty) _addTyped();
-    widget.onCreate(
-      composeTemplateContent(
-        widget.base,
-        title: _title.text,
-        type: _type,
-        items: [
-          for (final i in _items)
-            if (i.selected) i.text,
-        ],
-      ),
+    return composeTemplateContent(
+      widget.base,
+      title: _title.text,
+      type: _type,
+      items: [
+        for (final i in _items)
+          if (i.selected) i.text,
+      ],
     );
   }
+
+  void _submit() => widget.onCreate(_composed());
 
   @override
   Widget build(BuildContext context) {
@@ -805,6 +925,19 @@ class _TemplateComposerState extends State<TemplateComposer> {
                   style: theme.textTheme.titleLarge,
                 ),
               ),
+              if (widget.onSaveAsTemplate != null)
+                IconButton(
+                  key: const ValueKey('tpl-save-as'),
+                  tooltip: widget.saveAsEdits
+                      ? l10n.templateEdit
+                      : l10n.templateSaveAsMine,
+                  icon: Icon(
+                    widget.saveAsEdits
+                        ? Icons.edit_outlined
+                        : Icons.bookmark_add_outlined,
+                  ),
+                  onPressed: () => widget.onSaveAsTemplate!(_composed()),
+                ),
             ],
           ),
           const SizedBox(height: 12),

@@ -47,6 +47,59 @@ bool isExternalLocation(Uri uri) =>
 /// tipine bakılarak seçilir.
 String archiveNoteRoutePath(String id) => '/notebook/$id';
 
+/// Not/defter rotalarının SPLIT KABUĞUN DIŞINDAKİ eşi (bkz. [notePushPath]).
+const String kOutsideShellNotePrefix = '/open';
+
+/// Konum, liste+not kabuğunun ([SplitShell]) içindeki bir ekran mı?
+bool isSplitShellLocation(String path) =>
+    path == '/' || path.startsWith('/note/') || path.startsWith('/notebook/');
+
+/// **NOTU AÇMAK İÇİN PUSH EDİLECEK YOL** — o anki konuma göre.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-02: "arşivdeki notlar açılmıyor,
+/// basınca siyah ekran geliyor"): `/note/:id` SplitShell kabuğunun içinde;
+/// Arşiv, Çöp, Hatırlatıcılar, Klasörler, Yapay zekâ ise kabuğun DIŞINDA
+/// (kardeş rota). Arşivin üstüne `/note/x` push edilince go_router yığının
+/// dibindeki kabuktan ayrı İKİNCİ bir kabuk sayfası kuruyor: iki sayfa aynı
+/// sayfa anahtarını ve aynı iç Navigator GlobalKey'ini taşıyor. Hata
+/// ayıklamada `!keyReservation.contains(key)` iddiası, sürümde SİYAH EKRAN.
+///
+/// Kabuğun dışındayken not, kabuğun DIŞINDAKİ eş rotada
+/// ([kOutsideShellNotePrefix]) açılır: aynı ekran, tek kabuk; geri tuşu
+/// açılan yere (arşive) döner. Kabuk içindeyken yol aynen kalır (geniş
+/// ekranda liste solda durur). Test: `test/note_route_test.dart`.
+String notePushPath(String currentPath, String notePath) =>
+    isSplitShellLocation(currentPath)
+    ? notePath
+    : '$kOutsideShellNotePrefix$notePath';
+
+/// Not/defter rotasını o anki konuma göre doğru yoldan açar (bkz.
+/// [notePushPath]). Bağlamı OLMAYAN yollar (bildirim, paylaşım, derin
+/// bağlantı) için; ekrandan açarken [NoteContextPush.pushNote] kullanılır.
+extension NoteRoutePush on GoRouter {
+  Future<T?> pushNote<T extends Object?>(String notePath) =>
+      push<T>(notePushPath(state.uri.path, notePath));
+}
+
+/// Ekrandan not açma — [notePushPath]'e ek olarak çağıranın SAYFASIZ bir
+/// rotada (`Navigator.push` ile açılan klasör sayfası, podcast ekranı…)
+/// olup olmadığına bakar. Yönlendirici o rotaları görmez (konum hâlâ `/`);
+/// kabuk içi yol seçilseydi not, kabuğun iç Navigator'ına — sayfasız
+/// rotanın ALTINA — girer, geniş ekranda klasör sayfasının arkasında
+/// görünmez kalırdı. Kabuk dışı eş her zaman güvenli: en üste biner.
+extension NoteContextPush on BuildContext {
+  Future<T?> pushNote<T extends Object?>(String notePath) {
+    final router = GoRouter.of(this);
+    final route = ModalRoute.of(this);
+    final pageless = route != null && route.settings is! Page;
+    return router.push<T>(
+      pageless
+          ? '$kOutsideShellNotePrefix$notePath'
+          : notePushPath(router.state.uri.path, notePath),
+    );
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
   final refresh = _RefreshNotifier(repo.authStateChanges());
@@ -109,46 +162,27 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
               GoRoute(
                 path: '/notebook/:id',
-                builder: (context, state) => ArchiveNoteScreen(
-                  key: ValueKey('notebook-${state.pathParameters['id']}'),
-                  noteId: state.pathParameters['id']!,
-                ),
+                builder: _notebookBuilder,
               ),
               GoRoute(
                 path: '/note/:id',
                 // ValueKey(noteId): editör State'i tüm kurulumunu initState'te
                 // noteId ile yapıyor; go/pushReplacement aynı GoRoute'un Element'ini
                 // geri dönüştürürse key olmadan ekranda ÖNCEKİ notun içeriği kalırdı.
-                builder: (context, state) => NoteEditorScreen(
-                  key: ValueKey('note-${state.pathParameters['id']}'),
-                  noteId: state.pathParameters['id']!,
-                  // ?owner=<uid>: PAYLAŞILAN klasördeki not — sahibinin
-                  // koleksiyonundan okunur/yazılır (bkz. NoteEditorScreen.ownerId).
-                  ownerId: state.uri.queryParameters['owner'],
-                  // ?ro=1: yalnız OKUMA yetkisi verilmiş paylaşılan not — alanlar
-                  // kilitli açılır (bkz. NoteEditorScreen.readOnly).
-                  readOnly: state.uri.queryParameters['ro'] == '1',
-                  // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
-                  startDrawing: state.uri.queryParameters['draw'] == '1',
-                  // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
-                  startVoiceCapture: state.uri.queryParameters['voice'] == '1',
-                  // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
-                  // imlecin olduğu yere anında yazılır (yapay zekâ yok).
-                  startDictation: state.uri.queryParameters['dictate'] == '1',
-                  // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
-                  startVideo: state.uri.queryParameters['video'] == '1',
-                  // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
-                  startPhoto: state.uri.queryParameters['photo'] == '1',
-                  // ?scan=1: belge tara not al — belge tarayıcı açılır.
-                  startScan: state.uri.queryParameters['scan'] == '1',
-                  // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
-                  // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
-                  startPdf: state.uri.queryParameters['pdf'] == '1',
-                  // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
-                  startSlides: state.uri.queryParameters['slides'] == '1',
-                ),
+                builder: _noteBuilder,
               ),
             ],
+          ),
+          // Kabuğun DIŞINDAN (arşiv, çöp, hatırlatıcılar, klasörler…) açılan
+          // not ve defter — aynı ekranlar; ikinci bir SplitShell sayfası
+          // kurulmasın diye ayrı yol (bkz. notePushPath).
+          GoRoute(
+            path: '$kOutsideShellNotePrefix/notebook/:id',
+            builder: _notebookBuilder,
+          ),
+          GoRoute(
+            path: '$kOutsideShellNotePrefix/note/:id',
+            builder: _noteBuilder,
           ),
           GoRoute(
             path: '/settings',
@@ -222,7 +256,7 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
     // hatırlatıcısının dokunuşuyla aynı yol: kilitli not kilitli kalır).
     if (uri.host == 'note' && uri.pathSegments.isNotEmpty) {
       router.go('/');
-      router.push(noteRoutePath(uri.pathSegments.first));
+      router.pushNote(noteRoutePath(uri.pathSegments.first));
       return;
     }
     // notlar://reminders — "Bugün" widget'ı Hatırlatıcılar ekranını açar.
@@ -240,7 +274,7 @@ final deepLinkHandlerProvider = Provider<void>((ref) {
         final id = await repo.createNote(
           NoteType.fromId(uri.queryParameters['type']),
         );
-        router.push(noteRoutePath(id));
+        router.pushNote(noteRoutePath(id));
       });
     }
   }
@@ -278,3 +312,39 @@ class _RefreshNotifier extends ChangeNotifier {
     super.dispose();
   }
 }
+
+Widget _notebookBuilder(BuildContext context, GoRouterState state) =>
+    ArchiveNoteScreen(
+      key: ValueKey('notebook-${state.pathParameters['id']}'),
+      noteId: state.pathParameters['id']!,
+    );
+
+Widget _noteBuilder(BuildContext context, GoRouterState state) =>
+    NoteEditorScreen(
+      key: ValueKey('note-${state.pathParameters['id']}'),
+      noteId: state.pathParameters['id']!,
+      // ?owner=<uid>: PAYLAŞILAN klasördeki not — sahibinin
+      // koleksiyonundan okunur/yazılır (bkz. NoteEditorScreen.ownerId).
+      ownerId: state.uri.queryParameters['owner'],
+      // ?ro=1: yalnız OKUMA yetkisi verilmiş paylaşılan not — alanlar
+      // kilitli açılır (bkz. NoteEditorScreen.readOnly).
+      readOnly: state.uri.queryParameters['ro'] == '1',
+      // ?draw=1: el yazısı modu — editör çizim tuvaliyle açılır.
+      startDrawing: state.uri.queryParameters['draw'] == '1',
+      // ?voice=1: sesli not modu — kayıt + canlı döküm başlar.
+      startVoiceCapture: state.uri.queryParameters['voice'] == '1',
+      // ?dictate=1: SESLE YAZ — mikrofon açılır, konuşulan söz
+      // imlecin olduğu yere anında yazılır (yapay zekâ yok).
+      startDictation: state.uri.queryParameters['dictate'] == '1',
+      // ?video=1: görüntülü not — kamera açılır, video cihazda kalır.
+      startVideo: state.uri.queryParameters['video'] == '1',
+      // ?photo=1: foto çek not al — fotoğraf makinesi açılır.
+      startPhoto: state.uri.queryParameters['photo'] == '1',
+      // ?scan=1: belge tara not al — belge tarayıcı açılır.
+      startScan: state.uri.queryParameters['scan'] == '1',
+      // ?pdf=1: PDF ekle not al — dosya seçici açılır, seçilen belge
+      // notun içine gömülür (iki bölmeli sayfa-notu ekranı).
+      startPdf: state.uri.queryParameters['pdf'] == '1',
+      // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
+      startSlides: state.uri.queryParameters['slides'] == '1',
+    );

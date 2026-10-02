@@ -4314,4 +4314,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Why does it matter?';
+
+  @override
+  String get templateNew => 'New template';
+
+  @override
+  String get templateEdit => 'Edit template';
+
+  @override
+  String get templateDuplicate => 'Duplicate';
+
+  @override
+  String get templateSaveAsMine => 'Save to my templates';
+
+  @override
+  String get templateUntitled => 'Untitled template';
+
+  @override
+  String get templateTypeText => 'Text';
+
+  @override
+  String get templateTitleHelp =>
+      'Title of notes created from this template (optional)';
+
+  @override
+  String get templateBody => 'Text';
+
+  @override
+  String get templateHeadingHelp =>
+      'Lines starting with “# ” become headings, “## ” subheadings.';
+
+  @override
+  String get templateDiscardTitle => 'Discard changes?';
+
+  @override
+  String get templateDiscard => 'Discard';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” deleted';
+  }
 }

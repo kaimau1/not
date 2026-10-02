@@ -4313,4 +4313,44 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'यह क्यों ज़रूरी है?';
+
+  @override
+  String get templateNew => 'नया टेम्पलेट';
+
+  @override
+  String get templateEdit => 'टेम्पलेट संपादित करें';
+
+  @override
+  String get templateDuplicate => 'डुप्लिकेट करें';
+
+  @override
+  String get templateSaveAsMine => 'मेरे टेम्पलेट में सहेजें';
+
+  @override
+  String get templateUntitled => 'बिना नाम का टेम्पलेट';
+
+  @override
+  String get templateTypeText => 'टेक्स्ट';
+
+  @override
+  String get templateTitleHelp =>
+      'इस टेम्पलेट से बने नोट्स का शीर्षक (वैकल्पिक)';
+
+  @override
+  String get templateBody => 'टेक्स्ट';
+
+  @override
+  String get templateHeadingHelp =>
+      '“# ” से शुरू होने वाली पंक्तियाँ शीर्षक, “## ” वाली उपशीर्षक बनती हैं।';
+
+  @override
+  String get templateDiscardTitle => 'बदलाव छोड़ दें?';
+
+  @override
+  String get templateDiscard => 'छोड़ें';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” हटाया गया';
+  }
 }

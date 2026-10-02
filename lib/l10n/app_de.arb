@@ -831,5 +831,17 @@
   "tplGoalsYear": "Dieses Jahr",
   "tplGoalsMonth": "Diesen Monat",
   "tplGoalsWeek": "Diese Woche",
-  "tplGoalsWhy": "Warum ist es wichtig?"
+  "tplGoalsWhy": "Warum ist es wichtig?",
+  "templateNew": "Neue Vorlage",
+  "templateEdit": "Vorlage bearbeiten",
+  "templateDuplicate": "Duplizieren",
+  "templateSaveAsMine": "In meinen Vorlagen speichern",
+  "templateUntitled": "Unbenannte Vorlage",
+  "templateTypeText": "Text",
+  "templateTitleHelp": "Titel der Notizen aus dieser Vorlage (optional)",
+  "templateBody": "Text",
+  "templateHeadingHelp": "Zeilen mit „# “ werden Überschriften, mit „## “ Unterüberschriften.",
+  "templateDiscardTitle": "Änderungen verwerfen?",
+  "templateDiscard": "Verwerfen",
+  "templateDeleted": "„{name}“ gelöscht"
 }

@@ -3801,3 +3801,37 @@ gösterilmedi). Madde listeleri ASCII virgülle (`_split` ',' ile böler).
 ### Ortam
 Flutter 3.44.6 yine `/opt/flutter`'a indirildi. graphify konteynerde yok —
 graf bu turda güncellenmedi.
+
+## 2026-10-02 — arşivden not siyah ekran, şablon düzenleyicisi
+
+### "Arşivdeki notlar açılmıyor, basınca siyah ekran" — KÖK NEDEN
+`/note/:id` ve `/notebook/:id` SplitShell kabuğunun İÇİNDE; `/archive`,
+`/trash`, `/reminders`, `/folders`, `/inbox`, `/ai`, `/settings` kabuğun
+DIŞINDA (AppFrame altında kardeş). Arşivin üstüne `/note/x` push edilince
+go_router yığının dibindeki kabuktan ayrı İKİNCİ bir SplitShell sayfası
+kuruyor → iki sayfa aynı sayfa anahtarını + aynı iç Navigator GlobalKey'ini
+taşıyor. Hata ayıklamada `!keyReservation.contains(key)` iddiası, sürümde
+siyah ekran. Aynı hata: Hatırlatıcılar → "yeni hatırlatıcı", Klasörler/
+Gelen notlar ekranındaki kartlar, yapay zekâdan "not olarak kaydet".
+DÜZELTME: kabuk dışı EŞ rotalar `/open/note/:id`, `/open/notebook/:id`
+(aynı ekranlar). **TUZAK: not açan push'lar `context.push(noteRoutePath…)`
+DEĞİL `context.pushNote(...)` / `router.pushNote(...)` ile yapılır**
+(router.dart). Kural: konum kabuk içiyse aynı yol, değilse `/open` öneki;
+ÇAĞIRAN SAYFASIZ rotadaysa (FolderScreen, ListenScreen — `Navigator.push`)
+her zaman `/open`: yönlendirici o rotaları görmez, kabuk içi yol notu
+sayfasız rotanın ALTINA koyardı (geniş ekranda klasör sayfasının arkasında
+görünmez not). Test: `test/note_route_test.dart` (gerçek iskeletin
+aynısıyla). `/open/...` rayda hiçbir bölümü vurgulamaz (bilinçli).
+
+### Şablon düzenleyicisi (template_editor_screen.dart)
+Kullanıcı: "şablon oluşturma ve düzenleme, şablonları geliştir". Galeride
+"Yeni şablon"; kendi şablonumda ⋮ → Düzenle / Çoğalt / Yeniden adlandır /
+Sil (geri alınabilir); önizlemede yer imi düğmesi: hazır şablonun BİÇİLMİŞ
+hâli düzenleyicide açılır, "Şablonlarım"a girer. KARARLAR:
+* Yazı şablonunda başlık satırı `# ` (büyük) / `## ` (alt) önekiyle yazılır
+  — biçim işaretleri ham gösterilmez (`templateBodyToEditable`). Satır içi
+  biçim (kalın/renk) düzenleyicide görünmez; gövde DEĞİŞMEDEN kaydedilirse
+  asıl biçimli gövde korunur.
+* Liste ↔ yazı türü değişince içerik taşınır (maddeler "• madde" satırı,
+  satırlar madde) — kaybolmaz.
+* Düzenleme yerinde (`update`, sıra değişmez); çoğaltma aslının arkasına.

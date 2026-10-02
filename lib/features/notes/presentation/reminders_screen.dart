@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../app/router.dart';
@@ -177,7 +176,7 @@ class RemindersScreen extends ConsumerWidget {
     // Hatırlatıcı TEK yazımda: createNote + ayrı setReminder arasında doküman
     // bir an hatırlatıcısız kalıyordu (boş-doküman penceresi kuralı).
     final id = await repo.createNote(NoteType.text, reminderAt: picked);
-    if (context.mounted) await context.push(noteRoutePath(id));
+    if (context.mounted) await context.pushNote(noteRoutePath(id));
   }
 
   @override

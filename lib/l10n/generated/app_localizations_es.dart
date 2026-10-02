@@ -4335,4 +4335,44 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => '¿Por qué es importante?';
+
+  @override
+  String get templateNew => 'Nueva plantilla';
+
+  @override
+  String get templateEdit => 'Editar plantilla';
+
+  @override
+  String get templateDuplicate => 'Duplicar';
+
+  @override
+  String get templateSaveAsMine => 'Guardar en mis plantillas';
+
+  @override
+  String get templateUntitled => 'Plantilla sin título';
+
+  @override
+  String get templateTypeText => 'Texto';
+
+  @override
+  String get templateTitleHelp =>
+      'Título de las notas creadas con esta plantilla (opcional)';
+
+  @override
+  String get templateBody => 'Texto';
+
+  @override
+  String get templateHeadingHelp =>
+      'Las líneas que empiezan por “# ” son títulos; por “## ”, subtítulos.';
+
+  @override
+  String get templateDiscardTitle => '¿Descartar los cambios?';
+
+  @override
+  String get templateDiscard => 'Descartar';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” eliminada';
+  }
 }

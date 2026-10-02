@@ -4337,4 +4337,44 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tplGoalsWhy => 'Waarom is het belangrijk?';
+
+  @override
+  String get templateNew => 'Nieuwe sjabloon';
+
+  @override
+  String get templateEdit => 'Sjabloon bewerken';
+
+  @override
+  String get templateDuplicate => 'Dupliceren';
+
+  @override
+  String get templateSaveAsMine => 'Opslaan in mijn sjablonen';
+
+  @override
+  String get templateUntitled => 'Naamloze sjabloon';
+
+  @override
+  String get templateTypeText => 'Tekst';
+
+  @override
+  String get templateTitleHelp =>
+      'Titel van notities uit deze sjabloon (optioneel)';
+
+  @override
+  String get templateBody => 'Tekst';
+
+  @override
+  String get templateHeadingHelp =>
+      'Regels die beginnen met “# ” worden koppen, met “## ” subkoppen.';
+
+  @override
+  String get templateDiscardTitle => 'Wijzigingen negeren?';
+
+  @override
+  String get templateDiscard => 'Negeren';
+
+  @override
+  String templateDeleted(String name) {
+    return '“$name” verwijderd';
+  }
 }

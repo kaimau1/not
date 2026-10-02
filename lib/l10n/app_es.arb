@@ -831,5 +831,17 @@
   "tplGoalsYear": "Este año",
   "tplGoalsMonth": "Este mes",
   "tplGoalsWeek": "Esta semana",
-  "tplGoalsWhy": "¿Por qué es importante?"
+  "tplGoalsWhy": "¿Por qué es importante?",
+  "templateNew": "Nueva plantilla",
+  "templateEdit": "Editar plantilla",
+  "templateDuplicate": "Duplicar",
+  "templateSaveAsMine": "Guardar en mis plantillas",
+  "templateUntitled": "Plantilla sin título",
+  "templateTypeText": "Texto",
+  "templateTitleHelp": "Título de las notas creadas con esta plantilla (opcional)",
+  "templateBody": "Texto",
+  "templateHeadingHelp": "Las líneas que empiezan por “# ” son títulos; por “## ”, subtítulos.",
+  "templateDiscardTitle": "¿Descartar los cambios?",
+  "templateDiscard": "Descartar",
+  "templateDeleted": "“{name}” eliminada"
 }
