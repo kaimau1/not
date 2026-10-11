@@ -23,6 +23,7 @@ import '../features/notes/presentation/reminders_screen.dart';
 import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
+import '../features/settings/presentation/guide_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'app_frame.dart';
 import 'split_shell.dart';
@@ -192,6 +193,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/privacy',
             builder: (context, state) => const PrivacyScreen(),
+          ),
+          // Kullanım kılavuzu; `?section=pages` ile doğrudan bir bölüm.
+          GoRoute(
+            path: '/guide',
+            builder: (context, state) => GuideScreen(
+              initialSection: state.uri.queryParameters['section'],
+            ),
           ),
           GoRoute(
             path: '/premium',

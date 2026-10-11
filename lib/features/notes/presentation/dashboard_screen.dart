@@ -1365,6 +1365,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                 'settings' => context.push(
                                                   '/settings',
                                                 ),
+                                                'guide' => context.push(
+                                                  '/guide',
+                                                ),
                                                 _ => null,
                                               },
                                           // Tasarım bu menüyü dörde indiriyor
@@ -1477,6 +1480,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                               'settings',
                                               Icons.settings_outlined,
                                               l10n.settings,
+                                            ),
+                                            _menuItem(
+                                              'guide',
+                                              Icons.menu_book_outlined,
+                                              l10n.guideTitle,
                                             ),
                                           ],
                                         ),

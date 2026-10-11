@@ -4469,4 +4469,24 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Встраивание убрано';
+
+  @override
+  String get guideTitle => 'Руководство';
+
+  @override
+  String get guideMenuInfo => 'Все функции, шаг за шагом';
+
+  @override
+  String get guideSearchHint => 'Поиск по руководству — «страница», «YouTube»';
+
+  @override
+  String get guideContents => 'Содержание';
+
+  @override
+  String get guideOpenScreen => 'Открыть экран';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Ничего не найдено по запросу «$query»';
+  }
 }

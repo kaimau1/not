@@ -1986,5 +1986,12 @@
   "embedSectionExisting": "Bu nottaki ekler",
   "embedReplace": "Değiştir",
   "embedRemove": "Gömmeyi kaldır",
-  "embedRemoved": "Gömme kaldırıldı"
+  "embedRemoved": "Gömme kaldırıldı",
+  "guideTitle": "Kullanım kılavuzu",
+  "guideMenuInfo": "Bütün özellikler, adım adım",
+  "guideSearchHint": "Kılavuzda ara — “sayfa”, “YouTube”",
+  "guideContents": "İçindekiler",
+  "guideOpenScreen": "Ekranı aç",
+  "guideNoResults": "«{query}» için sonuç yok",
+  "@guideNoResults": {"placeholders": {"query": {"type": "String"}}}
 }

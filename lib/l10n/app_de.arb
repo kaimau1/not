@@ -872,5 +872,11 @@
   "embedSectionExisting": "Anhänge dieser Notiz",
   "embedReplace": "Ersetzen",
   "embedRemove": "Einbettung entfernen",
-  "embedRemoved": "Einbettung entfernt"
+  "embedRemoved": "Einbettung entfernt",
+  "guideTitle": "Benutzerhandbuch",
+  "guideMenuInfo": "Alle Funktionen, Schritt für Schritt",
+  "guideSearchHint": "Im Handbuch suchen – „Seite“, „YouTube“",
+  "guideContents": "Inhalt",
+  "guideOpenScreen": "Bildschirm öffnen",
+  "guideNoResults": "Keine Ergebnisse für „{query}“"
 }

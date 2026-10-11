@@ -872,5 +872,11 @@
   "embedSectionExisting": "Pièces jointes de cette note",
   "embedReplace": "Remplacer",
   "embedRemove": "Retirer l'intégration",
-  "embedRemoved": "Intégration retirée"
+  "embedRemoved": "Intégration retirée",
+  "guideTitle": "Guide d'utilisation",
+  "guideMenuInfo": "Toutes les fonctions, pas à pas",
+  "guideSearchHint": "Chercher dans le guide — « page », « YouTube »",
+  "guideContents": "Sommaire",
+  "guideOpenScreen": "Ouvrir l'écran",
+  "guideNoResults": "Aucun résultat pour « {query} »"
 }

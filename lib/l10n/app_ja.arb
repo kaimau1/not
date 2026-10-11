@@ -872,5 +872,11 @@
   "embedSectionExisting": "このノートの添付",
   "embedReplace": "置き換え",
   "embedRemove": "埋め込みを解除",
-  "embedRemoved": "埋め込みを解除しました"
+  "embedRemoved": "埋め込みを解除しました",
+  "guideTitle": "使い方ガイド",
+  "guideMenuInfo": "すべての機能を順を追って",
+  "guideSearchHint": "ガイドを検索 —「ページ」「YouTube」",
+  "guideContents": "目次",
+  "guideOpenScreen": "画面を開く",
+  "guideNoResults": "「{query}」の結果はありません"
 }

@@ -872,5 +872,11 @@
   "embedSectionExisting": "Załączniki tej notatki",
   "embedReplace": "Zamień",
   "embedRemove": "Usuń osadzenie",
-  "embedRemoved": "Usunięto osadzenie"
+  "embedRemoved": "Usunięto osadzenie",
+  "guideTitle": "Instrukcja obsługi",
+  "guideMenuInfo": "Wszystkie funkcje krok po kroku",
+  "guideSearchHint": "Szukaj w instrukcji — „strona”, „YouTube”",
+  "guideContents": "Spis treści",
+  "guideOpenScreen": "Otwórz ekran",
+  "guideNoResults": "Brak wyników dla „{query}”"
 }

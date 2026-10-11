@@ -872,5 +872,11 @@
   "embedSectionExisting": "Bijlagen van deze notitie",
   "embedReplace": "Vervangen",
   "embedRemove": "Insluiting verwijderen",
-  "embedRemoved": "Insluiting verwijderd"
+  "embedRemoved": "Insluiting verwijderd",
+  "guideTitle": "Handleiding",
+  "guideMenuInfo": "Alle functies, stap voor stap",
+  "guideSearchHint": "Zoeken in de handleiding — ‘pagina’, ‘YouTube’",
+  "guideContents": "Inhoud",
+  "guideOpenScreen": "Scherm openen",
+  "guideNoResults": "Geen resultaten voor ‘{query}’"
 }

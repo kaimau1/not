@@ -872,5 +872,11 @@
   "embedSectionExisting": "مرفقات هذه الملاحظة",
   "embedReplace": "استبدال",
   "embedRemove": "إزالة التضمين",
-  "embedRemoved": "أُزيل التضمين"
+  "embedRemoved": "أُزيل التضمين",
+  "guideTitle": "دليل الاستخدام",
+  "guideMenuInfo": "كل الميزات خطوة بخطوة",
+  "guideSearchHint": "ابحث في الدليل — «صفحة»، «يوتيوب»",
+  "guideContents": "المحتويات",
+  "guideOpenScreen": "فتح الشاشة",
+  "guideNoResults": "لا نتائج لـ «{query}»"
 }

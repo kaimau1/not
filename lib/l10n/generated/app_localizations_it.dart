@@ -4475,4 +4475,24 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Incorporamento rimosso';
+
+  @override
+  String get guideTitle => 'Guida all\'uso';
+
+  @override
+  String get guideMenuInfo => 'Tutte le funzioni, passo dopo passo';
+
+  @override
+  String get guideSearchHint => 'Cerca nella guida — “pagina”, “YouTube”';
+
+  @override
+  String get guideContents => 'Indice';
+
+  @override
+  String get guideOpenScreen => 'Apri schermata';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Nessun risultato per “$query”';
+  }
 }

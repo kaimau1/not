@@ -872,5 +872,11 @@
   "embedSectionExisting": "Lampiran catatan ini",
   "embedReplace": "Ganti",
   "embedRemove": "Hapus sematan",
-  "embedRemoved": "Sematan dihapus"
+  "embedRemoved": "Sematan dihapus",
+  "guideTitle": "Panduan penggunaan",
+  "guideMenuInfo": "Semua fitur, langkah demi langkah",
+  "guideSearchHint": "Cari di panduan — “halaman”, “YouTube”",
+  "guideContents": "Daftar isi",
+  "guideOpenScreen": "Buka layar",
+  "guideNoResults": "Tidak ada hasil untuk “{query}”"
 }

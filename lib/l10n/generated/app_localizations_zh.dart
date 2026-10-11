@@ -4353,4 +4353,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get embedRemoved => '已取消嵌入';
+
+  @override
+  String get guideTitle => '使用指南';
+
+  @override
+  String get guideMenuInfo => '所有功能，逐步讲解';
+
+  @override
+  String get guideSearchHint => '搜索指南 —“页面”“YouTube”';
+
+  @override
+  String get guideContents => '目录';
+
+  @override
+  String get guideOpenScreen => '打开界面';
+
+  @override
+  String guideNoResults(String query) {
+    return '没有“$query”的结果';
+  }
 }

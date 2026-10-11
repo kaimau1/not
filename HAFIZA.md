@@ -3985,3 +3985,30 @@ Diğer sorunlar ve yeni akış:
   yazılıyordu → "kelime " seçilince boşluk yutuluyordu (`trimmedRange`).
 * Zaten etiket olan yazıya yeniden gömmek ikinci ataç eklemez, bağı değiştirir.
 * "Ters yön" (önce eki seç, sonra yazıyı) korundu.
+
+## 2026-10-11 (3. tur) — Uygulama içi kullanım kılavuzu
+
+`flutter analyze` temiz, `flutter test` **1122 test yeşil** (4 yeni).
+Kullanıcı: "tüm özellikleri anlatan, gösteren bir kullanım kılavuzu";
+yeri sorulunca **uygulama içi** seçildi.
+* Ekran `settings/presentation/guide_screen.dart`, rota `/guide`
+  (`?section=<kimlik>` doğrudan bölüm açar). Giriş: ana ekran ⋮ menüsünün
+  sonu + Ayarlar'ın en üstündeki kart.
+* KARAR — içerik `assets/guide/guide_<dil>.md` METİN dosyalarında, l10n
+  anahtarlarında değil (yüzlerce cümle ARB'leri şişirir, bağlamsız
+  çevrilir). **tr ve en tam; diğer 14 dil İngilizceye düşer** — çeviri
+  sonraki iş. Biçim: `## Başlık {#kimlik}`, `### `, `- `, `1. `, `**kalın**`.
+  Kimlik simgeyi ve "Ekranı aç" rotasını seçer (`guideSectionMeta`) — çeviri
+  kimliğe dokunmaz. Test: bütün dil dosyaları AYNI kimlikleri aynı sırayla
+  taşımak zorunda (yeni dil eklerken bölüm atlanırsa kırmızı).
+* **Yeni özellik eklenince kılavuz da güncellenir** (tr + en, aynı bölüm).
+* TUZAK 1 — tembel `ListView` ekran dışındaki bölüm kartlarını KURMUYOR:
+  "İçindekiler"den atlamada `Scrollable.ensureVisible` hedefi bulamıyordu.
+  19 kart → `SingleChildScrollView` + `Column`.
+* TUZAK 2 — testte `rootBundle.loadString` önbelleği: bir testin sahte
+  saat bölgesinde başlatılan okuma sonraki testte asılı kalıp
+  `pumpAndSettle`'ı sonsuza dek bekletiyordu. `cache: false` + testte
+  `runAsync` ile kısa gerçek bekleme.
+* Metindeki her menü adı uygulamanın GERÇEK metnine göre yazıldı (ör.
+  "Seçili yazıya ek göm", "Kopyalanan eki yapıştır"); yeni bir özellik
+  yeniden adlandırılırsa kılavuz da değişmeli.

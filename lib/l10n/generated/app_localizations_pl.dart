@@ -4475,4 +4475,24 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Usunięto osadzenie';
+
+  @override
+  String get guideTitle => 'Instrukcja obsługi';
+
+  @override
+  String get guideMenuInfo => 'Wszystkie funkcje krok po kroku';
+
+  @override
+  String get guideSearchHint => 'Szukaj w instrukcji — „strona”, „YouTube”';
+
+  @override
+  String get guideContents => 'Spis treści';
+
+  @override
+  String get guideOpenScreen => 'Otwórz ekran';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Brak wyników dla „$query”';
+  }
 }

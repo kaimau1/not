@@ -872,5 +872,11 @@
   "embedSectionExisting": "此笔记的附件",
   "embedReplace": "替换",
   "embedRemove": "取消嵌入",
-  "embedRemoved": "已取消嵌入"
+  "embedRemoved": "已取消嵌入",
+  "guideTitle": "使用指南",
+  "guideMenuInfo": "所有功能，逐步讲解",
+  "guideSearchHint": "搜索指南 —“页面”“YouTube”",
+  "guideContents": "目录",
+  "guideOpenScreen": "打开界面",
+  "guideNoResults": "没有“{query}”的结果"
 }

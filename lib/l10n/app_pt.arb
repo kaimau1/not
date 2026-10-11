@@ -872,5 +872,11 @@
   "embedSectionExisting": "Anexos desta nota",
   "embedReplace": "Substituir",
   "embedRemove": "Remover incorporação",
-  "embedRemoved": "Incorporação removida"
+  "embedRemoved": "Incorporação removida",
+  "guideTitle": "Guia de utilização",
+  "guideMenuInfo": "Todas as funções, passo a passo",
+  "guideSearchHint": "Pesquisar no guia — “página”, “YouTube”",
+  "guideContents": "Conteúdo",
+  "guideOpenScreen": "Abrir ecrã",
+  "guideNoResults": "Sem resultados para “{query}”"
 }

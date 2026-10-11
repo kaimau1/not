@@ -1707,5 +1707,11 @@
   "embedSectionExisting": "Attachments in this note",
   "embedReplace": "Replace",
   "embedRemove": "Remove embed",
-  "embedRemoved": "Embed removed"
+  "embedRemoved": "Embed removed",
+  "guideTitle": "User guide",
+  "guideMenuInfo": "Every feature, step by step",
+  "guideSearchHint": "Search the guide — “page”, “YouTube”",
+  "guideContents": "Contents",
+  "guideOpenScreen": "Open screen",
+  "guideNoResults": "No results for “{query}”"
 }

@@ -872,5 +872,11 @@
   "embedSectionExisting": "Allegati di questa nota",
   "embedReplace": "Sostituisci",
   "embedRemove": "Rimuovi incorporamento",
-  "embedRemoved": "Incorporamento rimosso"
+  "embedRemoved": "Incorporamento rimosso",
+  "guideTitle": "Guida all'uso",
+  "guideMenuInfo": "Tutte le funzioni, passo dopo passo",
+  "guideSearchHint": "Cerca nella guida — “pagina”, “YouTube”",
+  "guideContents": "Indice",
+  "guideOpenScreen": "Apri schermata",
+  "guideNoResults": "Nessun risultato per “{query}”"
 }

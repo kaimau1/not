@@ -156,6 +156,8 @@ flutter:
   assets:
     # Uygulama içi Gizlilik Politikası ekranı bu dosyayı gösterir.
     - PRIVACY_POLICY.md
+    # Uygulama içi KULLANIM KILAVUZU (dil başına; bkz. guide_screen.dart).
+    - assets/guide/
     # Notu PDF'e aktarırken gömülen font. `pdf` paketinin hazır Helvetica'sı
     # WinAnsi kodlamalı, ı ğ ş İ harflerini İÇERMİYOR — Türkçe not bozuk
     # çıkıyordu. PT Sans (OFL) Türkçe'nin tamamını taşıyor.

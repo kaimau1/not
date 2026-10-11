@@ -4440,4 +4440,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get embedRemoved => 'أُزيل التضمين';
+
+  @override
+  String get guideTitle => 'دليل الاستخدام';
+
+  @override
+  String get guideMenuInfo => 'كل الميزات خطوة بخطوة';
+
+  @override
+  String get guideSearchHint => 'ابحث في الدليل — «صفحة»، «يوتيوب»';
+
+  @override
+  String get guideContents => 'المحتويات';
+
+  @override
+  String get guideOpenScreen => 'فتح الشاشة';
+
+  @override
+  String guideNoResults(String query) {
+    return 'لا نتائج لـ «$query»';
+  }
 }

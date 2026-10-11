@@ -4450,4 +4450,24 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get embedRemoved => 'एम्बेड हटाया गया';
+
+  @override
+  String get guideTitle => 'उपयोग गाइड';
+
+  @override
+  String get guideMenuInfo => 'सभी सुविधाएँ, कदम दर कदम';
+
+  @override
+  String get guideSearchHint => 'गाइड में खोजें — “पेज”, “YouTube”';
+
+  @override
+  String get guideContents => 'विषय सूची';
+
+  @override
+  String get guideOpenScreen => 'स्क्रीन खोलें';
+
+  @override
+  String guideNoResults(String query) {
+    return '“$query” के लिए कोई परिणाम नहीं';
+  }
 }

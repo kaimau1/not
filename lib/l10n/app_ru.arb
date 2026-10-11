@@ -872,5 +872,11 @@
   "embedSectionExisting": "Вложения этой заметки",
   "embedReplace": "Заменить",
   "embedRemove": "Убрать встраивание",
-  "embedRemoved": "Встраивание убрано"
+  "embedRemoved": "Встраивание убрано",
+  "guideTitle": "Руководство",
+  "guideMenuInfo": "Все функции, шаг за шагом",
+  "guideSearchHint": "Поиск по руководству — «страница», «YouTube»",
+  "guideContents": "Содержание",
+  "guideOpenScreen": "Открыть экран",
+  "guideNoResults": "Ничего не найдено по запросу «{query}»"
 }

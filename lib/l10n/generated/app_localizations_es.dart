@@ -4473,4 +4473,24 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Incrustación quitada';
+
+  @override
+  String get guideTitle => 'Guía de uso';
+
+  @override
+  String get guideMenuInfo => 'Todas las funciones, paso a paso';
+
+  @override
+  String get guideSearchHint => 'Buscar en la guía: «página», «YouTube»';
+
+  @override
+  String get guideContents => 'Contenido';
+
+  @override
+  String get guideOpenScreen => 'Abrir pantalla';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Sin resultados para «$query»';
+  }
 }

@@ -4468,4 +4468,24 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Sematan dihapus';
+
+  @override
+  String get guideTitle => 'Panduan penggunaan';
+
+  @override
+  String get guideMenuInfo => 'Semua fitur, langkah demi langkah';
+
+  @override
+  String get guideSearchHint => 'Cari di panduan — “halaman”, “YouTube”';
+
+  @override
+  String get guideContents => 'Daftar isi';
+
+  @override
+  String get guideOpenScreen => 'Buka layar';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Tidak ada hasil untuk “$query”';
+  }
 }

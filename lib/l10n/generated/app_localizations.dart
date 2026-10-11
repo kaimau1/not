@@ -8081,6 +8081,42 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Gömme kaldırıldı'**
   String get embedRemoved;
+
+  /// No description provided for @guideTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kullanım kılavuzu'**
+  String get guideTitle;
+
+  /// No description provided for @guideMenuInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütün özellikler, adım adım'**
+  String get guideMenuInfo;
+
+  /// No description provided for @guideSearchHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kılavuzda ara — “sayfa”, “YouTube”'**
+  String get guideSearchHint;
+
+  /// No description provided for @guideContents.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçindekiler'**
+  String get guideContents;
+
+  /// No description provided for @guideOpenScreen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekranı aç'**
+  String get guideOpenScreen;
+
+  /// No description provided for @guideNoResults.
+  ///
+  /// In tr, this message translates to:
+  /// **'«{query}» için sonuç yok'**
+  String guideNoResults(String query);
 }
 
 class _AppLocalizationsDelegate

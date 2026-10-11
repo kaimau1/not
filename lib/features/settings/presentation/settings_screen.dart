@@ -428,6 +428,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             children: [
               const _ProfileCard(),
+              const SizedBox(height: 8),
+              // KULLANIM KILAVUZU: ayar arayan kullanıcı çoğu zaman bir
+              // özelliğin NASIL kullanıldığını arıyor — en üstte.
+              Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  key: const ValueKey('settings-guide'),
+                  leading: const Icon(Icons.menu_book_outlined),
+                  title: Text(l10n.guideTitle),
+                  subtitle: Text(l10n.guideMenuInfo),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/guide'),
+                ),
+              ),
               const SizedBox(height: 12),
               // Ayar arama: alan basliklarinda ve anahtar kelimelerde arar.
               Container(

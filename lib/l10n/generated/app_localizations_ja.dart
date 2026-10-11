@@ -4379,4 +4379,24 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get embedRemoved => '埋め込みを解除しました';
+
+  @override
+  String get guideTitle => '使い方ガイド';
+
+  @override
+  String get guideMenuInfo => 'すべての機能を順を追って';
+
+  @override
+  String get guideSearchHint => 'ガイドを検索 —「ページ」「YouTube」';
+
+  @override
+  String get guideContents => '目次';
+
+  @override
+  String get guideOpenScreen => '画面を開く';
+
+  @override
+  String guideNoResults(String query) {
+    return '「$query」の結果はありません';
+  }
 }

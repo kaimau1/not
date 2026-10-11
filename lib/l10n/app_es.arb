@@ -872,5 +872,11 @@
   "embedSectionExisting": "Adjuntos de esta nota",
   "embedReplace": "Cambiar",
   "embedRemove": "Quitar incrustación",
-  "embedRemoved": "Incrustación quitada"
+  "embedRemoved": "Incrustación quitada",
+  "guideTitle": "Guía de uso",
+  "guideMenuInfo": "Todas las funciones, paso a paso",
+  "guideSearchHint": "Buscar en la guía: «página», «YouTube»",
+  "guideContents": "Contenido",
+  "guideOpenScreen": "Abrir pantalla",
+  "guideNoResults": "Sin resultados para «{query}»"
 }

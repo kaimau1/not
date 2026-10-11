@@ -4477,4 +4477,25 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Insluiting verwijderd';
+
+  @override
+  String get guideTitle => 'Handleiding';
+
+  @override
+  String get guideMenuInfo => 'Alle functies, stap voor stap';
+
+  @override
+  String get guideSearchHint =>
+      'Zoeken in de handleiding — ‘pagina’, ‘YouTube’';
+
+  @override
+  String get guideContents => 'Inhoud';
+
+  @override
+  String get guideOpenScreen => 'Scherm openen';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Geen resultaten voor ‘$query’';
+  }
 }

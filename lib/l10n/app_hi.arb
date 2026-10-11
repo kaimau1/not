@@ -872,5 +872,11 @@
   "embedSectionExisting": "इस नोट के अटैचमेंट",
   "embedReplace": "बदलें",
   "embedRemove": "एम्बेड हटाएँ",
-  "embedRemoved": "एम्बेड हटाया गया"
+  "embedRemoved": "एम्बेड हटाया गया",
+  "guideTitle": "उपयोग गाइड",
+  "guideMenuInfo": "सभी सुविधाएँ, कदम दर कदम",
+  "guideSearchHint": "गाइड में खोजें — “पेज”, “YouTube”",
+  "guideContents": "विषय सूची",
+  "guideOpenScreen": "स्क्रीन खोलें",
+  "guideNoResults": "“{query}” के लिए कोई परिणाम नहीं"
 }

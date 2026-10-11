@@ -4385,4 +4385,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get embedRemoved => '삽입을 해제했습니다';
+
+  @override
+  String get guideTitle => '사용 설명서';
+
+  @override
+  String get guideMenuInfo => '모든 기능을 단계별로';
+
+  @override
+  String get guideSearchHint => '설명서 검색 — “페이지”, “YouTube”';
+
+  @override
+  String get guideContents => '목차';
+
+  @override
+  String get guideOpenScreen => '화면 열기';
+
+  @override
+  String guideNoResults(String query) {
+    return '“$query”에 대한 결과가 없습니다';
+  }
 }

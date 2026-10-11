@@ -872,5 +872,11 @@
   "embedSectionExisting": "이 메모의 첨부",
   "embedReplace": "바꾸기",
   "embedRemove": "삽입 해제",
-  "embedRemoved": "삽입을 해제했습니다"
+  "embedRemoved": "삽입을 해제했습니다",
+  "guideTitle": "사용 설명서",
+  "guideMenuInfo": "모든 기능을 단계별로",
+  "guideSearchHint": "설명서 검색 — “페이지”, “YouTube”",
+  "guideContents": "목차",
+  "guideOpenScreen": "화면 열기",
+  "guideNoResults": "“{query}”에 대한 결과가 없습니다"
 }

@@ -4479,4 +4479,24 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Einbettung entfernt';
+
+  @override
+  String get guideTitle => 'Benutzerhandbuch';
+
+  @override
+  String get guideMenuInfo => 'Alle Funktionen, Schritt für Schritt';
+
+  @override
+  String get guideSearchHint => 'Im Handbuch suchen – „Seite“, „YouTube“';
+
+  @override
+  String get guideContents => 'Inhalt';
+
+  @override
+  String get guideOpenScreen => 'Bildschirm öffnen';
+
+  @override
+  String guideNoResults(String query) {
+    return 'Keine Ergebnisse für „$query“';
+  }
 }

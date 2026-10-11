@@ -4449,4 +4449,24 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get embedRemoved => 'Gömme kaldırıldı';
+
+  @override
+  String get guideTitle => 'Kullanım kılavuzu';
+
+  @override
+  String get guideMenuInfo => 'Bütün özellikler, adım adım';
+
+  @override
+  String get guideSearchHint => 'Kılavuzda ara — “sayfa”, “YouTube”';
+
+  @override
+  String get guideContents => 'İçindekiler';
+
+  @override
+  String get guideOpenScreen => 'Ekranı aç';
+
+  @override
+  String guideNoResults(String query) {
+    return '«$query» için sonuç yok';
+  }
 }
