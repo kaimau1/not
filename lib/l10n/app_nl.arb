@@ -856,5 +856,21 @@
   "pinMediaRelease": "Loslaten: bovenaan vastzetten (notitie eronder)",
   "unpinMedia": "Terugzetten op de pagina",
   "unpinMediaRelease": "Loslaten: terugzetten op de pagina",
-  "pinnedMediaResize": "Paneelhoogte — sleep om te wijzigen"
+  "pinnedMediaResize": "Paneelhoogte — sleep om te wijzigen",
+  "addPageSubtitle": "Voegt een nieuwe lege pagina aan de notitie toe",
+  "pageOf": "Pagina {current} / {total}",
+  "pageAdded": "Pagina {page} toegevoegd",
+  "deletePageConfirm": "Tekst van deze pagina verwijderen? De afbeeldingen gaan naar de buurpagina. Met Ongedaan maken haal je hem terug.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Afbeelding",
+  "embedNewVideo": "Video",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Wat insluiten?",
+  "embedPickTitleFor": "Insluiten in ‘{label}’",
+  "embedPickInfo": "Tik op de tekst om het ingesloten item ter plekke te openen.",
+  "embedSectionNew": "Nieuw toevoegen",
+  "embedSectionExisting": "Bijlagen van deze notitie",
+  "embedReplace": "Vervangen",
+  "embedRemove": "Insluiting verwijderen",
+  "embedRemoved": "Insluiting verwijderd"
 }

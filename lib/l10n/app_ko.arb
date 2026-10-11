@@ -856,5 +856,21 @@
   "pinMediaRelease": "놓기: 위에 고정(아래에 메모)",
   "unpinMedia": "페이지로 되돌리기",
   "unpinMediaRelease": "놓기: 페이지로 되돌리기",
-  "pinnedMediaResize": "창 높이 — 드래그하여 변경"
+  "pinnedMediaResize": "창 높이 — 드래그하여 변경",
+  "addPageSubtitle": "메모에 빈 페이지를 새로 추가합니다",
+  "pageOf": "{current} / {total} 페이지",
+  "pageAdded": "{page}페이지를 추가했습니다",
+  "deletePageConfirm": "이 페이지의 글을 삭제할까요? 이미지는 옆 페이지로 옮겨집니다. 실행 취소로 되돌릴 수 있습니다.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "이미지",
+  "embedNewVideo": "동영상",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "무엇을 삽입할까요?",
+  "embedPickTitleFor": "“{label}”에 삽입",
+  "embedPickInfo": "글을 탭하면 삽입한 항목이 그 자리에서 열립니다.",
+  "embedSectionNew": "새로 추가",
+  "embedSectionExisting": "이 메모의 첨부",
+  "embedReplace": "바꾸기",
+  "embedRemove": "삽입 해제",
+  "embedRemoved": "삽입을 해제했습니다"
 }

@@ -22,7 +22,7 @@ void main() {
   );
 
   Future<({List<Attachment> pinned, List<bool> hovers, List<Attachment> moved})>
-  pump(WidgetTester tester) async {
+  pump(WidgetTester tester, {double topLimit = 0}) async {
     final pinned = <Attachment>[];
     final hovers = <bool>[];
     final moved = <Attachment>[];
@@ -38,6 +38,7 @@ void main() {
               child: NotePageCanvas(
                 images: const [img],
                 minHeight: 800,
+                topLimit: topLimit,
                 onRemove: (_) {},
                 onChanged: moved.add,
                 onPinTop: pinned.add,
@@ -95,5 +96,25 @@ void main() {
     await tester.pump();
     expect(r.pinned, isEmpty);
     expect(r.moved.single.pageY, greaterThan(300));
+  });
+
+  testWidgets('yukarı ZORLAMAK yeter: tepeye kadar gitmek gerekmez', (
+    tester,
+  ) async {
+    // Başlık 200 dp'de bitiyor: görsel 200'ün üstüne çıkamaz.
+    final r = await pump(tester, topLimit: 200);
+    final start = boxOf(tester).center;
+    final gesture = await tester.startGesture(start);
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    // Görselin üstü 300'de: parmak 140 dp yukarı → görsel sınırın 40 dp
+    // ötesine zorlanıyor; parmak ekranın ORTASINDA (y≈220), tepede değil.
+    for (var i = 1; i <= 7; i++) {
+      await gesture.moveBy(const Offset(0, -20));
+      await tester.pump();
+    }
+    expect(r.hovers, [true]);
+    await gesture.up();
+    await tester.pump();
+    expect(r.pinned.single.id, 'g');
   });
 }

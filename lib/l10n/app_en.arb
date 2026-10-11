@@ -1691,5 +1691,21 @@
   "pinMediaRelease": "Release: pin to top (note below)",
   "unpinMedia": "Put back on page",
   "unpinMediaRelease": "Release: put back on page",
-  "pinnedMediaResize": "Pane height — drag to change"
+  "pinnedMediaResize": "Pane height — drag to change",
+  "addPageSubtitle": "Adds a new blank page to the note",
+  "pageOf": "Page {current} / {total}",
+  "pageAdded": "Page {page} added",
+  "deletePageConfirm": "Delete this page's text? Its images move to the neighbouring page. You can bring it back with Undo.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Image",
+  "embedNewVideo": "Video",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "What to embed?",
+  "embedPickTitleFor": "Embed into “{label}”",
+  "embedPickInfo": "Tap the text to open the embedded item in place.",
+  "embedSectionNew": "Add new",
+  "embedSectionExisting": "Attachments in this note",
+  "embedReplace": "Replace",
+  "embedRemove": "Remove embed",
+  "embedRemoved": "Embed removed"
 }

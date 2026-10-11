@@ -4394,4 +4394,59 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Bölme yüksekliği — sürükleyerek değiştir';
+
+  @override
+  String get addPageSubtitle => 'Nota yeni, boş bir sayfa ekler';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Sayfa $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return '$page. sayfa eklendi';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Bu sayfanın yazısı silinsin mi? Görselleri komşu sayfaya taşınır. Geri al ile geri getirebilirsin.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Görsel';
+
+  @override
+  String get embedNewVideo => 'Video';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Ne gömülsün?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return '“$label” yazısına göm';
+  }
+
+  @override
+  String get embedPickInfo => 'Gömülen ek yazıya dokununca yerinde açılır.';
+
+  @override
+  String get embedSectionNew => 'Yeni ekle';
+
+  @override
+  String get embedSectionExisting => 'Bu nottaki ekler';
+
+  @override
+  String get embedReplace => 'Değiştir';
+
+  @override
+  String get embedRemove => 'Gömmeyi kaldır';
+
+  @override
+  String get embedRemoved => 'Gömme kaldırıldı';
 }

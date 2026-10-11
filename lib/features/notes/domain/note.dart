@@ -62,6 +62,43 @@ class NoteTagLink {
   };
 }
 
+/// Notun bir SAYFASI (bkz. [Note.textPages]). Etkin sayfanın girdisi boştur;
+/// içeriği notun kendi gövdesinde/maddelerindedir.
+class NoteTextPage {
+  const NoteTextPage({
+    required this.id,
+    this.body = '',
+    this.items = const [],
+  });
+
+  /// '' = ilk sayfa (eski, bölümsüz görseller ona aittir).
+  final String id;
+  final String body;
+  final List<NoteItem> items;
+
+  NoteTextPage copyWith({String? id, String? body, List<NoteItem>? items}) =>
+      NoteTextPage(
+        id: id ?? this.id,
+        body: body ?? this.body,
+        items: items ?? this.items,
+      );
+
+  factory NoteTextPage.fromMap(Map<String, dynamic> map) => NoteTextPage(
+    id: map['id'] as String? ?? '',
+    body: map['body'] as String? ?? '',
+    items: [
+      for (final raw in (map['items'] as List<dynamic>? ?? const []))
+        NoteItem.fromMap(Map<String, dynamic>.from(raw as Map)),
+    ],
+  );
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'body': body,
+    'items': [for (final i in items) i.toMap()],
+  };
+}
+
 class AiSummary {
   const AiSummary({required this.text, required this.model, this.createdAt});
 
@@ -141,6 +178,8 @@ class Note {
     this.archivePaper = ArchivePaper.lined,
     this.archiveGeneralName = '',
     this.tagLinks = const [],
+    this.textPages = const [],
+    this.activePage = '',
     this.orderIndex = 0,
     this.createdAt,
     this.updatedAt,
@@ -308,6 +347,21 @@ class Note {
   /// dize ve nokta içerebiliyor — Firestore'da harita ANAHTARI yapmak alan
   /// yolu kurallarına takılırdı.
   final List<NoteTagLink> tagLinks;
+
+  /// NOTUN SAYFALARI (kullanıcı isteği 2026-10-11: "bir nota yeni sayfa
+  /// ekleme"). Boş = tek sayfalı not (eski notların hepsi).
+  ///
+  /// KARAR — ETKİN sayfanın içeriği [body]/[items]'ta yaşar, listedeki
+  /// karşılığı boş tutulur. Editörün, AI'ın, dikte ve biçim çubuğunun hepsi
+  /// `body`yi düzenliyor; sayfa geçişi yalnız İÇERİKLERİ YER DEĞİŞTİRİR
+  /// (bkz. `note_pages.dart` → [switchTextPage]) ve bu yollardan hiçbirinin
+  /// sayfayı bilmesi gerekmez. Sayfaya ait görseller `Attachment.section`
+  /// = sayfa kimliğiyle işaretlenir; İLK sayfanın kimliği her zaman ''
+  /// (eski görseller zaten bölümsüz).
+  final List<NoteTextPage> textPages;
+
+  /// Etkin sayfanın kimliği ('' = ilk sayfa). Bkz. [textPages].
+  final String activePage;
   final double orderIndex;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -341,6 +395,11 @@ class Note {
       // silmiş olabilir; yazdıkları o aralıkta yok edilmemeli. Görünürde boş
       // kalan notu kullanıcı listeden kendisi silebilir.
       pageNotes.values.every((v) => v.trim().isEmpty) &&
+      // Diğer sayfalarda yazı varsa not boş değil (etkin sayfa boş olsa da).
+      textPages.every(
+        (p) =>
+            p.body.trim().isEmpty && p.items.every((i) => i.text.trim().isEmpty),
+      ) &&
       attachments.isEmpty &&
       reminderAt == null;
 
@@ -391,30 +450,51 @@ class Note {
   String toPlainText({bool skipChecked = false}) {
     final buffer = StringBuffer();
     if (title.trim().isNotEmpty) buffer.writeln(stripRichMarkers(title).trim());
+    // SAYFALI NOT: her sayfa sırayla, aralarında boş satır (bkz.
+    // [textPages] — etkin sayfanın içeriği gövdede).
+    final pageContents = textPages.isEmpty
+        ? [(body, items)]
+        : [
+            for (final p in textPages)
+              p.id == activePage ? (body, items) : (p.body, p.items),
+          ];
+    void writePages(void Function(String body, List<NoteItem> items) write) {
+      for (var i = 0; i < pageContents.length; i++) {
+        if (i > 0) buffer.writeln();
+        write(pageContents[i].$1, pageContents[i].$2);
+      }
+    }
+
     switch (type) {
       case NoteType.text:
-        if (body.trim().isNotEmpty) buffer.writeln(body);
-        // Karışık içerik: metin notuna eklenen checklist maddeleri de dahil.
-        for (final item in items) {
-          if (item.text.trim().isEmpty) continue;
-          if (skipChecked && item.checked) continue;
-          buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
-        }
+        writePages((body, items) {
+          if (body.trim().isNotEmpty) buffer.writeln(body);
+          // Karışık içerik: metin notuna eklenen checklist maddeleri de dahil.
+          for (final item in items) {
+            if (item.text.trim().isEmpty) continue;
+            if (skipChecked && item.checked) continue;
+            buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
+          }
+        });
       case NoteType.checklist:
         // Liste notunun da serbest metni olabilir (madde listesinin üstünde
         // duran açıklama); dışa aktarmada kaybolmamalı.
-        if (body.trim().isNotEmpty) buffer.writeln(body);
-        for (final item in items) {
-          if (skipChecked && item.checked) continue;
-          buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
-        }
+        writePages((body, items) {
+          if (body.trim().isNotEmpty) buffer.writeln(body);
+          for (final item in items) {
+            if (skipChecked && item.checked) continue;
+            buffer.writeln('- [${item.checked ? 'x' : ' '}] ${item.text}');
+          }
+        });
       case NoteType.ordered:
-        if (body.trim().isNotEmpty) buffer.writeln(body);
-        var number = 0;
-        for (final item in items) {
-          if (skipChecked && item.checked) continue;
-          buffer.writeln('${++number}. ${item.text}');
-        }
+        writePages((body, items) {
+          if (body.trim().isNotEmpty) buffer.writeln(body);
+          var number = 0;
+          for (final item in items) {
+            if (skipChecked && item.checked) continue;
+            buffer.writeln('${++number}. ${item.text}');
+          }
+        });
       case NoteType.archive:
         // Arşiv defterinin metni: açıklama + metin girdileri. Ekler
         // (görsel/belge) düz metne dökülemez; başlıkları paylaşım/dışa
@@ -522,6 +602,8 @@ class Note {
     ArchivePaper? archivePaper,
     String? archiveGeneralName,
     List<NoteTagLink>? tagLinks,
+    List<NoteTextPage>? textPages,
+    String? activePage,
     double? orderIndex,
     DateTime? deletedAt,
     bool clearDeletedAt = false,
@@ -563,6 +645,8 @@ class Note {
     archivePaper: archivePaper ?? this.archivePaper,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
     tagLinks: tagLinks ?? this.tagLinks,
+    textPages: textPages ?? this.textPages,
+    activePage: activePage ?? this.activePage,
     orderIndex: orderIndex ?? this.orderIndex,
     createdAt: createdAt,
     updatedAt: updatedAt,
@@ -685,6 +769,11 @@ class Note {
         for (final raw in (map['tagLinks'] as List<dynamic>? ?? const []))
           NoteTagLink.fromMap(Map<String, dynamic>.from(raw as Map)),
       ],
+      textPages: [
+        for (final raw in (map['textPages'] as List<dynamic>? ?? const []))
+          NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),
+      ],
+      activePage: map['activePage'] as String? ?? '',
       orderIndex: (map['orderIndex'] as num?)?.toDouble() ?? 0,
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? localNow,
       updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? localNow,
@@ -754,6 +843,10 @@ class Note {
     // HER ZAMAN yazılır (`archivePages` ile aynı gerekçe: merge yazımda
     // atlanan anahtar silinmez, son bağı kaldırmak kayda yansımazdı).
     'tagLinks': [for (final l in tagLinks) l.toMap()],
+    // HER ZAMAN yazılır (merge yazımda eksik alan "değişmedi" sayılır —
+    // son sayfa silinince liste boşalmalı).
+    'textPages': [for (final p in textPages) p.toMap()],
+    'activePage': activePage,
     'orderIndex': orderIndex,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)

@@ -95,6 +95,8 @@ import 'image_layout.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
 import 'pinned_media_pane.dart';
+import 'embed_sheet.dart';
+import '../../domain/note_pages.dart';
 import '../archive_note_screen.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
@@ -185,6 +187,9 @@ bool sameRenderedNote(Note a, Note b) {
   if (identical(a, b)) return true;
   if (!sameItemsVisually(a.items, b.items)) return false;
   if (a.type != b.type ||
+      // Sayfa geçişi/ekleme çubuğu ve tuvali değiştirir (Note.textPages).
+      a.activePage != b.activePage ||
+      a.textPages.length != b.textPages.length ||
       a.color != b.color ||
       a.frameColor != b.frameColor ||
       a.pinned != b.pinned ||
@@ -246,6 +251,7 @@ bool sameRenderedNote(Note a, Note b) {
         // değiştirir — sayılmasaydı sabitlenen görsel ekranda yerinde kalırdı.
         x.pinHeight != y.pinHeight ||
         x.webUrl != y.webUrl ||
+        x.section != y.section ||
         !identical(x.ink, y.ink)) {
       return false;
     }
@@ -1249,6 +1255,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Metin DIŞINDA görünür hiçbir şey değişmedi mi? (saf yazım tespiti)
   static bool _sameVisual(Note a, Note b) =>
       sameItemsVisually(a.items, b.items) &&
+      a.activePage == b.activePage &&
+      identical(a.textPages, b.textPages) &&
       identical(a.attachments, b.attachments) &&
       identical(a.tags, b.tags) &&
       identical(a.aiSummary, b.aiSummary) &&
@@ -1456,7 +1464,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // görselin "altı" kendi tepesine eşitleniyor, yeni görsel bir öncekinin
     // 16 dp altına — yani pratikte ÜSTÜNE — düşüyordu. Paylaşımdan gelen ve
     // çoklu seçimle eklenen görseller tam bu yoldan geçiyor.
-    if (pageWidth <= 0) return image.copyWith(displayWidth: width);
+    // SAYFALI NOT: görsel ETKİN sayfaya aittir (bkz. Note.textPages).
+    final section = note.activePage;
+    if (pageWidth <= 0) {
+      return image.copyWith(displayWidth: width, section: section);
+    }
 
     Rect boxOf(Attachment a) {
       final aspect = (a.width != null && a.height != null && a.height! > 0)
@@ -1491,7 +1503,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         for (final a in note.attachments)
           // Konumu yazılmamış ekler tuvalde zaten otomatik yerleşiyor;
           // onların dp kutusu burada bilinemez.
-          if (a.floatsOnPage && (a.pageY != null || a.y != null)) boxOf(a),
+          if (a.floatsOnPage &&
+              a.section == note.activePage &&
+              (a.pageY != null || a.y != null))
+            boxOf(a),
       ],
       columnWidth: pageWidth,
       width: w,
@@ -1507,17 +1522,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       x: slot.left / pageWidth,
       pageY: top,
       displayWidth: width,
+      section: section,
     );
   }
 
   /// [asFile] true ise görsel sayfaya yerleşmez, alt şeritte dosya eki olur.
-  Future<void> _addImageBytes(
+  /// Eklenen eki döner (gömme akışı onu seçili yazıya bağlar).
+  Future<Attachment?> _addImageBytes(
     Uint8List bytes,
     String fileName, {
     bool asFile = false,
   }) async {
     final repo = ref.read(attachmentRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) return null;
     try {
       // Sıkıştırma + diske yazma büyük fotoğrafta saniyeler sürüyor ve o süre
       // boyunca ekranda hiçbir iz yoktu (bkz. [_busyTask]).
@@ -1529,19 +1546,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           fileName: fileName,
         ),
       );
-      if (!mounted) return;
-      _mutate(
-        (n) => n.copyWith(
-          attachments: [
-            ...n.attachments,
-            if (asFile)
-              attachment.copyWith(asFile: true)
-            else
-              _placeNewImage(attachment, n),
-          ],
-        ),
-        immediate: true,
-      );
+      if (!mounted) return null;
+      Attachment? added;
+      _mutate((n) {
+        added = asFile
+            ? attachment.copyWith(asFile: true)
+            : _placeNewImage(attachment, n);
+        return n.copyWith(attachments: [...n.attachments, added!]);
+      }, immediate: true);
+      return added;
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
@@ -1550,6 +1563,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // tamamlanmadan bırakıyordu → ekran donmuş görünüyor, mesaj çıkmıyordu.
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
+    return null;
   }
 
   /// [asFile] true ise seçilen görsel sayfaya değil ek şeridine girer.
@@ -1778,13 +1792,46 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     final selection = _bodyController.selection;
     if (note == null || !selection.isValid) return null;
+    // Hem dosya adları HEM seçili yazıdan kurulan bağların etiketleri
+    // (eskiden yalnız dosya adları aranıyordu: "kelimeye gömülü PDF" seçim
+    // menüsünde hiç tanınmıyordu — gömmenin "doğru çalışmıyor" hâli).
     final name = attachmentTagAt(
       _bodyController.logicalText,
       wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      [for (final a in note.attachments) a.fileName],
+      _bodyController.attachmentNames,
     );
     if (name == null) return null;
     return _attachmentForTag(note, name);
+  }
+
+  /// Gövdede DOKUNULAN etiket (imleç etiketin İÇİNDE — sınırlar hariç, bkz.
+  /// [attachmentTagInside]) ve bağlı olduğu ek.
+  ({String label, Attachment attachment})? _tappedEmbed() {
+    final note = _note;
+    final selection = _bodyController.selection;
+    if (note == null || !selection.isValid || !selection.isCollapsed) {
+      return null;
+    }
+    final tag = attachmentTagInside(
+      _bodyController.logicalText,
+      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
+      _bodyController.attachmentNames,
+    );
+    if (tag == null) return null;
+    final attachment = _attachmentForTag(note, tag.fileName);
+    if (attachment == null) return null;
+    return (label: tag.fileName, attachment: attachment);
+  }
+
+  /// İmlecin üzerinde durduğu etiketin YAZISI (seçim menüsü için).
+  String? _labelForAttachmentAtCaret() {
+    final selection = _bodyController.selection;
+    if (!selection.isValid) return null;
+    return attachmentTagAt(
+      _bodyController.logicalText,
+      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
+      _bodyController.attachmentNames,
+    );
   }
 
   /// Etiket metninden eke: önce SEÇİLİ METİNDEN kurulan bağlar
@@ -1858,24 +1905,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final note = _note;
     if (note == null) return;
     final attachment = _attachmentForTag(note, name);
-    if (attachment != null) _openAttachmentTag(attachment, editing: false);
+    if (attachment != null) _showEmbedPreviewFor(attachment, name);
   }
 
-  /// "+ Ekle" levhasından gelen ek gömme akışı.
+  /// "+ Ekle" levhasından gelen gömme akışı.
   ///
-  /// Seçim VARSA o yazıya bağlanır; yoksa imlecin olduğu yere dosya adıyla
-  /// bir etiket yazılır. İki durumda da önce hangi ekin gömüleceği sorulur —
-  /// kullanıcı levhaya "gömmek" için geldiği için akış hep bir sonuç üretir.
+  /// Seçim VARSA seçici o yazı için açılır ve sonuç doğrudan ona gömülür.
+  /// Seçim yoksa önce NE gömüleceği seçilir, sonra bağlama kipine geçilir
+  /// (kullanıcı yazıyı sonra seçer — istenen "ters" yön).
   Future<void> _embedAttachmentFlow() async {
     final note = _note;
     if (note == null) return;
-    if (note.attachments.isEmpty) {
-      _showSnack(context.l10n.attachmentTagNoAttachment);
-      return;
-    }
-    final chosen = await _pickAttachmentToEmbed(note);
-    if (chosen == null || !mounted) return;
-
     // Levha açılırken alınan anlık görüntü: klavye kapanınca seçim daralmış
     // olabilir (bkz. [_showAttachMenu]).
     final snapshot = _selectionSnapshot;
@@ -1889,47 +1929,153 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         _bodyController.text,
         snapshot.end,
       ).clamp(start, logical.length);
-      final label = logical.substring(start, end).trim();
-      if (label.isNotEmpty) {
-        _applyEmbed(label: label, attachment: chosen, start: start, end: end);
+      final range = trimmedRange(logical, start, end);
+      if (range != null) {
+        await _embedRange(range.start, range.end);
         return;
       }
     }
-    // Seçim YOK: dosya adını imlece yazmak yerine bağlama kipine geç —
-    // kullanıcı yazıyı sonra seçsin (istenen "ters" yön).
+    final chosen = await _pickEmbedTarget(label: '');
+    if (chosen == null || !mounted) return;
     _startPendingEmbed(chosen);
   }
 
-  /// Gömülecek eki seçtiren levha.
-  Future<Attachment?> _pickAttachmentToEmbed(Note note) =>
-      showModalBottomSheet<Attachment>(
-        context: context,
-        showDragHandle: true,
-        useSafeArea: true,
-        builder: (sheetContext) => SafeArea(
-          child: ListView(
-            shrinkWrap: true,
-            children: [
-              for (final a in note.attachments)
-                ListTile(
-                  leading: Icon(switch (a.kind) {
-                    AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
-                    AttachmentKind.slide => Icons.slideshow_outlined,
-                    AttachmentKind.video => Icons.videocam_outlined,
-                    AttachmentKind.audio => Icons.audiotrack_outlined,
-                    AttachmentKind.image => Icons.image_outlined,
-                  }),
-                  title: Text(
-                    a.fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () => Navigator.pop(sheetContext, a),
-                ),
-            ],
-          ),
-        ),
+  /// Gömme seçicisi + gerekiyorsa YENİ eki oluşturma. Yeni ek şeride girer
+  /// (gömülü dosya sayfayı kalabalıklaştırmasın); seçilen/oluşan eki döner.
+  Future<Attachment?> _pickEmbedTarget({required String label}) async {
+    final note = _note;
+    if (note == null) return null;
+    final pick = await showEmbedPicker(
+      context,
+      label: label,
+      attachments: note.attachments,
+    );
+    if (pick == null || !mounted) return null;
+    if (pick.attachment != null) return pick.attachment;
+    switch (pick.create) {
+      case 'pdf':
+        const group = XTypeGroup(
+          label: 'PDF',
+          extensions: ['pdf'],
+          mimeTypes: ['application/pdf'],
+        );
+        final files = await DocPicker.pickMany(group);
+        if (files.isEmpty || !mounted) return null;
+        return _addPdfFile(files.first, asFile: true);
+      case 'image':
+        if (_isDesktop) {
+          final group = XTypeGroup(
+            label: context.l10n.exportImages,
+            extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+          );
+          final file = await openFile(acceptedTypeGroups: [group]);
+          if (file == null || !mounted) return null;
+          return _addImageBytes(
+            await file.readAsBytes(),
+            file.name,
+            asFile: true,
+          );
+        }
+        final file = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 2400,
+          maxHeight: 2400,
+        );
+        if (file == null || !mounted) return null;
+        return _addImageBytes(await file.readAsBytes(), file.name, asFile: true);
+      case 'video':
+        return _addVideoFromGallery(asFile: true);
+      case 'youtube':
+        return _addYouTube(asFile: true);
+    }
+    return null;
+  }
+
+  /// Gövdedeki [start]–[end] aralığına (mantıksal metin) gömer: önce seçici.
+  Future<void> _embedRange(int start, int end) async {
+    final logical = _bodyController.logicalText;
+    final range = trimmedRange(logical, start, end);
+    if (range == null) return;
+    final label = logical.substring(range.start, range.end);
+    final chosen = await _pickEmbedTarget(label: label);
+    if (chosen == null || !mounted) return;
+    // Seçici açıkken metin değişmiş olabilir (dikte, eşitleme): aralık hâlâ
+    // AYNI yazıyı gösteriyorsa gömülür, yoksa imlece dosya adıyla.
+    final now = _bodyController.logicalText;
+    if (range.end <= now.length &&
+        now.substring(range.start, range.end) == label) {
+      _applyEmbed(
+        label: label,
+        attachment: chosen,
+        start: range.start,
+        end: range.end,
       );
+    } else {
+      _insertTagAtCaret(chosen);
+    }
+  }
+
+  /// Gömülü yazıya dokununca: YERİNDE önizleme kartı (tam ekrana atlamaz).
+  void _showEmbedPreviewFor(Attachment attachment, String label) {
+    _dismissKeyboard();
+    final editable =
+        attachment.kind == AttachmentKind.pdf ||
+        attachment.kind == AttachmentKind.image;
+    showEmbedPreview(
+      context,
+      attachment: attachment,
+      label: label,
+      onOpen: () => _openAttachmentTag(attachment, editing: false),
+      onEdit: editable
+          ? () => _openAttachmentTag(attachment, editing: true)
+          : null,
+      onChanged: _updateAttachment,
+      onReplace: () => unawaited(_replaceEmbed(label)),
+      onUnlink: () => _unlinkEmbed(label),
+    );
+  }
+
+  /// Gömülü yazının bağladığı eki DEĞİŞTİRİR (yazı aynı kalır).
+  Future<void> _replaceEmbed(String label) async {
+    final chosen = await _pickEmbedTarget(label: label);
+    if (chosen == null || !mounted) return;
+    _mutate(
+      (n) => n.copyWith(
+        tagLinks: [
+          for (final l in n.tagLinks)
+            if (l.label != label) l,
+          NoteTagLink(label: label, attachmentId: chosen.id),
+        ],
+      ),
+      immediate: true,
+    );
+    _showSnack(context.l10n.attachmentTagInserted);
+  }
+
+  /// GÖMMEYİ KALDIRIR: yazı kalır, ataç ve bağ gider (gövde + maddeler).
+  void _unlinkEmbed(String label) {
+    final body = removeAttachmentTags(_bodyController.logicalText, label);
+    if (body != _bodyController.logicalText) {
+      _bodyController.setLogical(body, body.length);
+    }
+    _mutate(
+      (n) => n.copyWith(
+        body: body,
+        items: [
+          for (final i in n.items)
+            i.text.contains(attachmentTagFor(label))
+                ? i.copyWith(text: removeAttachmentTags(i.text, label))
+                : i,
+        ],
+        tagLinks: [
+          for (final l in n.tagLinks)
+            if (l.label != label) l,
+        ],
+      ),
+      immediate: true,
+    );
+    _showSnack(context.l10n.embedRemoved);
+  }
 
   /// Seçili aralığı etikete çevirir ve bağı nota yazar.
   ///
@@ -1945,8 +2091,22 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   }) {
     final controller = target?.controller ?? _bodyController;
     final logical = controller.logicalText;
+    // Aralığın iki ucundaki boşluklar etikete girmez ve YUTULMAZ (bkz.
+    // [trimmedRange]); etiketin kendisi de kırpılmış hâlidir.
+    final range = trimmedRange(logical, start, end);
+    if (range != null) {
+      start = range.start;
+      end = range.end;
+      label = logical.substring(start, end);
+    }
+    // Yazı ZATEN bir etiketse (yeniden gömme) ikinci ataç eklenmez, yalnız
+    // bağ değişir.
+    final alreadyTagged =
+        start >= kAttachmentTagPrefix.length &&
+        logical.substring(start - kAttachmentTagPrefix.length, start) ==
+            kAttachmentTagPrefix;
     // Metne yalnız ATAÇ eklenir; seçilen yazı olduğu gibi kalır.
-    final tagged = '$kAttachmentTagPrefix$label';
+    final tagged = alreadyTagged ? label : '$kAttachmentTagPrefix$label';
     final text = logical.replaceRange(start, end, tagged);
     controller.setLogical(text, start + tagged.length);
     // Aynı etiket ikinci kez bağlanırsa eskisi değişir, çoğalmaz.
@@ -2121,8 +2281,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// hangi eke gittiği nota [Note.tagLinks] olarak yazılır. Metne gizli
   /// kimlik GÖMÜLMEZ — gerekçesi orada.
   Future<void> _embedIntoSelection(EditableTextState state) async {
-    final note = _note;
-    if (note == null) return;
     final selection = _bodyController.selection;
     if (!selection.isValid || selection.isCollapsed) return;
     final logical = _bodyController.logicalText;
@@ -2134,47 +2292,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       _bodyController.text,
       selection.end,
     ).clamp(start, logical.length);
-    final label = logical.substring(start, end).trim();
-    if (label.isEmpty) return;
-
-    // Hangi ek gömülecek: notun EK ŞERİDİNDEKİ dosyalar. Ek yoksa önce
-    // eklenmeli — buradan dosya seçtirip yüklemek, kullanıcının "hangi
-    // notta ne var" beklentisini bozardı.
-    final candidates = note.attachments;
-    if (candidates.isEmpty) {
-      _showSnack(context.l10n.attachmentTagNoAttachment);
-      return;
-    }
-    final chosen = await showModalBottomSheet<Attachment>(
-      context: context,
-      showDragHandle: true,
-      useSafeArea: true,
-      builder: (sheetContext) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (final a in candidates)
-              ListTile(
-                leading: Icon(switch (a.kind) {
-                  AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
-                  AttachmentKind.slide => Icons.slideshow_outlined,
-                  AttachmentKind.video => Icons.videocam_outlined,
-                  AttachmentKind.audio => Icons.audiotrack_outlined,
-                  AttachmentKind.image => Icons.image_outlined,
-                }),
-                title: Text(
-                  a.fileName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onTap: () => Navigator.pop(sheetContext, a),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (chosen == null || !mounted) return;
-    _applyEmbed(label: label, attachment: chosen, start: start, end: end);
+    await _embedRange(start, end);
   }
 
   /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
@@ -2244,7 +2362,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           label: context.l10n.attachmentTagPreview,
           onPressed: () {
             state.hideToolbar();
-            _openAttachmentTag(tagged, editing: false);
+            final label = _labelForAttachmentAtCaret() ?? tagged.fileName;
+            _showEmbedPreviewFor(tagged, label);
           },
         ),
         ContextMenuButtonItem(
@@ -2252,6 +2371,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           onPressed: () {
             state.hideToolbar();
             _openAttachmentTag(tagged, editing: true);
+          },
+        ),
+        ContextMenuButtonItem(
+          label: context.l10n.embedRemove,
+          onPressed: () {
+            state.hideToolbar();
+            final label = _labelForAttachmentAtCaret();
+            if (label != null) _unlinkEmbed(label);
           },
         ),
       ]);
@@ -2292,7 +2419,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     }
   }
 
-  Future<void> _addPdfFile(XFile file) async {
+  /// [asFile] true ise PDF sayfaya konmaz, ek şeridinde durur (gömme
+  /// akışı). Eklenen eki döner.
+  Future<Attachment?> _addPdfFile(XFile file, {bool asFile = false}) async {
     final bytes = await file.readAsBytes();
     // PDF sıkıştırılamaz (görsel ve ses küçültülüyor, bu küçültülemiyor) —
     // büyük dosya Firebase Storage kotasına doğrudan gider. Engellemek yerine
@@ -2316,11 +2445,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           ],
         ),
       );
-      if (proceed != true) return;
+      if (proceed != true) return null;
     }
-    if (!mounted) return;
+    if (!mounted) return null;
     final repo = ref.read(attachmentRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) return null;
     try {
       // Başka bir Not kullanıcısının gönderdiği "balonlu PDF" ise damga
       // katmanı sökülür ve balonlar/çizimler DÜZENLENEBİLİR olarak geri
@@ -2343,17 +2472,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   InkStroke.fromMap(Map<String, dynamic>.from(e as Map)),
               ],
             );
-      _mutate(
-        (n) => n.copyWith(
-          attachments: [...n.attachments, _placePdf(stored, n)],
-        ),
-        immediate: true,
-      );
+      Attachment? added;
+      _mutate((n) {
+        added = asFile ? stored : _placePdf(stored, n);
+        return n.copyWith(attachments: [...n.attachments, added!]);
+      }, immediate: true);
+      return added;
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
       if (mounted) _showSnack(context.l10n.attachmentFailed('$e'));
     }
+    return null;
   }
 
   /// Balonlu (belge) notta duran belgenin dosya adı: **notun başlığı**;
@@ -2973,10 +3103,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       context,
       isDesktop: _isDesktop,
       pageNote: _note?.type.isPageNoteType ?? false,
-      // "Yazıya ek göm" yalnız eki OLAN notta anlamlı.
-      canEmbed:
-          !(_note?.type.isPageNoteType ?? false) &&
-          (_note?.attachments.isNotEmpty ?? false),
+      // Gömme seçicisi yeni ek de ekleyebildiği için eki olmayan notta da
+      // anlamlı (gömme yeniden tasarımı, 2026-10-11).
+      canEmbed: !(_note?.type.isPageNoteType ?? false),
       // Birden çok ek kopyalandıysa ad yerine sayı yazılır.
       copiedAttachmentName: copied.isEmpty
           ? null
@@ -2991,6 +3120,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // gösteriliyordu ve kullanıcı "liste ekle seçeneği yok" diyordu).
       case 'embed-attachment':
         await _embedAttachmentFlow();
+      case 'new-page':
+        _addPage();
       case 'list-item':
         _addChecklistItem();
       case 'text-block':
@@ -4055,70 +4186,202 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// koyma"). Kamera yolu gibi cihazda kalır ve sayfaya yerleşir; süre
   /// sınırı YOK (o sınır yalnız AI'a gönderim içindi — uzun videoda
   /// "videodan not çıkar" boyut uyarısını kendisi verir).
-  Future<void> _addVideoFromGallery() async {
+  Future<Attachment?> _addVideoFromGallery({bool asFile = false}) async {
     final repo = ref.read(attachmentRepositoryProvider);
-    if (repo == null) return;
+    if (repo == null) return null;
     final l10n = context.l10n;
     try {
       final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
-      if (picked == null || !mounted) return;
+      if (picked == null || !mounted) return null;
       final attachment = await repo.prepareVideo(
         noteId: widget.noteId,
         sourcePath: picked.path,
         duration: await VideoFrame.duration(picked.path),
       );
-      if (!mounted) return;
-      _mutate(
-        (n) => n.copyWith(
-          attachments: [...n.attachments, _placeNewImage(attachment, n)],
-        ),
-        immediate: true,
-      );
+      if (!mounted) return null;
+      Attachment? added;
+      _mutate((n) {
+        added = asFile
+            ? attachment.copyWith(asFile: true)
+            : _placeNewImage(attachment, n);
+        return n.copyWith(attachments: [...n.attachments, added!]);
+      }, immediate: true);
       _showSnack(l10n.videoLocalOnly);
+      return added;
     } catch (e) {
       if (mounted) _showSnack(l10n.attachmentFailed('$e'));
     }
+    return null;
   }
 
   /// YOUTUBE videosu: bağlantı sorulur (panoda YouTube bağlantısı varsa hazır
   /// gelir), video dosyasız bir ek olarak sayfaya yerleşir ve gömülü
   /// oynatıcıda (resim içinde resim destekli) oynar. Başlık arka planda
   /// YouTube'dan alınır; gelmezse ek "YouTube" adıyla kalır.
-  Future<void> _addYouTube() async {
+  Future<Attachment?> _addYouTube({bool asFile = false}) async {
     final l10n = context.l10n;
     String initial = '';
     try {
       final clip = await Clipboard.getData(Clipboard.kTextPlain);
       initial = firstYouTubeUrl(clip?.text ?? '') ?? '';
     } catch (_) {}
-    if (!mounted) return;
+    if (!mounted) return null;
     final url = await showDialog<String>(
       context: context,
       builder: (context) => _YouTubeLinkDialog(initial: initial),
     );
-    if (url == null || !mounted) return;
+    if (url == null || !mounted) return null;
     final attachment = webVideoAttachment(url);
     if (attachment == null) {
       _showSnack(l10n.youTubeInvalidLink);
-      return;
+      return null;
     }
-    _mutate(
-      (n) => n.copyWith(
-        attachments: [
-          ...n.attachments,
-          // Görsel gibi imlecin satırına (16:9 kutu); büyütmek köşe
-          // tutamağıyla. Genişliği burada büyütmek, konumu dar kutuya göre
-          // hesaplanmış kutuyu sayfa kenarından taşırırdı.
-          _placeNewImage(attachment, n),
+    Attachment? added;
+    _mutate((n) {
+      // Görsel gibi imlecin satırına (16:9 kutu); büyütmek köşe
+      // tutamağıyla. Genişliği burada büyütmek, konumu dar kutuya göre
+      // hesaplanmış kutuyu sayfa kenarından taşırırdı.
+      added = asFile
+          ? attachment.copyWith(asFile: true)
+          : _placeNewImage(attachment, n);
+      return n.copyWith(attachments: [...n.attachments, added!]);
+    }, immediate: true);
+    // Başlık arka planda gelir; ek hemen kullanılabilir.
+    unawaited(() async {
+      final title = await fetchYouTubeTitle(attachment.webUrl);
+      if (title == null || !mounted) return;
+      final current = _note?.attachments.where((a) => a.id == attachment.id);
+      if (current == null || current.isEmpty) return;
+      _updateAttachment(current.first.copyWith(fileName: title));
+    }());
+    return added;
+  }
+
+  // ── NOTUN SAYFALARI (bkz. Note.textPages / note_pages.dart) ───────────
+
+  /// Sayfa geçişi notun İÇERİĞİNİ değiştirir: metin alanının denetleyicisi
+  /// nottan beslenmediği için (geri al ile aynı) elle yazılır. Geri al
+  /// yığınına GİRER: silinen sayfa "Geri al" ile döner; geri alınan anlık
+  /// görüntü sayfa bilgisini de taşıdığı için içerik hep tutarlı kalır.
+  void _applyPageChange(Note next) {
+    _bodyController.text = next.body;
+    _mutate((_) => next, immediate: true);
+    // Yeni sayfa tepeden başlar.
+    if (_pageScroll.hasClients) _pageScroll.jumpTo(0);
+  }
+
+  /// Etkin sayfanın arkasına boş sayfa ekler ve ona geçer (kullanıcı isteği
+  /// 2026-10-11: "bir nota yeni sayfa ekleme").
+  void _addPage() {
+    final note = _note;
+    if (note == null || note.type.isPageNoteType) return;
+    _dismissKeyboard();
+    _applyPageChange(addTextPage(note, const Uuid().v4()));
+    final pos = textPagePosition(_note!);
+    _showSnack(context.l10n.pageAdded(pos.index + 1));
+  }
+
+  void _goToPage(String id) {
+    final note = _note;
+    if (note == null || id == note.activePage) return;
+    _dismissKeyboard();
+    _applyPageChange(switchTextPage(note, id));
+  }
+
+  /// Komşu sayfaya geçer ([delta] -1 / +1).
+  void _stepPage(int delta) {
+    final note = _note;
+    if (note == null) return;
+    final pages = resolvedTextPages(note);
+    final i = textPagePosition(note).index + delta;
+    if (i < 0 || i >= pages.length) return;
+    _goToPage(pages[i].id);
+  }
+
+  /// Etkin sayfayı siler (onaylı). Görselleri komşu sayfaya taşınır; yazı
+  /// "Geri al" ile döner.
+  Future<void> _deleteActivePage() async {
+    final note = _note;
+    if (note == null || note.textPages.length < 2) return;
+    final l10n = context.l10n;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.archiveDeletePage),
+        content: Text(l10n.deletePageConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.archiveDeletePage),
+          ),
         ],
       ),
-      immediate: true,
     );
-    final title = await fetchYouTubeTitle(attachment.webUrl);
-    if (title == null || !mounted) return;
-    final current = _note?.attachments.where((a) => a.id == attachment.id);
-    if (current == null || current.isEmpty) return;
-    _updateAttachment(current.first.copyWith(fileName: title));
+    if (ok != true || !mounted) return;
+    final current = _note;
+    if (current == null) return;
+    _applyPageChange(deleteTextPage(current, current.activePage));
+  }
+
+  /// Başlığın altındaki SAYFA ÇUBUĞU: ‹ Sayfa 2 / 3 › · yeni sayfa · ⋮.
+  /// Yalnız sayfalı notta görünür (tek sayfalı notta yer kaplamaz).
+  Widget _pageBar(Note note) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final pos = textPagePosition(note);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _kGutter - 8),
+      child: Row(
+        children: [
+          IconButton(
+            key: const ValueKey('page-prev'),
+            tooltip: l10n.archivePrevPage,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.chevron_left),
+            onPressed: pos.index > 0 ? () => _stepPage(-1) : null,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: scheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              l10n.pageOf(pos.index + 1, pos.count),
+              key: const ValueKey('page-label'),
+              style: TextStyle(
+                color: scheme.onSecondaryContainer,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          IconButton(
+            key: const ValueKey('page-next'),
+            tooltip: l10n.archiveNextPage,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.chevron_right),
+            onPressed: pos.index < pos.count - 1 ? () => _stepPage(1) : null,
+          ),
+          const Spacer(),
+          IconButton(
+            tooltip: l10n.archiveNewPage,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.note_add_outlined),
+            onPressed: _addPage,
+          ),
+          IconButton(
+            tooltip: l10n.archiveDeletePage,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: _deleteActivePage,
+          ),
+        ],
+      ),
+    );
   }
 
   // ── ÜSTE SABİTLİ MEDYA ("üstte video/resim, altta not") ────────────────
@@ -4127,10 +4390,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pinHover = false;
 
   /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
-  /// olur: önceden sabitlenmiş olan sayfaya geri döner.
+  /// olur: önceden sabitlenmiş olan sayfaya geri döner. Daha önce
+  /// sabitlenmişse bölme ESKİ yüksekliğiyle açılır.
   void _pinMediaTop(Attachment media) {
     if (_pinHover) setState(() => _pinHover = false);
-    final height = defaultPinnedHeight(media, MediaQuery.sizeOf(context));
+    final height =
+        media.rememberedPinHeight ??
+        defaultPinnedHeight(media, MediaQuery.sizeOf(context));
     _dismissKeyboard();
     _mutate(
       (n) => n.copyWith(
@@ -4139,7 +4405,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             if (a.id == media.id)
               a.copyWith(pinHeight: height, asFile: false)
             else if (a.pinHeight > 0)
-              a.copyWith(pinHeight: 0)
+              a.copyWith(pinHeight: -a.pinHeight)
             else
               a,
         ],
@@ -4149,11 +4415,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     HapticFeedback.mediumImpact();
   }
 
-  /// Sabit medyayı sayfaya geri koyar (imlecin satırına yerleşir).
+  /// Sabit medyayı sayfaya geri koyar: sayfadaki ESKİ yeri ve genişliği
+  /// sabitlerken silinmediği için olduğu gibi döner; bölme yüksekliği de bir
+  /// sonraki sabitleme için saklanır (işaret negatife çevrilir).
   void _unpinMedia(Attachment media) {
-    final note = _note;
-    if (note == null) return;
-    _updateAttachment(_placeNewImage(media.copyWith(pinHeight: 0), note));
+    final current = _note?.attachments.where((a) => a.id == media.id);
+    final latest = current == null || current.isEmpty ? media : current.first;
+    if (latest.pinHeight <= 0) return;
+    _updateAttachment(latest.copyWith(pinHeight: -latest.pinHeight));
   }
 
   /// Ek üstteki sabit bölmede mi çiziliyor (o zaman şeritte gösterilmez).
@@ -6147,9 +6416,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Sayfada yüzen görseller ve videolar: "ek olarak" işaretlenenler buraya
     // girmez, alt şeritte dosya eki olarak durur (bkz. Attachment.asFile).
+    // SAYFALI NOT: yalnız ETKİN sayfanın görselleri (bkz. Note.textPages —
+    // ilk sayfanınki bölümsüz '').
     final imageAttachments = [
       for (final a in note.attachments)
-        if (a.floatsOnPage && a.id != note.backgroundImageId) a,
+        if (a.floatsOnPage &&
+            a.id != note.backgroundImageId &&
+            a.section == note.activePage)
+          a,
     ];
     // Zemin görseli: ekler listesinde durur ama sayfada yüzmez, şeritte de
     // görünmez — arkada duvar kâğıdı gibi çizilir.
@@ -6191,7 +6465,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final header = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      children: [titleRow, metaChips],
+      children: [
+        titleRow,
+        metaChips,
+        if (note.textPages.isNotEmpty && !note.type.isPageNoteType)
+          _pageBar(note),
+      ],
     );
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
@@ -6220,9 +6499,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
       // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
       // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
+      // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
+      // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
+      // yazmaya devam etmektir, önizleme açmaz).
       onTap: () {
-        final tagged = _selectedAttachmentTag();
-        if (tagged != null) _openAttachmentTag(tagged, editing: false);
+        final tapped = _tappedEmbed();
+        if (tapped != null) {
+          _showEmbedPreviewFor(tapped.attachment, tapped.label);
+        }
       },
       // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
       // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş

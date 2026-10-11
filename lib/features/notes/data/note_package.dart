@@ -75,6 +75,9 @@ Map<String, dynamic> encodeNoteJson(Note note) => {
   'titleTextOpacity': note.titleTextOpacity,
   'backgroundImageId': note.backgroundImageId,
   'backgroundOpacity': note.backgroundOpacity,
+  if (note.textPages.isNotEmpty)
+    'textPages': [for (final p in note.textPages) p.toMap()],
+  if (note.activePage.isNotEmpty) 'activePage': note.activePage,
 };
 
 /// Ekin DÜZEN ve KATMAN alanları. Depo alanları (storagePath, downloadUrl,
@@ -95,6 +98,8 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   if (a.y != null) 'y': a.y,
   if (a.pageY != null) 'pageY': a.pageY,
   if (a.asFile) 'asFile': true,
+  // Sayfalı notta görselin hangi sayfada olduğu (bkz. Note.textPages).
+  if (a.section.isNotEmpty) 'section': a.section,
   if (a.ink.isNotEmpty) 'ink': [for (final s in a.ink) s.toMap()],
   // PDF/slayt üzerindeki not balonları da paketle gider: kullanıcı isteği
   // "PDF üzerindeki balonlar girmiş olsun, yani her şeyiyle paylaşılmış olacak".
@@ -102,7 +107,7 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   if (a.pageIds.isNotEmpty) 'pageIds': a.pageIds,
   // YouTube eki dosyasızdır: bağlantının kendisi ektir (kişisel veri yok).
   if (a.webUrl.isNotEmpty) 'webUrl': a.webUrl,
-  if (a.pinHeight > 0) 'pinHeight': a.pinHeight,
+  if (a.pinHeight != 0) 'pinHeight': a.pinHeight,
 };
 
 /// Paket JSON'unu nota çevirir. Kimlik boş bırakılır: içe aktaran taraf notu
@@ -143,6 +148,11 @@ Note decodeNoteJson(Map<String, dynamic> map) {
     titleTextOpacity: (map['titleTextOpacity'] as num?)?.toDouble() ?? 1,
     backgroundImageId: map['backgroundImageId'] as String?,
     backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
+    textPages: [
+      for (final raw in (map['textPages'] as List? ?? const []))
+        NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),
+    ],
+    activePage: map['activePage'] as String? ?? '',
   );
 }
 
@@ -160,6 +170,7 @@ Attachment _decodeAttachment(Map<String, dynamic> map) => Attachment(
   y: (map['y'] as num?)?.toDouble(),
   pageY: (map['pageY'] as num?)?.toDouble(),
   asFile: map['asFile'] as bool? ?? false,
+  section: map['section'] as String? ?? '',
   ink: [
     for (final raw in (map['ink'] as List? ?? const []))
       InkStroke.fromMap(Map<String, dynamic>.from(raw as Map)),

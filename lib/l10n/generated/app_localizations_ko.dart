@@ -4330,4 +4330,59 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => '창 높이 — 드래그하여 변경';
+
+  @override
+  String get addPageSubtitle => '메모에 빈 페이지를 새로 추가합니다';
+
+  @override
+  String pageOf(int current, int total) {
+    return '$current / $total 페이지';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return '$page페이지를 추가했습니다';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      '이 페이지의 글을 삭제할까요? 이미지는 옆 페이지로 옮겨집니다. 실행 취소로 되돌릴 수 있습니다.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => '이미지';
+
+  @override
+  String get embedNewVideo => '동영상';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => '무엇을 삽입할까요?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return '“$label”에 삽입';
+  }
+
+  @override
+  String get embedPickInfo => '글을 탭하면 삽입한 항목이 그 자리에서 열립니다.';
+
+  @override
+  String get embedSectionNew => '새로 추가';
+
+  @override
+  String get embedSectionExisting => '이 메모의 첨부';
+
+  @override
+  String get embedReplace => '바꾸기';
+
+  @override
+  String get embedRemove => '삽입 해제';
+
+  @override
+  String get embedRemoved => '삽입을 해제했습니다';
 }

@@ -12,6 +12,9 @@ const double kPinnedMaxFraction = 0.7;
 /// Ayraç bu yüksekliğin altına çekilip bırakılırsa medya sayfaya geri döner.
 const double kPinnedUnpinHeight = 72;
 
+/// Medya ile not arasındaki çubuğun (tutamaç + düğmeler) yüksekliği.
+const double kPinnedBarHeight = 40;
+
 /// Yeni sabitlenen medyanın ilk yüksekliği: ekran genişliğinde medyanın kendi
 /// oranı, ekranın %45'ini geçmeden. Oranı bilinmeyen video 16:9 sayılır.
 double defaultPinnedHeight(Attachment media, Size screen) {
@@ -143,33 +146,16 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                       ),
                     ),
                     if (_unpinArmed) _UnpinHint(label: l10n.unpinMediaRelease),
-                    PositionedDirectional(
-                      top: 6,
-                      end: 6,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _PaneButton(
-                            tooltip: l10n.fullscreen,
-                            icon: Icons.fullscreen,
-                            onPressed: widget.onOpen,
-                          ),
-                          const SizedBox(width: 6),
-                          _PaneButton(
-                            tooltip: l10n.unpinMedia,
-                            icon: Icons.vertical_align_bottom,
-                            onPressed: widget.onUnpin,
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
             ),
-            // AYRAÇ: dikey sürükleme bölmeyi boyutlar. 22 dp dokunma alanı,
-            // ortada görünür bir tutamaç çizgisi.
+            // AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de
+            // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
+            // düğmeler YouTube oynatıcısının kendi sağ üst düğmeleriyle üst
+            // üste geliyordu). Çubuk medyanın DIŞINDA, hiçbir şeyi örtmez.
             GestureDetector(
+              key: const ValueKey('pinned-media-bar'),
               behavior: HitTestBehavior.opaque,
               onVerticalDragStart: (_) => setState(() => _live = height),
               onVerticalDragUpdate: (d) =>
@@ -184,27 +170,47 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                 }
               },
               onVerticalDragCancel: () => setState(() => _live = null),
-              child: Semantics(
-                label: l10n.pinnedMediaResize,
-                child: Container(
-                  height: 22,
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: scheme.outlineVariant),
-                    ),
+              child: Container(
+                height: kPinnedBarHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainer,
+                  border: Border(
+                    bottom: BorderSide(color: scheme.outlineVariant),
                   ),
-                  child: Container(
-                    width: 44,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: _live != null
-                          ? scheme.primary
-                          : scheme.onSurfaceVariant.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(3),
+                ),
+                child: Row(
+                  children: [
+                    _BarButton(
+                      tooltip: l10n.fullscreen,
+                      icon: Icons.fullscreen,
+                      onPressed: widget.onOpen,
                     ),
-                  ),
+                    Expanded(
+                      child: Semantics(
+                        label: l10n.pinnedMediaResize,
+                        child: Center(
+                          child: Container(
+                            width: 44,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: _live != null
+                                  ? scheme.primary
+                                  : scheme.onSurfaceVariant.withValues(
+                                      alpha: 0.5,
+                                    ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    _BarButton(
+                      tooltip: l10n.unpinMedia,
+                      icon: Icons.vertical_align_bottom,
+                      onPressed: widget.onUnpin,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -216,8 +222,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
   }
 }
 
-class _PaneButton extends StatelessWidget {
-  const _PaneButton({
+class _BarButton extends StatelessWidget {
+  const _BarButton({
     required this.tooltip,
     required this.icon,
     required this.onPressed,
@@ -228,18 +234,12 @@ class _PaneButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.black54,
-    shape: const CircleBorder(),
-    clipBehavior: Clip.antiAlias,
-    child: IconButton(
-      tooltip: tooltip,
-      visualDensity: VisualDensity.compact,
-      iconSize: 20,
-      color: Colors.white,
-      icon: Icon(icon),
-      onPressed: onPressed,
-    ),
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    visualDensity: VisualDensity.compact,
+    iconSize: 20,
+    icon: Icon(icon),
+    onPressed: onPressed,
   );
 }
 

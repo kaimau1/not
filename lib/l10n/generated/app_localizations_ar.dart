@@ -4385,4 +4385,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'ارتفاع اللوحة — اسحب لتغييره';
+
+  @override
+  String get addPageSubtitle => 'يضيف صفحة فارغة جديدة إلى الملاحظة';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'الصفحة $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'أُضيفت الصفحة $page';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'حذف نص هذه الصفحة؟ تنتقل صورها إلى الصفحة المجاورة. يمكنك استعادته بالتراجع.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'صورة';
+
+  @override
+  String get embedNewVideo => 'فيديو';
+
+  @override
+  String get embedNewYouTube => 'يوتيوب';
+
+  @override
+  String get embedPickTitle => 'ماذا تريد أن تضمّن؟';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'تضمين في «$label»';
+  }
+
+  @override
+  String get embedPickInfo => 'اضغط على النص لفتح العنصر المضمّن في مكانه.';
+
+  @override
+  String get embedSectionNew => 'إضافة جديد';
+
+  @override
+  String get embedSectionExisting => 'مرفقات هذه الملاحظة';
+
+  @override
+  String get embedReplace => 'استبدال';
+
+  @override
+  String get embedRemove => 'إزالة التضمين';
+
+  @override
+  String get embedRemoved => 'أُزيل التضمين';
 }

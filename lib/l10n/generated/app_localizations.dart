@@ -7985,6 +7985,102 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bölme yüksekliği — sürükleyerek değiştir'**
   String get pinnedMediaResize;
+
+  /// No description provided for @addPageSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Nota yeni, boş bir sayfa ekler'**
+  String get addPageSubtitle;
+
+  /// No description provided for @pageOf.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa {current} / {total}'**
+  String pageOf(int current, int total);
+
+  /// No description provided for @pageAdded.
+  ///
+  /// In tr, this message translates to:
+  /// **'{page}. sayfa eklendi'**
+  String pageAdded(int page);
+
+  /// No description provided for @deletePageConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu sayfanın yazısı silinsin mi? Görselleri komşu sayfaya taşınır. Geri al ile geri getirebilirsin.'**
+  String get deletePageConfirm;
+
+  /// No description provided for @embedNewPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get embedNewPdf;
+
+  /// No description provided for @embedNewImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel'**
+  String get embedNewImage;
+
+  /// No description provided for @embedNewVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video'**
+  String get embedNewVideo;
+
+  /// No description provided for @embedNewYouTube.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube'**
+  String get embedNewYouTube;
+
+  /// No description provided for @embedPickTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ne gömülsün?'**
+  String get embedPickTitle;
+
+  /// No description provided for @embedPickTitleFor.
+  ///
+  /// In tr, this message translates to:
+  /// **'“{label}” yazısına göm'**
+  String embedPickTitleFor(String label);
+
+  /// No description provided for @embedPickInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gömülen ek yazıya dokununca yerinde açılır.'**
+  String get embedPickInfo;
+
+  /// No description provided for @embedSectionNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni ekle'**
+  String get embedSectionNew;
+
+  /// No description provided for @embedSectionExisting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu nottaki ekler'**
+  String get embedSectionExisting;
+
+  /// No description provided for @embedReplace.
+  ///
+  /// In tr, this message translates to:
+  /// **'Değiştir'**
+  String get embedReplace;
+
+  /// No description provided for @embedRemove.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gömmeyi kaldır'**
+  String get embedRemove;
+
+  /// No description provided for @embedRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gömme kaldırıldı'**
+  String get embedRemoved;
 }
 
 class _AppLocalizationsDelegate

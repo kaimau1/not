@@ -856,5 +856,21 @@
   "pinMediaRelease": "指を離す: 上部に固定（下にノート）",
   "unpinMedia": "ページに戻す",
   "unpinMediaRelease": "指を離す: ページに戻す",
-  "pinnedMediaResize": "パネルの高さ — ドラッグで変更"
+  "pinnedMediaResize": "パネルの高さ — ドラッグで変更",
+  "addPageSubtitle": "ノートに新しい空白ページを追加します",
+  "pageOf": "{current} / {total} ページ",
+  "pageAdded": "{page} ページ目を追加しました",
+  "deletePageConfirm": "このページの文章を削除しますか？画像は隣のページに移動します。「元に戻す」で戻せます。",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "画像",
+  "embedNewVideo": "動画",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "何を埋め込みますか？",
+  "embedPickTitleFor": "「{label}」に埋め込む",
+  "embedPickInfo": "テキストをタップすると埋め込んだものがその場で開きます。",
+  "embedSectionNew": "新規追加",
+  "embedSectionExisting": "このノートの添付",
+  "embedReplace": "置き換え",
+  "embedRemove": "埋め込みを解除",
+  "embedRemoved": "埋め込みを解除しました"
 }

@@ -856,5 +856,21 @@
   "pinMediaRelease": "छोड़ें: ऊपर पिन करें (नीचे नोट)",
   "unpinMedia": "पेज पर वापस रखें",
   "unpinMediaRelease": "छोड़ें: पेज पर वापस रखें",
-  "pinnedMediaResize": "पैनल की ऊँचाई — बदलने के लिए खींचें"
+  "pinnedMediaResize": "पैनल की ऊँचाई — बदलने के लिए खींचें",
+  "addPageSubtitle": "नोट में एक नया खाली पेज जोड़ता है",
+  "pageOf": "पेज {current} / {total}",
+  "pageAdded": "पेज {page} जोड़ा गया",
+  "deletePageConfirm": "इस पेज का टेक्स्ट हटाएँ? इसकी तस्वीरें पास वाले पेज पर चली जाएँगी। पूर्ववत करें से वापस ला सकते हैं।",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "तस्वीर",
+  "embedNewVideo": "वीडियो",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "क्या एम्बेड करें?",
+  "embedPickTitleFor": "“{label}” में एम्बेड करें",
+  "embedPickInfo": "एम्बेड की गई चीज़ वहीं खोलने के लिए टेक्स्ट पर टैप करें।",
+  "embedSectionNew": "नया जोड़ें",
+  "embedSectionExisting": "इस नोट के अटैचमेंट",
+  "embedReplace": "बदलें",
+  "embedRemove": "एम्बेड हटाएँ",
+  "embedRemoved": "एम्बेड हटाया गया"
 }

@@ -3914,3 +3914,74 @@ davranışı içeriden kapansın.
 ### Ortam
 Flutter 3.44.6 `/opt/flutter`'a indirildi; Android SDK yok — APK ve Kotlin
 derlemesi CI'da doğrulandı. graphify konteynerde yok, graf güncellenmedi.
+
+## 2026-10-11 (2. tur) — YouTube sayfada oynar, bölme düğmeleri, kolay sabitleme + boyut hafızası, nota sayfa, gömme baştan
+
+`flutter analyze` temiz, `flutter test` **1118 test yeşil** (16 yeni).
+
+### Cihazdan gelen geri bildirim (v1.0.419)
+1. YouTube sayfada "oynat"a basınca ayrı ekran açılıyordu → artık KUTUNUN
+   İÇİNDE oynar (`NoteMediaBox.webPlaying/onWebPlay`, tuvalde `_playingWeb`).
+   Oynarken WebView dokunuşları yutar: kutunun sol üst köşesinin DIŞINDA bir
+   "×" düğmesi oynatıcıyı kapatır, kutu yeniden taşınabilir olur. Düğme
+   TUVALİN kendi katmanında — kutunun içinde olsaydı sınır dışına taşan
+   kısmı dokunuş almazdı (Flutter isabeti ebeveynin boyutuyla sınırlar).
+2. Sabit bölmede bizim düğmelerimiz YouTube'un sağ üst düğmeleriyle üst üste
+   → düğmeler medyanın ÜSTÜNDEN kalktı, medya ile not arasındaki 40 dp
+   AYRAÇ ÇUBUĞUNA taşındı (solda tam ekran, ortada tutamaç, sağda sayfaya
+   geri koy). Kural: oynatıcı/medya üstüne kendi düğmemizi koyma.
+3. Sabitleme için "en üst ortaya" sürüklemek zordu → görsel izin verilen en
+   üst noktanın (`topLimit`) **36 dp ötesine zorlanınca** da bölge sayılır
+   (`_pinOverPull`, ham — kırpılmamış — üst kenar ölçülür); yatay konum
+   önemsiz. Ekranın tepesi kuralı da duruyor.
+4. Sabitten çıkınca boyut sıfırlanıyordu → **`pinHeight` NEGATİF = sabit
+   değil ama yükseklik hatırlanıyor** (`rememberedPinHeight`). Sabitlerken
+   x/pageY/displayWidth hiç silinmediği için çıkışta `_placeNewImage`
+   ÇAĞRILMAZ — medya eski yerine eski genişliğiyle döner; yeniden
+   sabitlenince eski bölme yüksekliğiyle açılır. Kayda `!= 0` iken yazılır.
+
+### NOTA YENİ SAYFA (`Note.textPages` + `activePage`, `domain/note_pages.dart`)
+KARAR — **etkin sayfanın içeriği `body`/`items`'ta yaşar, listedeki girdisi
+boş tutulur; geçiş içerikleri YER DEĞİŞTİRİR.** Editörün, dikte, AI, biçim
+çubuğu, arama, kopyalama… hepsi `body`yi düzenliyor; hiçbirinin sayfayı
+bilmesi gerekmesin diye. Sayfanın görselleri `Attachment.section` = sayfa
+kimliği; **ilk sayfanın kimliği her zaman ''** (eski, bölümsüz görseller
+zaten ona ait). `_placeNewImage` yeni görsele etkin sayfayı yazar; tuval
+yalnız `section == activePage` olanları çizer.
+* Sayfa silinince yazı gider (Geri al getirir — sayfa işlemleri geri al
+  yığınına GİRER, anlık görüntü sayfa bilgisini de taşıdığı için tutarlı),
+  görseller komşu sayfaya taşınır. İlk sayfa silinirse komşusu '' olur.
+  Tek sayfa kalınca not yeniden tek sayfalı (`textPages` boş).
+* `toPlainText` (paylaşım/dışa aktarma/arama) ve `isEmpty` bütün sayfaları
+  sayar. `toContentText` (AI düzelt/çevir geri yazımı) BİLEREK yalnız etkin
+  sayfa — sonuç `body`ye yazılıyor.
+* Ekran: başlığın altında yalnız sayfalı notta görünen çubuk
+  (‹ Sayfa 2/3 › · yeni · sil). Giriş: "Ekle" levhasında "Yeni sayfa".
+* Etkin sayfa SENKRONLANIR (iki cihaz aynı notu açıksa ikisi de geçer) —
+  bilinçli: içerik takası başka türlü tutarlı tutulamaz.
+* `sameRenderedNote`/`_sameVisual` sayfa alanlarını ve ek `section`unu
+  sayar (yoksa geçiş ekrana yansımaz). Not paketi `textPages`, `activePage`
+  ve ek `section`unu taşır.
+
+### GÖMME BAŞTAN (`embed_sheet.dart`)
+KÖK NEDEN — "PDF gömme doğru çalışmıyor": dokunuş ve seçim menüsü etiketi
+`_selectedAttachmentTag` ile **yalnız DOSYA ADLARINDA** arıyordu. Seçili
+KELİMEYE gömülen ekin etiketi kelimenin kendisi (`Note.tagLinks`) — yani
+kırmızı çizilen kelimeye dokunmak HİÇBİR ŞEY yapmıyor, menüde "Önizle"
+çıkmıyordu (çizim yolu `attachmentNames`'e bağlar dahil ettiği için
+etiket görünüyordu ama işlevsizdi). Artık her yol `attachmentNames`
+(bağ etiketleri + dosya adları) kullanır.
+Diğer sorunlar ve yeni akış:
+* Seçici TEK levha: üstte **Yeni ekle** (PDF, görsel, galeriden video,
+  YouTube — eklenen dosya ŞERİDE girer), altta nottaki ekler (küçük
+  resimli). Eski akışta ek yoksa gömme hiç başlamıyordu.
+* Dokunuş artık **yerinde önizleme kartı** açar (tam ekrana atlamaz):
+  video/YouTube kartta oynar, PDF kartta çevrilir; Tam ekran / Düzenle /
+  Değiştir / **Gömmeyi kaldır** (yazı kalır, ataç ve bağ gider; gövde +
+  maddeler). Seçim menüsüne de "Gömmeyi kaldır" eklendi.
+* Dokunuş yalnız etiketin İÇİNDE sayılır (`attachmentTagInside`, sınırlar
+  hariç): etiketin yanına imleç koymak önizleme açıyordu.
+* Kırpma hatası: etiket kırpılıyor ama KIRPILMAMIŞ aralığın yerine
+  yazılıyordu → "kelime " seçilince boşluk yutuluyordu (`trimmedRange`).
+* Zaten etiket olan yazıya yeniden gömmek ikinci ataç eklemez, bağı değiştirir.
+* "Ters yön" (önce eki seç, sonra yazıyı) korundu.

@@ -193,6 +193,8 @@ class NoteShare {
         // yoksa not "zemini var ama dosyası yok" durumunda kalırdı.
         backgroundImageId: hasBackground ? source.backgroundImageId : null,
         backgroundOpacity: source.backgroundOpacity,
+        textPages: source.textPages,
+        activePage: source.activePage,
       ),
     );
     return id;

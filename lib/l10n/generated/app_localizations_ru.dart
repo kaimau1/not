@@ -4413,4 +4413,60 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Высота панели — перетащите, чтобы изменить';
+
+  @override
+  String get addPageSubtitle => 'Добавляет в заметку новую пустую страницу';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Страница $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Страница $page добавлена';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Удалить текст этой страницы? Изображения перейдут на соседнюю страницу. Вернуть можно кнопкой «Отменить».';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Изображение';
+
+  @override
+  String get embedNewVideo => 'Видео';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Что встроить?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Встроить в «$label»';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Нажмите на текст, чтобы открыть встроенное на месте.';
+
+  @override
+  String get embedSectionNew => 'Добавить новое';
+
+  @override
+  String get embedSectionExisting => 'Вложения этой заметки';
+
+  @override
+  String get embedReplace => 'Заменить';
+
+  @override
+  String get embedRemove => 'Убрать встраивание';
+
+  @override
+  String get embedRemoved => 'Встраивание убрано';
 }

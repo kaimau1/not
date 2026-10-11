@@ -4299,4 +4299,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => '面板高度 — 拖动以调整';
+
+  @override
+  String get addPageSubtitle => '为笔记添加一个新的空白页';
+
+  @override
+  String pageOf(int current, int total) {
+    return '第 $current / $total 页';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return '已添加第 $page 页';
+  }
+
+  @override
+  String get deletePageConfirm => '删除此页的文字？其中的图片会移到相邻页面。可用“撤销”恢复。';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => '图片';
+
+  @override
+  String get embedNewVideo => '视频';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => '要嵌入什么？';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return '嵌入到“$label”';
+  }
+
+  @override
+  String get embedPickInfo => '点按文字即可就地打开嵌入的内容。';
+
+  @override
+  String get embedSectionNew => '新添加';
+
+  @override
+  String get embedSectionExisting => '此笔记的附件';
+
+  @override
+  String get embedReplace => '替换';
+
+  @override
+  String get embedRemove => '取消嵌入';
+
+  @override
+  String get embedRemoved => '已取消嵌入';
 }

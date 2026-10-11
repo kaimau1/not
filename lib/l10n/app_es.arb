@@ -856,5 +856,21 @@
   "pinMediaRelease": "Suelta: fijar arriba (nota debajo)",
   "unpinMedia": "Devolver a la página",
   "unpinMediaRelease": "Suelta: devolver a la página",
-  "pinnedMediaResize": "Altura del panel: arrastra para cambiarla"
+  "pinnedMediaResize": "Altura del panel: arrastra para cambiarla",
+  "addPageSubtitle": "Añade una página en blanco a la nota",
+  "pageOf": "Página {current} / {total}",
+  "pageAdded": "Página {page} añadida",
+  "deletePageConfirm": "¿Borrar el texto de esta página? Sus imágenes pasan a la página vecina. Puedes recuperarlo con Deshacer.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Imagen",
+  "embedNewVideo": "Vídeo",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "¿Qué incrustar?",
+  "embedPickTitleFor": "Incrustar en «{label}»",
+  "embedPickInfo": "Toca el texto para abrir lo incrustado en el sitio.",
+  "embedSectionNew": "Añadir nuevo",
+  "embedSectionExisting": "Adjuntos de esta nota",
+  "embedReplace": "Cambiar",
+  "embedRemove": "Quitar incrustación",
+  "embedRemoved": "Incrustación quitada"
 }

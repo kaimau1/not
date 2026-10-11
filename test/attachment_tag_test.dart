@@ -48,9 +48,7 @@ void main() {
     expect(spans.length, 3);
     // ÇİZİLEN metin ham metinle birebir aynı olmalı: aksi hâlde
     // WrapTextController'da imleç ve seçim konumları kayar.
-    final drawn = spans
-        .map((s) => (s as TextSpan).text ?? '')
-        .join();
+    final drawn = spans.map((s) => (s as TextSpan).text ?? '').join();
     expect(drawn, text);
   });
 
@@ -59,5 +57,33 @@ void main() {
       linkSpans('bak https://a.com', null, const Color(0xFF0000FF)).length,
       2,
     );
+  });
+
+  group('gömme yeniden tasarımı (2026-10-11)', () {
+    test('dokunuş yalnız etiketin İÇİNDE sayılır', () {
+      const text = 'bak 📎 rapor burada';
+      final tag = findAttachmentTags(text, ['rapor']).single;
+      expect(attachmentTagInside(text, tag.start, ['rapor']), isNull);
+      expect(attachmentTagInside(text, tag.end, ['rapor']), isNull);
+      expect(
+        attachmentTagInside(text, tag.end - 1, ['rapor'])?.fileName,
+        'rapor',
+      );
+    });
+
+    test('seçimin kenar boşlukları etikete girmez ve yutulmaz', () {
+      const text = 'bir kelime var';
+      // "kelime " (arkasındaki boşlukla) seçildi.
+      expect(trimmedRange(text, 4, 11), (start: 4, end: 10));
+      expect(trimmedRange(text, 3, 4), isNull);
+    });
+
+    test('gömmeyi kaldırmak yazıyı korur, yalnız ataç gider', () {
+      const text = '📎 rapor ve yine 📎 rapor; 📎 başka';
+      expect(
+        removeAttachmentTags(text, 'rapor'),
+        'rapor ve yine rapor; 📎 başka',
+      );
+    });
   });
 }

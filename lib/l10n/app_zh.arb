@@ -856,5 +856,21 @@
   "pinMediaRelease": "松开：置顶（笔记在下方）",
   "unpinMedia": "放回页面",
   "unpinMediaRelease": "松开：放回页面",
-  "pinnedMediaResize": "面板高度 — 拖动以调整"
+  "pinnedMediaResize": "面板高度 — 拖动以调整",
+  "addPageSubtitle": "为笔记添加一个新的空白页",
+  "pageOf": "第 {current} / {total} 页",
+  "pageAdded": "已添加第 {page} 页",
+  "deletePageConfirm": "删除此页的文字？其中的图片会移到相邻页面。可用“撤销”恢复。",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "图片",
+  "embedNewVideo": "视频",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "要嵌入什么？",
+  "embedPickTitleFor": "嵌入到“{label}”",
+  "embedPickInfo": "点按文字即可就地打开嵌入的内容。",
+  "embedSectionNew": "新添加",
+  "embedSectionExisting": "此笔记的附件",
+  "embedReplace": "替换",
+  "embedRemove": "取消嵌入",
+  "embedRemoved": "已取消嵌入"
 }

@@ -146,6 +146,24 @@ void main() {
       expect(pinned.copyWith(pinHeight: 0).floatsOnPage, isTrue);
     });
 
+    test('sabitten çıkınca bölme yüksekliği ve sayfadaki yer hatırlanır', () {
+      final placed = image.copyWith(x: 0.4, pageY: 120, displayWidth: 0.5);
+      final pinned = placed.copyWith(pinHeight: 260);
+      // Sabitlemeden çık: işaret döner, yer/genişlik dokunulmadan kalır.
+      final released = pinned.copyWith(pinHeight: -pinned.pinHeight);
+      expect(released.isPinnedTop, isFalse);
+      expect(released.floatsOnPage, isTrue);
+      expect(released.rememberedPinHeight, 260);
+      expect(released.x, 0.4);
+      expect(released.pageY, 120);
+      expect(released.displayWidth, 0.5);
+      // Kayıtta da kalır (cihazlar arası).
+      final back = Attachment.fromMap(released.toMap()..remove('createdAt'));
+      expect(back.rememberedPinHeight, 260);
+      expect(back.isPinnedTop, isFalse);
+      expect(image.rememberedPinHeight, isNull);
+    });
+
     test('PDF/ses sabitlenmiş sayılmaz', () {
       const pdf = Attachment(
         id: 'p',
@@ -191,14 +209,20 @@ void main() {
       expect(body.dy, greaterThanOrEqualTo(200));
 
       // Ayraç tutamacını 60 dp aşağı çek: yükseklik kaydedilir.
-      await tester.dragFrom(const Offset(400, 211), const Offset(0, 60));
+      await tester.dragFrom(
+        tester.getCenter(find.byKey(const ValueKey('pinned-media-bar'))),
+        const Offset(0, 60),
+      );
       await tester.pumpAndSettle();
       expect(saved, isNotNull);
       expect(saved!, greaterThan(240));
       expect(unpinned, isFalse);
 
       // En üste çekip bırakmak sayfaya geri koyar.
-      await tester.dragFrom(const Offset(400, 211), const Offset(0, -190));
+      await tester.dragFrom(
+        tester.getCenter(find.byKey(const ValueKey('pinned-media-bar'))),
+        const Offset(0, -200),
+      );
       await tester.pumpAndSettle();
       expect(unpinned, isTrue);
     });

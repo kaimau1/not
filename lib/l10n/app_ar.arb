@@ -856,5 +856,21 @@
   "pinMediaRelease": "أفلِت: تثبيت في الأعلى (الملاحظة بالأسفل)",
   "unpinMedia": "إعادة إلى الصفحة",
   "unpinMediaRelease": "أفلِت: إعادة إلى الصفحة",
-  "pinnedMediaResize": "ارتفاع اللوحة — اسحب لتغييره"
+  "pinnedMediaResize": "ارتفاع اللوحة — اسحب لتغييره",
+  "addPageSubtitle": "يضيف صفحة فارغة جديدة إلى الملاحظة",
+  "pageOf": "الصفحة {current} / {total}",
+  "pageAdded": "أُضيفت الصفحة {page}",
+  "deletePageConfirm": "حذف نص هذه الصفحة؟ تنتقل صورها إلى الصفحة المجاورة. يمكنك استعادته بالتراجع.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "صورة",
+  "embedNewVideo": "فيديو",
+  "embedNewYouTube": "يوتيوب",
+  "embedPickTitle": "ماذا تريد أن تضمّن؟",
+  "embedPickTitleFor": "تضمين في «{label}»",
+  "embedPickInfo": "اضغط على النص لفتح العنصر المضمّن في مكانه.",
+  "embedSectionNew": "إضافة جديد",
+  "embedSectionExisting": "مرفقات هذه الملاحظة",
+  "embedReplace": "استبدال",
+  "embedRemove": "إزالة التضمين",
+  "embedRemoved": "أُزيل التضمين"
 }

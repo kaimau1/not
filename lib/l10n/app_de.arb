@@ -856,5 +856,21 @@
   "pinMediaRelease": "Loslassen: oben anheften (Notiz darunter)",
   "unpinMedia": "Zurück auf die Seite",
   "unpinMediaRelease": "Loslassen: zurück auf die Seite",
-  "pinnedMediaResize": "Bereichshöhe – zum Ändern ziehen"
+  "pinnedMediaResize": "Bereichshöhe – zum Ändern ziehen",
+  "addPageSubtitle": "Fügt der Notiz eine neue leere Seite hinzu",
+  "pageOf": "Seite {current} / {total}",
+  "pageAdded": "Seite {page} hinzugefügt",
+  "deletePageConfirm": "Text dieser Seite löschen? Ihre Bilder werden auf die Nachbarseite verschoben. Mit Rückgängig holst du ihn zurück.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Bild",
+  "embedNewVideo": "Video",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Was einbetten?",
+  "embedPickTitleFor": "In „{label}“ einbetten",
+  "embedPickInfo": "Tippe auf den Text, um das Eingebettete direkt zu öffnen.",
+  "embedSectionNew": "Neu hinzufügen",
+  "embedSectionExisting": "Anhänge dieser Notiz",
+  "embedReplace": "Ersetzen",
+  "embedRemove": "Einbettung entfernen",
+  "embedRemoved": "Einbettung entfernt"
 }

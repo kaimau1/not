@@ -108,3 +108,41 @@ String exportAttachmentTags(String text, Iterable<String> names) {
   buffer.write(text.substring(cursor));
   return buffer.toString();
 }
+
+/// DOKUNUŞ için etiket araması: [offset] etiketin İÇİNDE olmalı (iki sınır
+/// HARİÇ). [attachmentTagAt] sınırları dahil sayar — o seçim menüsü için
+/// doğru; ama dokunuşta etiketin hemen yanına imleç koymak (yazmaya devam
+/// etmek için) önizlemeyi açıyordu (gömme yeniden tasarımı, 2026-10-11).
+({int start, int end, String fileName})? attachmentTagInside(
+  String text,
+  int offset,
+  Iterable<String> fileNames,
+) {
+  for (final tag in findAttachmentTags(text, fileNames)) {
+    if (offset > tag.start && offset < tag.end) return tag;
+  }
+  return null;
+}
+
+/// Seçimin iki ucundaki boşlukları dışarıda bırakan aralık; seçim yalnız
+/// boşluksa null.
+///
+/// KÖK NEDEN (eski gömme): etiket metni kırpılıyor ama yazılırken KIRPILMAMIŞ
+/// aralığın yerine konuyordu — "kelime " seçilince kelimenin arkasındaki
+/// boşluk yutuluyor, sonraki sözcük etikete yapışıyordu.
+({int start, int end})? trimmedRange(String text, int start, int end) {
+  var s = start.clamp(0, text.length);
+  var e = end.clamp(s, text.length);
+  while (s < e && text[s].trim().isEmpty) {
+    s++;
+  }
+  while (e > s && text[e - 1].trim().isEmpty) {
+    e--;
+  }
+  return s == e ? null : (start: s, end: e);
+}
+
+/// [label] etiketinin metindeki TÜM ataçlarını söker ("📎 kelime" →
+/// "kelime"): gömmeyi kaldırmak yazıya dokunmaz, yalnız bağı çözer.
+String removeAttachmentTags(String text, String label) =>
+    text.replaceAll(attachmentTagFor(label), label.trim());

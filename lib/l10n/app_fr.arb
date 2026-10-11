@@ -856,5 +856,21 @@
   "pinMediaRelease": "Relâchez : épingler en haut (note en dessous)",
   "unpinMedia": "Remettre sur la page",
   "unpinMediaRelease": "Relâchez : remettre sur la page",
-  "pinnedMediaResize": "Hauteur du volet — faites glisser pour la modifier"
+  "pinnedMediaResize": "Hauteur du volet — faites glisser pour la modifier",
+  "addPageSubtitle": "Ajoute une nouvelle page vierge à la note",
+  "pageOf": "Page {current} / {total}",
+  "pageAdded": "Page {page} ajoutée",
+  "deletePageConfirm": "Supprimer le texte de cette page ? Ses images passent sur la page voisine. Annuler permet de le récupérer.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Image",
+  "embedNewVideo": "Vidéo",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Que intégrer ?",
+  "embedPickTitleFor": "Intégrer dans « {label} »",
+  "embedPickInfo": "Touchez le texte pour ouvrir l'élément intégré sur place.",
+  "embedSectionNew": "Ajouter",
+  "embedSectionExisting": "Pièces jointes de cette note",
+  "embedReplace": "Remplacer",
+  "embedRemove": "Retirer l'intégration",
+  "embedRemoved": "Intégration retirée"
 }

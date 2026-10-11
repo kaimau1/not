@@ -339,19 +339,33 @@ class NoteMediaBox extends StatelessWidget {
     required this.attachment,
     this.fit = BoxFit.cover,
     this.inlineWebVideo = false,
+    this.webPlaying,
+    this.onWebPlay,
     this.onSize,
   });
 
   final Attachment attachment;
   final BoxFit fit;
   final bool inlineWebVideo;
+
+  /// DENETİMLİ kip (sayfa tuvali): oynuyor mu bilgisini çağıran tutar —
+  /// kutunun DIŞINDA bir "durdur" düğmesi çizebilsin diye. null = kutu kendi
+  /// durumunu tutar (sabit bölme).
+  final bool? webPlaying;
+  final VoidCallback? onWebPlay;
   final ValueChanged<Size>? onSize;
 
   @override
   Widget build(BuildContext context) {
     final a = attachment;
     if (a.isWebVideo) {
-      return _WebVideoBox(video: a, fit: fit, inline: inlineWebVideo);
+      return _WebVideoBox(
+        video: a,
+        fit: fit,
+        inline: inlineWebVideo,
+        playing: webPlaying,
+        onPlay: onWebPlay,
+      );
     }
     if (a.kind == AttachmentKind.video) {
       return _VideoBox(video: a, fit: fit, onSize: onSize);
@@ -367,11 +381,15 @@ class _WebVideoBox extends StatefulWidget {
     required this.video,
     required this.fit,
     required this.inline,
+    this.playing,
+    this.onPlay,
   });
 
   final Attachment video;
   final BoxFit fit;
   final bool inline;
+  final bool? playing;
+  final VoidCallback? onPlay;
 
   @override
   State<_WebVideoBox> createState() => _WebVideoBoxState();
@@ -382,7 +400,11 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
 
   void _play() {
     if (widget.inline && youTubeInAppSupported) {
-      setState(() => _playing = true);
+      if (widget.onPlay != null) {
+        widget.onPlay!();
+      } else {
+        setState(() => _playing = true);
+      }
       return;
     }
     Navigator.of(context).push(
@@ -400,7 +422,9 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
 
   @override
   Widget build(BuildContext context) {
-    if (_playing) return YouTubeInlinePlayer(url: widget.video.webUrl);
+    if (widget.playing ?? _playing) {
+      return YouTubeInlinePlayer(url: widget.video.webUrl);
+    }
     final id = youTubeVideoId(widget.video.webUrl);
     final placeholder = Container(
       color: Colors.black87,
@@ -1014,6 +1038,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   double? _moveOriginLeft;
   double? _moveOriginTop;
 
+  /// Sayfada YERİNDE oynayan YouTube ekleri (kullanıcı bulgusu 2026-10-11:
+  /// "basınca ayrı bir video sayfası açılıyor, direkt o alanda
+  /// oynatılabilmeli"). Oynarken WebView dokunuşları yutar; kutunun
+  /// köşesindeki "durdur" düğmesi oynatıcıyı kapatıp kutuyu yeniden
+  /// taşınabilir yapar.
+  final _playingWeb = <String>{};
+
   /// Parmak şu an sabitleme bölgesinde mi (bkz. [NotePageCanvas.onPinTop]).
   bool _inPinZone = false;
 
@@ -1029,9 +1060,21 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     widget.onPinHover?.call(value);
   }
 
-  /// Parmağın ekran konumu sabitleme bölgesinde mi.
-  bool _pinZoneHit(Offset global) {
+  /// Görsel izin verilen en üst noktanın ([NotePageCanvas.topLimit]) bu
+  /// kadar ötesine ZORLANINCA sabitleme bölgesi sayılır.
+  static const double _pinOverPull = 36;
+
+  /// Sabitleme bölgesi mi: parmak ekranın tepesinde YA DA görsel yukarı doğru
+  /// başlığın üstüne zorlanıyor ([rawTop] = parmağın istediği, kırpılmamış
+  /// üst kenar).
+  ///
+  /// Kullanıcı bulgusu 2026-10-11: "sabitlemek için görseli en üst ortaya
+  /// getirmek gerekiyor, zor". Görsel başlığın altında DURDUĞU için (üste
+  /// çıkamaz) parmak ekranın tepesine kadar gitmek zorundaydı. Artık nerede
+  /// olursa olsun yukarı doğru biraz zorlamak yeter; yatay konum önemsiz.
+  bool _pinZoneHit(Offset global, {required double rawTop}) {
     if (widget.onPinTop == null) return false;
+    if (rawTop < widget.topLimit - _pinOverPull) return true;
     final scrollable = Scrollable.maybeOf(context);
     final box = scrollable?.context.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return false;
@@ -1519,6 +1562,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     return NoteMediaBox(
       attachment: a,
       fit: fit,
+      inlineWebVideo: true,
+      webPlaying: _playingWeb.contains(a.id),
+      onWebPlay: () => setState(() => _playingWeb.add(a.id)),
       onSize: (a.width == null || a.height == null)
           ? (s) => widget.onChanged(
               a.copyWith(width: s.width.round(), height: s.height.round()),
@@ -1624,6 +1670,40 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                   },
                 ),
               for (final img in widget.images) _positioned(context, img, cw),
+              // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
+              // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
+              // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
+              for (final img in widget.images)
+                if (_playingWeb.contains(img.id))
+                  Builder(
+                    builder: (context) {
+                      final r = _resolve(img, cw);
+                      return Positioned(
+                        left: r.left - 14,
+                        top: r.top - 14,
+                        child: Material(
+                          color: Theme.of(context).colorScheme.inverseSurface,
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () =>
+                                setState(() => _playingWeb.remove(img.id)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onInverseSurface,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
               // çizgiyi kapatırsa hizalama görünmez olurdu.
               if (_guides.isNotEmpty)
@@ -1996,7 +2076,12 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         // beslenseydi görsel kılavuzdan kopamazdı.
         onLongPressMoveUpdate: (d) {
           if (_moveId != img.id) return;
-          _setPinZone(_pinZoneHit(d.globalPosition));
+          _setPinZone(
+            _pinZoneHit(
+              d.globalPosition,
+              rawTop: (_moveOriginTop ?? r.top) + d.offsetFromOrigin.dy,
+            ),
+          );
           final snapped = snapMove(
             rect: Rect.fromLTWH(
               (_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx,

@@ -4417,4 +4417,60 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Altura del panel: arrastra para cambiarla';
+
+  @override
+  String get addPageSubtitle => 'Añade una página en blanco a la nota';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Página $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Página $page añadida';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      '¿Borrar el texto de esta página? Sus imágenes pasan a la página vecina. Puedes recuperarlo con Deshacer.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Imagen';
+
+  @override
+  String get embedNewVideo => 'Vídeo';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => '¿Qué incrustar?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Incrustar en «$label»';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Toca el texto para abrir lo incrustado en el sitio.';
+
+  @override
+  String get embedSectionNew => 'Añadir nuevo';
+
+  @override
+  String get embedSectionExisting => 'Adjuntos de esta nota';
+
+  @override
+  String get embedReplace => 'Cambiar';
+
+  @override
+  String get embedRemove => 'Quitar incrustación';
+
+  @override
+  String get embedRemoved => 'Incrustación quitada';
 }

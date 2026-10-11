@@ -856,5 +856,21 @@
   "pinMediaRelease": "Отпустите: закрепить сверху (заметка ниже)",
   "unpinMedia": "Вернуть на страницу",
   "unpinMediaRelease": "Отпустите: вернуть на страницу",
-  "pinnedMediaResize": "Высота панели — перетащите, чтобы изменить"
+  "pinnedMediaResize": "Высота панели — перетащите, чтобы изменить",
+  "addPageSubtitle": "Добавляет в заметку новую пустую страницу",
+  "pageOf": "Страница {current} / {total}",
+  "pageAdded": "Страница {page} добавлена",
+  "deletePageConfirm": "Удалить текст этой страницы? Изображения перейдут на соседнюю страницу. Вернуть можно кнопкой «Отменить».",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Изображение",
+  "embedNewVideo": "Видео",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Что встроить?",
+  "embedPickTitleFor": "Встроить в «{label}»",
+  "embedPickInfo": "Нажмите на текст, чтобы открыть встроенное на месте.",
+  "embedSectionNew": "Добавить новое",
+  "embedSectionExisting": "Вложения этой заметки",
+  "embedReplace": "Заменить",
+  "embedRemove": "Убрать встраивание",
+  "embedRemoved": "Встраивание убрано"
 }

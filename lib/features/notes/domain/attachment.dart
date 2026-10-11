@@ -628,7 +628,13 @@ class Attachment {
   /// **ÜSTE SABİTLİ** medya (kullanıcı isteği 2026-10-11: "üstte video/resim,
   /// altta not"): 0'dan büyükse görsel/video sayfada yüzmez, notun ÜSTÜNDE
   /// sabit bir bölmede durur ve metin altında kayar. Değer bölmenin
-  /// yüksekliği (dp) — ayraç sürüklenerek değişir. 0 = sabit değil.
+  /// yüksekliği (dp) — ayraç sürüklenerek değişir. 0 = hiç sabitlenmedi.
+  ///
+  /// NEGATİF = sabit DEĞİL ama son bölme yüksekliği hatırlanıyor (kullanıcı
+  /// bulgusu 2026-10-11: "geri serbestleştirince boyut sıfırlanıyor, eski
+  /// boyut hatırlanmalı"). Sabitlemeden çıkmak işareti çevirir; sayfadaki
+  /// konum/genişlik (x, pageY, displayWidth) sabitlerken hiç silinmediği
+  /// için medya eski yerine eski boyutuyla döner.
   final double pinHeight;
 
   final DateTime? createdAt;
@@ -637,6 +643,10 @@ class Attachment {
 
   /// YouTube (web) videosu mu — dosyası yok, gömülü oynatıcıda açılır.
   bool get isWebVideo => kind == AttachmentKind.video && webUrl.isNotEmpty;
+
+  /// Bir sonraki sabitlemede kullanılacak, HATIRLANAN bölme yüksekliği
+  /// (hiç sabitlenmediyse null).
+  double? get rememberedPinHeight => pinHeight == 0 ? null : pinHeight.abs();
 
   /// Notun üstündeki sabit bölmede mi (bkz. [pinHeight]).
   bool get isPinnedTop =>
@@ -845,7 +855,7 @@ class Attachment {
     if (pageIds.isNotEmpty) 'pageIds': pageIds,
     // Yalnız doluysa: dosyalı eklerin şeması büyümez.
     if (webUrl.isNotEmpty) 'webUrl': webUrl,
-    if (pinHeight > 0) 'pinHeight': pinHeight,
+    if (pinHeight != 0) 'pinHeight': pinHeight,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

@@ -4422,4 +4422,60 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get pinnedMediaResize =>
       'Hauteur du volet — faites glisser pour la modifier';
+
+  @override
+  String get addPageSubtitle => 'Ajoute une nouvelle page vierge à la note';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Page $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Page $page ajoutée';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Supprimer le texte de cette page ? Ses images passent sur la page voisine. Annuler permet de le récupérer.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Image';
+
+  @override
+  String get embedNewVideo => 'Vidéo';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Que intégrer ?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Intégrer dans « $label »';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Touchez le texte pour ouvrir l\'élément intégré sur place.';
+
+  @override
+  String get embedSectionNew => 'Ajouter';
+
+  @override
+  String get embedSectionExisting => 'Pièces jointes de cette note';
+
+  @override
+  String get embedReplace => 'Remplacer';
+
+  @override
+  String get embedRemove => 'Retirer l\'intégration';
+
+  @override
+  String get embedRemoved => 'Intégration retirée';
 }

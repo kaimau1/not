@@ -4396,4 +4396,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Pane height — drag to change';
+
+  @override
+  String get addPageSubtitle => 'Adds a new blank page to the note';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Page $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Page $page added';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Delete this page\'s text? Its images move to the neighbouring page. You can bring it back with Undo.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Image';
+
+  @override
+  String get embedNewVideo => 'Video';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'What to embed?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Embed into “$label”';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Tap the text to open the embedded item in place.';
+
+  @override
+  String get embedSectionNew => 'Add new';
+
+  @override
+  String get embedSectionExisting => 'Attachments in this note';
+
+  @override
+  String get embedReplace => 'Replace';
+
+  @override
+  String get embedRemove => 'Remove embed';
+
+  @override
+  String get embedRemoved => 'Embed removed';
 }

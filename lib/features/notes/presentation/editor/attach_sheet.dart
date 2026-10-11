@@ -90,6 +90,9 @@ class _AttachSheet extends StatelessWidget {
       if (!pageNote) ...[
         ('text-block', Icons.notes, l10n.addTextBlock, null),
         ('list-item', Icons.checklist, l10n.editorToolList, null),
+        // YENİ SAYFA (kullanıcı isteği 2026-10-11): notun yazısı ve
+        // görselleri sayfa sayfa; geçiş başlığın altındaki çubukta.
+        ('new-page', Icons.note_add_outlined, l10n.archiveNewPage, l10n.addPageSubtitle),
         // YAZIYA EK GÖM (kullanıcı bulgusu 2026-08-16: "ek gömmeyi
         // bulamadım"). İki giriş noktası vardı ve ikisi de saklıydı: ek
         // şeridindeki 16 piksellik simge ve metin seçim menüsü — Android o

@@ -856,5 +856,21 @@
   "pinMediaRelease": "Lepas: sematkan di atas (catatan di bawah)",
   "unpinMedia": "Kembalikan ke halaman",
   "unpinMediaRelease": "Lepas: kembalikan ke halaman",
-  "pinnedMediaResize": "Tinggi panel — seret untuk mengubah"
+  "pinnedMediaResize": "Tinggi panel — seret untuk mengubah",
+  "addPageSubtitle": "Menambahkan halaman kosong baru ke catatan",
+  "pageOf": "Halaman {current} / {total}",
+  "pageAdded": "Halaman {page} ditambahkan",
+  "deletePageConfirm": "Hapus teks halaman ini? Gambarnya pindah ke halaman sebelah. Bisa dikembalikan dengan Urungkan.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Gambar",
+  "embedNewVideo": "Video",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Sematkan apa?",
+  "embedPickTitleFor": "Sematkan ke “{label}”",
+  "embedPickInfo": "Ketuk teks untuk membuka sematan di tempat.",
+  "embedSectionNew": "Tambah baru",
+  "embedSectionExisting": "Lampiran catatan ini",
+  "embedReplace": "Ganti",
+  "embedRemove": "Hapus sematan",
+  "embedRemoved": "Sematan dihapus"
 }

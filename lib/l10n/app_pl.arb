@@ -856,5 +856,21 @@
   "pinMediaRelease": "Puść: przypnij u góry (notatka poniżej)",
   "unpinMedia": "Odłóż na stronę",
   "unpinMediaRelease": "Puść: odłóż na stronę",
-  "pinnedMediaResize": "Wysokość panelu — przeciągnij, aby zmienić"
+  "pinnedMediaResize": "Wysokość panelu — przeciągnij, aby zmienić",
+  "addPageSubtitle": "Dodaje do notatki nową pustą stronę",
+  "pageOf": "Strona {current} / {total}",
+  "pageAdded": "Dodano stronę {page}",
+  "deletePageConfirm": "Usunąć tekst tej strony? Jej obrazy przejdą na sąsiednią stronę. Możesz go przywrócić przyciskiem Cofnij.",
+  "embedNewPdf": "PDF",
+  "embedNewImage": "Obraz",
+  "embedNewVideo": "Wideo",
+  "embedNewYouTube": "YouTube",
+  "embedPickTitle": "Co osadzić?",
+  "embedPickTitleFor": "Osadź w „{label}”",
+  "embedPickInfo": "Dotknij tekstu, aby otworzyć osadzony element na miejscu.",
+  "embedSectionNew": "Dodaj nowe",
+  "embedSectionExisting": "Załączniki tej notatki",
+  "embedReplace": "Zamień",
+  "embedRemove": "Usuń osadzenie",
+  "embedRemoved": "Usunięto osadzenie"
 }

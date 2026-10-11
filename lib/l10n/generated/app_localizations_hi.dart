@@ -4394,4 +4394,60 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'पैनल की ऊँचाई — बदलने के लिए खींचें';
+
+  @override
+  String get addPageSubtitle => 'नोट में एक नया खाली पेज जोड़ता है';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'पेज $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'पेज $page जोड़ा गया';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'इस पेज का टेक्स्ट हटाएँ? इसकी तस्वीरें पास वाले पेज पर चली जाएँगी। पूर्ववत करें से वापस ला सकते हैं।';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'तस्वीर';
+
+  @override
+  String get embedNewVideo => 'वीडियो';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'क्या एम्बेड करें?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return '“$label” में एम्बेड करें';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'एम्बेड की गई चीज़ वहीं खोलने के लिए टेक्स्ट पर टैप करें।';
+
+  @override
+  String get embedSectionNew => 'नया जोड़ें';
+
+  @override
+  String get embedSectionExisting => 'इस नोट के अटैचमेंट';
+
+  @override
+  String get embedReplace => 'बदलें';
+
+  @override
+  String get embedRemove => 'एम्बेड हटाएँ';
+
+  @override
+  String get embedRemoved => 'एम्बेड हटाया गया';
 }

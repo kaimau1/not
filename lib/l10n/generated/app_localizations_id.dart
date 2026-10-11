@@ -4413,4 +4413,59 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Tinggi panel — seret untuk mengubah';
+
+  @override
+  String get addPageSubtitle => 'Menambahkan halaman kosong baru ke catatan';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Halaman $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Halaman $page ditambahkan';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Hapus teks halaman ini? Gambarnya pindah ke halaman sebelah. Bisa dikembalikan dengan Urungkan.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Gambar';
+
+  @override
+  String get embedNewVideo => 'Video';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Sematkan apa?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Sematkan ke “$label”';
+  }
+
+  @override
+  String get embedPickInfo => 'Ketuk teks untuk membuka sematan di tempat.';
+
+  @override
+  String get embedSectionNew => 'Tambah baru';
+
+  @override
+  String get embedSectionExisting => 'Lampiran catatan ini';
+
+  @override
+  String get embedReplace => 'Ganti';
+
+  @override
+  String get embedRemove => 'Hapus sematan';
+
+  @override
+  String get embedRemoved => 'Sematan dihapus';
 }

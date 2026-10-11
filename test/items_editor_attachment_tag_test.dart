@@ -80,10 +80,26 @@ void main() {
       names: ['rapor.pdf'],
       onTag: (name) => opened = name,
     );
-    // Satırın tamamı etiket: imleç nereye düşerse düşsün etiketin içindedir.
-    await tester.tap(find.byType(EditableText).first);
+    // Dokunuş etiketin YAZISINA düşmeli (2026-10-11 gömme yeniden tasarımı:
+    // etiketin bittiği yerin sağına dokunmak imleci etiketin DIŞINA koyar —
+    // orası yazmaya devam etmektir, önizleme açmaz).
+    final field = tester.getRect(find.byType(EditableText).first);
+    await tester.tapAt(Offset(field.left + 40, field.center.dy));
     await tester.pumpAndSettle();
     expect(opened, 'rapor.pdf');
+  });
+
+  testWidgets('etiketin SAĞINA dokunmak önizleme açmaz', (tester) async {
+    String? opened;
+    await pumpRow(
+      tester,
+      names: ['rapor.pdf'],
+      onTag: (name) => opened = name,
+    );
+    final field = tester.getRect(find.byType(EditableText).first);
+    await tester.tapAt(Offset(field.right - 4, field.center.dy));
+    await tester.pumpAndSettle();
+    expect(opened, isNull);
   });
 
   testWidgets('adı bilinmeyen ataç düz yazıdır, dokunuş bir şey yapmaz', (

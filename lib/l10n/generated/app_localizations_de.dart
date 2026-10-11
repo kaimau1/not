@@ -4423,4 +4423,60 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Bereichshöhe – zum Ändern ziehen';
+
+  @override
+  String get addPageSubtitle => 'Fügt der Notiz eine neue leere Seite hinzu';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Seite $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Seite $page hinzugefügt';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Text dieser Seite löschen? Ihre Bilder werden auf die Nachbarseite verschoben. Mit Rückgängig holst du ihn zurück.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Bild';
+
+  @override
+  String get embedNewVideo => 'Video';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Was einbetten?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'In „$label“ einbetten';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Tippe auf den Text, um das Eingebettete direkt zu öffnen.';
+
+  @override
+  String get embedSectionNew => 'Neu hinzufügen';
+
+  @override
+  String get embedSectionExisting => 'Anhänge dieser Notiz';
+
+  @override
+  String get embedReplace => 'Ersetzen';
+
+  @override
+  String get embedRemove => 'Einbettung entfernen';
+
+  @override
+  String get embedRemoved => 'Einbettung entfernt';
 }

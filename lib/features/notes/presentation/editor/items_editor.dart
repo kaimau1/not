@@ -349,12 +349,14 @@ class ItemsEditorState extends State<ItemsEditor> {
     if (onTag == null || widget.attachmentNames.isEmpty) return;
     final selection = controller.selection;
     if (!selection.isValid) return;
-    final name = attachmentTagAt(
+    // Etiketin İÇİNE dokunuş (sınırlar hariç): yanına imleç koymak yazmaya
+    // devam etmektir, önizleme açmaz (bkz. attachmentTagInside).
+    final tag = attachmentTagInside(
       controller.logicalText,
       wrapToLogicalOffset(controller.text, selection.baseOffset),
       widget.attachmentNames,
     );
-    if (name != null) onTag(name);
+    if (tag != null) onTag(tag.fileName);
   }
 
   void _exitSelection() {

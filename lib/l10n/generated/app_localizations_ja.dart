@@ -4325,4 +4325,58 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'パネルの高さ — ドラッグで変更';
+
+  @override
+  String get addPageSubtitle => 'ノートに新しい空白ページを追加します';
+
+  @override
+  String pageOf(int current, int total) {
+    return '$current / $total ページ';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return '$page ページ目を追加しました';
+  }
+
+  @override
+  String get deletePageConfirm => 'このページの文章を削除しますか？画像は隣のページに移動します。「元に戻す」で戻せます。';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => '画像';
+
+  @override
+  String get embedNewVideo => '動画';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => '何を埋め込みますか？';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return '「$label」に埋め込む';
+  }
+
+  @override
+  String get embedPickInfo => 'テキストをタップすると埋め込んだものがその場で開きます。';
+
+  @override
+  String get embedSectionNew => '新規追加';
+
+  @override
+  String get embedSectionExisting => 'このノートの添付';
+
+  @override
+  String get embedReplace => '置き換え';
+
+  @override
+  String get embedRemove => '埋め込みを解除';
+
+  @override
+  String get embedRemoved => '埋め込みを解除しました';
 }

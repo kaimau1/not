@@ -4420,4 +4420,61 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get pinnedMediaResize => 'Paneelhoogte — sleep om te wijzigen';
+
+  @override
+  String get addPageSubtitle =>
+      'Voegt een nieuwe lege pagina aan de notitie toe';
+
+  @override
+  String pageOf(int current, int total) {
+    return 'Pagina $current / $total';
+  }
+
+  @override
+  String pageAdded(int page) {
+    return 'Pagina $page toegevoegd';
+  }
+
+  @override
+  String get deletePageConfirm =>
+      'Tekst van deze pagina verwijderen? De afbeeldingen gaan naar de buurpagina. Met Ongedaan maken haal je hem terug.';
+
+  @override
+  String get embedNewPdf => 'PDF';
+
+  @override
+  String get embedNewImage => 'Afbeelding';
+
+  @override
+  String get embedNewVideo => 'Video';
+
+  @override
+  String get embedNewYouTube => 'YouTube';
+
+  @override
+  String get embedPickTitle => 'Wat insluiten?';
+
+  @override
+  String embedPickTitleFor(String label) {
+    return 'Insluiten in ‘$label’';
+  }
+
+  @override
+  String get embedPickInfo =>
+      'Tik op de tekst om het ingesloten item ter plekke te openen.';
+
+  @override
+  String get embedSectionNew => 'Nieuw toevoegen';
+
+  @override
+  String get embedSectionExisting => 'Bijlagen van deze notitie';
+
+  @override
+  String get embedReplace => 'Vervangen';
+
+  @override
+  String get embedRemove => 'Insluiting verwijderen';
+
+  @override
+  String get embedRemoved => 'Insluiting verwijderd';
 }
