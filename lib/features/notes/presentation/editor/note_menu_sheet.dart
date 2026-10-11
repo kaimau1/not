@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/action_menu_sheet.dart';
 
-/// Not editörünün ⋮ menüsü — İKİ SÜTUNLU levha.
+/// Not editörünün ⋮ menüsü — hızlı satır + başlıklı gruplar (bkz.
+/// [ActionMenu], 2026-10-11). Eskiden İKİ SÜTUNLU tek ızgaraydı.
 ///
 /// **Neden açılır menü değil** (kullanıcı ekran görüntüsü 2026-08-09: "bu 3
 /// nokta alanı düzenlenmeli"): menü on maddelik tek sütunlu bir `PopupMenu`
@@ -99,156 +101,104 @@ class _MenuGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    // (anahtar, etiket, simge) — sıra sık kullanımdan seyreğe.
-    final actions = <(String, String, IconData)>[
-      (
-        'pin',
-        pinned ? l10n.unpin : l10n.pin,
-        pinned ? Icons.push_pin : Icons.push_pin_outlined,
-      ),
-      (
-        'star',
-        starred ? l10n.unstar : l10n.star,
-        starred ? Icons.star : Icons.star_outline,
-      ),
-      // LİSTEYE ÖZGÜ maddeler (kullanıcı istekleri 2026-08-16). Hepsi
-      // yerel ve anında: hiçbiri model çağırmaz.
-      if (isList) ...[
-        ('toText', l10n.convertToText, Icons.notes_outlined),
-        ('sortItems', l10n.sortItems, Icons.sort),
-        (
-          'columns',
-          twoColumns ? l10n.listOneColumn : l10n.listTwoColumns,
-          twoColumns ? Icons.view_agenda_outlined : Icons.view_column_outlined,
+    // 2026-10-11 YENİDEN DÜZEN (bkz. [ActionMenu]). Üst çubukta ve alt
+    // çubukta zaten AÇIKÇA duran işler burada tekrar edilmez: "Sabitle" üst
+    // çubukta (raptiye), Biçim/Ekle/Seç alt çubukta. Ara ve Paylaş alt
+    // çubuktan dar ekranda düşebildiği için (bkz. planEditorBar) burada da
+    // kalır. Hesap makinesi üst çubuktan buraya geldi: üst çubuk notun
+    // DURUMUNA (geri al, sabitle, ortak çalışan) ayrıldı.
+    return ActionMenu(
+      quick: [
+        MenuAction(
+          'star',
+          starred ? l10n.unstar : l10n.star,
+          starred ? Icons.star : Icons.star_outline,
+          selected: starred,
         ),
-      ] else
-        ('toList', l10n.convertToList, Icons.checklist),
-      // Metin içi görselleri TOPLUCA ek şeridine indirir (kullanıcı isteği
-      // 2026-08-16: "metin içi görselleri eke dönüştürme butonu"). Görsel
-      // görsel yapılabiliyordu (görselin kendi menüsündeki "Ek yap") ama on
-      // görselli bir notta bu on ayrı işlem demekti.
-      if (hasFloatingImages)
-        ('imagesToFiles', l10n.imagesToAttachments, Icons.attach_file),
-      // NOT İÇİ ARAMA (kullanıcı isteği 2026-08-16). Ana ekrandaki arama
-      // notlar ARASINDA çalışıyor; bu, tek notun içine bakar.
-      ('search', l10n.noteSearchTitle, Icons.manage_search),
-      // **İSTATİSTİK**: yazarken "kaç kelime oldu, ne kadar sürer" sorusunun
-      // cevabı hiçbir yerde yoktu (bkz. showNoteStatsSheet).
-      ('stats', l10n.noteStatsTitle, Icons.insights_outlined),
-      // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29): bu not iskelet olarak
-      // saklanır, şablon galerisinde "Şablonlarım"da durur.
-      if (canTemplate)
-        ('saveTemplate', l10n.saveAsTemplate, Icons.bookmark_add_outlined),
-      // Ekleri bir arşiv defterine KOPYALAR (kullanıcı isteği 2026-08-16):
-      // kaynak not silinse bile kopya sağlam kalır.
-      if (hasAttachments)
-        ('toArchive', l10n.archiveCopyHere, Icons.inventory_2_outlined),
-      ('share', l10n.share, Icons.share_outlined),
-      // TÜM NOTU KOPYALA (kullanıcı isteği 2026-09-26: "kopyalama vb.
-      // şeylerin düzeni"): kopyalamak için metni seçmek gerekiyordu; madde
-      // listesinde bu hiç mümkün değildi (her madde ayrı alan).
-      ('copyText', l10n.copy, Icons.copy_outlined),
-      // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26).
-      if (localOnly != null)
-        (
-          'localOnly',
-          localOnly! ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
-          localOnly! ? Icons.cloud_sync_outlined : Icons.cloud_off_outlined,
+        MenuAction('share', l10n.share, Icons.share_outlined),
+        // TÜM NOTU KOPYALA (kullanıcı isteği 2026-09-26).
+        MenuAction('copyText', l10n.copy, Icons.copy_outlined),
+        MenuAction('search', l10n.noteSearchTitle, Icons.manage_search),
+        MenuAction(
+          'calculator',
+          l10n.calculatorTitle,
+          Icons.calculate_outlined,
         ),
-      // "PDF olarak dışa aktar" DEĞİL: belge notlarında çıktı balonlu PDF de
-      // olabiliyor, metin notlarında Word de üretiliyor. Etiket artık yolu
-      // değil işi anlatıyor (bkz. not editöründeki `_export`).
-      ('export', l10n.exportTitle, Icons.ios_share_outlined),
-      ('listen', l10n.listenToNote, Icons.headphones_outlined),
-      (
-        'lock',
-        locked ? l10n.unlockNote : l10n.lockNote,
-        locked ? Icons.lock_open_outlined : Icons.lock_outline,
-      ),
-      (
-        'archive',
-        archived ? l10n.unarchive : l10n.archive,
-        archived ? Icons.unarchive_outlined : Icons.archive_outlined,
-      ),
-      ('clear', l10n.clearNote, Icons.backspace_outlined),
-      ('settings', l10n.settings, Icons.settings_outlined),
-    ];
-
-    Widget tile(
-      String action,
-      String label,
-      IconData icon, {
-      bool danger = false,
-    }) {
-      final color = danger ? scheme.error : scheme.onSurface;
-      return Material(
-        color: danger
-            ? scheme.errorContainer.withValues(alpha: 0.4)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.pop(context, action),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, size: 22, color: color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: color),
-                  ),
-                ),
-              ],
+      ],
+      sections: [
+        MenuSection(l10n.menuSectionContent, [
+          // LİSTEYE ÖZGÜ maddeler (kullanıcı istekleri 2026-08-16).
+          if (isList) ...[
+            MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
+            MenuAction('sortItems', l10n.sortItems, Icons.sort),
+            MenuAction(
+              'columns',
+              twoColumns ? l10n.listOneColumn : l10n.listTwoColumns,
+              twoColumns
+                  ? Icons.view_agenda_outlined
+                  : Icons.view_column_outlined,
             ),
+          ] else
+            MenuAction('toList', l10n.convertToList, Icons.checklist),
+          // Metin içi görselleri TOPLUCA ek şeridine indirir.
+          if (hasFloatingImages)
+            MenuAction(
+              'imagesToFiles',
+              l10n.imagesToAttachments,
+              Icons.attach_file,
+            ),
+          MenuAction('clear', l10n.clearNote, Icons.backspace_outlined),
+        ]),
+        MenuSection(l10n.menuSectionCopy, [
+          MenuAction('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
+          MenuAction(
+            'duplicate',
+            l10n.duplicateNote,
+            Icons.library_add_outlined,
           ),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // İki sütun: 16 kenar dolgusu + 8 sütun aralığı.
-        final cellWidth = (constraints.maxWidth - 40) / 2;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final (action, label, icon) in actions)
-                    SizedBox(
-                      width: cellWidth,
-                      child: tile(action, label, icon),
-                    ),
-                ],
-              ),
+          // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29).
+          if (canTemplate)
+            MenuAction(
+              'saveTemplate',
+              l10n.saveAsTemplate,
+              Icons.bookmark_add_outlined,
             ),
-            const SizedBox(height: 10),
-            // Yıkıcı işlem tek başına, tam genişlikte ve uyarı renginde.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: tile(
-                'delete',
-                l10n.delete,
-                Icons.delete_outline,
-                danger: true,
-              ),
+          // Ekleri bir arşiv defterine KOPYALAR (kullanıcı isteği 2026-08-16).
+          if (hasAttachments)
+            MenuAction(
+              'toArchive',
+              l10n.archiveCopyHere,
+              Icons.inventory_2_outlined,
             ),
-          ],
-        );
-      },
+          // "PDF olarak dışa aktar" DEĞİL: çıktı Word/balonlu PDF de olabilir.
+          MenuAction('export', l10n.exportTitle, Icons.ios_share_outlined),
+        ]),
+        MenuSection(l10n.menuSectionTools, [
+          MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
+          MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
+          MenuAction('settings', l10n.settings, Icons.settings_outlined),
+        ]),
+        MenuSection(l10n.menuSectionProtect, [
+          MenuAction(
+            'archive',
+            archived ? l10n.unarchive : l10n.archive,
+            archived ? Icons.unarchive_outlined : Icons.archive_outlined,
+          ),
+          MenuAction(
+            'lock',
+            locked ? l10n.unlockNote : l10n.lockNote,
+            locked ? Icons.lock_open_outlined : Icons.lock_outline,
+          ),
+          // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26).
+          if (localOnly != null)
+            MenuAction(
+              'localOnly',
+              localOnly! ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
+              localOnly! ? Icons.cloud_sync_outlined : Icons.cloud_off_outlined,
+            ),
+        ]),
+      ],
+      danger: MenuAction('delete', l10n.delete, Icons.delete_outline),
     );
   }
 }

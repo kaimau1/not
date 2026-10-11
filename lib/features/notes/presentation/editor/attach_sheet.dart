@@ -16,6 +16,15 @@ import '../qr_scan_screen.dart';
 /// ŞİMDİ: tek dokunuş → tek levha → her seçenek görünür. İki sütun, iri
 /// dokunma hedefleri; simge + etiket.
 ///
+/// **2026-10-11 YENİDEN DÜZENLENDİ** (kullanıcı isteği: "menüler yeniden
+/// dizayn edilip toparlanmalı"): iki sütunlu, açıklamalı satırlar levhayı
+/// ekranın tamamına yayıyor, "Görüntülü not" ve PDF'e ulaşmak kaydırma
+/// istiyordu. Artık ÜÇ (geniş ekranda daha çok) sütunlu SİMGE ızgarası:
+/// yuvarlak simge + kısa ad; açıklama uzun basınca ipucunda. "Yeni sayfa"
+/// başlığın yanındaki "+" menüsüne taşındı (notun yapısı, içeriği değil);
+/// görsel bölümünün başlığı "YAKALA — İÇERİKTEN NOT OLUŞTURUR" idi (ana
+/// ekrandaki "+" panelinden ödünç, burada yanlış) → "Görsel ve çizim".
+///
 /// "Metin ekle" / "Liste maddesi ekle" de BURADA (en üstteki bölüm): eskiden
 /// alt çubukta kendi segmentleri vardı, çubuk üç segmentle kalabalıktı ve
 /// "ekleme" işi iki ayrı yere bölünmüştü. Artık eklenen her şey tek kapıdan
@@ -90,9 +99,6 @@ class _AttachSheet extends StatelessWidget {
       if (!pageNote) ...[
         ('text-block', Icons.notes, l10n.addTextBlock, null),
         ('list-item', Icons.checklist, l10n.editorToolList, null),
-        // YENİ SAYFA (kullanıcı isteği 2026-10-11): notun yazısı ve
-        // görselleri sayfa sayfa; geçiş başlığın altındaki çubukta.
-        ('new-page', Icons.note_add_outlined, l10n.archiveNewPage, l10n.addPageSubtitle),
         // YAZIYA EK GÖM (kullanıcı bulgusu 2026-08-16: "ek gömmeyi
         // bulamadım"). İki giriş noktası vardı ve ikisi de saklıydı: ek
         // şeridindeki 16 piksellik simge ve metin seçim menüsü — Android o
@@ -210,7 +216,7 @@ class _AttachSheet extends StatelessWidget {
             _SectionLabel(l10n.attachNoteContent),
             _Grid(entries: content, scheme: scheme),
           ],
-          _SectionLabel(l10n.quickAddCapture),
+          _SectionLabel(l10n.attachSectionVisual),
           _Grid(entries: visual, scheme: scheme),
           _SectionLabel(l10n.aiSectionAttachments),
           _Grid(entries: other, scheme: scheme),
@@ -242,8 +248,10 @@ class _SectionLabel extends StatelessWidget {
   );
 }
 
-/// İki sütunlu ızgara. Hücre yüksekliği sabit: etiket iki satıra kadar
-/// sığsın, açıklama üçüncü satırda kalsın.
+/// Simge ızgarası: sütun sayısı genişlikten (telefonda 3, genişte 4–6).
+/// Hücre: yuvarlak simge + en çok iki satırlık ad. Açıklama ([_Entry]'nin
+/// dördüncü alanı) ipucuna gider; yalnız "Kopyalanan eki yapıştır"ın dosya
+/// adı hücrede de yazılır — neyin yapıştırılacağı görünmeden basılmaz.
 class _Grid extends StatelessWidget {
   const _Grid({required this.entries, required this.scheme});
 
@@ -252,71 +260,105 @@ class _Grid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    // Levha yatayda 14+14 dolgulu; iki sütun ve aradaki 8 px boşluk.
-    final cellWidth = ((width - 28 - 8) / 2).clamp(120.0, 260.0);
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final (id, icon, label, info) in entries)
-          SizedBox(
-            width: cellWidth,
-            height: 76,
-            child: Material(
-              color: scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(14),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () => Navigator.pop(context, id),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(icon, size: 22, color: scheme.primary),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              label,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                height: 1.15,
-                              ),
-                            ),
-                            if (info != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                info,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 10.5,
-                                  height: 1.15,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 6.0;
+        final columns = (constraints.maxWidth / 112).floor().clamp(3, 6);
+        final cellWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: [
+            for (final (id, icon, label, info) in entries)
+              SizedBox(
+                width: cellWidth,
+                child: _Cell(
+                  id: id,
+                  icon: icon,
+                  label: label,
+                  info: info,
+                  scheme: scheme,
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Cell extends StatelessWidget {
+  const _Cell({
+    required this.id,
+    required this.icon,
+    required this.label,
+    required this.info,
+    required this.scheme,
+  });
+
+  final String id;
+  final IconData icon;
+  final String label;
+  final String? info;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final showInfo = id == 'paste-attachment' && info != null;
+    final cell = Material(
+      color: scheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.pop(context, id),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(6, 10, 6, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer.withValues(alpha: 0.7),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 21, color: scheme.onPrimaryContainer),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                height: 30,
+                child: Center(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ),
-            ),
+              if (showInfo)
+                Text(
+                  info!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
+    return info == null ? cell : Tooltip(message: info, child: cell);
   }
 }

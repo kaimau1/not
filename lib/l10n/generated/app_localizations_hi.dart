@@ -4470,4 +4470,37 @@ class AppLocalizationsHi extends AppLocalizations {
   String guideNoResults(String query) {
     return '“$query” के लिए कोई परिणाम नहीं';
   }
+
+  @override
+  String get copyVideoLink => 'लिंक कॉपी करें';
+
+  @override
+  String get videoLinkCopied => 'लिंक कॉपी हो गया';
+
+  @override
+  String get attachSectionVisual => 'चित्र और ड्रॉइंग';
+
+  @override
+  String get menuSectionOrganize => 'व्यवस्थित करें';
+
+  @override
+  String get menuSectionCopy => 'कॉपी और निर्यात';
+
+  @override
+  String get menuSectionTools => 'टूल';
+
+  @override
+  String get menuSectionProtect => 'सुरक्षा और संग्रहण';
+
+  @override
+  String get menuSectionContent => 'सामग्री';
+
+  @override
+  String get menuSectionPeople => 'खाता और लोग';
+
+  @override
+  String get menuSectionHome => 'होम स्क्रीन';
+
+  @override
+  String get menuSectionApp => 'ऐप';
 }

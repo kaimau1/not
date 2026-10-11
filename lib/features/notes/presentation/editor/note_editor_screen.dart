@@ -41,6 +41,7 @@ import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../inbox/presentation/send_note_sheet.dart';
 import '../../../ai/data/ai_gate.dart';
 import '../../../ai/data/gemini_service.dart';
 import '../../../ai/presentation/ai_sheet.dart';
@@ -2687,6 +2688,19 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (attachments.isEmpty) return;
     final l10n = context.l10n;
     ref.read(attachmentClipboardProvider.notifier).copyAll(attachments);
+    // YouTube ekinin dosyası yok: sistem panosuna BAĞLANTISI yazılır
+    // (kullanıcı bulgusu 2026-10-11: "videoların bağlantı adresi
+    // kopyalanmıyor" — eskiden yalnız uygulama içi panoya giriyordu,
+    // başka uygulamaya yapıştırılacak bir şey yoktu).
+    final links = [
+      for (final a in attachments)
+        if (a.isWebVideo) a.webUrl,
+    ];
+    if (links.isNotEmpty && links.length == attachments.length) {
+      await Clipboard.setData(ClipboardData(text: links.join('\n')));
+      if (mounted) _showSnack(l10n.videoLinkCopied);
+      return;
+    }
     final repo = ref.read(attachmentRepositoryProvider);
     final attachment = attachments.first;
     try {
@@ -3561,9 +3575,41 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         );
       case 'settings':
         if (mounted) context.push('/settings');
+      case 'calculator':
+        _openCalculator();
+      case 'sendToFriend':
+        _flushPending(_titleController);
+        _flushPending(_bodyController);
+        if (mounted) {
+          await showSendNoteToFriendSheet(context, ref, _note ?? note);
+        }
+      case 'duplicate':
+        await _duplicateNote();
       case 'delete':
         _delete();
     }
+  }
+
+  /// Notu çoğaltır (ana ekrandaki kart menüsüyle aynı iş — editörün ⋮
+  /// menüsünde yoktu, 2026-10-11 menü taramasında eklendi). Kopya açılmaz;
+  /// geri al onu kalıcı siler.
+  Future<void> _duplicateNote() async {
+    _flushPending(_titleController);
+    _flushPending(_bodyController);
+    final note = _note;
+    final repo = ref.read(notesRepositoryProvider);
+    if (note == null || repo == null) return;
+    final l10n = context.l10n;
+    final id = await repo.duplicateNote(note);
+    if (!mounted) return;
+    showUndoSnackBar(
+      context,
+      message: note.attachments.isEmpty
+          ? l10n.noteDuplicated
+          : l10n.noteDuplicatedNoAttachments,
+      undoLabel: l10n.undo,
+      onUndo: () => repo.hardDelete(id),
+    );
   }
 
   /// Notun eklerini bir ARŞİV DEFTERİNE fiziksel kopya olarak taşır.
@@ -4451,6 +4497,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 _updateAttachment(pinned.copyWith(pinHeight: h)),
             onUnpin: () => _unpinMedia(pinned),
             onOpen: () => _openAttachmentTag(pinned, editing: true),
+            onCopyLink: () => _copyAttachment(pinned),
             child: body,
           );
     return Stack(
@@ -5056,34 +5103,62 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     double size = 48,
   }) {
     final scheme = Theme.of(context).colorScheme;
-    final background = active ? scheme.primary : scheme.primaryContainer;
+    final background = active ? scheme.primary : Colors.transparent;
     final ink = active ? scheme.onPrimary : scheme.onPrimaryContainer;
     return Tooltip(
       message: tooltip,
       child: SizedBox(
         width: size,
-        height: size,
+        height: _kToolSegment,
         child: Material(
           color: background,
-          borderRadius: BorderRadius.circular(14),
-          elevation: 2,
+          borderRadius: BorderRadius.circular(10),
           child: InkWell(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             onTap: onTap,
             child: Stack(
               alignment: Alignment.center,
               children: [
-                Icon(icon, size: 24, color: ink),
+                Icon(icon, size: 22, color: ink),
                 if (badge != null)
                   Positioned(
-                    top: 7,
-                    right: 7,
-                    child: Icon(badge, size: 11, color: ink),
+                    top: 6,
+                    right: size / 2 - 17,
+                    child: Icon(badge, size: 10, color: ink),
                   ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  /// Alt çubuğun SAĞ grubu: AI + iki mikrofon tek vurgu renkli kapsülde
+  /// (soldaki araç kapsülüyle aynı yükseklik ve köşe — bkz.
+  /// [planEditorBar]).
+  Widget _aiCapsule({
+    required double segment,
+    required double gap,
+    required List<Widget> children,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      key: const ValueKey('editor-ai-capsule'),
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: scheme.primaryContainer),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) SizedBox(width: gap),
+            children[i],
+          ],
+        ],
       ),
     );
   }
@@ -6215,6 +6290,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // (ekran görüntüsündeki dağınıklık). Artık satır boş notta tek bir "+"
     // düğmesinden ibaret, doldukça büyür.
     final actionEntries = <PopupMenuEntry<String>>[
+      // YENİ SAYFA BURADA (kullanıcı isteği 2026-10-11: "yeni sayfa ekleyi
+      // üst alana koyabilir miyiz"). "Ekle" levhasının en üst bölümündeydi;
+      // ama sayfa notun İÇERİĞİ değil YAPISI — başlığın yanındaki bu menü
+      // (hatırlatıcı, klasör, etiket: notun kendisine dair olanlar) onun
+      // doğal yeri. Sayfalar arası geçiş de hemen altındaki çubukta.
+      if (!note.type.isPageNoteType) ...[
+        PopupMenuItem(
+          value: 'new-page',
+          child: ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.note_add_outlined),
+            title: Text(l10n.archiveNewPage),
+          ),
+        ),
+        const PopupMenuDivider(height: 8),
+      ],
       PopupMenuItem(
         value: 'reminder',
         child: ListTile(
@@ -6281,6 +6373,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       tooltip: l10n.noteMetaMenu,
       onSelected: (action) {
         switch (action) {
+          case 'new-page':
+            _addPage();
           case 'reminder':
             _pickReminder();
           case 'place-reminder':
@@ -6894,7 +6988,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     onList: () => unawaited(_openFindList()),
                     onClose: _closeFind,
                   )
-                else
+                else ...[
+                // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
+                // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
+                // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
+                // alan).
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.6),
+                ),
                 BottomAppBar(
                   color: background,
                   height: 64,
@@ -7036,53 +7141,55 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                             _penToolButton(l10n),
                             const SizedBox(width: 8),
                           ],
-                          // YALNIZ SİMGE (kullanıcı bulgusu 2026-09-02: "alt
-                          // kısım sığmıyor, AI yazan butondaki AI yazısını
-                          // kaldır sadece simgesi kalsın"). Etiket önce
-                          // "Yapay Zeka"dan "AI"ya kısaltılmıştı, o da
-                          // yetmedi: düğme artık mikrofonlarla aynı kare
-                          // ölçüde ve çubuk üçünü de sığdırıyor. Adı
-                          // ipucunda duruyor.
-                          _voiceButton(
-                            size: plan.button,
-                            tooltip: l10n.aiTitle,
-                            icon: Icons.auto_awesome,
-                            onTap: () => showAiSheet(
-                              context,
-                              note,
-                              onAppendText: _appendText,
-                              onReplaceText: _replaceText,
-                              onCreateNote: _createNoteFromText,
-                            ),
-                          ),
-                          SizedBox(width: plan.gap),
-                          // İKİ MİKROFON (kullanıcı isteği 2026-09-01):
-                          // soldaki YAPAY ZEKÂ yolu (levhada gözden geçir,
-                          // özetle/böl), sağdaki DÜZ SESLE YAZMA (konuşulan
-                          // söz imlecin olduğu yere anında düşer). Simgeler
-                          // bilerek farklı: parıltılı mikrofon "burada AI
-                          // var" der, sade mikrofon klavyenin dikte tuşunu
-                          // anımsatır. Bkz. [_toggleDictation].
-                          _voiceButton(
-                            size: plan.button,
-                            tooltip: l10n.voiceCaptureAi,
-                            icon: Icons.mic_none,
-                            badge: Icons.auto_awesome,
-                            onTap: _captureVoice,
-                          ),
-                          SizedBox(width: plan.gap),
-                          _voiceButton(
-                            size: plan.button,
-                            tooltip: l10n.liveDictation,
-                            icon: _dictating ? Icons.stop : Icons.mic,
-                            active: _dictating,
-                            onTap: () => unawaited(_toggleDictation()),
+                          // AI + SES TEK KAPSÜLDE (kullanıcı isteği
+                          // 2026-10-11: "işaretli alanlar mantıklı biçimde
+                          // düzenlenmeli"). Üç ayrı gölgeli kare düğme
+                          // çubuğun yarısını kaplıyor, soldaki araç
+                          // kapsülüyle iki farklı dil konuşuyordu. Şimdi
+                          // çubuk İKİ GRUP: solda düzenleme araçları (yüzey
+                          // renginde), sağda yapay zekâ ve ses (vurgu
+                          // renginde). Simgeler ve ipuçları aynı: parıltı =
+                          // AI levhası, parıltılı mikrofon = AI ile sesli
+                          // not, sade mikrofon = düz dikte (bkz.
+                          // [_toggleDictation]).
+                          _aiCapsule(
+                            segment: plan.button,
+                            gap: plan.gap,
+                            children: [
+                              _voiceButton(
+                                size: plan.button,
+                                tooltip: l10n.aiTitle,
+                                icon: Icons.auto_awesome,
+                                onTap: () => showAiSheet(
+                                  context,
+                                  note,
+                                  onAppendText: _appendText,
+                                  onReplaceText: _replaceText,
+                                  onCreateNote: _createNoteFromText,
+                                ),
+                              ),
+                              _voiceButton(
+                                size: plan.button,
+                                tooltip: l10n.voiceCaptureAi,
+                                icon: Icons.mic_none,
+                                badge: Icons.auto_awesome,
+                                onTap: _captureVoice,
+                              ),
+                              _voiceButton(
+                                size: plan.button,
+                                tooltip: l10n.liveDictation,
+                                icon: _dictating ? Icons.stop : Icons.mic,
+                                active: _dictating,
+                                onTap: () => unawaited(_toggleDictation()),
+                              ),
+                            ],
                           ),
                         ],
                       );
                     },
                   ),
                 ),
+                ],
               ],
             ),
           );
@@ -7234,6 +7341,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               // doluya döner ve kişi sayısını rozetle gösterir — notun
               // başkalarına açık olduğu, menüye girmeden görünsün.
               // Abonelik yalnız bu düğmede (bkz. yukarıdaki kasma notu).
+              // SIRA (2026-10-11 düzeni): önce DÜZENLEME geçmişi (geri al /
+              // yinele, yan yana), sonra notun durumu (sabitle, ortak
+              // çalışan), en sağda ⋮. Eskiden geri al, raptiye ile hesap
+              // makinesinin arasına sıkışmıştı.
+              IconButton(
+                tooltip: l10n.undo,
+                icon: const Icon(Icons.undo),
+                onPressed: _canUndo ? _undo : null,
+              ),
+              // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
+              // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
+              if (_canRedo)
+                IconButton(
+                  tooltip: l10n.redo,
+                  icon: const Icon(Icons.redo),
+                  onPressed: _redo,
+                ),
               Consumer(
                 builder: (context, ref, _) {
                   final owner = widget.ownerId;
@@ -7286,27 +7410,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   immediate: true,
                 ),
               ),
-              IconButton(
-                tooltip: l10n.undo,
-                icon: const Icon(Icons.undo),
-                onPressed: _canUndo ? _undo : null,
-              ),
-              // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
-              // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
-              if (_canRedo)
-                IconButton(
-                  tooltip: l10n.redo,
-                  icon: const Icon(Icons.redo),
-                  onPressed: _redo,
-                ),
-              // Hesap makinesi alt bardan buraya taşındı: alt bar üç etiketli
-              // araca indi, hesap makinesi ise metin biçimiyle ilgisi olmayan
-              // ayrı bir araç.
-              IconButton(
-                tooltip: l10n.calculatorTitle,
-                icon: const Icon(Icons.calculate_outlined),
-                onPressed: _openCalculator,
-              ),
+              // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
+              // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
+              // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
               // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
               // barın başlık alanındaki göstergelerden okunuyor.
               // ⋮ artık açılır menü değil, iki sütunlu levha açar

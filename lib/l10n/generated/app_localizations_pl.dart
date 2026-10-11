@@ -4495,4 +4495,37 @@ class AppLocalizationsPl extends AppLocalizations {
   String guideNoResults(String query) {
     return 'Brak wyników dla „$query”';
   }
+
+  @override
+  String get copyVideoLink => 'Kopiuj link';
+
+  @override
+  String get videoLinkCopied => 'Link skopiowany';
+
+  @override
+  String get attachSectionVisual => 'Obrazy i rysunek';
+
+  @override
+  String get menuSectionOrganize => 'Porządkuj';
+
+  @override
+  String get menuSectionCopy => 'Kopiuj i eksportuj';
+
+  @override
+  String get menuSectionTools => 'Narzędzia';
+
+  @override
+  String get menuSectionProtect => 'Ochrona i przechowywanie';
+
+  @override
+  String get menuSectionContent => 'Treść';
+
+  @override
+  String get menuSectionPeople => 'Konto i kontakty';
+
+  @override
+  String get menuSectionHome => 'Ekran główny';
+
+  @override
+  String get menuSectionApp => 'Aplikacja';
 }

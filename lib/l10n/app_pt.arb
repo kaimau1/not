@@ -878,5 +878,16 @@
   "guideSearchHint": "Pesquisar no guia — “página”, “YouTube”",
   "guideContents": "Conteúdo",
   "guideOpenScreen": "Abrir ecrã",
-  "guideNoResults": "Sem resultados para “{query}”"
+  "guideNoResults": "Sem resultados para “{query}”",
+  "copyVideoLink": "Copiar link",
+  "videoLinkCopied": "Link copiado",
+  "attachSectionVisual": "Imagens e desenho",
+  "menuSectionOrganize": "Organizar",
+  "menuSectionCopy": "Copiar e exportar",
+  "menuSectionTools": "Ferramentas",
+  "menuSectionProtect": "Proteção e armazenamento",
+  "menuSectionContent": "Conteúdo",
+  "menuSectionPeople": "Conta e contatos",
+  "menuSectionHome": "Tela inicial",
+  "menuSectionApp": "Aplicativo"
 }

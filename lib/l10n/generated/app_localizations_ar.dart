@@ -4460,4 +4460,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String guideNoResults(String query) {
     return 'لا نتائج لـ «$query»';
   }
+
+  @override
+  String get copyVideoLink => 'نسخ الرابط';
+
+  @override
+  String get videoLinkCopied => 'تم نسخ الرابط';
+
+  @override
+  String get attachSectionVisual => 'الصور والرسم';
+
+  @override
+  String get menuSectionOrganize => 'تنظيم';
+
+  @override
+  String get menuSectionCopy => 'النسخ والتصدير';
+
+  @override
+  String get menuSectionTools => 'الأدوات';
+
+  @override
+  String get menuSectionProtect => 'الحماية والتخزين';
+
+  @override
+  String get menuSectionContent => 'المحتوى';
+
+  @override
+  String get menuSectionPeople => 'الحساب وجهات الاتصال';
+
+  @override
+  String get menuSectionHome => 'الشاشة الرئيسية';
+
+  @override
+  String get menuSectionApp => 'التطبيق';
 }

@@ -878,5 +878,16 @@
   "guideSearchHint": "Zoeken in de handleiding — ‘pagina’, ‘YouTube’",
   "guideContents": "Inhoud",
   "guideOpenScreen": "Scherm openen",
-  "guideNoResults": "Geen resultaten voor ‘{query}’"
+  "guideNoResults": "Geen resultaten voor ‘{query}’",
+  "copyVideoLink": "Link kopiëren",
+  "videoLinkCopied": "Link gekopieerd",
+  "attachSectionVisual": "Afbeeldingen en tekening",
+  "menuSectionOrganize": "Ordenen",
+  "menuSectionCopy": "Kopiëren en exporteren",
+  "menuSectionTools": "Hulpmiddelen",
+  "menuSectionProtect": "Beveiliging en opslag",
+  "menuSectionContent": "Inhoud",
+  "menuSectionPeople": "Account en contacten",
+  "menuSectionHome": "Startscherm",
+  "menuSectionApp": "App"
 }

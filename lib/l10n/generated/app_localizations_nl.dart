@@ -4498,4 +4498,37 @@ class AppLocalizationsNl extends AppLocalizations {
   String guideNoResults(String query) {
     return 'Geen resultaten voor ‘$query’';
   }
+
+  @override
+  String get copyVideoLink => 'Link kopiëren';
+
+  @override
+  String get videoLinkCopied => 'Link gekopieerd';
+
+  @override
+  String get attachSectionVisual => 'Afbeeldingen en tekening';
+
+  @override
+  String get menuSectionOrganize => 'Ordenen';
+
+  @override
+  String get menuSectionCopy => 'Kopiëren en exporteren';
+
+  @override
+  String get menuSectionTools => 'Hulpmiddelen';
+
+  @override
+  String get menuSectionProtect => 'Beveiliging en opslag';
+
+  @override
+  String get menuSectionContent => 'Inhoud';
+
+  @override
+  String get menuSectionPeople => 'Account en contacten';
+
+  @override
+  String get menuSectionHome => 'Startscherm';
+
+  @override
+  String get menuSectionApp => 'App';
 }

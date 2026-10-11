@@ -878,5 +878,16 @@
   "guideSearchHint": "ガイドを検索 —「ページ」「YouTube」",
   "guideContents": "目次",
   "guideOpenScreen": "画面を開く",
-  "guideNoResults": "「{query}」の結果はありません"
+  "guideNoResults": "「{query}」の結果はありません",
+  "copyVideoLink": "リンクをコピー",
+  "videoLinkCopied": "リンクをコピーしました",
+  "attachSectionVisual": "画像と手描き",
+  "menuSectionOrganize": "整理",
+  "menuSectionCopy": "コピーと書き出し",
+  "menuSectionTools": "ツール",
+  "menuSectionProtect": "保護と保存",
+  "menuSectionContent": "内容",
+  "menuSectionPeople": "アカウントと連絡先",
+  "menuSectionHome": "ホーム画面",
+  "menuSectionApp": "アプリ"
 }

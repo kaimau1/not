@@ -84,7 +84,19 @@ String youTubeThumbnailUrl(String id) =>
 /// tanıtır. Sayfa bu yüzden doğrudan `loadRequest` ile değil, o taban
 /// adresle (`loadHtmlString(baseUrl: youTubeEmbedOrigin)`) yüklenir; iframe
 /// da aynı kökeni `origin` parametresiyle bildirir.
-String youTubeEmbedHtml(String id, {int start = 0}) {
+///
+/// **KÜÇÜK KUTUDA ÖLÇEK** (kullanıcı bulgusu 2026-10-11: "çok küçük halde
+/// oynatılırken YouTube kendi butonları aşırı yer kaplıyor"): YouTube'un
+/// mobil denetimleri CSS pikselinde SABİT boyutludur — 290 dp'lik kutuda
+/// ortadaki dev duraklat simgesi, CC ve logo videoyu kaplıyordu. Pencere
+/// [minCssWidth]'ten darsa iframe o genişlikte kurulup `scale()` ile
+/// küçültülür: denetimler kutuyla ORANTILI küçülür, video aynı kalır.
+/// Geniş pencerede (tam ekran oynatıcı) ölçek 1 — hiçbir şey değişmez.
+String youTubeEmbedHtml(
+  String id, {
+  int start = 0,
+  int minCssWidth = kYouTubeMinCssWidth,
+}) {
   final params = <String, String>{
     'autoplay': '1',
     'playsinline': '1',
@@ -104,13 +116,32 @@ String youTubeEmbedHtml(String id, {int start = 0}) {
 <html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <style>html,body{margin:0;padding:0;height:100%;background:#000;overflow:hidden}
-iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}</style>
+iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;transform-origin:0 0}</style>
 </head><body>
 <iframe id="player" src="https://www.youtube-nocookie.com/embed/$id?$query"
  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
  referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<script>
+(function(){
+  var MIN=$minCssWidth, f=document.getElementById('player');
+  function fit(){
+    var w=window.innerWidth, h=window.innerHeight;
+    if(!w||!h) return;
+    var s=w<MIN?w/MIN:1;
+    f.style.width=(w/s)+'px';
+    f.style.height=(h/s)+'px';
+    f.style.transform=s<1?'scale('+s+')':'none';
+  }
+  window.addEventListener('resize',fit);
+  fit();
+})();
+</script>
 </body></html>''';
 }
+
+/// Gömülü oynatıcının "sanal" en dar genişliği (CSS px): daha dar kutuda
+/// oynatıcı bu genişlikte kurulup küçültülür (bkz. [youTubeEmbedHtml]).
+const kYouTubeMinCssWidth = 480;
 
 /// Gömülü sayfanın kökeni = uygulamanın paket adı (bkz. [youTubeEmbedHtml]).
 const youTubeEmbedOrigin = 'https://dev.kaimau.notlar';

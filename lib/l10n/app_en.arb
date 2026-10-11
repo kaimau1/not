@@ -1713,5 +1713,16 @@
   "guideSearchHint": "Search the guide — “page”, “YouTube”",
   "guideContents": "Contents",
   "guideOpenScreen": "Open screen",
-  "guideNoResults": "No results for “{query}”"
+  "guideNoResults": "No results for “{query}”",
+  "copyVideoLink": "Copy link",
+  "videoLinkCopied": "Link copied",
+  "attachSectionVisual": "Images and drawing",
+  "menuSectionOrganize": "Organize",
+  "menuSectionCopy": "Copy and export",
+  "menuSectionTools": "Tools",
+  "menuSectionProtect": "Protection and storage",
+  "menuSectionContent": "Content",
+  "menuSectionPeople": "Account and people",
+  "menuSectionHome": "Home screen",
+  "menuSectionApp": "App"
 }

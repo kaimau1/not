@@ -18,7 +18,8 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. Reorder them from ⋮ → **Folder order**.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
-- The ⋮ menu at the top right holds account, contacts, incoming notes, templates, reminders, archive, bin, settings and this guide.
+- The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
+- **A card's ⋮ / long-press menu:** pin, star, share, send to a friend, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (copy, duplicate, template, export), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
 The **+** button at the bottom right opens two groups:
@@ -29,17 +30,17 @@ For PDFs, images and slides you choose a mode: **Bubbles** (the document becomes
 ## Editing a note {#editor}
 Bottom bar, left to right:
 - **Aa — Format:** bold, italic, underline, text colour, highlight, heading / subheading; the note's font, size and transparency; page colour, frame and background image. Applies to the selection, or to the word you type next.
-- **+ — Add:** text block, list item, new page, embed attachment in selection, and every attachment type (image, camera, scan, drawing, PDF, slides, voice recording, video, YouTube, QR).
+- **+ — Add:** an icon grid — **Note content** (text block, list, embed attachment in selection), **Images and drawing** (image, upload image as attachment, camera, scan, drawing) and **Attachments** (PDF, slides, voice recording, video, YouTube, QR). Long-press an icon to see what it does.
 - **🔍 — Search in note:** matches are highlighted as you type.
 - **Share.**
-- **✦ — AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
-Top bar: add people (shared note), pin, undo / redo, **calculator**, ⋮ menu (star, lock, read aloud, statistics, save as template, convert to list/text, two columns, sort items, export, archive).
+- The coloured capsule on the right: **✦ AI** (see the AI section), the **assistant microphone** and the **dictate** microphone.
+Top bar: **undo / redo**, pin, add people (shared note) and the ⋮ menu. The ⋮ menu's top row has star, share, copy, search in note and the **calculator**; below are **Content** (convert to list/text, two columns, sort items, images to attachments, clear), **Copy and export** (send to a friend, duplicate, save as template, copy to archive notebook, export), **Tools** (read aloud, statistics, settings), **Protection and storage** (archive, lock, sync).
 - In lists, long-press an item and drag to reorder; use "Select" to copy/delete several items.
-- Alarms, tags and folders are added with the **+** next to the title.
+- The **+** next to the title: **New page**, alarm, location reminder, folder, tag and tag/title suggestions.
 
 ## Note pages {#pages}
 A note can have several **pages**; each page has its own text and images.
-1. On the note screen: **+ Add → New page**.
+1. Tap the **+** next to the title → **New page**.
 2. A **‹ Page 2 / 3 ›** bar appears under the title; use the arrows to move between pages.
 3. The bar's **new page** button adds a page after the current one; **delete** removes the current page.
 - Images of a deleted page are not lost — they move to the neighbouring page; the text comes back with **Undo**.
@@ -57,7 +58,10 @@ Images **float freely** on the note's page; text flows around them.
 ## Video and YouTube {#video}
 - **+ Add → Video note** records with the camera; **Video from gallery** adds an existing video. The video sits on the page like an image and **plays in place**.
 - **+ Add → YouTube video:** paste the link (a YouTube link on the clipboard is filled in for you). Thumbnail and title come automatically.
-- The red **▶** on a YouTube box plays the video **inside the box**; the **×** at its corner closes the player so the box can be moved again.
+- Tap a YouTube box (to select it) and the **video's title** appears over the thumbnail.
+- The red **▶** plays the video **inside the box**; the **×** at its corner closes the player so the box can be moved again. In a small box YouTube's own controls shrink with the box.
+- **Copy link:** from the video's ⋮ menu, the 🔗 button on the pinned pane's bar, or the full-screen player. ⋮ → **Open in YouTube** opens it in the YouTube app.
+- On the web version, YouTube also plays right inside the page.
 - **Picture-in-picture:** tap ⧉ in the full-screen player, or go to the home screen while the video plays — it continues in a small window.
 - **Make a note from the video:** from the video's ⋮ menu; AI watches and listens and writes a detailed note (for videos on the device).
 - Share from the YouTube app → **Notes** and the video arrives as a playable attachment.

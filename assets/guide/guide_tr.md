@@ -18,7 +18,8 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Sırasını ⋮ → **Klasör sırası**'ndan değiştir.
 - **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
-- Sağ üstteki ⋮ menüsünde: hesap, kişiler, gelen notlar, şablonlar, hatırlatıcılar, arşiv, çöp kutusu, ayarlar ve bu kılavuz.
+- Sağ üstteki ⋮ alttan bir levha açar: en üstte **Hatırlatıcılar, Arşiv, Çöp Kutusu, Şablondan**; altında **Hesap ve kişiler** (hesap, kişiler, gelen notlar), **Ana ekran** (klasör sırası, zemin, gizli klasörler) ve **Uygulama** (ayarlar, bu kılavuz).
+- **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, arkadaşa gönder, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (kopyala, çoğalt, şablon, dışa aktar), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
 Sağ alttaki **+** düğmesi iki bölüm açar:
@@ -29,17 +30,17 @@ PDF, görsel ve sunum için iki kip sorulur: **Balonlu** (belge notun kendisi ol
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:
 - **Aa — Biçim:** kalın, italik, altı çizili, yazı rengi, renkli vurgu, büyük başlık / alt başlık; notun yazı tipi, boyutu ve şeffaflığı; sayfa rengi, çerçeve ve zemin görseli. Seçili yazıya uygulanır; seçim yoksa yazacağın kelimeye.
-- **+ — Ekle:** metin bloğu, liste maddesi, yeni sayfa, seçili yazıya ek gömme ve bütün ek türleri (görsel, kamera, tarama, çizim, PDF, sunum, ses kaydı, video, YouTube, QR).
+- **+ — Ekle:** simge ızgarası — **Not içeriği** (metin bloğu, liste, seçili yazıya ek gömme), **Görsel ve çizim** (görsel, görseli ek olarak yükle, kamera, tarama, çizim) ve **Ekler** (PDF, sunum, ses kaydı, video, YouTube, QR). Bir simgeye basılı tutunca ne yaptığı yazar.
 - **🔍 — Notta ara:** eşleşmeler yazarken vurgulanır.
 - **Paylaş.**
-- **✦ — Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
-Üst çubuk: kişi ekle (ortak not), sabitle, geri al / yinele, **hesap makinesi**, ⋮ menüsü (yıldızla, kilitle, sesli oku, istatistikler, şablon olarak kaydet, listeye/metne dönüştür, 2 sütun, maddeleri sırala, dışa aktar, arşivle).
+- Sağdaki renkli kapsül: **✦ Yapay zekâ** (bkz. Yapay zekâ bölümü), **asistan mikrofonu** ve **sesli yazdır** mikrofonu.
+Üst çubuk: **geri al / yinele**, sabitle, kişi ekle (ortak not) ve ⋮ menüsü. ⋮ menüsünün üst satırında yıldızla, paylaş, kopyala, notta ara ve **hesap makinesi**; altında **İçerik** (listeye/metne dönüştür, 2 sütun, maddeleri sırala, görselleri eke dönüştür, temizle), **Kopyala ve dışa aktar** (arkadaşa gönder, çoğalt, şablon olarak kaydet, arşiv defterine kopyala, dışa aktar), **Araçlar** (sesli oku, istatistikler, ayarlar), **Koruma ve depolama** (arşivle, kilitle, senkron).
 - Liste notlarında maddeyi basılı tutup sürükleyerek sırala; "Seç" ile birden çok maddeyi kopyala/sil.
-- Başlığa alarm, etiket ve klasör başlığın sağındaki **+** ile eklenir.
+- Başlığın sağındaki **+**: **Yeni sayfa**, alarm, konum hatırlatıcısı, klasör, etiket ve etiket/başlık önerisi.
 
 ## Not sayfaları {#pages}
 Bir nota birden çok **sayfa** ekleyebilirsin; her sayfanın kendi yazısı ve görselleri olur.
-1. Not ekranında **+ Ekle → Yeni sayfa**.
+1. Başlığın sağındaki **+** → **Yeni sayfa**.
 2. Başlığın altında **‹ Sayfa 2 / 3 ›** çubuğu belirir; oklarla sayfalar arasında geç.
 3. Çubuktaki **yeni sayfa** düğmesi bulunduğun sayfanın arkasına sayfa ekler; **sil** düğmesi o sayfayı siler.
 - Silinen sayfanın görselleri kaybolmaz, komşu sayfaya taşınır; yazısı **Geri al** ile geri gelir.
@@ -57,7 +58,10 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 ## Video ve YouTube {#video}
 - **+ Ekle → Görüntülü not** kamerayla çeker; **Galeriden video** var olan videoyu ekler. Video sayfada görsel gibi durur ve **olduğu yerde oynar**.
 - **+ Ekle → YouTube videosu:** bağlantıyı yapıştır (panoda bir YouTube bağlantısı varsa hazır gelir). Kapak görseli ve başlığı otomatik gelir.
-- YouTube kutusundaki kırmızı **▶** video **kutunun içinde** oynatır; köşedeki **×** oynatıcıyı kapatır ve kutu yeniden taşınabilir olur.
+- YouTube kutusuna dokununca (seçilince) **videonun başlığı** kapağın üstünde görünür.
+- Kırmızı **▶** video **kutunun içinde** oynatır; köşedeki **×** oynatıcıyı kapatır ve kutu yeniden taşınabilir olur. Küçük kutuda YouTube'un kendi düğmeleri de kutuyla orantılı küçülür.
+- **Bağlantıyı kopyala:** videonun ⋮ menüsünden, üste sabitli bölmenin çubuğundaki 🔗 düğmesinden ya da tam ekran oynatıcıdan. ⋮ → **YouTube'da aç** videoyu YouTube uygulamasında açar.
+- Web sürümünde de YouTube sayfanın içinde oynar.
 - **Resim içinde resim:** tam ekran oynatıcıda ⧉ düğmesine bas ya da video oynarken ana ekrana çık — video küçük pencerede devam eder.
 - **Videodan not çıkar:** videonun ⋮ menüsünden; yapay zekâ görüntü ve sesi izleyip detaylı not yazar (cihazdaki videolar için).
 - YouTube uygulamasından **Paylaş → Notlar** dersen video oynatılabilir ek olarak nota girer.

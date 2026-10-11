@@ -47,6 +47,7 @@ class PinnedMediaPane extends StatefulWidget {
     required this.onUnpin,
     required this.onOpen,
     required this.child,
+    this.onCopyLink,
   });
 
   final Attachment media;
@@ -57,6 +58,9 @@ class PinnedMediaPane extends StatefulWidget {
   final VoidCallback onOpen;
 
   final Widget child;
+
+  /// YouTube ekinin bağlantısını panoya yazar — ayraç çubuğunda düğme.
+  final VoidCallback? onCopyLink;
 
   @override
   State<PinnedMediaPane> createState() => _PinnedMediaPaneState();
@@ -141,6 +145,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             attachment: widget.media,
                             fit: BoxFit.contain,
                             inlineWebVideo: true,
+                            showWebTitle: true,
                           ),
                         ),
                       ),
@@ -205,6 +210,12 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                         ),
                       ),
                     ),
+                    if (widget.onCopyLink != null && widget.media.isWebVideo)
+                      _BarButton(
+                        tooltip: l10n.copyVideoLink,
+                        icon: Icons.link,
+                        onPressed: widget.onCopyLink!,
+                      ),
                     _BarButton(
                       tooltip: l10n.unpinMedia,
                       icon: Icons.vertical_align_bottom,

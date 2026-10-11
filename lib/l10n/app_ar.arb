@@ -878,5 +878,16 @@
   "guideSearchHint": "ابحث في الدليل — «صفحة»، «يوتيوب»",
   "guideContents": "المحتويات",
   "guideOpenScreen": "فتح الشاشة",
-  "guideNoResults": "لا نتائج لـ «{query}»"
+  "guideNoResults": "لا نتائج لـ «{query}»",
+  "copyVideoLink": "نسخ الرابط",
+  "videoLinkCopied": "تم نسخ الرابط",
+  "attachSectionVisual": "الصور والرسم",
+  "menuSectionOrganize": "تنظيم",
+  "menuSectionCopy": "النسخ والتصدير",
+  "menuSectionTools": "الأدوات",
+  "menuSectionProtect": "الحماية والتخزين",
+  "menuSectionContent": "المحتوى",
+  "menuSectionPeople": "الحساب وجهات الاتصال",
+  "menuSectionHome": "الشاشة الرئيسية",
+  "menuSectionApp": "التطبيق"
 }

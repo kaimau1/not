@@ -878,5 +878,16 @@
   "guideSearchHint": "설명서 검색 — “페이지”, “YouTube”",
   "guideContents": "목차",
   "guideOpenScreen": "화면 열기",
-  "guideNoResults": "“{query}”에 대한 결과가 없습니다"
+  "guideNoResults": "“{query}”에 대한 결과가 없습니다",
+  "copyVideoLink": "링크 복사",
+  "videoLinkCopied": "링크가 복사되었습니다",
+  "attachSectionVisual": "이미지와 그리기",
+  "menuSectionOrganize": "정리",
+  "menuSectionCopy": "복사 및 내보내기",
+  "menuSectionTools": "도구",
+  "menuSectionProtect": "보호 및 저장",
+  "menuSectionContent": "내용",
+  "menuSectionPeople": "계정 및 연락처",
+  "menuSectionHome": "홈 화면",
+  "menuSectionApp": "앱"
 }

@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -342,11 +343,17 @@ class NoteMediaBox extends StatelessWidget {
     this.webPlaying,
     this.onWebPlay,
     this.onSize,
+    this.showWebTitle = false,
   });
 
   final Attachment attachment;
   final BoxFit fit;
   final bool inlineWebVideo;
+
+  /// YouTube kapağının üstünde videonun BAŞLIĞI (kullanıcı isteği
+  /// 2026-10-11: "videoların başlığı üzerine tıklayınca görülmeli"). Sayfada
+  /// kutu SEÇİLİNCE, büyük önizlemede ve sabit bölmede açık.
+  final bool showWebTitle;
 
   /// DENETİMLİ kip (sayfa tuvali): oynuyor mu bilgisini çağıran tutar —
   /// kutunun DIŞINDA bir "durdur" düğmesi çizebilsin diye. null = kutu kendi
@@ -365,6 +372,7 @@ class NoteMediaBox extends StatelessWidget {
         inline: inlineWebVideo,
         playing: webPlaying,
         onPlay: onWebPlay,
+        showTitle: showWebTitle,
       );
     }
     if (a.kind == AttachmentKind.video) {
@@ -383,6 +391,7 @@ class _WebVideoBox extends StatefulWidget {
     required this.inline,
     this.playing,
     this.onPlay,
+    this.showTitle = false,
   });
 
   final Attachment video;
@@ -390,6 +399,7 @@ class _WebVideoBox extends StatefulWidget {
   final bool inline;
   final bool? playing;
   final VoidCallback? onPlay;
+  final bool showTitle;
 
   @override
   State<_WebVideoBox> createState() => _WebVideoBoxState();
@@ -462,6 +472,39 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
             ),
           ),
         ),
+        // Başlık YouTube'daki gibi üstte, koyu geçişli şeritte. Dokunuşu
+        // yutmaz (kutu taşınabilir/seçilebilir kalsın). Ad henüz gelmediyse
+        // ("YouTube" yer tutucusu) şerit çizilmez.
+        if (widget.showTitle && widget.video.fileName != 'YouTube')
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: IgnorePointer(
+              child: Container(
+                key: const ValueKey('web-video-title'),
+                padding: const EdgeInsets.fromLTRB(8, 6, 8, 14),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xCC000000), Color(0x00000000)],
+                  ),
+                ),
+                child: Text(
+                  widget.video.fileName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -656,6 +699,8 @@ class _ImageTools extends StatelessWidget {
     this.onDetach,
     this.onVideoToNote,
     this.onPinTop,
+    this.copyIsLink = false,
+    this.onOpenExternal,
   });
 
   final double wFrac;
@@ -683,6 +728,13 @@ class _ImageTools extends StatelessWidget {
   /// [Attachment.pinHeight]). Aynı iş görseli sayfanın tepesine sürükleyerek
   /// de yapılır; menüdeki giriş, hareketi bilmeyen için.
   final VoidCallback? onPinTop;
+
+  /// [onCopy] BAĞLANTI kopyalar (YouTube eki — dosyası yok, kopyalanacak şey
+  /// adresi). Menüde "Bağlantıyı kopyala" olarak ÜSTTE görünür.
+  final bool copyIsLink;
+
+  /// YouTube ekini YouTube uygulamasında/tarayıcıda açar.
+  final VoidCallback? onOpenExternal;
 
   @override
   Widget build(BuildContext context) {
@@ -731,7 +783,8 @@ class _ImageTools extends StatelessWidget {
                 onSelectMany != null ||
                 onDetach != null ||
                 onVideoToNote != null ||
-                onPinTop != null)
+                onPinTop != null ||
+                onOpenExternal != null)
               PopupMenuButton<String>(
                 tooltip: l10n.more,
                 icon: const Icon(Icons.more_vert, size: 20),
@@ -749,9 +802,31 @@ class _ImageTools extends StatelessWidget {
                       onVideoToNote?.call();
                     case 'pinTop':
                       onPinTop?.call();
+                    case 'openExternal':
+                      onOpenExternal?.call();
                   }
                 },
                 itemBuilder: (context) => [
+                  if (onCopy != null && copyIsLink)
+                    PopupMenuItem(
+                      value: 'copy',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.link),
+                        title: Text(l10n.copyVideoLink),
+                      ),
+                    ),
+                  if (onOpenExternal != null)
+                    PopupMenuItem(
+                      value: 'openExternal',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.open_in_new),
+                        title: Text(l10n.youTubeOpenExternal),
+                      ),
+                    ),
                   if (onPinTop != null)
                     PopupMenuItem(
                       value: 'pinTop',
@@ -782,7 +857,7 @@ class _ImageTools extends StatelessWidget {
                         title: Text(l10n.extractText),
                       ),
                     ),
-                  if (onCopy != null)
+                  if (onCopy != null && !copyIsLink)
                     PopupMenuItem(
                       value: 'copy',
                       child: ListTile(
@@ -1563,6 +1638,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       attachment: a,
       fit: fit,
       inlineWebVideo: true,
+      showWebTitle: fit == BoxFit.contain || _selectedId == a.id,
       webPlaying: _playingWeb.contains(a.id),
       onWebPlay: () => setState(() => _playingWeb.add(a.id)),
       onSize: (a.width == null || a.height == null)
@@ -2282,9 +2358,19 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onExtractText: widget.onExtractText == null || isVideo || isPdf
             ? null
             : () => widget.onExtractText!(img),
-        onCopy: widget.onCopy == null || isVideo
+        // YouTube ekinin kopyası BAĞLANTISIDIR (kullanıcı bulgusu
+        // 2026-10-11: "videoların bağlantı adresi kopyalanmıyor" — menüde
+        // video için kopyalama hiç yoktu).
+        onCopy: widget.onCopy == null || (isVideo && !img.isWebVideo)
             ? null
             : () => widget.onCopy!(img),
+        copyIsLink: img.isWebVideo,
+        onOpenExternal: img.isWebVideo
+            ? () => launchUrl(
+                Uri.parse(img.webUrl),
+                mode: LaunchMode.externalApplication,
+              )
+            : null,
         onSelectMany: widget.onCopyMany == null || widget.images.length < 2
             ? null
             : () => _startMulti(img.id),

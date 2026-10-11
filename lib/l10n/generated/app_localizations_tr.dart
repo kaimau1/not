@@ -4469,4 +4469,37 @@ class AppLocalizationsTr extends AppLocalizations {
   String guideNoResults(String query) {
     return '«$query» için sonuç yok';
   }
+
+  @override
+  String get copyVideoLink => 'Bağlantıyı kopyala';
+
+  @override
+  String get videoLinkCopied => 'Bağlantı kopyalandı';
+
+  @override
+  String get attachSectionVisual => 'Görsel ve çizim';
+
+  @override
+  String get menuSectionOrganize => 'Düzenle';
+
+  @override
+  String get menuSectionCopy => 'Kopyala ve dışa aktar';
+
+  @override
+  String get menuSectionTools => 'Araçlar';
+
+  @override
+  String get menuSectionProtect => 'Koruma ve depolama';
+
+  @override
+  String get menuSectionContent => 'İçerik';
+
+  @override
+  String get menuSectionPeople => 'Hesap ve kişiler';
+
+  @override
+  String get menuSectionHome => 'Ana ekran';
+
+  @override
+  String get menuSectionApp => 'Uygulama';
 }

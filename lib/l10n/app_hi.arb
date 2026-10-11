@@ -878,5 +878,16 @@
   "guideSearchHint": "गाइड में खोजें — “पेज”, “YouTube”",
   "guideContents": "विषय सूची",
   "guideOpenScreen": "स्क्रीन खोलें",
-  "guideNoResults": "“{query}” के लिए कोई परिणाम नहीं"
+  "guideNoResults": "“{query}” के लिए कोई परिणाम नहीं",
+  "copyVideoLink": "लिंक कॉपी करें",
+  "videoLinkCopied": "लिंक कॉपी हो गया",
+  "attachSectionVisual": "चित्र और ड्रॉइंग",
+  "menuSectionOrganize": "व्यवस्थित करें",
+  "menuSectionCopy": "कॉपी और निर्यात",
+  "menuSectionTools": "टूल",
+  "menuSectionProtect": "सुरक्षा और संग्रहण",
+  "menuSectionContent": "सामग्री",
+  "menuSectionPeople": "खाता और लोग",
+  "menuSectionHome": "होम स्क्रीन",
+  "menuSectionApp": "ऐप"
 }

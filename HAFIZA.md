@@ -4012,3 +4012,44 @@ yeri sorulunca **uygulama içi** seçildi.
 * Metindeki her menü adı uygulamanın GERÇEK metnine göre yazıldı (ör.
   "Seçili yazıya ek göm", "Kopyalanan eki yapıştır"); yeni bir özellik
   yeniden adlandırılırsa kılavuz da değişmeli.
+
+## 2026-10-11 (4. tur) — YouTube başlık/bağlantı, menülerin yeniden düzeni, web'de YouTube
+
+`flutter analyze` temiz, `flutter test` tam takım yeşil, `flutter build web` derleniyor.
+* **"Videoların bağlantısı kopyalanmıyor" — KÖK NEDEN:** sayfadaki kutunun ⋮
+  menüsünde video için kopyalama HİÇ yoktu (`onCopy` video için null), şerit
+  ve çoklu seçimdeki "Kopyala" ise yalnız UYGULAMA İÇİ ek panosuna yazıyordu
+  — sistem panosuna giden bir şey yoktu. Artık YouTube eki kopyalanınca
+  `Clipboard.setData(webUrl)` (`_copyAttachments`, hepsi YouTube ise).
+  Girişler: kutunun ⋮ → "Bağlantıyı kopyala" / "YouTube'da aç", sabit
+  bölmenin çubuğunda 🔗, tam ekran oynatıcının üst çubuğu.
+* **Başlık:** zaten `fileName`'de (oEmbed) — kapağın üstünde koyu geçişli
+  şeritte, yalnız kutu SEÇİLİYKEN, büyük önizlemede ve sabit bölmede
+  (`NoteMediaBox.showWebTitle`). "YouTube" yer tutucusunda şerit çizilmez.
+* **Küçük kutuda YouTube'un dev düğmeleri — KÖK NEDEN:** YouTube'un mobil
+  denetimleri CSS pikselinde sabit. ÇÖZÜM gömülü sayfada: pencere 480 CSS
+  px'ten darsa iframe 480 genişlikte kurulup `transform: scale()` ile
+  küçültülür (`kYouTubeMinCssWidth`, `resize`'da yeniden). Geniş pencerede
+  ölçek 1. `controls=0` SEÇİLMEDİ: kullanıcı ileri/geri saramazdı.
+* **Web'de YouTube** (`youtube_web_frame*.dart`, koşullu dışa aktarım):
+  `HtmlElementView` + iframe. `youTubeInAppSupported` artık web'de de true;
+  WebView yolu `_webViewSupported` ile ayrıldı. Web'de Referer/Hata 153
+  tuzağı yok (sayfanın kendi https kökeni var).
+* **MENÜLER — ortak `ActionMenu` (core/widgets/action_menu_sheet.dart):**
+  hızlı satır (4–5 yuvarlak düğme) + başlıklı gruplar (iki sütun, 44 dp
+  alçak satır) + ayrı "Sil". Kullananlar: kart menüsü, editör ⋮, ana ekran
+  ⋮ (açılır menüden ALT LEVHAYA döndü — %55'te kesiliyordu). KARAR: editör
+  ⋮'ünde üst/alt çubukta AÇIKÇA duran işler (Sabitle, Biçim, Ekle) tekrar
+  edilmez; Ara/Paylaş dar ekranda alt çubuktan düşebildiği için kalır.
+  Taramada eksik bulunup eklenenler: editörde "Arkadaşa gönder" ve "Notu
+  çoğalt". "Kopyala" ile "Notu çoğalt" aynı simgeyi taşıyordu → çoğalt
+  `library_add`.
+* **"Yeni sayfa" başlığın yanındaki "+" menüsünde** (kullanıcı isteği);
+  Ekle levhasından kalktı. Ekle levhası 3+ sütunlu SİMGE ızgarası,
+  açıklamalar ipucunda; görsel bölüm başlığı "YAKALA — İÇERİKTEN NOT
+  OLUŞTURUR" yanlış ödünçtü → "Görsel ve çizim".
+* **Editör çubukları:** üst çubuk = durum (geri al/yinele yan yana,
+  sabitle, ortak çalışan, ⋮); hesap makinesi ⋮'ün hızlı satırına taşındı.
+  Alt çubuk iki grup: solda araç kapsülü, sağda AI + iki mikrofon TEK vurgu
+  renkli kapsülde (eskiden üç gölgeli kare); üstünde ince ayraç.
+  `planEditorBar` buna göre (segment 44/40, aralık 2).

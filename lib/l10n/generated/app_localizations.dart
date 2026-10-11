@@ -8117,6 +8117,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'«{query}» için sonuç yok'**
   String guideNoResults(String query);
+
+  /// No description provided for @copyVideoLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kopyala'**
+  String get copyVideoLink;
+
+  /// No description provided for @videoLinkCopied.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantı kopyalandı'**
+  String get videoLinkCopied;
+
+  /// No description provided for @attachSectionVisual.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel ve çizim'**
+  String get attachSectionVisual;
+
+  /// No description provided for @menuSectionOrganize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get menuSectionOrganize;
+
+  /// No description provided for @menuSectionCopy.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kopyala ve dışa aktar'**
+  String get menuSectionCopy;
+
+  /// No description provided for @menuSectionTools.
+  ///
+  /// In tr, this message translates to:
+  /// **'Araçlar'**
+  String get menuSectionTools;
+
+  /// No description provided for @menuSectionProtect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Koruma ve depolama'**
+  String get menuSectionProtect;
+
+  /// No description provided for @menuSectionContent.
+  ///
+  /// In tr, this message translates to:
+  /// **'İçerik'**
+  String get menuSectionContent;
+
+  /// No description provided for @menuSectionPeople.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hesap ve kişiler'**
+  String get menuSectionPeople;
+
+  /// No description provided for @menuSectionHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ana ekran'**
+  String get menuSectionHome;
+
+  /// No description provided for @menuSectionApp.
+  ///
+  /// In tr, this message translates to:
+  /// **'Uygulama'**
+  String get menuSectionApp;
 }
 
 class _AppLocalizationsDelegate

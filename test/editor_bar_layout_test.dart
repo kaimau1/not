@@ -10,7 +10,7 @@ void main() {
       attachments: true,
       pen: false,
     );
-    expect(plan, (button: 48.0, gap: 6.0, search: true, share: true));
+    expect(plan, (button: 44.0, gap: 2.0, search: true, share: true));
   });
 
   test('393 dp telefonda önce düğmeler küçülür, sonra Paylaş çıkar', () {
@@ -21,8 +21,9 @@ void main() {
       attachments: false,
       pen: false,
     );
-    expect(fits.button, 44);
+    expect(fits.button, 40);
     expect(fits.search, isTrue);
+    expect(fits.share, isTrue);
 
     final withFiles = planEditorBar(
       width: 369,
@@ -50,6 +51,6 @@ void main() {
       attachments: true,
       pen: true,
     );
-    expect(plan, (button: 44.0, gap: 4.0, search: false, share: false));
+    expect(plan, (button: 40.0, gap: 2.0, search: false, share: false));
   });
 }

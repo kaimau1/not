@@ -1993,5 +1993,16 @@
   "guideContents": "İçindekiler",
   "guideOpenScreen": "Ekranı aç",
   "guideNoResults": "«{query}» için sonuç yok",
-  "@guideNoResults": {"placeholders": {"query": {"type": "String"}}}
+  "@guideNoResults": {"placeholders": {"query": {"type": "String"}}},
+  "copyVideoLink": "Bağlantıyı kopyala",
+  "videoLinkCopied": "Bağlantı kopyalandı",
+  "attachSectionVisual": "Görsel ve çizim",
+  "menuSectionOrganize": "Düzenle",
+  "menuSectionCopy": "Kopyala ve dışa aktar",
+  "menuSectionTools": "Araçlar",
+  "menuSectionProtect": "Koruma ve depolama",
+  "menuSectionContent": "İçerik",
+  "menuSectionPeople": "Hesap ve kişiler",
+  "menuSectionHome": "Ana ekran",
+  "menuSectionApp": "Uygulama"
 }

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -10,17 +11,28 @@ import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../domain/attachment.dart';
+import 'youtube_web_frame.dart';
 
-/// Gömülü oynatıcı yalnız mobilde var (webview_flutter'ın Windows/web
-/// eklentisi yok) — orada bağlantı tarayıcıda açılır.
-bool get youTubeInAppSupported =>
-    !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+/// Uygulama İÇİNDE oynatma: mobilde WebView, WEB'de iframe (2026-10-11,
+/// "web sitemizin yeniliklere uyum sağlaması" — web'de YouTube eki yalnız
+/// "tarayıcıda aç" diyordu). Windows'ta webview_flutter eklentisi yok —
+/// orada bağlantı tarayıcıda açılır.
+bool get youTubeInAppSupported => kIsWeb || _webViewSupported;
+
+bool get _webViewSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+/// Web'deki gömülü oynatıcı; bağlantı video değilse null.
+Widget? _webFrameFor(String url) {
+  final id = youTubeVideoId(url);
+  if (!kIsWeb || id == null) return null;
+  return youTubeWebFrame(id, start: youTubeStartSeconds(url));
+}
 
 /// Gömülü YouTube oynatıcısının denetleyicisi; bağlantı video değilse ya da
 /// platformda WebView yoksa null.
 WebViewController? createYouTubeController(String url) {
   final id = youTubeVideoId(url);
-  if (id == null || !youTubeInAppSupported) return null;
+  if (id == null || !_webViewSupported) return null;
   final controller = WebViewController()
     ..setJavaScriptMode(JavaScriptMode.unrestricted)
     ..setBackgroundColor(Colors.black)
@@ -76,6 +88,8 @@ class _YouTubeInlinePlayerState extends State<YouTubeInlinePlayer> {
 
   @override
   Widget build(BuildContext context) {
+    final frame = _webFrameFor(widget.url);
+    if (frame != null) return ColoredBox(color: Colors.black, child: frame);
     final controller = _controller;
     if (controller == null) return const ColoredBox(color: Colors.black);
     return ColoredBox(
@@ -126,6 +140,13 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     super.dispose();
   }
 
+  Future<void> _copyLink() async {
+    final l10n = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: _url));
+    messenger.showSnackBar(SnackBar(content: Text(l10n.videoLinkCopied)));
+  }
+
   Future<void> _openExternal() =>
       launchUrl(Uri.parse(_url), mode: LaunchMode.externalApplication);
 
@@ -133,6 +154,37 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final controller = _controller;
+    final webFrame = _webFrameFor(_url);
+    if (webFrame != null) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          title: Text(
+            widget.attachment.fileName,
+            style: const TextStyle(fontSize: 14),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          actions: [
+            IconButton(
+              tooltip: l10n.copyVideoLink,
+              icon: const Icon(Icons.link),
+              onPressed: _copyLink,
+            ),
+            IconButton(
+              tooltip: l10n.youTubeOpenExternal,
+              icon: const Icon(Icons.open_in_new),
+              onPressed: _openExternal,
+            ),
+          ],
+        ),
+        body: Center(
+          child: AspectRatio(aspectRatio: 16 / 9, child: webFrame),
+        ),
+      );
+    }
     if (controller == null) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.attachment.fileName)),
@@ -190,6 +242,11 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
                         icon: const Icon(Icons.picture_in_picture_alt),
                         onPressed: () => PictureInPicture.enter(),
                       ),
+                    IconButton(
+                      tooltip: l10n.copyVideoLink,
+                      icon: const Icon(Icons.link),
+                      onPressed: _copyLink,
+                    ),
                     IconButton(
                       tooltip: l10n.youTubeOpenExternal,
                       icon: const Icon(Icons.open_in_new),

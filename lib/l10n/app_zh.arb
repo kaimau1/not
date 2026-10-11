@@ -878,5 +878,16 @@
   "guideSearchHint": "搜索指南 —“页面”“YouTube”",
   "guideContents": "目录",
   "guideOpenScreen": "打开界面",
-  "guideNoResults": "没有“{query}”的结果"
+  "guideNoResults": "没有“{query}”的结果",
+  "copyVideoLink": "复制链接",
+  "videoLinkCopied": "链接已复制",
+  "attachSectionVisual": "图片与绘图",
+  "menuSectionOrganize": "整理",
+  "menuSectionCopy": "复制与导出",
+  "menuSectionTools": "工具",
+  "menuSectionProtect": "保护与存储",
+  "menuSectionContent": "内容",
+  "menuSectionPeople": "账户与联系人",
+  "menuSectionHome": "主屏幕",
+  "menuSectionApp": "应用"
 }

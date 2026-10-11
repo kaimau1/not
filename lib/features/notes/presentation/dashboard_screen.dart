@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -13,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/app_commands.dart';
 import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
+import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/freeze_when_hidden.dart';
 import '../../../core/utils/local_file.dart';
@@ -1317,176 +1319,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                           ),
                                         ),
                                         const SizedBox(width: 6),
-                                        PopupMenuButton<String>(
-                                          // Menü ekranın altına taşıp sistem gezinme
-                                          // çubuğunun arkasında kalıyordu; yükseklik
-                                          // sınırlanınca içerik kaydırılabilir olur.
-                                          constraints: BoxConstraints(
-                                            maxHeight:
-                                                MediaQuery.sizeOf(
-                                                  context,
-                                                ).height *
-                                                0.55,
+                                        // ⋮ ARTIK ALT LEVHA (kullanıcı isteği
+                                        // 2026-10-11: "menüler yeniden dizayn
+                                        // edilmeli"). On bir maddelik açılır
+                                        // menü ekranın %55'inde kesiliyor,
+                                        // "Kullanım kılavuzu" kaydırmadan
+                                        // görünmüyordu. Levha not menüleriyle
+                                        // aynı dili konuşur (bkz. [ActionMenu]).
+                                        IconButton(
+                                          tooltip: l10n.more,
+                                          icon: const Icon(Icons.more_vert),
+                                          onPressed: () => unawaited(
+                                            _openHomeMenu(
+                                              hasHiddenFolders:
+                                                  hasHiddenFolders,
+                                              hiddenRevealed: hiddenRevealed,
+                                            ),
                                           ),
-                                          onSelected: (action) =>
-                                              switch (action) {
-                                                'account' => showAccountSheet(
-                                                  context,
-                                                ),
-                                                'inbox' => InboxScreen.open(
-                                                  context,
-                                                ),
-                                                'friends' =>
-                                                  openFriendsScreenOrExplain(
-                                                    context,
-                                                    ref,
-                                                  ),
-                                                'hidden' =>
-                                                  _toggleHiddenFolders(),
-                                                'reminders' => context.push(
-                                                  '/reminders',
-                                                ),
-                                                'archive' => context.push(
-                                                  '/archive',
-                                                ),
-                                                'background' =>
-                                                  showDashboardBackgroundSheet(
-                                                    context,
-                                                  ),
-                                                'trash' => context.push(
-                                                  '/trash',
-                                                ),
-                                                'template' =>
-                                                  createFromTemplate(),
-                                                'folderOrder' =>
-                                                  showFolderOrderSheet(
-                                                    context,
-                                                  ),
-                                                'settings' => context.push(
-                                                  '/settings',
-                                                ),
-                                                'guide' => context.push(
-                                                  '/guide',
-                                                ),
-                                                _ => null,
-                                              },
-                                          // Tasarım bu menüyü dörde indiriyor
-                                          // (Hatırlatıcılar, Arşiv, Çöp, Ayarlar).
-                                          // "Notları sırala" BURADAN KALKTI
-                                          // (kullanıcı isteği 2026-08-09):
-                                          // sıralamanın tek yeri Süz levhası —
-                                          // aynı iş iki menüde duruyordu ve
-                                          // hangisinin ne yaptığı belirsizdi.
-                                          // Elle sıralama modu Süz → SIRALAMA
-                                          // bölümündeki taşıma düğmesinden
-                                          // açılıyor (bkz. filter_sheet).
-                                          // SAYILAR menü AÇILIRKEN okunur
-                                          // (ref.read): ekranın kendisi bu
-                                          // sayılar için yeniden kurulmaz.
-                                          itemBuilder: (context) => [
-                                            // **HESAP** (kullanıcı isteği
-                                            // 2026-08-18: "hesap seçeneklerini
-                                            // ana sayfadaki sağ üstteki 3
-                                            // noktaya da koy"): profil, kişiler
-                                            // ve gelen notlar tek levhada.
-                                            _menuItem(
-                                              'account',
-                                              Icons.account_circle_outlined,
-                                              l10n.account,
-                                            ),
-                                            _menuItem(
-                                              'friends',
-                                              Icons.people_outline,
-                                              l10n.friendsTitle,
-                                            ),
-                                            _menuItem(
-                                              'inbox',
-                                              Icons.move_to_inbox_outlined,
-                                              l10n.inboxTitle,
-                                              count:
-                                                  ref
-                                                      .read(inboxNotesProvider)
-                                                      .value
-                                                      ?.length ??
-                                                  0,
-                                              highlight: true,
-                                            ),
-                                            const PopupMenuDivider(),
-                                            // Gizli klasörler yalnız gizli klasörü
-                                            // OLAN kullanıcıda görünür: yoksa
-                                            // menüde ölü bir madde durmaz.
-                                            if (hasHiddenFolders) ...[
-                                              _menuItem(
-                                                'hidden',
-                                                hiddenRevealed
-                                                    ? Icons
-                                                          .visibility_off_outlined
-                                                    : Icons.visibility_outlined,
-                                                l10n.hiddenFoldersMenu,
-                                              ),
-                                              const PopupMenuDivider(),
-                                            ],
-                                            // YENİ (2026-09-26): şablondan
-                                            // not ve klasör sırası — ikisi de
-                                            // ana ekranın işleri, ayarlara
-                                            // gitmeden ulaşılsın.
-                                            _menuItem(
-                                              'template',
-                                              Icons
-                                                  .dashboard_customize_outlined,
-                                              l10n.fromTemplate,
-                                            ),
-                                            _menuItem(
-                                              'folderOrder',
-                                              Icons.swap_vert,
-                                              l10n.folderOrderTitle,
-                                            ),
-                                            const PopupMenuDivider(),
-                                            _menuItem(
-                                              'reminders',
-                                              Icons.alarm_outlined,
-                                              l10n.remindersTitle,
-                                              count: _upcomingReminderCount(),
-                                            ),
-                                            _menuItem(
-                                              'archive',
-                                              Icons.archive_outlined,
-                                              l10n.archiveTitle,
-                                              count:
-                                                  ref
-                                                      .read(
-                                                        archivedNotesProvider,
-                                                      )
-                                                      .value
-                                                      ?.length ??
-                                                  0,
-                                            ),
-                                            // Zemin görseli AYARLARDAN
-                                            // BURAYA taşındı (kullanıcı
-                                            // isteği 2026-08-16): sonucu
-                                            // yalnız bu ekranda görülüyor.
-                                            _menuItem(
-                                              'background',
-                                              Icons.wallpaper,
-                                              l10n.dashboardBackground,
-                                            ),
-                                            _menuItem(
-                                              'trash',
-                                              Icons.delete_outline,
-                                              l10n.trashTitle,
-                                            ),
-                                            const PopupMenuDivider(),
-                                            _menuItem(
-                                              'settings',
-                                              Icons.settings_outlined,
-                                              l10n.settings,
-                                            ),
-                                            _menuItem(
-                                              'guide',
-                                              Icons.menu_book_outlined,
-                                              l10n.guideTitle,
-                                            ),
-                                          ],
                                         ),
                                         const SizedBox(width: 4),
                                       ],
@@ -1874,6 +1723,110 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// (kullanıcı isteği 2026-09-26: menü "görsel ve işlevsel olarak
   /// geliştirilsin" — Gelen notlar/Hatırlatıcılar/Arşiv'de ne beklediği
   /// açmadan görünsün). [highlight]: bekleyen iş (gelen not) vurgulu rozet.
+  /// Ana ekranın ⋮ levhası: hızlı satırda en sık gidilen dört yer (sayılı),
+  /// altında kişiler, ana ekran ve uygulama grupları. Sayılar levha
+  /// AÇILIRKEN okunur (ref.read) — ekran bu sayılar için yeniden kurulmaz.
+  Future<void> _openHomeMenu({
+    required bool hasHiddenFolders,
+    required bool hiddenRevealed,
+  }) async {
+    final l10n = context.l10n;
+    final action = await showActionMenuSheet(
+      context,
+      ActionMenu(
+        quick: [
+          MenuAction(
+            'reminders',
+            l10n.remindersTitle,
+            Icons.alarm_outlined,
+            count: _upcomingReminderCount(),
+          ),
+          MenuAction(
+            'archive',
+            l10n.archiveTitle,
+            Icons.archive_outlined,
+            count: ref.read(archivedNotesProvider).value?.length ?? 0,
+          ),
+          MenuAction('trash', l10n.trashTitle, Icons.delete_outline),
+          // YENİ (2026-09-26): şablondan not — ana ekranın işi.
+          MenuAction(
+            'template',
+            l10n.fromTemplate,
+            Icons.dashboard_customize_outlined,
+          ),
+        ],
+        sections: [
+          // **HESAP** (kullanıcı isteği 2026-08-18: "hesap seçeneklerini
+          // ana sayfadaki sağ üstteki 3 noktaya da koy").
+          MenuSection(l10n.menuSectionPeople, [
+            MenuAction(
+              'account',
+              l10n.account,
+              Icons.account_circle_outlined,
+            ),
+            MenuAction('friends', l10n.friendsTitle, Icons.people_outline),
+            MenuAction(
+              'inbox',
+              l10n.inboxTitle,
+              Icons.move_to_inbox_outlined,
+              count: ref.read(inboxNotesProvider).value?.length ?? 0,
+              highlight: true,
+            ),
+          ]),
+          MenuSection(l10n.menuSectionHome, [
+            MenuAction('folderOrder', l10n.folderOrderTitle, Icons.swap_vert),
+            // Zemin görseli AYARLARDAN BURAYA taşındı (2026-08-16).
+            MenuAction(
+              'background',
+              l10n.dashboardBackground,
+              Icons.wallpaper,
+            ),
+            // Gizli klasörler yalnız gizli klasörü OLAN kullanıcıda.
+            if (hasHiddenFolders)
+              MenuAction(
+                'hidden',
+                l10n.hiddenFoldersMenu,
+                hiddenRevealed
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+              ),
+          ]),
+          MenuSection(l10n.menuSectionApp, [
+            MenuAction('settings', l10n.settings, Icons.settings_outlined),
+            MenuAction('guide', l10n.guideTitle, Icons.menu_book_outlined),
+          ]),
+        ],
+      ),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case 'account':
+        showAccountSheet(context);
+      case 'inbox':
+        InboxScreen.open(context);
+      case 'friends':
+        openFriendsScreenOrExplain(context, ref);
+      case 'hidden':
+        _toggleHiddenFolders();
+      case 'reminders':
+        context.push('/reminders');
+      case 'archive':
+        context.push('/archive');
+      case 'background':
+        showDashboardBackgroundSheet(context);
+      case 'trash':
+        context.push('/trash');
+      case 'template':
+        createFromTemplate();
+      case 'folderOrder':
+        showFolderOrderSheet(context);
+      case 'settings':
+        context.push('/settings');
+      case 'guide':
+        context.push('/guide');
+    }
+  }
+
   PopupMenuItem<String> _menuItem(
     String value,
     IconData icon,

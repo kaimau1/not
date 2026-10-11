@@ -4488,4 +4488,37 @@ class AppLocalizationsId extends AppLocalizations {
   String guideNoResults(String query) {
     return 'Tidak ada hasil untuk “$query”';
   }
+
+  @override
+  String get copyVideoLink => 'Salin tautan';
+
+  @override
+  String get videoLinkCopied => 'Tautan disalin';
+
+  @override
+  String get attachSectionVisual => 'Gambar dan coretan';
+
+  @override
+  String get menuSectionOrganize => 'Atur';
+
+  @override
+  String get menuSectionCopy => 'Salin dan ekspor';
+
+  @override
+  String get menuSectionTools => 'Alat';
+
+  @override
+  String get menuSectionProtect => 'Perlindungan dan penyimpanan';
+
+  @override
+  String get menuSectionContent => 'Konten';
+
+  @override
+  String get menuSectionPeople => 'Akun dan kontak';
+
+  @override
+  String get menuSectionHome => 'Layar utama';
+
+  @override
+  String get menuSectionApp => 'Aplikasi';
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n_ext.dart';
 import '../../ai/presentation/listen_screen.dart';
 import '../../../core/utils/note_guard.dart';
+import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/presentation/folder_sheets.dart';
 import '../../inbox/presentation/send_note_sheet.dart';
@@ -26,9 +27,8 @@ import 'share_sheet.dart';
 /// arşivle, kilitle, seç, sil. Kilitli notun içeriği kimlik doğrulaması
 /// yapılmadan paylaşılmaz/kopyalanmaz.
 ///
-/// Yerleşim İKİ SÜTUNLU ızgara: on üç işlem tek sütunlu liste hâlinde ekranın
-/// tamamını dolduruyor, "Sil" en altta kaydırma gerektiriyordu. Izgarada hepsi
-/// tek bakışta görünür ve sayfa yarı yükseklikte kalır.
+/// Yerleşim: hızlı satır + başlıklı gruplar + ayrı "Sil" (bkz.
+/// [ActionMenu]).
 Future<void> showNoteActionsSheet(
   BuildContext context,
   WidgetRef ref,
@@ -55,8 +55,7 @@ Future<void> showNoteActionsSheet(
   await _runNoteAction(context, ref, note, action);
 }
 
-/// Not işlemleri: iki sütunlu düğme ızgarası. Her düğme simge + etiket
-/// taşıyan dokunma hedefidir; "Sil" ayrı satırda ve uyarı renginde durur ki
+/// Not işlemleri levhası; "Sil" ayrı satırda ve uyarı renginde durur ki
 /// yıkıcı işlem yanlışlıkla seçilmesin.
 class _ActionsGrid extends StatelessWidget {
   const _ActionsGrid({
@@ -73,156 +72,86 @@ class _ActionsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final title = note.displayTitle.trim();
-    // (aksiyon, etiket, simge) — sıra sık kullanımdan seyreğe.
-    final actions = <(String, String, IconData)>[
-      (
-        'pin',
-        note.pinned ? l10n.unpin : l10n.pin,
-        note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
-      ),
-      (
-        'star',
-        note.starred ? l10n.unstar : l10n.star,
-        note.starred ? Icons.star : Icons.star_outline,
-      ),
-      // Tek "Paylaş": düz metin / not paketi / balonlu PDF seçimi levhada
-      // yapılır (bkz. showNoteShareSheet). Eskiden ızgarada iki ayrı kutu
-      // vardı ve "Paylaş" PDF notunda sessizce hiçbir şey yapmıyordu.
-      ('share', l10n.share, Icons.share_outlined),
-      // **ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18): sistem paylaşım
-      // levhasından AYRI bir kutu — o, notu uygulamanın DIŞINA çıkarır;
-      // bu, uygulamanın içinde bir kişinin gelen kutusuna bırakır.
-      ('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
-      ('copy', l10n.copy, Icons.copy_outlined),
-      // **NOTU ÇOĞALT** — bir notu şablon gibi kullanmanın (haftalık liste,
-      // toplantı notu) tek yolu metnini kopyalayıp yeni bir nota
-      // yapıştırmaktı; biçim, renk, etiket ve madde işaretleri yolda
-      // kayboluyordu (bkz. NotesRepository.duplicateNote).
-      ('duplicate', l10n.duplicateNote, Icons.content_copy_outlined),
-      // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29): çoğaltmanın aksine
-      // şablondan doğan not tertemiz başlar (bkz. user_templates.dart).
-      if (canSaveAsTemplate(note))
-        ('saveTemplate', l10n.saveAsTemplate, Icons.bookmark_add_outlined),
-      ('select', l10n.select, Icons.check_circle_outline),
-      ('folder', l10n.moveToFolder, Icons.folder_outlined),
-      ('color', l10n.backgroundColor, Icons.palette_outlined),
-      ('frame', l10n.frameColor, Icons.border_color_outlined),
-      ('listen', l10n.listenToNote, Icons.headphones_outlined),
-      // **İSTATİSTİK**: uzun bir notun ne kadar uzun olduğu yalnız
-      // kaydırarak anlaşılıyordu.
-      ('stats', l10n.noteStatsTitle, Icons.insights_outlined),
-      // "PDF olarak dışa aktar" DEĞİL: belge notunda çıktı balonlu PDF de
-      // olabiliyor, metin notunda Word de üretiliyor (bkz. `_runNoteAction`).
-      ('pdf', l10n.exportTitle, Icons.ios_share_outlined),
-      (
-        'archive',
-        note.archivedAt != null ? l10n.unarchive : l10n.archive,
-        note.archivedAt != null
-            ? Icons.unarchive_outlined
-            : Icons.archive_outlined,
-      ),
-      (
-        'lock',
-        note.locked ? l10n.unlockNote : l10n.lockNote,
-        note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
-      ),
-      // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26). Web'de yok.
-      if (localOnlyAvailable)
-        (
-          'localOnly',
-          note.localOnly ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
-          note.localOnly
-              ? Icons.cloud_sync_outlined
-              : Icons.cloud_off_outlined,
+    // Gruplar ve sıra: bkz. [ActionMenu] (2026-10-11 yeniden düzen).
+    return ActionMenu(
+      title: note.displayTitle,
+      quick: [
+        MenuAction(
+          'pin',
+          note.pinned ? l10n.unpin : l10n.pin,
+          note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+          selected: note.pinned,
         ),
-    ];
-
-    Widget tile(
-      String action,
-      String label,
-      IconData icon, {
-      bool danger = false,
-    }) {
-      final color = danger ? scheme.error : scheme.onSurface;
-      return Material(
-        color: danger
-            ? scheme.errorContainer.withValues(alpha: 0.4)
-            : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => Navigator.pop(context, action),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            child: Row(
-              children: [
-                Icon(icon, size: 22, color: color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: color),
-                  ),
-                ),
-              ],
-            ),
+        MenuAction(
+          'star',
+          note.starred ? l10n.unstar : l10n.star,
+          note.starred ? Icons.star : Icons.star_outline,
+          selected: note.starred,
+        ),
+        // Tek "Paylaş": düz metin / not paketi / balonlu PDF seçimi levhada
+        // yapılır (bkz. showNoteShareSheet).
+        MenuAction('share', l10n.share, Icons.share_outlined),
+        // **ARKADAŞA GÖNDER** (kullanıcı isteği 2026-08-18): sistem paylaşım
+        // levhasından AYRI — o notu uygulamanın DIŞINA çıkarır, bu bir
+        // kişinin gelen kutusuna bırakır.
+        MenuAction('sendToFriend', l10n.sendNoteAction, Icons.send_outlined),
+        MenuAction('select', l10n.select, Icons.check_circle_outline),
+      ],
+      sections: [
+        MenuSection(l10n.menuSectionOrganize, [
+          MenuAction('folder', l10n.moveToFolder, Icons.folder_outlined),
+          MenuAction('color', l10n.backgroundColor, Icons.palette_outlined),
+          MenuAction('frame', l10n.frameColor, Icons.border_color_outlined),
+        ]),
+        MenuSection(l10n.menuSectionCopy, [
+          MenuAction('copy', l10n.copy, Icons.copy_outlined),
+          // **NOTU ÇOĞALT** (bkz. NotesRepository.duplicateNote). Simgesi
+          // "Kopyala"dan AYRI: ikisi aynı resmi taşıyordu.
+          MenuAction(
+            'duplicate',
+            l10n.duplicateNote,
+            Icons.library_add_outlined,
           ),
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // İki sütun: 16 kenar dolgusu + 8 sütun aralığı.
-        final cellWidth = (constraints.maxWidth - 40) / 2;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (title.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final (action, label, icon) in actions)
-                    SizedBox(
-                      width: cellWidth,
-                      child: tile(action, label, icon),
-                    ),
-                ],
-              ),
+          // KENDİ ŞABLONUM (kullanıcı isteği 2026-09-29).
+          if (canSaveAsTemplate(note))
+            MenuAction(
+              'saveTemplate',
+              l10n.saveAsTemplate,
+              Icons.bookmark_add_outlined,
             ),
-            const SizedBox(height: 10),
-            // Yıkıcı işlem tek başına, tam genişlikte.
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: tile(
-                'delete',
-                l10n.delete,
-                Icons.delete_outline,
-                danger: true,
-              ),
+          // "PDF olarak dışa aktar" DEĞİL: belge notunda çıktı balonlu PDF de
+          // olabiliyor, metin notunda Word de üretiliyor.
+          MenuAction('pdf', l10n.exportTitle, Icons.ios_share_outlined),
+        ]),
+        MenuSection(l10n.menuSectionTools, [
+          MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
+          MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
+        ]),
+        MenuSection(l10n.menuSectionProtect, [
+          MenuAction(
+            'archive',
+            note.archivedAt != null ? l10n.unarchive : l10n.archive,
+            note.archivedAt != null
+                ? Icons.unarchive_outlined
+                : Icons.archive_outlined,
+          ),
+          MenuAction(
+            'lock',
+            note.locked ? l10n.unlockNote : l10n.lockNote,
+            note.locked ? Icons.lock_open_outlined : Icons.lock_outline,
+          ),
+          // NOTA ÖZEL SENKRON (kullanıcı isteği 2026-09-26). Web'de yok.
+          if (localOnlyAvailable)
+            MenuAction(
+              'localOnly',
+              note.localOnly ? l10n.localOnlyTurnOff : l10n.localOnlyTurnOn,
+              note.localOnly
+                  ? Icons.cloud_sync_outlined
+                  : Icons.cloud_off_outlined,
             ),
-          ],
-        );
-      },
+        ]),
+      ],
+      danger: MenuAction('delete', l10n.delete, Icons.delete_outline),
     );
   }
 }
@@ -309,9 +238,7 @@ Future<void> _runNoteAction(
       if (!await unlockIfNeeded()) return;
       // Paylaşımla AYNI biçim (bkz. noteShareText): `- [ ]` işaretleri yok.
       await Clipboard.setData(
-        ClipboardData(
-          text: noteShareText(note, pageLabel: l10n.pageLabel),
-        ),
+        ClipboardData(text: noteShareText(note, pageLabel: l10n.pageLabel)),
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context)

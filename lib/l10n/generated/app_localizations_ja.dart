@@ -4399,4 +4399,37 @@ class AppLocalizationsJa extends AppLocalizations {
   String guideNoResults(String query) {
     return '「$query」の結果はありません';
   }
+
+  @override
+  String get copyVideoLink => 'リンクをコピー';
+
+  @override
+  String get videoLinkCopied => 'リンクをコピーしました';
+
+  @override
+  String get attachSectionVisual => '画像と手描き';
+
+  @override
+  String get menuSectionOrganize => '整理';
+
+  @override
+  String get menuSectionCopy => 'コピーと書き出し';
+
+  @override
+  String get menuSectionTools => 'ツール';
+
+  @override
+  String get menuSectionProtect => '保護と保存';
+
+  @override
+  String get menuSectionContent => '内容';
+
+  @override
+  String get menuSectionPeople => 'アカウントと連絡先';
+
+  @override
+  String get menuSectionHome => 'ホーム画面';
+
+  @override
+  String get menuSectionApp => 'アプリ';
 }

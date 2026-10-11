@@ -4373,4 +4373,37 @@ class AppLocalizationsZh extends AppLocalizations {
   String guideNoResults(String query) {
     return '没有“$query”的结果';
   }
+
+  @override
+  String get copyVideoLink => '复制链接';
+
+  @override
+  String get videoLinkCopied => '链接已复制';
+
+  @override
+  String get attachSectionVisual => '图片与绘图';
+
+  @override
+  String get menuSectionOrganize => '整理';
+
+  @override
+  String get menuSectionCopy => '复制与导出';
+
+  @override
+  String get menuSectionTools => '工具';
+
+  @override
+  String get menuSectionProtect => '保护与存储';
+
+  @override
+  String get menuSectionContent => '内容';
+
+  @override
+  String get menuSectionPeople => '账户与联系人';
+
+  @override
+  String get menuSectionHome => '主屏幕';
+
+  @override
+  String get menuSectionApp => '应用';
 }

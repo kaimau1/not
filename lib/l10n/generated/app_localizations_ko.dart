@@ -4405,4 +4405,37 @@ class AppLocalizationsKo extends AppLocalizations {
   String guideNoResults(String query) {
     return '“$query”에 대한 결과가 없습니다';
   }
+
+  @override
+  String get copyVideoLink => '링크 복사';
+
+  @override
+  String get videoLinkCopied => '링크가 복사되었습니다';
+
+  @override
+  String get attachSectionVisual => '이미지와 그리기';
+
+  @override
+  String get menuSectionOrganize => '정리';
+
+  @override
+  String get menuSectionCopy => '복사 및 내보내기';
+
+  @override
+  String get menuSectionTools => '도구';
+
+  @override
+  String get menuSectionProtect => '보호 및 저장';
+
+  @override
+  String get menuSectionContent => '내용';
+
+  @override
+  String get menuSectionPeople => '계정 및 연락처';
+
+  @override
+  String get menuSectionHome => '홈 화면';
+
+  @override
+  String get menuSectionApp => '앱';
 }

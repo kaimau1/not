@@ -4489,4 +4489,37 @@ class AppLocalizationsRu extends AppLocalizations {
   String guideNoResults(String query) {
     return 'Ничего не найдено по запросу «$query»';
   }
+
+  @override
+  String get copyVideoLink => 'Копировать ссылку';
+
+  @override
+  String get videoLinkCopied => 'Ссылка скопирована';
+
+  @override
+  String get attachSectionVisual => 'Изображения и рисунок';
+
+  @override
+  String get menuSectionOrganize => 'Упорядочить';
+
+  @override
+  String get menuSectionCopy => 'Копирование и экспорт';
+
+  @override
+  String get menuSectionTools => 'Инструменты';
+
+  @override
+  String get menuSectionProtect => 'Защита и хранение';
+
+  @override
+  String get menuSectionContent => 'Содержимое';
+
+  @override
+  String get menuSectionPeople => 'Аккаунт и контакты';
+
+  @override
+  String get menuSectionHome => 'Главный экран';
+
+  @override
+  String get menuSectionApp => 'Приложение';
 }

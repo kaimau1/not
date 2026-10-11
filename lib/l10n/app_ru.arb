@@ -878,5 +878,16 @@
   "guideSearchHint": "Поиск по руководству — «страница», «YouTube»",
   "guideContents": "Содержание",
   "guideOpenScreen": "Открыть экран",
-  "guideNoResults": "Ничего не найдено по запросу «{query}»"
+  "guideNoResults": "Ничего не найдено по запросу «{query}»",
+  "copyVideoLink": "Копировать ссылку",
+  "videoLinkCopied": "Ссылка скопирована",
+  "attachSectionVisual": "Изображения и рисунок",
+  "menuSectionOrganize": "Упорядочить",
+  "menuSectionCopy": "Копирование и экспорт",
+  "menuSectionTools": "Инструменты",
+  "menuSectionProtect": "Защита и хранение",
+  "menuSectionContent": "Содержимое",
+  "menuSectionPeople": "Аккаунт и контакты",
+  "menuSectionHome": "Главный экран",
+  "menuSectionApp": "Приложение"
 }

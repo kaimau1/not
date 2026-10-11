@@ -878,5 +878,16 @@
   "guideSearchHint": "Cari di panduan — “halaman”, “YouTube”",
   "guideContents": "Daftar isi",
   "guideOpenScreen": "Buka layar",
-  "guideNoResults": "Tidak ada hasil untuk “{query}”"
+  "guideNoResults": "Tidak ada hasil untuk “{query}”",
+  "copyVideoLink": "Salin tautan",
+  "videoLinkCopied": "Tautan disalin",
+  "attachSectionVisual": "Gambar dan coretan",
+  "menuSectionOrganize": "Atur",
+  "menuSectionCopy": "Salin dan ekspor",
+  "menuSectionTools": "Alat",
+  "menuSectionProtect": "Perlindungan dan penyimpanan",
+  "menuSectionContent": "Konten",
+  "menuSectionPeople": "Akun dan kontak",
+  "menuSectionHome": "Layar utama",
+  "menuSectionApp": "Aplikasi"
 }

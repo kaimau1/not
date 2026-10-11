@@ -4499,4 +4499,37 @@ class AppLocalizationsFr extends AppLocalizations {
   String guideNoResults(String query) {
     return 'Aucun résultat pour « $query »';
   }
+
+  @override
+  String get copyVideoLink => 'Copier le lien';
+
+  @override
+  String get videoLinkCopied => 'Lien copié';
+
+  @override
+  String get attachSectionVisual => 'Images et dessin';
+
+  @override
+  String get menuSectionOrganize => 'Organiser';
+
+  @override
+  String get menuSectionCopy => 'Copier et exporter';
+
+  @override
+  String get menuSectionTools => 'Outils';
+
+  @override
+  String get menuSectionProtect => 'Protection et stockage';
+
+  @override
+  String get menuSectionContent => 'Contenu';
+
+  @override
+  String get menuSectionPeople => 'Compte et contacts';
+
+  @override
+  String get menuSectionHome => 'Écran d\'accueil';
+
+  @override
+  String get menuSectionApp => 'Application';
 }
