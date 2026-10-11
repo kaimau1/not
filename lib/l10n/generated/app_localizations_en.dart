@@ -4354,4 +4354,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String templateDeleted(String name) {
     return '“$name” deleted';
   }
+
+  @override
+  String get addVideoFromGallery => 'Video from gallery';
+
+  @override
+  String get addYouTubeVideo => 'YouTube video';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'Plays in the note, watch in a small window';
+
+  @override
+  String get youTubeLinkHelp =>
+      'Paste a YouTube video link (youtube.com or youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'This is not a YouTube video link';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'Video can\'t be played in the app on this device; it can be opened in the browser.';
+
+  @override
+  String get youTubeOpenExternal => 'Open in YouTube';
+
+  @override
+  String get pictureInPicture => 'Picture-in-picture';
+
+  @override
+  String get pinMediaTop => 'Pin to top';
+
+  @override
+  String get pinMediaRelease => 'Release: pin to top (note below)';
+
+  @override
+  String get unpinMedia => 'Put back on page';
+
+  @override
+  String get unpinMediaRelease => 'Release: put back on page';
+
+  @override
+  String get pinnedMediaResize => 'Pane height — drag to change';
 }

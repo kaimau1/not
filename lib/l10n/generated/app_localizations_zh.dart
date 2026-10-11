@@ -4260,4 +4260,43 @@ class AppLocalizationsZh extends AppLocalizations {
   String templateDeleted(String name) {
     return '已删除“$name”';
   }
+
+  @override
+  String get addVideoFromGallery => '从相册选择视频';
+
+  @override
+  String get addYouTubeVideo => 'YouTube 视频';
+
+  @override
+  String get addYouTubeVideoSubtitle => '在笔记中播放，可用小窗观看';
+
+  @override
+  String get youTubeLinkHelp => '粘贴 YouTube 视频链接（youtube.com 或 youtu.be）。';
+
+  @override
+  String get youTubeInvalidLink => '这不是 YouTube 视频链接';
+
+  @override
+  String get youTubeOpenInBrowserInfo => '此设备无法在应用内播放视频，可在浏览器中打开。';
+
+  @override
+  String get youTubeOpenExternal => '在 YouTube 中打开';
+
+  @override
+  String get pictureInPicture => '画中画';
+
+  @override
+  String get pinMediaTop => '置顶';
+
+  @override
+  String get pinMediaRelease => '松开：置顶（笔记在下方）';
+
+  @override
+  String get unpinMedia => '放回页面';
+
+  @override
+  String get unpinMediaRelease => '松开：放回页面';
+
+  @override
+  String get pinnedMediaResize => '面板高度 — 拖动以调整';
 }

@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/router.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/utils/youtube.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
 import '../presentation/capture_mode_sheet.dart';
@@ -27,6 +28,8 @@ import 'note_package.dart';
 import 'note_share.dart';
 import 'notes_repository.dart';
 import 'pdf_edit.dart';
+import 'video_frame.dart';
+import 'web_video.dart';
 
 /// Paylaş menüsünden gelen içerikleri nota çevirir: başka bir uygulamada
 /// Paylaşılan dosyanın hangi ek türü olduğunu söyler; `null` ise dosya değil
@@ -46,6 +49,11 @@ AttachmentKind? shareAttachmentKind(SharedMediaFile f) {
   }
   if (mime.startsWith('image/') || f.type == SharedMediaType.image) {
     return AttachmentKind.image;
+  }
+  // Galeriden/kameradan paylaşılan video (kullanıcı isteği 2026-10-11:
+  // "video paylaş seçeneklerinde çıkmamız lazım" — manifestte video/*).
+  if (mime.startsWith('video/') || f.type == SharedMediaType.video) {
+    return AttachmentKind.video;
   }
   return null;
 }
@@ -159,7 +167,14 @@ final shareIntakeProvider = Provider<void>((ref) {
     // Gövde TEK yazımda: createNote + ayrı updateFields arasında doküman bir
     // an boş kalıyor ve o anki akış anlık görüntüsünde not süzgeçten
     // düşebiliyordu (bkz. NotesRepository.createNote yorumu).
-    final body = bodyParts.join('\n').trim();
+    var body = bodyParts.join('\n').trim();
+    // YOUTUBE paylaşımı (YouTube uygulaması bağlantıyı METİN olarak
+    // paylaşır): bağlantı oynatılabilir bir video ekine dönüşür. Metin
+    // yalnız bağlantıdan ibaretse gövdeye yazılmaz — kart zaten onu taşır.
+    final youTubeUrl = firstYouTubeUrl(body);
+    if (youTubeUrl != null && body.replaceFirst(youTubeUrl, '').trim().isEmpty) {
+      body = '';
+    }
     // BELGE paylaşımında (PDF/sunum) YENİ not kipi SORULUR — uygulama içindeki
     // "PDF ekle not al" akışının aynı kartları (kullanıcı isteği 2026-09-05).
     final docKind = body.isEmpty && docs.isNotEmpty
@@ -204,6 +219,8 @@ final shareIntakeProvider = Provider<void>((ref) {
           files: [
             for (final f in docs)
               (name: p.basename(f.path), kind: shareAttachmentKind(f)!),
+            if (youTubeUrl != null)
+              (name: 'YouTube', kind: AttachmentKind.video),
           ],
         ),
         notes: notes,
@@ -224,7 +241,15 @@ final shareIntakeProvider = Provider<void>((ref) {
 
     final targetId = destination?.noteId;
     if (targetId != null) {
-      await _addToExistingNote(ref, repo, targetId, body, docs, safeToRead);
+      await _addToExistingNote(
+        ref,
+        repo,
+        targetId,
+        body,
+        docs,
+        safeToRead,
+        youTubeUrl: youTubeUrl,
+      );
       ReceiveSharingIntent.instance.reset();
       return;
     }
@@ -263,6 +288,7 @@ final shareIntakeProvider = Provider<void>((ref) {
       noteType: type,
       docs: docs,
       safeToRead: safeToRead,
+      youTubeUrl: youTubeUrl,
     );
     if (prepared.isNotEmpty) {
       // Zaman aşımı ŞART: dönen Future sunucu onayını bekliyor ve
@@ -321,9 +347,11 @@ Future<List<Attachment>> _prepareAttachments(
   required NoteType noteType,
   required List<SharedMediaFile> docs,
   required bool Function(String path) safeToRead,
+  String? youTubeUrl,
 }) async {
   final attachRepo = ref.read(attachmentRepositoryProvider);
   if (attachRepo == null) return const [];
+  final webVideo = youTubeUrl == null ? null : webVideoAttachment(youTubeUrl);
   // Hazırlanan ekler ÖNCE toplanır, sonra TEK yazımda gider.
   //
   // KÖK NEDEN (kullanıcı 2026-08-16: "3 resim gönderdim 2'si geldi"):
@@ -332,13 +360,35 @@ Future<List<Attachment>> _prepareAttachments(
   // editör açılıyor, editör de kendi anlık görüntüsünü (henüz 2 ekli) geri
   // yazınca son ek siliniyordu. Tek arrayUnion'da böyle bir aralık yok.
   final prepared = <Attachment>[];
+  if (webVideo != null) {
+    // Başlık beklenir ama kısa (4 sn tavan): gelmezse "YouTube" kalır.
+    final title = await fetchYouTubeTitle(webVideo.webUrl);
+    prepared.add(
+      title == null
+          ? webVideo.copyWith(displayWidth: 0.6)
+          : webVideo.copyWith(fileName: title, displayWidth: 0.6),
+    );
+  }
   for (final file in docs) {
     try {
       // Ek dosyaları da aynı kurala tabi: önbellek dışındaki bir yolu
       // (sahte MIME ile işaretlenmiş keyfi bir dosyayı) eke çevirme.
       if (!safeToRead(file.path)) continue;
-      final bytes = await File(file.path).readAsBytes();
       final kind = shareAttachmentKind(file)!;
+      // VİDEO baytları belleğe OKUNMAZ (yüzlerce MB olabilir): dosya
+      // eklentinin önbelleğinden doğrudan uygulamanın ek klasörüne kopyalanır.
+      // Cihazda kalır, buluta gitmez (bkz. prepareVideo).
+      if (kind == AttachmentKind.video) {
+        prepared.add(
+          await attachRepo.prepareVideo(
+            noteId: noteId,
+            sourcePath: file.path,
+            duration: await VideoFrame.duration(file.path),
+          ),
+        );
+        continue;
+      }
+      final bytes = await File(file.path).readAsBytes();
       var name = p.basename(file.path);
       // Ad uzantısız geldiyse (bkz. shareAttachmentKind) türün uzantısı
       // eklenir; yoksa ek uzantısız kaydedilir ve dışa aktarılınca açılmaz.
@@ -421,8 +471,9 @@ Future<void> _addToExistingNote(
   String noteId,
   String body,
   List<SharedMediaFile> docs,
-  bool Function(String path) safeToRead,
-) async {
+  bool Function(String path) safeToRead, {
+  String? youTubeUrl,
+}) async {
   final notes = ref.read(notesStreamProvider).value ?? const <Note>[];
   Note? target;
   for (final n in notes) {
@@ -446,6 +497,7 @@ Future<void> _addToExistingNote(
     noteType: target.type,
     docs: docs,
     safeToRead: safeToRead,
+    youTubeUrl: youTubeUrl,
   );
   if (prepared.isNotEmpty) {
     await repo

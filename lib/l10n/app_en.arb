@@ -1678,5 +1678,18 @@
   "templateHeadingHelp": "Lines starting with “# ” become headings, “## ” subheadings.",
   "templateDiscardTitle": "Discard changes?",
   "templateDiscard": "Discard",
-  "templateDeleted": "“{name}” deleted"
+  "templateDeleted": "“{name}” deleted",
+  "addVideoFromGallery": "Video from gallery",
+  "addYouTubeVideo": "YouTube video",
+  "addYouTubeVideoSubtitle": "Plays in the note, watch in a small window",
+  "youTubeLinkHelp": "Paste a YouTube video link (youtube.com or youtu.be).",
+  "youTubeInvalidLink": "This is not a YouTube video link",
+  "youTubeOpenInBrowserInfo": "Video can't be played in the app on this device; it can be opened in the browser.",
+  "youTubeOpenExternal": "Open in YouTube",
+  "pictureInPicture": "Picture-in-picture",
+  "pinMediaTop": "Pin to top",
+  "pinMediaRelease": "Release: pin to top (note below)",
+  "unpinMedia": "Put back on page",
+  "unpinMediaRelease": "Release: put back on page",
+  "pinnedMediaResize": "Pane height — drag to change"
 }

@@ -13,7 +13,9 @@ import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_viewer_screen.dart';
+import '../../../../core/utils/youtube.dart';
 import '../viewers/video_viewer.dart';
+import '../viewers/youtube_viewer.dart';
 import 'image_layout.dart';
 import 'pdf_page_box.dart';
 import 'text_wrap.dart';
@@ -325,6 +327,122 @@ class _ImageBox extends StatelessWidget {
   }
 }
 
+/// Görsel/video ekin İÇERİĞİ — sayfa tuvali ile notun üstündeki sabit
+/// bölme ([PinnedMediaPane]) aynı çizimi kullanır.
+///
+/// [inlineWebVideo]: YouTube eki oynat düğmesinde KUTUNUN İÇİNDE oynar
+/// (sabit bölme — "üstte video, altta not"); false ise oynatıcı ekranı
+/// açılır (sayfada yüzen kutu taşınabilir kalsın, WebView jestleri yutmasın).
+class NoteMediaBox extends StatelessWidget {
+  const NoteMediaBox({
+    super.key,
+    required this.attachment,
+    this.fit = BoxFit.cover,
+    this.inlineWebVideo = false,
+    this.onSize,
+  });
+
+  final Attachment attachment;
+  final BoxFit fit;
+  final bool inlineWebVideo;
+  final ValueChanged<Size>? onSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final a = attachment;
+    if (a.isWebVideo) {
+      return _WebVideoBox(video: a, fit: fit, inline: inlineWebVideo);
+    }
+    if (a.kind == AttachmentKind.video) {
+      return _VideoBox(video: a, fit: fit, onSize: onSize);
+    }
+    return _ImageBox(img: a, fit: fit);
+  }
+}
+
+/// YouTube ekinin kutusu: kapak görseli + oynat düğmesi + küçük YouTube
+/// rozeti. Kapak ağsız da çizilemezse koyu zemin üstünde simge kalır.
+class _WebVideoBox extends StatefulWidget {
+  const _WebVideoBox({
+    required this.video,
+    required this.fit,
+    required this.inline,
+  });
+
+  final Attachment video;
+  final BoxFit fit;
+  final bool inline;
+
+  @override
+  State<_WebVideoBox> createState() => _WebVideoBoxState();
+}
+
+class _WebVideoBoxState extends State<_WebVideoBox> {
+  bool _playing = false;
+
+  void _play() {
+    if (widget.inline && youTubeInAppSupported) {
+      setState(() => _playing = true);
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VideoViewerScreen(attachment: widget.video),
+      ),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _WebVideoBox old) {
+    super.didUpdateWidget(old);
+    if (old.video.webUrl != widget.video.webUrl) _playing = false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_playing) return YouTubeInlinePlayer(url: widget.video.webUrl);
+    final id = youTubeVideoId(widget.video.webUrl);
+    final placeholder = Container(
+      color: Colors.black87,
+      alignment: Alignment.center,
+      child: const Icon(Icons.smart_display_outlined, color: Colors.white70),
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (id == null)
+          placeholder
+        else
+          CachedNetworkImage(
+            imageUrl: youTubeThumbnailUrl(id),
+            fit: widget.fit,
+            placeholder: (_, _) => placeholder,
+            errorWidget: (_, _, _) => placeholder,
+          ),
+        Center(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _play,
+            child: Container(
+              width: 52,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF0000),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Video ekin sayfa üzerindeki kutusu: video **olduğu yerde** oynar — ortada
 /// oynat/durdur düğmesi, ayrı ekrana gitmek gerekmez (tam ekran, araç
 /// çubuğundaki düğmede). Dosya yoksa (video buluta çıkmaz — başka cihazda
@@ -513,6 +631,7 @@ class _ImageTools extends StatelessWidget {
     this.onSelectMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onPinTop,
   });
 
   final double wFrac;
@@ -535,6 +654,11 @@ class _ImageTools extends StatelessWidget {
 
   /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
   final VoidCallback? onVideoToNote;
+
+  /// Görseli/videoyu notun ÜSTÜNDEKİ sabit bölmeye alır (bkz.
+  /// [Attachment.pinHeight]). Aynı iş görseli sayfanın tepesine sürükleyerek
+  /// de yapılır; menüdeki giriş, hareketi bilmeyen için.
+  final VoidCallback? onPinTop;
 
   @override
   Widget build(BuildContext context) {
@@ -582,7 +706,8 @@ class _ImageTools extends StatelessWidget {
                 onCopy != null ||
                 onSelectMany != null ||
                 onDetach != null ||
-                onVideoToNote != null)
+                onVideoToNote != null ||
+                onPinTop != null)
               PopupMenuButton<String>(
                 tooltip: l10n.more,
                 icon: const Icon(Icons.more_vert, size: 20),
@@ -598,9 +723,21 @@ class _ImageTools extends StatelessWidget {
                       onDetach?.call();
                     case 'videoToNote':
                       onVideoToNote?.call();
+                    case 'pinTop':
+                      onPinTop?.call();
                   }
                 },
                 itemBuilder: (context) => [
+                  if (onPinTop != null)
+                    PopupMenuItem(
+                      value: 'pinTop',
+                      child: ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.vertical_align_top),
+                        title: Text(l10n.pinMediaTop),
+                      ),
+                    ),
                   if (onVideoToNote != null)
                     PopupMenuItem(
                       value: 'videoToNote',
@@ -761,6 +898,8 @@ class NotePageCanvas extends StatefulWidget {
     this.onChangedMany,
     this.onDetach,
     this.onVideoToNote,
+    this.onPinTop,
+    this.onPinHover,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -844,6 +983,16 @@ class NotePageCanvas extends StatefulWidget {
   /// Videodan AI ile not çıkarır; yalnız video ekinin menüsünde görünür.
   final ValueChanged<Attachment>? onVideoToNote;
 
+  /// **ÜSTE SABİTLE** (kullanıcı isteği 2026-10-11: "üstte video/resim, altta
+  /// not — görseli sürükleyerek"): basılı tutup sürüklenen görsel ekranın
+  /// TEPESİNE (sayfanın görünen üst kenarına) bırakılınca çağrılır; görsel
+  /// sayfadan kalkar, notun üstündeki sabit bölmeye geçer. null = kapalı.
+  final ValueChanged<Attachment>? onPinTop;
+
+  /// Sürüklenen görsel sabitleme bölgesine girdi/çıktı — editör o sırada
+  /// ekranın tepesinde "Bırak: üste sabitle" şeridini gösterir.
+  final ValueChanged<bool>? onPinHover;
+
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
   final VoidCallback? onTapEmpty;
@@ -865,9 +1014,48 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   double? _moveOriginLeft;
   double? _moveOriginTop;
 
+  /// Parmak şu an sabitleme bölgesinde mi (bkz. [NotePageCanvas.onPinTop]).
+  bool _inPinZone = false;
+
+  /// Sabitleme bölgesi: kaydırılan sayfanın GÖRÜNEN üst kenarından bu kadar
+  /// dp (parmağın ekrandaki yeri ölçülür — sayfa aşağı kaydırılmışken de
+  /// ekranın tepesine sürüklemek yeter).
+  static const double _pinZoneHeight = 56;
+
+  void _setPinZone(bool value) {
+    if (_inPinZone == value) return;
+    _inPinZone = value;
+    if (value) HapticFeedback.mediumImpact();
+    widget.onPinHover?.call(value);
+  }
+
+  /// Parmağın ekran konumu sabitleme bölgesinde mi.
+  bool _pinZoneHit(Offset global) {
+    if (widget.onPinTop == null) return false;
+    final scrollable = Scrollable.maybeOf(context);
+    final box = scrollable?.context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return false;
+    final top = box.localToGlobal(Offset.zero).dy;
+    return global.dy < top + _pinZoneHeight;
+  }
+
   /// Sürükleme bitince yeni konumu kaydeder ve canlı değerleri temizler.
   void _commitMove(Attachment img, double cw) {
     if (_moveId != img.id) return;
+    if (_inPinZone) {
+      _setPinZone(false);
+      setState(() {
+        _moveId = null;
+        _moveLeft = null;
+        _moveTop = null;
+        _moveOriginLeft = null;
+        _moveOriginTop = null;
+        _guides = const [];
+        _selectedId = null;
+      });
+      widget.onPinTop?.call(img);
+      return;
+    }
     final nl = _moveLeft;
     final nt = _moveTop;
     if (nl != null && nt != null) {
@@ -1328,18 +1516,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               },
       );
     }
-    if (a.kind == AttachmentKind.video) {
-      return _VideoBox(
-        video: a,
-        fit: fit,
-        onSize: (a.width == null || a.height == null)
-            ? (s) => widget.onChanged(
-                a.copyWith(width: s.width.round(), height: s.height.round()),
-              )
-            : null,
-      );
-    }
-    return _ImageBox(img: a, fit: fit);
+    return NoteMediaBox(
+      attachment: a,
+      fit: fit,
+      onSize: (a.width == null || a.height == null)
+          ? (s) => widget.onChanged(
+              a.copyWith(width: s.width.round(), height: s.height.round()),
+            )
+          : null,
+    );
   }
 
   @override
@@ -1458,20 +1643,28 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
               if (previewImg != null) _preview(context, previewImg, cw),
             ],
           );
-          if (imgForDismiss == null) return content;
-          final r = _resolve(imgForDismiss, cw);
-          // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
-          // bir bant: ikisinin de dışı "dışarısı" sayılır.
-          final imageRect = Rect.fromLTWH(
-            r.left - 24,
-            r.top - 24,
-            r.w + 48,
-            r.h + 48,
-          );
-          final toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+          // Listener HER ZAMAN ağaçta (seçim yokken boş geçer).
+          //
+          // KÖK NEDEN (2026-10-11, "görseli sürükleyerek üste sabitle"
+          // üzerinde çalışırken bulundu): Listener eskiden yalnız seçim
+          // VARKEN sarılıyordu. Seçili olmayan görsele basılı tutunca
+          // `onLongPressStart` seçimi açıyor → içerik bu karede Listener'a
+          // sarılıyor → Stack'in altındaki bütün ağaç (görselin jest
+          // tanıyıcısı dahil) yeniden kuruluyor ve süren sürükleme kopuyordu:
+          // "basılı tut, sürükle" ancak görsel ÖNCEDEN seçiliyse çalışıyordu.
+          Rect? imageRect;
+          Rect? toolbarRect;
+          if (imgForDismiss != null) {
+            final r = _resolve(imgForDismiss, cw);
+            // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
+            // bir bant: ikisinin de dışı "dışarısı" sayılır.
+            imageRect = Rect.fromLTWH(r.left - 24, r.top - 24, r.w + 48, r.h + 48);
+            toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+          }
           return Listener(
             behavior: HitTestBehavior.translucent,
             onPointerDown: (event) {
+              if (imageRect == null || toolbarRect == null) return;
               final p = event.localPosition;
               if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
                 _deselect();
@@ -1803,6 +1996,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         // beslenseydi görsel kılavuzdan kopamazdı.
         onLongPressMoveUpdate: (d) {
           if (_moveId != img.id) return;
+          _setPinZone(_pinZoneHit(d.globalPosition));
           final snapped = snapMove(
             rect: Rect.fromLTWH(
               (_moveOriginLeft ?? r.left) + d.offsetFromOrigin.dx,
@@ -1824,7 +2018,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           });
         },
         onLongPressEnd: (_) => _commitMove(img, cw),
-        onLongPressCancel: () => _commitMove(img, cw),
+        onLongPressCancel: () {
+          // İptal (ör. jest başka bir tanıyıcıya geçti) sabitleme SAYILMAZ.
+          _setPinZone(false);
+          _commitMove(img, cw);
+        },
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -2005,9 +2203,17 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onSelectMany: widget.onCopyMany == null || widget.images.length < 2
             ? null
             : () => _startMulti(img.id),
-        onVideoToNote: widget.onVideoToNote == null || !isVideo
+        // YouTube ekinin dosyası yok — videodan not çıkarmak mümkün değil.
+        onVideoToNote: widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
+        // PDF sabitlenmez: üst bölme görsel/video içindir.
+        onPinTop: widget.onPinTop == null || isPdf
+            ? null
+            : () {
+                _deselect();
+                widget.onPinTop!(img);
+              },
         onDetach: widget.onDetach == null
             ? null
             : () {

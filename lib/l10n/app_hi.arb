@@ -843,5 +843,18 @@
   "templateHeadingHelp": "“# ” से शुरू होने वाली पंक्तियाँ शीर्षक, “## ” वाली उपशीर्षक बनती हैं।",
   "templateDiscardTitle": "बदलाव छोड़ दें?",
   "templateDiscard": "छोड़ें",
-  "templateDeleted": "“{name}” हटाया गया"
+  "templateDeleted": "“{name}” हटाया गया",
+  "addVideoFromGallery": "गैलरी से वीडियो",
+  "addYouTubeVideo": "YouTube वीडियो",
+  "addYouTubeVideoSubtitle": "नोट में चलता है, छोटी विंडो में देखें",
+  "youTubeLinkHelp": "YouTube वीडियो लिंक चिपकाएँ (youtube.com या youtu.be)।",
+  "youTubeInvalidLink": "यह YouTube वीडियो लिंक नहीं है",
+  "youTubeOpenInBrowserInfo": "इस डिवाइस पर वीडियो ऐप में नहीं चल सकता; इसे ब्राउज़र में खोला जा सकता है।",
+  "youTubeOpenExternal": "YouTube में खोलें",
+  "pictureInPicture": "पिक्चर-इन-पिक्चर",
+  "pinMediaTop": "ऊपर पिन करें",
+  "pinMediaRelease": "छोड़ें: ऊपर पिन करें (नीचे नोट)",
+  "unpinMedia": "पेज पर वापस रखें",
+  "unpinMediaRelease": "छोड़ें: पेज पर वापस रखें",
+  "pinnedMediaResize": "पैनल की ऊँचाई — बदलने के लिए खींचें"
 }

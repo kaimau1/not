@@ -145,6 +145,21 @@ class _AttachSheet extends StatelessWidget {
           l10n.newVideoNote,
           l10n.videoLocalOnly,
         ),
+      // Galeriden video (kamera yolu yukarıda): masaüstünde image_picker
+      // dosya seçiciye düşer, orada da çalışır.
+      if (!kIsWeb)
+        (
+          'video-gallery',
+          Icons.video_library_outlined,
+          l10n.addVideoFromGallery,
+          l10n.videoLocalOnly,
+        ),
+      (
+        'youtube',
+        Icons.smart_display_outlined,
+        l10n.addYouTubeVideo,
+        l10n.addYouTubeVideoSubtitle,
+      ),
       if (qrScanSupported)
         ('qr', Icons.qr_code_scanner, l10n.qrScanTitle, l10n.qrScanSubtitle),
       // "Renk" BURADAN KALKTI (kullanıcı isteği 2026-08-10: "sayfa rengi ve

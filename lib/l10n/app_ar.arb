@@ -843,5 +843,18 @@
   "templateHeadingHelp": "الأسطر التي تبدأ بـ «# » تصبح عناوين، و«## » عناوين فرعية.",
   "templateDiscardTitle": "تجاهل التغييرات؟",
   "templateDiscard": "تجاهل",
-  "templateDeleted": "تم حذف «{name}»"
+  "templateDeleted": "تم حذف «{name}»",
+  "addVideoFromGallery": "فيديو من المعرض",
+  "addYouTubeVideo": "فيديو يوتيوب",
+  "addYouTubeVideoSubtitle": "يُشغَّل داخل الملاحظة، شاهده في نافذة صغيرة",
+  "youTubeLinkHelp": "الصق رابط فيديو يوتيوب (youtube.com أو youtu.be).",
+  "youTubeInvalidLink": "هذا ليس رابط فيديو يوتيوب",
+  "youTubeOpenInBrowserInfo": "لا يمكن تشغيل الفيديو داخل التطبيق على هذا الجهاز؛ يمكن فتحه في المتصفح.",
+  "youTubeOpenExternal": "فتح في يوتيوب",
+  "pictureInPicture": "صورة داخل صورة",
+  "pinMediaTop": "تثبيت في الأعلى",
+  "pinMediaRelease": "أفلِت: تثبيت في الأعلى (الملاحظة بالأسفل)",
+  "unpinMedia": "إعادة إلى الصفحة",
+  "unpinMediaRelease": "أفلِت: إعادة إلى الصفحة",
+  "pinnedMediaResize": "ارتفاع اللوحة — اسحب لتغييره"
 }

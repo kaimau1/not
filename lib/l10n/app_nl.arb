@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Regels die beginnen met “# ” worden koppen, met “## ” subkoppen.",
   "templateDiscardTitle": "Wijzigingen negeren?",
   "templateDiscard": "Negeren",
-  "templateDeleted": "“{name}” verwijderd"
+  "templateDeleted": "“{name}” verwijderd",
+  "addVideoFromGallery": "Video uit galerij",
+  "addYouTubeVideo": "YouTube-video",
+  "addYouTubeVideoSubtitle": "Speelt in de notitie, bekijk in een klein venster",
+  "youTubeLinkHelp": "Plak een YouTube-videolink (youtube.com of youtu.be).",
+  "youTubeInvalidLink": "Dit is geen YouTube-videolink",
+  "youTubeOpenInBrowserInfo": "De video kan op dit apparaat niet in de app worden afgespeeld; hij kan in de browser worden geopend.",
+  "youTubeOpenExternal": "Openen in YouTube",
+  "pictureInPicture": "Beeld-in-beeld",
+  "pinMediaTop": "Bovenaan vastzetten",
+  "pinMediaRelease": "Loslaten: bovenaan vastzetten (notitie eronder)",
+  "unpinMedia": "Terugzetten op de pagina",
+  "unpinMediaRelease": "Loslaten: terugzetten op de pagina",
+  "pinnedMediaResize": "Paneelhoogte — sleep om te wijzigen"
 }

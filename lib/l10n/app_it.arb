@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Le righe che iniziano con “# ” diventano titoli, con “## ” sottotitoli.",
   "templateDiscardTitle": "Annullare le modifiche?",
   "templateDiscard": "Annulla modifiche",
-  "templateDeleted": "“{name}” eliminato"
+  "templateDeleted": "“{name}” eliminato",
+  "addVideoFromGallery": "Video dalla galleria",
+  "addYouTubeVideo": "Video di YouTube",
+  "addYouTubeVideoSubtitle": "Si riproduce nella nota, guardalo in una finestra piccola",
+  "youTubeLinkHelp": "Incolla un link a un video di YouTube (youtube.com o youtu.be).",
+  "youTubeInvalidLink": "Questo non è un link a un video di YouTube",
+  "youTubeOpenInBrowserInfo": "Il video non può essere riprodotto nell'app su questo dispositivo; può essere aperto nel browser.",
+  "youTubeOpenExternal": "Apri in YouTube",
+  "pictureInPicture": "Picture-in-picture",
+  "pinMediaTop": "Fissa in alto",
+  "pinMediaRelease": "Rilascia: fissa in alto (nota sotto)",
+  "unpinMedia": "Rimetti nella pagina",
+  "unpinMediaRelease": "Rilascia: rimetti nella pagina",
+  "pinnedMediaResize": "Altezza del pannello: trascina per modificarla"
 }

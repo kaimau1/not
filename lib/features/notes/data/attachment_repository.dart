@@ -587,7 +587,11 @@ class AttachmentRepository {
     final ext = p.extension(sourcePath).isEmpty
         ? '.mp4'
         : p.extension(sourcePath);
-    final fileName = 'goruntu_${duration.inSeconds}s$ext';
+    // Galeriden seçilen/paylaşılan videonun süresi bilinmiyorsa (0) addan
+    // çıkarılır — "goruntu_0s" yanıltıcıydı.
+    final fileName = duration > Duration.zero
+        ? 'goruntu_${duration.inSeconds}s$ext'
+        : 'goruntu$ext';
     final dir = await _attachmentsDir(noteId);
     final file = await source.copy(p.join(dir.path, '${id}_$fileName'));
 
@@ -595,7 +599,13 @@ class AttachmentRepository {
       id: id,
       kind: AttachmentKind.video,
       fileName: fileName,
-      mimeType: ext == '.mov' ? 'video/quicktime' : 'video/mp4',
+      mimeType: switch (ext.toLowerCase()) {
+        '.mov' => 'video/quicktime',
+        '.webm' => 'video/webm',
+        '.mkv' => 'video/x-matroska',
+        '.3gp' => 'video/3gpp',
+        _ => 'video/mp4',
+      },
       localPath: file.path,
       sizeBytes: sizeBytes,
       createdAt: DateTime.now(),
@@ -615,6 +625,22 @@ class AttachmentRepository {
     required String noteId,
     required Attachment source,
   }) async {
+    // YouTube eki dosyasızdır: kopyası yeni kimlikli aynı bağlantı.
+    if (source.isWebVideo) {
+      return Attachment(
+        id: _uuid.v4(),
+        kind: source.kind,
+        fileName: source.fileName,
+        mimeType: source.mimeType,
+        webUrl: source.webUrl,
+        width: source.width,
+        height: source.height,
+        displayWidth: source.displayWidth,
+        align: source.align,
+        asFile: source.asFile,
+        createdAt: DateTime.now(),
+      );
+    }
     final bytes = await readBytes(source);
     if (bytes == null) throw const AttachmentMissingException();
     // Görüntülü not buluta hiç gitmediğinden boyut sınırına da girmez

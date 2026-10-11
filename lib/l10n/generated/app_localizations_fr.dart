@@ -4379,4 +4379,47 @@ class AppLocalizationsFr extends AppLocalizations {
   String templateDeleted(String name) {
     return '« $name » supprimé';
   }
+
+  @override
+  String get addVideoFromGallery => 'Vidéo de la galerie';
+
+  @override
+  String get addYouTubeVideo => 'Vidéo YouTube';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'Se lit dans la note, à regarder dans une petite fenêtre';
+
+  @override
+  String get youTubeLinkHelp =>
+      'Collez un lien de vidéo YouTube (youtube.com ou youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'Ce n\'est pas un lien de vidéo YouTube';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'La vidéo ne peut pas être lue dans l\'app sur cet appareil ; elle peut être ouverte dans le navigateur.';
+
+  @override
+  String get youTubeOpenExternal => 'Ouvrir dans YouTube';
+
+  @override
+  String get pictureInPicture => 'Image dans l\'image';
+
+  @override
+  String get pinMediaTop => 'Épingler en haut';
+
+  @override
+  String get pinMediaRelease => 'Relâchez : épingler en haut (note en dessous)';
+
+  @override
+  String get unpinMedia => 'Remettre sur la page';
+
+  @override
+  String get unpinMediaRelease => 'Relâchez : remettre sur la page';
+
+  @override
+  String get pinnedMediaResize =>
+      'Hauteur du volet — faites glisser pour la modifier';
 }

@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Строки, начинающиеся с «# », станут заголовками, с «## » — подзаголовками.",
   "templateDiscardTitle": "Отменить изменения?",
   "templateDiscard": "Отменить",
-  "templateDeleted": "«{name}» удалён"
+  "templateDeleted": "«{name}» удалён",
+  "addVideoFromGallery": "Видео из галереи",
+  "addYouTubeVideo": "Видео YouTube",
+  "addYouTubeVideoSubtitle": "Воспроизводится в заметке, смотрите в маленьком окне",
+  "youTubeLinkHelp": "Вставьте ссылку на видео YouTube (youtube.com или youtu.be).",
+  "youTubeInvalidLink": "Это не ссылка на видео YouTube",
+  "youTubeOpenInBrowserInfo": "На этом устройстве видео нельзя воспроизвести в приложении; его можно открыть в браузере.",
+  "youTubeOpenExternal": "Открыть в YouTube",
+  "pictureInPicture": "Картинка в картинке",
+  "pinMediaTop": "Закрепить сверху",
+  "pinMediaRelease": "Отпустите: закрепить сверху (заметка ниже)",
+  "unpinMedia": "Вернуть на страницу",
+  "unpinMediaRelease": "Отпустите: вернуть на страницу",
+  "pinnedMediaResize": "Высота панели — перетащите, чтобы изменить"
 }

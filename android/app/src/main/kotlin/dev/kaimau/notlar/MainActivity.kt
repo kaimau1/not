@@ -2,8 +2,10 @@ package dev.kaimau.notlar
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
@@ -18,6 +20,7 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import android.util.Rational
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
@@ -83,12 +86,103 @@ class MainActivity : FlutterFragmentActivity() {
     // loglanmaz (döküm kişisel veridir, logcat'e sızmamalı).
     private val logTag = "NotlarSpeech"
 
+    // RESİM İÇİNDE RESİM (video oynatıcı ekranları): Dart tarafı oynatıcı
+    // açıkken "otomatik PiP"i açar; kullanıcı ana ekrana çıkınca etkinlik
+    // küçük pencereye geçer. Pencere değişimi Dart'a "pipChanged" ile
+    // bildirilir — oynatıcı o sırada çubukları gizleyip yalnız videoyu çizer.
+    private var systemChannel: MethodChannel? = null
+    private var autoPip = false
+    private var pipRatio = Rational(16, 9)
+
+    private val pipSupported: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    private fun pipParams(): PictureInPictureParams? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return null
+        val builder = PictureInPictureParams.Builder().setAspectRatio(pipRatio)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setAutoEnterEnabled(autoPip)
+            builder.setSeamlessResizeEnabled(true)
+        }
+        return builder.build()
+    }
+
+    // PiP en-boy oranı Android'de 1:2.39 ile 2.39:1 arasında olmalı; dışı
+    // IllegalArgumentException atar (dikey çekilmiş 9:21 video gibi).
+    private fun clampedRatio(w: Int, h: Int): Rational {
+        if (w <= 0 || h <= 0) return Rational(16, 9)
+        val r = w.toDouble() / h
+        return when {
+            r > 2.39 -> Rational(239, 100)
+            r < 1 / 2.39 -> Rational(100, 239)
+            else -> Rational(w, h)
+        }
+    }
+
+    private fun enterPip(): Boolean {
+        // Sürüm denetimi ÇAĞRININ yanında: lint (NewApi) özellik içindeki
+        // denetimi görmez ve sürüm derlemesini durdururdu.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || !pipSupported) return false
+        val params = pipParams() ?: return false
+        return try {
+            enterPictureInPictureMode(params)
+        } catch (e: Exception) {
+            Log.w("NotlarPip", "PiP acilamadi: ${e.javaClass.simpleName}")
+            false
+        }
+    }
+
+    // Android 12 öncesi otomatik geçiş yok: ana ekran tuşu bu kancayı çağırır.
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (autoPip && Build.VERSION.SDK_INT < Build.VERSION_CODES.S) enterPip()
+    }
+
+    override fun onPictureInPictureModeChanged(
+        isInPictureInPictureMode: Boolean,
+        newConfig: Configuration
+    ) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        systemChannel?.invokeMethod("pipChanged", isInPictureInPictureMode)
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         configureSpeechChannel(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+        val channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+        systemChannel = channel
+        channel
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+                    "pipSupported" -> result.success(pipSupported)
+                    // Oynatıcı hemen küçük pencereye alınır (PiP düğmesi).
+                    "enterPip" -> {
+                        pipRatio = clampedRatio(
+                            call.argument<Int>("w") ?: 16,
+                            call.argument<Int>("h") ?: 9
+                        )
+                        result.success(enterPip())
+                    }
+                    // Oynatıcı açık/kapalı: açıkken ana ekrana çıkmak PiP'e geçer.
+                    "setAutoPip" -> {
+                        autoPip = call.argument<Boolean>("enabled") ?: false
+                        pipRatio = clampedRatio(
+                            call.argument<Int>("w") ?: 16,
+                            call.argument<Int>("h") ?: 9
+                        )
+                        val params = pipParams()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                            pipSupported && params != null
+                        ) {
+                            try {
+                                setPictureInPictureParams(params)
+                            } catch (e: Exception) {
+                                Log.w("NotlarPip", "PiP ayari yazilamadi: ${e.javaClass.simpleName}")
+                            }
+                        }
+                        result.success(pipSupported)
+                    }
                     // Cihazda konuşma tanıma var mı (Google uygulaması /
                     // RecognitionService). Yoksa Dart tarafı eski ses yoluna
                     // düşer.

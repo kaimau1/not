@@ -341,6 +341,7 @@ class _IncomingSummary extends StatelessWidget {
     AttachmentKind.pdf => Icons.picture_as_pdf_outlined,
     AttachmentKind.slide => Icons.slideshow_outlined,
     AttachmentKind.image => Icons.image_outlined,
+    AttachmentKind.video => Icons.videocam_outlined,
     _ => Icons.insert_drive_file_outlined,
   };
 

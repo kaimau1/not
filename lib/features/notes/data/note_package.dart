@@ -100,6 +100,9 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   // "PDF üzerindeki balonlar girmiş olsun, yani her şeyiyle paylaşılmış olacak".
   if (a.bubbles.isNotEmpty) 'bubbles': [for (final b in a.bubbles) b.toMap()],
   if (a.pageIds.isNotEmpty) 'pageIds': a.pageIds,
+  // YouTube eki dosyasızdır: bağlantının kendisi ektir (kişisel veri yok).
+  if (a.webUrl.isNotEmpty) 'webUrl': a.webUrl,
+  if (a.pinHeight > 0) 'pinHeight': a.pinHeight,
 };
 
 /// Paket JSON'unu nota çevirir. Kimlik boş bırakılır: içe aktaran taraf notu
@@ -168,6 +171,8 @@ Attachment _decodeAttachment(Map<String, dynamic> map) => Attachment(
   pageIds: [
     for (final raw in (map['pageIds'] as List? ?? const [])) raw.toString(),
   ],
+  webUrl: map['webUrl'] as String? ?? '',
+  pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
 );
 
 /// Notu ve ek baytlarını tek bir `.notpaket` (ZIP) dosyasına yazar.

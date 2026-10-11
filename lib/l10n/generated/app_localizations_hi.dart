@@ -4353,4 +4353,45 @@ class AppLocalizationsHi extends AppLocalizations {
   String templateDeleted(String name) {
     return '“$name” हटाया गया';
   }
+
+  @override
+  String get addVideoFromGallery => 'गैलरी से वीडियो';
+
+  @override
+  String get addYouTubeVideo => 'YouTube वीडियो';
+
+  @override
+  String get addYouTubeVideoSubtitle => 'नोट में चलता है, छोटी विंडो में देखें';
+
+  @override
+  String get youTubeLinkHelp =>
+      'YouTube वीडियो लिंक चिपकाएँ (youtube.com या youtu.be)।';
+
+  @override
+  String get youTubeInvalidLink => 'यह YouTube वीडियो लिंक नहीं है';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'इस डिवाइस पर वीडियो ऐप में नहीं चल सकता; इसे ब्राउज़र में खोला जा सकता है।';
+
+  @override
+  String get youTubeOpenExternal => 'YouTube में खोलें';
+
+  @override
+  String get pictureInPicture => 'पिक्चर-इन-पिक्चर';
+
+  @override
+  String get pinMediaTop => 'ऊपर पिन करें';
+
+  @override
+  String get pinMediaRelease => 'छोड़ें: ऊपर पिन करें (नीचे नोट)';
+
+  @override
+  String get unpinMedia => 'पेज पर वापस रखें';
+
+  @override
+  String get unpinMediaRelease => 'छोड़ें: पेज पर वापस रखें';
+
+  @override
+  String get pinnedMediaResize => 'पैनल की ऊँचाई — बदलने के लिए खींचें';
 }

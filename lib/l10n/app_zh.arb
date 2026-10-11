@@ -843,5 +843,18 @@
   "templateHeadingHelp": "以“# ”开头的行成为标题，以“## ”开头的成为副标题。",
   "templateDiscardTitle": "放弃更改？",
   "templateDiscard": "放弃",
-  "templateDeleted": "已删除“{name}”"
+  "templateDeleted": "已删除“{name}”",
+  "addVideoFromGallery": "从相册选择视频",
+  "addYouTubeVideo": "YouTube 视频",
+  "addYouTubeVideoSubtitle": "在笔记中播放，可用小窗观看",
+  "youTubeLinkHelp": "粘贴 YouTube 视频链接（youtube.com 或 youtu.be）。",
+  "youTubeInvalidLink": "这不是 YouTube 视频链接",
+  "youTubeOpenInBrowserInfo": "此设备无法在应用内播放视频，可在浏览器中打开。",
+  "youTubeOpenExternal": "在 YouTube 中打开",
+  "pictureInPicture": "画中画",
+  "pinMediaTop": "置顶",
+  "pinMediaRelease": "松开：置顶（笔记在下方）",
+  "unpinMedia": "放回页面",
+  "unpinMediaRelease": "松开：放回页面",
+  "pinnedMediaResize": "面板高度 — 拖动以调整"
 }

@@ -3835,3 +3835,82 @@ hâli düzenleyicide açılır, "Şablonlarım"a girer. KARARLAR:
 * Liste ↔ yazı türü değişince içerik taşınır (maddeler "• madde" satırı,
   satırlar madde) — kaybolmaz.
 * Düzenleme yerinde (`update`, sıra değişmez); çoğaltma aslının arkasına.
+
+## 2026-10-11 — Notta video: galeriden video, YouTube (resim içinde resim), üste sabitli medya, video paylaşımı
+
+`flutter analyze` temiz, `flutter test` **1102 test yeşil** (16 yeni).
+
+### Kullanıcı isteği (4 madde)
+1. Not içine video koyma → "Ekle" levhasında **Galeriden video** (süre
+   sınırı yok; kamera yolu 60 sn AI sınırıyla kaldı) ve **YouTube videosu**
+   (bağlantı sorulur, panoda YouTube bağlantısı varsa hazır gelir).
+2. YouTube'u resim içinde resim (PiP) oynatma → `YouTubeViewerScreen`
+   (webview_flutter) + Android PiP köprüsü (`PictureInPicture`, MainActivity
+   `enterPip`/`setAutoPip`/`pipChanged`). Yerel video oynatıcısı da PiP aldı.
+3. "Üstte video/resim, altta not — görseli sürükleyerek" → **üste sabitli
+   medya** (`PinnedMediaPane`). Sayfadaki görsel/video basılı tutulup ekranın
+   TEPESİNE (kaydırılan sayfanın görünen üst kenarından 56 dp) sürüklenince
+   bırakıldığı an sabitlenir; tepede "Bırak: üste sabitle" şeridi çıkar.
+   Görsel menüsünde "Üste sabitle" girişi de var. Ayraç sürüklenerek bölme
+   boyutlanır; 72 dp altına çekmek, medyayı basılı tutup aşağı çekmek ya da
+   bölmedeki düğme sayfaya geri koyar. YouTube bölmede GÖMÜLÜ oynar (izlerken
+   altına not yazılır).
+4. Paylaş menüsünde video → manifestte SEND/SEND_MULTIPLE `video/*`;
+   `shareAttachmentKind` video döner, video baytları belleğe OKUNMADAN
+   `prepareVideo` ile kopyalanır. YouTube uygulamasının paylaştığı METİN
+   bağlantı da YouTube ekine dönüşür (metin yalnız bağlantıysa gövdeye
+   yazılmaz).
+
+### KARARLAR
+* YouTube eki = `AttachmentKind.video` + **`webUrl`** (yeni alan, yalnız
+  doluysa yazılır). `downloadUrl` KULLANILMADI: o alan `isUploaded` anlamı
+  taşıyor; görsel önbelleği/Storage silme yolları onu Storage adresi sanardı.
+  Video türü zaten yükleme kuyruğu/kota dışında. Dosyası yok → bağlantı
+  buluta gider, her cihazda oynar. Eski sürüm bunu "senkronlanmadı" yer
+  tutucusu olarak görür (kaybolmaz). Kopyala/yapıştır ve not paketi
+  bağlantıyı taşır (`duplicate`, `note_package`, `NoteShare.import`).
+* Üste sabitleme = **`pinHeight`** (dp; 0 = sabit değil). `floatsOnPage`
+  sabitliyi dışlar; şerit de göstermez (`_inPinnedPane`). Notta TEK sabit
+  medya: yenisi sabitlenince eskisi sayfaya döner. Belge (PDF/sunum) notunda
+  bölme yok — orada sabitli ek şeritte kalır.
+* **TUZAK — `sameRenderedNote` (note_editor_screen.dart üstü)**: editör, ekin
+  hangi alanlarının değiştiğine bakarak yeniden çizer. Yeni bir GÖRÜNÜR ek
+  alanı eklenince oraya da eklenmeli — `pinHeight`/`webUrl` eklenmeseydi
+  sabitlenen görsel ekranda yerinde kalırdı.
+* Başlık YouTube oEmbed'den (anahtarsız, 4 sn tavan); gelmezse "YouTube".
+
+### TUZAK: YouTube gömülü oynatıcısı WebView'da Hata 152/153
+Referer'sız istek reddediliyor. YouTube'un WebView kuralı: uygulama
+`https://<paket-adı>` Referer'ıyla kendini tanıtır. Sayfa
+`loadHtmlString(baseUrl: 'https://dev.kaimau.notlar')` ile yüklenir, iframe
+aynı kökeni `origin=` ile bildirir (bkz. `core/utils/youtube.dart`).
+Oynatıcının logo/öneri bağlantıları WebView'u youtube.com'a götürmesin diye
+ana çerçeve gezinmesi dış uygulamada açılır. `fs=0`: tam ekran düğmesi
+WebView'da özel görünüm köprüsü ister. Windows/web'de WebView yok →
+"YouTube'da aç".
+
+### PiP
+* Oynatıcı açılınca `setAuto(true)`, kapanınca **mutlaka** `setAuto(false)`
+  (yoksa not listesinde ana ekrana çıkmak da uygulamayı küçük pencereye
+  alırdı). Android 12+ `setAutoEnterEnabled`, öncesi `onUserLeaveHint`.
+* Oran 1:2.39–2.39:1 dışına çıkarsa Android IllegalArgumentException atar →
+  `clampedRatio`. API 26 çağrıları sürüm denetimi ÇAĞRININ YANINDA (lint
+  NewApi özellik içindeki denetimi görmez, lintVital sürüm derlemesini
+  durdurur).
+* YouTube ekranında PiP'te Scaffold'ın gövde YAPISI değişmez (yalnız
+  SafeArea kalkar): WebView yeniden kurulsaydı video baştan başlardı.
+
+### KÖK NEDEN: "basılı tut, sürükle" seçili OLMAYAN görselde kopuyordu
+`NotePageCanvas` içeriği yalnız seçim VARKEN dışarı-dokunuş `Listener`ına
+sarıyordu. Seçili olmayan görsele uzun basınca `onLongPressStart` seçimi
+açıyor → aynı karede sarmalayıcı ekleniyor → Stack'in altındaki ağaç
+(görselin jest tanıyıcısı dahil) yeniden kuruluyor → süren sürükleme
+ölüyordu (hareket olayları yeni tanıyıcıya hiç gitmiyor). Taşıma yalnız
+önceden seçili görselde çalışıyordu. Listener artık HEP ağaçta, seçim yokken
+boş geçer. Test: `test/pin_media_drag_test.dart`. **Kural: jest süren bir
+alt ağacın ATASINI koşula bağlı sarmalama** — sarmalayıcı hep dursun,
+davranışı içeriden kapansın.
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`'a indirildi; Android SDK yok — APK ve Kotlin
+derlemesi CI'da doğrulandı. graphify konteynerde yok, graf güncellenmedi.

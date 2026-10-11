@@ -4285,4 +4285,44 @@ class AppLocalizationsJa extends AppLocalizations {
   String templateDeleted(String name) {
     return '「$name」を削除しました';
   }
+
+  @override
+  String get addVideoFromGallery => 'ギャラリーから動画';
+
+  @override
+  String get addYouTubeVideo => 'YouTube動画';
+
+  @override
+  String get addYouTubeVideoSubtitle => 'ノート内で再生、小さなウィンドウで視聴';
+
+  @override
+  String get youTubeLinkHelp =>
+      'YouTube動画のリンクを貼り付けてください（youtube.com または youtu.be）。';
+
+  @override
+  String get youTubeInvalidLink => 'YouTube動画のリンクではありません';
+
+  @override
+  String get youTubeOpenInBrowserInfo => 'この端末ではアプリ内で動画を再生できません。ブラウザで開けます。';
+
+  @override
+  String get youTubeOpenExternal => 'YouTubeで開く';
+
+  @override
+  String get pictureInPicture => 'ピクチャー・イン・ピクチャー';
+
+  @override
+  String get pinMediaTop => '上部に固定';
+
+  @override
+  String get pinMediaRelease => '指を離す: 上部に固定（下にノート）';
+
+  @override
+  String get unpinMedia => 'ページに戻す';
+
+  @override
+  String get unpinMediaRelease => '指を離す: ページに戻す';
+
+  @override
+  String get pinnedMediaResize => 'パネルの高さ — ドラッグで変更';
 }

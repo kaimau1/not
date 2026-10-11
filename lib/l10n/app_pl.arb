@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Wiersze zaczynające się od „# ” to nagłówki, od „## ” podtytuły.",
   "templateDiscardTitle": "Odrzucić zmiany?",
   "templateDiscard": "Odrzuć",
-  "templateDeleted": "Usunięto „{name}”"
+  "templateDeleted": "Usunięto „{name}”",
+  "addVideoFromGallery": "Film z galerii",
+  "addYouTubeVideo": "Film z YouTube",
+  "addYouTubeVideoSubtitle": "Odtwarza się w notatce, oglądaj w małym oknie",
+  "youTubeLinkHelp": "Wklej link do filmu z YouTube (youtube.com lub youtu.be).",
+  "youTubeInvalidLink": "To nie jest link do filmu z YouTube",
+  "youTubeOpenInBrowserInfo": "Na tym urządzeniu nie można odtworzyć filmu w aplikacji; można go otworzyć w przeglądarce.",
+  "youTubeOpenExternal": "Otwórz w YouTube",
+  "pictureInPicture": "Obraz w obrazie",
+  "pinMediaTop": "Przypnij u góry",
+  "pinMediaRelease": "Puść: przypnij u góry (notatka poniżej)",
+  "unpinMedia": "Odłóż na stronę",
+  "unpinMediaRelease": "Puść: odłóż na stronę",
+  "pinnedMediaResize": "Wysokość panelu — przeciągnij, aby zmienić"
 }

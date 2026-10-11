@@ -4371,4 +4371,46 @@ class AppLocalizationsRu extends AppLocalizations {
   String templateDeleted(String name) {
     return '«$name» удалён';
   }
+
+  @override
+  String get addVideoFromGallery => 'Видео из галереи';
+
+  @override
+  String get addYouTubeVideo => 'Видео YouTube';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'Воспроизводится в заметке, смотрите в маленьком окне';
+
+  @override
+  String get youTubeLinkHelp =>
+      'Вставьте ссылку на видео YouTube (youtube.com или youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'Это не ссылка на видео YouTube';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'На этом устройстве видео нельзя воспроизвести в приложении; его можно открыть в браузере.';
+
+  @override
+  String get youTubeOpenExternal => 'Открыть в YouTube';
+
+  @override
+  String get pictureInPicture => 'Картинка в картинке';
+
+  @override
+  String get pinMediaTop => 'Закрепить сверху';
+
+  @override
+  String get pinMediaRelease => 'Отпустите: закрепить сверху (заметка ниже)';
+
+  @override
+  String get unpinMedia => 'Вернуть на страницу';
+
+  @override
+  String get unpinMediaRelease => 'Отпустите: вернуть на страницу';
+
+  @override
+  String get pinnedMediaResize => 'Высота панели — перетащите, чтобы изменить';
 }

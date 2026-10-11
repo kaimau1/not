@@ -47,6 +47,8 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user
@@ -106,6 +108,9 @@
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="image/*"/>
+                <!-- Galeriden/kameradan video paylaşımı da nota girer (video
+                     cihazda kalır, buluta yüklenmez). -->
+                <data android:mimeType="video/*"/>
             </intent-filter>
             <!-- "Birlikte aç" (ACTION_VIEW) ile PDF/sunum açma. SEND filtresi
                  yalnız PAYLAŞ menüsünde çıkarıyordu; dosya yöneticisinden,
@@ -132,6 +137,9 @@
                 <action android:name="android.intent.action.SEND_MULTIPLE"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="image/*"/>
+                <!-- Galeriden/kameradan video paylaşımı da nota girer (video
+                     cihazda kalır, buluta yüklenmez). -->
+                <data android:mimeType="video/*"/>
             </intent-filter>
             <!-- BİRDEN ÇOK BELGE paylaşımı (kullanıcı bulgusu 2026-09-05:
                  "PDF'leri paylaşırken Notlar uygulaması çıkmalı" — ekran

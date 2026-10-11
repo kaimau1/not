@@ -143,6 +143,11 @@ class NoteShare {
     final stored = <Attachment>[];
     if (attachments != null) {
       for (final meta in source.attachments) {
+        // YouTube eki dosyasızdır: bağlantı olduğu gibi taşınır.
+        if (meta.isWebVideo) {
+          stored.add(meta);
+          continue;
+        }
         final bytes = package.files[meta.id];
         // Baytı gelmemiş ek atlanır: dosyası olmayan bir ek kaydı arayüzde
         // sonsuza dek "senkronlanmadı" olarak durur ve silinemez.

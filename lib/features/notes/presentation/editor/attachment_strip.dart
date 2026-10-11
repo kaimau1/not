@@ -270,7 +270,7 @@ class _AttachmentTile extends ConsumerWidget {
   void _open(BuildContext context) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
     if (attachment.kind == AttachmentKind.audio) return;
-    if (!_hasLocal && !attachment.isUploaded) {
+    if (!_hasLocal && !attachment.isUploaded && !attachment.isWebVideo) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(context.l10n.attachmentNotSynced)));
@@ -356,7 +356,7 @@ class _AttachmentTile extends ConsumerWidget {
               style: Theme.of(context).textTheme.labelSmall,
             ),
             Text(
-              context.l10n.videoLocalOnly,
+              attachment.isWebVideo ? 'YouTube' : context.l10n.videoLocalOnly,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -365,7 +365,7 @@ class _AttachmentTile extends ConsumerWidget {
                 fontSize: 9,
               ),
             ),
-            if (onVideoToNote != null)
+            if (onVideoToNote != null && !attachment.isWebVideo)
               TextButton.icon(
                 onPressed: () => onVideoToNote!(attachment),
                 icon: const Icon(Icons.auto_awesome, size: 14),

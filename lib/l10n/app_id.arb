@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Baris yang diawali “# ” menjadi judul, “## ” menjadi subjudul.",
   "templateDiscardTitle": "Buang perubahan?",
   "templateDiscard": "Buang",
-  "templateDeleted": "“{name}” dihapus"
+  "templateDeleted": "“{name}” dihapus",
+  "addVideoFromGallery": "Video dari galeri",
+  "addYouTubeVideo": "Video YouTube",
+  "addYouTubeVideoSubtitle": "Diputar di catatan, tonton di jendela kecil",
+  "youTubeLinkHelp": "Tempel tautan video YouTube (youtube.com atau youtu.be).",
+  "youTubeInvalidLink": "Ini bukan tautan video YouTube",
+  "youTubeOpenInBrowserInfo": "Video tidak dapat diputar di aplikasi pada perangkat ini; dapat dibuka di browser.",
+  "youTubeOpenExternal": "Buka di YouTube",
+  "pictureInPicture": "Gambar-dalam-gambar",
+  "pinMediaTop": "Sematkan di atas",
+  "pinMediaRelease": "Lepas: sematkan di atas (catatan di bawah)",
+  "unpinMedia": "Kembalikan ke halaman",
+  "unpinMediaRelease": "Lepas: kembalikan ke halaman",
+  "pinnedMediaResize": "Tinggi panel — seret untuk mengubah"
 }

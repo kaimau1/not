@@ -516,6 +516,8 @@ class Attachment {
     this.ink = const [],
     this.bubbles = const [],
     this.pageIds = const [],
+    this.webUrl = '',
+    this.pinHeight = 0,
     this.createdAt,
   });
 
@@ -615,16 +617,39 @@ class Attachment {
   /// sayfayla birlikte taşınır: sayfa düzeni değişince YALNIZ bu liste
   /// yeniden yazılır, `Note.pageNotes` anahtarlarına dokunulmaz.
   final List<String> pageIds;
+
+  /// WEB VİDEOSU (YouTube) bağlantısı — yalnız [AttachmentKind.video]'da.
+  /// Dosya yoktur: video gömülü oynatıcıda akar, not ile birlikte buluta
+  /// gider (yalnız bağlantı) ve her cihazda oynar. Neden `downloadUrl`
+  /// değil: o alan "Storage'a yüklendi" anlamı taşıyor ([isUploaded]) ve
+  /// görsel önbelleği/silme yolları onu Storage adresi sanardı.
+  final String webUrl;
+
+  /// **ÜSTE SABİTLİ** medya (kullanıcı isteği 2026-10-11: "üstte video/resim,
+  /// altta not"): 0'dan büyükse görsel/video sayfada yüzmez, notun ÜSTÜNDE
+  /// sabit bir bölmede durur ve metin altında kayar. Değer bölmenin
+  /// yüksekliği (dp) — ayraç sürüklenerek değişir. 0 = sabit değil.
+  final double pinHeight;
+
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
+
+  /// YouTube (web) videosu mu — dosyası yok, gömülü oynatıcıda açılır.
+  bool get isWebVideo => kind == AttachmentKind.video && webUrl.isNotEmpty;
+
+  /// Notun üstündeki sabit bölmede mi (bkz. [pinHeight]).
+  bool get isPinnedTop =>
+      pinHeight > 0 &&
+      (kind == AttachmentKind.image || kind == AttachmentKind.video);
 
   /// Ek SAYFADA yüzüyor mu? Görseller gibi videolar da serbest tuvale
   /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF/ses/sunum
   /// hiçbir zaman yüzmez.
   bool get floatsOnPage =>
       ((kind == AttachmentKind.image || kind == AttachmentKind.video) &&
-          !asFile) ||
+          !asFile &&
+          !isPinnedTop) ||
       (kind == AttachmentKind.pdf && onPage);
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
@@ -661,6 +686,7 @@ class Attachment {
     pdfPage: local.pdfPage,
     pdfTurns: local.pdfTurns,
     pdfMarks: local.pdfMarks,
+    pinHeight: local.pinHeight,
   );
 
   /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
@@ -689,6 +715,8 @@ class Attachment {
     List<InkStroke>? ink,
     List<PageBubble>? bubbles,
     List<String>? pageIds,
+    String? webUrl,
+    double? pinHeight,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -714,6 +742,8 @@ class Attachment {
     ink: ink ?? this.ink,
     bubbles: bubbles ?? this.bubbles,
     pageIds: pageIds ?? this.pageIds,
+    webUrl: webUrl ?? this.webUrl,
+    pinHeight: pinHeight ?? this.pinHeight,
     createdAt: createdAt,
   );
 
@@ -757,6 +787,8 @@ class Attachment {
         pageIds: [
           for (final e in (map['pageIds'] as List?) ?? const []) e.toString(),
         ],
+        webUrl: map['webUrl'] as String? ?? '',
+        pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       );
 
@@ -811,6 +843,9 @@ class Attachment {
     // (türetilen `p<sayfaNo>` zaten aynı sonucu verir) ve eski notların
     // şeması büyümez.
     if (pageIds.isNotEmpty) 'pageIds': pageIds,
+    // Yalnız doluysa: dosyalı eklerin şeması büyümez.
+    if (webUrl.isNotEmpty) 'webUrl': webUrl,
+    if (pinHeight > 0) 'pinHeight': pinHeight,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

@@ -4343,4 +4343,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String templateDeleted(String name) {
     return 'تم حذف «$name»';
   }
+
+  @override
+  String get addVideoFromGallery => 'فيديو من المعرض';
+
+  @override
+  String get addYouTubeVideo => 'فيديو يوتيوب';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'يُشغَّل داخل الملاحظة، شاهده في نافذة صغيرة';
+
+  @override
+  String get youTubeLinkHelp =>
+      'الصق رابط فيديو يوتيوب (youtube.com أو youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'هذا ليس رابط فيديو يوتيوب';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'لا يمكن تشغيل الفيديو داخل التطبيق على هذا الجهاز؛ يمكن فتحه في المتصفح.';
+
+  @override
+  String get youTubeOpenExternal => 'فتح في يوتيوب';
+
+  @override
+  String get pictureInPicture => 'صورة داخل صورة';
+
+  @override
+  String get pinMediaTop => 'تثبيت في الأعلى';
+
+  @override
+  String get pinMediaRelease => 'أفلِت: تثبيت في الأعلى (الملاحظة بالأسفل)';
+
+  @override
+  String get unpinMedia => 'إعادة إلى الصفحة';
+
+  @override
+  String get unpinMediaRelease => 'أفلِت: إعادة إلى الصفحة';
+
+  @override
+  String get pinnedMediaResize => 'ارتفاع اللوحة — اسحب لتغييره';
 }

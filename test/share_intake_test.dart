@@ -49,5 +49,25 @@ void main() {
         isNull,
       );
     });
+
+    test('video ek olur (MIME ya da eklentinin türü ile)', () {
+      expect(
+        shareAttachmentKind(_shared('/c/klip', mime: 'video/mp4')),
+        AttachmentKind.video,
+      );
+      expect(
+        shareAttachmentKind(_shared('/c/klip.mov', type: SharedMediaType.video)),
+        AttachmentKind.video,
+      );
+    });
+
+    test('YouTube bağlantısı METİN olarak gelir (video ekine sonra çevrilir)', () {
+      expect(
+        shareAttachmentKind(
+          _shared('https://youtu.be/dQw4w9WgXcQ', type: SharedMediaType.text),
+        ),
+        isNull,
+      );
+    });
   });
 }

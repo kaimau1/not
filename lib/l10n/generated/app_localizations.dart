@@ -7907,6 +7907,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'“{name}” silindi'**
   String templateDeleted(String name);
+
+  /// No description provided for @addVideoFromGallery.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeriden video'**
+  String get addVideoFromGallery;
+
+  /// No description provided for @addYouTubeVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube videosu'**
+  String get addYouTubeVideo;
+
+  /// No description provided for @addYouTubeVideoSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notta oynar, küçük pencerede izlenir'**
+  String get addYouTubeVideoSubtitle;
+
+  /// No description provided for @youTubeLinkHelp.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube video bağlantısını yapıştır (youtube.com veya youtu.be).'**
+  String get youTubeLinkHelp;
+
+  /// No description provided for @youTubeInvalidLink.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu bir YouTube video bağlantısı değil'**
+  String get youTubeInvalidLink;
+
+  /// No description provided for @youTubeOpenInBrowserInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda video uygulama içinde oynatılamıyor; tarayıcıda açılabilir.'**
+  String get youTubeOpenInBrowserInfo;
+
+  /// No description provided for @youTubeOpenExternal.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube\'da aç'**
+  String get youTubeOpenExternal;
+
+  /// No description provided for @pictureInPicture.
+  ///
+  /// In tr, this message translates to:
+  /// **'Resim içinde resim'**
+  String get pictureInPicture;
+
+  /// No description provided for @pinMediaTop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üste sabitle'**
+  String get pinMediaTop;
+
+  /// No description provided for @pinMediaRelease.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: üste sabitle (altta not)'**
+  String get pinMediaRelease;
+
+  /// No description provided for @unpinMedia.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya geri koy'**
+  String get unpinMedia;
+
+  /// No description provided for @unpinMediaRelease.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: sayfaya geri koy'**
+  String get unpinMediaRelease;
+
+  /// No description provided for @pinnedMediaResize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölme yüksekliği — sürükleyerek değiştir'**
+  String get pinnedMediaResize;
 }
 
 class _AppLocalizationsDelegate

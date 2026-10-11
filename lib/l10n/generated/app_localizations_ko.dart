@@ -4289,4 +4289,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String templateDeleted(String name) {
     return '“$name” 삭제됨';
   }
+
+  @override
+  String get addVideoFromGallery => '갤러리에서 동영상';
+
+  @override
+  String get addYouTubeVideo => 'YouTube 동영상';
+
+  @override
+  String get addYouTubeVideoSubtitle => '메모 안에서 재생, 작은 창으로 시청';
+
+  @override
+  String get youTubeLinkHelp =>
+      'YouTube 동영상 링크를 붙여넣으세요(youtube.com 또는 youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'YouTube 동영상 링크가 아닙니다';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      '이 기기에서는 앱 안에서 동영상을 재생할 수 없습니다. 브라우저에서 열 수 있습니다.';
+
+  @override
+  String get youTubeOpenExternal => 'YouTube에서 열기';
+
+  @override
+  String get pictureInPicture => 'PIP 모드';
+
+  @override
+  String get pinMediaTop => '위에 고정';
+
+  @override
+  String get pinMediaRelease => '놓기: 위에 고정(아래에 메모)';
+
+  @override
+  String get unpinMedia => '페이지로 되돌리기';
+
+  @override
+  String get unpinMediaRelease => '놓기: 페이지로 되돌리기';
+
+  @override
+  String get pinnedMediaResize => '창 높이 — 드래그하여 변경';
 }

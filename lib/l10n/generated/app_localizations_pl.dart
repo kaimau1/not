@@ -4377,4 +4377,46 @@ class AppLocalizationsPl extends AppLocalizations {
   String templateDeleted(String name) {
     return 'Usunięto „$name”';
   }
+
+  @override
+  String get addVideoFromGallery => 'Film z galerii';
+
+  @override
+  String get addYouTubeVideo => 'Film z YouTube';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'Odtwarza się w notatce, oglądaj w małym oknie';
+
+  @override
+  String get youTubeLinkHelp =>
+      'Wklej link do filmu z YouTube (youtube.com lub youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'To nie jest link do filmu z YouTube';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'Na tym urządzeniu nie można odtworzyć filmu w aplikacji; można go otworzyć w przeglądarce.';
+
+  @override
+  String get youTubeOpenExternal => 'Otwórz w YouTube';
+
+  @override
+  String get pictureInPicture => 'Obraz w obrazie';
+
+  @override
+  String get pinMediaTop => 'Przypnij u góry';
+
+  @override
+  String get pinMediaRelease => 'Puść: przypnij u góry (notatka poniżej)';
+
+  @override
+  String get unpinMedia => 'Odłóż na stronę';
+
+  @override
+  String get unpinMediaRelease => 'Puść: odłóż na stronę';
+
+  @override
+  String get pinnedMediaResize => 'Wysokość panelu — przeciągnij, aby zmienić';
 }

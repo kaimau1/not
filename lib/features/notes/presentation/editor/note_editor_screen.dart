@@ -38,6 +38,7 @@ import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
+import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
 import '../../../ai/data/ai_gate.dart';
@@ -60,6 +61,8 @@ import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
 import '../../data/scan/scan_title.dart';
 import '../../data/user_templates.dart';
+import '../../data/video_frame.dart';
+import '../../data/web_video.dart';
 import '../../domain/attachment.dart';
 import '../../domain/note.dart';
 import '../../domain/list_convert.dart';
@@ -91,6 +94,7 @@ import 'format_menu.dart';
 import 'image_layout.dart';
 import 'items_editor.dart';
 import 'note_images.dart';
+import 'pinned_media_pane.dart';
 import '../archive_note_screen.dart';
 import 'note_menu_sheet.dart';
 import 'in_note_find.dart';
@@ -238,6 +242,10 @@ bool sameRenderedNote(Note a, Note b) {
         x.height != y.height ||
         x.downloadUrl != y.downloadUrl ||
         x.fileName != y.fileName ||
+        // Üste sabitleme/bölme yüksekliği ve YouTube bağlantısı da çizimi
+        // değiştirir — sayılmasaydı sabitlenen görsel ekranda yerinde kalırdı.
+        x.pinHeight != y.pinHeight ||
+        x.webUrl != y.webUrl ||
         !identical(x.ink, y.ink)) {
       return false;
     }
@@ -1802,7 +1810,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
-    if (!localFileExists(attachment.localPath) && !attachment.isUploaded) {
+    if (!localFileExists(attachment.localPath) &&
+        !attachment.isUploaded &&
+        !attachment.isWebVideo) {
       _showSnack(context.l10n.attachmentNotSynced);
       return;
     }
@@ -2899,6 +2909,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onCopyMany: _copyAttachments,
       onDetach: (a) => _setImageAsFile(a, true),
       onVideoToNote: _videoToNote,
+      onPinTop: _pinMediaTop,
+      onPinHover: _setPinHover,
       topLimit: _bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
@@ -3010,6 +3022,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         await _recordAudio();
       case 'video':
         await _addVideo();
+      case 'video-gallery':
+        await _addVideoFromGallery();
+      case 'youtube':
+        await _addYouTube();
       case 'paste':
         await _pasteImage();
       // 'color' BURADAN KALKTI: sayfa görünümü artık biçim şeridinde
@@ -4033,6 +4049,187 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     } catch (e) {
       if (mounted) _showSnack(l10n.attachmentFailed('$e'));
     }
+  }
+
+  /// GALERİDEN video (kullanıcı isteği 2026-10-11: "not içerisine video
+  /// koyma"). Kamera yolu gibi cihazda kalır ve sayfaya yerleşir; süre
+  /// sınırı YOK (o sınır yalnız AI'a gönderim içindi — uzun videoda
+  /// "videodan not çıkar" boyut uyarısını kendisi verir).
+  Future<void> _addVideoFromGallery() async {
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    try {
+      final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
+      if (picked == null || !mounted) return;
+      final attachment = await repo.prepareVideo(
+        noteId: widget.noteId,
+        sourcePath: picked.path,
+        duration: await VideoFrame.duration(picked.path),
+      );
+      if (!mounted) return;
+      _mutate(
+        (n) => n.copyWith(
+          attachments: [...n.attachments, _placeNewImage(attachment, n)],
+        ),
+        immediate: true,
+      );
+      _showSnack(l10n.videoLocalOnly);
+    } catch (e) {
+      if (mounted) _showSnack(l10n.attachmentFailed('$e'));
+    }
+  }
+
+  /// YOUTUBE videosu: bağlantı sorulur (panoda YouTube bağlantısı varsa hazır
+  /// gelir), video dosyasız bir ek olarak sayfaya yerleşir ve gömülü
+  /// oynatıcıda (resim içinde resim destekli) oynar. Başlık arka planda
+  /// YouTube'dan alınır; gelmezse ek "YouTube" adıyla kalır.
+  Future<void> _addYouTube() async {
+    final l10n = context.l10n;
+    String initial = '';
+    try {
+      final clip = await Clipboard.getData(Clipboard.kTextPlain);
+      initial = firstYouTubeUrl(clip?.text ?? '') ?? '';
+    } catch (_) {}
+    if (!mounted) return;
+    final url = await showDialog<String>(
+      context: context,
+      builder: (context) => _YouTubeLinkDialog(initial: initial),
+    );
+    if (url == null || !mounted) return;
+    final attachment = webVideoAttachment(url);
+    if (attachment == null) {
+      _showSnack(l10n.youTubeInvalidLink);
+      return;
+    }
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          ...n.attachments,
+          // Görsel gibi imlecin satırına (16:9 kutu); büyütmek köşe
+          // tutamağıyla. Genişliği burada büyütmek, konumu dar kutuya göre
+          // hesaplanmış kutuyu sayfa kenarından taşırırdı.
+          _placeNewImage(attachment, n),
+        ],
+      ),
+      immediate: true,
+    );
+    final title = await fetchYouTubeTitle(attachment.webUrl);
+    if (title == null || !mounted) return;
+    final current = _note?.attachments.where((a) => a.id == attachment.id);
+    if (current == null || current.isEmpty) return;
+    _updateAttachment(current.first.copyWith(fileName: title));
+  }
+
+  // ── ÜSTE SABİTLİ MEDYA ("üstte video/resim, altta not") ────────────────
+
+  /// Görsel sabitleme bölgesinin üstündeyken true: "Bırak" şeridi görünür.
+  bool _pinHover = false;
+
+  /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
+  /// olur: önceden sabitlenmiş olan sayfaya geri döner.
+  void _pinMediaTop(Attachment media) {
+    if (_pinHover) setState(() => _pinHover = false);
+    final height = defaultPinnedHeight(media, MediaQuery.sizeOf(context));
+    _dismissKeyboard();
+    _mutate(
+      (n) => n.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == media.id)
+              a.copyWith(pinHeight: height, asFile: false)
+            else if (a.pinHeight > 0)
+              a.copyWith(pinHeight: 0)
+            else
+              a,
+        ],
+      ),
+      immediate: true,
+    );
+    HapticFeedback.mediumImpact();
+  }
+
+  /// Sabit medyayı sayfaya geri koyar (imlecin satırına yerleşir).
+  void _unpinMedia(Attachment media) {
+    final note = _note;
+    if (note == null) return;
+    _updateAttachment(_placeNewImage(media.copyWith(pinHeight: 0), note));
+  }
+
+  /// Ek üstteki sabit bölmede mi çiziliyor (o zaman şeritte gösterilmez).
+  /// Belge notunda bölme yok — sabitli ek orada şeritte görünmeye devam eder.
+  /// İki cihazda aynı anda sabitlenmiş (çakışan) ikinci medya bölmede
+  /// gösterilmez; o da şeritte kalır, kaybolmaz.
+  bool _inPinnedPane(Note note, Attachment a) =>
+      a.isPinnedTop &&
+      !note.type.isPageNoteType &&
+      note.attachments.firstWhere((x) => x.isPinnedTop).id == a.id;
+
+  void _setPinHover(bool value) {
+    if (_pinHover != value && mounted) setState(() => _pinHover = value);
+  }
+
+  /// Gövdeyi (sayfa notu değilse) sabit medya bölmesi ve sürükleme sırasında
+  /// tepede beliren "Bırak: üste sabitle" şeridiyle sarar.
+  Widget _withPinnedMedia(Note note, Widget body) {
+    if (note.type.isPageNoteType) return body;
+    final pinned = note.attachments.where((a) => a.isPinnedTop).firstOrNull;
+    final content = pinned == null
+        ? body
+        : PinnedMediaPane(
+            media: pinned,
+            onHeightChanged: (h) =>
+                _updateAttachment(pinned.copyWith(pinHeight: h)),
+            onUnpin: () => _unpinMedia(pinned),
+            onOpen: () => _openAttachmentTag(pinned, editing: true),
+            child: body,
+          );
+    return Stack(
+      children: [
+        Positioned.fill(child: content),
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: IgnorePointer(
+            child: AnimatedSlide(
+              offset: _pinHover ? Offset.zero : const Offset(0, -1.2),
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOut,
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.vertical_align_top,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      context.l10n.pinMediaRelease,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   /// Videodan (görüntü + ses) detaylı not çıkarır ve gövdeye ekler.
@@ -5583,7 +5780,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [
       for (final a in (note?.attachments ?? const <Attachment>[]))
-        if (!a.floatsOnPage) a,
+        if (!a.floatsOnPage && !_inPinnedPane(note!, a)) a,
     ];
     final isDocumentNote =
         note != null &&
@@ -6172,7 +6369,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Önbellek her editör build'inde sıfırlanır (bkz. build başındaki
     // `_canvasCache = null`) — yani not değişimi ya da yeni görsel bir kare
     // bile gecikmeden görünür.
-    final body = note.type.isPageNoteType
+    final pageBody = note.type.isPageNoteType
         ? _pageNoteBody(note, keyedHeader, richTheme, noteBodyStyle)
         : LayoutBuilder(
             builder: (context, constraints) {
@@ -6196,6 +6393,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               return built;
             },
           );
+    final body = _withPinnedMedia(note, pageBody);
 
     // ALT ÇUBUK — Scaffold'ın `bottomNavigationBar` YUVASINDA DEĞİL,
     // gövdenin dibinde bir `Column` çocuğu.
@@ -6242,7 +6440,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 AttachmentStrip(
                   attachments: [
                     for (final a in note.attachments)
-                      if (!a.floatsOnPage) a,
+                      if (!a.floatsOnPage && !_inPinnedPane(note, a)) a,
                   ],
                   onRemove: _removeAttachment,
                   onChanged: _updateAttachment,
@@ -6971,6 +7169,63 @@ class _CleanCopySelectionAction extends Action<CopySelectionTextIntent> {
 /// olmalı"). Şerit alt çubuğun içinde durur; düğmeye basmak metin alanının
 /// odağını düşürse bile seçim denetleyicide korunuyor (bkz.
 /// `_finishPendingEmbed`).
+/// YouTube bağlantısı sorusu. Bağlantı geçerli bir VİDEO değilse "Ekle"
+/// kapalı kalır (kanal/oynatma listesi bağlantısı ek olamaz).
+class _YouTubeLinkDialog extends StatefulWidget {
+  const _YouTubeLinkDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_YouTubeLinkDialog> createState() => _YouTubeLinkDialogState();
+}
+
+class _YouTubeLinkDialogState extends State<_YouTubeLinkDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String? get _url => firstYouTubeUrl(_controller.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final url = _url;
+    return AlertDialog(
+      title: Text(l10n.addYouTubeVideo),
+      content: TextField(
+        controller: _controller,
+        autofocus: widget.initial.isEmpty,
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(
+          hintText: 'https://youtu.be/…',
+          helperText: l10n.youTubeLinkHelp,
+          helperMaxLines: 3,
+          prefixIcon: const Icon(Icons.smart_display_outlined),
+        ),
+        onChanged: (_) => setState(() {}),
+        onSubmitted: (_) {
+          if (_url != null) Navigator.pop(context, _url);
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: url == null ? null : () => Navigator.pop(context, url),
+          child: Text(l10n.addAttachment),
+        ),
+      ],
+    );
+  }
+}
+
 class _PendingEmbedBanner extends StatelessWidget {
   const _PendingEmbedBanner({
     required this.fileName,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,9 @@ import '../../../../core/utils/local_file.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/utils/pip.dart';
 import '../../domain/attachment.dart';
+import 'youtube_viewer.dart';
 
 /// Süreyi `s:sn` (bir saatten uzunsa `s:dd:sn`) olarak yazar.
 String formatVideoPosition(Duration d) {
@@ -20,18 +23,39 @@ String formatVideoPosition(Duration d) {
 /// Görüntülü notu uygulama içinde oynatır. Video yalnızca cihazda saklandığı
 /// için kaynak her zaman yerel dosyadır (buluta yüklenmez — bkz.
 /// [AttachmentRepository.prepareVideo]); dosya yoksa net bir uyarı gösterilir.
-class VideoViewerScreen extends StatefulWidget {
+///
+/// YouTube eki ([Attachment.isWebVideo]) gömülü oynatıcıya gider — videoyu
+/// açan her yer (sayfa, şerit, liste) aynı tek girişi kullanır.
+class VideoViewerScreen extends StatelessWidget {
   const VideoViewerScreen({super.key, required this.attachment});
 
   final Attachment attachment;
 
   @override
-  State<VideoViewerScreen> createState() => _VideoViewerScreenState();
+  Widget build(BuildContext context) => attachment.isWebVideo
+      ? YouTubeViewerScreen(attachment: attachment)
+      : _LocalVideoViewer(attachment: attachment);
 }
 
-class _VideoViewerScreenState extends State<VideoViewerScreen> {
+class _LocalVideoViewer extends StatefulWidget {
+  const _LocalVideoViewer({required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  State<_LocalVideoViewer> createState() => _LocalVideoViewerState();
+}
+
+class _LocalVideoViewerState extends State<_LocalVideoViewer> {
   VideoPlayerController? _controller;
   Object? _error;
+  bool _pipSupported = false;
+
+  /// Videonun en-boy oranı (PiP penceresi buna göre açılır).
+  Size get _aspect {
+    final size = _controller?.value.size;
+    return size == null || size.isEmpty ? const Size(16, 9) : size;
+  }
 
   /// Sürükleme sırasındaki geçici konum (ms). Sürüklerken oynatıcının kendi
   /// konumunu kullanmak kaydırıcıyı parmağın altından kaçırıyordu: her kare
@@ -59,6 +83,10 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
         return;
       }
       setState(() => _controller = controller);
+      // Oynarken ana ekrana çıkmak küçük pencereye alır (bkz. youtube_viewer).
+      unawaited(PictureInPicture.setAuto(true, aspect: _aspect));
+      final pip = await PictureInPicture.supported();
+      if (mounted) setState(() => _pipSupported = pip);
       await controller.play();
     } catch (e) {
       if (mounted) setState(() => _error = e);
@@ -67,6 +95,7 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
 
   @override
   void dispose() {
+    PictureInPicture.setAuto(false);
     _controller?.dispose();
     super.dispose();
   }
@@ -85,8 +114,27 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
       _seekTo(controller, controller.value.position + Duration(seconds: seconds));
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: PictureInPicture.active,
+    builder: (context, inPip, _) => _build(context, inPip),
+  );
+
+  Widget _build(BuildContext context, bool inPip) {
     final controller = _controller;
+    // KÜÇÜK PENCEREDE yalnız video: çubuklar dokunulamaz ve yer kaplar.
+    if (inPip && controller != null) {
+      return ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: controller.value.aspectRatio == 0
+                ? 16 / 9
+                : controller.value.aspectRatio,
+            child: VideoPlayer(controller),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -96,6 +144,14 @@ class _VideoViewerScreenState extends State<VideoViewerScreen> {
           widget.attachment.fileName,
           style: const TextStyle(fontSize: 14),
         ),
+        actions: [
+          if (_pipSupported && controller != null)
+            IconButton(
+              tooltip: context.l10n.pictureInPicture,
+              icon: const Icon(Icons.picture_in_picture_alt),
+              onPressed: () => PictureInPicture.enter(aspect: _aspect),
+            ),
+        ],
       ),
       body: Center(
         child: _error != null

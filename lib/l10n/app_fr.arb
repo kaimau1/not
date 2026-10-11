@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Les lignes commençant par « # » deviennent des titres, par « ## » des sous-titres.",
   "templateDiscardTitle": "Abandonner les modifications ?",
   "templateDiscard": "Abandonner",
-  "templateDeleted": "« {name} » supprimé"
+  "templateDeleted": "« {name} » supprimé",
+  "addVideoFromGallery": "Vidéo de la galerie",
+  "addYouTubeVideo": "Vidéo YouTube",
+  "addYouTubeVideoSubtitle": "Se lit dans la note, à regarder dans une petite fenêtre",
+  "youTubeLinkHelp": "Collez un lien de vidéo YouTube (youtube.com ou youtu.be).",
+  "youTubeInvalidLink": "Ce n'est pas un lien de vidéo YouTube",
+  "youTubeOpenInBrowserInfo": "La vidéo ne peut pas être lue dans l'app sur cet appareil ; elle peut être ouverte dans le navigateur.",
+  "youTubeOpenExternal": "Ouvrir dans YouTube",
+  "pictureInPicture": "Image dans l'image",
+  "pinMediaTop": "Épingler en haut",
+  "pinMediaRelease": "Relâchez : épingler en haut (note en dessous)",
+  "unpinMedia": "Remettre sur la page",
+  "unpinMediaRelease": "Relâchez : remettre sur la page",
+  "pinnedMediaResize": "Hauteur du volet — faites glisser pour la modifier"
 }

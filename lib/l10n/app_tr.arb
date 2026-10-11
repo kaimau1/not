@@ -1954,5 +1954,18 @@
         "type": "String"
       }
     }
-  }
+  },
+  "addVideoFromGallery": "Galeriden video",
+  "addYouTubeVideo": "YouTube videosu",
+  "addYouTubeVideoSubtitle": "Notta oynar, küçük pencerede izlenir",
+  "youTubeLinkHelp": "YouTube video bağlantısını yapıştır (youtube.com veya youtu.be).",
+  "youTubeInvalidLink": "Bu bir YouTube video bağlantısı değil",
+  "youTubeOpenInBrowserInfo": "Bu cihazda video uygulama içinde oynatılamıyor; tarayıcıda açılabilir.",
+  "youTubeOpenExternal": "YouTube'da aç",
+  "pictureInPicture": "Resim içinde resim",
+  "pinMediaTop": "Üste sabitle",
+  "pinMediaRelease": "Bırak: üste sabitle (altta not)",
+  "unpinMedia": "Sayfaya geri koy",
+  "unpinMediaRelease": "Bırak: sayfaya geri koy",
+  "pinnedMediaResize": "Bölme yüksekliği — sürükleyerek değiştir"
 }

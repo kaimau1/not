@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Las líneas que empiezan por “# ” son títulos; por “## ”, subtítulos.",
   "templateDiscardTitle": "¿Descartar los cambios?",
   "templateDiscard": "Descartar",
-  "templateDeleted": "“{name}” eliminada"
+  "templateDeleted": "“{name}” eliminada",
+  "addVideoFromGallery": "Vídeo de la galería",
+  "addYouTubeVideo": "Vídeo de YouTube",
+  "addYouTubeVideoSubtitle": "Se reproduce en la nota, míralo en una ventana pequeña",
+  "youTubeLinkHelp": "Pega un enlace de vídeo de YouTube (youtube.com o youtu.be).",
+  "youTubeInvalidLink": "Esto no es un enlace de vídeo de YouTube",
+  "youTubeOpenInBrowserInfo": "El vídeo no se puede reproducir en la app en este dispositivo; se puede abrir en el navegador.",
+  "youTubeOpenExternal": "Abrir en YouTube",
+  "pictureInPicture": "Imagen en imagen",
+  "pinMediaTop": "Fijar arriba",
+  "pinMediaRelease": "Suelta: fijar arriba (nota debajo)",
+  "unpinMedia": "Devolver a la página",
+  "unpinMediaRelease": "Suelta: devolver a la página",
+  "pinnedMediaResize": "Altura del panel: arrastra para cambiarla"
 }

@@ -4353,4 +4353,45 @@ class AppLocalizationsTr extends AppLocalizations {
   String templateDeleted(String name) {
     return '“$name” silindi';
   }
+
+  @override
+  String get addVideoFromGallery => 'Galeriden video';
+
+  @override
+  String get addYouTubeVideo => 'YouTube videosu';
+
+  @override
+  String get addYouTubeVideoSubtitle => 'Notta oynar, küçük pencerede izlenir';
+
+  @override
+  String get youTubeLinkHelp =>
+      'YouTube video bağlantısını yapıştır (youtube.com veya youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'Bu bir YouTube video bağlantısı değil';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'Bu cihazda video uygulama içinde oynatılamıyor; tarayıcıda açılabilir.';
+
+  @override
+  String get youTubeOpenExternal => 'YouTube\'da aç';
+
+  @override
+  String get pictureInPicture => 'Resim içinde resim';
+
+  @override
+  String get pinMediaTop => 'Üste sabitle';
+
+  @override
+  String get pinMediaRelease => 'Bırak: üste sabitle (altta not)';
+
+  @override
+  String get unpinMedia => 'Sayfaya geri koy';
+
+  @override
+  String get unpinMediaRelease => 'Bırak: sayfaya geri koy';
+
+  @override
+  String get pinnedMediaResize => 'Bölme yüksekliği — sürükleyerek değiştir';
 }

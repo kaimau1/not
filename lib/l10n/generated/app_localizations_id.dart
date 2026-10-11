@@ -4371,4 +4371,46 @@ class AppLocalizationsId extends AppLocalizations {
   String templateDeleted(String name) {
     return '“$name” dihapus';
   }
+
+  @override
+  String get addVideoFromGallery => 'Video dari galeri';
+
+  @override
+  String get addYouTubeVideo => 'Video YouTube';
+
+  @override
+  String get addYouTubeVideoSubtitle =>
+      'Diputar di catatan, tonton di jendela kecil';
+
+  @override
+  String get youTubeLinkHelp =>
+      'Tempel tautan video YouTube (youtube.com atau youtu.be).';
+
+  @override
+  String get youTubeInvalidLink => 'Ini bukan tautan video YouTube';
+
+  @override
+  String get youTubeOpenInBrowserInfo =>
+      'Video tidak dapat diputar di aplikasi pada perangkat ini; dapat dibuka di browser.';
+
+  @override
+  String get youTubeOpenExternal => 'Buka di YouTube';
+
+  @override
+  String get pictureInPicture => 'Gambar-dalam-gambar';
+
+  @override
+  String get pinMediaTop => 'Sematkan di atas';
+
+  @override
+  String get pinMediaRelease => 'Lepas: sematkan di atas (catatan di bawah)';
+
+  @override
+  String get unpinMedia => 'Kembalikan ke halaman';
+
+  @override
+  String get unpinMediaRelease => 'Lepas: kembalikan ke halaman';
+
+  @override
+  String get pinnedMediaResize => 'Tinggi panel — seret untuk mengubah';
 }

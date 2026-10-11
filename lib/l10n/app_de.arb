@@ -843,5 +843,18 @@
   "templateHeadingHelp": "Zeilen mit „# “ werden Überschriften, mit „## “ Unterüberschriften.",
   "templateDiscardTitle": "Änderungen verwerfen?",
   "templateDiscard": "Verwerfen",
-  "templateDeleted": "„{name}“ gelöscht"
+  "templateDeleted": "„{name}“ gelöscht",
+  "addVideoFromGallery": "Video aus Galerie",
+  "addYouTubeVideo": "YouTube-Video",
+  "addYouTubeVideoSubtitle": "Spielt in der Notiz, im kleinen Fenster ansehen",
+  "youTubeLinkHelp": "YouTube-Videolink einfügen (youtube.com oder youtu.be).",
+  "youTubeInvalidLink": "Das ist kein YouTube-Videolink",
+  "youTubeOpenInBrowserInfo": "Das Video kann auf diesem Gerät nicht in der App abgespielt werden; es kann im Browser geöffnet werden.",
+  "youTubeOpenExternal": "In YouTube öffnen",
+  "pictureInPicture": "Bild-im-Bild",
+  "pinMediaTop": "Oben anheften",
+  "pinMediaRelease": "Loslassen: oben anheften (Notiz darunter)",
+  "unpinMedia": "Zurück auf die Seite",
+  "unpinMediaRelease": "Loslassen: zurück auf die Seite",
+  "pinnedMediaResize": "Bereichshöhe – zum Ändern ziehen"
 }
