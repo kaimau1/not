@@ -115,6 +115,7 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
+import 'tag_tap.dart';
 import 'text_wrap.dart';
 
 bool get _isDesktop =>
@@ -426,6 +427,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// `.logicalText` üzerinden okunur (bkz. text_wrap.dart).
   final _bodyController = WrapTextController();
   final _bodyFocus = FocusNode();
+
+  /// Gövdeye yapılan son dokunuşun konumu (etiket önizlemesi, bkz.
+  /// [_tappedEmbed]).
+  final _bodyTapPoint = TapPointTracker();
 
   /// KÖK NEDEN (ölçüldü): `dispose()` içinde `ref` kullanmak bu Riverpod
   /// sürümünde "Using ref when a widget is about to or has been unmounted is
@@ -974,128 +979,129 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingYouTube = widget.startYouTube;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
-    _sub = ref.listenManual(owner == null
-        ? noteStreamProvider(widget.noteId)
-        : ownedNoteStreamProvider((ownerId: owner, noteId: widget.noteId)), (
-      previous,
-      next,
-    ) {
-      final incoming = next.value;
-      if (incoming == null) return;
-      if (_note == null) {
-        setState(() {
-          _note = incoming;
-          _titleController.text = incoming.title;
-          _bodyController.text = incoming.body;
-        });
-        // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
-        _runPendingIntents();
-      } else {
-        // Not BAŞKA yerden çöpe atıldı (geniş ekranda soldaki kartın menüsü
-        // ya da ikinci cihaz). Editör tam dokümanı `deletedAt: null` ile
-        // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
-        // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
-        // "Geri al" snackbar'ı zaten ekranda.
-        // `!_deleted` ŞART: editörün KENDİ silmesi de (softDelete + pop)
-        // gecikme telafisiyle buraya bir snapshot düşürür; bayrak olmadan
-        // dal ikinci kez tetiklenir ve context.pop() yığının tepesindeki
-        // ALTTAKİ rotayı (örn. Arşiv ekranını) düşürürdü.
-        if (incoming.deletedAt != null &&
-            _note!.deletedAt == null &&
-            !_deleted) {
-          _deleted = true;
-          _debouncer.cancel();
-          if (mounted && context.canPop()) context.pop();
-          return;
-        }
-        if (_deleted) return;
-        // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
-        // gerisi uzaktan benimsenir:
-        //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
-        //  - meta (sabit/yıldız/kilit/arşiv/klasör/etiket/renk/hatırlatıcı):
-        //    karttan ya da ikinci cihazdan yapılan değişiklik, editörün
-        //    tam-doküman kaydıyla sessizce GERİ ALINMASIN. Yereldeki meta
-        //    değişikliği kaybolmaz: Firestore gecikme telafisi yerel yazımı
-        //    akışa anında yansıtır, bayat snapshot gelmez.
-        final localTitle = _titleController.logicalText;
-        final localBody = _bodyController.logicalText;
-        // Kullanıcı bu oturumda HİÇ yazmadıysa içerik de benimsenir: notu
-        // yalnızca açıp bakan tarafta ikinci cihazın düzenlemesi canlı akar
-        // ve bayat taban tam-doküman kaydıyla onu ezemez.
-        final pristine =
-            !_undoStack.canUndo &&
-            !_debouncer.hasPending &&
-            localTitle == _note!.title &&
-            localBody == _note!.body;
-        // KÖK NEDEN (kasma): burada KOŞULSUZ `setState` vardı. Firestore
-        // gecikme telafisi yüzünden editörün KENDİ kaydı da anında bir
-        // anlık görüntü olarak geri düşer; yani yazarken (debounce 0,5 sn,
-        // en geç 3 sn) düzenli aralıklarla 4000 satırlık editör build'i —
-        // sayfa tuvali, sarma ölçümü, bütün madde satırları — boşuna
-        // yeniden koşuyordu. Oysa o yankıda çizimi değiştiren HİÇBİR ŞEY
-        // yok: alanlar zaten yerelden geldiği gibi. Artık yeni not nesnesi
-        // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
-        // (denetleyiciler ve `_note` yine güncel kalır).
-        final previous = _note!;
-        Note merged;
-        {
-          merged = previous.copyWith(
-            attachments: mergeAttachmentLayout(
-              local: _note!.attachments,
-              incoming: incoming.attachments,
-            ),
-            aiSummary: incoming.aiSummary,
-            pinned: incoming.pinned,
-            starred: incoming.starred,
-            locked: incoming.locked,
-            tags: incoming.tags,
-            color: incoming.color,
-            frameColor: incoming.frameColor,
-            folderId: incoming.folderId,
-            clearFolderId: incoming.folderId == null,
-            archivedAt: incoming.archivedAt,
-            clearArchivedAt: incoming.archivedAt == null,
-            reminderAt: incoming.reminderAt,
-            clearReminderAt: incoming.reminderAt == null,
-            // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
-            // solda sürükle-sırala yapıldığında editörün tam-doküman kaydı
-            // orderIndex'i geri almasın.
-            orderIndex: incoming.orderIndex,
-            fontFamily: incoming.fontFamily,
-            clearFontFamily: incoming.fontFamily == null,
-            fontScale: incoming.fontScale,
-            textOpacity: incoming.textOpacity,
-            titleFontFamily: incoming.titleFontFamily,
-            clearTitleFontFamily: incoming.titleFontFamily == null,
-            titleFontScale: incoming.titleFontScale,
-            titleTextOpacity: incoming.titleTextOpacity,
-            backgroundImageId: incoming.backgroundImageId,
-            clearBackgroundImage: incoming.backgroundImageId == null,
-            backgroundOpacity: incoming.backgroundOpacity,
-          );
-          if (pristine) {
-            merged = merged.copyWith(
-              title: incoming.title,
-              body: incoming.body,
-              items: incoming.items,
-              // Sayfa notları da içerik: bu oturumda hiç yazılmadıysa ikinci
-              // cihazın yazdığı sayfa notu canlı görünür. Yazılmışsa YEREL
-              // esastır (pristine false) — yankı gelen bayat harita, henüz
-              // kaydedilmemiş tuş vuruşlarını geri almasın.
-              pageNotes: incoming.pageNotes,
+    _sub = ref.listenManual(
+      owner == null
+          ? noteStreamProvider(widget.noteId)
+          : ownedNoteStreamProvider((ownerId: owner, noteId: widget.noteId)),
+      (previous, next) {
+        final incoming = next.value;
+        if (incoming == null) return;
+        if (_note == null) {
+          setState(() {
+            _note = incoming;
+            _titleController.text = incoming.title;
+            _bodyController.text = incoming.body;
+          });
+          // Not eline geçti: bekleyen sesli not/çizim niyeti şimdi çalışır.
+          _runPendingIntents();
+        } else {
+          // Not BAŞKA yerden çöpe atıldı (geniş ekranda soldaki kartın menüsü
+          // ya da ikinci cihaz). Editör tam dokümanı `deletedAt: null` ile
+          // yazdığından, kalan tek harflik bir yazım bile notu çöpten sessizce
+          // DİRİLTİYORDU. Kayıt durdurulur ve editör kapatılır — kart menüsünün
+          // "Geri al" snackbar'ı zaten ekranda.
+          // `!_deleted` ŞART: editörün KENDİ silmesi de (softDelete + pop)
+          // gecikme telafisiyle buraya bir snapshot düşürür; bayrak olmadan
+          // dal ikinci kez tetiklenir ve context.pop() yığının tepesindeki
+          // ALTTAKİ rotayı (örn. Arşiv ekranını) düşürürdü.
+          if (incoming.deletedAt != null &&
+              _note!.deletedAt == null &&
+              !_deleted) {
+            _deleted = true;
+            _debouncer.cancel();
+            if (mounted && context.canPop()) context.pop();
+            return;
+          }
+          if (_deleted) return;
+          // Editör açıkken YAZILAN alanlar (başlık/gövde/maddeler) yerel esastır;
+          // gerisi uzaktan benimsenir:
+          //  - ekler: yükleme/AI alanları düzen korunarak birleştirilir,
+          //  - meta (sabit/yıldız/kilit/arşiv/klasör/etiket/renk/hatırlatıcı):
+          //    karttan ya da ikinci cihazdan yapılan değişiklik, editörün
+          //    tam-doküman kaydıyla sessizce GERİ ALINMASIN. Yereldeki meta
+          //    değişikliği kaybolmaz: Firestore gecikme telafisi yerel yazımı
+          //    akışa anında yansıtır, bayat snapshot gelmez.
+          final localTitle = _titleController.logicalText;
+          final localBody = _bodyController.logicalText;
+          // Kullanıcı bu oturumda HİÇ yazmadıysa içerik de benimsenir: notu
+          // yalnızca açıp bakan tarafta ikinci cihazın düzenlemesi canlı akar
+          // ve bayat taban tam-doküman kaydıyla onu ezemez.
+          final pristine =
+              !_undoStack.canUndo &&
+              !_debouncer.hasPending &&
+              localTitle == _note!.title &&
+              localBody == _note!.body;
+          // KÖK NEDEN (kasma): burada KOŞULSUZ `setState` vardı. Firestore
+          // gecikme telafisi yüzünden editörün KENDİ kaydı da anında bir
+          // anlık görüntü olarak geri düşer; yani yazarken (debounce 0,5 sn,
+          // en geç 3 sn) düzenli aralıklarla 4000 satırlık editör build'i —
+          // sayfa tuvali, sarma ölçümü, bütün madde satırları — boşuna
+          // yeniden koşuyordu. Oysa o yankıda çizimi değiştiren HİÇBİR ŞEY
+          // yok: alanlar zaten yerelden geldiği gibi. Artık yeni not nesnesi
+          // kurulur, çizimi etkileyen bir fark yoksa `setState` ATLANIR
+          // (denetleyiciler ve `_note` yine güncel kalır).
+          final previous = _note!;
+          Note merged;
+          {
+            merged = previous.copyWith(
+              attachments: mergeAttachmentLayout(
+                local: _note!.attachments,
+                incoming: incoming.attachments,
+              ),
+              aiSummary: incoming.aiSummary,
+              pinned: incoming.pinned,
+              starred: incoming.starred,
+              locked: incoming.locked,
+              tags: incoming.tags,
+              color: incoming.color,
+              frameColor: incoming.frameColor,
+              folderId: incoming.folderId,
+              clearFolderId: incoming.folderId == null,
+              archivedAt: incoming.archivedAt,
+              clearArchivedAt: incoming.archivedAt == null,
+              reminderAt: incoming.reminderAt,
+              clearReminderAt: incoming.reminderAt == null,
+              // Sıra ve görünüm ayarları da uzaktan benimsenir: geniş ekranda
+              // solda sürükle-sırala yapıldığında editörün tam-doküman kaydı
+              // orderIndex'i geri almasın.
+              orderIndex: incoming.orderIndex,
+              fontFamily: incoming.fontFamily,
+              clearFontFamily: incoming.fontFamily == null,
+              fontScale: incoming.fontScale,
+              textOpacity: incoming.textOpacity,
+              titleFontFamily: incoming.titleFontFamily,
+              clearTitleFontFamily: incoming.titleFontFamily == null,
+              titleFontScale: incoming.titleFontScale,
+              titleTextOpacity: incoming.titleTextOpacity,
+              backgroundImageId: incoming.backgroundImageId,
+              clearBackgroundImage: incoming.backgroundImageId == null,
+              backgroundOpacity: incoming.backgroundOpacity,
             );
-            if (incoming.title != localTitle) {
-              _titleController.text = incoming.title;
-            }
-            if (incoming.body != localBody) {
-              _bodyController.text = incoming.body;
+            if (pristine) {
+              merged = merged.copyWith(
+                title: incoming.title,
+                body: incoming.body,
+                items: incoming.items,
+                // Sayfa notları da içerik: bu oturumda hiç yazılmadıysa ikinci
+                // cihazın yazdığı sayfa notu canlı görünür. Yazılmışsa YEREL
+                // esastır (pristine false) — yankı gelen bayat harita, henüz
+                // kaydedilmemiş tuş vuruşlarını geri almasın.
+                pageNotes: incoming.pageNotes,
+              );
+              if (incoming.title != localTitle) {
+                _titleController.text = incoming.title;
+              }
+              if (incoming.body != localBody) {
+                _bodyController.text = incoming.body;
+              }
             }
           }
+          _note = merged;
+          if (!sameRenderedNote(previous, merged)) setState(() {});
         }
-        _note = merged;
-        if (!sameRenderedNote(previous, merged)) setState(() {});
-      }
-    }, fireImmediately: true);
+      },
+      fireImmediately: true,
+    );
   }
 
   /// Bekleyen kaydı ERTELEMEDEN yazar; metin alanlarındaki en güncel içerik
@@ -1522,9 +1528,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // değişmiyor, kullanıcı "eklenmedi" sanıyordu.
     final visibleTop = _pageScroll.hasClients ? _pageScroll.offset + 24 : null;
     final anchor = _caretPageY ?? visibleTop ?? (_bodyTop + 24);
-    final aspect = (image.width != null &&
-            image.height != null &&
-            image.height! > 0)
+    final aspect =
+        (image.width != null && image.height != null && image.height! > 0)
         ? image.width! / image.height!
         : 1.0;
     final w = pageWidth * width;
@@ -1805,65 +1810,39 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _appendPlainText(code);
   }
 
-  /// Gövdedeki seçimin/imlecin üzerinde durduğu bağlantı (yoksa null).
-  /// Alanın metni sarma çapaları içerdiğinden konum önce mantıksal metne
-  /// çevrilir — çapalar sayılmasa adres sınırları kayardı.
-  String? _selectedLink() {
-    final selection = _bodyController.selection;
-    if (!selection.isValid) return null;
-    return linkAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-    );
-  }
-
-  /// Gövdedeki imlecin üzerinde durduğu EK ETİKETİ (yoksa null).
-  /// Bağlantı aramanın ([_selectedLink]) ek karşılığı; konum aynı gerekçeyle
-  /// önce mantıksal metne çevrilir.
-  Attachment? _selectedAttachmentTag() {
-    final note = _note;
-    final selection = _bodyController.selection;
-    if (note == null || !selection.isValid) return null;
-    // Hem dosya adları HEM seçili yazıdan kurulan bağların etiketleri
-    // (eskiden yalnız dosya adları aranıyordu: "kelimeye gömülü PDF" seçim
-    // menüsünde hiç tanınmıyordu — gömmenin "doğru çalışmıyor" hâli).
-    final name = attachmentTagAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
-    );
-    if (name == null) return null;
-    return _attachmentForTag(note, name);
-  }
+  // Gövdenin imleç altındaki bağlantı/etiket sorguları seçim menüsünün
+  // ortak kurucusuna taşındı (bkz. [_selectionMenu]) — madde satırları da
+  // aynı yolu kullanıyor.
 
   /// Gövdede DOKUNULAN etiket (imleç etiketin İÇİNDE — sınırlar hariç, bkz.
   /// [attachmentTagInside]) ve bağlı olduğu ek.
-  ({String label, Attachment attachment})? _tappedEmbed() {
+  ///
+  /// Sınırda (son harfin sağ yarısı) dokunuşun KONUMUNA bakılır — bkz.
+  /// [tappedAttachmentTag].
+  ({String label, Attachment attachment})? _tappedEmbed(
+    EditableTextState? editable,
+  ) {
     final note = _note;
     final selection = _bodyController.selection;
     if (note == null || !selection.isValid || !selection.isCollapsed) {
       return null;
     }
-    final tag = attachmentTagInside(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
+    final tag = tappedAttachmentTag(
+      logicalText: _bodyController.logicalText,
+      logicalCaret: wrapToLogicalOffset(
+        _bodyController.text,
+        selection.baseOffset,
+      ),
+      displayText: _bodyController.text,
+      selection: selection,
+      names: _bodyController.attachmentNames,
+      editable: editable,
+      tapGlobal: _bodyTapPoint.last,
     );
     if (tag == null) return null;
     final attachment = _attachmentForTag(note, tag.fileName);
     if (attachment == null) return null;
     return (label: tag.fileName, attachment: attachment);
-  }
-
-  /// İmlecin üzerinde durduğu etiketin YAZISI (seçim menüsü için).
-  String? _labelForAttachmentAtCaret() {
-    final selection = _bodyController.selection;
-    if (!selection.isValid) return null;
-    return attachmentTagAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
-    );
   }
 
   /// Etiket metninden eke: önce SEÇİLİ METİNDEN kurulan bağlar
@@ -2014,7 +1993,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           maxHeight: 2400,
         );
         if (file == null || !mounted) return null;
-        return _addImageBytes(await file.readAsBytes(), file.name, asFile: true);
+        return _addImageBytes(
+          await file.readAsBytes(),
+          file.name,
+          asFile: true,
+        );
       case 'video':
         return _addVideoFromGallery(asFile: true);
       case 'youtube':
@@ -2312,129 +2295,180 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Seçilen kelimenin başına ataç konur ve metnin kendisi etiket olur;
   /// hangi eke gittiği nota [Note.tagLinks] olarak yazılır. Metne gizli
   /// kimlik GÖMÜLMEZ — gerekçesi orada.
-  Future<void> _embedIntoSelection(EditableTextState state) async {
-    final selection = _bodyController.selection;
+  ///
+  /// [target] verilirse seçim O ALANDA (madde satırı); verilmezse gövdede.
+  Future<void> _embedIntoSelection(
+    WrapTextController controller, {
+    FormatTarget? target,
+  }) async {
+    final selection = controller.selection;
     if (!selection.isValid || selection.isCollapsed) return;
-    final logical = _bodyController.logicalText;
+    final logical = controller.logicalText;
     final start = wrapToLogicalOffset(
-      _bodyController.text,
+      controller.text,
       selection.start,
     ).clamp(0, logical.length);
     final end = wrapToLogicalOffset(
-      _bodyController.text,
+      controller.text,
       selection.end,
     ).clamp(start, logical.length);
-    await _embedRange(start, end);
+    if (target == null) {
+      await _embedRange(start, end);
+      return;
+    }
+    final range = trimmedRange(logical, start, end);
+    if (range == null) return;
+    final label = logical.substring(range.start, range.end);
+    final chosen = await _pickEmbedTarget(label: label);
+    if (chosen == null || !mounted) return;
+    // Seçici açıkken satırın metni değiştiyse (silindi, eşitlendi) gömülmez.
+    final now = controller.logicalText;
+    if (range.end <= now.length &&
+        now.substring(range.start, range.end) == label) {
+      _applyEmbed(
+        label: label,
+        attachment: chosen,
+        start: range.start,
+        end: range.end,
+        target: target,
+      );
+    }
   }
 
-  /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
-  /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
-  /// platformun kendi listesinden gelir.
-  Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) {
-    // Kes/Kopyala temiz-metin sürümleriyle değiştirilir: varsayılanları
-    // panoya biçim işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını
-    // HAM olarak yazıyordu — dışarı yapıştıran kullanıcı çöp görüyordu.
-    final items = cleanClipboardMenuItems(state);
-    // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş noktası
-    // SEÇİM çubuğu — biçim zaten "şu metne" uygulanır; ayrı bir düğme olsaydı
-    // önce seçimi hatırlaması gerekirdi (klavye kapanınca seçim düşüyor).
-    if (!state.textEditingValue.selection.isCollapsed) {
-      items.add(
-        ContextMenuButtonItem(
-          label: context.l10n.formatMenu,
-          onPressed: () {
-            state.hideToolbar();
-            showFormatSheet(
-              context,
-              controller: _bodyController,
-              onApplied: () => _mutate(
-                (n) => n.copyWith(body: _bodyController.logicalText),
-                immediate: true,
-              ),
-            );
-          },
+  /// Gövdenin seçim menüsü (bkz. [_selectionMenu]).
+  Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) =>
+      _selectionMenu(
+        state,
+        _bodyController,
+        commit: () => _mutate(
+          (n) => n.copyWith(body: _bodyController.logicalText),
+          immediate: true,
         ),
       );
+
+  /// GÖVDE ve MADDE SATIRLARININ ortak seçim menüsü (kullanıcı bulgusu
+  /// 2026-10-15: "metin seçim mantığı ve kalitesi düzeltilmeli" — madde
+  /// satırında ek gömme, etiket önizleme ve bağlantıyı aç hiç yoktu; sıra
+  /// için bkz. [arrangeSelectionMenu]).
+  ///
+  /// [target] madde satırında alanın kendisi (gömme oraya yazılır); gövdede
+  /// null. [trailing] alanın kendi ek seçenekleri (Tüm notu kopyala).
+  Widget _selectionMenu(
+    EditableTextState state,
+    WrapTextController controller, {
+    required VoidCallback commit,
+    FormatTarget? target,
+    List<ContextMenuButtonItem> trailing = const [],
+  }) {
+    final l10n = context.l10n;
+    final selection = state.textEditingValue.selection;
+    final hasSelection = selection.isValid && !selection.isCollapsed;
+    final note = _note;
+    final logical = controller.logicalText;
+    final caret = selection.isValid
+        ? wrapToLogicalOffset(
+            controller.text,
+            selection.baseOffset,
+          ).clamp(0, logical.length)
+        : -1;
+    final url = caret < 0 ? null : linkAt(logical, caret);
+    final tagLabel = caret < 0 || note == null
+        ? null
+        : attachmentTagAt(logical, caret, controller.attachmentNames);
+    final tagged = tagLabel == null ? null : _attachmentForTag(note!, tagLabel);
+    void run(VoidCallback action) {
+      state.hideToolbar();
+      action();
     }
-    // EK ETİKETİ (kullanıcı isteği 2026-08-16): imleç "📎 rapor.pdf"in
-    // üzerindeyse önizleme ve düzenleme buradan açılır.
-    // BAĞLAMA KİPİ açıksa ilk madde odur: kullanıcı yazıyı yeni seçti,
-    // yapacağı tek iş bağlamak.
-    if (_pendingEmbed != null &&
-        !state.textEditingValue.selection.isCollapsed) {
-      items.insert(
-        0,
+
+    final leading = <ContextMenuButtonItem>[
+      // BAĞLAMA KİPİ açıksa ilk madde odur: kullanıcı yazıyı yeni seçti,
+      // yapacağı tek iş bağlamak.
+      if (_pendingEmbed != null && hasSelection)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagLinkHere,
-          onPressed: () {
-            state.hideToolbar();
-            _finishPendingEmbed();
-          },
+          label: l10n.attachmentTagLinkHere,
+          onPressed: () => run(_finishPendingEmbed),
         ),
-      );
-    }
-    // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
-    if (!state.textEditingValue.selection.isCollapsed &&
-        _selectedAttachmentTag() == null) {
-      items.insert(
-        0,
+      // İmleç bir EK ETİKETİNİN üstündeyse önizleme birinci iş.
+      if (tagged != null)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagEmbed,
-          onPressed: () {
-            state.hideToolbar();
-            unawaited(_embedIntoSelection(state));
-          },
+          label: l10n.attachmentTagPreview,
+          onPressed: () => run(() => _showEmbedPreviewFor(tagged, tagLabel!)),
         ),
-      );
-    }
-    final tagged = _selectedAttachmentTag();
-    if (tagged != null) {
-      items.insertAll(0, [
+      if (url != null)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagPreview,
-          onPressed: () {
-            state.hideToolbar();
-            final label = _labelForAttachmentAtCaret() ?? tagged.fileName;
-            _showEmbedPreviewFor(tagged, label);
-          },
-        ),
-        ContextMenuButtonItem(
-          label: context.l10n.attachmentTagEdit,
-          onPressed: () {
-            state.hideToolbar();
-            _openAttachmentTag(tagged, editing: true);
-          },
-        ),
-        ContextMenuButtonItem(
-          label: context.l10n.embedRemove,
-          onPressed: () {
-            state.hideToolbar();
-            final label = _labelForAttachmentAtCaret();
-            if (label != null) _unlinkEmbed(label);
-          },
-        ),
-      ]);
-    }
-    final url = _selectedLink();
-    if (url != null) {
-      items.insert(
-        0,
-        ContextMenuButtonItem(
-          label: context.l10n.openLink,
-          onPressed: () {
-            state.hideToolbar();
+          label: l10n.openLink,
+          onPressed: () => run(() {
             openLink(url).then((opened) {
-              if (!opened && mounted) _showSnack(context.l10n.linkOpenFailed);
+              if (!opened && mounted) _showSnack(l10n.linkOpenFailed);
             });
-          },
+          }),
         ),
-      );
-    }
+    ];
+    final afterClipboard = <ContextMenuButtonItem>[
+      // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş
+      // noktası SEÇİM çubuğu — biçim zaten "şu metne" uygulanır.
+      if (hasSelection)
+        ContextMenuButtonItem(
+          label: l10n.formatMenu,
+          onPressed: () => run(
+            () => showFormatSheet(
+              context,
+              controller: controller,
+              onApplied: commit,
+            ),
+          ),
+        ),
+      // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
+      if (hasSelection && tagged == null && !widget.readOnly)
+        ContextMenuButtonItem(
+          label: l10n.attachmentTagEmbed,
+          onPressed: () => run(
+            () => unawaited(_embedIntoSelection(controller, target: target)),
+          ),
+        ),
+      if (tagged != null) ...[
+        ContextMenuButtonItem(
+          label: l10n.attachmentTagEdit,
+          onPressed: () => run(() => _openAttachmentTag(tagged, editing: true)),
+        ),
+        ContextMenuButtonItem(
+          label: l10n.embedRemove,
+          onPressed: () => run(() => _unlinkEmbed(tagLabel!)),
+        ),
+      ],
+    ];
     return AdaptiveTextSelectionToolbar.buttonItems(
       anchors: state.contextMenuAnchors,
-      buttonItems: items,
+      buttonItems: arrangeSelectionMenu(
+        // Kes/Kopyala temiz-metin sürümleri: varsayılanlar panoya biçim
+        // işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını HAM
+        // yazıyordu — dışarı yapıştıran kullanıcı çöp görüyordu.
+        platform: cleanClipboardMenuItems(state),
+        leading: leading,
+        afterClipboard: afterClipboard,
+        trailing: trailing,
+      ),
     );
   }
+
+  /// Madde satırının seçim menüsü: gövdeyle aynı kurucu, gömme o satıra.
+  Widget _itemSelectionMenu(
+    EditableTextState state,
+    WrapTextController controller,
+    VoidCallback commit,
+    List<ContextMenuButtonItem> own,
+  ) => _selectionMenu(
+    state,
+    controller,
+    commit: commit,
+    target: FormatTarget(
+      controller: controller,
+      focusNode: state.widget.focusNode,
+      commit: commit,
+    ),
+    trailing: own,
+  );
 
   /// **ÇOKLU SEÇİM** (kullanıcı isteği 2026-08-09: "aynı anda birden fazla ek
   /// yüklenebilsin"): seçilen belgeler sırayla eklenir; biri hata verse
@@ -5243,7 +5277,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void _runFind({bool keepIndex = false, bool reveal = true}) {
     final l10n = context.l10n;
     final query = _findController.text.trim();
-    final previous = keepIndex && _findIndex >= 0 && _findIndex < _findHits.length
+    final previous =
+        keepIndex && _findIndex >= 0 && _findIndex < _findHits.length
         ? _findHits[_findIndex]
         : null;
     final hits = <_FindHit>[];
@@ -5272,7 +5307,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     scan(_titleController, _titleFocus, l10n.noteTitleLabel, Icons.title);
     final note = _note;
     if (note != null && !note.type.isPageNoteType) {
-      scan(_bodyController, _bodyFocus, l10n.noteBodyLabel, Icons.notes_outlined);
+      scan(
+        _bodyController,
+        _bodyFocus,
+        l10n.noteBodyLabel,
+        Icons.notes_outlined,
+      );
     }
     final items = _itemsEditorKey.currentState?.searchFields() ?? const [];
     for (var i = 0; i < items.length; i++) {
@@ -5319,9 +5359,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ..clear()
       ..addAll(byController.keys);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final hitColor = dark
-        ? const Color(0x80C28B00)
-        : const Color(0x66FFD54F);
+    final hitColor = dark ? const Color(0x80C28B00) : const Color(0x66FFD54F);
     final currentColor = dark
         ? const Color(0xFFE65100)
         : const Color(0xFFFFA726);
@@ -5368,8 +5406,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         return;
       }
       final position = _pageScroll.position;
-      final viewport = position.context.notificationContext
-          ?.findRenderObject();
+      final viewport = position.context.notificationContext?.findRenderObject();
       if (viewport is! RenderBox ||
           !viewport.hasSize ||
           !_isDescendantOf(editable, viewport)) {
@@ -5390,9 +5427,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       final rect = boxes.isEmpty
           ? editable.getLocalRectForCaret(TextPosition(offset: start))
           : boxes.first.toRect();
-      final top = editable
-          .localToGlobal(rect.topLeft, ancestor: viewport)
-          .dy;
+      final top = editable.localToGlobal(rect.topLeft, ancestor: viewport).dy;
       final height = viewport.size.height;
       if (top >= height * 0.12 && top + rect.height <= height * 0.8) return;
       final target = (position.pixels + top - height * 0.3).clamp(
@@ -6600,55 +6635,64 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
     // aynı controller/focus'u paylaşır. Madde varken kısalır (2 satır tabanı).
-    final bodyField = TextField(
-      controller: _bodyController,
-      focusNode: _bodyFocus,
-      readOnly: widget.readOnly,
-      // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
-      // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
-      style: noteBodyStyle,
-      // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
-      // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
-      // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
-      // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
-      strutStyle: wrapStrutStyle(noteBodyStyle),
-      onChanged: (value) =>
-          _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
-      maxLines: null,
-      minLines: note.items.isEmpty ? 8 : 2,
-      keyboardType: TextInputType.multiline,
-      // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
-      //
-      // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
-      // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
-      // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
-      // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
-      // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
-      // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
-      // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
-      // yazmaya devam etmektir, önizleme açmaz).
-      onTap: () {
-        final tapped = _tappedEmbed();
-        if (tapped != null) {
-          _showEmbedPreviewFor(tapped.attachment, tapped.label);
-        }
-      },
-      // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
-      // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
-      // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
-      contextMenuBuilder: (menuContext, editableState) =>
-          _bodyContextMenu(menuContext, editableState),
-      contentInsertionConfiguration: _keyboardImagePaste,
-      decoration: InputDecoration(
-        // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
-        hintText: useCanvasHint ? null : l10n.bodyHint,
-        filled: false,
-        border: InputBorder.none,
-        // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
-        // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
-        // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
-        // varsayılanına bırakılırsa üç yer sessizce ayrışır.
-        contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
+    // `Builder`: dokunuşta alanın KENDİ EditableText'i bulunur (başlığınki
+    // değil); sarmalayıcı dokunuşun konumunu tutar (bkz. [_tappedEmbed]).
+    final bodyField = Builder(
+      builder: (fieldContext) => _bodyTapPoint.wrap(
+        TextField(
+          controller: _bodyController,
+          focusNode: _bodyFocus,
+          readOnly: widget.readOnly,
+          // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
+          // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
+          style: noteBodyStyle,
+          // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
+          // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
+          // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
+          // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
+          strutStyle: wrapStrutStyle(noteBodyStyle),
+          onChanged: (value) =>
+              _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
+          maxLines: null,
+          minLines: note.items.isEmpty ? 8 : 2,
+          keyboardType: TextInputType.multiline,
+          // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
+          //
+          // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
+          // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
+          // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
+          // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
+          // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
+          // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
+          // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
+          // yazmaya devam etmektir, önizleme açmaz).
+          onTap: () {
+            final editable = editableTextBelow(fieldContext);
+            final tapped = _tappedEmbed(editable);
+            if (tapped != null) {
+              // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
+              editable?.hideToolbar();
+              _showEmbedPreviewFor(tapped.attachment, tapped.label);
+            }
+          },
+          // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
+          // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
+          // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
+          contextMenuBuilder: (menuContext, editableState) =>
+              _bodyContextMenu(menuContext, editableState),
+          contentInsertionConfiguration: _keyboardImagePaste,
+          decoration: InputDecoration(
+            // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
+            hintText: useCanvasHint ? null : l10n.bodyHint,
+            filled: false,
+            border: InputBorder.none,
+            // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
+            // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
+            // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
+            // varsayılanına bırakılırsa üç yer sessizce ayrışır.
+            contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
+          ),
+        ),
       ),
     );
 
@@ -6699,6 +6743,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
+        selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -6737,6 +6782,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
+        selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -6875,9 +6921,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                       : (a) => _setImageAsFile(a, false),
                   onVideoToNote: _videoToNote,
                   expanded: ref.watch(attachmentsExpandedProvider),
-                  onToggle: () => ref
-                      .read(attachmentsExpandedProvider.notifier)
-                      .toggle(),
+                  onToggle: () =>
+                      ref.read(attachmentsExpandedProvider.notifier).toggle(),
                 ),
                 // BAĞLAMA KİPİ şeridi: hangi dosyanın bağlanmayı
                 // beklediğini söyler ve seçilen yazıya bağlar.
@@ -7020,206 +7065,205 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                     onClose: _closeFind,
                   )
                 else ...[
-                // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
-                // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
-                // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
-                // alan).
-                Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.6),
-                ),
-                BottomAppBar(
-                  color: background,
-                  height: 64,
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final showSelect =
-                          !note.type.isPageNoteType &&
-                          note.items.isNotEmpty;
-                      final showAttachments = fileAttachments.isNotEmpty;
-                      // Genişliğe göre plan: taşma/kesik kapsül yerine önce
-                      // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
-                      // Ara/Paylaş kapsülden çıkar (bkz. planEditorBar).
-                      final plan = planEditorBar(
-                        width: constraints.maxWidth,
-                        fixedSegments: showSelect ? 3 : 2,
-                        attachments: showAttachments,
-                        pen: isDocumentNote,
-                      );
-                      return Row(
-                        children: [
-                          // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
-                          // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
-                          // Seç). Segmentler Keep gibi yalnız SİMGE olduğundan
-                          // dördü de en dar telefona sığar; kaydırma yalnız çok
-                          // büyük sistem yazı ölçeğinde devreye giren son çare.
-                          Expanded(
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Container(
-                                padding: const EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(13),
-                                  border: Border.all(
+                  // İnce ayraç: kaydırılan metnin son satırı çubuğun hemen
+                  // üstünde YARIM kesiliyordu ve çubuk sayfanın parçası gibi
+                  // görünüyordu (kullanıcının 2026-10-11'de işaretlediği alt
+                  // alan).
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                  BottomAppBar(
+                    color: background,
+                    height: 64,
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final showSelect =
+                            !note.type.isPageNoteType && note.items.isNotEmpty;
+                        final showAttachments = fileAttachments.isNotEmpty;
+                        // Genişliğe göre plan: taşma/kesik kapsül yerine önce
+                        // düğmeler küçülür, sonra ⋮ menüsünde de bulunan
+                        // Ara/Paylaş kapsülden çıkar (bkz. planEditorBar).
+                        final plan = planEditorBar(
+                          width: constraints.maxWidth,
+                          fixedSegments: showSelect ? 3 : 2,
+                          attachments: showAttachments,
+                          pen: isDocumentNote,
+                        );
+                        return Row(
+                          children: [
+                            // Kapsül YATAY KAYAR ve `Expanded` içinde: segment
+                            // sayısı nota göre değişiyor (Biçim + Ekle + Ekler +
+                            // Seç). Segmentler Keep gibi yalnız SİMGE olduğundan
+                            // dördü de en dar telefona sığar; kaydırma yalnız çok
+                            // büyük sistem yazı ölçeğinde devreye giren son çare.
+                            Expanded(
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.outlineVariant,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _toolSegment(
-                                      icon: Icons.text_format,
-                                      label: l10n.formatTitle,
-                                      active: _formatBarOpen,
-                                      onTap: () => setState(
-                                        () => _formatBarOpen =
-                                            !_formatBarOpen,
-                                      ),
+                                    ).colorScheme.surface,
+                                    borderRadius: BorderRadius.circular(13),
+                                    border: Border.all(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.outlineVariant,
                                     ),
-                                    const SizedBox(width: 3),
-                                    // "Metin ekle" / "Liste maddesi ekle" buradan
-                                    // Ekle levhasının en üst bölümüne taşındı: çubuk
-                                    // üç segmentle kalabalıktı ve ekleme işi iki ayrı
-                                    // yere bölünmüştü (bkz. attach_sheet.dart).
-                                    _addToolButton(l10n),
-                                    // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
-                                    // "seç burada olsun, yeni öğe eski yerinde"):
-                                    // toplu kopyalama/silme girişi bir tur ekranın
-                                    // dibinde yüzen bir düğmeydi ve alt paneli
-                                    // örtüyordu. Alt çubuğun segmenti olunca hem
-                                    // sayfanın neresinde olursak olalım görünür
-                                    // kalıyor hem hiçbir şeyi kapatmıyor.
-                                    // Madde yoksa gizli: seçilecek bir şey yok.
-                                    //
-                                    // SİMGE DEĞİŞTİ (kullanıcı bulgusu
-                                    // 2026-09-01: "alt alandaki seç işareti
-                                    // karışıyor, farklı bir simge
-                                    // kullanalım"): `checklist` simgesi tam
-                                    // yanındaki "Ekle" segmentinin açtığı
-                                    // "liste maddesi ekle" işiyle aynı
-                                    // resmi çiziyordu — ikisi de üç madde
-                                    // ve bir tik. `select_all` kesikli
-                                    // çerçevesiyle "toplu iş" anlamını
-                                    // taşır ve başka hiçbir düğmeye
-                                    // benzemez.
-                                    if (showSelect) ...[
-                                      const SizedBox(width: 3),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
                                       _toolSegment(
-                                        icon: Icons.select_all,
-                                        label: l10n.select,
-                                        onTap: () => _itemsEditorKey
-                                            .currentState
-                                            ?.startSelection(),
+                                        icon: Icons.text_format,
+                                        label: l10n.formatTitle,
+                                        active: _formatBarOpen,
+                                        onTap: () => setState(
+                                          () =>
+                                              _formatBarOpen = !_formatBarOpen,
+                                        ),
                                       ),
-                                    ],
-                                    // NOTTA ARA ve PAYLAŞ artık ⋮ menüsünün
-                                    // içinde saklı değil, alt çubukta
-                                    // (kullanıcı isteği 2026-09-01: "notta
-                                    // ara seçeneğini alt alana büyüteç
-                                    // işareti ile koyalım", "paylaş
-                                    // seçeneğini de alt alana koyalım").
-                                    // Menüdeki maddeleri KALDIRMADIK: aynı
-                                    // eylem iki yerden çalışır, alışkanlık
-                                    // bozulmaz.
-                                    if (plan.search) ...[
                                       const SizedBox(width: 3),
-                                      _toolSegment(
-                                        icon: Icons.search,
-                                        label: l10n.noteSearchTitle,
-                                        onTap: _openNoteSearch,
-                                      ),
+                                      // "Metin ekle" / "Liste maddesi ekle" buradan
+                                      // Ekle levhasının en üst bölümüne taşındı: çubuk
+                                      // üç segmentle kalabalıktı ve ekleme işi iki ayrı
+                                      // yere bölünmüştü (bkz. attach_sheet.dart).
+                                      _addToolButton(l10n),
+                                      // "SEÇ" BURADA (kullanıcı isteği 2026-08-09:
+                                      // "seç burada olsun, yeni öğe eski yerinde"):
+                                      // toplu kopyalama/silme girişi bir tur ekranın
+                                      // dibinde yüzen bir düğmeydi ve alt paneli
+                                      // örtüyordu. Alt çubuğun segmenti olunca hem
+                                      // sayfanın neresinde olursak olalım görünür
+                                      // kalıyor hem hiçbir şeyi kapatmıyor.
+                                      // Madde yoksa gizli: seçilecek bir şey yok.
+                                      //
+                                      // SİMGE DEĞİŞTİ (kullanıcı bulgusu
+                                      // 2026-09-01: "alt alandaki seç işareti
+                                      // karışıyor, farklı bir simge
+                                      // kullanalım"): `checklist` simgesi tam
+                                      // yanındaki "Ekle" segmentinin açtığı
+                                      // "liste maddesi ekle" işiyle aynı
+                                      // resmi çiziyordu — ikisi de üç madde
+                                      // ve bir tik. `select_all` kesikli
+                                      // çerçevesiyle "toplu iş" anlamını
+                                      // taşır ve başka hiçbir düğmeye
+                                      // benzemez.
+                                      if (showSelect) ...[
+                                        const SizedBox(width: 3),
+                                        _toolSegment(
+                                          icon: Icons.select_all,
+                                          label: l10n.select,
+                                          onTap: () => _itemsEditorKey
+                                              .currentState
+                                              ?.startSelection(),
+                                        ),
+                                      ],
+                                      // NOTTA ARA ve PAYLAŞ artık ⋮ menüsünün
+                                      // içinde saklı değil, alt çubukta
+                                      // (kullanıcı isteği 2026-09-01: "notta
+                                      // ara seçeneğini alt alana büyüteç
+                                      // işareti ile koyalım", "paylaş
+                                      // seçeneğini de alt alana koyalım").
+                                      // Menüdeki maddeleri KALDIRMADIK: aynı
+                                      // eylem iki yerden çalışır, alışkanlık
+                                      // bozulmaz.
+                                      if (plan.search) ...[
+                                        const SizedBox(width: 3),
+                                        _toolSegment(
+                                          icon: Icons.search,
+                                          label: l10n.noteSearchTitle,
+                                          onTap: _openNoteSearch,
+                                        ),
+                                      ],
+                                      if (plan.share) ...[
+                                        const SizedBox(width: 3),
+                                        _toolSegment(
+                                          icon: Icons.share_outlined,
+                                          label: l10n.share,
+                                          onTap: () => unawaited(_share()),
+                                        ),
+                                      ],
+                                      // EKLER düğmesi: şeridin kendi başlık satırı
+                                      // kalktı, aç/kapa buraya taşındı (kullanıcı
+                                      // isteği 2026-08-08 — "ekler yazısı ve göster
+                                      // gizlesi alt alana gelsin, bir satır alan
+                                      // kurtarmış oluruz").
+                                      if (showAttachments) ...[
+                                        const SizedBox(width: 3),
+                                        _attachmentsToggle(
+                                          l10n,
+                                          fileAttachments.length,
+                                        ),
+                                      ],
                                     ],
-                                    if (plan.share) ...[
-                                      const SizedBox(width: 3),
-                                      _toolSegment(
-                                        icon: Icons.share_outlined,
-                                        label: l10n.share,
-                                        onTap: () => unawaited(_share()),
-                                      ),
-                                    ],
-                                    // EKLER düğmesi: şeridin kendi başlık satırı
-                                    // kalktı, aç/kapa buraya taşındı (kullanıcı
-                                    // isteği 2026-08-08 — "ekler yazısı ve göster
-                                    // gizlesi alt alana gelsin, bir satır alan
-                                    // kurtarmış oluruz").
-                                    if (showAttachments) ...[
-                                      const SizedBox(width: 3),
-                                      _attachmentsToggle(
-                                        l10n,
-                                        fileAttachments.length,
-                                      ),
-                                    ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          // PDF/sunum notunda KALEM alt çubukta: tam ekrana
-                          // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
-                          // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
-                          // boşluk).
-                          if (isDocumentNote) ...[
-                            _penToolButton(l10n),
                             const SizedBox(width: 8),
-                          ],
-                          // AI + SES TEK KAPSÜLDE (kullanıcı isteği
-                          // 2026-10-11: "işaretli alanlar mantıklı biçimde
-                          // düzenlenmeli"). Üç ayrı gölgeli kare düğme
-                          // çubuğun yarısını kaplıyor, soldaki araç
-                          // kapsülüyle iki farklı dil konuşuyordu. Şimdi
-                          // çubuk İKİ GRUP: solda düzenleme araçları (yüzey
-                          // renginde), sağda yapay zekâ ve ses (vurgu
-                          // renginde). Simgeler ve ipuçları aynı: parıltı =
-                          // AI levhası, parıltılı mikrofon = AI ile sesli
-                          // not, sade mikrofon = düz dikte (bkz.
-                          // [_toggleDictation]).
-                          _aiCapsule(
-                            segment: plan.button,
-                            gap: plan.gap,
-                            children: [
-                              _voiceButton(
-                                size: plan.button,
-                                tooltip: l10n.aiTitle,
-                                icon: Icons.auto_awesome,
-                                onTap: () => showAiSheet(
-                                  context,
-                                  note,
-                                  onAppendText: _appendText,
-                                  onReplaceText: _replaceText,
-                                  onCreateNote: _createNoteFromText,
-                                ),
-                              ),
-                              _voiceButton(
-                                size: plan.button,
-                                tooltip: l10n.voiceCaptureAi,
-                                icon: Icons.mic_none,
-                                badge: Icons.auto_awesome,
-                                onTap: _captureVoice,
-                              ),
-                              _voiceButton(
-                                size: plan.button,
-                                tooltip: l10n.liveDictation,
-                                icon: _dictating ? Icons.stop : Icons.mic,
-                                active: _dictating,
-                                onTap: () => unawaited(_toggleDictation()),
-                              ),
+                            // PDF/sunum notunda KALEM alt çubukta: tam ekrana
+                            // geçmeden sayfanın üzerine yazılabilsin (kullanıcı
+                            // isteği 2026-08-08 — ekran görüntüsünde işaretlenen
+                            // boşluk).
+                            if (isDocumentNote) ...[
+                              _penToolButton(l10n),
+                              const SizedBox(width: 8),
                             ],
-                          ),
-                        ],
-                      );
-                    },
+                            // AI + SES TEK KAPSÜLDE (kullanıcı isteği
+                            // 2026-10-11: "işaretli alanlar mantıklı biçimde
+                            // düzenlenmeli"). Üç ayrı gölgeli kare düğme
+                            // çubuğun yarısını kaplıyor, soldaki araç
+                            // kapsülüyle iki farklı dil konuşuyordu. Şimdi
+                            // çubuk İKİ GRUP: solda düzenleme araçları (yüzey
+                            // renginde), sağda yapay zekâ ve ses (vurgu
+                            // renginde). Simgeler ve ipuçları aynı: parıltı =
+                            // AI levhası, parıltılı mikrofon = AI ile sesli
+                            // not, sade mikrofon = düz dikte (bkz.
+                            // [_toggleDictation]).
+                            _aiCapsule(
+                              segment: plan.button,
+                              gap: plan.gap,
+                              children: [
+                                _voiceButton(
+                                  size: plan.button,
+                                  tooltip: l10n.aiTitle,
+                                  icon: Icons.auto_awesome,
+                                  onTap: () => showAiSheet(
+                                    context,
+                                    note,
+                                    onAppendText: _appendText,
+                                    onReplaceText: _replaceText,
+                                    onCreateNote: _createNoteFromText,
+                                  ),
+                                ),
+                                _voiceButton(
+                                  size: plan.button,
+                                  tooltip: l10n.voiceCaptureAi,
+                                  icon: Icons.mic_none,
+                                  badge: Icons.auto_awesome,
+                                  onTap: _captureVoice,
+                                ),
+                                _voiceButton(
+                                  size: plan.button,
+                                  tooltip: l10n.liveDictation,
+                                  icon: _dictating ? Icons.stop : Icons.mic,
+                                  active: _dictating,
+                                  onTap: () => unawaited(_toggleDictation()),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
                 ],
               ],
             ),
@@ -7259,280 +7303,281 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             if (!didPop && _findOpen) _closeFind();
           },
           child: Scaffold(
-          backgroundColor: background,
-          // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
-          // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
-          // görselli/uzun notlarda ve PDF bölmesinde yalnızca bu yeniden
-          // ölçüm bile takılma yaratıyor. Boşluk aşağıda, gövdenin
-          // dolgusundan veriliyor ve bir açılış/kapanışta EN ÇOK BİR KEZ
-          // değişiyor; çubuğun klavyeyle birlikte akan hareketi ise
-          // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
-          resizeToAvoidBottomInset: false,
-          appBar: AppBar(
             backgroundColor: background,
-            // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
-            // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
-            // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
-            // menüsüne taşındığı için durum bir yerde görünmeliydi.
-            titleSpacing: 0,
-            title: note.updatedAt == null
-                ? null
-                : Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          DateFormat('d MMM y HH:mm').format(note.updatedAt!),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w500,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+            // **KASMA — klavye boşluğu artık KARARLI** (bkz. [KeyboardSnap]).
+            // Scaffold gövdeyi klavye animasyonunun HER karesinde kısaltıyordu;
+            // görselli/uzun notlarda ve PDF bölmesinde yalnızca bu yeniden
+            // ölçüm bile takılma yaratıyor. Boşluk aşağıda, gövdenin
+            // dolgusundan veriliyor ve bir açılış/kapanışta EN ÇOK BİR KEZ
+            // değişiyor; çubuğun klavyeyle birlikte akan hareketi ise
+            // [KeyboardSlide] ile yalnız boyama katmanında yapılıyor.
+            resizeToAvoidBottomInset: false,
+            appBar: AppBar(
+              backgroundColor: background,
+              // Başlık yerinde düzenleme tarihi: notun kendi başlığı zaten gövdenin
+              // en üstünde duruyor, üst barda ikinci kez göstermek yer harcıyordu.
+              // Sabitlenmiş/yıldızlı göstergesi tarihin yanında — düğmeler ⋯
+              // menüsüne taşındığı için durum bir yerde görünmeliydi.
+              titleSpacing: 0,
+              title: note.updatedAt == null
+                  ? null
+                  : Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            DateFormat('d MMM y HH:mm').format(note.updatedAt!),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      ),
-                      if (note.starred) ...[
-                        const SizedBox(width: 6),
-                        Icon(
-                          Icons.star,
-                          size: 14,
-                          color: Colors.amber.shade600,
-                        ),
+                        if (note.starred) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.star,
+                            size: 14,
+                            color: Colors.amber.shade600,
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
+              actions: [
+                // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
+                // `pendingWrites` her kayıtta false→true→false gidiyor, yani
+                // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla
+                // 4000 satırlık editör build'i BAŞTAN koşuyordu — üstelik
+                // tetikleyici Riverpod olduğu için `_mutate`'in "saf yazım"
+                // kısayolu ve akış yankısı koruması ikisi de devreye giremiyordu.
+                // Abonelik artık yalnız BU İKONA ait.
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 4),
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final owner = widget.ownerId;
+                      final pending =
+                          ref
+                              .watch(
+                                owner == null
+                                    ? pendingWritesProvider(widget.noteId)
+                                    : ownedPendingWritesProvider((
+                                        ownerId: owner,
+                                        noteId: widget.noteId,
+                                      )),
+                              )
+                              .value ??
+                          false;
+                      // Yalnız bu cihazdaki not: bulut simgesi yerine telefon.
+                      if (owner == null &&
+                          (ref
+                                  .read(notesRepositoryProvider)
+                                  ?.isLocal(widget.noteId) ??
+                              false)) {
+                        return Tooltip(
+                          message: l10n.localOnlyBadge,
+                          child: Icon(
+                            Icons.cloud_off_outlined,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                        );
+                      }
+                      return Tooltip(
+                        message: pending ? l10n.syncPending : l10n.synced,
+                        child: Icon(
+                          pending
+                              ? Icons.cloud_upload_outlined
+                              : Icons.cloud_done_outlined,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant
+                              .withValues(alpha: pending ? 0.9 : 0.5),
+                        ),
+                      );
+                    },
                   ),
-            actions: [
-              // KÖK NEDEN (kasma): bu akış `build`'in en başında izleniyordu.
-              // `pendingWrites` her kayıtta false→true→false gidiyor, yani
-              // yazarken (debounce 0,5 sn / en geç 3 sn) düzenli aralıklarla
-              // 4000 satırlık editör build'i BAŞTAN koşuyordu — üstelik
-              // tetikleyici Riverpod olduğu için `_mutate`'in "saf yazım"
-              // kısayolu ve akış yankısı koruması ikisi de devreye giremiyordu.
-              // Abonelik artık yalnız BU İKONA ait.
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: 4),
-                child: Consumer(
+                ),
+                // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
+                // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
+                // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
+                // oynamasın.
+                // SABİTLEME üst barda, AÇIK düğme olarak (kullanıcı isteği:
+                // "sabitleme butonunu açığa koy görülsün"). ⋯ menüsündeyken hem
+                // bulunması hem durumunun okunması iki dokunuş istiyordu;
+                // başlıktaki küçük raptiye göstergesi yalnız DURUMU söylüyor,
+                // dokunulabilir değil.
+                // **ORTAK ÇALIŞAN** (kullanıcı isteği 2026-09-22: "ortak not
+                // butonu keepteki gibi"). Keep'teki yeri: notun kendi
+                // araçlarının yanında, tek dokunuşla. Paylaşılmışsa simge
+                // doluya döner ve kişi sayısını rozetle gösterir — notun
+                // başkalarına açık olduğu, menüye girmeden görünsün.
+                // Abonelik yalnız bu düğmede (bkz. yukarıdaki kasma notu).
+                // SIRA (2026-10-11 düzeni): önce DÜZENLEME geçmişi (geri al /
+                // yinele, yan yana), sonra notun durumu (sabitle, ortak
+                // çalışan), en sağda ⋮. Eskiden geri al, raptiye ile hesap
+                // makinesinin arasına sıkışmıştı.
+                IconButton(
+                  tooltip: l10n.undo,
+                  icon: const Icon(Icons.undo),
+                  onPressed: _canUndo ? _undo : null,
+                ),
+                // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
+                // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
+                if (_canRedo)
+                  IconButton(
+                    tooltip: l10n.redo,
+                    icon: const Icon(Icons.redo),
+                    onPressed: _redo,
+                  ),
+                Consumer(
                   builder: (context, ref, _) {
                     final owner = widget.ownerId;
-                    final pending =
-                        ref
-                            .watch(
-                              owner == null
-                                  ? pendingWritesProvider(widget.noteId)
-                                  : ownedPendingWritesProvider((
-                                      ownerId: owner,
-                                      noteId: widget.noteId,
-                                    )),
-                            )
-                            .value ??
-                        false;
-                    // Yalnız bu cihazdaki not: bulut simgesi yerine telefon.
+                    final count = owner == null
+                        ? ref.watch(
+                            myNoteSharesProvider.select(
+                              (m) =>
+                                  m.value?[widget.noteId]?.sharedWith.length ??
+                                  0,
+                            ),
+                          )
+                        : 1;
+                    // Yalnız bu cihazdaki not kimseyle paylaşılamaz.
                     if (owner == null &&
                         (ref
                                 .read(notesRepositoryProvider)
                                 ?.isLocal(widget.noteId) ??
                             false)) {
-                      return Tooltip(
-                        message: l10n.localOnlyBadge,
-                        child: Icon(
-                          Icons.cloud_off_outlined,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.tertiary,
-                        ),
-                      );
+                      return const SizedBox.shrink();
                     }
-                    return Tooltip(
-                      message: pending ? l10n.syncPending : l10n.synced,
-                      child: Icon(
-                        pending
-                            ? Icons.cloud_upload_outlined
-                            : Icons.cloud_done_outlined,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant
-                            .withValues(alpha: pending ? 0.9 : 0.5),
+                    return IconButton(
+                      tooltip: count > 0
+                          ? l10n.collaboratorsCount(count)
+                          : l10n.collaborators,
+                      icon: Badge(
+                        isLabelVisible: owner == null && count > 0,
+                        label: Text('$count'),
+                        child: Icon(
+                          count > 0
+                              ? Icons.people_alt
+                              : Icons.person_add_alt_1_outlined,
+                        ),
+                      ),
+                      onPressed: () => showCollaboratorsSheet(
+                        context,
+                        ref,
+                        noteId: widget.noteId,
+                        ownerId: owner,
                       ),
                     );
                   },
                 ),
-              ),
-              // Geri al: son değişikliği (yazma dizisi, madde işaretleme, görsel
-              // taşıma, AI ile değiştirme...) tek dokunuşta iptal eder. Yığın
-              // boşken pasif durur — düğmenin yerini korur ki araç çubuğu
-              // oynamasın.
-              // SABİTLEME üst barda, AÇIK düğme olarak (kullanıcı isteği:
-              // "sabitleme butonunu açığa koy görülsün"). ⋯ menüsündeyken hem
-              // bulunması hem durumunun okunması iki dokunuş istiyordu;
-              // başlıktaki küçük raptiye göstergesi yalnız DURUMU söylüyor,
-              // dokunulabilir değil.
-              // **ORTAK ÇALIŞAN** (kullanıcı isteği 2026-09-22: "ortak not
-              // butonu keepteki gibi"). Keep'teki yeri: notun kendi
-              // araçlarının yanında, tek dokunuşla. Paylaşılmışsa simge
-              // doluya döner ve kişi sayısını rozetle gösterir — notun
-              // başkalarına açık olduğu, menüye girmeden görünsün.
-              // Abonelik yalnız bu düğmede (bkz. yukarıdaki kasma notu).
-              // SIRA (2026-10-11 düzeni): önce DÜZENLEME geçmişi (geri al /
-              // yinele, yan yana), sonra notun durumu (sabitle, ortak
-              // çalışan), en sağda ⋮. Eskiden geri al, raptiye ile hesap
-              // makinesinin arasına sıkışmıştı.
-              IconButton(
-                tooltip: l10n.undo,
-                icon: const Icon(Icons.undo),
-                onPressed: _canUndo ? _undo : null,
-              ),
-              // Yinele yalnız kullanılabilirken görünür: yanlış "Geri al"dan
-              // dönüş yolu. Sürekli görünse araç çubuğunda ölü yer kaplardı.
-              if (_canRedo)
                 IconButton(
-                  tooltip: l10n.redo,
-                  icon: const Icon(Icons.redo),
-                  onPressed: _redo,
+                  tooltip: note.pinned ? l10n.unpin : l10n.pin,
+                  isSelected: note.pinned,
+                  icon: Icon(
+                    note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                  ),
+                  onPressed: () => _mutate(
+                    (n) => n.copyWith(pinned: !n.pinned),
+                    immediate: true,
+                  ),
                 ),
-              Consumer(
-                builder: (context, ref, _) {
-                  final owner = widget.ownerId;
-                  final count = owner == null
-                      ? ref.watch(
-                          myNoteSharesProvider.select(
-                            (m) =>
-                                m.value?[widget.noteId]?.sharedWith.length ?? 0,
-                          ),
-                        )
-                      : 1;
-                  // Yalnız bu cihazdaki not kimseyle paylaşılamaz.
-                  if (owner == null &&
-                      (ref
-                              .read(notesRepositoryProvider)
-                              ?.isLocal(widget.noteId) ??
-                          false)) {
-                    return const SizedBox.shrink();
-                  }
-                  return IconButton(
-                    tooltip: count > 0
-                        ? l10n.collaboratorsCount(count)
-                        : l10n.collaborators,
-                    icon: Badge(
-                      isLabelVisible: owner == null && count > 0,
-                      label: Text('$count'),
-                      child: Icon(
-                        count > 0
-                            ? Icons.people_alt
-                            : Icons.person_add_alt_1_outlined,
-                      ),
-                    ),
-                    onPressed: () => showCollaboratorsSheet(
-                      context,
-                      ref,
-                      noteId: widget.noteId,
-                      ownerId: owner,
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                tooltip: note.pinned ? l10n.unpin : l10n.pin,
-                isSelected: note.pinned,
-                icon: Icon(
-                  note.pinned ? Icons.push_pin : Icons.push_pin_outlined,
+                // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
+                // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
+                // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
+                // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
+                // barın başlık alanındaki göstergelerden okunuyor.
+                // ⋮ artık açılır menü değil, iki sütunlu levha açar
+                // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
+                IconButton(
+                  tooltip: l10n.noteMetaMenu,
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: _openNoteMenu,
                 ),
-                onPressed: () => _mutate(
-                  (n) => n.copyWith(pinned: !n.pinned),
-                  immediate: true,
-                ),
-              ),
-              // HESAP MAKİNESİ ⋮ menüsünün hızlı satırında (2026-10-11):
-              // üst çubuk notun DURUMUNA ayrıldı — geri al/yinele, sabitle,
-              // ortak çalışan. Araçlar ⋮'te ve alt çubukta.
-              // Yıldız ve sabitleme düğmeleri ⋯ menüsüne taşındı; durumları üst
-              // barın başlık alanındaki göstergelerden okunuyor.
-              // ⋮ artık açılır menü değil, iki sütunlu levha açar
-              // (bkz. note_menu_sheet.dart — kullanıcı isteği 2026-08-09).
-              IconButton(
-                tooltip: l10n.noteMetaMenu,
-                icon: const Icon(Icons.more_vert),
-                onPressed: _openNoteMenu,
-              ),
-            ],
-          ),
-          // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
-          //
-          // ALT ÇUBUK GÖVDENİN İÇİNDE (bkz. aşağıdaki `_bottomBar` yorumu):
-          // `bottomNavigationBar` yuvasındayken yüksekliği klavyeyle
-          // büyüyordu ve bu, Scaffold'ı her animasyon karesinde yeniden
-          // yerleştiriyordu.
-          //
-          // `SafeArea(bottom: false)`: alt güvenli alanı BİLEREK uygulanmaz.
-          // Çubuk `bottomNavigationBar` yuvasındayken Scaffold gövdeden alt
-          // dolguyu zaten kaldırıyordu (çubuk aşağıda duruyordu); yuva
-          // boşalınca dolgu geri gelir ve sayfa alanı sebepsiz kısalırdı.
-          // Görünüm birebir korunur.
-          body: KeyboardSnap(
-            // Klavye durup gövde oturduktan sonra odaklı alanı görünür kıl —
-            // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
-            // kendi imleç kaydırması bu işi yapamaz (bkz. [KeyboardSnap]).
-            onSettled: (inset) {
-              _keyboardInset = inset;
-              if (inset <= 0) return;
-              _keyboardMemory = inset;
-              // Tahmin tuttuysa bu geçiş hiçbir şey yapmaz (imleç zaten
-              // görünür); tutmadıysa farkı burada kapatır.
-              _revealCaret();
-            },
-            builder: (context, keyboardInset) => Padding(
-              padding: EdgeInsets.only(bottom: keyboardInset),
-              child: Column(
-                children: [
-                  Expanded(
-                    child: SafeArea(
-                      bottom: false,
-                      child: _withBackground(
-                        note,
-                        bgImage,
-                        note.frameColor == NoteColor.none
-                            ? body
-                            : Container(
-                                margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(
-                                    color: NoteColors.swatch(note.frameColor),
-                                    width: 2.5,
+              ],
+            ),
+            // Renkli çerçeve: seçiliyse editör içeriğini saran ince renkli kenarlık.
+            //
+            // ALT ÇUBUK GÖVDENİN İÇİNDE (bkz. aşağıdaki `_bottomBar` yorumu):
+            // `bottomNavigationBar` yuvasındayken yüksekliği klavyeyle
+            // büyüyordu ve bu, Scaffold'ı her animasyon karesinde yeniden
+            // yerleştiriyordu.
+            //
+            // `SafeArea(bottom: false)`: alt güvenli alanı BİLEREK uygulanmaz.
+            // Çubuk `bottomNavigationBar` yuvasındayken Scaffold gövdeden alt
+            // dolguyu zaten kaldırıyordu (çubuk aşağıda duruyordu); yuva
+            // boşalınca dolgu geri gelir ve sayfa alanı sebepsiz kısalırdı.
+            // Görünüm birebir korunur.
+            body: KeyboardSnap(
+              // Klavye durup gövde oturduktan sonra odaklı alanı görünür kıl —
+              // gövde animasyon boyunca bilerek kısaltılmadığı için Flutter'ın
+              // kendi imleç kaydırması bu işi yapamaz (bkz. [KeyboardSnap]).
+              onSettled: (inset) {
+                _keyboardInset = inset;
+                if (inset <= 0) return;
+                _keyboardMemory = inset;
+                // Tahmin tuttuysa bu geçiş hiçbir şey yapmaz (imleç zaten
+                // görünür); tutmadıysa farkı burada kapatır.
+                _revealCaret();
+              },
+              builder: (context, keyboardInset) => Padding(
+                padding: EdgeInsets.only(bottom: keyboardInset),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SafeArea(
+                        bottom: false,
+                        child: _withBackground(
+                          note,
+                          bgImage,
+                          note.frameColor == NoteColor.none
+                              ? body
+                              : Container(
+                                  margin: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: NoteColors.swatch(note.frameColor),
+                                      width: 2.5,
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: body,
                                   ),
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: body,
-                                ),
-                              ),
+                        ),
                       ),
                     ),
-                  ),
-                  // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt
-                  // çubuğu ekranın dibinde bırakır — yani klavye açıkken alt
-                  // çubuğun tamamı (biçim çubuğu dahil) klavyenin ALTINDA
-                  // kalıyordu ve kullanılamıyordu ("düzenleme alanı güzel ama
-                  // altta olduğu için klavyenin altında kalıyor"). Çubuk klavye
-                  // kadar yukarı kaldırılır; böylece "Aa" düğmesi de yazarken
-                  // erişilebilir olur — biçim çubuğunu açmak için klavyeyi
-                  // kapatmak, kapatınca da seçimi kaybetmek gerekmez.
-                  //
-                  // ZIPLAMA + KASMA — HAREKET İLE YERLEŞİM AYRILDI (kullanıcı
-                  // bulgusu 2026-08-22: "klavye açılıp kapanırken bu alan
-                  // kayıyor"). Çubuk klavyeyle birlikte KARE KARE kayar ama
-                  // yalnız BOYAMA katmanında ([KeyboardSlide] → `Transform`);
-                  // gövdenin yerleşimi ise animasyon boyunca hiç değişmez,
-                  // klavye durunca TEK SEFERDE oturur (bkz. [KeyboardSnap]).
-                  // Eskiden ikisi de aynı kademeli değerden besleniyordu:
-                  // yerleşim azalmıştı ama çubuk 96 dp'lik sıçramalarla
-                  // yukarı çıkıyordu — kullanıcının gördüğü zıplama buydu.
-                  if (bottomBar != null)
-                    KeyboardSlide(inset: keyboardInset, child: bottomBar),
-                ],
+                    // KLAVYE: Scaffold yalnız GÖVDEYİ klavyeye göre kısaltır, alt
+                    // çubuğu ekranın dibinde bırakır — yani klavye açıkken alt
+                    // çubuğun tamamı (biçim çubuğu dahil) klavyenin ALTINDA
+                    // kalıyordu ve kullanılamıyordu ("düzenleme alanı güzel ama
+                    // altta olduğu için klavyenin altında kalıyor"). Çubuk klavye
+                    // kadar yukarı kaldırılır; böylece "Aa" düğmesi de yazarken
+                    // erişilebilir olur — biçim çubuğunu açmak için klavyeyi
+                    // kapatmak, kapatınca da seçimi kaybetmek gerekmez.
+                    //
+                    // ZIPLAMA + KASMA — HAREKET İLE YERLEŞİM AYRILDI (kullanıcı
+                    // bulgusu 2026-08-22: "klavye açılıp kapanırken bu alan
+                    // kayıyor"). Çubuk klavyeyle birlikte KARE KARE kayar ama
+                    // yalnız BOYAMA katmanında ([KeyboardSlide] → `Transform`);
+                    // gövdenin yerleşimi ise animasyon boyunca hiç değişmez,
+                    // klavye durunca TEK SEFERDE oturur (bkz. [KeyboardSnap]).
+                    // Eskiden ikisi de aynı kademeli değerden besleniyordu:
+                    // yerleşim azalmıştı ama çubuk 96 dp'lik sıçramalarla
+                    // yukarı çıkıyordu — kullanıcının gördüğü zıplama buydu.
+                    if (bottomBar != null)
+                      KeyboardSlide(inset: keyboardInset, child: bottomBar),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       ),
     );
@@ -7678,37 +7723,37 @@ class _PendingEmbedBanner extends StatelessWidget {
           // hiç etkilemez, yalnız haber verir.
           onPointerDown: (_) => onPointerDown(),
           child: Material(
-          color: scheme.tertiaryContainer,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
-            child: Row(
-          children: [
-            Icon(Icons.link, size: 18, color: scheme.onTertiaryContainer),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                l10n.attachmentTagPendingBanner(fileName),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onTertiaryContainer,
-                ),
+            color: scheme.tertiaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
+              child: Row(
+                children: [
+                  Icon(Icons.link, size: 18, color: scheme.onTertiaryContainer),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.attachmentTagPendingBanner(fileName),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onTertiaryContainer,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onLink,
+                    child: Text(l10n.attachmentTagLinkHere),
+                  ),
+                  IconButton(
+                    tooltip: l10n.cancel,
+                    icon: const Icon(Icons.close, size: 18),
+                    color: scheme.onTertiaryContainer,
+                    onPressed: onCancel,
+                  ),
+                ],
               ),
             ),
-            TextButton(
-              onPressed: onLink,
-              child: Text(l10n.attachmentTagLinkHere),
-            ),
-            IconButton(
-              tooltip: l10n.cancel,
-              icon: const Icon(Icons.close, size: 18),
-              color: scheme.onTertiaryContainer,
-              onPressed: onCancel,
-            ),
-          ],
-            ),
           ),
-        ),
         ),
       ),
     );
@@ -7740,36 +7785,35 @@ class _AiBanner extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          LinearProgressIndicator(
-            minHeight: 2,
-            backgroundColor: scheme.secondaryContainer,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                Icon(icon, size: 18, color: scheme.onSecondaryContainer),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSecondaryContainer,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LinearProgressIndicator(
+              minHeight: 2,
+              backgroundColor: scheme.secondaryContainer,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: Row(
+                children: [
+                  Icon(icon, size: 18, color: scheme.onSecondaryContainer),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSecondaryContainer,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
   }
 }
-
 
 /// Canlı aramanın tek eşleşmesi: hangi alanda, tamponun neresinde.
 class _FindHit {

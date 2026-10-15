@@ -6,12 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
-import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
 import 'format_menu.dart';
+import 'tag_tap.dart';
 import 'text_wrap.dart';
 
 /// Yanlışlıkla işaretlenen öğenin "hemen geri alındı" sayıldığı süre.
@@ -138,6 +138,7 @@ class ItemsEditor extends StatefulWidget {
     this.onFieldDisposed,
     this.attachmentNames = const [],
     this.onAttachmentTag,
+    this.selectionMenu,
   });
 
   final List<NoteItem> items;
@@ -224,6 +225,19 @@ class ItemsEditor extends StatefulWidget {
   /// taşıdığı ad (bağ etiketi ya da dosya adı). Eki açmak editörün işi —
   /// görüntüleyiciler ve düzenleme geri çağrıları orada.
   final void Function(String fileName)? onAttachmentTag;
+
+  /// Madde satırının seçim menüsünü EDİTÖR kurar — gövdeyle AYNI seçenekler
+  /// ve AYNI sıra (ek göm, etiket önizle/düzenle/kaldır, bağlantıyı aç,
+  /// biçim; bkz. `arrangeSelectionMenu`). [own] madde editörünün kendi
+  /// seçenekleri (Tüm notu kopyala), menünün sonuna eklenir. [commit] alanın
+  /// metnini nota işler. null ise yalnız madde editörünün kendi menüsü.
+  final Widget Function(
+    EditableTextState state,
+    WrapTextController controller,
+    VoidCallback commit,
+    List<ContextMenuButtonItem> own,
+  )?
+  selectionMenu;
 
   @override
   State<ItemsEditor> createState() => ItemsEditorState();
@@ -344,20 +358,35 @@ class ItemsEditorState extends State<ItemsEditor> {
   /// İmleç bir EK ETİKETİNİN üstüne düştüyse çağıranı haberdar eder.
   /// Konum önce mantıksal metne çevrilir: alanın metni sarma çapaları
   /// taşıyabiliyor ve çapalar sayılırsa etiketin sınırları kayardı.
-  void _tapAttachmentTag(WrapTextController controller) {
+  void _tapAttachmentTag(
+    WrapTextController controller,
+    BuildContext fieldContext,
+  ) {
     final onTag = widget.onAttachmentTag;
     if (onTag == null || widget.attachmentNames.isEmpty) return;
     final selection = controller.selection;
     if (!selection.isValid) return;
-    // Etiketin İÇİNE dokunuş (sınırlar hariç): yanına imleç koymak yazmaya
-    // devam etmektir, önizleme açmaz (bkz. attachmentTagInside).
-    final tag = attachmentTagInside(
-      controller.logicalText,
-      wrapToLogicalOffset(controller.text, selection.baseOffset),
-      widget.attachmentNames,
+    // Etiketin İÇİNE dokunuş; sınırdaysa dokunuşun KONUMU etiketin
+    // kutusunda mı ona bakılır (bkz. tappedAttachmentTag — son harfe
+    // dokunmak imleci sınıra koyuyor, önizleme açılmıyordu).
+    final editable = editableTextBelow(fieldContext);
+    final tag = tappedAttachmentTag(
+      logicalText: controller.logicalText,
+      logicalCaret: wrapToLogicalOffset(controller.text, selection.baseOffset),
+      displayText: controller.text,
+      selection: selection,
+      names: widget.attachmentNames,
+      editable: editable,
+      tapGlobal: _tapPoint.last,
     );
-    if (tag != null) onTag(tag.fileName);
+    if (tag == null) return;
+    // Önizleme açılırken dokunuşun açtığı Yapıştır menüsü kalmasın.
+    editable?.hideToolbar();
+    onTag(tag.fileName);
   }
+
+  /// Madde alanlarına yapılan son dokunuşun konumu (bkz. [_tapAttachmentTag]).
+  final _tapPoint = TapPointTracker();
 
   void _exitSelection() {
     setState(() {
@@ -1238,24 +1267,9 @@ class ItemsEditorState extends State<ItemsEditor> {
     NoteItem item,
   ) {
     final l10n = context.l10n;
-    final buttonItems = <ContextMenuButtonItem>[
-      // Kes/Kopyala temiz-metin sürümü: varsayılanlar biçim işaretlerini ve
-      // sarma çapalarını panoya HAM yazıyordu (gövdeyle aynı gerekçe).
-      ...cleanClipboardMenuItems(editableState),
-      // Biçim (kalın/italik/altı çizili/renk) — gövde metniyle aynı yol.
-      if (!editableState.textEditingValue.selection.isCollapsed)
-        ContextMenuButtonItem(
-          label: l10n.formatMenu,
-          onPressed: () {
-            editableState.hideToolbar();
-            final controller = _controllerFor(item);
-            showFormatSheet(
-              context,
-              controller: controller,
-              onApplied: () => _updateText(item, controller.logicalText),
-            );
-          },
-        ),
+    final controller = _controllerFor(item);
+    void commit() => _updateText(item, controller.logicalText);
+    final own = [
       ContextMenuButtonItem(
         label: l10n.copyWholeNote,
         onPressed: () {
@@ -1264,6 +1278,31 @@ class ItemsEditorState extends State<ItemsEditor> {
         },
       ),
     ];
+    final external = widget.selectionMenu;
+    if (external != null) {
+      return external(editableState, controller, commit, own);
+    }
+    final buttonItems = arrangeSelectionMenu(
+      // Kes/Kopyala temiz-metin sürümü: varsayılanlar biçim işaretlerini ve
+      // sarma çapalarını panoya HAM yazıyordu (gövdeyle aynı gerekçe).
+      platform: cleanClipboardMenuItems(editableState),
+      afterClipboard: [
+        // Biçim (kalın/italik/altı çizili/renk) — gövde metniyle aynı yol.
+        if (!editableState.textEditingValue.selection.isCollapsed)
+          ContextMenuButtonItem(
+            label: l10n.formatMenu,
+            onPressed: () {
+              editableState.hideToolbar();
+              showFormatSheet(
+                context,
+                controller: controller,
+                onApplied: commit,
+              );
+            },
+          ),
+      ],
+      trailing: own,
+    );
     return AdaptiveTextSelectionToolbar.buttonItems(
       anchors: editableState.contextMenuAnchors,
       buttonItems: buttonItems,
@@ -1569,46 +1608,50 @@ class ItemsEditorState extends State<ItemsEditor> {
                                   strike,
                                 ),
                               );
-                        final field = TextField(
-                          controller: controller,
-                          focusNode: _focusFor(item),
-                          onChanged: (_) =>
-                              _updateText(item, controller.logicalText),
-                          contextMenuBuilder: (context, editableState) =>
-                              _contextMenu(context, editableState, item),
-                          contentInsertionConfiguration:
-                              widget.contentInsertion,
-                          // Varsayılan "next" davranışı odağı metin dışı bir
-                          // öğeye taşıyıp klavyeyi kapatıp açıyordu;
-                          // onEditingComplete onu bastırır, odak doğrudan
-                          // yeni öğeye geçer.
-                          onEditingComplete: () => _insertAfter(item),
-                          textInputAction: TextInputAction.next,
-                          // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
-                          // aynı kural (bkz. note_editor_screen `bodyField`):
-                          // düzenlenebilir alanda span'e tanıyıcı bağlanamaz
-                          // (dokunuş imleci taşımak için EditableText'e
-                          // gider), bu yüzden dokunuştan SONRA imlecin
-                          // nereye düştüğüne bakılır.
-                          onTap: () => _tapAttachmentTag(controller),
-                          // Tam göster modunda satır sarılıp büyür; "dokununca
-                          // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
-                          maxLines: widget.expandItems || focused ? null : 1,
-                          // Sarma planı bu stille hesaplanır; TextField'ın örtük
-                          // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
-                          // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
-                          style: fieldStyle,
-                          // Satır yüksekliği çıpası gövdeyle aynı yerden
-                          // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
-                          // ayrışmasın.
-                          strutStyle: wrapStrutStyle(fieldStyle),
-                          decoration: InputDecoration(
-                            hintText: l10n.newItemHint,
-                            filled: false,
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10,
+                        // Dokunuşun konumu tutulur (etiket önizlemesi,
+                        // bkz. _tapAttachmentTag); sarmalayıcı HEP ağaçta.
+                        final field = _tapPoint.wrap(
+                          TextField(
+                            controller: controller,
+                            focusNode: _focusFor(item),
+                            onChanged: (_) =>
+                                _updateText(item, controller.logicalText),
+                            contextMenuBuilder: (context, editableState) =>
+                                _contextMenu(context, editableState, item),
+                            contentInsertionConfiguration:
+                                widget.contentInsertion,
+                            // Varsayılan "next" davranışı odağı metin dışı bir
+                            // öğeye taşıyıp klavyeyi kapatıp açıyordu;
+                            // onEditingComplete onu bastırır, odak doğrudan
+                            // yeni öğeye geçer.
+                            onEditingComplete: () => _insertAfter(item),
+                            textInputAction: TextInputAction.next,
+                            // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
+                            // aynı kural (bkz. note_editor_screen `bodyField`):
+                            // düzenlenebilir alanda span'e tanıyıcı bağlanamaz
+                            // (dokunuş imleci taşımak için EditableText'e
+                            // gider), bu yüzden dokunuştan SONRA imlecin
+                            // nereye düştüğüne bakılır.
+                            onTap: () => _tapAttachmentTag(controller, context),
+                            // Tam göster modunda satır sarılıp büyür; "dokununca
+                            // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
+                            maxLines: widget.expandItems || focused ? null : 1,
+                            // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                            // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                            // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
+                            style: fieldStyle,
+                            // Satır yüksekliği çıpası gövdeyle aynı yerden
+                            // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
+                            // ayrışmasın.
+                            strutStyle: wrapStrutStyle(fieldStyle),
+                            decoration: InputDecoration(
+                              hintText: l10n.newItemHint,
+                              filled: false,
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         );
@@ -2337,7 +2380,6 @@ class _CheckPopState extends State<_CheckPop>
     super.dispose();
   }
 }
-
 
 /// "+ Yeni öğe" ile üst üste açılabilecek en çok boş öğe (bkz.
 /// [ItemsEditorState._addItem]).

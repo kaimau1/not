@@ -92,6 +92,37 @@ void main() {
     expect(opened, 'rapor.pdf');
   });
 
+  testWidgets('son harfin SAĞ yarısına dokunmak da önizleme açar', (
+    tester,
+  ) async {
+    // Kullanıcı bulgusu 2026-10-15 (ekran görüntüsü): gömülü kelimeye
+    // dokununca önizleme yerine "Yapıştır / Tümünü seç" menüsü çıkıyordu.
+    // Son harfin sağ yarısı imleci etiketin SINIRINA koyar; dokunuşun
+    // KONUMU etiketin kutusundaysa yine etikete dokunulmuştur.
+    String? opened;
+    await pumpRow(
+      tester,
+      names: ['rapor.pdf'],
+      onTag: (name) => opened = name,
+    );
+    final editable = tester
+        .state<EditableTextState>(find.byType(EditableText).first)
+        .renderEditable;
+    const text = '📎 rapor.pdf';
+    final last = editable.getBoxesForSelection(
+      const TextSelection(
+        baseOffset: text.length - 1,
+        extentOffset: text.length,
+      ),
+    ).single.toRect();
+    final point = editable.localToGlobal(
+      Offset(last.right - 1, last.center.dy),
+    );
+    await tester.tapAt(point);
+    await tester.pumpAndSettle();
+    expect(opened, 'rapor.pdf');
+  });
+
   testWidgets('etiketin SAĞINA dokunmak önizleme açmaz', (tester) async {
     String? opened;
     await pumpRow(
