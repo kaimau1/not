@@ -65,7 +65,11 @@ class NoteTagLink {
 /// Notun bir SAYFASI (bkz. [Note.textPages]). Etkin sayfanın girdisi boştur;
 /// içeriği notun kendi gövdesinde/maddelerindedir.
 class NoteTextPage {
-  const NoteTextPage({required this.id, this.body = '', this.items = const []});
+  const NoteTextPage({
+    required this.id,
+    this.body = '',
+    this.items = const [],
+  });
 
   /// '' = ilk sayfa (eski, bölümsüz görseller ona aittir).
   final String id;
@@ -415,8 +419,7 @@ class Note {
       // Diğer sayfalarda yazı varsa not boş değil (etkin sayfa boş olsa da).
       textPages.every(
         (p) =>
-            p.body.trim().isEmpty &&
-            p.items.every((i) => i.text.trim().isEmpty),
+            p.body.trim().isEmpty && p.items.every((i) => i.text.trim().isEmpty),
       ) &&
       attachments.isEmpty &&
       reminderAt == null;
@@ -740,7 +743,10 @@ class Note {
       attachments: [
         for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
-          Attachment.fromMap(Map<String, dynamic>.from(raw as Map), noteId: id),
+          Attachment.fromMap(
+            Map<String, dynamic>.from(raw as Map),
+            noteId: id,
+          ),
       ],
       tags: [
         for (final tag in (map['tags'] as List<dynamic>? ?? const []))

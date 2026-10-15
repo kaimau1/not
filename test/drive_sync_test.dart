@@ -100,6 +100,14 @@ void main() {
       expect(a.isSynced, isTrue);
       expect(syncedTo(a, UploadTarget.drive), isTrue);
       expect(syncedTo(a, UploadTarget.storage), isFalse);
+      // Storage'a önceden yüklenmiş eski ek Drive'a yeniden yüklenmez.
+      expect(
+        syncedTo(
+          a.copyWith(driveId: '', downloadUrl: 'https://x'),
+          UploadTarget.drive,
+        ),
+        isTrue,
+      );
       final map = Map<String, dynamic>.from(a.toMap())..remove('createdAt');
       expect(map['driveId'], 'drv1');
       expect(Attachment.fromMap(map).driveId, 'drv1');

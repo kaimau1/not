@@ -49,9 +49,14 @@ UploadTarget? uploadTargetFor({
 }
 
 /// Ek, [target] hedefinde ZATEN var mı.
+///
+/// Drive hedefinde Storage'a ÖNCEDEN yüklenmiş ek de "var" sayılır: eski
+/// ekler Firebase'de kalır ve her cihazdan okunmaya devam eder; Drive'a
+/// toplu taşıma (kullanıcının kotasından habersizce GB'larca yükleme)
+/// yapılmaz — yalnız YENİ ekler Drive'a gider.
 bool syncedTo(Attachment a, UploadTarget target) => switch (target) {
   UploadTarget.storage => a.isUploaded,
-  UploadTarget.drive => a.isInDrive,
+  UploadTarget.drive => a.isInDrive || a.isUploaded,
 };
 
 /// Benim paylaştığım notların ve klasörlerin kimlikleri — "bu notu başkası
@@ -425,9 +430,7 @@ class UploadQueue {
         jobs.add((note: note, attachment: attachment, target: target));
       }
     }
-    jobs.sort(
-      (a, b) => a.attachment.sizeBytes.compareTo(b.attachment.sizeBytes),
-    );
+    jobs.sort((a, b) => a.attachment.sizeBytes.compareTo(b.attachment.sizeBytes));
     await _runPool(jobs, (job) async {
       final note = job.note;
       final attachment = job.attachment;
@@ -448,9 +451,7 @@ class UploadQueue {
         // (üstel bekleme dolduysa) yeniden denenir.
         final attempts = (lastFailure?.attempts ?? 0) + 1;
         _lastFailure[key] = (at: DateTime.now(), attempts: attempts);
-        _ref
-            .read(uploadFailuresProvider.notifier)
-            .fail(attachment.id, attempts);
+        _ref.read(uploadFailuresProvider.notifier).fail(attachment.id, attempts);
         debugPrint('Ek yüklenemedi ($key): $e');
       } finally {
         _inFlight.remove(key);

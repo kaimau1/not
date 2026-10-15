@@ -1557,7 +1557,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       // ÜSTÜNE çıkabilsin (bkz.
                                       // [_kFabClearance]).
                                       const SliverToBoxAdapter(
-                                        child: SizedBox(height: _kFabClearance),
+                                        child: SizedBox(
+                                          height: _kFabClearance,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -1760,7 +1762,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           // **HESAP** (kullanıcı isteği 2026-08-18: "hesap seçeneklerini
           // ana sayfadaki sağ üstteki 3 noktaya da koy").
           MenuSection(l10n.menuSectionPeople, [
-            MenuAction('account', l10n.account, Icons.account_circle_outlined),
+            MenuAction(
+              'account',
+              l10n.account,
+              Icons.account_circle_outlined,
+            ),
             MenuAction('friends', l10n.friendsTitle, Icons.people_outline),
             MenuAction(
               'inbox',
@@ -1773,7 +1779,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           MenuSection(l10n.menuSectionHome, [
             MenuAction('folderOrder', l10n.folderOrderTitle, Icons.swap_vert),
             // Zemin görseli AYARLARDAN BURAYA taşındı (2026-08-16).
-            MenuAction('background', l10n.dashboardBackground, Icons.wallpaper),
+            MenuAction(
+              'background',
+              l10n.dashboardBackground,
+              Icons.wallpaper,
+            ),
             // Gizli klasörler yalnız gizli klasörü OLAN kullanıcıda.
             if (hasHiddenFolders)
               MenuAction(
@@ -3300,6 +3310,7 @@ class _DashVoiceButton extends StatelessWidget {
   }
 }
 
+
 /// **KAYDIRARAK HIZLI İŞLEM** (kullanıcı isteği 2026-09-23): liste
 /// görünümünde satırı sağa çekmek sabitler (ya da sabitlemeyi kaldırır),
 /// sola çekmek arşivler — geri alınabilir.
@@ -3393,6 +3404,7 @@ class _SwipeActions extends StatelessWidget {
     );
   }
 }
+
 
 /// **SENKRON BEKLEYEN EKLER** göstergesi (kullanıcı isteği 2026-09-23).
 ///
@@ -3491,6 +3503,7 @@ class _PendingUploadsBar extends ConsumerWidget {
     );
   }
 }
+
 
 /// Yatay şeritteki seçili çipi görünür alana kaydırır: yana çekişle ekran
 /// dışındaki bir klasöre gelinince şerit de oraya kayar.

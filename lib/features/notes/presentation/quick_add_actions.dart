@@ -91,7 +91,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (repo == null) return;
     // Klasör TEK yazımda: createNote + ayrı updateFields arasında doküman bir
     // an klasörsüz/boş kalıyordu (bkz. NotesRepository.createNote yorumu).
-    final id = await repo.createNote(type, folderId: quickAddFolderId);
+    final id = await repo.createNote(
+      type,
+      folderId: quickAddFolderId,
+    );
     await openNewNote(id, type: type);
     // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
     // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
@@ -118,6 +121,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       ref.read(searchQueryProvider.notifier).set('');
     }
   }
+
 
   /// El yazısı modu: not oluşturulur ve editör doğrudan çizim tuvalini
   /// açarak başlar; çizim nota görsel eki olarak kaydedilir.
@@ -411,7 +415,10 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final id = await repo.createNote(type, folderId: quickAddFolderId);
+    final id = await repo.createNote(
+      type,
+      folderId: quickAddFolderId,
+    );
     if (title.isNotEmpty) repo.updateFields(id, {'title': title});
     await openNewNote(id, query: query);
   }

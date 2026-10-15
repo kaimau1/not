@@ -2,6 +2,25 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-15 — kart medyası, + menüsü, seçim, balonlu⇄klasik, Drive (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Google Cloud'da Drive API'yi etkinleştir** (proje notlar-kaimau →
+  APIs & Services → "Google Drive API" → Enable) ve OAuth onay ekranına
+  `drive.appdata` kapsamını ekle. Kapalıyken "Bağla" açıklayıcı hata verir.
+- [ ] **Drive senkronu iki cihazda**: telefonda Bağla → görsel/PDF ekle →
+  Drive'a yüklendi mi (rozet kalkıyor mu); ikinci cihaz (Windows) bağlanınca
+  ek iniyor ve kartta görünüyor mu. Ayarlar'da Drive kullanımı doğru mu.
+- [ ] **Misafir hesap**: ek eklenince "yükleniyor" çarkı/şeridi ÇIKMAMALI.
+- [ ] **Kart kapakları**: YouTube sabitli not, tek görselli not, galeriden
+  video (kapak karesi), balonlu PDF (ilk sayfa küçük resmi), ses notu.
+- [ ] **Balonlu ⇄ klasik**: çip, ⋮, PDF'i tepeye sürükleme; geri dönünce
+  balonlar/sayfa notları ve PDF'in sayfadaki yeri yerinde mi; uygulamayı
+  kapatıp açınca klasik görünüm korunuyor mu.
+- [ ] **Seçim**: madde satırında kelime seç → menüde Biçim + Ek göm;
+  gömülü kelimenin son harfine dokun → önizleme.
+- [ ] **+ menüsü**: küçük ekranda kayıyor mu; Galeriden video / YouTube
+  notu üstte sabit videoyla açılıyor mu.
+- [ ] ~45 yeni çeviri anahtarı × 14 dil makine çevirisi.
+
 ## 2026-10-02 — arşiv siyah ekran, şablon düzenleyicisi (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Arşivden not aç** (telefon + tablet): açılıyor mu, geri tuşu arşive
   dönüyor mu. Aynısı Çöp/Hatırlatıcılar ("yeni hatırlatıcı")/Klasörler

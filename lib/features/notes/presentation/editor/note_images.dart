@@ -202,7 +202,9 @@ class _ImageBox extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: b.fill == 0 ? 0 : 2),
+                padding: EdgeInsets.symmetric(
+                  horizontal: b.fill == 0 ? 0 : 2,
+                ),
                 child: Text(
                   b.text.trim(),
                   maxLines: 3,
@@ -218,7 +220,9 @@ class _ImageBox extends StatelessWidget {
                     fontSize: (box.width * 0.05).clamp(7.0, 14.0),
                     height: 1.2,
                     fontWeight: b.bold ? FontWeight.w800 : FontWeight.w600,
-                    fontStyle: b.italic ? FontStyle.italic : FontStyle.normal,
+                    fontStyle: b.italic
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                     color: Color(b.color),
                     shadows: b.fill == 0
                         ? const [Shadow(blurRadius: 2, color: Colors.black54)]
@@ -1304,9 +1308,10 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   void _equalizeSizes() {
     final chosen = _multiSelected;
     if (chosen.length < 2 || _cw <= 0) return;
-    final target = equalWidthFrac([
-      for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw),
-    ], minFrac: _minWidthFrac);
+    final target = equalWidthFrac(
+      [for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw)],
+      minFrac: _minWidthFrac,
+    );
     _applyMany([for (final a in chosen) a.copyWith(displayWidth: target)]);
     _endMulti();
   }
@@ -1602,7 +1607,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           builder: (_) => PdfViewerScreen(
             attachment: img,
             initialPage: img.pdfPage,
-            onPageChanged: (p) => widget.onChanged(img.copyWith(pdfPage: p)),
+            onPageChanged: (p) =>
+                widget.onChanged(img.copyWith(pdfPage: p)),
             onChanged: widget.onChanged,
           ),
         ),
@@ -1696,159 +1702,154 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         controller: _multiBar,
         overlayChildBuilder: _multiToolbar,
         child: LayoutBuilder(
-          builder: (context, constraints) {
-            final cw = constraints.maxWidth;
-            // Otomatik yerleşim bu karede BİR kez kurulur; aşağıdaki bütün
-            // _resolve çağrıları aynı sonucu okur.
-            _computeAutoSlots(cw);
-            _reportFloats(cw);
-            // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
-            var maxBottom = 0.0;
-            for (final img in widget.images) {
-              final r = _resolve(img, cw);
-              final bottom = r.top + r.h + 72;
-              if (bottom > maxBottom) maxBottom = bottom;
-            }
-            final selected = _selectedId;
-            Attachment? selectedImg;
-            for (final img in widget.images) {
-              if (img.id == selected) selectedImg = img;
-            }
-            final previewImg = _previewOf(widget.images);
-            // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
-            // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
-            // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
-            // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
-            // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
-            // kapatır hem hedefine (ör. metin alanına odak) gider.
-            final imgForDismiss = selectedImg;
-            final content = Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
-                // gövdeye odaklanılır (dokunuş metin alanına da düşer).
-                GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    if (_selectedId != null) {
-                      _deselect();
-                    } else {
-                      widget.onTapEmpty?.call();
-                    }
-                  },
-                  child: PageMinHeight(
-                    minHeight: maxBottom > widget.minHeight
-                        ? maxBottom
-                        : widget.minHeight,
-                    child: widget.child,
-                  ),
+        builder: (context, constraints) {
+          final cw = constraints.maxWidth;
+          // Otomatik yerleşim bu karede BİR kez kurulur; aşağıdaki bütün
+          // _resolve çağrıları aynı sonucu okur.
+          _computeAutoSlots(cw);
+          _reportFloats(cw);
+          // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
+          var maxBottom = 0.0;
+          for (final img in widget.images) {
+            final r = _resolve(img, cw);
+            final bottom = r.top + r.h + 72;
+            if (bottom > maxBottom) maxBottom = bottom;
+          }
+          final selected = _selectedId;
+          Attachment? selectedImg;
+          for (final img in widget.images) {
+            if (img.id == selected) selectedImg = img;
+          }
+          final previewImg = _previewOf(widget.images);
+          // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
+          // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
+          // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
+          // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
+          // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
+          // kapatır hem hedefine (ör. metin alanına odak) gider.
+          final imgForDismiss = selectedImg;
+          final content = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
+              // gövdeye odaklanılır (dokunuş metin alanına da düşer).
+              GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () {
+                  if (_selectedId != null) {
+                    _deselect();
+                  } else {
+                    widget.onTapEmpty?.call();
+                  }
+                },
+                child: PageMinHeight(
+                  minHeight: maxBottom > widget.minHeight
+                      ? maxBottom
+                      : widget.minHeight,
+                  child: widget.child,
                 ),
-                // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
-                // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
-                if (widget.hint != null)
+              ),
+              // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
+              // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
+              if (widget.hint != null)
+                Builder(
+                  builder: (context) {
+                    // İpucu metnin ilk satırıyla AYNI yere oturur: görselin
+                    // yanında yer varsa yanına, yoksa altına (bkz.
+                    // [hintPlacement]).
+                    final place = _hintPlacement(cw);
+                    return PositionedDirectional(
+                      start: place.left,
+                      end: widget.textLeft,
+                      top: place.top,
+                      child: IgnorePointer(child: widget.hint!),
+                    );
+                  },
+                ),
+              for (final img in widget.images) _positioned(context, img, cw),
+              // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
+              // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
+              // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
+              for (final img in widget.images)
+                if (_playingWeb.contains(img.id))
                   Builder(
                     builder: (context) {
-                      // İpucu metnin ilk satırıyla AYNI yere oturur: görselin
-                      // yanında yer varsa yanına, yoksa altına (bkz.
-                      // [hintPlacement]).
-                      final place = _hintPlacement(cw);
-                      return PositionedDirectional(
-                        start: place.left,
-                        end: widget.textLeft,
-                        top: place.top,
-                        child: IgnorePointer(child: widget.hint!),
-                      );
-                    },
-                  ),
-                for (final img in widget.images) _positioned(context, img, cw),
-                // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
-                // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
-                // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
-                for (final img in widget.images)
-                  if (_playingWeb.contains(img.id))
-                    Builder(
-                      builder: (context) {
-                        final r = _resolve(img, cw);
-                        return Positioned(
-                          left: r.left - 14,
-                          top: r.top - 14,
-                          child: Material(
-                            color: Theme.of(context).colorScheme.inverseSurface,
-                            shape: const CircleBorder(),
-                            elevation: 2,
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: () =>
-                                  setState(() => _playingWeb.remove(img.id)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(5),
-                                child: Icon(
-                                  Icons.close,
-                                  size: 16,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onInverseSurface,
-                                ),
+                      final r = _resolve(img, cw);
+                      return Positioned(
+                        left: r.left - 14,
+                        top: r.top - 14,
+                        child: Material(
+                          color: Theme.of(context).colorScheme.inverseSurface,
+                          shape: const CircleBorder(),
+                          elevation: 2,
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: () =>
+                                setState(() => _playingWeb.remove(img.id)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(5),
+                              child: Icon(
+                                Icons.close,
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onInverseSurface,
                               ),
                             ),
                           ),
-                        );
-                      },
-                    ),
-                // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
-                // çizgiyi kapatırsa hizalama görünmez olurdu.
-                if (_guides.isNotEmpty)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: _GuidePainter(
-                          guides: _guides,
-                          color: Theme.of(context).colorScheme.primary,
                         ),
+                      );
+                    },
+                  ),
+              // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
+              // çizgiyi kapatırsa hizalama görünmez olurdu.
+              if (_guides.isNotEmpty)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _GuidePainter(
+                        guides: _guides,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
-                if (selectedImg != null) _toolbar(context, selectedImg, cw),
-                // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
-                // metnin sarması olduğu gibi kalır.
-                if (previewImg != null) _preview(context, previewImg, cw),
-              ],
-            );
-            // Listener HER ZAMAN ağaçta (seçim yokken boş geçer).
-            //
-            // KÖK NEDEN (2026-10-11, "görseli sürükleyerek üste sabitle"
-            // üzerinde çalışırken bulundu): Listener eskiden yalnız seçim
-            // VARKEN sarılıyordu. Seçili olmayan görsele basılı tutunca
-            // `onLongPressStart` seçimi açıyor → içerik bu karede Listener'a
-            // sarılıyor → Stack'in altındaki bütün ağaç (görselin jest
-            // tanıyıcısı dahil) yeniden kuruluyor ve süren sürükleme kopuyordu:
-            // "basılı tut, sürükle" ancak görsel ÖNCEDEN seçiliyse çalışıyordu.
-            Rect? imageRect;
-            Rect? toolbarRect;
-            if (imgForDismiss != null) {
-              final r = _resolve(imgForDismiss, cw);
-              // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
-              // bir bant: ikisinin de dışı "dışarısı" sayılır.
-              imageRect = Rect.fromLTWH(
-                r.left - 24,
-                r.top - 24,
-                r.w + 48,
-                r.h + 48,
-              );
-              toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
-            }
-            return Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (event) {
-                if (imageRect == null || toolbarRect == null) return;
-                final p = event.localPosition;
-                if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
-                  _deselect();
-                }
-              },
-              child: content,
-            );
-          },
+                ),
+              if (selectedImg != null) _toolbar(context, selectedImg, cw),
+              // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
+              // metnin sarması olduğu gibi kalır.
+              if (previewImg != null) _preview(context, previewImg, cw),
+            ],
+          );
+          // Listener HER ZAMAN ağaçta (seçim yokken boş geçer).
+          //
+          // KÖK NEDEN (2026-10-11, "görseli sürükleyerek üste sabitle"
+          // üzerinde çalışırken bulundu): Listener eskiden yalnız seçim
+          // VARKEN sarılıyordu. Seçili olmayan görsele basılı tutunca
+          // `onLongPressStart` seçimi açıyor → içerik bu karede Listener'a
+          // sarılıyor → Stack'in altındaki bütün ağaç (görselin jest
+          // tanıyıcısı dahil) yeniden kuruluyor ve süren sürükleme kopuyordu:
+          // "basılı tut, sürükle" ancak görsel ÖNCEDEN seçiliyse çalışıyordu.
+          Rect? imageRect;
+          Rect? toolbarRect;
+          if (imgForDismiss != null) {
+            final r = _resolve(imgForDismiss, cw);
+            // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
+            // bir bant: ikisinin de dışı "dışarısı" sayılır.
+            imageRect = Rect.fromLTWH(r.left - 24, r.top - 24, r.w + 48, r.h + 48);
+            toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+          }
+          return Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (event) {
+              if (imageRect == null || toolbarRect == null) return;
+              final p = event.localPosition;
+              if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
+                _deselect();
+              }
+            },
+            child: content,
+          );
+        },
         ),
       ),
     );
@@ -2127,7 +2128,8 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       width: r.w,
       height: r.h,
       child: GestureDetector(
-        onTap: () => _multiMode ? _toggleMulti(img.id) : _select(img.id),
+        onTap: () =>
+            _multiMode ? _toggleMulti(img.id) : _select(img.id),
         // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
         //
         // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme
@@ -2394,8 +2396,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             ? null
             : () => _startMulti(img.id),
         // YouTube ekinin dosyası yok — videodan not çıkarmak mümkün değil.
-        onVideoToNote:
-            widget.onVideoToNote == null || !isVideo || img.isWebVideo
+        onVideoToNote: widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
         // PDF'te aynı giriş BALONLU GÖRÜNÜME geçirir (üst bölme görsel/video

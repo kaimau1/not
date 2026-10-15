@@ -731,9 +731,8 @@ class _SettingsArea extends StatelessWidget {
                 // açıklama küçük ve soluk — göz önce başlığı tarar.
                 child: ListTileTheme.merge(
                   dense: true,
-                  titleTextStyle: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  titleTextStyle: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w600),
                   subtitleTextStyle: Theme.of(context).textTheme.bodySmall
                       ?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1485,7 +1484,8 @@ class _ThemeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        for (final c in schemes) Expanded(child: _preview(c)),
+                        for (final c in schemes)
+                          Expanded(child: _preview(c)),
                       ],
                     ),
                     if (selected)
@@ -2774,7 +2774,9 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
     );
 
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2924,6 +2926,7 @@ class _ModelSelectors extends ConsumerWidget {
         .join(' ');
     return hint == null ? name : '$name — $hint';
   }
+
 }
 
 class _BriefingEditor extends ConsumerWidget {

@@ -2381,6 +2381,7 @@ class _CheckPopState extends State<_CheckPop>
   }
 }
 
+
 /// "+ Yeni öğe" ile üst üste açılabilecek en çok boş öğe (bkz.
 /// [ItemsEditorState._addItem]).
 const int kMaxTrailingEmptyItems = 3;

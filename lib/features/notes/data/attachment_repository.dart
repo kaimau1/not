@@ -387,9 +387,7 @@ class AttachmentRepository {
     );
     // Uzantı değiştiyse (ör. .png → .jpg) yerel dosya adı da değişti; eskisi
     // artık hiçbir yerden gösterilmiyor, yetim kalmasın.
-    if (!kIsWeb &&
-        oldLocalPath.isNotEmpty &&
-        oldLocalPath != stored.localPath) {
+    if (!kIsWeb && oldLocalPath.isNotEmpty && oldLocalPath != stored.localPath) {
       try {
         await File(oldLocalPath).delete();
       } on FileSystemException {
@@ -450,9 +448,7 @@ class AttachmentRepository {
       result.bytes,
       freedBytes: attachment.sizeBytes,
     );
-    if (!kIsWeb &&
-        oldLocalPath.isNotEmpty &&
-        oldLocalPath != stored.localPath) {
+    if (!kIsWeb && oldLocalPath.isNotEmpty && oldLocalPath != stored.localPath) {
       try {
         await File(oldLocalPath).delete();
       } on FileSystemException {
