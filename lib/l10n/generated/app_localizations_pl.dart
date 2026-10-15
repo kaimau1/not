@@ -2919,7 +2919,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get archiveNoLink => 'Bağlı dosya yok';
 
   @override
-  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+  String get attachmentTagEmbed => 'Ek göm';
 
   @override
   String get attachmentTagNoAttachment =>

@@ -5433,7 +5433,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentTagEmbed.
   ///
   /// In tr, this message translates to:
-  /// **'Seçili yazıya ek göm'**
+  /// **'Ek göm'**
   String get attachmentTagEmbed;
 
   /// No description provided for @attachmentTagNoAttachment.

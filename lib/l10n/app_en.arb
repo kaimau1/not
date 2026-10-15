@@ -1091,7 +1091,7 @@
   "archiveEntryTitle": "Title",
   "archiveLinkedFile": "Linked file",
   "archiveNoLink": "No linked file",
-  "attachmentTagEmbed": "Embed attachment in selection",
+  "attachmentTagEmbed": "Embed",
   "attachmentTagNoAttachment": "Add a file to the note first, then you can embed it in the text.",
   "bubbleModeBubble": "Bubble",
   "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected",

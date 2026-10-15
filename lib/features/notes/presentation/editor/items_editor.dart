@@ -11,6 +11,7 @@ import '../../../../core/utils/sentence_select.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
 import 'format_menu.dart';
+import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
 
@@ -137,6 +138,7 @@ class ItemsEditor extends StatefulWidget {
     this.wholeNoteText,
     this.onFieldDisposed,
     this.attachmentNames = const [],
+    this.tagLooks = const {},
     this.onAttachmentTag,
     this.selectionMenu,
   });
@@ -220,6 +222,15 @@ class ItemsEditor extends StatefulWidget {
   /// bir MADDE metnine uygulandığında) etiket düz yazı olarak kalıyor,
   /// tıklanacak bir şey de olmuyordu — kullanıcının gördüğü tam olarak buydu.
   final List<String> attachmentNames;
+
+  /// Gömülü yazıların ÇİP görünümü (gövdeyle aynı — bkz.
+  /// `AttachmentTagChips`). Boşsa eski kırmızı görünüm.
+  final Map<String, TagLook> tagLooks;
+
+  /// [tagLooks]'tan satır denetleyicilerinin istediği renk haritası.
+  Map<String, Color> get _tagChipColors => {
+    for (final e in tagLooks.entries) e.key: e.value.color,
+  };
 
   /// Bir madde satırındaki ek etiketine dokunuldu: [fileName] etiketin
   /// taşıdığı ad (bağ etiketi ya da dosya adı). Eki açmak editörün işi —
@@ -575,6 +586,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     // Ek etiketleri gövdeyle AYNI yoldan çizilsin (bkz.
     // [ItemsEditor.attachmentNames]); setter aynı listede hiçbir şey yapmaz.
     controller.attachmentNames = widget.attachmentNames;
+    controller.tagChipColors = widget._tagChipColors;
     return controller;
   }
 
@@ -1377,6 +1389,11 @@ class ItemsEditorState extends State<ItemsEditor> {
       _selectionMode,
       l10n.localeName,
       widget.contentInsertion,
+      // Çip görünümü İÇERİKLE anahtarlanır: harita her kurulumda yeni nesne
+      // (kimlikle karşılaştırılsa önbellek her karede boşalırdı).
+      Object.hashAll([
+        for (final e in widget.tagLooks.entries) Object.hash(e.key, e.value),
+      ]),
     );
     if (env != _rowCacheEnv || !sameFloatList(_rowCacheFloats, widget.floats)) {
       _rowCache.clear();
@@ -1610,7 +1627,11 @@ class ItemsEditorState extends State<ItemsEditor> {
                               );
                         // Dokunuşun konumu tutulur (etiket önizlemesi,
                         // bkz. _tapAttachmentTag); sarmalayıcı HEP ağaçta.
-                        final field = _tapPoint.wrap(
+                        // Gömülü yazı çip olarak çizilir (gövdeyle aynı).
+                        final field = AttachmentTagChips(
+                          controller: controller,
+                          looks: widget.tagLooks,
+                          child: _tapPoint.wrap(
                           TextField(
                             controller: controller,
                             focusNode: _focusFor(item),
@@ -1653,6 +1674,7 @@ class ItemsEditorState extends State<ItemsEditor> {
                                 vertical: 10,
                               ),
                             ),
+                          ),
                           ),
                         );
                         // Tek satır kipinde taşan metnin "devamı var"
@@ -1807,8 +1829,10 @@ class ItemsEditorState extends State<ItemsEditor> {
     // çizilmeyeceği değişir. Satır ÖNBELLEKTEN gelebildiği için besleme
     // `_controllerFor`a bırakılamaz: denetleyici zaten var olan satırlarda o
     // işlev hiç çağrılmaz. Setter aynı listede hiçbir şey yapmaz.
+    final chipColors = widget._tagChipColors;
     for (final controller in _controllers.values) {
       controller.attachmentNames = widget.attachmentNames;
+      controller.tagChipColors = chipColors;
     }
 
     // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da

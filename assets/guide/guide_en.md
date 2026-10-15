@@ -80,11 +80,11 @@ To take notes while watching a video or looking at an image:
 
 ## Embedding in text {#embed}
 You can link a **PDF, image, video, YouTube video** or any attachment of the note to a word or sentence.
-1. Select the word → **Embed attachment in selection** in the selection menu (or the same option under + Add).
-2. In the sheet, pick **Add new** (PDF, image, video, YouTube) or one of the **attachments in this note**.
-3. The word is marked with 📎 and becomes an underlined tag on a pale red background.
-- List items work the same: **Embed attachment in selection** in the selection menu, and **Preview / Edit / Remove embed** when the cursor is on a tag.
-- **Tap the word** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen**, **Edit**, **Replace** and **Remove embed**.
+1. Select the word → **Embed** in the selection menu (or the same option under + Add).
+2. The sheet shows the **attachments in this note** with thumbnails at the top; for a new one tap **PDF, Image, Video or YouTube** below.
+3. The word becomes a rounded **chip** in the colour of the attachment's type, with the type's badge in front (PDF red, image teal, video purple, YouTube magenta).
+- List items work the same: **Embed** in the selection menu, and **Preview / Edit / Remove embed** when the cursor is on a tag.
+- **Tap the chip** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen** and **Edit**, with **Replace** and **Remove embed** below.
 - Removing an embed keeps the text and only unlinks it.
 - It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**.
 

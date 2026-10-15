@@ -721,7 +721,7 @@ RichMark activeFormats(String text, int start, int end) {
 /// muhasebesi bu boyutta kazançtan çok yer tutar).
 const _spanCacheLimit = 256;
 final Map<
-  (String, TextStyle?, Color?, List<Color>, Color, String),
+  (String, TextStyle?, Color?, List<Color>, Color, String, String),
   List<InlineSpan>
 >
 _spanCache = {};
@@ -736,10 +736,17 @@ List<InlineSpan> richSpans(
   required List<Color> palette,
   required Color markerColor,
   Iterable<String> attachmentNames = const [],
+  Map<String, Color>? tagChipColors,
 }) {
   if (text.isEmpty) return [TextSpan(text: text, style: style)];
   if (!_hasMarker(text)) {
-    return linkSpans(text, style, linkColor, attachmentNames: attachmentNames);
+    return linkSpans(
+      text,
+      style,
+      linkColor,
+      attachmentNames: attachmentNames,
+      tagChipColors: tagChipColors,
+    );
   }
   // Ek adları da ANAHTARIN parçası: ek silinip eklenince etiket işaretlemesi
   // değişiyor, bayat span dönerse etiket eski hâliyle çizilirdi.
@@ -750,6 +757,12 @@ List<InlineSpan> richSpans(
     palette,
     markerColor,
     attachmentNames.join('\u0000'),
+    tagChipColors == null
+        ? ''
+        : [
+            for (final e in tagChipColors.entries)
+              '${e.key}=${e.value.toARGB32()}',
+          ].join('\u0000'),
   );
   final cached = _spanCache[cacheKey];
   if (cached != null) return cached;
@@ -760,6 +773,7 @@ List<InlineSpan> richSpans(
     palette: palette,
     markerColor: markerColor,
     attachmentNames: attachmentNames,
+    tagChipColors: tagChipColors,
   );
   if (_spanCache.length >= _spanCacheLimit) _spanCache.clear();
   // Değiştirilemez: liste artık PAYLAŞILIYOR, bir çağıranın onu yerinde
@@ -774,6 +788,7 @@ List<InlineSpan> _richSpansUncached(
   TextStyle? style, {
   Color? linkColor,
   Iterable<String> attachmentNames = const [],
+  Map<String, Color>? tagChipColors,
   required List<Color> palette,
   required Color markerColor,
 }) {
@@ -813,6 +828,7 @@ List<InlineSpan> _richSpansUncached(
             styleFor,
             linkColor,
             attachmentNames: attachmentNames,
+            tagChipColors: tagChipColors,
           ),
         );
       }
@@ -826,6 +842,7 @@ List<InlineSpan> _richSpansUncached(
           styleFor,
           linkColor,
           attachmentNames: attachmentNames,
+          tagChipColors: tagChipColors,
         ),
       );
     }

@@ -80,11 +80,11 @@ Bir videoyu izlerken ya da bir görsele bakarken altına not almak için:
 
 ## Yazıya gömme {#embed}
 Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herhangi bir eki bağlayabilirsin.
-1. Kelimeyi seç → seçim menüsünde **Seçili yazıya ek göm** (ya da + Ekle'deki aynı seçenek).
-2. Açılan levhada **Yeni ekle** (PDF, görsel, video, YouTube) ya da **Bu nottaki ekler**'den birini seç.
-3. Kelime 📎 ile işaretlenir ve soluk kırmızı zeminli, altı çizili bir etiket olur.
-- Madde satırlarında da aynı: seçim menüsünde **Seçili yazıya ek göm**, imleç etiketteyken **Önizle / Düzenle / Gömmeyi kaldır**.
-- **Kelimeye dokununca** (son harfi dahil) önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran**, **Düzenle**, **Değiştir** ve **Gömmeyi kaldır** var.
+1. Kelimeyi seç → seçim menüsünde **Ek göm** (ya da + Ekle'deki aynı seçenek).
+2. Açılan levhada üstte **Bu nottaki ekler** küçük resimleriyle durur; yenisi için altta **PDF, Görsel, Video, YouTube** kutularından birine dokun.
+3. Kelime, ekin türünün renginde yuvarlak bir **çip** olur; başında türün rozeti durur (PDF kırmızı, görsel turkuaz, video mor, YouTube pembe-kırmızı).
+- Madde satırlarında da aynı: seçim menüsünde **Ek göm**, imleç etiketteyken **Önizle / Düzenle / Gömmeyi kaldır**.
+- **Çipe dokununca** (son harfi dahil) önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran** ve **Düzenle**; altta **Değiştir** ve **Gömmeyi kaldır** var.
 - Gömmeyi kaldırınca yazı kalır, yalnız bağ çözülür.
 - Ters yön de çalışır: önce eki seç (ek şeridindeki bağla düğmesi), sonra yazıyı seçip **Buraya bağla**.
 

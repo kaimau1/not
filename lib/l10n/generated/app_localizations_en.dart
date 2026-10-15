@@ -2902,7 +2902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNoLink => 'No linked file';
 
   @override
-  String get attachmentTagEmbed => 'Embed attachment in selection';
+  String get attachmentTagEmbed => 'Embed';
 
   @override
   String get attachmentTagNoAttachment =>
