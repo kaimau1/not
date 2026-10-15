@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../settings/settings_providers.dart';
 
 /// Bir İÇERİKTEN (fotoğraf, tarama, video, görsel, PDF, sunum) not alırken
 /// notun hangi biçimde açılacağı.
@@ -43,26 +46,56 @@ class CaptureChoice {
 /// serbest — eski davranışa (varsayılan ad) düşülür.
 ///
 /// İptalde null döner — çağıran hiçbir şey oluşturmaz.
+///
+/// [kind] içeriğin türü ('pdf', 'photo'…): verilirse o tür için SON SEÇİLEN
+/// kip hatırlanır ve kartında "Son seçimin" yazar (kullanıcı isteği
+/// 2026-10-15: "düzenlerin kaydedilmesi ve öneriler"). Karar yine
+/// kullanıcının — levha atlanmaz, yalnız önerilir.
 Future<CaptureChoice?> showCaptureModeSheet(
   BuildContext context, {
   required String title,
-}) => showModalBottomSheet<CaptureChoice>(
-  context: context,
-  isScrollControlled: true,
-  showDragHandle: true,
-  builder: (sheetContext) => Padding(
-    // Klavye açılınca levha yukarı kalkar; başlık alanı örtülmesin.
-    padding: EdgeInsets.only(
-      bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+  String? kind,
+}) {
+  SharedPreferences? prefs;
+  try {
+    prefs = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(sharedPreferencesProvider);
+  } catch (_) {
+    prefs = null; // sağlayıcısız ağaç (testler): öneri yok
+  }
+  final key = kind == null ? null : 'capture_mode_last_$kind';
+  final last = key == null ? null : prefs?.getString(key);
+  return showModalBottomSheet<CaptureChoice>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) => Padding(
+      // Klavye açılınca levha yukarı kalkar; başlık alanı örtülmesin.
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+      ),
+      child: _CaptureModeSheet(
+        title: title,
+        last: CaptureMode.values.where((m) => m.name == last).firstOrNull,
+      ),
     ),
-    child: _CaptureModeSheet(title: title),
-  ),
-);
+  ).then((choice) {
+    if (choice != null && key != null) {
+      prefs?.setString(key, choice.mode.name);
+    }
+    return choice;
+  });
+}
 
 class _CaptureModeSheet extends StatefulWidget {
-  const _CaptureModeSheet({required this.title});
+  const _CaptureModeSheet({required this.title, this.last});
 
   final String title;
+
+  /// Bu tür için en son seçilen kip (öneri olarak işaretlenir).
+  final CaptureMode? last;
 
   @override
   State<_CaptureModeSheet> createState() => _CaptureModeSheetState();
@@ -121,7 +154,16 @@ class _CaptureModeSheetState extends State<_CaptureModeSheet> {
               ),
             ),
             const SizedBox(height: 10),
-            CaptureModeCards(onPick: _pick),
+            CaptureModeCards(onPick: _pick, last: widget.last),
+            const SizedBox(height: 8),
+            // Seçim kalıcı DEĞİL: notun içindeki görünüm çipi iki yöne de
+            // geçirir (bkz. editördeki _switchToBubbles).
+            Text(
+              l10n.captureModeChangeLater,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
@@ -133,9 +175,13 @@ class _CaptureModeSheetState extends State<_CaptureModeSheet> {
 /// önizlemeler karşılaştırmalı duruyor. Hem bu levha hem de paylaşımla gelen
 /// belgenin hedef levhası (bkz. `share_target_sheet.dart`) kullanır.
 class CaptureModeCards extends StatelessWidget {
-  const CaptureModeCards({super.key, required this.onPick});
+  const CaptureModeCards({super.key, required this.onPick, this.last});
 
   final ValueChanged<CaptureMode> onPick;
+
+  /// Bu tür için en son seçilen kip: kartı vurgulanır ve "Son seçimin"
+  /// rozetini taşır. null = öneri yok.
+  final CaptureMode? last;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +194,10 @@ class CaptureModeCards extends StatelessWidget {
             title: l10n.captureModeBubbles,
             info: l10n.captureModeBubblesInfo,
             preview: const _BubblePreview(),
-            badge: l10n.captureModeNew,
+            badge: last == CaptureMode.bubbles
+                ? l10n.captureModeLast
+                : (last == null ? l10n.captureModeNew : null),
+            highlighted: last == CaptureMode.bubbles,
             onTap: () => onPick(CaptureMode.bubbles),
           ),
         ),
@@ -158,6 +207,8 @@ class CaptureModeCards extends StatelessWidget {
             title: l10n.captureModeClassic,
             info: l10n.captureModeClassicInfo,
             preview: const _ClassicPreview(),
+            badge: last == CaptureMode.classic ? l10n.captureModeLast : null,
+            highlighted: last == CaptureMode.classic,
             onTap: () => onPick(CaptureMode.classic),
           ),
         ),
@@ -173,6 +224,7 @@ class _ModeCard extends StatelessWidget {
     required this.preview,
     required this.onTap,
     this.badge,
+    this.highlighted = false,
   });
 
   final String title;
@@ -181,6 +233,9 @@ class _ModeCard extends StatelessWidget {
   final String? badge;
   final VoidCallback onTap;
 
+  /// Önerilen (son seçilen) kart: birincil renkte ince çerçeve.
+  final bool highlighted;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -188,7 +243,12 @@ class _ModeCard extends StatelessWidget {
     final badgeText = badge;
     return Material(
       color: scheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: highlighted
+            ? BorderSide(color: scheme.primary, width: 1.5)
+            : BorderSide.none,
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

@@ -21,11 +21,14 @@ void main() {
     displayWidth: 0.3,
   );
 
+  final hoverItems = <Attachment?>[];
+
   Future<({List<Attachment> pinned, List<bool> hovers, List<Attachment> moved})>
   pump(WidgetTester tester, {double topLimit = 0}) async {
     final pinned = <Attachment>[];
     final hovers = <bool>[];
     final moved = <Attachment>[];
+    hoverItems.clear();
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -43,6 +46,7 @@ void main() {
                 onChanged: moved.add,
                 onPinTop: pinned.add,
                 onPinHover: hovers.add,
+                onPinHoverItem: hoverItems.add,
                 child: const SizedBox(width: 400, height: 400),
               ),
             ),
@@ -79,6 +83,10 @@ void main() {
     await tester.pump();
     expect(r.pinned.single.id, 'g');
     expect(r.hovers.last, isFalse);
+    // Editör sürüklenen EKİ de öğrenir (PDF'te şerit "balonlu görünüm"
+    // yazar — 2026-10-15).
+    expect(hoverItems.first?.id, 'g');
+    expect(hoverItems.last, isNull);
     // Sabitlenen görsel ayrıca "taşındı" diye kaydedilmez.
     expect(r.moved, isEmpty);
   });

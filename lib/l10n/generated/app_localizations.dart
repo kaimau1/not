@@ -1935,7 +1935,7 @@ abstract class AppLocalizations {
   /// No description provided for @newVideoNote.
   ///
   /// In tr, this message translates to:
-  /// **'Görüntülü not'**
+  /// **'Video çek'**
   String get newVideoNote;
 
   /// No description provided for @videoLocalOnly.
@@ -2601,7 +2601,7 @@ abstract class AppLocalizations {
   /// No description provided for @newPdfNote.
   ///
   /// In tr, this message translates to:
-  /// **'PDF ekle not al'**
+  /// **'PDF\'ten not'**
   String get newPdfNote;
 
   /// No description provided for @imageNotePreparing.
@@ -2613,7 +2613,7 @@ abstract class AppLocalizations {
   /// No description provided for @newImageNote.
   ///
   /// In tr, this message translates to:
-  /// **'Görsel ekle not al'**
+  /// **'Görselden not'**
   String get newImageNote;
 
   /// No description provided for @pdfPageNoteHint.
@@ -2667,7 +2667,7 @@ abstract class AppLocalizations {
   /// No description provided for @newSlidesNote.
   ///
   /// In tr, this message translates to:
-  /// **'Sunum ekle not al'**
+  /// **'Sunumdan not'**
   String get newSlidesNote;
 
   /// No description provided for @slidesNoDocument.
@@ -2835,13 +2835,13 @@ abstract class AppLocalizations {
   /// No description provided for @newPhotoNote.
   ///
   /// In tr, this message translates to:
-  /// **'Foto çek not al'**
+  /// **'Fotoğraf çek'**
   String get newPhotoNote;
 
   /// No description provided for @newScanNote.
   ///
   /// In tr, this message translates to:
-  /// **'Belge tara not al'**
+  /// **'Belge tara'**
   String get newScanNote;
 
   /// No description provided for @scanDocument.
@@ -3393,7 +3393,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddCapture.
   ///
   /// In tr, this message translates to:
-  /// **'YAKALA — İÇERİKTEN NOT OLUŞTURUR'**
+  /// **'ÇEK VE KAYDET'**
   String get quickAddCapture;
 
   /// No description provided for @viewToggle.
@@ -8183,6 +8183,252 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uygulama'**
   String get menuSectionApp;
+
+  /// No description provided for @cardMoreFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} dosya daha'**
+  String cardMoreFiles(int count);
+
+  /// No description provided for @cardAudioCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
+  String cardAudioCount(int count);
+
+  /// No description provided for @cardBubbleDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'BALONLU PDF'**
+  String get cardBubbleDocument;
+
+  /// No description provided for @cardBubbleSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'BALONLU SUNUM'**
+  String get cardBubbleSlides;
+
+  /// No description provided for @cardKindPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get cardKindPdf;
+
+  /// No description provided for @cardKindSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'SUNUM'**
+  String get cardKindSlides;
+
+  /// No description provided for @cardBubbleCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} balon'**
+  String cardBubbleCount(int count);
+
+  /// No description provided for @quickAddImport.
+  ///
+  /// In tr, this message translates to:
+  /// **'DOSYADAN'**
+  String get quickAddImport;
+
+  /// No description provided for @quickAddImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel'**
+  String get quickAddImage;
+
+  /// No description provided for @quickAddPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get quickAddPdf;
+
+  /// No description provided for @quickAddSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum'**
+  String get quickAddSlides;
+
+  /// No description provided for @quickAddGalleryVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeriden video'**
+  String get quickAddGalleryVideo;
+
+  /// No description provided for @quickAddYouTube.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube videosu'**
+  String get quickAddYouTube;
+
+  /// No description provided for @docViewBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu'**
+  String get docViewBubbles;
+
+  /// No description provided for @docViewClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik'**
+  String get docViewClassic;
+
+  /// No description provided for @docViewToBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu görünüme geç'**
+  String get docViewToBubbles;
+
+  /// No description provided for @docViewToClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik görünüme geç'**
+  String get docViewToClassic;
+
+  /// No description provided for @docViewSwitchedBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.'**
+  String get docViewSwitchedBubbles;
+
+  /// No description provided for @docViewSwitchedClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.'**
+  String get docViewSwitchedClassic;
+
+  /// No description provided for @docViewTextKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısı klasik görünümde duruyor.'**
+  String get docViewTextKept;
+
+  /// No description provided for @docViewDropBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: balonlu görünüm (üstte belge, altta not)'**
+  String get docViewDropBubbles;
+
+  /// No description provided for @captureModeLast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son seçimin'**
+  String get captureModeLast;
+
+  /// No description provided for @captureModeChangeLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.'**
+  String get captureModeChangeLater;
+
+  /// No description provided for @attachmentSyncTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek senkronu'**
+  String get attachmentSyncTitle;
+
+  /// No description provided for @driveSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler Google Drive\'ında'**
+  String get driveSectionTitle;
+
+  /// No description provided for @driveConnectTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleri Google Drive\'ında sakla'**
+  String get driveConnectTitle;
+
+  /// No description provided for @driveConnectInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.'**
+  String get driveConnectInfo;
+
+  /// No description provided for @driveConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get driveConnect;
+
+  /// No description provided for @driveDisconnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kes'**
+  String get driveDisconnect;
+
+  /// No description provided for @driveConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive bağlandı — ekler yedekleniyor.'**
+  String get driveConnected;
+
+  /// No description provided for @driveConnectedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı · ekler Drive\'ının uygulama klasöründe'**
+  String get driveConnectedInfo;
+
+  /// No description provided for @driveUsage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive: {used} / {limit} kullanıldı'**
+  String driveUsage(String used, String limit);
+
+  /// No description provided for @driveConnectFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive bağlanamadı. {error}'**
+  String driveConnectFailed(String error);
+
+  /// No description provided for @driveApiDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Cloud projesinde Drive API kapalı: konsolda \"Google Drive API\"yi etkinleştirip yeniden dene.'**
+  String get driveApiDisabled;
+
+  /// No description provided for @driveDisconnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive bağlantısı kesildi. Yeni ekler bağlanana dek cihazda bekler.'**
+  String get driveDisconnected;
+
+  /// No description provided for @textOnlyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız metin senkronu'**
+  String get textOnlyTitle;
+
+  /// No description provided for @textOnlyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir hesapta yalnız yazılar senkronlanır; ekler bu cihazda kalır. Google hesabı bağlarsan ekler Google Drive\'ında saklanır.'**
+  String get textOnlyInfo;
+
+  /// No description provided for @storageModeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web\'de ekler uygulama bulutuna yüklenir.'**
+  String get storageModeInfo;
+
+  /// No description provided for @driveWaiting.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek Google Drive bağlantısını bekliyor — dokun, bağla} other{{count} ek Google Drive bağlantısını bekliyor — dokun, bağla}}'**
+  String driveWaiting(int count);
+
+  /// No description provided for @driveDownloading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek Google Drive\'dan indiriliyor…'**
+  String get driveDownloading;
+
+  /// No description provided for @driveNeededForFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.'**
+  String get driveNeededForFile;
 }
 
 class _AppLocalizationsDelegate

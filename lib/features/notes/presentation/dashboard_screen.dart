@@ -62,6 +62,7 @@ import 'quick_add_fab.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
+import 'drive_ui.dart';
 
 /// Ana ekran ızgarasının önbellek payı (px). Masonry ızgaranın toplam
 /// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
@@ -1665,6 +1666,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           onImageNote: createImageNote,
                           onSlidesNote: createSlidesNote,
                           onQrNote: createQrNote,
+                          onGalleryVideo: createGalleryVideoNote,
+                          onYouTube: createYouTubeNote,
                           anchor: _fabColumnLink,
                           onCreate: createNote,
                           onHandwriting: createHandwritingNote,
@@ -3420,7 +3423,10 @@ class _PendingUploadsBar extends ConsumerWidget {
     final state = ref.watch(pendingUploadsProvider);
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final failing = state.failed > 0;
+    // Google hesabı ama Drive bağlanmadı: ekler bağlantı bekliyor — şerit
+    // bunu söyler ve dokununca bağlar (kullanıcı isteği 2026-10-15).
+    final needsDrive = state.needsDrive;
+    final failing = state.failed > 0 && !needsDrive;
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),
       alignment: Alignment.topCenter,
@@ -3435,11 +3441,13 @@ class _PendingUploadsBar extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: () => ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(l10n.pendingUploadsInfo)),
-                    ),
+                  onTap: needsDrive
+                      ? () => connectDrive(context, ref)
+                      : () => ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(content: Text(l10n.pendingUploadsInfo)),
+                          ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -3448,7 +3456,9 @@ class _PendingUploadsBar extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          failing
+                          needsDrive
+                              ? Icons.add_to_drive_outlined
+                              : failing
                               ? Icons.cloud_off_outlined
                               : Icons.cloud_upload_outlined,
                           size: 18,
@@ -3459,7 +3469,9 @@ class _PendingUploadsBar extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            failing
+                            needsDrive
+                                ? l10n.driveWaiting(state.pending)
+                                : failing
                                 ? l10n.pendingUploadsFailed(state.failed)
                                 : l10n.pendingUploads(state.pending),
                             maxLines: 1,
@@ -3476,7 +3488,7 @@ class _PendingUploadsBar extends ConsumerWidget {
                         // Dönen çark YOK (bilerek): bağlantı yokken şerit
                         // saatlerce durabilir; sürekli animasyon pili yakardı.
                         Icon(
-                          Icons.info_outline,
+                          needsDrive ? Icons.link : Icons.info_outline,
                           size: 16,
                           color: failing
                               ? scheme.onErrorContainer

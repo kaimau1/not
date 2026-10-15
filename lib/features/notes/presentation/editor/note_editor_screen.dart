@@ -87,6 +87,8 @@ import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
+import '../../data/drive_store.dart' show localFilesRevisionProvider;
+import '../drive_ui.dart';
 import '../place_reminder_sheet.dart';
 import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
@@ -115,6 +117,7 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
+import 'tag_tap.dart';
 import 'text_wrap.dart';
 
 bool get _isDesktop =>
@@ -301,6 +304,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startScan = false,
     this.startPdf = false,
     this.startSlides = false,
+    this.startGalleryVideo = false,
+    this.startYouTube = false,
   });
 
   final String noteId;
@@ -363,6 +368,14 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// (+) menüsündeki "Sunum ekle not al": PDF yolunun slayt eşi.
   final bool startSlides;
 
+  /// (+) menüsündeki "Galeriden video": açılışta galeri açılır, seçilen
+  /// video notun ÜSTÜNE sabitlenir (üstte video, altta not).
+  final bool startGalleryVideo;
+
+  /// (+) menüsündeki "YouTube videosu": açılışta bağlantı sorulur, video
+  /// notun ÜSTÜNE sabitlenir ve izlerken altına not yazılır.
+  final bool startYouTube;
+
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
 }
@@ -416,6 +429,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// `.logicalText` üzerinden okunur (bkz. text_wrap.dart).
   final _bodyController = WrapTextController();
   final _bodyFocus = FocusNode();
+
+  /// Gövdeye yapılan son dokunuşun konumu (etiket önizlemesi, bkz.
+  /// [_tappedEmbed]).
+  final _bodyTapPoint = TapPointTracker();
 
   /// KÖK NEDEN (ölçüldü): `dispose()` içinde `ref` kullanmak bu Riverpod
   /// sürümünde "Using ref when a widget is about to or has been unmounted is
@@ -492,6 +509,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingScan = false;
   bool _pendingPdf = false;
   bool _pendingSlides = false;
+  bool _pendingGalleryVideo = false;
+  bool _pendingYouTube = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -529,6 +548,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingSlides) {
       _pendingSlides = false;
       _pickSlide();
+    }
+    // Videodan doğan not "üstte video, altta not" düzeniyle açılır: video
+    // sabit bölmede oynarken not altında yazılır (kullanıcının kendi
+    // kurduğu düzen; elle sürükleyip sabitlemek gerekmesin).
+    if (_pendingGalleryVideo) {
+      _pendingGalleryVideo = false;
+      unawaited(() async {
+        final added = await _addVideoFromGallery();
+        if (added != null && mounted) _pinMediaTop(added);
+      }());
+    }
+    if (_pendingYouTube) {
+      _pendingYouTube = false;
+      unawaited(() async {
+        final added = await _addYouTube();
+        if (added != null && mounted) _pinMediaTop(added);
+      }());
     }
   }
 
@@ -941,6 +977,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingScan = widget.startScan;
     _pendingPdf = widget.startPdf;
     _pendingSlides = widget.startSlides;
+    _pendingGalleryVideo = widget.startGalleryVideo;
+    _pendingYouTube = widget.startYouTube;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
     _sub = ref.listenManual(owner == null
@@ -1774,65 +1812,39 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _appendPlainText(code);
   }
 
-  /// Gövdedeki seçimin/imlecin üzerinde durduğu bağlantı (yoksa null).
-  /// Alanın metni sarma çapaları içerdiğinden konum önce mantıksal metne
-  /// çevrilir — çapalar sayılmasa adres sınırları kayardı.
-  String? _selectedLink() {
-    final selection = _bodyController.selection;
-    if (!selection.isValid) return null;
-    return linkAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-    );
-  }
-
-  /// Gövdedeki imlecin üzerinde durduğu EK ETİKETİ (yoksa null).
-  /// Bağlantı aramanın ([_selectedLink]) ek karşılığı; konum aynı gerekçeyle
-  /// önce mantıksal metne çevrilir.
-  Attachment? _selectedAttachmentTag() {
-    final note = _note;
-    final selection = _bodyController.selection;
-    if (note == null || !selection.isValid) return null;
-    // Hem dosya adları HEM seçili yazıdan kurulan bağların etiketleri
-    // (eskiden yalnız dosya adları aranıyordu: "kelimeye gömülü PDF" seçim
-    // menüsünde hiç tanınmıyordu — gömmenin "doğru çalışmıyor" hâli).
-    final name = attachmentTagAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
-    );
-    if (name == null) return null;
-    return _attachmentForTag(note, name);
-  }
+  // Gövdenin imleç altındaki bağlantı/etiket sorguları seçim menüsünün
+  // ortak kurucusuna taşındı (bkz. [_selectionMenu]) — madde satırları da
+  // aynı yolu kullanıyor.
 
   /// Gövdede DOKUNULAN etiket (imleç etiketin İÇİNDE — sınırlar hariç, bkz.
   /// [attachmentTagInside]) ve bağlı olduğu ek.
-  ({String label, Attachment attachment})? _tappedEmbed() {
+  ///
+  /// Sınırda (son harfin sağ yarısı) dokunuşun KONUMUNA bakılır — bkz.
+  /// [tappedAttachmentTag].
+  ({String label, Attachment attachment})? _tappedEmbed(
+    EditableTextState? editable,
+  ) {
     final note = _note;
     final selection = _bodyController.selection;
     if (note == null || !selection.isValid || !selection.isCollapsed) {
       return null;
     }
-    final tag = attachmentTagInside(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
+    final tag = tappedAttachmentTag(
+      logicalText: _bodyController.logicalText,
+      logicalCaret: wrapToLogicalOffset(
+        _bodyController.text,
+        selection.baseOffset,
+      ),
+      displayText: _bodyController.text,
+      selection: selection,
+      names: _bodyController.attachmentNames,
+      editable: editable,
+      tapGlobal: _bodyTapPoint.last,
     );
     if (tag == null) return null;
     final attachment = _attachmentForTag(note, tag.fileName);
     if (attachment == null) return null;
     return (label: tag.fileName, attachment: attachment);
-  }
-
-  /// İmlecin üzerinde durduğu etiketin YAZISI (seçim menüsü için).
-  String? _labelForAttachmentAtCaret() {
-    final selection = _bodyController.selection;
-    if (!selection.isValid) return null;
-    return attachmentTagAt(
-      _bodyController.logicalText,
-      wrapToLogicalOffset(_bodyController.text, selection.baseOffset),
-      _bodyController.attachmentNames,
-    );
   }
 
   /// Etiket metninden eke: önce SEÇİLİ METİNDEN kurulan bağlar
@@ -1858,6 +1870,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
+    // Drive'daki ek bu cihaza henüz inmediyse ŞİMDİ indirilir, sonra açılır
+    // (bkz. drive_ui.dart — arka plan kuyruğunu beklemesin).
+    if (!localFileExists(attachment.localPath) &&
+        attachment.isInDrive &&
+        !attachment.isUploaded) {
+      fetchAttachmentNow(context, ref, attachment).then((ok) {
+        if (ok && mounted) _openAttachmentTag(attachment, editing: editing);
+      });
+      return;
+    }
     if (!localFileExists(attachment.localPath) &&
         !attachment.isUploaded &&
         !attachment.isWebVideo) {
@@ -2281,129 +2303,180 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Seçilen kelimenin başına ataç konur ve metnin kendisi etiket olur;
   /// hangi eke gittiği nota [Note.tagLinks] olarak yazılır. Metne gizli
   /// kimlik GÖMÜLMEZ — gerekçesi orada.
-  Future<void> _embedIntoSelection(EditableTextState state) async {
-    final selection = _bodyController.selection;
+  ///
+  /// [target] verilirse seçim O ALANDA (madde satırı); verilmezse gövdede.
+  Future<void> _embedIntoSelection(
+    WrapTextController controller, {
+    FormatTarget? target,
+  }) async {
+    final selection = controller.selection;
     if (!selection.isValid || selection.isCollapsed) return;
-    final logical = _bodyController.logicalText;
+    final logical = controller.logicalText;
     final start = wrapToLogicalOffset(
-      _bodyController.text,
+      controller.text,
       selection.start,
     ).clamp(0, logical.length);
     final end = wrapToLogicalOffset(
-      _bodyController.text,
+      controller.text,
       selection.end,
     ).clamp(start, logical.length);
-    await _embedRange(start, end);
+    if (target == null) {
+      await _embedRange(start, end);
+      return;
+    }
+    final range = trimmedRange(logical, start, end);
+    if (range == null) return;
+    final label = logical.substring(range.start, range.end);
+    final chosen = await _pickEmbedTarget(label: label);
+    if (chosen == null || !mounted) return;
+    // Seçici açıkken satırın metni değiştiyse (silindi, eşitlendi) gömülmez.
+    final now = controller.logicalText;
+    if (range.end <= now.length &&
+        now.substring(range.start, range.end) == label) {
+      _applyEmbed(
+        label: label,
+        attachment: chosen,
+        start: range.start,
+        end: range.end,
+        target: target,
+      );
+    }
   }
 
-  /// Gövde metninin seçim menüsü: imleç bir bağlantının üzerindeyse listenin
-  /// başına "Bağlantıyı aç" eklenir, kalan seçenekler (kes/kopyala/yapıştır)
-  /// platformun kendi listesinden gelir.
-  Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) {
-    // Kes/Kopyala temiz-metin sürümleriyle değiştirilir: varsayılanları
-    // panoya biçim işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını
-    // HAM olarak yazıyordu — dışarı yapıştıran kullanıcı çöp görüyordu.
-    final items = cleanClipboardMenuItems(state);
-    // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş noktası
-    // SEÇİM çubuğu — biçim zaten "şu metne" uygulanır; ayrı bir düğme olsaydı
-    // önce seçimi hatırlaması gerekirdi (klavye kapanınca seçim düşüyor).
-    if (!state.textEditingValue.selection.isCollapsed) {
-      items.add(
-        ContextMenuButtonItem(
-          label: context.l10n.formatMenu,
-          onPressed: () {
-            state.hideToolbar();
-            showFormatSheet(
-              context,
-              controller: _bodyController,
-              onApplied: () => _mutate(
-                (n) => n.copyWith(body: _bodyController.logicalText),
-                immediate: true,
-              ),
-            );
-          },
+  /// Gövdenin seçim menüsü (bkz. [_selectionMenu]).
+  Widget _bodyContextMenu(BuildContext menuContext, EditableTextState state) =>
+      _selectionMenu(
+        state,
+        _bodyController,
+        commit: () => _mutate(
+          (n) => n.copyWith(body: _bodyController.logicalText),
+          immediate: true,
         ),
       );
+
+  /// GÖVDE ve MADDE SATIRLARININ ortak seçim menüsü (kullanıcı bulgusu
+  /// 2026-10-15: "metin seçim mantığı ve kalitesi düzeltilmeli" — madde
+  /// satırında ek gömme, etiket önizleme ve bağlantıyı aç hiç yoktu; sıra
+  /// için bkz. [arrangeSelectionMenu]).
+  ///
+  /// [target] madde satırında alanın kendisi (gömme oraya yazılır); gövdede
+  /// null. [trailing] alanın kendi ek seçenekleri (Tüm notu kopyala).
+  Widget _selectionMenu(
+    EditableTextState state,
+    WrapTextController controller, {
+    required VoidCallback commit,
+    FormatTarget? target,
+    List<ContextMenuButtonItem> trailing = const [],
+  }) {
+    final l10n = context.l10n;
+    final selection = state.textEditingValue.selection;
+    final hasSelection = selection.isValid && !selection.isCollapsed;
+    final note = _note;
+    final logical = controller.logicalText;
+    final caret = selection.isValid
+        ? wrapToLogicalOffset(
+            controller.text,
+            selection.baseOffset,
+          ).clamp(0, logical.length)
+        : -1;
+    final url = caret < 0 ? null : linkAt(logical, caret);
+    final tagLabel = caret < 0 || note == null
+        ? null
+        : attachmentTagAt(logical, caret, controller.attachmentNames);
+    final tagged = tagLabel == null ? null : _attachmentForTag(note!, tagLabel);
+    void run(VoidCallback action) {
+      state.hideToolbar();
+      action();
     }
-    // EK ETİKETİ (kullanıcı isteği 2026-08-16): imleç "📎 rapor.pdf"in
-    // üzerindeyse önizleme ve düzenleme buradan açılır.
-    // BAĞLAMA KİPİ açıksa ilk madde odur: kullanıcı yazıyı yeni seçti,
-    // yapacağı tek iş bağlamak.
-    if (_pendingEmbed != null &&
-        !state.textEditingValue.selection.isCollapsed) {
-      items.insert(
-        0,
+
+    final leading = <ContextMenuButtonItem>[
+      // BAĞLAMA KİPİ açıksa ilk madde odur: kullanıcı yazıyı yeni seçti,
+      // yapacağı tek iş bağlamak.
+      if (_pendingEmbed != null && hasSelection)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagLinkHere,
-          onPressed: () {
-            state.hideToolbar();
-            _finishPendingEmbed();
-          },
+          label: l10n.attachmentTagLinkHere,
+          onPressed: () => run(_finishPendingEmbed),
         ),
-      );
-    }
-    // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
-    if (!state.textEditingValue.selection.isCollapsed &&
-        _selectedAttachmentTag() == null) {
-      items.insert(
-        0,
+      // İmleç bir EK ETİKETİNİN üstündeyse önizleme birinci iş.
+      if (tagged != null)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagEmbed,
-          onPressed: () {
-            state.hideToolbar();
-            unawaited(_embedIntoSelection(state));
-          },
+          label: l10n.attachmentTagPreview,
+          onPressed: () => run(() => _showEmbedPreviewFor(tagged, tagLabel!)),
         ),
-      );
-    }
-    final tagged = _selectedAttachmentTag();
-    if (tagged != null) {
-      items.insertAll(0, [
+      if (url != null)
         ContextMenuButtonItem(
-          label: context.l10n.attachmentTagPreview,
-          onPressed: () {
-            state.hideToolbar();
-            final label = _labelForAttachmentAtCaret() ?? tagged.fileName;
-            _showEmbedPreviewFor(tagged, label);
-          },
-        ),
-        ContextMenuButtonItem(
-          label: context.l10n.attachmentTagEdit,
-          onPressed: () {
-            state.hideToolbar();
-            _openAttachmentTag(tagged, editing: true);
-          },
-        ),
-        ContextMenuButtonItem(
-          label: context.l10n.embedRemove,
-          onPressed: () {
-            state.hideToolbar();
-            final label = _labelForAttachmentAtCaret();
-            if (label != null) _unlinkEmbed(label);
-          },
-        ),
-      ]);
-    }
-    final url = _selectedLink();
-    if (url != null) {
-      items.insert(
-        0,
-        ContextMenuButtonItem(
-          label: context.l10n.openLink,
-          onPressed: () {
-            state.hideToolbar();
+          label: l10n.openLink,
+          onPressed: () => run(() {
             openLink(url).then((opened) {
-              if (!opened && mounted) _showSnack(context.l10n.linkOpenFailed);
+              if (!opened && mounted) _showSnack(l10n.linkOpenFailed);
             });
-          },
+          }),
         ),
-      );
-    }
+    ];
+    final afterClipboard = <ContextMenuButtonItem>[
+      // Biçim: seçili metne kalın/italik/altı çizili/renk uygular. Giriş
+      // noktası SEÇİM çubuğu — biçim zaten "şu metne" uygulanır.
+      if (hasSelection)
+        ContextMenuButtonItem(
+          label: l10n.formatMenu,
+          onPressed: () => run(
+            () => showFormatSheet(
+              context,
+              controller: controller,
+              onApplied: commit,
+            ),
+          ),
+        ),
+      // SEÇİLİ YAZIYA EK GÖM: seçim varsa ve o seçim zaten bir etiket değilse.
+      if (hasSelection && tagged == null && !widget.readOnly)
+        ContextMenuButtonItem(
+          label: l10n.attachmentTagEmbed,
+          onPressed: () => run(
+            () => unawaited(_embedIntoSelection(controller, target: target)),
+          ),
+        ),
+      if (tagged != null) ...[
+        ContextMenuButtonItem(
+          label: l10n.attachmentTagEdit,
+          onPressed: () => run(() => _openAttachmentTag(tagged, editing: true)),
+        ),
+        ContextMenuButtonItem(
+          label: l10n.embedRemove,
+          onPressed: () => run(() => _unlinkEmbed(tagLabel!)),
+        ),
+      ],
+    ];
     return AdaptiveTextSelectionToolbar.buttonItems(
       anchors: state.contextMenuAnchors,
-      buttonItems: items,
+      buttonItems: arrangeSelectionMenu(
+        // Kes/Kopyala temiz-metin sürümleri: varsayılanlar panoya biçim
+        // işaretlerini (`**`, `%%1:`) ve görünmez sarma çapalarını HAM
+        // yazıyordu — dışarı yapıştıran kullanıcı çöp görüyordu.
+        platform: cleanClipboardMenuItems(state),
+        leading: leading,
+        afterClipboard: afterClipboard,
+        trailing: trailing,
+      ),
     );
   }
+
+  /// Madde satırının seçim menüsü: gövdeyle aynı kurucu, gömme o satıra.
+  Widget _itemSelectionMenu(
+    EditableTextState state,
+    WrapTextController controller,
+    VoidCallback commit,
+    List<ContextMenuButtonItem> own,
+  ) => _selectionMenu(
+    state,
+    controller,
+    commit: commit,
+    target: FormatTarget(
+      controller: controller,
+      focusNode: state.widget.focusNode,
+      commit: commit,
+    ),
+    trailing: own,
+  );
 
   /// **ÇOKLU SEÇİM** (kullanıcı isteği 2026-08-09: "aynı anda birden fazla ek
   /// yüklenebilsin"): seçilen belgeler sırayla eklenir; biri hata verse
@@ -3055,6 +3128,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onVideoToNote: _videoToNote,
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
+      onPinHoverItem: _setPinHoverItem,
       topLimit: _bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
@@ -3512,6 +3586,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
       hasAttachments: note.attachments.isNotEmpty,
+      bubbleView: widget.readOnly || _switchableDocument(note) == null
+          ? null
+          : note.type.isPageNoteType,
       canTemplate: canSaveAsTemplate(note),
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
@@ -3521,6 +3598,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
     if (action == null || !mounted) return;
     switch (action) {
+      case 'docView':
+        _toggleDocumentView();
       case 'pin':
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
       case 'star':
@@ -4435,11 +4514,122 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Görsel sabitleme bölgesinin üstündeyken true: "Bırak" şeridi görünür.
   bool _pinHover = false;
 
+  /// Sabitleme bölgesine sürüklenen bir PDF mi (şeridin yazısı "balonlu
+  /// görünüm" olur).
+  bool _pinHoverDocument = false;
+
+  // ── BALONLU ⇄ KLASİK GÖRÜNÜM ─────────────────────────────────────────
+  //
+  // Kullanıcı isteği 2026-10-15: "balonlu mod ve normal ek arasında hızlı,
+  // sürükleyerek veya başka şekilde geçiş; düzenler kaydedilsin". Kip
+  // eskiden YALNIZ notu oluştururken seçiliyordu ve bir daha
+  // değiştirilemiyordu. Geçiş artık üç yoldan:
+  //  * başlığın altındaki görünüm çipi (tek dokunuş, iki yönde),
+  //  * klasik notta sayfadaki PDF'i ekranın TEPESİNE sürüklemek (görseli
+  //    üste sabitlemenin aynı hareketi — "üstte belge, altta not"),
+  //  * ⋮ menüsü ve sayfadaki PDF kutusunun menüsü.
+  // Geçiş VERİ SİLMEZ: balonlar/vurgular/çizimler ekte, sayfa notları notta,
+  // klasik yerleşim (belgenin sayfadaki yeri, boyutu, sayfası) ekte kalır —
+  // geri dönünce iki düzen de olduğu gibi gelir (bkz. Note.classicDocument).
+
+  /// Görünümü değiştirilebilecek belge: notun ilk PDF/sunum eki.
+  static Attachment? _switchableDocument(Note note) => note.attachments
+      .where(
+        (a) => a.kind == AttachmentKind.pdf || a.kind == AttachmentKind.slide,
+      )
+      .firstOrNull;
+
+  void _toggleDocumentView() {
+    final note = _note;
+    if (note == null) return;
+    if (note.type.isPageNoteType) {
+      _switchToClassic();
+    } else {
+      _switchToBubbles();
+    }
+  }
+
+  /// KLASİK → BALONLU: belge notun kendisi olur (üstte sayfa, altta sayfa
+  /// notu; üzerine balon/vurgu/kalem). [document] verilmezse ilk belge.
+  void _switchToBubbles([Attachment? document]) {
+    final note = _note;
+    if (note == null || note.type.isPageNoteType || widget.readOnly) return;
+    final doc = document ?? _switchableDocument(note);
+    if (doc == null) return;
+    if (_pinHover) setState(() => _pinHover = false);
+    _dismissKeyboard();
+    final hadText =
+        note.body.trim().isNotEmpty ||
+        note.items.any((i) => i.text.trim().isNotEmpty);
+    _mutate(
+      (n) => n.copyWith(
+        type: doc.kind == AttachmentKind.slide ? NoteType.slides : NoteType.pdf,
+        classicDocument: false,
+        // Belge bölmesi türünün İLK ekini gösterir: seçilen belge öne alınır
+        // (sıra dışında hiçbir alan değişmez — klasik düzen ekte kalır).
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == doc.id) a,
+          for (final a in n.attachments)
+            if (a.id != doc.id) a,
+        ],
+      ),
+      immediate: true,
+    );
+    HapticFeedback.mediumImpact();
+    final l10n = context.l10n;
+    _showSnack(
+      hadText
+          ? '${l10n.docViewSwitchedBubbles} ${l10n.docViewTextKept}'
+          : l10n.docViewSwitchedBubbles,
+    );
+  }
+
+  /// BALONLU → KLASİK: not yeniden metin notu olur, belge sayfada (ya da
+  /// önceden durduğu şeritte) bir ek olarak görünür.
+  void _switchToClassic() {
+    final note = _note;
+    if (note == null || !note.type.isPageNoteType || widget.readOnly) return;
+    final kind = note.type == NoteType.slides
+        ? AttachmentKind.slide
+        : AttachmentKind.pdf;
+    final doc = note.attachments.where((a) => a.kind == kind).firstOrNull;
+    _dismissKeyboard();
+    _mutate((n) {
+      final asText = n.copyWith(type: NoteType.text, classicDocument: true);
+      return asText.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            // Balonlu doğmuş (sayfada hiç yeri olmamış) PDF sayfaya yerleşir;
+            // klasikte bir yeri olan belge KENDİ yerine döner — sayfada ya da
+            // şeritte (kullanıcı oraya koyduysa) olduğu gibi.
+            if (doc != null &&
+                a.id == doc.id &&
+                a.kind == AttachmentKind.pdf &&
+                a.x == null &&
+                a.pageY == null)
+              _placePdf(a, asText)
+            else
+              a,
+        ],
+      );
+    }, immediate: true);
+    HapticFeedback.mediumImpact();
+    _showSnack(context.l10n.docViewSwitchedClassic);
+  }
+
   /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
   /// olur: önceden sabitlenmiş olan sayfaya geri döner. Daha önce
   /// sabitlenmişse bölme ESKİ yüksekliğiyle açılır.
   void _pinMediaTop(Attachment media) {
     if (_pinHover) setState(() => _pinHover = false);
+    // PDF'i tepeye sürüklemek BALONLU GÖRÜNÜME geçirir: "üstte belge, altta
+    // not" — görselin sabit bölmesinin belgedeki karşılığı (bkz.
+    // [_switchToBubbles]).
+    if (media.kind == AttachmentKind.pdf) {
+      _switchToBubbles(media);
+      return;
+    }
     final height =
         media.rememberedPinHeight ??
         defaultPinnedHeight(media, MediaQuery.sizeOf(context));
@@ -4484,6 +4674,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pinHover != value && mounted) setState(() => _pinHover = value);
   }
 
+  void _setPinHoverItem(Attachment? item) {
+    final document = item?.kind == AttachmentKind.pdf;
+    if (_pinHoverDocument != document && mounted) {
+      setState(() => _pinHoverDocument = document);
+    }
+  }
+
   /// Gövdeyi (sayfa notu değilse) sabit medya bölmesi ve sürükleme sırasında
   /// tepede beliren "Bırak: üste sabitle" şeridiyle sarar.
   Widget _withPinnedMedia(Note note, Widget body) {
@@ -4526,16 +4723,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.vertical_align_top,
+                      _pinHoverDocument
+                          ? Icons.chat_bubble_outline
+                          : Icons.vertical_align_top,
                       size: 18,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      context.l10n.pinMediaRelease,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Text(
+                        _pinHoverDocument
+                            ? context.l10n.docViewDropBubbles
+                            : context.l10n.pinMediaRelease,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -6112,6 +6316,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Drive'dan bir ek inince editör yeniden çizilir: ekranlar yerel
+    // kopyayı çizim anında arıyor (bkz. localFilesRevisionProvider).
+    ref.watch(localFilesRevisionProvider);
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
     _cacheDeps();
     // Tuval önbelleği YALNIZ bu build içindeki `LayoutBuilder` tekrarları
@@ -6413,7 +6620,47 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fontSize: 12.5,
     );
 
+    // BALONLU ⇄ KLASİK görünüm (bkz. [_switchToBubbles]): notta bir belge
+    // varsa iki küçük seçim çipi — etkin görünüm dolu, öbürüne tek dokunuş.
+    final viewDocument = widget.readOnly ? null : _switchableDocument(note);
+    final bubbleView = note.type.isPageNoteType;
     final metaChildren = <Widget>[
+      if (viewDocument != null) ...[
+        ChoiceChip(
+          key: const ValueKey('doc-view-bubbles'),
+          avatar: Icon(
+            Icons.chat_bubble_outline,
+            size: 14,
+            color: bubbleView ? theme.colorScheme.onSecondaryContainer : null,
+          ),
+          showCheckmark: false,
+          label: Text(l10n.docViewBubbles),
+          labelStyle: chipLabelStyle,
+          tooltip: bubbleView ? null : l10n.docViewToBubbles,
+          selected: bubbleView,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          onSelected: bubbleView ? null : (_) => _switchToBubbles(),
+        ),
+        ChoiceChip(
+          key: const ValueKey('doc-view-classic'),
+          avatar: Icon(
+            Icons.view_agenda_outlined,
+            size: 14,
+            color: bubbleView ? null : theme.colorScheme.onSecondaryContainer,
+          ),
+          showCheckmark: false,
+          label: Text(l10n.docViewClassic),
+          labelStyle: chipLabelStyle,
+          tooltip: bubbleView ? l10n.docViewToClassic : null,
+          selected: !bubbleView,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          onSelected: bubbleView ? (_) => _switchToClassic() : null,
+        ),
+      ],
       // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(
@@ -6569,55 +6816,64 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
     // Gövde metin alanı: saf metin modunda ve karışık (metin+madde) modda
     // aynı controller/focus'u paylaşır. Madde varken kısalır (2 satır tabanı).
-    final bodyField = TextField(
-      controller: _bodyController,
-      focusNode: _bodyFocus,
-      readOnly: widget.readOnly,
-      // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
-      // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
-      style: noteBodyStyle,
-      // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
-      // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
-      // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
-      // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
-      strutStyle: wrapStrutStyle(noteBodyStyle),
-      onChanged: (value) =>
-          _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
-      maxLines: null,
-      minLines: note.items.isEmpty ? 8 : 2,
-      keyboardType: TextInputType.multiline,
-      // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
-      //
-      // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
-      // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
-      // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
-      // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
-      // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
-      // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
-      // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
-      // yazmaya devam etmektir, önizleme açmaz).
-      onTap: () {
-        final tapped = _tappedEmbed();
-        if (tapped != null) {
-          _showEmbedPreviewFor(tapped.attachment, tapped.label);
-        }
-      },
-      // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
-      // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
-      // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
-      contextMenuBuilder: (menuContext, editableState) =>
-          _bodyContextMenu(menuContext, editableState),
-      contentInsertionConfiguration: _keyboardImagePaste,
-      decoration: InputDecoration(
-        // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
-        hintText: useCanvasHint ? null : l10n.bodyHint,
-        filled: false,
-        border: InputBorder.none,
-        // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
-        // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
-        // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
-        // varsayılanına bırakılırsa üç yer sessizce ayrışır.
-        contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
+    // `Builder`: dokunuşta alanın KENDİ EditableText'i bulunur (başlığınki
+    // değil); sarmalayıcı dokunuşun konumunu tutar (bkz. [_tappedEmbed]).
+    final bodyField = Builder(
+      builder: (fieldContext) => _bodyTapPoint.wrap(
+        TextField(
+          controller: _bodyController,
+          focusNode: _bodyFocus,
+          readOnly: widget.readOnly,
+          // Sarma planı bu stille hesaplanır; TextField'ın örtük varsayılanına
+          // bırakılırsa ölçüm ile çizim ayrışır ve satırlar yanlış kırılır.
+          style: noteBodyStyle,
+          // SATIR YÜKSEKLİĞİ ÇIPASI AÇIKÇA VERİLİR: alan zaten `forceStrutHeight`
+          // ile çiziyor, sarma ölçümü de aynı çıpayı kullanıyor (bkz.
+          // [wrapStrutStyle]). Açıkça vermek eşleşmeyi `EditableText`in
+          // varsayılanına bırakmaz — kaymanın kök nedeni buydu.
+          strutStyle: wrapStrutStyle(noteBodyStyle),
+          onChanged: (value) =>
+              _mutate((n) => n.copyWith(body: _bodyController.logicalText)),
+          maxLines: null,
+          minLines: note.items.isEmpty ? 8 : 2,
+          keyboardType: TextInputType.multiline,
+          // EK ETİKETİNE DOKUNUNCA ÖNİZLEME (kullanıcı isteği 2026-08-16).
+          //
+          // Span'in kendisine `TapGestureRecognizer` bağlanamıyor: düzenlenebilir
+          // bir alanda dokunuş imleci taşımak için EditableText'e gidiyor ve
+          // span tanıyıcıları hiç ateşlenmiyor. `onTap` ise dokunuş imleci
+          // TAŞIDIKTAN SONRA çalışır — imlecin nereye düştüğüne bakmak, "etikete
+          // dokunuldu mu" sorusunun bu alandaki tek doğru cevabı.
+          // YENİ (gömme yeniden tasarımı): tam ekran yerine YERİNDE önizleme
+          // kartı; yalnız dokunuş etiketin İÇİNE düşünce (yanına imleç koymak
+          // yazmaya devam etmektir, önizleme açmaz).
+          onTap: () {
+            final editable = editableTextBelow(fieldContext);
+            final tapped = _tappedEmbed(editable);
+            if (tapped != null) {
+              // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
+              editable?.hideToolbar();
+              _showEmbedPreviewFor(tapped.attachment, tapped.label);
+            }
+          },
+          // Bağlantıya uzun basınca seçim menüsüne "Bağlantıyı aç" eklenir.
+          // Düzenlenebilir bir alanda span'e tıklama Flutter'da çalışmaz (dokunuş
+          // imleci taşımak için EditableText'e gider), bu yüzden yol seçim menüsü.
+          contextMenuBuilder: (menuContext, editableState) =>
+              _bodyContextMenu(menuContext, editableState),
+          contentInsertionConfiguration: _keyboardImagePaste,
+          decoration: InputDecoration(
+            // Görsel ipucunun üstüne gelebiliyorsa ipucu tuvale devredilir.
+            hintText: useCanvasHint ? null : l10n.bodyHint,
+            filled: false,
+            border: InputBorder.none,
+            // İÇ DOLGU AÇIKÇA: ilk metin satırının alanın tepesinden ne kadar
+            // aşağıda başladığı hem sarma ölçümüne ([_wrapped]) hem de tuval
+            // ipucuna ([NotePageCanvas.textTop]) veriliyor. Flutter'ın örtük
+            // varsayılanına bırakılırsa üç yer sessizce ayrışır.
+            contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
+          ),
+        ),
       ),
     );
 
@@ -6668,6 +6924,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
+        selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -6706,6 +6963,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
         onAttachmentTag: _openTagByName,
+        selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''

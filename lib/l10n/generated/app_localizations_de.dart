@@ -1369,7 +1369,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get annotateDone => 'Beschriften beenden';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => 'PDF\'ten not';
 
   @override
   String get imageNotePreparing =>
@@ -1407,7 +1407,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get pdfChooseDocument => 'PDF seç';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => 'Sunumdan not';
 
   @override
   String get slidesNoDocument => 'Bu notta henüz sunum yok';
@@ -4532,4 +4532,161 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get menuSectionApp => 'App';
+
+  @override
+  String cardMoreFiles(int count) {
+    return '+$count dosya daha';
+  }
+
+  @override
+  String cardAudioCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ses kaydı',
+      one: 'Ses kaydı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardBubbleDocument => 'BALONLU PDF';
+
+  @override
+  String get cardBubbleSlides => 'BALONLU SUNUM';
+
+  @override
+  String get cardKindPdf => 'PDF';
+
+  @override
+  String get cardKindSlides => 'SUNUM';
+
+  @override
+  String cardBubbleCount(int count) {
+    return '$count balon';
+  }
+
+  @override
+  String get quickAddImport => 'DOSYADAN';
+
+  @override
+  String get quickAddImage => 'Görsel';
+
+  @override
+  String get quickAddPdf => 'PDF';
+
+  @override
+  String get quickAddSlides => 'Sunum';
+
+  @override
+  String get quickAddGalleryVideo => 'Galeriden video';
+
+  @override
+  String get quickAddYouTube => 'YouTube videosu';
+
+  @override
+  String get docViewBubbles => 'Balonlu';
+
+  @override
+  String get docViewClassic => 'Klasik';
+
+  @override
+  String get docViewToBubbles => 'Balonlu görünüme geç';
+
+  @override
+  String get docViewToClassic => 'Klasik görünüme geç';
+
+  @override
+  String get docViewSwitchedBubbles =>
+      'Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.';
+
+  @override
+  String get docViewSwitchedClassic =>
+      'Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.';
+
+  @override
+  String get docViewTextKept => 'Notun yazısı klasik görünümde duruyor.';
+
+  @override
+  String get docViewDropBubbles =>
+      'Bırak: balonlu görünüm (üstte belge, altta not)';
+
+  @override
+  String get captureModeLast => 'Son seçimin';
+
+  @override
+  String get captureModeChangeLater =>
+      'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
+
+  @override
+  String get attachmentSyncTitle => 'Ek senkronu';
+
+  @override
+  String get driveSectionTitle => 'Ekler Google Drive\'ında';
+
+  @override
+  String get driveConnectTitle => 'Ekleri Google Drive\'ında sakla';
+
+  @override
+  String get driveConnectInfo =>
+      'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.';
+
+  @override
+  String get driveConnect => 'Bağla';
+
+  @override
+  String get driveDisconnect => 'Bağlantıyı kes';
+
+  @override
+  String get driveConnected => 'Google Drive bağlandı — ekler yedekleniyor.';
+
+  @override
+  String get driveConnectedInfo =>
+      'Bağlı · ekler Drive\'ının uygulama klasöründe';
+
+  @override
+  String driveUsage(String used, String limit) {
+    return 'Drive: $used / $limit kullanıldı';
+  }
+
+  @override
+  String driveConnectFailed(String error) {
+    return 'Google Drive bağlanamadı. $error';
+  }
+
+  @override
+  String get driveApiDisabled =>
+      'Google Cloud projesinde Drive API kapalı: konsolda \"Google Drive API\"yi etkinleştirip yeniden dene.';
+
+  @override
+  String get driveDisconnected =>
+      'Drive bağlantısı kesildi. Yeni ekler bağlanana dek cihazda bekler.';
+
+  @override
+  String get textOnlyTitle => 'Yalnız metin senkronu';
+
+  @override
+  String get textOnlyInfo =>
+      'Misafir hesapta yalnız yazılar senkronlanır; ekler bu cihazda kalır. Google hesabı bağlarsan ekler Google Drive\'ında saklanır.';
+
+  @override
+  String get storageModeInfo => 'Web\'de ekler uygulama bulutuna yüklenir.';
+
+  @override
+  String driveWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek Google Drive bağlantısını bekliyor — dokun, bağla',
+      one: '1 ek Google Drive bağlantısını bekliyor — dokun, bağla',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveDownloading => 'Ek Google Drive\'dan indiriliyor…';
+
+  @override
+  String get driveNeededForFile =>
+      'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.';
 }

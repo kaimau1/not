@@ -47,6 +47,8 @@ import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart' show swipeModeProvider;
+import '../../notes/data/drive_store.dart';
+import '../../notes/presentation/drive_ui.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
@@ -377,6 +379,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         summary: '',
         keywords: 'yedek geri yukle sinir mb yukleme depolama alan kota',
         rows: [
+          // EK SENKRONU (kullanıcı isteği 2026-10-15): Google hesabında
+          // ekler kullanıcının Drive'ına, misafir hesapta yalnız metin.
+          _SettingRow(
+            const AttachmentSyncTile(),
+            title: l10n.attachmentSyncTitle,
+            keywords: 'google drive ek gorsel pdf senkron bagla kota',
+          ),
           _SettingRow(
             const _StorageUsage(),
             title: l10n.storageUsage,
@@ -1921,6 +1930,12 @@ class _StorageUsage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // Uygulama bulutunun tavanı YALNIZ ekler oraya gidiyorsa (web) anlamlı:
+    // Drive kipinde kota Drive'ın (bkz. AttachmentSyncTile), misafir
+    // hesapta ekler buluta hiç çıkmıyor.
+    if (ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.storage) {
+      return const SizedBox.shrink();
+    }
     final premium = ref.watch(premiumProvider).value ?? false;
     final quota = premium
         ? AppConstants.maxPremiumStorageBytes

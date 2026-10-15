@@ -995,7 +995,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permOnboardSkip => 'Not now';
 
   @override
-  String get newVideoNote => 'Video note';
+  String get newVideoNote => 'Record a video';
 
   @override
   String get videoLocalOnly =>
@@ -1356,13 +1356,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get annotateDone => 'Finish annotating';
 
   @override
-  String get newPdfNote => 'Add PDF, take notes';
+  String get newPdfNote => 'Note from PDF';
 
   @override
   String get imageNotePreparing => 'Arranging images into a document…';
 
   @override
-  String get newImageNote => 'Add image, take notes';
+  String get newImageNote => 'Note from images';
 
   @override
   String get pdfPageNoteHint => 'Note for this page…';
@@ -1393,7 +1393,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfChooseDocument => 'Choose PDF';
 
   @override
-  String get newSlidesNote => 'Add slides, take notes';
+  String get newSlidesNote => 'Note from slides';
 
   @override
   String get slidesNoDocument => 'This note has no presentation yet';
@@ -1482,7 +1482,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get slideOpenFailed => 'The presentation couldn\'t be opened';
 
   @override
-  String get newPhotoNote => 'Photo note';
+  String get newPhotoNote => 'Take a photo';
 
   @override
   String get newScanNote => 'Scan a document';
@@ -1791,7 +1791,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddWrite => 'WRITE';
 
   @override
-  String get quickAddCapture => 'CAPTURE — CREATES A NOTE FROM CONTENT';
+  String get quickAddCapture => 'CAPTURE';
 
   @override
   String get viewToggle => 'View';
@@ -4505,4 +4505,170 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuSectionApp => 'App';
+
+  @override
+  String cardMoreFiles(int count) {
+    return '+$count more files';
+  }
+
+  @override
+  String cardAudioCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voice recordings',
+      one: 'Voice recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardBubbleDocument => 'PDF WITH BUBBLES';
+
+  @override
+  String get cardBubbleSlides => 'SLIDES WITH BUBBLES';
+
+  @override
+  String get cardKindPdf => 'PDF';
+
+  @override
+  String get cardKindSlides => 'SLIDES';
+
+  @override
+  String cardBubbleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bubbles',
+      one: '1 bubble',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddImport => 'FROM FILES';
+
+  @override
+  String get quickAddImage => 'Image';
+
+  @override
+  String get quickAddPdf => 'PDF';
+
+  @override
+  String get quickAddSlides => 'Slides';
+
+  @override
+  String get quickAddGalleryVideo => 'Video from gallery';
+
+  @override
+  String get quickAddYouTube => 'YouTube video';
+
+  @override
+  String get docViewBubbles => 'Bubbles';
+
+  @override
+  String get docViewClassic => 'Classic';
+
+  @override
+  String get docViewToBubbles => 'Switch to bubbles view';
+
+  @override
+  String get docViewToClassic => 'Switch to classic view';
+
+  @override
+  String get docViewSwitchedBubbles =>
+      'Bubbles view: document on top, page notes below. Your classic layout is kept.';
+
+  @override
+  String get docViewSwitchedClassic =>
+      'Classic view: the document is an attachment on the page. Bubbles and page notes are kept.';
+
+  @override
+  String get docViewTextKept => 'The note\'s text stays in classic view.';
+
+  @override
+  String get docViewDropBubbles =>
+      'Release: bubbles view (document on top, notes below)';
+
+  @override
+  String get captureModeLast => 'Your last choice';
+
+  @override
+  String get captureModeChangeLater =>
+      'You can switch later with the Bubbles / Classic chip in the note.';
+
+  @override
+  String get attachmentSyncTitle => 'Attachment sync';
+
+  @override
+  String get driveSectionTitle => 'Attachments in your Google Drive';
+
+  @override
+  String get driveConnectTitle => 'Keep attachments in your Google Drive';
+
+  @override
+  String get driveConnectInfo =>
+      'Images, PDFs, slides and voice recordings are kept in your own Drive storage, in a hidden app folder, and download to your other devices. Videos stay on the device.';
+
+  @override
+  String get driveConnect => 'Connect';
+
+  @override
+  String get driveDisconnect => 'Disconnect';
+
+  @override
+  String get driveConnected =>
+      'Google Drive connected — attachments are being backed up.';
+
+  @override
+  String get driveConnectedInfo =>
+      'Connected · attachments live in your Drive\'s app folder';
+
+  @override
+  String driveUsage(String used, String limit) {
+    return 'Drive: $used of $limit used';
+  }
+
+  @override
+  String driveConnectFailed(String error) {
+    return 'Couldn\'t connect Google Drive. $error';
+  }
+
+  @override
+  String get driveApiDisabled =>
+      'The Drive API is disabled in the Google Cloud project: enable \"Google Drive API\" in the console and try again.';
+
+  @override
+  String get driveDisconnected =>
+      'Drive disconnected. New attachments wait on the device until you reconnect.';
+
+  @override
+  String get textOnlyTitle => 'Text-only sync';
+
+  @override
+  String get textOnlyInfo =>
+      'Guest accounts sync text only; attachments stay on this device. Link a Google account to keep attachments in your Google Drive.';
+
+  @override
+  String get storageModeInfo =>
+      'On the web, attachments are uploaded to the app\'s cloud.';
+
+  @override
+  String driveWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments are waiting for Google Drive — tap to connect',
+      one: '1 attachment is waiting for Google Drive — tap to connect',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveDownloading =>
+      'Downloading the attachment from Google Drive…';
+
+  @override
+  String get driveNeededForFile =>
+      'This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.';
 }

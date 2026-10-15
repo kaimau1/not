@@ -4053,3 +4053,106 @@ yeri sorulunca **uygulama içi** seçildi.
   Alt çubuk iki grup: solda araç kapsülü, sağda AI + iki mikrofon TEK vurgu
   renkli kapsülde (eskiden üç gölgeli kare); üstünde ince ayraç.
   `planEditorBar` buna göre (segment 44/40, aralık 2).
+
+## 2026-10-15 — Kart medyası, + menüsü, gömme çipi, seçim menüsü, balonlu ⇄ klasik, Drive ek senkronu
+
+`flutter analyze` temiz, `flutter test` tam takım yeşil. Kullanıcı isteği
+(ekran görüntüleriyle, 6 madde + "main'e merge et, APK derlensin").
+
+### Ana ekran kartı (`note_card_media.dart`)
+KÖK NEDEN — "notta video/resim olunca dashboard'da görülmüyor": kartın ek
+önizlemesi yalnız görsel/PDF/sunum tanıyordu; video, YouTube ve ses hiç
+çizilmiyordu — üste sabitli YouTube'lu not başlıktan ibaretti.
+`CardMediaPlan` (saf, test edilir) kararı verir; yükseklik tahmini
+(`estimateNoteCardHeight`) de AYNI planı ölçer (yoksa ızgara dengesi kayar).
+* Kapak: üste sabitli medya, yoksa notun TEK görseli/videosu — kartın
+  tepesinde kenardan kenara (Keep gibi); ⋮ kapakta koyu yuvarlakta.
+* Video ▶ rozeti, YouTube kırmızı düğme + başlık; yerel video kapağı
+  `VideoFrame.cover`, PDF ilk sayfa pdfrx ile 240 px PNG — ikisi de
+  `CardThumbs` süreç önbelleğinde (anahtar dosyanın mtime+boyu: PDF
+  düzenlenince eski küçük resim kalmaz).
+* Balonlu not: belge kartı + "BALONLU PDF" rozeti + balon sayısı.
+* Liste satırında (NoteListRow) tür simgesi yerine küçük resim.
+
+### "+" menüsü
+Üç bölüm: YAZ · ÇEK VE KAYDET · DOSYADAN. "Foto çek not al" gibi cümle
+yarımları gitti (`newPhotoNote` vb. TR değerleri değişti — kip levhasının
+başlığı da bunlar). EKSİKTİ: Galeriden video ve YouTube (`?gvideo=1`,
+`?youtube=1` → editör videoyu ÜSTE SABİTLER: "üstte video, altta not").
+Panel ekranın %78'ini aşarsa kendi içinde kayar.
+
+### Gömülü ek etiketi
+Alt çizgi 📎 emojisinin de altından geçiyordu (yazım hatası işaretine
+benziyordu). Etiket artık TEK span altında iki çocuk: ataç+boşluk çizgisiz,
+ad çizgili (ince); bütünün arkasında soluk kırmızı zemin. TUZAK: ölçüm yolu
+(`linkColor == null`) düz metin — zemin/çizgi yerleşimi etkilemez, ama
+yazı tipi BOYU/AĞIRLIĞI değişseydi sarma ölçümü ile çizim ayrışırdı. Emojiyi
+simgeyle DEĞİŞTİRMEK de bu yüzden yapılmadı (genişlik farkı + vekil çift
+ortasına imleç düşmesi riski).
+
+### Metin seçimi (`tag_tap.dart`)
+* KÖK NEDEN — gömülü kelimeye dokununca önizleme yerine "Yapıştır/Tümünü
+  seç" çıkıyordu: son harfin sağ yarısı imleci etiket SINIRINA koyar,
+  `attachmentTagInside` sınırı saymaz. Artık sınırda DOKUNUŞUN KONUMU
+  (`TapPointTracker` + `RenderEditable.getBoxesForSelection`) bakılır.
+  Alan `Builder` ile sarılı: dokunuşta alanın KENDİ EditableText'i
+  bulunur (gövde ekranında başlığınki de var).
+* Seçim menüsü tek kurucuda (`_selectionMenu`, `arrangeSelectionMenu`):
+  madde satırında da ek göm, etiket önizle/düzenle/kaldır, bağlantıyı aç.
+  Sıra: birincil iş → kes/kopyala/yapıştır → biçim/göm → tümünü seç →
+  platform ekleri (Paylaş…) → Tüm notu kopyala.
+* Seçim zemini birincilin %24'ü (M3 varsayılanı %40 kâğıt temada yazıyı
+  örtüyordu).
+
+### Balonlu ⇄ klasik görünüm
+Kip eskiden yalnız oluşturmada seçiliyordu. Artık: başlık altındaki
+Balonlu/Klasik çipi, ⋮ menüsü, PDF kutusunun menüsü ve klasik notta PDF'i
+TEPEYE sürüklemek (görseli üste sabitlemenin aynı hareketi; şerit "Bırak:
+balonlu görünüm" der — `onPinHoverItem`). Geçiş TİPİ değiştirir, veri
+silmez: balon/vurgu/çizim ekte, sayfa notları notta, klasik yerleşim
+(x/pageY/displayWidth/pdfPage) ekte kalır. Balonlu doğmuş PDF klasiğe ilk
+geçişte `_placePdf` ile sayfaya yerleşir; yeri olan kendi yerine döner.
+**TUZAK — `repairNoteType`**: sayfa notu taşıyan "text" notu eski sürüm
+onarımıyla belge notuna geri yükseltiliyordu; klasik görünüm her açılışta
+balonluya dönerdi. `Note.classicDocument` (HER ZAMAN yazılır — merge
+tuzağı) onarımı durdurur. Kip levhası tür başına son seçimi
+(`capture_mode_last_<tür>`) "Son seçimin" diye işaretler.
+
+### Ekler Google Drive'da (`drive_store.dart`)
+KARAR: kapsam `drive.appdata` (hassas DEĞİL, doğrulama istemez; kullanıcı
+kotası, gizli uygulama klasörü). Kip (`attachmentSyncModeFor`): Google
+hesabı → Drive; misafir → yalnız metin (ekler cihazda); web → Storage
+(dosya sistemi yok). Hedef (`uploadTargetFor`): PAYLAŞILAN not (benim
+paylaştığım not ya da paylaşılan klasör) → Storage — ortak çalışan benim
+Drive'ıma erişemez. Video hâlâ buluta gitmez (eski kullanıcı kararı).
+* Drive dosyası özel: `Attachment.driveId` (yalnız doluysa yazılır),
+  `downloadUrl`'a DOKUNULMAZ. Öbür cihaz kuyruğun `_processDownloads`'ı
+  ile yerel yola indirir; bitince `localFilesRevisionProvider` artar —
+  kart ve editör onu izler (ekranlar yerel dosyayı çizim anında arıyor).
+  Açmak isteyince `fetchAttachmentNow` hemen indirir.
+* Android yetkisi: platform arayüzü (`clientAuthorizationTokensForScopes`)
+  Firebase oturumunun E-POSTASIYLA — cihazda çok hesap varsa doğru Drive.
+  `GoogleSignIn.initialize` süreçte tek kez (`AndroidGoogleAuth.
+  ensureInitialized` artık statik). Windows: ayrı, yalnız drive.appdata
+  kapsamlı YENİLEME anahtarı güvenli depoda (`google_drive_refresh_token`,
+  çıkışta silinir) — giriş akışı hâlâ anahtar istemiyor.
+* Bağlanmadan ekler bekler; ana ekran şeridi "Drive bağlantısını
+  bekliyor — dokun, bağla". Bağla, `probe()` ile Drive'a gerçekten
+  ulaşıldığını sınar (Cloud projesinde **Drive API kapalıysa**
+  `accessNotConfigured` → açıklayıcı mesaj).
+* Drive kipinde uygulamanın Firebase tavanları kalkar (dosya başına 50 MB,
+  toplam tavan yok — Drive kotası geçerli); kırp/döndür/sayfa düzenle
+  `driveId`'yi de sıfırlar (yeniden yüklenir), kalıcı silme Drive
+  kopyasını da siler (`driveFileDeleter` kancası).
+* GÖÇ YOK (bilinçli): Storage'a önceden yüklenmiş ek Drive hedefinde de
+  "senkronlu" sayılır (`syncedTo`) — eskiler Firebase'de kalır, yalnız YENİ
+  ekler Drive'a gider; kullanıcının kotasına habersiz toplu yükleme yok.
+* TUZAK (test yakaladı): `StreamedRequest` gövdesini `listen(...).asFuture()`
+  ile beslemek `onDone`'u EZER — gövde kapanmaz, yükleme sonsuza dek asılı.
+* TUZAK: eski sürüm (güncellenmemiş Windows) notu kaydederse `driveId`
+  alanını düşürür; yerel dosyası olan cihaz eki yeniden yükler (Drive'da
+  ikinci kopya — zararsız).
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`'a indirildi; Android SDK yok — APK CI'da.
+graphify konteynerde yok, graf güncellenmedi.

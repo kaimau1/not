@@ -12,6 +12,7 @@ import '../../../core/constants.dart';
 import '../../ai/data/ai_gate.dart' show premiumProvider;
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/attachment.dart';
+import 'drive_store.dart';
 import 'notes_repository.dart' show storageUsedBytesProvider;
 
 final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
@@ -19,14 +20,23 @@ final attachmentRepositoryProvider = Provider<AttachmentRepository?>((ref) {
   if (uid == null) return null;
   // Premium 50 MB, ücretsiz 10 MB'a kadar ek yükleyebilir.
   final premium = ref.watch(premiumProvider).value ?? false;
-  final maxBytes = premium
+  // Ekler Firebase'e GİTMİYORSA (Drive'a ya da hiçbir yere) uygulamanın
+  // Firebase tavanları anlamsız: dosya başına sınır premium tavanına çıkar,
+  // toplam tavan kalkar — Drive'ın kendi kotası geçerli (kullanıcı isteği
+  // 2026-10-15: "oradaki kota kullanılsın").
+  final mode = ref.watch(attachmentSyncModeProvider);
+  final firebaseBound = mode == AttachmentSyncMode.storage;
+  final maxBytes = premium || !firebaseBound
       ? AppConstants.maxPremiumAttachmentBytes
       : AppConstants.maxFreeAttachmentBytes;
   return AttachmentRepository(
     FirebaseStorage.instance,
     uid,
     maxBytes,
-    quotaBytes: premium
+    drive: ref.watch(driveStoreProvider),
+    quotaBytes: !firebaseBound
+        ? 0
+        : premium
         ? AppConstants.maxPremiumStorageBytes
         : AppConstants.maxFreeStorageBytes,
     // Kullanılan alan İSTEK ANINDA okunur (`watch` değil): depo notlar her
@@ -163,10 +173,14 @@ class AttachmentRepository {
     this.maxBytes, {
     this.quotaBytes = 0,
     this.usedBytes,
+    this.drive,
   });
 
   final FirebaseStorage _storage;
   final String uid;
+
+  /// Kullanıcının Google Drive'ı (bağlıysa). null = Drive yok/bağlı değil.
+  final DriveStore? drive;
 
   /// Bu kullanıcı için izin verilen en büyük ek boyutu (premium'a göre).
   final int maxBytes;
@@ -182,7 +196,7 @@ class AttachmentRepository {
   /// kendi denetimini yazsaydı biri eklendiğinde sessizce tavansız kalırdı.
   void _checkQuota(int incoming) {
     final used = usedBytes;
-    if (used == null) return;
+    if (used == null || quotaBytes <= 0) return;
     if (storageQuotaExceeded(
       used: used(),
       incoming: incoming,
@@ -211,6 +225,8 @@ class AttachmentRepository {
           maxBytes,
           quotaBytes: quotaBytes,
           usedBytes: usedBytes,
+          // Başkasının notu Drive'a GİTMEZ: dosya benim Drive'ımda olursa
+          // sahibi ve öbür ortak çalışanlar ona erişemez.
         );
 
   Future<Directory> _attachmentsDir(String noteId) async {
@@ -357,6 +373,7 @@ class AttachmentRepository {
         height: result.height,
         storagePath: '',
         downloadUrl: '',
+        driveId: '',
         ink: cropInk(
           attachment.ink,
           left: left,
@@ -425,6 +442,7 @@ class AttachmentRepository {
         height: result.height,
         storagePath: '',
         downloadUrl: '',
+        driveId: '',
         ink: rotateInk(attachment.ink, quarterTurns),
       ),
       result.bytes,
@@ -496,6 +514,7 @@ class AttachmentRepository {
         sizeBytes: bytes.length,
         storagePath: '',
         downloadUrl: '',
+        driveId: '',
         pageIds: pageIds,
       ),
       bytes,
@@ -731,7 +750,52 @@ class AttachmentRepository {
     return attachment.copyWith(storagePath: storagePath, downloadUrl: url);
   }
 
+  /// Yerel kopyası olup henüz Drive'da olmayan eki kullanıcının Google
+  /// Drive'ına (uygulama klasörü) yükler; Drive kimliğiyle güncellenmiş
+  /// metadata'yı döner. Drive bağlı değilse ya da dosya yoksa null.
+  Future<Attachment?> uploadToDrive(
+    String noteId,
+    Attachment attachment,
+  ) async {
+    final store = drive;
+    if (store == null) return null;
+    if (attachment.kind == AttachmentKind.video) return null;
+    if (attachment.isInDrive || attachment.localPath.isEmpty) return null;
+    final file = File(attachment.localPath);
+    if (!await file.exists()) return null;
+    final id = await store.upload(
+      file,
+      name: driveFileName(
+        noteId: noteId,
+        attachmentId: attachment.id,
+        fileName: p.basename(attachment.fileName),
+      ),
+      mimeType: attachment.mimeType.isEmpty
+          ? 'application/octet-stream'
+          : attachment.mimeType,
+    );
+    return attachment.copyWith(driveId: id);
+  }
+
+  /// Drive'daki eki bu cihazın yerel kopyasına indirir (yoksa). İndirildiyse
+  /// true; Drive yoksa/ek Drive'da değilse false.
+  Future<bool> fetchFromDrive(Attachment attachment) async {
+    final store = drive;
+    if (store == null || !attachment.isInDrive) return false;
+    if (attachment.localPath.isEmpty) return false;
+    final target = File(attachment.localPath);
+    if (await target.exists()) return false;
+    await store.download(attachment.driveId, target);
+    return true;
+  }
+
   Future<void> deleteFromStorage(Attachment attachment) async {
+    // Drive kopyası da gider (bağlı değilse dosya Drive'da kalır — yalnız
+    // yer kaplar, veri riski yok).
+    if (attachment.isInDrive) {
+      final store = drive;
+      if (store != null) await store.delete(attachment.driveId);
+    }
     if (attachment.storagePath.isEmpty) return;
     try {
       await _storage.ref(attachment.storagePath).delete();
@@ -740,11 +804,20 @@ class AttachmentRepository {
     }
   }
 
-  /// PDF baytlarını getirir: önce yerel kopya, yoksa Storage'dan indirir.
+  /// PDF baytlarını getirir: önce yerel kopya, yoksa Drive'dan (bağlıysa
+  /// indirip yerel kopyaya da yazarak), o da yoksa Storage'dan.
   Future<Uint8List?> readBytes(Attachment attachment) async {
     if (attachment.localPath.isNotEmpty) {
       final file = File(attachment.localPath);
       if (await file.exists()) return file.readAsBytes();
+    }
+    if (attachment.isInDrive && drive != null) {
+      if (!kIsWeb && attachment.localPath.isNotEmpty) {
+        await fetchFromDrive(attachment);
+        final file = File(attachment.localPath);
+        if (await file.exists()) return file.readAsBytes();
+      }
+      return drive!.downloadBytes(attachment.driveId);
     }
     if (attachment.storagePath.isNotEmpty) {
       return _storage

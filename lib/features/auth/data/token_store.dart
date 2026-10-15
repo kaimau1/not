@@ -12,6 +12,10 @@ class TokenStore {
   static const _refreshTokenKey = 'google_refresh_token';
   static const _scopesKey = 'google_granted_scopes';
 
+  /// Drive ek senkronunun yenileme anahtarı (bkz. DesktopDriveAuth) —
+  /// çıkışta o da silinir.
+  static const _driveRefreshKey = 'google_drive_refresh_token';
+
   Future<List<String>> readGrantedScopes() async {
     final raw = await _storage.read(key: _scopesKey);
     if (raw == null || raw.isEmpty) return const [];
@@ -24,5 +28,6 @@ class TokenStore {
   Future<void> clear() async {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _scopesKey);
+    await _storage.delete(key: _driveRefreshKey);
   }
 }

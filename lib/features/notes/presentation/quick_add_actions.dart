@@ -178,7 +178,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     // Kapak karesi yalnız Android'de çıkarılabiliyor: masaüstünde seçenek hiç
     // SORULMAZ — sorup sonra sessizce klasiğe düşmek, seçimi yok saymak olurdu.
     final choice = VideoFrame.supported
-        ? await _askCaptureMode(context.l10n.newVideoNote)
+        ? await _askCaptureMode(context.l10n.newVideoNote, 'video')
         : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
     if (choice == null || !mounted) return;
     if (choice.mode == CaptureMode.classic) {
@@ -227,7 +227,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// gömülür ve kullanıcı hemen yazmaya başlar; balonlu kipte kare bir belge
   /// sayfası olur ve üzerine balon/vurgu/kalem konabilir.
   Future<void> createPhotoNote() async {
-    final choice = await _askCaptureMode(context.l10n.newPhotoNote);
+    final choice = await _askCaptureMode(context.l10n.newPhotoNote, 'photo');
     if (choice == null || !mounted) return;
     if (choice.mode == CaptureMode.classic) {
       await _openBlankNote(
@@ -271,7 +271,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     // Belge tarayıcı yoksa (masaüstü) balonlu kip kurulamaz: seçenek
     // sorulmaz, editördeki eski yol (fotoğraflardan tarama) açılır.
     final choice = DocumentScan.supported
-        ? await _askCaptureMode(context.l10n.newScanNote)
+        ? await _askCaptureMode(context.l10n.newScanNote, 'scan')
         : const CaptureChoice(mode: CaptureMode.classic, noteTitle: '');
     if (choice == null || !mounted) return;
     if (choice.mode == CaptureMode.classic) {
@@ -328,7 +328,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// ikiye bölünür; klasik kipte PDF sıradan bir ek olur ve not düz metin
   /// notudur. Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
   Future<void> createPdfNote() async {
-    final choice = await _askCaptureMode(context.l10n.newPdfNote);
+    final choice = await _askCaptureMode(context.l10n.newPdfNote, 'pdf');
     if (choice == null || !mounted) return;
     await _openBlankNote(
       choice.mode == CaptureMode.bubbles ? NoteType.pdf : NoteType.text,
@@ -348,7 +348,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// gelir; ayrı bir tip açmak aynı ekranların ikinci bir kopyasını
   /// (ve ikinci bir hata kaynağını) doğururdu.
   Future<void> createImageNote() async {
-    final choice = await _askCaptureMode(context.l10n.newImageNote);
+    final choice = await _askCaptureMode(context.l10n.newImageNote, 'image');
     if (choice == null || !mounted) return;
     final l10n = context.l10n;
     final group = XTypeGroup(
@@ -377,7 +377,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   /// "Sunum ekle not al": PDF yolunun slayt eşi.
   Future<void> createSlidesNote() async {
-    final choice = await _askCaptureMode(context.l10n.newSlidesNote);
+    final choice = await _askCaptureMode(context.l10n.newSlidesNote, 'slides');
     if (choice == null || !mounted) return;
     await _openBlankNote(
       choice.mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
@@ -386,10 +386,21 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     );
   }
 
+  /// "Galeriden video": var olan bir videodan not. Video notun üstüne
+  /// sabitlenir, not altında yazılır (bkz. editördeki `startGalleryVideo`).
+  /// Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
+  Future<void> createGalleryVideoNote() =>
+      _openBlankNote(NoteType.text, query: '?gvideo=1');
+
+  /// "YouTube videosu": bağlantı sorulur (panoda varsa hazır gelir), video
+  /// notun üstüne sabitlenir ve izlerken altına not alınır.
+  Future<void> createYouTubeNote() =>
+      _openBlankNote(NoteType.text, query: '?youtube=1');
+
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
   /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).
-  Future<CaptureChoice?> _askCaptureMode(String title) =>
-      showCaptureModeSheet(context, title: title);
+  Future<CaptureChoice?> _askCaptureMode(String title, String kind) =>
+      showCaptureModeSheet(context, title: title, kind: kind);
 
   /// Boş bir not kurup editörü [query] açılış niyetiyle açar (klasör süzgeci
   /// varsa nota da yazılır). Altı yakalama yolunun ortak kuyruğu.

@@ -45,7 +45,7 @@ void main() {
     expect(controller.attachmentNames, ['rapor.pdf']);
   });
 
-  testWidgets('etiket ayrı bir span olarak çizilir (kırmızı + altı çizili)', (
+  testWidgets('etiket ayrı bir span olarak çizilir (kırmızı + adı altı çizili)', (
     tester,
   ) async {
     final controller = await pumpRow(tester, names: ['rapor.pdf']);
@@ -70,7 +70,10 @@ void main() {
     }
 
     walk(span);
-    expect(underlined, contains('📎 rapor.pdf'));
+    // 2026-10-15: ataç ÇİZGİSİZ, yalnız ad çizgili (alt çizgi emojinin
+    // altından geçince yazım hatası işaretine benziyordu).
+    expect(underlined, contains('rapor.pdf'));
+    expect(underlined.any((t) => t.contains('📎')), isFalse);
   });
 
   testWidgets('etikete dokunmak eki bildirir', (tester) async {
@@ -85,6 +88,37 @@ void main() {
     // orası yazmaya devam etmektir, önizleme açmaz).
     final field = tester.getRect(find.byType(EditableText).first);
     await tester.tapAt(Offset(field.left + 40, field.center.dy));
+    await tester.pumpAndSettle();
+    expect(opened, 'rapor.pdf');
+  });
+
+  testWidgets('son harfin SAĞ yarısına dokunmak da önizleme açar', (
+    tester,
+  ) async {
+    // Kullanıcı bulgusu 2026-10-15 (ekran görüntüsü): gömülü kelimeye
+    // dokununca önizleme yerine "Yapıştır / Tümünü seç" menüsü çıkıyordu.
+    // Son harfin sağ yarısı imleci etiketin SINIRINA koyar; dokunuşun
+    // KONUMU etiketin kutusundaysa yine etikete dokunulmuştur.
+    String? opened;
+    await pumpRow(
+      tester,
+      names: ['rapor.pdf'],
+      onTag: (name) => opened = name,
+    );
+    final editable = tester
+        .state<EditableTextState>(find.byType(EditableText).first)
+        .renderEditable;
+    const text = '📎 rapor.pdf';
+    final last = editable.getBoxesForSelection(
+      const TextSelection(
+        baseOffset: text.length - 1,
+        extentOffset: text.length,
+      ),
+    ).single.toRect();
+    final point = editable.localToGlobal(
+      Offset(last.right - 1, last.center.dy),
+    );
+    await tester.tapAt(point);
     await tester.pumpAndSettle();
     expect(opened, 'rapor.pdf');
   });

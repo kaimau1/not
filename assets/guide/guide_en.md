@@ -5,6 +5,8 @@ Every feature of Notes, section by section. Tap a section to open it; use the se
 ## Getting started {#start}
 Your notes belong to your account and **sync instantly** between phone, tablet, computer and the web. Everything works offline too; changes sync by themselves when you are back online.
 - Sign in with your Google account, or start right away without signing in.
+- **Attachments (images, PDFs, slides, audio) live in your Google Drive:** if you signed in with Google, go to Settings → Sync → **Keep attachments in your Google Drive → Connect** (or tap the "waiting for Google Drive" strip on the home screen). Attachments use your own Drive storage, sit in a hidden app folder and download to your other devices. Attachments of notes you share with others go to the app's cloud so everyone can see them.
+- **Guest accounts sync text only;** attachments stay on that device.
 - Want a note to stay **on this device only**? Note menu (⋮) → **Stop syncing**. That note and its attachments never go to the cloud.
 - Videos are always stored only on the device that recorded them (never uploaded); YouTube videos are links, so they play on every device.
 - Made a mistake? **Undo** (↶) and **Redo** on the note screen bring back every change.
@@ -18,14 +20,16 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. Reorder them from ⋮ → **Folder order**.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
+- **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note stands out with the **PDF WITH BUBBLES** badge, a thumbnail of its first page and its bubble count; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
 - **A card's ⋮ / long-press menu:** pin, star, share, send to a friend, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (copy, duplicate, template, export), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
-The **+** button at the bottom right opens two groups:
-- **Write:** text note, list, numbered list, archive notebook, shopping list, note **from template**.
-- **Capture:** voice note, photo, document scan, PDF, image, slides, handwriting, video note and QR code.
-For PDFs, images and slides you choose a mode: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment).
+The **+** button at the bottom right opens three groups:
+- **Write:** text note, list, numbered list, shopping list, note **from template**, archive notebook.
+- **Capture:** voice note, take a photo, record a video, scan a document, handwriting and QR code.
+- **From files:** image, PDF, slides, **video from gallery** and **YouTube video**. A note started from a video opens with the video pinned on top and the note below.
+For PDFs, images and slides you choose a mode: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). You can switch later too: see **Bubbles ↔ classic**.
 
 ## Editing a note {#editor}
 Bottom bar, left to right:
@@ -78,8 +82,9 @@ To take notes while watching a video or looking at an image:
 You can link a **PDF, image, video, YouTube video** or any attachment of the note to a word or sentence.
 1. Select the word → **Embed attachment in selection** in the selection menu (or the same option under + Add).
 2. In the sheet, pick **Add new** (PDF, image, video, YouTube) or one of the **attachments in this note**.
-3. The word is marked with 📎 and underlined in red.
-- **Tap the word** to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen**, **Edit**, **Replace** and **Remove embed**.
+3. The word is marked with 📎 and becomes an underlined tag on a pale red background.
+- List items work the same: **Embed attachment in selection** in the selection menu, and **Preview / Edit / Remove embed** when the cursor is on a tag.
+- **Tap the word** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen**, **Edit**, **Replace** and **Remove embed**.
 - Removing an embed keeps the text and only unlinks it.
 - It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**.
 
@@ -92,6 +97,8 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Bookmarks** and page jumps; double-tap to zoom.
 - **Chat with the PDF:** ask "is there a penalty clause?" or "what's the deadline?".
 - In a classic note the PDF sits on the page as a small box; pages turn inside the box.
+- **Bubbles ↔ classic:** tap the **Bubbles / Classic** chip under the title, or ⋮ → *Switch to bubbles/classic view*. In a classic note, long-press the PDF on the page and **drag it to the top of the screen** to switch to bubbles ("document on top, notes below"). Switching deletes nothing: bubbles, highlights, drawings and page notes, as well as the PDF's position and size on the page, are kept and come back as they were.
+- When a new note asks for the mode, **your last choice** is marked.
 - In another app choose **Open with → Notes** for a PDF: you're asked whether to make a new note or add it to an existing one.
 
 ## Scan, OCR and QR {#scan}
@@ -162,7 +169,7 @@ Find any setting by name with the search box at the top of Settings ("briefing",
 - **AI:** model, your own API key, daily briefing time, keeping checked items untouched.
 - **Read aloud:** device voice or AI voice, reading speed.
 - **Permissions:** microphone, camera, notifications, location — status and system settings.
-- **Storage:** cloud usage and the cache on this device.
+- **Sync:** Google Drive connection and Drive usage, the automatic upload limit, the cache on this device, backups.
 - **Account:** sign out, delete account; privacy policy and licences.
 
 ## Tips {#tips}

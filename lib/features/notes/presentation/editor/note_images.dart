@@ -699,9 +699,14 @@ class _ImageTools extends StatelessWidget {
     this.onDetach,
     this.onVideoToNote,
     this.onPinTop,
+    this.pinIsBubbles = false,
     this.copyIsLink = false,
     this.onOpenExternal,
   });
+
+  /// [onPinTop] bir PDF'te BALONLU GÖRÜNÜME geçirir (üstte belge, altta not)
+  /// — menüdeki yazı ve simge ona göre.
+  final bool pinIsBubbles;
 
   final double wFrac;
   final double minWidthFrac;
@@ -833,8 +838,16 @@ class _ImageTools extends StatelessWidget {
                       child: ListTile(
                         dense: true,
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.vertical_align_top),
-                        title: Text(l10n.pinMediaTop),
+                        leading: Icon(
+                          pinIsBubbles
+                              ? Icons.chat_bubble_outline
+                              : Icons.vertical_align_top,
+                        ),
+                        title: Text(
+                          pinIsBubbles
+                              ? l10n.docViewToBubbles
+                              : l10n.pinMediaTop,
+                        ),
                       ),
                     ),
                   if (onVideoToNote != null)
@@ -999,6 +1012,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onVideoToNote,
     this.onPinTop,
     this.onPinHover,
+    this.onPinHoverItem,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -1092,6 +1106,10 @@ class NotePageCanvas extends StatefulWidget {
   /// ekranın tepesinde "Bırak: üste sabitle" şeridini gösterir.
   final ValueChanged<bool>? onPinHover;
 
+  /// Sabitleme bölgesine SÜRÜKLENEN ek (bölgeden çıkınca null) — editör PDF
+  /// için şeride "balonlu görünüm" yazar.
+  final ValueChanged<Attachment?>? onPinHoverItem;
+
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
   final VoidCallback? onTapEmpty;
@@ -1132,6 +1150,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (_inPinZone == value) return;
     _inPinZone = value;
     if (value) HapticFeedback.mediumImpact();
+    widget.onPinHoverItem?.call(
+      value ? widget.images.where((a) => a.id == _moveId).firstOrNull : null,
+    );
     widget.onPinHover?.call(value);
   }
 
@@ -2378,13 +2399,15 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         onVideoToNote: widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
-        // PDF sabitlenmez: üst bölme görsel/video içindir.
-        onPinTop: widget.onPinTop == null || isPdf
+        // PDF'te aynı giriş BALONLU GÖRÜNÜME geçirir (üst bölme görsel/video
+        // içindir; belgenin "üstte belge, altta not" hâli balonlu görünüm).
+        onPinTop: widget.onPinTop == null
             ? null
             : () {
                 _deselect();
                 widget.onPinTop!(img);
               },
+        pinIsBubbles: isPdf,
         onDetach: widget.onDetach == null
             ? null
             : () {

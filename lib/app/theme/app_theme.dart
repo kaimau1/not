@@ -122,6 +122,19 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: scheme.surface,
       visualDensity: desktop ? VisualDensity.compact : VisualDensity.standard,
       splashFactory: InkSparkle.splashFactory,
+      // METİN SEÇİMİ (kullanıcı bulgusu 2026-10-15: "metin seçim kalitesi
+      // düzeltilmeli"). M3 varsayılanı seçimi birincil rengin %40'ıyla
+      // boyuyordu; kâğıt temasının koyu kahvesinde seçili kelime yazının
+      // üstüne basılmış koyu bir blok gibi duruyor, harfler zor okunuyordu.
+      // Daha açık bir zemin seçimi gösterir ama yazıyı örtmez; tutamaçlar ve
+      // imleç birincil renkte kalır (nerede tutulacağı belli olsun).
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: scheme.primary,
+        selectionColor: scheme.primary.withValues(
+          alpha: brightness == Brightness.dark ? 0.38 : 0.24,
+        ),
+        selectionHandleColor: scheme.primary,
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,

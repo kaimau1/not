@@ -27,6 +27,7 @@ Future<String?> showNoteEditorMenu(
   required bool hasFloatingImages,
   required bool hasAttachments,
   bool? localOnly,
+  bool? bubbleView,
   bool canTemplate = false,
 }) {
   final l10n = context.l10n;
@@ -48,6 +49,7 @@ Future<String?> showNoteEditorMenu(
           hasFloatingImages: hasFloatingImages,
           hasAttachments: hasAttachments,
           localOnly: localOnly,
+          bubbleView: bubbleView,
           canTemplate: canTemplate,
         ),
       ),
@@ -67,8 +69,13 @@ class _MenuGrid extends StatelessWidget {
     required this.hasFloatingImages,
     required this.hasAttachments,
     this.localOnly,
+    this.bubbleView,
     this.canTemplate = false,
   });
+
+  /// null = notta görünümü değişebilecek belge yok; true = balonlu
+  /// görünümde (geçiş klasiğe), false = klasikte (geçiş balonluya).
+  final bool? bubbleView;
 
   /// "Şablon olarak kaydet" gösterilsin mi (bkz. `canSaveAsTemplate`).
   final bool canTemplate;
@@ -127,6 +134,15 @@ class _MenuGrid extends StatelessWidget {
       ],
       sections: [
         MenuSection(l10n.menuSectionContent, [
+          // BALONLU ⇄ KLASİK görünüm (kullanıcı isteği 2026-10-15).
+          if (bubbleView != null)
+            MenuAction(
+              'docView',
+              bubbleView! ? l10n.docViewToClassic : l10n.docViewToBubbles,
+              bubbleView!
+                  ? Icons.view_agenda_outlined
+                  : Icons.chat_bubble_outline,
+            ),
           // LİSTEYE ÖZGÜ maddeler (kullanıcı istekleri 2026-08-16).
           if (isList) ...[
             MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
