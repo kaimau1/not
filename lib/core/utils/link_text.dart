@@ -165,11 +165,27 @@ List<InlineSpan> linkSpans(
   // Ek etiketi KIRMIZI + altı çizili (kullanıcının tarif ettiği görünüm).
   // Renk temadan DEĞİL sabit: etiketin "bu bir dosya" işareti olması
   // gerekiyor ve tema rengiyle bağlantı renginden ayrılamazdı.
+  //
+  // GÖRÜNÜM (kullanıcı bulgusu 2026-10-15: "ek gömmedeki görsel 📎
+  // düzeltilmeli"): alt çizgi ATAÇ emojisinin ve ardındaki boşluğun da
+  // altından geçiyordu — renkli emoji kırmızı bir çizginin üstünde, yazım
+  // hatası işaretine benzer bir görüntü. Şimdi etiket bir ÇİP gibi okunur:
+  // bütün etiketin arkasında soluk kırmızı zemin, alt çizgi YALNIZ kelimenin
+  // altında ve inceltilmiş. Zemin ve çizgi yerleşimi etkilemez (ölçüm yolu
+  // renksiz/zeminsiz ölçer; satırlar kaymaz). Metin vurgulu bir aralıktaysa
+  // vurgunun kendi zemini korunur.
   const attachmentColor = Color(0xFFD32F2F);
-  final attachmentStyle = base.copyWith(
-    color: attachmentColor,
+  final tagBase = base.background != null || base.backgroundColor != null
+      ? base.copyWith(color: attachmentColor)
+      : base.copyWith(
+          color: attachmentColor,
+          backgroundColor: attachmentColor.withValues(alpha: 0.10),
+        );
+  final tagPrefixStyle = tagBase.copyWith(decoration: TextDecoration.none);
+  final tagLabelStyle = tagBase.copyWith(
     decoration: TextDecoration.underline,
-    decorationColor: attachmentColor,
+    decorationColor: attachmentColor.withValues(alpha: 0.75),
+    decorationThickness: 1.2,
   );
 
   final spans = <InlineSpan>[];
@@ -182,12 +198,32 @@ List<InlineSpan> linkSpans(
         TextSpan(text: text.substring(cursor, mark.start), style: style),
       );
     }
-    spans.add(
-      TextSpan(
-        text: text.substring(mark.start, mark.end),
-        style: mark.attachment ? attachmentStyle : linkStyle,
-      ),
-    );
+    final marked = text.substring(mark.start, mark.end);
+    if (mark.attachment && marked.startsWith(kAttachmentTagPrefix)) {
+      // Ataç + boşluk ÇİZGİSİZ, ad çizgili; ikisi tek span altında (etiket
+      // yine tek parça: çizilen metin ham metinle birebir aynı).
+      spans.add(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: kAttachmentTagPrefix,
+              style: tagPrefixStyle,
+            ),
+            TextSpan(
+              text: marked.substring(kAttachmentTagPrefix.length),
+              style: tagLabelStyle,
+            ),
+          ],
+        ),
+      );
+    } else {
+      spans.add(
+        TextSpan(
+          text: marked,
+          style: mark.attachment ? tagLabelStyle : linkStyle,
+        ),
+      );
+    }
     cursor = mark.end;
   }
   if (cursor < text.length) {

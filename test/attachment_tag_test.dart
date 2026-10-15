@@ -48,8 +48,30 @@ void main() {
     expect(spans.length, 3);
     // ÇİZİLEN metin ham metinle birebir aynı olmalı: aksi hâlde
     // WrapTextController'da imleç ve seçim konumları kayar.
-    final drawn = spans.map((s) => (s as TextSpan).text ?? '').join();
+    final drawn = spans.map((s) => s.toPlainText()).join();
     expect(drawn, text);
+  });
+
+  test('ataç çizgisiz, ad çizgili; etiket soluk zeminli bir çip', () {
+    // Kullanıcı bulgusu 2026-10-15: alt çizgi ataç emojisinin de altından
+    // geçiyor, yazım hatası işaretine benziyordu.
+    const text = 'önce 📎 a.jpg sonra';
+    final tag =
+        linkSpans(
+              text,
+              null,
+              const Color(0xFF0000FF),
+              attachmentNames: const ['a.jpg'],
+            )[1]
+            as TextSpan;
+    final prefix = tag.children![0] as TextSpan;
+    final label = tag.children![1] as TextSpan;
+    expect(prefix.text, kAttachmentTagPrefix);
+    expect(prefix.style?.decoration, TextDecoration.none);
+    expect(label.text, 'a.jpg');
+    expect(label.style?.decoration, TextDecoration.underline);
+    expect(prefix.style?.backgroundColor, isNotNull);
+    expect(label.style?.backgroundColor, prefix.style?.backgroundColor);
   });
 
   test('etiketsiz metinde renk yolu bağlantı davranışını korur', () {

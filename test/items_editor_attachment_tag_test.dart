@@ -45,7 +45,7 @@ void main() {
     expect(controller.attachmentNames, ['rapor.pdf']);
   });
 
-  testWidgets('etiket ayrı bir span olarak çizilir (kırmızı + altı çizili)', (
+  testWidgets('etiket ayrı bir span olarak çizilir (kırmızı + adı altı çizili)', (
     tester,
   ) async {
     final controller = await pumpRow(tester, names: ['rapor.pdf']);
@@ -70,7 +70,10 @@ void main() {
     }
 
     walk(span);
-    expect(underlined, contains('📎 rapor.pdf'));
+    // 2026-10-15: ataç ÇİZGİSİZ, yalnız ad çizgili (alt çizgi emojinin
+    // altından geçince yazım hatası işaretine benziyordu).
+    expect(underlined, contains('rapor.pdf'));
+    expect(underlined.any((t) => t.contains('📎')), isFalse);
   });
 
   testWidgets('etikete dokunmak eki bildirir', (tester) async {
