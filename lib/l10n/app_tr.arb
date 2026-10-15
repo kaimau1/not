@@ -2020,5 +2020,15 @@
   "quickAddPdf": "PDF",
   "quickAddSlides": "Sunum",
   "quickAddGalleryVideo": "Galeriden video",
-  "quickAddYouTube": "YouTube videosu"
+  "quickAddYouTube": "YouTube videosu",
+  "docViewBubbles": "Balonlu",
+  "docViewClassic": "Klasik",
+  "docViewToBubbles": "Balonlu görünüme geç",
+  "docViewToClassic": "Klasik görünüme geç",
+  "docViewSwitchedBubbles": "Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.",
+  "docViewSwitchedClassic": "Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.",
+  "docViewTextKept": "Notun yazısı klasik görünümde duruyor.",
+  "docViewDropBubbles": "Bırak: balonlu görünüm (üstte belge, altta not)",
+  "captureModeLast": "Son seçimin",
+  "captureModeChangeLater": "Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin."
 }

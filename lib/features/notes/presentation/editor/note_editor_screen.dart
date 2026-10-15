@@ -3120,6 +3120,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onVideoToNote: _videoToNote,
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
+      onPinHoverItem: _setPinHoverItem,
       topLimit: _bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
@@ -3577,6 +3578,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       twoColumns: note.listColumns == 2,
       hasFloatingImages: note.attachments.any((a) => a.floatsOnPage),
       hasAttachments: note.attachments.isNotEmpty,
+      bubbleView: widget.readOnly || _switchableDocument(note) == null
+          ? null
+          : note.type.isPageNoteType,
       canTemplate: canSaveAsTemplate(note),
       // Yalnız KENDİ notum (başkasının notu yerel yapılamaz) ve özellik
       // destekleniyorsa (web'de yok).
@@ -3586,6 +3590,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     );
     if (action == null || !mounted) return;
     switch (action) {
+      case 'docView':
+        _toggleDocumentView();
       case 'pin':
         _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true);
       case 'star':
@@ -4500,11 +4506,122 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Görsel sabitleme bölgesinin üstündeyken true: "Bırak" şeridi görünür.
   bool _pinHover = false;
 
+  /// Sabitleme bölgesine sürüklenen bir PDF mi (şeridin yazısı "balonlu
+  /// görünüm" olur).
+  bool _pinHoverDocument = false;
+
+  // ── BALONLU ⇄ KLASİK GÖRÜNÜM ─────────────────────────────────────────
+  //
+  // Kullanıcı isteği 2026-10-15: "balonlu mod ve normal ek arasında hızlı,
+  // sürükleyerek veya başka şekilde geçiş; düzenler kaydedilsin". Kip
+  // eskiden YALNIZ notu oluştururken seçiliyordu ve bir daha
+  // değiştirilemiyordu. Geçiş artık üç yoldan:
+  //  * başlığın altındaki görünüm çipi (tek dokunuş, iki yönde),
+  //  * klasik notta sayfadaki PDF'i ekranın TEPESİNE sürüklemek (görseli
+  //    üste sabitlemenin aynı hareketi — "üstte belge, altta not"),
+  //  * ⋮ menüsü ve sayfadaki PDF kutusunun menüsü.
+  // Geçiş VERİ SİLMEZ: balonlar/vurgular/çizimler ekte, sayfa notları notta,
+  // klasik yerleşim (belgenin sayfadaki yeri, boyutu, sayfası) ekte kalır —
+  // geri dönünce iki düzen de olduğu gibi gelir (bkz. Note.classicDocument).
+
+  /// Görünümü değiştirilebilecek belge: notun ilk PDF/sunum eki.
+  static Attachment? _switchableDocument(Note note) => note.attachments
+      .where(
+        (a) => a.kind == AttachmentKind.pdf || a.kind == AttachmentKind.slide,
+      )
+      .firstOrNull;
+
+  void _toggleDocumentView() {
+    final note = _note;
+    if (note == null) return;
+    if (note.type.isPageNoteType) {
+      _switchToClassic();
+    } else {
+      _switchToBubbles();
+    }
+  }
+
+  /// KLASİK → BALONLU: belge notun kendisi olur (üstte sayfa, altta sayfa
+  /// notu; üzerine balon/vurgu/kalem). [document] verilmezse ilk belge.
+  void _switchToBubbles([Attachment? document]) {
+    final note = _note;
+    if (note == null || note.type.isPageNoteType || widget.readOnly) return;
+    final doc = document ?? _switchableDocument(note);
+    if (doc == null) return;
+    if (_pinHover) setState(() => _pinHover = false);
+    _dismissKeyboard();
+    final hadText =
+        note.body.trim().isNotEmpty ||
+        note.items.any((i) => i.text.trim().isNotEmpty);
+    _mutate(
+      (n) => n.copyWith(
+        type: doc.kind == AttachmentKind.slide ? NoteType.slides : NoteType.pdf,
+        classicDocument: false,
+        // Belge bölmesi türünün İLK ekini gösterir: seçilen belge öne alınır
+        // (sıra dışında hiçbir alan değişmez — klasik düzen ekte kalır).
+        attachments: [
+          for (final a in n.attachments)
+            if (a.id == doc.id) a,
+          for (final a in n.attachments)
+            if (a.id != doc.id) a,
+        ],
+      ),
+      immediate: true,
+    );
+    HapticFeedback.mediumImpact();
+    final l10n = context.l10n;
+    _showSnack(
+      hadText
+          ? '${l10n.docViewSwitchedBubbles} ${l10n.docViewTextKept}'
+          : l10n.docViewSwitchedBubbles,
+    );
+  }
+
+  /// BALONLU → KLASİK: not yeniden metin notu olur, belge sayfada (ya da
+  /// önceden durduğu şeritte) bir ek olarak görünür.
+  void _switchToClassic() {
+    final note = _note;
+    if (note == null || !note.type.isPageNoteType || widget.readOnly) return;
+    final kind = note.type == NoteType.slides
+        ? AttachmentKind.slide
+        : AttachmentKind.pdf;
+    final doc = note.attachments.where((a) => a.kind == kind).firstOrNull;
+    _dismissKeyboard();
+    _mutate((n) {
+      final asText = n.copyWith(type: NoteType.text, classicDocument: true);
+      return asText.copyWith(
+        attachments: [
+          for (final a in n.attachments)
+            // Balonlu doğmuş (sayfada hiç yeri olmamış) PDF sayfaya yerleşir;
+            // klasikte bir yeri olan belge KENDİ yerine döner — sayfada ya da
+            // şeritte (kullanıcı oraya koyduysa) olduğu gibi.
+            if (doc != null &&
+                a.id == doc.id &&
+                a.kind == AttachmentKind.pdf &&
+                a.x == null &&
+                a.pageY == null)
+              _placePdf(a, asText)
+            else
+              a,
+        ],
+      );
+    }, immediate: true);
+    HapticFeedback.mediumImpact();
+    _showSnack(context.l10n.docViewSwitchedClassic);
+  }
+
   /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
   /// olur: önceden sabitlenmiş olan sayfaya geri döner. Daha önce
   /// sabitlenmişse bölme ESKİ yüksekliğiyle açılır.
   void _pinMediaTop(Attachment media) {
     if (_pinHover) setState(() => _pinHover = false);
+    // PDF'i tepeye sürüklemek BALONLU GÖRÜNÜME geçirir: "üstte belge, altta
+    // not" — görselin sabit bölmesinin belgedeki karşılığı (bkz.
+    // [_switchToBubbles]).
+    if (media.kind == AttachmentKind.pdf) {
+      _switchToBubbles(media);
+      return;
+    }
     final height =
         media.rememberedPinHeight ??
         defaultPinnedHeight(media, MediaQuery.sizeOf(context));
@@ -4549,6 +4666,13 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pinHover != value && mounted) setState(() => _pinHover = value);
   }
 
+  void _setPinHoverItem(Attachment? item) {
+    final document = item?.kind == AttachmentKind.pdf;
+    if (_pinHoverDocument != document && mounted) {
+      setState(() => _pinHoverDocument = document);
+    }
+  }
+
   /// Gövdeyi (sayfa notu değilse) sabit medya bölmesi ve sürükleme sırasında
   /// tepede beliren "Bırak: üste sabitle" şeridiyle sarar.
   Widget _withPinnedMedia(Note note, Widget body) {
@@ -4591,16 +4715,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.vertical_align_top,
+                      _pinHoverDocument
+                          ? Icons.chat_bubble_outline
+                          : Icons.vertical_align_top,
                       size: 18,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      context.l10n.pinMediaRelease,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Text(
+                        _pinHoverDocument
+                            ? context.l10n.docViewDropBubbles
+                            : context.l10n.pinMediaRelease,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -6479,7 +6610,47 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fontSize: 12.5,
     );
 
+    // BALONLU ⇄ KLASİK görünüm (bkz. [_switchToBubbles]): notta bir belge
+    // varsa iki küçük seçim çipi — etkin görünüm dolu, öbürüne tek dokunuş.
+    final viewDocument = widget.readOnly ? null : _switchableDocument(note);
+    final bubbleView = note.type.isPageNoteType;
     final metaChildren = <Widget>[
+      if (viewDocument != null) ...[
+        ChoiceChip(
+          key: const ValueKey('doc-view-bubbles'),
+          avatar: Icon(
+            Icons.chat_bubble_outline,
+            size: 14,
+            color: bubbleView ? theme.colorScheme.onSecondaryContainer : null,
+          ),
+          showCheckmark: false,
+          label: Text(l10n.docViewBubbles),
+          labelStyle: chipLabelStyle,
+          tooltip: bubbleView ? null : l10n.docViewToBubbles,
+          selected: bubbleView,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          onSelected: bubbleView ? null : (_) => _switchToBubbles(),
+        ),
+        ChoiceChip(
+          key: const ValueKey('doc-view-classic'),
+          avatar: Icon(
+            Icons.view_agenda_outlined,
+            size: 14,
+            color: bubbleView ? null : theme.colorScheme.onSecondaryContainer,
+          ),
+          showCheckmark: false,
+          label: Text(l10n.docViewClassic),
+          labelStyle: chipLabelStyle,
+          tooltip: bubbleView ? l10n.docViewToClassic : null,
+          selected: !bubbleView,
+          padding: _kChipPadding,
+          visualDensity: _kChipDensity,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          onSelected: bubbleView ? (_) => _switchToClassic() : null,
+        ),
+      ],
       // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(

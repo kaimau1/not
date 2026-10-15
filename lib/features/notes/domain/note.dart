@@ -65,11 +65,7 @@ class NoteTagLink {
 /// Notun bir SAYFASI (bkz. [Note.textPages]). Etkin sayfanın girdisi boştur;
 /// içeriği notun kendi gövdesinde/maddelerindedir.
 class NoteTextPage {
-  const NoteTextPage({
-    required this.id,
-    this.body = '',
-    this.items = const [],
-  });
+  const NoteTextPage({required this.id, this.body = '', this.items = const []});
 
   /// '' = ilk sayfa (eski, bölümsüz görseller ona aittir).
   final String id;
@@ -133,12 +129,19 @@ class AiSummary {
 /// Ölçüt dar tutuldu: SAYFA NOTU olan VE belge eki taşıyan bir "text" notu
 /// başka türlü oluşmaz. Yalnız PDF eki olan düz metin notu meşrudur, ona
 /// dokunulmaz.
+///
+/// [classicDocument]: kullanıcı belge notunu BİLEREK klasik görünüme aldıysa
+/// (bkz. [Note.classicDocument]) onarım yapılmaz — yoksa not her açılışta
+/// balonluya geri dönerdi.
 NoteType repairNoteType(
   NoteType stored, {
   required List<String?> attachmentKinds,
   required bool hasPageNotes,
+  bool classicDocument = false,
 }) {
-  if (stored != NoteType.text || !hasPageNotes) return stored;
+  if (stored != NoteType.text || !hasPageNotes || classicDocument) {
+    return stored;
+  }
   for (final kind in attachmentKinds) {
     if (kind == AttachmentKind.pdf.id) return NoteType.pdf;
     if (kind == AttachmentKind.slide.id) return NoteType.slides;
@@ -174,6 +177,7 @@ class Note {
     this.backgroundImageId,
     this.backgroundOpacity = 0.35,
     this.listColumns = 1,
+    this.classicDocument = false,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
     this.archiveGeneralName = '',
@@ -305,6 +309,19 @@ class Note {
   /// maddelerden oluşabiliyor ve ikincisi iki sütunda okunmaz hâle gelir.
   final int listColumns;
 
+  /// Belge (PDF/sunum) notu KLASİK görünüme alındı mı?
+  ///
+  /// Kullanıcı isteği 2026-10-15: "balonlu mod ve normal ek arasında hızlı
+  /// geçiş, düzenler kaydedilsin". Geçiş notun TİPİNİ değiştirir (pdf/slides
+  /// ⇄ text) ve hiçbir veriyi silmez: balonlar, vurgular, çizimler ve sayfa
+  /// notları ekte/notta kalır; klasik düzen (belgenin sayfadaki yeri,
+  /// boyutu, sayfası) da ekte durur. Geri dönünce ikisi de olduğu gibi gelir.
+  ///
+  /// Bu bayrak YALNIZ [repairNoteType]'ı durdurur: sayfa notu taşıyan bir
+  /// "text" notu eski sürüm onarımında belge notuna geri yükseltiliyordu —
+  /// klasik görünüm her açılışta kendiliğinden balonluya dönerdi.
+  final bool classicDocument;
+
   /// Arşiv defterinin ELLE açılmış sayfaları (sıralı, adlarıyla).
   ///
   /// Türe göre dolan sayfalar (Görseller / Videolar / Belgeler / Metinler)
@@ -398,7 +415,8 @@ class Note {
       // Diğer sayfalarda yazı varsa not boş değil (etkin sayfa boş olsa da).
       textPages.every(
         (p) =>
-            p.body.trim().isEmpty && p.items.every((i) => i.text.trim().isEmpty),
+            p.body.trim().isEmpty &&
+            p.items.every((i) => i.text.trim().isEmpty),
       ) &&
       attachments.isEmpty &&
       reminderAt == null;
@@ -598,6 +616,7 @@ class Note {
     bool clearBackgroundImage = false,
     double? backgroundOpacity,
     int? listColumns,
+    bool? classicDocument,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
     String? archiveGeneralName,
@@ -641,6 +660,7 @@ class Note {
         : (backgroundImageId ?? this.backgroundImageId),
     backgroundOpacity: backgroundOpacity ?? this.backgroundOpacity,
     listColumns: listColumns ?? this.listColumns,
+    classicDocument: classicDocument ?? this.classicDocument,
     archivePages: archivePages ?? this.archivePages,
     archivePaper: archivePaper ?? this.archivePaper,
     archiveGeneralName: archiveGeneralName ?? this.archiveGeneralName,
@@ -700,6 +720,7 @@ class Note {
         for (final raw in rawAttachments) (raw as Map)['kind']?.toString(),
       ],
       hasPageNotes: rawPageNotes.isNotEmpty,
+      classicDocument: map['classicDocument'] == true,
     );
     return Note(
       id: id,
@@ -719,10 +740,7 @@ class Note {
       attachments: [
         for (final raw in (map['attachments'] as List<dynamic>? ?? const []))
           // noteId ile: ekin yerel yolu cihazda türetilir, belgeden okunmaz.
-          Attachment.fromMap(
-            Map<String, dynamic>.from(raw as Map),
-            noteId: id,
-          ),
+          Attachment.fromMap(Map<String, dynamic>.from(raw as Map), noteId: id),
       ],
       tags: [
         for (final tag in (map['tags'] as List<dynamic>? ?? const []))
@@ -759,6 +777,7 @@ class Note {
       // bilmeyen bu sürüm) tek sütuna düşer — çizim yolu ikiden fazlasını
       // yerleştiremez.
       listColumns: (map['listColumns'] as num?)?.toInt() == 2 ? 2 : 1,
+      classicDocument: map['classicDocument'] == true,
       archivePages: [
         for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
           p.toString(),
@@ -830,6 +849,9 @@ class Note {
     // iki sütundan tek sütuna dönmek kayda hiç yansımaz ve not her açılışta
     // yine iki sütunlu gelirdi.
     'listColumns': listColumns,
+    // HER ZAMAN yazılır (merge tuzağı): balonluya geri dönüş bayrağı
+    // indirebilmeli.
+    'classicDocument': classicDocument,
     // HER ZAMAN yazılır: son özel sayfayı silmek `set(merge: true)` ile
     // ancak boş dizi yazılarak kayda geçer.
     'archivePages': archivePages,

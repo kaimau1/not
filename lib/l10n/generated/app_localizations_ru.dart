@@ -4573,4 +4573,38 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quickAddYouTube => 'YouTube videosu';
+
+  @override
+  String get docViewBubbles => 'Balonlu';
+
+  @override
+  String get docViewClassic => 'Klasik';
+
+  @override
+  String get docViewToBubbles => 'Balonlu görünüme geç';
+
+  @override
+  String get docViewToClassic => 'Klasik görünüme geç';
+
+  @override
+  String get docViewSwitchedBubbles =>
+      'Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.';
+
+  @override
+  String get docViewSwitchedClassic =>
+      'Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.';
+
+  @override
+  String get docViewTextKept => 'Notun yazısı klasik görünümde duruyor.';
+
+  @override
+  String get docViewDropBubbles =>
+      'Bırak: balonlu görünüm (üstte belge, altta not)';
+
+  @override
+  String get captureModeLast => 'Son seçimin';
+
+  @override
+  String get captureModeChangeLater =>
+      'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
 }

@@ -18,6 +18,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Sırasını ⋮ → **Klasör sırası**'ndan değiştir.
 - **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
+- **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu not **BALONLU PDF** rozeti, ilk sayfanın küçük resmi ve balon sayısıyla ayrılır; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
 - Sağ üstteki ⋮ alttan bir levha açar: en üstte **Hatırlatıcılar, Arşiv, Çöp Kutusu, Şablondan**; altında **Hesap ve kişiler** (hesap, kişiler, gelen notlar), **Ana ekran** (klasör sırası, zemin, gizli klasörler) ve **Uygulama** (ayarlar, bu kılavuz).
 - **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, arkadaşa gönder, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (kopyala, çoğalt, şablon, dışa aktar), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
@@ -79,8 +80,9 @@ Bir videoyu izlerken ya da bir görsele bakarken altına not almak için:
 Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herhangi bir eki bağlayabilirsin.
 1. Kelimeyi seç → seçim menüsünde **Seçili yazıya ek göm** (ya da + Ekle'deki aynı seçenek).
 2. Açılan levhada **Yeni ekle** (PDF, görsel, video, YouTube) ya da **Bu nottaki ekler**'den birini seç.
-3. Kelime 📎 ile işaretlenir ve kırmızı altı çizili görünür.
-- **Kelimeye dokununca** önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran**, **Düzenle**, **Değiştir** ve **Gömmeyi kaldır** var.
+3. Kelime 📎 ile işaretlenir ve soluk kırmızı zeminli, altı çizili bir etiket olur.
+- Madde satırlarında da aynı: seçim menüsünde **Seçili yazıya ek göm**, imleç etiketteyken **Önizle / Düzenle / Gömmeyi kaldır**.
+- **Kelimeye dokununca** (son harfi dahil) önizleme kartı açılır: video ve YouTube kartta oynar, PDF sayfaları kartta çevrilir. Kartta **Tam ekran**, **Düzenle**, **Değiştir** ve **Gömmeyi kaldır** var.
 - Gömmeyi kaldırınca yazı kalır, yalnız bağ çözülür.
 - Ters yön de çalışır: önce eki seç (ek şeridindeki bağla düğmesi), sonra yazıyı seçip **Buraya bağla**.
 
@@ -93,6 +95,8 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Yer imleri** ve sayfa atlama; çift dokunuşla yakınlaştırma.
 - **PDF ile sohbet:** "cezai şart var mı?", "son teslim tarihi ne?" diye sor.
 - Klasik notta PDF **sayfaya gömülü** küçük bir kutu olarak durur; kutunun içinde sayfa çevrilir.
+- **Balonlu ↔ klasik geçiş:** başlığın altındaki **Balonlu / Klasik** çipine dokun ya da ⋮ → *Balonlu/Klasik görünüme geç*. Klasik notta sayfadaki PDF'i basılı tutup **ekranın tepesine sürüklemek** de balonlu görünüme geçirir ("üstte belge, altta not"). Geçiş hiçbir şey silmez: balonlar, vurgular, çizimler ve sayfa notları da, PDF'in sayfadaki yeri ve boyutu da saklanır — geri dönünce olduğu gibi gelir.
+- Yeni not açarken kip sorulduğunda **son seçimin** işaretli gelir.
 - Başka bir uygulamada PDF için **Birlikte aç → Notlar** de: yeni not mu, var olan nota mı ekleneceğini sorar.
 
 ## Tarama, OCR ve QR {#scan}

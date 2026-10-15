@@ -4562,4 +4562,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddYouTube => 'YouTube video';
+
+  @override
+  String get docViewBubbles => 'Bubbles';
+
+  @override
+  String get docViewClassic => 'Classic';
+
+  @override
+  String get docViewToBubbles => 'Switch to bubbles view';
+
+  @override
+  String get docViewToClassic => 'Switch to classic view';
+
+  @override
+  String get docViewSwitchedBubbles =>
+      'Bubbles view: document on top, page notes below. Your classic layout is kept.';
+
+  @override
+  String get docViewSwitchedClassic =>
+      'Classic view: the document is an attachment on the page. Bubbles and page notes are kept.';
+
+  @override
+  String get docViewTextKept => 'The note\'s text stays in classic view.';
+
+  @override
+  String get docViewDropBubbles =>
+      'Release: bubbles view (document on top, notes below)';
+
+  @override
+  String get captureModeLast => 'Your last choice';
+
+  @override
+  String get captureModeChangeLater =>
+      'You can switch later with the Bubbles / Classic chip in the note.';
 }

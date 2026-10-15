@@ -18,6 +18,7 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **Folder strip:** switch folders by tapping or by **swiping sideways**. Reorder them from ⋮ → **Folder order**.
 - **Quick note row:** type into "New note…" at the top of the list and save — without opening a note.
 - **Home screen background:** ⋮ → Home screen background for an image or pattern.
+- **Media on cards:** a pinned or single image/video shows as a cover at the top of the card; videos carry ▶, YouTube the red button. A bubbles note stands out with the **PDF WITH BUBBLES** badge, a thumbnail of its first page and its bubble count; voice recordings and other documents sit as rows at the bottom of the card.
 - The ⋮ at the top right opens a sheet: **Reminders, Archive, Bin, From template** on top; below them **Account and people** (account, contacts, incoming notes), **Home screen** (folder order, background, hidden folders) and **App** (settings, this guide).
 - **A card's ⋮ / long-press menu:** pin, star, share, send to a friend, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (copy, duplicate, template, export), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
@@ -79,8 +80,9 @@ To take notes while watching a video or looking at an image:
 You can link a **PDF, image, video, YouTube video** or any attachment of the note to a word or sentence.
 1. Select the word → **Embed attachment in selection** in the selection menu (or the same option under + Add).
 2. In the sheet, pick **Add new** (PDF, image, video, YouTube) or one of the **attachments in this note**.
-3. The word is marked with 📎 and underlined in red.
-- **Tap the word** to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen**, **Edit**, **Replace** and **Remove embed**.
+3. The word is marked with 📎 and becomes an underlined tag on a pale red background.
+- List items work the same: **Embed attachment in selection** in the selection menu, and **Preview / Edit / Remove embed** when the cursor is on a tag.
+- **Tap the word** (its last letter too) to open a preview card: videos and YouTube play in the card, PDF pages turn in the card. The card has **Full screen**, **Edit**, **Replace** and **Remove embed**.
 - Removing an embed keeps the text and only unlinks it.
 - It also works the other way round: pick the attachment first (link button on the attachment strip), then select the text and tap **Link here**.
 
@@ -93,6 +95,8 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Bookmarks** and page jumps; double-tap to zoom.
 - **Chat with the PDF:** ask "is there a penalty clause?" or "what's the deadline?".
 - In a classic note the PDF sits on the page as a small box; pages turn inside the box.
+- **Bubbles ↔ classic:** tap the **Bubbles / Classic** chip under the title, or ⋮ → *Switch to bubbles/classic view*. In a classic note, long-press the PDF on the page and **drag it to the top of the screen** to switch to bubbles ("document on top, notes below"). Switching deletes nothing: bubbles, highlights, drawings and page notes, as well as the PDF's position and size on the page, are kept and come back as they were.
+- When a new note asks for the mode, **your last choice** is marked.
 - In another app choose **Open with → Notes** for a PDF: you're asked whether to make a new note or add it to an existing one.
 
 ## Scan, OCR and QR {#scan}

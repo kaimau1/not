@@ -1737,5 +1737,15 @@
   "quickAddPdf": "PDF",
   "quickAddSlides": "Slides",
   "quickAddGalleryVideo": "Video from gallery",
-  "quickAddYouTube": "YouTube video"
+  "quickAddYouTube": "YouTube video",
+  "docViewBubbles": "Bubbles",
+  "docViewClassic": "Classic",
+  "docViewToBubbles": "Switch to bubbles view",
+  "docViewToClassic": "Switch to classic view",
+  "docViewSwitchedBubbles": "Bubbles view: document on top, page notes below. Your classic layout is kept.",
+  "docViewSwitchedClassic": "Classic view: the document is an attachment on the page. Bubbles and page notes are kept.",
+  "docViewTextKept": "The note's text stays in classic view.",
+  "docViewDropBubbles": "Release: bubbles view (document on top, notes below)",
+  "captureModeLast": "Your last choice",
+  "captureModeChangeLater": "You can switch later with the Bubbles / Classic chip in the note."
 }

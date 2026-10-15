@@ -8261,6 +8261,66 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'YouTube videosu'**
   String get quickAddYouTube;
+
+  /// No description provided for @docViewBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu'**
+  String get docViewBubbles;
+
+  /// No description provided for @docViewClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik'**
+  String get docViewClassic;
+
+  /// No description provided for @docViewToBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu görünüme geç'**
+  String get docViewToBubbles;
+
+  /// No description provided for @docViewToClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik görünüme geç'**
+  String get docViewToClassic;
+
+  /// No description provided for @docViewSwitchedBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu görünüm: belge üstte, sayfa notu altta. Klasik yerleşim saklandı.'**
+  String get docViewSwitchedBubbles;
+
+  /// No description provided for @docViewSwitchedClassic.
+  ///
+  /// In tr, this message translates to:
+  /// **'Klasik görünüm: belge sayfada bir ek. Balonlar ve sayfa notları saklandı.'**
+  String get docViewSwitchedClassic;
+
+  /// No description provided for @docViewTextKept.
+  ///
+  /// In tr, this message translates to:
+  /// **'Notun yazısı klasik görünümde duruyor.'**
+  String get docViewTextKept;
+
+  /// No description provided for @docViewDropBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bırak: balonlu görünüm (üstte belge, altta not)'**
+  String get docViewDropBubbles;
+
+  /// No description provided for @captureModeLast.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son seçimin'**
+  String get captureModeLast;
+
+  /// No description provided for @captureModeChangeLater.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.'**
+  String get captureModeChangeLater;
 }
 
 class _AppLocalizationsDelegate
