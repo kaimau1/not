@@ -1765,5 +1765,9 @@
   "storageModeInfo": "On the web, attachments are uploaded to the app's cloud.",
   "driveWaiting": "{count, plural, =1{1 attachment is waiting for Google Drive — tap to connect} other{{count} attachments are waiting for Google Drive — tap to connect}}",
   "driveDownloading": "Downloading the attachment from Google Drive…",
-  "driveNeededForFile": "This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it."
+  "driveNeededForFile": "This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.",
+  "quickAddMore": "TEMPLATES AND NOTEBOOK",
+  "quickAddFrequent": "YOUR FREQUENT",
+  "quickAddAll": "All",
+  "quickAddLess": "Less"
 }

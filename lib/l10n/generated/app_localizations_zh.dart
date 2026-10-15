@@ -4563,4 +4563,16 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get driveNeededForFile =>
       'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.';
+
+  @override
+  String get quickAddMore => 'ŞABLON VE DEFTER';
+
+  @override
+  String get quickAddFrequent => 'SIK KULLANDIKLARIN';
+
+  @override
+  String get quickAddAll => 'Tümü';
+
+  @override
+  String get quickAddLess => 'Daha az';
 }

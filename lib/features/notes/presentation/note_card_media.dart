@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import '../../../core/l10n_ext.dart';
@@ -620,12 +623,10 @@ class _LocalVideoCover extends StatelessWidget {
         child: Icon(Icons.videocam_outlined, color: Colors.white54, size: 22),
       ),
     );
-    final path = video.localPath;
-    if (!VideoFrame.supported || !localFileExists(path)) return fallback;
-    return _AsyncThumb(
-      future: CardThumbs.videoCover(path),
-      fallback: fallback,
-    );
+    if (!VideoFrame.supported || !localFileExists(video.localPath)) {
+      return fallback;
+    }
+    return _AsyncThumb(future: CardThumbs.videoCover(video), fallback: fallback);
   }
 }
 
@@ -640,10 +641,9 @@ class _PdfFirstPage extends StatelessWidget {
     final fallback = Center(
       child: Icon(Icons.picture_as_pdf_outlined, color: scheme.error),
     );
-    final path = attachment.localPath;
-    if (!localFileExists(path)) return fallback;
+    if (!localFileExists(attachment.localPath)) return fallback;
     return _AsyncThumb(
-      future: CardThumbs.pdfPage(path, math.max(1, attachment.pdfPage)),
+      future: CardThumbs.pdfPage(attachment, math.max(1, attachment.pdfPage)),
       fallback: fallback,
       alignment: Alignment.topCenter,
     );
@@ -680,32 +680,38 @@ class _AsyncThumb extends StatelessWidget {
   );
 }
 
-/// Kart küçük resimlerinin (video kapağı, PDF ilk sayfası) süreç ömürlü
-/// önbelleği.
+/// Kart küçük resimlerinin (video kapağı, PDF ilk sayfası) önbelleği.
 ///
-/// Neden: kart her kaydırmada yeniden kurulur; kareyi/sayfayı her seferinde
-/// yeniden çıkarmak hem pili hem akıcılığı yer. Anahtar dosyanın değişme
-/// zamanını ve boyunu da taşır: PDF düzenlenince (sayfa silme, balon basma)
-/// eski küçük resim kalmaz. Aynı anda istenen aynı anahtar TEK iş başlatır
-/// (Future paylaşılır).
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-15: "güncellemeden sonra kasma"):
+/// ilk sürümde (a) anahtar için kart HER çizildiğinde `statSync` (senkron
+/// dosya sistemi çağrısı) yapılıyor, (b) video kapağı Android'in ANA iş
+/// parçacığında tam boy kare + JPEG olarak çıkarılıyor, (c) görünürdeki
+/// bütün PDF'ler AYNI ANDA açılıp çiziliyordu; hiçbiri diske yazılmadığı
+/// için her açılışta hepsi baştan. Şimdi:
+/// * anahtar çizimde HİÇ G/Ç yapmadan ekin kendi alanlarından kurulur
+///   (yol + boyut + sayfa) — PDF düzenlenince boyut değişir, eski resim
+///   kalmaz;
+/// * üretilen küçük resim DİSKE yazılır (`<önbellek>/card_thumbs/`) — bir
+///   kez üretilir, sonraki açılışlarda yalnız okunur;
+/// * üretim TEK SIRADA (aynı anda bir iş) — kaydırma sırasında onlarca
+///   çözücü yarışmaz;
+/// * video karesi arka plan iş parçacığında, doğrudan KÜÇÜK üretilir.
 abstract final class CardThumbs {
   static final _cache = <String, Future<Uint8List?>>{};
-  static const _cap = 48;
+  static const _cap = 64;
 
-  static Future<Uint8List?> videoCover(String path) =>
-      _get('v|${_stamp(path)}', () => VideoFrame.cover(path));
+  /// Üretim kuyruğu: bir önceki iş bitmeden yenisi başlamaz.
+  static Future<void> _queue = Future.value();
 
-  static Future<Uint8List?> pdfPage(String path, int page) =>
-      _get('p|${_stamp(path)}|$page', () => _renderPdf(path, page));
+  static Future<Uint8List?> videoCover(Attachment video) => _get(
+    'v|${video.localPath}|${video.sizeBytes}',
+    () => VideoFrame.thumbnail(video.localPath),
+  );
 
-  static String _stamp(String path) {
-    try {
-      final stat = File(path).statSync();
-      return '$path|${stat.modified.millisecondsSinceEpoch}|${stat.size}';
-    } catch (_) {
-      return path;
-    }
-  }
+  static Future<Uint8List?> pdfPage(Attachment pdf, int page) => _get(
+    'p|${pdf.localPath}|${pdf.sizeBytes}|$page',
+    () => _renderPdf(pdf.localPath, page),
+  );
 
   static Future<Uint8List?> _get(
     String key,
@@ -716,12 +722,50 @@ abstract final class CardThumbs {
       _cache[key] = hit; // en yeni kullanılan sona
       return hit;
     }
-    final future = Future<Uint8List?>.sync(
-      make,
-    ).catchError((Object _) => null);
+    final future = _load(key, make).catchError((Object _) => null);
     _cache[key] = future;
     if (_cache.length > _cap) _cache.remove(_cache.keys.first);
     return future;
+  }
+
+  static Future<Uint8List?> _load(
+    String key,
+    Future<Uint8List?> Function() make,
+  ) async {
+    final file = await _diskFile(key);
+    if (file != null && await file.exists()) return file.readAsBytes();
+    // Sıraya gir: önceki üretim bitince başla.
+    final previous = _queue;
+    final done = Completer<void>();
+    _queue = done.future;
+    try {
+      await previous;
+      final bytes = await make();
+      if (bytes != null && file != null) {
+        try {
+          await file.parent.create(recursive: true);
+          await file.writeAsBytes(bytes, flush: false);
+        } catch (_) {
+          // Disk dolu/erişilemez: küçük resim yalnız bellekte kalır.
+        }
+      }
+      return bytes;
+    } finally {
+      done.complete();
+    }
+  }
+
+  static String? _dir;
+
+  static Future<File?> _diskFile(String key) async {
+    if (kIsWeb) return null;
+    try {
+      _dir ??= (await getApplicationCacheDirectory()).path;
+    } catch (_) {
+      return null;
+    }
+    final name = sha1.convert(utf8.encode(key)).toString();
+    return File('$_dir/card_thumbs/$name.img');
   }
 
   static Future<Uint8List?> _renderPdf(String path, int pageNumber) async {
@@ -731,8 +775,8 @@ abstract final class CardThumbs {
       if (pages.isEmpty) return null;
       final page = pages[(pageNumber - 1).clamp(0, pages.length - 1)];
       if (page.width <= 0 || page.height <= 0) return null;
-      // Kartta 62 dp genişlik: 3x ekranda ~190 px; 240 px payla yeter.
-      const targetWidth = 240.0;
+      // Kart kapağı ~200 dp genişlikte: 3x ekranda ~600 px; 480 px yeter.
+      const targetWidth = 480.0;
       final scale = targetWidth / page.width;
       final rendered = await page.render(
         fullWidth: targetWidth,

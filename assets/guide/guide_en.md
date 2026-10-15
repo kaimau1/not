@@ -25,10 +25,10 @@ Your notes appear as cards grouped by **TODAY / THIS WEEK / EARLIER**; pinned no
 - **A card's ⋮ / long-press menu:** pin, star, share, send to a friend, select on top; then **Organize** (folder, background colour, frame), **Copy and export** (copy, duplicate, template, export), **Tools** (read aloud, statistics), **Protection and storage** (archive, lock, sync); Delete at the bottom.
 
 ## Creating notes {#create}
-The **+** button at the bottom right opens three groups:
-- **Write:** text note, list, numbered list, shopping list, note **from template**, archive notebook.
-- **Capture:** voice note, take a photo, record a video, scan a document, handwriting and QR code.
-- **From files:** image, PDF, slides, **video from gallery** and **YouTube video**. A note started from a video opens with the video pinned on top and the note below.
+The **+** button at the bottom right opens a short panel, read from your thumb upwards:
+- **At the bottom, right above the button:** large **Text note · List · Numbered list** buttons.
+- **Your frequent:** the three actions you pick most (the app learns) and **All**.
+- **All** opens **Capture** (voice note, photo, video, scan, handwriting, QR), **From files** (image, PDF, slides, **video from gallery**, **YouTube video**) and **Templates and notebook** (shopping list, from template, archive notebook). A note started from a video opens with the video pinned on top and the note below.
 For PDFs, images and slides you choose a mode: **Bubbles** (the document becomes the note itself, with bubbles and pen on top) or **Classic** (the document is an ordinary attachment). You can switch later too: see **Bubbles ↔ classic**.
 
 ## Editing a note {#editor}

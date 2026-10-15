@@ -2051,5 +2051,9 @@
   "driveWaiting": "{count, plural, =1{1 ek Google Drive bağlantısını bekliyor — dokun, bağla} other{{count} ek Google Drive bağlantısını bekliyor — dokun, bağla}}",
   "@driveWaiting": {"placeholders": {"count": {"type": "int"}}},
   "driveDownloading": "Ek Google Drive'dan indiriliyor…",
-  "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla."
+  "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla.",
+  "quickAddMore": "ŞABLON VE DEFTER",
+  "quickAddFrequent": "SIK KULLANDIKLARIN",
+  "quickAddAll": "Tümü",
+  "quickAddLess": "Daha az"
 }
