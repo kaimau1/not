@@ -90,7 +90,9 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 
 ## PDF ve sunumlar {#documents}
 **Balonlu** kipte belge notun kendisidir: üstte sayfa, altta o sayfanın notu.
-- **Balon:** sayfada bir yere dokunup not balonu bırak; balonlar renklenir, taşınır, kapanır, aranır.
+- **Balon:** alt çubuktaki **Balon** düğmesine bas, sayfada notun ait olduğu yere dokun. Balonun sivri köşesi o noktayı gösterir; yazdıktan sonra **Bitti**.
+- Balona dokununca not yerinde okunur; **Düzenle** ile yazmaya geçilir. Renk, yıldız, acil (yanıp söner) ve sil yazma kartında hep görünür; basılı tutup sürükleyerek taşınır.
+- Alt çubuktaki 💬 sayılı düğme bütün balonları listeler ve arar. Sayfa notu, tüm sayfa notları, sayfaları düzenle ve tam ekran telefonda ⋮ menüsündedir.
 - **Vurgu:** belgedeki metni seç ve vurgula; seçili metni kopyala ya da yapay zekâya sor.
 - **Kalem:** alt çubuktaki kalemle sayfanın üzerine yaz; tek parmak çizer, iki parmak kaydırır.
 - **Sayfaları düzenle:** sil, döndür, sırala — sayfa notları sayfalarıyla taşınır.

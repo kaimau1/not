@@ -2055,5 +2055,9 @@
   "quickAddMore": "ŞABLON VE DEFTER",
   "quickAddFrequent": "SIK KULLANDIKLARIN",
   "quickAddAll": "Tümü",
-  "quickAddLess": "Daha az"
+  "quickAddLess": "Daha az",
+  "bubbleDone": "Bitti",
+  "bubbleEditShort": "Düzenle",
+  "bubblePlainModeShort": "Metin",
+  "pageBarMore": "Sayfa ve not seçenekleri"
 }

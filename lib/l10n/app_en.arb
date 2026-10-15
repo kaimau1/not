@@ -1769,5 +1769,9 @@
   "quickAddMore": "TEMPLATES AND NOTEBOOK",
   "quickAddFrequent": "YOUR FREQUENT",
   "quickAddAll": "All",
-  "quickAddLess": "Less"
+  "quickAddLess": "Less",
+  "bubbleDone": "Done",
+  "bubbleEditShort": "Edit",
+  "bubblePlainModeShort": "Text",
+  "pageBarMore": "Page and note options"
 }

@@ -109,7 +109,23 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
       _bubbleEditing.value = editing;
       widget.onImmersiveChanged?.call(editing);
     };
+    _bubbles.addingListenable.addListener(_onAddingChanged);
     _load();
+  }
+
+  /// Balon bırakma açılınca kalem kapanır (PDF panosuyla aynı kural).
+  void _onAddingChanged() {
+    if (_bubbles.adding && widget.penMode) {
+      widget.onPenModeChanged?.call(false);
+    }
+  }
+
+  /// Balon listesi; seçilen balonun slaydına gidilir ve balon açılır.
+  Future<void> _openBubbles(ValueChanged<int> goToPage) async {
+    final target = await showBubblesOverview(context, _bubbles);
+    if (target == null || !mounted) return;
+    goToPage(target.page);
+    _bubbles.openOnly(target.id);
   }
 
   @override
@@ -153,6 +169,7 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
 
   @override
   void dispose() {
+    _bubbles.addingListenable.removeListener(_onAddingChanged);
     _ink.dispose();
     _bubbles.dispose();
     _bubbleEditing.dispose();
@@ -179,6 +196,11 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
     suppressNotes: _bubbleEditing,
+    barActions: (context, goToPage, compact) => BubbleBarActions(
+      controller: _bubbles,
+      compact: compact,
+      onOpenList: () => _openBubbles(goToPage),
+    ),
     viewerBuilder: (context, host) => _SlidePaneViewer(
       slides: _slides,
       error: _error,
@@ -333,89 +355,105 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
         ),
       );
     }
-    return _withBubbleButton(
-      ColoredBox(
-        color: Colors.black,
-        child: AnimatedBuilder(
-          animation: widget.bubbles,
-          builder: (context, _) => LayoutBuilder(
-            builder: (context, constraints) {
-              final metrics = SlideStripMetrics.forWidth([
-                for (final s in slides) slideAspect(s),
-              ], constraints.maxWidth);
-              _metrics = metrics;
-              _viewport = constraints.maxHeight;
-              if (!_positioned && widget.host.page > 1) {
-                _positioned = true;
-                WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _goToPage(widget.host.page),
-                );
-              }
-              return ListView.builder(
-                controller: _scroll,
-                // Balon taşınırken, KALEM AÇIKKEN ya da slayt
-                // yakınlaştırılmışken kaydırma KİLİTLİ: parmak balonu
-                // sürüklerken (ya da çizerken) listenin de kayması işi
-                // imkânsız kılıyordu.
-                physics:
-                    (widget.bubbles.dragging != null ||
-                        _zoomed ||
-                        widget.penMode)
-                    ? const NeverScrollableScrollPhysics()
-                    : const ClampingScrollPhysics(),
-                itemCount: slides.length,
-                // Yükseklikler önceden biliniyor: liste ölçmeden kurulur,
-                // "balona git" tam yere gider.
-                itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
-                itemBuilder: (context, i) => RepaintBoundary(
-                  child: ZoomBox(
-                    // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
-                    // çizer, önceden yapılmış yakınlaştırma kaybolmaz (tam
-                    // ekran görüntüleyicideki kurulumun aynısı).
-                    enabled: !widget.penMode,
-                    onZoomChanged: (value) {
-                      if (mounted && _zoomed != value) {
-                        setState(() => _zoomed = value);
-                      }
-                    },
-                    child: Stack(
-                      children: [
-                        Positioned.fill(child: SlideCanvas(slide: slides[i])),
-                        Positioned.fill(
-                          child: InkPageLayer(
-                            controller: widget.ink,
-                            page: i + 1,
-                          ),
+    return _withOverlays(_listFor(slides));
+  }
+
+  /// Slayt listesi — KURULDUĞU GİBİ SAKLANIR (PDF panosundaki
+  /// `_viewerFor` ile aynı kök neden: pano her sayfa değişiminde bu bölmeyi
+  /// yeniden kuruyor, görünen bütün slaytlar baştan çiziliyordu). Liste
+  /// yalnız slaytlar, kalem kipi ya da yakınlaştırma değişince kurulur.
+  ///
+  /// Eskiden liste balon denetleyicisinin HER bildirimini de dinliyordu
+  /// (yalnız "balon taşınıyor mu" bilgisi için): balon açmak, renk seçmek
+  /// görünen her slaydı yeniden çizdiriyordu. Artık yalnız
+  /// [BubbleController.draggingListenable] dinlenir.
+  Widget _listFor(List<SlideVM> slides) {
+    final cached = _list;
+    if (cached != null &&
+        identical(_listSlides, slides) &&
+        _listPen == widget.penMode &&
+        _listZoomed == _zoomed) {
+      return cached;
+    }
+    _listSlides = slides;
+    _listPen = widget.penMode;
+    _listZoomed = _zoomed;
+    return _list = ColoredBox(
+      color: Colors.black,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final metrics = SlideStripMetrics.forWidth([
+            for (final s in slides) slideAspect(s),
+          ], constraints.maxWidth);
+          _metrics = metrics;
+          _viewport = constraints.maxHeight;
+          if (!_positioned && widget.host.page > 1) {
+            _positioned = true;
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _goToPage(widget.host.page),
+            );
+          }
+          return ValueListenableBuilder<bool>(
+            valueListenable: widget.bubbles.draggingListenable,
+            builder: (context, dragging, _) => ListView.builder(
+              controller: _scroll,
+              // Balon taşınırken, KALEM AÇIKKEN ya da slayt
+              // yakınlaştırılmışken kaydırma KİLİTLİ: parmak balonu
+              // sürüklerken (ya da çizerken) listenin de kayması işi
+              // imkânsız kılıyordu.
+              physics: (dragging || _zoomed || widget.penMode)
+                  ? const NeverScrollableScrollPhysics()
+                  : const ClampingScrollPhysics(),
+              itemCount: slides.length,
+              // Yükseklikler önceden biliniyor: liste ölçmeden kurulur,
+              // "balona git" tam yere gider.
+              itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
+              itemBuilder: (context, i) => RepaintBoundary(
+                child: ZoomBox(
+                  // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
+                  // çizer, önceden yapılmış yakınlaştırma kaybolmaz (tam
+                  // ekran görüntüleyicideki kurulumun aynısı).
+                  enabled: !widget.penMode,
+                  onZoomChanged: (value) {
+                    if (mounted && _zoomed != value) {
+                      setState(() => _zoomed = value);
+                    }
+                  },
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: SlideCanvas(slide: slides[i])),
+                      Positioned.fill(
+                        child: InkPageLayer(
+                          controller: widget.ink,
+                          page: i + 1,
                         ),
-                        Positioned.fill(
-                          child: BubblePageLayer(
-                            controller: widget.bubbles,
-                            page: i + 1,
-                          ),
+                      ),
+                      Positioned.fill(
+                        child: BubblePageLayer(
+                          controller: widget.bubbles,
+                          page: i + 1,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Future<void> _openBubbles() async {
-    final target = await showBubblesOverview(context, widget.bubbles);
-    if (target == null || !mounted) return;
-    widget.host.onPageChanged(target.page);
-    _goToPage(target.page);
-    widget.bubbles.openOnly(target.id);
-  }
+  Widget? _list;
+  List<SlideVM>? _listSlides;
+  bool? _listPen;
+  bool? _listZoomed;
 
-  /// Görüntüleyicinin üstüne "balon bırak" ve "balon listesi" düğmeleri
-  /// (PDF panosuyla aynı).
-  Widget _withBubbleButton(Widget viewer) => Stack(
+  /// Görüntüleyicinin üstündeki katmanlar: yazma kartı, balon araç kartı ve
+  /// kalem çubuğu (PDF panosuyla aynı). Balon düğmeleri artık panonun alt
+  /// çubuğunda (bkz. [BubbleBarActions]).
+  Widget _withOverlays(Widget viewer) => Stack(
     children: [
       Positioned.fill(child: viewer),
       Positioned(
@@ -426,17 +464,14 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
       ),
       // **BALON ARAÇ ÇUBUĞU BURADA DA VAR** (kullanıcı bulgusu 2026-08-18:
       // "bu balon PDF ekle not al modunda yok, sadece metin içi PDF
-      // eklendiğinde çıkıyor"). Çubuk yalnız tam ekran görüntüleyicilere
-      // konmuştu; balonlu kipin KENDİ ekranında — yani "PDF/sunum ekle not
-      // al" ile açılan iki bölmeli ekranda — kip seçimi (balon / açık metin)
-      // ve renk paleti hiç görünmüyordu. Aynı çubuk, aynı denetleyici.
+      // eklendiğinde çıkıyor"). Aynı çubuk, aynı denetleyici.
       Positioned(
         left: 0,
         right: 0,
         bottom: 0,
-        child: AnimatedBuilder(
-          animation: widget.bubbles,
-          builder: (context, _) => widget.bubbles.adding
+        child: ValueListenableBuilder<bool>(
+          valueListenable: widget.bubbles.addingListenable,
+          builder: (context, adding, _) => adding
               ? BubbleToolbar(controller: widget.bubbles)
               : const SizedBox.shrink(),
         ),
@@ -450,58 +485,6 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
           bottom: 0,
           child: InkToolbar(controller: widget.ink),
         ),
-      Positioned(
-        top: 4,
-        right: 4,
-        child: Column(
-          children: [
-            _addButton(),
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Material(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surface.withValues(alpha: 0.85),
-                shape: const CircleBorder(),
-                elevation: 2,
-                child: IconButton(
-                  tooltip: context.l10n.bubblesOverviewTitle,
-                  visualDensity: VisualDensity.compact,
-                  onPressed: _openBubbles,
-                  icon: Icon(
-                    Icons.forum_outlined,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     ],
-  );
-
-  Widget _addButton() => AnimatedBuilder(
-    animation: widget.bubbles,
-    builder: (context, _) {
-      final adding = widget.bubbles.adding;
-      final scheme = Theme.of(context).colorScheme;
-      return Material(
-        color: adding ? scheme.primary : scheme.surface.withValues(alpha: 0.85),
-        shape: const CircleBorder(),
-        elevation: 2,
-        child: IconButton(
-          tooltip: adding ? context.l10n.bubbleAddDone : context.l10n.bubbleAdd,
-          visualDensity: VisualDensity.compact,
-          onPressed: () => widget.bubbles.setAdding(!adding),
-          icon: Icon(
-            adding ? Icons.chat_bubble : Icons.add_comment_outlined,
-            size: 18,
-            color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    },
   );
 }

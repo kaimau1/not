@@ -652,9 +652,9 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
         ),
         bottomNavigationBar: _editing
             ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
-            : AnimatedBuilder(
-                animation: _bubbles,
-                builder: (context, _) => _bubbles.adding
+            : ValueListenableBuilder<bool>(
+                valueListenable: _bubbles.addingListenable,
+                builder: (context, adding, _) => adding
                     ? BubbleToolbar(controller: _bubbles)
                     : const SizedBox.shrink(),
               ),

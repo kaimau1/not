@@ -4697,4 +4697,16 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get quickAddLess => 'Daha az';
+
+  @override
+  String get bubbleDone => 'Bitti';
+
+  @override
+  String get bubbleEditShort => 'Düzenle';
+
+  @override
+  String get bubblePlainModeShort => 'Metin';
+
+  @override
+  String get pageBarMore => 'Sayfa ve not seçenekleri';
 }

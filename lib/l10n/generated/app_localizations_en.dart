@@ -4683,4 +4683,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickAddLess => 'Less';
+
+  @override
+  String get bubbleDone => 'Done';
+
+  @override
+  String get bubbleEditShort => 'Edit';
+
+  @override
+  String get bubblePlainModeShort => 'Text';
+
+  @override
+  String get pageBarMore => 'Page and note options';
 }

@@ -90,7 +90,9 @@ You can link a **PDF, image, video, YouTube video** or any attachment of the not
 
 ## PDFs and slides {#documents}
 In **Bubbles** mode the document is the note itself: the page on top, that page's note below.
-- **Bubbles:** tap anywhere on the page to drop a note bubble; bubbles can be coloured, moved, collapsed and searched.
+- **Bubbles:** press **Bubble** in the bottom bar, then tap the spot on the page the note belongs to. The bubble's pointed corner marks that spot; press **Done** when you've written it.
+- Tap a bubble to read it in place; **Edit** switches to writing. Colour, star, urgent (blinks) and delete are always visible on the writing card; long-press and drag to move.
+- The 💬 button with the count lists and searches all bubbles. Page note, all page notes, edit pages and full screen live in the ⋮ menu on phones.
 - **Highlight:** select text in the document and highlight it; copy it or ask AI about it.
 - **Pen:** write on the page with the pen in the bottom bar; one finger draws, two fingers scroll.
 - **Edit pages:** delete, rotate, reorder — page notes move with their pages.

@@ -8453,6 +8453,30 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Daha az'**
   String get quickAddLess;
+
+  /// No description provided for @bubbleDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get bubbleDone;
+
+  /// No description provided for @bubbleEditShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get bubbleEditShort;
+
+  /// No description provided for @bubblePlainModeShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin'**
+  String get bubblePlainModeShort;
+
+  /// No description provided for @pageBarMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa ve not seçenekleri'**
+  String get pageBarMore;
 }
 
 class _AppLocalizationsDelegate
