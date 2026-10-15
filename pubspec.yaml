@@ -45,6 +45,10 @@ dependencies:
   # üretir (zorlama Firebase konsolundan AÇILMADI) — bkz. main.dart.
   firebase_app_check: ^0.4.1
   google_sign_in: ^7.2.0
+  # Drive ek senkronunda yetki isteği HESAP E-POSTASIYLA yapılır (cihazda
+  # birden çok Google hesabı varsa doğru Drive'a yazılsın) — bu ayrıntı
+  # yalnız platform arayüzünde var (bkz. drive_store.dart).
+  google_sign_in_platform_interface: ^3.1.0
   crypto: ^3.0.7
   url_launcher: ^6.3.2
   http: ^1.6.0

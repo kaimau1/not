@@ -16,6 +16,7 @@ import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
 import 'attachment_repository.dart';
+import 'drive_store.dart' show driveFileDeleter;
 import 'local_notes_store.dart';
 
 /// Şu an bir editörde AÇIK olan notların id'leri; `cleanupEmptyNotes` bunlara
@@ -602,6 +603,7 @@ class NotesRepository {
     // Ek silmeleri paralel: sıralı bekleyiş, çok ekli notlarda (çöp boşaltma
     // açılışta çalıştığı için) ilk senkronla yarışan uzun bir ağ kuyruğu
     // oluşturuyordu.
+    final deleteDrive = driveFileDeleter;
     await Future.wait([
       for (final attachment in note.attachments)
         if (attachment.storagePath.isNotEmpty)
@@ -609,6 +611,11 @@ class NotesRepository {
               .ref(attachment.storagePath)
               .delete()
               .catchError((Object _) {}),
+      // Google Drive kopyası (bkz. drive_store.dart). Drive bağlı değilse
+      // dosya Drive'da kalır — yalnız yer kaplar.
+      for (final attachment in note.attachments)
+        if (attachment.isInDrive && deleteDrive != null)
+          deleteDrive(attachment.driveId).catchError((Object _) {}),
     ]);
     // Cihazdaki ek klasörü de gitsin: yalnız bulut temizliği, her kalıcı
     // silmede `<destek>/attachments/<noteId>/` altında yetim dosya bırakıyor

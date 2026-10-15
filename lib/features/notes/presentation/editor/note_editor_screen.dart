@@ -87,6 +87,8 @@ import 'attachment_strip.dart';
 import 'audio_recorder_sheet.dart';
 import 'calculator_sheet.dart';
 import '../../data/place_reminders.dart';
+import '../../data/drive_store.dart' show localFilesRevisionProvider;
+import '../drive_ui.dart';
 import '../place_reminder_sheet.dart';
 import 'drawing_screen.dart';
 import 'editor_bar_layout.dart';
@@ -1868,6 +1870,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// düzenleme geri çağrılarıyla açılır. Kullanıcının istediği ayrım tam
   /// olarak bu — "tıklayınca önizlemesi açılır, bir butonla da düzenleme".
   void _openAttachmentTag(Attachment attachment, {required bool editing}) {
+    // Drive'daki ek bu cihaza henüz inmediyse ŞİMDİ indirilir, sonra açılır
+    // (bkz. drive_ui.dart — arka plan kuyruğunu beklemesin).
+    if (!localFileExists(attachment.localPath) &&
+        attachment.isInDrive &&
+        !attachment.isUploaded) {
+      fetchAttachmentNow(context, ref, attachment).then((ok) {
+        if (ok && mounted) _openAttachmentTag(attachment, editing: editing);
+      });
+      return;
+    }
     if (!localFileExists(attachment.localPath) &&
         !attachment.isUploaded &&
         !attachment.isWebVideo) {
@@ -6309,6 +6321,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Drive'dan bir ek inince editör yeniden çizilir: ekranlar yerel
+    // kopyayı çizim anında arıyor (bkz. localFilesRevisionProvider).
+    ref.watch(localFilesRevisionProvider);
     // dispose'un kullanacağı bağımlılıklar her karede tazelenir (bkz. yukarı).
     _cacheDeps();
     // Tuval önbelleği YALNIZ bu build içindeki `LayoutBuilder` tekrarları

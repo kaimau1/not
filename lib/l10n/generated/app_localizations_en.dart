@@ -4596,4 +4596,79 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get captureModeChangeLater =>
       'You can switch later with the Bubbles / Classic chip in the note.';
+
+  @override
+  String get attachmentSyncTitle => 'Attachment sync';
+
+  @override
+  String get driveSectionTitle => 'Attachments in your Google Drive';
+
+  @override
+  String get driveConnectTitle => 'Keep attachments in your Google Drive';
+
+  @override
+  String get driveConnectInfo =>
+      'Images, PDFs, slides and voice recordings are kept in your own Drive storage, in a hidden app folder, and download to your other devices. Videos stay on the device.';
+
+  @override
+  String get driveConnect => 'Connect';
+
+  @override
+  String get driveDisconnect => 'Disconnect';
+
+  @override
+  String get driveConnected =>
+      'Google Drive connected — attachments are being backed up.';
+
+  @override
+  String get driveConnectedInfo =>
+      'Connected · attachments live in your Drive\'s app folder';
+
+  @override
+  String driveUsage(String used, String limit) {
+    return 'Drive: $used of $limit used';
+  }
+
+  @override
+  String driveConnectFailed(String error) {
+    return 'Couldn\'t connect Google Drive. $error';
+  }
+
+  @override
+  String get driveApiDisabled =>
+      'The Drive API is disabled in the Google Cloud project: enable \"Google Drive API\" in the console and try again.';
+
+  @override
+  String get driveDisconnected =>
+      'Drive disconnected. New attachments wait on the device until you reconnect.';
+
+  @override
+  String get textOnlyTitle => 'Text-only sync';
+
+  @override
+  String get textOnlyInfo =>
+      'Guest accounts sync text only; attachments stay on this device. Link a Google account to keep attachments in your Google Drive.';
+
+  @override
+  String get storageModeInfo =>
+      'On the web, attachments are uploaded to the app\'s cloud.';
+
+  @override
+  String driveWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments are waiting for Google Drive — tap to connect',
+      one: '1 attachment is waiting for Google Drive — tap to connect',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveDownloading =>
+      'Downloading the attachment from Google Drive…';
+
+  @override
+  String get driveNeededForFile =>
+      'This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.';
 }

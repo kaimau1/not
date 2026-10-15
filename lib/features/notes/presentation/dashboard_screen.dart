@@ -62,6 +62,7 @@ import 'quick_add_fab.dart';
 import 'voice_assistant.dart';
 import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
+import 'drive_ui.dart';
 
 /// Ana ekran ızgarasının önbellek payı (px). Masonry ızgaranın toplam
 /// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
@@ -1556,9 +1557,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                       // ÜSTÜNE çıkabilsin (bkz.
                                       // [_kFabClearance]).
                                       const SliverToBoxAdapter(
-                                        child: SizedBox(
-                                          height: _kFabClearance,
-                                        ),
+                                        child: SizedBox(height: _kFabClearance),
                                       ),
                                     ],
                                   ),
@@ -1761,11 +1760,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           // **HESAP** (kullanıcı isteği 2026-08-18: "hesap seçeneklerini
           // ana sayfadaki sağ üstteki 3 noktaya da koy").
           MenuSection(l10n.menuSectionPeople, [
-            MenuAction(
-              'account',
-              l10n.account,
-              Icons.account_circle_outlined,
-            ),
+            MenuAction('account', l10n.account, Icons.account_circle_outlined),
             MenuAction('friends', l10n.friendsTitle, Icons.people_outline),
             MenuAction(
               'inbox',
@@ -1778,11 +1773,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           MenuSection(l10n.menuSectionHome, [
             MenuAction('folderOrder', l10n.folderOrderTitle, Icons.swap_vert),
             // Zemin görseli AYARLARDAN BURAYA taşındı (2026-08-16).
-            MenuAction(
-              'background',
-              l10n.dashboardBackground,
-              Icons.wallpaper,
-            ),
+            MenuAction('background', l10n.dashboardBackground, Icons.wallpaper),
             // Gizli klasörler yalnız gizli klasörü OLAN kullanıcıda.
             if (hasHiddenFolders)
               MenuAction(
@@ -3309,7 +3300,6 @@ class _DashVoiceButton extends StatelessWidget {
   }
 }
 
-
 /// **KAYDIRARAK HIZLI İŞLEM** (kullanıcı isteği 2026-09-23): liste
 /// görünümünde satırı sağa çekmek sabitler (ya da sabitlemeyi kaldırır),
 /// sola çekmek arşivler — geri alınabilir.
@@ -3404,7 +3394,6 @@ class _SwipeActions extends StatelessWidget {
   }
 }
 
-
 /// **SENKRON BEKLEYEN EKLER** göstergesi (kullanıcı isteği 2026-09-23).
 ///
 /// Çevrimdışı eklenen fotoğraf öbür cihazda görünmüyordu ve bunun nedeni
@@ -3422,7 +3411,10 @@ class _PendingUploadsBar extends ConsumerWidget {
     final state = ref.watch(pendingUploadsProvider);
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final failing = state.failed > 0;
+    // Google hesabı ama Drive bağlanmadı: ekler bağlantı bekliyor — şerit
+    // bunu söyler ve dokununca bağlar (kullanıcı isteği 2026-10-15).
+    final needsDrive = state.needsDrive;
+    final failing = state.failed > 0 && !needsDrive;
     return AnimatedSize(
       duration: const Duration(milliseconds: 200),
       alignment: Alignment.topCenter,
@@ -3437,11 +3429,13 @@ class _PendingUploadsBar extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: () => ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(l10n.pendingUploadsInfo)),
-                    ),
+                  onTap: needsDrive
+                      ? () => connectDrive(context, ref)
+                      : () => ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(content: Text(l10n.pendingUploadsInfo)),
+                          ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -3450,7 +3444,9 @@ class _PendingUploadsBar extends ConsumerWidget {
                     child: Row(
                       children: [
                         Icon(
-                          failing
+                          needsDrive
+                              ? Icons.add_to_drive_outlined
+                              : failing
                               ? Icons.cloud_off_outlined
                               : Icons.cloud_upload_outlined,
                           size: 18,
@@ -3461,7 +3457,9 @@ class _PendingUploadsBar extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            failing
+                            needsDrive
+                                ? l10n.driveWaiting(state.pending)
+                                : failing
                                 ? l10n.pendingUploadsFailed(state.failed)
                                 : l10n.pendingUploads(state.pending),
                             maxLines: 1,
@@ -3478,7 +3476,7 @@ class _PendingUploadsBar extends ConsumerWidget {
                         // Dönen çark YOK (bilerek): bağlantı yokken şerit
                         // saatlerce durabilir; sürekli animasyon pili yakardı.
                         Icon(
-                          Icons.info_outline,
+                          needsDrive ? Icons.link : Icons.info_outline,
                           size: 16,
                           color: failing
                               ? scheme.onErrorContainer
@@ -3493,7 +3491,6 @@ class _PendingUploadsBar extends ConsumerWidget {
     );
   }
 }
-
 
 /// Yatay şeritteki seçili çipi görünür alana kaydırır: yana çekişle ekran
 /// dışındaki bir klasöre gelinince şerit de oraya kayar.

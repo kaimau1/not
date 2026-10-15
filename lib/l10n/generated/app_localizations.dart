@@ -8321,6 +8321,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.'**
   String get captureModeChangeLater;
+
+  /// No description provided for @attachmentSyncTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek senkronu'**
+  String get attachmentSyncTitle;
+
+  /// No description provided for @driveSectionTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler Google Drive\'ında'**
+  String get driveSectionTitle;
+
+  /// No description provided for @driveConnectTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekleri Google Drive\'ında sakla'**
+  String get driveConnectTitle;
+
+  /// No description provided for @driveConnectInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.'**
+  String get driveConnectInfo;
+
+  /// No description provided for @driveConnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağla'**
+  String get driveConnect;
+
+  /// No description provided for @driveDisconnect.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlantıyı kes'**
+  String get driveDisconnect;
+
+  /// No description provided for @driveConnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive bağlandı — ekler yedekleniyor.'**
+  String get driveConnected;
+
+  /// No description provided for @driveConnectedInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bağlı · ekler Drive\'ının uygulama klasöründe'**
+  String get driveConnectedInfo;
+
+  /// No description provided for @driveUsage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive: {used} / {limit} kullanıldı'**
+  String driveUsage(String used, String limit);
+
+  /// No description provided for @driveConnectFailed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Drive bağlanamadı. {error}'**
+  String driveConnectFailed(String error);
+
+  /// No description provided for @driveApiDisabled.
+  ///
+  /// In tr, this message translates to:
+  /// **'Google Cloud projesinde Drive API kapalı: konsolda \"Google Drive API\"yi etkinleştirip yeniden dene.'**
+  String get driveApiDisabled;
+
+  /// No description provided for @driveDisconnected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Drive bağlantısı kesildi. Yeni ekler bağlanana dek cihazda bekler.'**
+  String get driveDisconnected;
+
+  /// No description provided for @textOnlyTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yalnız metin senkronu'**
+  String get textOnlyTitle;
+
+  /// No description provided for @textOnlyInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Misafir hesapta yalnız yazılar senkronlanır; ekler bu cihazda kalır. Google hesabı bağlarsan ekler Google Drive\'ında saklanır.'**
+  String get textOnlyInfo;
+
+  /// No description provided for @storageModeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Web\'de ekler uygulama bulutuna yüklenir.'**
+  String get storageModeInfo;
+
+  /// No description provided for @driveWaiting.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{1 ek Google Drive bağlantısını bekliyor — dokun, bağla} other{{count} ek Google Drive bağlantısını bekliyor — dokun, bağla}}'**
+  String driveWaiting(int count);
+
+  /// No description provided for @driveDownloading.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek Google Drive\'dan indiriliyor…'**
+  String get driveDownloading;
+
+  /// No description provided for @driveNeededForFile.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.'**
+  String get driveNeededForFile;
 }
 
 class _AppLocalizationsDelegate

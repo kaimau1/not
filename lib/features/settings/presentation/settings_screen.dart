@@ -47,6 +47,8 @@ import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart' show swipeModeProvider;
+import '../../notes/data/drive_store.dart';
+import '../../notes/presentation/drive_ui.dart';
 import '../data/permissions_service.dart';
 import '../settings_providers.dart';
 import 'notes_settings.dart';
@@ -377,6 +379,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         summary: '',
         keywords: 'yedek geri yukle sinir mb yukleme depolama alan kota',
         rows: [
+          // EK SENKRONU (kullanıcı isteği 2026-10-15): Google hesabında
+          // ekler kullanıcının Drive'ına, misafir hesapta yalnız metin.
+          _SettingRow(
+            const AttachmentSyncTile(),
+            title: l10n.attachmentSyncTitle,
+            keywords: 'google drive ek gorsel pdf senkron bagla kota',
+          ),
           _SettingRow(
             const _StorageUsage(),
             title: l10n.storageUsage,
@@ -722,8 +731,9 @@ class _SettingsArea extends StatelessWidget {
                 // açıklama küçük ve soluk — göz önce başlığı tarar.
                 child: ListTileTheme.merge(
                   dense: true,
-                  titleTextStyle: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  titleTextStyle: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   subtitleTextStyle: Theme.of(context).textTheme.bodySmall
                       ?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1475,8 +1485,7 @@ class _ThemeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        for (final c in schemes)
-                          Expanded(child: _preview(c)),
+                        for (final c in schemes) Expanded(child: _preview(c)),
                       ],
                     ),
                     if (selected)
@@ -1921,6 +1930,12 @@ class _StorageUsage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // Uygulama bulutunun tavanı YALNIZ ekler oraya gidiyorsa (web) anlamlı:
+    // Drive kipinde kota Drive'ın (bkz. AttachmentSyncTile), misafir
+    // hesapta ekler buluta hiç çıkmıyor.
+    if (ref.watch(attachmentSyncModeProvider) != AttachmentSyncMode.storage) {
+      return const SizedBox.shrink();
+    }
     final premium = ref.watch(premiumProvider).value ?? false;
     final quota = premium
         ? AppConstants.maxPremiumStorageBytes
@@ -2759,9 +2774,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
     );
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2911,7 +2924,6 @@ class _ModelSelectors extends ConsumerWidget {
         .join(' ');
     return hint == null ? name : '$name — $hint';
   }
-
 }
 
 class _BriefingEditor extends ConsumerWidget {

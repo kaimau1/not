@@ -498,6 +498,7 @@ class Attachment {
     required this.mimeType,
     this.storagePath = '',
     this.downloadUrl = '',
+    this.driveId = '',
     this.localPath = '',
     this.sizeBytes = 0,
     this.width,
@@ -527,6 +528,17 @@ class Attachment {
   final String mimeType;
   final String storagePath;
   final String downloadUrl;
+
+  /// **GOOGLE DRIVE** kopyasının dosya kimliği (kullanıcının Drive'ındaki
+  /// uygulama klasörü — bkz. `drive_store.dart`). Boş = Drive'da yok.
+  ///
+  /// Kullanıcı isteği 2026-10-15: "eklerin ve görsellerin senkronizasyonu
+  /// Google Drive'a bağlansın, oradaki kota kullanılsın". Drive dosyası
+  /// özeldir — herkese açık bir adresi yok; öbür cihaz onu kendi Google
+  /// yetkisiyle İNDİRİP yerel kopyaya yazar ve her ekran zaten önce yerel
+  /// kopyaya baktığı için oradan çizer. Bu yüzden [downloadUrl]'a
+  /// (Storage'ın herkese açık jetonlu adresi) dokunulmaz, ayrı alan.
+  final String driveId;
 
   /// Yükleme bitene kadar kullanılan cihaz içi kopya. Firestore'a yazılır ki
   /// aynı cihazda uygulama yeniden açıldığında kuyruk kaldığı yerden sürsün;
@@ -641,6 +653,13 @@ class Attachment {
 
   bool get isUploaded => downloadUrl.isNotEmpty;
 
+  /// Google Drive'da kopyası var mı (bkz. [driveId]).
+  bool get isInDrive => driveId.isNotEmpty;
+
+  /// Bulutta (Storage YA DA Drive) bir kopyası var mı — başka cihaz ona
+  /// ulaşabilir mi.
+  bool get isSynced => isUploaded || isInDrive;
+
   /// YouTube (web) videosu mu — dosyası yok, gömülü oynatıcıda açılır.
   bool get isWebVideo => kind == AttachmentKind.video && webUrl.isNotEmpty;
 
@@ -671,6 +690,7 @@ class Attachment {
   Attachment withUploadOf(Attachment uploaded) => copyWith(
     storagePath: uploaded.storagePath,
     downloadUrl: uploaded.downloadUrl,
+    driveId: uploaded.driveId,
     localPath: uploaded.localPath,
     sizeBytes: uploaded.sizeBytes,
     fileName: uploaded.fileName,
@@ -707,6 +727,7 @@ class Attachment {
     String? mimeType,
     String? storagePath,
     String? downloadUrl,
+    String? driveId,
     String? localPath,
     int? sizeBytes,
     int? width,
@@ -734,6 +755,7 @@ class Attachment {
     mimeType: mimeType ?? this.mimeType,
     storagePath: storagePath ?? this.storagePath,
     downloadUrl: downloadUrl ?? this.downloadUrl,
+    driveId: driveId ?? this.driveId,
     localPath: localPath ?? this.localPath,
     sizeBytes: sizeBytes ?? this.sizeBytes,
     width: width ?? this.width,
@@ -768,6 +790,7 @@ class Attachment {
         mimeType: map['mimeType'] as String? ?? '',
         storagePath: map['storagePath'] as String? ?? '',
         downloadUrl: map['downloadUrl'] as String? ?? '',
+        driveId: map['driveId'] as String? ?? '',
         localPath: _resolveLocalPath(map, noteId),
         sizeBytes: (map['sizeBytes'] as num?)?.toInt() ?? 0,
         width: (map['width'] as num?)?.toInt(),
@@ -825,6 +848,8 @@ class Attachment {
     'mimeType': mimeType,
     'storagePath': storagePath,
     'downloadUrl': downloadUrl,
+    // Yalnız doluysa: Drive'sız eklerin şeması büyümez.
+    if (driveId.isNotEmpty) 'driveId': driveId,
     // localPath BİLEREK YAZILMIYOR: mutlak cihaz yolu (Windows'ta kullanıcı
     // adı içerir) buluta senkronlanıyordu, başka cihazda anlamsızdı ve dosya
     // sistemi işlemlerini yanlış yola yönlendirebiliyordu. Yol artık okuma

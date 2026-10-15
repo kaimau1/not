@@ -32,10 +32,16 @@ class DesktopOAuthFlow {
   DesktopOAuthFlow({
     required this.scopes,
     this.timeout = const Duration(minutes: 5),
+    this.offline = false,
   });
 
   final List<String> scopes;
   final Duration timeout;
+
+  /// Yenileme anahtarı istensin mi. Giriş İSTEMEZ (aşağıdaki not); yalnız
+  /// arka planda saatlerce çalışan Drive ek senkronu ister (bkz.
+  /// DesktopDriveAuth — anahtar yalnız `drive.appdata` kapsamlı).
+  final bool offline;
 
   static const _authEndpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
   static const _tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -74,6 +80,7 @@ class DesktopOAuthFlow {
         // yalnızca saldırı yüzeyi büyütüyordu. ('prompt=consent' de onunla
         // birlikte gitti: tek amacı refresh token'ı her girişte döndürmekti.)
         'include_granted_scopes': 'true',
+        if (offline) ...{'access_type': 'offline', 'prompt': 'consent'},
       },
     );
 

@@ -16,6 +16,11 @@ bu politikayı kabul etmiş olursunuz.
    hatırlatıcılarınız ve ekleriniz (fotoğraf, PDF, ses kaydı, çizim)
    cihazlar arası eşitleme için Google Firebase (Firestore ve Cloud
    Storage) üzerinde, yalnızca sizin hesabınıza bağlı olarak saklanır.
+   Google hesabıyla giriş yapıp "Ekleri Google Drive'ında sakla"
+   seçeneğini bağladığınızda ekleriniz bunun yerine KENDİ Google
+   Drive'ınızda, uygulamaya özel gizli klasörde (drive.appdata izni —
+   uygulama Drive'ınızdaki başka hiçbir dosyayı göremez) saklanır.
+   Misafir (Google'sız) hesapta ekler buluta yüklenmez, cihazda kalır.
    Verileriniz başka kullanıcılarla paylaşılmaz ve reklam amacıyla
    kullanılmaz.
 
@@ -44,7 +49,10 @@ bu politikayı kabul etmiş olursunuz.
 
 ## Veri saklama ve silme
 
-- Verileriniz siz silene kadar Firebase'de saklanır.
+- Verileriniz siz silene kadar Firebase'de (ekleriniz Drive'ı
+  bağladıysanız Google Drive'ınızda) saklanır. Drive'daki uygulama
+  klasörünü Google Drive → Ayarlar → Uygulamaları yönet'ten de
+  silebilirsiniz.
 - Tek bir notu çöp kutusuna taşıyıp kalıcı silebilirsiniz.
 - Ayarlar → "Hesabımı ve verilerimi sil" ile hesabınızı ve TÜM
   verilerinizi (notlar, ekler, hesap kaydı) uygulama içinden kalıcı
@@ -60,7 +68,8 @@ güvenli depoda saklanır.
 ## Üçüncü taraf hizmetler
 
 Uygulama şu Google hizmetlerini kullanır: Firebase Authentication,
-Cloud Firestore, Cloud Storage, Firebase AI Logic ve Gemini API.
+Cloud Firestore, Cloud Storage, Google Drive API (bağlarsanız),
+Firebase AI Logic ve Gemini API.
 Bu hizmetler için Google'ın gizlilik politikası geçerlidir:
 https://policies.google.com/privacy
 

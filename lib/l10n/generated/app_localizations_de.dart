@@ -4617,4 +4617,76 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get captureModeChangeLater =>
       'Sonradan nottaki Balonlu / Klasik çipiyle değiştirebilirsin.';
+
+  @override
+  String get attachmentSyncTitle => 'Ek senkronu';
+
+  @override
+  String get driveSectionTitle => 'Ekler Google Drive\'ında';
+
+  @override
+  String get driveConnectTitle => 'Ekleri Google Drive\'ında sakla';
+
+  @override
+  String get driveConnectInfo =>
+      'Görseller, PDF\'ler, sunumlar ve ses kayıtları kendi Drive kotanda, uygulamaya özel gizli klasörde saklanır ve öbür cihazlarına iner. Videolar cihazda kalır.';
+
+  @override
+  String get driveConnect => 'Bağla';
+
+  @override
+  String get driveDisconnect => 'Bağlantıyı kes';
+
+  @override
+  String get driveConnected => 'Google Drive bağlandı — ekler yedekleniyor.';
+
+  @override
+  String get driveConnectedInfo =>
+      'Bağlı · ekler Drive\'ının uygulama klasöründe';
+
+  @override
+  String driveUsage(String used, String limit) {
+    return 'Drive: $used / $limit kullanıldı';
+  }
+
+  @override
+  String driveConnectFailed(String error) {
+    return 'Google Drive bağlanamadı. $error';
+  }
+
+  @override
+  String get driveApiDisabled =>
+      'Google Cloud projesinde Drive API kapalı: konsolda \"Google Drive API\"yi etkinleştirip yeniden dene.';
+
+  @override
+  String get driveDisconnected =>
+      'Drive bağlantısı kesildi. Yeni ekler bağlanana dek cihazda bekler.';
+
+  @override
+  String get textOnlyTitle => 'Yalnız metin senkronu';
+
+  @override
+  String get textOnlyInfo =>
+      'Misafir hesapta yalnız yazılar senkronlanır; ekler bu cihazda kalır. Google hesabı bağlarsan ekler Google Drive\'ında saklanır.';
+
+  @override
+  String get storageModeInfo => 'Web\'de ekler uygulama bulutuna yüklenir.';
+
+  @override
+  String driveWaiting(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ek Google Drive bağlantısını bekliyor — dokun, bağla',
+      one: '1 ek Google Drive bağlantısını bekliyor — dokun, bağla',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get driveDownloading => 'Ek Google Drive\'dan indiriliyor…';
+
+  @override
+  String get driveNeededForFile =>
+      'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.';
 }

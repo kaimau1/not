@@ -11,14 +11,18 @@ class AndroidGoogleAuth implements AuthRepository {
 
   final FirebaseAuth _auth;
 
-  Future<void>? _initFuture;
+  /// `initialize` süreç başına TEK kez çağrılmalı — giriş ve Drive yetkisi
+  /// (bkz. drive_store.dart) aynı kapıdan geçer.
+  static Future<void>? _initFuture;
 
-  Future<void> _ensureInitialized() =>
+  static Future<void> ensureInitialized() =>
       _initFuture ??= GoogleSignIn.instance.initialize(
         serverClientId: AppConstants.serverClientId.isEmpty
             ? null
             : AppConstants.serverClientId,
       );
+
+  Future<void> _ensureInitialized() => ensureInitialized();
 
   @override
   Stream<User?> authStateChanges() => _auth.authStateChanges();

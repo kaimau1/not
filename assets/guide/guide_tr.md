@@ -5,6 +5,8 @@ Notlar'ın bütün özellikleri, bölüm bölüm. Bir bölüme dokunarak aç; yu
 ## Başlarken {#start}
 Notların hesabına bağlıdır ve telefon, tablet, bilgisayar ve web arasında **anında senkronlanır**. İnternet yokken de her şey çalışır; bağlantı gelince kendiliğinden eşitlenir.
 - Google hesabınla gir; giriş yapmadan da hemen kullanmaya başlayabilirsin.
+- **Ekler (görsel, PDF, sunum, ses) Google Drive'ında saklanır:** Google hesabıyla girdiysen Ayarlar → Senkron → **Ekleri Google Drive'ında sakla → Bağla** (ya da ana ekrandaki "Drive bağlantısını bekliyor" şeridine dokun). Ekler kendi Drive kotanda, uygulamaya özel gizli bir klasörde durur ve öbür cihazlarına iner. Başkasıyla paylaştığın notların ekleri herkes görebilsin diye uygulama bulutuna gider.
+- **Misafir hesapta yalnız yazılar senkronlanır;** ekler o cihazda kalır.
 - Bir not **yalnız bu cihazda** kalsın istiyorsan: not menüsü (⋮) → **Senkronu kapat**. O not ve ekleri buluta hiç gitmez.
 - Videolar her zaman yalnız çekildiği cihazda saklanır (buluta yüklenmez); YouTube videoları ise bağlantı olarak her cihazda oynar.
 - Yanlış bir şey mi yaptın? Not ekranındaki **Geri al** (↶) ve **Yinele** her değişikliği geri getirir.
@@ -167,7 +169,7 @@ Ayarlar ekranının üstündeki arama kutusuyla her ayarı adıyla bul ("brifing
 - **Yapay Zeka:** model, kendi API anahtarın, günlük brifing saati, işaretli maddeleri koruma.
 - **Sesli okuma:** cihaz sesi ya da yapay zekâ sesi, okuma hızı.
 - **İzinler:** mikrofon, kamera, bildirim, konum — durumu ve ayar ekranları.
-- **Depolama:** bulut kullanımı ve bu cihazdaki önbellek.
+- **Senkron:** Google Drive bağlantısı ve Drive kullanımı, otomatik yükleme sınırı, bu cihazdaki önbellek, yedekleme.
 - **Hesap:** çıkış, hesabı silme; gizlilik politikası ve lisanslar.
 
 ## İpuçları {#tips}

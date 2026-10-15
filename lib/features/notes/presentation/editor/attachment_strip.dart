@@ -14,6 +14,8 @@ import '../viewers/image_viewer.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
+import '../../data/drive_store.dart';
+import '../drive_ui.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -267,9 +269,16 @@ class _AttachmentTile extends ConsumerWidget {
       attachment.kind == AttachmentKind.video ||
       attachment.kind == AttachmentKind.pdf;
 
-  void _open(BuildContext context) {
+  void _open(BuildContext context, WidgetRef ref) {
     // Ses eki için satır içi görüntüleyici yok (kompakt oynatıcıdan çalınır).
     if (attachment.kind == AttachmentKind.audio) return;
+    // Drive'daki ek bu cihaza inmediyse önce indirilir (bkz. drive_ui.dart).
+    if (!_hasLocal && attachment.isInDrive && !attachment.isUploaded) {
+      fetchAttachmentNow(context, ref, attachment).then((ok) {
+        if (ok && context.mounted) _open(context, ref);
+      });
+      return;
+    }
     if (!_hasLocal && !attachment.isUploaded && !attachment.isWebVideo) {
       ScaffoldMessenger.of(
         context,
@@ -457,16 +466,20 @@ class _AttachmentTile extends ConsumerWidget {
           borderRadius: BorderRadius.circular(10),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => _open(context),
+            onTap: () => _open(context, ref),
             child: SizedBox(height: 98, child: content),
           ),
         ),
         // Yükleme sürüyor göstergesi. Görüntülü not buluta HİÇ yüklenmediği
         // için burada asla dönmemeli: sürekli dönen çark "senkron edilmeye
         // çalışılıyor" izlenimi veriyordu.
-        if (!attachment.isUploaded &&
+        // Bulutta (Storage ya da Drive) kopyası olmayan ek; misafir hesapta
+        // ekler buluta hiç gitmez — orada çark yalan olurdu.
+        if (!attachment.isSynced &&
             _hasLocal &&
-            attachment.kind != AttachmentKind.video)
+            attachment.kind != AttachmentKind.video &&
+            ref.watch(attachmentSyncModeProvider) !=
+                AttachmentSyncMode.textOnly)
           PositionedDirectional(
             start: 6,
             bottom: 6,

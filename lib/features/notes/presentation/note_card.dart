@@ -21,6 +21,7 @@ import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
+import '../data/drive_store.dart' show localFilesRevisionProvider;
 import 'note_actions_sheet.dart';
 import 'note_card_media.dart';
 import 'notes_providers.dart';
@@ -426,6 +427,8 @@ class NoteCard extends ConsumerWidget {
       selectedNoteIdsProvider.select((s) => s.contains(note.id)),
     );
     final richPreview = ref.watch(cardRichPreviewProvider);
+    // Drive'dan bir ek inince kart küçük resmini yerel kopyadan çizsin.
+    ref.watch(localFilesRevisionProvider);
 
     void toggleSelection() =>
         ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);
