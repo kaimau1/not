@@ -386,6 +386,17 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     );
   }
 
+  /// "Galeriden video": var olan bir videodan not. Video notun üstüne
+  /// sabitlenir, not altında yazılır (bkz. editördeki `startGalleryVideo`).
+  /// Seçim iptal edilirse boş not çıkışta kendiliğinden silinir.
+  Future<void> createGalleryVideoNote() =>
+      _openBlankNote(NoteType.text, query: '?gvideo=1');
+
+  /// "YouTube videosu": bağlantı sorulur (panoda varsa hazır gelir), video
+  /// notun üstüne sabitlenir ve izlerken altına not alınır.
+  Future<void> createYouTubeNote() =>
+      _openBlankNote(NoteType.text, query: '?youtube=1');
+
   /// İçerikten not alan seçeneklerin ortak ilk adımı: **balonlu mu klasik mi**
   /// (önizlemeli levha — bkz. `capture_mode_sheet.dart`).
   Future<CaptureChoice?> _askCaptureMode(String title) =>

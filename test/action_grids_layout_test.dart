@@ -55,10 +55,11 @@ void main() {
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli YAZ satırları + YAKALA ızgarası olarak açılır', (
+  testWidgets('"+" paneli üç bölümlü ızgara: YAZ · ÇEK VE KAYDET · DOSYADAN', (
     tester,
   ) async {
     final link = LayerLink();
+    var youTube = 0;
     await tester.pumpWidget(
       host(
         Scaffold(
@@ -78,6 +79,8 @@ void main() {
                 onImageNote: () {},
                 onSlidesNote: () {},
                 onQrNote: () {},
+                onGalleryVideo: () {},
+                onYouTube: () => youTube++,
               ),
             ),
           ),
@@ -88,9 +91,7 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // YAZ bölümü de ÜÇ SÜTUNLU IZGARA (kullanıcı isteği 2026-08-09: "metin /
-    // liste / sıralı liste de grid kart olsun, altrakiler gibi"): iki bölüm
-    // arasında iki ayrı düğme dili vardı.
+    // YAZ bölümü ÜÇ SÜTUNLU IZGARA.
     final text = tester.getRect(find.text('Metin notu'));
     final list = tester.getRect(find.text('Liste'));
     final ordered = tester.getRect(find.text('Sıralı liste'));
@@ -99,23 +100,41 @@ void main() {
     expect(text.center.dx, lessThan(list.center.dx));
     expect(list.center.dx, lessThan(ordered.center.dx));
 
-    // Bölüm başlıkları görünür ve YAKALA, YAZ'ın altındadır.
+    // Bölümler sırayla: YAZ → ÇEK VE KAYDET → DOSYADAN.
     expect(find.text('YAZ'), findsOneWidget);
-    final capture = tester.getRect(
-      find.text('YAKALA — İÇERİKTEN NOT OLUŞTURUR'),
-    );
+    final capture = tester.getRect(find.text('ÇEK VE KAYDET'));
+    final files = tester.getRect(find.text('DOSYADAN'));
     expect(capture.center.dy, greaterThan(ordered.center.dy));
+    expect(files.center.dy, greaterThan(capture.center.dy));
 
-    // YAKALA ızgarası üç sütun: ilk iki yakalama seçeneği yan yana.
+    // Eski cümle yarımı etiketler gitti (kullanıcı bulgusu 2026-10-15).
+    expect(find.text('Foto çek not al'), findsNothing);
+    expect(find.text('PDF ekle not al'), findsNothing);
+
+    // ÇEK ızgarası üç sütun: ilk iki seçenek yan yana.
     final voice = tester.getRect(find.text('Sesli not'));
-    final photo = tester.getRect(find.text('Foto çek not al'));
+    final photo = tester.getRect(find.text('Fotoğraf çek'));
     expect(voice.center.dy, closeTo(photo.center.dy, 1));
     expect(voice.center.dx, lessThan(photo.center.dx));
     expect(voice.center.dy, greaterThan(capture.center.dy));
+
+    // DOSYADAN: eksik olan galeriden video ve YouTube artık menüde.
+    final gallery = tester.getRect(find.text('Galeriden video'));
+    expect(gallery.center.dy, greaterThan(files.center.dy));
+    expect(find.text('YouTube videosu'), findsOneWidget);
 
     // Panel ekrandan taşmaz.
     final width = tester.view.physicalSize.width / tester.view.devicePixelRatio;
     expect(text.left, greaterThanOrEqualTo(0));
     expect(photo.right, lessThan(width));
+
+    // Kısa ekranda (test 800×600) panel kendi içinde kayar: son seçenek
+    // kaydırılarak ulaşılabilir olmalı.
+    await tester.ensureVisible(find.text('YouTube videosu'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('YouTube videosu'));
+    await tester.pumpAndSettle();
+    expect(youTube, 1);
+    expect(find.text('DOSYADAN'), findsNothing, reason: 'seçince panel kapanır');
   });
 }

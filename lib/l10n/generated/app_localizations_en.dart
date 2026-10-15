@@ -995,7 +995,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permOnboardSkip => 'Not now';
 
   @override
-  String get newVideoNote => 'Video note';
+  String get newVideoNote => 'Record a video';
 
   @override
   String get videoLocalOnly =>
@@ -1356,13 +1356,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get annotateDone => 'Finish annotating';
 
   @override
-  String get newPdfNote => 'Add PDF, take notes';
+  String get newPdfNote => 'Note from PDF';
 
   @override
   String get imageNotePreparing => 'Arranging images into a document…';
 
   @override
-  String get newImageNote => 'Add image, take notes';
+  String get newImageNote => 'Note from images';
 
   @override
   String get pdfPageNoteHint => 'Note for this page…';
@@ -1393,7 +1393,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pdfChooseDocument => 'Choose PDF';
 
   @override
-  String get newSlidesNote => 'Add slides, take notes';
+  String get newSlidesNote => 'Note from slides';
 
   @override
   String get slidesNoDocument => 'This note has no presentation yet';
@@ -1482,7 +1482,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get slideOpenFailed => 'The presentation couldn\'t be opened';
 
   @override
-  String get newPhotoNote => 'Photo note';
+  String get newPhotoNote => 'Take a photo';
 
   @override
   String get newScanNote => 'Scan a document';
@@ -1791,7 +1791,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quickAddWrite => 'WRITE';
 
   @override
-  String get quickAddCapture => 'CAPTURE — CREATES A NOTE FROM CONTENT';
+  String get quickAddCapture => 'CAPTURE';
 
   @override
   String get viewToggle => 'View';
@@ -4505,4 +4505,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get menuSectionApp => 'App';
+
+  @override
+  String cardMoreFiles(int count) {
+    return '+$count more files';
+  }
+
+  @override
+  String cardAudioCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count voice recordings',
+      one: 'Voice recording',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardBubbleDocument => 'PDF WITH BUBBLES';
+
+  @override
+  String get cardBubbleSlides => 'SLIDES WITH BUBBLES';
+
+  @override
+  String get cardKindPdf => 'PDF';
+
+  @override
+  String get cardKindSlides => 'SLIDES';
+
+  @override
+  String cardBubbleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bubbles',
+      one: '1 bubble',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get quickAddImport => 'FROM FILES';
+
+  @override
+  String get quickAddImage => 'Image';
+
+  @override
+  String get quickAddPdf => 'PDF';
+
+  @override
+  String get quickAddSlides => 'Slides';
+
+  @override
+  String get quickAddGalleryVideo => 'Video from gallery';
+
+  @override
+  String get quickAddYouTube => 'YouTube video';
 }

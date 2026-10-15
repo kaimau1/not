@@ -18,11 +18,11 @@ import '../../../core/widgets/undo_snackbar.dart';
 import '../../settings/settings_providers.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
-import '../domain/attachment.dart';
 import '../domain/note.dart';
 import '../domain/note_type.dart';
 import '../domain/page_notes.dart';
 import 'note_actions_sheet.dart';
+import 'note_card_media.dart';
 import 'notes_providers.dart';
 
 /// Kartın YAKLAŞIK yüksekliği (dp), [width] genişliğinde çizildiğinde.
@@ -90,21 +90,10 @@ double estimateNoteCardHeight(Note note, double width) {
       if (pages > 5) height += 16;
   }
 
-  // Ek önizlemesi: görseller tek 72 dp'lik şerit, PDF/sunum satır başına ~22.
-  final previews = [
-    for (final a in note.attachments)
-      if (a.id != note.backgroundImageId) a,
-  ];
-  if (previews.isNotEmpty) {
-    height += 8;
-    if (previews.any((a) => a.kind == AttachmentKind.image)) height += 72;
-    final files = previews
-        .where(
-          (a) => a.kind == AttachmentKind.pdf || a.kind == AttachmentKind.slide,
-        )
-        .length;
-    height += math.min(files, 4) * 22.0;
-  }
+  // Ek önizlemesi (kapak, belge kartı, karolar, dosya satırları): çizimle
+  // AYNI plandan ölçülür (bkz. CardMediaPlan).
+  final media = CardMediaPlan.of(note);
+  if (!media.isEmpty) height += media.estimateHeight(width) + 8;
 
   // Alt meta satırı (rozet · etiket · tarih) neredeyse her kartta var.
   height += 24;
@@ -473,11 +462,21 @@ class NoteCard extends ConsumerWidget {
     // Üst satır yalnızca başlık varsa çizilir. Başlıksız notta (madde 5) boş
     // bir üst bant bırakılmaz; içerik doğrudan tepeden başlar.
     final showTopRow = hasTitle;
+    // Kilitli notta içerik (ekler dahil) kartta gösterilmez.
+    final media = note.locked ? null : CardMediaPlan.of(note);
+    final hero = media?.hero;
+    final borderWidth = note.frameColor != NoteColor.none ? 2.5 : 1.0;
 
-    final content = Padding(
+    final padded = Padding(
       // Başlıksız kartta sağdan biraz içerik payı bırakılır ki ilk satır
-      // köşedeki üç nokta düğmesinin altına girmesin.
-      padding: EdgeInsetsDirectional.fromSTEB(12, 10, showTopRow ? 12 : 20, 10),
+      // köşedeki üç nokta düğmesinin altına girmesin (kapak varsa düğme
+      // kapağın üstünde durur, pay gerekmez).
+      padding: EdgeInsetsDirectional.fromSTEB(
+        12,
+        hero != null ? 8 : 10,
+        showTopRow || hero != null ? 12 : 20,
+        10,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -528,18 +527,15 @@ class NoteCard extends ConsumerWidget {
               highlightQuery: highlightQuery,
               rich: richPreview,
             ),
-            // Zemin görseli ek DEĞİLDİR: kartta küçük resim olarak
-            // görünmemeli (notun arkasında duvar kâğıdı olarak duruyor).
-            if (note.attachments.any(
-              (a) => a.id != note.backgroundImageId,
-            )) ...[
+            // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
+            // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
+            if (media != null &&
+                (media.heroDocument != null ||
+                    media.strip.isNotEmpty ||
+                    media.docs.isNotEmpty ||
+                    media.audioCount > 0)) ...[
               const SizedBox(height: 8),
-              _AttachmentPreview(
-                attachments: [
-                  for (final a in note.attachments)
-                    if (a.id != note.backgroundImageId) a,
-                ],
-              ),
+              CardMediaBody(plan: media),
             ],
           ],
           // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
@@ -586,6 +582,26 @@ class NoteCard extends ConsumerWidget {
       ),
     );
 
+    // KAPAK kartın tepesinde, KENARDAN KENARA (Keep'teki gibi): üste
+    // sabitli video/görsel ya da notun tek görseli/videosu. Kenarlık `Ink`
+    // tarafından çocuğa dolgu olarak eklendiği için kapak çerçevenin İÇİNDE
+    // kalır; köşe yarıçapı kenarlık kadar küçültülür.
+    final content = hero == null
+        ? padded
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(12 - borderWidth),
+                ),
+                child: CardHeroMedia(attachment: hero),
+              ),
+              padded,
+            ],
+          );
+
     final card = Material(
       color: NoteColors.surface(context, note.color),
       borderRadius: BorderRadius.circular(12),
@@ -614,7 +630,7 @@ class NoteCard extends ConsumerWidget {
               color: note.frameColor != NoteColor.none
                   ? NoteColors.swatch(note.frameColor)
                   : scheme.outlineVariant.withValues(alpha: 0.5),
-              width: note.frameColor != NoteColor.none ? 2.5 : 1,
+              width: borderWidth,
             ),
           ),
           // Notun ZEMİN görseli kartta da görünür (kullanıcı isteği: "her
@@ -699,11 +715,28 @@ class NoteCard extends ConsumerWidget {
                           alignment: AlignmentDirectional.topEnd,
                           child: Padding(
                             padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.more_vert,
-                              size: 18,
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            // Kapağın üstünde düğme koyu yuvarlakla okunur
+                            // kalır (açık renkli fotoğrafta kaybolmasın).
+                            child: hero == null
+                                ? Icon(
+                                    Icons.more_vert,
+                                    size: 18,
+                                    color: scheme.onSurfaceVariant,
+                                  )
+                                : DecoratedBox(
+                                    decoration: const BoxDecoration(
+                                      color: Color(0x66000000),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(2),
+                                      child: Icon(
+                                        Icons.more_vert,
+                                        size: 18,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -1078,130 +1111,6 @@ class _NotePreview extends StatelessWidget {
   }
 }
 
-class _AttachmentPreview extends StatelessWidget {
-  const _AttachmentPreview({required this.attachments});
-
-  final List<Attachment> attachments;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final images = [
-      for (final a in attachments)
-        if (a.kind == AttachmentKind.image) a,
-    ];
-    final pdfs = [
-      for (final a in attachments)
-        if (a.kind == AttachmentKind.pdf) a,
-    ];
-    final slides = [
-      for (final a in attachments)
-        if (a.kind == AttachmentKind.slide) a,
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (images.isNotEmpty)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: SizedBox(
-              height: 72,
-              child: Row(
-                children: [
-                  for (final image in images.take(3)) ...[
-                    Expanded(child: _thumb(image)),
-                    if (image != images.take(3).last) const SizedBox(width: 2),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        for (final pdf in pdfs.take(2))
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.picture_as_pdf_outlined,
-                  size: 14,
-                  color: scheme.error,
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    pdf.fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        for (final slide in slides.take(2))
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.slideshow_outlined,
-                  size: 14,
-                  color: scheme.tertiary,
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    slide.fileName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _thumb(Attachment attachment) {
-    // Kart küçük resmi için 2048 px'lik eki tam boy çözdürmek boşuna bellek
-    // ve CPU (liste kaydırma takılması); 480 px, 3x ekranda bile yeterli.
-    //
-    // YEREL KOPYA ÖNCE (2026-09-23, "görseller çok gecikiyor"): dosya zaten
-    // cihazdayken kart onu ağdan YENİDEN indiriyordu — ilk açılışta her
-    // kart küçük resmi boş kutuyla başlıyordu.
-    if (localFileExists(attachment.localPath)) {
-      return Image.file(
-        File(attachment.localPath),
-        fit: BoxFit.cover,
-        cacheWidth: 480,
-      );
-    }
-    if (attachment.isUploaded) {
-      return CachedNetworkImage(
-        imageUrl: attachment.downloadUrl,
-        fit: BoxFit.cover,
-        fadeInDuration: const Duration(milliseconds: 150),
-        memCacheWidth: 480,
-        placeholder: (context, _) => const ColoredBox(color: Colors.black12),
-      );
-    }
-    return Container(
-      color: Colors.black12,
-      child: const Icon(Icons.image_outlined, size: 20),
-    );
-  }
-}
-
 /// Liste görünümündeki not satırı.
 ///
 /// Izgaradaki [NoteCard]'ın "tek sütuna sıkıştırılmış" hâli DEĞİL: kart
@@ -1232,6 +1141,24 @@ class NoteListRow extends ConsumerWidget {
       NoteType.archive => Icons.inventory_2_outlined,
       NoteType.text => Icons.notes,
     };
+  }
+
+  /// Satırın solu: notun görseli/videosu varsa küçük resmi (video oynat
+  /// işaretiyle), yoksa tür simgesi. Kilitli notta hep simge.
+  Widget _rowLeading(ColorScheme scheme) {
+    final media = note.locked ? null : CardMediaPlan.of(note);
+    final visual = media?.hero ?? media?.strip.firstOrNull;
+    if (visual == null) {
+      return Icon(_icon, size: 20, color: scheme.onSurfaceVariant);
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: CardMediaTile(attachment: visual),
+      ),
+    );
   }
 
   /// Tek satırlık önizleme. Kilitli notta içerik SIZDIRILMAZ.
@@ -1268,7 +1195,7 @@ class NoteListRow extends ConsumerWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(_icon, size: 20, color: scheme.onSurfaceVariant),
+              _rowLeading(scheme),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

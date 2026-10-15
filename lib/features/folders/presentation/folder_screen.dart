@@ -252,6 +252,8 @@ class _FolderScreenState extends ConsumerState<FolderScreen>
           onImageNote: createImageNote,
           onSlidesNote: createSlidesNote,
           onQrNote: createQrNote,
+          onGalleryVideo: createGalleryVideoNote,
+          onYouTube: createYouTubeNote,
           onTemplate: createFromTemplate,
           onShopping: () => createFromTemplate(NoteTemplate.shopping),
         ),

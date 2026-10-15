@@ -1368,7 +1368,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get annotateDone => 'Terminer l\'annotation';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => 'PDF\'ten not';
 
   @override
   String get imageNotePreparing => 'Assemblage des images en un document…';
@@ -1405,7 +1405,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get pdfChooseDocument => 'PDF seç';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => 'Sunumdan not';
 
   @override
   String get slidesNoDocument => 'Bu notta henüz sunum yok';
@@ -4532,4 +4532,55 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get menuSectionApp => 'Application';
+
+  @override
+  String cardMoreFiles(int count) {
+    return '+$count dosya daha';
+  }
+
+  @override
+  String cardAudioCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ses kaydı',
+      one: 'Ses kaydı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardBubbleDocument => 'BALONLU PDF';
+
+  @override
+  String get cardBubbleSlides => 'BALONLU SUNUM';
+
+  @override
+  String get cardKindPdf => 'PDF';
+
+  @override
+  String get cardKindSlides => 'SUNUM';
+
+  @override
+  String cardBubbleCount(int count) {
+    return '$count balon';
+  }
+
+  @override
+  String get quickAddImport => 'DOSYADAN';
+
+  @override
+  String get quickAddImage => 'Görsel';
+
+  @override
+  String get quickAddPdf => 'PDF';
+
+  @override
+  String get quickAddSlides => 'Sunum';
+
+  @override
+  String get quickAddGalleryVideo => 'Galeriden video';
+
+  @override
+  String get quickAddYouTube => 'YouTube videosu';
 }

@@ -301,6 +301,8 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startScan = false,
     this.startPdf = false,
     this.startSlides = false,
+    this.startGalleryVideo = false,
+    this.startYouTube = false,
   });
 
   final String noteId;
@@ -362,6 +364,14 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
 
   /// (+) menüsündeki "Sunum ekle not al": PDF yolunun slayt eşi.
   final bool startSlides;
+
+  /// (+) menüsündeki "Galeriden video": açılışta galeri açılır, seçilen
+  /// video notun ÜSTÜNE sabitlenir (üstte video, altta not).
+  final bool startGalleryVideo;
+
+  /// (+) menüsündeki "YouTube videosu": açılışta bağlantı sorulur, video
+  /// notun ÜSTÜNE sabitlenir ve izlerken altına not yazılır.
+  final bool startYouTube;
 
   @override
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
@@ -492,6 +502,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   bool _pendingScan = false;
   bool _pendingPdf = false;
   bool _pendingSlides = false;
+  bool _pendingGalleryVideo = false;
+  bool _pendingYouTube = false;
 
   void _runPendingIntents() {
     if (!mounted || _note == null) return;
@@ -529,6 +541,23 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pendingSlides) {
       _pendingSlides = false;
       _pickSlide();
+    }
+    // Videodan doğan not "üstte video, altta not" düzeniyle açılır: video
+    // sabit bölmede oynarken not altında yazılır (kullanıcının kendi
+    // kurduğu düzen; elle sürükleyip sabitlemek gerekmesin).
+    if (_pendingGalleryVideo) {
+      _pendingGalleryVideo = false;
+      unawaited(() async {
+        final added = await _addVideoFromGallery();
+        if (added != null && mounted) _pinMediaTop(added);
+      }());
+    }
+    if (_pendingYouTube) {
+      _pendingYouTube = false;
+      unawaited(() async {
+        final added = await _addYouTube();
+        if (added != null && mounted) _pinMediaTop(added);
+      }());
     }
   }
 
@@ -941,6 +970,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _pendingScan = widget.startScan;
     _pendingPdf = widget.startPdf;
     _pendingSlides = widget.startSlides;
+    _pendingGalleryVideo = widget.startGalleryVideo;
+    _pendingYouTube = widget.startYouTube;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
     final owner = widget.ownerId;
     _sub = ref.listenManual(owner == null

@@ -1665,6 +1665,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           onImageNote: createImageNote,
                           onSlidesNote: createSlidesNote,
                           onQrNote: createQrNote,
+                          onGalleryVideo: createGalleryVideoNote,
+                          onYouTube: createYouTubeNote,
                           anchor: _fabColumnLink,
                           onCreate: createNote,
                           onHandwriting: createHandwritingNote,

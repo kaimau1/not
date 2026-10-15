@@ -22,10 +22,11 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, arkadaşa gönder, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (kopyala, çoğalt, şablon, dışa aktar), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
 ## Yeni not oluşturma {#create}
-Sağ alttaki **+** düğmesi iki bölüm açar:
-- **Yaz:** metin notu, onay kutulu liste, sıralı (numaralı) liste, arşiv defteri, alışveriş listesi, **şablondan** not.
-- **Yakala:** sesli not, fotoğraf, belge tarama, PDF, görsel, sunum, el yazısı, görüntülü not (video) ve QR kod.
-PDF, görsel ve sunum için iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge sıradan bir ek olur).
+Sağ alttaki **+** düğmesi üç bölüm açar:
+- **Yaz:** metin notu, onay kutulu liste, sıralı (numaralı) liste, alışveriş listesi, **şablondan** not, arşiv defteri.
+- **Çek ve kaydet:** sesli not, fotoğraf çek, video çek, belge tara, el yazısı ve QR kod.
+- **Dosyadan:** görsel, PDF, sunum, **galeriden video** ve **YouTube videosu**. Video ile açılan not "üstte video, altta not" düzeninde başlar.
+PDF, görsel ve sunum için iki kip sorulur: **Balonlu** (belge notun kendisi olur, üzerine balon/kalem) ya da **Klasik** (belge sıradan bir ek olur). Kip sonradan da değişir: bkz. **Balonlu ↔ klasik geçiş**.
 
 ## Not düzenleme {#editor}
 Alt çubuk soldan sağa:

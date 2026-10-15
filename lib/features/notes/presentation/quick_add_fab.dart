@@ -48,9 +48,17 @@ class QuickAddFab extends StatefulWidget {
     required this.onImageNote,
     required this.onSlidesNote,
     required this.onQrNote,
+    this.onGalleryVideo,
+    this.onYouTube,
     this.onTemplate,
     this.onShopping,
   });
+
+  /// Galerideki bir videodan not (kamera değil — var olan video).
+  final VoidCallback? onGalleryVideo;
+
+  /// YouTube bağlantısından not: video notun üstüne sabitli açılır.
+  final VoidCallback? onYouTube;
 
   /// Şablon levhasını açar (bkz. `QuickAddActions.createFromTemplate`).
   final VoidCallback? onTemplate;
@@ -134,102 +142,127 @@ class _QuickAddFabState extends State<QuickAddFab> {
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
             child: _QuickAddPanel(
-              // YAZ: boş bir not açan üç seçenek. Bunlar da YAKALA bölümüyle
-              // AYNI ızgara kartlarında durur (kullanıcı isteği 2026-08-09:
-              // "metin/liste/sıralı liste de grid kart olsun, altrakiler
-              // gibi"): iki bölüm arasında iki ayrı düğme dili vardı, göz
-              // her açılışta yeniden alışıyordu.
-              writeOptions: [
+              // ÜÇ BÖLÜM (kullanıcı bulgusu 2026-10-15: "not ekleme menüsü
+              // düzenlenmeli, eksikler giderilmeli, yazılar ve mantık
+              // düzeltilmeli"). Eski "YAKALA — İÇERİKTEN NOT OLUŞTURUR"
+              // bölümü kamerayı, dosya seçiciyi ve kalemi tek torbaya
+              // koyuyordu; etiketler de "Foto çek not al", "PDF ekle not al"
+              // gibi cümle yarımlarıydı. Galeriden video ve YouTube hiç
+              // yoktu (yalnız editörün içindeki Ekle levhasında vardı).
+              // Şimdi: YAZ (boş not) · ÇEK VE KAYDET (kamera, mikrofon,
+              // kalem) · DOSYADAN (cihazdaki/web'deki içerik).
+              sections: [
                 (
-                  Icons.notes,
-                  context.l10n.newTextNote,
-                  () => widget.onCreate(NoteType.text),
+                  label: context.l10n.quickAddWrite,
+                  color: Theme.of(context).colorScheme.primary,
+                  options: [
+                    (
+                      Icons.notes,
+                      context.l10n.newTextNote,
+                      () => widget.onCreate(NoteType.text),
+                    ),
+                    (
+                      Icons.check_box_outlined,
+                      context.l10n.newChecklist,
+                      () => widget.onCreate(NoteType.checklist),
+                    ),
+                    (
+                      Icons.format_list_numbered_rounded,
+                      context.l10n.newOrderedList,
+                      () => widget.onCreate(NoteType.ordered),
+                    ),
+                    if (widget.onShopping case final onShopping?)
+                      (
+                        Icons.shopping_cart_outlined,
+                        context.l10n.tplShoppingName,
+                        onShopping,
+                      ),
+                    if (widget.onTemplate case final onTemplate?)
+                      (
+                        Icons.dashboard_customize_outlined,
+                        context.l10n.fromTemplate,
+                        onTemplate,
+                      ),
+                    // ARŞİV DEFTERİ (kullanıcı isteği 2026-08-16): kendi
+                    // sayfaları olan, belge/görsel KOPYASI toplayan not.
+                    (
+                      Icons.inventory_2_outlined,
+                      context.l10n.archiveNotebook,
+                      () => widget.onCreate(NoteType.archive),
+                    ),
+                  ],
                 ),
                 (
-                  Icons.check_box_outlined,
-                  context.l10n.newChecklist,
-                  () => widget.onCreate(NoteType.checklist),
+                  label: context.l10n.quickAddCapture,
+                  color: Theme.of(context).colorScheme.tertiary,
+                  options: [
+                    (
+                      Icons.graphic_eq,
+                      context.l10n.newVoiceCapture,
+                      widget.onVoiceCapture,
+                    ),
+                    (
+                      Icons.photo_camera_outlined,
+                      context.l10n.newPhotoNote,
+                      widget.onPhotoNote,
+                    ),
+                    (
+                      Icons.videocam_outlined,
+                      context.l10n.newVideoNote,
+                      widget.onVideoNote,
+                    ),
+                    if (DocumentScan.available)
+                      (
+                        Icons.document_scanner_outlined,
+                        context.l10n.newScanNote,
+                        widget.onScanNote,
+                      ),
+                    (
+                      Icons.draw_outlined,
+                      context.l10n.newHandwriting,
+                      widget.onHandwriting,
+                    ),
+                    if (qrScanSupported)
+                      (
+                        Icons.qr_code_scanner,
+                        context.l10n.qrScanTitle,
+                        widget.onQrNote,
+                      ),
+                  ],
                 ),
                 (
-                  Icons.format_list_numbered_rounded,
-                  context.l10n.newOrderedList,
-                  () => widget.onCreate(NoteType.ordered),
+                  label: context.l10n.quickAddImport,
+                  color: Theme.of(context).colorScheme.secondary,
+                  options: [
+                    (
+                      Icons.photo_library_outlined,
+                      context.l10n.quickAddImage,
+                      widget.onImageNote,
+                    ),
+                    (
+                      Icons.picture_as_pdf_outlined,
+                      context.l10n.quickAddPdf,
+                      widget.onPdfNote,
+                    ),
+                    (
+                      Icons.slideshow_outlined,
+                      context.l10n.quickAddSlides,
+                      widget.onSlidesNote,
+                    ),
+                    if (widget.onGalleryVideo case final onGalleryVideo?)
+                      (
+                        Icons.video_library_outlined,
+                        context.l10n.quickAddGalleryVideo,
+                        onGalleryVideo,
+                      ),
+                    if (widget.onYouTube case final onYouTube?)
+                      (
+                        Icons.smart_display_outlined,
+                        context.l10n.quickAddYouTube,
+                        onYouTube,
+                      ),
+                  ],
                 ),
-                // ARŞİV DEFTERİ (kullanıcı isteği 2026-08-16): kendi
-                // sayfaları olan, belge/görsel KOPYASI toplayan not.
-                (
-                  Icons.inventory_2_outlined,
-                  context.l10n.archiveNotebook,
-                  () => widget.onCreate(NoteType.archive),
-                ),
-                // ŞABLONLAR / MODLAR (kullanıcı isteği 2026-09-26: "modlar,
-                // alışveriş listesi gibi"). Arşiv defterinin yanındaki boş
-                // iki hücreyi de doldurur (ekran görüntüsündeki boşluk).
-                if (widget.onShopping case final onShopping?)
-                  (
-                    Icons.shopping_cart_outlined,
-                    context.l10n.tplShoppingName,
-                    onShopping,
-                  ),
-                if (widget.onTemplate case final onTemplate?)
-                  (
-                    Icons.dashboard_customize_outlined,
-                    context.l10n.fromTemplate,
-                    onTemplate,
-                  ),
-              ],
-              // YAKALA: hepsi bir İÇERİKTEN not üretir (ses, fotoğraf, tarama,
-              // el yazısı, video, QR). Bölüm başlığı bunu açıkça söylüyor —
-              // kullanıcı "Fotoğraflı not"un fotoğrafı nereye koyduğunu
-              // denemeden anlamıyordu.
-              captureOptions: [
-                (
-                  Icons.graphic_eq,
-                  context.l10n.newVoiceCapture,
-                  widget.onVoiceCapture,
-                ),
-                (
-                  Icons.photo_camera_outlined,
-                  context.l10n.newPhotoNote,
-                  widget.onPhotoNote,
-                ),
-                if (DocumentScan.available)
-                  (
-                    Icons.document_scanner_outlined,
-                    context.l10n.newScanNote,
-                    widget.onScanNote,
-                  ),
-                (
-                  Icons.picture_as_pdf_outlined,
-                  context.l10n.newPdfNote,
-                  widget.onPdfNote,
-                ),
-                (
-                  Icons.photo_library_outlined,
-                  context.l10n.newImageNote,
-                  widget.onImageNote,
-                ),
-                (
-                  Icons.slideshow_outlined,
-                  context.l10n.newSlidesNote,
-                  widget.onSlidesNote,
-                ),
-                (
-                  Icons.draw_outlined,
-                  context.l10n.newHandwriting,
-                  widget.onHandwriting,
-                ),
-                (
-                  Icons.videocam_outlined,
-                  context.l10n.newVideoNote,
-                  widget.onVideoNote,
-                ),
-                if (qrScanSupported)
-                  (
-                    Icons.qr_code_scanner,
-                    context.l10n.qrScanTitle,
-                    widget.onQrNote,
-                  ),
               ],
               onSelected: _select,
             ),
@@ -339,23 +372,24 @@ class _BlurBarrier extends StatelessWidget {
   );
 }
 
+/// Panel bölümü: başlık, renk (simgeler ve başlık çizgisi) ve seçenekler.
+typedef QuickAddSection = ({
+  String label,
+  Color color,
+  List<(IconData, String, VoidCallback)> options,
+});
+
 /// Yeni not tipleri paneli: üç sütunlu, iri dokunma hedefli düğme ızgarası.
 ///
 /// Ölçüler: panel en çok 360 dp (küçük ekranda ekran genişliği - 24), her
-/// hücre 84 dp yüksek — simge + iki satıra kadar etiket sığar, dokunma hedefi
-/// Material'ın 48 dp alt sınırının rahat üstünde kalır.
+/// hücre 66 dp yüksek — simge + iki satıra kadar etiket sığar, dokunma hedefi
+/// Material'ın 48 dp alt sınırının rahat üstünde kalır. Kısa ekranda (yatay
+/// telefon) panel ekranın %78'ini aşarsa kendi içinde kayar — taşıp üstteki
+/// seçenekleri ekran dışına itmez.
 class _QuickAddPanel extends StatefulWidget {
-  const _QuickAddPanel({
-    required this.writeOptions,
-    required this.captureOptions,
-    required this.onSelected,
-  });
+  const _QuickAddPanel({required this.sections, required this.onSelected});
 
-  /// (simge, etiket, işlem) üçlüleri — boş not açanlar.
-  final List<(IconData, String, VoidCallback)> writeOptions;
-
-  /// (simge, etiket, işlem) üçlüleri — içerikten not üretenler.
-  final List<(IconData, String, VoidCallback)> captureOptions;
+  final List<QuickAddSection> sections;
 
   /// Seçilen işlemi paneli kapatarak çalıştırır.
   final void Function(VoidCallback action) onSelected;
@@ -367,10 +401,8 @@ class _QuickAddPanel extends StatefulWidget {
 class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
   static const _columns = 3;
-  // Simge artık renkli bir yuvarlak içinde (bölümü renkle ayırır): hücre
-  // 8 dp uzadı.
-  static const _cellHeight = 72.0;
-  static const _gap = 8.0;
+  static const _cellHeight = 66.0;
+  static const _gap = 6.0;
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
@@ -386,62 +418,57 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final size = MediaQuery.sizeOf(context);
     // Panel genişliği ekranla sınırlı: geniş ekranda 360 dp'de durur,
     // telefonda kenarlardan 12 dp boşluk bırakır.
-    final width = math.min(360.0, MediaQuery.sizeOf(context).width - 24);
+    final width = math.min(360.0, size.width - 24);
     final cellWidth = (width - 24 - _gap * (_columns - 1)) / _columns;
 
-    final l10n = context.l10n;
+    final children = <Widget>[];
+    for (final section in widget.sections) {
+      if (section.options.isEmpty) continue;
+      if (children.isNotEmpty) {
+        children
+          ..add(const SizedBox(height: 8))
+          ..add(Divider(height: 1, color: scheme.outlineVariant));
+      }
+      children
+        ..add(_SectionLabel(section.label, color: section.color))
+        ..add(
+          Wrap(
+            spacing: _gap,
+            runSpacing: _gap,
+            children: [
+              for (final (icon, label, action) in section.options)
+                SizedBox(
+                  width: cellWidth,
+                  height: _cellHeight,
+                  child: _PanelButton(
+                    icon: icon,
+                    label: label,
+                    accent: section.color,
+                    onTap: () => widget.onSelected(action),
+                  ),
+                ),
+            ],
+          ),
+        );
+    }
+
     final panel = Material(
       color: scheme.surface,
       elevation: 8,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _SectionLabel(l10n.quickAddWrite, color: scheme.primary),
-            Wrap(
-              spacing: _gap,
-              runSpacing: _gap,
-              children: [
-                for (final (icon, label, action) in widget.writeOptions)
-                  SizedBox(
-                    width: cellWidth,
-                    height: _cellHeight,
-                    child: _PanelButton(
-                      icon: icon,
-                      label: label,
-                      accent: scheme.primary,
-                      onTap: () => widget.onSelected(action),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Divider(height: 1, color: scheme.outlineVariant),
-            _SectionLabel(l10n.quickAddCapture, color: scheme.tertiary),
-            Wrap(
-              spacing: _gap,
-              runSpacing: _gap,
-              children: [
-                for (final (icon, label, action) in widget.captureOptions)
-                  SizedBox(
-                    width: cellWidth,
-                    height: _cellHeight,
-                    child: _PanelButton(
-                      icon: icon,
-                      label: label,
-                      accent: scheme.tertiary,
-                      onTap: () => widget.onSelected(action),
-                    ),
-                  ),
-              ],
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: size.height * 0.78),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
         ),
       ),
     );
@@ -469,14 +496,14 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   }
 }
 
-/// Panel bölüm başlığı (YAZ / YAKALA…).
+/// Panel bölüm başlığı (YAZ / ÇEK VE KAYDET / DOSYADAN).
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text, {this.color});
 
   final String text;
 
-  /// Bölümün rengi — hücre simgeleriyle aynı (yaz = birincil, yakala =
-  /// üçüncül): iki bölüm başlığı okunmadan da ayırt edilsin.
+  /// Bölümün rengi — hücre simgeleriyle aynı (yaz = birincil, çek =
+  /// üçüncül, dosyadan = ikincil): bölümler okunmadan da ayırt edilsin.
   final Color? color;
 
   @override

@@ -994,7 +994,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get permOnboardSkip => 'Şimdi değil';
 
   @override
-  String get newVideoNote => 'Görüntülü not';
+  String get newVideoNote => 'Video çek';
 
   @override
   String get videoLocalOnly =>
@@ -1353,13 +1353,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get annotateDone => 'Yazmayı bitir';
 
   @override
-  String get newPdfNote => 'PDF ekle not al';
+  String get newPdfNote => 'PDF\'ten not';
 
   @override
   String get imageNotePreparing => 'Görseller belgeye diziliyor…';
 
   @override
-  String get newImageNote => 'Görsel ekle not al';
+  String get newImageNote => 'Görselden not';
 
   @override
   String get pdfPageNoteHint => 'Bu sayfanın notu…';
@@ -1390,7 +1390,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get pdfChooseDocument => 'PDF seç';
 
   @override
-  String get newSlidesNote => 'Sunum ekle not al';
+  String get newSlidesNote => 'Sunumdan not';
 
   @override
   String get slidesNoDocument => 'Bu notta henüz sunum yok';
@@ -1480,10 +1480,10 @@ class AppLocalizationsTr extends AppLocalizations {
   String get slideOpenFailed => 'Sunum açılamadı';
 
   @override
-  String get newPhotoNote => 'Foto çek not al';
+  String get newPhotoNote => 'Fotoğraf çek';
 
   @override
-  String get newScanNote => 'Belge tara not al';
+  String get newScanNote => 'Belge tara';
 
   @override
   String get scanDocument => 'Belge tara';
@@ -1788,7 +1788,7 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickAddWrite => 'YAZ';
 
   @override
-  String get quickAddCapture => 'YAKALA — İÇERİKTEN NOT OLUŞTURUR';
+  String get quickAddCapture => 'ÇEK VE KAYDET';
 
   @override
   String get viewToggle => 'Görünüm';
@@ -4502,4 +4502,55 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get menuSectionApp => 'Uygulama';
+
+  @override
+  String cardMoreFiles(int count) {
+    return '+$count dosya daha';
+  }
+
+  @override
+  String cardAudioCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ses kaydı',
+      one: 'Ses kaydı',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cardBubbleDocument => 'BALONLU PDF';
+
+  @override
+  String get cardBubbleSlides => 'BALONLU SUNUM';
+
+  @override
+  String get cardKindPdf => 'PDF';
+
+  @override
+  String get cardKindSlides => 'SUNUM';
+
+  @override
+  String cardBubbleCount(int count) {
+    return '$count balon';
+  }
+
+  @override
+  String get quickAddImport => 'DOSYADAN';
+
+  @override
+  String get quickAddImage => 'Görsel';
+
+  @override
+  String get quickAddPdf => 'PDF';
+
+  @override
+  String get quickAddSlides => 'Sunum';
+
+  @override
+  String get quickAddGalleryVideo => 'Galeriden video';
+
+  @override
+  String get quickAddYouTube => 'YouTube videosu';
 }

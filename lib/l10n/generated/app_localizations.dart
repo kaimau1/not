@@ -1935,7 +1935,7 @@ abstract class AppLocalizations {
   /// No description provided for @newVideoNote.
   ///
   /// In tr, this message translates to:
-  /// **'Görüntülü not'**
+  /// **'Video çek'**
   String get newVideoNote;
 
   /// No description provided for @videoLocalOnly.
@@ -2601,7 +2601,7 @@ abstract class AppLocalizations {
   /// No description provided for @newPdfNote.
   ///
   /// In tr, this message translates to:
-  /// **'PDF ekle not al'**
+  /// **'PDF\'ten not'**
   String get newPdfNote;
 
   /// No description provided for @imageNotePreparing.
@@ -2613,7 +2613,7 @@ abstract class AppLocalizations {
   /// No description provided for @newImageNote.
   ///
   /// In tr, this message translates to:
-  /// **'Görsel ekle not al'**
+  /// **'Görselden not'**
   String get newImageNote;
 
   /// No description provided for @pdfPageNoteHint.
@@ -2667,7 +2667,7 @@ abstract class AppLocalizations {
   /// No description provided for @newSlidesNote.
   ///
   /// In tr, this message translates to:
-  /// **'Sunum ekle not al'**
+  /// **'Sunumdan not'**
   String get newSlidesNote;
 
   /// No description provided for @slidesNoDocument.
@@ -2835,13 +2835,13 @@ abstract class AppLocalizations {
   /// No description provided for @newPhotoNote.
   ///
   /// In tr, this message translates to:
-  /// **'Foto çek not al'**
+  /// **'Fotoğraf çek'**
   String get newPhotoNote;
 
   /// No description provided for @newScanNote.
   ///
   /// In tr, this message translates to:
-  /// **'Belge tara not al'**
+  /// **'Belge tara'**
   String get newScanNote;
 
   /// No description provided for @scanDocument.
@@ -3393,7 +3393,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddCapture.
   ///
   /// In tr, this message translates to:
-  /// **'YAKALA — İÇERİKTEN NOT OLUŞTURUR'**
+  /// **'ÇEK VE KAYDET'**
   String get quickAddCapture;
 
   /// No description provided for @viewToggle.
@@ -8183,6 +8183,84 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Uygulama'**
   String get menuSectionApp;
+
+  /// No description provided for @cardMoreFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'+{count} dosya daha'**
+  String cardMoreFiles(int count);
+
+  /// No description provided for @cardAudioCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}'**
+  String cardAudioCount(int count);
+
+  /// No description provided for @cardBubbleDocument.
+  ///
+  /// In tr, this message translates to:
+  /// **'BALONLU PDF'**
+  String get cardBubbleDocument;
+
+  /// No description provided for @cardBubbleSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'BALONLU SUNUM'**
+  String get cardBubbleSlides;
+
+  /// No description provided for @cardKindPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get cardKindPdf;
+
+  /// No description provided for @cardKindSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'SUNUM'**
+  String get cardKindSlides;
+
+  /// No description provided for @cardBubbleCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} balon'**
+  String cardBubbleCount(int count);
+
+  /// No description provided for @quickAddImport.
+  ///
+  /// In tr, this message translates to:
+  /// **'DOSYADAN'**
+  String get quickAddImport;
+
+  /// No description provided for @quickAddImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel'**
+  String get quickAddImage;
+
+  /// No description provided for @quickAddPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get quickAddPdf;
+
+  /// No description provided for @quickAddSlides.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sunum'**
+  String get quickAddSlides;
+
+  /// No description provided for @quickAddGalleryVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Galeriden video'**
+  String get quickAddGalleryVideo;
+
+  /// No description provided for @quickAddYouTube.
+  ///
+  /// In tr, this message translates to:
+  /// **'YouTube videosu'**
+  String get quickAddYouTube;
 }
 
 class _AppLocalizationsDelegate

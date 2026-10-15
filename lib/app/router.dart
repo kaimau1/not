@@ -355,4 +355,8 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       startPdf: state.uri.queryParameters['pdf'] == '1',
       // ?slides=1: sunum ekle not al — PDF yolunun slayt eşi.
       startSlides: state.uri.queryParameters['slides'] == '1',
+      // ?gvideo=1: galeriden video — seçilen video notun üstüne sabitlenir.
+      startGalleryVideo: state.uri.queryParameters['gvideo'] == '1',
+      // ?youtube=1: YouTube bağlantısı sorulur, video üste sabitlenir.
+      startYouTube: state.uri.queryParameters['youtube'] == '1',
     );
