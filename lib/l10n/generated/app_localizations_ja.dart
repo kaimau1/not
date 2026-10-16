@@ -4777,7 +4777,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'ノート画面のAIボタン';
+  String get moduleAiInfo => 'ホーム画面とノート画面のAIボタン';
 
   @override
   String get moduleVoice => '音声';
@@ -4847,6 +4847,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get personalizeHome => 'ホーム画面';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      '選択した項目がホーム画面に表示されます。編集モードではホーム画面で直接タップして非表示にもできます。';
 
   @override
   String get personalizeBubbles => '吹き出し';

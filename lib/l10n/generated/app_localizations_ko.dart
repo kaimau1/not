@@ -4783,7 +4783,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => '노트 화면의 AI 버튼';
+  String get moduleAiInfo => '홈 화면과 노트 화면의 AI 버튼';
 
   @override
   String get moduleVoice => '음성';
@@ -4853,6 +4853,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get personalizeHome => '홈 화면';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      '선택한 항목이 홈 화면에 표시됩니다. 편집 모드에서는 홈 화면에서 직접 눌러 숨길 수도 있습니다.';
 
   @override
   String get personalizeBubbles => '말풍선';

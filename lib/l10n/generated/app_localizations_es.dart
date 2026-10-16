@@ -4877,7 +4877,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get moduleAi => 'IA';
 
   @override
-  String get moduleAiInfo => 'Botones de IA en la pantalla de nota';
+  String get moduleAiInfo => 'Botones de IA en la pantalla de inicio y de nota';
 
   @override
   String get moduleVoice => 'Voz';
@@ -4951,6 +4951,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get personalizeHome => 'PANTALLA DE INICIO';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Los elementos seleccionados aparecen en la pantalla de inicio; en el modo de edición también puedes tocarlos allí para ocultarlos.';
 
   @override
   String get personalizeBubbles => 'BURBUJAS';

@@ -136,6 +136,15 @@ abstract final class UiItem {
   static const editorTags = 'editor.tags';
   static const editorDate = 'editor.date';
 
+  // ── Ana ekran ──
+  // (kullanıcı bulgusu 2026-10-16: "ana ekran kişiselleştirilemiyor").
+  static const homeAccount = 'home.account';
+  static const homeAi = 'home.ai';
+  static const homeFilter = 'home.filter';
+  static const homeViewToggle = 'home.viewToggle';
+  static const homeVoiceAi = 'home.voiceAi';
+  static const homeDictation = 'home.dictation';
+
   // ── Video denetimi ──
   static const videoSpeed = 'video.speed';
   static const videoTime = 'video.time';
@@ -160,11 +169,20 @@ class UiModule {
   final String id;
   final List<String> items;
 
-  static const ai = UiModule('ai', [UiItem.barAi, UiItem.barVoiceAi]);
+  // Eklentiler AYRIK: bir öğe tek eklentide durur. "AI ile sesli not"
+  // eskiden hem Yapay zekâ'da hem Ses'te vardı; Ses'i kapatmak Yapay zekâ'yı
+  // da "kısmen açık"a düşürüyor, kullanıcı "başka şeyler de kapanmış"
+  // görüyordu (kullanıcı bulgusu 2026-10-16).
+  static const ai = UiModule('ai', [
+    UiItem.barAi,
+    UiItem.barVoiceAi,
+    UiItem.homeAi,
+    UiItem.homeVoiceAi,
+  ]);
 
   static const voice = UiModule('voice', [
-    UiItem.barVoiceAi,
     UiItem.barDictation,
+    UiItem.homeDictation,
     'quickadd.voice',
     'attach.audio',
   ]);

@@ -224,7 +224,8 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
   final _pdf = PdfViewerController();
   final _selection = PdfSelectionState();
 
-  Timer? _centerTimer;
+  /// Açılan balonu görünür kılan yardımcı (bkz. [BubbleReveal]).
+  late final _reveal = BubbleReveal(widget.bubbles);
 
   /// Görüntüleyicinin KENDİ gösterdiği sayfa (1 tabanlı).
   ///
@@ -244,18 +245,13 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     super.initState();
     if (widget.penMode) widget.ink.setEditing(true);
     // Balon taşımasında pan kilidi YOK (bkz. BubbleController açıklaması).
-    // Açılan balon, yazma kartının üstünde kalan alanın ortasına getirilir.
-    widget.bubbles.onOpened = (bubble) => centerPdfOnBubble(
+    // Açılan balon gerekirse (yalnız görünmüyorsa) yazma kartının üstünde
+    // kalan alanın ortasına getirilir — yerleşim oturduktan sonra, tek kez.
+    widget.bubbles.onOpened = (bubble) => revealPdfBubble(
+      reveal: _reveal,
       controller: _pdf,
       bubble: bubble,
-      timer: (t) => _centerTimer = t,
-      previous: _centerTimer,
-      // Klavyenin arkasında kalan dip de "görünür" sayılmaz (editör gövdesi
-      // klavye durana dek kısalmaz — bkz. keyboardOverlapOf).
-      freeBelow: () =>
-          widget.bubbles.dockHeight.value +
-          (mounted ? keyboardOverlapOf(context) : 0),
-      alive: () => mounted,
+      viewport: context,
     );
   }
 
@@ -282,7 +278,7 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
 
   @override
   void dispose() {
-    _centerTimer?.cancel();
+    _reveal.cancel();
     _selection.dispose();
     super.dispose();
   }
@@ -396,7 +392,9 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     final viewer = _viewerFor(attachment, hasLocal);
     return Stack(
       children: [
-        Positioned.fill(child: viewer),
+        // Balona yazarken bölme boy değiştirir (başlık gizlenir, klavye
+        // oturur); pdfrx her boy değişiminde sayfa başına sıçrıyordu.
+        Positioned.fill(child: StableViewport(child: viewer)),
         // Yazma kartı bölmenin ALT kenarında — klavye açıkken tam onun üstü.
         Positioned(
           left: 0,
@@ -432,12 +430,8 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
         // Yazma kartı açıkken çubuk onun üstüne çıkar (üst üste binmesin).
         ValueListenableBuilder<double>(
           valueListenable: widget.bubbles.dockHeight,
-          builder: (context, dock, child) => Positioned(
-            left: 8,
-            right: 8,
-            bottom: 8 + dock,
-            child: child!,
-          ),
+          builder: (context, dock, child) =>
+              Positioned(left: 8, right: 8, bottom: 8 + dock, child: child!),
           child: PdfSelectionBar(
             selection: _selection,
             bubbles: widget.bubbles,

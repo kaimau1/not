@@ -281,6 +281,9 @@ void main() {
         UiItem.barDictation,
         UiItem.editorTags,
         UiItem.topCollab,
+        UiItem.homeAi,
+        UiItem.homeVoiceAi,
+        UiItem.homeDictation,
       };
       for (final module in UiModule.all) {
         for (final id in module.items) {

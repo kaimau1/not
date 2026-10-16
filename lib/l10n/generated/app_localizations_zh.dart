@@ -4751,7 +4751,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => '笔记界面中的 AI 按钮';
+  String get moduleAiInfo => '主屏幕和笔记界面中的 AI 按钮';
 
   @override
   String get moduleVoice => '语音';
@@ -4821,6 +4821,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get personalizeHome => '主屏幕';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      '选中的项目会显示在主屏幕上；在编辑模式下也可以直接在主屏幕上点按将其隐藏。';
 
   @override
   String get personalizeBubbles => '气泡';

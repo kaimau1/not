@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -272,7 +273,9 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
   int _page = 1;
 
   bool _positioned = false;
-  Timer? _centerTimer;
+
+  /// Açılan balonu görünür kılan yardımcı (bkz. [BubbleReveal]).
+  late final _reveal = BubbleReveal(widget.bubbles);
 
   @override
   void initState() {
@@ -295,7 +298,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
 
   @override
   void dispose() {
-    _centerTimer?.cancel();
+    _reveal.cancel();
     _scroll.dispose();
     super.dispose();
   }
@@ -318,37 +321,43 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
     );
   }
 
-  /// Açılan balonu, yazma kartının üstünde kalan alanın ortasına getirir.
-  /// Gecikme klavye animasyonu içindir (PDF'teki `centerPdfOnBubble` ile aynı
-  /// gerekçe).
-  void _centerOn(PageBubble bubble) {
-    _centerTimer?.cancel();
-    _centerTimer = Timer(const Duration(milliseconds: 420), () {
-      final metrics = _metrics;
-      if (!mounted || metrics == null || !_scroll.hasClients) return;
-      // Klavyenin arkasında kalan dip de "görünür" sayılmaz (editör gövdesi
-      // klavye durana dek kısalmaz — bkz. keyboardOverlapOf).
-      final free =
-          (_viewport -
-                  widget.bubbles.dockHeight.value -
-                  keyboardOverlapOf(context) -
-                  24)
-              .clamp(
-        80.0,
-        _viewport <= 0 ? 80.0 : _viewport,
-      );
+  /// Açılan balonu gerekirse (yalnız görünmüyorsa) yazma kartının üstünde
+  /// kalan alanın ortasına getirir — yerleşim oturduktan sonra, tek kez
+  /// (bkz. [BubbleReveal]).
+  void _centerOn(PageBubble bubble) => _reveal.request(
+    bubble,
+    viewport: context,
+    scrollBy: (dy) {
+      if (!mounted || !_scroll.hasClients) return;
+      final position = _scroll.position;
       _scroll.animateTo(
-        metrics.centerOffset(
-          page: bubble.page,
-          y: bubble.y,
-          free: free,
-          maxScroll: _scroll.position.maxScrollExtent,
+        (position.pixels + dy).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
         ),
-        duration: const Duration(milliseconds: 220),
+        duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
       );
-    });
-  }
+    },
+    centerUnbuilt: (top, height) {
+      final metrics = _metrics;
+      if (!mounted || metrics == null || !_scroll.hasClients) return;
+      final max = _scroll.position.maxScrollExtent;
+      final target =
+          metrics.centerOffset(
+            page: bubble.page,
+            y: bubble.y,
+            free: height,
+            maxScroll: max,
+          ) -
+          top;
+      _scroll.animateTo(
+        target.clamp(0.0, math.max(0.0, max)),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
+    },
+  );
 
   @override
   Widget build(BuildContext context) {

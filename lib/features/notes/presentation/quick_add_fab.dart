@@ -600,51 +600,65 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     Widget custom(QuickAddOption o, Widget child) =>
         Customizable(id: UiItem.quickAdd(o.key), badgeInset: 6, child: child);
 
-    Widget grid(List<QuickAddOption> items) => Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      children: [
-        for (final o in items)
-          SizedBox(
-            width: cell,
-            height: 64,
-            child: custom(
-              o,
-              _PanelButton(
-                key: ValueKey('quick-add-${o.key}'),
-                icon: o.icon,
-                label: o.label,
-                accent: o.color,
-                onTap: () => _pick(o),
+    // **"TÜMÜ" SIKI IZGARA** (kullanıcı bulgusu 2026-10-16: "not ekle
+    // alanında tümü kısmı ekranın çok yukarısına doğru uzuyor, görsel olarak
+    // güzel değil"). Eskiden açılınca üç başlıklı bölüm (Çek ve kaydet ·
+    // Dosyadan · Şablon ve defter) 4 sütunda 64 dp'lik hücrelerle diziliyor,
+    // sık kullanılanlar satırı da ALTINDA kalıyordu: panel ekranın ~%75'ine
+    // uzanıyordu. Şimdi:
+    //  * birincil olmayan bütün seçenekler TEK ızgarada, 5 sütun (dar
+    //    ekranda 4), 58 dp'lik sıkı hücreler; grup ayrımı başlıkla değil
+    //    simge RENGİYLE (çek = üçüncül, dosyadan = ikincil, diğer = birincil);
+    //  * açıkken sık kullanılanlar satırı GİZLİ (aynı seçenekler zaten
+    //    ızgarada) — yerinde ince bir "Daha az" satırı;
+    //  * ızgara en çok ekranın %34'ü kadar uzar, sığmazsa kendi içinde kayar.
+    // Sonuç: açık panel ~320 dp (eskiden ~600 dp).
+    final denseColumns = (width - 20 - gap * 4) / 5 >= 56 ? 5 : 4;
+    final denseCell = (width - 20 - gap * (denseColumns - 1)) / denseColumns;
+    Color colorOf(QuickAddOption o) => switch (o.group) {
+      QuickAddGroup.capture => scheme.tertiary,
+      QuickAddGroup.files => scheme.secondary,
+      _ => scheme.primary,
+    };
+    final rest = [
+      for (final g in [
+        QuickAddGroup.capture,
+        QuickAddGroup.files,
+        QuickAddGroup.more,
+      ])
+        for (final o in options)
+          if (o.group == g) o,
+    ];
+    final expandedPart = rest.isEmpty
+        ? const SizedBox(width: double.infinity)
+        : ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: size.height * 0.34),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 8, bottom: 6),
+              child: Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final o in rest)
+                    SizedBox(
+                      width: denseCell,
+                      height: 58,
+                      child: custom(
+                        o,
+                        _PanelButton(
+                          key: ValueKey('quick-add-${o.key}'),
+                          icon: o.icon,
+                          label: o.label,
+                          accent: colorOf(o),
+                          dense: true,
+                          onTap: () => _pick(o),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-      ],
-    );
-
-    List<QuickAddOption> group(QuickAddGroup g) => [
-      for (final o in options)
-        if (o.group == g) o,
-    ];
-
-    final expandedPart = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final (g, label, color) in [
-          (QuickAddGroup.capture, l10n.quickAddCapture, scheme.tertiary),
-          (QuickAddGroup.files, l10n.quickAddImport, scheme.secondary),
-          (QuickAddGroup.more, l10n.quickAddMore, scheme.primary),
-        ])
-          if (group(g).isNotEmpty) ...[
-            _SectionLabel(label, color: color),
-            grid(group(g)),
-          ],
-        const SizedBox(height: 6),
-        Divider(height: 1, color: scheme.outlineVariant),
-        const SizedBox(height: 4),
-      ],
-    );
+          );
 
     final panel = Material(
       color: scheme.surface,
@@ -670,48 +684,69 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                     ? expandedPart
                     : const SizedBox(width: double.infinity),
               ),
-              // "Sık kullandıkların" satırı da kişiselleştirilir; gizliyken
-              // yalnız "Tümü" düğmesi kalır.
-              Customizable(
-                id: UiItem.quickAddFrequent,
-                badgeInset: 6,
-                hidden: const SizedBox.shrink(),
-                child: _SectionLabel(
-                  l10n.quickAddFrequent,
-                  color: scheme.outline,
+              if (expanded && !editing)
+                // Açıkken: sık kullanılanlar yerine ince "Daha az" satırı.
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(height: 1, color: scheme.outlineVariant),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('quick-add-more'),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        foregroundColor: scheme.onSurfaceVariant,
+                      ),
+                      onPressed: _toggleExpanded,
+                      icon: const Icon(Icons.expand_more, size: 18),
+                      label: Text(l10n.quickAddLess),
+                    ),
+                  ],
+                )
+              else ...[
+                // "Sık kullandıkların" satırı da kişiselleştirilir; gizliyken
+                // yalnız "Tümü" düğmesi kalır.
+                Customizable(
+                  id: UiItem.quickAddFrequent,
+                  badgeInset: 6,
+                  hidden: const SizedBox.shrink(),
+                  child: _SectionLabel(
+                    l10n.quickAddFrequent,
+                    color: scheme.outline,
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  if (showFrequent && !editing)
-                    for (final o in frequent) ...[
+                if (!editing)
+                  Row(
+                    children: [
+                      if (showFrequent)
+                        for (final o in frequent) ...[
+                          SizedBox(
+                            width: cell,
+                            height: 64,
+                            child: _PanelButton(
+                              key: ValueKey('quick-frequent-${o.key}'),
+                              icon: o.icon,
+                              label: o.label,
+                              accent: o.color,
+                              onTap: () => _pick(o),
+                            ),
+                          ),
+                          const SizedBox(width: gap),
+                        ],
                       SizedBox(
                         width: cell,
                         height: 64,
                         child: _PanelButton(
-                          key: ValueKey('quick-frequent-${o.key}'),
-                          icon: o.icon,
-                          label: o.label,
-                          accent: o.color,
-                          onTap: () => _pick(o),
+                          key: const ValueKey('quick-add-more'),
+                          icon: Icons.apps,
+                          label: l10n.quickAddAll,
+                          accent: scheme.onSurfaceVariant,
+                          onTap: _toggleExpanded,
                         ),
                       ),
-                      const SizedBox(width: gap),
                     ],
-                  if (!editing)
-                    SizedBox(
-                      width: cell,
-                      height: 64,
-                      child: _PanelButton(
-                        key: const ValueKey('quick-add-more'),
-                        icon: _expanded ? Icons.expand_more : Icons.apps,
-                        label: _expanded ? l10n.quickAddLess : l10n.quickAddAll,
-                        accent: scheme.onSurfaceVariant,
-                        onTap: _toggleExpanded,
-                      ),
-                    ),
-                ],
-              ),
+                  ),
+              ],
               const SizedBox(height: 8),
               // BİRİNCİL: büyük, dolgulu, FAB'ın hemen üstünde.
               Row(
@@ -856,6 +891,7 @@ class _PanelButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.accent,
+    this.dense = false,
   });
 
   final IconData icon;
@@ -864,6 +900,9 @@ class _PanelButton extends StatelessWidget {
 
   /// Simge yuvarlağının rengi (bölümün rengi).
   final Color? accent;
+
+  /// "Tümü" ızgarasının sıkı hücresi: küçük simge, iki satırlık küçük yazı.
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -875,13 +914,13 @@ class _PanelButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 3, vertical: dense ? 5 : 8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 30,
-                height: 30,
+                width: dense ? 26 : 30,
+                height: dense ? 26 : 30,
                 decoration: BoxDecoration(
                   color: (accent ?? scheme.onSurfaceVariant).withValues(
                     alpha: 0.14,
@@ -890,11 +929,11 @@ class _PanelButton extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  size: 18,
+                  size: dense ? 16 : 18,
                   color: accent ?? scheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 5),
+              SizedBox(height: dense ? 3 : 5),
               Flexible(
                 child: Text(
                   label,
@@ -903,7 +942,8 @@ class _PanelButton extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSecondaryContainer,
-                    height: 1.15,
+                    height: 1.1,
+                    fontSize: dense ? 10 : null,
                   ),
                 ),
               ),

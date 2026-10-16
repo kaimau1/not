@@ -4864,7 +4864,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'AI buttons in the note screen';
+  String get moduleAiInfo => 'AI buttons on the home and note screens';
 
   @override
   String get moduleVoice => 'Voice';
@@ -4936,6 +4936,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get personalizeHome => 'HOME SCREEN';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Selected items appear on the home screen; in edit mode you can also tap them on the home screen to hide.';
 
   @override
   String get personalizeBubbles => 'BUBBLES';

@@ -23,6 +23,7 @@ import '../../../core/constants.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
+import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
@@ -305,6 +306,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.personalizeModules} ${l10n.personalizeQuickAdd} '
                 '${l10n.videoSeekBack} ${l10n.videoSeekForward}',
           ),
+          // EKLENTİLER BURADA DA aç/kapa (kullanıcı isteği 2026-10-16:
+          // "kişiselleştirme ayarlar kısmında aç kapa yapılamıyor, oradan da
+          // yapılabilmeli") — Kişiselleştir ekranıyla aynı parça, aynı kayıt.
+          _SettingRow(
+            const PersonalizeModuleSwitches(),
+            title: l10n.personalizeModules,
+            keywords:
+                '${l10n.moduleAi} ${l10n.moduleVoice} ${l10n.moduleVideo} '
+                '${l10n.moduleDocuments} ${l10n.moduleScan} '
+                '${l10n.moduleDrawing} ${l10n.moduleTemplates} '
+                '${l10n.moduleTags} ${l10n.moduleCollaboration} eklenti ac kapa',
+          ),
           _SettingRow(
             ListTile(
               key: const ValueKey('settings-edit-mode-row'),
@@ -521,9 +534,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: l10n.personalizeInfo,
                     color: scheme.primary,
                     onTap: () async {
-                      final result = await context.push<String>(
-                        '/personalize',
-                      );
+                      final result = await context.push<String>('/personalize');
                       // Kişiselleştir'den düzenleme modu başlatıldıysa
                       // ayarlar da kapanır: kullanıcı düzenleyeceği ekrana
                       // iner.
@@ -632,7 +643,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Kaç öğe gizli + sarma süreleri ("3 gizli · ⏪10 ⏩10 sn").
   String _personalizeSummary(AppLocalizations l10n) {
     final p = Personalize.prefs.value;
-    final seek = '${l10n.videoSeekBack} ${l10n.secondsShort(p.seekBack)} · '
+    final seek =
+        '${l10n.videoSeekBack} ${l10n.secondsShort(p.seekBack)} · '
         '${l10n.videoSeekForward} ${l10n.secondsShort(p.seekForward)}';
     return p.hidden.isEmpty
         ? seek
@@ -845,8 +857,9 @@ class _SettingsArea extends StatelessWidget {
                 // açıklama küçük ve soluk — göz önce başlığı tarar.
                 child: ListTileTheme.merge(
                   dense: true,
-                  titleTextStyle: Theme.of(context).textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  titleTextStyle: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   subtitleTextStyle: Theme.of(context).textTheme.bodySmall
                       ?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1713,8 +1726,7 @@ class _ThemeCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        for (final c in schemes)
-                          Expanded(child: _preview(c)),
+                        for (final c in schemes) Expanded(child: _preview(c)),
                       ],
                     ),
                     if (selected)
@@ -3003,9 +3015,7 @@ class _ModelPickerSheetState extends ConsumerState<_ModelPickerSheet> {
     );
 
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3155,7 +3165,6 @@ class _ModelSelectors extends ConsumerWidget {
         .join(' ');
     return hint == null ? name : '$name — $hint';
   }
-
 }
 
 class _BriefingEditor extends ConsumerWidget {

@@ -4842,7 +4842,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleAi => 'الذكاء الاصطناعي';
 
   @override
-  String get moduleAiInfo => 'أزرار الذكاء الاصطناعي في شاشة الملاحظة';
+  String get moduleAiInfo =>
+      'أزرار الذكاء الاصطناعي في الشاشة الرئيسية وشاشة الملاحظة';
 
   @override
   String get moduleVoice => 'الصوت';
@@ -4913,6 +4914,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get personalizeHome => 'الشاشة الرئيسية';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'تظهر العناصر المحددة في الشاشة الرئيسية؛ وفي وضع التعديل يمكنك أيضًا لمسها هناك لإخفائها.';
 
   @override
   String get personalizeBubbles => 'الفقاعات';

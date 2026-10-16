@@ -4851,7 +4851,8 @@ class AppLocalizationsTr extends AppLocalizations {
   String get moduleAi => 'Yapay zekâ';
 
   @override
-  String get moduleAiInfo => 'Not ekranındaki yapay zekâ düğmeleri';
+  String get moduleAiInfo =>
+      'Ana ekran ve not ekranındaki yapay zekâ düğmeleri';
 
   @override
   String get moduleVoice => 'Ses';
@@ -4923,6 +4924,10 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get personalizeHome => 'ANA EKRAN';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki öğelere dokunarak da gizleyebilirsiniz.';
 
   @override
   String get personalizeBubbles => 'BALONLAR';

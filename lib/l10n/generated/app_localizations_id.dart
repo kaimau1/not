@@ -4874,7 +4874,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'Tombol AI di layar catatan';
+  String get moduleAiInfo => 'Tombol AI di layar beranda dan layar catatan';
 
   @override
   String get moduleVoice => 'Suara';
@@ -4945,6 +4945,10 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get personalizeHome => 'LAYAR BERANDA';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Item yang dipilih muncul di layar beranda; dalam mode edit Anda juga dapat mengetuknya di sana untuk menyembunyikan.';
 
   @override
   String get personalizeBubbles => 'BALON';

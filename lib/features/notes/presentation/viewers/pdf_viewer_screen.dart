@@ -117,22 +117,23 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     // jestin ortasında görüntüleyiciyi yeniden kuruyor ve başlamış uzun
     // basışı iptal ediyordu ("hâlâ çok zor sürükleniyor"). Uzun basış jest
     // arenasını zaten kazanıyor, sayfa altta kaymıyor.
-    _bubbles.onOpened = (bubble) => centerPdfOnBubble(
+    _bubbles.onOpened = (bubble) => revealPdfBubble(
+      reveal: _reveal,
       controller: _pdf,
       bubble: bubble,
-      timer: (t) => _centerTimer = t,
-      previous: _centerTimer,
-      freeBelow: () => _bubbles.dockHeight.value,
-      alive: () => mounted,
+      viewport: _viewportKey.currentContext ?? context,
     );
   }
 
-  /// Açık balonu ortalama zamanlayıcısı (klavye açılma animasyonunu bekler).
-  Timer? _centerTimer;
+  /// Açılan balonu görünür kılan (yerleşim oturunca, gerekirse) yardımcı.
+  late final _reveal = BubbleReveal(_bubbles);
+
+  /// Görüntüleyici + yazma kartının kutusu (görünür alan buradan ölçülür).
+  final _viewportKey = GlobalKey();
 
   @override
   void dispose() {
-    _centerTimer?.cancel();
+    _reveal.cancel();
     _edgeTimer?.cancel();
     _ink.dispose();
     _bubbles.dispose();
@@ -301,7 +302,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               AnimatedBuilder(
                 animation: _bubbles,
                 builder: (context, _) => IconButton(
-                  tooltip: _bubbles.adding ? l10n.bubbleAddDone : l10n.bubbleAdd,
+                  tooltip: _bubbles.adding
+                      ? l10n.bubbleAddDone
+                      : l10n.bubbleAdd,
                   isSelected: _bubbles.adding,
                   icon: Icon(
                     _bubbles.adding
@@ -334,9 +337,15 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           child: Focus(
             autofocus: true,
             child: Stack(
+              key: _viewportKey,
               children: [
+                // Klavye açılıp kapanırken görüntüleyicinin boyu SABİT:
+                // pdfrx boy değişiminde sayfa başına sıçrıyordu (bkz.
+                // StableViewport).
                 Positioned.fill(
-                  child: RepaintBoundary(key: _areaBoundary, child: viewer),
+                  child: StableViewport(
+                    child: RepaintBoundary(key: _areaBoundary, child: viewer),
+                  ),
                 ),
                 // Yazma kartı KLAVYENİN üstünde: Scaffold klavye kadar
                 // daraldığı için "alt kenar" = klavyenin üstü (bkz. BubbleDock).
@@ -397,27 +406,28 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   }
 }
 
-/// Açık balonu, klavye ve yazma kartının ÜSTÜNDE kalan alanın ortasına
-/// getirir (kullanıcı isteği 2026-08-08: "tıklanan balon klavye ile ekranın
-/// üstü arasında ortalanmalı").
+/// Açılan balonu PDF'te görünür kılar (bkz. [BubbleReveal] — ne zaman ve ne
+/// kadar kaydırılacağına o karar verir; burada yalnız PDF'in kaydırma dili).
 ///
-/// Gecikme şart: klavye ~250 ms'de açılıyor ve görünür alan o sırada
-/// daralıyor; hemen ortalamak klavye kapalıyken doğru olan yere kaydırırdı.
 /// Tam ekran görüntüleyici ile pano bölmesi aynı kodu kullansın diye burada.
-void centerPdfOnBubble({
+void revealPdfBubble({
+  required BubbleReveal reveal,
   required PdfViewerController controller,
   required PageBubble bubble,
-  required void Function(Timer) timer,
-  required Timer? previous,
-  required double Function() freeBelow,
-  required bool Function() alive,
+  required BuildContext viewport,
 }) {
-  previous?.cancel();
-  timer(
-    // 420 ms: klavye açılışı (~250–300 ms) bitmiş olsun; kalan farkı
-    // [freeBelow] klavyenin gerçek konumundan hesaplar.
-    Timer(const Duration(milliseconds: 420), () {
-      if (!alive() || !controller.isReady) return;
+  reveal.request(
+    bubble,
+    viewport: StableViewport.contextOf(viewport),
+    scrollBy: (dy) {
+      if (!controller.isReady) return;
+      // Ekran pikseliyle kaydırma = dönüşümün ÖNÜNE öteleme.
+      final next = Matrix4.translationValues(0, -dy, 0)
+        ..multiply(controller.value);
+      controller.goTo(next, duration: const Duration(milliseconds: 260));
+    },
+    centerUnbuilt: (top, height) {
+      if (!controller.isReady) return;
       try {
         // pdfrx 1.3.x'te sayfa ölçüsüne tek erişim bu; `useDocument` eşleniği
         // 2.x ile geliyor ve o sürüm bu projede kullanılamıyor.
@@ -433,14 +443,18 @@ void centerPdfOnBubble({
             )
             .center;
         final view = controller.viewSize;
-        final free = (view.height - freeBelow() - 24).clamp(80.0, view.height);
+        final matrix = controller.calcMatrixFor(
+          at,
+          viewSize: Size(view.width, height),
+        );
         controller.goTo(
-          controller.calcMatrixFor(at, viewSize: Size(view.width, free)),
+          Matrix4.translationValues(0, top, 0)..multiply(matrix),
+          duration: const Duration(milliseconds: 260),
         );
       } catch (_) {
         // Belge henüz hazır değilse (yarış) ortalama sessizce atlanır.
       }
-    }),
+    },
   );
 }
 
@@ -486,47 +500,47 @@ PdfViewerParams pdfLayerParams({
     Positioned.fill(
       child: RepaintBoundary(
         child: ValueListenableBuilder<int>(
-        valueListenable: selection.page,
-        // YALNIZ "balon bırak" kipi dinlenir (seçim katmanını kapatıp açan
-        // tek şey o). Balon katmanı kendi dinleyicisiyle, yalnız KENDİ
-        // sayfası değişince tazelenir (bkz. BubblePageLayer).
-        builder: (context, activePage, _) => ValueListenableBuilder<bool>(
-        valueListenable: bubbles.addingListenable,
-        builder: (context, adding, _) => Stack(
-          clipBehavior: Clip.none,
-          children: [
-            if (!inkEditing && !adding)
-              PdfSelectLayer(
-                page: page,
-                pageSize: pageRect.size,
-                activeSelectionPage: activePage,
-                // Düzenlenebilir görünümde basılı tutmak balon bırakır;
-                // seçim çift dokunuşla (bkz. longPressSelects).
-                longPressSelects: !editable,
-                onSelected: (text, rects, pageNo, fromOcr) => selection.set(
-                  value: text,
-                  pageNumber: pageNo,
-                  pdfRects: rects,
-                  source: page,
+          valueListenable: selection.page,
+          // YALNIZ "balon bırak" kipi dinlenir (seçim katmanını kapatıp açan
+          // tek şey o). Balon katmanı kendi dinleyicisiyle, yalnız KENDİ
+          // sayfası değişince tazelenir (bkz. BubblePageLayer).
+          builder: (context, activePage, _) => ValueListenableBuilder<bool>(
+            valueListenable: bubbles.addingListenable,
+            builder: (context, adding, _) => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (!inkEditing && !adding)
+                  PdfSelectLayer(
+                    page: page,
+                    pageSize: pageRect.size,
+                    activeSelectionPage: activePage,
+                    // Düzenlenebilir görünümde basılı tutmak balon bırakır;
+                    // seçim çift dokunuşla (bkz. longPressSelects).
+                    longPressSelects: !editable,
+                    onSelected: (text, rects, pageNo, fromOcr) => selection.set(
+                      value: text,
+                      pageNumber: pageNo,
+                      pdfRects: rects,
+                      source: page,
+                    ),
+                    onSelectingChanged: (value) =>
+                        selection.selecting.value = value,
+                    onDragAt: onSelectDragAt,
+                  ),
+                if (inkLayer != null)
+                  Positioned.fill(child: inkLayer(page.pageNumber)),
+                Positioned.fill(
+                  child: BubblePageLayer(
+                    controller: bubbles,
+                    page: page.pageNumber,
+                    readOnly: !editable,
+                    longPressAdd: !inkEditing,
+                  ),
                 ),
-                onSelectingChanged: (value) =>
-                    selection.selecting.value = value,
-                onDragAt: onSelectDragAt,
-              ),
-            if (inkLayer != null)
-              Positioned.fill(child: inkLayer(page.pageNumber)),
-            Positioned.fill(
-              child: BubblePageLayer(
-                controller: bubbles,
-                page: page.pageNumber,
-                readOnly: !editable,
-                longPressAdd: !inkEditing,
-              ),
+              ],
             ),
-          ],
+          ),
         ),
-        ),
-      ),
       ),
     ),
   ],

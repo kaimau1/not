@@ -4884,7 +4884,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'AI-knoppen in het notitiescherm';
+  String get moduleAiInfo => 'AI-knoppen op het start- en notitiescherm';
 
   @override
   String get moduleVoice => 'Spraak';
@@ -4957,6 +4957,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get personalizeHome => 'STARTSCHERM';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Geselecteerde items verschijnen op het startscherm; in de bewerkmodus kun je ze daar ook aantikken om te verbergen.';
 
   @override
   String get personalizeBubbles => 'BALLONNEN';

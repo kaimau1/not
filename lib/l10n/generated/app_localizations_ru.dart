@@ -4874,7 +4874,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get moduleAi => 'ИИ';
 
   @override
-  String get moduleAiInfo => 'Кнопки ИИ на экране заметки';
+  String get moduleAiInfo => 'Кнопки ИИ на главном экране и экране заметки';
 
   @override
   String get moduleVoice => 'Голос';
@@ -4947,6 +4947,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get personalizeHome => 'ГЛАВНЫЙ ЭКРАН';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Выбранные элементы видны на главном экране; в режиме редактирования их можно скрыть, коснувшись прямо там.';
 
   @override
   String get personalizeBubbles => 'ВЫНОСКИ';

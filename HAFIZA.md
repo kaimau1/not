@@ -4562,3 +4562,59 @@ Flutter 3.44.6 `/opt/flutter`. 68 yeni anahtar 16 dile elle yazıldı.
 MaterialIcons) üretildi ve SİLİNDİ. note_editor_screen biçimsiz tutulduğu
 için değişiklikler HEAD'e betikle uygulandı (dart format UYGULANMADI).
 Android SDK yok — APK CI'da; klavye takibi ve odak cihazda görülmedi.
+
+## 2026-10-16 (4. tur) — kişiselleştirme hataları, ana ekran, balon odağı, "Tümü"
+
+### Kişiselleştir ekranında aç/kapa "çalışmıyordu" — KÖK NEDEN
+`PersonalizeScreen` listesi `children: const [...]` idi; kaydı dinleyen tek
+yer listenin ÜSTÜNDEKİ `ListenableBuilder`dı. `const` örnek her kurulumda
+AYNI nesne → Flutter alt ağacı hiç yeniden kurmuyor: anahtar KAYDEDİLİYOR
+ama ekranda yerinden oynamıyordu. Çiplerde daha kötüsü: `FilterChip.onSelected`
+bayat `selected`ın tersini yazdığından ikinci dokunuş geri açmıyor, aynı
+değeri tekrar yazıyordu → kullanıcı çıkıp girince "başka şeyler de kapanmış"
+görüyordu (4. bulgu da büyük ölçüde buydu). Artık kaydı okuyan her parça
+KENDİSİ dinliyor (`_Live`). **Kural: statik dinlenebilirden okuyan const
+alt widget, üstteki builder'a güvenemez — kendisi dinlemeli.**
+
+### Eklentiler AYRIK
+"AI ile sesli not" (`editor.bar.voiceAi`) hem Yapay zekâ hem Ses
+eklentisindeydi; Ses'i kapatmak Yapay zekâ'yı "kısmen açık"a düşürüyordu.
+Bir öğe artık tek eklentide (test: `eklentiler ayrık`). Eklenti anahtarları
+`PersonalizeModuleSwitches` olarak AYARLARIN Kişiselleştir alanında da var.
+
+### Ana ekran kişiselleştirilir
+Yeni kimlikler: `home.account`, `home.ai`, `home.filter` (Süz düğmesi —
+uygulanmış süzgeç çipleri gizliyken de görünür), `home.viewToggle`,
+`home.voiceAi`, `home.dictation`. Yapay zekâ eklentisi `home.ai`+
+`home.voiceAi`, Ses eklentisi `home.dictation` içerir. Kişiselleştir →
+ANA EKRAN bölümünde çipler.
+
+### Balon odağı baştan yazıldı (`BubbleReveal`, `StableViewport` — bubble_layer.dart)
+* KÖK NEDEN 1: her açılışta (okuma kartı, sonra "Düzenle") SABİT 420 ms sonra
+  KOŞULSUZ ortalama → dokunulan (zaten görünen) balon için iki kaydırma.
+* KÖK NEDEN 2: 420 ms klavyeye yetmiyordu; KeyboardSnap gövdeyi klavye
+  DURUNCA kısaltıyor, belge yeniden kayıyordu.
+* KÖK NEDEN 3 (asıl "aşağı yukarı"): **pdfrx 1.3.5 `_updateLayout`
+  görüntüleyici boyu her değiştiğinde `_goToPage(o anki sayfa)` ile SAYFA
+  BAŞINA animasyonla gidiyor.** Yazma kipinde başlık/çubuk gizlenince bölme
+  uzuyor, klavye oturunca kısalıyordu → her seferinde sayfa başına sıçrama.
+  `StableViewport`: klavye açıkken boy değişimi görüntüleyiciye YANSITILMAZ
+  (fazlası alttan kırpılır), klavye kapalıyken yeni boy 280 ms sabit kalınca
+  benimsenir, genişlik hemen. PDF bölmesi + tam ekran PDF'te sarılı.
+  `onViewSizeChanged` ile geri almak İŞE YARAMAZ: pdfrx onu sıçrama
+  animasyonu BİTTİKTEN sonra çağırıyor.
+* Yeni yol: yerleşim oturana dek (görünür alan, kart boyu, balonun ekran
+  konumu 4 ölçüm üst üste aynı; yazma kartında klavye de gelmiş; en çok
+  1,6 sn) beklenir, balonun yeri sayfa katmanının kutusundan ÖLÇÜLÜR
+  (`BubbleController.globalPointOf`), rahatça görünüyorsa HİÇ kaydırılmaz,
+  değilse tek yumuşak kaydırmayla görünür alanın ortasına. Sayfası kurulu
+  değilse eski hesap (`centerUnbuilt`).
+
+### "+" menüsü "Tümü" kısaldı
+Bölüm başlıklı 4 sütunluk 64 dp ızgara yerine tek SIKI ızgara (5 sütun,
+dar ekranda hücre <56 dp ise 4; 58 dp hücre; grup rengi simgede), en çok
+ekranın %34'ü, açıkken sık kullanılanlar satırı yerine ince "Daha az".
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter` (oturumda indirildi). analyze temiz, 1237/1237
+test (+9 `requests_2026_10_16_d_test.dart`). Cihazda GÖRÜLMEDİ — APK CI'da.

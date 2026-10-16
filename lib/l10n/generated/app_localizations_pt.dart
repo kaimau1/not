@@ -4878,7 +4878,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get moduleAi => 'IA';
 
   @override
-  String get moduleAiInfo => 'Botões de IA na tela da nota';
+  String get moduleAiInfo => 'Botões de IA na tela inicial e na tela da nota';
 
   @override
   String get moduleVoice => 'Voz';
@@ -4951,6 +4951,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get personalizeHome => 'TELA INICIAL';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Os itens selecionados aparecem na tela inicial; no modo de edição você também pode tocá-los lá para ocultar.';
 
   @override
   String get personalizeBubbles => 'BALÕES';
