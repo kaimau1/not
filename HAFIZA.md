@@ -4229,3 +4229,105 @@ kısa.
 Kotlin değişikliği yerelde derlenmedi (Android SDK yok) — CI derler.
 Görsel denetim için `test/_shots/` altında gerçek yazı tipli altın
 görüntü üretildi ve SİLİNDİ (commit'lenmez).
+
+## 2026-10-16 — görsel sürükleme kasması, yazma FPS'i, sabit/yüzen/balonlu anahtarı, video zaman damgaları
+Kullanıcı (4 madde + "başka bug, performans, görsel; main'e merge, APK"):
+görseller sürüklenirken aşırı kasma; videoda YouTube gibi dk:sn notu (dokun →
+oraya git; video akarken "bu dakikaya not al"); PDF üste sabitlenemiyor —
+sabit/yüzen/balonlu geçişi TÜM eklerde ve yeri/düzeni iyi değil; program
+genelinde yazarken FPS düşüşü.
+
+### KÖK NEDEN 1 — `planTextWrap` O(satır × metin) (yazma + sürükleme)
+Görselli/videolu/PDF'li HER notta (yani kullanıcının notlarının çoğunda) her
+tuşta ve görsel sürüklenirken her karede koşuyordu; döngü HER TUR tam
+`TextPainter.layout` yapıyor, bandın altındaki satırlarda da metnin sonuna
+kadar yürüyordu. Ölçüm (test ortamı): 700 kr 45 ms, 2.800 kr 325 ms,
+8.500 kr ~2 sn, 21.000 kr ~4,7 sn → artık hepsi ~7–9 ms (uzunluktan
+bağımsız). Üç düzeltme: (a) satıra dolgu eklenmediyse yeniden dizgi yok,
+(b) satır bütün bantların altına inince döngü biter (metin boşken imleç evi
+dalı hariç), (c) yalnız bandı + 2 satırı kapsayan PARAGRAF öneki dizilir
+(yetmezse ikiye katlanır). Ek olarak `WrapPlan.frozenDisplay/frozenLogical`:
+değişiklik önekin ötesindeyse (`reuseWrapPlan`) plan ölçülmeden önek + yeni
+kuyruk olarak kurulur. GÜVENCE: eski algoritma test klasörüne kopyalanıp 400
+rastgele durumda (RTL, boş metin, biçim, bağlantı) display+widths BİREBİR aynı
+çıktı, önek yeniden kullanımı 130 durumda tam planla aynı (geçici test
+silindi; kalıcı koruma `typing_perf_2026_10_16_test.dart`).
+**DAYANAK — TUZAK**: biçim işaretleri, bağlantı, ek etiketi ve zaman damgası
+SATIR SONUNU AŞMAZ (`_formatPattern`'de `.` satır sonu eşleşmez). Bu
+varsayım bozulursa (satırlar arası bir işaret eklenirse) önek ölçümü ve
+paragraf önbelleği yanlış sonuç verir.
+
+### KÖK NEDEN 2 — sürüklemede her karede editörün TAMAMI yeniden kuruluyordu
+Tuval taşıma/boyutlandırma karesinde yeni bant üretip `onFloats` → editör
+`setState` (8000 satırlık build) + gövdenin yeniden sarılması. Artık
+taşıma/boyutlandırma SÜRERKEN bant 160 ms sessizlikten sonra bildirilir
+(parmak durunca metin akar), bırakınca anında. Taşınan görsel zaten yarı
+saydam. Ayrıca sayfaya gömülü PDF'in çizim boyu 128 px adıma yuvarlanır
+(`PdfPageImage`) — köşe tutamacıyla boyutlandırmak her karede PDFium çizimi
+demekti (görsellerdeki `decodeWidthBucket`ın karşılığı).
+
+### KÖK NEDEN 3 — görselsiz notta da tuş başına tam ayrıştırma
+`WrapTextController` span önbelleği yalnız AYNI metni kapsıyordu; her tuşta
+bütün metin `richSpans`/`findLinks` ile baştan ayrıştırılıyordu (10.000 kr
+~7,5 ms, 30.000 kr ~20 ms). Span ve "düz mü" taraması PARAGRAF başına
+önbelleklenir (`_paragraphSpan`, `_flagsOf`) → 0,56 / 1 ms. Biçim çubuğu
+açıkken `activeRichFormats` de yalnız seçimin paragraflarını ayrıştırır. Gömme
+çipi boyayıcısı (`AttachmentTagChips`) RepaintBoundary içinde — her tuşta
+bütün sayfayı yeniden boyatıyordu.
+
+### Görünüm anahtarı (Sabit / Yüzen / Balonlu) — `view_mode_switch.dart`
+KARAR: üç kip TEK anahtarda ve ekin YANINDA: sayfada seçilince araç panelinin
+üst satırı, sabit bölmede çubuğun sağı (dar), balonlu görünümde başlık
+satırının sağı (dar, + menüsünün solu). Başlık altındaki "Balonlu / Klasik"
+çipleri KALDIRILDI (kullanıcı: yeri/düzeni iyi değil); ⋮ → görünüm geçişi
+duruyor. Görsel menüsündeki "Üste sabitle" kalktı (anahtarda).
+* **PDF sabitlenir**: `Attachment.isPinnedTop` PDF'i de kapsar,
+  `floatsOnPage` sabit PDF'i saymaz. Bölmede `PdfPageBox` (sayfa çevirme
+  jestleri kutunun). PDF'i tepeye sürüklemek artık SABİTLER (eskiden balonlu
+  görünüme geçiriyordu; `onPinHoverItem` kaldırıldı). İlk yükseklik A4 oranı,
+  ekranın %50'si tavan. Kartta sabitli belge kapak olur.
+* **Görsel → balonlu**: balon bir sayfa uzayında yaşadığından görsel tek
+  sayfalık PDF'e çevrilir (`ScanPdf.build`, A4 contain). Görselin çizim ve
+  balonları `ScanPdf.imageFrameOnPage` + `placeInk`/`placeBubbles` ile
+  sayfaya taşınır. YENİ ALAN `Attachment.sourceId` (yalnız doluysa yazılır;
+  paket de taşır): klasikte kaynak görsel notta durdukça türetilmiş belge
+  sayfada/şeritte/kartta GİZLİ (`Note.hidesDerivedDocument`); tekrar
+  balonluya geçince AYNI belge (balonlarıyla) gelir. Web'de görsel balonlu
+  olamaz (dosya sistemi). Video balonlu OLAMAZ (sayfası yok — zaman damgası
+  onun karşılığı); sunum sabitlenemez.
+* Balonluya geçen belge/kaynağı sabitse sabitlikten çıkar (yükseklik
+  hatırlanır). Balonlu → Sabit: önce klasik, sonra sabit (türetilmişte
+  görselin kendisi sabitlenir).
+* Tuvalde seçili ek sayfadan ayrılınca (sabitlendi/balonluya geçti) seçim
+  düşer — görünmeyen seçim geri tuşunu bir kez yutuyordu.
+
+### Video zaman damgaları — `core/utils/video_time.dart`
+* Metindeki `d:ss` / `s:dd:ss` damgaları notta video VARKEN bağlantı renginde
+  (ince zeminli, alt çizgisiz) çizilir — yalnız renk, ölçüm etkilenmez.
+  Dokununca (`tappedVideoTimestamp`, sınırda dokunuşun kutusuna bakılır):
+  son oynatılan oynatıcı, yoksa sabitli olan sarılır; hiç oynatıcı yoksa
+  sabit/sayfadaki YouTube kutusu o saniyeden başlar, o da yoksa tam ekran o
+  andan açılır. Madde satırlarında da çalışır.
+* `NoteVideoHub` (editör başına, `VideoHubScope` ile ağaca iner;
+  `getInheritedWidgetOfExactType` — kayıt yeniden çizim tetiklemez).
+  Yerel video (`_VideoBox`) ve YouTube (`YouTubeInlinePlayer`) kendini
+  kaydeder; oynatılan `touch` edilir.
+* **YouTube konumu**: embed sayfasında oynatıcının KENDİ ileti protokolü
+  (`listening` el sıkışması → `infoDelivery.currentTime`; sarma
+  `command/seekTo`). Resmî `iframe_api` betiği BİLEREK kullanılmadı:
+  nocookie iframe'de hedef köken uyuşmazsa sessizce başarısız olur ve konum
+  başlangıç değerinde kalırdı (yanlış 0:00). Hiç ileti gelmediyse
+  `notlarTime()` -1 → "Videonun anı okunamadı". CİHAZDA DOĞRULANMADI.
+* "Bu ana not al": video kutusunun köşesinde ⏱ (140 dp'den dar kutuda yok),
+  oynayan YouTube'da kutunun sağ üst DIŞINDA, sabit bölmede çubukta, tam
+  ekranda üst çubukta (ekran kapanır, not yazılır). Liste notunda ya da odak
+  maddedeyken damgalı madde (`ItemsEditorState.addItemWithText` — boş madde
+  varsa onu kullanır), metinde imlecin satırı boşsa oraya, doluysa altına
+  (`insertTimestampLine`).
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`'a indirildi; analiz temiz, 1191/1191 test.
+Android SDK yok — APK CI'da. graphify konteynerde yok, graf güncellenmedi.
+523 anahtar × 14 dil hâlâ çevrilmemiş (Türkçe şablona düşüyor) — çeviri CI
+akışı (`translate.yml`) elle tetiklenmeli; bu turun 11 anahtarı elle 16 dile
+yazıldı.
