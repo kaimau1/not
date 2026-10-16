@@ -72,8 +72,18 @@ class CardMediaPlan {
   static const maxDocs = 2;
 
   static const stripHeight = 64.0;
-  static const documentHeight = 84.0;
+  static const documentHeight = 72.0;
   static const docRowHeight = 24.0;
+
+  /// BALONLU notun kapağı: belgesi kartın tepesinde kenardan kenara (bkz.
+  /// [CardDocumentCover]). Sıradan notun belge eki kapak OLMAZ — gövdede
+  /// küçük belge kartı olarak durur.
+  Attachment? get cover => documentNote ? heroDocument : null;
+
+  /// Belge kapağının [width] genişlikteki yüksekliği: sayfanın üst kısmı
+  /// (başlık, ilk satırlar) okunacak kadar.
+  static double coverHeight(double width) =>
+      (width * 0.72).clamp(96.0, 150.0).toDouble();
 
   bool get isEmpty =>
       hero == null &&
@@ -158,8 +168,9 @@ class CardMediaPlan {
   double estimateHeight(double width) {
     var h = 0.0;
     if (hero case final hero?) h += heroHeight(hero, width);
+    if (cover != null) h += coverHeight(width);
     var below = 0.0;
-    if (heroDocument != null) below += documentHeight + 8;
+    if (heroDocument != null && cover == null) below += documentHeight + 8;
     if (strip.isNotEmpty) below += stripHeight + 8;
     below += math.min(docs.length, maxDocs) * docRowHeight;
     if (docs.length > maxDocs) below += 16;
@@ -203,15 +214,11 @@ class CardMediaBody extends StatelessWidget {
       if (children.isNotEmpty) children.add(const SizedBox(height: 6));
     }
 
-    if (plan.heroDocument case final doc?) {
+    // Balonlu notun belgesi gövdede DEĞİL, kartın tepesinde kapak olarak
+    // durur (bkz. [CardDocumentCover]).
+    if (plan.heroDocument case final doc? when plan.cover == null) {
       gap();
-      children.add(
-        _DocumentCard(
-          document: doc,
-          documentNote: plan.documentNote,
-          bubbleCount: plan.bubbleCount,
-        ),
-      );
+      children.add(_DocumentCard(document: doc));
     }
     if (plan.strip.isNotEmpty) {
       gap();
@@ -339,31 +346,24 @@ class _FileRow extends StatelessWidget {
   );
 }
 
-/// Belge kartı: solda ilk sayfanın küçük resmi (kâğıt gibi), sağda tür
-/// rozeti, dosya adı ve balon sayısı. Balonlu not "BALONLU" rozetini taşır —
-/// ana ekranda sıradan bir PDF ekinden bakışta ayrılsın.
+/// Sıradan notun BELGE eki: solda ilk sayfanın küçük resmi (kâğıt gibi,
+/// altında türün şeridi), sağda dosya adı ve türü.
+///
+/// 2026-10-15 toparlaması ("dashboard'ta balonlu mod görseli ve diğerleri
+/// biraz daha toparlanmalı"): tür rozeti metin sütununun başında bir hap
+/// olarak duruyordu ve dar kartta "BALONLU …" diye kesiliyordu. Tür artık
+/// kâğıdın altındaki şeritte; balonlu not ise hiç burada değil, kapakta.
 class _DocumentCard extends StatelessWidget {
-  const _DocumentCard({
-    required this.document,
-    required this.documentNote,
-    required this.bubbleCount,
-  });
+  const _DocumentCard({required this.document});
 
   final Attachment document;
-  final bool documentNote;
-  final int bubbleCount;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final pdf = document.kind == AttachmentKind.pdf;
-    final accent = documentNote
-        ? scheme.primary
-        : (pdf ? scheme.error : scheme.tertiary);
-    final badge = documentNote
-        ? (pdf ? l10n.cardBubbleDocument : l10n.cardBubbleSlides)
-        : (pdf ? l10n.cardKindPdf : l10n.cardKindSlides);
+    final accent = pdf ? scheme.error : scheme.tertiary;
     final small = Theme.of(context).textTheme.labelSmall;
     return SizedBox(
       height: CardMediaPlan.documentHeight,
@@ -372,85 +372,207 @@ class _DocumentCard extends StatelessWidget {
         children: [
           // Kâğıt: beyaz zemin + ince kenarlık; sayfa oranına yakın.
           Container(
-            width: 62,
+            width: 54,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(5),
               border: Border.all(color: scheme.outlineVariant),
             ),
             clipBehavior: Clip.antiAlias,
-            child: pdf
-                ? _PdfFirstPage(attachment: document)
-                : Icon(Icons.slideshow_outlined, color: scheme.tertiary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: pdf
+                      ? _PdfFirstPage(attachment: document)
+                      : Icon(Icons.slideshow_outlined, color: accent),
+                ),
+                ColoredBox(
+                  color: accent,
+                  child: Text(
+                    pdf ? l10n.cardKindPdf : l10n.cardKindSlides,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      height: 1.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                document.fileName,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: small?.copyWith(
+                  color: scheme.onSurface.withValues(alpha: 0.85),
+                  fontWeight: FontWeight.w600,
+                  height: 1.25,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// BALONLU notun kapağı: belgenin ilk sayfası kartın tepesinde KENARDAN
+/// KENARA — video/görsel kapağıyla aynı yer, aynı dil.
+///
+/// KULLANICI İSTEĞİ (2026-10-15): "dashboard'ta balonlu mod görseli ve
+/// diğerleri için biraz daha toparlanmalı". Balonlu not ana ekranda sayfa
+/// notlarının ALTINDA, 62 px'lik bir kâğıt + kesilen "BALONLU …" rozetiyle
+/// duruyordu; notun kendisi belge olduğu hâlde belge en son okunuyordu.
+/// Şimdi belge önde: sayfanın üst kısmı, sol üstte tür rozeti, altta koyu
+/// geçiş üstünde dosya adı ve balon sayısı.
+class CardDocumentCover extends StatelessWidget {
+  const CardDocumentCover({
+    super.key,
+    required this.document,
+    required this.bubbleCount,
+  });
+
+  final Attachment document;
+  final int bubbleCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final pdf = document.kind == AttachmentKind.pdf;
+    return LayoutBuilder(
+      builder: (context, constraints) => SizedBox(
+        height: CardMediaPlan.coverHeight(constraints.maxWidth),
+        width: double.infinity,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (pdf)
+              ColoredBox(
+                color: Colors.white,
+                child: _PdfFirstPage(attachment: document, iconSize: 36),
+              )
+            else
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [scheme.tertiaryContainer, scheme.primaryContainer],
+                  ),
+                ),
+                child: Icon(
+                  Icons.slideshow_outlined,
+                  size: 40,
+                  color: scheme.onTertiaryContainer,
+                ),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(8, 18, 8, 6),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0xB3000000)],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        document.fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (bubbleCount > 0) ...[
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.chat_bubble,
+                        size: 11,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        l10n.cardBubbleCount(bubbleCount),
+                        maxLines: 1,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            // Tür rozeti sol üstte: balonlu not ana ekranda sıradan bir PDF
+            // ekinden bakışta ayrılsın (sağ üstte kartın ⋮ düğmesi var).
+            PositionedDirectional(
+              start: 8,
+              top: 8,
+              end: 40,
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                    horizontal: 7,
+                    vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(6),
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        documentNote
-                            ? Icons.chat_bubble_outline
-                            : (pdf
-                                  ? Icons.picture_as_pdf_outlined
-                                  : Icons.slideshow_outlined),
+                        Icons.chat_bubble_outline,
                         size: 11,
-                        color: accent,
+                        color: scheme.onPrimary,
                       ),
-                      const SizedBox(width: 3),
+                      const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          badge,
+                          pdf ? l10n.cardBubbleDocument : l10n.cardBubbleSlides,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: small?.copyWith(
-                            color: accent,
-                            fontWeight: FontWeight.w700,
+                          style: TextStyle(
+                            color: scheme.onPrimary,
                             fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  document.fileName,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: small?.copyWith(
-                    color: scheme.onSurface.withValues(alpha: 0.85),
-                    height: 1.2,
-                  ),
-                ),
-                if (bubbleCount > 0) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    l10n.cardBubbleCount(bubbleCount),
-                    maxLines: 1,
-                    style: small?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -631,15 +753,20 @@ class _LocalVideoCover extends StatelessWidget {
 }
 
 class _PdfFirstPage extends StatelessWidget {
-  const _PdfFirstPage({required this.attachment});
+  const _PdfFirstPage({required this.attachment, this.iconSize = 24});
 
   final Attachment attachment;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fallback = Center(
-      child: Icon(Icons.picture_as_pdf_outlined, color: scheme.error),
+      child: Icon(
+        Icons.picture_as_pdf_outlined,
+        color: scheme.error,
+        size: iconSize,
+      ),
     );
     if (!localFileExists(attachment.localPath)) return fallback;
     return _AsyncThumb(

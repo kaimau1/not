@@ -91,6 +91,15 @@ void main() {
       expect(plan.hero, isNull);
       expect([for (final a in plan.strip) a.id], ['vid']);
       expect(plan.bubbleCount, 2);
+      // Balonlu notun belgesi KAPAK olur (kartın tepesinde, kenardan
+      // kenara); sıradan notun belge eki kapak olmaz.
+      expect(plan.cover?.id, 'pdf');
+      expect(
+        CardMediaPlan.of(
+          const Note(id: 'n', type: NoteType.text, attachments: [pdf]),
+        ).cover,
+        isNull,
+      );
     });
 
     test('ses ve zemin görseli', () {
@@ -180,6 +189,13 @@ void main() {
       expect(find.text('rapor.pdf'), findsOneWidget);
       expect(find.text('2 balon'), findsOneWidget);
       expect(tester.takeException(), isNull);
+      // Belge kapağı başlığın ÜSTÜNDE (2026-10-15 toparlaması: belge
+      // sayfa notlarının altında küçük bir kutuda kalıyordu).
+      expect(find.byType(CardDocumentCover), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byType(CardDocumentCover)).dy,
+        lessThan(tester.getTopLeft(find.text('Rapor')).dy),
+      );
     });
   });
 }

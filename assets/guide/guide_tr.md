@@ -20,7 +20,7 @@ Notların kart olarak, **BUGÜN / BU HAFTA / DAHA ÖNCE** gruplarıyla dizilir; 
 - **Klasör şeridi:** klasörler arasında dokunarak ya da ekranı **yana kaydırarak** geç. Sırasını ⋮ → **Klasör sırası**'ndan değiştir.
 - **Hızlı not satırı:** listenin başındaki "Yeni not…" alanına yazıp kaydet — not açmadan.
 - **Ana ekran zemini:** ⋮ → Ana ekran zemini ile görsel ya da desen seç.
-- **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu not **BALONLU PDF** rozeti, ilk sayfanın küçük resmi ve balon sayısıyla ayrılır; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
+- **Kartta medya:** üste sabitlenmiş ya da tek görsel/video kartın tepesinde kapak olarak görünür; video ▶, YouTube kırmızı düğmeyle işaretlidir. Balonlu notun belgesi de kartın tepesinde kapak olur: ilk sayfa, sol üstte **BALONLU PDF** rozeti, altta dosya adı ve balon sayısı; ses kayıtları ve öbür belgeler kartın altında satır olarak durur.
 - Sağ üstteki ⋮ alttan bir levha açar: en üstte **Hatırlatıcılar, Arşiv, Çöp Kutusu, Şablondan**; altında **Hesap ve kişiler** (hesap, kişiler, gelen notlar), **Ana ekran** (klasör sırası, zemin, gizli klasörler) ve **Uygulama** (ayarlar, bu kılavuz).
 - **Karttaki ⋮ ya da karta basılı tutma menüsü:** üst satırda sabitle, yıldızla, paylaş, arkadaşa gönder, seç; altında **Düzenle** (klasör, zemin rengi, çerçeve), **Kopyala ve dışa aktar** (kopyala, çoğalt, şablon, dışa aktar), **Araçlar** (sesli oku, istatistik), **Koruma ve depolama** (arşivle, kilitle, senkron); en altta Sil.
 
