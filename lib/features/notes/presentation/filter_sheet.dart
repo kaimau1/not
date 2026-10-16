@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/personalize.dart';
+import '../../../core/widgets/customizable.dart';
 import '../../ai/data/attachment_text_index.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../folders/domain/note_folder.dart';
@@ -19,19 +21,20 @@ import 'notes_providers.dart';
 ///
 /// ŞİMDİ: tek "Süz" düğmesi, tek levha, dört bölüm. Ana ekranda yalnız
 /// UYGULANMIŞ süzgeçler kaldırılabilir çip olarak görünür.
-Future<void> showFilterSheet(BuildContext context) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  useSafeArea: true,
-  showDragHandle: true,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-  ),
-  constraints: BoxConstraints(
-    maxHeight: MediaQuery.sizeOf(context).height * 0.76,
-  ),
-  builder: (_) => const _FilterSheet(),
-);
+Future<void> showFilterSheet(BuildContext context) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.76,
+      ),
+      builder: (_) => const _FilterSheet(),
+    );
 
 /// Ana ekranda bir süzgeç uygulanmış mı? "Süz" düğmesinin vurgusu ve
 /// levhadaki "Sıfırla" bunun üstünden karar verir.
@@ -77,62 +80,73 @@ class DashboardFilterRow extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
       child: Row(
         children: [
-          Material(
-            color: count > 0 ? scheme.secondaryContainer : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => showFilterSheet(context),
-              child: Container(
-                height: 36,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
+          // Süz düğmesi ve görünüm anahtarı kişiselleştirmede gizlenebilir
+          // (bkz. UiItem.homeFilter / homeViewToggle). Süz gizliyken bile
+          // UYGULANMIŞ süzgeç çipleri görünür ve kaldırılabilir kalır.
+          Customizable(
+            id: UiItem.homeFilter,
+            hidden: const SizedBox.shrink(),
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: 7),
+              child: Material(
+                color: count > 0
+                    ? scheme.secondaryContainer
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: count > 0
-                        ? Colors.transparent
-                        : scheme.outlineVariant,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.tune, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      l10n.filterSheetTitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                  onTap: () => showFilterSheet(context),
+                  child: Container(
+                    height: 36,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: count > 0
+                            ? Colors.transparent
+                            : scheme.outlineVariant,
                       ),
                     ),
-                    if (count > 0) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.primary,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '$count',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onPrimary,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.tune, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.filterSheetTitle,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ),
-                    ],
-                  ],
+                        if (count > 0) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: scheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-          const SizedBox(width: 7),
           Expanded(
             child: SizedBox(
               height: 36,
@@ -182,27 +196,31 @@ class DashboardFilterRow extends ConsumerWidget {
           ),
           // Izgara ⇄ liste. İkon HEDEFİ gösterir (ızgaradayken "liste"
           // simgesi): düğmeler bulunulan hâli değil basınca olacağı anlatır.
-          Tooltip(
-            message: l10n.viewToggle,
-            child: SizedBox(
-              width: 36,
-              height: 36,
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
-                child: InkWell(
+          Customizable(
+            id: UiItem.homeViewToggle,
+            child: Tooltip(
+              message: l10n.viewToggle,
+              child: SizedBox(
+                width: 36,
+                height: 36,
+                child: Material(
+                  color: Colors.transparent,
                   borderRadius: BorderRadius.circular(10),
-                  onTap: () => ref.read(noteListViewProvider.notifier).toggle(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: scheme.outlineVariant),
-                    ),
-                    child: Icon(
-                      ref.watch(noteListViewProvider)
-                          ? Icons.grid_view
-                          : Icons.view_agenda_outlined,
-                      size: 18,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () =>
+                        ref.read(noteListViewProvider.notifier).toggle(),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: scheme.outlineVariant),
+                      ),
+                      child: Icon(
+                        ref.watch(noteListViewProvider)
+                            ? Icons.grid_view
+                            : Icons.view_agenda_outlined,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -308,11 +326,7 @@ class _FavoriteChip extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon ?? Icons.star,
-                  size: 14,
-                  color: scheme.primary,
-                ),
+                Icon(icon ?? Icons.star, size: 14, color: scheme.primary),
                 const SizedBox(width: 5),
                 Text(
                   label,
@@ -428,9 +442,9 @@ class _FilterSheet extends ConsumerWidget {
             children: [
               Text(
                 l10n.filterSheetTitle,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
               ),
               if (appliedCount > 0) ...[
                 const SizedBox(width: 8),
@@ -504,7 +518,6 @@ class _FilterSheet extends ConsumerWidget {
           // daraltıyordu. Klasör artık ana ekranda karosu olan bir YER
           // (bkz. `FolderTile` / `FolderScreen`); oluşturma, yönetme ve içine
           // girme oradan yapılır. Etiket saf etiket olarak burada kalır.
-
           if (tags.isNotEmpty)
             _Section(
               icon: Icons.tag,
@@ -719,17 +732,18 @@ Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
 }
 
 /// Süzgeç türünün yerelleştirilmiş etiketi (eski çip barından taşındı).
-String filterLabel(AppLocalizations l10n, NoteFilter filter) => switch (filter) {
-  NoteFilter.all => l10n.filterAll,
-  NoteFilter.text => l10n.filterText,
-  NoteFilter.checklist => l10n.filterChecklist,
-  NoteFilter.ordered => l10n.filterOrdered,
-  NoteFilter.pinned => l10n.filterPinned,
-  NoteFilter.starred => l10n.filterStarred,
-  NoteFilter.reminded => l10n.filterReminded,
-  NoteFilter.locked => l10n.filterLocked,
-  NoteFilter.others => l10n.filterOthers,
-};
+String filterLabel(AppLocalizations l10n, NoteFilter filter) =>
+    switch (filter) {
+      NoteFilter.all => l10n.filterAll,
+      NoteFilter.text => l10n.filterText,
+      NoteFilter.checklist => l10n.filterChecklist,
+      NoteFilter.ordered => l10n.filterOrdered,
+      NoteFilter.pinned => l10n.filterPinned,
+      NoteFilter.starred => l10n.filterStarred,
+      NoteFilter.reminded => l10n.filterReminded,
+      NoteFilter.locked => l10n.filterLocked,
+      NoteFilter.others => l10n.filterOthers,
+    };
 
 String sortLabel(AppLocalizations l10n, NoteSort sort) => switch (sort) {
   NoteSort.manual => l10n.sortManual,
@@ -839,9 +853,7 @@ class _Option extends StatelessWidget {
     final star = favorite;
     // Seçili çip dolgun (primary), seçilmemiş tonal — kenarlık çizgisi yok:
     // eski tasarımda her çipin kenarlığı levhayı tel kafese çeviriyordu.
-    final background = selected
-        ? scheme.primary
-        : scheme.surfaceContainerHigh;
+    final background = selected ? scheme.primary : scheme.surfaceContainerHigh;
     final foreground = selected ? scheme.onPrimary : scheme.onSurface;
     return Material(
       color: background,
@@ -901,7 +913,6 @@ class _Option extends StatelessWidget {
     );
   }
 }
-
 
 /// Aramanın KAPSAM çipi: ek içeriği (PDF metni + görsel OCR) de taransın mı.
 ///

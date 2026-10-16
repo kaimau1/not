@@ -15,6 +15,8 @@ import '../../../app/router.dart';
 import '../../../app/theme/note_colors.dart';
 import '../../../core/widgets/action_menu_sheet.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/personalize.dart';
+import '../../../core/widgets/customizable.dart';
 import '../../../core/widgets/freeze_when_hidden.dart';
 import '../../../core/utils/local_file.dart';
 import '../../../core/utils/note_guard.dart';
@@ -1284,38 +1286,51 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                         // yapılmadıysa yerel hesap simgesi
                                         // olsun"). Hangi hesapla çalışıldığı
                                         // ayarlara girmeden görünsün.
-                                        const AccountAvatarButton(),
+                                        // ANA EKRAN KİŞİSELLEŞTİRİLİR
+                                        // (kullanıcı bulgusu 2026-10-16:
+                                        // "ana ekran kişiselleştirilemiyor"):
+                                        // hesap, Yapay zekâ, Süz, görünüm ve
+                                        // iki mikrofon gizlenebilir; düzenleme
+                                        // modunda dokunarak (bkz.
+                                        // Customizable).
+                                        const Customizable(
+                                          id: UiItem.homeAccount,
+                                          child: AccountAvatarButton(),
+                                        ),
                                         // Yapay Zeka yeniden KENDİ düğmesi oldu.
                                         // Bir süre ⋮ menüsünde durmuştu çünkü arama
                                         // alanının içindeki ✨ (akıllı arama) ile
                                         // karışıyordu; o ✨ artık Metin/Anlam
                                         // segmenti olduğundan karışıklık kalktı.
-                                        Tooltip(
-                                          message: l10n.aiHubTitle,
-                                          child: SizedBox(
-                                            width: 44,
-                                            height: 44,
-                                            child: Material(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.secondaryContainer,
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: InkWell(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                onTap: () =>
-                                                    context.push('/ai'),
-                                                child: Icon(
-                                                  Icons.auto_awesome,
-                                                  size: 22,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSecondaryContainer,
+                                        Customizable(
+                                          id: UiItem.homeAi,
+                                          child: Tooltip(
+                                              message: l10n.aiHubTitle,
+                                              child: SizedBox(
+                                                width: 44,
+                                                height: 44,
+                                                child: Material(
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.secondaryContainer,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child: InkWell(
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                    onTap: () =>
+                                                        context.push('/ai'),
+                                                    child: Icon(
+                                                      Icons.auto_awesome,
+                                                      size: 22,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onSecondaryContainer,
+                                                    ),
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
                                         ),
                                         const SizedBox(width: 6),
                                         // ⋮ ARTIK ALT LEVHA (kullanıcı isteği
@@ -1639,19 +1654,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         //  * parıltılı mikrofon → asistan/ses yakalama
                         //    levhası (eski davranış): metin gözden geçirilir,
                         //    özetlenebilir, hatırlatıcıya çevrilebilir.
-                        _DashVoiceButton(
-                          tooltip: l10n.voiceAssistantTitle,
-                          icon: Icons.mic_none,
-                          badge: Icons.auto_awesome,
-                          onTap: _captureVoiceNote,
+                        // İkisi de kişiselleştirmede gizlenebilir (bkz.
+                        // UiItem.homeVoiceAi / homeDictation); aralık
+                        // düğmeyle birlikte gider.
+                        Customizable(
+                          id: UiItem.homeVoiceAi,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _DashVoiceButton(
+                              tooltip: l10n.voiceAssistantTitle,
+                              icon: Icons.mic_none,
+                              badge: Icons.auto_awesome,
+                              onTap: _captureVoiceNote,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 10),
-                        _DashVoiceButton(
-                          tooltip: l10n.liveDictation,
-                          icon: Icons.mic,
-                          onTap: createDictationNote,
+                        Customizable(
+                          id: UiItem.homeDictation,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _DashVoiceButton(
+                              tooltip: l10n.liveDictation,
+                              icon: Icons.mic,
+                              onTap: createDictationNote,
+                            ),
+                          ),
                         ),
-                        const SizedBox(height: 10),
                         // Keep tarzı açılan "+": metin/madde/sıralı/el yazısı.
                         QuickAddFab(
                           onVoiceCapture: createVoiceCaptureNote,

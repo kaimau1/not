@@ -4854,7 +4854,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'नोट स्क्रीन में AI बटन';
+  String get moduleAiInfo => 'होम और नोट स्क्रीन पर AI बटन';
 
   @override
   String get moduleVoice => 'आवाज़';
@@ -4925,6 +4925,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get personalizeHome => 'होम स्क्रीन';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'चुने गए आइटम होम स्क्रीन पर दिखते हैं; संपादन मोड में आप उन्हें वहीं टैप करके छिपा भी सकते हैं।';
 
   @override
   String get personalizeBubbles => 'बबल';

@@ -4880,7 +4880,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get moduleAi => 'IA';
 
   @override
-  String get moduleAiInfo => 'Pulsanti IA nella schermata della nota';
+  String get moduleAiInfo => 'Pulsanti IA nella schermata home e della nota';
 
   @override
   String get moduleVoice => 'Voce';
@@ -4953,6 +4953,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get personalizeHome => 'SCHERMATA HOME';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Gli elementi selezionati appaiono nella schermata home; in modalità modifica puoi anche toccarli lì per nasconderli.';
 
   @override
   String get personalizeBubbles => 'FUMETTI';

@@ -120,9 +120,14 @@ void main() {
 
     await tester.tap(find.text('Tümü'));
     await tester.pumpAndSettle();
-    expect(find.text('ÇEK VE KAYDET'), findsOneWidget);
-    expect(find.text('DOSYADAN'), findsOneWidget);
     expect(find.text('Galeriden video'), findsOneWidget);
+    // Kullanıcı bulgusu 2026-10-16: "tümü kısmı ekranın çok yukarısına
+    // doğru uzuyor". Açık panel de ekranın yarısını geçmez; sık
+    // kullanılanlar satırı (ızgarada zaten var) yerini "Daha az"a bırakır.
+    final panelTop = tester.getRect(find.text('Sesli not')).top;
+    expect(fab.top - panelTop, lessThan(screen.height / 2));
+    expect(find.text('SIK KULLANDIKLARIN'), findsNothing);
+    expect(find.text('Daha az'), findsOneWidget);
     // Açılınca da birincil düğmeler yerinde (FAB'ın yanında) kalır.
     expect(
       tester.getRect(find.text('Metin notu')).center.dy,
@@ -135,7 +140,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(youTube, 1);
     expect(
-      find.text('SIK KULLANDIKLARIN'),
+      find.text('Metin notu'),
       findsNothing,
       reason: 'seçince panel kapanır',
     );

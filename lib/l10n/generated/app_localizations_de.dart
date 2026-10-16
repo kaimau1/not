@@ -4886,7 +4886,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get moduleAi => 'KI';
 
   @override
-  String get moduleAiInfo => 'KI-Schaltflächen in der Notizansicht';
+  String get moduleAiInfo => 'KI-Schaltflächen auf Start- und Notizbildschirm';
 
   @override
   String get moduleVoice => 'Sprache';
@@ -4959,6 +4959,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get personalizeHome => 'STARTBILDSCHIRM';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Ausgewählte Elemente erscheinen auf dem Startbildschirm; im Bearbeitungsmodus kannst du sie dort auch antippen, um sie auszublenden.';
 
   @override
   String get personalizeBubbles => 'BLASEN';

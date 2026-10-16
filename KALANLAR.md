@@ -2,6 +2,24 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-16 (4. tur) — kişiselleştirme, ana ekran, balon odağı, "Tümü" (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Balon odağı**: PDF bölmesinde yazılı balona dokun → belge HİÇ
+  kaymamalı (okuma kartı yerinde). "Düzenle" → klavye açılır, başlık/çubuk
+  gizlenir; belge sayfa başına SIÇRAMAMALI, balon kartın arkasında kaldıysa
+  tek bir yumuşak kaydırmayla ortaya gelmeli. Bitti → sayfa başına sıçrama
+  yok. Aynısı slayt bölmesi ve tam ekran PDF/slaytta. Sayfanın EN ALTINDAKİ
+  balonda kart açıkken belge yeterince yukarı kayabiliyor mu.
+- [ ] Sayfa notu alanına yazarken (klavye açık) PDF bölmesi altta kırpılıyor
+  ama sayfa başına sıçramıyor mu; klavye kapanınca normal boya dönüyor mu.
+- [ ] **Kişiselleştir**: eklenti anahtarları ve çipler dokununca anında
+  değişiyor mu; Ayarlar → Kişiselleştir alanındaki eklenti anahtarları.
+- [ ] **Ana ekran düzenleme modu**: hesap, Yapay zekâ, Süz, ızgara/liste,
+  iki mikrofon dokunarak gizlenip Kaydet ile kalıcı oluyor mu.
+- [ ] **"+" → Tümü**: 360 dp telefonda panel ekranın yarısını geçmiyor mu,
+  5 sütunda etiketler okunuyor mu; "Daha az" kapatıyor mu.
+- [ ] `moduleAiInfo` ve yeni `personalizeHomeItemsInfo` 16 dilde elle
+  yazıldı — anadil kontrolü.
+
 ## 2026-10-16 (2. tur) — damga, video çubuğu, balonlar, OCR, paylaşım, tembel ızgara (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Damga**: videolu notta (klavye kapalıyken) "1:23"e dokun → video
   sarılıyor, klavye AÇILMIYOR mu; damganın yanına dokununca yazılabiliyor mu;

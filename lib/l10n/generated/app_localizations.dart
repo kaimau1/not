@@ -8787,7 +8787,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleAiInfo.
   ///
   /// In tr, this message translates to:
-  /// **'Not ekranındaki yapay zekâ düğmeleri'**
+  /// **'Ana ekran ve not ekranındaki yapay zekâ düğmeleri'**
   String get moduleAiInfo;
 
   /// No description provided for @moduleVoice.
@@ -8927,6 +8927,12 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'ANA EKRAN'**
   String get personalizeHome;
+
+  /// No description provided for @personalizeHomeItemsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili olanlar ana ekranda görünür; düzenleme modunda ana ekrandaki öğelere dokunarak da gizleyebilirsiniz.'**
+  String get personalizeHomeItemsInfo;
 
   /// No description provided for @personalizeBubbles.
   ///

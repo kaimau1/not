@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,12 +61,18 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     _current = next;
     widget.onChanged?.call(next);
   }
+
   /// Slaytlar PDF gibi ALT ALTA, boşluksuz kayar (kullanıcı isteği
   /// 2026-08-08). Yatay `PageView` bırakıldı — bkz. [SlideStripMetrics].
   final _scroll = ScrollController();
   SlideStripMetrics? _metrics;
   double _viewport = 0;
-  Timer? _centerTimer;
+
+  /// Açılan balonu görünür kılan yardımcı (bkz. [BubbleReveal]).
+  late final _reveal = BubbleReveal(_bubbles);
+
+  /// Görüntüleyici + yazma kartının kutusu (görünür alan buradan ölçülür).
+  final _viewportKey = GlobalKey();
 
   /// Görünen slayt yakınlaştırılmış mı? Yakınken liste kilitlenir.
   bool _zoomed = false;
@@ -128,29 +135,43 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     );
   }
 
-  /// Açılan balonu, yazma kartının üstünde kalan alanın ortasına getirir
-  /// ("tıklanan balon klavye ile ekranın üstü arasında ortalanmalı").
-  void _centerOn(PageBubble bubble) {
-    _centerTimer?.cancel();
-    _centerTimer = Timer(const Duration(milliseconds: 340), () {
-      final metrics = _metrics;
-      if (!mounted || metrics == null || !_scroll.hasClients) return;
-      final free = (_viewport - _bubbles.dockHeight.value - 24).clamp(
-        80.0,
-        _viewport <= 0 ? 80.0 : _viewport,
-      );
+  /// Açılan balonu gerekirse (yalnız görünmüyorsa) yazma kartının üstünde
+  /// kalan alanın ortasına getirir — yerleşim oturduktan sonra, tek kez
+  /// (bkz. [BubbleReveal]).
+  void _centerOn(PageBubble bubble) => _reveal.request(
+    bubble,
+    viewport: _viewportKey.currentContext ?? context,
+    scrollBy: (dy) {
+      if (!mounted || !_scroll.hasClients) return;
+      final position = _scroll.position;
       _scroll.animateTo(
-        metrics.centerOffset(
-          page: bubble.page,
-          y: bubble.y,
-          free: free,
-          maxScroll: _scroll.position.maxScrollExtent,
+        (position.pixels + dy).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
         ),
-        duration: const Duration(milliseconds: 220),
+        duration: const Duration(milliseconds: 240),
         curve: Curves.easeOutCubic,
       );
-    });
-  }
+    },
+    centerUnbuilt: (top, height) {
+      final metrics = _metrics;
+      if (!mounted || metrics == null || !_scroll.hasClients) return;
+      final max = _scroll.position.maxScrollExtent;
+      final target =
+          metrics.centerOffset(
+            page: bubble.page,
+            y: bubble.y,
+            free: height,
+            maxScroll: max,
+          ) -
+          top;
+      _scroll.animateTo(
+        target.clamp(0.0, math.max(0.0, max)),
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
+    },
+  );
 
   void _toggleEditing() {
     setState(() {
@@ -199,7 +220,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
 
   @override
   void dispose() {
-    _centerTimer?.cancel();
+    _reveal.cancel();
     _ink.dispose();
     _bubbles.addingListenable.removeListener(_onAddingChanged);
     _bubbles.dispose();
@@ -256,6 +277,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
           ],
         ),
         body: Stack(
+          key: _viewportKey,
           children: [
             Positioned.fill(
               child: RepaintBoundary(key: _areaBoundary, child: _body(l10n)),
@@ -318,50 +340,49 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final metrics = SlideStripMetrics.forWidth(
-                [for (final s in slides) slideAspect(s)],
-                constraints.maxWidth,
-              );
+              final metrics = SlideStripMetrics.forWidth([
+                for (final s in slides) slideAspect(s),
+              ], constraints.maxWidth);
               _metrics = metrics;
               _viewport = constraints.maxHeight;
               return ValueListenableBuilder<bool>(
                 valueListenable: _bubbles.draggingListenable,
                 builder: (context, dragging, _) => ListView.builder(
-                controller: _scroll,
-                physics: (locked || dragging)
-                    ? const NeverScrollableScrollPhysics()
-                    : const ClampingScrollPhysics(),
-                itemCount: slides.length,
-                itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
-                itemBuilder: (context, i) => RepaintBoundary(
-                  child: ZoomBox(
-                    // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
-                    // çizer, önceden yapılmış yakınlaştırma kaybolmaz.
-                    enabled: !_editing,
-                    onZoomChanged: (value) {
-                      if (mounted && _zoomed != value) {
-                        setState(() => _zoomed = value);
-                      }
-                    },
-                    child: Stack(
-                      children: [
-                        Positioned.fill(child: SlideCanvas(slide: slides[i])),
-                        Positioned.fill(
-                          child: InkPageLayer(controller: _ink, page: i + 1),
-                        ),
-                        Positioned.fill(
-                          child: BubblePageLayer(
-                            controller: _bubbles,
-                            page: i + 1,
-                            readOnly: widget.onChanged == null,
-                            longPressAdd: !_editing,
+                  controller: _scroll,
+                  physics: (locked || dragging)
+                      ? const NeverScrollableScrollPhysics()
+                      : const ClampingScrollPhysics(),
+                  itemCount: slides.length,
+                  itemExtentBuilder: (index, _) => metrics.heightOf(index + 1),
+                  itemBuilder: (context, i) => RepaintBoundary(
+                    child: ZoomBox(
+                      // Çizimde jestler kapalı ama ölçek KORUNUR: tek parmak
+                      // çizer, önceden yapılmış yakınlaştırma kaybolmaz.
+                      enabled: !_editing,
+                      onZoomChanged: (value) {
+                        if (mounted && _zoomed != value) {
+                          setState(() => _zoomed = value);
+                        }
+                      },
+                      child: Stack(
+                        children: [
+                          Positioned.fill(child: SlideCanvas(slide: slides[i])),
+                          Positioned.fill(
+                            child: InkPageLayer(controller: _ink, page: i + 1),
                           ),
-                        ),
-                      ],
+                          Positioned.fill(
+                            child: BubblePageLayer(
+                              controller: _bubbles,
+                              page: i + 1,
+                              readOnly: widget.onChanged == null,
+                              longPressAdd: !_editing,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
               );
             },
           ),

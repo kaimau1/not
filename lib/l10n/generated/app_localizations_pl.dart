@@ -4878,7 +4878,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get moduleAi => 'AI';
 
   @override
-  String get moduleAiInfo => 'Przyciski AI na ekranie notatki';
+  String get moduleAiInfo =>
+      'Przyciski AI na ekranie głównym i ekranie notatki';
 
   @override
   String get moduleVoice => 'Głos';
@@ -4952,6 +4953,10 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get personalizeHome => 'EKRAN GŁÓWNY';
+
+  @override
+  String get personalizeHomeItemsInfo =>
+      'Zaznaczone elementy są widoczne na ekranie głównym; w trybie edycji możesz też je tam dotknąć, aby ukryć.';
 
   @override
   String get personalizeBubbles => 'DYMKI';

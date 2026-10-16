@@ -42,30 +42,38 @@ class PersonalizeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListenableBuilder(
-        listenable: Personalize.listenable,
-        builder: (context, _) => Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                14,
-                8,
-                14,
-                24 + MediaQuery.paddingOf(context).bottom,
-              ),
-              children: const [
-                _EditModeCard(),
-                SizedBox(height: 14),
-                _ModulesSection(),
-                _EditorSection(),
-                _QuickAddSection(),
-                _AttachSection(),
-                _VideoSection(),
-                _HomeSection(),
-                _BubblesSection(),
-              ],
+      // KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "kişiselleştirme ayarlar
+      // kısmında aç kapa yapılamıyor"; "kapatıyorum, girip çıkınca başka
+      // şeyler kapanmış oluyor"): bölümler burada `const` idi ve kaydı
+      // dinleyen tek yer bu listenin ÜSTÜNDEKİ ListenableBuilder'dı. `const`
+      // örnek her yeniden kurulumda AYNI nesne olduğu için Flutter alt ağacı
+      // hiç yeniden kurmuyordu: anahtar kaydediliyor ama ekranda yerinden
+      // oynamıyordu. Çiplerde daha kötüsü — `onSelected` bayat `selected`
+      // değerinin tersini yazdığından ikinci dokunuş geri açmıyor, aynı
+      // değeri bir daha yazıyordu; kullanıcı ekrandan çıkıp girince
+      // beklemediği öğeleri kapalı buluyordu. Artık kaydı okuyan her bölüm
+      // KENDİSİ dinliyor ([_Live]).
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: EdgeInsets.fromLTRB(
+              14,
+              8,
+              14,
+              24 + MediaQuery.paddingOf(context).bottom,
             ),
+            children: const [
+              _EditModeCard(),
+              SizedBox(height: 14),
+              _ModulesSection(),
+              _EditorSection(),
+              _QuickAddSection(),
+              _AttachSection(),
+              _VideoSection(),
+              _HomeSection(),
+              _BubblesSection(),
+            ],
           ),
         ),
       ),
@@ -99,12 +107,28 @@ class PersonalizeScreen extends StatelessWidget {
   }
 }
 
+/// Kişiselleştirme kaydını (ve düzenleme taslağını) dinleyerek kurar: kaydı
+/// okuyan her parça değişince KENDİSİ tazelenir (bkz. ekrandaki kök neden).
+class _Live extends StatelessWidget {
+  const _Live(this.builder);
+
+  final WidgetBuilder builder;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Personalize.listenable,
+    builder: (context, _) => builder(context),
+  );
+}
+
 /// Ekranın başındaki büyük kart: düzenleme modunu başlatır.
 class _EditModeCard extends StatelessWidget {
   const _EditModeCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => _Live(_build);
+
+  Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final editing = Personalize.editing;
@@ -260,7 +284,9 @@ class _VisibilityChips extends StatelessWidget {
   final List<({String id, IconData icon, String label})> items;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => _Live(_build);
+
+  Widget _build(BuildContext context) {
     final prefs = Personalize.prefs.value;
     final scheme = Theme.of(context).colorScheme;
     return Wrap(
@@ -307,6 +333,26 @@ class _ModulesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return _Section(
+      title: l10n.personalizeModules,
+      icon: Icons.extension_outlined,
+      info: l10n.personalizeModulesInfo,
+      child: const PersonalizeModuleSwitches(),
+    );
+  }
+}
+
+/// Eklentilerin aç/kapa anahtarları. Kişiselleştir ekranında ve AYARLARIN
+/// "Kişiselleştir" alanında aynı parça (kullanıcı isteği 2026-10-16:
+/// "ayarlar kısmından da aç kapa yapılabilmeli").
+class PersonalizeModuleSwitches extends StatelessWidget {
+  const PersonalizeModuleSwitches({super.key});
+
+  @override
+  Widget build(BuildContext context) => _Live(_build);
+
+  Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final prefs = Personalize.prefs.value;
@@ -361,49 +407,44 @@ class _ModulesSection extends StatelessWidget {
         l10n.moduleCollaborationInfo,
       ),
     ];
-    return _Section(
-      title: l10n.personalizeModules,
-      icon: Icons.extension_outlined,
-      info: l10n.personalizeModulesInfo,
-      child: Column(
-        children: [
-          for (final (module, icon, title, info) in modules)
-            Builder(
-              builder: (context) {
-                final state = prefs.moduleState(module);
-                return SwitchListTile(
-                  key: ValueKey('module-${module.id}'),
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  secondary: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: (state == false ? scheme.outline : scheme.primary)
-                          .withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 19,
-                      color: state == false ? scheme.outline : scheme.primary,
-                    ),
+    return Column(
+      children: [
+        for (final (module, icon, title, info) in modules)
+          Builder(
+            builder: (context) {
+              final state = prefs.moduleState(module);
+              return SwitchListTile(
+                key: ValueKey('module-${module.id}'),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                secondary: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: (state == false ? scheme.outline : scheme.primary)
+                        .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  title: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  child: Icon(
+                    icon,
+                    size: 19,
+                    color: state == false ? scheme.outline : scheme.primary,
                   ),
-                  subtitle: Text(
-                    state == null ? '$info · ${l10n.moduleMixed}' : info,
-                  ),
-                  value: state != false,
-                  onChanged: (on) =>
-                      Personalize.update((p) => p.withModule(module, on)),
-                );
-              },
-            ),
-        ],
-      ),
+                ),
+                title: Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  state == null ? '$info · ${l10n.moduleMixed}' : info,
+                ),
+                value: state != false,
+                onChanged: (on) =>
+                    Personalize.update((p) => p.withModule(module, on)),
+              );
+            },
+          ),
+      ],
     );
   }
 }
@@ -550,7 +591,9 @@ class _VideoSection extends StatelessWidget {
   const _VideoSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => _Live(_build);
+
+  Widget _build(BuildContext context) {
     final l10n = context.l10n;
     final prefs = Personalize.prefs.value;
     Widget seekRow({
@@ -657,8 +700,48 @@ class _HomeSection extends ConsumerWidget {
     return _Section(
       title: l10n.personalizeHome,
       icon: Icons.home_outlined,
+      info: l10n.personalizeHomeItemsInfo,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ANA EKRAN ÖĞELERİ (kullanıcı bulgusu 2026-10-16: "ana ekran
+          // kişiselleştirilemiyor"). Düzenleme modunda ana ekranın kendisinde
+          // de dokunarak gizlenir/gösterilir.
+          _VisibilityChips(
+            items: [
+              (
+                id: UiItem.homeAccount,
+                icon: Icons.account_circle_outlined,
+                label: l10n.account,
+              ),
+              (
+                id: UiItem.homeAi,
+                icon: Icons.auto_awesome,
+                label: l10n.aiHubTitle,
+              ),
+              (
+                id: UiItem.homeFilter,
+                icon: Icons.tune,
+                label: l10n.filterSheetTitle,
+              ),
+              (
+                id: UiItem.homeViewToggle,
+                icon: Icons.grid_view,
+                label: l10n.viewToggle,
+              ),
+              (
+                id: UiItem.homeVoiceAi,
+                icon: Icons.mic_none,
+                label: l10n.voiceAssistantTitle,
+              ),
+              (
+                id: UiItem.homeDictation,
+                icon: Icons.mic,
+                label: l10n.liveDictation,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
           tile(
             const ValueKey('home-quick-capture'),
             l10n.quickCaptureRowSetting,
