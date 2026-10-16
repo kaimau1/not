@@ -21,6 +21,7 @@ import 'core/utils/local_file.dart';
 import 'core/widgets/setup_required_screen.dart';
 import 'features/notes/data/local_notes_store.dart';
 import 'features/settings/settings_providers.dart';
+import 'core/personalize.dart';
 import 'features/notes/presentation/viewers/bubble_layer.dart' show BubbleLook;
 import 'firebase_options.dart';
 
@@ -111,6 +112,8 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   // Balon tutamaçlarının genel boyu (cihaz tercihi — bkz. BubbleLook).
   BubbleLook.attach(prefs);
+  // Kişiselleştirme: gizlenen alanlar, sarma süreleri (bkz. Personalize).
+  Personalize.attach(prefs);
 
   // Ek dosyalarının kök klasörü: yerel yol artık Firestore'dan okunmuyor,
   // (noteId, ekId, dosyaAdı)ndan türetiliyor — taban BURADA bir kez çözülür

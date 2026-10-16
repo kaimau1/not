@@ -7,9 +7,12 @@ import '../../../../core/utils/local_file.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customizable.dart';
 import '../../../../core/utils/pip.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
+import '../editor/video_transport.dart' show SeekIcon;
 import 'youtube_viewer.dart';
 
 /// Süreyi `s:sn` (bir saatten uzunsa `s:dd:sn`) olarak yazar.
@@ -65,7 +68,13 @@ class NoteAtTimeButton extends StatelessWidget {
   final VoidCallback onPressed;
 
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) => Customizable(
+    // Kişiselleştirmede gizlenebilir (bkz. UiItem.videoNoteAt).
+    id: UiItem.videoNoteAt,
+    child: _button(context),
+  );
+
+  Widget _button(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 4),
     child: FilledButton.tonalIcon(
       style: FilledButton.styleFrom(
@@ -156,8 +165,9 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
     await controller.seekTo(clamped);
   }
 
-  /// ±10 sn atlama düğmeleri: kaydırıcıyla hassas nokta bulmak zor, kısa
-  /// atlamalar en sık istenen hareket.
+  /// Geri/ileri atlama düğmeleri (süreler kişiselleştirmeden — bkz.
+  /// Personalize): kaydırıcıyla hassas nokta bulmak zor, kısa atlamalar en
+  /// sık istenen hareket.
   Future<void> _skip(VideoPlayerController controller, int seconds) =>
       _seekTo(controller, controller.value.position + Duration(seconds: seconds));
 
@@ -351,11 +361,18 @@ class _Controls extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    tooltip: context.l10n.videoBack10,
+                    key: const ValueKey('viewer-video-back'),
+                    tooltip: context.l10n.videoBackSeconds(
+                      Personalize.current.seekBack,
+                    ),
                     color: Colors.white,
                     iconSize: 30,
-                    icon: const Icon(Icons.replay_10),
-                    onPressed: () => onSkip(-10),
+                    icon: SeekIcon(
+                      seconds: Personalize.current.seekBack,
+                      forward: false,
+                      size: 30,
+                    ),
+                    onPressed: () => onSkip(-Personalize.current.seekBack),
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
@@ -369,11 +386,18 @@ class _Controls extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    tooltip: context.l10n.videoForward10,
+                    key: const ValueKey('viewer-video-forward'),
+                    tooltip: context.l10n.videoForwardSeconds(
+                      Personalize.current.seekForward,
+                    ),
                     color: Colors.white,
                     iconSize: 30,
-                    icon: const Icon(Icons.forward_10),
-                    onPressed: () => onSkip(10),
+                    icon: SeekIcon(
+                      seconds: Personalize.current.seekForward,
+                      forward: true,
+                      size: 30,
+                    ),
+                    onPressed: () => onSkip(Personalize.current.seekForward),
                   ),
                   // DÖNGÜ: video bitince baştan.
                   SizedBox(

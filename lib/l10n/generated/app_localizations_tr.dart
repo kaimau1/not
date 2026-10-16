@@ -4775,4 +4775,224 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Bu cihazda paylaşılacak ek dosyası yok.';
+
+  @override
+  String get attachmentRemoved => 'Ek kaldırıldı';
+
+  @override
+  String get pinnedEmbedOnPage => 'Sayfaya göm (yüzen)';
+
+  @override
+  String get customizeHideItem => 'Gizle';
+
+  @override
+  String get customizeShowItem => 'Göster';
+
+  @override
+  String get customizeModeTitle => 'Düzenleme modu';
+
+  @override
+  String get customizeModeHint => 'Gizlemek/göstermek için öğelere dokunun';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count öğe gizli · dokunarak değiştirin';
+  }
+
+  @override
+  String get customizeSave => 'Kaydet';
+
+  @override
+  String get customizeSaved => 'Düzen kaydedildi';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds sn geri';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds sn ileri';
+  }
+
+  @override
+  String get personalizeTitle => 'Kişiselleştir';
+
+  @override
+  String get personalizeInfo => 'Hangi alan ve düğmeler görünsün, eklentiler';
+
+  @override
+  String get personalizeOpen => 'Kişiselleştirmeyi aç';
+
+  @override
+  String get customizeStartTitle => 'Ekranda düzenle';
+
+  @override
+  String get customizeStartInfo =>
+      'Düzenleme modunu açın; ekranlardaki düğme ve alanlara dokunarak gizleyin ya da gösterin. Bitince üstteki şeritten Kaydet\'e basın.';
+
+  @override
+  String get customizeStart => 'Düzenleme modunu başlat';
+
+  @override
+  String get customizeActive => 'Düzenleme modu açık';
+
+  @override
+  String get customizeModeShort => 'Ekranlarda dokunarak gizle/göster';
+
+  @override
+  String get personalizeModules => 'EKLENTİLER';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.';
+
+  @override
+  String get moduleAi => 'Yapay zekâ';
+
+  @override
+  String get moduleAiInfo => 'Not ekranındaki yapay zekâ düğmeleri';
+
+  @override
+  String get moduleVoice => 'Ses';
+
+  @override
+  String get moduleVoiceInfo => 'Sesli not, sesli yazdırma, ses kaydı';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Video çekme, galeriden video, YouTube';
+
+  @override
+  String get moduleDocuments => 'Belgeler';
+
+  @override
+  String get moduleDocumentsInfo => 'PDF ve sunum ekleme';
+
+  @override
+  String get moduleScan => 'Tarama';
+
+  @override
+  String get moduleScanInfo => 'Belge tarama ve QR kod';
+
+  @override
+  String get moduleDrawing => 'Çizim';
+
+  @override
+  String get moduleDrawingInfo => 'El yazısı ve çizim';
+
+  @override
+  String get moduleTemplates => 'Şablonlar';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Şablondan not, alışveriş listesi, arşiv defteri';
+
+  @override
+  String get moduleTags => 'Not çipleri';
+
+  @override
+  String get moduleTagsInfo =>
+      'Başlığın altındaki etiket, klasör ve hatırlatıcı çipleri';
+
+  @override
+  String get moduleCollaboration => 'Ortak çalışma';
+
+  @override
+  String get moduleCollaborationInfo => 'Not ekranındaki kişi ekle düğmesi';
+
+  @override
+  String get moduleMixed => 'kısmen açık';
+
+  @override
+  String get personalizeEditorBar => 'NOT EKRANI · ALT ÇUBUK';
+
+  @override
+  String get personalizeEditorTop => 'NOT EKRANI · ÜST ÇUBUK VE ALANLAR';
+
+  @override
+  String get personalizeQuickAdd => 'YENİ NOT MENÜSÜ (+)';
+
+  @override
+  String get personalizeAttachSheet => 'EKLE LEVHASI (NOTUN İÇİNDE +)';
+
+  @override
+  String get personalizeVideo => 'VİDEO';
+
+  @override
+  String get personalizeHome => 'ANA EKRAN';
+
+  @override
+  String get personalizeBubbles => 'BALONLAR';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Seçili olanlar görünür; dokunarak açıp kapatın.';
+
+  @override
+  String get personalizeReset => 'Varsayılana dön';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Bütün görünürlük ve sarma ayarları varsayılana dönsün mü?';
+
+  @override
+  String get personalizeResetDone => 'Varsayılana dönüldü';
+
+  @override
+  String get uiItemAttachments => 'Ekler';
+
+  @override
+  String get uiItemDate => 'Düzenleme tarihi';
+
+  @override
+  String get uiItemSync => 'Senkron simgesi';
+
+  @override
+  String get uiItemFrequent => 'Sık kullandıkların';
+
+  @override
+  String get uiItemVideoTime => 'Süre yazısı';
+
+  @override
+  String get videoSeekBack => 'Geri sarma';
+
+  @override
+  String get videoSeekForward => 'İleri sarma';
+
+  @override
+  String get bubbleSizeSetting => 'Balon boyu';
+
+  @override
+  String get noteMenuCustomize => 'Ekranı düzenle';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds sn';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count gizli';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VİDEO';
+
+  @override
+  String get listPartRemoved => 'Liste kaldırıldı';
+
+  @override
+  String get textPartRemoved => 'Metin kaldırıldı';
+
+  @override
+  String get notePartsMenu => 'Bölümler';
+
+  @override
+  String get removeListPart => 'Listeyi kaldır';
+
+  @override
+  String get removeTextPart => 'Metni kaldır';
 }

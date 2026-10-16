@@ -44,6 +44,7 @@ EditorBarPlan planEditorBar({
   required int fixedSegments,
   required bool attachments,
   required bool pen,
+  int aiButtons = 3,
 }) {
   double need(double button, double gap, int optional) {
     final n = fixedSegments + optional;
@@ -52,12 +53,14 @@ EditorBarPlan planEditorBar({
         n * kEditorBarSegment +
         (n - 1).clamp(0, n) * _segmentGap +
         (attachments ? _attachmentsWidth + _segmentGap : 0);
+    // Kişiselleştirmede gizlenen AI düğmeleri yer tutmaz; hiçbiri yoksa
+    // kapsülün kendisi de çizilmez.
     return pill +
         _pillGap +
         (pen ? _penWidth : 0) +
-        _aiChrome +
-        3 * button +
-        2 * gap;
+        (aiButtons > 0
+            ? _aiChrome + aiButtons * button + (aiButtons - 1) * gap
+            : 0);
   }
 
   const steps = [

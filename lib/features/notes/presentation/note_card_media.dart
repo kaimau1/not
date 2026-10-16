@@ -81,8 +81,7 @@ class CardMediaPlan {
   ///
   /// Üste SABİTLENMİŞ belge de kapaktır: editörde notun tepesinde duruyor,
   /// kartta da tepede durur.
-  Attachment? get cover =>
-      documentNote || (heroDocument?.isPinnedTop ?? false)
+  Attachment? get cover => documentNote || (heroDocument?.isPinnedTop ?? false)
       ? heroDocument
       : null;
 
@@ -108,8 +107,7 @@ class CardMediaPlan {
     // Zemin görseli ek DEĞİL: notun arkasında duvar kâğıdı olarak duruyor.
     final all = [
       for (final a in note.attachments)
-        if (a.id != note.backgroundImageId && !note.hidesDerivedDocument(a))
-          a,
+        if (a.id != note.backgroundImageId && !note.hidesDerivedDocument(a)) a,
     ];
     // Sabitli medya önce: kartın kapağı odur.
     final visuals = [
@@ -594,7 +592,11 @@ class CardDocumentCover extends StatelessWidget {
 /// Görsel/video karosu. Video kapağın ortasında oynat işareti, YouTube'da
 /// kırmızı YouTube düğmesi taşır — fotoğraftan bakışta ayrılsın.
 class CardMediaTile extends StatelessWidget {
-  const CardMediaTile({super.key, required this.attachment, this.large = false});
+  const CardMediaTile({
+    super.key,
+    required this.attachment,
+    this.large = false,
+  });
 
   final Attachment attachment;
 
@@ -761,8 +763,23 @@ class _LocalVideoCover extends StatelessWidget {
     if (!VideoFrame.supported || !localFileExists(video.localPath)) {
       return fallback;
     }
-    return _AsyncThumb(future: CardThumbs.videoCover(video), fallback: fallback);
+    return _AsyncThumb(
+      future: CardThumbs.videoCover(video),
+      fallback: fallback,
+    );
   }
+}
+
+/// PDF'in (yer imli sayfası, yoksa ilk) sayfasının önbellekli küçük resmi —
+/// kartın dışında da kullanılır (not ekranının alt ek şeridi).
+class PdfFirstPageThumb extends StatelessWidget {
+  const PdfFirstPageThumb({super.key, required this.attachment});
+
+  final Attachment attachment;
+
+  @override
+  Widget build(BuildContext context) =>
+      _PdfFirstPage(attachment: attachment, iconSize: 28);
 }
 
 class _PdfFirstPage extends StatelessWidget {

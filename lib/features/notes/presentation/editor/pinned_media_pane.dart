@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customizable.dart';
 import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
 import '../viewers/bubble_layer.dart';
@@ -63,7 +65,20 @@ class PinnedMediaPane extends StatefulWidget {
     this.viewSwitch,
     this.onNoteAt,
     this.bubbleDoc,
+    this.onRemove,
+    this.onDetach,
   });
+
+  /// Eki nottan kaldırır (geri al ile döner) — çubuğun ⋮ menüsünde.
+  ///
+  /// Kullanıcı bulgusu 2026-10-16: "video sabitken kaldırmak ayarı yok,
+  /// gömülü hale getirmek gerekiyor" — sabit bölmede yalnız simgeli görünüm
+  /// anahtarı vardı; silmek için önce sayfaya almak, sonra seçip panelden
+  /// silmek gerekiyordu. Menü YAZILI: Sayfaya göm · Alta ek olarak · Kaldır.
+  final VoidCallback? onRemove;
+
+  /// Eki sabit bölmeden alıp alttaki ek şeridine DOSYA olarak koyar.
+  final VoidCallback? onDetach;
 
   /// GÖRSELDEN TÜRETİLMİŞ balonlu belge (bkz. `Attachment.sourceId`).
   /// Kullanıcı isteği 2026-10-16: "balonludan üste sabitlemeye alınca da
@@ -389,30 +404,34 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
             ),
           ),
         ),
+        // Kişiselleştirmede gizlenebilir (bkz. UiItem.videoNoteAt).
         if (widget.onNoteAt != null)
-          noteAtLabel
-              ? Padding(
-                  padding: const EdgeInsets.only(right: 2),
-                  child: TextButton.icon(
-                    key: const ValueKey('pinned-note-at'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+          Customizable(
+            id: UiItem.videoNoteAt,
+            child: noteAtLabel
+                ? Padding(
+                    padding: const EdgeInsets.only(right: 2),
+                    child: TextButton.icon(
+                      key: const ValueKey('pinned-note-at'),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      onPressed: widget.onNoteAt,
+                      icon: const Icon(Icons.more_time, size: 18),
+                      label: Text(l10n.videoNoteAtTimeShort),
                     ),
+                  )
+                : IconButton(
+                    key: const ValueKey('pinned-note-at'),
+                    tooltip: l10n.videoNoteAtTime,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 20,
+                    color: scheme.primary,
+                    icon: const Icon(Icons.more_time),
                     onPressed: widget.onNoteAt,
-                    icon: const Icon(Icons.more_time, size: 18),
-                    label: Text(l10n.videoNoteAtTimeShort),
                   ),
-                )
-              : IconButton(
-                  key: const ValueKey('pinned-note-at'),
-                  tooltip: l10n.videoNoteAtTime,
-                  visualDensity: VisualDensity.compact,
-                  iconSize: 20,
-                  color: scheme.primary,
-                  icon: const Icon(Icons.more_time),
-                  onPressed: widget.onNoteAt,
-                ),
+          ),
         // Görselden türetilmiş belgenin balonları: göster/gizle.
         if (widget.bubbleDoc case final doc?
             when doc.bubbles.isNotEmpty && !isVideo)
@@ -431,23 +450,89 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
               doc.copyWith(bubblesHidden: !doc.bubblesHidden),
             ),
           ),
-        if (showLink && widget.onCopyLink != null && widget.media.isWebVideo)
+        if (showLink &&
+            !hasMenu &&
+            widget.onCopyLink != null &&
+            widget.media.isWebVideo)
           _BarButton(
             tooltip: l10n.copyVideoLink,
             icon: Icons.link,
             onPressed: widget.onCopyLink!,
           ),
-        if (widget.viewSwitch case final viewSwitch?)
+        // Dar çubukta (< 340 dp) ⋮ menüsü varken anahtar düşer: menüdeki
+        // "Sayfaya göm" aynı işi yazılı olarak yapar.
+        if (widget.viewSwitch case final viewSwitch?
+            when width >= 340 || !hasMenu)
           Padding(
-            padding: const EdgeInsets.only(left: 2, right: 6),
+            padding: const EdgeInsets.only(left: 2, right: 2),
             child: viewSwitch,
           )
-        else
+        else if (!hasMenu)
           _BarButton(
             tooltip: l10n.unpinMedia,
             icon: Icons.vertical_align_bottom,
             onPressed: widget.onUnpin,
           ),
+        if (hasMenu) _menu(context),
+      ],
+    );
+  }
+
+  /// Çubuğun ⋮ menüsü verilmiş mi (salt okunurda kaldır/ek yok).
+  bool get hasMenu => widget.onRemove != null || widget.onDetach != null;
+
+  /// YAZILI işlemler: sayfaya göm (yüzen), alta ek olarak, bağlantı, kaldır.
+  Widget _menu(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    Widget item(IconData icon, String label, {Color? color}) => ListTile(
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: color),
+      title: Text(label, style: color == null ? null : TextStyle(color: color)),
+    );
+    return PopupMenuButton<String>(
+      key: const ValueKey('pinned-media-menu'),
+      tooltip: l10n.more,
+      icon: const Icon(Icons.more_vert, size: 20),
+      onSelected: (action) {
+        switch (action) {
+          case 'float':
+            widget.onUnpin();
+          case 'detach':
+            widget.onDetach?.call();
+          case 'link':
+            widget.onCopyLink?.call();
+          case 'remove':
+            widget.onRemove?.call();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'float',
+          child: item(Icons.wrap_text_rounded, l10n.pinnedEmbedOnPage),
+        ),
+        if (widget.onDetach != null)
+          PopupMenuItem(
+            value: 'detach',
+            child: item(Icons.attachment_outlined, l10n.moveImageToAttachments),
+          ),
+        if (widget.onCopyLink != null && widget.media.isWebVideo)
+          PopupMenuItem(
+            value: 'link',
+            child: item(Icons.link, l10n.copyVideoLink),
+          ),
+        if (widget.onRemove != null) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 'remove',
+            child: item(
+              Icons.delete_outline,
+              l10n.removeAttachment,
+              color: scheme.error,
+            ),
+          ),
+        ],
       ],
     );
   }

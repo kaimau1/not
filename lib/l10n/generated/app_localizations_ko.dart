@@ -4708,4 +4708,219 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get shareAttachmentFilesNone => '이 기기에 공유할 첨부 파일이 없습니다.';
+
+  @override
+  String get attachmentRemoved => '첨부 파일을 제거했습니다';
+
+  @override
+  String get pinnedEmbedOnPage => '페이지에 삽입(플로팅)';
+
+  @override
+  String get customizeHideItem => '숨기기';
+
+  @override
+  String get customizeShowItem => '표시';
+
+  @override
+  String get customizeModeTitle => '편집 모드';
+
+  @override
+  String get customizeModeHint => '항목을 탭하여 숨기거나 표시하세요';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count개 숨김 · 탭하여 변경';
+  }
+
+  @override
+  String get customizeSave => '저장';
+
+  @override
+  String get customizeSaved => '레이아웃을 저장했습니다';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds초 뒤로';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds초 앞으로';
+  }
+
+  @override
+  String get personalizeTitle => '맞춤 설정';
+
+  @override
+  String get personalizeInfo => '표시할 영역과 버튼, 플러그인';
+
+  @override
+  String get personalizeOpen => '맞춤 설정 열기';
+
+  @override
+  String get customizeStartTitle => '화면에서 편집';
+
+  @override
+  String get customizeStartInfo =>
+      '편집 모드를 켠 다음 아무 화면에서나 버튼과 영역을 탭하여 숨기거나 표시하세요. 끝나면 상단 띠에서 저장을 탭하세요.';
+
+  @override
+  String get customizeStart => '편집 모드 시작';
+
+  @override
+  String get customizeActive => '편집 모드가 켜져 있습니다';
+
+  @override
+  String get customizeModeShort => '화면을 탭하여 숨기거나 표시';
+
+  @override
+  String get personalizeModules => '플러그인';
+
+  @override
+  String get personalizeModulesInfo => '플러그인을 끄면 해당 버튼이 모든 곳에서 사라집니다.';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => '노트 화면의 AI 버튼';
+
+  @override
+  String get moduleVoice => '음성';
+
+  @override
+  String get moduleVoiceInfo => '음성 메모, 받아쓰기, 오디오 녹음';
+
+  @override
+  String get moduleVideo => '동영상';
+
+  @override
+  String get moduleVideoInfo => '녹화, 갤러리 동영상, YouTube';
+
+  @override
+  String get moduleDocuments => '문서';
+
+  @override
+  String get moduleDocumentsInfo => 'PDF 및 슬라이드 추가';
+
+  @override
+  String get moduleScan => '스캔';
+
+  @override
+  String get moduleScanInfo => '문서 스캔 및 QR 코드';
+
+  @override
+  String get moduleDrawing => '그리기';
+
+  @override
+  String get moduleDrawingInfo => '손글씨와 그림';
+
+  @override
+  String get moduleTemplates => '템플릿';
+
+  @override
+  String get moduleTemplatesInfo => '템플릿으로 노트, 쇼핑 목록, 보관 노트북';
+
+  @override
+  String get moduleTags => '노트 칩';
+
+  @override
+  String get moduleTagsInfo => '제목 아래의 태그·폴더·알림 칩';
+
+  @override
+  String get moduleCollaboration => '공동 작업';
+
+  @override
+  String get moduleCollaborationInfo => '노트 화면의 사람 추가 버튼';
+
+  @override
+  String get moduleMixed => '일부 켜짐';
+
+  @override
+  String get personalizeEditorBar => '노트 화면 · 하단 바';
+
+  @override
+  String get personalizeEditorTop => '노트 화면 · 상단 바와 영역';
+
+  @override
+  String get personalizeQuickAdd => '새 노트 메뉴(+)';
+
+  @override
+  String get personalizeAttachSheet => '추가 시트(노트 안의 +)';
+
+  @override
+  String get personalizeVideo => '동영상';
+
+  @override
+  String get personalizeHome => '홈 화면';
+
+  @override
+  String get personalizeBubbles => '말풍선';
+
+  @override
+  String get personalizeChipsInfo => '선택한 항목이 표시됩니다. 탭하여 전환하세요.';
+
+  @override
+  String get personalizeReset => '기본값으로 재설정';
+
+  @override
+  String get personalizeResetConfirm => '모든 표시 및 이동 설정을 기본값으로 재설정할까요?';
+
+  @override
+  String get personalizeResetDone => '기본값으로 복원했습니다';
+
+  @override
+  String get uiItemAttachments => '첨부 파일';
+
+  @override
+  String get uiItemDate => '편집 날짜';
+
+  @override
+  String get uiItemSync => '동기화 아이콘';
+
+  @override
+  String get uiItemFrequent => '자주 사용';
+
+  @override
+  String get uiItemVideoTime => '시간 표시';
+
+  @override
+  String get videoSeekBack => '되감기';
+
+  @override
+  String get videoSeekForward => '빨리 감기';
+
+  @override
+  String get bubbleSizeSetting => '말풍선 크기';
+
+  @override
+  String get noteMenuCustomize => '화면 맞춤 설정';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds초';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count개 숨김';
+  }
+
+  @override
+  String get uiItemVideoBadge => '동영상';
+
+  @override
+  String get listPartRemoved => '목록을 제거했습니다';
+
+  @override
+  String get textPartRemoved => '텍스트를 제거했습니다';
+
+  @override
+  String get notePartsMenu => '섹션';
+
+  @override
+  String get removeListPart => '목록 제거';
+
+  @override
+  String get removeTextPart => '텍스트 제거';
 }

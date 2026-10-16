@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import 'video_hub_scope.dart';
@@ -46,9 +47,11 @@ class VideoTransportControls extends StatelessWidget {
   Widget build(BuildContext context) {
     final hub = VideoHubScope.maybeOf(context);
     if (hub == null) return const SizedBox.shrink();
-    return ValueListenableBuilder<int>(
-      valueListenable: hub.revision,
-      builder: (context, _, _) {
+    // Sarma süreleri ve gizlenen düğmeler kişiselleştirmeden (bkz.
+    // Personalize) — ayar değişince yalnız bu satır tazelenir.
+    return ListenableBuilder(
+      listenable: Listenable.merge([hub.revision, Personalize.listenable]),
+      builder: (context, _) {
         final source = hub.sourceFor(video.id);
         if (source == null) return _row(context, hub, null);
         return ListenableBuilder(
@@ -98,14 +101,28 @@ class VideoTransportControls extends StatelessWidget {
       s.seekBy(Duration(seconds: seconds));
     }
 
+    // GERİ ve İLERİ AYRI SÜRELER (kullanıcı isteği 2026-10-16: "sarma sn
+    // ayarlayabilme, geri ileri ayrı ayrı") — bkz. ayarlar → Kişiselleştir.
+    final prefs = Personalize.current;
+    final back = prefs.seekBack;
+    final forward = prefs.seekForward;
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        button(
+        IconButton(
           key: const ValueKey('video-back-10'),
-          icon: Icons.replay_10_rounded,
-          tooltip: l10n.videoBack10,
-          onPressed: source == null ? null : () => seek(-10),
+          tooltip: l10n.videoBackSeconds(back),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints.tightFor(
+            width: iconSize + 16,
+            height: iconSize + 16,
+          ),
+          color: color,
+          disabledColor: color.withValues(alpha: 0.35),
+          icon: SeekIcon(seconds: back, forward: false, size: iconSize),
+          onPressed: source == null ? null : () => seek(-back),
         ),
         button(
           key: const ValueKey('video-play-pause'),
@@ -124,13 +141,21 @@ class VideoTransportControls extends StatelessWidget {
                   playing ? s.pause() : s.play();
                 },
         ),
-        button(
+        IconButton(
           key: const ValueKey('video-forward-10'),
-          icon: Icons.forward_10_rounded,
-          tooltip: l10n.videoForward10,
-          onPressed: source == null ? null : () => seek(10),
+          tooltip: l10n.videoForwardSeconds(forward),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: BoxConstraints.tightFor(
+            width: iconSize + 16,
+            height: iconSize + 16,
+          ),
+          color: color,
+          disabledColor: color.withValues(alpha: 0.35),
+          icon: SeekIcon(seconds: forward, forward: true, size: iconSize),
+          onPressed: source == null ? null : () => seek(forward),
         ),
-        if (showSpeed && source != null)
+        if (showSpeed && source != null && prefs.shows(UiItem.videoSpeed))
           Tooltip(
             message: l10n.videoSpeed,
             child: InkWell(
@@ -155,7 +180,7 @@ class VideoTransportControls extends StatelessWidget {
               ),
             ),
           ),
-        if (showTime && position != null)
+        if (showTime && position != null && prefs.shows(UiItem.videoTime))
           Padding(
             padding: const EdgeInsets.only(left: 4, right: 2),
             child: Text(
@@ -215,6 +240,65 @@ class VideoProgressLine extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Sarma düğmesinin simgesi: döngü oku + içinde saniye. 5/10/30 için
+/// Material'ın kendi simgeleri; diğer süreler aynı resmin üstüne yazılır.
+class SeekIcon extends StatelessWidget {
+  const SeekIcon({
+    super.key,
+    required this.seconds,
+    required this.forward,
+    this.size = 24,
+    this.color,
+  });
+
+  final int seconds;
+  final bool forward;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final builtIn = switch ((seconds, forward)) {
+      (5, false) => Icons.replay_5_rounded,
+      (10, false) => Icons.replay_10_rounded,
+      (30, false) => Icons.replay_30_rounded,
+      (5, true) => Icons.forward_5_rounded,
+      (10, true) => Icons.forward_10_rounded,
+      (30, true) => Icons.forward_30_rounded,
+      _ => null,
+    };
+    if (builtIn != null) return Icon(builtIn, size: size, color: color);
+    final c = color ?? IconTheme.of(context).color;
+    // Ok simgesi ([Icons.replay]/[Icons.refresh] ayna) ve ortasında sayı:
+    // Material'ın replay_10 çizimiyle aynı düzen.
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Transform.flip(
+            flipX: forward,
+            child: Icon(Icons.replay_rounded, size: size, color: c),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: size * 0.16),
+            child: Text(
+              '$seconds',
+              style: TextStyle(
+                fontSize: size * (seconds >= 100 ? 0.26 : 0.33),
+                fontWeight: FontWeight.w800,
+                height: 1,
+                color: c,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

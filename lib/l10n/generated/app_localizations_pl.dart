@@ -4802,4 +4802,226 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Brak załączników do udostępnienia na tym urządzeniu.';
+
+  @override
+  String get attachmentRemoved => 'Załącznik usunięty';
+
+  @override
+  String get pinnedEmbedOnPage => 'Osadź na stronie (pływający)';
+
+  @override
+  String get customizeHideItem => 'Ukryj';
+
+  @override
+  String get customizeShowItem => 'Pokaż';
+
+  @override
+  String get customizeModeTitle => 'Tryb edycji';
+
+  @override
+  String get customizeModeHint => 'Dotknij elementów, aby je ukryć lub pokazać';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return 'Ukryte: $count · dotknij, aby zmienić';
+  }
+
+  @override
+  String get customizeSave => 'Zapisz';
+
+  @override
+  String get customizeSaved => 'Układ zapisany';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Wstecz o $seconds s';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Naprzód o $seconds s';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalizuj';
+
+  @override
+  String get personalizeInfo => 'Widoczne obszary i przyciski, wtyczki';
+
+  @override
+  String get personalizeOpen => 'Otwórz personalizację';
+
+  @override
+  String get customizeStartTitle => 'Edytuj na ekranie';
+
+  @override
+  String get customizeStartInfo =>
+      'Włącz tryb edycji, a potem dotykaj przycisków i obszarów na dowolnym ekranie, aby je ukryć lub pokazać. Na koniec dotknij Zapisz na pasku u góry.';
+
+  @override
+  String get customizeStart => 'Uruchom tryb edycji';
+
+  @override
+  String get customizeActive => 'Tryb edycji jest włączony';
+
+  @override
+  String get customizeModeShort => 'Ukrywaj lub pokazuj, dotykając ekranów';
+
+  @override
+  String get personalizeModules => 'WTYCZKI';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Wyłączenie wtyczki usuwa jej przyciski wszędzie.';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'Przyciski AI na ekranie notatki';
+
+  @override
+  String get moduleVoice => 'Głos';
+
+  @override
+  String get moduleVoiceInfo =>
+      'Notatki głosowe, dyktowanie, nagrywanie dźwięku';
+
+  @override
+  String get moduleVideo => 'Wideo';
+
+  @override
+  String get moduleVideoInfo => 'Nagrywanie, filmy z galerii, YouTube';
+
+  @override
+  String get moduleDocuments => 'Dokumenty';
+
+  @override
+  String get moduleDocumentsInfo => 'Dodawanie PDF i slajdów';
+
+  @override
+  String get moduleScan => 'Skanowanie';
+
+  @override
+  String get moduleScanInfo => 'Skanowanie dokumentów i kody QR';
+
+  @override
+  String get moduleDrawing => 'Rysowanie';
+
+  @override
+  String get moduleDrawingInfo => 'Pismo odręczne i rysunki';
+
+  @override
+  String get moduleTemplates => 'Szablony';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notatki z szablonów, lista zakupów, zeszyt archiwum';
+
+  @override
+  String get moduleTags => 'Etykiety notatki';
+
+  @override
+  String get moduleTagsInfo =>
+      'Etykiety tagów, folderów i przypomnień pod tytułem';
+
+  @override
+  String get moduleCollaboration => 'Współpraca';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'Przycisk dodawania osoby na ekranie notatki';
+
+  @override
+  String get moduleMixed => 'częściowo włączone';
+
+  @override
+  String get personalizeEditorBar => 'EKRAN NOTATKI · DOLNY PASEK';
+
+  @override
+  String get personalizeEditorTop => 'EKRAN NOTATKI · GÓRNY PASEK I OBSZARY';
+
+  @override
+  String get personalizeQuickAdd => 'MENU NOWEJ NOTATKI (+)';
+
+  @override
+  String get personalizeAttachSheet => 'ARKUSZ DODAWANIA (+ W NOTATCE)';
+
+  @override
+  String get personalizeVideo => 'WIDEO';
+
+  @override
+  String get personalizeHome => 'EKRAN GŁÓWNY';
+
+  @override
+  String get personalizeBubbles => 'DYMKI';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Zaznaczone elementy są widoczne; dotknij, aby przełączyć.';
+
+  @override
+  String get personalizeReset => 'Przywróć domyślne';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Przywrócić domyślne wszystkie ustawienia widoczności i przewijania?';
+
+  @override
+  String get personalizeResetDone => 'Przywrócono ustawienia domyślne';
+
+  @override
+  String get uiItemAttachments => 'Załączniki';
+
+  @override
+  String get uiItemDate => 'Data edycji';
+
+  @override
+  String get uiItemSync => 'Ikona synchronizacji';
+
+  @override
+  String get uiItemFrequent => 'Często używane';
+
+  @override
+  String get uiItemVideoTime => 'Wskaźnik czasu';
+
+  @override
+  String get videoSeekBack => 'Przewijanie wstecz';
+
+  @override
+  String get videoSeekForward => 'Przewijanie naprzód';
+
+  @override
+  String get bubbleSizeSetting => 'Rozmiar dymków';
+
+  @override
+  String get noteMenuCustomize => 'Dostosuj ekran';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return 'Ukryte: $count';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'WIDEO';
+
+  @override
+  String get listPartRemoved => 'Lista usunięta';
+
+  @override
+  String get textPartRemoved => 'Tekst usunięty';
+
+  @override
+  String get notePartsMenu => 'Sekcje';
+
+  @override
+  String get removeListPart => 'Usuń listę';
+
+  @override
+  String get removeTextPart => 'Usuń tekst';
 }

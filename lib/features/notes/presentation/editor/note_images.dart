@@ -10,6 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customizable.dart';
 import '../../../../core/utils/local_file.dart';
 import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
@@ -864,7 +866,13 @@ class _NoteAtChip extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
+  Widget build(BuildContext context) => Customizable(
+    // Kişiselleştirmede gizlenebilir (bkz. UiItem.videoNoteAt).
+    id: UiItem.videoNoteAt,
+    child: _chip(context),
+  );
+
+  Widget _chip(BuildContext context) => Tooltip(
     message: context.l10n.videoNoteAtTime,
     child: GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -963,6 +971,7 @@ class _PlayerTimeSource extends VideoTimeSource {
 /// ekran + sil): küçük tuval ve tam sayfa katmanı ortak kullanır.
 class _ImageTools extends StatelessWidget {
   const _ImageTools({
+    super.key,
     required this.wFrac,
     required this.minWidthFrac,
     required this.onWidthChanged,
@@ -1397,6 +1406,17 @@ class NotePageCanvas extends StatefulWidget {
 
 class _NotePageCanvasState extends State<NotePageCanvas> {
   String? _selectedId;
+
+  /// Seçili ekin araç paneli. "Dışarıya dokunuldu mu" kararı panelin
+  /// GERÇEK dikdörtgeninden verilir (bkz. build'deki Listener).
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-16, ekran görüntüsü: "sil, 3 nokta
+  /// vs basılmıyor"): panelin alanı sabit 64 dp sayılıyordu; görünüm anahtarı
+  /// panelin ÜSTÜNE ikinci satır olarak gelince panel ~110 dp'ye uzadı ve alt
+  /// satırdaki kaydırıcı/tam ekran/sil/⋮ "dışarısı" sayıldı — parmak inerken
+  /// seçim düşüyor, panel kalkıyor, dokunuş boşa gidiyordu. Üst satır
+  /// (anahtar) 64 dp'nin içinde kaldığı için o çalışıyordu.
+  final _toolbarKey = GlobalKey(debugLabel: 'page-media-tools');
 
   /// Taşıma sırasındaki canlı sol/üst (dp); bırakınca kaydedilir.
   String? _moveId;
@@ -2021,7 +2041,11 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             var maxBottom = 0.0;
             for (final img in widget.images) {
               final r = _resolve(img, cw);
-              final bottom = r.top + r.h + 72;
+              // Seçiliyken altında iki satırlık araç paneli durur; sayfa onu
+              // da kapsamalı (yoksa dipteki görselin paneli sayfadan taşar ve
+              // taşan kısmı dokunuş almaz).
+              final pad = img.id == _selectedId ? _toolbarEstimate + 12 : 72;
+              final bottom = r.top + r.h + pad;
               if (bottom > maxBottom) maxBottom = bottom;
             }
             final selected = _selectedId;
@@ -2209,16 +2233,24 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                 r.w + 48,
                 r.h + 48,
               );
-              toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+              // Yedek: panel henüz çizilmediyse (ilk kare) tahmini bant.
+              toolbarRect = Rect.fromLTWH(
+                0,
+                r.top + r.h + 6,
+                cw,
+                _toolbarEstimate,
+              );
             }
             return Listener(
               behavior: HitTestBehavior.translucent,
               onPointerDown: (event) {
                 if (imageRect == null || toolbarRect == null) return;
                 final p = event.localPosition;
-                if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
-                  _deselect();
+                if (imageRect.contains(p)) return;
+                if (_toolbarHit(event.position) ?? toolbarRect.contains(p)) {
+                  return;
                 }
+                _deselect();
               },
               child: content,
             );
@@ -2226,6 +2258,19 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         ),
       ),
     );
+  }
+
+  /// Araç panelinin tahmini yüksekliği (iki satır: görünüm + araçlar).
+  static const double _toolbarEstimate = 124;
+
+  /// [global] noktası araç panelinin ÇİZİLMİŞ dikdörtgeninde mi; panel
+  /// ölçülemiyorsa null (çağıran tahmini banda bakar).
+  bool? _toolbarHit(Offset global) {
+    final box = _toolbarKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize || !box.attached) return null;
+    final rect = box.localToGlobal(Offset.zero) & box.size;
+    // Kenarda birkaç dp pay: parmak panelin çizgisine denk gelirse de içeride.
+    return rect.inflate(6).contains(global);
   }
 
   /// Çoklu seçim işlem çubuğu — ekranın dibinde, kaydırmadan bağımsız.
@@ -2735,6 +2780,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       right: 8,
       top: r.top + r.h + 6,
       child: _ImageTools(
+        key: _toolbarKey,
         wFrac: wFrac,
         minWidthFrac: _minWidthFrac,
         onWidthChanged: (v) => setState(() {

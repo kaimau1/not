@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../../core/personalize.dart';
+import '../../../core/widgets/customizable.dart';
 import '../../settings/settings_providers.dart';
 import '../data/document_scan.dart';
 import '../domain/note_type.dart';
@@ -178,157 +180,46 @@ class _QuickAddFabState extends State<QuickAddFab> {
   }
 
   /// Menüdeki BÜTÜN seçenekler, gruplarıyla. Anahtar kullanım sayacının
-  /// (bkz. [_QuickAddPanel] — sık kullanılanlar) kalıcı kimliğidir.
+  /// (bkz. [_QuickAddPanel] — sık kullanılanlar) ve kişiselleştirmenin
+  /// (`UiItem.quickAdd`) kalıcı kimliğidir. Ad/simge/grup TEK listeden
+  /// ([quickAddCatalog]) gelir — ayarlardaki "Yeni not menüsü" seçici de onu
+  /// okur, iki yer ayrışmaz.
   List<QuickAddOption> _options(BuildContext context) {
-    final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final actions = <String, VoidCallback?>{
+      'text': () => widget.onCreate(NoteType.text),
+      'checklist': () => widget.onCreate(NoteType.checklist),
+      'ordered': () => widget.onCreate(NoteType.ordered),
+      'voice': widget.onVoiceCapture,
+      'photo': widget.onPhotoNote,
+      'video': widget.onVideoNote,
+      'scan': widget.onScanNote,
+      'draw': widget.onHandwriting,
+      'qr': widget.onQrNote,
+      'image': widget.onImageNote,
+      'pdf': widget.onPdfNote,
+      'slides': widget.onSlidesNote,
+      'gvideo': widget.onGalleryVideo,
+      'youtube': widget.onYouTube,
+      'shopping': widget.onShopping,
+      'template': widget.onTemplate,
+      'archive': () => widget.onCreate(NoteType.archive),
+    };
     return [
-      // YAZ — en sık kullanılanlar; FAB'ın HEMEN ÜSTÜNDE büyük düğmeler.
-      QuickAddOption(
-        'text',
-        QuickAddGroup.primary,
-        Icons.notes,
-        l10n.newTextNote,
-        () => widget.onCreate(NoteType.text),
-        scheme.primary,
-      ),
-      QuickAddOption(
-        'checklist',
-        QuickAddGroup.primary,
-        Icons.check_box_outlined,
-        l10n.newChecklist,
-        () => widget.onCreate(NoteType.checklist),
-        scheme.primary,
-      ),
-      QuickAddOption(
-        'ordered',
-        QuickAddGroup.primary,
-        Icons.format_list_numbered_rounded,
-        l10n.newOrderedList,
-        () => widget.onCreate(NoteType.ordered),
-        scheme.primary,
-      ),
-      // ÇEK VE KAYDET — kamera, mikrofon, kalem.
-      QuickAddOption(
-        'voice',
-        QuickAddGroup.capture,
-        Icons.graphic_eq,
-        l10n.newVoiceCapture,
-        widget.onVoiceCapture,
-        scheme.tertiary,
-      ),
-      QuickAddOption(
-        'photo',
-        QuickAddGroup.capture,
-        Icons.photo_camera_outlined,
-        l10n.newPhotoNote,
-        widget.onPhotoNote,
-        scheme.tertiary,
-      ),
-      QuickAddOption(
-        'video',
-        QuickAddGroup.capture,
-        Icons.videocam_outlined,
-        l10n.newVideoNote,
-        widget.onVideoNote,
-        scheme.tertiary,
-      ),
-      if (DocumentScan.available)
-        QuickAddOption(
-          'scan',
-          QuickAddGroup.capture,
-          Icons.document_scanner_outlined,
-          l10n.newScanNote,
-          widget.onScanNote,
-          scheme.tertiary,
-        ),
-      QuickAddOption(
-        'draw',
-        QuickAddGroup.capture,
-        Icons.draw_outlined,
-        l10n.newHandwriting,
-        widget.onHandwriting,
-        scheme.tertiary,
-      ),
-      if (qrScanSupported)
-        QuickAddOption(
-          'qr',
-          QuickAddGroup.capture,
-          Icons.qr_code_scanner,
-          l10n.qrScanTitle,
-          widget.onQrNote,
-          scheme.tertiary,
-        ),
-      // DOSYADAN — cihazdaki/web'deki içerik.
-      QuickAddOption(
-        'image',
-        QuickAddGroup.files,
-        Icons.photo_library_outlined,
-        l10n.quickAddImage,
-        widget.onImageNote,
-        scheme.secondary,
-      ),
-      QuickAddOption(
-        'pdf',
-        QuickAddGroup.files,
-        Icons.picture_as_pdf_outlined,
-        l10n.quickAddPdf,
-        widget.onPdfNote,
-        scheme.secondary,
-      ),
-      QuickAddOption(
-        'slides',
-        QuickAddGroup.files,
-        Icons.slideshow_outlined,
-        l10n.quickAddSlides,
-        widget.onSlidesNote,
-        scheme.secondary,
-      ),
-      if (widget.onGalleryVideo case final onGalleryVideo?)
-        QuickAddOption(
-          'gvideo',
-          QuickAddGroup.files,
-          Icons.video_library_outlined,
-          l10n.quickAddGalleryVideo,
-          onGalleryVideo,
-          scheme.secondary,
-        ),
-      if (widget.onYouTube case final onYouTube?)
-        QuickAddOption(
-          'youtube',
-          QuickAddGroup.files,
-          Icons.smart_display_outlined,
-          l10n.quickAddYouTube,
-          onYouTube,
-          scheme.secondary,
-        ),
-      // DİĞER YAZ — şablonlar ve defter.
-      if (widget.onShopping case final onShopping?)
-        QuickAddOption(
-          'shopping',
-          QuickAddGroup.more,
-          Icons.shopping_cart_outlined,
-          l10n.tplShoppingName,
-          onShopping,
-          scheme.primary,
-        ),
-      if (widget.onTemplate case final onTemplate?)
-        QuickAddOption(
-          'template',
-          QuickAddGroup.more,
-          Icons.dashboard_customize_outlined,
-          l10n.fromTemplate,
-          onTemplate,
-          scheme.primary,
-        ),
-      QuickAddOption(
-        'archive',
-        QuickAddGroup.more,
-        Icons.inventory_2_outlined,
-        l10n.archiveNotebook,
-        () => widget.onCreate(NoteType.archive),
-        scheme.primary,
-      ),
+      for (final m in quickAddCatalog(context.l10n))
+        if (actions[m.key] case final action?)
+          QuickAddOption(
+            m.key,
+            m.group,
+            m.icon,
+            m.label,
+            action,
+            switch (m.group) {
+              QuickAddGroup.capture => scheme.tertiary,
+              QuickAddGroup.files => scheme.secondary,
+              QuickAddGroup.primary || QuickAddGroup.more => scheme.primary,
+            },
+          ),
     ];
   }
 
@@ -446,6 +337,128 @@ class QuickAddOption {
   final Color color;
 }
 
+/// Menü seçeneğinin eylemsiz tanımı (bkz. [quickAddCatalog]).
+typedef QuickAddMeta = ({
+  String key,
+  QuickAddGroup group,
+  IconData icon,
+  String label,
+});
+
+/// "+" menüsünün BÜTÜN seçenekleri, menüdeki sırayla (platformda olmayanlar
+/// — belge tarama, QR — hariç). Panel eylemleri bu kimliklere bağlar;
+/// Kişiselleştir ekranı aynı listeden gizle/göster seçicisi kurar.
+List<QuickAddMeta> quickAddCatalog(AppLocalizations l10n) => [
+  // YAZ — en sık kullanılanlar; FAB'ın HEMEN ÜSTÜNDE büyük düğmeler.
+  (
+    key: 'text',
+    group: QuickAddGroup.primary,
+    icon: Icons.notes,
+    label: l10n.newTextNote,
+  ),
+  (
+    key: 'checklist',
+    group: QuickAddGroup.primary,
+    icon: Icons.check_box_outlined,
+    label: l10n.newChecklist,
+  ),
+  (
+    key: 'ordered',
+    group: QuickAddGroup.primary,
+    icon: Icons.format_list_numbered_rounded,
+    label: l10n.newOrderedList,
+  ),
+  // ÇEK VE KAYDET — kamera, mikrofon, kalem.
+  (
+    key: 'voice',
+    group: QuickAddGroup.capture,
+    icon: Icons.graphic_eq,
+    label: l10n.newVoiceCapture,
+  ),
+  (
+    key: 'photo',
+    group: QuickAddGroup.capture,
+    icon: Icons.photo_camera_outlined,
+    label: l10n.newPhotoNote,
+  ),
+  (
+    key: 'video',
+    group: QuickAddGroup.capture,
+    icon: Icons.videocam_outlined,
+    label: l10n.newVideoNote,
+  ),
+  if (DocumentScan.available)
+    (
+      key: 'scan',
+      group: QuickAddGroup.capture,
+      icon: Icons.document_scanner_outlined,
+      label: l10n.newScanNote,
+    ),
+  (
+    key: 'draw',
+    group: QuickAddGroup.capture,
+    icon: Icons.draw_outlined,
+    label: l10n.newHandwriting,
+  ),
+  if (qrScanSupported)
+    (
+      key: 'qr',
+      group: QuickAddGroup.capture,
+      icon: Icons.qr_code_scanner,
+      label: l10n.qrScanTitle,
+    ),
+  // DOSYADAN — cihazdaki/web'deki içerik.
+  (
+    key: 'image',
+    group: QuickAddGroup.files,
+    icon: Icons.photo_library_outlined,
+    label: l10n.quickAddImage,
+  ),
+  (
+    key: 'pdf',
+    group: QuickAddGroup.files,
+    icon: Icons.picture_as_pdf_outlined,
+    label: l10n.quickAddPdf,
+  ),
+  (
+    key: 'slides',
+    group: QuickAddGroup.files,
+    icon: Icons.slideshow_outlined,
+    label: l10n.quickAddSlides,
+  ),
+  (
+    key: 'gvideo',
+    group: QuickAddGroup.files,
+    icon: Icons.video_library_outlined,
+    label: l10n.quickAddGalleryVideo,
+  ),
+  (
+    key: 'youtube',
+    group: QuickAddGroup.files,
+    icon: Icons.smart_display_outlined,
+    label: l10n.quickAddYouTube,
+  ),
+  // DİĞER YAZ — şablonlar ve defter.
+  (
+    key: 'shopping',
+    group: QuickAddGroup.more,
+    icon: Icons.shopping_cart_outlined,
+    label: l10n.tplShoppingName,
+  ),
+  (
+    key: 'template',
+    group: QuickAddGroup.more,
+    icon: Icons.dashboard_customize_outlined,
+    label: l10n.fromTemplate,
+  ),
+  (
+    key: 'archive',
+    group: QuickAddGroup.more,
+    icon: Icons.inventory_2_outlined,
+    label: l10n.archiveNotebook,
+  ),
+];
+
 /// Sık kullanılanlar satırının seçimi (saf, test edilir): birincil olmayan
 /// seçenekler kullanım sayısına göre; eşitlikte menüdeki sırayla.
 List<QuickAddOption> frequentQuickAdd(
@@ -547,7 +560,14 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ListenableBuilder(
+    // Kişiselleştirme (gizlenen seçenekler) ve düzenleme modu: panel açıkken
+    // değişirse hemen yansır.
+    listenable: Personalize.listenable,
+    builder: (context, _) => _build(context),
+  );
+
+  Widget _build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final size = MediaQuery.sizeOf(context);
@@ -556,11 +576,29 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     const columns = 4;
     final cell = (width - 20 - gap * (columns - 1)) / columns;
 
+    // NOT EKLEME ALANI KİŞİSELLEŞTİRİLİR (kullanıcı isteği 2026-10-16:
+    // "not ekleme alanı da özelleştirilebilsin, hangilerinin görüleceği
+    // seçilsin"). Gizlenen seçenek panelde yer kaplamaz; DÜZENLEME MODUNDA
+    // hepsi görünür (gizliler soluk) ve dokunmak gizle/göster yapar.
+    final editing = Personalize.editing;
+    final prefs = Personalize.current;
+    final options = editing
+        ? widget.options
+        : [
+            for (final o in widget.options)
+              if (prefs.shows(UiItem.quickAdd(o.key))) o,
+          ];
+    final expanded = _expanded || editing;
+
     final primary = [
-      for (final o in widget.options)
+      for (final o in options)
         if (o.group == QuickAddGroup.primary) o,
     ];
-    final frequent = frequentQuickAdd(widget.options, _usage, count: 3);
+    final frequent = frequentQuickAdd(options, _usage, count: 3);
+    final showFrequent = editing || prefs.shows(UiItem.quickAddFrequent);
+
+    Widget custom(QuickAddOption o, Widget child) =>
+        Customizable(id: UiItem.quickAdd(o.key), badgeInset: 6, child: child);
 
     Widget grid(List<QuickAddOption> items) => Wrap(
       spacing: gap,
@@ -570,19 +608,22 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
           SizedBox(
             width: cell,
             height: 64,
-            child: _PanelButton(
-              key: ValueKey('quick-add-${o.key}'),
-              icon: o.icon,
-              label: o.label,
-              accent: o.color,
-              onTap: () => _pick(o),
+            child: custom(
+              o,
+              _PanelButton(
+                key: ValueKey('quick-add-${o.key}'),
+                icon: o.icon,
+                label: o.label,
+                accent: o.color,
+                onTap: () => _pick(o),
+              ),
             ),
           ),
       ],
     );
 
     List<QuickAddOption> group(QuickAddGroup g) => [
-      for (final o in widget.options)
+      for (final o in options)
         if (o.group == g) o,
     ];
 
@@ -590,12 +631,15 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _SectionLabel(l10n.quickAddCapture, color: scheme.tertiary),
-        grid(group(QuickAddGroup.capture)),
-        _SectionLabel(l10n.quickAddImport, color: scheme.secondary),
-        grid(group(QuickAddGroup.files)),
-        _SectionLabel(l10n.quickAddMore, color: scheme.primary),
-        grid(group(QuickAddGroup.more)),
+        for (final (g, label, color) in [
+          (QuickAddGroup.capture, l10n.quickAddCapture, scheme.tertiary),
+          (QuickAddGroup.files, l10n.quickAddImport, scheme.secondary),
+          (QuickAddGroup.more, l10n.quickAddMore, scheme.primary),
+        ])
+          if (group(g).isNotEmpty) ...[
+            _SectionLabel(label, color: color),
+            grid(group(g)),
+          ],
         const SizedBox(height: 6),
         Divider(height: 1, color: scheme.outlineVariant),
         const SizedBox(height: 4),
@@ -622,38 +666,50 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOutCubic,
                 alignment: Alignment.bottomCenter,
-                child: _expanded
+                child: expanded
                     ? expandedPart
                     : const SizedBox(width: double.infinity),
               ),
-              _SectionLabel(l10n.quickAddFrequent, color: scheme.outline),
+              // "Sık kullandıkların" satırı da kişiselleştirilir; gizliyken
+              // yalnız "Tümü" düğmesi kalır.
+              Customizable(
+                id: UiItem.quickAddFrequent,
+                badgeInset: 6,
+                hidden: const SizedBox.shrink(),
+                child: _SectionLabel(
+                  l10n.quickAddFrequent,
+                  color: scheme.outline,
+                ),
+              ),
               Row(
                 children: [
-                  for (final o in frequent) ...[
+                  if (showFrequent && !editing)
+                    for (final o in frequent) ...[
+                      SizedBox(
+                        width: cell,
+                        height: 64,
+                        child: _PanelButton(
+                          key: ValueKey('quick-frequent-${o.key}'),
+                          icon: o.icon,
+                          label: o.label,
+                          accent: o.color,
+                          onTap: () => _pick(o),
+                        ),
+                      ),
+                      const SizedBox(width: gap),
+                    ],
+                  if (!editing)
                     SizedBox(
                       width: cell,
                       height: 64,
                       child: _PanelButton(
-                        key: ValueKey('quick-frequent-${o.key}'),
-                        icon: o.icon,
-                        label: o.label,
-                        accent: o.color,
-                        onTap: () => _pick(o),
+                        key: const ValueKey('quick-add-more'),
+                        icon: _expanded ? Icons.expand_more : Icons.apps,
+                        label: _expanded ? l10n.quickAddLess : l10n.quickAddAll,
+                        accent: scheme.onSurfaceVariant,
+                        onTap: _toggleExpanded,
                       ),
                     ),
-                    const SizedBox(width: gap),
-                  ],
-                  SizedBox(
-                    width: cell,
-                    height: 64,
-                    child: _PanelButton(
-                      key: const ValueKey('quick-add-more'),
-                      icon: _expanded ? Icons.expand_more : Icons.apps,
-                      label: _expanded ? l10n.quickAddLess : l10n.quickAddAll,
-                      accent: scheme.onSurfaceVariant,
-                      onTap: _toggleExpanded,
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -663,10 +719,13 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
                   for (var i = 0; i < primary.length; i++) ...[
                     if (i > 0) const SizedBox(width: gap),
                     Expanded(
-                      child: _PrimaryButton(
-                        key: ValueKey('quick-add-${primary[i].key}'),
-                        option: primary[i],
-                        onTap: () => _pick(primary[i]),
+                      child: custom(
+                        primary[i],
+                        _PrimaryButton(
+                          key: ValueKey('quick-add-${primary[i].key}'),
+                          option: primary[i],
+                          onTap: () => _pick(primary[i]),
+                        ),
                       ),
                     ),
                   ],

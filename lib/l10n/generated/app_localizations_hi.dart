@@ -4778,4 +4778,223 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'इस डिवाइस पर साझा करने के लिए कोई अटैचमेंट फ़ाइल नहीं है।';
+
+  @override
+  String get attachmentRemoved => 'अटैचमेंट हटाया गया';
+
+  @override
+  String get pinnedEmbedOnPage => 'पेज पर एम्बेड करें (तैरता)';
+
+  @override
+  String get customizeHideItem => 'छिपाएँ';
+
+  @override
+  String get customizeShowItem => 'दिखाएँ';
+
+  @override
+  String get customizeModeTitle => 'संपादन मोड';
+
+  @override
+  String get customizeModeHint => 'छिपाने या दिखाने के लिए आइटम पर टैप करें';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count छिपे · बदलने के लिए टैप करें';
+  }
+
+  @override
+  String get customizeSave => 'सहेजें';
+
+  @override
+  String get customizeSaved => 'लेआउट सहेजा गया';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds से. पीछे';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds से. आगे';
+  }
+
+  @override
+  String get personalizeTitle => 'वैयक्तिकृत करें';
+
+  @override
+  String get personalizeInfo => 'दिखने वाले क्षेत्र और बटन, प्लग-इन';
+
+  @override
+  String get personalizeOpen => 'वैयक्तिकरण खोलें';
+
+  @override
+  String get customizeStartTitle => 'स्क्रीन पर संपादित करें';
+
+  @override
+  String get customizeStartInfo =>
+      'संपादन मोड चालू करें, फिर किसी भी स्क्रीन पर बटन और क्षेत्रों पर टैप करके उन्हें छिपाएँ या दिखाएँ। हो जाने पर ऊपर की पट्टी में सहेजें दबाएँ।';
+
+  @override
+  String get customizeStart => 'संपादन मोड शुरू करें';
+
+  @override
+  String get customizeActive => 'संपादन मोड चालू है';
+
+  @override
+  String get customizeModeShort => 'स्क्रीन पर टैप करके छिपाएँ या दिखाएँ';
+
+  @override
+  String get personalizeModules => 'प्लग-इन';
+
+  @override
+  String get personalizeModulesInfo =>
+      'किसी प्लग-इन को बंद करने से उसके बटन हर जगह से हट जाते हैं।';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'नोट स्क्रीन में AI बटन';
+
+  @override
+  String get moduleVoice => 'आवाज़';
+
+  @override
+  String get moduleVoiceInfo => 'वॉइस नोट, डिक्टेशन, ऑडियो रिकॉर्डिंग';
+
+  @override
+  String get moduleVideo => 'वीडियो';
+
+  @override
+  String get moduleVideoInfo => 'रिकॉर्डिंग, गैलरी वीडियो, YouTube';
+
+  @override
+  String get moduleDocuments => 'दस्तावेज़';
+
+  @override
+  String get moduleDocumentsInfo => 'PDF और स्लाइड जोड़ना';
+
+  @override
+  String get moduleScan => 'स्कैनिंग';
+
+  @override
+  String get moduleScanInfo => 'दस्तावेज़ स्कैन और QR कोड';
+
+  @override
+  String get moduleDrawing => 'ड्रॉइंग';
+
+  @override
+  String get moduleDrawingInfo => 'हस्तलेख और ड्रॉइंग';
+
+  @override
+  String get moduleTemplates => 'टेम्पलेट';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'टेम्पलेट से नोट, खरीदारी सूची, संग्रह नोटबुक';
+
+  @override
+  String get moduleTags => 'नोट चिप';
+
+  @override
+  String get moduleTagsInfo => 'शीर्षक के नीचे टैग, फ़ोल्डर और रिमाइंडर चिप';
+
+  @override
+  String get moduleCollaboration => 'सहयोग';
+
+  @override
+  String get moduleCollaborationInfo => 'नोट स्क्रीन में व्यक्ति जोड़ें बटन';
+
+  @override
+  String get moduleMixed => 'आंशिक रूप से चालू';
+
+  @override
+  String get personalizeEditorBar => 'नोट स्क्रीन · नीचे की पट्टी';
+
+  @override
+  String get personalizeEditorTop => 'नोट स्क्रीन · ऊपर की पट्टी और क्षेत्र';
+
+  @override
+  String get personalizeQuickAdd => 'नया नोट मेनू (+)';
+
+  @override
+  String get personalizeAttachSheet => 'जोड़ें शीट (नोट के अंदर +)';
+
+  @override
+  String get personalizeVideo => 'वीडियो';
+
+  @override
+  String get personalizeHome => 'होम स्क्रीन';
+
+  @override
+  String get personalizeBubbles => 'बबल';
+
+  @override
+  String get personalizeChipsInfo =>
+      'चुने गए आइटम दिखते हैं; बदलने के लिए टैप करें।';
+
+  @override
+  String get personalizeReset => 'डिफ़ॉल्ट पर लौटें';
+
+  @override
+  String get personalizeResetConfirm =>
+      'सभी दृश्यता और सीक सेटिंग्स डिफ़ॉल्ट पर लौटाएँ?';
+
+  @override
+  String get personalizeResetDone => 'डिफ़ॉल्ट बहाल किए गए';
+
+  @override
+  String get uiItemAttachments => 'अटैचमेंट';
+
+  @override
+  String get uiItemDate => 'संपादन तिथि';
+
+  @override
+  String get uiItemSync => 'सिंक आइकन';
+
+  @override
+  String get uiItemFrequent => 'अक्सर उपयोग किए गए';
+
+  @override
+  String get uiItemVideoTime => 'समय सूचक';
+
+  @override
+  String get videoSeekBack => 'पीछे करें';
+
+  @override
+  String get videoSeekForward => 'आगे करें';
+
+  @override
+  String get bubbleSizeSetting => 'बबल का आकार';
+
+  @override
+  String get noteMenuCustomize => 'स्क्रीन अनुकूलित करें';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds से.';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count छिपे';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'वीडियो';
+
+  @override
+  String get listPartRemoved => 'सूची हटाई गई';
+
+  @override
+  String get textPartRemoved => 'टेक्स्ट हटाया गया';
+
+  @override
+  String get notePartsMenu => 'भाग';
+
+  @override
+  String get removeListPart => 'सूची हटाएँ';
+
+  @override
+  String get removeTextPart => 'टेक्स्ट हटाएँ';
 }

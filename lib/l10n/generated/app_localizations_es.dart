@@ -4800,4 +4800,227 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'No hay archivos adjuntos en este dispositivo para compartir.';
+
+  @override
+  String get attachmentRemoved => 'Adjunto eliminado';
+
+  @override
+  String get pinnedEmbedOnPage => 'Insertar en la página (flotante)';
+
+  @override
+  String get customizeHideItem => 'Ocultar';
+
+  @override
+  String get customizeShowItem => 'Mostrar';
+
+  @override
+  String get customizeModeTitle => 'Modo edición';
+
+  @override
+  String get customizeModeHint =>
+      'Toca los elementos para ocultarlos o mostrarlos';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count ocultos · toca para cambiar';
+  }
+
+  @override
+  String get customizeSave => 'Guardar';
+
+  @override
+  String get customizeSaved => 'Diseño guardado';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Retroceder $seconds s';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Avanzar $seconds s';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalizar';
+
+  @override
+  String get personalizeInfo => 'Áreas y botones visibles, complementos';
+
+  @override
+  String get personalizeOpen => 'Abrir personalización';
+
+  @override
+  String get customizeStartTitle => 'Editar en pantalla';
+
+  @override
+  String get customizeStartInfo =>
+      'Activa el modo edición y toca botones y áreas de cualquier pantalla para ocultarlos o mostrarlos. Al terminar, toca Guardar en la franja superior.';
+
+  @override
+  String get customizeStart => 'Iniciar modo edición';
+
+  @override
+  String get customizeActive => 'El modo edición está activo';
+
+  @override
+  String get customizeModeShort => 'Ocultar o mostrar tocando en las pantallas';
+
+  @override
+  String get personalizeModules => 'COMPLEMENTOS';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Al desactivar un complemento, sus botones desaparecen en todas partes.';
+
+  @override
+  String get moduleAi => 'IA';
+
+  @override
+  String get moduleAiInfo => 'Botones de IA en la pantalla de nota';
+
+  @override
+  String get moduleVoice => 'Voz';
+
+  @override
+  String get moduleVoiceInfo => 'Notas de voz, dictado, grabación de audio';
+
+  @override
+  String get moduleVideo => 'Vídeo';
+
+  @override
+  String get moduleVideoInfo => 'Grabación, vídeos de la galería, YouTube';
+
+  @override
+  String get moduleDocuments => 'Documentos';
+
+  @override
+  String get moduleDocumentsInfo => 'Añadir PDF y diapositivas';
+
+  @override
+  String get moduleScan => 'Escaneo';
+
+  @override
+  String get moduleScanInfo => 'Escaneo de documentos y códigos QR';
+
+  @override
+  String get moduleDrawing => 'Dibujo';
+
+  @override
+  String get moduleDrawingInfo => 'Escritura a mano y dibujo';
+
+  @override
+  String get moduleTemplates => 'Plantillas';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notas desde plantillas, lista de la compra, cuaderno de archivo';
+
+  @override
+  String get moduleTags => 'Chips de nota';
+
+  @override
+  String get moduleTagsInfo =>
+      'Chips de etiqueta, carpeta y recordatorio bajo el título';
+
+  @override
+  String get moduleCollaboration => 'Colaboración';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'El botón de añadir persona en la pantalla de nota';
+
+  @override
+  String get moduleMixed => 'parcialmente activo';
+
+  @override
+  String get personalizeEditorBar => 'PANTALLA DE NOTA · BARRA INFERIOR';
+
+  @override
+  String get personalizeEditorTop =>
+      'PANTALLA DE NOTA · BARRA SUPERIOR Y ÁREAS';
+
+  @override
+  String get personalizeQuickAdd => 'MENÚ NUEVA NOTA (+)';
+
+  @override
+  String get personalizeAttachSheet => 'HOJA AÑADIR (+ DENTRO DE UNA NOTA)';
+
+  @override
+  String get personalizeVideo => 'VÍDEO';
+
+  @override
+  String get personalizeHome => 'PANTALLA DE INICIO';
+
+  @override
+  String get personalizeBubbles => 'BURBUJAS';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Los elementos seleccionados son visibles; toca para alternar.';
+
+  @override
+  String get personalizeReset => 'Restablecer valores predeterminados';
+
+  @override
+  String get personalizeResetConfirm =>
+      '¿Restablecer todos los ajustes de visibilidad y de avance/retroceso?';
+
+  @override
+  String get personalizeResetDone => 'Valores predeterminados restablecidos';
+
+  @override
+  String get uiItemAttachments => 'Adjuntos';
+
+  @override
+  String get uiItemDate => 'Fecha de edición';
+
+  @override
+  String get uiItemSync => 'Icono de sincronización';
+
+  @override
+  String get uiItemFrequent => 'Usados con frecuencia';
+
+  @override
+  String get uiItemVideoTime => 'Indicador de tiempo';
+
+  @override
+  String get videoSeekBack => 'Retroceso';
+
+  @override
+  String get videoSeekForward => 'Avance rápido';
+
+  @override
+  String get bubbleSizeSetting => 'Tamaño de burbuja';
+
+  @override
+  String get noteMenuCustomize => 'Personalizar pantalla';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count ocultos';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VÍDEO';
+
+  @override
+  String get listPartRemoved => 'Lista eliminada';
+
+  @override
+  String get textPartRemoved => 'Texto eliminado';
+
+  @override
+  String get notePartsMenu => 'Secciones';
+
+  @override
+  String get removeListPart => 'Quitar lista';
+
+  @override
+  String get removeTextPart => 'Quitar texto';
 }

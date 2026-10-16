@@ -4702,4 +4702,219 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get shareAttachmentFilesNone => 'この端末に共有できる添付ファイルがありません。';
+
+  @override
+  String get attachmentRemoved => '添付を削除しました';
+
+  @override
+  String get pinnedEmbedOnPage => 'ページに埋め込む（フロート）';
+
+  @override
+  String get customizeHideItem => '非表示';
+
+  @override
+  String get customizeShowItem => '表示';
+
+  @override
+  String get customizeModeTitle => '編集モード';
+
+  @override
+  String get customizeModeHint => '項目をタップして表示・非表示を切り替え';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count件非表示・タップで変更';
+  }
+
+  @override
+  String get customizeSave => '保存';
+
+  @override
+  String get customizeSaved => 'レイアウトを保存しました';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds秒戻る';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds秒進む';
+  }
+
+  @override
+  String get personalizeTitle => 'カスタマイズ';
+
+  @override
+  String get personalizeInfo => '表示する領域とボタン、プラグイン';
+
+  @override
+  String get personalizeOpen => 'カスタマイズを開く';
+
+  @override
+  String get customizeStartTitle => '画面上で編集';
+
+  @override
+  String get customizeStartInfo =>
+      '編集モードをオンにして、各画面のボタンや領域をタップすると表示・非表示を切り替えられます。終わったら上部の帯で［保存］をタップします。';
+
+  @override
+  String get customizeStart => '編集モードを開始';
+
+  @override
+  String get customizeActive => '編集モードはオンです';
+
+  @override
+  String get customizeModeShort => '画面をタップして表示・非表示';
+
+  @override
+  String get personalizeModules => 'プラグイン';
+
+  @override
+  String get personalizeModulesInfo => 'プラグインをオフにすると、そのボタンがすべての場所から消えます。';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'ノート画面のAIボタン';
+
+  @override
+  String get moduleVoice => '音声';
+
+  @override
+  String get moduleVoiceInfo => '音声メモ、音声入力、録音';
+
+  @override
+  String get moduleVideo => '動画';
+
+  @override
+  String get moduleVideoInfo => '撮影、ギャラリーの動画、YouTube';
+
+  @override
+  String get moduleDocuments => 'ドキュメント';
+
+  @override
+  String get moduleDocumentsInfo => 'PDFとスライドの追加';
+
+  @override
+  String get moduleScan => 'スキャン';
+
+  @override
+  String get moduleScanInfo => '書類スキャンとQRコード';
+
+  @override
+  String get moduleDrawing => '描画';
+
+  @override
+  String get moduleDrawingInfo => '手書きと描画';
+
+  @override
+  String get moduleTemplates => 'テンプレート';
+
+  @override
+  String get moduleTemplatesInfo => 'テンプレートからのノート、買い物リスト、アーカイブノート';
+
+  @override
+  String get moduleTags => 'ノートのチップ';
+
+  @override
+  String get moduleTagsInfo => 'タイトル下のタグ・フォルダ・リマインダーのチップ';
+
+  @override
+  String get moduleCollaboration => '共同編集';
+
+  @override
+  String get moduleCollaborationInfo => 'ノート画面のユーザー追加ボタン';
+
+  @override
+  String get moduleMixed => '一部オン';
+
+  @override
+  String get personalizeEditorBar => 'ノート画面・下部バー';
+
+  @override
+  String get personalizeEditorTop => 'ノート画面・上部バーと領域';
+
+  @override
+  String get personalizeQuickAdd => '新規ノートメニュー（+）';
+
+  @override
+  String get personalizeAttachSheet => '追加シート（ノート内の+）';
+
+  @override
+  String get personalizeVideo => '動画';
+
+  @override
+  String get personalizeHome => 'ホーム画面';
+
+  @override
+  String get personalizeBubbles => '吹き出し';
+
+  @override
+  String get personalizeChipsInfo => '選択した項目が表示されます。タップで切り替え。';
+
+  @override
+  String get personalizeReset => 'デフォルトに戻す';
+
+  @override
+  String get personalizeResetConfirm => '表示とスキップの設定をすべてデフォルトに戻しますか？';
+
+  @override
+  String get personalizeResetDone => 'デフォルトに戻しました';
+
+  @override
+  String get uiItemAttachments => '添付';
+
+  @override
+  String get uiItemDate => '編集日時';
+
+  @override
+  String get uiItemSync => '同期アイコン';
+
+  @override
+  String get uiItemFrequent => 'よく使う項目';
+
+  @override
+  String get uiItemVideoTime => '時間表示';
+
+  @override
+  String get videoSeekBack => '巻き戻し';
+
+  @override
+  String get videoSeekForward => '早送り';
+
+  @override
+  String get bubbleSizeSetting => '吹き出しのサイズ';
+
+  @override
+  String get noteMenuCustomize => '画面をカスタマイズ';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds秒';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count件非表示';
+  }
+
+  @override
+  String get uiItemVideoBadge => '動画';
+
+  @override
+  String get listPartRemoved => 'リストを削除しました';
+
+  @override
+  String get textPartRemoved => 'テキストを削除しました';
+
+  @override
+  String get notePartsMenu => 'セクション';
+
+  @override
+  String get removeListPart => 'リストを削除';
+
+  @override
+  String get removeTextPart => 'テキストを削除';
 }

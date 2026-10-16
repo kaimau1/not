@@ -414,7 +414,9 @@ void centerPdfOnBubble({
 }) {
   previous?.cancel();
   timer(
-    Timer(const Duration(milliseconds: 340), () {
+    // 420 ms: klavye açılışı (~250–300 ms) bitmiş olsun; kalan farkı
+    // [freeBelow] klavyenin gerçek konumundan hesaplar.
+    Timer(const Duration(milliseconds: 420), () {
       if (!alive() || !controller.isReady) return;
       try {
         // pdfrx 1.3.x'te sayfa ölçüsüne tek erişim bu; `useDocument` eşleniği

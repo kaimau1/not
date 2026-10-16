@@ -269,11 +269,32 @@
   "placeFailed": "Konum hatırlatıcısı kurulamadı.",
   "placeNoLocation": "Konum alınamadı. Konumun açık olduğundan emin ol.",
   "placeArrivedBody": "{place} konumuna vardın",
-  "@placeArrivedBody": {"placeholders": {"place": {"type": "String"}}},
+  "@placeArrivedBody": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
   "placeLeftBody": "{place} konumundan ayrıldın",
-  "@placeLeftBody": {"placeholders": {"place": {"type": "String"}}},
+  "@placeLeftBody": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      }
+    }
+  },
   "placeActive": "{place} · {trigger}",
-  "@placeActive": {"placeholders": {"place": {"type": "String"}, "trigger": {"type": "String"}}},
+  "@placeActive": {
+    "placeholders": {
+      "place": {
+        "type": "String"
+      },
+      "trigger": {
+        "type": "String"
+      }
+    }
+  },
   "placeSection": "Konum",
   "share": "Paylaş",
   "archive": "Arşivle",
@@ -478,9 +499,21 @@
   "select": "Seç",
   "noteArchived": "Not arşivlendi",
   "pendingUploads": "{count} ek buluta yükleniyor",
-  "@pendingUploads": {"placeholders": {"count": {"type": "int"}}},
+  "@pendingUploads": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pendingUploadsFailed": "{count} ek yüklenemedi, yeniden denenecek",
-  "@pendingUploadsFailed": {"placeholders": {"count": {"type": "int"}}},
+  "@pendingUploadsFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "pendingUploadsInfo": "Ekler bu cihazda güvende. Bağlantı olduğunda kendiliğinden yüklenir; o zamana kadar öbür cihazlarınızda görünmez.",
   "deleteChecked": "İşaretlileri sil ({count})",
   "@deleteChecked": {
@@ -1783,7 +1816,13 @@
   "findNext": "Sonraki eşleşme",
   "findShowAll": "Tüm eşleşmeler",
   "findMatchCount": "{count, plural, =0{Eşleşme yok} other{{count} eşleşme}}",
-  "@findMatchCount": {"placeholders": {"count": {"type": "int"}}},
+  "@findMatchCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "findDeepSearch": "Eklerde ve YZ ile ara",
   "notesSettingsTitle": "Notlar ve klasörler",
   "noteViewSetting": "Ana ekran görünümü",
@@ -1804,7 +1843,13 @@
   "deviceStorageInfo": "Önbelleği temizlemek notları ve ekleri silmez; görseller gerektikçe yeniden iner. Eski geçici dosyalar zaten her açılışta temizlenir.",
   "deviceStorageClear": "Önbelleği temizle",
   "deviceStorageCleared": "{size} boşaltıldı",
-  "@deviceStorageCleared": {"placeholders": {"size": {"type": "String"}}},
+  "@deviceStorageCleared": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "deviceStorageUnavailable": "Bu cihazda ölçülemedi.",
   "localOnlyTurnOn": "Senkronu kapat",
   "localOnlyTurnOff": "Senkronu aç",
@@ -1970,9 +2015,24 @@
   "pinnedMediaResize": "Bölme yüksekliği — sürükleyerek değiştir",
   "addPageSubtitle": "Nota yeni, boş bir sayfa ekler",
   "pageOf": "Sayfa {current} / {total}",
-  "@pageOf": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@pageOf": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "pageAdded": "{page}. sayfa eklendi",
-  "@pageAdded": {"placeholders": {"page": {"type": "int"}}},
+  "@pageAdded": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "deletePageConfirm": "Bu sayfanın yazısı silinsin mi? Görselleri komşu sayfaya taşınır. Geri al ile geri getirebilirsin.",
   "embedNewPdf": "PDF",
   "embedNewImage": "Görsel",
@@ -1980,7 +2040,13 @@
   "embedNewYouTube": "YouTube",
   "embedPickTitle": "Ne gömülsün?",
   "embedPickTitleFor": "“{label}” yazısına göm",
-  "@embedPickTitleFor": {"placeholders": {"label": {"type": "String"}}},
+  "@embedPickTitleFor": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "embedPickInfo": "Gömülen ek yazıya dokununca yerinde açılır.",
   "embedSectionNew": "Yeni ekle",
   "embedSectionExisting": "Bu nottaki ekler",
@@ -1993,7 +2059,13 @@
   "guideContents": "İçindekiler",
   "guideOpenScreen": "Ekranı aç",
   "guideNoResults": "«{query}» için sonuç yok",
-  "@guideNoResults": {"placeholders": {"query": {"type": "String"}}},
+  "@guideNoResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
   "copyVideoLink": "Bağlantıyı kopyala",
   "videoLinkCopied": "Bağlantı kopyalandı",
   "attachSectionVisual": "Görsel ve çizim",
@@ -2006,15 +2078,33 @@
   "menuSectionHome": "Ana ekran",
   "menuSectionApp": "Uygulama",
   "cardMoreFiles": "+{count} dosya daha",
-  "@cardMoreFiles": {"placeholders": {"count": {"type": "int"}}},
+  "@cardMoreFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cardAudioCount": "{count, plural, =1{Ses kaydı} other{{count} ses kaydı}}",
-  "@cardAudioCount": {"placeholders": {"count": {"type": "int"}}},
+  "@cardAudioCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "cardBubbleDocument": "BALONLU PDF",
   "cardBubbleSlides": "BALONLU SUNUM",
   "cardKindPdf": "PDF",
   "cardKindSlides": "SUNUM",
   "cardBubbleCount": "{count} balon",
-  "@cardBubbleCount": {"placeholders": {"count": {"type": "int"}}},
+  "@cardBubbleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quickAddImport": "DOSYADAN",
   "quickAddImage": "Görsel",
   "quickAddPdf": "PDF",
@@ -2040,16 +2130,37 @@
   "driveConnected": "Google Drive bağlandı — ekler yedekleniyor.",
   "driveConnectedInfo": "Bağlı · ekler Drive'ının uygulama klasöründe",
   "driveUsage": "Drive: {used} / {limit} kullanıldı",
-  "@driveUsage": {"placeholders": {"used": {"type": "String"}, "limit": {"type": "String"}}},
+  "@driveUsage": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      }
+    }
+  },
   "driveConnectFailed": "Google Drive bağlanamadı. {error}",
-  "@driveConnectFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@driveConnectFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "driveApiDisabled": "Google Cloud projesinde Drive API kapalı: konsolda \"Google Drive API\"yi etkinleştirip yeniden dene.",
   "driveDisconnected": "Drive bağlantısı kesildi. Yeni ekler bağlanana dek cihazda bekler.",
   "textOnlyTitle": "Yalnız metin senkronu",
   "textOnlyInfo": "Misafir hesapta yalnız yazılar senkronlanır; ekler bu cihazda kalır. Google hesabı bağlarsan ekler Google Drive'ında saklanır.",
   "storageModeInfo": "Web'de ekler uygulama bulutuna yüklenir.",
   "driveWaiting": "{count, plural, =1{1 ek Google Drive bağlantısını bekliyor — dokun, bağla} other{{count} ek Google Drive bağlantısını bekliyor — dokun, bağla}}",
-  "@driveWaiting": {"placeholders": {"count": {"type": "int"}}},
+  "@driveWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "driveDownloading": "Ek Google Drive'dan indiriliyor…",
   "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla.",
   "quickAddMore": "ŞABLON VE DEFTER",
@@ -2095,5 +2206,108 @@
   "shareAsNoteShort": "Not paketi",
   "shareMoreSection": "DAHA FAZLA",
   "shareQuickPreparing": "Hazırlanıyor…",
-  "shareAttachmentFilesNone": "Bu cihazda paylaşılacak ek dosyası yok."
+  "shareAttachmentFilesNone": "Bu cihazda paylaşılacak ek dosyası yok.",
+  "attachmentRemoved": "Ek kaldırıldı",
+  "pinnedEmbedOnPage": "Sayfaya göm (yüzen)",
+  "customizeHideItem": "Gizle",
+  "customizeShowItem": "Göster",
+  "customizeModeTitle": "Düzenleme modu",
+  "customizeModeHint": "Gizlemek/göstermek için öğelere dokunun",
+  "customizeHiddenCount": "{count} öğe gizli · dokunarak değiştirin",
+  "@customizeHiddenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customizeSave": "Kaydet",
+  "customizeSaved": "Düzen kaydedildi",
+  "videoBackSeconds": "{seconds} sn geri",
+  "@videoBackSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "videoForwardSeconds": "{seconds} sn ileri",
+  "@videoForwardSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "personalizeTitle": "Kişiselleştir",
+  "personalizeInfo": "Hangi alan ve düğmeler görünsün, eklentiler",
+  "personalizeOpen": "Kişiselleştirmeyi aç",
+  "customizeStartTitle": "Ekranda düzenle",
+  "customizeStartInfo": "Düzenleme modunu açın; ekranlardaki düğme ve alanlara dokunarak gizleyin ya da gösterin. Bitince üstteki şeritten Kaydet'e basın.",
+  "customizeStart": "Düzenleme modunu başlat",
+  "customizeActive": "Düzenleme modu açık",
+  "customizeModeShort": "Ekranlarda dokunarak gizle/göster",
+  "personalizeModules": "EKLENTİLER",
+  "personalizeModulesInfo": "Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.",
+  "moduleAi": "Yapay zekâ",
+  "moduleAiInfo": "Not ekranındaki yapay zekâ düğmeleri",
+  "moduleVoice": "Ses",
+  "moduleVoiceInfo": "Sesli not, sesli yazdırma, ses kaydı",
+  "moduleVideo": "Video",
+  "moduleVideoInfo": "Video çekme, galeriden video, YouTube",
+  "moduleDocuments": "Belgeler",
+  "moduleDocumentsInfo": "PDF ve sunum ekleme",
+  "moduleScan": "Tarama",
+  "moduleScanInfo": "Belge tarama ve QR kod",
+  "moduleDrawing": "Çizim",
+  "moduleDrawingInfo": "El yazısı ve çizim",
+  "moduleTemplates": "Şablonlar",
+  "moduleTemplatesInfo": "Şablondan not, alışveriş listesi, arşiv defteri",
+  "moduleTags": "Not çipleri",
+  "moduleTagsInfo": "Başlığın altındaki etiket, klasör ve hatırlatıcı çipleri",
+  "moduleCollaboration": "Ortak çalışma",
+  "moduleCollaborationInfo": "Not ekranındaki kişi ekle düğmesi",
+  "moduleMixed": "kısmen açık",
+  "personalizeEditorBar": "NOT EKRANI · ALT ÇUBUK",
+  "personalizeEditorTop": "NOT EKRANI · ÜST ÇUBUK VE ALANLAR",
+  "personalizeQuickAdd": "YENİ NOT MENÜSÜ (+)",
+  "personalizeAttachSheet": "EKLE LEVHASI (NOTUN İÇİNDE +)",
+  "personalizeVideo": "VİDEO",
+  "personalizeHome": "ANA EKRAN",
+  "personalizeBubbles": "BALONLAR",
+  "personalizeChipsInfo": "Seçili olanlar görünür; dokunarak açıp kapatın.",
+  "personalizeReset": "Varsayılana dön",
+  "personalizeResetConfirm": "Bütün görünürlük ve sarma ayarları varsayılana dönsün mü?",
+  "personalizeResetDone": "Varsayılana dönüldü",
+  "uiItemAttachments": "Ekler",
+  "uiItemDate": "Düzenleme tarihi",
+  "uiItemSync": "Senkron simgesi",
+  "uiItemFrequent": "Sık kullandıkların",
+  "uiItemVideoTime": "Süre yazısı",
+  "videoSeekBack": "Geri sarma",
+  "videoSeekForward": "İleri sarma",
+  "bubbleSizeSetting": "Balon boyu",
+  "noteMenuCustomize": "Ekranı düzenle",
+  "secondsShort": "{seconds} sn",
+  "@secondsShort": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "personalizeHiddenSummary": "{count} gizli",
+  "@personalizeHiddenSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "uiItemVideoBadge": "VİDEO",
+  "listPartRemoved": "Liste kaldırıldı",
+  "textPartRemoved": "Metin kaldırıldı",
+  "notePartsMenu": "Bölümler",
+  "removeListPart": "Listeyi kaldır",
+  "removeTextPart": "Metni kaldır"
 }

@@ -175,6 +175,15 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
 
   @override
   void dispose() {
+    // Yazma kartı açıkken bölme kalkarsa (klasik görünüme geçildi) editör
+    // sade "yazma kipinde" kalmasın: kare sonunda geri alınır (editörün
+    // geri çağrısı kendi `mounted`ını denetler).
+    if (_bubbleEditing.value) {
+      final onImmersive = widget.onImmersiveChanged;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => onImmersive?.call(false),
+      );
+    }
     _bubbles.addingListenable.removeListener(_onAddingChanged);
     _ink.dispose();
     _bubbles.dispose();
@@ -314,10 +323,17 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
   /// gerekçe).
   void _centerOn(PageBubble bubble) {
     _centerTimer?.cancel();
-    _centerTimer = Timer(const Duration(milliseconds: 340), () {
+    _centerTimer = Timer(const Duration(milliseconds: 420), () {
       final metrics = _metrics;
       if (!mounted || metrics == null || !_scroll.hasClients) return;
-      final free = (_viewport - widget.bubbles.dockHeight.value - 24).clamp(
+      // Klavyenin arkasında kalan dip de "görünür" sayılmaz (editör gövdesi
+      // klavye durana dek kısalmaz — bkz. keyboardOverlapOf).
+      final free =
+          (_viewport -
+                  widget.bubbles.dockHeight.value -
+                  keyboardOverlapOf(context) -
+                  24)
+              .clamp(
         80.0,
         _viewport <= 0 ? 80.0 : _viewport,
       );

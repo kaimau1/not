@@ -1792,6 +1792,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ]),
           MenuSection(l10n.menuSectionApp, [
             MenuAction('settings', l10n.settings, Icons.settings_outlined),
+            // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): hangi alan ve
+            // düğme görünsün — menüden; ekranda kalıcı ayar düğmesi yok.
+            MenuAction(
+              'personalize',
+              l10n.personalizeTitle,
+              Icons.tune_rounded,
+            ),
             MenuAction('guide', l10n.guideTitle, Icons.menu_book_outlined),
           ]),
         ],
@@ -1821,6 +1828,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         showFolderOrderSheet(context);
       case 'settings':
         context.push('/settings');
+      case 'personalize':
+        context.push('/personalize');
       case 'guide':
         context.push('/guide');
     }

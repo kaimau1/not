@@ -4806,4 +4806,227 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Geen bijlagen op dit apparaat om te delen.';
+
+  @override
+  String get attachmentRemoved => 'Bijlage verwijderd';
+
+  @override
+  String get pinnedEmbedOnPage => 'Op pagina insluiten (zwevend)';
+
+  @override
+  String get customizeHideItem => 'Verbergen';
+
+  @override
+  String get customizeShowItem => 'Tonen';
+
+  @override
+  String get customizeModeTitle => 'Bewerkmodus';
+
+  @override
+  String get customizeModeHint =>
+      'Tik op onderdelen om ze te verbergen of te tonen';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count verborgen · tik om te wijzigen';
+  }
+
+  @override
+  String get customizeSave => 'Opslaan';
+
+  @override
+  String get customizeSaved => 'Indeling opgeslagen';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds s terug';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds s vooruit';
+  }
+
+  @override
+  String get personalizeTitle => 'Personaliseren';
+
+  @override
+  String get personalizeInfo => 'Zichtbare gebieden en knoppen, plug-ins';
+
+  @override
+  String get personalizeOpen => 'Personalisatie openen';
+
+  @override
+  String get customizeStartTitle => 'Op het scherm bewerken';
+
+  @override
+  String get customizeStartInfo =>
+      'Zet de bewerkmodus aan en tik op knoppen en gebieden op elk scherm om ze te verbergen of te tonen. Tik daarna bovenaan in de balk op Opslaan.';
+
+  @override
+  String get customizeStart => 'Bewerkmodus starten';
+
+  @override
+  String get customizeActive => 'Bewerkmodus staat aan';
+
+  @override
+  String get customizeModeShort =>
+      'Verbergen of tonen door op schermen te tikken';
+
+  @override
+  String get personalizeModules => 'PLUG-INS';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Een uitgeschakelde plug-in verwijdert zijn knoppen overal.';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'AI-knoppen in het notitiescherm';
+
+  @override
+  String get moduleVoice => 'Spraak';
+
+  @override
+  String get moduleVoiceInfo => 'Spraaknotities, dicteren, audio-opname';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Opnemen, video\'s uit de galerij, YouTube';
+
+  @override
+  String get moduleDocuments => 'Documenten';
+
+  @override
+  String get moduleDocumentsInfo => 'PDF\'s en dia\'s toevoegen';
+
+  @override
+  String get moduleScan => 'Scannen';
+
+  @override
+  String get moduleScanInfo => 'Documenten scannen en QR-codes';
+
+  @override
+  String get moduleDrawing => 'Tekenen';
+
+  @override
+  String get moduleDrawingInfo => 'Handschrift en tekeningen';
+
+  @override
+  String get moduleTemplates => 'Sjablonen';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notities uit sjablonen, boodschappenlijst, archiefschrift';
+
+  @override
+  String get moduleTags => 'Notitiechips';
+
+  @override
+  String get moduleTagsInfo =>
+      'Label-, map- en herinneringschips onder de titel';
+
+  @override
+  String get moduleCollaboration => 'Samenwerken';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'De knop Persoon toevoegen in het notitiescherm';
+
+  @override
+  String get moduleMixed => 'deels aan';
+
+  @override
+  String get personalizeEditorBar => 'NOTITIESCHERM · ONDERBALK';
+
+  @override
+  String get personalizeEditorTop => 'NOTITIESCHERM · BOVENBALK EN GEBIEDEN';
+
+  @override
+  String get personalizeQuickAdd => 'MENU NIEUWE NOTITIE (+)';
+
+  @override
+  String get personalizeAttachSheet => 'TOEVOEGBLAD (+ IN EEN NOTITIE)';
+
+  @override
+  String get personalizeVideo => 'VIDEO';
+
+  @override
+  String get personalizeHome => 'STARTSCHERM';
+
+  @override
+  String get personalizeBubbles => 'BALLONNEN';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Geselecteerde onderdelen zijn zichtbaar; tik om te wisselen.';
+
+  @override
+  String get personalizeReset => 'Standaard herstellen';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Alle zichtbaarheids- en spoelinstellingen terugzetten naar standaard?';
+
+  @override
+  String get personalizeResetDone => 'Standaardwaarden hersteld';
+
+  @override
+  String get uiItemAttachments => 'Bijlagen';
+
+  @override
+  String get uiItemDate => 'Bewerkdatum';
+
+  @override
+  String get uiItemSync => 'Synchronisatiepictogram';
+
+  @override
+  String get uiItemFrequent => 'Vaak gebruikt';
+
+  @override
+  String get uiItemVideoTime => 'Tijdsaanduiding';
+
+  @override
+  String get videoSeekBack => 'Terugspoelen';
+
+  @override
+  String get videoSeekForward => 'Vooruitspoelen';
+
+  @override
+  String get bubbleSizeSetting => 'Ballongrootte';
+
+  @override
+  String get noteMenuCustomize => 'Scherm aanpassen';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count verborgen';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDEO';
+
+  @override
+  String get listPartRemoved => 'Lijst verwijderd';
+
+  @override
+  String get textPartRemoved => 'Tekst verwijderd';
+
+  @override
+  String get notePartsMenu => 'Onderdelen';
+
+  @override
+  String get removeListPart => 'Lijst verwijderen';
+
+  @override
+  String get removeTextPart => 'Tekst verwijderen';
 }

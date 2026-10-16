@@ -4788,4 +4788,224 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'No attachment files on this device to share.';
+
+  @override
+  String get attachmentRemoved => 'Attachment removed';
+
+  @override
+  String get pinnedEmbedOnPage => 'Embed on page (floating)';
+
+  @override
+  String get customizeHideItem => 'Hide';
+
+  @override
+  String get customizeShowItem => 'Show';
+
+  @override
+  String get customizeModeTitle => 'Edit mode';
+
+  @override
+  String get customizeModeHint => 'Tap items to hide or show them';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count hidden · tap to change';
+  }
+
+  @override
+  String get customizeSave => 'Save';
+
+  @override
+  String get customizeSaved => 'Layout saved';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Back $seconds s';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Forward $seconds s';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalize';
+
+  @override
+  String get personalizeInfo => 'Choose visible areas and buttons, plug-ins';
+
+  @override
+  String get personalizeOpen => 'Open personalization';
+
+  @override
+  String get customizeStartTitle => 'Edit on screen';
+
+  @override
+  String get customizeStartInfo =>
+      'Turn on edit mode, then tap buttons and areas on any screen to hide or show them. When you\'re done, tap Save in the strip at the top.';
+
+  @override
+  String get customizeStart => 'Start edit mode';
+
+  @override
+  String get customizeActive => 'Edit mode is on';
+
+  @override
+  String get customizeModeShort => 'Hide or show by tapping on screens';
+
+  @override
+  String get personalizeModules => 'PLUG-INS';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Turning a plug-in off removes its buttons everywhere.';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'AI buttons in the note screen';
+
+  @override
+  String get moduleVoice => 'Voice';
+
+  @override
+  String get moduleVoiceInfo => 'Voice notes, dictation, audio recording';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Recording, gallery videos, YouTube';
+
+  @override
+  String get moduleDocuments => 'Documents';
+
+  @override
+  String get moduleDocumentsInfo => 'Adding PDFs and slides';
+
+  @override
+  String get moduleScan => 'Scanning';
+
+  @override
+  String get moduleScanInfo => 'Document scanning and QR codes';
+
+  @override
+  String get moduleDrawing => 'Drawing';
+
+  @override
+  String get moduleDrawingInfo => 'Handwriting and drawing';
+
+  @override
+  String get moduleTemplates => 'Templates';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notes from templates, shopping list, archive notebook';
+
+  @override
+  String get moduleTags => 'Note chips';
+
+  @override
+  String get moduleTagsInfo => 'Tag, folder and reminder chips under the title';
+
+  @override
+  String get moduleCollaboration => 'Collaboration';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'The add-person button in the note screen';
+
+  @override
+  String get moduleMixed => 'partly on';
+
+  @override
+  String get personalizeEditorBar => 'NOTE SCREEN · BOTTOM BAR';
+
+  @override
+  String get personalizeEditorTop => 'NOTE SCREEN · TOP BAR AND AREAS';
+
+  @override
+  String get personalizeQuickAdd => 'NEW NOTE MENU (+)';
+
+  @override
+  String get personalizeAttachSheet => 'ADD SHEET (+ INSIDE A NOTE)';
+
+  @override
+  String get personalizeVideo => 'VIDEO';
+
+  @override
+  String get personalizeHome => 'HOME SCREEN';
+
+  @override
+  String get personalizeBubbles => 'BUBBLES';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Selected items are visible; tap to toggle.';
+
+  @override
+  String get personalizeReset => 'Reset to default';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Reset all visibility and seek settings to default?';
+
+  @override
+  String get personalizeResetDone => 'Defaults restored';
+
+  @override
+  String get uiItemAttachments => 'Attachments';
+
+  @override
+  String get uiItemDate => 'Edit date';
+
+  @override
+  String get uiItemSync => 'Sync icon';
+
+  @override
+  String get uiItemFrequent => 'Frequently used';
+
+  @override
+  String get uiItemVideoTime => 'Time label';
+
+  @override
+  String get videoSeekBack => 'Rewind';
+
+  @override
+  String get videoSeekForward => 'Fast-forward';
+
+  @override
+  String get bubbleSizeSetting => 'Bubble size';
+
+  @override
+  String get noteMenuCustomize => 'Customize screen';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count hidden';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDEO';
+
+  @override
+  String get listPartRemoved => 'List removed';
+
+  @override
+  String get textPartRemoved => 'Text removed';
+
+  @override
+  String get notePartsMenu => 'Sections';
+
+  @override
+  String get removeListPart => 'Remove list';
+
+  @override
+  String get removeTextPart => 'Remove text';
 }

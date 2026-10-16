@@ -8651,6 +8651,414 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu cihazda paylaşılacak ek dosyası yok.'**
   String get shareAttachmentFilesNone;
+
+  /// No description provided for @attachmentRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek kaldırıldı'**
+  String get attachmentRemoved;
+
+  /// No description provided for @pinnedEmbedOnPage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfaya göm (yüzen)'**
+  String get pinnedEmbedOnPage;
+
+  /// No description provided for @customizeHideItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizle'**
+  String get customizeHideItem;
+
+  /// No description provided for @customizeShowItem.
+  ///
+  /// In tr, this message translates to:
+  /// **'Göster'**
+  String get customizeShowItem;
+
+  /// No description provided for @customizeModeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenleme modu'**
+  String get customizeModeTitle;
+
+  /// No description provided for @customizeModeHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gizlemek/göstermek için öğelere dokunun'**
+  String get customizeModeHint;
+
+  /// No description provided for @customizeHiddenCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} öğe gizli · dokunarak değiştirin'**
+  String customizeHiddenCount(int count);
+
+  /// No description provided for @customizeSave.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kaydet'**
+  String get customizeSave;
+
+  /// No description provided for @customizeSaved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzen kaydedildi'**
+  String get customizeSaved;
+
+  /// No description provided for @videoBackSeconds.
+  ///
+  /// In tr, this message translates to:
+  /// **'{seconds} sn geri'**
+  String videoBackSeconds(int seconds);
+
+  /// No description provided for @videoForwardSeconds.
+  ///
+  /// In tr, this message translates to:
+  /// **'{seconds} sn ileri'**
+  String videoForwardSeconds(int seconds);
+
+  /// No description provided for @personalizeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiselleştir'**
+  String get personalizeTitle;
+
+  /// No description provided for @personalizeInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hangi alan ve düğmeler görünsün, eklentiler'**
+  String get personalizeInfo;
+
+  /// No description provided for @personalizeOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kişiselleştirmeyi aç'**
+  String get personalizeOpen;
+
+  /// No description provided for @customizeStartTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekranda düzenle'**
+  String get customizeStartTitle;
+
+  /// No description provided for @customizeStartInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenleme modunu açın; ekranlardaki düğme ve alanlara dokunarak gizleyin ya da gösterin. Bitince üstteki şeritten Kaydet\'e basın.'**
+  String get customizeStartInfo;
+
+  /// No description provided for @customizeStart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenleme modunu başlat'**
+  String get customizeStart;
+
+  /// No description provided for @customizeActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenleme modu açık'**
+  String get customizeActive;
+
+  /// No description provided for @customizeModeShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekranlarda dokunarak gizle/göster'**
+  String get customizeModeShort;
+
+  /// No description provided for @personalizeModules.
+  ///
+  /// In tr, this message translates to:
+  /// **'EKLENTİLER'**
+  String get personalizeModules;
+
+  /// No description provided for @personalizeModulesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bir eklentiyi kapatınca ona ait düğmeler her yerden kalkar.'**
+  String get personalizeModulesInfo;
+
+  /// No description provided for @moduleAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ'**
+  String get moduleAi;
+
+  /// No description provided for @moduleAiInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ekranındaki yapay zekâ düğmeleri'**
+  String get moduleAiInfo;
+
+  /// No description provided for @moduleVoice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ses'**
+  String get moduleVoice;
+
+  /// No description provided for @moduleVoiceInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sesli not, sesli yazdırma, ses kaydı'**
+  String get moduleVoiceInfo;
+
+  /// No description provided for @moduleVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video'**
+  String get moduleVideo;
+
+  /// No description provided for @moduleVideoInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video çekme, galeriden video, YouTube'**
+  String get moduleVideoInfo;
+
+  /// No description provided for @moduleDocuments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belgeler'**
+  String get moduleDocuments;
+
+  /// No description provided for @moduleDocumentsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF ve sunum ekleme'**
+  String get moduleDocumentsInfo;
+
+  /// No description provided for @moduleScan.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarama'**
+  String get moduleScan;
+
+  /// No description provided for @moduleScanInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Belge tarama ve QR kod'**
+  String get moduleScanInfo;
+
+  /// No description provided for @moduleDrawing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Çizim'**
+  String get moduleDrawing;
+
+  /// No description provided for @moduleDrawingInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'El yazısı ve çizim'**
+  String get moduleDrawingInfo;
+
+  /// No description provided for @moduleTemplates.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablonlar'**
+  String get moduleTemplates;
+
+  /// No description provided for @moduleTemplatesInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablondan not, alışveriş listesi, arşiv defteri'**
+  String get moduleTemplatesInfo;
+
+  /// No description provided for @moduleTags.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not çipleri'**
+  String get moduleTags;
+
+  /// No description provided for @moduleTagsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Başlığın altındaki etiket, klasör ve hatırlatıcı çipleri'**
+  String get moduleTagsInfo;
+
+  /// No description provided for @moduleCollaboration.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ortak çalışma'**
+  String get moduleCollaboration;
+
+  /// No description provided for @moduleCollaborationInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not ekranındaki kişi ekle düğmesi'**
+  String get moduleCollaborationInfo;
+
+  /// No description provided for @moduleMixed.
+  ///
+  /// In tr, this message translates to:
+  /// **'kısmen açık'**
+  String get moduleMixed;
+
+  /// No description provided for @personalizeEditorBar.
+  ///
+  /// In tr, this message translates to:
+  /// **'NOT EKRANI · ALT ÇUBUK'**
+  String get personalizeEditorBar;
+
+  /// No description provided for @personalizeEditorTop.
+  ///
+  /// In tr, this message translates to:
+  /// **'NOT EKRANI · ÜST ÇUBUK VE ALANLAR'**
+  String get personalizeEditorTop;
+
+  /// No description provided for @personalizeQuickAdd.
+  ///
+  /// In tr, this message translates to:
+  /// **'YENİ NOT MENÜSÜ (+)'**
+  String get personalizeQuickAdd;
+
+  /// No description provided for @personalizeAttachSheet.
+  ///
+  /// In tr, this message translates to:
+  /// **'EKLE LEVHASI (NOTUN İÇİNDE +)'**
+  String get personalizeAttachSheet;
+
+  /// No description provided for @personalizeVideo.
+  ///
+  /// In tr, this message translates to:
+  /// **'VİDEO'**
+  String get personalizeVideo;
+
+  /// No description provided for @personalizeHome.
+  ///
+  /// In tr, this message translates to:
+  /// **'ANA EKRAN'**
+  String get personalizeHome;
+
+  /// No description provided for @personalizeBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'BALONLAR'**
+  String get personalizeBubbles;
+
+  /// No description provided for @personalizeChipsInfo.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçili olanlar görünür; dokunarak açıp kapatın.'**
+  String get personalizeChipsInfo;
+
+  /// No description provided for @personalizeReset.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılana dön'**
+  String get personalizeReset;
+
+  /// No description provided for @personalizeResetConfirm.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bütün görünürlük ve sarma ayarları varsayılana dönsün mü?'**
+  String get personalizeResetConfirm;
+
+  /// No description provided for @personalizeResetDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Varsayılana dönüldü'**
+  String get personalizeResetDone;
+
+  /// No description provided for @uiItemAttachments.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler'**
+  String get uiItemAttachments;
+
+  /// No description provided for @uiItemDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenleme tarihi'**
+  String get uiItemDate;
+
+  /// No description provided for @uiItemSync.
+  ///
+  /// In tr, this message translates to:
+  /// **'Senkron simgesi'**
+  String get uiItemSync;
+
+  /// No description provided for @uiItemFrequent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık kullandıkların'**
+  String get uiItemFrequent;
+
+  /// No description provided for @uiItemVideoTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Süre yazısı'**
+  String get uiItemVideoTime;
+
+  /// No description provided for @videoSeekBack.
+  ///
+  /// In tr, this message translates to:
+  /// **'Geri sarma'**
+  String get videoSeekBack;
+
+  /// No description provided for @videoSeekForward.
+  ///
+  /// In tr, this message translates to:
+  /// **'İleri sarma'**
+  String get videoSeekForward;
+
+  /// No description provided for @bubbleSizeSetting.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balon boyu'**
+  String get bubbleSizeSetting;
+
+  /// No description provided for @noteMenuCustomize.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekranı düzenle'**
+  String get noteMenuCustomize;
+
+  /// No description provided for @secondsShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'{seconds} sn'**
+  String secondsShort(int seconds);
+
+  /// No description provided for @personalizeHiddenSummary.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gizli'**
+  String personalizeHiddenSummary(int count);
+
+  /// No description provided for @uiItemVideoBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'VİDEO'**
+  String get uiItemVideoBadge;
+
+  /// No description provided for @listPartRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste kaldırıldı'**
+  String get listPartRemoved;
+
+  /// No description provided for @textPartRemoved.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin kaldırıldı'**
+  String get textPartRemoved;
+
+  /// No description provided for @notePartsMenu.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bölümler'**
+  String get notePartsMenu;
+
+  /// No description provided for @removeListPart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Listeyi kaldır'**
+  String get removeListPart;
+
+  /// No description provided for @removeTextPart.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metni kaldır'**
+  String get removeTextPart;
 }
 
 class _AppLocalizationsDelegate

@@ -4676,4 +4676,219 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get shareAttachmentFilesNone => '此设备上没有可分享的附件文件。';
+
+  @override
+  String get attachmentRemoved => '已移除附件';
+
+  @override
+  String get pinnedEmbedOnPage => '嵌入页面（浮动）';
+
+  @override
+  String get customizeHideItem => '隐藏';
+
+  @override
+  String get customizeShowItem => '显示';
+
+  @override
+  String get customizeModeTitle => '编辑模式';
+
+  @override
+  String get customizeModeHint => '点按项目以隐藏或显示';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '已隐藏 $count 项 · 点按更改';
+  }
+
+  @override
+  String get customizeSave => '保存';
+
+  @override
+  String get customizeSaved => '布局已保存';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '后退 $seconds 秒';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '前进 $seconds 秒';
+  }
+
+  @override
+  String get personalizeTitle => '个性化';
+
+  @override
+  String get personalizeInfo => '可见区域和按钮、插件';
+
+  @override
+  String get personalizeOpen => '打开个性化';
+
+  @override
+  String get customizeStartTitle => '在屏幕上编辑';
+
+  @override
+  String get customizeStartInfo =>
+      '开启编辑模式，然后在任意屏幕上点按按钮和区域即可隐藏或显示。完成后点按顶部条中的“保存”。';
+
+  @override
+  String get customizeStart => '开始编辑模式';
+
+  @override
+  String get customizeActive => '编辑模式已开启';
+
+  @override
+  String get customizeModeShort => '在屏幕上点按以隐藏或显示';
+
+  @override
+  String get personalizeModules => '插件';
+
+  @override
+  String get personalizeModulesInfo => '关闭插件后，其按钮会从所有位置移除。';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => '笔记界面中的 AI 按钮';
+
+  @override
+  String get moduleVoice => '语音';
+
+  @override
+  String get moduleVoiceInfo => '语音笔记、听写、录音';
+
+  @override
+  String get moduleVideo => '视频';
+
+  @override
+  String get moduleVideoInfo => '录制、图库视频、YouTube';
+
+  @override
+  String get moduleDocuments => '文档';
+
+  @override
+  String get moduleDocumentsInfo => '添加 PDF 和幻灯片';
+
+  @override
+  String get moduleScan => '扫描';
+
+  @override
+  String get moduleScanInfo => '文档扫描和二维码';
+
+  @override
+  String get moduleDrawing => '绘图';
+
+  @override
+  String get moduleDrawingInfo => '手写和绘图';
+
+  @override
+  String get moduleTemplates => '模板';
+
+  @override
+  String get moduleTemplatesInfo => '从模板创建笔记、购物清单、归档笔记本';
+
+  @override
+  String get moduleTags => '笔记标签条';
+
+  @override
+  String get moduleTagsInfo => '标题下方的标签、文件夹和提醒标签条';
+
+  @override
+  String get moduleCollaboration => '协作';
+
+  @override
+  String get moduleCollaborationInfo => '笔记界面中的添加成员按钮';
+
+  @override
+  String get moduleMixed => '部分开启';
+
+  @override
+  String get personalizeEditorBar => '笔记界面 · 底栏';
+
+  @override
+  String get personalizeEditorTop => '笔记界面 · 顶栏和区域';
+
+  @override
+  String get personalizeQuickAdd => '新建笔记菜单（+）';
+
+  @override
+  String get personalizeAttachSheet => '添加面板（笔记内的 +）';
+
+  @override
+  String get personalizeVideo => '视频';
+
+  @override
+  String get personalizeHome => '主屏幕';
+
+  @override
+  String get personalizeBubbles => '气泡';
+
+  @override
+  String get personalizeChipsInfo => '选中的项目会显示；点按切换。';
+
+  @override
+  String get personalizeReset => '恢复默认';
+
+  @override
+  String get personalizeResetConfirm => '将所有显示和快进/快退设置恢复为默认？';
+
+  @override
+  String get personalizeResetDone => '已恢复默认设置';
+
+  @override
+  String get uiItemAttachments => '附件';
+
+  @override
+  String get uiItemDate => '编辑日期';
+
+  @override
+  String get uiItemSync => '同步图标';
+
+  @override
+  String get uiItemFrequent => '常用';
+
+  @override
+  String get uiItemVideoTime => '时间标签';
+
+  @override
+  String get videoSeekBack => '快退';
+
+  @override
+  String get videoSeekForward => '快进';
+
+  @override
+  String get bubbleSizeSetting => '气泡大小';
+
+  @override
+  String get noteMenuCustomize => '自定义界面';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds 秒';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '已隐藏 $count 项';
+  }
+
+  @override
+  String get uiItemVideoBadge => '视频';
+
+  @override
+  String get listPartRemoved => '已移除列表';
+
+  @override
+  String get textPartRemoved => '已移除文本';
+
+  @override
+  String get notePartsMenu => '部分';
+
+  @override
+  String get removeListPart => '移除列表';
+
+  @override
+  String get removeTextPart => '移除文本';
 }

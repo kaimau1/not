@@ -24,6 +24,7 @@ import '../features/notes/presentation/trash_screen.dart';
 import '../features/settings/presentation/premium_screen.dart';
 import '../features/settings/presentation/privacy_screen.dart';
 import '../features/settings/presentation/guide_screen.dart';
+import '../features/settings/presentation/personalize_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import 'app_frame.dart';
 import 'split_shell.dart';
@@ -189,6 +190,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/settings',
             builder: (context, state) =>
                 SettingsScreen(initialArea: state.uri.queryParameters['area']),
+          ),
+          // Kişiselleştir: görünürlük, eklentiler, düzenleme modu.
+          GoRoute(
+            path: '/personalize',
+            builder: (context, state) => const PersonalizeScreen(),
           ),
           GoRoute(
             path: '/privacy',

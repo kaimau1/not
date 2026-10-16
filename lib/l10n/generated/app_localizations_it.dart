@@ -4803,4 +4803,226 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Nessun allegato da condividere su questo dispositivo.';
+
+  @override
+  String get attachmentRemoved => 'Allegato rimosso';
+
+  @override
+  String get pinnedEmbedOnPage => 'Incorpora nella pagina (mobile)';
+
+  @override
+  String get customizeHideItem => 'Nascondi';
+
+  @override
+  String get customizeShowItem => 'Mostra';
+
+  @override
+  String get customizeModeTitle => 'Modalità modifica';
+
+  @override
+  String get customizeModeHint =>
+      'Tocca gli elementi per nasconderli o mostrarli';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count nascosti · tocca per cambiare';
+  }
+
+  @override
+  String get customizeSave => 'Salva';
+
+  @override
+  String get customizeSaved => 'Layout salvato';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Indietro di $seconds s';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Avanti di $seconds s';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalizza';
+
+  @override
+  String get personalizeInfo => 'Aree e pulsanti visibili, plug-in';
+
+  @override
+  String get personalizeOpen => 'Apri personalizzazione';
+
+  @override
+  String get customizeStartTitle => 'Modifica sullo schermo';
+
+  @override
+  String get customizeStartInfo =>
+      'Attiva la modalità modifica, poi tocca pulsanti e aree in qualsiasi schermata per nasconderli o mostrarli. Al termine tocca Salva nella barra in alto.';
+
+  @override
+  String get customizeStart => 'Avvia modalità modifica';
+
+  @override
+  String get customizeActive => 'La modalità modifica è attiva';
+
+  @override
+  String get customizeModeShort => 'Nascondi o mostra toccando le schermate';
+
+  @override
+  String get personalizeModules => 'PLUG-IN';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Disattivando un plug-in i suoi pulsanti spariscono ovunque.';
+
+  @override
+  String get moduleAi => 'IA';
+
+  @override
+  String get moduleAiInfo => 'Pulsanti IA nella schermata della nota';
+
+  @override
+  String get moduleVoice => 'Voce';
+
+  @override
+  String get moduleVoiceInfo => 'Note vocali, dettatura, registrazione audio';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Registrazione, video dalla galleria, YouTube';
+
+  @override
+  String get moduleDocuments => 'Documenti';
+
+  @override
+  String get moduleDocumentsInfo => 'Aggiunta di PDF e diapositive';
+
+  @override
+  String get moduleScan => 'Scansione';
+
+  @override
+  String get moduleScanInfo => 'Scansione documenti e codici QR';
+
+  @override
+  String get moduleDrawing => 'Disegno';
+
+  @override
+  String get moduleDrawingInfo => 'Scrittura a mano e disegno';
+
+  @override
+  String get moduleTemplates => 'Modelli';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Note da modelli, lista della spesa, quaderno d\'archivio';
+
+  @override
+  String get moduleTags => 'Chip della nota';
+
+  @override
+  String get moduleTagsInfo =>
+      'Chip di etichetta, cartella e promemoria sotto il titolo';
+
+  @override
+  String get moduleCollaboration => 'Collaborazione';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'Il pulsante aggiungi persona nella schermata della nota';
+
+  @override
+  String get moduleMixed => 'parzialmente attivo';
+
+  @override
+  String get personalizeEditorBar => 'SCHERMATA NOTA · BARRA INFERIORE';
+
+  @override
+  String get personalizeEditorTop => 'SCHERMATA NOTA · BARRA SUPERIORE E AREE';
+
+  @override
+  String get personalizeQuickAdd => 'MENU NUOVA NOTA (+)';
+
+  @override
+  String get personalizeAttachSheet => 'FOGLIO AGGIUNGI (+ IN UNA NOTA)';
+
+  @override
+  String get personalizeVideo => 'VIDEO';
+
+  @override
+  String get personalizeHome => 'SCHERMATA HOME';
+
+  @override
+  String get personalizeBubbles => 'FUMETTI';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Gli elementi selezionati sono visibili; tocca per cambiare.';
+
+  @override
+  String get personalizeReset => 'Ripristina predefiniti';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Ripristinare tutte le impostazioni di visibilità e di avanzamento?';
+
+  @override
+  String get personalizeResetDone => 'Predefiniti ripristinati';
+
+  @override
+  String get uiItemAttachments => 'Allegati';
+
+  @override
+  String get uiItemDate => 'Data di modifica';
+
+  @override
+  String get uiItemSync => 'Icona di sincronizzazione';
+
+  @override
+  String get uiItemFrequent => 'Usati spesso';
+
+  @override
+  String get uiItemVideoTime => 'Indicatore del tempo';
+
+  @override
+  String get videoSeekBack => 'Riavvolgi';
+
+  @override
+  String get videoSeekForward => 'Avanti veloce';
+
+  @override
+  String get bubbleSizeSetting => 'Dimensione fumetti';
+
+  @override
+  String get noteMenuCustomize => 'Personalizza schermata';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count nascosti';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDEO';
+
+  @override
+  String get listPartRemoved => 'Elenco rimosso';
+
+  @override
+  String get textPartRemoved => 'Testo rimosso';
+
+  @override
+  String get notePartsMenu => 'Sezioni';
+
+  @override
+  String get removeListPart => 'Rimuovi elenco';
+
+  @override
+  String get removeTextPart => 'Rimuovi testo';
 }

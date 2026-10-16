@@ -143,7 +143,12 @@ class ItemsEditor extends StatefulWidget {
     this.selectionMenu,
     this.videoTimestamps = false,
     this.onVideoTimestamp,
+    this.addRowTrailing,
   });
+
+  /// "+ Yeni öğe" satırının SAĞ ucundaki ek düğme (editörde: notta hem metin
+  /// hem liste varken "bölümler" menüsü — listeyi ya da metni kaldır).
+  final Widget? addRowTrailing;
 
   /// Notta video var mı: varsa madde metnindeki "1:23" damgaları bağlantı
   /// gibi çizilir ve dokununca [onVideoTimestamp] çağrılır.
@@ -1968,6 +1973,10 @@ class ItemsEditorState extends State<ItemsEditor> {
               icon: const Icon(Icons.add, size: 20),
               label: Text(l10n.newItemHint),
             ),
+            if (widget.addRowTrailing != null) ...[
+              const Spacer(),
+              widget.addRowTrailing!,
+            ],
           ],
         ),
       ),

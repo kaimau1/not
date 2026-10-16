@@ -4807,4 +4807,228 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Auf diesem Gerät gibt es keine Anhänge zum Teilen.';
+
+  @override
+  String get attachmentRemoved => 'Anhang entfernt';
+
+  @override
+  String get pinnedEmbedOnPage => 'Auf Seite einbetten (schwebend)';
+
+  @override
+  String get customizeHideItem => 'Ausblenden';
+
+  @override
+  String get customizeShowItem => 'Einblenden';
+
+  @override
+  String get customizeModeTitle => 'Bearbeitungsmodus';
+
+  @override
+  String get customizeModeHint =>
+      'Tippe auf Elemente, um sie ein- oder auszublenden';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count ausgeblendet · zum Ändern tippen';
+  }
+
+  @override
+  String get customizeSave => 'Speichern';
+
+  @override
+  String get customizeSaved => 'Layout gespeichert';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return '$seconds s zurück';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return '$seconds s vor';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalisieren';
+
+  @override
+  String get personalizeInfo =>
+      'Sichtbare Bereiche und Schaltflächen, Plug-ins';
+
+  @override
+  String get personalizeOpen => 'Personalisierung öffnen';
+
+  @override
+  String get customizeStartTitle => 'Auf dem Bildschirm bearbeiten';
+
+  @override
+  String get customizeStartInfo =>
+      'Schalte den Bearbeitungsmodus ein und tippe auf Schaltflächen und Bereiche, um sie aus- oder einzublenden. Tippe danach oben in der Leiste auf Speichern.';
+
+  @override
+  String get customizeStart => 'Bearbeitungsmodus starten';
+
+  @override
+  String get customizeActive => 'Bearbeitungsmodus ist an';
+
+  @override
+  String get customizeModeShort =>
+      'Auf den Bildschirmen per Tippen aus-/einblenden';
+
+  @override
+  String get personalizeModules => 'PLUG-INS';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Ein ausgeschaltetes Plug-in entfernt seine Schaltflächen überall.';
+
+  @override
+  String get moduleAi => 'KI';
+
+  @override
+  String get moduleAiInfo => 'KI-Schaltflächen in der Notizansicht';
+
+  @override
+  String get moduleVoice => 'Sprache';
+
+  @override
+  String get moduleVoiceInfo => 'Sprachnotizen, Diktat, Audioaufnahme';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Aufnehmen, Videos aus der Galerie, YouTube';
+
+  @override
+  String get moduleDocuments => 'Dokumente';
+
+  @override
+  String get moduleDocumentsInfo => 'PDFs und Folien hinzufügen';
+
+  @override
+  String get moduleScan => 'Scannen';
+
+  @override
+  String get moduleScanInfo => 'Dokumente scannen und QR-Codes';
+
+  @override
+  String get moduleDrawing => 'Zeichnen';
+
+  @override
+  String get moduleDrawingInfo => 'Handschrift und Zeichnungen';
+
+  @override
+  String get moduleTemplates => 'Vorlagen';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notizen aus Vorlagen, Einkaufsliste, Archivheft';
+
+  @override
+  String get moduleTags => 'Notiz-Chips';
+
+  @override
+  String get moduleTagsInfo =>
+      'Tag-, Ordner- und Erinnerungs-Chips unter dem Titel';
+
+  @override
+  String get moduleCollaboration => 'Zusammenarbeit';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'Die Schaltfläche „Person hinzufügen“ in der Notizansicht';
+
+  @override
+  String get moduleMixed => 'teilweise an';
+
+  @override
+  String get personalizeEditorBar => 'NOTIZANSICHT · UNTERE LEISTE';
+
+  @override
+  String get personalizeEditorTop => 'NOTIZANSICHT · OBERE LEISTE UND BEREICHE';
+
+  @override
+  String get personalizeQuickAdd => 'NEUE-NOTIZ-MENÜ (+)';
+
+  @override
+  String get personalizeAttachSheet => 'HINZUFÜGEN-BLATT (+ IN EINER NOTIZ)';
+
+  @override
+  String get personalizeVideo => 'VIDEO';
+
+  @override
+  String get personalizeHome => 'STARTBILDSCHIRM';
+
+  @override
+  String get personalizeBubbles => 'BLASEN';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Ausgewählte Elemente sind sichtbar; zum Umschalten tippen.';
+
+  @override
+  String get personalizeReset => 'Auf Standard zurücksetzen';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Alle Sichtbarkeits- und Spul-Einstellungen auf Standard zurücksetzen?';
+
+  @override
+  String get personalizeResetDone => 'Standard wiederhergestellt';
+
+  @override
+  String get uiItemAttachments => 'Anhänge';
+
+  @override
+  String get uiItemDate => 'Bearbeitungsdatum';
+
+  @override
+  String get uiItemSync => 'Sync-Symbol';
+
+  @override
+  String get uiItemFrequent => 'Häufig verwendet';
+
+  @override
+  String get uiItemVideoTime => 'Zeitanzeige';
+
+  @override
+  String get videoSeekBack => 'Zurückspulen';
+
+  @override
+  String get videoSeekForward => 'Vorspulen';
+
+  @override
+  String get bubbleSizeSetting => 'Blasengröße';
+
+  @override
+  String get noteMenuCustomize => 'Ansicht anpassen';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count ausgeblendet';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDEO';
+
+  @override
+  String get listPartRemoved => 'Liste entfernt';
+
+  @override
+  String get textPartRemoved => 'Text entfernt';
+
+  @override
+  String get notePartsMenu => 'Abschnitte';
+
+  @override
+  String get removeListPart => 'Liste entfernen';
+
+  @override
+  String get removeTextPart => 'Text entfernen';
 }

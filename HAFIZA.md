@@ -4454,3 +4454,111 @@ YouTube ve arka plan görseli ve gizli türetilmiş belge hariç).
 Flutter 3.44.6 `/opt/flutter`'a indirildi; analiz temiz. Android SDK yok —
 APK CI'da; YouTube köprüsü ve uzun basış cihazda görülmedi. graphify
 konteynerde yok, graf güncellenmedi. 18 yeni anahtar 16 dile elle yazıldı. `flutter test` 1214/1214 yeşil (23 yeni: `requests_2026_10_16_b_test.dart`).
+
+## 2026-10-16 (3. tur) — panel dokunuşu, sabit bölme menüsü, ayrı sarma süreleri, bölüm kaldırma, balona yazma, ek önizlemesi, KİŞİSELLEŞTİRME
+Kullanıcı (ekran görüntüsü + 9 madde + "tek oturumda yap, main'e merge, APK"):
+sayfadaki videonun panelinde sil/⋮ basılmıyor; sabit videoyu kaldırma yok;
+geri/ileri sarma saniyesi ayrı ayrı; metin+liste notunda bir bölümü
+kaldırma; balona yazarken odak/klavye kayması + yazma alanının görsel
+yenilenmesi; alttaki ek şeridinde görsel önizleme; bütün alanlar eklenti
+gibi aç/kapa, not ekleme alanı özelleştirme, ayarların toparlanması,
+düzenlemeler MENÜDEN ve bir DÜZENLEME MODUYLA (ekranda kalıcı ayar düğmesi
+yok).
+
+### KÖK NEDEN — panelde sil/⋮/tam ekran basılmıyordu (`note_images.dart`)
+Seçili ekin araç panelinin "dışarı dokunuldu → seçimi düşür" kararı SABİT
+64 dp'lik bir banda bakıyordu. Görünüm anahtarı (Sabit/Yüzen/Balonlu)
+panele İKİNCİ SATIR olarak gelince panel ~110 dp'ye uzadı; alt satır
+(kaydırıcı, tam ekran, sil, ⋮) "dışarısı" sayıldı → parmak İNERKEN seçim
+düşüyor, panel kalkıyor, dokunuş boşa gidiyordu. Üst satır (anahtar) bandın
+içinde kaldığı için o çalışıyordu — kullanıcının gördüğü tablo tam buydu.
+Artık panelin GERÇEK dikdörtgeni (`_toolbarKey` → RenderBox) okunur; panel
+henüz çizilmediyse 124 dp tahmin. Sayfa da seçili ekin altında panel
+kadar uzar (dipteki ekin paneli sayfadan taşıp dokunuş kaybetmesin).
+DERS: bir panele satır eklerken o panelin "dışı" hesabını da ara.
+
+### Sabit bölme ⋮ menüsü (`pinned_media_pane.dart`)
+Yazılı: Sayfaya göm (yüzen) · Ek olarak taşı (alt şerit) · Bağlantıyı
+kopyala (YouTube) · Kaldır (snackbar'da Geri al). Dar çubukta (<340 dp)
+menü varken anahtar düşer (menü aynı işi yazılı yapar). Salt okunurda menü
+yok.
+
+### KİŞİSELLEŞTİRME (`core/personalize.dart`, `core/widgets/customizable.dart`, `settings/presentation/personalize_screen.dart`)
+* `UiPrefs` (gizlenen öğe KİMLİKLERİ kümesi + `seekBack`/`seekForward`),
+  SharedPreferences `ui_prefs_v1` (cihaz tercihi, senkron YOK). Statik
+  `Personalize` (BubbleLook gibi; Overlay/levha içinden de okunur, testte
+  bağlanmadan varsayılanla çalışır). Varsayılan: hepsi görünür — yeni öğe
+  güncellemede kendiliğinden görünür gelir. KİMLİKLER DEĞİŞTİRİLMEZ
+  (`UiItem`; + menüsü `quickadd.<key>`, Ekle levhası `attach.<id>`).
+* EKLENTİ (`UiModule`) = öğelerin adlı grubu; ayrı kaydı YOK, durum
+  öğelerden türer (karışıkta "kısmen açık").
+* DÜZENLEME MODU taslak üzerinde (`draft`): `Customizable` normalde gizliyse
+  yer kaplamaz; modda soluk + göz rozetiyle çizilir, çocuğun işi KAPALI
+  (IgnorePointer), dokunmak taslakta gizle/göster. Uygulamanın TEPESİNDE
+  şerit (`CustomizeModeHost`, MaterialApp.builder): Vazgeç / Kaydet.
+  TUZAK: şerit eklenirken ağaç ŞEKLİ sabit kalmalı (Column + boş yuva +
+  Expanded hep var) — ebeveyn değişseydi Navigator yeniden kurulur, açık
+  ekranlar kaybolurdu (test: `_Counter` durumu korunur).
+* Girişler: Ayarlar tepesinde kısayol kartları (Kılavuz · Kişiselleştir ·
+  Düzenleme modu) + aranabilir "Kişiselleştir" alanı; ana ekran ⋮ →
+  Kişiselleştir; not ⋮ → "Ekranı düzenle" (modu doğrudan açar).
+  Kişiselleştir'den "Düzenleme modunu başlat" `pop('edit')` döner, ayarlar
+  da kapanır.
+* Bağlananlar: not alt çubuğu (Biçim/Ekle/Seç/Ara/Paylaş/Ekler/AI/sesli
+  AI/dikte — `planEditorBar(aiButtons:)` gizlenen AI düğmesinin yerini
+  açar; dikte SÜRERKEN düğme gizlenmez), üst çubuk (tarih, senkron, geri
+  al, ortak çalışan, sabitle), başlık altı çip şeridi, + menüsü (her seçenek
+  + "Sık kullandıkların"; seçenek listesi tek kaynak `quickAddCatalog`),
+  Ekle levhası (`attachSheetCatalog`), video (hız, süre, "Not al").
+* Ayarlar görsel: alan simgeleri renkli karede; Kişiselleştir ekranı
+  bölüm kartları `Material` (DecoratedBox DEĞİL — içindeki ListTile zemin/
+  dalgasını en yakın Material'a çizer, renkli DecoratedBox assert verir).
+
+### Sarma süreleri
+`UiPrefs.seekBack/seekForward` (3·5·10·15·20·30·60 sn). `SeekIcon`: 5/10/30
+Material simgesi, diğerleri döngü oku + sayı. Not içi çubuk ve tam ekran
+oynatıcı aynı kaydı okur; düğme anahtarları (`video-back-10`) testler için
+DEĞİŞMEDİ.
+
+### Bölüm kaldırma (karışık içerik)
+Not ⋮ → İçerik: "Listeyi kaldır" (not saf metin olur) / "Metni kaldır" (saf
+liste; metin notu → checklist, sıralı sıralı kalır) + "Yeni öğe" satırının
+sağında aynı iki iş (`ItemsEditor.addRowTrailing`). Geri al'lı snackbar.
+"Metne/listeye çevir" DÖNÜŞTÜRÜR, bunlar SİLER.
+
+### Balona yazma (`bubble_layer.dart` BubbleDock)
+* KÖK NEDEN 1 (odak): okuma kartından "Düzenle" (`beginEdit`) alanları
+  zaten aynı balonla dolu bulduğu için `_sync` ERKEN dönüyor, odak hiç
+  istenmiyordu — kart açılıyor, klavye gelmiyordu. Artık `_focusedFor`:
+  düzenlemeye açılan her balon için BİR KEZ odak + imleç sonda.
+* KÖK NEDEN 2 (kayma): "yazma kipi" (editörde başlık/alt çubuk/sayfa çubuğu
+  gizlenmesi) ODAĞA bağlıydı; odak her gidip geldiğinde bütün bölme yeniden
+  yerleşiyordu. Artık KARTIN görünürlüğüne bağlı (açılınca bir kez, Bitti
+  ile bir kez). Kart setEditing'i kare sonunda çağırır; bölme dispose'ta
+  açık kalmış kipi kare sonunda geri alır (klasiğe geçiş).
+* KÖK NEDEN 3 (sıçrama): editör gövdesi klavye animasyonu boyunca bilerek
+  tam boyda (KeyboardSnap); gövdenin dibindeki kart ~400 ms klavyenin
+  ARKASINDA kalıp sonra sıçrıyordu. `_KeyboardFollow` → `_RenderKeyboardFollow`:
+  kartın alt kenarı klavyenin üst kenarını aşıyorsa YALNIZ çizim ve isabet
+  testi o kadar yukarı kayar (yerleşim yok; `hitTest` kendi sınırını
+  kaydırılmış konumla denetler, `applyPaintTransform` da kayar →
+  getRect/dokunuş doğru). Ortalama (`centerPdfOnBubble`, slayt `_centerOn`)
+  420 ms'de ve klavyenin arkasında kalan dibi (`keyboardOverlapOf`)
+  "görünür" saymaz.
+* Görünüm: başlık şeridi balon rengine boyalı (renkli tür rozeti + başlık
+  + ✓ Bitti), yazı alanı yumuşak dolgulu kutu (boş yerine dokunmak da
+  odaklar; `filled: false` ŞART — kâğıt temasının InputDecoration dolgusu
+  kutunun içinde ikinci bir kutu çiziyordu), başlıkta Enter metne geçer.
+
+### Ek şeridi önizlemesi (`attachment_strip.dart`)
+PDF ilk sayfası (`PdfFirstPageThumb` — kart önbelleği `CardThumbs`), video
+karesi/YouTube kapağı (`CardMediaTile`), sunum renkli kâğıt; altta koyu
+geçiş üstünde tür rozeti + ad; videodan not ✨ köşede.
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`. 68 yeni anahtar 16 dile elle yazıldı.
+`flutter analyze` temiz; testler: yeni `requests_2026_10_16_c_test.dart`
+(14). Görsel denetim `test/_shots/` (gerçek yazı tipi, PT Sans +
+MaterialIcons) üretildi ve SİLİNDİ. note_editor_screen biçimsiz tutulduğu
+için değişiklikler HEAD'e betikle uygulandı (dart format UYGULANMADI).
+Android SDK yok — APK CI'da; klavye takibi ve odak cihazda görülmedi.

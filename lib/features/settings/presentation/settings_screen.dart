@@ -22,6 +22,7 @@ import '../../ai/data/attachment_text_index.dart';
 import '../../../core/constants.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/l10n_ext.dart';
+import '../../../core/personalize.dart';
 import '../../../core/utils/doc_picker.dart';
 import '../../../core/utils/format_bytes.dart';
 import '../../../core/utils/language_names.dart';
@@ -85,7 +86,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Kişiselleştir alanının özeti kayıttan okunur: Kişiselleştir ekranından
+    // dönünce güncel olsun.
+    Personalize.prefs.addListener(_onPersonalize);
+  }
+
+  void _onPersonalize() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    Personalize.prefs.removeListener(_onPersonalize);
     _searchController.dispose();
     super.dispose();
   }
@@ -259,6 +273,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _DarkScheduleEditor(),
             title: l10n.darkSchedule,
             keywords: l10n.darkScheduleInfo,
+          ),
+        ],
+      ),
+      // KİŞİSELLEŞTİR (kullanıcı isteği 2026-10-16): asıl ekran ayrı
+      // (`/personalize`); bu alan aramada bulunsun ve özet versin diye.
+      _Area(
+        id: 'personalize',
+        icon: Icons.tune_rounded,
+        title: l10n.personalizeTitle,
+        summary: _personalizeSummary(l10n),
+        keywords:
+            'kisisellestir gizle goster eklenti duzenleme modu dugme alan '
+            'arti menu ekle video sarma saniye ileri geri',
+        rows: [
+          _SettingRow(
+            ListTile(
+              key: const ValueKey('settings-personalize-row'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.extension_outlined),
+              title: Text(l10n.personalizeOpen),
+              subtitle: Text(l10n.personalizeInfo),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final result = await context.push<String>('/personalize');
+                if (result == 'edit' && context.mounted) context.pop();
+              },
+            ),
+            title: l10n.personalizeTitle,
+            keywords:
+                '${l10n.personalizeModules} ${l10n.personalizeQuickAdd} '
+                '${l10n.videoSeekBack} ${l10n.videoSeekForward}',
+          ),
+          _SettingRow(
+            ListTile(
+              key: const ValueKey('settings-edit-mode-row'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.touch_app_outlined),
+              title: Text(l10n.customizeStart),
+              subtitle: Text(l10n.customizeModeShort),
+              onTap: () {
+                Personalize.startEditing();
+                context.pop();
+              },
+            ),
+            title: l10n.customizeModeTitle,
+            keywords: 'duzenleme modu ekranda gizle goster',
           ),
         ],
       ),
@@ -438,18 +498,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             children: [
               const _ProfileCard(),
               const SizedBox(height: 8),
-              // KULLANIM KILAVUZU: ayar arayan kullanıcı çoğu zaman bir
-              // özelliğin NASIL kullanıldığını arıyor — en üstte.
-              Card(
-                margin: EdgeInsets.zero,
-                child: ListTile(
-                  key: const ValueKey('settings-guide'),
-                  leading: const Icon(Icons.menu_book_outlined),
-                  title: Text(l10n.guideTitle),
-                  subtitle: Text(l10n.guideMenuInfo),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/guide'),
-                ),
+              // KISAYOL KARTLARI (kullanıcı isteği 2026-10-16: "ayarların
+              // toparlanması, görsel ve özellik olarak geliştirilmesi"):
+              // KULLANIM KILAVUZU (ayar arayan çoğu zaman bir özelliğin
+              // nasıl kullanıldığını arıyor), KİŞİSELLEŞTİR (hangi alan ve
+              // düğme görünsün — eklentiler) ve DÜZENLEME MODU (ekranların
+              // kendisinde gizle/göster) en üstte, yan yana.
+              _ShortcutTiles(
+                tiles: [
+                  _ShortcutTile(
+                    key: const ValueKey('settings-guide'),
+                    icon: Icons.menu_book_outlined,
+                    title: l10n.guideTitle,
+                    subtitle: l10n.guideMenuInfo,
+                    color: scheme.secondary,
+                    onTap: () => context.push('/guide'),
+                  ),
+                  _ShortcutTile(
+                    key: const ValueKey('settings-personalize'),
+                    icon: Icons.tune_rounded,
+                    title: l10n.personalizeTitle,
+                    subtitle: l10n.personalizeInfo,
+                    color: scheme.primary,
+                    onTap: () async {
+                      final result = await context.push<String>(
+                        '/personalize',
+                      );
+                      // Kişiselleştir'den düzenleme modu başlatıldıysa
+                      // ayarlar da kapanır: kullanıcı düzenleyeceği ekrana
+                      // iner.
+                      if (result == 'edit' && context.mounted) context.pop();
+                    },
+                  ),
+                  _ShortcutTile(
+                    key: const ValueKey('settings-edit-mode'),
+                    icon: Icons.touch_app_outlined,
+                    title: l10n.customizeModeTitle,
+                    subtitle: l10n.customizeModeShort,
+                    color: scheme.tertiary,
+                    onTap: () {
+                      Personalize.startEditing();
+                      context.pop();
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               // Ayar arama: alan basliklarinda ve anahtar kelimelerde arar.
@@ -535,6 +627,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  /// Kaç öğe gizli + sarma süreleri ("3 gizli · ⏪10 ⏩10 sn").
+  String _personalizeSummary(AppLocalizations l10n) {
+    final p = Personalize.prefs.value;
+    final seek = '${l10n.videoSeekBack} ${l10n.secondsShort(p.seekBack)} · '
+        '${l10n.videoSeekForward} ${l10n.secondsShort(p.seekForward)}';
+    return p.hidden.isEmpty
+        ? seek
+        : '${l10n.personalizeHiddenSummary(p.hidden.length)} · $seek';
   }
 
   String _aiSummary(AppLocalizations l10n) =>
@@ -678,10 +780,22 @@ class _SettingsArea extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      area.icon,
-                      size: 21,
-                      color: open ? scheme.primary : scheme.onSurfaceVariant,
+                    // Alan simgesi renkli karede (2026-10-16 görsel
+                    // yenileme): başlıklar göz ucuyla ayırt edilsin.
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: (open ? scheme.primary : scheme.onSurfaceVariant)
+                            .withValues(alpha: open ? 0.16 : 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        area.icon,
+                        size: 19,
+                        color: open ? scheme.primary : scheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -745,6 +859,121 @@ class _SettingsArea extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ayarların tepesindeki kısayol kartları: genişte yan yana, dar telefonda
+/// (< 520 dp) alt alta ince satırlar.
+class _ShortcutTiles extends StatelessWidget {
+  const _ShortcutTiles({required this.tiles});
+
+  final List<_ShortcutTile> tiles;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 520) {
+          return Column(
+            children: [
+              for (var i = 0; i < tiles.length; i++) ...[
+                if (i > 0) const SizedBox(height: 6),
+                tiles[i],
+              ],
+            ],
+          );
+        }
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < tiles.length; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                Expanded(child: tiles[i]),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ShortcutTile extends StatelessWidget {
+  const _ShortcutTile({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: Icon(icon, size: 20, color: color),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: scheme.onSurfaceVariant,
+              ),
+            ],
+          ),
         ),
       ),
     );

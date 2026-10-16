@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart'
     show LongPressGestureRecognizer, PointerDeviceKind, TapGestureRecognizer;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -2069,13 +2070,42 @@ class _BubbleDockState extends State<BubbleDock> {
     widget.controller.addListener(_sync);
     for (final focus in [_titleFocus, _textFocus]) {
       focus.addListener(() {
-        final editing = _titleFocus.hasFocus || _textFocus.hasFocus;
-        if (!editing) widget.controller.save();
-        widget.controller.setEditing(editing);
+        final focused = _titleFocus.hasFocus || _textFocus.hasFocus;
+        if (!focused) widget.controller.save();
       });
     }
     _sync();
   }
+
+  /// Yazma kartı AÇIK mı (balon açık + düzenleme kipi) — bölmeyi sadeleştiren
+  /// "yazma kipi" ([BubbleController.setEditing]) buna bağlıdır.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "balona yazarken odak sorunu,
+  /// klavye kayması"): kip eskiden yazı alanının ODAĞINA bağlıydı. Odak her
+  /// gidip geldiğinde (sayfaya dokunmak, renk şeridi, başlıktan metne geçiş
+  /// sırasında bir kare) editörün başlığı, alt çubuğu ve sayfa çubuğu
+  /// gizlenip geri geliyor, bütün bölme yeniden yerleşip kayıyordu. Artık kip
+  /// kartın görünürlüğüne bağlı: kart açılınca BİR KEZ sadeleşir, "Bitti"
+  /// ile BİR KEZ geri gelir; arada odak ne yaparsa yapsın yerleşim sabit.
+  bool _dockOpen = false;
+
+  void _setDockOpen(bool open) {
+    if (_dockOpen == open) return;
+    _dockOpen = open;
+    // Denetleyici bildirimi sırasında (ya da initState'te) üst ekranın
+    // setState'i çağrılmasın: kare sonuna ertelenir.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.controller.setEditing(_dockOpen);
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  /// Odağın en son İSTENDİĞİ balon. Okuma kartından "Düzenle"ye geçişte
+  /// alanlar zaten aynı balonla dolu olduğundan ([_loadedId]) eski kod erken
+  /// dönüyor ve ODAK HİÇ İSTENMİYORDU — kart açılıyor ama klavye gelmiyor,
+  /// kullanıcı alana ayrıca dokunmak zorunda kalıyordu.
+  String? _focusedFor;
 
   @override
   void dispose() {
@@ -2089,7 +2119,10 @@ class _BubbleDockState extends State<BubbleDock> {
 
   void _sync() {
     final open = widget.controller.openBubble;
+    final editMode = widget.controller.editMode;
+    _setDockOpen(open != null && editMode && !widget.readOnly);
     if (open == null) {
+      _focusedFor = null;
       if (_loadedId != null) {
         _loadedId = null;
         _titleFocus.unfocus();
@@ -2097,21 +2130,30 @@ class _BubbleDockState extends State<BubbleDock> {
       }
       return;
     }
-    if (open.id == _loadedId) return;
-    _loadedId = open.id;
-    _title.text = open.title;
-    _text.text = open.text;
-    // Başka bir balona geçildi: açık kalan eylem satırı yeni balona ait
-    // sanılmasın.
-    _colors = false;
-    _fills = false;
-    // Düzenlemeye açıldıysa klavye hazır gelir. Okuma kipinde bu kart zaten
-    // görünmüyor — orada sayfanın üzerindeki balon var.
-    if (widget.controller.editMode && !widget.readOnly) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _textFocus.requestFocus();
-      });
+    if (open.id != _loadedId) {
+      _loadedId = open.id;
+      _title.text = open.title;
+      _text.text = open.text;
+      // Başka bir balona geçildi: açık kalan eylem satırı yeni balona ait
+      // sanılmasın.
+      _colors = false;
+      _fills = false;
+      _focusedFor = null;
     }
+    if (!editMode) {
+      _focusedFor = null;
+      return;
+    }
+    // Düzenlemeye açıldı (yeni balon, okuma kartından "Düzenle", listeden
+    // düzenle): klavye hazır gelir, imleç metnin SONUNDA. Her balon için
+    // BİR KEZ — sonraki bildirimler (yazdıkça) odağı yerinden oynatmaz.
+    if (widget.readOnly || _focusedFor == open.id) return;
+    _focusedFor = open.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _titleFocus.hasFocus || _textFocus.hasFocus) return;
+      _text.selection = TextSelection.collapsed(offset: _text.text.length);
+      _textFocus.requestFocus();
+    });
   }
 
   /// Kartın yüksekliğini denetleyiciye bildirir: görüntüleyici belgeyi
@@ -2157,105 +2199,181 @@ class _BubbleDockState extends State<BubbleDock> {
         fontSize: 14,
         color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
       );
-      // Kâğıda iliştirilmiş bir fiş gibi: zemin BELGENİN rengi (beyaz),
-      // balonun rengi üstte ince bir şerit. Eski sürümde kart baştan sona
-      // balon rengiyle doluydu ("güzel değil, sayfa yapısına uygun bir
-      // tasarımda olsun").
-      return Padding(
-        padding: EdgeInsets.fromLTRB(8, 6, 8, 8 + widget.bottomPadding),
-        child: Material(
-          key: _cardKey,
-          color: scheme.surface,
-          elevation: 8,
-          shadowColor: Colors.black54,
-          borderRadius: BorderRadius.circular(18),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(height: 4, color: color),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 4, 6, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: widget.readOnly
-                          ? Text(
-                              bubble.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: _titleStyle,
-                            )
-                          : TextField(
-                              controller: _title,
-                              focusNode: _titleFocus,
-                              maxLines: 1,
-                              maxLength: PageBubble.maxTitle,
-                              textCapitalization: TextCapitalization.sentences,
-                              style: _titleStyle,
-                              cursorColor: scheme.onSurface,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                counterText: '',
-                                contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 6,
-                                ),
-                                border: InputBorder.none,
-                                hintText: l10n.bubbleTitleHint,
-                                hintStyle: hintStyle,
-                              ),
-                              onChanged: (value) => widget.controller
-                                  .updateTitle(bubble.id, value),
-                            ),
-                    ),
-                    // "Bitti" YAZILI ve hep görünür: eski kapat simgesi
-                    // (⤡) neyin kapandığını anlatmıyordu.
-                    TextFieldTapRegion(
-                      child: ExcludeFocus(
-                        child: FilledButton.tonal(
-                          key: const ValueKey('bubble-dock-done'),
-                          onPressed: _close,
-                          style: FilledButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            minimumSize: const Size(0, 34),
+      // **YAZMA ALANI YENİLENDİ** (kullanıcı isteği 2026-10-16: "yazma
+      // düzenleme alanı tamamen görsel yenilensin"): başlık satırı balonun
+      // rengine boyalı bir şerit (renkli rozet + başlık + Bitti), yazı alanı
+      // yumuşak dolgulu bir kutu (sohbet yazma kutusu gibi; kutunun boş
+      // yerine dokunmak da alana odaklanır), araçlar altta. Kart klavyenin
+      // hemen üstünde ve klavyeyle KARE KARE birlikte kayar
+      // ([_KeyboardFollow]) — eskiden klavye animasyonu boyunca klavyenin
+      // ARKASINDA kalıp, klavye durunca yukarı sıçrıyordu.
+      final onColor =
+          ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+          ? Colors.white
+          : Colors.black87;
+      return _KeyboardFollow(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(6, 6, 6, 6 + widget.bottomPadding),
+          child: Material(
+            key: _cardKey,
+            color: scheme.surface,
+            elevation: 10,
+            shadowColor: Colors.black45,
+            borderRadius: BorderRadius.circular(22),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ColoredBox(
+                  color: Color.alphaBlend(
+                    color.withValues(alpha: 0.16),
+                    scheme.surface,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 6, 6, 6),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
                           ),
-                          child: Text(l10n.bubbleDone),
+                          child: Icon(
+                            bubble.plain
+                                ? Icons.text_fields_rounded
+                                : bubble.isHighlight
+                                ? Icons.border_color_rounded
+                                : Icons.chat_bubble_rounded,
+                            size: 15,
+                            color: onColor,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: widget.readOnly
+                              ? Text(
+                                  bubble.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _titleStyle,
+                                )
+                              : TextField(
+                                  key: const ValueKey('bubble-dock-title'),
+                                  controller: _title,
+                                  focusNode: _titleFocus,
+                                  maxLines: 1,
+                                  maxLength: PageBubble.maxTitle,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  textInputAction: TextInputAction.next,
+                                  // Başlıkta Enter metne geçer — klavye
+                                  // kapanıp açılmaz.
+                                  onSubmitted: (_) => _textFocus.requestFocus(),
+                                  style: _titleStyle,
+                                  cursorColor: scheme.onSurface,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    filled: false,
+                                    counterText: '',
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      vertical: 6,
+                                    ),
+                                    border: InputBorder.none,
+                                    hintText: l10n.bubbleTitleHint,
+                                    hintStyle: hintStyle,
+                                  ),
+                                  onChanged: (value) => widget.controller
+                                      .updateTitle(bubble.id, value),
+                                ),
+                        ),
+                        // "Bitti" YAZILI ve hep görünür: eski kapat simgesi
+                        // (⤡) neyin kapandığını anlatmıyordu.
+                        TextFieldTapRegion(
+                          child: ExcludeFocus(
+                            child: FilledButton.icon(
+                              key: const ValueKey('bubble-dock-done'),
+                              onPressed: _close,
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                                minimumSize: const Size(0, 34),
+                              ),
+                              icon: const Icon(Icons.check_rounded, size: 18),
+                              label: Text(l10n.bubbleDone),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: widget.readOnly
-                    ? Text(bubble.text, style: _bodyStyle)
-                    : TextField(
-                        controller: _text,
-                        focusNode: _textFocus,
-                        maxLines: 5,
-                        minLines: 1,
-                        style: _bodyStyle,
-                        cursorColor: scheme.onSurface,
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding: const EdgeInsets.only(bottom: 4),
-                          border: InputBorder.none,
-                          hintText: l10n.bubbleHint,
-                          hintStyle: hintStyle,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+                  child: widget.readOnly
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(bubble.text, style: _bodyStyle),
+                        )
+                      : GestureDetector(
+                          // Kutunun boş yerine dokunmak da yazmaya başlatır:
+                          // tek satırlık alanın dışına (kutunun dolgusuna)
+                          // dokunan parmak eskiden boşa gidiyordu.
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () {
+                            if (!_textFocus.hasFocus) {
+                              _textFocus.requestFocus();
+                            }
+                          },
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: scheme.surfaceContainerHighest.withValues(
+                                alpha: 0.6,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+                              child: TextField(
+                                key: const ValueKey('bubble-dock-text'),
+                                controller: _text,
+                                focusNode: _textFocus,
+                                maxLines: 6,
+                                minLines: 2,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                keyboardType: TextInputType.multiline,
+                                style: _bodyStyle,
+                                cursorColor: scheme.onSurface,
+                                // İmleç alanın içinde kaydırılırken kartın
+                                // üstünde boşluk bırakılmaz.
+                                scrollPadding: EdgeInsets.zero,
+                                decoration: InputDecoration(
+                                  isDense: true,
+                                  filled: false,
+                                  contentPadding: EdgeInsets.zero,
+                                  border: InputBorder.none,
+                                  hintText: l10n.bubbleHint,
+                                  hintStyle: hintStyle,
+                                ),
+                                onChanged: (value) => widget.controller
+                                    .updateText(bubble.id, value),
+                              ),
+                            ),
+                          ),
                         ),
-                        onChanged: (value) =>
-                            widget.controller.updateText(bubble.id, value),
-                      ),
-              ),
-              if (!widget.readOnly) _toolRow(context, bubble),
-              if (_colors && !widget.readOnly) _colorStrip(bubble),
-              if (_fills && bubble.plain && !widget.readOnly)
-                _fillStrip(bubble),
-              if (widget.readOnly) const SizedBox(height: 10),
-            ],
+                ),
+                if (!widget.readOnly) _toolRow(context, bubble),
+                if (_colors && !widget.readOnly) _colorStrip(bubble),
+                if (_fills && bubble.plain && !widget.readOnly)
+                  _fillStrip(bubble),
+                if (widget.readOnly) const SizedBox(height: 10),
+              ],
+            ),
           ),
         ),
       );
@@ -2894,4 +3012,112 @@ class BubbleBarActions extends StatelessWidget {
       },
     );
   }
+}
+
+/// Çocuğunu KLAVYENİN ÜSTÜNDE tutar: çocuğun alt kenarı klavyenin arkasına
+/// düşüyorsa (ekranın gövdesi henüz kısalmadıysa) aradaki fark kadar yukarı
+/// KAYDIRARAK çizer. Yalnız boyama ve isabet testi kayar — yerleşim yok.
+///
+/// KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "balona yazarken klavye
+/// kayması"): not editörü klavye açılırken gövdeyi bilerek animasyon
+/// boyunca tam boyda tutar ve klavye DURUNCA tek seferde kısaltır (bkz.
+/// `KeyboardSnap` — kasma çözümü). Gövdenin dibindeki yazma kartı bu yüzden
+/// klavye açılırken ~400 ms klavyenin arkasında kalıyor, sonra birden
+/// yukarı sıçrıyordu; yazılan ilk harfler görünmüyordu. Kart artık
+/// klavyeyle kare kare birlikte yükselir; gövde oturunca fark sıfırlanır,
+/// görünür hiçbir sıçrama olmaz. Klavyeyi zaten gövdeden düşen tam ekran
+/// görüntüleyicilerde fark hep sıfırdır (etkisiz).
+class _KeyboardFollow extends StatelessWidget {
+  const _KeyboardFollow({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    // Bağımlılık YALNIZ bu küçük sarmalayıcıda: klavye karelerinde kartın
+    // kendisi yeniden kurulmaz, yalnız çizim kayması güncellenir.
+    final inset = MediaQuery.viewInsetsOf(context).bottom;
+    final view = View.of(context);
+    final height = view.physicalSize.height / view.devicePixelRatio;
+    final keyboard = math.max(
+      inset,
+      view.viewInsets.bottom / view.devicePixelRatio,
+    );
+    return _KeyboardFollowBox(keyboardTop: height - keyboard, child: child);
+  }
+}
+
+class _KeyboardFollowBox extends SingleChildRenderObjectWidget {
+  const _KeyboardFollowBox({required this.keyboardTop, super.child});
+
+  /// Klavyenin üst kenarı (pencerenin tepesinden, mantıksal piksel).
+  final double keyboardTop;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderKeyboardFollow(keyboardTop);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderKeyboardFollow renderObject,
+  ) => renderObject.keyboardTop = keyboardTop;
+}
+
+class _RenderKeyboardFollow extends RenderProxyBox {
+  _RenderKeyboardFollow(this._keyboardTop);
+
+  double _keyboardTop;
+  set keyboardTop(double value) {
+    if (value == _keyboardTop) return;
+    _keyboardTop = value;
+    markNeedsPaint();
+  }
+
+  /// Son çizimdeki yukarı kayma (dp).
+  double _shift = 0;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final bottom = localToGlobal(Offset(0, size.height)).dy;
+    _shift = math.max(0.0, bottom - _keyboardTop);
+    context.paintChild(child, offset.translate(0, -_shift));
+  }
+
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null) return false;
+    if (!size.contains(position.translate(0, _shift))) return false;
+    final hit = result.addWithPaintOffset(
+      offset: Offset(0, -_shift),
+      position: position,
+      hitTest: (result, transformed) =>
+          child.hitTest(result, position: transformed),
+    );
+    if (hit) result.add(BoxHitTestEntry(this, position));
+    return hit;
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.translateByDouble(0, -_shift, 0, 1);
+  }
+}
+
+/// Bölmenin alt kenarının klavyenin ARKASINDA kalan kısmı (dp). Görüntüleyici
+/// açık balonu ortalarken klavyenin altında kalan yeri "görünür" saymasın
+/// (bkz. `centerPdfOnBubble`) — editör gövdesi klavye durana dek kısalmaz.
+double keyboardOverlapOf(BuildContext context) {
+  final box = context.findRenderObject();
+  if (box is! RenderBox || !box.attached || !box.hasSize) return 0;
+  final view = View.maybeOf(context);
+  if (view == null) return 0;
+  final height = view.physicalSize.height / view.devicePixelRatio;
+  final keyboard = view.viewInsets.bottom / view.devicePixelRatio;
+  if (keyboard <= 0) return 0;
+  final bottom = box.localToGlobal(Offset(0, box.size.height)).dy;
+  return math.max(0.0, bottom - (height - keyboard));
 }

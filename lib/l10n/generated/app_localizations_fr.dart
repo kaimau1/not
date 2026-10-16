@@ -4807,4 +4807,226 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Aucune pièce jointe à partager sur cet appareil.';
+
+  @override
+  String get attachmentRemoved => 'Pièce jointe supprimée';
+
+  @override
+  String get pinnedEmbedOnPage => 'Intégrer à la page (flottant)';
+
+  @override
+  String get customizeHideItem => 'Masquer';
+
+  @override
+  String get customizeShowItem => 'Afficher';
+
+  @override
+  String get customizeModeTitle => 'Mode édition';
+
+  @override
+  String get customizeModeHint =>
+      'Touchez les éléments pour les masquer ou les afficher';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count masqué(s) · touchez pour modifier';
+  }
+
+  @override
+  String get customizeSave => 'Enregistrer';
+
+  @override
+  String get customizeSaved => 'Disposition enregistrée';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Reculer de $seconds s';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Avancer de $seconds s';
+  }
+
+  @override
+  String get personalizeTitle => 'Personnaliser';
+
+  @override
+  String get personalizeInfo => 'Zones et boutons visibles, modules';
+
+  @override
+  String get personalizeOpen => 'Ouvrir la personnalisation';
+
+  @override
+  String get customizeStartTitle => 'Modifier à l\'écran';
+
+  @override
+  String get customizeStartInfo =>
+      'Activez le mode édition, puis touchez les boutons et zones de n\'importe quel écran pour les masquer ou les afficher. Ensuite, touchez Enregistrer dans la bande en haut.';
+
+  @override
+  String get customizeStart => 'Démarrer le mode édition';
+
+  @override
+  String get customizeActive => 'Le mode édition est activé';
+
+  @override
+  String get customizeModeShort => 'Masquer ou afficher en touchant les écrans';
+
+  @override
+  String get personalizeModules => 'MODULES';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Désactiver un module retire ses boutons partout.';
+
+  @override
+  String get moduleAi => 'IA';
+
+  @override
+  String get moduleAiInfo => 'Boutons IA dans l\'écran de note';
+
+  @override
+  String get moduleVoice => 'Voix';
+
+  @override
+  String get moduleVoiceInfo => 'Notes vocales, dictée, enregistrement audio';
+
+  @override
+  String get moduleVideo => 'Vidéo';
+
+  @override
+  String get moduleVideoInfo => 'Enregistrement, vidéos de la galerie, YouTube';
+
+  @override
+  String get moduleDocuments => 'Documents';
+
+  @override
+  String get moduleDocumentsInfo => 'Ajout de PDF et de diapositives';
+
+  @override
+  String get moduleScan => 'Numérisation';
+
+  @override
+  String get moduleScanInfo => 'Numérisation de documents et codes QR';
+
+  @override
+  String get moduleDrawing => 'Dessin';
+
+  @override
+  String get moduleDrawingInfo => 'Écriture manuscrite et dessin';
+
+  @override
+  String get moduleTemplates => 'Modèles';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Notes à partir de modèles, liste de courses, carnet d\'archives';
+
+  @override
+  String get moduleTags => 'Puces de note';
+
+  @override
+  String get moduleTagsInfo =>
+      'Puces d\'étiquette, de dossier et de rappel sous le titre';
+
+  @override
+  String get moduleCollaboration => 'Collaboration';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'Le bouton d\'ajout de personne dans l\'écran de note';
+
+  @override
+  String get moduleMixed => 'partiellement activé';
+
+  @override
+  String get personalizeEditorBar => 'ÉCRAN DE NOTE · BARRE DU BAS';
+
+  @override
+  String get personalizeEditorTop => 'ÉCRAN DE NOTE · BARRE DU HAUT ET ZONES';
+
+  @override
+  String get personalizeQuickAdd => 'MENU NOUVELLE NOTE (+)';
+
+  @override
+  String get personalizeAttachSheet => 'FEUILLE D\'AJOUT (+ DANS UNE NOTE)';
+
+  @override
+  String get personalizeVideo => 'VIDÉO';
+
+  @override
+  String get personalizeHome => 'ÉCRAN D\'ACCUEIL';
+
+  @override
+  String get personalizeBubbles => 'BULLES';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Les éléments sélectionnés sont visibles ; touchez pour basculer.';
+
+  @override
+  String get personalizeReset => 'Rétablir les valeurs par défaut';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Rétablir tous les réglages de visibilité et d\'avance/recul par défaut ?';
+
+  @override
+  String get personalizeResetDone => 'Valeurs par défaut rétablies';
+
+  @override
+  String get uiItemAttachments => 'Pièces jointes';
+
+  @override
+  String get uiItemDate => 'Date de modification';
+
+  @override
+  String get uiItemSync => 'Icône de synchro';
+
+  @override
+  String get uiItemFrequent => 'Fréquemment utilisés';
+
+  @override
+  String get uiItemVideoTime => 'Indication de durée';
+
+  @override
+  String get videoSeekBack => 'Retour arrière';
+
+  @override
+  String get videoSeekForward => 'Avance rapide';
+
+  @override
+  String get bubbleSizeSetting => 'Taille des bulles';
+
+  @override
+  String get noteMenuCustomize => 'Personnaliser l\'écran';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds s';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count masqué(s)';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDÉO';
+
+  @override
+  String get listPartRemoved => 'Liste supprimée';
+
+  @override
+  String get textPartRemoved => 'Texte supprimé';
+
+  @override
+  String get notePartsMenu => 'Sections';
+
+  @override
+  String get removeListPart => 'Supprimer la liste';
+
+  @override
+  String get removeTextPart => 'Supprimer le texte';
 }

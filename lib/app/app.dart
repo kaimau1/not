@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/l10n_ext.dart';
+import '../core/widgets/customizable.dart';
 import '../core/widgets/undo_snackbar.dart';
 import '../features/settings/settings_providers.dart';
 import 'router.dart';
@@ -130,7 +131,9 @@ class NotlarApp extends ConsumerWidget {
           ),
           child: fixedTypography(
             context,
-            child ?? const SizedBox.shrink(),
+            // DÜZENLEME MODU şeridi bütün ekranların üstünde (bkz.
+            // customizable.dart) — mod kapalıyken ağaca hiçbir şey eklemez.
+            CustomizeModeHost(child: child ?? const SizedBox.shrink()),
             fontScale,
           ),
         );

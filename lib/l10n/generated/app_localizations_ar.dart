@@ -4767,4 +4767,221 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'لا توجد ملفات مرفقة على هذا الجهاز للمشاركة.';
+
+  @override
+  String get attachmentRemoved => 'تمت إزالة المرفق';
+
+  @override
+  String get pinnedEmbedOnPage => 'تضمين في الصفحة (عائم)';
+
+  @override
+  String get customizeHideItem => 'إخفاء';
+
+  @override
+  String get customizeShowItem => 'إظهار';
+
+  @override
+  String get customizeModeTitle => 'وضع التعديل';
+
+  @override
+  String get customizeModeHint => 'اضغط على العناصر لإخفائها أو إظهارها';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count مخفية · اضغط للتغيير';
+  }
+
+  @override
+  String get customizeSave => 'حفظ';
+
+  @override
+  String get customizeSaved => 'تم حفظ التخطيط';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'رجوع $seconds ث';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'تقديم $seconds ث';
+  }
+
+  @override
+  String get personalizeTitle => 'تخصيص';
+
+  @override
+  String get personalizeInfo => 'المناطق والأزرار الظاهرة، الإضافات';
+
+  @override
+  String get personalizeOpen => 'فتح التخصيص';
+
+  @override
+  String get customizeStartTitle => 'التعديل على الشاشة';
+
+  @override
+  String get customizeStartInfo =>
+      'شغّل وضع التعديل، ثم اضغط على الأزرار والمناطق في أي شاشة لإخفائها أو إظهارها. عند الانتهاء اضغط حفظ في الشريط العلوي.';
+
+  @override
+  String get customizeStart => 'بدء وضع التعديل';
+
+  @override
+  String get customizeActive => 'وضع التعديل مفعّل';
+
+  @override
+  String get customizeModeShort => 'إخفاء أو إظهار بالضغط على الشاشات';
+
+  @override
+  String get personalizeModules => 'الإضافات';
+
+  @override
+  String get personalizeModulesInfo => 'إيقاف إضافة يزيل أزرارها من كل مكان.';
+
+  @override
+  String get moduleAi => 'الذكاء الاصطناعي';
+
+  @override
+  String get moduleAiInfo => 'أزرار الذكاء الاصطناعي في شاشة الملاحظة';
+
+  @override
+  String get moduleVoice => 'الصوت';
+
+  @override
+  String get moduleVoiceInfo => 'ملاحظات صوتية، إملاء، تسجيل صوت';
+
+  @override
+  String get moduleVideo => 'الفيديو';
+
+  @override
+  String get moduleVideoInfo => 'التسجيل، فيديوهات المعرض، يوتيوب';
+
+  @override
+  String get moduleDocuments => 'المستندات';
+
+  @override
+  String get moduleDocumentsInfo => 'إضافة ملفات PDF والشرائح';
+
+  @override
+  String get moduleScan => 'المسح';
+
+  @override
+  String get moduleScanInfo => 'مسح المستندات ورموز QR';
+
+  @override
+  String get moduleDrawing => 'الرسم';
+
+  @override
+  String get moduleDrawingInfo => 'الكتابة اليدوية والرسم';
+
+  @override
+  String get moduleTemplates => 'القوالب';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'ملاحظات من القوالب، قائمة التسوق، دفتر الأرشيف';
+
+  @override
+  String get moduleTags => 'شارات الملاحظة';
+
+  @override
+  String get moduleTagsInfo => 'شارات الوسوم والمجلدات والتذكيرات أسفل العنوان';
+
+  @override
+  String get moduleCollaboration => 'التعاون';
+
+  @override
+  String get moduleCollaborationInfo => 'زر إضافة شخص في شاشة الملاحظة';
+
+  @override
+  String get moduleMixed => 'مفعّل جزئيًا';
+
+  @override
+  String get personalizeEditorBar => 'شاشة الملاحظة · الشريط السفلي';
+
+  @override
+  String get personalizeEditorTop => 'شاشة الملاحظة · الشريط العلوي والمناطق';
+
+  @override
+  String get personalizeQuickAdd => 'قائمة ملاحظة جديدة (+)';
+
+  @override
+  String get personalizeAttachSheet => 'لوحة الإضافة (+ داخل الملاحظة)';
+
+  @override
+  String get personalizeVideo => 'الفيديو';
+
+  @override
+  String get personalizeHome => 'الشاشة الرئيسية';
+
+  @override
+  String get personalizeBubbles => 'الفقاعات';
+
+  @override
+  String get personalizeChipsInfo => 'العناصر المحددة ظاهرة؛ اضغط للتبديل.';
+
+  @override
+  String get personalizeReset => 'استعادة الافتراضي';
+
+  @override
+  String get personalizeResetConfirm =>
+      'استعادة كل إعدادات الظهور والتقديم/الإرجاع إلى الافتراضي؟';
+
+  @override
+  String get personalizeResetDone => 'تمت استعادة الإعدادات الافتراضية';
+
+  @override
+  String get uiItemAttachments => 'المرفقات';
+
+  @override
+  String get uiItemDate => 'تاريخ التعديل';
+
+  @override
+  String get uiItemSync => 'أيقونة المزامنة';
+
+  @override
+  String get uiItemFrequent => 'الأكثر استخدامًا';
+
+  @override
+  String get uiItemVideoTime => 'مؤشر الوقت';
+
+  @override
+  String get videoSeekBack => 'إرجاع';
+
+  @override
+  String get videoSeekForward => 'تقديم سريع';
+
+  @override
+  String get bubbleSizeSetting => 'حجم الفقاعة';
+
+  @override
+  String get noteMenuCustomize => 'تخصيص الشاشة';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds ث';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count مخفية';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'فيديو';
+
+  @override
+  String get listPartRemoved => 'تمت إزالة القائمة';
+
+  @override
+  String get textPartRemoved => 'تمت إزالة النص';
+
+  @override
+  String get notePartsMenu => 'الأقسام';
+
+  @override
+  String get removeListPart => 'إزالة القائمة';
+
+  @override
+  String get removeTextPart => 'إزالة النص';
 }

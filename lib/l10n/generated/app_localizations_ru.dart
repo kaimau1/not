@@ -4796,4 +4796,227 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'На этом устройстве нет вложений для отправки.';
+
+  @override
+  String get attachmentRemoved => 'Вложение удалено';
+
+  @override
+  String get pinnedEmbedOnPage => 'Встроить в страницу (плавающий)';
+
+  @override
+  String get customizeHideItem => 'Скрыть';
+
+  @override
+  String get customizeShowItem => 'Показать';
+
+  @override
+  String get customizeModeTitle => 'Режим правки';
+
+  @override
+  String get customizeModeHint =>
+      'Нажимайте на элементы, чтобы скрыть или показать их';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return 'Скрыто: $count · нажмите, чтобы изменить';
+  }
+
+  @override
+  String get customizeSave => 'Сохранить';
+
+  @override
+  String get customizeSaved => 'Макет сохранён';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Назад на $seconds с';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Вперёд на $seconds с';
+  }
+
+  @override
+  String get personalizeTitle => 'Персонализация';
+
+  @override
+  String get personalizeInfo => 'Видимые области и кнопки, модули';
+
+  @override
+  String get personalizeOpen => 'Открыть персонализацию';
+
+  @override
+  String get customizeStartTitle => 'Правка на экране';
+
+  @override
+  String get customizeStartInfo =>
+      'Включите режим правки и нажимайте на кнопки и области любого экрана, чтобы скрыть или показать их. Затем нажмите «Сохранить» на полосе вверху.';
+
+  @override
+  String get customizeStart => 'Включить режим правки';
+
+  @override
+  String get customizeActive => 'Режим правки включён';
+
+  @override
+  String get customizeModeShort =>
+      'Скрывайте и показывайте нажатием на экранах';
+
+  @override
+  String get personalizeModules => 'МОДУЛИ';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Выключенный модуль убирает свои кнопки отовсюду.';
+
+  @override
+  String get moduleAi => 'ИИ';
+
+  @override
+  String get moduleAiInfo => 'Кнопки ИИ на экране заметки';
+
+  @override
+  String get moduleVoice => 'Голос';
+
+  @override
+  String get moduleVoiceInfo => 'Голосовые заметки, диктовка, запись звука';
+
+  @override
+  String get moduleVideo => 'Видео';
+
+  @override
+  String get moduleVideoInfo => 'Съёмка, видео из галереи, YouTube';
+
+  @override
+  String get moduleDocuments => 'Документы';
+
+  @override
+  String get moduleDocumentsInfo => 'Добавление PDF и слайдов';
+
+  @override
+  String get moduleScan => 'Сканирование';
+
+  @override
+  String get moduleScanInfo => 'Сканирование документов и QR-коды';
+
+  @override
+  String get moduleDrawing => 'Рисование';
+
+  @override
+  String get moduleDrawingInfo => 'Рукописный ввод и рисунки';
+
+  @override
+  String get moduleTemplates => 'Шаблоны';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Заметки из шаблонов, список покупок, архивная тетрадь';
+
+  @override
+  String get moduleTags => 'Метки заметки';
+
+  @override
+  String get moduleTagsInfo =>
+      'Метки тегов, папок и напоминаний под заголовком';
+
+  @override
+  String get moduleCollaboration => 'Совместная работа';
+
+  @override
+  String get moduleCollaborationInfo =>
+      'Кнопка добавления человека на экране заметки';
+
+  @override
+  String get moduleMixed => 'частично включено';
+
+  @override
+  String get personalizeEditorBar => 'ЭКРАН ЗАМЕТКИ · НИЖНЯЯ ПАНЕЛЬ';
+
+  @override
+  String get personalizeEditorTop => 'ЭКРАН ЗАМЕТКИ · ВЕРХНЯЯ ПАНЕЛЬ И ОБЛАСТИ';
+
+  @override
+  String get personalizeQuickAdd => 'МЕНЮ НОВОЙ ЗАМЕТКИ (+)';
+
+  @override
+  String get personalizeAttachSheet => 'ЛИСТ ДОБАВЛЕНИЯ (+ В ЗАМЕТКЕ)';
+
+  @override
+  String get personalizeVideo => 'ВИДЕО';
+
+  @override
+  String get personalizeHome => 'ГЛАВНЫЙ ЭКРАН';
+
+  @override
+  String get personalizeBubbles => 'ВЫНОСКИ';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Выбранные элементы видны; нажмите, чтобы переключить.';
+
+  @override
+  String get personalizeReset => 'Сбросить по умолчанию';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Сбросить все настройки видимости и перемотки?';
+
+  @override
+  String get personalizeResetDone => 'Настройки по умолчанию восстановлены';
+
+  @override
+  String get uiItemAttachments => 'Вложения';
+
+  @override
+  String get uiItemDate => 'Дата правки';
+
+  @override
+  String get uiItemSync => 'Значок синхронизации';
+
+  @override
+  String get uiItemFrequent => 'Часто используемые';
+
+  @override
+  String get uiItemVideoTime => 'Индикатор времени';
+
+  @override
+  String get videoSeekBack => 'Перемотка назад';
+
+  @override
+  String get videoSeekForward => 'Перемотка вперёд';
+
+  @override
+  String get bubbleSizeSetting => 'Размер выносок';
+
+  @override
+  String get noteMenuCustomize => 'Настроить экран';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds с';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return 'Скрыто: $count';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'ВИДЕО';
+
+  @override
+  String get listPartRemoved => 'Список удалён';
+
+  @override
+  String get textPartRemoved => 'Текст удалён';
+
+  @override
+  String get notePartsMenu => 'Разделы';
+
+  @override
+  String get removeListPart => 'Удалить список';
+
+  @override
+  String get removeTextPart => 'Удалить текст';
 }

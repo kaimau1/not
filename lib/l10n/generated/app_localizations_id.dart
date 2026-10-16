@@ -4796,4 +4796,225 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get shareAttachmentFilesNone =>
       'Tidak ada file lampiran di perangkat ini untuk dibagikan.';
+
+  @override
+  String get attachmentRemoved => 'Lampiran dihapus';
+
+  @override
+  String get pinnedEmbedOnPage => 'Sematkan di halaman (mengambang)';
+
+  @override
+  String get customizeHideItem => 'Sembunyikan';
+
+  @override
+  String get customizeShowItem => 'Tampilkan';
+
+  @override
+  String get customizeModeTitle => 'Mode edit';
+
+  @override
+  String get customizeModeHint =>
+      'Ketuk item untuk menyembunyikan atau menampilkannya';
+
+  @override
+  String customizeHiddenCount(int count) {
+    return '$count tersembunyi · ketuk untuk mengubah';
+  }
+
+  @override
+  String get customizeSave => 'Simpan';
+
+  @override
+  String get customizeSaved => 'Tata letak disimpan';
+
+  @override
+  String videoBackSeconds(int seconds) {
+    return 'Mundur $seconds dtk';
+  }
+
+  @override
+  String videoForwardSeconds(int seconds) {
+    return 'Maju $seconds dtk';
+  }
+
+  @override
+  String get personalizeTitle => 'Personalisasi';
+
+  @override
+  String get personalizeInfo => 'Area dan tombol yang terlihat, plug-in';
+
+  @override
+  String get personalizeOpen => 'Buka personalisasi';
+
+  @override
+  String get customizeStartTitle => 'Edit di layar';
+
+  @override
+  String get customizeStartInfo =>
+      'Aktifkan mode edit, lalu ketuk tombol dan area di layar mana pun untuk menyembunyikan atau menampilkannya. Setelah selesai, ketuk Simpan di strip atas.';
+
+  @override
+  String get customizeStart => 'Mulai mode edit';
+
+  @override
+  String get customizeActive => 'Mode edit aktif';
+
+  @override
+  String get customizeModeShort =>
+      'Sembunyikan atau tampilkan dengan mengetuk layar';
+
+  @override
+  String get personalizeModules => 'PLUG-IN';
+
+  @override
+  String get personalizeModulesInfo =>
+      'Menonaktifkan plug-in akan menghapus tombolnya di mana pun.';
+
+  @override
+  String get moduleAi => 'AI';
+
+  @override
+  String get moduleAiInfo => 'Tombol AI di layar catatan';
+
+  @override
+  String get moduleVoice => 'Suara';
+
+  @override
+  String get moduleVoiceInfo => 'Catatan suara, dikte, rekaman audio';
+
+  @override
+  String get moduleVideo => 'Video';
+
+  @override
+  String get moduleVideoInfo => 'Merekam, video galeri, YouTube';
+
+  @override
+  String get moduleDocuments => 'Dokumen';
+
+  @override
+  String get moduleDocumentsInfo => 'Menambahkan PDF dan slide';
+
+  @override
+  String get moduleScan => 'Pemindaian';
+
+  @override
+  String get moduleScanInfo => 'Pindai dokumen dan kode QR';
+
+  @override
+  String get moduleDrawing => 'Menggambar';
+
+  @override
+  String get moduleDrawingInfo => 'Tulisan tangan dan gambar';
+
+  @override
+  String get moduleTemplates => 'Templat';
+
+  @override
+  String get moduleTemplatesInfo =>
+      'Catatan dari templat, daftar belanja, buku arsip';
+
+  @override
+  String get moduleTags => 'Chip catatan';
+
+  @override
+  String get moduleTagsInfo => 'Chip tag, folder, dan pengingat di bawah judul';
+
+  @override
+  String get moduleCollaboration => 'Kolaborasi';
+
+  @override
+  String get moduleCollaborationInfo => 'Tombol tambah orang di layar catatan';
+
+  @override
+  String get moduleMixed => 'sebagian aktif';
+
+  @override
+  String get personalizeEditorBar => 'LAYAR CATATAN · BILAH BAWAH';
+
+  @override
+  String get personalizeEditorTop => 'LAYAR CATATAN · BILAH ATAS DAN AREA';
+
+  @override
+  String get personalizeQuickAdd => 'MENU CATATAN BARU (+)';
+
+  @override
+  String get personalizeAttachSheet => 'LEMBAR TAMBAH (+ DI DALAM CATATAN)';
+
+  @override
+  String get personalizeVideo => 'VIDEO';
+
+  @override
+  String get personalizeHome => 'LAYAR BERANDA';
+
+  @override
+  String get personalizeBubbles => 'BALON';
+
+  @override
+  String get personalizeChipsInfo =>
+      'Item yang dipilih terlihat; ketuk untuk beralih.';
+
+  @override
+  String get personalizeReset => 'Kembalikan ke bawaan';
+
+  @override
+  String get personalizeResetConfirm =>
+      'Kembalikan semua pengaturan visibilitas dan lompat ke bawaan?';
+
+  @override
+  String get personalizeResetDone => 'Pengaturan bawaan dipulihkan';
+
+  @override
+  String get uiItemAttachments => 'Lampiran';
+
+  @override
+  String get uiItemDate => 'Tanggal edit';
+
+  @override
+  String get uiItemSync => 'Ikon sinkronisasi';
+
+  @override
+  String get uiItemFrequent => 'Sering digunakan';
+
+  @override
+  String get uiItemVideoTime => 'Penanda waktu';
+
+  @override
+  String get videoSeekBack => 'Mundur';
+
+  @override
+  String get videoSeekForward => 'Maju cepat';
+
+  @override
+  String get bubbleSizeSetting => 'Ukuran balon';
+
+  @override
+  String get noteMenuCustomize => 'Sesuaikan layar';
+
+  @override
+  String secondsShort(int seconds) {
+    return '$seconds dtk';
+  }
+
+  @override
+  String personalizeHiddenSummary(int count) {
+    return '$count tersembunyi';
+  }
+
+  @override
+  String get uiItemVideoBadge => 'VIDEO';
+
+  @override
+  String get listPartRemoved => 'Daftar dihapus';
+
+  @override
+  String get textPartRemoved => 'Teks dihapus';
+
+  @override
+  String get notePartsMenu => 'Bagian';
+
+  @override
+  String get removeListPart => 'Hapus daftar';
+
+  @override
+  String get removeTextPart => 'Hapus teks';
 }

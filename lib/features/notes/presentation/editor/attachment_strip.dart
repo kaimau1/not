@@ -16,6 +16,7 @@ import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import '../../data/drive_store.dart';
 import '../drive_ui.dart';
+import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -324,91 +325,70 @@ class _AttachmentTile extends ConsumerWidget {
         ref.watch(uploadFailuresProvider)[attachment.id] ?? 0;
     final uploadFailed = !overSyncLimit && failedAttempts >= 3;
 
+    // GÖRSEL ÖNİZLEME (kullanıcı isteği 2026-10-16: "ekler altta iken sadece
+    // metin olarak görülüyor; görsel, PDF, video önizlemesi görsel olarak
+    // görülmeli"). PDF/sunum/video eskiden simge + dosya adıydı; artık
+    // döşemenin tamamı önizleme (PDF'in ilk sayfası, videonun karesi,
+    // YouTube kapağı — ana ekran kartlarıyla aynı önbellekli küçük resimler,
+    // bkz. CardThumbs), altta koyu geçiş üstünde ad + tür rozeti.
     Widget content;
     if (attachment.kind == AttachmentKind.audio) {
       content = _AudioTile(attachment: attachment);
     } else if (attachment.kind == AttachmentKind.pdf) {
-      content = Container(
-        width: 140,
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.picture_as_pdf_outlined, color: scheme.error, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              attachment.fileName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-          ],
+      content = _PreviewTile(
+        preview: ColoredBox(
+          color: Colors.white,
+          child: PdfFirstPageThumb(attachment: attachment),
         ),
+        name: attachment.fileName,
+        badge: context.l10n.cardKindPdf,
+        badgeColor: scheme.error,
       );
     } else if (attachment.kind == AttachmentKind.video) {
-      // Görüntülü not: yalnız cihazda saklandığı için bulut simgesi yerine
-      // "cihazda" bilgisi verilir; dokununca uygulama içinde oynatılır.
-      content = Container(
-        width: 140,
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.play_circle_outline, color: scheme.primary, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              attachment.fileName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            Text(
-              attachment.isWebVideo ? 'YouTube' : context.l10n.videoLocalOnly,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontSize: 9,
-              ),
-            ),
-            if (onVideoToNote != null && !attachment.isWebVideo)
-              TextButton.icon(
-                onPressed: () => onVideoToNote!(attachment),
-                icon: const Icon(Icons.auto_awesome, size: 14),
-                label: Text(
-                  context.l10n.videoToNote,
-                  style: const TextStyle(fontSize: 10),
+      // Görüntülü not: yalnız cihazda saklanır; dokununca uygulama içinde
+      // oynatılır. AI ile not çıkarma köşedeki ✨ düğmesinde.
+      content = _PreviewTile(
+        preview: CardMediaTile(attachment: attachment),
+        name: attachment.fileName,
+        badge: attachment.isWebVideo
+            ? 'YouTube'
+            : context.l10n.uiItemVideoBadge,
+        badgeColor: attachment.isWebVideo
+            ? const Color(0xFFE53935)
+            : scheme.primary,
+        trailing: onVideoToNote != null && !attachment.isWebVideo
+            ? Tooltip(
+                message: context.l10n.videoToNote,
+                child: InkWell(
+                  onTap: () => onVideoToNote!(attachment),
+                  customBorder: const CircleBorder(),
+                  child: const Padding(
+                    padding: EdgeInsets.all(3),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 15,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  minimumSize: const Size(0, 28),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-              ),
-          ],
-        ),
+              )
+            : null,
       );
     } else if (attachment.kind == AttachmentKind.slide) {
-      content = Container(
-        width: 140,
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.slideshow_outlined, color: scheme.tertiary, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              attachment.fileName,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
+      content = _PreviewTile(
+        preview: ColoredBox(
+          color: scheme.tertiaryContainer.withValues(alpha: 0.6),
+          child: Center(
+            child: Icon(
+              Icons.slideshow_outlined,
+              color: scheme.onTertiaryContainer,
+              size: 30,
             ),
-          ],
+          ),
         ),
+        name: attachment.fileName,
+        badge: context.l10n.cardKindSlides,
+        badgeColor: scheme.tertiary,
       );
     } else if (_hasLocal) {
       content = Image.file(
@@ -596,6 +576,90 @@ class _AttachmentTile extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Ek şeridinin önizlemeli döşemesi: önizleme döşemeyi doldurur, altta koyu
+/// geçiş üstünde dosya adı; sol altta tür rozeti, sağ altta isteğe bağlı
+/// düğme ([trailing]).
+class _PreviewTile extends StatelessWidget {
+  const _PreviewTile({
+    required this.preview,
+    required this.name,
+    required this.badge,
+    required this.badgeColor,
+    this.trailing,
+  });
+
+  final Widget preview;
+  final String name;
+  final String badge;
+  final Color badgeColor;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 140,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          preview,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(6, 16, 4, 5),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0xC0000000)],
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 1,
+                    ),
+                    decoration: BoxDecoration(
+                      color: badgeColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      badge,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  ?trailing,
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

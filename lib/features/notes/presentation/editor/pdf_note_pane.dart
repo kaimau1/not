@@ -144,6 +144,15 @@ class _PdfNotePaneState extends State<PdfNotePane> {
 
   @override
   void dispose() {
+    // Yazma kartı açıkken bölme kalkarsa (klasik görünüme geçildi) editör
+    // sade "yazma kipinde" kalmasın: kare sonunda geri alınır (editörün
+    // geri çağrısı kendi `mounted`ını denetler).
+    if (_bubbleEditing.value) {
+      final onImmersive = widget.onImmersiveChanged;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => onImmersive?.call(false),
+      );
+    }
     _bubbles.addingListenable.removeListener(_onAddingChanged);
     _ink.dispose();
     _bubbles.dispose();
@@ -241,7 +250,11 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
       bubble: bubble,
       timer: (t) => _centerTimer = t,
       previous: _centerTimer,
-      freeBelow: () => widget.bubbles.dockHeight.value,
+      // Klavyenin arkasında kalan dip de "görünür" sayılmaz (editör gövdesi
+      // klavye durana dek kısalmaz — bkz. keyboardOverlapOf).
+      freeBelow: () =>
+          widget.bubbles.dockHeight.value +
+          (mounted ? keyboardOverlapOf(context) : 0),
       alive: () => mounted,
     );
   }

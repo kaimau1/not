@@ -29,6 +29,7 @@ Future<String?> showNoteEditorMenu(
   bool? localOnly,
   bool? bubbleView,
   bool canTemplate = false,
+  bool canRemoveParts = false,
 }) {
   final l10n = context.l10n;
   return showModalBottomSheet<String>(
@@ -51,6 +52,7 @@ Future<String?> showNoteEditorMenu(
           localOnly: localOnly,
           bubbleView: bubbleView,
           canTemplate: canTemplate,
+          canRemoveParts: canRemoveParts,
         ),
       ),
     ),
@@ -71,7 +73,12 @@ class _MenuGrid extends StatelessWidget {
     this.localOnly,
     this.bubbleView,
     this.canTemplate = false,
+    this.canRemoveParts = false,
   });
+
+  /// Notta HEM serbest metin HEM madde listesi var: "Listeyi kaldır" /
+  /// "Metni kaldır" gösterilir (kullanıcı isteği 2026-10-16).
+  final bool canRemoveParts;
 
   /// null = notta görünümü değişebilecek belge yok; true = balonlu
   /// görünümde (geçiş klasiğe), false = klasikte (geçiş balonluya).
@@ -156,6 +163,21 @@ class _MenuGrid extends StatelessWidget {
             ),
           ] else
             MenuAction('toList', l10n.convertToList, Icons.checklist),
+          // KARIŞIK İÇERİKTE bir bölümü kaldır (kullanıcı isteği
+          // 2026-10-16: "liste veya metin kısımlarını kaldırabilme, ikisi de
+          // varken"). Geri alınabilir.
+          if (canRemoveParts) ...[
+            MenuAction(
+              'removeList',
+              l10n.removeListPart,
+              Icons.playlist_remove_rounded,
+            ),
+            MenuAction(
+              'removeText',
+              l10n.removeTextPart,
+              Icons.format_clear_rounded,
+            ),
+          ],
           // Metin içi görselleri TOPLUCA ek şeridine indirir.
           if (hasFloatingImages)
             MenuAction(
@@ -192,6 +214,9 @@ class _MenuGrid extends StatelessWidget {
         MenuSection(l10n.menuSectionTools, [
           MenuAction('listen', l10n.listenToNote, Icons.headphones_outlined),
           MenuAction('stats', l10n.noteStatsTitle, Icons.insights_outlined),
+          // EKRANI DÜZENLE (kullanıcı isteği 2026-10-16): düzenleme modunu
+          // doğrudan buradan açar — çubuktaki düğmelere dokunarak gizle/göster.
+          MenuAction('customize', l10n.noteMenuCustomize, Icons.tune_rounded),
           MenuAction('settings', l10n.settings, Icons.settings_outlined),
         ]),
         MenuSection(l10n.menuSectionProtect, [

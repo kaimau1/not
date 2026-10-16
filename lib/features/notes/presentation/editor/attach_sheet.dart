@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/personalize.dart';
+import '../../../../core/widgets/customizable.dart';
 import '../../data/document_scan.dart';
 import '../qr_scan_screen.dart';
 
@@ -57,6 +59,51 @@ Future<String?> showAttachSheet(
 
 /// Izgaranın tek hücresi: (id, simge, etiket, açıklama).
 typedef _Entry = (String, IconData, String, String?);
+
+/// "Ekle" levhasının KİŞİSELLEŞTİRİLEBİLİR seçenekleri (ayarlardaki seçici
+/// için): kimlik, simge, ad. Kimlikler levhanın döndürdüğü değerlerle aynı.
+/// Yalnız masaüstünde olan "Görsel yapıştır" ve içeriğe göre çıkan "Eki
+/// yapıştır" listede yok.
+List<({String id, IconData icon, String label})> attachSheetCatalog(
+  AppLocalizations l10n,
+) => [
+  (id: 'text-block', icon: Icons.notes, label: l10n.addTextBlock),
+  (id: 'list-item', icon: Icons.checklist, label: l10n.editorToolList),
+  (id: 'embed-attachment', icon: Icons.link, label: l10n.attachmentTagEmbed),
+  (id: 'image', icon: Icons.image_outlined, label: l10n.addImage),
+  (
+    id: 'image-file',
+    icon: Icons.attachment_outlined,
+    label: l10n.addImageAsFile,
+  ),
+  if (!kIsWeb)
+    (id: 'camera', icon: Icons.photo_camera_outlined, label: l10n.takePhoto),
+  if (DocumentScan.available)
+    (
+      id: 'scan',
+      icon: Icons.document_scanner_outlined,
+      label: l10n.scanDocument,
+    ),
+  (id: 'drawing', icon: Icons.brush_outlined, label: l10n.addDrawing),
+  (id: 'pdf', icon: Icons.picture_as_pdf_outlined, label: l10n.addPdf),
+  (id: 'slide', icon: Icons.slideshow_outlined, label: l10n.addSlide),
+  if (!kIsWeb) (id: 'audio', icon: Icons.mic_none, label: l10n.recordAudio),
+  if (!kIsWeb)
+    (id: 'video', icon: Icons.videocam_outlined, label: l10n.newVideoNote),
+  if (!kIsWeb)
+    (
+      id: 'video-gallery',
+      icon: Icons.video_library_outlined,
+      label: l10n.addVideoFromGallery,
+    ),
+  (
+    id: 'youtube',
+    icon: Icons.smart_display_outlined,
+    label: l10n.addYouTubeVideo,
+  ),
+  if (qrScanSupported)
+    (id: 'qr', icon: Icons.qr_code_scanner, label: l10n.qrScanTitle),
+];
 
 class _AttachSheet extends StatelessWidget {
   const _AttachSheet({
@@ -184,6 +231,22 @@ class _AttachSheet extends StatelessWidget {
         ),
     ];
 
+    // KİŞİSELLEŞTİRME (kullanıcı isteği 2026-10-16): gizlenen seçenekler
+    // levhada yer kaplamaz; düzenleme modunda hepsi görünür, dokunmak
+    // gizle/göster yapar (bkz. Customizable). Yapıştır, içeriğe göre
+    // kendiliğinden çıkan bir seçenek — gizlenmez.
+    List<_Entry> visibleOf(List<_Entry> entries) => Personalize.editing
+        ? entries
+        : [
+            for (final e in entries)
+              if (e.$1 == 'paste-attachment' ||
+                  Personalize.current.shows(UiItem.attach(e.$1)))
+                e,
+          ];
+    final contentShown = visibleOf(content);
+    final visualShown = visibleOf(visual);
+    final otherShown = visibleOf(other);
+
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         14,
@@ -212,14 +275,18 @@ class _AttachSheet extends StatelessWidget {
               ),
             ],
           ),
-          if (content.isNotEmpty) ...[
+          if (contentShown.isNotEmpty) ...[
             _SectionLabel(l10n.attachNoteContent),
-            _Grid(entries: content, scheme: scheme),
+            _Grid(entries: contentShown, scheme: scheme),
           ],
-          _SectionLabel(l10n.attachSectionVisual),
-          _Grid(entries: visual, scheme: scheme),
-          _SectionLabel(l10n.aiSectionAttachments),
-          _Grid(entries: other, scheme: scheme),
+          if (visualShown.isNotEmpty) ...[
+            _SectionLabel(l10n.attachSectionVisual),
+            _Grid(entries: visualShown, scheme: scheme),
+          ],
+          if (otherShown.isNotEmpty) ...[
+            _SectionLabel(l10n.aiSectionAttachments),
+            _Grid(entries: otherShown, scheme: scheme),
+          ],
         ],
       ),
     );
@@ -273,12 +340,16 @@ class _Grid extends StatelessWidget {
             for (final (id, icon, label, info) in entries)
               SizedBox(
                 width: cellWidth,
-                child: _Cell(
-                  id: id,
-                  icon: icon,
-                  label: label,
-                  info: info,
-                  scheme: scheme,
+                child: Customizable(
+                  id: UiItem.attach(id),
+                  badgeInset: 6,
+                  child: _Cell(
+                    id: id,
+                    icon: icon,
+                    label: label,
+                    info: info,
+                    scheme: scheme,
+                  ),
                 ),
               ),
           ],
