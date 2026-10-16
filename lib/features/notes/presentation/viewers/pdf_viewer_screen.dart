@@ -62,16 +62,28 @@ class PdfViewerScreen extends StatefulWidget {
 }
 
 class _PdfViewerScreenState extends State<PdfViewerScreen> {
+  /// Ekin GÜNCEL hâli. KÖK NEDEN: değişiklikler eskiden hep AÇILIŞTAKİ
+  /// `widget.attachment` üstüne kuruluyordu (rota yeniden kurulmaz) — önce
+  /// çizip sonra balon bırakınca balon yazımı çizimi açılıştaki hâline
+  /// geri döndürüyordu. Her değişiklik bu kopyaya işlenir.
+  late Attachment _current = widget.attachment;
+
+  void _emit(Attachment next) {
+    _current = next;
+    widget.onChanged?.call(next);
+  }
+
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
-    onChanged: (strokes) =>
-        widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
+    onChanged: (strokes) => _emit(_current.copyWith(ink: strokes)),
   );
 
   late final BubbleController _bubbles = BubbleController(
     initial: widget.attachment.bubbles,
-    onChanged: (list) =>
-        widget.onChanged?.call(widget.attachment.copyWith(bubbles: list)),
+    onChanged: (list) => _emit(_current.copyWith(bubbles: list)),
+    hidden: widget.attachment.bubblesHidden,
+    onHiddenChanged: (hidden) =>
+        _emit(_current.copyWith(bubblesHidden: hidden)),
   );
 
   final _pdf = PdfViewerController();
@@ -486,6 +498,9 @@ PdfViewerParams pdfLayerParams({
                 page: page,
                 pageSize: pageRect.size,
                 activeSelectionPage: activePage,
+                // Düzenlenebilir görünümde basılı tutmak balon bırakır;
+                // seçim çift dokunuşla (bkz. longPressSelects).
+                longPressSelects: !editable,
                 onSelected: (text, rects, pageNo, fromOcr) => selection.set(
                   value: text,
                   pageNumber: pageNo,
@@ -503,6 +518,7 @@ PdfViewerParams pdfLayerParams({
                 controller: bubbles,
                 page: page.pageNumber,
                 readOnly: !editable,
+                longPressAdd: !inkEditing,
               ),
             ),
           ],

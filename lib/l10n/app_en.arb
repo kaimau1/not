@@ -1784,5 +1784,30 @@
   "viewModeSwitchedFloating": "Back on the page",
   "videoNoteAtTime": "Note at this moment",
   "videoNoteAtTimeShort": "Note",
-  "videoTimeUnknown": "Couldn't read the video time — play the video first."
+  "videoTimeUnknown": "Couldn't read the video time — play the video first.",
+  "videoSpeed": "Playback speed",
+  "videoLoop": "Loop",
+  "bubbleSmaller": "Smaller bubble",
+  "bubbleLarger": "Larger bubble",
+  "bubbleAllSmaller": "Make all bubbles smaller",
+  "bubbleAllLarger": "Make all bubbles larger",
+  "bubblesShow": "Show bubbles",
+  "bubblesHide": "Hide bubbles",
+  "shareIncludeVideoLinks": "Video links",
+  "shareQuickPdf": "PDF",
+  "shareAsImage": "Image",
+  "shareAttachmentFiles": "Files ({count})",
+  "@shareAttachmentFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareToFriendShort": "To a friend",
+  "shareCollaborateShort": "Collaborate",
+  "shareAsNoteShort": "Note package",
+  "shareMoreSection": "MORE",
+  "shareQuickPreparing": "Preparing…",
+  "shareAttachmentFilesNone": "No attachment files on this device to share."
 }

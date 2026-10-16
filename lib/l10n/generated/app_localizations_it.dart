@@ -4746,4 +4746,61 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Impossibile leggere il tempo del video: avvia prima la riproduzione.';
+
+  @override
+  String get videoSpeed => 'Velocità di riproduzione';
+
+  @override
+  String get videoLoop => 'Ripeti';
+
+  @override
+  String get bubbleSmaller => 'Rimpicciolisci fumetto';
+
+  @override
+  String get bubbleLarger => 'Ingrandisci fumetto';
+
+  @override
+  String get bubbleAllSmaller => 'Rimpicciolisci tutti i fumetti';
+
+  @override
+  String get bubbleAllLarger => 'Ingrandisci tutti i fumetti';
+
+  @override
+  String get bubblesShow => 'Mostra fumetti';
+
+  @override
+  String get bubblesHide => 'Nascondi fumetti';
+
+  @override
+  String get shareIncludeVideoLinks => 'Link ai video';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Immagine';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Allegati ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'A un amico';
+
+  @override
+  String get shareCollaborateShort => 'Collabora';
+
+  @override
+  String get shareAsNoteShort => 'Pacchetto nota';
+
+  @override
+  String get shareMoreSection => 'ALTRO';
+
+  @override
+  String get shareQuickPreparing => 'Preparazione…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Nessun allegato da condividere su questo dispositivo.';
 }

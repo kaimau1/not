@@ -262,7 +262,37 @@ bool sameRenderedNote(Note a, Note b) {
         x.pinHeight != y.pinHeight ||
         x.webUrl != y.webUrl ||
         x.section != y.section ||
+        // Sabit/sayfadaki belge kutusu balonları da çizer (bkz. PdfPageBox).
+        x.bubblesHidden != y.bubblesHidden ||
+        !_sameBubbles(x.bubbles, y.bubbles) ||
         !identical(x.ink, y.ink)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Balonların GÖRÜNEN hâli aynı mı (her anlık görüntü yeni liste kurduğu
+/// için kimlik değil içerik karşılaştırılır).
+bool _sameBubbles(List<PageBubble> a, List<PageBubble> b) {
+  if (identical(a, b)) return true;
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    final x = a[i];
+    final y = b[i];
+    if (x.id != y.id ||
+        x.page != y.page ||
+        x.x != y.x ||
+        x.y != y.y ||
+        x.title != y.title ||
+        x.text != y.text ||
+        x.color != y.color ||
+        x.size != y.size ||
+        x.collapsed != y.collapsed ||
+        x.starred != y.starred ||
+        x.urgent != y.urgent ||
+        x.plain != y.plain ||
+        x.rects.length != y.rects.length) {
       return false;
     }
   }
@@ -4993,6 +5023,17 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onNoteAt: pinned.kind == AttachmentKind.video && !widget.readOnly
                 ? () => _noteAtPinned(pinned)
                 : null,
+            // Görsel balonlu görünümden sabite alındıysa balonları onun
+            // türetilmiş belgesinde (bkz. Attachment.sourceId).
+            bubbleDoc: pinned.kind == AttachmentKind.image
+                ? note.attachments
+                      .where(
+                        (a) =>
+                            a.sourceId == pinned.id &&
+                            a.kind == AttachmentKind.pdf,
+                      )
+                      .firstOrNull
+                : null,
             child: body,
           );
     return Stack(
@@ -7181,6 +7222,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // varsayılanına bırakılırsa üç yer sessizce ayrışır.
             contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
           ),
+        ),
+        // Damgaya/etikete dokunmak klavyeyi AÇMAZ (bkz. TapPointTracker.wrap).
+        focusNode: _bodyFocus,
+        keepsKeyboardClosed: (global) => linkAtPoint(
+          editable: editableTextBelow(fieldContext),
+          displayText: _bodyController.text,
+          global: global,
+          timestamps: _note != null && _hasVideo(_note!),
+          tagNames: _bodyController.attachmentNames,
         ),
         ),
       ),

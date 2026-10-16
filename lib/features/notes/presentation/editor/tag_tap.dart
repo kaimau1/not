@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/widgets.dart';
 
 import '../../../../core/utils/attachment_tag.dart';
@@ -12,11 +15,103 @@ import 'text_wrap.dart';
 class TapPointTracker {
   Offset? last;
 
-  Widget wrap(Widget child) => Listener(
+  /// Bu dokunuş süresince odak alması engellenen alan (bkz. [wrap]).
+  FocusNode? _blocked;
+  Timer? _release;
+
+  /// Uzun basış bu süreyi aşınca engel kalkar: damgaya/etikete BASILI
+  /// TUTMAK onu seçip düzenlemek demektir, klavye açılabilir.
+  static const _holdRelease = Duration(milliseconds: 380);
+
+  /// [focusNode] ve [keepsKeyboardClosed] verilirse: ODAKSIZ alanda parmak
+  /// bir BAĞLANTININ (video zaman damgası, gömülü ek) üstüne inince bu
+  /// dokunuş alanı odaklamaz — klavye hiç açılmaz.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-16: "videoda dk üzerine tıklayınca
+  /// klavye açılıyor"): damga `TextField.onTap`te işleniyordu ve o geri
+  /// çağırma alanın kendi dokunuş işleminden SONRA koşar — o sırada
+  /// `requestKeyboard` odağı çoktan istemiş, klavye açılmış oluyordu. Karar
+  /// PARMAK İNERKEN verilir: odak düğümünün `canRequestFocus`u bu dokunuşun
+  /// sonuna dek kapatılır; alan imleci yine taşır (onTap damgayı oradan
+  /// okur) ama odaklanamaz. Zaten odaktaki alana (yazarken) dokunulmaz.
+  Widget wrap(
+    Widget child, {
+    FocusNode? focusNode,
+    bool Function(Offset global)? keepsKeyboardClosed,
+  }) => Listener(
     behavior: HitTestBehavior.translucent,
-    onPointerDown: (event) => last = event.position,
+    onPointerDown: (event) {
+      last = event.position;
+      if (focusNode == null ||
+          keepsKeyboardClosed == null ||
+          event.kind == PointerDeviceKind.mouse ||
+          focusNode.hasFocus ||
+          !focusNode.canRequestFocus) {
+        return;
+      }
+      if (!keepsKeyboardClosed(event.position)) return;
+      _unblock();
+      _blocked = focusNode..canRequestFocus = false;
+      _release = Timer(_holdRelease, _unblock);
+    },
+    // Dokunuşun kendisi (seçim, onTap) parmak kalktığı olayın içinde işlenir;
+    // engel ondan SONRA, bir sonraki turda kalkar.
+    onPointerUp: (_) => _releaseSoon(),
+    onPointerCancel: (_) => _releaseSoon(),
     child: child,
   );
+
+  void _releaseSoon() {
+    if (_blocked == null) return;
+    _release?.cancel();
+    _release = Timer(Duration.zero, _unblock);
+  }
+
+  void _unblock() {
+    _release?.cancel();
+    _release = null;
+    final node = _blocked;
+    _blocked = null;
+    node?.canRequestFocus = true;
+  }
+}
+
+/// [global] noktasının altında bir VİDEO ZAMAN DAMGASI ya da GÖMÜLÜ EK
+/// etiketi var mı — parmak inerken (dokunuş işlenmeden önce) sorulur, bkz.
+/// [TapPointTracker.wrap].
+bool linkAtPoint({
+  required EditableTextState? editable,
+  required String displayText,
+  required Offset global,
+  bool timestamps = false,
+  Iterable<String> tagNames = const [],
+}) {
+  if (editable == null) return false;
+  final render = editable.renderEditable;
+  if (!render.attached || !render.hasSize) return false;
+  final local = render.globalToLocal(global);
+  bool hits(int start, int end, double slack) {
+    final boxes = render.getBoxesForSelection(
+      TextSelection(baseOffset: start, extentOffset: end),
+    );
+    for (final box in boxes) {
+      if (box.toRect().inflate(slack).contains(local)) return true;
+    }
+    return false;
+  }
+
+  final offset = render.getPositionForPoint(global).offset;
+  if (timestamps) {
+    final hit = videoTimestampAt(displayText, offset);
+    if (hit != null && hits(hit.start, hit.end, 3)) return true;
+  }
+  if (tagNames.isNotEmpty) {
+    for (final tag in findAttachmentTags(displayText, tagNames)) {
+      if (offset < tag.start || offset > tag.end) continue;
+      if (hits(tag.start, tag.end, 2)) return true;
+    }
+  }
+  return false;
 }
 
 /// [context]in altındaki İLK düzenlenebilir alanın durumu (yoksa null).

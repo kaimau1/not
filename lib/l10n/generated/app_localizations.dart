@@ -8543,6 +8543,114 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Videonun anı okunamadı — önce videoyu oynat.'**
   String get videoTimeUnknown;
+
+  /// No description provided for @videoSpeed.
+  ///
+  /// In tr, this message translates to:
+  /// **'Oynatma hızı'**
+  String get videoSpeed;
+
+  /// No description provided for @videoLoop.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tekrarla'**
+  String get videoLoop;
+
+  /// No description provided for @bubbleSmaller.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonu küçült'**
+  String get bubbleSmaller;
+
+  /// No description provided for @bubbleLarger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonu büyüt'**
+  String get bubbleLarger;
+
+  /// No description provided for @bubbleAllSmaller.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm balonları küçült'**
+  String get bubbleAllSmaller;
+
+  /// No description provided for @bubbleAllLarger.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm balonları büyüt'**
+  String get bubbleAllLarger;
+
+  /// No description provided for @bubblesShow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonları göster'**
+  String get bubblesShow;
+
+  /// No description provided for @bubblesHide.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonları gizle'**
+  String get bubblesHide;
+
+  /// No description provided for @shareIncludeVideoLinks.
+  ///
+  /// In tr, this message translates to:
+  /// **'Video bağlantıları'**
+  String get shareIncludeVideoLinks;
+
+  /// No description provided for @shareQuickPdf.
+  ///
+  /// In tr, this message translates to:
+  /// **'PDF'**
+  String get shareQuickPdf;
+
+  /// No description provided for @shareAsImage.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görsel'**
+  String get shareAsImage;
+
+  /// No description provided for @shareAttachmentFiles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ekler ({count})'**
+  String shareAttachmentFiles(int count);
+
+  /// No description provided for @shareToFriendShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Arkadaşa'**
+  String get shareToFriendShort;
+
+  /// No description provided for @shareCollaborateShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Birlikte düzenle'**
+  String get shareCollaborateShort;
+
+  /// No description provided for @shareAsNoteShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not paketi'**
+  String get shareAsNoteShort;
+
+  /// No description provided for @shareMoreSection.
+  ///
+  /// In tr, this message translates to:
+  /// **'DAHA FAZLA'**
+  String get shareMoreSection;
+
+  /// No description provided for @shareQuickPreparing.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hazırlanıyor…'**
+  String get shareQuickPreparing;
+
+  /// No description provided for @shareAttachmentFilesNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu cihazda paylaşılacak ek dosyası yok.'**
+  String get shareAttachmentFilesNone;
 }
 
 class _AppLocalizationsDelegate

@@ -26,7 +26,14 @@ class PdfPageImage extends StatefulWidget {
     required this.pageNumber,
     this.maximumDpi = 300,
     this.background = Colors.white,
+    this.overlay,
   });
+
+  /// Sayfanın TAM ÜSTÜNE (sayfanın kendi en-boy kutusuna) konan katman —
+  /// balonlar sayfa oranlı konumla çizildiği için sayfanın kenarlarıyla
+  /// birebir hizalı olmalı; kutu ile sayfanın oranı farklıysa (karışık
+  /// boylu belge) kenar boşluğuna taşmasın.
+  final Widget? overlay;
 
   final PdfDocument document;
 
@@ -109,9 +116,19 @@ class _PdfPageImageState extends State<PdfPageImage> {
             aspectRatio: aspect,
             child: ColoredBox(
               color: widget.background,
-              child: image == null
-                  ? const SizedBox.expand()
-                  : RawImage(image: image, fit: BoxFit.fill),
+              child: widget.overlay == null
+                  ? (image == null
+                        ? const SizedBox.expand()
+                        : RawImage(image: image, fit: BoxFit.fill))
+                  : Stack(
+                      fit: StackFit.expand,
+                      clipBehavior: Clip.none,
+                      children: [
+                        if (image != null)
+                          RawImage(image: image, fit: BoxFit.fill),
+                        widget.overlay!,
+                      ],
+                    ),
             ),
           ),
         );

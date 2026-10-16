@@ -4731,4 +4731,61 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Couldn\'t read the video time — play the video first.';
+
+  @override
+  String get videoSpeed => 'Playback speed';
+
+  @override
+  String get videoLoop => 'Loop';
+
+  @override
+  String get bubbleSmaller => 'Smaller bubble';
+
+  @override
+  String get bubbleLarger => 'Larger bubble';
+
+  @override
+  String get bubbleAllSmaller => 'Make all bubbles smaller';
+
+  @override
+  String get bubbleAllLarger => 'Make all bubbles larger';
+
+  @override
+  String get bubblesShow => 'Show bubbles';
+
+  @override
+  String get bubblesHide => 'Hide bubbles';
+
+  @override
+  String get shareIncludeVideoLinks => 'Video links';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Image';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Files ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'To a friend';
+
+  @override
+  String get shareCollaborateShort => 'Collaborate';
+
+  @override
+  String get shareAsNoteShort => 'Note package';
+
+  @override
+  String get shareMoreSection => 'MORE';
+
+  @override
+  String get shareQuickPreparing => 'Preparing…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'No attachment files on this device to share.';
 }

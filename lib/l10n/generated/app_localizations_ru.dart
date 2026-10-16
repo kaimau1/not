@@ -4739,4 +4739,61 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Не удалось прочитать время видео — сначала запустите воспроизведение.';
+
+  @override
+  String get videoSpeed => 'Скорость воспроизведения';
+
+  @override
+  String get videoLoop => 'Повтор';
+
+  @override
+  String get bubbleSmaller => 'Уменьшить выноску';
+
+  @override
+  String get bubbleLarger => 'Увеличить выноску';
+
+  @override
+  String get bubbleAllSmaller => 'Уменьшить все выноски';
+
+  @override
+  String get bubbleAllLarger => 'Увеличить все выноски';
+
+  @override
+  String get bubblesShow => 'Показать выноски';
+
+  @override
+  String get bubblesHide => 'Скрыть выноски';
+
+  @override
+  String get shareIncludeVideoLinks => 'Ссылки на видео';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Изображение';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Вложения ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'Другу';
+
+  @override
+  String get shareCollaborateShort => 'Совместно';
+
+  @override
+  String get shareAsNoteShort => 'Пакет заметки';
+
+  @override
+  String get shareMoreSection => 'ЕЩЁ';
+
+  @override
+  String get shareQuickPreparing => 'Подготовка…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'На этом устройстве нет вложений для отправки.';
 }

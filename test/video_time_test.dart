@@ -125,7 +125,7 @@ void main() {
   });
 }
 
-class _FakeSource implements VideoTimeSource {
+class _FakeSource extends VideoTimeSource {
   _FakeSource(this.attachmentId, {this.at});
 
   @override

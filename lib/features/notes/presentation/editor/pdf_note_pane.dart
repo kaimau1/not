@@ -94,6 +94,10 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     initial: widget.attachment.bubbles,
     onChanged: (list) =>
         widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
+    hidden: widget.attachment.bubblesHidden,
+    onHiddenChanged: (hidden) => widget.onAttachmentChanged(
+      widget.attachment.copyWith(bubblesHidden: hidden),
+    ),
   );
 
   /// Balon yazılırken alt not alanı gizlenir — iki bölme + klavye aynı anda
@@ -133,7 +137,9 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
     // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
     _ink.replace(widget.attachment.ink);
-    _bubbles.replace(widget.attachment.bubbles);
+    _bubbles
+      ..replace(widget.attachment.bubbles)
+      ..syncHidden(widget.attachment.bubblesHidden);
   }
 
   @override

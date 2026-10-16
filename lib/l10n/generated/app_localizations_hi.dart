@@ -4721,4 +4721,61 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'वीडियो का समय नहीं पढ़ा जा सका — पहले वीडियो चलाएँ।';
+
+  @override
+  String get videoSpeed => 'प्लेबैक गति';
+
+  @override
+  String get videoLoop => 'दोहराएँ';
+
+  @override
+  String get bubbleSmaller => 'बबल छोटा करें';
+
+  @override
+  String get bubbleLarger => 'बबल बड़ा करें';
+
+  @override
+  String get bubbleAllSmaller => 'सभी बबल छोटे करें';
+
+  @override
+  String get bubbleAllLarger => 'सभी बबल बड़े करें';
+
+  @override
+  String get bubblesShow => 'बबल दिखाएँ';
+
+  @override
+  String get bubblesHide => 'बबल छिपाएँ';
+
+  @override
+  String get shareIncludeVideoLinks => 'वीडियो लिंक';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'छवि';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'अटैचमेंट ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'मित्र को';
+
+  @override
+  String get shareCollaborateShort => 'साथ संपादित';
+
+  @override
+  String get shareAsNoteShort => 'नोट पैकेज';
+
+  @override
+  String get shareMoreSection => 'और';
+
+  @override
+  String get shareQuickPreparing => 'तैयार हो रहा है…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'इस डिवाइस पर साझा करने के लिए कोई अटैचमेंट फ़ाइल नहीं है।';
 }

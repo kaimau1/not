@@ -141,8 +141,15 @@ iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;transform-
 // "infoDelivery" iletileriyle bildirir; hiç ileti gelmediyse konum
 // BİLİNMİYOR sayılır (-1) — yanlış bir 0:00 yazılmasın.
 var notlarCur=$start, notlarHeard=false, notlarFrame=document.getElementById('player');
+var notlarState=-1, notlarDur=0, notlarSent=-2;
 function notlarPost(o){
   try{ notlarFrame.contentWindow.postMessage(JSON.stringify(o),'*'); }catch(_){}
+}
+// Durum uygulamaya (videonun altındaki denetim çubuğu) kanal varsa gider;
+// konum saniyede bir, durum değişince hemen.
+function notlarSend(){
+  notlarSent=Math.floor(notlarCur);
+  try{ if(window.NotlarBridge) NotlarBridge.postMessage(JSON.stringify({s:notlarState,t:notlarHeard?notlarCur:-1,d:notlarDur})); }catch(_){}
 }
 function notlarListen(){ notlarPost({event:'listening',id:'notlar',channel:'widget'}); }
 notlarFrame.addEventListener('load',function(){
@@ -155,9 +162,21 @@ notlarFrame.addEventListener('load',function(){
 window.addEventListener('message',function(e){
   try{
     var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-    if(!d||!d.info) return;
+    if(!d) return;
+    if(d.event==='onStateChange'&&typeof d.info==='number'){
+      if(d.info!==notlarState){ notlarState=d.info; notlarSend(); }
+      return;
+    }
+    if(!d.info||typeof d.info!=='object') return;
     notlarHeard=true;
-    if(typeof d.info.currentTime==='number') notlarCur=d.info.currentTime;
+    var ch=false;
+    if(typeof d.info.currentTime==='number'){
+      notlarCur=d.info.currentTime;
+      if(Math.floor(notlarCur)!==notlarSent) ch=true;
+    }
+    if(typeof d.info.playerState==='number'&&d.info.playerState!==notlarState){ notlarState=d.info.playerState; ch=true; }
+    if(typeof d.info.duration==='number'&&d.info.duration!==notlarDur){ notlarDur=d.info.duration; ch=true; }
+    if(ch) notlarSend();
   }catch(_){}
 });
 window.notlarTime=function(){ return notlarHeard?notlarCur:-1; };
@@ -165,6 +184,16 @@ window.notlarSeek=function(s){
   notlarCur=s;
   notlarPost({event:'command',func:'seekTo',args:[s,true]});
   notlarPost({event:'command',func:'playVideo',args:[]});
+};
+window.notlarPlay=function(){ notlarPost({event:'command',func:'playVideo',args:[]}); };
+window.notlarPause=function(){ notlarPost({event:'command',func:'pauseVideo',args:[]}); };
+window.notlarRate=function(r){ notlarPost({event:'command',func:'setPlaybackRate',args:[r]}); };
+window.notlarSeekBy=function(d){
+  var s=Math.max(0,notlarCur+d);
+  if(notlarDur>0) s=Math.min(s,notlarDur);
+  notlarCur=s;
+  notlarPost({event:'command',func:'seekTo',args:[s,true]});
+  notlarSend();
 };
 </script>
 </body></html>''';

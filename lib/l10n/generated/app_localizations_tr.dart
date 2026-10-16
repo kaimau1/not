@@ -4718,4 +4718,61 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get videoTimeUnknown => 'Videonun anı okunamadı — önce videoyu oynat.';
+
+  @override
+  String get videoSpeed => 'Oynatma hızı';
+
+  @override
+  String get videoLoop => 'Tekrarla';
+
+  @override
+  String get bubbleSmaller => 'Balonu küçült';
+
+  @override
+  String get bubbleLarger => 'Balonu büyüt';
+
+  @override
+  String get bubbleAllSmaller => 'Tüm balonları küçült';
+
+  @override
+  String get bubbleAllLarger => 'Tüm balonları büyüt';
+
+  @override
+  String get bubblesShow => 'Balonları göster';
+
+  @override
+  String get bubblesHide => 'Balonları gizle';
+
+  @override
+  String get shareIncludeVideoLinks => 'Video bağlantıları';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Görsel';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Ekler ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'Arkadaşa';
+
+  @override
+  String get shareCollaborateShort => 'Birlikte düzenle';
+
+  @override
+  String get shareAsNoteShort => 'Not paketi';
+
+  @override
+  String get shareMoreSection => 'DAHA FAZLA';
+
+  @override
+  String get shareQuickPreparing => 'Hazırlanıyor…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Bu cihazda paylaşılacak ek dosyası yok.';
 }

@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -64,21 +63,20 @@ import 'voice_assistant_widgets.dart';
 import 'voice_capture_sheet.dart';
 import 'drive_ui.dart';
 
-/// Ana ekran ızgarasının önbellek payı (px). Masonry ızgaranın toplam
-/// uzunluğunu TAHMİN etmesini engellemek için kartların tamamının bu pay
-/// içinde ölçülmesi istenir (bkz. [_DashboardScreenState.build]). ~10 bin px,
-/// iki sütunlu düzende yüzden fazla nota karşılık gelir.
+/// Ana ekran ızgarasının önbellek payı (px): görünen alanın altında/üstünde
+/// önceden kurulan kartlar — hızlı kaydırmada kart boş gelmesin diye ~2
+/// ekran boyu.
 ///
-/// **2026-08-07 (16. tur) — DÜŞÜRÜLMEDİ, BİLEREK.** Denetimde "bu pay her
-/// yeniden kurulumun çarpanı" diye işaretlenmişti: ~130 kart canlı duruyor ve
-/// her biri biçim ayrıştırması + yazı tipi kurulumu yapıyordu. Doğru sıra
-/// önce ÇARPANI DEĞİL BİRİM MALİYETİ düşürmekti; `richSpans` ve
-/// `applyNoteFont` artık önbellekli, kart başına iş neredeyse sıfır. Payı
-/// ayrıca düşürmek, belgelenmiş ve kullanıcı tarafından bildirilmiş bir hatayı
-/// ("aşağı kaydırırken liste yukarı sıçrıyor") geri getirme riski taşıyor —
-/// masonry uzunluğu yeniden TAHMİN olurdu. Ölçmeden düşürmek kazançtan çok
-/// gerileme getirir; cihazda ölçüm yapılabildiğinde yeniden değerlendirilsin.
-const double _kGridCacheExtent = 10000;
+/// **2026-10-16 — 10 000'DEN İNDİRİLDİ** (kullanıcı: "FPS düşük, her alanda
+/// süper akıcı olsun"). Geniş pay, MASONRY ızgaranın toplam uzunluğunu
+/// tahmin edip listeyi yukarı sıçratmasına karşı konmuştu: kartların
+/// tamamını (~130 kart, kapakları ve küçük resimleriyle) ilk yerleşimde
+/// ölçtürüyordu. Masonry artık yok: ızgara deterministik sütunlu TEMBEL
+/// listeler (bkz. `sliverBalancedNoteColumns`). Her sütun bir `SliverList`:
+/// bir kart görünmeden önce bu pay içinde yerleşir, son kartlar da sona
+/// varılmadan ölçülmüş olur — uzunluk aşağı kaydırırken küçülüp konumu
+/// geri çekmez. Pay yalnız hızlı kaydırmada boş kart görülmesin diye var.
+const double _kGridCacheExtent = 1600;
 
 /// Izgaranın altında bırakılan boşluk: sağ alttaki düğme sütunu (iki
 /// mikrofon 48 + "+" 56 + aralıklar 20 + alt pay 16 = 188, + 12 nefes payı)
@@ -1488,12 +1486,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                     // tahmin o anki konumun altına düştüğü an
                                     // ScrollPosition kendini düzeltip listeyi
                                     // yukarı çekiyordu (sona yaklaşıldıkça sık).
-                                    // Geniş önbellek payı kartların TAMAMINI ilk
-                                    // yerleşimde ölçtürür: uzunluk tahmin değil
-                                    // gerçek olur, düzeltme/sıçrama hiç olmaz.
-                                    // Bedeli, bu pay içindeki kartların önceden
-                                    // kurulması; bu sınırın (≈130 kart) ötesinde
-                                    // tembelliğe geri dönülür.
+                                    // 2026-10-16: masonry kalktı (tembel
+                                    // deterministik sütunlar) — pay artık
+                                    // yalnız hızlı kaydırma için (bkz.
+                                    // [_kGridCacheExtent]).
                                     scrollCacheExtent:
                                         const ScrollCacheExtent.pixels(
                                           _kGridCacheExtent,
@@ -2302,24 +2298,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
         );
       }
 
-      // Çok uzun bölümde tembelliği bırakmamak için eski masonry (bkz.
-      // [kStaticGridLimit]).
-      if (items.length > kStaticGridLimit) {
-        return SliverMasonryGrid.count(
-          crossAxisCount: columns,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          childCount: items.length,
-          itemBuilder: cell,
-        );
-      }
-      return SliverToBoxAdapter(
-        child: balancedNoteColumns(
-          items: items,
-          columns: columns,
-          cellWidth: cellWidth,
-          cell: (index) => cell(context, index),
-        ),
+      // TEMBEL deterministik ızgara (bkz. [sliverBalancedNoteColumns]):
+      // eskiden bölümün bütün kartları tek kutuda kuruluyordu.
+      return sliverBalancedNoteColumns(
+        items: items,
+        columns: columns,
+        cellWidth: cellWidth,
+        cell: cell,
       );
     }
 

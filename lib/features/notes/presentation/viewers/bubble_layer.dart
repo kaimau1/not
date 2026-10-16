@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart'
-    show LongPressGestureRecognizer, TapGestureRecognizer;
+    show LongPressGestureRecognizer, PointerDeviceKind, TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/l10n_ext.dart';
@@ -41,8 +43,52 @@ import '../../domain/attachment.dart';
 /// eleniyor. (Metin seçiminde kilit ŞART kalır — o katman arenaya hiç
 /// girmeyen bir `Listener` kullanıyor.)
 class BubbleController extends ChangeNotifier {
-  BubbleController({required List<PageBubble> initial, required this.onChanged})
-    : _bubbles = [...initial];
+  BubbleController({
+    required List<PageBubble> initial,
+    required this.onChanged,
+    bool hidden = false,
+    this.onHiddenChanged,
+  }) : _bubbles = [...initial],
+       hiddenListenable = ValueNotifier<bool>(hidden);
+
+  /// **BALONLAR GİZLİ Mİ** (kullanıcı isteği 2026-10-16: "balonları
+  /// göster/gizle olsun"). Gizliyken sayfada ne tutamaç ne vurgu çizilir;
+  /// balonlar silinmez (toplu liste, paylaşım, senkron aynen). Balon
+  /// bırakmaya geçmek, listeden bir balona gitmek ya da basılı tutup yeni
+  /// balon bırakmak balonları kendiliğinden GÖSTERİR — gizli bir şeyin
+  /// üstüne çalışılmaz. Değer ekte saklanır ([Attachment.bubblesHidden]).
+  final ValueNotifier<bool> hiddenListenable;
+  bool get hidden => hiddenListenable.value;
+
+  /// Kullanıcı gizle/göster deyince (kaydetmek için).
+  ValueChanged<bool>? onHiddenChanged;
+
+  void setHidden(bool value) {
+    if (hidden == value) return;
+    hiddenListenable.value = value;
+    if (value) {
+      // Açık kart/yazma kartı da gider. Bellekte kapatılır, AYRICA
+      // kaydedilmez: aynı karede iki ayrı ek yazımı birbirini ezerdi.
+      final next = <PageBubble>[];
+      for (final b in _bubbles) {
+        next.add(b.collapsed ? b : b.copyWith(collapsed: true));
+        if (!b.collapsed) _dirty = true;
+      }
+      _bubbles = next;
+      justAdded = null;
+      editMode = false;
+      adding = false;
+    }
+    notifyListeners();
+    onHiddenChanged?.call(value);
+  }
+
+  /// Dışarıdan gelen değeri benimser (tam ekrandan dönüş) — kaydetmez.
+  void syncHidden(bool value) {
+    if (hidden == value) return;
+    hiddenListenable.value = value;
+    notifyListeners();
+  }
 
   /// Balonlar değişince güncel listeyle çağrılır (kaydetme).
   final ValueChanged<List<PageBubble>> onChanged;
@@ -219,6 +265,8 @@ class BubbleController extends ChangeNotifier {
 
   void setAdding(bool value) {
     if (adding == value) return;
+    // Gizli balonların üstüne yenisi bırakılmaz: önce görünürler.
+    if (value && hidden) setHidden(false);
     adding = value;
     notifyListeners();
   }
@@ -354,7 +402,15 @@ class BubbleController extends ChangeNotifier {
   }
 
   void _insert(PageBubble bubble, {bool focus = true}) {
-    _bubbles = [..._bubbles, bubble];
+    if (hidden) setHidden(false);
+    // Yeni balon AÇIK doğar; açık kalmış eskiler kapanır — yoksa "açık
+    // balon" ilk açık olan sayılır ve yazma kartı yanlış balona açılırdı
+    // (basılı tutup balon bırakırken bir okuma kartı açık olabilir).
+    _bubbles = [
+      for (final b in _bubbles)
+        if (focus && !b.collapsed) b.copyWith(collapsed: true) else b,
+      bubble,
+    ];
     justAdded = focus ? bubble.id : null;
     // Yeni balonda okunacak bir şey yok: doğrudan yazmaya açılır.
     editMode = focus;
@@ -408,6 +464,21 @@ class BubbleController extends ChangeNotifier {
     revision.value++;
   }
 
+  /// Balonun BOYUTUNU bir adım değiştirir ([PageBubble.sizeSteps]):
+  /// tutamaçta tutamacın kendisi, açık metinde yazının puntosu büyür.
+  void stepSize(String id, int direction) {
+    final bubble = byId(id);
+    if (bubble == null) return;
+    final next = PageBubble.stepSize(
+      bubble.size,
+      direction,
+      plain: bubble.plain,
+    );
+    if (next == bubble.size) return;
+    update(bubble.copyWith(size: next));
+    save();
+  }
+
   @override
   void dispose() {
     revision.dispose();
@@ -415,6 +486,7 @@ class BubbleController extends ChangeNotifier {
     dragDelta.dispose();
     addingListenable.dispose();
     draggingListenable.dispose();
+    hiddenListenable.dispose();
     super.dispose();
   }
 
@@ -500,6 +572,7 @@ class BubbleController extends ChangeNotifier {
   /// Yazılmış balon OKUMA kipinde açılır: klavye gelmez, not yerinde görünür.
   /// Henüz boş olanda okunacak bir şey yok, doğrudan yazmaya açılır.
   void openOnly(String id, {bool edit = false}) {
+    if (hidden) setHidden(false);
     var changed = false;
     final next = <PageBubble>[];
     for (final b in _bubbles) {
@@ -561,6 +634,7 @@ class BubblePageLayer extends StatefulWidget {
     required this.controller,
     required this.page,
     this.readOnly = false,
+    this.longPressAdd = true,
   });
 
   final BubbleController controller;
@@ -568,6 +642,14 @@ class BubblePageLayer extends StatefulWidget {
 
   /// Salt görüntüleme: balonlar görünür ve açılıp kapanır ama düzenlenmez.
   final bool readOnly;
+
+  /// **BASILI TUTUNCA BALON** (kullanıcı isteği 2026-10-16: "basılı tutarak
+  /// balon ekleme olsun; şu an metin tanıma yapıyor"). Sayfanın boş ya da
+  /// yazılı herhangi bir yerine parmağı ~0,45 sn kıpırdatmadan tutmak oraya
+  /// balon bırakır ve yazma kartını açar — "Balon" kipine geçmeden. Kalem
+  /// kipinde kapalı (o parmak çizer). Metin seçimi PDF'te ÇİFT DOKUNUŞA
+  /// geçti (bkz. `PdfSelectLayer.longPressSelects`).
+  final bool longPressAdd;
 
   @override
   State<BubblePageLayer> createState() => _BubblePageLayerState();
@@ -586,6 +668,7 @@ class _PageView {
     required this.editMode,
     required this.adding,
     required this.dragging,
+    required this.hidden,
   });
 
   factory _PageView.of(BubbleController c, int page) {
@@ -601,6 +684,7 @@ class _PageView {
       dragging: dragging != null && bubbles.any((b) => b.id == dragging)
           ? dragging
           : null,
+      hidden: c.hidden,
     );
   }
 
@@ -610,9 +694,11 @@ class _PageView {
   final bool editMode;
   final bool adding;
   final String? dragging;
+  final bool hidden;
 
   bool sameAs(_PageView other) {
     if (anyOpen != other.anyOpen ||
+        hidden != other.hidden ||
         !identical(open, other.open) ||
         adding != other.adding ||
         dragging != other.dragging ||
@@ -636,6 +722,24 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
   void initState() {
     super.initState();
     widget.controller.addListener(_onChanged);
+    BubbleLook.scale.addListener(_onScale);
+  }
+
+  /// Genel balon boyu değişti (araç kartındaki −/+): tutamaçlar yeniden
+  /// ölçülür. Seyrek bir olay — sayfanın tamamı tazelenir.
+  void _onScale() {
+    if (mounted) setState(() {});
+  }
+
+  /// Basılı tutulan noktaya balon bırakır (bkz. [BubblePageLayer.longPressAdd]).
+  void _dropAt(Offset local, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+    HapticFeedback.mediumImpact();
+    widget.controller.add(
+      widget.page,
+      local.dx / size.width,
+      local.dy / size.height,
+    );
   }
 
   @override
@@ -651,6 +755,7 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
   @override
   void dispose() {
     widget.controller.removeListener(_onChanged);
+    BubbleLook.scale.removeListener(_onScale);
     super.dispose();
   }
 
@@ -666,14 +771,30 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
     final view = _view;
     final page = widget.page;
     final readOnly = widget.readOnly;
+    final scale = BubbleLook.scale.value;
+    final drop = widget.longPressAdd && !readOnly && !view.adding;
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
+        // GİZLİ: yalnız "basılı tut → balon" dinleyicisi kalır (bırakılan
+        // balon gizliliği kaldırır).
+        if (view.hidden && !view.adding) {
+          return drop
+              ? _LongPressDrop(onDrop: (at) => _dropAt(at, size))
+              : const SizedBox.shrink();
+        }
         final bubbles = view.bubbles;
         final open = view.open;
         return Stack(
           clipBehavior: Clip.none,
           children: [
+            // Basılı tut → balon: EN ALTTA ve arenaya girmeyen bir dinleyici
+            // (tutamaçlar ve vurgular dokunuşu önce alır; sayfa kaydırma,
+            // yakınlaştırma ve metin seçimi bozulmaz).
+            if (drop)
+              Positioned.fill(
+                child: _LongPressDrop(onDrop: (at) => _dropAt(at, size)),
+              ),
             // Vurgu boyası EN ALTTA ve dokunuşa kapalı: rengi metnin üstüne
             // serer, parmağı almaz (dokunuşu aşağıdaki görünmez alan alır).
             // `RepaintBoundary`: sayfa kaydırılırken ya da bir tutamaç
@@ -763,6 +884,7 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
                 bubble: bubble,
                 pageSize: size,
                 readOnly: readOnly,
+                scale: scale,
               ),
             // OKUMA balonu: yazılmış bir nota dokunulunca not YERİNDE, klavye
             // açılmadan görünür. Yazmak için "Düzenle" denir — o zaman içerik
@@ -773,6 +895,7 @@ class _BubblePageLayerState extends State<BubblePageLayer> {
                 bubble: open,
                 pageSize: size,
                 readOnly: readOnly,
+                scale: scale,
               ),
           ],
         );
@@ -1000,19 +1123,27 @@ typedef _PinPlace = ({bool below, bool left});
 /// Serbest balonun gövdesi noktanın ÜSTÜNDE (harita iğnesi gibi); vurgunun
 /// gövdesi ise vurgulanan satırın ALTINDA — yoksa işaretlenen yazının
 /// üstünü kapatırdı. Sayfanın kenarına yakın tutamaç ters yöne döner.
-_PinPlace _pinPlacement(PageBubble bubble, Size page) {
+_PinPlace _pinPlacement(PageBubble bubble, Size page, [double scale = 1]) {
   final x = bubble.x * page.width;
   final y = bubble.y * page.height;
   final title = bubble.title.trim();
-  final width = title.isEmpty
-      ? _pinSize
-      : math.min(_pinChipMaxWidth, 34 + title.characters.length * 7.2);
-  const room = _pinSize + 8;
+  final width =
+      (title.isEmpty
+          ? _pinSize
+          : math.min(_pinChipMaxWidth, 34 + title.characters.length * 7.2)) *
+      scale;
+  final room = (_pinSize + 8) * scale;
   return (
     below: bubble.isHighlight ? y <= page.height - room : y < room,
     left: x + width > page.width - 2 && x >= width,
   );
 }
+
+/// Tutamacın ekrandaki boy çarpanı: genel tercih ([BubbleLook.scale]) ×
+/// balonun kendi boyu ([PageBubble.size]). Açık metinde 1 — orada boy
+/// yazının puntosudur, tutamaç yok.
+double _pinScaleOf(PageBubble bubble, double scale) =>
+    bubble.plain ? 1 : (scale * bubble.size).clamp(0.5, 4.0).toDouble();
 
 /// Balon renginin üstünde okunan yazı/simge rengi. Sabit siyah, koyu
 /// renklerde (indigo, kahve, mor) okunmuyordu.
@@ -1038,6 +1169,7 @@ class _BubbleReadCard extends StatelessWidget {
     required this.bubble,
     required this.pageSize,
     required this.readOnly,
+    this.scale = 1,
   });
 
   final BubbleController controller;
@@ -1045,10 +1177,15 @@ class _BubbleReadCard extends StatelessWidget {
   final Size pageSize;
   final bool readOnly;
 
+  /// Genel balon boyu ([BubbleLook.scale]): kartın genişliği ve yazısı da
+  /// onunla büyür (büyük balon tercih eden okumayı da büyük ister).
+  final double scale;
+
   @override
   Widget build(BuildContext context) {
     // Dar tutulur: kart okunan satırın yanında durmalı, sayfayı örtmemeli.
-    final width = math.min(pageSize.width * 0.74, 280.0);
+    final width = math.min(pageSize.width * 0.74, 280.0 * scale);
+    final pinScale = _pinScaleOf(bubble, scale);
     final anchor = Offset(
       bubble.x * pageSize.width,
       bubble.y * pageSize.height,
@@ -1060,9 +1197,11 @@ class _BubbleReadCard extends StatelessWidget {
     // sayfanın dışına taşardı.
     final below = anchor.dy < pageSize.height * 0.55;
     // Tutamaç noktanın hangi yanında duruyor? Kart onun üstüne binmesin.
-    final pinBelow = !bubble.plain && _pinPlacement(bubble, pageSize).below;
+    final pinBelow =
+        !bubble.plain && _pinPlacement(bubble, pageSize, pinScale).below;
     const gap = 6.0;
-    const pin = _pinSize + gap + 2;
+    final pin = _pinSize * pinScale + gap + 2;
+    final card = _card(context);
     return Positioned(
       left: left,
       width: width,
@@ -1070,7 +1209,16 @@ class _BubbleReadCard extends StatelessWidget {
       bottom: below
           ? null
           : math.max(0.0, pageSize.height - anchor.dy) + (pinBelow ? gap : pin),
-      child: _card(context),
+      child: scale == 1
+          ? card
+          : MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(
+                  MediaQuery.textScalerOf(context).scale(1) * scale,
+                ),
+              ),
+              child: card,
+            ),
     );
   }
 
@@ -1183,6 +1331,113 @@ class _BubbleReadCard extends StatelessWidget {
   );
 }
 
+/// Balon tutamaçlarının GENEL boy tercihi (cihaz başına, bütün belgelerde).
+///
+/// Kullanıcı isteği 2026-10-16: "balonların boyutu ayarlanabilir olsun".
+/// Telefonda 28 dp'lik tutamaç kimine küçük (bulunmuyor), kimine büyük
+/// (yazıyı örtüyor). Tek balonun boyu yazma kartındaki −/+ ile
+/// ([PageBubble.size]), hepsininki balon bırakma kartındaki −/+ ile
+/// buradan ayarlanır; ikisi çarpılır.
+class BubbleLook {
+  BubbleLook._();
+
+  static const double min = 0.7;
+  static const double max = 2.0;
+  static const double step = 0.15;
+
+  static final scale = ValueNotifier<double>(1);
+
+  static SharedPreferences? _prefs;
+  static const _key = 'bubble_pin_scale';
+
+  /// Uygulama açılışında (main) bir kez: kayıtlı tercih okunur.
+  static void attach(SharedPreferences prefs) {
+    _prefs = prefs;
+    scale.value = (prefs.getDouble(_key) ?? 1).clamp(min, max).toDouble();
+  }
+
+  static void setScale(double value) {
+    final next = value.clamp(min, max).toDouble();
+    if ((next - scale.value).abs() < 0.001) return;
+    scale.value = next;
+    _prefs?.setDouble(_key, next);
+  }
+}
+
+/// "Basılı tut → balon bırak" dinleyicisi (bkz. [BubblePageLayer.longPressAdd]).
+///
+/// **Jest tanıyıcısı DEĞİL, `Listener`**: sayfanın tamamını kaplayan bir uzun
+/// basış tanıyıcısı HER dokunuşta arenaya girer ve süresi dolunca kazanıp
+/// belgenin kaydırma/yakınlaştırma tanıyıcılarını elerdi (PdfSelectLayer'daki
+/// gerekçenin aynısı). Dinleyici arenaya girmez: süre zamanlayıcıyla ölçülür,
+/// parmak kayarsa ya da ikinci parmak inerse iptal olur. Fare dinlenmez —
+/// masaüstünde basılı tutup sürüklemek metin seçimidir.
+class _LongPressDrop extends StatefulWidget {
+  const _LongPressDrop({required this.onDrop});
+
+  final ValueChanged<Offset> onDrop;
+
+  static const delay = Duration(milliseconds: 450);
+  static const slop = 18.0;
+
+  @override
+  State<_LongPressDrop> createState() => _LongPressDropState();
+}
+
+class _LongPressDropState extends State<_LongPressDrop> {
+  final _pointers = <int>{};
+  Timer? _timer;
+  int? _pointer;
+  Offset _start = Offset.zero;
+
+  void _cancel() {
+    _timer?.cancel();
+    _timer = null;
+    _pointer = null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _up(PointerEvent e) {
+    _pointers.remove(e.pointer);
+    if (e.pointer == _pointer) _cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) => Listener(
+    behavior: HitTestBehavior.translucent,
+    onPointerDown: (e) {
+      if (e.kind == PointerDeviceKind.mouse) return;
+      _pointers.add(e.pointer);
+      if (_pointers.length > 1) {
+        _cancel();
+        return;
+      }
+      _pointer = e.pointer;
+      _start = e.localPosition;
+      _timer?.cancel();
+      _timer = Timer(_LongPressDrop.delay, () {
+        final at = _start;
+        _cancel();
+        if (mounted) widget.onDrop(at);
+      });
+    },
+    onPointerMove: (e) {
+      if (e.pointer == _pointer &&
+          (e.localPosition - _start).distance > _LongPressDrop.slop) {
+        _cancel();
+      }
+    },
+    onPointerUp: _up,
+    onPointerCancel: _up,
+    child: const SizedBox.expand(),
+  );
+}
+
 /// Balonu (kart ya da tutamaç) **basılı tutup sürüklenebilir** yapan sarmalayıcı.
 ///
 /// Neden `GestureDetector` değil `RawGestureDetector`: `GestureDetector` uzun
@@ -1282,12 +1537,16 @@ class _BubblePin extends StatefulWidget {
     required this.bubble,
     required this.pageSize,
     required this.readOnly,
+    this.scale = 1,
   });
 
   final BubbleController controller;
   final PageBubble bubble;
   final Size pageSize;
   final bool readOnly;
+
+  /// Genel balon boyu ([BubbleLook.scale]).
+  final double scale;
 
   @override
   State<_BubblePin> createState() => _BubblePinState();
@@ -1403,6 +1662,11 @@ class _BubblePinState extends State<_BubblePin>
     // o an ilgilenilen balon net görünmeli.
     final opaque = _lifted || !bubble.collapsed;
     final page = widget.pageSize;
+    // BOY (kullanıcı isteği 2026-10-16): tutamaç sivri köşesinin ETRAFINDA
+    // ölçeklenir — işaret ettiği nokta yerinde kalır. Ölçek bir dönüşüm:
+    // yerleşim ve dokunma alanı (RenderTransform isabeti dönüşümle
+    // hesaplar) birlikte büyür, gövdenin ölçüsünü bilmek gerekmez.
+    final pinScale = _pinScaleOf(bubble, widget.scale);
     final point = Offset(bubble.x * page.width, bubble.y * page.height);
     // AÇIK METİN ALANI: tutamaç yerine yazının kendisi çizilir.
     // Boyutlanırken model henüz yazılmadı: geçici çarpan burada uygulanır.
@@ -1424,7 +1688,7 @@ class _BubblePinState extends State<_BubblePin>
       // Sivri köşe NOKTADA: gövde oradan sağa/sola, yukarı/aşağı açılır.
       // Sağ/alt kenardan yerleştirmek gövdenin genişliğini bilmeyi
       // gerektirmez (etiket uzunluğu başlığa göre değişiyor).
-      final place = _pinPlacement(bubble, page);
+      final place = _pinPlacement(bubble, page, pinScale);
       child = _marker(bubble, place, opaque);
       if (place.left) {
         right = page.width - point.dx;
@@ -1451,7 +1715,7 @@ class _BubblePinState extends State<_BubblePin>
         builder: (context, offset, child) =>
             Transform.translate(offset: offset, child: child),
         child: AnimatedScale(
-          scale: _lifted ? 1.2 : 1,
+          scale: (_lifted ? 1.2 : 1) * pinScale,
           alignment: origin,
           duration: const Duration(milliseconds: 120),
           child: BubbleDragArea(
@@ -2052,119 +2316,18 @@ class _BubbleDockState extends State<BubbleDock> {
   Widget _toolRow(BuildContext context, PageBubble bubble) {
     final l10n = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    // Düğmeler YATAY KAYAR, Sil sabit sağda: açık metin alanında biçim
+    // düğmeleri ve boy düğmeleriyle satır dar telefona sığmıyordu.
     return Padding(
       padding: const EdgeInsets.fromLTRB(6, 0, 6, 4),
       child: Row(
         children: [
-          // Renk: balonun kendi rengiyle dolu bir daire — şeridi açar.
-          TextFieldTapRegion(
-            child: ExcludeFocus(
-              child: IconButton(
-                key: const ValueKey('bubble-color-toggle'),
-                tooltip: l10n.color,
-                onPressed: () => setState(() {
-                  _colors = !_colors;
-                  if (_colors) _fills = false;
-                }),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                icon: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Color(bubble.color),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _colors ? scheme.primary : scheme.outlineVariant,
-                      width: _colors ? 2.5 : 1.5,
-                    ),
-                  ),
-                ),
-              ),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: _tools(context, bubble, l10n, scheme)),
             ),
           ),
-          _barButton(
-            context,
-            icon: bubble.starred
-                ? Icons.star_rounded
-                : Icons.star_border_rounded,
-            tooltip: l10n.bubbleStar,
-            selected: bubble.starred,
-            color: bubble.starred ? Colors.amber[800] : null,
-            onPressed: () => widget.controller.toggleStar(bubble.id),
-          ),
-          _barButton(
-            context,
-            icon: Icons.priority_high_rounded,
-            tooltip: l10n.bubbleUrgent,
-            selected: bubble.urgent,
-            color: bubble.urgent ? scheme.error : null,
-            onPressed: () => widget.controller.toggleUrgent(bubble.id),
-          ),
-          // Ok yalnız VURGULU balonda: serbest balonun bağlanacağı metin yok.
-          if (bubble.isHighlight)
-            _barButton(
-              context,
-              icon: bubble.arrow ? Icons.north_east : Icons.block,
-              tooltip: bubble.arrow
-                  ? l10n.bubbleArrowHide
-                  : l10n.bubbleArrowShow,
-              onPressed: () => widget.controller.toggleArrow(bubble.id),
-            ),
-          // **METİN KUTUSU BİÇİMİ** — yalnız AÇIK METİN alanında (normal
-          // balonun yazısı kartın içinde duruyor, sayfada değil; orada
-          // kalın/hiza/dolgu bir şey ifade etmez).
-          if (bubble.plain) ...[
-            _barButton(
-              context,
-              icon: Icons.format_bold,
-              tooltip: l10n.formatBold,
-              selected: bubble.bold,
-              onPressed: () => widget.controller
-                ..update(bubble.copyWith(bold: !bubble.bold))
-                ..save(),
-            ),
-            _barButton(
-              context,
-              icon: Icons.format_italic,
-              tooltip: l10n.formatItalic,
-              selected: bubble.italic,
-              onPressed: () => widget.controller
-                ..update(bubble.copyWith(italic: !bubble.italic))
-                ..save(),
-            ),
-            // Hiza tek düğmeyle DÖNER (sol → orta → sağ): kartta üç ayrı
-            // düğmeye yer yok, simge de o an hangi hizada olduğunu gösterir.
-            _barButton(
-              context,
-              icon: switch (bubble.align) {
-                1 => Icons.format_align_center,
-                2 => Icons.format_align_right,
-                _ => Icons.format_align_left,
-              },
-              tooltip: switch (bubble.align) {
-                1 => l10n.bubbleTextAlignCenter,
-                2 => l10n.bubbleTextAlignRight,
-                _ => l10n.bubbleTextAlignLeft,
-              },
-              selected: bubble.align != 0,
-              onPressed: () => widget.controller
-                ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
-                ..save(),
-            ),
-            _barButton(
-              context,
-              icon: Icons.format_color_fill,
-              tooltip: l10n.bubbleTextFill,
-              selected: _fills,
-              onPressed: () => setState(() {
-                _fills = !_fills;
-                if (_fills) _colors = false;
-              }),
-            ),
-          ],
-          const Spacer(),
           _barButton(
             context,
             icon: Icons.delete_outline,
@@ -2180,6 +2343,146 @@ class _BubbleDockState extends State<BubbleDock> {
       ),
     );
   }
+
+  List<Widget> _tools(
+    BuildContext context,
+    PageBubble bubble,
+    AppLocalizations l10n,
+    ColorScheme scheme,
+  ) => [
+    // Renk: balonun kendi rengiyle dolu bir daire — şeridi açar.
+    TextFieldTapRegion(
+      child: ExcludeFocus(
+        child: IconButton(
+          key: const ValueKey('bubble-color-toggle'),
+          tooltip: l10n.color,
+          onPressed: () => setState(() {
+            _colors = !_colors;
+            if (_colors) _fills = false;
+          }),
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          icon: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: Color(bubble.color),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _colors ? scheme.primary : scheme.outlineVariant,
+                width: _colors ? 2.5 : 1.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+    _barButton(
+      context,
+      icon: bubble.starred ? Icons.star_rounded : Icons.star_border_rounded,
+      tooltip: l10n.bubbleStar,
+      selected: bubble.starred,
+      color: bubble.starred ? Colors.amber[800] : null,
+      onPressed: () => widget.controller.toggleStar(bubble.id),
+    ),
+    _barButton(
+      context,
+      icon: Icons.priority_high_rounded,
+      tooltip: l10n.bubbleUrgent,
+      selected: bubble.urgent,
+      color: bubble.urgent ? scheme.error : null,
+      onPressed: () => widget.controller.toggleUrgent(bubble.id),
+    ),
+    // Ok yalnız VURGULU balonda: serbest balonun bağlanacağı metin yok.
+    if (bubble.isHighlight)
+      _barButton(
+        context,
+        icon: bubble.arrow ? Icons.north_east : Icons.block,
+        tooltip: bubble.arrow ? l10n.bubbleArrowHide : l10n.bubbleArrowShow,
+        onPressed: () => widget.controller.toggleArrow(bubble.id),
+      ),
+    // **METİN KUTUSU BİÇİMİ** — yalnız AÇIK METİN alanında (normal
+    // balonun yazısı kartın içinde duruyor, sayfada değil; orada
+    // kalın/hiza/dolgu bir şey ifade etmez).
+    if (bubble.plain) ...[
+      _barButton(
+        context,
+        icon: Icons.format_bold,
+        tooltip: l10n.formatBold,
+        selected: bubble.bold,
+        onPressed: () => widget.controller
+          ..update(bubble.copyWith(bold: !bubble.bold))
+          ..save(),
+      ),
+      _barButton(
+        context,
+        icon: Icons.format_italic,
+        tooltip: l10n.formatItalic,
+        selected: bubble.italic,
+        onPressed: () => widget.controller
+          ..update(bubble.copyWith(italic: !bubble.italic))
+          ..save(),
+      ),
+      // Hiza tek düğmeyle DÖNER (sol → orta → sağ): kartta üç ayrı
+      // düğmeye yer yok, simge de o an hangi hizada olduğunu gösterir.
+      _barButton(
+        context,
+        icon: switch (bubble.align) {
+          1 => Icons.format_align_center,
+          2 => Icons.format_align_right,
+          _ => Icons.format_align_left,
+        },
+        tooltip: switch (bubble.align) {
+          1 => l10n.bubbleTextAlignCenter,
+          2 => l10n.bubbleTextAlignRight,
+          _ => l10n.bubbleTextAlignLeft,
+        },
+        selected: bubble.align != 0,
+        onPressed: () => widget.controller
+          ..update(bubble.copyWith(align: (bubble.align + 1) % 3))
+          ..save(),
+      ),
+      _barButton(
+        context,
+        icon: Icons.format_color_fill,
+        tooltip: l10n.bubbleTextFill,
+        selected: _fills,
+        onPressed: () => setState(() {
+          _fills = !_fills;
+          if (_fills) _colors = false;
+        }),
+      ),
+    ],
+    // BOY (kullanıcı isteği 2026-10-16: "balonların boyutu
+    // ayarlanabilir olsun"): normal balonda tutamaç, açık metinde yazı
+    // büyür/küçülür. Değer nota yazılır, her cihazda aynı.
+    _barButton(
+      context,
+      icon: Icons.zoom_out_rounded,
+      tooltip: l10n.bubbleSmaller,
+      onPressed: () => widget.controller.stepSize(bubble.id, -1),
+    ),
+    SizedBox(
+      width: 34,
+      child: Text(
+        '${(bubble.size * 100).round()}%',
+        key: const ValueKey('bubble-size-label'),
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: scheme.onSurfaceVariant,
+        ),
+      ),
+    ),
+    _barButton(
+      context,
+      icon: Icons.zoom_in_rounded,
+      tooltip: l10n.bubbleLarger,
+      onPressed: () => widget.controller.stepSize(bubble.id, 1),
+    ),
+  ];
 
   /// Renk şeridi: modal levha yerine kartın içinde yatay bir sıra (levha da
   /// rota iterek klavyeyi kapatıyordu).
@@ -2414,6 +2717,9 @@ class BubbleToolbar extends StatelessWidget {
                             ),
                           ),
                         ),
+                        // BÜTÜN balonların boyu (cihaz tercihi — bkz.
+                        // [BubbleLook]). Tek balonunki yazma kartında.
+                        if (!plain) const _GlobalSizeButtons(),
                       ],
                     ),
                   ],
@@ -2421,6 +2727,63 @@ class BubbleToolbar extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// Balon bırakma kartındaki genel boy düğmeleri: − 100% +.
+class _GlobalSizeButtons extends StatelessWidget {
+  const _GlobalSizeButtons();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return ValueListenableBuilder<double>(
+      valueListenable: BubbleLook.scale,
+      builder: (context, scale, _) {
+        Widget button(IconData icon, String tooltip, double delta, Key key) =>
+            IconButton(
+              key: key,
+              tooltip: tooltip,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 30, minHeight: 32),
+              iconSize: 18,
+              onPressed:
+                  (delta < 0
+                      ? scale <= BubbleLook.min
+                      : scale >= BubbleLook.max)
+                  ? null
+                  : () => BubbleLook.setScale(scale + delta),
+              icon: Icon(icon),
+            );
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            button(
+              Icons.zoom_out_rounded,
+              l10n.bubbleAllSmaller,
+              -BubbleLook.step,
+              const ValueKey('bubble-global-smaller'),
+            ),
+            Text(
+              '${(scale * 100).round()}%',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            button(
+              Icons.zoom_in_rounded,
+              l10n.bubbleAllLarger,
+              BubbleLook.step,
+              const ValueKey('bubble-global-larger'),
+            ),
+          ],
         );
       },
     );
@@ -2456,6 +2819,11 @@ class BubbleBarActions extends StatelessWidget {
       builder: (context, _) {
         final adding = controller.adding;
         final count = controller.bubbles.length;
+        // Göster/gizle düğmesi de çubuktayken (balon varken) telefonda
+        // "Balon" yazısı düşer — sayfa sayacı kesilmesin.
+        final compact =
+            this.compact ||
+            (count > 0 && MediaQuery.sizeOf(context).width < 400);
         final style = FilledButton.styleFrom(
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.symmetric(horizontal: compact ? 10 : 14),
@@ -2487,6 +2855,7 @@ class BubbleBarActions extends StatelessWidget {
                       icon: icon,
                       label: Text(l10n.bubbleModeBubble),
                     ));
+        final hidden = controller.hidden;
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2495,6 +2864,21 @@ class BubbleBarActions extends StatelessWidget {
               message: adding ? l10n.bubbleAddDone : l10n.bubbleAdd,
               child: add,
             ),
+            // GÖSTER / GİZLE (kullanıcı isteği 2026-10-16). Balon yoksa
+            // gizlenecek bir şey de yok — düğme çizilmez.
+            if (count > 0)
+              IconButton(
+                key: const ValueKey('bubble-visibility'),
+                tooltip: hidden ? l10n.bubblesShow : l10n.bubblesHide,
+                visualDensity: VisualDensity.compact,
+                isSelected: hidden,
+                onPressed: () => controller.setHidden(!hidden),
+                icon: Icon(
+                  hidden
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+              ),
             IconButton(
               tooltip: l10n.bubblesOverviewTitle,
               visualDensity: VisualDensity.compact,

@@ -70,14 +70,17 @@ Images **float freely** on the note's page; text flows around them.
 - **Picture-in-picture:** tap ⧉ in the full-screen player, or go to the home screen while the video plays — it continues in a small window.
 - **Make a note from the video:** from the video's ⋮ menu; AI watches and listens and writes a detailed note (for videos on the device).
 - Share from the YouTube app → **Notes** and the video arrives as a playable attachment.
-- **Timestamps (like YouTube):** when the note has a video, times such as **1:23**, **12:05** or **1:02:33** in the text are drawn in blue; tap one and the video jumps there (or starts there if it isn't playing).
+- **Timestamps (like YouTube):** when the note has a video, times such as **1:23**, **12:05** or **1:02:33** in the text are drawn in blue; tap one and the video jumps there (or starts there if it isn't playing). Tapping a timestamp doesn't open the keyboard — tap next to it to type.
+- **Control bar:** once a video has played, its box shows **⏪ 10s · ▶/⏸ · 10s ⏩** at the bottom, plus position/length and **speed** (1× → 1.25× → 1.5× → 2× → 0.5× → 0.75×) in a wide box. A YouTube video playing on the page has its controls right below the box; a pinned video has them on the pane's bar.
+- The full-screen player also has **speed** and **loop** buttons.
 - **Note at this moment:** while the video plays, the **⏱ Note** button at its corner (on the bar of a pinned video, in the top bar full screen) writes the current timestamp and leaves you ready to type: a new item in a list note, or the timestamp on the caret's line (below it if the line has text) in a text note.
 
 ## Media on top, note below {#pin}
 To take notes while watching a video or looking at an image:
 1. Press and hold the image/video and drag it **upwards** (pushing it past the title is enough). **"Release: pin to top"** appears at the top of the screen.
 2. Release: the media stays fixed above the note, and the note scrolls on its own below. YouTube plays in place here too.
-- Drag the **bar** between them to resize the pane. The bar has **Full screen** on the left and the **view switch** (Pinned / Floating / Bubbles) on the right; for videos also **⏱ Note**.
+- Drag the **bar** between them to resize the pane. The bar has **Full screen** on the left and the **view switch** (Pinned / Floating / Bubbles) on the right; for videos also **⏪ 10s · ▶/⏸ · 10s ⏩**, speed and **⏱ Note**; the thin line along the bar's top edge is the video's progress.
+- **Bubbles stay visible when pinned:** a PDF (or image) pinned from bubbles view keeps its bubbles; tap one to read it. The 💬 on the PDF box's bar (the button on the pane's bar for an image) **hides/shows** them.
 - **PDFs can be pinned too:** the document stays on top, pages turn inside the box, and you write below.
 - Pulling the bar all the way up, or holding the media and dragging it down, also puts it back. It returns to its old place and size; pin it again and the pane opens at its previous height.
 - The same is available with the **Pinned** button on the selected attachment's panel.
@@ -94,10 +97,12 @@ You can link a **PDF, image, video, YouTube video** or any attachment of the not
 
 ## PDFs and slides {#documents}
 In **Bubbles** mode the document is the note itself: the page on top, that page's note below.
-- **Bubbles:** press **Bubble** in the bottom bar, then tap the spot on the page the note belongs to. The bubble's pointed corner marks that spot; press **Done** when you've written it.
-- Tap a bubble to read it in place; **Edit** switches to writing. Colour, star, urgent (blinks) and delete are always visible on the writing card; long-press and drag to move.
+- **Bubbles:** **press and hold** the spot on the page the note belongs to — a bubble drops there and the writing card opens. Or press **Bubble** in the bottom bar, then tap the page. The bubble's pointed corner marks that spot; press **Done** when you've written it.
+- Tap a bubble to read it in place; **Edit** switches to writing. Colour, star, urgent (blinks), **size (− / +)** and delete are always visible on the writing card; long-press the bubble itself and drag to move it.
+- **Size of all bubbles:** − / + on the card opened by the Bubble button (applies to every document on this device).
+- **Show / hide:** the 👁 button in the bottom bar hides the document's bubbles and highlights without deleting them. They reappear when you drop a new bubble or go to one from the list.
 - The 💬 button with the count lists and searches all bubbles. Page note, all page notes, edit pages and full screen live in the ⋮ menu on phones.
-- **Highlight:** select text in the document and highlight it; copy it or ask AI about it.
+- **Highlight:** **double-tap** text (a word is selected; keep the finger down on the second tap and drag to extend), then highlight it; copy it or ask AI about it. A scanned page's text is recognised once and kept — no waiting next time.
 - **Pen:** write on the page with the pen in the bottom bar; one finger draws, two fingers scroll.
 - **Edit pages:** delete, rotate, reorder — page notes move with their pages.
 - **Bookmarks** and page jumps; double-tap to zoom.
@@ -147,11 +152,13 @@ The **AI** screen on the home screen:
 - The **Today** widget shows today's reminders with their times on your home screen.
 
 ## Sharing and working together {#share}
-The **Share** button on the note screen:
-- **As text:** to any app.
-- **As a note:** with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes.
-- **PDF with bubbles:** bubbles and drawings are printed into the PDF.
-- **Export:** save as PDF, Word or images.
+The **Share** button on the note screen: a preview of the text at the top with content chips (title, completed items, tags, **video links** — your choice is remembered next time), then one-tap buttons:
+- **Share / Copy:** send the text to any app or copy it.
+- **PDF:** send the note as a PDF in one tap (images at the end).
+- **Image:** send the note as pictures (PNG pages) — previews nicely in chats.
+- **Files:** send the note's photos, PDFs and videos as files.
+- **To a friend**, **Collaborate** and **Note package** (with attachments, pages, drawings and bubbles; the other person opens it exactly the same in Notes).
+- **More:** PDF/Word export with options (title, image position/size) and **PDF with bubbles** (bubbles and drawings printed into the PDF).
 Working together:
 - **Contacts:** add friends from ⋮ → Contacts.
 - **Send to a friend:** a copy of the note lands in their **Incoming notes**.

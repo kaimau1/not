@@ -4749,4 +4749,61 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Videotijd niet leesbaar — speel de video eerst af.';
+
+  @override
+  String get videoSpeed => 'Afspeelsnelheid';
+
+  @override
+  String get videoLoop => 'Herhalen';
+
+  @override
+  String get bubbleSmaller => 'Ballon verkleinen';
+
+  @override
+  String get bubbleLarger => 'Ballon vergroten';
+
+  @override
+  String get bubbleAllSmaller => 'Alle ballonnen verkleinen';
+
+  @override
+  String get bubbleAllLarger => 'Alle ballonnen vergroten';
+
+  @override
+  String get bubblesShow => 'Ballonnen tonen';
+
+  @override
+  String get bubblesHide => 'Ballonnen verbergen';
+
+  @override
+  String get shareIncludeVideoLinks => 'Videolinks';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Afbeelding';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Bijlagen ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'Naar vriend';
+
+  @override
+  String get shareCollaborateShort => 'Samenwerken';
+
+  @override
+  String get shareAsNoteShort => 'Notitiepakket';
+
+  @override
+  String get shareMoreSection => 'MEER';
+
+  @override
+  String get shareQuickPreparing => 'Voorbereiden…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Geen bijlagen op dit apparaat om te delen.';
 }

@@ -4739,4 +4739,61 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Waktu video tidak terbaca — putar videonya dulu.';
+
+  @override
+  String get videoSpeed => 'Kecepatan putar';
+
+  @override
+  String get videoLoop => 'Ulangi';
+
+  @override
+  String get bubbleSmaller => 'Perkecil gelembung';
+
+  @override
+  String get bubbleLarger => 'Perbesar gelembung';
+
+  @override
+  String get bubbleAllSmaller => 'Perkecil semua gelembung';
+
+  @override
+  String get bubbleAllLarger => 'Perbesar semua gelembung';
+
+  @override
+  String get bubblesShow => 'Tampilkan gelembung';
+
+  @override
+  String get bubblesHide => 'Sembunyikan gelembung';
+
+  @override
+  String get shareIncludeVideoLinks => 'Tautan video';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Gambar';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Lampiran ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'Ke teman';
+
+  @override
+  String get shareCollaborateShort => 'Kolaborasi';
+
+  @override
+  String get shareAsNoteShort => 'Paket catatan';
+
+  @override
+  String get shareMoreSection => 'LAINNYA';
+
+  @override
+  String get shareQuickPreparing => 'Menyiapkan…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Tidak ada file lampiran di perangkat ini untuk dibagikan.';
 }

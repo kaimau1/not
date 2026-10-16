@@ -4744,4 +4744,61 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Não foi possível ler o tempo do vídeo — reproduza-o primeiro.';
+
+  @override
+  String get videoSpeed => 'Velocidade de reprodução';
+
+  @override
+  String get videoLoop => 'Repetir';
+
+  @override
+  String get bubbleSmaller => 'Diminuir balão';
+
+  @override
+  String get bubbleLarger => 'Aumentar balão';
+
+  @override
+  String get bubbleAllSmaller => 'Diminuir todos os balões';
+
+  @override
+  String get bubbleAllLarger => 'Aumentar todos os balões';
+
+  @override
+  String get bubblesShow => 'Mostrar balões';
+
+  @override
+  String get bubblesHide => 'Ocultar balões';
+
+  @override
+  String get shareIncludeVideoLinks => 'Links de vídeo';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Imagem';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Anexos ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'Para amigo';
+
+  @override
+  String get shareCollaborateShort => 'Colaborar';
+
+  @override
+  String get shareAsNoteShort => 'Pacote da nota';
+
+  @override
+  String get shareMoreSection => 'MAIS';
+
+  @override
+  String get shareQuickPreparing => 'Preparando…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Não há anexos neste dispositivo para compartilhar.';
 }

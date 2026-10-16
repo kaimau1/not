@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/pip.dart';
+import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import 'youtube_viewer.dart';
 
@@ -330,6 +331,25 @@ class _Controls extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // HIZ (0.5×–2×): dokundukça sıradakine geçer.
+                  SizedBox(
+                    width: 56,
+                    child: TextButton(
+                      key: const ValueKey('viewer-video-speed'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: value.playbackSpeed == 1
+                            ? Colors.white70
+                            : Colors.amberAccent,
+                      ),
+                      onPressed: () => controller.setPlaybackSpeed(
+                        nextVideoSpeed(value.playbackSpeed),
+                      ),
+                      child: Text(
+                        formatVideoSpeed(value.playbackSpeed),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
                   IconButton(
                     tooltip: context.l10n.videoBack10,
                     color: Colors.white,
@@ -354,6 +374,22 @@ class _Controls extends StatelessWidget {
                     iconSize: 30,
                     icon: const Icon(Icons.forward_10),
                     onPressed: () => onSkip(10),
+                  ),
+                  // DÖNGÜ: video bitince baştan.
+                  SizedBox(
+                    width: 56,
+                    child: IconButton(
+                      key: const ValueKey('viewer-video-loop'),
+                      tooltip: context.l10n.videoLoop,
+                      isSelected: value.isLooping,
+                      color: Colors.white70,
+                      selectedIcon: const Icon(
+                        Icons.repeat_on_rounded,
+                        color: Colors.amberAccent,
+                      ),
+                      icon: const Icon(Icons.repeat_rounded),
+                      onPressed: () => controller.setLooping(!value.isLooping),
+                    ),
                   ),
                 ],
               ),

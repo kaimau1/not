@@ -4646,4 +4646,60 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get videoTimeUnknown => '動画の再生位置を取得できません。先に再生してください。';
+
+  @override
+  String get videoSpeed => '再生速度';
+
+  @override
+  String get videoLoop => 'ループ';
+
+  @override
+  String get bubbleSmaller => '吹き出しを小さく';
+
+  @override
+  String get bubbleLarger => '吹き出しを大きく';
+
+  @override
+  String get bubbleAllSmaller => 'すべての吹き出しを小さく';
+
+  @override
+  String get bubbleAllLarger => 'すべての吹き出しを大きく';
+
+  @override
+  String get bubblesShow => '吹き出しを表示';
+
+  @override
+  String get bubblesHide => '吹き出しを隠す';
+
+  @override
+  String get shareIncludeVideoLinks => '動画リンク';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => '画像';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return '添付 ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => '友だちへ';
+
+  @override
+  String get shareCollaborateShort => '共同編集';
+
+  @override
+  String get shareAsNoteShort => 'ノートパッケージ';
+
+  @override
+  String get shareMoreSection => 'その他';
+
+  @override
+  String get shareQuickPreparing => '準備中…';
+
+  @override
+  String get shareAttachmentFilesNone => 'この端末に共有できる添付ファイルがありません。';
 }

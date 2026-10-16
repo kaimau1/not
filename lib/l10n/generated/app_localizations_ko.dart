@@ -4652,4 +4652,60 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get videoTimeUnknown => '동영상 시간을 읽을 수 없습니다. 먼저 재생하세요.';
+
+  @override
+  String get videoSpeed => '재생 속도';
+
+  @override
+  String get videoLoop => '반복';
+
+  @override
+  String get bubbleSmaller => '말풍선 작게';
+
+  @override
+  String get bubbleLarger => '말풍선 크게';
+
+  @override
+  String get bubbleAllSmaller => '모든 말풍선 작게';
+
+  @override
+  String get bubbleAllLarger => '모든 말풍선 크게';
+
+  @override
+  String get bubblesShow => '말풍선 표시';
+
+  @override
+  String get bubblesHide => '말풍선 숨기기';
+
+  @override
+  String get shareIncludeVideoLinks => '동영상 링크';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => '이미지';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return '첨부 ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => '친구에게';
+
+  @override
+  String get shareCollaborateShort => '공동 편집';
+
+  @override
+  String get shareAsNoteShort => '노트 패키지';
+
+  @override
+  String get shareMoreSection => '더 보기';
+
+  @override
+  String get shareQuickPreparing => '준비 중…';
+
+  @override
+  String get shareAttachmentFilesNone => '이 기기에 공유할 첨부 파일이 없습니다.';
 }

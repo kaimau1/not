@@ -81,7 +81,9 @@ String formatVideoTimestamp(Duration d) {
   return (text: next, caret: lineEnd + 1 + insert.length);
 }
 
-/// Bir oynatıcının not tarafına açtığı yüz: konumu okunur, oraya sarılır.
+/// Bir oynatıcının not tarafına açtığı yüz: konumu okunur, oraya sarılır;
+/// videonun altındaki DENETİM ÇUBUĞU (oynat/durdur, ±10 sn — bkz.
+/// `VideoTransportBar`) da buradan sürer.
 abstract class VideoTimeSource {
   /// Oynatıcının çaldığı ekin kimliği.
   String get attachmentId;
@@ -91,6 +93,57 @@ abstract class VideoTimeSource {
 
   /// Konuma sarar ve OYNATIR (damgaya dokunan izlemek ister).
   Future<void> seekTo(Duration position);
+
+  /// Oynatma durumu ya da konum değişince uyanır (denetim çubuğu dinler).
+  /// Varsayılan: hiç uyanmaz (durumunu bildiremeyen oynatıcı).
+  Listenable get changes => _silent;
+
+  /// Oynuyor mu (bilinmiyorsa false).
+  bool get isPlaying => false;
+
+  /// Bilinen son konum ve videonun süresi (bilinmiyorsa null) — çubuktaki
+  /// "1:23 / 4:56" yazısı için; okuma maliyeti yok.
+  Duration? get lastPosition => null;
+  Duration? get duration => null;
+
+  Future<void> play() async {}
+  Future<void> pause() async {}
+
+  /// Konumu [delta] kadar kaydırır (±10 sn); oynama durumu DEĞİŞMEZ.
+  Future<void> seekBy(Duration delta) async {}
+
+  /// Oynatma hızı (1 = normal) — bkz. [kVideoSpeeds].
+  double get speed => 1;
+  Future<void> setSpeed(double value) async {}
+}
+
+/// Hız düğmesinin dolaştığı değerler (dokundukça sıradakine geçer).
+const kVideoSpeeds = <double>[1, 1.25, 1.5, 2, 0.5, 0.75];
+
+/// [current]'tan sonraki hız.
+double nextVideoSpeed(double current) {
+  final i = kVideoSpeeds.indexOf(current);
+  return kVideoSpeeds[(i + 1) % kVideoSpeeds.length];
+}
+
+/// "1.5×", "2×", "0.75×".
+String formatVideoSpeed(double speed) {
+  final text = speed == speed.roundToDouble()
+      ? speed.toStringAsFixed(0)
+      : speed.toString();
+  return '$text×';
+}
+
+final Listenable _silent = ValueNotifier<int>(0);
+
+/// [delta] kadar kaydırılmış konum, videonun sınırlarına kıstırılmış.
+Duration shiftedPosition(Duration from, Duration delta, Duration? duration) {
+  var target = from + delta;
+  if (target.isNegative) target = Duration.zero;
+  if (duration != null && duration > Duration.zero && target > duration) {
+    target = duration;
+  }
+  return target;
 }
 
 /// Notun içindeki oynatıcıların buluşma noktası (editör başına bir tane).
@@ -110,14 +163,20 @@ class NoteVideoHub {
   /// `serial` aynı saniyeye ikinci istekte de dinleyiciyi uyandırır.
   final startRequest = _StartRequestNotifier();
 
+  /// Oynatıcı kaydolunca/ayrılınca artar — denetim çubuğu oynatıcısını
+  /// buradan bulur (oynatıcı kutudan SONRA, kendi hazır olunca kaydolur).
+  final revision = ValueNotifier<int>(0);
+
   void register(VideoTimeSource source) {
     _sources.remove(source);
     _sources.add(source);
+    revision.value++;
   }
 
   void unregister(VideoTimeSource source) {
-    _sources.remove(source);
+    if (!_sources.remove(source)) return;
     if (identical(_recent, source)) _recent = null;
+    revision.value++;
   }
 
   /// Oynatıcı kullanıcı tarafından oynatıldı/sarıldı: damgalar ÖNCE ona
@@ -146,7 +205,8 @@ class NoteVideoHub {
     return _sources.isEmpty ? null : _sources.last;
   }
 
-  void requestStart(String attachmentId, int seconds) {
+  /// [seconds] null = bağlantının kendi başlangıcı ("oynat" düğmesi).
+  void requestStart(String attachmentId, int? seconds) {
     startRequest.request(attachmentId, seconds);
   }
 
@@ -165,16 +225,19 @@ class NoteVideoHub {
     return true;
   }
 
-  void dispose() => startRequest.dispose();
+  void dispose() {
+    startRequest.dispose();
+    revision.dispose();
+  }
 }
 
 /// [NoteVideoHub.startRequest]'in bildiricisi.
 class _StartRequestNotifier
-    extends ValueNotifier<({String id, int seconds, int serial})?> {
+    extends ValueNotifier<({String id, int? seconds, int serial})?> {
   _StartRequestNotifier() : super(null);
 
   var _serial = 0;
 
-  void request(String id, int seconds) =>
+  void request(String id, int? seconds) =>
       value = (id: id, seconds: seconds, serial: ++_serial);
 }

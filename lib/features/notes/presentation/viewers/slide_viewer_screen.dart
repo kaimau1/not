@@ -42,14 +42,24 @@ class SlideViewerScreen extends ConsumerStatefulWidget {
 class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
-    onChanged: (strokes) =>
-        widget.onChanged?.call(widget.attachment.copyWith(ink: strokes)),
+    onChanged: (strokes) => _emit(_current.copyWith(ink: strokes)),
   );
   late final BubbleController _bubbles = BubbleController(
     initial: widget.attachment.bubbles,
-    onChanged: (list) =>
-        widget.onChanged?.call(widget.attachment.copyWith(bubbles: list)),
+    onChanged: (list) => _emit(_current.copyWith(bubbles: list)),
+    hidden: widget.attachment.bubblesHidden,
+    onHiddenChanged: (hidden) =>
+        _emit(_current.copyWith(bubblesHidden: hidden)),
   );
+
+  /// Ekin GÜNCEL hâli — çizim ve balon yazımları birbirini açılıştaki
+  /// hâle döndürmesin (bkz. PdfViewerScreen._current).
+  late Attachment _current = widget.attachment;
+
+  void _emit(Attachment next) {
+    _current = next;
+    widget.onChanged?.call(next);
+  }
   /// Slaytlar PDF gibi ALT ALTA, boşluksuz kayar (kullanıcı isteği
   /// 2026-08-08). Yatay `PageView` bırakıldı — bkz. [SlideStripMetrics].
   final _scroll = ScrollController();
@@ -344,6 +354,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                             controller: _bubbles,
                             page: i + 1,
                             readOnly: widget.onChanged == null,
+                            longPressAdd: !_editing,
                           ),
                         ),
                       ],

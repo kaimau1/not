@@ -206,13 +206,19 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
   late final BubbleController _bubbles = BubbleController(
     initial: widget.attachment.bubbles,
     onChanged: (list) =>
-        widget.onChanged?.call(_attachment.copyWith(bubbles: list)),
+        widget.onChanged?.call(
+          _attachment = _attachment.copyWith(bubbles: list),
+        ),
+    hidden: widget.attachment.bubblesHidden,
+    onHiddenChanged: (hidden) => widget.onChanged?.call(
+      _attachment = _attachment.copyWith(bubblesHidden: hidden),
+    ),
   );
 
   late final InkController _ink = InkController(
     initial: widget.attachment.ink,
     onChanged: (strokes) =>
-        widget.onChanged?.call(_attachment.copyWith(ink: strokes)),
+        widget.onChanged?.call(_attachment = _attachment.copyWith(ink: strokes)),
   );
   final _zoom = TransformationController();
   bool _editing = false;
@@ -717,6 +723,10 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                       controller: _bubbles,
                       page: 1,
                       readOnly: widget.onChanged == null,
+                      // Görsel görüntüleyicide basılı tutmak bir şey
+                      // bırakmaz: yakınlaştırıp gezerken parmağı
+                      // dinlendirmek sürpriz metin alanı açmasın.
+                      longPressAdd: false,
                     ),
                   ),
                 ],

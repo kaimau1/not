@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -36,7 +37,15 @@ Widget? _webFrameFor(String url, {int? start}) {
 /// Gömülü YouTube oynatıcısının denetleyicisi; bağlantı video değilse ya da
 /// platformda WebView yoksa null. [start] verilirse (saniye) bağlantıdaki
 /// başlangıcın yerine geçer — zaman damgasına dokununca video oradan açılır.
-WebViewController? createYouTubeController(String url, {int? start}) {
+///
+/// [onState]: gömülü sayfa oynatıcının durumunu (oynuyor/durdu, konum, süre)
+/// `NotlarBridge` kanalından JSON olarak bildirir — denetim çubuğu bununla
+/// canlı kalır (bkz. `youTubeEmbedHtml` → `notlarSend`).
+WebViewController? createYouTubeController(
+  String url, {
+  int? start,
+  ValueChanged<String>? onState,
+}) {
   final id = youTubeVideoId(url);
   if (id == null || !_webViewSupported) return null;
   final controller = WebViewController()
@@ -63,6 +72,12 @@ WebViewController? createYouTubeController(String url, {int? start}) {
         },
       ),
     );
+  if (onState != null) {
+    controller.addJavaScriptChannel(
+      'NotlarBridge',
+      onMessageReceived: (message) => onState(message.message),
+    );
+  }
   final platform = controller.platform;
   if (platform is AndroidWebViewController) {
     // Otomatik oynatma: Android WebView varsayılanı "dokunuş bekle".
@@ -77,12 +92,79 @@ WebViewController? createYouTubeController(String url, {int? start}) {
 
 /// Gömülü sayfanın JS köprüsü üzerinden konum okuyan/saran kaynak (bkz.
 /// `youTubeEmbedHtml` → `notlarTime`/`notlarSeek`).
-class _WebViewTimeSource implements VideoTimeSource {
+class _WebViewTimeSource extends VideoTimeSource {
   _WebViewTimeSource(this.attachmentId, this.controller);
 
   @override
   final String attachmentId;
   final WebViewController controller;
+
+  /// Sayfanın son bildirdiği durum (bkz. [onState]). YouTube oynatıcı
+  /// durumu: 1 oynuyor, 3 tamponluyor, 2 durdu, 0 bitti, -1 başlamadı.
+  int _state = -1;
+  double _current = -1;
+  double _duration = 0;
+  final _changes = ValueNotifier<int>(0);
+
+  /// `NotlarBridge` iletisi: `{"s":durum,"t":saniye,"d":süre}`.
+  void onState(String raw) {
+    try {
+      final data = jsonDecode(raw);
+      if (data is! Map) return;
+      final s = data['s'];
+      final t = data['t'];
+      final d = data['d'];
+      if (s is num) _state = s.toInt();
+      if (t is num) _current = t.toDouble();
+      if (d is num) _duration = d.toDouble();
+      _changes.value++;
+    } catch (_) {}
+  }
+
+  void dispose() => _changes.dispose();
+
+  @override
+  Listenable get changes => _changes;
+
+  @override
+  bool get isPlaying => _state == 1 || _state == 3;
+
+  @override
+  Duration? get lastPosition =>
+      _current < 0 ? null : Duration(milliseconds: (_current * 1000).round());
+
+  @override
+  Duration? get duration => _duration <= 0
+      ? null
+      : Duration(milliseconds: (_duration * 1000).round());
+
+  Future<void> _run(String js) async {
+    try {
+      await controller.runJavaScript(js);
+    } catch (_) {}
+  }
+
+  @override
+  Future<void> play() => _run('window.notlarPlay && notlarPlay()');
+
+  @override
+  Future<void> pause() => _run('window.notlarPause && notlarPause()');
+
+  @override
+  Future<void> seekBy(Duration delta) =>
+      _run('window.notlarSeekBy && notlarSeekBy(${delta.inSeconds})');
+
+  double _speed = 1;
+
+  @override
+  double get speed => _speed;
+
+  @override
+  Future<void> setSpeed(double value) async {
+    _speed = value;
+    _changes.value++;
+    await _run('window.notlarRate && notlarRate($value)');
+  }
 
   @override
   Future<Duration?> position() async {
@@ -133,9 +215,12 @@ class YouTubeInlinePlayer extends StatefulWidget {
 }
 
 class _YouTubeInlinePlayerState extends State<YouTubeInlinePlayer> {
+  /// Sayfanın durum iletileri kaynağa gider; kaynak denetleyiciden SONRA
+  /// kurulduğu için ileti ara değişkenden geçer.
   late final WebViewController? _controller = createYouTubeController(
     widget.url,
     start: widget.start,
+    onState: (raw) => _source?.onState(raw),
   );
 
   NoteVideoHub? _hub;
@@ -162,7 +247,10 @@ class _YouTubeInlinePlayerState extends State<YouTubeInlinePlayer> {
   @override
   void dispose() {
     final source = _source;
-    if (source != null) _hub?.unregister(source);
+    if (source != null) {
+      _hub?.unregister(source);
+      source.dispose();
+    }
     super.dispose();
   }
 

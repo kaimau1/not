@@ -11,6 +11,7 @@ import '../../data/pdf/pdf_page_ocr.dart';
 import '../../data/pdf_text.dart';
 import '../../domain/attachment.dart';
 import '../viewers/area_actions.dart';
+import '../viewers/bubble_layer.dart';
 import '../viewers/ink_layer.dart';
 import '../viewers/pdf_page_image.dart';
 import '../viewers/pdf_viewer_screen.dart';
@@ -54,7 +55,16 @@ class PdfPageBox extends StatefulWidget {
     this.controls = true,
     this.swipeToTurn = true,
     this.onDetach,
+    this.showBubbles = false,
   });
+
+  /// Belgenin BALONLARI sayfanın üstünde çizilsin mi (salt okunur: dokununca
+  /// okuma kartı açılır). Kullanıcı isteği 2026-10-16: "balonludan üste
+  /// sabitlemeye alınca da balonlar görülsün ama göster/gizlesi olsun" —
+  /// sabit bölme açar; çubukta göster/gizle düğmesi çıkar
+  /// ([Attachment.bubblesHidden]). Sayfadaki yüzen kutuda kapalı (orada
+  /// dokunuş kutuyu seçer/taşır).
+  final bool showBubbles;
 
   final Attachment attachment;
 
@@ -182,6 +192,10 @@ class _PdfPageBoxState extends State<PdfPageBox> {
       _page = _clamp(incoming);
       _syncPagerSoon();
     }
+    // Tam ekranda/balonlu görünümde değişen balonlar ve gizlilik.
+    _bubbles
+      ?..replace(widget.attachment.bubbles)
+      ..syncHidden(widget.attachment.bubblesHidden);
     // Dosya yolu/adresi değiştiyse (yükleme bitti, dosya yeniden yazıldı)
     // belge yeniden bağlanır.
     if (widget.attachment.localPath != old.attachment.localPath ||
@@ -197,7 +211,27 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     _autoPlay?.cancel();
     _detachDocument();
     _pager?.dispose();
+    _bubbles?.dispose();
     super.dispose();
+  }
+
+  /// Balon katmanının denetleyicisi — yalnız [PdfPageBox.showBubbles] açık
+  /// ve belgede balon varken kurulur. Okuma kartının aç/kapa durumu da bu
+  /// yoldan nota yazılır (balonlu görünümle aynı veri).
+  BubbleController? _bubbles;
+
+  /// Kurulum build'de (bildirim yok); dışarıdan gelen değişiklik
+  /// `didUpdateWidget`te benimsenir.
+  BubbleController _bubbleController() {
+    final a = widget.attachment;
+    return _bubbles ??= BubbleController(
+      initial: a.bubbles,
+      hidden: a.bubblesHidden,
+      onChanged: (list) =>
+          widget.onChanged(widget.attachment.copyWith(bubbles: list)),
+      onHiddenChanged: (hidden) =>
+          widget.onChanged(widget.attachment.copyWith(bubblesHidden: hidden)),
+    );
   }
 
   /// Çevirici, kutunun gösterdiği sayfadan ayrı düştüyse (dışarıdan gelen
@@ -447,6 +481,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final a = widget.attachment;
     final pager = _pager ??= PageController(initialPage: _page - 1);
     final swipe = widget.controls && widget.swipeToTurn;
+    final bubbles = widget.showBubbles && a.bubbles.isNotEmpty
+        ? _bubbleController()
+        : null;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -469,7 +506,18 @@ class _PdfPageBoxState extends State<PdfPageBox> {
               quarterTurns: a.pdfTurns,
               // Kendi çizicimiz: pdfrx'in PdfPageView'ı aynı boydaki
               // sayfalarda görüntüyü yenilemiyordu (bkz. PdfPageImage).
-              child: PdfPageImage(document: document, pageNumber: i + 1),
+              child: PdfPageImage(
+                document: document,
+                pageNumber: i + 1,
+                overlay: bubbles == null
+                    ? null
+                    : BubblePageLayer(
+                        controller: bubbles,
+                        page: i + 1,
+                        readOnly: true,
+                        longPressAdd: false,
+                      ),
+              ),
             ),
           ),
         ),
@@ -515,6 +563,8 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     final marked = a.pdfMarks.contains(_page);
     final notes = a.bubbles.where((b) => b.page == _page).length;
     final showMark = width >= 210;
+    // Balonlar çiziliyorsa sayfa rozeti yerine GÖSTER/GİZLE düğmesi.
+    final bubbleToggle = widget.showBubbles && a.bubbles.isNotEmpty;
     final showArrows = width >= 110;
     final big = width >= 150;
     return Material(
@@ -561,7 +611,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                         ),
                       ),
                       // Sayfa notu rozeti: bu sayfada balon/vurgu var mı?
-                      if (notes > 0 && showMark)
+                      if (notes > 0 && showMark && !bubbleToggle)
                         Padding(
                           padding: const EdgeInsets.only(left: 3),
                           child: Row(
@@ -596,6 +646,19 @@ class _PdfPageBoxState extends State<PdfPageBox> {
                     ? () => _goTo(_page + 1)
                     : null,
               ),
+            if (bubbleToggle)
+              _barButton(
+                key: const ValueKey('pdf-box-bubbles'),
+                icon: a.bubblesHidden
+                    ? Icons.speaker_notes_off_outlined
+                    : Icons.chat_bubble_outline,
+                tooltip: a.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
+                color: a.bubblesHidden ? Colors.white54 : Colors.white,
+                big: big,
+                onPressed: () => widget.onChanged(
+                  a.copyWith(bubblesHidden: !a.bubblesHidden),
+                ),
+              ),
             if (showMark)
               _barButton(
                 icon: marked ? Icons.bookmark : Icons.bookmark_border,
@@ -617,7 +680,9 @@ class _PdfPageBoxState extends State<PdfPageBox> {
     required VoidCallback? onPressed,
     Color color = Colors.white,
     bool big = false,
+    Key? key,
   }) => IconButton(
+    key: key,
     tooltip: tooltip,
     iconSize: big ? 20 : 16,
     padding: EdgeInsets.zero,

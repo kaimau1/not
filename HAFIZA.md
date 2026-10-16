@@ -4331,3 +4331,126 @@ Android SDK yok — APK CI'da. graphify konteynerde yok, graf güncellenmedi.
 523 anahtar × 14 dil hâlâ çevrilmemiş (Türkçe şablona düşüyor) — çeviri CI
 akışı (`translate.yml`) elle tetiklenmeli; bu turun 11 anahtarı elle 16 dile
 yazıldı.
+
+## 2026-10-16 (2. tur) — damga dokunuşu, video denetimi, balon boyu/gizle/basılı tut, kalıcı OCR, paylaşım, tembel ana ekran
+Kullanıcı (9 madde + "main'e merge, APK"): videoda dk'ya dokununca klavye
+açılıyor; videonun altında oynat/durdur/±10 sn; balon boyu ayarlansın; basılı
+tutunca balon (şu an metin tanıma yapıyor, her seferinde baştan); FPS düşük;
+video özellikleri; balonları göster/gizle; balonludan sabite alınca balonlar
+görünsün (göster/gizleli); paylaşım seçenekleri.
+
+### KÖK NEDEN — damgaya dokununca klavye
+Damga `TextField.onTap`te işleniyordu; o geri çağırma alanın kendi dokunuş
+işleminden (`onSingleTapUp` → `requestKeyboard`) SONRA koşar — odak çoktan
+istenmiş, klavye açılmış oluyordu. ÇÖZÜM `TapPointTracker.wrap(focusNode:,
+keepsKeyboardClosed:)`: parmak İNERKEN `linkAtPoint` (damga ya da gömülü ek
+etiketi kutusu) bakılır; odaksız alanda isabet varsa `canRequestFocus=false`
+bu dokunuşun sonuna dek (parmak kalkınca `Timer.zero` ile, 380 ms basılı
+tutulursa erken — basılı tutmak düzenlemektir). Alan imleci yine taşır,
+`onTap` damgayı oradan okur. Gövde + madde satırları. Gömülü ek etiketi de
+aynı kurala girdi (önizleme kartı klavyesiz açılır). Zaten odaktaki alana
+dokunulmaz.
+
+### Video denetimi (`editor/video_transport.dart`)
+* `VideoTimeSource` artık soyut SINIF (varsayılanlı): `changes`, `isPlaying`,
+  `lastPosition`, `duration`, `play/pause/seekBy`, `speed/setSpeed`. Uygulayan
+  `extends` eder (test sahtesi dahil). `NoteVideoHub.revision` kayıt/ayrılmada
+  artar — çubuk oynatıcısını kutudan SONRA bulur (oynatıcı hazır olunca
+  kaydolur). `requestStart(id, null)` = bağlantının kendi başlangıcı.
+* YouTube durumu: gömülü sayfa `NotlarBridge` JavaScript kanalına
+  `{s,t,d}` yollar (durum değişince hemen, konum saniyede bir;
+  `onStateChange` iletisinin `info`su SAYI — ayrı dal). Komutlar
+  `notlarPlay/Pause/SeekBy/Rate` (iframe ileti protokolü, `iframe_api` yine
+  yok). Kanal `createYouTubeController(onState:)` ile, kaynak denetleyiciden
+  sonra kurulduğu için ileti `_source?.onState` üzerinden. CİHAZDA
+  DOĞRULANMADI.
+* Yerleşim: sabit bölmenin çubuğunda (tam ekran | ⏪ ▶ ⏩ [hız ≥400] [süre
+  ≥500] | tutamaç | Not al [yazı ≥430] | 🔗 [≥360] | anahtar) + çubuğun üst
+  kenarında ilerleme çizgisi; sayfadaki yerel videoda bir kez oynatılınca
+  kutunun DİBİNDE koyu şerit (170×110 dp altı kutuda yok; şerit varken
+  ortadaki ▶ yalnız dururken); oynayan sayfa YouTube'unda kutunun hemen
+  ALTINDA hap (oynatıcının kendi çubuğunu örtmez — kural). Sabit bölmedeki
+  kutuda şerit kapalı (`videoControls: false`). Tam ekran yerel oynatıcıya
+  hız + döngü.
+
+### Balonlar (`bubble_layer.dart`)
+* **Boy**: aynı `PageBubble.size` alanı — açık metinde punto, normal balonda
+  TUTAMAÇ (sınır 0.6–2.5, `stepSize` adımları). Genel tercih `BubbleLook.scale`
+  (SharedPreferences `bubble_pin_scale`, main'de `attach`) ile çarpılır.
+  Tutamaç sivri köşesi ETRAFINDA `AnimatedScale` ile büyür: RenderTransform
+  isabeti dönüşümle hesapladığı için dokunma alanı da büyür, gövde ölçüsü
+  bilinmeden yerleşim değişmez. Okuma kartı genişliği/yazısı genel ölçekle.
+  Yazma kartının araç satırı YATAY KAYAR (Sil sabit sağda) — açık metinde
+  biçim + boy düğmeleri 360 dp'ye sığmıyordu.
+* **Gizle**: `Attachment.bubblesHidden` (yalnız true iken yazılır; paket,
+  `withLayoutOf`, `sameRenderedNote` dahil). Denetleyici `hidden`/
+  `setHidden`/`syncHidden`/`onHiddenChanged`. Gizlerken açık balon BELLEKTE
+  kapanır, ayrıca KAYDEDİLMEZ — aynı karede iki ek yazımı (balonlar +
+  gizlilik) birbirini ezerdi. Balon bırakmak, listeden gitmek, basılı tutup
+  bırakmak gizliliği kaldırır. Alt çubukta 👁 (balon varken; o zaman 400 dp
+  altında "Balon" yazısı düşer — `BubbleBarActions` kendisi ölçer).
+* **Basılı tut → balon**: `_LongPressDrop` — Listener (arenaya GİRMEZ),
+  450 ms, 18 px kayma ya da ikinci parmak iptal, fare yok. Katmanın EN
+  ALTINDA (tutamaç/vurgu önce alır). Kalem kipinde kapalı (`longPressAdd`),
+  salt okunurda ve görsel görüntüleyicide kapalı. PDF'te seçim katmanının
+  uzun basışı düzenlenebilir görünümde KAPALI (`longPressSelects: false`):
+  seçim ÇİFT DOKUNUŞLA — ikinci dokunuş İNERKEN kelime seçilip sürükleme
+  kipine girilir (uzun basıştaki davranış). 350 ms'den uzun basılı tutulup
+  bırakılan dokunuş "tık" sayılmaz (yoksa ardından gelen tık çift dokunuş
+  sanılırdı). Salt okunur görüntüleyicide uzun basış eskisi gibi seçer.
+* **Sabitte balonlar**: `PdfPageBox(showBubbles:)` — balon katmanı
+  `PdfPageImage.overlay` yuvasında (sayfanın KENDİ en-boy kutusunda; karışık
+  boylu belgede kenar boşluğuna taşmaz), salt okunur, denetleyici build'de
+  bildirimsiz kurulur, değişiklik `didUpdateWidget`te benimsenir. Çubukta 💬
+  göster/gizle (sayfa rozeti yerine). Görselden türetilmiş belgede sabitlenen
+  GÖRSELİN kendisi: balonlar `unplaceBubbles` (placeBubbles'ın tersi) ile
+  görselin uzayına geri taşınıp `contain` dikdörtgenine çizilir; gizlilik
+  belgede saklanır, bölme çubuğunda düğme. Bu kopyanın aç/kapa durumu
+  YAZILMAZ (onChanged boş).
+
+### KÖK NEDEN — "metin tanıma her seferinde baştan"
+`PdfPageOcr` sonucu yalnız bellekteydi (24 sayfa): her açılışta aynı sayfa
+1600 px'te yeniden çizilip ML Kit'e veriliyordu. Artık uygulama klasöründe
+`pdf_ocr/<sha1>.json` (sözcük kutuları + ölçek). Anahtar: kaynak + yerel
+dosyanın BOY_DEĞİŞME ZAMANI + sayfa no/ölçüsü — sayfa düzenle/döndür dosyayı
+yeniden yazınca eski sonuç kendiliğinden geçersiz. Sayfa görüntüsü yazılmaz.
+Otomatik OCR gecikmesi 350 → 900 ms (kaydırırken geçilen sayfalar girmesin).
+
+### HATA — tam ekran görüntüleyicide çizim ezilmesi
+PDF/slayt/görsel tam ekranı her değişikliği AÇILIŞTAKİ `widget.attachment`
+üstüne kuruyordu (rota yeniden kurulmaz): önce çizip sonra balon
+bırakınca balon yazımı çizimi açılıştaki hâline döndürüyordu (ve tersi).
+Görüntüleyiciler artık güncel kopyayı (`_current` / `_attachment`) tutup
+her değişikliği ona işliyor.
+
+### KÖK NEDEN — ana ekran FPS (tembel ızgara)
+Deterministik ızgara (`balancedNoteColumns`) bölümün 200 karta kadar
+TAMAMINI tek `Column`da kuruyordu; üstüne CustomScrollView önbellek payı
+10 000 px'ti (masonry'nin uzunluk tahmini sıçramasına karşı) — açılışta
+~130 kart, kapakları/PDF küçük resimleri/video kareleriyle kurulup
+çözülüyor, her ana ekran yeniden kurulumu hepsini geziyordu. Artık
+`sliverBalancedNoteColumns`: AYNI deterministik atama
+(`balancedColumnAssignment`), her sütun kendi tembel `SliverList`'i,
+`SliverCrossAxisGroup` ile yan yana (aralar `SliverConstrainedCrossAxis`
+8 px). Pay 1 600 px. Masonry yok: her sütun SliverList, son kartlar sona
+varılmadan ölçülür — aşağı kaydırırken uzunluk küçülüp konumu çekmez.
+Klasör/arşiv (`NoteBalancedGrid`) da aynı yoldan. `flutter_staggered_grid_view`
+artık lib'de kullanılmıyor (bağımlılık duruyor). TUZAK: odak vurgusu
+(`_FocusHalo` → `ensureVisible`) ekran dışındaki, KURULMAMIŞ kartta çalışmaz
+— liste görünümünde zaten böyleydi.
+
+### Paylaşım (`share_sheet.dart`, `data/note_quick_export.dart`)
+Önizleme + çipler (yeni: **Video bağlantıları** — `ShareTextOptions.links`,
+"▶ Başlık\nadres"; seçim `share_text_options` tercihine yazılır) + TEK
+DOKUNUŞLUK ızgara: Paylaş · Kopyala · PDF · Görsel · Ekler (N) · Arkadaşa ·
+Birlikte düzenle · Not paketi; "Daha fazla": ayarlı PDF/Word, balonlu PDF.
+Hızlı PDF dışa aktarma ekranıyla aynı içerik (`contentOf`, çiplere uyar),
+görseller sonda %80; "Görsel" o PDF'in sayfalarını pdfrx ile PNG'ye çizer
+(en çok 10, web'de yok); "Ekler" yerel dosyaları, yoksa buluttan okunan
+görsel/PDF'i geçici klasörden gönderir (yerelde olmayan video atlanır,
+YouTube ve arka plan görseli ve gizli türetilmiş belge hariç).
+
+### Ortam
+Flutter 3.44.6 `/opt/flutter`'a indirildi; analiz temiz. Android SDK yok —
+APK CI'da; YouTube köprüsü ve uzun basış cihazda görülmedi. graphify
+konteynerde yok, graf güncellenmedi. 18 yeni anahtar 16 dile elle yazıldı. `flutter test` 1214/1214 yeşil (23 yeni: `requests_2026_10_16_b_test.dart`).

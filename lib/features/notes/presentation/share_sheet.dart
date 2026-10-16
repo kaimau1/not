@@ -1,13 +1,17 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData, rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../app/theme/note_colors.dart';
 import '../../../core/l10n_ext.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../inbox/presentation/send_note_sheet.dart';
+import '../../settings/settings_providers.dart' show sharedPreferencesProvider;
 import '../data/attachment_repository.dart';
 import '../data/note_pdf.dart';
+import '../data/note_quick_export.dart';
 import '../data/note_share.dart';
 import '../domain/attachment.dart';
 import '../domain/note.dart';
@@ -36,6 +40,15 @@ import 'pdf_export_screen.dart';
 /// * **Dosya olarak** — PDF / Word, not paketi (`.notpaket`), balonlu PDF.
 /// * **Uygulama içinde** — arkadaşa gönder, birlikte düzenle (ortak not).
 ///
+///
+/// 2026-10-16 YENİDEN DÜZEN (kullanıcı: "paylaşım seçenekleri düzenlenmeli
+/// ve geliştirilmeli"): seçenekler uzun bir liste hâlindeydi ve notu dosya
+/// olarak göndermenin tek yolu dışa aktarma ekranıydı. Artık önizlemenin
+/// altında TEK DOKUNUŞLUK bir ızgara: Metin · Kopyala · PDF · Görsel ·
+/// Ekler · Arkadaşa · Birlikte · Not paketi (bkz. [NoteQuickExport]); ince
+/// ayarlı PDF/Word ve balonlu PDF "Daha fazla"da. İçerik çiplerine "Video
+/// bağlantıları" eklendi; çip seçimi HATIRLANIR (son paylaşımdaki gibi açılır).
+///
 /// [ownerId] doluysa not BAŞKASININ (ortak not / paylaşılan klasör): ortak
 /// çalışan ekleme yetkisi yalnız sahipte, o satır çizilmez. [onExport]
 /// verilirse PDF/Word satırı onu çağırır (editör sayfa ölçülerini geçirir).
@@ -46,6 +59,8 @@ Future<void> showNoteShareSheet(
   String? ownerId,
   VoidCallback? onExport,
 }) async {
+  final prefs = ref.read(sharedPreferencesProvider);
+  final initial = ShareTextOptions.decode(prefs.getString(_optionsKey));
   final result = await showModalBottomSheet<(String, ShareTextOptions)>(
     context: context,
     showDragHandle: true,
@@ -54,11 +69,15 @@ Future<void> showNoteShareSheet(
     constraints: const BoxConstraints(maxWidth: 640),
     builder: (_) => _ShareSheet(
       note: note,
+      initial: initial,
       canCollaborate: ownerId == null && !ref.read(isAnonymousProvider),
     ),
   );
   if (result == null || !context.mounted) return;
   final (choice, options) = result;
+  // Çiplerin son hâli bir sonraki paylaşımda da geçerli.
+  await prefs.setString(_optionsKey, options.encode());
+  if (!context.mounted) return;
   switch (choice) {
     case 'export':
       if (onExport != null) {
@@ -77,18 +96,26 @@ Future<void> showNoteShareSheet(
   }
 }
 
+/// Paylaşım çiplerinin saklandığı tercih anahtarı.
+const _optionsKey = 'share_text_options';
+
 class _ShareSheet extends StatefulWidget {
-  const _ShareSheet({required this.note, required this.canCollaborate});
+  const _ShareSheet({
+    required this.note,
+    required this.canCollaborate,
+    this.initial = const ShareTextOptions(),
+  });
 
   final Note note;
   final bool canCollaborate;
+  final ShareTextOptions initial;
 
   @override
   State<_ShareSheet> createState() => _ShareSheetState();
 }
 
 class _ShareSheetState extends State<_ShareSheet> {
-  var _options = const ShareTextOptions();
+  late var _options = widget.initial;
 
   void _pop(String choice) => Navigator.pop(context, (choice, _options));
 
@@ -109,7 +136,9 @@ class _ShareSheetState extends State<_ShareSheet> {
         note.type != NoteType.archive &&
         note.items.any((i) => i.checked && i.text.trim().isNotEmpty);
     final hasTitle = note.displayTitle.trim().isNotEmpty;
+    final hasLinks = shareableVideoLinks(note).isNotEmpty;
     final stamped = countStampablePdfs(note);
+    final files = shareableAttachments(note).length;
 
     Widget section(String label) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
@@ -141,7 +170,7 @@ class _ShareSheetState extends State<_ShareSheet> {
               muted: !hasText,
             ),
           ),
-          if (hasTitle || hasChecked || note.tags.isNotEmpty)
+          if (hasTitle || hasChecked || hasLinks || note.tags.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
               child: Wrap(
@@ -172,45 +201,110 @@ class _ShareSheetState extends State<_ShareSheet> {
                         () => _options = _options.copyWith(tags: v),
                       ),
                     ),
+                  if (hasLinks)
+                    FilterChip(
+                      key: const ValueKey('share-include-links'),
+                      label: Text(l10n.shareIncludeVideoLinks),
+                      selected: _options.links,
+                      onSelected: (v) => setState(
+                        () => _options = _options.copyWith(links: v),
+                      ),
+                    ),
                 ],
               ),
             ),
+          // TEK DOKUNUŞLUK IZGARA: en sık işler önizlemenin hemen altında.
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: hasText ? () => _pop('text') : null,
-                    icon: const Icon(Icons.share_outlined, size: 18),
-                    label: Text(l10n.shareTextAction),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: hasText ? () => _pop('copy') : null,
-                    icon: const Icon(Icons.copy_outlined, size: 18),
-                    label: Text(l10n.copy),
-                  ),
-                ),
-              ],
+            padding: const EdgeInsets.fromLTRB(8, 14, 8, 0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 520 ? 6 : 4;
+                final width = constraints.maxWidth / columns;
+                Widget cell(Widget child) =>
+                    SizedBox(width: width, child: child);
+                return Wrap(
+                  runSpacing: 6,
+                  children: [
+                    cell(
+                      _QuickShareButton(
+                        key: const ValueKey('share-quick-text'),
+                        icon: Icons.share_outlined,
+                        label: l10n.shareTextAction,
+                        primary: true,
+                        onTap: hasText ? () => _pop('text') : null,
+                      ),
+                    ),
+                    cell(
+                      _QuickShareButton(
+                        key: const ValueKey('share-quick-copy'),
+                        icon: Icons.copy_outlined,
+                        label: l10n.copy,
+                        onTap: hasText ? () => _pop('copy') : null,
+                      ),
+                    ),
+                    cell(
+                      _QuickShareButton(
+                        key: const ValueKey('share-quick-pdf'),
+                        icon: Icons.picture_as_pdf_outlined,
+                        label: l10n.shareQuickPdf,
+                        onTap: () => _pop('pdf_quick'),
+                      ),
+                    ),
+                    if (!kIsWeb)
+                      cell(
+                        _QuickShareButton(
+                          key: const ValueKey('share-quick-image'),
+                          icon: Icons.image_outlined,
+                          label: l10n.shareAsImage,
+                          onTap: () => _pop('png'),
+                        ),
+                      ),
+                    if (files > 0)
+                      cell(
+                        _QuickShareButton(
+                          key: const ValueKey('share-quick-files'),
+                          icon: Icons.attach_file,
+                          label: l10n.shareAttachmentFiles(files),
+                          onTap: () => _pop('files'),
+                        ),
+                      ),
+                    cell(
+                      _QuickShareButton(
+                        key: const ValueKey('share-quick-friend'),
+                        icon: Icons.send_outlined,
+                        label: l10n.shareToFriendShort,
+                        onTap: () => _pop('friend'),
+                      ),
+                    ),
+                    if (widget.canCollaborate)
+                      cell(
+                        _QuickShareButton(
+                          key: const ValueKey('share-quick-collab'),
+                          icon: Icons.group_add_outlined,
+                          label: l10n.shareCollaborateShort,
+                          onTap: () => _pop('collab'),
+                        ),
+                      ),
+                    cell(
+                      _QuickShareButton(
+                        key: const ValueKey('share-quick-package'),
+                        icon: Icons.inventory_2_outlined,
+                        label: l10n.shareAsNoteShort,
+                        onTap: () => _pop('package'),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
-          section(l10n.shareAsFileSection),
+          section(l10n.shareMoreSection),
           _tile(
             context,
             onTap: () => _pop('export'),
-            icon: Icons.description_outlined,
+            icon: Icons.tune,
             title: l10n.exportNotesOption,
             subtitle: l10n.exportNotesOptionInfo,
-          ),
-          _tile(
-            context,
-            onTap: () => _pop('package'),
-            icon: Icons.inventory_2_outlined,
-            title: l10n.shareAsNote,
-            subtitle: l10n.shareAsNoteInfo,
           ),
           if (stamped > 0)
             _tile(
@@ -220,23 +314,72 @@ class _ShareSheetState extends State<_ShareSheet> {
               title: l10n.sharePdfWithBubbles,
               subtitle: l10n.sharePdfWithBubblesInfo,
             ),
-          section(l10n.shareInAppSection),
-          _tile(
-            context,
-            onTap: () => _pop('friend'),
-            icon: Icons.send_outlined,
-            title: l10n.sendNoteAction,
-            subtitle: l10n.shareSendFriendInfo,
-          ),
-          if (widget.canCollaborate)
-            _tile(
-              context,
-              onTap: () => _pop('collab'),
-              icon: Icons.group_add_outlined,
-              title: l10n.collaborators,
-              subtitle: l10n.shareCollaborateInfo,
-            ),
         ],
+      ),
+    );
+  }
+}
+
+/// Izgaradaki tek dokunuşluk paylaşım düğmesi: yuvarlak simge + altta ad.
+class _QuickShareButton extends StatelessWidget {
+  const _QuickShareButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.primary = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    final background = primary
+        ? scheme.primary
+        : scheme.secondaryContainer.withValues(alpha: 0.8);
+    final foreground = primary ? scheme.onPrimary : scheme.onSecondaryContainer;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.4,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: foreground, size: 22),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  label,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(height: 1.15),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -485,6 +628,64 @@ Future<void> runNoteShare(
           attachments: ref.read(attachmentRepositoryProvider),
           fallbackName: l10n.appName,
           shareSubject: subject,
+        );
+      } catch (e) {
+        snack(l10n.genericError('$e'));
+      }
+    case 'pdf_quick':
+    case 'png':
+      snack(l10n.shareQuickPreparing);
+      try {
+        final bytes = await NoteQuickExport.pdf(
+          note,
+          options: options,
+          attachments: ref.read(attachmentRepositoryProvider),
+          palette: NoteColors.richPalette,
+        );
+        final name = NotePdf.safeFileName(subject);
+        if (choice == 'png') {
+          final pages = await NoteQuickExport.pngPages(bytes, name: name);
+          if (pages.isEmpty) {
+            snack(l10n.shareAsTextEmpty);
+            return;
+          }
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [for (final p in pages) XFile(p, mimeType: 'image/png')],
+              subject: subject,
+            ),
+          );
+          return;
+        }
+        final file = kIsWeb
+            ? XFile.fromData(
+                bytes,
+                name: '$name.pdf',
+                mimeType: 'application/pdf',
+              )
+            : XFile(
+                await NotePdf.writeTemp(bytes, subject),
+                mimeType: 'application/pdf',
+              );
+        await SharePlus.instance.share(
+          ShareParams(files: [file], subject: subject),
+        );
+      } catch (e) {
+        snack(l10n.genericError('$e'));
+      }
+    case 'files':
+      snack(l10n.shareQuickPreparing);
+      try {
+        final files = await NoteQuickExport.attachmentFiles(
+          note,
+          attachments: ref.read(attachmentRepositoryProvider),
+        );
+        if (files.isEmpty) {
+          snack(l10n.shareAttachmentFilesNone);
+          return;
+        }
+        await SharePlus.instance.share(
+          ShareParams(files: files, subject: subject),
         );
       } catch (e) {
         snack(l10n.genericError('$e'));

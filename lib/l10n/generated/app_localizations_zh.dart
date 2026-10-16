@@ -4620,4 +4620,60 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get videoTimeUnknown => '无法读取视频时间——请先播放视频。';
+
+  @override
+  String get videoSpeed => '播放速度';
+
+  @override
+  String get videoLoop => '循环播放';
+
+  @override
+  String get bubbleSmaller => '缩小气泡';
+
+  @override
+  String get bubbleLarger => '放大气泡';
+
+  @override
+  String get bubbleAllSmaller => '缩小所有气泡';
+
+  @override
+  String get bubbleAllLarger => '放大所有气泡';
+
+  @override
+  String get bubblesShow => '显示气泡';
+
+  @override
+  String get bubblesHide => '隐藏气泡';
+
+  @override
+  String get shareIncludeVideoLinks => '视频链接';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => '图片';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return '附件 ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => '发给好友';
+
+  @override
+  String get shareCollaborateShort => '协作';
+
+  @override
+  String get shareAsNoteShort => '笔记包';
+
+  @override
+  String get shareMoreSection => '更多';
+
+  @override
+  String get shareQuickPreparing => '正在准备…';
+
+  @override
+  String get shareAttachmentFilesNone => '此设备上没有可分享的附件文件。';
 }

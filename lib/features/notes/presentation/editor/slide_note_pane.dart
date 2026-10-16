@@ -92,6 +92,10 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     initial: widget.attachment.bubbles,
     onChanged: (list) =>
         widget.onAttachmentChanged(widget.attachment.copyWith(bubbles: list)),
+    hidden: widget.attachment.bubblesHidden,
+    onHiddenChanged: (hidden) => widget.onAttachmentChanged(
+      widget.attachment.copyWith(bubblesHidden: hidden),
+    ),
   );
 
   /// Balon yazılırken alt not alanı gizlenir (PDF panosuyla aynı gerekçe:
@@ -140,7 +144,9 @@ class _SlideNotePaneState extends ConsumerState<SlideNotePane> {
     // Kimlik değil İÇERİK karşılaştırması denetleyicinin içinde yapılıyor
     // (her anlık görüntü yeni liste kuruyor — bkz. InkController.replace).
     _ink.replace(widget.attachment.ink);
-    _bubbles.replace(widget.attachment.bubbles);
+    _bubbles
+      ..replace(widget.attachment.bubbles)
+      ..syncHidden(widget.attachment.bubblesHidden);
     // Dosya bu arada senkronlandıysa (başka cihazda eklenmiş sunum indi)
     // yeniden denenir; yoksa pano sonsuza dek "açılamadı" derdi.
     if (_slides == null &&
@@ -432,6 +438,7 @@ class _SlidePaneViewerState extends State<_SlidePaneViewer> {
                         child: BubblePageLayer(
                           controller: widget.bubbles,
                           page: i + 1,
+                          longPressAdd: !widget.penMode,
                         ),
                       ),
                     ],

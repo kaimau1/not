@@ -1756,6 +1756,19 @@ class ItemsEditorState extends State<ItemsEditor> {
                               ),
                             ),
                           ),
+                          // Damgaya/etikete dokunmak klavyeyi açmaz.
+                          focusNode: _focusFor(item),
+                          keepsKeyboardClosed: (global) => linkAtPoint(
+                            editable: editableTextBelow(context),
+                            displayText: controller.text,
+                            global: global,
+                            timestamps:
+                                widget.videoTimestamps &&
+                                widget.onVideoTimestamp != null,
+                            tagNames: widget.onAttachmentTag == null
+                                ? const []
+                                : widget.attachmentNames,
+                          ),
                           ),
                         );
                         // Tek satır kipinde taşan metnin "devamı var"

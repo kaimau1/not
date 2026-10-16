@@ -4710,4 +4710,61 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'تعذّرت قراءة وقت الفيديو — شغّل الفيديو أولاً.';
+
+  @override
+  String get videoSpeed => 'سرعة التشغيل';
+
+  @override
+  String get videoLoop => 'تكرار';
+
+  @override
+  String get bubbleSmaller => 'تصغير الفقاعة';
+
+  @override
+  String get bubbleLarger => 'تكبير الفقاعة';
+
+  @override
+  String get bubbleAllSmaller => 'تصغير كل الفقاعات';
+
+  @override
+  String get bubbleAllLarger => 'تكبير كل الفقاعات';
+
+  @override
+  String get bubblesShow => 'إظهار الفقاعات';
+
+  @override
+  String get bubblesHide => 'إخفاء الفقاعات';
+
+  @override
+  String get shareIncludeVideoLinks => 'روابط الفيديو';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'صورة';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'المرفقات ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'إلى صديق';
+
+  @override
+  String get shareCollaborateShort => 'تعاون';
+
+  @override
+  String get shareAsNoteShort => 'حزمة الملاحظة';
+
+  @override
+  String get shareMoreSection => 'المزيد';
+
+  @override
+  String get shareQuickPreparing => 'جارٍ التحضير…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'لا توجد ملفات مرفقة على هذا الجهاز للمشاركة.';
 }

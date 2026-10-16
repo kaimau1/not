@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../data/scan/scan_pdf.dart';
 import '../../domain/attachment.dart';
+import '../viewers/bubble_layer.dart';
 import 'note_images.dart';
 import 'pdf_page_box.dart';
+import 'video_transport.dart';
 
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
 const double kPinnedMinHeight = 96;
@@ -59,7 +62,17 @@ class PinnedMediaPane extends StatefulWidget {
     this.onChanged,
     this.viewSwitch,
     this.onNoteAt,
+    this.bubbleDoc,
   });
+
+  /// GÖRSELDEN TÜRETİLMİŞ balonlu belge (bkz. `Attachment.sourceId`).
+  /// Kullanıcı isteği 2026-10-16: "balonludan üste sabitlemeye alınca da
+  /// balonlar görülsün ama göster/gizlesi olsun". Görsel balonluya alınınca
+  /// balonlar A4 sayfadaki belgede yaşar; sabitlenen ise görselin kendisi.
+  /// Balonlar görselin uzayına geri taşınıp ([unplaceBubbles]) üstünde salt
+  /// okunur çizilir; çubukta göster/gizle (gizlilik belgede saklanır,
+  /// [onChanged] ile yazılır). PDF'in kendi kutusu balonları zaten çizer.
+  final Attachment? bubbleDoc;
 
   final Attachment media;
   final ValueChanged<double> onHeightChanged;
@@ -89,6 +102,56 @@ class PinnedMediaPane extends StatefulWidget {
 }
 
 class _PinnedMediaPaneState extends State<PinnedMediaPane> {
+  /// Sabit görselin üstündeki balonların denetleyicisi (bkz.
+  /// [PinnedMediaPane.bubbleDoc]); aç/kapa durumu yazılmaz — görselin
+  /// uzayındaki kopya belgeye geri yazılamaz, okuma için yeter.
+  BubbleController? _imageBubbles;
+
+  List<PageBubble> _mappedBubbles(Attachment doc) => unplaceBubbles(
+    doc.bubbles,
+    ScanPdf.imageFrameOnPage(widget.media.width ?? 0, widget.media.height ?? 0),
+  );
+
+  BubbleController? _bubblesFor(Attachment? doc) {
+    if (doc == null || doc.bubbles.isEmpty) return null;
+    return _imageBubbles ??= BubbleController(
+      initial: _mappedBubbles(doc),
+      hidden: doc.bubblesHidden,
+      onChanged: (_) {},
+    );
+  }
+
+  @override
+  void didUpdateWidget(PinnedMediaPane old) {
+    super.didUpdateWidget(old);
+    final doc = widget.bubbleDoc;
+    if (doc != null) {
+      _imageBubbles
+        ?..replace(_mappedBubbles(doc))
+        ..syncHidden(doc.bubblesHidden);
+    }
+  }
+
+  @override
+  void dispose() {
+    _imageBubbles?.dispose();
+    super.dispose();
+  }
+
+  /// Görselin bölmede `contain` ile çizildiği dikdörtgen (balonlar onun
+  /// oranlı uzayında). Ölçüsü bilinmeyen görselde null.
+  Rect? _imageRect(Size box) {
+    final w = (widget.media.width ?? 0).toDouble();
+    final h = (widget.media.height ?? 0).toDouble();
+    if (w <= 0 || h <= 0 || box.isEmpty) return null;
+    final scale = (box.width / w) < (box.height / h)
+        ? box.width / w
+        : box.height / h;
+    final dw = w * scale;
+    final dh = h * scale;
+    return Rect.fromLTWH((box.width - dw) / 2, (box.height - dh) / 2, dw, dh);
+  }
+
   /// Ayraç sürüklenirken canlı yükseklik (ham — sınırlanmamış).
   double? _live;
 
@@ -141,6 +204,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                             key: ValueKey('pinned-pdf-${widget.media.id}'),
                             attachment: widget.media,
                             onChanged: widget.onChanged ?? (_) {},
+                            // Balonludan sabite alınan belge balonlarıyla
+                            // görünür; çubukta göster/gizle.
+                            showBubbles: true,
                           ),
                         ),
                       ),
@@ -190,10 +256,37 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                                   fit: BoxFit.contain,
                                   inlineWebVideo: true,
                                   showWebTitle: true,
+                                  // Denetim bölmenin çubuğunda.
+                                  videoControls: false,
                                 ),
                               ),
                             ),
                           ),
+                          if (!isVideo && !_pulling)
+                            if (_bubblesFor(widget.bubbleDoc)
+                                case final bubbles?)
+                              LayoutBuilder(
+                                builder: (context, box) {
+                                  final rect = _imageRect(box.biggest);
+                                  if (rect == null) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Positioned.fromRect(
+                                        rect: rect,
+                                        child: BubblePageLayer(
+                                          controller: bubbles,
+                                          page: 1,
+                                          readOnly: true,
+                                          longPressAdd: false,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
                           if (_unpinArmed)
                             _UnpinHint(label: l10n.unpinMediaRelease),
                         ],
@@ -229,64 +322,24 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                     bottom: BorderSide(color: scheme.outlineVariant),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    _BarButton(
-                      tooltip: l10n.fullscreen,
-                      icon: Icons.fullscreen,
-                      onPressed: widget.onOpen,
-                    ),
-                    Expanded(
-                      child: Semantics(
-                        label: l10n.pinnedMediaResize,
-                        child: Center(
-                          child: Container(
-                            width: 36,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              color: _live != null
-                                  ? scheme.primary
-                                  : scheme.onSurfaceVariant.withValues(
-                                      alpha: 0.5,
-                                    ),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
+                // Dar ekranda önce süre yazısı, sonra "Not al" yazısı, en
+                // son bağlantı düğmesi düşer — denetimler ve anahtar kalır.
+                child: LayoutBuilder(
+                  builder: (context, bar) => Stack(
+                    children: [
+                      _barRow(context, bar.maxWidth),
+                      // Videonun ilerlemesi çubuğun üst kenarında ince çizgi.
+                      if (isVideo)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          child: IgnorePointer(
+                            child: VideoProgressLine(video: widget.media),
                           ),
                         ),
-                      ),
-                    ),
-                    if (widget.onNoteAt != null)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 2),
-                        child: TextButton.icon(
-                          key: const ValueKey('pinned-note-at'),
-                          style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                          onPressed: widget.onNoteAt,
-                          icon: const Icon(Icons.more_time, size: 18),
-                          label: Text(l10n.videoNoteAtTimeShort),
-                        ),
-                      ),
-                    if (widget.onCopyLink != null && widget.media.isWebVideo)
-                      _BarButton(
-                        tooltip: l10n.copyVideoLink,
-                        icon: Icons.link,
-                        onPressed: widget.onCopyLink!,
-                      ),
-                    if (widget.viewSwitch case final viewSwitch?)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 2, right: 6),
-                        child: viewSwitch,
-                      )
-                    else
-                      _BarButton(
-                        tooltip: l10n.unpinMedia,
-                        icon: Icons.vertical_align_bottom,
-                        onPressed: widget.onUnpin,
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -294,6 +347,108 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           ],
         );
       },
+    );
+  }
+
+  Widget _barRow(BuildContext context, double width) {
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final isVideo = widget.media.kind == AttachmentKind.video;
+    final noteAtLabel = !isVideo || width >= 430;
+    final showLink = !isVideo || width >= 360;
+    return Row(
+      children: [
+        _BarButton(
+          tooltip: l10n.fullscreen,
+          icon: Icons.fullscreen,
+          onPressed: widget.onOpen,
+        ),
+        // VİDEO DENETİMİ (kullanıcı isteği 2026-10-16): ±10 sn ve
+        // oynat/durdur medyanın HEMEN ALTINDA — oynatıcının
+        // üstünü örtmez.
+        if (isVideo)
+          VideoTransportControls(
+            video: widget.media,
+            showTime: width >= 500,
+            showSpeed: width >= 400,
+          ),
+        Expanded(
+          child: Semantics(
+            label: l10n.pinnedMediaResize,
+            child: Center(
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: _live != null
+                      ? scheme.primary
+                      : scheme.onSurfaceVariant.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (widget.onNoteAt != null)
+          noteAtLabel
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 2),
+                  child: TextButton.icon(
+                    key: const ValueKey('pinned-note-at'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: widget.onNoteAt,
+                    icon: const Icon(Icons.more_time, size: 18),
+                    label: Text(l10n.videoNoteAtTimeShort),
+                  ),
+                )
+              : IconButton(
+                  key: const ValueKey('pinned-note-at'),
+                  tooltip: l10n.videoNoteAtTime,
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 20,
+                  color: scheme.primary,
+                  icon: const Icon(Icons.more_time),
+                  onPressed: widget.onNoteAt,
+                ),
+        // Görselden türetilmiş belgenin balonları: göster/gizle.
+        if (widget.bubbleDoc case final doc?
+            when doc.bubbles.isNotEmpty && !isVideo)
+          IconButton(
+            key: const ValueKey('pinned-bubbles-toggle'),
+            tooltip: doc.bubblesHidden ? l10n.bubblesShow : l10n.bubblesHide,
+            visualDensity: VisualDensity.compact,
+            iconSize: 20,
+            isSelected: doc.bubblesHidden,
+            icon: Icon(
+              doc.bubblesHidden
+                  ? Icons.speaker_notes_off_outlined
+                  : Icons.chat_bubble_outline,
+            ),
+            onPressed: () => widget.onChanged?.call(
+              doc.copyWith(bubblesHidden: !doc.bubblesHidden),
+            ),
+          ),
+        if (showLink && widget.onCopyLink != null && widget.media.isWebVideo)
+          _BarButton(
+            tooltip: l10n.copyVideoLink,
+            icon: Icons.link,
+            onPressed: widget.onCopyLink!,
+          ),
+        if (widget.viewSwitch case final viewSwitch?)
+          Padding(
+            padding: const EdgeInsets.only(left: 2, right: 6),
+            child: viewSwitch,
+          )
+        else
+          _BarButton(
+            tooltip: l10n.unpinMedia,
+            icon: Icons.vertical_align_bottom,
+            onPressed: widget.onUnpin,
+          ),
+      ],
     );
   }
 }

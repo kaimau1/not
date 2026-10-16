@@ -2,6 +2,40 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-16 (2. tur) — damga, video çubuğu, balonlar, OCR, paylaşım, tembel ızgara (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Damga**: videolu notta (klavye kapalıyken) "1:23"e dokun → video
+  sarılıyor, klavye AÇILMIYOR mu; damganın yanına dokununca yazılabiliyor mu;
+  basılı tutunca seçilebiliyor mu. Gömülü ek çipine dokununca önizleme
+  klavyesiz mi. Madde satırında da.
+- [ ] **Video çubuğu**: sabit bölmede ⏪10 ▶ ⏩10 + hız + ilerleme çizgisi
+  (yerel video ve YouTube). YouTube'da ▶/⏸ simgesi gerçekten oynatıcının
+  durumunu izliyor mu (`NotlarBridge`), ±10 sn çalışıyor mu, hız değişiyor mu.
+  Sayfadaki yerel videoda oynatınca dipte şerit; oynayan YouTube'un altında
+  hap. 360 dp telefonda çubuk taşmıyor mu. Tam ekranda hız/tekrarla.
+- [ ] **Basılı tut → balon** (PDF/slayt, pano + tam ekran): boş yerde ve yazı
+  üstünde ~0,45 sn → balon + yazma kartı; kaydırma/yakınlaştırma bozulmadı
+  mı; balonu basılı tutup taşımak hâlâ çalışıyor mu. Metin seçimi ÇİFT
+  DOKUNUŞLA (ikinci dokunuşta sürükleyerek büyüyor mu). Kalem kipinde balon
+  düşmemeli.
+- [ ] **OCR**: taranmış PDF'te bir kez tanındıktan sonra uygulamayı kapatıp
+  açınca çift dokunuş BEKLEMEDEN seçiyor mu.
+- [ ] **Balon boyu**: yazma kartında − % + (tutamaç sivri köşesi yerinde
+  kalarak büyüyor mu, dokunma alanı büyüyor mu); Balon kartındaki genel − / +
+  bütün belgelerde. Okuma kartı da büyüyor mu.
+- [ ] **Göster/gizle**: alt çubukta 👁; gizliyken Balon/listeden git/basılı
+  tut balonları geri getiriyor mu; tercih iki cihazda aynı mı. Balonludan
+  Sabit'e geçen PDF'te balonlar görünüyor, kutu çubuğundaki 💬 gizliyor mu;
+  görselden türetilmiş belgede sabit görselin üstünde balonlar doğru yerde mi.
+- [ ] **Ana ekran akıcılığı**: çok notlu hesapta açılış, hızlı kaydırma (boş
+  kart görünüyor mu), sona doğru kaydırırken sıçrama YOK mu; klasör/arşiv
+  ızgarası. Odak vurgusu (asistanın açtığı not) ekran dışındaysa kaydırmıyor
+  — gerekirse tahmini konuma atlama eklenmeli.
+- [ ] **Paylaşım**: ızgaradaki 8 düğme; PDF ve Görsel (PNG) çıktısı okunur mu,
+  görseller sonda mı; Ekler (yerel + buluttan) gidiyor mu; çip seçimi bir
+  sonraki açılışta hatırlanıyor mu; video bağlantıları metinde.
+- [ ] 18 yeni çeviri anahtarı (video/bubble/share) 16 dilde elle yazıldı —
+  anadil kontrolü.
+
 ## 2026-10-16 — kasma, görünüm anahtarı, video zaman damgaları (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Görsel sürükleme**: görselli/PDF'li uzun notta görseli basılı tutup
   sürüklerken akıcı mı; parmak DURUNCA (~0,16 sn) metin yeni yere akıyor mu,

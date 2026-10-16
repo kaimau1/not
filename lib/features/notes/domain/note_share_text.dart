@@ -1,4 +1,5 @@
 import '../../../core/utils/rich_text.dart';
+import 'attachment.dart';
 import 'note.dart';
 import 'note_item.dart';
 import 'note_type.dart';
@@ -10,7 +11,14 @@ class ShareTextOptions {
     this.title = true,
     this.checked = true,
     this.tags = false,
+    this.links = true,
   });
+
+  /// Nottaki YouTube videolarının bağlantıları sonda ("▶ Başlık" + adres).
+  /// Kullanıcı isteği 2026-10-16 ("paylaşım seçenekleri geliştirilmeli"):
+  /// videolu not paylaşılınca karşı taraf yalnız "1:23" damgalarını
+  /// görüyordu — hangi videonun damgaları olduğu metinde yoktu.
+  final bool links;
 
   /// Başlık ilk satırda.
   final bool title;
@@ -21,13 +29,39 @@ class ShareTextOptions {
   /// Etiketler sonda `#etiket` satırı olarak.
   final bool tags;
 
-  ShareTextOptions copyWith({bool? title, bool? checked, bool? tags}) =>
-      ShareTextOptions(
-        title: title ?? this.title,
-        checked: checked ?? this.checked,
-        tags: tags ?? this.tags,
-      );
+  ShareTextOptions copyWith({
+    bool? title,
+    bool? checked,
+    bool? tags,
+    bool? links,
+  }) => ShareTextOptions(
+    title: title ?? this.title,
+    checked: checked ?? this.checked,
+    tags: tags ?? this.tags,
+    links: links ?? this.links,
+  );
+
+  /// Tercihlerin saklanan biçimi (paylaşım levhası son seçimi hatırlar).
+  String encode() =>
+      '${title ? 1 : 0}${checked ? 1 : 0}${tags ? 1 : 0}${links ? 1 : 0}';
+
+  static ShareTextOptions decode(String? raw) {
+    if (raw == null || raw.length < 4) return const ShareTextOptions();
+    bool at(int i) => raw[i] == '1';
+    return ShareTextOptions(
+      title: at(0),
+      checked: at(1),
+      tags: at(2),
+      links: at(3),
+    );
+  }
 }
+
+/// Nottaki YouTube videoları (bağlantısı olanlar), sırasıyla.
+List<Attachment> shareableVideoLinks(Note note) => [
+  for (final a in note.attachments)
+    if (a.isWebVideo && a.webUrl.trim().isNotEmpty) a,
+];
 
 /// Onay kutusu işaretleri. WhatsApp, Telegram, e-posta ve not
 /// uygulamalarının hepsinde tek karakter olarak çizilen iki simge.
@@ -80,6 +114,20 @@ String noteShareText(
         if (text.isEmpty) continue;
         blocks.add('${label(entry.page)}\n$text');
       }
+    }
+  }
+
+  if (options.links) {
+    final videos = shareableVideoLinks(note);
+    if (videos.isNotEmpty) {
+      blocks.add(
+        [
+          for (final v in videos)
+            v.fileName.trim().isEmpty || v.fileName == 'YouTube'
+                ? '▶ ${v.webUrl.trim()}'
+                : '▶ ${v.fileName.trim()}\n${v.webUrl.trim()}',
+        ].join('\n'),
+      );
     }
   }
 

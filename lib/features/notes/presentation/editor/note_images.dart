@@ -23,6 +23,7 @@ import 'image_layout.dart';
 import 'pdf_page_box.dart';
 import 'text_wrap.dart';
 import 'video_hub_scope.dart';
+import 'video_transport.dart';
 import 'view_mode_switch.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
@@ -345,11 +346,15 @@ class NoteMediaBox extends StatelessWidget {
     this.onSize,
     this.showWebTitle = false,
     this.noteAtButton = false,
+    this.videoControls = true,
   });
 
   final Attachment attachment;
   final BoxFit fit;
   final bool inlineWebVideo;
+
+  /// Yerel videonun dibindeki denetim şeridi (bkz. [_VideoBox.controls]).
+  final bool videoControls;
 
   /// Yerel videonun köşesinde "Bu ana not al" düğmesi (sayfa tuvali). Sabit
   /// bölmede kapalı — orada düğme bölmenin çubuğunda.
@@ -386,6 +391,7 @@ class NoteMediaBox extends StatelessWidget {
         fit: fit,
         onSize: onSize,
         noteAtButton: noteAtButton,
+        controls: videoControls,
       );
     }
     return _ImageBox(img: a, fit: fit);
@@ -572,9 +578,14 @@ class _VideoBox extends StatefulWidget {
     this.fit = BoxFit.cover,
     this.onSize,
     this.noteAtButton = false,
+    this.controls = true,
   });
 
   final Attachment video;
+
+  /// Oynatılınca dipte denetim şeridi (±10 sn, oynat/durdur). Sabit
+  /// bölmede kapalı — orada denetim bölmenin çubuğunda.
+  final bool controls;
 
   /// Köşede "Bu ana not al" düğmesi (bkz. [NoteMediaBox.noteAtButton]).
   final bool noteAtButton;
@@ -662,8 +673,17 @@ class _VideoBoxState extends State<_VideoBox> {
   /// tazeliyor).
   void _onTick() {
     final playing = _controller?.value.isPlaying ?? false;
-    if (playing != _playing && mounted) setState(() => _playing = playing);
+    if (playing != _playing && mounted) {
+      setState(() {
+        _playing = playing;
+        if (playing) _started = true;
+      });
+    }
   }
+
+  /// Video bir kez oynatıldı mı — alttaki denetim şeridi ancak o zaman
+  /// görünür (oynatılmamış video yalnız kapağını ve ▶'yi gösterir).
+  bool _started = false;
 
   @override
   void didUpdateWidget(covariant _VideoBox old) {
@@ -722,12 +742,31 @@ class _VideoBoxState extends State<_VideoBox> {
     }
     final size = controller.value.size;
     return LayoutBuilder(
-      builder: (context, constraints) =>
-          _player(controller, size, constraints.maxWidth),
+      builder: (context, constraints) => _player(
+        controller,
+        size,
+        constraints.maxWidth,
+        constraints.maxHeight,
+      ),
     );
   }
 
-  Widget _player(VideoPlayerController controller, Size size, double boxWidth) {
+  Widget _player(
+    VideoPlayerController controller,
+    Size size,
+    double boxWidth,
+    double boxHeight,
+  ) {
+    // DENETİM ŞERİDİ (kullanıcı isteği 2026-10-16: "videonun hemen altında
+    // oynat/durdur, 10 sn sarma"): video bir kez oynatılınca kutunun dibinde
+    // koyu geçişli şerit. Küçük kutuda çizilmez — videoyu örterdi. Notun
+    // video merkezi yoksa (kart önizlemesi) denetim de yok.
+    final strip =
+        widget.controls &&
+        _started &&
+        _source != null &&
+        boxWidth >= 170 &&
+        boxHeight >= 110;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -745,29 +784,57 @@ class _VideoBoxState extends State<_VideoBox> {
         // Oynat/durdur dokunuşu KENDİ alır: dıştaki jest (seçim) çalışmaya
         // devam eder — videonun kenarına dokunmak seçer, ortasına dokunmak
         // oynatır. Oynarken düğme yarı saydamlaşır, video okunur kalır.
-        Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _toggle,
-            child: AnimatedOpacity(
-              opacity: _playing ? 0.35 : 1,
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: Colors.black45,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _playing ? Icons.pause : Icons.play_arrow,
-                  color: Colors.white,
-                  size: 28,
+        // Şerit varken ortadaki düğme yalnız DURURKEN görünür (oynarken
+        // durdurmak şeritten).
+        if (!(strip && _playing))
+          Center(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _toggle,
+              child: AnimatedOpacity(
+                opacity: _playing ? 0.35 : 1,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Colors.black45,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _playing ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        if (strip)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              key: const ValueKey('video-box-controls'),
+              padding: const EdgeInsets.only(top: 10),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00000000), Color(0xAA000000)],
+                ),
+              ),
+              alignment: Alignment.center,
+              child: VideoTransportControls(
+                video: widget.video,
+                onDark: true,
+                iconSize: 20,
+                showTime: boxWidth >= 270,
+                showSpeed: boxWidth >= 320,
+              ),
+            ),
+          ),
         // "BU ANA NOT AL" (kullanıcı isteği 2026-10-16): video akarken
         // kenardaki düğme o anın damgasını nota yazar ve yazma alanına
         // odaklanır. Küçük kutuda düğme videoyu örtmesin diye çizilmez.
@@ -829,7 +896,7 @@ class _NoteAtChip extends StatelessWidget {
 }
 
 /// Yerel oynatıcının (video_player) not tarafına açılan yüzü.
-class _PlayerTimeSource implements VideoTimeSource {
+class _PlayerTimeSource extends VideoTimeSource {
   _PlayerTimeSource(this.attachmentId, this.controller);
 
   @override
@@ -849,6 +916,47 @@ class _PlayerTimeSource implements VideoTimeSource {
     await controller.seekTo(target);
     await controller.play();
   }
+
+  @override
+  Listenable get changes => controller;
+
+  @override
+  bool get isPlaying => controller.value.isPlaying;
+
+  @override
+  Duration? get lastPosition =>
+      controller.value.isInitialized ? controller.value.position : null;
+
+  @override
+  Duration? get duration =>
+      controller.value.isInitialized ? controller.value.duration : null;
+
+  @override
+  Future<void> play() async {
+    final v = controller.value;
+    if (!v.isInitialized) return;
+    // Bittiyse oynat = baştan.
+    if (v.duration > Duration.zero && v.position >= v.duration) {
+      await controller.seekTo(Duration.zero);
+    }
+    await controller.play();
+  }
+
+  @override
+  Future<void> pause() => controller.pause();
+
+  @override
+  Future<void> seekBy(Duration delta) async {
+    final v = controller.value;
+    if (!v.isInitialized) return;
+    await controller.seekTo(shiftedPosition(v.position, delta, v.duration));
+  }
+
+  @override
+  double get speed => controller.value.playbackSpeed;
+
+  @override
+  Future<void> setSpeed(double value) => controller.setPlaybackSpeed(value);
 }
 
 /// Seçili görselin işlem çubuğu içeriği (genişlik kaydırıcısı + OCR + tam
@@ -1995,6 +2103,41 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
                                   color: Theme.of(
                                     context,
                                   ).colorScheme.onInverseSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                // Oynayan YouTube'un DENETİMİ (±10 sn, oynat/durdur) kutunun
+                // HEMEN ALTINDA, dışında — oynatıcının kendi çubuğunu örtmez.
+                for (final img in widget.images)
+                  if (_playingWeb.contains(img.id))
+                    Builder(
+                      builder: (context) {
+                        final r = _resolve(img, cw);
+                        if (r.w < 150) return const SizedBox.shrink();
+                        return Positioned(
+                          left: r.left,
+                          width: r.w,
+                          top: r.top + r.h + 4,
+                          child: Center(
+                            child: Material(
+                              key: ValueKey('web-video-controls-${img.id}'),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHigh,
+                              elevation: 2,
+                              borderRadius: BorderRadius.circular(20),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                child: VideoTransportControls(
+                                  video: img,
+                                  iconSize: 20,
+                                  showTime: r.w >= 260,
                                 ),
                               ),
                             ),

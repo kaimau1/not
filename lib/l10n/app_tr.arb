@@ -2070,5 +2070,30 @@
   "viewModeSwitchedFloating": "Ek sayfaya döndü",
   "videoNoteAtTime": "Bu ana not al",
   "videoNoteAtTimeShort": "Not al",
-  "videoTimeUnknown": "Videonun anı okunamadı — önce videoyu oynat."
+  "videoTimeUnknown": "Videonun anı okunamadı — önce videoyu oynat.",
+  "videoSpeed": "Oynatma hızı",
+  "videoLoop": "Tekrarla",
+  "bubbleSmaller": "Balonu küçült",
+  "bubbleLarger": "Balonu büyüt",
+  "bubbleAllSmaller": "Tüm balonları küçült",
+  "bubbleAllLarger": "Tüm balonları büyüt",
+  "bubblesShow": "Balonları göster",
+  "bubblesHide": "Balonları gizle",
+  "shareIncludeVideoLinks": "Video bağlantıları",
+  "shareQuickPdf": "PDF",
+  "shareAsImage": "Görsel",
+  "shareAttachmentFiles": "Ekler ({count})",
+  "@shareAttachmentFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareToFriendShort": "Arkadaşa",
+  "shareCollaborateShort": "Birlikte düzenle",
+  "shareAsNoteShort": "Not paketi",
+  "shareMoreSection": "DAHA FAZLA",
+  "shareQuickPreparing": "Hazırlanıyor…",
+  "shareAttachmentFilesNone": "Bu cihazda paylaşılacak ek dosyası yok."
 }

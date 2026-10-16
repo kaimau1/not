@@ -59,9 +59,18 @@ class PdfSelectLayer extends StatefulWidget {
     this.onSelectingChanged,
     this.onDragAt,
     this.activeSelectionPage = 0,
+    this.longPressSelects = true,
   });
 
   final PdfPage page;
+
+  /// Uzun basış kelime seçsin mi? Balonlu (düzenlenebilir) görünümde
+  /// HAYIR: orada basılı tutmak BALON BIRAKIR (kullanıcı isteği 2026-10-16:
+  /// "basılı tutarak balon ekleme olsun; şu an metin tanıma yapıyor" —
+  /// taranmış sayfada uzun basış OCR'ı bekletiyordu). Seçim o zaman ÇİFT
+  /// DOKUNUŞLA başlar; ikinci dokunuşta parmak kalkmadan sürüklenirse seçim
+  /// kelime kelime büyür (uzun basıştaki davranışın aynısı).
+  final bool longPressSelects;
 
   /// Sayfanın ekrandaki (ölçekli) boyutu — katman tam sayfayı kaplar.
   final Size pageSize;
@@ -132,6 +141,7 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
   Timer? _pressTimer;
   int? _pressPointer;
   Offset _pressStart = Offset.zero;
+  DateTime _pressDownAt = DateTime.now();
 
   /// Bu dokunuşta uzun basış ateşlendi mi? (Parmak kalkınca "boş dokunuş"
   /// sayılıp seçimin temizlenmemesi için.)
@@ -284,7 +294,22 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     _pressFired = false;
     _pressPointer = event.pointer;
     _pressStart = event.localPosition;
+    _pressDownAt = DateTime.now();
     _pressTimer?.cancel();
+    if (!widget.longPressSelects) {
+      // ÇİFT DOKUNUŞ + SÜRÜKLE: ikinci dokunuş İNERKEN kelime seçilir ve
+      // sürükleyerek büyütme kipine girilir (parmak kalkınca "dokunuş"
+      // sayılmasın diye [_pressFired]).
+      final last = _lastTapAt;
+      if (last != null &&
+          DateTime.now().difference(last) < const Duration(milliseconds: 300) &&
+          (event.localPosition - _lastTapPos).distance < 30) {
+        _lastTapAt = null;
+        _pressFired = true;
+        _beginTouchSelection(event.localPosition, event.pointer);
+      }
+      return;
+    }
     _pressTimer = Timer(_longPressDelay, () {
       _pressTimer = null;
       final pointer = _pressPointer;
@@ -327,7 +352,14 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
       setState(() => _magnifier = event.localPosition);
       return;
     }
-    if (event.pointer != _pressPointer || _pressTimer == null) return;
+    if (event.pointer != _pressPointer) return;
+    if (!widget.longPressSelects && !_pressFired) {
+      // Zamanlayıcı yok ama dokunuş ölçülüyor: kayan parmak "dokunuş"
+      // sayılmasın (yoksa kaydırmanın sonu çift dokunuşun ilki olurdu).
+      if ((event.localPosition - _pressStart).distance > _slop) _cancelPress();
+      return;
+    }
+    if (_pressTimer == null) return;
     if ((event.localPosition - _pressStart).distance > _slop) {
       // Kaydırma: uzun basış değil. (Sayfa zaten pdfrx tarafından kaydırılıyor;
       // bizim iptal etmemiz yalnız yanlışlıkla seçim yapılmasını önler.)
@@ -351,7 +383,13 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     // da parmak kaydıysa dokunulmaz.
     if (wasMeasuring && !_pressFired) {
       final moved = (event.localPosition - _pressStart).distance;
-      if (moved <= _slop) _onTouchTap(event.localPosition);
+      // Basılı tutup bırakmak (balon bırakıldı) dokunuş SAYILMAZ: yoksa
+      // hemen ardından gelen dokunuş çift dokunuş sanılıp kelime seçerdi.
+      final held =
+          !widget.longPressSelects &&
+          DateTime.now().difference(_pressDownAt) >
+              const Duration(milliseconds: 350);
+      if (moved <= _slop && !held) _onTouchTap(event.localPosition);
     }
     if (_pointers.isEmpty) _pressFired = false;
   }
@@ -506,7 +544,10 @@ class _PdfSelectLayerState extends State<PdfSelectLayer> {
     if (!_textLoaded || _ocrTried || _ocrRunning) return;
     if (!PdfPageOcr.isSupported || !_textThin) return;
     _autoOcrTimer?.cancel();
-    _autoOcrTimer = Timer(const Duration(milliseconds: 350), () {
+    // 900 ms (2026-10-16, eskiden 350): kaydırırken önbellek payında kurulup
+    // geçilen sayfalar OCR'a (1600 px çizim + ML Kit) girip kaydırmayı
+    // ağırlaştırmasın; sonuç artık diskte kalıcı, bir kez beklemek yeter.
+    _autoOcrTimer = Timer(const Duration(milliseconds: 900), () {
       if (mounted) _startOcr();
     });
   }

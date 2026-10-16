@@ -4750,4 +4750,61 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get videoTimeUnknown =>
       'Impossible de lire le temps de la vidéo — lance d\'abord la lecture.';
+
+  @override
+  String get videoSpeed => 'Vitesse de lecture';
+
+  @override
+  String get videoLoop => 'Lire en boucle';
+
+  @override
+  String get bubbleSmaller => 'Réduire la bulle';
+
+  @override
+  String get bubbleLarger => 'Agrandir la bulle';
+
+  @override
+  String get bubbleAllSmaller => 'Réduire toutes les bulles';
+
+  @override
+  String get bubbleAllLarger => 'Agrandir toutes les bulles';
+
+  @override
+  String get bubblesShow => 'Afficher les bulles';
+
+  @override
+  String get bubblesHide => 'Masquer les bulles';
+
+  @override
+  String get shareIncludeVideoLinks => 'Liens vidéo';
+
+  @override
+  String get shareQuickPdf => 'PDF';
+
+  @override
+  String get shareAsImage => 'Image';
+
+  @override
+  String shareAttachmentFiles(int count) {
+    return 'Pièces jointes ($count)';
+  }
+
+  @override
+  String get shareToFriendShort => 'À un ami';
+
+  @override
+  String get shareCollaborateShort => 'Collaborer';
+
+  @override
+  String get shareAsNoteShort => 'Paquet de note';
+
+  @override
+  String get shareMoreSection => 'PLUS';
+
+  @override
+  String get shareQuickPreparing => 'Préparation…';
+
+  @override
+  String get shareAttachmentFilesNone =>
+      'Aucune pièce jointe à partager sur cet appareil.';
 }

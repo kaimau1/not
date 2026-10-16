@@ -230,6 +230,37 @@ class PageBubble {
   /// Çarpanın ekrandaki karşılığı: 16 px taban.
   static const double baseFontSize = 16;
 
+  /// TUTAMACIN (normal balon) boyut çarpanı sınırları — kullanıcı isteği
+  /// 2026-10-16: "balonların boyutu ayarlanabilir olsun". Aynı [size] alanı:
+  /// açık metinde yazının puntosu, normal balonda tutamacın kendisi büyür.
+  /// Eski kayıtlarda 1 (varsayılan boy) — eski balonlar aynen çizilir.
+  static const double minPinSize = 0.6;
+  static const double maxPinSize = 2.5;
+
+  /// "Küçült / Büyüt" düğmelerinin adımları.
+  static const sizeSteps = <double>[0.6, 0.75, 1, 1.25, 1.5, 2, 2.5];
+
+  /// [current]'tan bir adım küçük ([direction] < 0) ya da büyük boy.
+  /// Açık metin kendi sınırlarını ([minSize]–[maxSize]) korur ve adımları
+  /// aşan boyda (köşe tutamacıyla büyütülmüş) %25 yürür.
+  static double stepSize(double current, int direction, {bool plain = false}) {
+    final lo = plain ? minSize : minPinSize;
+    final hi = plain ? maxSize : maxPinSize;
+    double next;
+    if (direction > 0) {
+      next = sizeSteps.firstWhere(
+        (s) => s > current + 0.01,
+        orElse: () => current * 1.25,
+      );
+    } else {
+      next = sizeSteps.lastWhere(
+        (s) => s < current - 0.01,
+        orElse: () => current / 1.25,
+      );
+    }
+    return next.clamp(lo, hi).toDouble();
+  }
+
   double get fontSize => baseFontSize * size;
 
   /// Bu balon bir METİN vurgusu mu (yoksa serbest balon mu)?
@@ -484,6 +515,37 @@ List<PageBubble> placeBubbles(
   ];
 }
 
+/// [placeBubbles]'ın TERSİ: sayfada [frame] dikdörtgeninde duran görselin
+/// balonlarını görselin kendi oranlı uzayına geri taşır (yalnız [page]
+/// sayfasındakiler). Görselden türetilmiş balonlu belge klasik görünümde
+/// gizliyken balonlar sabit görselin üstünde bu yoldan çizilir.
+List<PageBubble> unplaceBubbles(
+  List<PageBubble> bubbles,
+  PageBubbleRect frame, {
+  int page = 1,
+}) {
+  final w = frame.right - frame.left;
+  final h = frame.bottom - frame.top;
+  if (w <= 0 || h <= 0) return const [];
+  return [
+    for (final b in bubbles)
+      if (b.page == page)
+        b.copyWith(
+          x: (b.x - frame.left) / w,
+          y: (b.y - frame.top) / h,
+          rects: [
+            for (final r in b.rects)
+              PageBubbleRect(
+                (r.left - frame.left) / w,
+                (r.top - frame.top) / h,
+                (r.right - frame.left) / w,
+                (r.bottom - frame.top) / h,
+              ),
+          ],
+        ),
+  ];
+}
+
 /// Görsel 90°'nin katlarıyla döndürülünce üstündeki çizimleri de döndürür.
 ///
 /// [cropInk] ile aynı gerekçe: noktalar görselin ORANI (0–1) olarak tutuluyor,
@@ -578,8 +640,16 @@ class Attachment {
     this.webUrl = '',
     this.pinHeight = 0,
     this.sourceId = '',
+    this.bubblesHidden = false,
     this.createdAt,
   });
+
+  /// Belgenin BALONLARI gizli mi (kullanıcı isteği 2026-10-16: "balonları
+  /// göster/gizle olsun; balonludan üste sabitlemeye alınınca da balonlar
+  /// görülsün ama göster/gizlesi olsun"). Yalnız GÖRÜNÜM tercihi: balonlar
+  /// silinmez, toplu listede ve paylaşımda durur. Belge başına saklanır
+  /// (bir belgede gizlemek ötekileri etkilemez) ve senkronlanır.
+  final bool bubblesHidden;
 
   final String id;
   final AttachmentKind kind;
@@ -794,6 +864,7 @@ class Attachment {
     pdfTurns: local.pdfTurns,
     pdfMarks: local.pdfMarks,
     pinHeight: local.pinHeight,
+    bubblesHidden: local.bubblesHidden,
   );
 
   /// [fileName]/[mimeType]/[width]/[height]/[sizeBytes] yalnız KIRPMA yolunda
@@ -826,6 +897,7 @@ class Attachment {
     String? webUrl,
     double? pinHeight,
     String? sourceId,
+    bool? bubblesHidden,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -855,6 +927,7 @@ class Attachment {
     webUrl: webUrl ?? this.webUrl,
     pinHeight: pinHeight ?? this.pinHeight,
     sourceId: sourceId ?? this.sourceId,
+    bubblesHidden: bubblesHidden ?? this.bubblesHidden,
     createdAt: createdAt,
   );
 
@@ -902,6 +975,7 @@ class Attachment {
         webUrl: map['webUrl'] as String? ?? '',
         pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
         sourceId: map['sourceId'] as String? ?? '',
+        bubblesHidden: map['bubblesHidden'] as bool? ?? false,
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       );
 
@@ -964,6 +1038,9 @@ class Attachment {
     // Yalnız doluysa: türetilmemiş eklerin şeması büyümez. (Ekler dizi
     // olarak TÜMDEN yazılır — merge tuzağı yok.)
     if (sourceId.isNotEmpty) 'sourceId': sourceId,
+    // Yalnız gizliyken yazılır (ekler dizi olarak TÜMDEN yazılır — gösterince
+    // alanın düşmesi yeterli, merge tuzağı yok).
+    if (bubblesHidden) 'bubblesHidden': true,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

@@ -109,6 +109,7 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   if (a.webUrl.isNotEmpty) 'webUrl': a.webUrl,
   if (a.pinHeight != 0) 'pinHeight': a.pinHeight,
   if (a.sourceId.isNotEmpty) 'sourceId': a.sourceId,
+  if (a.bubblesHidden) 'bubblesHidden': true,
 };
 
 /// Paket JSON'unu nota çevirir. Kimlik boş bırakılır: içe aktaran taraf notu
@@ -186,6 +187,7 @@ Attachment _decodeAttachment(Map<String, dynamic> map) => Attachment(
   webUrl: map['webUrl'] as String? ?? '',
   pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
   sourceId: map['sourceId'] as String? ?? '',
+  bubblesHidden: map['bubblesHidden'] as bool? ?? false,
 );
 
 /// Notu ve ek baytlarını tek bir `.notpaket` (ZIP) dosyasına yazar.
