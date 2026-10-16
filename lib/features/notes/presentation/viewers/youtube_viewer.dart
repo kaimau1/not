@@ -9,8 +9,11 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/pip.dart';
+import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../domain/attachment.dart';
+import '../editor/video_hub_scope.dart';
+import 'video_viewer.dart' show NoteAtTimeButton;
 import 'youtube_web_frame.dart';
 
 /// Uygulama İÇİNDE oynatma: mobilde WebView, WEB'de iframe (2026-10-11,
@@ -21,16 +24,19 @@ bool get youTubeInAppSupported => kIsWeb || _webViewSupported;
 
 bool get _webViewSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
-/// Web'deki gömülü oynatıcı; bağlantı video değilse null.
-Widget? _webFrameFor(String url) {
+/// Web'deki gömülü oynatıcı; bağlantı video değilse null. Web'de konum
+/// okunamıyor: damgaya dokunmak oynatıcıyı o saniyeden YENİDEN kurar
+/// ([start] değişince görünüm türü de değişir).
+Widget? _webFrameFor(String url, {int? start}) {
   final id = youTubeVideoId(url);
   if (!kIsWeb || id == null) return null;
-  return youTubeWebFrame(id, start: youTubeStartSeconds(url));
+  return youTubeWebFrame(id, start: start ?? youTubeStartSeconds(url));
 }
 
 /// Gömülü YouTube oynatıcısının denetleyicisi; bağlantı video değilse ya da
-/// platformda WebView yoksa null.
-WebViewController? createYouTubeController(String url) {
+/// platformda WebView yoksa null. [start] verilirse (saniye) bağlantıdaki
+/// başlangıcın yerine geçer — zaman damgasına dokununca video oradan açılır.
+WebViewController? createYouTubeController(String url, {int? start}) {
   final id = youTubeVideoId(url);
   if (id == null || !_webViewSupported) return null;
   final controller = WebViewController()
@@ -63,19 +69,64 @@ WebViewController? createYouTubeController(String url) {
     platform.setMediaPlaybackRequiresUserGesture(false);
   }
   controller.loadHtmlString(
-    youTubeEmbedHtml(id, start: youTubeStartSeconds(url)),
+    youTubeEmbedHtml(id, start: start ?? youTubeStartSeconds(url)),
     baseUrl: youTubeEmbedOrigin,
   );
   return controller;
+}
+
+/// Gömülü sayfanın JS köprüsü üzerinden konum okuyan/saran kaynak (bkz.
+/// `youTubeEmbedHtml` → `notlarTime`/`notlarSeek`).
+class _WebViewTimeSource implements VideoTimeSource {
+  _WebViewTimeSource(this.attachmentId, this.controller);
+
+  @override
+  final String attachmentId;
+  final WebViewController controller;
+
+  @override
+  Future<Duration?> position() async {
+    try {
+      final raw = await controller.runJavaScriptReturningResult(
+        'window.notlarTime ? notlarTime() : -1',
+      );
+      final seconds = raw is num ? raw.toDouble() : double.tryParse('$raw');
+      if (seconds == null || seconds < 0) return null;
+      return Duration(milliseconds: (seconds * 1000).round());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    try {
+      await controller.runJavaScript(
+        'window.notlarSeek && notlarSeek(${position.inSeconds})',
+      );
+    } catch (_) {}
+  }
 }
 
 /// Sayfaya/üst bölmeye GÖMÜLÜ oynatıcı ("üstte video, altta not"): video
 /// notun içinde oynarken altına yazılabilir. Kurulduğu an oynamaya başlar —
 /// çağıran onu ancak oynat düğmesine basılınca ağaca koyar.
 class YouTubeInlinePlayer extends StatefulWidget {
-  const YouTubeInlinePlayer({super.key, required this.url});
+  const YouTubeInlinePlayer({
+    super.key,
+    required this.url,
+    this.start,
+    this.attachmentId,
+  });
 
   final String url;
+
+  /// Başlangıç saniyesi (null = bağlantıdaki `t=`).
+  final int? start;
+
+  /// Verilirse oynatıcı notun video merkezine ([VideoHubScope]) kaydolur:
+  /// zaman damgaları ona gider, "Bu ana not al" konumunu ondan okur.
+  final String? attachmentId;
 
   @override
   State<YouTubeInlinePlayer> createState() => _YouTubeInlinePlayerState();
@@ -84,11 +135,40 @@ class YouTubeInlinePlayer extends StatefulWidget {
 class _YouTubeInlinePlayerState extends State<YouTubeInlinePlayer> {
   late final WebViewController? _controller = createYouTubeController(
     widget.url,
+    start: widget.start,
   );
+
+  NoteVideoHub? _hub;
+  _WebViewTimeSource? _source;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = _controller;
+    final id = widget.attachmentId;
+    if (_source != null || controller == null || id == null) return;
+    final hub = VideoHubScope.maybeOf(context);
+    if (hub == null) return;
+    final source = _WebViewTimeSource(id, controller);
+    _hub = hub;
+    _source = source;
+    hub
+      ..register(source)
+      // Oynatıcı ancak "oynat"a basılınca kurulur: kullanıcının izlediği
+      // video budur.
+      ..touch(source);
+  }
+
+  @override
+  void dispose() {
+    final source = _source;
+    if (source != null) _hub?.unregister(source);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final frame = _webFrameFor(widget.url);
+    final frame = _webFrameFor(widget.url, start: widget.start);
     if (frame != null) return ColoredBox(color: Colors.black, child: frame);
     final controller = _controller;
     if (controller == null) return const ColoredBox(color: Colors.black);
@@ -106,9 +186,20 @@ class _YouTubeInlinePlayerState extends State<YouTubeInlinePlayer> {
 /// geçirir. Küçük pencerede çubuklar gizlenir, yalnız video çizilir; pencere
 /// büyütülünce ekran olduğu gibi geri gelir.
 class YouTubeViewerScreen extends StatefulWidget {
-  const YouTubeViewerScreen({super.key, required this.attachment});
+  const YouTubeViewerScreen({
+    super.key,
+    required this.attachment,
+    this.start,
+    this.onNoteAt,
+  });
 
   final Attachment attachment;
+
+  /// Açılış konumu (zaman damgası); null = bağlantıdaki `t=`.
+  final Duration? start;
+
+  /// "Bu ana not al" (bkz. [VideoViewerScreen.onNoteAt]).
+  final ValueChanged<Duration>? onNoteAt;
 
   @override
   State<YouTubeViewerScreen> createState() => _YouTubeViewerScreenState();
@@ -123,7 +214,10 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
   @override
   void initState() {
     super.initState();
-    final controller = createYouTubeController(_url);
+    final controller = createYouTubeController(
+      _url,
+      start: widget.start?.inSeconds,
+    );
     if (controller == null) return;
     _controller = controller;
     PictureInPicture.setAuto(true);
@@ -150,11 +244,31 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
   Future<void> _openExternal() =>
       launchUrl(Uri.parse(_url), mode: LaunchMode.externalApplication);
 
+  /// Oynatıcının konumunu okuyup notu o anın damgasıyla açar.
+  Future<void> _noteAt() async {
+    final controller = _controller;
+    final callback = widget.onNoteAt;
+    if (controller == null || callback == null) return;
+    final position = await _WebViewTimeSource(
+      widget.attachment.id,
+      controller,
+    ).position();
+    if (!mounted) return;
+    if (position == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.videoTimeUnknown)));
+      return;
+    }
+    Navigator.of(context).pop();
+    callback(position);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final controller = _controller;
-    final webFrame = _webFrameFor(_url);
+    final webFrame = _webFrameFor(_url, start: widget.start?.inSeconds);
     if (webFrame != null) {
       return Scaffold(
         backgroundColor: Colors.black,
@@ -236,6 +350,8 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   actions: [
+                    if (widget.onNoteAt != null)
+                      NoteAtTimeButton(onPressed: _noteAt),
                     if (_pipSupported)
                       IconButton(
                         tooltip: l10n.pictureInPicture,

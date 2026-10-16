@@ -4619,4 +4619,37 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => '보기';
+
+  @override
+  String get viewModePinned => '고정';
+
+  @override
+  String get viewModeFloating => '플로팅';
+
+  @override
+  String get viewModeBubbles => '말풍선';
+
+  @override
+  String get viewModePinnedHint => '위에 고정 — 위에 머물고 노트는 아래에서 스크롤됩니다';
+
+  @override
+  String get viewModeFloatingHint => '페이지에 띄우기 — 글이 주위로 흐릅니다';
+
+  @override
+  String get viewModeBubblesHint => '말풍선 보기 — 페이지 위에 말풍선, 강조, 펜';
+
+  @override
+  String get viewModeSwitchedFloating => '페이지로 돌아왔습니다';
+
+  @override
+  String get videoNoteAtTime => '이 순간에 메모';
+
+  @override
+  String get videoNoteAtTimeShort => '메모';
+
+  @override
+  String get videoTimeUnknown => '동영상 시간을 읽을 수 없습니다. 먼저 재생하세요.';
 }

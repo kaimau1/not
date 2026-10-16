@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'attachment_tag.dart';
+import 'video_time.dart';
 
 /// Bulunan bağlantının türü. E-posta ayrı tutulur çünkü açılışı farklıdır
 /// (`mailto:`) ve **web kalıbından ÖNCE eşleşmesi** gerekir.
@@ -145,6 +146,7 @@ List<InlineSpan> linkSpans(
   Color? linkColor, {
   Iterable<String> attachmentNames = const [],
   Map<String, Color>? tagChipColors,
+  bool videoTimestamps = false,
 }) {
   if (linkColor == null || text.isEmpty) {
     return [TextSpan(text: text, style: style)];
@@ -153,12 +155,20 @@ List<InlineSpan> linkSpans(
   // toplanır: ikisi de metnin bir aralığını başka renkte çizen işaretler ve
   // aynı aralıkta ikisi birden olamaz. Ayrı iki geçiş yapılsaydı çakışan
   // aralıklarda span'ler üst üste binerdi.
+  //
+  // VİDEO ZAMAN DAMGALARI (bkz. video_time.dart) de aynı listede: notta video
+  // varken "1:23" YouTube'daki gibi bağlantı renginde çizilir, dokununca
+  // video oraya gider. Yalnız RENK — genişlik değişmez, sarma ölçümü
+  // (renksiz) ile çizim ayrışmaz.
   final marks =
-      <({int start, int end, bool attachment})>[
+      <({int start, int end, bool attachment, bool time})>[
         for (final link in findLinks(text))
-          (start: link.start, end: link.end, attachment: false),
+          (start: link.start, end: link.end, attachment: false, time: false),
         for (final tag in findAttachmentTags(text, attachmentNames))
-          (start: tag.start, end: tag.end, attachment: true),
+          (start: tag.start, end: tag.end, attachment: true, time: false),
+        if (videoTimestamps)
+          for (final t in findVideoTimestamps(text))
+            (start: t.start, end: t.end, attachment: false, time: true),
       ]..sort((a, b) => a.start - b.start);
   if (marks.isEmpty) return [TextSpan(text: text, style: style)];
 
@@ -188,6 +198,13 @@ List<InlineSpan> linkSpans(
           backgroundColor: attachmentColor.withValues(alpha: 0.10),
         );
   final tagPrefixStyle = tagBase.copyWith(decoration: TextDecoration.none);
+  // Damga: bağlantı renginde, ince zeminli (YouTube yorumlarındaki mavi
+  // zaman gibi) — alt çizgisiz, bağlantıdan ayırt edilsin.
+  final timeStyle = base.copyWith(
+    color: linkColor,
+    backgroundColor: base.backgroundColor ?? linkColor.withValues(alpha: 0.10),
+    decoration: TextDecoration.none,
+  );
   final tagLabelStyle = tagBase.copyWith(
     decoration: TextDecoration.underline,
     decorationColor: attachmentColor.withValues(alpha: 0.75),
@@ -250,7 +267,11 @@ List<InlineSpan> linkSpans(
       spans.add(
         TextSpan(
           text: marked,
-          style: mark.attachment ? tagLabelStyle : linkStyle,
+          style: mark.attachment
+              ? tagLabelStyle
+              : mark.time
+              ? timeStyle
+              : linkStyle,
         ),
       );
     }

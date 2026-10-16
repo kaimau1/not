@@ -889,5 +889,16 @@
   "menuSectionContent": "Konten",
   "menuSectionPeople": "Akun dan kontak",
   "menuSectionHome": "Layar utama",
-  "menuSectionApp": "Aplikasi"
+  "menuSectionApp": "Aplikasi",
+  "viewModeTitle": "Tampilan",
+  "viewModePinned": "Disematkan",
+  "viewModeFloating": "Mengambang",
+  "viewModeBubbles": "Gelembung",
+  "viewModePinnedHint": "Sematkan di atas — tetap di atas, catatan bergulir di bawahnya",
+  "viewModeFloatingHint": "Mengambang di halaman — teks mengalir di sekitarnya",
+  "viewModeBubblesHint": "Tampilan gelembung — gelembung, sorotan, dan pena di halaman",
+  "viewModeSwitchedFloating": "Kembali ke halaman",
+  "videoNoteAtTime": "Catat momen ini",
+  "videoNoteAtTimeShort": "Catat",
+  "videoTimeUnknown": "Waktu video tidak terbaca — putar videonya dulu."
 }

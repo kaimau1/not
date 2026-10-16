@@ -4713,4 +4713,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Ansicht';
+
+  @override
+  String get viewModePinned => 'Angeheftet';
+
+  @override
+  String get viewModeFloating => 'Schwebend';
+
+  @override
+  String get viewModeBubbles => 'Sprechblasen';
+
+  @override
+  String get viewModePinnedHint =>
+      'Oben anheften — bleibt oben, die Notiz scrollt darunter';
+
+  @override
+  String get viewModeFloatingHint =>
+      'Auf der Seite schweben — Text fließt darum herum';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Sprechblasen-Ansicht — Blasen, Markierungen und Stift auf der Seite';
+
+  @override
+  String get viewModeSwitchedFloating => 'Wieder auf der Seite';
+
+  @override
+  String get videoNoteAtTime => 'Notiz zu diesem Moment';
+
+  @override
+  String get videoNoteAtTimeShort => 'Notiz';
+
+  @override
+  String get videoTimeUnknown =>
+      'Videozeit nicht lesbar — spiele das Video zuerst ab.';
 }

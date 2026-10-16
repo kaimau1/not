@@ -889,5 +889,16 @@
   "menuSectionContent": "Inhoud",
   "menuSectionPeople": "Account en contacten",
   "menuSectionHome": "Startscherm",
-  "menuSectionApp": "App"
+  "menuSectionApp": "App",
+  "viewModeTitle": "Weergave",
+  "viewModePinned": "Vastgezet",
+  "viewModeFloating": "Zwevend",
+  "viewModeBubbles": "Ballonnen",
+  "viewModePinnedHint": "Bovenaan vastzetten — blijft boven, de notitie scrolt eronder",
+  "viewModeFloatingHint": "Zweven op de pagina — tekst loopt eromheen",
+  "viewModeBubblesHint": "Ballonweergave — ballonnen, markeringen en pen op de pagina",
+  "viewModeSwitchedFloating": "Weer op de pagina",
+  "videoNoteAtTime": "Notitie bij dit moment",
+  "videoNoteAtTimeShort": "Notitie",
+  "videoTimeUnknown": "Videotijd niet leesbaar — speel de video eerst af."
 }

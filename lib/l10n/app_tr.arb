@@ -2059,5 +2059,16 @@
   "bubbleDone": "Bitti",
   "bubbleEditShort": "Düzenle",
   "bubblePlainModeShort": "Metin",
-  "pageBarMore": "Sayfa ve not seçenekleri"
+  "pageBarMore": "Sayfa ve not seçenekleri",
+  "viewModeTitle": "Görünüm",
+  "viewModePinned": "Sabit",
+  "viewModeFloating": "Yüzen",
+  "viewModeBubbles": "Balonlu",
+  "viewModePinnedHint": "Üste sabitle — ek tepede durur, not altında kayar",
+  "viewModeFloatingHint": "Sayfada yüzer — yazı etrafından akar",
+  "viewModeBubblesHint": "Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem",
+  "viewModeSwitchedFloating": "Ek sayfaya döndü",
+  "videoNoteAtTime": "Bu ana not al",
+  "videoNoteAtTimeShort": "Not al",
+  "videoTimeUnknown": "Videonun anı okunamadı — önce videoyu oynat."
 }

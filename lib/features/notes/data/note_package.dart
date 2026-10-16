@@ -108,6 +108,7 @@ Map<String, dynamic> _encodeAttachment(Attachment a) => {
   // YouTube eki dosyasızdır: bağlantının kendisi ektir (kişisel veri yok).
   if (a.webUrl.isNotEmpty) 'webUrl': a.webUrl,
   if (a.pinHeight != 0) 'pinHeight': a.pinHeight,
+  if (a.sourceId.isNotEmpty) 'sourceId': a.sourceId,
 };
 
 /// Paket JSON'unu nota çevirir. Kimlik boş bırakılır: içe aktaran taraf notu
@@ -184,6 +185,7 @@ Attachment _decodeAttachment(Map<String, dynamic> map) => Attachment(
   ],
   webUrl: map['webUrl'] as String? ?? '',
   pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
+  sourceId: map['sourceId'] as String? ?? '',
 );
 
 /// Notu ve ek baytlarını tek bir `.notpaket` (ZIP) dosyasına yazar.

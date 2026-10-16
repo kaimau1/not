@@ -889,5 +889,16 @@
   "menuSectionContent": "Contenido",
   "menuSectionPeople": "Cuenta y contactos",
   "menuSectionHome": "Pantalla de inicio",
-  "menuSectionApp": "Aplicación"
+  "menuSectionApp": "Aplicación",
+  "viewModeTitle": "Vista",
+  "viewModePinned": "Fijado",
+  "viewModeFloating": "Flotante",
+  "viewModeBubbles": "Burbujas",
+  "viewModePinnedHint": "Fijar arriba: queda arriba y la nota se desplaza debajo",
+  "viewModeFloatingHint": "Flotar en la página: el texto lo rodea",
+  "viewModeBubblesHint": "Vista de burbujas: burbujas, resaltados y lápiz sobre la página",
+  "viewModeSwitchedFloating": "De vuelta en la página",
+  "videoNoteAtTime": "Anotar este momento",
+  "videoNoteAtTimeShort": "Anotar",
+  "videoTimeUnknown": "No se pudo leer el tiempo del vídeo; reprodúcelo primero."
 }

@@ -135,6 +135,37 @@ iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;transform-
   window.addEventListener('resize',fit);
   fit();
 })();
+// ZAMAN DAMGALARI (bkz. video_time.dart): uygulama konumu okur ve sarar.
+// Oynatıcının kendi ileti protokolü (IFrame API'nin içte kullandığı) —
+// dış betik yüklenmez. "listening" el sıkışmasından sonra oynatıcı konumu
+// "infoDelivery" iletileriyle bildirir; hiç ileti gelmediyse konum
+// BİLİNMİYOR sayılır (-1) — yanlış bir 0:00 yazılmasın.
+var notlarCur=$start, notlarHeard=false, notlarFrame=document.getElementById('player');
+function notlarPost(o){
+  try{ notlarFrame.contentWindow.postMessage(JSON.stringify(o),'*'); }catch(_){}
+}
+function notlarListen(){ notlarPost({event:'listening',id:'notlar',channel:'widget'}); }
+notlarFrame.addEventListener('load',function(){
+  notlarListen();
+  var n=0, t=setInterval(function(){
+    if(notlarHeard||++n>40){ clearInterval(t); return; }
+    notlarListen();
+  },500);
+});
+window.addEventListener('message',function(e){
+  try{
+    var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
+    if(!d||!d.info) return;
+    notlarHeard=true;
+    if(typeof d.info.currentTime==='number') notlarCur=d.info.currentTime;
+  }catch(_){}
+});
+window.notlarTime=function(){ return notlarHeard?notlarCur:-1; };
+window.notlarSeek=function(s){
+  notlarCur=s;
+  notlarPost({event:'command',func:'seekTo',args:[s,true]});
+  notlarPost({event:'command',func:'playVideo',args:[]});
+};
 </script>
 </body></html>''';
 }

@@ -4684,4 +4684,41 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'दृश्य';
+
+  @override
+  String get viewModePinned => 'पिन किया';
+
+  @override
+  String get viewModeFloating => 'तैरता';
+
+  @override
+  String get viewModeBubbles => 'बुलबुले';
+
+  @override
+  String get viewModePinnedHint =>
+      'ऊपर पिन करें — ऊपर रहता है, नोट नीचे स्क्रॉल होता है';
+
+  @override
+  String get viewModeFloatingHint =>
+      'पेज पर तैरता है — टेक्स्ट इसके चारों ओर बहता है';
+
+  @override
+  String get viewModeBubblesHint =>
+      'बुलबुला दृश्य — पेज पर बुलबुले, हाइलाइट और पेन';
+
+  @override
+  String get viewModeSwitchedFloating => 'पेज पर वापस';
+
+  @override
+  String get videoNoteAtTime => 'इस पल पर नोट लें';
+
+  @override
+  String get videoNoteAtTimeShort => 'नोट';
+
+  @override
+  String get videoTimeUnknown =>
+      'वीडियो का समय नहीं पढ़ा जा सका — पहले वीडियो चलाएँ।';
 }

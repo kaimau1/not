@@ -4683,4 +4683,39 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Görünüm';
+
+  @override
+  String get viewModePinned => 'Sabit';
+
+  @override
+  String get viewModeFloating => 'Yüzen';
+
+  @override
+  String get viewModeBubbles => 'Balonlu';
+
+  @override
+  String get viewModePinnedHint =>
+      'Üste sabitle — ek tepede durur, not altında kayar';
+
+  @override
+  String get viewModeFloatingHint => 'Sayfada yüzer — yazı etrafından akar';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem';
+
+  @override
+  String get viewModeSwitchedFloating => 'Ek sayfaya döndü';
+
+  @override
+  String get videoNoteAtTime => 'Bu ana not al';
+
+  @override
+  String get videoNoteAtTimeShort => 'Not al';
+
+  @override
+  String get videoTimeUnknown => 'Videonun anı okunamadı — önce videoyu oynat.';
 }

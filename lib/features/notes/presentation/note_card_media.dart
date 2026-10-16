@@ -78,7 +78,13 @@ class CardMediaPlan {
   /// BALONLU notun kapağı: belgesi kartın tepesinde kenardan kenara (bkz.
   /// [CardDocumentCover]). Sıradan notun belge eki kapak OLMAZ — gövdede
   /// küçük belge kartı olarak durur.
-  Attachment? get cover => documentNote ? heroDocument : null;
+  ///
+  /// Üste SABİTLENMİŞ belge de kapaktır: editörde notun tepesinde duruyor,
+  /// kartta da tepede durur.
+  Attachment? get cover =>
+      documentNote || (heroDocument?.isPinnedTop ?? false)
+      ? heroDocument
+      : null;
 
   /// Belge kapağının [width] genişlikteki yüksekliği: sayfanın üst kısmı
   /// (başlık, ilk satırlar) okunacak kadar.
@@ -102,7 +108,8 @@ class CardMediaPlan {
     // Zemin görseli ek DEĞİL: notun arkasında duvar kâğıdı olarak duruyor.
     final all = [
       for (final a in note.attachments)
-        if (a.id != note.backgroundImageId) a,
+        if (a.id != note.backgroundImageId && !note.hidesDerivedDocument(a))
+          a,
     ];
     // Sabitli medya önce: kartın kapağı odur.
     final visuals = [
@@ -118,14 +125,20 @@ class CardMediaPlan {
     final documentNote =
         note.type == NoteType.pdf || note.type == NoteType.slides;
 
+    // Üste SABİTLENMİŞ belge (bkz. Attachment.isPinnedTop) kartın kapağıdır
+    // — sabitli görselin belgedeki karşılığı.
+    final pinnedDocument = documents.where((d) => d.isPinnedTop).firstOrNull;
     Attachment? hero;
     if (visuals.isNotEmpty &&
         (visuals.first.isPinnedTop || visuals.length == 1) &&
-        !documentNote) {
+        !documentNote &&
+        pinnedDocument == null) {
       hero = visuals.first;
     }
     Attachment? heroDocument;
-    if (documents.isNotEmpty && (documentNote || visuals.isEmpty)) {
+    if (pinnedDocument != null && !documentNote) {
+      heroDocument = pinnedDocument;
+    } else if (documents.isNotEmpty && (documentNote || visuals.isEmpty)) {
       heroDocument = documents.first;
     }
     var bubbles = 0;

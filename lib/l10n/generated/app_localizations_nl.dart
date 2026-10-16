@@ -4712,4 +4712,41 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Weergave';
+
+  @override
+  String get viewModePinned => 'Vastgezet';
+
+  @override
+  String get viewModeFloating => 'Zwevend';
+
+  @override
+  String get viewModeBubbles => 'Ballonnen';
+
+  @override
+  String get viewModePinnedHint =>
+      'Bovenaan vastzetten — blijft boven, de notitie scrolt eronder';
+
+  @override
+  String get viewModeFloatingHint =>
+      'Zweven op de pagina — tekst loopt eromheen';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Ballonweergave — ballonnen, markeringen en pen op de pagina';
+
+  @override
+  String get viewModeSwitchedFloating => 'Weer op de pagina';
+
+  @override
+  String get videoNoteAtTime => 'Notitie bij dit moment';
+
+  @override
+  String get videoNoteAtTimeShort => 'Notitie';
+
+  @override
+  String get videoTimeUnknown =>
+      'Videotijd niet leesbaar — speel de video eerst af.';
 }

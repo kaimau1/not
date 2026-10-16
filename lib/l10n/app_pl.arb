@@ -889,5 +889,16 @@
   "menuSectionContent": "Treść",
   "menuSectionPeople": "Konto i kontakty",
   "menuSectionHome": "Ekran główny",
-  "menuSectionApp": "Aplikacja"
+  "menuSectionApp": "Aplikacja",
+  "viewModeTitle": "Widok",
+  "viewModePinned": "Przypięty",
+  "viewModeFloating": "Pływający",
+  "viewModeBubbles": "Dymki",
+  "viewModePinnedHint": "Przypnij na górze — zostaje u góry, notatka przewija się pod nim",
+  "viewModeFloatingHint": "Pływa na stronie — tekst go opływa",
+  "viewModeBubblesHint": "Widok dymków — dymki, wyróżnienia i pióro na stronie",
+  "viewModeSwitchedFloating": "Z powrotem na stronie",
+  "videoNoteAtTime": "Notatka w tym momencie",
+  "videoNoteAtTimeShort": "Notatka",
+  "videoTimeUnknown": "Nie udało się odczytać czasu wideo — najpierw je odtwórz."
 }

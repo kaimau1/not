@@ -4695,4 +4695,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Page and note options';
+
+  @override
+  String get viewModeTitle => 'View';
+
+  @override
+  String get viewModePinned => 'Pinned';
+
+  @override
+  String get viewModeFloating => 'Floating';
+
+  @override
+  String get viewModeBubbles => 'Bubbles';
+
+  @override
+  String get viewModePinnedHint =>
+      'Pin to top — stays above, the note scrolls below';
+
+  @override
+  String get viewModeFloatingHint => 'Float on the page — text wraps around it';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Bubbles view — bubbles, highlights and pen on the page';
+
+  @override
+  String get viewModeSwitchedFloating => 'Back on the page';
+
+  @override
+  String get videoNoteAtTime => 'Note at this moment';
+
+  @override
+  String get videoNoteAtTimeShort => 'Note';
+
+  @override
+  String get videoTimeUnknown =>
+      'Couldn\'t read the video time — play the video first.';
 }

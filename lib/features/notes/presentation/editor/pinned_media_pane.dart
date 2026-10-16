@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../domain/attachment.dart';
 import 'note_images.dart';
+import 'pdf_page_box.dart';
 
 /// Sabit bölmenin yüksekliği bu sınırlar arasında kalır (dp / oran).
 const double kPinnedMinHeight = 96;
@@ -13,18 +14,25 @@ const double kPinnedMaxFraction = 0.7;
 const double kPinnedUnpinHeight = 72;
 
 /// Medya ile not arasındaki çubuğun (tutamaç + düğmeler) yüksekliği.
-const double kPinnedBarHeight = 40;
+const double kPinnedBarHeight = 44;
 
 /// Yeni sabitlenen medyanın ilk yüksekliği: ekran genişliğinde medyanın kendi
 /// oranı, ekranın %45'ini geçmeden. Oranı bilinmeyen video 16:9 sayılır.
 double defaultPinnedHeight(Attachment media, Size screen) {
   final w = (media.width ?? 0).toDouble();
   final h = (media.height ?? 0).toDouble();
+  final pdf = media.kind == AttachmentKind.pdf;
   final ratio = w > 0 && h > 0
-      ? h / w
-      : (media.kind == AttachmentKind.video ? 9 / 16 : 3 / 4);
+      ? (pdf ? 1 / pdfBoxAspect(w, h, media.pdfTurns) : h / w)
+      : (media.kind == AttachmentKind.video
+            ? 9 / 16
+            : pdf
+            ? 1.41
+            : 3 / 4);
   final natural = screen.width * ratio;
-  final max = screen.height * 0.45;
+  // Belge okunacak kadar uzun açılır (A4 sayfa ekranın yarısında bile
+  // okunur); görsel/video ekranın %45'ini geçmez.
+  final max = screen.height * (pdf ? 0.5 : 0.45);
   return natural.clamp(
     kPinnedMinHeight,
     max < kPinnedMinHeight ? kPinnedMinHeight : max,
@@ -48,6 +56,9 @@ class PinnedMediaPane extends StatefulWidget {
     required this.onOpen,
     required this.child,
     this.onCopyLink,
+    this.onChanged,
+    this.viewSwitch,
+    this.onNoteAt,
   });
 
   final Attachment media;
@@ -61,6 +72,17 @@ class PinnedMediaPane extends StatefulWidget {
 
   /// YouTube ekinin bağlantısını panoya yazar — ayraç çubuğunda düğme.
   final VoidCallback? onCopyLink;
+
+  /// Sabitli PDF'in sayfa/yer imi/döndürme değişiklikleri (bkz.
+  /// [PdfPageBox.onChanged]).
+  final ValueChanged<Attachment>? onChanged;
+
+  /// Ayraç çubuğunun sağındaki görünüm anahtarı (Sabit / Yüzen / Balonlu —
+  /// bkz. `AttachmentViewSwitch`). null ise eski "sayfaya geri koy" düğmesi.
+  final Widget? viewSwitch;
+
+  /// "Bu ana not al" (yalnız video): ayraç çubuğunda yazılı düğme.
+  final VoidCallback? onNoteAt;
 
   @override
   State<PinnedMediaPane> createState() => _PinnedMediaPaneState();
@@ -88,6 +110,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final isVideo = widget.media.kind == AttachmentKind.video;
+    final isPdf = widget.media.kind == AttachmentKind.pdf;
     return LayoutBuilder(
       builder: (context, constraints) {
         final max = constraints.maxHeight * kPinnedMaxFraction;
@@ -101,59 +124,81 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
           children: [
             SizedBox(
               height: height,
-              child: GestureDetector(
-                onTap: isVideo ? null : widget.onOpen,
-                onLongPressStart: (_) {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    _pulling = true;
-                    _pullDown = 0;
-                  });
-                },
-                onLongPressMoveUpdate: (d) =>
-                    setState(() => _pullDown = d.offsetFromOrigin.dy),
-                onLongPressEnd: (_) {
-                  final unpin = _unpinArmed;
-                  setState(() {
-                    _pulling = false;
-                    _pullDown = 0;
-                  });
-                  if (unpin) widget.onUnpin();
-                },
-                onLongPressCancel: () => setState(() {
-                  _pulling = false;
-                  _pullDown = 0;
-                }),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ColoredBox(
-                      color: isVideo
-                          ? Colors.black
-                          : scheme.surfaceContainerHigh,
-                      child: Transform.translate(
-                        offset: Offset(
-                          0,
-                          _pulling ? _pullDown.clamp(0, 140) : 0,
-                        ),
-                        child: Opacity(
-                          opacity: _pulling ? 0.6 : 1,
-                          child: NoteMediaBox(
-                            // Ek değişince (başka medya sabitlenince)
-                            // oynatıcı da yenilensin.
-                            key: ValueKey(widget.media.id),
+              child: isPdf
+                  // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
+                  // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
+                  // görünüm anahtarından.
+                  ? ColoredBox(
+                      color: scheme.surfaceContainerHigh,
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: pdfBoxAspect(
+                            (widget.media.width ?? 0).toDouble(),
+                            (widget.media.height ?? 0).toDouble(),
+                            widget.media.pdfTurns,
+                          ),
+                          child: PdfPageBox(
+                            key: ValueKey('pinned-pdf-${widget.media.id}'),
                             attachment: widget.media,
-                            fit: BoxFit.contain,
-                            inlineWebVideo: true,
-                            showWebTitle: true,
+                            onChanged: widget.onChanged ?? (_) {},
                           ),
                         ),
                       ),
+                    )
+                  : GestureDetector(
+                      onTap: isVideo ? null : widget.onOpen,
+                      onLongPressStart: (_) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _pulling = true;
+                          _pullDown = 0;
+                        });
+                      },
+                      onLongPressMoveUpdate: (d) =>
+                          setState(() => _pullDown = d.offsetFromOrigin.dy),
+                      onLongPressEnd: (_) {
+                        final unpin = _unpinArmed;
+                        setState(() {
+                          _pulling = false;
+                          _pullDown = 0;
+                        });
+                        if (unpin) widget.onUnpin();
+                      },
+                      onLongPressCancel: () => setState(() {
+                        _pulling = false;
+                        _pullDown = 0;
+                      }),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ColoredBox(
+                            color: isVideo
+                                ? Colors.black
+                                : scheme.surfaceContainerHigh,
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                _pulling ? _pullDown.clamp(0, 140) : 0,
+                              ),
+                              child: Opacity(
+                                opacity: _pulling ? 0.6 : 1,
+                                child: NoteMediaBox(
+                                  // Ek değişince (başka medya sabitlenince)
+                                  // oynatıcı da yenilensin.
+                                  key: ValueKey(widget.media.id),
+                                  attachment: widget.media,
+                                  fit: BoxFit.contain,
+                                  inlineWebVideo: true,
+                                  showWebTitle: true,
+                                ),
+                              ),
+                            ),
+                          ),
+                          if (_unpinArmed)
+                            _UnpinHint(label: l10n.unpinMediaRelease),
+                        ],
+                      ),
                     ),
-                    if (_unpinArmed) _UnpinHint(label: l10n.unpinMediaRelease),
-                  ],
-                ),
-              ),
             ),
             // AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de
             // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
@@ -196,7 +241,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                         label: l10n.pinnedMediaResize,
                         child: Center(
                           child: Container(
-                            width: 44,
+                            width: 36,
                             height: 5,
                             decoration: BoxDecoration(
                               color: _live != null
@@ -210,17 +255,37 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                         ),
                       ),
                     ),
+                    if (widget.onNoteAt != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 2),
+                        child: TextButton.icon(
+                          key: const ValueKey('pinned-note-at'),
+                          style: TextButton.styleFrom(
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: widget.onNoteAt,
+                          icon: const Icon(Icons.more_time, size: 18),
+                          label: Text(l10n.videoNoteAtTimeShort),
+                        ),
+                      ),
                     if (widget.onCopyLink != null && widget.media.isWebVideo)
                       _BarButton(
                         tooltip: l10n.copyVideoLink,
                         icon: Icons.link,
                         onPressed: widget.onCopyLink!,
                       ),
-                    _BarButton(
-                      tooltip: l10n.unpinMedia,
-                      icon: Icons.vertical_align_bottom,
-                      onPressed: widget.onUnpin,
-                    ),
+                    if (widget.viewSwitch case final viewSwitch?)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 2, right: 6),
+                        child: viewSwitch,
+                      )
+                    else
+                      _BarButton(
+                        tooltip: l10n.unpinMedia,
+                        icon: Icons.vertical_align_bottom,
+                        onPressed: widget.onUnpin,
+                      ),
                   ],
                 ),
               ),

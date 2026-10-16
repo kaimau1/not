@@ -72,11 +72,20 @@ class _PdfPageImageState extends State<PdfPageImage> {
     final aspect = page.height <= 0 ? 1.0 : page.width / page.height;
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Kutu ölçüsü 128 px'lik ADIMLARA yukarı yuvarlanır (görsellerdeki
+        // `decodeWidthBucket`ın karşılığı). KÖK NEDEN (kullanıcı 2026-10-16:
+        // "görseller sürüklenirken aşırı kasma"): sayfaya gömülü PDF köşe
+        // tutamacıyla ya da kaydırıcıyla boyutlandırılırken kutu HER KAREDE
+        // bir piksel değişiyor, her değişim yeni bir anahtar ve sayfanın
+        // baştan çizimi (PDFium + görüntü oluşturma) demekti. Görüntü kutuya
+        // `fill` ile oturduğundan biraz büyük çizim fark edilmez.
+        double bucket(double v) =>
+            v.isFinite && v > 0 ? (v / 128).ceil() * 128.0 : v;
         final target = pdfRenderSize(
           pageWidth: page.width,
           pageHeight: page.height,
-          boxWidth: constraints.maxWidth * dpr,
-          boxHeight: constraints.maxHeight * dpr,
+          boxWidth: bucket(constraints.maxWidth * dpr),
+          boxHeight: bucket(constraints.maxHeight * dpr),
           maximumDpi: widget.maximumDpi,
         );
         if (target != null) {

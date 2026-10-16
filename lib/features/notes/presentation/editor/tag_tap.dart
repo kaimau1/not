@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../../core/utils/attachment_tag.dart';
+import '../../../../core/utils/video_time.dart';
 import 'text_wrap.dart';
 
 /// Bir metin alanına yapılan SON dokunuşun ekran konumu.
@@ -84,6 +85,35 @@ EditableTextState? editableTextBelow(BuildContext context) {
       }
     }
     return null;
+  }
+  return null;
+}
+
+/// Dokunuşun düştüğü VİDEO ZAMAN DAMGASI (saniye; yoksa null).
+///
+/// Etiketteki kuralın aynısı: imleç damganın İÇİNDEYSE ya da sınırındayken
+/// parmak damganın çizildiği kutudaysa damgaya dokunulmuştur. Damganın
+/// yanına imleç koymak yazmaya devam etmektir — sayfayı sarmaz.
+int? tappedVideoTimestamp({
+  required String displayText,
+  required TextSelection selection,
+  EditableTextState? editable,
+  Offset? tapGlobal,
+}) {
+  if (!selection.isValid || !selection.isCollapsed) return null;
+  final caret = selection.baseOffset;
+  final hit = videoTimestampAt(displayText, caret);
+  if (hit == null) return null;
+  if (caret > hit.start && caret < hit.end) return hit.seconds;
+  if (editable == null || tapGlobal == null) return null;
+  final render = editable.renderEditable;
+  if (!render.attached || !render.hasSize) return null;
+  final local = render.globalToLocal(tapGlobal);
+  final boxes = render.getBoxesForSelection(
+    TextSelection(baseOffset: hit.start, extentOffset: hit.end),
+  );
+  for (final box in boxes) {
+    if (box.toRect().inflate(3).contains(local)) return hit.seconds;
   }
   return null;
 }

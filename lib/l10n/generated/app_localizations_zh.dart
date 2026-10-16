@@ -4587,4 +4587,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => '视图';
+
+  @override
+  String get viewModePinned => '固定';
+
+  @override
+  String get viewModeFloating => '浮动';
+
+  @override
+  String get viewModeBubbles => '气泡';
+
+  @override
+  String get viewModePinnedHint => '固定在顶部——保持在上方，笔记在下方滚动';
+
+  @override
+  String get viewModeFloatingHint => '在页面上浮动——文字环绕排列';
+
+  @override
+  String get viewModeBubblesHint => '气泡视图——在页面上添加气泡、高亮和画笔';
+
+  @override
+  String get viewModeSwitchedFloating => '已回到页面';
+
+  @override
+  String get videoNoteAtTime => '在此刻记笔记';
+
+  @override
+  String get videoNoteAtTimeShort => '笔记';
+
+  @override
+  String get videoTimeUnknown => '无法读取视频时间——请先播放视频。';
 }

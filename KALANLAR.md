@@ -2,6 +2,31 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-16 — kasma, görünüm anahtarı, video zaman damgaları (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Görsel sürükleme**: görselli/PDF'li uzun notta görseli basılı tutup
+  sürüklerken akıcı mı; parmak DURUNCA (~0,16 sn) metin yeni yere akıyor mu,
+  bırakınca kesin yerine oturuyor mu. PDF kutusunu köşeden boyutlandırırken
+  sayfa bulanıklaşıp yeniden netleşiyor mu (128 px adım).
+- [ ] **Yazma**: görselli uzun notta (görselin yanında ve altında) ve
+  görselsiz 10.000+ karakterlik notta yazarken takılma kaldı mı; biçim
+  çubuğu açıkken de.
+- [ ] **Görünüm anahtarı**: sayfadaki görsele/PDF'e dokun → panelin üst
+  satırında Sabit / Yüzen / Balonlu. PDF → Sabit (bölmede sayfa çevrilebiliyor
+  mu), → Balonlu, → Yüzen (eski yerine dönüyor mu). Görsel → Balonlu: tek
+  sayfalık belge oluşuyor mu, görselin çizimleri belgede doğru yerde mi;
+  Yüzen'e dönünce belge gizleniyor, görsel yerinde mi; yeniden Balonlu →
+  AYNI belge balonlarıyla mı. Balonlu görünümde anahtar başlığın sağında;
+  dar telefonda başlık okunuyor mu. Sabit bölme çubuğu 320 dp'de taşmıyor mu.
+- [ ] **Zaman damgaları**: videolu notta "1:23" mavi mi; dokununca yerel
+  video / sabitli YouTube oraya sarılıyor mu (YouTube oynamıyorsa o andan
+  başlıyor mu). Video köşesindeki ⏱ Not al: liste notunda yeni madde, metin
+  notunda imlecin satırı/altı; klavye açılıyor mu. **YouTube konumu** ileti
+  protokolüyle okunuyor (`notlarTime`) — cihazda gerçekten saniye geliyor mu,
+  gelmiyorsa "okunamadı" uyarısı çıkıyor mu (yanlış 0:00 YAZILMAMALI).
+  Tam ekran oynatıcıdaki "Bu ana not al" (yerel + YouTube).
+- [ ] 11 yeni çeviri anahtarı 16 dilde elle yazıldı (viewMode*, videoNoteAt*,
+  videoTimeUnknown) — anadil kontrolü.
+
 ## 2026-10-15 (2. tur) — kasma, balonlu mod, gömme çipi, kart kapağı (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Kasma**: çok videolu/PDF'li ana ekranda kaydırma akıcı mı; ilk
   açılışta kapaklar sırayla geliyor, ikinci açılışta anında mı (disk

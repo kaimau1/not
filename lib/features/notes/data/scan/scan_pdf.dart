@@ -5,6 +5,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../domain/attachment.dart' show PageBubbleRect;
 import '../note_pdf.dart' show NotePdf;
 import 'scan_ocr.dart';
 
@@ -25,6 +26,32 @@ import 'scan_ocr.dart';
 /// Üretim compute() izolesinde koşar (sayfa başına MB'larca görsel kodlama);
 /// font baytları ANA izolede yüklenir (rootBundle izolede yok — bkz. NotePdf).
 abstract final class ScanPdf {
+  /// [imgWidth]×[imgHeight] görselin [build] sayfasında KAPLADIĞI alan,
+  /// sayfanın oranı (0–1) olarak — yerleşim [_buildInIsolate]'teki ile
+  /// birebir (A4, yatay görselde yatay kâğıt, ortalanmış "contain").
+  /// Görselin üstündeki çizim/balonlar belgeye bununla taşınır
+  /// (bkz. `placeInk`).
+  static PageBubbleRect imageFrameOnPage(num imgWidth, num imgHeight) {
+    if (imgWidth <= 0 || imgHeight <= 0) {
+      return const PageBubbleRect(0, 0, 1, 1);
+    }
+    final landscape = imgWidth > imgHeight;
+    final pageWidth = landscape
+        ? PdfPageFormat.a4.height
+        : PdfPageFormat.a4.width;
+    final pageHeight = landscape
+        ? PdfPageFormat.a4.width
+        : PdfPageFormat.a4.height;
+    final sx = pageWidth / imgWidth;
+    final sy = pageHeight / imgHeight;
+    final scale = sx < sy ? sx : sy;
+    final w = imgWidth * scale / pageWidth;
+    final h = imgHeight * scale / pageHeight;
+    final left = (1 - w) / 2;
+    final top = (1 - h) / 2;
+    return PageBubbleRect(left, top, left + w, top + h);
+  }
+
   static Future<Uint8List> build(
     List<String> imagePaths, {
     List<List<OcrLine>> ocrLinesPerPage = const [],
