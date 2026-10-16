@@ -56,7 +56,8 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 - **Boyutlandır:** görsele dokun (seçilir), sağ alt köşedeki tutamacı sürükle ya da alttaki kaydırıcıyı kullan.
 - **Önizleme:** seçili görsele çift dokun ya da köşe tutamacına dokun.
 - **Tam ekran:** kırp, döndür, üzerine kalemle yaz, görseldeki metni tanı (OCR).
-- **⋮ menüsü:** metni çıkar, kopyala, birden çok görsel seç (boyutları eşitle, 2/3 sütuna sığdır), ek olarak alta taşı, üste sabitle.
+- **Görünüm (Sabit / Yüzen / Balonlu):** seçili görselin panelinin üst satırında. **Sabit** üste alır (not altında kayar), **Yüzen** sayfada bırakır, **Balonlu** görseli tek sayfalık bir belgeye çevirip üzerine balon, vurgu ve kalem açar (görselin çizimleri de taşınır). Yüzen'e dönünce görsel yerine döner; yeniden Balonlu'ya geçince aynı belge balonlarıyla gelir.
+- **⋮ menüsü:** metni çıkar, kopyala, birden çok görsel seç (boyutları eşitle, 2/3 sütuna sığdır), ek olarak alta taşı.
 - Bir görseli notun **zemin görseli** yapabilirsin (Biçim → sayfa görünümü).
 
 ## Video ve YouTube {#video}
@@ -69,14 +70,17 @@ Görseller notun sayfasında **serbestçe yüzer**; yazı onların etrafından a
 - **Resim içinde resim:** tam ekran oynatıcıda ⧉ düğmesine bas ya da video oynarken ana ekrana çık — video küçük pencerede devam eder.
 - **Videodan not çıkar:** videonun ⋮ menüsünden; yapay zekâ görüntü ve sesi izleyip detaylı not yazar (cihazdaki videolar için).
 - YouTube uygulamasından **Paylaş → Notlar** dersen video oynatılabilir ek olarak nota girer.
+- **Zaman damgaları (YouTube'daki gibi):** notta video varken metindeki **1:23**, **12:05**, **1:02:33** gibi damgalar mavi çizilir; dokununca video o ana gider (oynamıyorsa o andan başlar).
+- **Bu ana not al:** video oynarken köşedeki **⏱ Not al** düğmesi (üste sabitli videoda çubuktaki düğme, tam ekranda üst çubuk) o anın damgasını yazar ve yazmaya hazır bırakır: liste notunda yeni madde açar, metinde imlecin satırına (doluysa altına) damga koyar.
 
 ## Üstte medya, altta not {#pin}
 Bir videoyu izlerken ya da bir görsele bakarken altına not almak için:
 1. Görseli/videoyu basılı tut ve **yukarı doğru** sürükle (başlığın üstüne zorlaman yeter). Ekranın tepesinde **"Bırak: üste sabitle"** yazısı çıkar.
 2. Bırak: medya notun üstünde sabit durur, not altında kendi başına kayar. YouTube burada da yerinde oynar.
-- Aradaki **çubuğu** sürükleyerek bölmeyi büyüt/küçült. Çubuğun solunda **tam ekran**, sağında **sayfaya geri koy** düğmesi var.
+- Aradaki **çubuğu** sürükleyerek bölmeyi büyüt/küçült. Çubuğun solunda **tam ekran**, sağında **görünüm anahtarı** (Sabit / Yüzen / Balonlu) var; videoda ayrıca **⏱ Not al**.
+- **PDF de sabitlenir:** belge üstte durur, sayfası kutunun içinde çevrilir, not altında yazılır.
 - Çubuğu en üste çekmek ya da medyayı basılı tutup aşağı sürüklemek de sayfaya geri koyar. Medya eski yerine eski boyutuyla döner; yeniden sabitleyince bölme eski yüksekliğiyle açılır.
-- Aynı iş görselin ⋮ menüsündeki **Üste sabitle** ile de yapılır.
+- Aynı iş seçili ekin panelindeki **Sabit** düğmesiyle de yapılır.
 
 ## Yazıya gömme {#embed}
 Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herhangi bir eki bağlayabilirsin.
@@ -99,7 +103,7 @@ Bir kelimeye ya da cümleye **PDF, görsel, video, YouTube** ya da nottaki herha
 - **Yer imleri** ve sayfa atlama; çift dokunuşla yakınlaştırma.
 - **PDF ile sohbet:** "cezai şart var mı?", "son teslim tarihi ne?" diye sor.
 - Klasik notta PDF **sayfaya gömülü** küçük bir kutu olarak durur; kutunun içinde sayfa çevrilir.
-- **Balonlu ↔ klasik geçiş:** başlığın altındaki **Balonlu / Klasik** çipine dokun ya da ⋮ → *Balonlu/Klasik görünüme geç*. Klasik notta sayfadaki PDF'i basılı tutup **ekranın tepesine sürüklemek** de balonlu görünüme geçirir ("üstte belge, altta not"). Geçiş hiçbir şey silmez: balonlar, vurgular, çizimler ve sayfa notları da, PDF'in sayfadaki yeri ve boyutu da saklanır — geri dönünce olduğu gibi gelir.
+- **Görünüm geçişi (Sabit / Yüzen / Balonlu):** her ekin yanında aynı anahtar — sayfadaki PDF'e dokununca panelin üst satırında, üste sabitliyken çubukta, balonlu görünümde başlığın sağında. ⋮ → *Balonlu/Klasik görünüme geç* de çalışır. Geçiş hiçbir şey silmez: balonlar, vurgular, çizimler ve sayfa notları da, PDF'in sayfadaki yeri ve boyutu da saklanır — geri dönünce olduğu gibi gelir.
 - Yeni not açarken kip sorulduğunda **son seçimin** işaretli gelir.
 - Başka bir uygulamada PDF için **Birlikte aç → Notlar** de: yeni not mu, var olan nota mı ekleneceğini sorar.
 

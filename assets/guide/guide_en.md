@@ -56,7 +56,8 @@ Images **float freely** on the note's page; text flows around them.
 - **Resize:** tap the image (it gets selected), drag the bottom-right handle or use the slider below.
 - **Preview:** double-tap a selected image or tap its corner handle.
 - **Full screen:** crop, rotate, write on it with the pen, recognise its text (OCR).
-- **⋮ menu:** extract text, copy, select images (equalise sizes, fit 2/3 per row), move to attachments, pin to top.
+- **View (Pinned / Floating / Bubbles):** on the top row of the selected image's panel. **Pinned** puts it on top (the note scrolls below), **Floating** keeps it on the page, **Bubbles** turns the image into a one-page document with bubbles, highlights and pen (the image's drawings come along). Back to Floating, the image returns to its place; switching to Bubbles again brings back the same document with its bubbles.
+- **⋮ menu:** extract text, copy, select images (equalise sizes, fit 2/3 per row), move to attachments.
 - An image can become the note's **background image** (Format → page appearance).
 
 ## Video and YouTube {#video}
@@ -69,14 +70,17 @@ Images **float freely** on the note's page; text flows around them.
 - **Picture-in-picture:** tap ⧉ in the full-screen player, or go to the home screen while the video plays — it continues in a small window.
 - **Make a note from the video:** from the video's ⋮ menu; AI watches and listens and writes a detailed note (for videos on the device).
 - Share from the YouTube app → **Notes** and the video arrives as a playable attachment.
+- **Timestamps (like YouTube):** when the note has a video, times such as **1:23**, **12:05** or **1:02:33** in the text are drawn in blue; tap one and the video jumps there (or starts there if it isn't playing).
+- **Note at this moment:** while the video plays, the **⏱ Note** button at its corner (on the bar of a pinned video, in the top bar full screen) writes the current timestamp and leaves you ready to type: a new item in a list note, or the timestamp on the caret's line (below it if the line has text) in a text note.
 
 ## Media on top, note below {#pin}
 To take notes while watching a video or looking at an image:
 1. Press and hold the image/video and drag it **upwards** (pushing it past the title is enough). **"Release: pin to top"** appears at the top of the screen.
 2. Release: the media stays fixed above the note, and the note scrolls on its own below. YouTube plays in place here too.
-- Drag the **bar** between them to resize the pane. The bar has **Full screen** on the left and **Put back on page** on the right.
+- Drag the **bar** between them to resize the pane. The bar has **Full screen** on the left and the **view switch** (Pinned / Floating / Bubbles) on the right; for videos also **⏱ Note**.
+- **PDFs can be pinned too:** the document stays on top, pages turn inside the box, and you write below.
 - Pulling the bar all the way up, or holding the media and dragging it down, also puts it back. It returns to its old place and size; pin it again and the pane opens at its previous height.
-- The same is available as **Pin to top** in the image's ⋮ menu.
+- The same is available with the **Pinned** button on the selected attachment's panel.
 
 ## Embedding in text {#embed}
 You can link a **PDF, image, video, YouTube video** or any attachment of the note to a word or sentence.
@@ -99,7 +103,7 @@ In **Bubbles** mode the document is the note itself: the page on top, that page'
 - **Bookmarks** and page jumps; double-tap to zoom.
 - **Chat with the PDF:** ask "is there a penalty clause?" or "what's the deadline?".
 - In a classic note the PDF sits on the page as a small box; pages turn inside the box.
-- **Bubbles ↔ classic:** tap the **Bubbles / Classic** chip under the title, or ⋮ → *Switch to bubbles/classic view*. In a classic note, long-press the PDF on the page and **drag it to the top of the screen** to switch to bubbles ("document on top, notes below"). Switching deletes nothing: bubbles, highlights, drawings and page notes, as well as the PDF's position and size on the page, are kept and come back as they were.
+- **Switching views (Pinned / Floating / Bubbles):** every attachment has the same switch next to it — on the top row of the panel when you tap the PDF on the page, on the bar when it's pinned, and right of the title in bubbles view. ⋮ → *Switch to bubbles/classic view* works too. Switching deletes nothing: bubbles, highlights, drawings and page notes, as well as the PDF's position and size on the page, are kept and come back as they were.
 - When a new note asks for the mode, **your last choice** is marked.
 - In another app choose **Open with → Notes** for a PDF: you're asked whether to make a new note or add it to an existing one.
 

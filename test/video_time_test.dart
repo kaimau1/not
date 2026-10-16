@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/core/utils/video_time.dart';
+import 'package:notlar/core/utils/youtube.dart';
 
 /// "Videolarda dk:sn notu, YouTube'daki gibi" (kullanıcı isteği 2026-10-16).
 void main() {
@@ -70,6 +71,17 @@ void main() {
       expect(r.text, 'a\n3:10 \nb');
       expect(r.caret, 7);
     });
+  });
+
+  test('gömülü oynatıcı konum okuma/sarma köprüsünü taşır, dış betik yok', () {
+    final html = youTubeEmbedHtml('dQw4w9WgXcQ', start: 42);
+    expect(html, contains('window.notlarTime'));
+    expect(html, contains('window.notlarSeek'));
+    expect(html, contains("event:'listening'"));
+    // Konum hiç gelmediyse BİLİNMİYOR (-1) — yanlış 0:00 yazılmasın.
+    expect(html, contains('notlarHeard?notlarCur:-1'));
+    expect(html, contains('notlarCur=42'));
+    expect(html, isNot(contains('iframe_api')));
   });
 
   group('NoteVideoHub', () {

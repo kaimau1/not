@@ -6,6 +6,7 @@ import 'package:notlar/features/notes/domain/attachment.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
 import 'package:notlar/features/notes/presentation/editor/note_images.dart';
+import 'package:notlar/features/notes/presentation/editor/pinned_media_pane.dart';
 import 'package:notlar/features/notes/presentation/editor/view_mode_switch.dart';
 import 'package:notlar/features/notes/presentation/editor/text_wrap.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
@@ -140,7 +141,10 @@ void main() {
     );
     await tester.tap(find.byKey(const ValueKey('page-image-g')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('attachment-view-switch')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('attachment-view-switch')),
+      findsOneWidget,
+    );
     await tester.tap(find.byKey(const ValueKey('view-pinned')));
     await tester.pump();
     expect(changes.single, ('g', AttachmentView.pinned));
@@ -187,6 +191,48 @@ void main() {
     expect(reports.last.single.top, greaterThan(300));
     await gesture.up();
     await tester.pump();
+  });
+
+  testWidgets('sabit bölmenin çubuğu DAR ekranda taşmaz (video: not al + '
+      'bağlantı + anahtar)', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const video = Attachment(
+      id: 'v',
+      kind: AttachmentKind.video,
+      fileName: 'Video',
+      mimeType: 'video/youtube',
+      webUrl: 'https://youtu.be/dQw4w9WgXcQ',
+      pinHeight: 180,
+    );
+    var noted = 0;
+    await tester.pumpWidget(
+      _app(
+        PinnedMediaPane(
+          media: video,
+          onHeightChanged: (_) {},
+          onUnpin: () {},
+          onOpen: () {},
+          onCopyLink: () {},
+          onNoteAt: () => noted++,
+          viewSwitch: AttachmentViewSwitch(
+            current: AttachmentView.pinned,
+            available: availableViews(video),
+            dense: true,
+            onChanged: (_) {},
+          ),
+          child: const Text('not gövdesi'),
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const ValueKey('attachment-view-switch')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('pinned-note-at')));
+    expect(noted, 1);
   });
 
   group('görsel → balonlu belge', () {

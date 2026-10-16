@@ -146,58 +146,59 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                       ),
                     )
                   : GestureDetector(
-                onTap: isVideo ? null : widget.onOpen,
-                onLongPressStart: (_) {
-                  HapticFeedback.selectionClick();
-                  setState(() {
-                    _pulling = true;
-                    _pullDown = 0;
-                  });
-                },
-                onLongPressMoveUpdate: (d) =>
-                    setState(() => _pullDown = d.offsetFromOrigin.dy),
-                onLongPressEnd: (_) {
-                  final unpin = _unpinArmed;
-                  setState(() {
-                    _pulling = false;
-                    _pullDown = 0;
-                  });
-                  if (unpin) widget.onUnpin();
-                },
-                onLongPressCancel: () => setState(() {
-                  _pulling = false;
-                  _pullDown = 0;
-                }),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ColoredBox(
-                      color: isVideo
-                          ? Colors.black
-                          : scheme.surfaceContainerHigh,
-                      child: Transform.translate(
-                        offset: Offset(
-                          0,
-                          _pulling ? _pullDown.clamp(0, 140) : 0,
-                        ),
-                        child: Opacity(
-                          opacity: _pulling ? 0.6 : 1,
-                          child: NoteMediaBox(
-                            // Ek değişince (başka medya sabitlenince)
-                            // oynatıcı da yenilensin.
-                            key: ValueKey(widget.media.id),
-                            attachment: widget.media,
-                            fit: BoxFit.contain,
-                            inlineWebVideo: true,
-                            showWebTitle: true,
+                      onTap: isVideo ? null : widget.onOpen,
+                      onLongPressStart: (_) {
+                        HapticFeedback.selectionClick();
+                        setState(() {
+                          _pulling = true;
+                          _pullDown = 0;
+                        });
+                      },
+                      onLongPressMoveUpdate: (d) =>
+                          setState(() => _pullDown = d.offsetFromOrigin.dy),
+                      onLongPressEnd: (_) {
+                        final unpin = _unpinArmed;
+                        setState(() {
+                          _pulling = false;
+                          _pullDown = 0;
+                        });
+                        if (unpin) widget.onUnpin();
+                      },
+                      onLongPressCancel: () => setState(() {
+                        _pulling = false;
+                        _pullDown = 0;
+                      }),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ColoredBox(
+                            color: isVideo
+                                ? Colors.black
+                                : scheme.surfaceContainerHigh,
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                _pulling ? _pullDown.clamp(0, 140) : 0,
+                              ),
+                              child: Opacity(
+                                opacity: _pulling ? 0.6 : 1,
+                                child: NoteMediaBox(
+                                  // Ek değişince (başka medya sabitlenince)
+                                  // oynatıcı da yenilensin.
+                                  key: ValueKey(widget.media.id),
+                                  attachment: widget.media,
+                                  fit: BoxFit.contain,
+                                  inlineWebVideo: true,
+                                  showWebTitle: true,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
+                          if (_unpinArmed)
+                            _UnpinHint(label: l10n.unpinMediaRelease),
+                        ],
                       ),
                     ),
-                    if (_unpinArmed) _UnpinHint(label: l10n.unpinMediaRelease),
-                  ],
-                ),
-              ),
             ),
             // AYRAÇ ÇUBUĞU: dikey sürükleme bölmeyi boyutlar; düğmeler de
             // BURADA (kullanıcı bulgusu 2026-10-11: medyanın üstüne konan
@@ -261,9 +262,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane> {
                           key: const ValueKey('pinned-note-at'),
                           style: TextButton.styleFrom(
                             visualDensity: VisualDensity.compact,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
                           onPressed: widget.onNoteAt,
                           icon: const Icon(Icons.more_time, size: 18),

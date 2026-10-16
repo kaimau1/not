@@ -255,9 +255,9 @@ class _YouTubeViewerScreenState extends State<YouTubeViewerScreen> {
     ).position();
     if (!mounted) return;
     if (position == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.videoTimeUnknown)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.videoTimeUnknown)));
       return;
     }
     Navigator.of(context).pop();

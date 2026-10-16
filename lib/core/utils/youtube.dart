@@ -136,39 +136,37 @@ iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;transform-
   fit();
 })();
 // ZAMAN DAMGALARI (bkz. video_time.dart): uygulama konumu okur ve sarar.
-// Resmî IFrame API'si mevcut iframe'e bağlanır; yüklenemezse sarma ham
-// postMessage komutlarıyla yine çalışır, konum oynatıcının kendi
-// "infoDelivery" iletilerinden izlenir.
-var notlarPlayer=null, notlarCur=$start;
-function onYouTubeIframeAPIReady(){
-  try{ notlarPlayer=new YT.Player('player',{}); }catch(_){}
+// Oynatıcının kendi ileti protokolü (IFrame API'nin içte kullandığı) —
+// dış betik yüklenmez. "listening" el sıkışmasından sonra oynatıcı konumu
+// "infoDelivery" iletileriyle bildirir; hiç ileti gelmediyse konum
+// BİLİNMİYOR sayılır (-1) — yanlış bir 0:00 yazılmasın.
+var notlarCur=$start, notlarHeard=false, notlarFrame=document.getElementById('player');
+function notlarPost(o){
+  try{ notlarFrame.contentWindow.postMessage(JSON.stringify(o),'*'); }catch(_){}
 }
+function notlarListen(){ notlarPost({event:'listening',id:'notlar',channel:'widget'}); }
+notlarFrame.addEventListener('load',function(){
+  notlarListen();
+  var n=0, t=setInterval(function(){
+    if(notlarHeard||++n>40){ clearInterval(t); return; }
+    notlarListen();
+  },500);
+});
 window.addEventListener('message',function(e){
   try{
     var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-    if(d&&d.info&&typeof d.info.currentTime==='number'){notlarCur=d.info.currentTime;}
+    if(!d||!d.info) return;
+    notlarHeard=true;
+    if(typeof d.info.currentTime==='number') notlarCur=d.info.currentTime;
   }catch(_){}
 });
-window.notlarTime=function(){
-  try{
-    if(notlarPlayer&&notlarPlayer.getCurrentTime){
-      var t=notlarPlayer.getCurrentTime();
-      if(typeof t==='number'&&t>0) return t;
-    }
-  }catch(_){}
-  return notlarCur;
-};
+window.notlarTime=function(){ return notlarHeard?notlarCur:-1; };
 window.notlarSeek=function(s){
   notlarCur=s;
-  try{
-    if(notlarPlayer&&notlarPlayer.seekTo){notlarPlayer.seekTo(s,true);notlarPlayer.playVideo();return;}
-  }catch(_){}
-  var w=document.getElementById('player').contentWindow;
-  w.postMessage(JSON.stringify({event:'command',func:'seekTo',args:[s,true]}),'*');
-  w.postMessage(JSON.stringify({event:'command',func:'playVideo',args:[]}),'*');
+  notlarPost({event:'command',func:'seekTo',args:[s,true]});
+  notlarPost({event:'command',func:'playVideo',args:[]});
 };
 </script>
-<script src="https://www.youtube.com/iframe_api" async></script>
 </body></html>''';
 }
 

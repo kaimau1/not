@@ -7021,8 +7021,18 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Başlık satırı: alan + sağ kenarda "+" (ekleme/öneri menüsü). Balonlu
     // görünümde belgenin görünüm anahtarı da burada — not başlığının
     // hemen yanında, sayfa çubuğunu kalabalıklaştırmadan.
+    // Bölmedeki belge: türü notun türüyle aynı OLAN ilk ek (sunum notunda
+    // sunum, PDF notunda PDF — bkz. [_viewOf]).
     final bubbleDocument = note.type.isPageNoteType
-        ? _switchableDocument(note)
+        ? note.attachments
+              .where(
+                (a) =>
+                    a.kind ==
+                    (note.type == NoteType.slides
+                        ? AttachmentKind.slide
+                        : AttachmentKind.pdf),
+              )
+              .firstOrNull
         : null;
     final bubbleSwitch = bubbleDocument == null
         ? null

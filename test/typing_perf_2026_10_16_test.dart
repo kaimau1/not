@@ -95,12 +95,14 @@ void main() {
         ),
       ),
     );
-    final c = WrapTextController(
-      text: 'ilk **kalın** satır\nikinci www.ornek.com\nüçüncü',
-    )..richTheme = const RichTextTheme(
-        palette: [Colors.red],
-        markerColor: Colors.grey,
-      );
+    final c =
+        WrapTextController(
+            text: 'ilk **kalın** satır\nikinci www.ornek.com\nüçüncü',
+          )
+          ..richTheme = const RichTextTheme(
+            palette: [Colors.red],
+            markerColor: Colors.grey,
+          );
     addTearDown(c.dispose);
     final link = Theme.of(ctx).colorScheme.primary;
     TextSpan build() => c.buildTextSpan(context: ctx, withComposing: false);
