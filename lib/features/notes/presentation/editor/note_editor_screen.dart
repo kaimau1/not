@@ -20,6 +20,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/router.dart';
@@ -38,6 +39,7 @@ import '../../../../core/utils/note_fonts.dart';
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/note_guard.dart';
 import '../../../../core/utils/sentence_select.dart';
+import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -60,6 +62,7 @@ import '../../data/note_shares_repository.dart';
 import '../../data/notes_repository.dart';
 import '../../data/pdf_edit.dart';
 import '../../data/scan/scan_ocr.dart';
+import '../../data/scan/scan_pdf.dart';
 import '../../data/scan/scan_title.dart';
 import '../../data/user_templates.dart';
 import '../../data/video_frame.dart';
@@ -120,6 +123,8 @@ import '../viewers/text_recognize_screen.dart';
 import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
+import 'video_hub_scope.dart';
+import 'view_mode_switch.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -974,6 +979,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _loadGuard = Timer(const Duration(seconds: 6), () {
       if (mounted && _note == null) setState(() => _loadFailed = true);
     });
+    _videoHub.onNoteAt = _noteAtVideoTime;
     _pendingDraw = widget.startDrawing;
     _pendingVoice = widget.startVoiceCapture;
     _pendingDictation = widget.startDictation;
@@ -1237,6 +1243,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _findController.dispose();
     _findFocus.dispose();
     _attachPulse.dispose();
+    _videoHub.dispose();
     super.dispose();
   }
 
@@ -3133,7 +3140,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onVideoToNote: _videoToNote,
       onPinTop: _pinMediaTop,
       onPinHover: _setPinHover,
-      onPinHoverItem: _setPinHoverItem,
+      onViewChange: widget.readOnly
+          ? null
+          : (a, view) => unawaited(_setAttachmentView(a, view)),
       topLimit: _bodyTop,
       // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
       // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
@@ -4519,10 +4528,6 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Görsel sabitleme bölgesinin üstündeyken true: "Bırak" şeridi görünür.
   bool _pinHover = false;
 
-  /// Sabitleme bölgesine sürüklenen bir PDF mi (şeridin yazısı "balonlu
-  /// görünüm" olur).
-  bool _pinHoverDocument = false;
-
   // ── BALONLU ⇄ KLASİK GÖRÜNÜM ─────────────────────────────────────────
   //
   // Kullanıcı isteği 2026-10-15: "balonlu mod ve normal ek arasında hızlı,
@@ -4566,6 +4571,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final hadText =
         note.body.trim().isNotEmpty ||
         note.items.any((i) => i.text.trim().isNotEmpty);
+    // Sabit bölmeden balonluya geçen belge (ya da kaynağı olan görsel)
+    // sabitlikten çıkar: balonlu görünümde bölme yok, klasiğe dönünce
+    // kendiliğinden yeniden sabitlenmiş görünmesin. Bölme yüksekliği
+    // hatırlanır (işaret negatif — bkz. Attachment.pinHeight).
+    Attachment released(Attachment a) =>
+        (a.id == doc.id || a.id == doc.sourceId) && a.pinHeight > 0
+        ? a.copyWith(pinHeight: -a.pinHeight)
+        : a;
     _mutate(
       (n) => n.copyWith(
         type: doc.kind == AttachmentKind.slide ? NoteType.slides : NoteType.pdf,
@@ -4574,9 +4587,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // (sıra dışında hiçbir alan değişmez — klasik düzen ekte kalır).
         attachments: [
           for (final a in n.attachments)
-            if (a.id == doc.id) a,
+            if (a.id == doc.id) released(a),
           for (final a in n.attachments)
-            if (a.id != doc.id) a,
+            if (a.id != doc.id) released(a),
         ],
       ),
       immediate: true,
@@ -4592,7 +4605,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
 
   /// BALONLU → KLASİK: not yeniden metin notu olur, belge sayfada (ya da
   /// önceden durduğu şeritte) bir ek olarak görünür.
-  void _switchToClassic() {
+  void _switchToClassic({bool announce = true}) {
     final note = _note;
     if (note == null || !note.type.isPageNoteType || widget.readOnly) return;
     final kind = note.type == NoteType.slides
@@ -4608,9 +4621,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             // Balonlu doğmuş (sayfada hiç yeri olmamış) PDF sayfaya yerleşir;
             // klasikte bir yeri olan belge KENDİ yerine döner — sayfada ya da
             // şeritte (kullanıcı oraya koyduysa) olduğu gibi.
+            // Görselden üretilmiş belge (bkz. Attachment.sourceId) sayfaya
+            // KONMAZ: klasikte görselin kendisi görünür, belge gizlenir.
             if (doc != null &&
                 a.id == doc.id &&
                 a.kind == AttachmentKind.pdf &&
+                a.sourceId.isEmpty &&
                 a.x == null &&
                 a.pageY == null)
               _placePdf(a, asText)
@@ -4620,7 +4636,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       );
     }, immediate: true);
     HapticFeedback.mediumImpact();
-    _showSnack(context.l10n.docViewSwitchedClassic);
+    if (announce) _showSnack(context.l10n.docViewSwitchedClassic);
   }
 
   /// Görseli/videoyu notun üstündeki sabit bölmeye alır. Bölmede TEK medya
@@ -4628,13 +4644,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// sabitlenmişse bölme ESKİ yüksekliğiyle açılır.
   void _pinMediaTop(Attachment media) {
     if (_pinHover) setState(() => _pinHover = false);
-    // PDF'i tepeye sürüklemek BALONLU GÖRÜNÜME geçirir: "üstte belge, altta
-    // not" — görselin sabit bölmesinin belgedeki karşılığı (bkz.
-    // [_switchToBubbles]).
-    if (media.kind == AttachmentKind.pdf) {
-      _switchToBubbles(media);
-      return;
-    }
+    // PDF de GERÇEKTEN sabitlenir (kullanıcı bulgusu 2026-10-16: "PDF'lerde
+    // üste sabitleme yapamıyorum"). Eskiden PDF'i tepeye sürüklemek balonlu
+    // görünüme geçiriyordu; balonlu artık görünüm anahtarının ayrı kipi.
     final height =
         media.rememberedPinHeight ??
         defaultPinnedHeight(media, MediaQuery.sizeOf(context));
@@ -4679,12 +4691,288 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_pinHover != value && mounted) setState(() => _pinHover = value);
   }
 
-  void _setPinHoverItem(Attachment? item) {
-    final document = item?.kind == AttachmentKind.pdf;
-    if (_pinHoverDocument != document && mounted) {
-      setState(() => _pinHoverDocument = document);
+  // ── GÖRÜNÜM: SABİT / YÜZEN / BALONLU ──────────────────────────────────
+  //
+  // Kullanıcı isteği 2026-10-16: "sabitleme, yüzen ve balonlu arasında
+  // kolay geçiş TÜM ekler için olmalı; geçişin yeri ve düzeni iyi değil".
+  // Üç kip tek anahtarda (bkz. view_mode_switch.dart) ve anahtar ekin
+  // YANINDA: sayfada seçilince araç panelinde, sabit bölmenin çubuğunda,
+  // balonlu görünümde sayfa çubuğunda.
+
+  /// [a] şu an hangi görünümde.
+  AttachmentView _viewOf(Note note, Attachment a) {
+    if (note.type.isPageNoteType) {
+      final kind = note.type == NoteType.slides
+          ? AttachmentKind.slide
+          : AttachmentKind.pdf;
+      final doc = note.attachments.where((x) => x.kind == kind).firstOrNull;
+      if (doc != null && (doc.id == a.id || doc.sourceId == a.id)) {
+        return AttachmentView.bubbles;
+      }
+    }
+    if (a.isPinnedTop) return AttachmentView.pinned;
+    return AttachmentView.floating;
+  }
+
+  /// [a]'nın görünüm anahtarı; salt okunurda ya da tek seçenekte null.
+  Widget? _viewSwitchFor(Note note, Attachment a, {bool dense = false}) {
+    if (widget.readOnly) return null;
+    final available = availableViews(a);
+    if (available.length < 2) return null;
+    return AttachmentViewSwitch(
+      current: _viewOf(note, a),
+      available: available,
+      dense: dense,
+      onChanged: (view) => unawaited(_setAttachmentView(a, view)),
+    );
+  }
+
+  /// Anahtardan gelen geçiş.
+  Future<void> _setAttachmentView(Attachment a, AttachmentView view) async {
+    final note = _note;
+    if (note == null || widget.readOnly) return;
+    if (_viewOf(note, a) == view) return;
+    switch (view) {
+      case AttachmentView.bubbles:
+        if (a.kind == AttachmentKind.image) {
+          await _imageToBubbles(a);
+        } else if (a.kind == AttachmentKind.pdf ||
+            a.kind == AttachmentKind.slide) {
+          _switchToBubbles(a);
+        }
+      case AttachmentView.floating:
+        if (note.type.isPageNoteType) {
+          // Balonlu → yüzen: not klasiğe döner. Görselden üretilmiş belgede
+          // görselin kendisi sayfasına döner (belge gizlenir).
+          _switchToClassic(announce: false);
+          final source = a.sourceId.isEmpty
+              ? null
+              : _note?.attachments.where((x) => x.id == a.sourceId).firstOrNull;
+          _floatOnPage(source ?? a);
+          _showSnack(context.l10n.viewModeSwitchedFloating);
+          return;
+        }
+        _floatOnPage(a);
+      case AttachmentView.pinned:
+        var target = a;
+        if (note.type.isPageNoteType) {
+          // Balonlu → sabit: önce klasik, sonra sabit bölme. Görselden
+          // üretilmiş belgede sabitlenen GÖRSELİN kendisi.
+          if (a.sourceId.isNotEmpty) {
+            target =
+                note.attachments.where((x) => x.id == a.sourceId).firstOrNull ??
+                a;
+          }
+          _switchToClassic(announce: false);
+        }
+        final latest =
+            _note?.attachments.where((x) => x.id == target.id).firstOrNull ??
+            target;
+        _pinMediaTop(latest);
     }
   }
+
+  /// Eki SAYFAYA (yüzen) alır: sabitse bölmeden iner, şeritteyse sayfaya
+  /// konur. Sayfada önceden bir yeri varsa oraya döner.
+  void _floatOnPage(Attachment a) {
+    final note = _note;
+    if (note == null) return;
+    final latest = note.attachments.where((x) => x.id == a.id).firstOrNull ?? a;
+    var next = latest.pinHeight > 0
+        ? latest.copyWith(pinHeight: -latest.pinHeight)
+        : latest;
+    final offPage = next.kind == AttachmentKind.pdf ? !next.onPage : next.asFile;
+    if (offPage && next.kind != AttachmentKind.slide) {
+      final moved = next.kind == AttachmentKind.pdf
+          ? next.copyWith(onPage: true)
+          : next.copyWith(asFile: false);
+      next = moved.x != null || moved.pageY != null
+          ? moved
+          : _placeNewImage(moved, note);
+    }
+    if (identical(next, latest)) return;
+    _updateAttachment(next);
+    HapticFeedback.selectionClick();
+  }
+
+  /// GÖRSEL → BALONLU: görsel tek sayfalık bir belgeye çevrilir (yakalama
+  /// levhasındaki "balonlu" kipin yolu — bkz. `ScanPdf`), üstündeki çizim
+  /// ve balonlar belgeye taşınır. Belge görsele bağlıdır
+  /// ([Attachment.sourceId]): klasiğe dönünce gizlenir, yeniden balonluya
+  /// alınınca AYNI belge (balonlarıyla) geri gelir.
+  Future<void> _imageToBubbles(Attachment image) async {
+    final note = _note;
+    if (note == null) return;
+    final existing = note.attachments
+        .where((a) => a.kind == AttachmentKind.pdf && a.sourceId == image.id)
+        .firstOrNull;
+    if (existing != null) {
+      _switchToBubbles(existing);
+      return;
+    }
+    final repo = ref.read(attachmentRepositoryProvider);
+    if (repo == null) return;
+    final l10n = context.l10n;
+    _showSnack(l10n.imageNotePreparing);
+    File? temp;
+    try {
+      var path = image.localPath;
+      if (!localFileExists(path)) {
+        final bytes = await repo.readBytes(image);
+        if (bytes == null) {
+          if (mounted) _showSnack(l10n.attachmentNotSynced);
+          return;
+        }
+        final dir = await getTemporaryDirectory();
+        temp = File(
+          '${dir.path}${Platform.pathSeparator}balon_'
+          '${DateTime.now().microsecondsSinceEpoch}.img',
+        );
+        await temp.writeAsBytes(bytes);
+        path = temp.path;
+      }
+      final pdfBytes = await ScanPdf.build([path]);
+      if (!mounted) return;
+      final dot = image.fileName.lastIndexOf('.');
+      final base = dot > 0 ? image.fileName.substring(0, dot) : image.fileName;
+      final pdf = await repo.preparePdf(
+        noteId: widget.noteId,
+        bytes: pdfBytes,
+        fileName: '${base.isEmpty ? 'gorsel' : base}.pdf',
+      );
+      if (!mounted) return;
+      final w = image.width ?? 0;
+      final h = image.height ?? 0;
+      final frame = ScanPdf.imageFrameOnPage(w, h);
+      final hasFrame = w > 0 && h > 0;
+      final derived = pdf.copyWith(
+        sourceId: image.id,
+        ink: hasFrame ? placeInk(image.ink, frame) : const [],
+        bubbles: hasFrame ? placeBubbles(image.bubbles, frame) : const [],
+      );
+      _mutate(
+        (n) => n.copyWith(attachments: [...n.attachments, derived]),
+        immediate: true,
+      );
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      _switchToBubbles(derived);
+    } on FileTooLargeException catch (e) {
+      if (mounted) _showSnack(_tooLargeMessage(e));
+    } catch (e) {
+      if (mounted) _showSnack(l10n.genericError('$e'));
+    } finally {
+      temp?.delete().ignore();
+    }
+  }
+
+  // ── VİDEO ZAMAN DAMGALARI ─────────────────────────────────────────────
+  //
+  // Kullanıcı isteği 2026-10-16: "videolarda altta dk sn notu YouTube'daki
+  // gibi, tıklayınca video o dk sn'ye gider; tersi de: video akarken
+  // kenarda 'bu dakikaya not al' düğmesi madde ekler ya da metne dk sn
+  // yazar ve not alanına odaklar".
+
+  /// Nottaki oynatıcıların buluşma noktası (bkz. video_time.dart).
+  final _videoHub = NoteVideoHub();
+
+  /// Notta video (dosya ya da YouTube) var mı — damgalar ancak o zaman
+  /// bağlantı gibi çizilir.
+  static bool _hasVideo(Note note) =>
+      note.attachments.any((a) => a.kind == AttachmentKind.video);
+
+  /// Sabit bölmedeki videonun "Bu ana not al" düğmesi.
+  Future<void> _noteAtPinned(Attachment video) async {
+    final source = _videoHub.sourceFor(video.id);
+    if (source == null || !await _videoHub.noteAt(source)) {
+      if (mounted) _showSnack(context.l10n.videoTimeUnknown);
+    }
+  }
+
+  /// Damgaya dokunuldu: video oraya sarılır. Oynatıcısı açık olan video
+  /// (son oynatılan, yoksa sabitli olan) önce gelir; hiçbiri açık değilse
+  /// sabit/sayfadaki YouTube kutusu o saniyeden başlar, o da yoksa video
+  /// tam ekranda o andan açılır.
+  void _seekVideoTo(int seconds) {
+    final note = _note;
+    if (note == null) return;
+    final videos = [
+      for (final a in note.attachments)
+        if (a.kind == AttachmentKind.video) a,
+    ];
+    if (videos.isEmpty) return;
+    HapticFeedback.selectionClick();
+    final pinned = videos.where((a) => _inPinnedPane(note, a)).firstOrNull;
+    final source = _videoHub.target(preferId: pinned?.id);
+    if (source != null) {
+      _videoHub.touch(source);
+      unawaited(source.seekTo(Duration(seconds: seconds)));
+      return;
+    }
+    final inPage =
+        pinned ??
+        videos.where((a) => a.isWebVideo && a.floatsOnPage).firstOrNull;
+    if (inPage != null && inPage.isWebVideo) {
+      _videoHub.requestStart(inPage.id, seconds);
+      return;
+    }
+    final video = pinned ?? videos.first;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VideoViewerScreen(
+          attachment: video,
+          start: Duration(seconds: seconds),
+          onNoteAt: widget.readOnly
+              ? null
+              : (position) => _noteAtVideoTime(video.id, position),
+        ),
+      ),
+    );
+  }
+
+  /// "Bu ana not al": liste notunda (ya da odak bir maddedeyken) damgalı
+  /// YENİ MADDE açılır; metinde imlecin satırına (boşsa) ya da altına yeni
+  /// satıra damga yazılır. Her iki durumda odak oraya gider, klavye açılır.
+  void _noteAtVideoTime(String attachmentId, Duration position) {
+    final note = _note;
+    if (note == null || widget.readOnly) return;
+    final stamp = formatVideoTimestamp(position);
+    HapticFeedback.selectionClick();
+    final target = _formatTarget?.controller;
+    final itemsState = _itemsEditorKey.currentState;
+    final isList =
+        note.type == NoteType.checklist || note.type == NoteType.ordered;
+    final focusedItem =
+        target != null &&
+        target != _bodyController &&
+        target != _titleController;
+    if (itemsState != null && (focusedItem || (isList && !_listBodyOpen))) {
+      itemsState.addItemWithText('$stamp ', after: focusedItem ? target : null);
+      return;
+    }
+    final logical = _bodyController.logicalText;
+    final selection = _bodyController.selection;
+    final caret = selection.isValid
+        ? wrapToLogicalOffset(_bodyController.text, selection.extentOffset)
+        : -1;
+    final result = insertTimestampLine(logical, caret, stamp);
+    _bodyController.setLogical(result.text, result.caret);
+    _mutate((n) => n.copyWith(body: result.text), immediate: true);
+    if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+    _revealCaretSoon();
+  }
+
+  /// Gövdede dokunulan damga (saniye); yoksa null.
+  int? _tappedTimestamp(EditableTextState? editable) {
+    final note = _note;
+    if (note == null || !_hasVideo(note)) return null;
+    return tappedVideoTimestamp(
+      displayText: _bodyController.text,
+      selection: _bodyController.selection,
+      editable: editable,
+      tapGlobal: _bodyTapPoint.last,
+    );
+  }
+
 
   /// Gövdeyi (sayfa notu değilse) sabit medya bölmesi ve sürükleme sırasında
   /// tepede beliren "Bırak: üste sabitle" şeridiyle sarar.
@@ -4700,6 +4988,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             onUnpin: () => _unpinMedia(pinned),
             onOpen: () => _openAttachmentTag(pinned, editing: true),
             onCopyLink: () => _copyAttachment(pinned),
+            onChanged: _updateAttachment,
+            viewSwitch: _viewSwitchFor(note, pinned, dense: true),
+            onNoteAt: pinned.kind == AttachmentKind.video && !widget.readOnly
+                ? () => _noteAtPinned(pinned)
+                : null,
             child: body,
           );
     return Stack(
@@ -4728,18 +5021,14 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      _pinHoverDocument
-                          ? Icons.chat_bubble_outline
-                          : Icons.vertical_align_top,
+                      Icons.vertical_align_top,
                       size: 18,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        _pinHoverDocument
-                            ? context.l10n.docViewDropBubbles
-                            : context.l10n.pinMediaRelease,
+                        context.l10n.pinMediaRelease,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimary,
@@ -6336,7 +6625,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [
       for (final a in (note?.attachments ?? const <Attachment>[]))
-        if (!a.floatsOnPage && !_inPinnedPane(note!, a)) a,
+        if (!a.floatsOnPage &&
+            !_inPinnedPane(note!, a) &&
+            !note.hidesDerivedDocument(a))
+          a,
     ];
     final isDocumentNote =
         note != null &&
@@ -6417,6 +6709,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     _bodyController.tagChipColors = {
       for (final e in tagLooks.entries) e.key: e.value.color,
     };
+    // Notta video varken "1:23" gibi damgalar bağlantı gibi çizilir ve
+    // dokununca video oraya gider (bkz. video_time.dart).
+    _bodyController.videoTimestamps = _hasVideo(note);
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`
     // çiftinden, BAŞLIK ise kendi `titleFontFamily`/`titleFontScale`
     // değerlerinden beslenir — biçim çubuğu odaktaki alana yazar.
@@ -6635,47 +6930,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       fontSize: 12.5,
     );
 
-    // BALONLU ⇄ KLASİK görünüm (bkz. [_switchToBubbles]): notta bir belge
-    // varsa iki küçük seçim çipi — etkin görünüm dolu, öbürüne tek dokunuş.
-    final viewDocument = widget.readOnly ? null : _switchableDocument(note);
-    final bubbleView = note.type.isPageNoteType;
+    // BALONLU ⇄ KLASİK görünüm çipleri buradaydı (başlığın altında, etiket ve
+    // klasör çipleriyle aynı kayan şeritte). Kullanıcı bulgusu 2026-10-16:
+    // "kolay geçişin yeri ve düzeni iyi değil". Görünüm artık EKİN YANINDA
+    // tek bir üçlü anahtar (Sabit / Yüzen / Balonlu — bkz.
+    // view_mode_switch.dart); balonlu görünümde başlık satırının sağında.
     final metaChildren = <Widget>[
-      if (viewDocument != null) ...[
-        ChoiceChip(
-          key: const ValueKey('doc-view-bubbles'),
-          avatar: Icon(
-            Icons.chat_bubble_outline,
-            size: 14,
-            color: bubbleView ? theme.colorScheme.onSecondaryContainer : null,
-          ),
-          showCheckmark: false,
-          label: Text(l10n.docViewBubbles),
-          labelStyle: chipLabelStyle,
-          tooltip: bubbleView ? null : l10n.docViewToBubbles,
-          selected: bubbleView,
-          padding: _kChipPadding,
-          visualDensity: _kChipDensity,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onSelected: bubbleView ? null : (_) => _switchToBubbles(),
-        ),
-        ChoiceChip(
-          key: const ValueKey('doc-view-classic'),
-          avatar: Icon(
-            Icons.view_agenda_outlined,
-            size: 14,
-            color: bubbleView ? null : theme.colorScheme.onSecondaryContainer,
-          ),
-          showCheckmark: false,
-          label: Text(l10n.docViewClassic),
-          labelStyle: chipLabelStyle,
-          tooltip: bubbleView ? l10n.docViewToClassic : null,
-          selected: !bubbleView,
-          padding: _kChipPadding,
-          visualDensity: _kChipDensity,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          onSelected: bubbleView ? (_) => _switchToClassic() : null,
-        ),
-      ],
       // Yalnız KURULU hatırlatıcı çipte görünür; kurmak "+" menüsünden.
       if (note.reminderAt != null)
         InputChip(
@@ -6758,11 +7018,24 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             ),
           );
 
-    // Başlık satırı: alan + sağ kenarda "+" (ekleme/öneri menüsü).
+    // Başlık satırı: alan + sağ kenarda "+" (ekleme/öneri menüsü). Balonlu
+    // görünümde belgenin görünüm anahtarı da burada — not başlığının
+    // hemen yanında, sayfa çubuğunu kalabalıklaştırmadan.
+    final bubbleDocument = note.type.isPageNoteType
+        ? _switchableDocument(note)
+        : null;
+    final bubbleSwitch = bubbleDocument == null
+        ? null
+        : _viewSwitchFor(note, bubbleDocument, dense: true);
     final titleRow = Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Expanded(child: titleField),
+        if (bubbleSwitch != null)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 4),
+            child: bubbleSwitch,
+          ),
         Padding(
           padding: const EdgeInsetsDirectional.only(end: 10),
           child: actionsMenu,
@@ -6778,7 +7051,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       for (final a in note.attachments)
         if (a.floatsOnPage &&
             a.id != note.backgroundImageId &&
-            a.section == note.activePage)
+            a.section == note.activePage &&
+            !note.hidesDerivedDocument(a))
           a,
     ];
     // Zemin görseli: ekler listesinde durur ama sayfada yüzmez, şeritte de
@@ -6867,6 +7141,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
           // yazmaya devam etmektir, önizleme açmaz).
           onTap: () {
             final editable = editableTextBelow(fieldContext);
+            final seconds = _tappedTimestamp(editable);
+            if (seconds != null) {
+              editable?.hideToolbar();
+              _seekVideoTo(seconds);
+              return;
+            }
             final tapped = _tappedEmbed(editable);
             if (tapped != null) {
               // Dokunuşun açtığı Yapıştır menüsü önizlemenin altında kalmasın.
@@ -6945,6 +7225,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
         selectionMenu: _itemSelectionMenu,
+        videoTimestamps: _bodyController.videoTimestamps,
+        onVideoTimestamp: _seekVideoTo,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -6985,6 +7267,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
         selectionMenu: _itemSelectionMenu,
+        videoTimestamps: _bodyController.videoTimestamps,
+        onVideoTimestamp: _seekVideoTo,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
         wholeNoteText: () => _note == null
             ? ''
@@ -7050,7 +7334,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
               return built;
             },
           );
-    final body = _withPinnedMedia(note, pageBody);
+    // Oynatıcılar (sabit bölme, sayfadaki video kutuları) notun video
+    // merkezine buradan ulaşır (bkz. VideoHubScope).
+    final body = VideoHubScope(
+      hub: _videoHub,
+      child: _withPinnedMedia(note, pageBody),
+    );
 
     // ALT ÇUBUK — Scaffold'ın `bottomNavigationBar` YUVASINDA DEĞİL,
     // gövdenin dibinde bir `Column` çocuğu.
@@ -7097,7 +7386,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 AttachmentStrip(
                   attachments: [
                     for (final a in note.attachments)
-                      if (!a.floatsOnPage && !_inPinnedPane(note, a)) a,
+                      if (!a.floatsOnPage &&
+                          !_inPinnedPane(note, a) &&
+                          !note.hidesDerivedDocument(a))
+                        a,
                   ],
                   onRemove: _removeAttachment,
                   onChanged: _updateAttachment,

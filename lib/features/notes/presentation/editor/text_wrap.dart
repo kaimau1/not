@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/utils/attachment_tag.dart';
 import '../../../../core/utils/link_text.dart';
 import '../../../../core/utils/rich_text.dart';
+import '../../../../core/utils/video_time.dart';
 
 /// Metnin, üzerinde yüzen görsellerin ETRAFINDAN akmasını (Word'ün "kare
 /// sarma"sı) sağlayan katman.
@@ -103,10 +104,28 @@ bool sameFloatList(List<FloatBox> a, List<FloatBox> b) {
 /// çapaların (sırayla) genişlikleri.
 @immutable
 class WrapPlan {
-  const WrapPlan(this.display, this.widths);
+  const WrapPlan(
+    this.display,
+    this.widths, {
+    this.frozenDisplay = -1,
+    this.frozenLogical = -1,
+  });
 
   final String display;
   final List<double> widths;
+
+  /// Planın görsel bandını KAPSAYAN öneki: `display[0, frozenDisplay)` ve
+  /// onun mantıksal karşılığı `logical[0, frozenLogical)`. Önek bir
+  /// PARAGRAF sonunda (satır sonu karakterinin önünde) biter ve bütün
+  /// çapalar onun içindedir; ardından gelen metin görselin bandının altında
+  /// kalır, dolgu almaz. -1 = önek yok (metnin tamamı ölçüldü).
+  ///
+  /// Neden: yazarken plan her tuşta yeniden kuruluyordu. Değişiklik önekin
+  /// ÖTESİNDEYSE (görselin altında yazılıyorsa) önek birebir aynı kalır —
+  /// plan yeniden ölçülmeden, önek + yeni kuyruk olarak kurulur (bkz.
+  /// [WrapTextController]).
+  final int frozenDisplay;
+  final int frozenLogical;
 
   bool get isEmpty => widths.isEmpty;
 }
@@ -265,6 +284,74 @@ WrapPlan planTextWrap({
     textScaler: TextScaler.linear(textScaleFactor),
   );
 
+  // ---- YALNIZ BANDI KAPSAYAN ÖNEK ÖLÇÜLÜR --------------------------------
+  //
+  // KÖK NEDEN (kullanıcı 2026-10-16: "program genelinde yazı yazarken FPS
+  // düşüşü", "görseller sürüklenirken aşırı kasma"): plan her turda METNİN
+  // TAMAMINI diziyor ve satır başına bir tur dönüyordu — maliyet
+  // O(satır × metin). Görselli bir notta HER TUŞTA (ve görsel sürüklenirken
+  // HER KAREDE) koşuyor. Ölçüm (test ortamı): 700 karakter 45 ms,
+  // 2.800 karakter 325 ms, 8.500 karakter ~2 sn.
+  //
+  // Dolgu yalnız görselin BANDINI kesen satırlara konur; bandın altındaki
+  // satırların kırılımı plana hiçbir şey katmaz. Satır kırıcı açgözlüdür ve
+  // bir PARAGRAF sonundan (satır sonu) önceki satırlar ondan sonra gelen
+  // metinden etkilenmez (biçim işaretleri de satır sonunu aşmaz — bkz.
+  // rich_text `_formatPattern`). Bu yüzden ölçüm, bandın altına en az iki
+  // satır taşan bir paragraf önekiyle sınırlanır; önek yetmezse büyütülür.
+  var bandBottom = -double.infinity;
+  for (final f in floats) {
+    if (f.bottom > bandBottom) bandBottom = f.bottom;
+  }
+  final fontSize = (style.fontSize ?? 14) * textScaleFactor;
+  final lineGuess = fontSize * (style.height ?? 1.2);
+  // Satıra sığan karakter tahmini BİLEREK cömert (dar harf ~0,3 em): önek
+  // kısa gelirse ölçüm bir kez daha yapılır, uzun gelirse yalnız biraz
+  // fazla metin dizilir.
+  final charsPerLine = math.max(8, (columnWidth / (fontSize * 0.3)).ceil());
+  var minChars =
+      ((math.max(0.0, bandBottom) / lineGuess).ceil() + 4) * charsPerLine;
+  int prefixEndFor(int from) {
+    if (from >= display.length) return display.length;
+    final nl = display.indexOf('\n', from);
+    return nl < 0 ? display.length : nl;
+  }
+
+  var prefixEnd = prefixEndFor(minChars);
+
+  /// [at] konumuna [s] eklenir; önekin sınırı da kayar.
+  void insertAt(int at, String s) {
+    display = display.replaceRange(at, at, s);
+    if (at <= prefixEnd) prefixEnd += s.length;
+  }
+
+  var metrics = const <LineMetrics>[];
+  void layoutPrefix() {
+    for (;;) {
+      final text = prefixEnd >= display.length
+          ? display
+          : display.substring(0, prefixEnd);
+      final anchors = prefixEnd >= display.length
+          ? widths.length
+          : _anchorCountBefore(display, prefixEnd);
+      _layout(
+        painter,
+        text,
+        anchors >= widths.length ? widths : widths.sublist(0, anchors),
+        style,
+        columnWidth,
+        rich,
+      );
+      if (prefixEnd >= display.length ||
+          painter.height >= bandBottom + painter.preferredLineHeight * 2) {
+        break;
+      }
+      minChars = math.max(minChars * 2, prefixEnd + 1);
+      prefixEnd = prefixEndFor(minChars);
+    }
+    metrics = painter.computeLineMetrics();
+  }
+
   var line = 0;
   // Satır başı LTR'de fiziksel solda, RTL'de sağdadır (bkz. [wrapLineIndents]).
   final ltr = direction == TextDirection.ltr;
@@ -272,17 +359,18 @@ WrapPlan planTextWrap({
   // yapıştıramazsa (ör. satırda hiç boşluk yok) bir daha denenmez — yoksa
   // aynı satır sonsuza dek yeniden dolgulanırdı.
   final rightPadded = <int>{};
-  // Ölçüm, `display`/`widths`ın SON hâlini mi taşıyor? Aşağıdaki son denetim
-  // buna bakıp gereksiz bir tam dizgiyi atlar (yazarken her tuşta koşan bir
-  // yol; bedava bir `TextPainter.layout` istemiyoruz).
+  // Ölçüm, `display`/`widths`ın SON hâlini mi taşıyor? Satıra dolgu
+  // eklenmediyse (satır olduğu gibi kaldı) bir sonraki tur aynı ölçümü
+  // kullanır — eskiden HER TUR tam dizgi yapılıyordu.
   var laidOut = false;
   // Görsel sayısı azdır (not başına birkaç ek); tur sayısı satır sayısı +
   // eklenen dolgu kadardır. Tavan, beklenmedik bir kırılımda sonsuz döngüyü
   // engeller — aşılırsa o ana kadarki plan kullanılır (metin yine okunur).
   for (var guard = 0; guard < 512; guard++) {
-    _layout(painter, display, widths, style, columnWidth, rich);
-    laidOut = true;
-    final metrics = painter.computeLineMetrics();
+    if (!laidOut) {
+      layoutPrefix();
+      laidOut = true;
+    }
 
     // SATIR TEPESİ `LineMetrics`TEN TOPLANMAZ (kullanıcı bulgusu 2026-08-30,
     // ekran görüntüsü: imleç yazının çok altında):
@@ -296,6 +384,12 @@ WrapPlan planTextWrap({
     final lineHeight = painter.preferredLineHeight;
     final top = line * lineHeight;
     final bottom = top + lineHeight;
+
+    // Satır bütün bantların ALTINDA: buradan sonraki hiçbir satır dolgu
+    // almaz (bkz. [wrapLineIndents]) — eski geçiş metnin sonuna kadar boşuna
+    // yürüyordu. Boş tamponun imleç evi dalı (aşağıda) bandın altında da iş
+    // görür; o yüzden yalnız metin varken.
+    if (logical.isNotEmpty && top >= bandBottom) break;
 
     // Satırı kesen görsellerin bu satıra bıraktığı dolgular. İPUCU DA AYNI
     // İŞLEVİ ÇAĞIRIR (bkz. [wrapLineIndents]).
@@ -347,7 +441,7 @@ WrapPlan planTextWrap({
             display.codeUnitAt(display.length - 1) == _kWrapAnchorCode &&
             widths.isNotEmpty &&
             widths.last >= columnWidth) {
-          display += kWrapAnchorChar;
+          insertAt(display.length, kWrapAnchorChar);
           widths.add(_kCaretHomeWidth);
           laidOut = false;
         }
@@ -355,7 +449,7 @@ WrapPlan planTextWrap({
       }
       // Dolgu metnin SONUNA eklenir (bu satırın "başı" orasıdır); çapa
       // sırası korunduğu için genişlik de listenin sonuna gider.
-      display += kWrapAnchorChar;
+      insertAt(display.length, kWrapAnchorChar);
       widths.add(indentStart);
       laidOut = false;
       // Görselin YANINDA okunur yer varsa imleç oraya oturdu, iş bitti —
@@ -372,7 +466,7 @@ WrapPlan planTextWrap({
         start < display.length && display.codeUnitAt(start) == _kWrapAnchorCode;
 
     if (indentStart > 0 && !hasStartAnchor) {
-      display = display.replaceRange(start, start, kWrapAnchorChar);
+      insertAt(start, kWrapAnchorChar);
       widths.insert(_anchorCountBefore(display, start), indentStart);
       laidOut = false;
       continue; // aynı satırı yeni genişlikle yeniden ölç
@@ -396,11 +490,7 @@ WrapPlan planTextWrap({
         top + lineHeight / 2,
       );
       if (cut >= 0) {
-        display = display.replaceRange(
-          cut,
-          cut,
-          '$kWrapGlueChar$kWrapAnchorChar',
-        );
+        insertAt(cut, '$kWrapGlueChar$kWrapAnchorChar');
         widths.insert(_anchorCountBefore(display, cut), indentEnd);
         laidOut = false;
         continue;
@@ -410,7 +500,7 @@ WrapPlan planTextWrap({
       // soldaki geniş görselle aynı: satırı TÜMÜYLE boşalt, kelime bir alt
       // satıra insin. Görselin bandı bitene dek satırlar böyle boşaltılır.
       if (!hasStartAnchor) {
-        display = display.replaceRange(start, start, kWrapAnchorChar);
+        insertAt(start, kWrapAnchorChar);
         widths.insert(_anchorCountBefore(display, start), columnWidth);
         laidOut = false;
         continue;
@@ -446,15 +536,17 @@ WrapPlan planTextWrap({
   // kendi üst/altını kullanır — hiçbir yerde tahmin yok.
   for (var pass = 0; pass < 128; pass++) {
     if (!laidOut) {
-      _layout(painter, display, widths, style, columnWidth, rich);
+      layoutPrefix();
       laidOut = true;
     }
     var repaired = false;
     var offset = 0;
-    while (offset < display.length) {
+    // Yalnız ÖLÇÜLEN önek denetlenir (bandı kapsıyor, bkz. [layoutPrefix]).
+    final measured = math.min(prefixEnd, display.length);
+    while (offset < measured) {
       final boundary = painter.getLineBoundary(TextPosition(offset: offset));
-      final start = boundary.start.clamp(0, display.length);
-      final end = boundary.end.clamp(start, display.length);
+      final start = boundary.start.clamp(0, measured);
+      final end = boundary.end.clamp(start, measured);
       offset = end > offset ? end : offset + 1;
       final text = _lineTextRange(display, (start: start, end: end));
       if (text == null) continue; // satırda çizilen metin yok
@@ -472,6 +564,9 @@ WrapPlan planTextWrap({
         if (box.top < boxTop) boxTop = box.top;
         if (box.bottom > boxBottom) boxBottom = box.bottom;
       }
+      // Satırlar yukarıdan aşağı gelir: bandların altına inen ilk satırdan
+      // sonra hiçbir satır görsele binemez.
+      if (boxTop >= bandBottom) break;
       // Bir dp'lik pay: dolgu tam görselin kenarında bittiğinde yuvarlama
       // farkı yüzünden satırı boşuna aşağı itmeyelim.
       final hits = floats.any(
@@ -482,7 +577,7 @@ WrapPlan planTextWrap({
             left < f.right - 1,
       );
       if (!hits) continue;
-      display = display.replaceRange(start, start, kWrapAnchorChar);
+      insertAt(start, kWrapAnchorChar);
       widths.insert(_anchorCountBefore(display, start), columnWidth);
       repaired = true;
       laidOut = false;
@@ -492,7 +587,45 @@ WrapPlan planTextWrap({
   }
 
   painter.dispose();
-  return WrapPlan(display, widths);
+  if (prefixEnd >= display.length) return WrapPlan(display, widths);
+  var invisible = 0;
+  for (var i = 0; i < prefixEnd; i++) {
+    if (_isAnchorCode(display.codeUnitAt(i))) invisible++;
+  }
+  return WrapPlan(
+    display,
+    widths,
+    frozenDisplay: prefixEnd,
+    frozenLogical: prefixEnd - invisible,
+  );
+}
+
+/// Önceki plan [previous] ([previousLogical] için kurulmuş), [logical]
+/// için de geçerliyse önek + yeni kuyruk olarak yeniden kullanır; değilse
+/// null. Geçerlilik: iki metin önekin sonundaki satır sonu DAHİL aynı —
+/// değişiklik görselin bandının altında kalmış (bkz. [WrapPlan.frozenDisplay]).
+/// Plan girdilerinin (stil, genişlik, bantlar) aynı olduğunu çağıran sağlar.
+WrapPlan? reuseWrapPlan(
+  WrapPlan previous,
+  String previousLogical,
+  String logical,
+) {
+  final fl = previous.frozenLogical;
+  if (fl < 0 || fl >= logical.length || fl >= previousLogical.length) {
+    return null;
+  }
+  if (logical.codeUnitAt(fl) != 0x0A) return null;
+  // Kısa yol: önek gerçekten aynı mı (satır sonu dahil).
+  for (var i = fl; i >= 0; i--) {
+    if (logical.codeUnitAt(i) != previousLogical.codeUnitAt(i)) return null;
+  }
+  return WrapPlan(
+    previous.display.substring(0, previous.frozenDisplay) +
+        logical.substring(fl),
+    previous.widths,
+    frozenDisplay: previous.frozenDisplay,
+    frozenLogical: fl,
+  );
 }
 
 /// Satırın ÇİZİLEN metin aralığı: baştaki/sondaki görünmez karakterler
@@ -638,6 +771,7 @@ InlineSpan buildWrapSpan(
   RichTextTheme? rich,
   Iterable<String> attachmentNames = const [],
   Map<String, Color>? tagChipColors,
+  bool videoTimestamps = false,
 }) {
   List<InlineSpan> parts(String text) => rich == null
       ? linkSpans(
@@ -646,6 +780,7 @@ InlineSpan buildWrapSpan(
           linkColor,
           attachmentNames: attachmentNames,
           tagChipColors: tagChipColors,
+          videoTimestamps: videoTimestamps,
         )
       : richSpans(
           text,
@@ -655,6 +790,7 @@ InlineSpan buildWrapSpan(
           markerColor: rich.markerColor,
           attachmentNames: attachmentNames,
           tagChipColors: tagChipColors,
+          videoTimestamps: videoTimestamps,
         );
 
   if (widths.isEmpty || !display.contains(kWrapAnchorChar)) {
@@ -1022,6 +1158,21 @@ class WrapTextController extends TextEditingController {
   }
 
   Map<String, Color> get tagChipColors => _tagChipColors;
+
+  /// Notta VİDEO var mı: varsa metindeki "1:23" gibi zaman damgaları
+  /// bağlantı renginde çizilir (bkz. video_time.dart). Yalnız çizim değişir;
+  /// satır kırılımı aynı kalır.
+  bool _videoTimestamps = false;
+
+  set videoTimestamps(bool value) {
+    if (_videoTimestamps == value) return;
+    _videoTimestamps = value;
+    _spanCache = null;
+    _scanText = null;
+    notifyListeners();
+  }
+
+  bool get videoTimestamps => _videoTimestamps;
 
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
@@ -1568,15 +1719,33 @@ class WrapTextController extends TextEditingController {
         sameFloatList(_planKeyFloats!, _floats)) {
       return _planCache!;
     }
-    final plan = planTextWrap(
-      logical: logical,
-      style: style,
-      columnWidth: _columnWidth,
-      floats: _floats,
-      textScaleFactor: _textScale,
-      direction: _direction,
-      rich: _rich,
-    );
+    // Yalnız METİN değişti ve değişiklik görselin bandının altında (önekin
+    // ötesinde): önek aynen kalır, yeniden ölçülmez (bkz. [reuseWrapPlan]).
+    // Uzun bir notun görselin altındaki kısmına yazmak artık tuş başına
+    // dizgi yapmıyor.
+    final previous = _planCache;
+    final previousLogical = _planKeyLogical;
+    final sameInputs =
+        previous != null &&
+        previousLogical != null &&
+        _planKeyStyle == style &&
+        _planKeyWidth == _columnWidth &&
+        _planKeyScale == _textScale &&
+        _planKeyDirection == _direction &&
+        _planKeyRich == _rich &&
+        _planKeyFloats != null &&
+        sameFloatList(_planKeyFloats!, _floats);
+    final plan =
+        (sameInputs ? reuseWrapPlan(previous, previousLogical, logical) : null) ??
+        planTextWrap(
+          logical: logical,
+          style: style,
+          columnWidth: _columnWidth,
+          floats: _floats,
+          textScaleFactor: _textScale,
+          direction: _direction,
+          rich: _rich,
+        );
     _planKeyLogical = logical;
     _planKeyStyle = style;
     _planKeyWidth = _columnWidth;
@@ -1651,6 +1820,7 @@ class WrapTextController extends TextEditingController {
   bool _scanHasLink = false;
   bool _scanHasMarker = false;
   bool _scanHasTag = false;
+  bool _scanHasTime = false;
 
   /// Üretilmiş span ağacının önbelleği.
   ///
@@ -1689,6 +1859,7 @@ class WrapTextController extends TextEditingController {
               rich: _rich,
               attachmentNames: _attachmentNames,
               tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
+              videoTimestamps: _videoTimestamps,
             )
             as TextSpan;
     _spanKeyText = text;
@@ -1708,6 +1879,8 @@ class WrapTextController extends TextEditingController {
     _scanHasLink = findLinks(text).isNotEmpty;
     _scanHasMarker = stripRichMarkers(text) != text;
     _scanHasTag = findAttachmentTags(text, _attachmentNames).isNotEmpty;
+    _scanHasTime =
+        _videoTimestamps && findVideoTimestamps(text).isNotEmpty;
   }
 
   @override
@@ -1733,7 +1906,8 @@ class WrapTextController extends TextEditingController {
       // metinde ikisi de yok, dolayısıyla üst sınıfın DÜZ span'i dönüyor ve
       // etiket kırmızı/altı çizili HİÇ çizilmiyordu — yalnız madde
       // satırlarında değil, gövdede de.
-      if ((linkColor == null || (!_scanHasLink && !_scanHasTag)) &&
+      if ((linkColor == null ||
+              (!_scanHasLink && !_scanHasTag && !_scanHasTime)) &&
           !_scanHasMarker) {
         span = super.buildTextSpan(
           context: context,

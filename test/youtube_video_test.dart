@@ -164,15 +164,27 @@ void main() {
       expect(image.rememberedPinHeight, isNull);
     });
 
-    test('PDF/ses sabitlenmiş sayılmaz', () {
+    test('PDF de sabitlenir (2026-10-16), ses sabitlenmez', () {
       const pdf = Attachment(
         id: 'p',
         kind: AttachmentKind.pdf,
         fileName: 'a.pdf',
         mimeType: 'application/pdf',
         pinHeight: 200,
+        onPage: true,
       );
-      expect(pdf.isPinnedTop, isFalse);
+      expect(pdf.isPinnedTop, isTrue);
+      // Sabitken sayfada yüzmez; inince sayfadaki yerine döner.
+      expect(pdf.floatsOnPage, isFalse);
+      expect(pdf.copyWith(pinHeight: -200).floatsOnPage, isTrue);
+      const audio = Attachment(
+        id: 'a',
+        kind: AttachmentKind.audio,
+        fileName: 'a.m4a',
+        mimeType: 'audio/mp4',
+        pinHeight: 200,
+      );
+      expect(audio.isPinnedTop, isFalse);
     });
 
     test('ilk yükseklik medyanın oranından, ekranın %45inde tavan', () {

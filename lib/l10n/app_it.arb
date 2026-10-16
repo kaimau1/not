@@ -889,5 +889,16 @@
   "menuSectionContent": "Contenuto",
   "menuSectionPeople": "Account e contatti",
   "menuSectionHome": "Schermata principale",
-  "menuSectionApp": "App"
+  "menuSectionApp": "App",
+  "viewModeTitle": "Vista",
+  "viewModePinned": "Fissato",
+  "viewModeFloating": "Fluttuante",
+  "viewModeBubbles": "Fumetti",
+  "viewModePinnedHint": "Fissa in alto: resta sopra, la nota scorre sotto",
+  "viewModeFloatingHint": "Fluttua sulla pagina: il testo gli scorre intorno",
+  "viewModeBubblesHint": "Vista fumetti: fumetti, evidenziazioni e penna sulla pagina",
+  "viewModeSwitchedFloating": "Di nuovo sulla pagina",
+  "videoNoteAtTime": "Annota questo momento",
+  "videoNoteAtTimeShort": "Annota",
+  "videoTimeUnknown": "Impossibile leggere il tempo del video: avvia prima la riproduzione."
 }

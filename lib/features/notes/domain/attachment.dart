@@ -426,6 +426,64 @@ List<InkStroke> cropInk(
   return out;
 }
 
+/// [cropInk]'in TERSİ: görselin oranlı uzayındaki çizimleri, görselin
+/// [frame] dikdörtgeninde durduğu bir SAYFANIN uzayına taşır.
+///
+/// Görsel balonlu görünüme alınınca A4 bir PDF sayfasına ortalanarak
+/// yerleşir (bkz. `ScanPdf.imageFrameOnPage`); üstüne çizilmiş imza/ok
+/// olduğu yerde kalmalı. Kalınlık sayfa GENİŞLİĞİNİN oranı olduğundan
+/// çerçevenin genişliğiyle küçülür.
+List<InkStroke> placeInk(
+  List<InkStroke> strokes,
+  PageBubbleRect frame, {
+  int page = 1,
+}) {
+  final w = frame.right - frame.left;
+  final h = frame.bottom - frame.top;
+  return [
+    for (final s in strokes)
+      InkStroke(
+        page: page,
+        color: s.color,
+        width: s.width * w,
+        points: [
+          for (var i = 0; i + 1 < s.points.length; i += 2) ...[
+            frame.left + s.points[i] * w,
+            frame.top + s.points[i + 1] * h,
+          ],
+        ],
+        arrow: s.arrow,
+      ),
+  ];
+}
+
+/// [placeInk]'in balon karşılığı: konum ve vurgu dikdörtgenleri sayfaya.
+List<PageBubble> placeBubbles(
+  List<PageBubble> bubbles,
+  PageBubbleRect frame, {
+  int page = 1,
+}) {
+  final w = frame.right - frame.left;
+  final h = frame.bottom - frame.top;
+  return [
+    for (final b in bubbles)
+      b.copyWith(
+        page: page,
+        x: frame.left + b.x * w,
+        y: frame.top + b.y * h,
+        rects: [
+          for (final r in b.rects)
+            PageBubbleRect(
+              frame.left + r.left * w,
+              frame.top + r.top * h,
+              frame.left + r.right * w,
+              frame.top + r.bottom * h,
+            ),
+        ],
+      ),
+  ];
+}
+
 /// Görsel 90°'nin katlarıyla döndürülünce üstündeki çizimleri de döndürür.
 ///
 /// [cropInk] ile aynı gerekçe: noktalar görselin ORANI (0–1) olarak tutuluyor,
@@ -519,6 +577,7 @@ class Attachment {
     this.pageIds = const [],
     this.webUrl = '',
     this.pinHeight = 0,
+    this.sourceId = '',
     this.createdAt,
   });
 
@@ -649,6 +708,17 @@ class Attachment {
   /// için medya eski yerine eski boyutuyla döner.
   final double pinHeight;
 
+  /// Bu belge hangi GÖRSELDEN üretildi (boş = sıradan ek).
+  ///
+  /// Kullanıcı isteği 2026-10-16: sabit / yüzen / balonlu geçişi bütün
+  /// eklerde olmalı. Balon bir belge SAYFASINDA yaşadığı için görsel
+  /// balonluya alınınca tek sayfalık bir PDF'e çevrilir (yakalama levhasının
+  /// "balonlu" kipiyle aynı yol). Görsel klasiğe dönünce bu belge GİZLENİR
+  /// (görselin kendisi sayfasına döner); yeniden balonluya alınınca AYNI
+  /// belge — balonları ve çizimleriyle — geri gelir, ikinci kopya üretilmez.
+  /// Kaynak görsel silinirse belge sıradan bir ek gibi görünür.
+  final String sourceId;
+
   final DateTime? createdAt;
 
   bool get isUploaded => downloadUrl.isNotEmpty;
@@ -668,18 +738,25 @@ class Attachment {
   double? get rememberedPinHeight => pinHeight == 0 ? null : pinHeight.abs();
 
   /// Notun üstündeki sabit bölmede mi (bkz. [pinHeight]).
+  ///
+  /// PDF de sabitlenir (kullanıcı isteği 2026-10-16: "PDF'lerde üste
+  /// sabitleme yapamıyorum"): bölmede sayfa çevrilebilen belge kutusu durur,
+  /// not altında yazılır. Balonlu görünümden farkı: belge notun KENDİSİ
+  /// olmaz, not metin notu kalır.
   bool get isPinnedTop =>
       pinHeight > 0 &&
-      (kind == AttachmentKind.image || kind == AttachmentKind.video);
+      (kind == AttachmentKind.image ||
+          kind == AttachmentKind.video ||
+          kind == AttachmentKind.pdf);
 
   /// Ek SAYFADA yüzüyor mu? Görseller gibi videolar da serbest tuvale
-  /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF/ses/sunum
-  /// hiçbir zaman yüzmez.
+  /// yerleşir ve olduğu yerde oynatılır (2026-08-06 isteği); PDF sayfaya
+  /// gömülünce ([onPage]) yüzer; ses/sunum hiçbir zaman yüzmez.
   bool get floatsOnPage =>
       ((kind == AttachmentKind.image || kind == AttachmentKind.video) &&
           !asFile &&
           !isPinnedTop) ||
-      (kind == AttachmentKind.pdf && onPage);
+      (kind == AttachmentKind.pdf && onPage && !isPinnedTop);
 
   /// [uploaded] yüklemesinin ürettiği DEPO alanlarını bu ekin üzerine geçirir;
   /// düzen alanları (konum/boyut/hiza/çizim) bu ekten korunur.
@@ -748,6 +825,7 @@ class Attachment {
     List<String>? pageIds,
     String? webUrl,
     double? pinHeight,
+    String? sourceId,
   }) => Attachment(
     id: id,
     kind: kind,
@@ -776,6 +854,7 @@ class Attachment {
     pageIds: pageIds ?? this.pageIds,
     webUrl: webUrl ?? this.webUrl,
     pinHeight: pinHeight ?? this.pinHeight,
+    sourceId: sourceId ?? this.sourceId,
     createdAt: createdAt,
   );
 
@@ -822,6 +901,7 @@ class Attachment {
         ],
         webUrl: map['webUrl'] as String? ?? '',
         pinHeight: (map['pinHeight'] as num?)?.toDouble() ?? 0,
+        sourceId: map['sourceId'] as String? ?? '',
         createdAt: (map['createdAt'] as Timestamp?)?.toDate(),
       );
 
@@ -881,6 +961,9 @@ class Attachment {
     // Yalnız doluysa: dosyalı eklerin şeması büyümez.
     if (webUrl.isNotEmpty) 'webUrl': webUrl,
     if (pinHeight != 0) 'pinHeight': pinHeight,
+    // Yalnız doluysa: türetilmemiş eklerin şeması büyümez. (Ekler dizi
+    // olarak TÜMDEN yazılır — merge tuzağı yok.)
+    if (sourceId.isNotEmpty) 'sourceId': sourceId,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

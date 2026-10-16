@@ -4703,4 +4703,40 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Вид';
+
+  @override
+  String get viewModePinned => 'Закреплено';
+
+  @override
+  String get viewModeFloating => 'Плавающее';
+
+  @override
+  String get viewModeBubbles => 'Выноски';
+
+  @override
+  String get viewModePinnedHint =>
+      'Закрепить сверху — остаётся вверху, заметка прокручивается ниже';
+
+  @override
+  String get viewModeFloatingHint => 'Плавает на странице — текст обтекает его';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Вид выносок — выноски, выделения и перо на странице';
+
+  @override
+  String get viewModeSwitchedFloating => 'Снова на странице';
+
+  @override
+  String get videoNoteAtTime => 'Заметка к этому моменту';
+
+  @override
+  String get videoNoteAtTimeShort => 'Заметка';
+
+  @override
+  String get videoTimeUnknown =>
+      'Не удалось прочитать время видео — сначала запустите воспроизведение.';
 }

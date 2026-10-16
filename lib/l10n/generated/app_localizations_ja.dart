@@ -4613,4 +4613,37 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => '表示';
+
+  @override
+  String get viewModePinned => '固定';
+
+  @override
+  String get viewModeFloating => 'フロート';
+
+  @override
+  String get viewModeBubbles => '吹き出し';
+
+  @override
+  String get viewModePinnedHint => '上部に固定 — 上にとどまり、ノートは下でスクロールします';
+
+  @override
+  String get viewModeFloatingHint => 'ページに浮かべる — 文字が周りを回り込みます';
+
+  @override
+  String get viewModeBubblesHint => '吹き出し表示 — ページ上に吹き出し・ハイライト・ペン';
+
+  @override
+  String get viewModeSwitchedFloating => 'ページに戻しました';
+
+  @override
+  String get videoNoteAtTime => 'この瞬間にメモ';
+
+  @override
+  String get videoNoteAtTimeShort => 'メモ';
+
+  @override
+  String get videoTimeUnknown => '動画の再生位置を取得できません。先に再生してください。';
 }

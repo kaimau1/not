@@ -8477,6 +8477,72 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Sayfa ve not seçenekleri'**
   String get pageBarMore;
+
+  /// No description provided for @viewModeTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Görünüm'**
+  String get viewModeTitle;
+
+  /// No description provided for @viewModePinned.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabit'**
+  String get viewModePinned;
+
+  /// No description provided for @viewModeFloating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüzen'**
+  String get viewModeFloating;
+
+  /// No description provided for @viewModeBubbles.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu'**
+  String get viewModeBubbles;
+
+  /// No description provided for @viewModePinnedHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Üste sabitle — ek tepede durur, not altında kayar'**
+  String get viewModePinnedHint;
+
+  /// No description provided for @viewModeFloatingHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfada yüzer — yazı etrafından akar'**
+  String get viewModeFloatingHint;
+
+  /// No description provided for @viewModeBubblesHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Balonlu görünüm — sayfanın üstüne balon, vurgu ve kalem'**
+  String get viewModeBubblesHint;
+
+  /// No description provided for @viewModeSwitchedFloating.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ek sayfaya döndü'**
+  String get viewModeSwitchedFloating;
+
+  /// No description provided for @videoNoteAtTime.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bu ana not al'**
+  String get videoNoteAtTime;
+
+  /// No description provided for @videoNoteAtTimeShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Not al'**
+  String get videoNoteAtTimeShort;
+
+  /// No description provided for @videoTimeUnknown.
+  ///
+  /// In tr, this message translates to:
+  /// **'Videonun anı okunamadı — önce videoyu oynat.'**
+  String get videoTimeUnknown;
 }
 
 class _AppLocalizationsDelegate

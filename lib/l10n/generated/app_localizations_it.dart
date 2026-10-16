@@ -4709,4 +4709,41 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Vista';
+
+  @override
+  String get viewModePinned => 'Fissato';
+
+  @override
+  String get viewModeFloating => 'Fluttuante';
+
+  @override
+  String get viewModeBubbles => 'Fumetti';
+
+  @override
+  String get viewModePinnedHint =>
+      'Fissa in alto: resta sopra, la nota scorre sotto';
+
+  @override
+  String get viewModeFloatingHint =>
+      'Fluttua sulla pagina: il testo gli scorre intorno';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Vista fumetti: fumetti, evidenziazioni e penna sulla pagina';
+
+  @override
+  String get viewModeSwitchedFloating => 'Di nuovo sulla pagina';
+
+  @override
+  String get videoNoteAtTime => 'Annota questo momento';
+
+  @override
+  String get videoNoteAtTimeShort => 'Annota';
+
+  @override
+  String get videoTimeUnknown =>
+      'Impossibile leggere il tempo del video: avvia prima la riproduzione.';
 }

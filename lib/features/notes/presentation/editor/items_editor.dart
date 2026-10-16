@@ -141,7 +141,14 @@ class ItemsEditor extends StatefulWidget {
     this.tagLooks = const {},
     this.onAttachmentTag,
     this.selectionMenu,
+    this.videoTimestamps = false,
+    this.onVideoTimestamp,
   });
+
+  /// Notta video var mı: varsa madde metnindeki "1:23" damgaları bağlantı
+  /// gibi çizilir ve dokununca [onVideoTimestamp] çağrılır.
+  final bool videoTimestamps;
+  final ValueChanged<int>? onVideoTimestamp;
 
   final List<NoteItem> items;
   final ValueChanged<List<NoteItem>> onChanged;
@@ -373,10 +380,25 @@ class ItemsEditorState extends State<ItemsEditor> {
     WrapTextController controller,
     BuildContext fieldContext,
   ) {
-    final onTag = widget.onAttachmentTag;
-    if (onTag == null || widget.attachmentNames.isEmpty) return;
     final selection = controller.selection;
     if (!selection.isValid) return;
+    // VİDEO ZAMAN DAMGASI (bkz. video_time.dart): notta video varken
+    // "1:23"e dokunmak videoyu oraya sarar — gövdeyle aynı kural.
+    final onTime = widget.onVideoTimestamp;
+    if (onTime != null && widget.videoTimestamps) {
+      final seconds = tappedVideoTimestamp(
+        displayText: controller.text,
+        selection: selection,
+        editable: editableTextBelow(fieldContext),
+        tapGlobal: _tapPoint.last,
+      );
+      if (seconds != null) {
+        onTime(seconds);
+        return;
+      }
+    }
+    final onTag = widget.onAttachmentTag;
+    if (onTag == null || widget.attachmentNames.isEmpty) return;
     // Etiketin İÇİNE dokunuş; sınırdaysa dokunuşun KONUMU etiketin
     // kutusunda mı ona bakılır (bkz. tappedAttachmentTag — son harfe
     // dokunmak imleci sınıra koyuyor, önizleme açılmıyordu).
@@ -587,6 +609,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     // [ItemsEditor.attachmentNames]); setter aynı listede hiçbir şey yapmaz.
     controller.attachmentNames = widget.attachmentNames;
     controller.tagChipColors = widget._tagChipColors;
+    controller.videoTimestamps = widget.videoTimestamps;
     return controller;
   }
 
@@ -1061,6 +1084,64 @@ class ItemsEditorState extends State<ItemsEditor> {
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
+    });
+  }
+
+  /// [text] ile başlayan bir madde açar ve imleci sonuna koyar (videonun
+  /// "Bu ana not al" düğmesi — damga + boşluk).
+  ///
+  /// [after] bu editörün bir satırıysa: o satır BOŞSA damga oraya yazılır,
+  /// doluysa hemen altına yeni madde açılır. Verilmezse işaretsizlerin
+  /// sonundaki boş madde kullanılır, yoksa sona yeni madde eklenir — art
+  /// arda basılan düğme boş satır biriktirmez.
+  void addItemWithText(String text, {TextEditingController? after}) {
+    NoteItem? anchor;
+    if (after != null) {
+      for (final entry in _controllers.entries) {
+        if (!identical(entry.value, after)) continue;
+        anchor = _items.where((i) => i.id == entry.key).firstOrNull;
+        break;
+      }
+    }
+    NoteItem target;
+    if (anchor != null && anchor.text.trim().isEmpty) {
+      target = anchor;
+    } else if (anchor != null) {
+      final index = _items.indexWhere((i) => i.id == anchor!.id);
+      target = NoteItem(id: _uuid.v4(), text: '');
+      final at = (widget.showCheckboxes && anchor.checked)
+          ? _uncheckedInsertIndex(_uncheckedCount)
+          : index + 1;
+      setState(() => _items.insert(at, target));
+    } else {
+      final open = [
+        for (final i in _items)
+          if (!i.checked) i,
+      ];
+      if (open.isNotEmpty && open.last.text.trim().isEmpty) {
+        target = open.last;
+      } else {
+        target = NoteItem(id: _uuid.v4(), text: '');
+        setState(
+          () => _items.insert(_uncheckedInsertIndex(_uncheckedCount), target),
+        );
+      }
+    }
+    final index = _items.indexWhere((i) => i.id == target.id);
+    if (index < 0) return;
+    setState(() => _items[index] = _items[index].copyWith(text: text));
+    _controllers[target.id]?.setLogical(text, text.length);
+    _commit();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final controller = _controllerFor(_items.firstWhere(
+        (i) => i.id == target.id,
+        orElse: () => target,
+      ));
+      _focusFor(target).requestFocus();
+      controller.selection = TextSelection.collapsed(
+        offset: controller.text.length,
+      );
     });
   }
 
@@ -1833,6 +1914,7 @@ class ItemsEditorState extends State<ItemsEditor> {
     for (final controller in _controllers.values) {
       controller.attachmentNames = widget.attachmentNames;
       controller.tagChipColors = chipColors;
+      controller.videoTimestamps = widget.videoTimestamps;
     }
 
     // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da

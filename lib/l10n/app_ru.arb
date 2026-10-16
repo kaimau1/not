@@ -889,5 +889,16 @@
   "menuSectionContent": "Содержимое",
   "menuSectionPeople": "Аккаунт и контакты",
   "menuSectionHome": "Главный экран",
-  "menuSectionApp": "Приложение"
+  "menuSectionApp": "Приложение",
+  "viewModeTitle": "Вид",
+  "viewModePinned": "Закреплено",
+  "viewModeFloating": "Плавающее",
+  "viewModeBubbles": "Выноски",
+  "viewModePinnedHint": "Закрепить сверху — остаётся вверху, заметка прокручивается ниже",
+  "viewModeFloatingHint": "Плавает на странице — текст обтекает его",
+  "viewModeBubblesHint": "Вид выносок — выноски, выделения и перо на странице",
+  "viewModeSwitchedFloating": "Снова на странице",
+  "videoNoteAtTime": "Заметка к этому моменту",
+  "videoNoteAtTimeShort": "Заметка",
+  "videoTimeUnknown": "Не удалось прочитать время видео — сначала запустите воспроизведение."
 }

@@ -889,5 +889,16 @@
   "menuSectionContent": "Inhalt",
   "menuSectionPeople": "Konto und Kontakte",
   "menuSectionHome": "Startbildschirm",
-  "menuSectionApp": "App"
+  "menuSectionApp": "App",
+  "viewModeTitle": "Ansicht",
+  "viewModePinned": "Angeheftet",
+  "viewModeFloating": "Schwebend",
+  "viewModeBubbles": "Sprechblasen",
+  "viewModePinnedHint": "Oben anheften — bleibt oben, die Notiz scrollt darunter",
+  "viewModeFloatingHint": "Auf der Seite schweben — Text fließt darum herum",
+  "viewModeBubblesHint": "Sprechblasen-Ansicht — Blasen, Markierungen und Stift auf der Seite",
+  "viewModeSwitchedFloating": "Wieder auf der Seite",
+  "videoNoteAtTime": "Notiz zu diesem Moment",
+  "videoNoteAtTimeShort": "Notiz",
+  "videoTimeUnknown": "Videozeit nicht lesbar — spiele das Video zuerst ab."
 }

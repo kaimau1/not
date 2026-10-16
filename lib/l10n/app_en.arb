@@ -1773,5 +1773,16 @@
   "bubbleDone": "Done",
   "bubbleEditShort": "Edit",
   "bubblePlainModeShort": "Text",
-  "pageBarMore": "Page and note options"
+  "pageBarMore": "Page and note options",
+  "viewModeTitle": "View",
+  "viewModePinned": "Pinned",
+  "viewModeFloating": "Floating",
+  "viewModeBubbles": "Bubbles",
+  "viewModePinnedHint": "Pin to top — stays above, the note scrolls below",
+  "viewModeFloatingHint": "Float on the page — text wraps around it",
+  "viewModeBubblesHint": "Bubbles view — bubbles, highlights and pen on the page",
+  "viewModeSwitchedFloating": "Back on the page",
+  "videoNoteAtTime": "Note at this moment",
+  "videoNoteAtTimeShort": "Note",
+  "videoTimeUnknown": "Couldn't read the video time — play the video first."
 }

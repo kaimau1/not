@@ -889,5 +889,16 @@
   "menuSectionContent": "सामग्री",
   "menuSectionPeople": "खाता और लोग",
   "menuSectionHome": "होम स्क्रीन",
-  "menuSectionApp": "ऐप"
+  "menuSectionApp": "ऐप",
+  "viewModeTitle": "दृश्य",
+  "viewModePinned": "पिन किया",
+  "viewModeFloating": "तैरता",
+  "viewModeBubbles": "बुलबुले",
+  "viewModePinnedHint": "ऊपर पिन करें — ऊपर रहता है, नोट नीचे स्क्रॉल होता है",
+  "viewModeFloatingHint": "पेज पर तैरता है — टेक्स्ट इसके चारों ओर बहता है",
+  "viewModeBubblesHint": "बुलबुला दृश्य — पेज पर बुलबुले, हाइलाइट और पेन",
+  "viewModeSwitchedFloating": "पेज पर वापस",
+  "videoNoteAtTime": "इस पल पर नोट लें",
+  "videoNoteAtTimeShort": "नोट",
+  "videoTimeUnknown": "वीडियो का समय नहीं पढ़ा जा सका — पहले वीडियो चलाएँ।"
 }

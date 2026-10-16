@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -10,6 +11,7 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/local_file.dart';
+import '../../../../core/utils/video_time.dart';
 import '../../domain/attachment.dart';
 import '../viewers/image_viewer.dart';
 import '../viewers/ink_layer.dart';
@@ -20,6 +22,8 @@ import '../viewers/youtube_viewer.dart';
 import 'image_layout.dart';
 import 'pdf_page_box.dart';
 import 'text_wrap.dart';
+import 'video_hub_scope.dart';
+import 'view_mode_switch.dart';
 
 /// Görseli tam ekran açar (yoksa "henüz senkronlanmadı" der). Tam ekranda
 /// görselin üzerine elle yazılabilir; çizim [onChanged] ile ekin `ink`
@@ -202,9 +206,7 @@ class _ImageBox extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: b.fill == 0 ? 0 : 2,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: b.fill == 0 ? 0 : 2),
                 child: Text(
                   b.text.trim(),
                   maxLines: 3,
@@ -220,9 +222,7 @@ class _ImageBox extends StatelessWidget {
                     fontSize: (box.width * 0.05).clamp(7.0, 14.0),
                     height: 1.2,
                     fontWeight: b.bold ? FontWeight.w800 : FontWeight.w600,
-                    fontStyle: b.italic
-                        ? FontStyle.italic
-                        : FontStyle.normal,
+                    fontStyle: b.italic ? FontStyle.italic : FontStyle.normal,
                     color: Color(b.color),
                     shadows: b.fill == 0
                         ? const [Shadow(blurRadius: 2, color: Colors.black54)]
@@ -344,11 +344,16 @@ class NoteMediaBox extends StatelessWidget {
     this.onWebPlay,
     this.onSize,
     this.showWebTitle = false,
+    this.noteAtButton = false,
   });
 
   final Attachment attachment;
   final BoxFit fit;
   final bool inlineWebVideo;
+
+  /// Yerel videonun köşesinde "Bu ana not al" düğmesi (sayfa tuvali). Sabit
+  /// bölmede kapalı — orada düğme bölmenin çubuğunda.
+  final bool noteAtButton;
 
   /// YouTube kapağının üstünde videonun BAŞLIĞI (kullanıcı isteği
   /// 2026-10-11: "videoların başlığı üzerine tıklayınca görülmeli"). Sayfada
@@ -376,7 +381,12 @@ class NoteMediaBox extends StatelessWidget {
       );
     }
     if (a.kind == AttachmentKind.video) {
-      return _VideoBox(video: a, fit: fit, onSize: onSize);
+      return _VideoBox(
+        video: a,
+        fit: fit,
+        onSize: onSize,
+        noteAtButton: noteAtButton,
+      );
     }
     return _ImageBox(img: a, fit: fit);
   }
@@ -408,6 +418,39 @@ class _WebVideoBox extends StatefulWidget {
 class _WebVideoBoxState extends State<_WebVideoBox> {
   bool _playing = false;
 
+  /// Zaman damgasından gelen başlangıç saniyesi ve isteğin sırası (aynı
+  /// saniyeye ikinci dokunuş da oynatıcıyı yeniden kurar).
+  int? _startAt;
+  int _startSerial = 0;
+  NoteVideoHub? _hub;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final hub = VideoHubScope.maybeOf(context);
+    if (identical(hub, _hub)) return;
+    _hub?.startRequest.removeListener(_onStartRequest);
+    _hub = hub?..startRequest.addListener(_onStartRequest);
+  }
+
+  @override
+  void dispose() {
+    _hub?.startRequest.removeListener(_onStartRequest);
+    super.dispose();
+  }
+
+  /// Notta bu videonun damgasına dokunuldu ama oynatıcısı kayıtlı değil
+  /// (henüz oynatılmadı ya da web): oynatıcı o saniyeden kurulur.
+  void _onStartRequest() {
+    final request = _hub?.startRequest.value;
+    if (request == null || request.id != widget.video.id || !mounted) return;
+    setState(() {
+      _startAt = request.seconds;
+      _startSerial = request.serial;
+    });
+    if (!(widget.playing ?? _playing)) _play();
+  }
+
   void _play() {
     if (widget.inline && youTubeInAppSupported) {
       if (widget.onPlay != null) {
@@ -427,13 +470,21 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
   @override
   void didUpdateWidget(covariant _WebVideoBox old) {
     super.didUpdateWidget(old);
-    if (old.video.webUrl != widget.video.webUrl) _playing = false;
+    if (old.video.webUrl != widget.video.webUrl) {
+      _playing = false;
+      _startAt = null;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.playing ?? _playing) {
-      return YouTubeInlinePlayer(url: widget.video.webUrl);
+      return YouTubeInlinePlayer(
+        key: ValueKey('yt-${widget.video.id}-$_startSerial'),
+        url: widget.video.webUrl,
+        start: _startAt,
+        attachmentId: widget.video.id,
+      );
     }
     final id = youTubeVideoId(widget.video.webUrl);
     final placeholder = Container(
@@ -516,9 +567,17 @@ class _WebVideoBoxState extends State<_WebVideoBox> {
 /// yalnız yer tutucu olur) ya da oynatıcı desteklenmiyorsa (masaüstü) kamera
 /// simgeli yer tutucu çizilir; kutu taşınıp boyutlandırılabilir kalır.
 class _VideoBox extends StatefulWidget {
-  const _VideoBox({required this.video, this.fit = BoxFit.cover, this.onSize});
+  const _VideoBox({
+    required this.video,
+    this.fit = BoxFit.cover,
+    this.onSize,
+    this.noteAtButton = false,
+  });
 
   final Attachment video;
+
+  /// Köşede "Bu ana not al" düğmesi (bkz. [NoteMediaBox.noteAtButton]).
+  final bool noteAtButton;
 
   /// Tuvalde `cover`, büyük önizlemede `contain` (bkz. [_ImageBox.fit]).
   final BoxFit fit;
@@ -549,10 +608,29 @@ class _VideoBoxState extends State<_VideoBox> {
   /// tembel kurulum yeniden düşünülebilir.
   bool _initStarted = false;
 
+  /// Notun video merkezi ve bu oynatıcının oradaki kaydı (zaman damgaları).
+  NoteVideoHub? _hub;
+  _PlayerTimeSource? _source;
+
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  void _register(VideoPlayerController controller) {
+    _unregister();
+    final hub = VideoHubScope.maybeOf(context);
+    if (hub == null) return;
+    final source = _PlayerTimeSource(widget.video.id, controller);
+    _hub = hub..register(source);
+    _source = source;
+  }
+
+  void _unregister() {
+    final source = _source;
+    if (source != null) _hub?.unregister(source);
+    _source = null;
   }
 
   Future<void> _init() async {
@@ -566,6 +644,7 @@ class _VideoBoxState extends State<_VideoBox> {
       await controller.initialize();
       if (!mounted) return;
       controller.addListener(_onTick);
+      _register(controller);
       setState(() {});
       final size = controller.value.size;
       if (!_sizeReported && size.width > 0 && size.height > 0) {
@@ -590,6 +669,7 @@ class _VideoBoxState extends State<_VideoBox> {
   void didUpdateWidget(covariant _VideoBox old) {
     super.didUpdateWidget(old);
     if (old.video.localPath != widget.video.localPath) {
+      _unregister();
       _controller?.removeListener(_onTick);
       _controller?.dispose();
       _controller = null;
@@ -601,6 +681,7 @@ class _VideoBoxState extends State<_VideoBox> {
 
   @override
   void dispose() {
+    _unregister();
     _controller?.removeListener(_onTick);
     _controller?.dispose();
     super.dispose();
@@ -623,6 +704,8 @@ class _VideoBoxState extends State<_VideoBox> {
     if (v.duration > Duration.zero && v.position >= v.duration) {
       await controller.seekTo(Duration.zero);
     }
+    final source = _source;
+    if (source != null) _hub?.touch(source);
     await controller.play();
   }
 
@@ -638,6 +721,13 @@ class _VideoBoxState extends State<_VideoBox> {
       );
     }
     final size = controller.value.size;
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          _player(controller, size, constraints.maxWidth),
+    );
+  }
+
+  Widget _player(VideoPlayerController controller, Size size, double boxWidth) {
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -678,8 +768,86 @@ class _VideoBoxState extends State<_VideoBox> {
             ),
           ),
         ),
+        // "BU ANA NOT AL" (kullanıcı isteği 2026-10-16): video akarken
+        // kenardaki düğme o anın damgasını nota yazar ve yazma alanına
+        // odaklanır. Küçük kutuda düğme videoyu örtmesin diye çizilmez.
+        if (widget.noteAtButton &&
+            _source != null &&
+            _hub?.onNoteAt != null &&
+            boxWidth >= 140)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: _NoteAtChip(
+              onTap: () {
+                final source = _source;
+                if (source != null) _hub?.noteAt(source);
+              },
+            ),
+          ),
       ],
     );
+  }
+}
+
+/// Video kutusunun köşesindeki küçük "⏱ Not" düğmesi.
+class _NoteAtChip extends StatelessWidget {
+  const _NoteAtChip({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: context.l10n.videoNoteAtTime,
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.more_time, size: 15, color: Colors.white),
+            const SizedBox(width: 3),
+            Text(
+              context.l10n.videoNoteAtTimeShort,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Yerel oynatıcının (video_player) not tarafına açılan yüzü.
+class _PlayerTimeSource implements VideoTimeSource {
+  _PlayerTimeSource(this.attachmentId, this.controller);
+
+  @override
+  final String attachmentId;
+  final VideoPlayerController controller;
+
+  @override
+  Future<Duration?> position() async =>
+      controller.value.isInitialized ? controller.value.position : null;
+
+  @override
+  Future<void> seekTo(Duration position) async {
+    if (!controller.value.isInitialized) return;
+    final duration = controller.value.duration;
+    var target = position;
+    if (duration > Duration.zero && target > duration) target = duration;
+    await controller.seekTo(target);
+    await controller.play();
   }
 }
 
@@ -698,15 +866,13 @@ class _ImageTools extends StatelessWidget {
     this.onSelectMany,
     this.onDetach,
     this.onVideoToNote,
-    this.onPinTop,
-    this.pinIsBubbles = false,
+    this.viewSwitch,
     this.copyIsLink = false,
     this.onOpenExternal,
   });
 
-  /// [onPinTop] bir PDF'te BALONLU GÖRÜNÜME geçirir (üstte belge, altta not)
-  /// — menüdeki yazı ve simge ona göre.
-  final bool pinIsBubbles;
+  /// Üst satırdaki görünüm anahtarı (Sabit / Yüzen / Balonlu).
+  final Widget? viewSwitch;
 
   final double wFrac;
   final double minWidthFrac;
@@ -729,11 +895,6 @@ class _ImageTools extends StatelessWidget {
   /// Videodan (görüntü + ses) AI ile not çıkarır — yalnız video ekinde dolu.
   final VoidCallback? onVideoToNote;
 
-  /// Görseli/videoyu notun ÜSTÜNDEKİ sabit bölmeye alır (bkz.
-  /// [Attachment.pinHeight]). Aynı iş görseli sayfanın tepesine sürükleyerek
-  /// de yapılır; menüdeki giriş, hareketi bilmeyen için.
-  final VoidCallback? onPinTop;
-
   /// [onCopy] BAĞLANTI kopyalar (YouTube eki — dosyası yok, kopyalanacak şey
   /// adresi). Menüde "Bağlantıyı kopyala" olarak ÜSTTE görünür.
   final bool copyIsLink;
@@ -745,163 +906,171 @@ class _ImageTools extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
+    final tools = Row(
+      children: [
+        Icon(Icons.photo_size_select_large, size: 18, color: scheme.primary),
+        Expanded(
+          child: Slider(
+            value: wFrac,
+            min: minWidthFrac,
+            max: 1,
+            onChanged: onWidthChanged,
+            onChangeEnd: onWidthEnd,
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.fullscreen,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.fullscreen, size: 20),
+          onPressed: onFullscreen,
+        ),
+        IconButton(
+          tooltip: l10n.removeAttachment,
+          visualDensity: VisualDensity.compact,
+          icon: const Icon(Icons.delete_outline, size: 20),
+          color: scheme.error,
+          onPressed: onRemove,
+        ),
+        // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
+        // çubuk dar ekranda kaydırıcıya yer bırakmazdı. Hiçbiri
+        // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
+        if (onExtractText != null ||
+            onCopy != null ||
+            onSelectMany != null ||
+            onDetach != null ||
+            onVideoToNote != null ||
+            onOpenExternal != null)
+          PopupMenuButton<String>(
+            tooltip: l10n.more,
+            icon: const Icon(Icons.more_vert, size: 20),
+            onSelected: (action) {
+              switch (action) {
+                case 'ocr':
+                  onExtractText?.call();
+                case 'copy':
+                  onCopy?.call();
+                case 'selectMany':
+                  onSelectMany?.call();
+                case 'detach':
+                  onDetach?.call();
+                case 'videoToNote':
+                  onVideoToNote?.call();
+                case 'openExternal':
+                  onOpenExternal?.call();
+              }
+            },
+            itemBuilder: (context) => [
+              if (onCopy != null && copyIsLink)
+                PopupMenuItem(
+                  value: 'copy',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.link),
+                    title: Text(l10n.copyVideoLink),
+                  ),
+                ),
+              if (onOpenExternal != null)
+                PopupMenuItem(
+                  value: 'openExternal',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.open_in_new),
+                    title: Text(l10n.youTubeOpenExternal),
+                  ),
+                ),
+              if (onVideoToNote != null)
+                PopupMenuItem(
+                  value: 'videoToNote',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.auto_awesome_outlined),
+                    title: Text(l10n.videoToNote),
+                  ),
+                ),
+              if (onExtractText != null)
+                PopupMenuItem(
+                  value: 'ocr',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.document_scanner_outlined),
+                    title: Text(l10n.extractText),
+                  ),
+                ),
+              if (onCopy != null && !copyIsLink)
+                PopupMenuItem(
+                  value: 'copy',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.copy_outlined),
+                    title: Text(l10n.copy),
+                  ),
+                ),
+              if (onSelectMany != null)
+                PopupMenuItem(
+                  value: 'selectMany',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.checklist),
+                    title: Text(l10n.selectImages),
+                  ),
+                ),
+              if (onDetach != null)
+                PopupMenuItem(
+                  value: 'detach',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.attachment_outlined),
+                    title: Text(l10n.moveImageToAttachments),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+    final viewSwitch = this.viewSwitch;
     return Material(
       color: scheme.surfaceContainerHighest,
       elevation: 3,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(4, 6, 4, 2),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.photo_size_select_large,
-              size: 18,
-              color: scheme.primary,
-            ),
-            Expanded(
-              child: Slider(
-                value: wFrac,
-                min: minWidthFrac,
-                max: 1,
-                onChanged: onWidthChanged,
-                onChangeEnd: onWidthEnd,
+            // GÖRÜNÜM satırı: ekin nasıl duracağı tek dokunuşla değişir
+            // (kullanıcı isteği 2026-10-16 — "kolay geçişin yeri ve düzeni").
+            if (viewSwitch != null)
+              LayoutBuilder(
+                builder: (context, constraints) => Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    if (constraints.maxWidth >= 380) ...[
+                      Icon(
+                        Icons.layers_outlined,
+                        size: 16,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        l10n.viewModeTitle,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                    const Spacer(),
+                    viewSwitch,
+                    const SizedBox(width: 4),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              tooltip: l10n.fullscreen,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.fullscreen, size: 20),
-              onPressed: onFullscreen,
-            ),
-            IconButton(
-              tooltip: l10n.removeAttachment,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.delete_outline, size: 20),
-              color: scheme.error,
-              onPressed: onRemove,
-            ),
-            // Seyrek kullanılan işlemler menüde: hepsi ayrı düğme olsaydı
-            // çubuk dar ekranda kaydırıcıya yer bırakmazdı. Hiçbiri
-            // verilmemişse düğme de çizilmez (boş menü açılışta patlar).
-            if (onExtractText != null ||
-                onCopy != null ||
-                onSelectMany != null ||
-                onDetach != null ||
-                onVideoToNote != null ||
-                onPinTop != null ||
-                onOpenExternal != null)
-              PopupMenuButton<String>(
-                tooltip: l10n.more,
-                icon: const Icon(Icons.more_vert, size: 20),
-                onSelected: (action) {
-                  switch (action) {
-                    case 'ocr':
-                      onExtractText?.call();
-                    case 'copy':
-                      onCopy?.call();
-                    case 'selectMany':
-                      onSelectMany?.call();
-                    case 'detach':
-                      onDetach?.call();
-                    case 'videoToNote':
-                      onVideoToNote?.call();
-                    case 'pinTop':
-                      onPinTop?.call();
-                    case 'openExternal':
-                      onOpenExternal?.call();
-                  }
-                },
-                itemBuilder: (context) => [
-                  if (onCopy != null && copyIsLink)
-                    PopupMenuItem(
-                      value: 'copy',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.link),
-                        title: Text(l10n.copyVideoLink),
-                      ),
-                    ),
-                  if (onOpenExternal != null)
-                    PopupMenuItem(
-                      value: 'openExternal',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.open_in_new),
-                        title: Text(l10n.youTubeOpenExternal),
-                      ),
-                    ),
-                  if (onPinTop != null)
-                    PopupMenuItem(
-                      value: 'pinTop',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          pinIsBubbles
-                              ? Icons.chat_bubble_outline
-                              : Icons.vertical_align_top,
-                        ),
-                        title: Text(
-                          pinIsBubbles
-                              ? l10n.docViewToBubbles
-                              : l10n.pinMediaTop,
-                        ),
-                      ),
-                    ),
-                  if (onVideoToNote != null)
-                    PopupMenuItem(
-                      value: 'videoToNote',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.auto_awesome_outlined),
-                        title: Text(l10n.videoToNote),
-                      ),
-                    ),
-                  if (onExtractText != null)
-                    PopupMenuItem(
-                      value: 'ocr',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.document_scanner_outlined),
-                        title: Text(l10n.extractText),
-                      ),
-                    ),
-                  if (onCopy != null && !copyIsLink)
-                    PopupMenuItem(
-                      value: 'copy',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.copy_outlined),
-                        title: Text(l10n.copy),
-                      ),
-                    ),
-                  if (onSelectMany != null)
-                    PopupMenuItem(
-                      value: 'selectMany',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.checklist),
-                        title: Text(l10n.selectImages),
-                      ),
-                    ),
-                  if (onDetach != null)
-                    PopupMenuItem(
-                      value: 'detach',
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.attachment_outlined),
-                        title: Text(l10n.moveImageToAttachments),
-                      ),
-                    ),
-                ],
-              ),
+            tools,
           ],
         ),
       ),
@@ -1012,7 +1181,7 @@ class NotePageCanvas extends StatefulWidget {
     this.onVideoToNote,
     this.onPinTop,
     this.onPinHover,
-    this.onPinHoverItem,
+    this.onViewChange,
     this.onTapEmpty,
     this.topLimit = 0,
     this.onFloats,
@@ -1106,9 +1275,9 @@ class NotePageCanvas extends StatefulWidget {
   /// ekranın tepesinde "Bırak: üste sabitle" şeridini gösterir.
   final ValueChanged<bool>? onPinHover;
 
-  /// Sabitleme bölgesine SÜRÜKLENEN ek (bölgeden çıkınca null) — editör PDF
-  /// için şeride "balonlu görünüm" yazar.
-  final ValueChanged<Attachment?>? onPinHoverItem;
+  /// Görünüm anahtarı (Sabit / Yüzen / Balonlu — bkz. view_mode_switch.dart)
+  /// seçili ekin araç panelinde; null ise anahtar çizilmez.
+  final void Function(Attachment, AttachmentView)? onViewChange;
 
   /// Boş alana dokununca (seçili görsel yokken) çağrılır — editör bununla
   /// gövde metnine odaklanır ("aşağıya dokun, yazmaya başla" davranışı).
@@ -1150,9 +1319,6 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     if (_inPinZone == value) return;
     _inPinZone = value;
     if (value) HapticFeedback.mediumImpact();
-    widget.onPinHoverItem?.call(
-      value ? widget.images.where((a) => a.id == _moveId).firstOrNull : null,
-    );
     widget.onPinHover?.call(value);
   }
 
@@ -1308,10 +1474,9 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   void _equalizeSizes() {
     final chosen = _multiSelected;
     if (chosen.length < 2 || _cw <= 0) return;
-    final target = equalWidthFrac(
-      [for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw)],
-      minFrac: _minWidthFrac,
-    );
+    final target = equalWidthFrac([
+      for (final a in chosen) a.displayWidth ?? _defaultWFrac(_cw),
+    ], minFrac: _minWidthFrac);
     _applyMany([for (final a in chosen) a.copyWith(displayWidth: target)]);
     _endMulti();
   }
@@ -1391,6 +1556,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
   @override
   void dispose() {
     _previewPages?.dispose();
+    _floatTimer?.cancel();
     super.dispose();
   }
 
@@ -1589,16 +1755,44 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
     final cb = widget.onFloats;
     if (cb == null) return;
     final next = _floatsFor(cw);
-    if (_lastFloats != null && sameFloatList(_lastFloats!, next)) return;
+    // SÜRÜKLERKEN/BOYUTLANDIRIRKEN bantlar parmak DURUNCA bildirilir.
+    //
+    // KÖK NEDEN (kullanıcı 2026-10-16: "görseller sürüklenirken aşırı
+    // kasma"): taşımanın HER KARESİ yeni bant üretiyor, bildirim de editörün
+    // TAMAMINI `setState` ile yeniden kuruyor ve gövde metnini baştan
+    // sarıyordu — saniyede 60 kez tam editör build'i + sarma planı. Taşınan
+    // görsel zaten yarı saydam (altındaki metin okunur); metin parmak bir an
+    // durunca ya da bırakınca yerine akar.
+    final live = _moveId != null || _resizeId != null;
+    if (_lastFloats != null && sameFloatList(_lastFloats!, next)) {
+      // Bırakıldı ama son bant hâlâ zamanlayıcıda bekliyor: hemen ver.
+      if (!live && (_floatTimer?.isActive ?? false)) {
+        _floatTimer!.cancel();
+        _deliverFloats(cb, next);
+      }
+      return;
+    }
     _lastFloats = next;
-    // Ölçüm build sırasında yapılır; bildirimi kare sonuna erteleriz ki
-    // gövde denetleyicisi build içinde setState tetiklemesin.
+    _floatTimer?.cancel();
+    if (live) {
+      _floatTimer = Timer(const Duration(milliseconds: 160), () {
+        if (mounted) cb(next);
+      });
+      return;
+    }
+    _deliverFloats(cb, next);
+  }
+
+  /// Ölçüm build sırasında yapılır; bildirimi kare sonuna erteleriz ki
+  /// gövde denetleyicisi build içinde setState tetiklemesin.
+  void _deliverFloats(ValueChanged<List<FloatBox>> cb, List<FloatBox> next) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cb(next);
     });
   }
 
   List<FloatBox>? _lastFloats;
+  Timer? _floatTimer;
 
   void _openViewer(Attachment img) {
     if (img.kind == AttachmentKind.pdf) {
@@ -1607,8 +1801,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
           builder: (_) => PdfViewerScreen(
             attachment: img,
             initialPage: img.pdfPage,
-            onPageChanged: (p) =>
-                widget.onChanged(img.copyWith(pdfPage: p)),
+            onPageChanged: (p) => widget.onChanged(img.copyWith(pdfPage: p)),
             onChanged: widget.onChanged,
           ),
         ),
@@ -1659,6 +1852,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       attachment: a,
       fit: fit,
       inlineWebVideo: true,
+      noteAtButton: fit == BoxFit.cover,
       showWebTitle: fit == BoxFit.contain || _selectedId == a.id,
       webPlaying: _playingWeb.contains(a.id),
       onWebPlay: () => setState(() => _playingWeb.add(a.id)),
@@ -1672,6 +1866,13 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
 
   @override
   Widget build(BuildContext context) {
+    // Seçili ek sayfadan ayrıldıysa (sabitlendi, balonluya alındı, silindi)
+    // seçim de düşer — yoksa görünmeyen bir seçim geri tuşunu bir kez
+    // yutardı (bkz. aşağıdaki PopScope).
+    final selected0 = _selectedId;
+    if (selected0 != null && !widget.images.any((a) => a.id == selected0)) {
+      _selectedId = null;
+    }
     if (widget.images.isEmpty) {
       // Son görsel silinince bantların BOŞALDIĞI da bildirilmeli — yoksa
       // metin, artık var olmayan bir görselin etrafından akmaya devam eder.
@@ -1702,154 +1903,183 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
         controller: _multiBar,
         overlayChildBuilder: _multiToolbar,
         child: LayoutBuilder(
-        builder: (context, constraints) {
-          final cw = constraints.maxWidth;
-          // Otomatik yerleşim bu karede BİR kez kurulur; aşağıdaki bütün
-          // _resolve çağrıları aynı sonucu okur.
-          _computeAutoSlots(cw);
-          _reportFloats(cw);
-          // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
-          var maxBottom = 0.0;
-          for (final img in widget.images) {
-            final r = _resolve(img, cw);
-            final bottom = r.top + r.h + 72;
-            if (bottom > maxBottom) maxBottom = bottom;
-          }
-          final selected = _selectedId;
-          Attachment? selectedImg;
-          for (final img in widget.images) {
-            if (img.id == selected) selectedImg = img;
-          }
-          final previewImg = _previewOf(widget.images);
-          // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
-          // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
-          // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
-          // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
-          // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
-          // kapatır hem hedefine (ör. metin alanına odak) gider.
-          final imgForDismiss = selectedImg;
-          final content = Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
-              // gövdeye odaklanılır (dokunuş metin alanına da düşer).
-              GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTap: () {
-                  if (_selectedId != null) {
-                    _deselect();
-                  } else {
-                    widget.onTapEmpty?.call();
-                  }
-                },
-                child: PageMinHeight(
-                  minHeight: maxBottom > widget.minHeight
-                      ? maxBottom
-                      : widget.minHeight,
-                  child: widget.child,
-                ),
-              ),
-              // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
-              // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
-              if (widget.hint != null)
-                Builder(
-                  builder: (context) {
-                    // İpucu metnin ilk satırıyla AYNI yere oturur: görselin
-                    // yanında yer varsa yanına, yoksa altına (bkz.
-                    // [hintPlacement]).
-                    final place = _hintPlacement(cw);
-                    return PositionedDirectional(
-                      start: place.left,
-                      end: widget.textLeft,
-                      top: place.top,
-                      child: IgnorePointer(child: widget.hint!),
-                    );
+          builder: (context, constraints) {
+            final cw = constraints.maxWidth;
+            // Otomatik yerleşim bu karede BİR kez kurulur; aşağıdaki bütün
+            // _resolve çağrıları aynı sonucu okur.
+            _computeAutoSlots(cw);
+            _reportFloats(cw);
+            // Sayfa en alttaki görseli (+ araç çubuğu payı) kapsayacak kadar uzar.
+            var maxBottom = 0.0;
+            for (final img in widget.images) {
+              final r = _resolve(img, cw);
+              final bottom = r.top + r.h + 72;
+              if (bottom > maxBottom) maxBottom = bottom;
+            }
+            final selected = _selectedId;
+            Attachment? selectedImg;
+            for (final img in widget.images) {
+              if (img.id == selected) selectedImg = img;
+            }
+            final previewImg = _previewOf(widget.images);
+            // Görsel araç paneli, görselin/panelin DIŞINA düşen her dokunuşta
+            // kapanır. Alttaki GestureDetector yalnız "boş alan" dokunuşlarını
+            // görüyordu: metin alanına dokunmak alanın kendisine gittiğinden
+            // panel açık kalıyordu ("resmin üzerine tıklanmayınca panel
+            // kapanmıyor"). Listener jestleri YUTMAZ — dokunuş hem paneli
+            // kapatır hem hedefine (ör. metin alanına odak) gider.
+            final imgForDismiss = selectedImg;
+            final content = Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // İçerik: boş alana dokununca önce seçim kalkar, seçim yoksa
+                // gövdeye odaklanılır (dokunuş metin alanına da düşer).
+                GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    if (_selectedId != null) {
+                      _deselect();
+                    } else {
+                      widget.onTapEmpty?.call();
+                    }
                   },
+                  child: PageMinHeight(
+                    minHeight: maxBottom > widget.minHeight
+                        ? maxBottom
+                        : widget.minHeight,
+                    child: widget.child,
+                  ),
                 ),
-              for (final img in widget.images) _positioned(context, img, cw),
-              // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
-              // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
-              // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
-              for (final img in widget.images)
-                if (_playingWeb.contains(img.id))
+                // İpucu görsellerin ALTINDA çizilir: zaten kesişmeyecek yere
+                // konuyor, dokunuşu da yutmamalı (boş alana dokun → gövdeye odak).
+                if (widget.hint != null)
                   Builder(
                     builder: (context) {
-                      final r = _resolve(img, cw);
-                      return Positioned(
-                        left: r.left - 14,
-                        top: r.top - 14,
-                        child: Material(
-                          color: Theme.of(context).colorScheme.inverseSurface,
-                          shape: const CircleBorder(),
-                          elevation: 2,
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: () =>
-                                setState(() => _playingWeb.remove(img.id)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onInverseSurface,
-                              ),
-                            ),
-                          ),
-                        ),
+                      // İpucu metnin ilk satırıyla AYNI yere oturur: görselin
+                      // yanında yer varsa yanına, yoksa altına (bkz.
+                      // [hintPlacement]).
+                      final place = _hintPlacement(cw);
+                      return PositionedDirectional(
+                        start: place.left,
+                        end: widget.textLeft,
+                        top: place.top,
+                        child: IgnorePointer(child: widget.hint!),
                       );
                     },
                   ),
-              // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
-              // çizgiyi kapatırsa hizalama görünmez olurdu.
-              if (_guides.isNotEmpty)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: _GuidePainter(
-                        guides: _guides,
-                        color: Theme.of(context).colorScheme.primary,
+                for (final img in widget.images) _positioned(context, img, cw),
+                // YERİNDE OYNAYAN YouTube'un "durdur" düğmesi kutunun SOL ÜST
+                // köşesinin DIŞINDA (oynatıcının kendi düğmelerini örtmesin);
+                // tuvalin kendi katmanında ki dokunuş kutunun sınırına takılmasın.
+                for (final img in widget.images)
+                  if (_playingWeb.contains(img.id))
+                    Builder(
+                      builder: (context) {
+                        final r = _resolve(img, cw);
+                        return Positioned(
+                          left: r.left - 14,
+                          top: r.top - 14,
+                          child: Material(
+                            color: Theme.of(context).colorScheme.inverseSurface,
+                            shape: const CircleBorder(),
+                            elevation: 2,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: () =>
+                                  setState(() => _playingWeb.remove(img.id)),
+                              child: Padding(
+                                padding: const EdgeInsets.all(5),
+                                child: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onInverseSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                // Oynayan YouTube'un "Bu ana not al" düğmesi SAĞ ÜST köşenin
+                // dışında (durdur düğmesinin simetriği) — oynatıcının kendi
+                // düğmelerini örtmez.
+                for (final img in widget.images)
+                  if (_playingWeb.contains(img.id))
+                    Builder(
+                      builder: (context) {
+                        final hub = VideoHubScope.maybeOf(context);
+                        if (hub == null || hub.onNoteAt == null) {
+                          return const SizedBox.shrink();
+                        }
+                        final r = _resolve(img, cw);
+                        return Positioned(
+                          right: (cw - r.left - r.w - 10).clamp(0.0, cw),
+                          top: r.top - 14,
+                          child: _NoteAtChip(
+                            onTap: () {
+                              final source = hub.sourceFor(img.id);
+                              if (source != null) hub.noteAt(source);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                // Hizalama kılavuzları görsellerin ÜSTÜNDE: taşınan görsel
+                // çizgiyi kapatırsa hizalama görünmez olurdu.
+                if (_guides.isNotEmpty)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: _GuidePainter(
+                          guides: _guides,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              if (selectedImg != null) _toolbar(context, selectedImg, cw),
-              // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
-              // metnin sarması olduğu gibi kalır.
-              if (previewImg != null) _preview(context, previewImg, cw),
-            ],
-          );
-          // Listener HER ZAMAN ağaçta (seçim yokken boş geçer).
-          //
-          // KÖK NEDEN (2026-10-11, "görseli sürükleyerek üste sabitle"
-          // üzerinde çalışırken bulundu): Listener eskiden yalnız seçim
-          // VARKEN sarılıyordu. Seçili olmayan görsele basılı tutunca
-          // `onLongPressStart` seçimi açıyor → içerik bu karede Listener'a
-          // sarılıyor → Stack'in altındaki bütün ağaç (görselin jest
-          // tanıyıcısı dahil) yeniden kuruluyor ve süren sürükleme kopuyordu:
-          // "basılı tut, sürükle" ancak görsel ÖNCEDEN seçiliyse çalışıyordu.
-          Rect? imageRect;
-          Rect? toolbarRect;
-          if (imgForDismiss != null) {
-            final r = _resolve(imgForDismiss, cw);
-            // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
-            // bir bant: ikisinin de dışı "dışarısı" sayılır.
-            imageRect = Rect.fromLTWH(r.left - 24, r.top - 24, r.w + 48, r.h + 48);
-            toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
-          }
-          return Listener(
-            behavior: HitTestBehavior.translucent,
-            onPointerDown: (event) {
-              if (imageRect == null || toolbarRect == null) return;
-              final p = event.localPosition;
-              if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
-                _deselect();
-              }
-            },
-            child: content,
-          );
-        },
+                if (selectedImg != null) _toolbar(context, selectedImg, cw),
+                // Büyük önizleme en üstte: sayfa ölçüleriyle oynamadığı için
+                // metnin sarması olduğu gibi kalır.
+                if (previewImg != null) _preview(context, previewImg, cw),
+              ],
+            );
+            // Listener HER ZAMAN ağaçta (seçim yokken boş geçer).
+            //
+            // KÖK NEDEN (2026-10-11, "görseli sürükleyerek üste sabitle"
+            // üzerinde çalışırken bulundu): Listener eskiden yalnız seçim
+            // VARKEN sarılıyordu. Seçili olmayan görsele basılı tutunca
+            // `onLongPressStart` seçimi açıyor → içerik bu karede Listener'a
+            // sarılıyor → Stack'in altındaki bütün ağaç (görselin jest
+            // tanıyıcısı dahil) yeniden kuruluyor ve süren sürükleme kopuyordu:
+            // "basılı tut, sürükle" ancak görsel ÖNCEDEN seçiliyse çalışıyordu.
+            Rect? imageRect;
+            Rect? toolbarRect;
+            if (imgForDismiss != null) {
+              final r = _resolve(imgForDismiss, cw);
+              // Tutamaklar köşelerden taşar, panel görselin altında tam genişlik
+              // bir bant: ikisinin de dışı "dışarısı" sayılır.
+              imageRect = Rect.fromLTWH(
+                r.left - 24,
+                r.top - 24,
+                r.w + 48,
+                r.h + 48,
+              );
+              toolbarRect = Rect.fromLTWH(0, r.top + r.h + 6, cw, 64);
+            }
+            return Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (event) {
+                if (imageRect == null || toolbarRect == null) return;
+                final p = event.localPosition;
+                if (!imageRect.contains(p) && !toolbarRect.contains(p)) {
+                  _deselect();
+                }
+              },
+              child: content,
+            );
+          },
         ),
       ),
     );
@@ -2128,8 +2358,7 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
       width: r.w,
       height: r.h,
       child: GestureDetector(
-        onTap: () =>
-            _multiMode ? _toggleMulti(img.id) : _select(img.id),
+        onTap: () => _multiMode ? _toggleMulti(img.id) : _select(img.id),
         // ÇİFT DOKUNUŞ = büyük önizleme, ama YALNIZ görsel SEÇİLİYKEN.
         //
         // KÖK NEDEN (kullanıcı 2026-09-05: "görselleri seçerken gecikme
@@ -2396,18 +2625,22 @@ class _NotePageCanvasState extends State<NotePageCanvas> {
             ? null
             : () => _startMulti(img.id),
         // YouTube ekinin dosyası yok — videodan not çıkarmak mümkün değil.
-        onVideoToNote: widget.onVideoToNote == null || !isVideo || img.isWebVideo
+        onVideoToNote:
+            widget.onVideoToNote == null || !isVideo || img.isWebVideo
             ? null
             : () => widget.onVideoToNote!(img),
-        // PDF'te aynı giriş BALONLU GÖRÜNÜME geçirir (üst bölme görsel/video
-        // içindir; belgenin "üstte belge, altta not" hâli balonlu görünüm).
-        onPinTop: widget.onPinTop == null
+        // GÖRÜNÜM ANAHTARI panelin üst satırında: Sabit / Yüzen / Balonlu
+        // (eskiden menüde "Üste sabitle", PDF'te "Balonlu görünüm").
+        viewSwitch: widget.onViewChange == null
             ? null
-            : () {
-                _deselect();
-                widget.onPinTop!(img);
-              },
-        pinIsBubbles: isPdf,
+            : AttachmentViewSwitch(
+                current: AttachmentView.floating,
+                available: availableViews(img),
+                onChanged: (view) {
+                  _deselect();
+                  widget.onViewChange!(img, view);
+                },
+              ),
         onDetach: widget.onDetach == null
             ? null
             : () {

@@ -27,20 +27,63 @@ String formatVideoPosition(Duration d) {
 /// YouTube eki ([Attachment.isWebVideo]) gömülü oynatıcıya gider — videoyu
 /// açan her yer (sayfa, şerit, liste) aynı tek girişi kullanır.
 class VideoViewerScreen extends StatelessWidget {
-  const VideoViewerScreen({super.key, required this.attachment});
+  const VideoViewerScreen({
+    super.key,
+    required this.attachment,
+    this.start,
+    this.onNoteAt,
+  });
 
   final Attachment attachment;
+
+  /// Açılış konumu (nottaki zaman damgasına dokunulduysa).
+  final Duration? start;
+
+  /// "Bu ana not al": verilirse üst çubukta düğme çıkar; basınca ekran
+  /// kapanır ve not o anın damgasıyla açılır (bkz. editör `_noteAtVideoTime`).
+  final ValueChanged<Duration>? onNoteAt;
 
   @override
   Widget build(BuildContext context) => attachment.isWebVideo
-      ? YouTubeViewerScreen(attachment: attachment)
-      : _LocalVideoViewer(attachment: attachment);
+      ? YouTubeViewerScreen(
+          attachment: attachment,
+          start: start,
+          onNoteAt: onNoteAt,
+        )
+      : _LocalVideoViewer(
+          attachment: attachment,
+          start: start,
+          onNoteAt: onNoteAt,
+        );
+}
+
+/// Tam ekran oynatıcıların üst çubuğundaki "Bu ana not al" düğmesi.
+class NoteAtTimeButton extends StatelessWidget {
+  const NoteAtTimeButton({super.key, required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: FilledButton.tonalIcon(
+      style: FilledButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+      ),
+      onPressed: onPressed,
+      icon: const Icon(Icons.more_time, size: 18),
+      label: Text(context.l10n.videoNoteAtTime),
+    ),
+  );
 }
 
 class _LocalVideoViewer extends StatefulWidget {
-  const _LocalVideoViewer({required this.attachment});
+  const _LocalVideoViewer({required this.attachment, this.start, this.onNoteAt});
 
   final Attachment attachment;
+  final Duration? start;
+  final ValueChanged<Duration>? onNoteAt;
 
   @override
   State<_LocalVideoViewer> createState() => _LocalVideoViewerState();
@@ -81,6 +124,10 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
       if (!mounted) {
         await controller.dispose();
         return;
+      }
+      final start = widget.start;
+      if (start != null && start > Duration.zero) {
+        await controller.seekTo(start);
       }
       setState(() => _controller = controller);
       // Oynarken ana ekrana çıkmak küçük pencereye alır (bkz. youtube_viewer).
@@ -145,6 +192,15 @@ class _LocalVideoViewerState extends State<_LocalVideoViewer> {
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
+          if (widget.onNoteAt != null && controller != null)
+            NoteAtTimeButton(
+              onPressed: () {
+                final position = controller.value.position;
+                controller.pause();
+                Navigator.of(context).pop();
+                widget.onNoteAt!(position);
+              },
+            ),
           if (_pipSupported && controller != null)
             IconButton(
               tooltip: context.l10n.pictureInPicture,

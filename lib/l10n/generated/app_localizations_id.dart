@@ -4702,4 +4702,41 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'Tampilan';
+
+  @override
+  String get viewModePinned => 'Disematkan';
+
+  @override
+  String get viewModeFloating => 'Mengambang';
+
+  @override
+  String get viewModeBubbles => 'Gelembung';
+
+  @override
+  String get viewModePinnedHint =>
+      'Sematkan di atas — tetap di atas, catatan bergulir di bawahnya';
+
+  @override
+  String get viewModeFloatingHint =>
+      'Mengambang di halaman — teks mengalir di sekitarnya';
+
+  @override
+  String get viewModeBubblesHint =>
+      'Tampilan gelembung — gelembung, sorotan, dan pena di halaman';
+
+  @override
+  String get viewModeSwitchedFloating => 'Kembali ke halaman';
+
+  @override
+  String get videoNoteAtTime => 'Catat momen ini';
+
+  @override
+  String get videoNoteAtTimeShort => 'Catat';
+
+  @override
+  String get videoTimeUnknown =>
+      'Waktu video tidak terbaca — putar videonya dulu.';
 }

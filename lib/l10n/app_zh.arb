@@ -889,5 +889,16 @@
   "menuSectionContent": "内容",
   "menuSectionPeople": "账户与联系人",
   "menuSectionHome": "主屏幕",
-  "menuSectionApp": "应用"
+  "menuSectionApp": "应用",
+  "viewModeTitle": "视图",
+  "viewModePinned": "固定",
+  "viewModeFloating": "浮动",
+  "viewModeBubbles": "气泡",
+  "viewModePinnedHint": "固定在顶部——保持在上方，笔记在下方滚动",
+  "viewModeFloatingHint": "在页面上浮动——文字环绕排列",
+  "viewModeBubblesHint": "气泡视图——在页面上添加气泡、高亮和画笔",
+  "viewModeSwitchedFloating": "已回到页面",
+  "videoNoteAtTime": "在此刻记笔记",
+  "videoNoteAtTimeShort": "笔记",
+  "videoTimeUnknown": "无法读取视频时间——请先播放视频。"
 }

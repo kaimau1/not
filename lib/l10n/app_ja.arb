@@ -889,5 +889,16 @@
   "menuSectionContent": "内容",
   "menuSectionPeople": "アカウントと連絡先",
   "menuSectionHome": "ホーム画面",
-  "menuSectionApp": "アプリ"
+  "menuSectionApp": "アプリ",
+  "viewModeTitle": "表示",
+  "viewModePinned": "固定",
+  "viewModeFloating": "フロート",
+  "viewModeBubbles": "吹き出し",
+  "viewModePinnedHint": "上部に固定 — 上にとどまり、ノートは下でスクロールします",
+  "viewModeFloatingHint": "ページに浮かべる — 文字が周りを回り込みます",
+  "viewModeBubblesHint": "吹き出し表示 — ページ上に吹き出し・ハイライト・ペン",
+  "viewModeSwitchedFloating": "ページに戻しました",
+  "videoNoteAtTime": "この瞬間にメモ",
+  "videoNoteAtTimeShort": "メモ",
+  "videoTimeUnknown": "動画の再生位置を取得できません。先に再生してください。"
 }

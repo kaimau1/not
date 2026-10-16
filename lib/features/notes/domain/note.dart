@@ -424,6 +424,16 @@ class Note {
       attachments.isEmpty &&
       reminderAt == null;
 
+  /// [a] bir görselden BALONLU görünüm için üretilmiş belge mi ve şu an
+  /// GİZLİ mi (bkz. `Attachment.sourceId`): not klasik görünümdeyken ve
+  /// kaynak görsel hâlâ notta dururken belge ne sayfada ne şeritte ne kartta
+  /// görünür — görselin kendisi görünür. Balonlu görünümde belge notun
+  /// kendisidir, gizlenmez.
+  bool hidesDerivedDocument(Attachment a) =>
+      a.sourceId.isNotEmpty &&
+      !type.isPageNoteType &&
+      attachments.any((x) => x.id == a.sourceId);
+
   /// MEVCUT eklerin sayfa notu var mı? (Boş dizgiler sayılmaz; belgesi
   /// silinmiş eskiden kalma anahtarlar sayılmaz.)
   bool get hasPageNotes {

@@ -889,5 +889,16 @@
   "menuSectionContent": "المحتوى",
   "menuSectionPeople": "الحساب وجهات الاتصال",
   "menuSectionHome": "الشاشة الرئيسية",
-  "menuSectionApp": "التطبيق"
+  "menuSectionApp": "التطبيق",
+  "viewModeTitle": "العرض",
+  "viewModePinned": "مثبّت",
+  "viewModeFloating": "عائم",
+  "viewModeBubbles": "فقاعات",
+  "viewModePinnedHint": "تثبيت في الأعلى — يبقى في الأعلى وتُمرَّر الملاحظة أسفله",
+  "viewModeFloatingHint": "عائم على الصفحة — يلتف النص حوله",
+  "viewModeBubblesHint": "عرض الفقاعات — فقاعات وتمييز وقلم على الصفحة",
+  "viewModeSwitchedFloating": "عاد إلى الصفحة",
+  "videoNoteAtTime": "دوّن ملاحظة عند هذه اللحظة",
+  "videoNoteAtTimeShort": "ملاحظة",
+  "videoTimeUnknown": "تعذّرت قراءة وقت الفيديو — شغّل الفيديو أولاً."
 }

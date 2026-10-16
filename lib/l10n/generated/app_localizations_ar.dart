@@ -4674,4 +4674,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pageBarMore => 'Sayfa ve not seçenekleri';
+
+  @override
+  String get viewModeTitle => 'العرض';
+
+  @override
+  String get viewModePinned => 'مثبّت';
+
+  @override
+  String get viewModeFloating => 'عائم';
+
+  @override
+  String get viewModeBubbles => 'فقاعات';
+
+  @override
+  String get viewModePinnedHint =>
+      'تثبيت في الأعلى — يبقى في الأعلى وتُمرَّر الملاحظة أسفله';
+
+  @override
+  String get viewModeFloatingHint => 'عائم على الصفحة — يلتف النص حوله';
+
+  @override
+  String get viewModeBubblesHint =>
+      'عرض الفقاعات — فقاعات وتمييز وقلم على الصفحة';
+
+  @override
+  String get viewModeSwitchedFloating => 'عاد إلى الصفحة';
+
+  @override
+  String get videoNoteAtTime => 'دوّن ملاحظة عند هذه اللحظة';
+
+  @override
+  String get videoNoteAtTimeShort => 'ملاحظة';
+
+  @override
+  String get videoTimeUnknown =>
+      'تعذّرت قراءة وقت الفيديو — شغّل الفيديو أولاً.';
 }
