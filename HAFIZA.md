@@ -4156,3 +4156,76 @@ Drive'ıma erişemez. Video hâlâ buluta gitmez (eski kullanıcı kararı).
 ### Ortam
 Flutter 3.44.6 `/opt/flutter`'a indirildi; Android SDK yok — APK CI'da.
 graphify konteynerde yok, graf güncellenmedi.
+
+## 2026-10-15 (2. tur) — kasma, balonlu mod yenilemesi, gömme çipi, kart kapağı, + menüsü
+Kullanıcı (v1.0.427 sonrası): "güncellemeden sonra kasma oldu; balonlu mod
+baştan aşağı yenilenmeli (görüntü, performans, genel hatlar); ek gömmenin
+akışı ve görüntüsü yenilenmeli; dashboard'ta balonlu ve diğerleri
+toparlanmalı; + menüsü ekranı kaplıyor, Metin/Liste çok yukarıda".
+
+### Kasmanın kök nedenleri (hepsi 1. turda gelen kart medyası + FAB)
+* Video kapağı Android'in ANA iş parçacığında tam boy kare + JPEG
+  çıkarılıyordu (`MainActivity.videoFrame`). Artık süreç ömürlü tek
+  iş parçacıklı `notlar-media` yürütücüsünde, `getScaledFrameAtTime` ile
+  doğrudan küçük (`VideoFrame.thumbnail`, 360 px).
+* Kart çiziminde anahtar için `statSync`; görünen bütün PDF'ler aynı anda
+  çiziliyordu. `CardThumbs`: anahtar ekin alanlarından (yol+boyut+sayfa),
+  TEK sıra, sonuç diske (`<önbellek>/card_thumbs/`).
+* "+" paneli açılırken tam ekran `BackdropFilter` bulanıklığı canlanıyordu →
+  düz karartma (opaklık animasyonu).
+* Balonlu mod: (a) `BubblePageLayer` denetleyicinin HER bildiriminde
+  görünen bütün sayfaları kuruyordu → sayfa özeti (`_PageView`, balonlar
+  KİMLİKLE) değişmedikçe setState yok; (b) pano her setState'inde (sayfa
+  sınırı geçilince, bölme sürüklenince) yeni `PdfViewer`+params kuruyordu →
+  görüntüleyici widget'ı saklanıyor (`_viewerFor`, slaytta `_listFor`),
+  yalnız kaynak/kalem/yakınlaştırma değişince yeniden kurulur; (c) slayt
+  listesi yalnız "taşınıyor mu" için bütün denetleyiciyi dinliyordu →
+  `draggingListenable`; seçim/kalem katmanı `addingListenable`'a bakar;
+  (d) tutamaç gölgeleri bulanıksız.
+* TUZAK: `TextField` kendi `RepaintBoundary`'si içinde; üstüne boyayan bir
+  `CustomPaint` imleç yanıp sönmesinden ve iç kaydırmadan HABERSİZ —
+  yalnız denetleyici bildirimiyle tazelenir (çip boyayıcısı buna göre).
+
+### Balonlu mod (`bubble_layer.dart`, `page_note_pane.dart`)
+* Tutamaç KONUŞMA BALONU: sivri köşe noktada (serbest balonun gövdesi
+  üstte, vurgununki satırın ALTINDA — yazıyı örtmesin; kenarda ters döner,
+  `_pinPlacement`). Konum alanı değişmedi (eski balonlar ~yarım boy yukarı
+  görünür, veri aynı).
+* Okuma kartı tutamacın üstüne binmez, "Düzenle" YAZILI. Yazma kartında
+  renk/yıldız/acil/sil HEP görünür (⋮ kalktı), "Bitti" yazılı. Ekleme kartı
+  iki satır + "Bitti".
+* Balon bırak/listesi sağ üst köşedeki iki simgeden ALT ÇUBUĞA
+  (`BubbleBarActions`, sayılı rozet). Çubukta sayfa hapı; dar ekranda
+  (<520) sayfa notu/toplu görünüm/sayfa düzenle/tam ekran "⋮" menüsünde,
+  <340'ta "Balon" yazısı düşer.
+* TUZAK: slayt tam ekranı `adding`'i setState'le okuyordu; denetleyici
+  kendi kapatınca (balon bırakıldı, "Bitti") ekran bayat kalıyordu →
+  `addingListenable` dinleniyor.
+
+### Gömme çipi (`tag_chips.dart`, `embed_sheet.dart`)
+KARAR: metin DEĞİŞMEZ ("📎 ad" ham metinle aynı kalmalı). Çip kipinde
+(`tagChipColors`) ataç saydam, ad türün renginde; çerçeve ve türün rozeti
+(opak — emoji saydamlığı desteklenmese de örter) `RenderEditable.
+getBoxesForSelection` kutularından alanın ÜSTÜNE çizilir. Kalınlık/punto
+DEĞİŞTİRİLMEZ (ölçüm yolu renksiz ölçer; genişlik değişirse sarma kayar).
+Renkler: PDF kırmızı, görsel turkuaz, video mor, YouTube pembe-kırmızı,
+sunum turuncu, ses mavi (`embedKindColor`). Sarmalayıcı HEP ağaçta (görünüm
+boşken boyayıcı null) — ilk gömmede alan yeniden kurulup klavye düşmesin.
+Madde satırı önbelleği görünümü İÇERİKLE anahtarlar (harita her kurulumda
+yeni nesne). Seçici: önce nottaki ekler (küçük resimli), sonra 4 kutu.
+Menü etiketi "Ek göm".
+
+### Kart (`note_card_media.dart`)
+Balonlu notun belgesi kartın tepesinde KAPAK (`CardDocumentCover`, ilk
+sayfa + sol üstte rozet + altta ad/balon sayısı); "BALONLU …" hapı dar
+kartta kesiliyordu. Sıradan notun belge eki gövdede kâğıt + tür şeridi.
+
+### + menüsü (`quick_add_fab.dart`)
+Alttan yukarı: Metin/Liste FAB'ın hemen üstünde, üstünde 3 "sık
+kullandıkların" (`quick_add_usage`) + Tümü; kapalıyken ekranın yarısından
+kısa.
+
+### Ortam
+Kotlin değişikliği yerelde derlenmedi (Android SDK yok) — CI derler.
+Görsel denetim için `test/_shots/` altında gerçek yazı tipli altın
+görüntü üretildi ve SİLİNDİ (commit'lenmez).
