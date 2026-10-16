@@ -134,11 +134,17 @@ String? linkAt(String text, int offset) {
 /// Metni düz ve bağlantı parçalarına böler. [linkColor] null ise metin
 /// olduğu gibi döner — ÖLÇÜM yolu (TextPainter) rengi umursamaz ve renk/alt
 /// çizgi satır genişliğini değiştirmediği için ölçüm ile çizim ayrışmaz.
+///
+/// [tagChipColors] verilirse ek etiketleri ÇİP kipinde çizilir (yalnız
+/// editörde, bkz. `editor/tag_chips.dart`): ataç SAYDAM, ad ekin türünün
+/// renginde; zemin, alt çizgi ve türün rozeti alanın üstündeki boyayıcıdan
+/// gelir. Yerleşim değişmez — yalnız renk.
 List<InlineSpan> linkSpans(
   String text,
   TextStyle? style,
   Color? linkColor, {
   Iterable<String> attachmentNames = const [],
+  Map<String, Color>? tagChipColors,
 }) {
   if (linkColor == null || text.isEmpty) {
     return [TextSpan(text: text, style: style)];
@@ -199,7 +205,31 @@ List<InlineSpan> linkSpans(
       );
     }
     final marked = text.substring(mark.start, mark.end);
-    if (mark.attachment && marked.startsWith(kAttachmentTagPrefix)) {
+    final chip = mark.attachment && tagChipColors != null
+        ? tagChipColors[marked.substring(kAttachmentTagPrefix.length)]
+        : null;
+    if (chip != null && marked.startsWith(kAttachmentTagPrefix)) {
+      // ÇİP kipi: ataç görünmez (yerinde türün rozeti çizilir), ad ekin
+      // renginde ve hafif kalın değil — kalınlık satır genişliğini
+      // değiştirir, ölçüm yolu ile çizim ayrışırdı.
+      spans.add(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: kAttachmentTagPrefix,
+              style: base.copyWith(
+                color: const Color(0x00000000),
+                decoration: TextDecoration.none,
+              ),
+            ),
+            TextSpan(
+              text: marked.substring(kAttachmentTagPrefix.length),
+              style: base.copyWith(color: chip),
+            ),
+          ],
+        ),
+      );
+    } else if (mark.attachment && marked.startsWith(kAttachmentTagPrefix)) {
       // Ataç + boşluk ÇİZGİSİZ, ad çizgili; ikisi tek span altında (etiket
       // yine tek parça: çizilen metin ham metinle birebir aynı).
       spans.add(

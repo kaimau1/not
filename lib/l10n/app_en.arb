@@ -1091,7 +1091,7 @@
   "archiveEntryTitle": "Title",
   "archiveLinkedFile": "Linked file",
   "archiveNoLink": "No linked file",
-  "attachmentTagEmbed": "Embed attachment in selection",
+  "attachmentTagEmbed": "Embed",
   "attachmentTagNoAttachment": "Add a file to the note first, then you can embed it in the text.",
   "bubbleModeBubble": "Bubble",
   "attachmentTagEmbedInfo": "Links to your selected text, or at the cursor if nothing is selected",
@@ -1765,5 +1765,13 @@
   "storageModeInfo": "On the web, attachments are uploaded to the app's cloud.",
   "driveWaiting": "{count, plural, =1{1 attachment is waiting for Google Drive — tap to connect} other{{count} attachments are waiting for Google Drive — tap to connect}}",
   "driveDownloading": "Downloading the attachment from Google Drive…",
-  "driveNeededForFile": "This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it."
+  "driveNeededForFile": "This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.",
+  "quickAddMore": "TEMPLATES AND NOTEBOOK",
+  "quickAddFrequent": "YOUR FREQUENT",
+  "quickAddAll": "All",
+  "quickAddLess": "Less",
+  "bubbleDone": "Done",
+  "bubbleEditShort": "Edit",
+  "bubblePlainModeShort": "Text",
+  "pageBarMore": "Page and note options"
 }

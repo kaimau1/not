@@ -2902,7 +2902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archiveNoLink => 'No linked file';
 
   @override
-  String get attachmentTagEmbed => 'Embed attachment in selection';
+  String get attachmentTagEmbed => 'Embed';
 
   @override
   String get attachmentTagNoAttachment =>
@@ -4671,4 +4671,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get driveNeededForFile =>
       'This attachment is in your Google Drive. Connect Drive in Settings → Sync to see it.';
+
+  @override
+  String get quickAddMore => 'TEMPLATES AND NOTEBOOK';
+
+  @override
+  String get quickAddFrequent => 'YOUR FREQUENT';
+
+  @override
+  String get quickAddAll => 'All';
+
+  @override
+  String get quickAddLess => 'Less';
+
+  @override
+  String get bubbleDone => 'Done';
+
+  @override
+  String get bubbleEditShort => 'Edit';
+
+  @override
+  String get bubblePlainModeShort => 'Text';
+
+  @override
+  String get pageBarMore => 'Page and note options';
 }

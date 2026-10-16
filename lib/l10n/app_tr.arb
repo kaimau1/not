@@ -1344,7 +1344,7 @@
   "archiveEntryTitle": "Başlık",
   "archiveLinkedFile": "Bağlı dosya",
   "archiveNoLink": "Bağlı dosya yok",
-  "attachmentTagEmbed": "Seçili yazıya ek göm",
+  "attachmentTagEmbed": "Ek göm",
   "attachmentTagNoAttachment": "Önce nota bir dosya ekle; sonra yazıya gömebilirsin.",
   "bubbleModeBubble": "Balon",
   "attachmentTagEmbedInfo": "Yazıyı seçtiysen o yazıya, seçmediysen imlecin yerine bağlanır",
@@ -2051,5 +2051,13 @@
   "driveWaiting": "{count, plural, =1{1 ek Google Drive bağlantısını bekliyor — dokun, bağla} other{{count} ek Google Drive bağlantısını bekliyor — dokun, bağla}}",
   "@driveWaiting": {"placeholders": {"count": {"type": "int"}}},
   "driveDownloading": "Ek Google Drive'dan indiriliyor…",
-  "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla."
+  "driveNeededForFile": "Bu ek Google Drive'ında. Görmek için Ayarlar → Senkron'dan Drive'ı bağla.",
+  "quickAddMore": "ŞABLON VE DEFTER",
+  "quickAddFrequent": "SIK KULLANDIKLARIN",
+  "quickAddAll": "Tümü",
+  "quickAddLess": "Daha az",
+  "bubbleDone": "Bitti",
+  "bubbleEditShort": "Düzenle",
+  "bubblePlainModeShort": "Metin",
+  "pageBarMore": "Sayfa ve not seçenekleri"
 }

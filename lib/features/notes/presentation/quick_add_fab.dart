@@ -1,10 +1,13 @@
+import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n_ext.dart';
+import '../../settings/settings_providers.dart';
 import '../data/document_scan.dart';
 import '../domain/note_type.dart';
 import 'qr_scan_screen.dart';
@@ -142,128 +145,7 @@ class _QuickAddFabState extends State<QuickAddFab> {
             followerAnchor: Alignment.bottomRight,
             offset: const Offset(0, -12),
             child: _QuickAddPanel(
-              // ÜÇ BÖLÜM (kullanıcı bulgusu 2026-10-15: "not ekleme menüsü
-              // düzenlenmeli, eksikler giderilmeli, yazılar ve mantık
-              // düzeltilmeli"). Eski "YAKALA — İÇERİKTEN NOT OLUŞTURUR"
-              // bölümü kamerayı, dosya seçiciyi ve kalemi tek torbaya
-              // koyuyordu; etiketler de "Foto çek not al", "PDF ekle not al"
-              // gibi cümle yarımlarıydı. Galeriden video ve YouTube hiç
-              // yoktu (yalnız editörün içindeki Ekle levhasında vardı).
-              // Şimdi: YAZ (boş not) · ÇEK VE KAYDET (kamera, mikrofon,
-              // kalem) · DOSYADAN (cihazdaki/web'deki içerik).
-              sections: [
-                (
-                  label: context.l10n.quickAddWrite,
-                  color: Theme.of(context).colorScheme.primary,
-                  options: [
-                    (
-                      Icons.notes,
-                      context.l10n.newTextNote,
-                      () => widget.onCreate(NoteType.text),
-                    ),
-                    (
-                      Icons.check_box_outlined,
-                      context.l10n.newChecklist,
-                      () => widget.onCreate(NoteType.checklist),
-                    ),
-                    (
-                      Icons.format_list_numbered_rounded,
-                      context.l10n.newOrderedList,
-                      () => widget.onCreate(NoteType.ordered),
-                    ),
-                    if (widget.onShopping case final onShopping?)
-                      (
-                        Icons.shopping_cart_outlined,
-                        context.l10n.tplShoppingName,
-                        onShopping,
-                      ),
-                    if (widget.onTemplate case final onTemplate?)
-                      (
-                        Icons.dashboard_customize_outlined,
-                        context.l10n.fromTemplate,
-                        onTemplate,
-                      ),
-                    // ARŞİV DEFTERİ (kullanıcı isteği 2026-08-16): kendi
-                    // sayfaları olan, belge/görsel KOPYASI toplayan not.
-                    (
-                      Icons.inventory_2_outlined,
-                      context.l10n.archiveNotebook,
-                      () => widget.onCreate(NoteType.archive),
-                    ),
-                  ],
-                ),
-                (
-                  label: context.l10n.quickAddCapture,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  options: [
-                    (
-                      Icons.graphic_eq,
-                      context.l10n.newVoiceCapture,
-                      widget.onVoiceCapture,
-                    ),
-                    (
-                      Icons.photo_camera_outlined,
-                      context.l10n.newPhotoNote,
-                      widget.onPhotoNote,
-                    ),
-                    (
-                      Icons.videocam_outlined,
-                      context.l10n.newVideoNote,
-                      widget.onVideoNote,
-                    ),
-                    if (DocumentScan.available)
-                      (
-                        Icons.document_scanner_outlined,
-                        context.l10n.newScanNote,
-                        widget.onScanNote,
-                      ),
-                    (
-                      Icons.draw_outlined,
-                      context.l10n.newHandwriting,
-                      widget.onHandwriting,
-                    ),
-                    if (qrScanSupported)
-                      (
-                        Icons.qr_code_scanner,
-                        context.l10n.qrScanTitle,
-                        widget.onQrNote,
-                      ),
-                  ],
-                ),
-                (
-                  label: context.l10n.quickAddImport,
-                  color: Theme.of(context).colorScheme.secondary,
-                  options: [
-                    (
-                      Icons.photo_library_outlined,
-                      context.l10n.quickAddImage,
-                      widget.onImageNote,
-                    ),
-                    (
-                      Icons.picture_as_pdf_outlined,
-                      context.l10n.quickAddPdf,
-                      widget.onPdfNote,
-                    ),
-                    (
-                      Icons.slideshow_outlined,
-                      context.l10n.quickAddSlides,
-                      widget.onSlidesNote,
-                    ),
-                    if (widget.onGalleryVideo case final onGalleryVideo?)
-                      (
-                        Icons.video_library_outlined,
-                        context.l10n.quickAddGalleryVideo,
-                        onGalleryVideo,
-                      ),
-                    if (widget.onYouTube case final onYouTube?)
-                      (
-                        Icons.smart_display_outlined,
-                        context.l10n.quickAddYouTube,
-                        onYouTube,
-                      ),
-                  ],
-                ),
-              ],
+              options: _options(context),
               onSelected: _select,
             ),
           ),
@@ -293,6 +175,161 @@ class _QuickAddFabState extends State<QuickAddFab> {
     Overlay.of(context).insert(_entry!);
     quickAddPanelOpen.value = true;
     setState(() {});
+  }
+
+  /// Menüdeki BÜTÜN seçenekler, gruplarıyla. Anahtar kullanım sayacının
+  /// (bkz. [_QuickAddPanel] — sık kullanılanlar) kalıcı kimliğidir.
+  List<QuickAddOption> _options(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return [
+      // YAZ — en sık kullanılanlar; FAB'ın HEMEN ÜSTÜNDE büyük düğmeler.
+      QuickAddOption(
+        'text',
+        QuickAddGroup.primary,
+        Icons.notes,
+        l10n.newTextNote,
+        () => widget.onCreate(NoteType.text),
+        scheme.primary,
+      ),
+      QuickAddOption(
+        'checklist',
+        QuickAddGroup.primary,
+        Icons.check_box_outlined,
+        l10n.newChecklist,
+        () => widget.onCreate(NoteType.checklist),
+        scheme.primary,
+      ),
+      QuickAddOption(
+        'ordered',
+        QuickAddGroup.primary,
+        Icons.format_list_numbered_rounded,
+        l10n.newOrderedList,
+        () => widget.onCreate(NoteType.ordered),
+        scheme.primary,
+      ),
+      // ÇEK VE KAYDET — kamera, mikrofon, kalem.
+      QuickAddOption(
+        'voice',
+        QuickAddGroup.capture,
+        Icons.graphic_eq,
+        l10n.newVoiceCapture,
+        widget.onVoiceCapture,
+        scheme.tertiary,
+      ),
+      QuickAddOption(
+        'photo',
+        QuickAddGroup.capture,
+        Icons.photo_camera_outlined,
+        l10n.newPhotoNote,
+        widget.onPhotoNote,
+        scheme.tertiary,
+      ),
+      QuickAddOption(
+        'video',
+        QuickAddGroup.capture,
+        Icons.videocam_outlined,
+        l10n.newVideoNote,
+        widget.onVideoNote,
+        scheme.tertiary,
+      ),
+      if (DocumentScan.available)
+        QuickAddOption(
+          'scan',
+          QuickAddGroup.capture,
+          Icons.document_scanner_outlined,
+          l10n.newScanNote,
+          widget.onScanNote,
+          scheme.tertiary,
+        ),
+      QuickAddOption(
+        'draw',
+        QuickAddGroup.capture,
+        Icons.draw_outlined,
+        l10n.newHandwriting,
+        widget.onHandwriting,
+        scheme.tertiary,
+      ),
+      if (qrScanSupported)
+        QuickAddOption(
+          'qr',
+          QuickAddGroup.capture,
+          Icons.qr_code_scanner,
+          l10n.qrScanTitle,
+          widget.onQrNote,
+          scheme.tertiary,
+        ),
+      // DOSYADAN — cihazdaki/web'deki içerik.
+      QuickAddOption(
+        'image',
+        QuickAddGroup.files,
+        Icons.photo_library_outlined,
+        l10n.quickAddImage,
+        widget.onImageNote,
+        scheme.secondary,
+      ),
+      QuickAddOption(
+        'pdf',
+        QuickAddGroup.files,
+        Icons.picture_as_pdf_outlined,
+        l10n.quickAddPdf,
+        widget.onPdfNote,
+        scheme.secondary,
+      ),
+      QuickAddOption(
+        'slides',
+        QuickAddGroup.files,
+        Icons.slideshow_outlined,
+        l10n.quickAddSlides,
+        widget.onSlidesNote,
+        scheme.secondary,
+      ),
+      if (widget.onGalleryVideo case final onGalleryVideo?)
+        QuickAddOption(
+          'gvideo',
+          QuickAddGroup.files,
+          Icons.video_library_outlined,
+          l10n.quickAddGalleryVideo,
+          onGalleryVideo,
+          scheme.secondary,
+        ),
+      if (widget.onYouTube case final onYouTube?)
+        QuickAddOption(
+          'youtube',
+          QuickAddGroup.files,
+          Icons.smart_display_outlined,
+          l10n.quickAddYouTube,
+          onYouTube,
+          scheme.secondary,
+        ),
+      // DİĞER YAZ — şablonlar ve defter.
+      if (widget.onShopping case final onShopping?)
+        QuickAddOption(
+          'shopping',
+          QuickAddGroup.more,
+          Icons.shopping_cart_outlined,
+          l10n.tplShoppingName,
+          onShopping,
+          scheme.primary,
+        ),
+      if (widget.onTemplate case final onTemplate?)
+        QuickAddOption(
+          'template',
+          QuickAddGroup.more,
+          Icons.dashboard_customize_outlined,
+          l10n.fromTemplate,
+          onTemplate,
+          scheme.primary,
+        ),
+      QuickAddOption(
+        'archive',
+        QuickAddGroup.more,
+        Icons.inventory_2_outlined,
+        l10n.archiveNotebook,
+        () => widget.onCreate(NoteType.archive),
+        scheme.primary,
+      ),
+    ];
   }
 
   void _select(VoidCallback action) {
@@ -345,51 +382,106 @@ class _QuickAddFabState extends State<QuickAddFab> {
   }
 }
 
-/// Menü açıkken arka planı bulanıklaştıran tam ekran katman. Bulanıklık
-/// birden bindirilmez: 180 ms'de yumuşakça girer ki sayfa "donmuş" gibi
-/// görünmesin. Sistemde "hareketi azalt" açıksa anında tam bulanıklık.
+/// Menü açıkken arka planı KARARTAN tam ekran katman.
+///
+/// BULANIKLIK KALDIRILDI (kullanıcı bulgusu 2026-10-15: "kasma"): tam ekran
+/// `BackdropFilter` arkadaki not duvarının (onlarca görsel kart) her
+/// karesini GPU'da yeniden bulanıklaştırıyordu; açılış animasyonu boyunca
+/// sigma her karede değiştiği için önbelleğe de alınamıyordu. Düşük uçlu
+/// cihazda menü açılırken takılma buradandı. Karartma (saydamlık) aynı
+/// odaklamayı neredeyse bedavaya verir.
 class _BlurBarrier extends StatelessWidget {
   const _BlurBarrier();
 
-  static const _sigma = 10.0;
-  static const _dim = 0.18;
+  static const _dim = 0.32;
 
   @override
   Widget build(BuildContext context) {
-    final animate = !MediaQuery.disableAnimationsOf(context);
-    if (!animate) return _layer(1);
+    final color = Colors.black.withValues(alpha: _dim);
+    if (MediaQuery.disableAnimationsOf(context)) {
+      return ColoredBox(color: color);
+    }
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 160),
       curve: Curves.easeOut,
-      builder: (context, t, _) => _layer(t),
+      builder: (context, t, child) => Opacity(opacity: t, child: child),
+      child: ColoredBox(color: color),
     );
   }
-
-  Widget _layer(double t) => BackdropFilter(
-    filter: ImageFilter.blur(sigmaX: _sigma * t, sigmaY: _sigma * t),
-    child: ColoredBox(color: Colors.black.withValues(alpha: _dim * t)),
-  );
 }
 
-/// Panel bölümü: başlık, renk (simgeler ve başlık çizgisi) ve seçenekler.
-typedef QuickAddSection = ({
-  String label,
-  Color color,
-  List<(IconData, String, VoidCallback)> options,
-});
+/// Menü seçeneğinin grubu.
+enum QuickAddGroup {
+  /// Metin / liste / sıralı liste — FAB'ın hemen üstünde büyük düğmeler.
+  primary,
 
-/// Yeni not tipleri paneli: üç sütunlu, iri dokunma hedefli düğme ızgarası.
+  /// Kamera, mikrofon, kalem.
+  capture,
+
+  /// Dosyadan (görsel, PDF, sunum, video, YouTube).
+  files,
+
+  /// Şablonlar ve defter.
+  more,
+}
+
+/// Menüdeki tek seçenek. [key] kalıcı kimlik (kullanım sayacı).
+@immutable
+class QuickAddOption {
+  const QuickAddOption(
+    this.key,
+    this.group,
+    this.icon,
+    this.label,
+    this.action,
+    this.color,
+  );
+
+  final String key;
+  final QuickAddGroup group;
+  final IconData icon;
+  final String label;
+  final VoidCallback action;
+  final Color color;
+}
+
+/// Sık kullanılanlar satırının seçimi (saf, test edilir): birincil olmayan
+/// seçenekler kullanım sayısına göre; eşitlikte menüdeki sırayla.
+List<QuickAddOption> frequentQuickAdd(
+  List<QuickAddOption> options,
+  Map<String, int> usage, {
+  int count = 4,
+}) {
+  final candidates = [
+    for (final o in options)
+      if (o.group != QuickAddGroup.primary) o,
+  ];
+  final order = {for (var i = 0; i < candidates.length; i++) candidates[i]: i};
+  candidates.sort((a, b) {
+    final byUse = (usage[b.key] ?? 0).compareTo(usage[a.key] ?? 0);
+    return byUse != 0 ? byUse : order[a]!.compareTo(order[b]!);
+  });
+  return candidates.take(count).toList();
+}
+
+/// Yeni not paneli.
 ///
-/// Ölçüler: panel en çok 360 dp (küçük ekranda ekran genişliği - 24), her
-/// hücre 66 dp yüksek — simge + iki satıra kadar etiket sığar, dokunma hedefi
-/// Material'ın 48 dp alt sınırının rahat üstünde kalır. Kısa ekranda (yatay
-/// telefon) panel ekranın %78'ini aşarsa kendi içinde kayar — taşıp üstteki
-/// seçenekleri ekran dışına itmez.
+/// YENİDEN DÜZEN (kullanıcı bulgusu 2026-10-15: "not ekle menüsü neredeyse
+/// tüm ekranı kaplıyor; en çok kullanılan metin notu, liste notu çok yukarıda
+/// kalıyor, bulması ve başlatması çok zor"). Panel YUKARIDAN aşağı değil,
+/// AŞAĞIDAN yukarı okunur — başparmağın olduğu yerden:
+///  1. En altta, FAB'ın hemen üstünde BÜYÜK üç düğme: Metin · Liste · Sıralı.
+///  2. Onun üstünde SIK KULLANDIKLARIN: en çok seçilen üç işlem (sayaç
+///     cihazda tutulur; ilk gün Sesli not, Fotoğraf, Video çek) ve "Tümü"
+///     düğmesi.
+///  3. "Tümü" açılınca geri kalanlar üstte, gruplarıyla (Çek ve kaydet ·
+///     Dosyadan · Şablon ve defter) belirir.
+/// Kapalı hâli ~190 dp: ekranın dörtte biri (eskiden ~%70'i).
 class _QuickAddPanel extends StatefulWidget {
-  const _QuickAddPanel({required this.sections, required this.onSelected});
+  const _QuickAddPanel({required this.options, required this.onSelected});
 
-  final List<QuickAddSection> sections;
+  final List<QuickAddOption> options;
 
   /// Seçilen işlemi paneli kapatarak çalıştırır.
   final void Function(VoidCallback action) onSelected;
@@ -400,14 +492,40 @@ class _QuickAddPanel extends StatefulWidget {
 
 class _QuickAddPanelState extends State<_QuickAddPanel>
     with SingleTickerProviderStateMixin {
-  static const _columns = 3;
-  static const _cellHeight = 66.0;
-  static const _gap = 6.0;
+  static const _usageKey = 'quick_add_usage';
+
+  /// "Tümü" açık mı — oturum boyunca hatırlanır (her açılışta yeniden
+  /// açtırmasın).
+  static bool _expandedMemory = false;
+
+  late bool _expanded = _expandedMemory;
+  Map<String, int> _usage = const {};
+  SharedPreferences? _prefs;
 
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 220),
+    duration: const Duration(milliseconds: 200),
   )..forward();
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _prefs = ProviderScope.containerOf(
+        context,
+        listen: false,
+      ).read(sharedPreferencesProvider);
+      final raw = _prefs?.getString(_usageKey);
+      if (raw != null) {
+        _usage = {
+          for (final e in (jsonDecode(raw) as Map<String, dynamic>).entries)
+            e.key: (e.value as num).toInt(),
+        };
+      }
+    } catch (_) {
+      // Sağlayıcısız ağaç (testler) ya da bozuk kayıt: varsayılan sıra.
+    }
+  }
 
   @override
   void dispose() {
@@ -415,68 +533,153 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
     super.dispose();
   }
 
+  void _pick(QuickAddOption option) {
+    final next = {..._usage, option.key: (_usage[option.key] ?? 0) + 1};
+    try {
+      _prefs?.setString(_usageKey, jsonEncode(next));
+    } catch (_) {}
+    widget.onSelected(option.action);
+  }
+
+  void _toggleExpanded() {
+    setState(() => _expanded = !_expanded);
+    _expandedMemory = _expanded;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final size = MediaQuery.sizeOf(context);
-    // Panel genişliği ekranla sınırlı: geniş ekranda 360 dp'de durur,
-    // telefonda kenarlardan 12 dp boşluk bırakır.
-    final width = math.min(360.0, size.width - 24);
-    final cellWidth = (width - 24 - _gap * (_columns - 1)) / _columns;
+    final width = math.min(380.0, size.width - 24);
+    const gap = 6.0;
+    const columns = 4;
+    final cell = (width - 20 - gap * (columns - 1)) / columns;
 
-    final children = <Widget>[];
-    for (final section in widget.sections) {
-      if (section.options.isEmpty) continue;
-      if (children.isNotEmpty) {
-        children
-          ..add(const SizedBox(height: 8))
-          ..add(Divider(height: 1, color: scheme.outlineVariant));
-      }
-      children
-        ..add(_SectionLabel(section.label, color: section.color))
-        ..add(
-          Wrap(
-            spacing: _gap,
-            runSpacing: _gap,
-            children: [
-              for (final (icon, label, action) in section.options)
-                SizedBox(
-                  width: cellWidth,
-                  height: _cellHeight,
-                  child: _PanelButton(
-                    icon: icon,
-                    label: label,
-                    accent: section.color,
-                    onTap: () => widget.onSelected(action),
-                  ),
-                ),
-            ],
+    final primary = [
+      for (final o in widget.options)
+        if (o.group == QuickAddGroup.primary) o,
+    ];
+    final frequent = frequentQuickAdd(widget.options, _usage, count: 3);
+
+    Widget grid(List<QuickAddOption> items) => Wrap(
+      spacing: gap,
+      runSpacing: gap,
+      children: [
+        for (final o in items)
+          SizedBox(
+            width: cell,
+            height: 64,
+            child: _PanelButton(
+              key: ValueKey('quick-add-${o.key}'),
+              icon: o.icon,
+              label: o.label,
+              accent: o.color,
+              onTap: () => _pick(o),
+            ),
           ),
-        );
-    }
+      ],
+    );
+
+    List<QuickAddOption> group(QuickAddGroup g) => [
+      for (final o in widget.options)
+        if (o.group == g) o,
+    ];
+
+    final expandedPart = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel(l10n.quickAddCapture, color: scheme.tertiary),
+        grid(group(QuickAddGroup.capture)),
+        _SectionLabel(l10n.quickAddImport, color: scheme.secondary),
+        grid(group(QuickAddGroup.files)),
+        _SectionLabel(l10n.quickAddMore, color: scheme.primary),
+        grid(group(QuickAddGroup.more)),
+        const SizedBox(height: 6),
+        Divider(height: 1, color: scheme.outlineVariant),
+        const SizedBox(height: 4),
+      ],
+    );
 
     final panel = Material(
       color: scheme.surface,
       elevation: 8,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       clipBehavior: Clip.antiAlias,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: size.height * 0.78),
+        constraints: BoxConstraints(maxHeight: size.height * 0.72),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+          // TERS: içerik taşarsa kaydırma ALTTAN başlar — birincil düğmeler
+          // her zaman FAB'ın yanında görünür kalır.
+          reverse: true,
+          padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
+            children: [
+              AnimatedSize(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.bottomCenter,
+                child: _expanded
+                    ? expandedPart
+                    : const SizedBox(width: double.infinity),
+              ),
+              _SectionLabel(l10n.quickAddFrequent, color: scheme.outline),
+              Row(
+                children: [
+                  for (final o in frequent) ...[
+                    SizedBox(
+                      width: cell,
+                      height: 64,
+                      child: _PanelButton(
+                        key: ValueKey('quick-frequent-${o.key}'),
+                        icon: o.icon,
+                        label: o.label,
+                        accent: o.color,
+                        onTap: () => _pick(o),
+                      ),
+                    ),
+                    const SizedBox(width: gap),
+                  ],
+                  SizedBox(
+                    width: cell,
+                    height: 64,
+                    child: _PanelButton(
+                      key: const ValueKey('quick-add-more'),
+                      icon: _expanded ? Icons.expand_more : Icons.apps,
+                      label: _expanded ? l10n.quickAddLess : l10n.quickAddAll,
+                      accent: scheme.onSurfaceVariant,
+                      onTap: _toggleExpanded,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // BİRİNCİL: büyük, dolgulu, FAB'ın hemen üstünde.
+              Row(
+                children: [
+                  for (var i = 0; i < primary.length; i++) ...[
+                    if (i > 0) const SizedBox(width: gap),
+                    Expanded(
+                      child: _PrimaryButton(
+                        key: ValueKey('quick-add-${primary[i].key}'),
+                        option: primary[i],
+                        onTap: () => _pick(primary[i]),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
 
     final sized = SizedBox(width: width, child: panel);
-    // Erişilebilirlik: sistemde "hareketi azalt" açıksa animasyon yok.
     if (MediaQuery.disableAnimationsOf(context)) return sized;
-    // Panel "+" düğmesinden büyüyerek açılır: ölçek + solma, sağ-alt köşeden.
     final curve = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutCubic,
@@ -487,9 +690,53 @@ class _QuickAddPanelState extends State<_QuickAddPanel>
         animation: curve,
         child: sized,
         builder: (context, inner) => Transform.scale(
-          scale: 0.85 + 0.15 * curve.value,
+          scale: 0.9 + 0.1 * curve.value,
           alignment: Alignment.bottomRight,
           child: inner,
+        ),
+      ),
+    );
+  }
+}
+
+/// Birincil düğme (Metin / Liste / Sıralı): dolgulu, büyük, simge + yazı yan
+/// yana değil ÜST ÜSTE — dar ekranda üçü yan yana sığsın.
+class _PrimaryButton extends StatelessWidget {
+  const _PrimaryButton({super.key, required this.option, required this.onTap});
+
+  final QuickAddOption option;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.primaryContainer,
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: 70,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(option.icon, size: 24, color: scheme.onPrimaryContainer),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  option.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onPrimaryContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -545,6 +792,7 @@ class _SectionLabel extends StatelessWidget {
 /// olduğunu belli eder (düz metin düğmeler "başlık" gibi okunuyordu).
 class _PanelButton extends StatelessWidget {
   const _PanelButton({
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,

@@ -403,6 +403,52 @@ void main() {
       );
       expect(back.onPressed, isNull);
     });
+
+    testWidgets('telefonda çubuk: belirgin "Balon", seyrek işler ⋮ menüsünde', (
+      tester,
+    ) async {
+      // 2026-10-15 yenilemesi: balon bırakma/listeleme belgenin sağ üst
+      // köşesindeki iki küçük simgeden alt çubuğa, YAZILI düğmeye geçti.
+      tester.view.physicalSize = const Size(1080, 2220);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      final attachment = pdf();
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('tr'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: PdfNotePane(
+              noteOf: () =>
+                  Note(id: 'n1', type: NoteType.pdf, attachments: [attachment]),
+              attachment: attachment,
+              onPageNoteChanged: (_, _) {},
+              onAttachmentChanged: (_) {},
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('Sayfa 1'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'çubuk taşmamalı');
+      // Dar ekranda sayfa notu düğmesi doğrudan görünmez, menüdedir.
+      expect(find.byIcon(Icons.edit_note_outlined), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('bubble-add')));
+      await tester.pump();
+      expect(find.text('Bitti'), findsOneWidget, reason: 'kip açık');
+      await tester.tap(find.text('Bitti'));
+      await tester.pump();
+      expect(find.text('Bitti'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('page-bar-more')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sayfa notunu göster'));
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
+    });
   });
 
   group('SlideNotePane', () {

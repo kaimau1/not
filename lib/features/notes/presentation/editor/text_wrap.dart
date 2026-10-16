@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -636,9 +637,16 @@ InlineSpan buildWrapSpan(
   Color? linkColor,
   RichTextTheme? rich,
   Iterable<String> attachmentNames = const [],
+  Map<String, Color>? tagChipColors,
 }) {
   List<InlineSpan> parts(String text) => rich == null
-      ? linkSpans(text, style, linkColor, attachmentNames: attachmentNames)
+      ? linkSpans(
+          text,
+          style,
+          linkColor,
+          attachmentNames: attachmentNames,
+          tagChipColors: tagChipColors,
+        )
       : richSpans(
           text,
           style,
@@ -646,6 +654,7 @@ InlineSpan buildWrapSpan(
           palette: rich.palette,
           markerColor: rich.markerColor,
           attachmentNames: attachmentNames,
+          tagChipColors: tagChipColors,
         );
 
   if (widths.isEmpty || !display.contains(kWrapAnchorChar)) {
@@ -997,6 +1006,22 @@ class WrapTextController extends TextEditingController {
   /// Metindeki ek etiketlerinin adları (imleç konumundan hangi eke
   /// bakılacağını çağıran bulur).
   List<String> get attachmentNames => _attachmentNames;
+
+  /// Etiket adı → ekin türünün rengi. Doluysa etiketler ÇİP kipinde çizilir
+  /// (ataç saydam, ad türün renginde — çipi ve rozeti alanı saran
+  /// `AttachmentTagChips` boyar). Boşsa eski görünüm (kırmızı, altı çizili):
+  /// alanın üstünde boyayıcı yoksa çip de olmaz.
+  Map<String, Color> _tagChipColors = const {};
+
+  set tagChipColors(Map<String, Color> value) {
+    if (mapEquals(_tagChipColors, value)) return;
+    _tagChipColors = value;
+    // Yalnız renk değişti; satır kırılımı aynı (bkz. [attachmentNames]).
+    _spanCache = null;
+    notifyListeners();
+  }
+
+  Map<String, Color> get tagChipColors => _tagChipColors;
 
   /// Nota yazılacak, çapasız gövde metni.
   String get logicalText => stripWrapAnchors(text);
@@ -1663,6 +1688,7 @@ class WrapTextController extends TextEditingController {
               linkColor: linkColor,
               rich: _rich,
               attachmentNames: _attachmentNames,
+              tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
             )
             as TextSpan;
     _spanKeyText = text;

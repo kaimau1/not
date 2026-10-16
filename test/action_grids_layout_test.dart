@@ -55,11 +55,15 @@ void main() {
     expect(tester.getRect(find.text('Sil')).center.dy, greaterThan(pin.top));
   });
 
-  testWidgets('"+" paneli üç bölümlü ızgara: YAZ · ÇEK VE KAYDET · DOSYADAN', (
+  testWidgets('"+" paneli: Metin/Liste FAB\'ın hemen üstünde, panel kısa', (
     tester,
   ) async {
+    // Kullanıcı bulgusu 2026-10-15: "not ekle menüsü neredeyse tüm ekranı
+    // kaplıyor; en çok kullanılan metin notu, liste notu çok yukarıda
+    // kalıyor, bulması ve başlatması çok zor".
     final link = LayerLink();
     var youTube = 0;
+    final created = <NoteType>[];
     await tester.pumpWidget(
       host(
         Scaffold(
@@ -69,7 +73,7 @@ void main() {
               link: link,
               child: QuickAddFab(
                 anchor: link,
-                onCreate: (_) {},
+                onCreate: created.add,
                 onHandwriting: () {},
                 onVoiceCapture: () {},
                 onVideoNote: () {},
@@ -91,50 +95,84 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // YAZ bölümü ÜÇ SÜTUNLU IZGARA.
+    final fab = tester.getRect(find.byType(FloatingActionButton).last);
     final text = tester.getRect(find.text('Metin notu'));
     final list = tester.getRect(find.text('Liste'));
     final ordered = tester.getRect(find.text('Sıralı liste'));
+    // Birincil üçlü yan yana ve PANELİN EN ALTINDA (FAB'a en yakın).
     expect(text.center.dy, closeTo(list.center.dy, 1));
     expect(list.center.dy, closeTo(ordered.center.dy, 1));
     expect(text.center.dx, lessThan(list.center.dx));
-    expect(list.center.dx, lessThan(ordered.center.dx));
+    expect(fab.top - text.bottom, lessThan(60));
 
-    // Bölümler sırayla: YAZ → ÇEK VE KAYDET → DOSYADAN.
-    expect(find.text('YAZ'), findsOneWidget);
-    final capture = tester.getRect(find.text('ÇEK VE KAYDET'));
-    final files = tester.getRect(find.text('DOSYADAN'));
-    expect(capture.center.dy, greaterThan(ordered.center.dy));
-    expect(files.center.dy, greaterThan(capture.center.dy));
-
-    // Eski cümle yarımı etiketler gitti (kullanıcı bulgusu 2026-10-15).
+    // Kapalı hâlde panel KISA: ekranın yarısından az (eskiden ~%70).
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    final frequent = tester.getRect(find.text('SIK KULLANDIKLARIN'));
+    expect(fab.top - frequent.top, lessThan(screen.height / 2));
+    // Sık kullanılanlar birincil satırın ÜSTÜNDE; ilk gün sesli not başta.
+    expect(
+      tester.getRect(find.text('Sesli not')).center.dy,
+      lessThan(text.center.dy),
+    );
+    // Geri kalanı "Tümü" ardında.
+    expect(find.text('YouTube videosu'), findsNothing);
     expect(find.text('Foto çek not al'), findsNothing);
-    expect(find.text('PDF ekle not al'), findsNothing);
 
-    // ÇEK ızgarası üç sütun: ilk iki seçenek yan yana.
-    final voice = tester.getRect(find.text('Sesli not'));
-    final photo = tester.getRect(find.text('Fotoğraf çek'));
-    expect(voice.center.dy, closeTo(photo.center.dy, 1));
-    expect(voice.center.dx, lessThan(photo.center.dx));
-    expect(voice.center.dy, greaterThan(capture.center.dy));
+    await tester.tap(find.text('Tümü'));
+    await tester.pumpAndSettle();
+    expect(find.text('ÇEK VE KAYDET'), findsOneWidget);
+    expect(find.text('DOSYADAN'), findsOneWidget);
+    expect(find.text('Galeriden video'), findsOneWidget);
+    // Açılınca da birincil düğmeler yerinde (FAB'ın yanında) kalır.
+    expect(
+      tester.getRect(find.text('Metin notu')).center.dy,
+      closeTo(text.center.dy, 1),
+    );
 
-    // DOSYADAN: eksik olan galeriden video ve YouTube artık menüde.
-    final gallery = tester.getRect(find.text('Galeriden video'));
-    expect(gallery.center.dy, greaterThan(files.center.dy));
-    expect(find.text('YouTube videosu'), findsOneWidget);
-
-    // Panel ekrandan taşmaz.
-    final width = tester.view.physicalSize.width / tester.view.devicePixelRatio;
-    expect(text.left, greaterThanOrEqualTo(0));
-    expect(photo.right, lessThan(width));
-
-    // Kısa ekranda (test 800×600) panel kendi içinde kayar: son seçenek
-    // kaydırılarak ulaşılabilir olmalı.
     await tester.ensureVisible(find.text('YouTube videosu'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('YouTube videosu'));
     await tester.pumpAndSettle();
     expect(youTube, 1);
-    expect(find.text('DOSYADAN'), findsNothing, reason: 'seçince panel kapanır');
+    expect(
+      find.text('SIK KULLANDIKLARIN'),
+      findsNothing,
+      reason: 'seçince panel kapanır',
+    );
+
+    // Metin notu tek dokunuş.
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Metin notu'));
+    await tester.pumpAndSettle();
+    expect(created, [NoteType.text]);
+  });
+
+  test('sık kullanılanlar sayaca göre, eşitlikte menü sırasıyla', () {
+    QuickAddOption o(String key, QuickAddGroup g) =>
+        QuickAddOption(key, g, Icons.add, key, () {}, Colors.black);
+    final options = [
+      o('text', QuickAddGroup.primary),
+      o('voice', QuickAddGroup.capture),
+      o('photo', QuickAddGroup.capture),
+      o('pdf', QuickAddGroup.files),
+      o('youtube', QuickAddGroup.files),
+    ];
+    expect(
+      [for (final x in frequentQuickAdd(options, const {}, count: 3)) x.key],
+      ['voice', 'photo', 'pdf'],
+    );
+    expect(
+      [
+        for (final x in frequentQuickAdd(options, const {
+          'youtube': 5,
+          'pdf': 2,
+          'text': 99,
+        }, count: 3))
+          x.key,
+      ],
+      ['youtube', 'pdf', 'voice'],
+      reason: 'birincil (metin) zaten altta — sık kullanılanlara girmez',
+    );
   });
 }

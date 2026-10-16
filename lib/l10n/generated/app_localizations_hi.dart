@@ -2905,7 +2905,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get archiveNoLink => 'Bağlı dosya yok';
 
   @override
-  String get attachmentTagEmbed => 'Seçili yazıya ek göm';
+  String get attachmentTagEmbed => 'Ek göm';
 
   @override
   String get attachmentTagNoAttachment =>
@@ -4660,4 +4660,28 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get driveNeededForFile =>
       'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.';
+
+  @override
+  String get quickAddMore => 'ŞABLON VE DEFTER';
+
+  @override
+  String get quickAddFrequent => 'SIK KULLANDIKLARIN';
+
+  @override
+  String get quickAddAll => 'Tümü';
+
+  @override
+  String get quickAddLess => 'Daha az';
+
+  @override
+  String get bubbleDone => 'Bitti';
+
+  @override
+  String get bubbleEditShort => 'Düzenle';
+
+  @override
+  String get bubblePlainModeShort => 'Metin';
+
+  @override
+  String get pageBarMore => 'Sayfa ve not seçenekleri';
 }

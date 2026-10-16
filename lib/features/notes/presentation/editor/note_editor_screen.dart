@@ -117,6 +117,7 @@ import '../viewers/pdf_viewer_screen.dart';
 import '../viewers/slide_viewer_screen.dart';
 import '../viewers/video_viewer.dart';
 import '../viewers/text_recognize_screen.dart';
+import 'tag_chips.dart';
 import 'tag_tap.dart';
 import 'text_wrap.dart';
 
@@ -433,6 +434,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   /// Gövdeye yapılan son dokunuşun konumu (etiket önizlemesi, bkz.
   /// [_tappedEmbed]).
   final _bodyTapPoint = TapPointTracker();
+
+  /// Gömülü yazıların çip görünümü (etiket adı → türün simgesi/rengi);
+  /// her `build`de nottan yeniden çıkarılır.
+  Map<String, TagLook> _tagLooks = const {};
 
   /// KÖK NEDEN (ölçüldü): `dispose()` içinde `ref` kullanmak bu Riverpod
   /// sürümünde "Using ref when a widget is about to or has been unmounted is
@@ -6402,6 +6407,16 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         if (link.label.isNotEmpty) link.label,
       for (final a in note.attachments) a.fileName,
     ];
+    // Gömülü yazının ÇİP görünümü: ekin türüne göre renk ve rozet (bkz.
+    // AttachmentTagChips). Denetleyici renkleri yalnız değişince alır.
+    final tagLooks = embedTagLooks(
+      note,
+      dark: Theme.of(context).brightness == Brightness.dark,
+    );
+    _tagLooks = tagLooks;
+    _bodyController.tagChipColors = {
+      for (final e in tagLooks.entries) e.key: e.value.color,
+    };
     // Notun kendi yazı tipi/boyutu: gövde ve maddeler `fontFamily`/`fontScale`
     // çiftinden, BAŞLIK ise kendi `titleFontFamily`/`titleFontScale`
     // değerlerinden beslenir — biçim çubuğu odaktaki alana yazar.
@@ -6819,7 +6834,10 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // `Builder`: dokunuşta alanın KENDİ EditableText'i bulunur (başlığınki
     // değil); sarmalayıcı dokunuşun konumunu tutar (bkz. [_tappedEmbed]).
     final bodyField = Builder(
-      builder: (fieldContext) => _bodyTapPoint.wrap(
+      builder: (fieldContext) => AttachmentTagChips(
+        controller: _bodyController,
+        looks: _tagLooks,
+        child: _bodyTapPoint.wrap(
         TextField(
           controller: _bodyController,
           focusNode: _bodyFocus,
@@ -6874,6 +6892,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
             contentPadding: const EdgeInsets.symmetric(vertical: _kBodyTextTop),
           ),
         ),
+        ),
       ),
     );
 
@@ -6923,6 +6942,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
+        tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
         selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
@@ -6962,6 +6982,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
         // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
         // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
         attachmentNames: _bodyController.attachmentNames,
+        tagLooks: _tagLooks,
         onAttachmentTag: _openTagByName,
         selectionMenu: _itemSelectionMenu,
         // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).

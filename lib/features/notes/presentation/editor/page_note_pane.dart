@@ -18,6 +18,17 @@ import 'text_wrap.dart';
 typedef PageViewerBuilder =
     Widget Function(BuildContext context, PageNoteHost host);
 
+/// Sayfa çubuğuna görüntüleyiciye özgü düğmeler koyan kapanış (balonlu
+/// panolarda "Balon" ve balon listesi). [goToPage] panonun sayfasını
+/// değiştirir — görüntüleyici oraya kendisi kayar; [compact] dar ekranda
+/// yazıların düşmesi içindir.
+typedef PageBarActionsBuilder =
+    Widget Function(
+      BuildContext context,
+      ValueChanged<int> goToPage,
+      bool compact,
+    );
+
 /// Görüntüleyicinin panoyla konuştuğu arayüz.
 @immutable
 class PageNoteHost {
@@ -64,7 +75,12 @@ class PageNotePane extends StatefulWidget {
     this.onFieldFocused,
     this.onFieldDisposed,
     this.suppressNotes,
+    this.barActions,
   });
+
+  /// Sayfa çubuğunun sağındaki görüntüleyiciye özgü düğmeler (bkz.
+  /// [PageBarActionsBuilder]). null = yok.
+  final PageBarActionsBuilder? barActions;
 
   /// true olduğunda alt not alanı GEÇİCİ olarak gizlenir — kullanıcı bir
   /// balonun içine yazarken. Kök neden (2026-08-08 bulgusu: "balona not
@@ -395,76 +411,176 @@ class _PageNotePaneState extends State<PageNotePane> {
     setState(() => _notesOpen = !_notesOpen);
   }
 
+  /// Belgenin altındaki çubuk: solda sayfa gezinme HAPI, sağda balon
+  /// düğmeleri ve sayfa notu işleri.
+  ///
+  /// **2026-10-15 yenilemesi** (kullanıcı isteği: "balonlu mod genel hatlar
+  /// tamamen yenilenmeli"): eskiden yedi eşit simgelik düz bir satırdı ve
+  /// balon bırakma/listeleme belgenin SAĞ ÜST köşesine binen iki küçük
+  /// yuvarlak simgedeydi. Şimdi en çok kullanılan iş (balon) yazılı ve
+  /// belirgin; dar telefonda seyrek işler (sayfa notu, toplu görünüm, sayfa
+  /// düzenleme, tam ekran) tek bir "⋮" menüsünde. Geniş ekranda hepsi
+  /// görünür kalır.
   Widget _pageBar(BuildContext context, AppLocalizations l10n, bool notesOpen) {
     final scheme = Theme.of(context).colorScheme;
     final label = _pageCount > 0
         ? l10n.pdfPageOf(_page, _pageCount)
         : l10n.pdfPage(_page);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    final actions = widget.barActions;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        border: Border(
+          top: BorderSide(
+            color: scheme.outlineVariant.withValues(alpha: 0.7),
+            width: 0.7,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 4, 2, 4),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final wide = constraints.maxWidth >= 520;
+            final compact = constraints.maxWidth < 340;
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest.withValues(
+                        alpha: 0.75,
+                      ),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: l10n.pdfPreviousPage,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: _page > 1 ? () => _goTo(_page - 1) : null,
+                          icon: const Icon(Icons.chevron_left),
+                        ),
+                        Flexible(
+                          child: Text(
+                            label,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: scheme.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l10n.pdfNextPage,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: (_pageCount == 0 || _page < _pageCount)
+                              ? () => _goTo(_page + 1)
+                              : null,
+                          icon: const Icon(Icons.chevron_right),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (actions != null) ...[
+                      const SizedBox(width: 6),
+                      actions(context, _goTo, compact),
+                    ],
+                    if (wide) ..._wideActions(l10n, notesOpen) else
+                      _moreMenu(l10n, notesOpen),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Geniş ekranda (tablet, masaüstü) seyrek işler de simge olarak görünür.
+  List<Widget> _wideActions(AppLocalizations l10n, bool notesOpen) => [
+    IconButton(
+      tooltip: notesOpen ? l10n.pageNotesHide : l10n.pageNotesShow,
+      visualDensity: VisualDensity.compact,
+      isSelected: notesOpen,
+      onPressed: _toggleNotes,
+      icon: Icon(notesOpen ? Icons.edit_note : Icons.edit_note_outlined),
+    ),
+    IconButton(
+      tooltip: l10n.pdfAllPageNotes,
+      visualDensity: VisualDensity.compact,
+      onPressed: _openOverview,
+      icon: const Icon(Icons.subject),
+    ),
+    if (widget.onEditPages != null)
+      IconButton(
+        tooltip: l10n.pdfEditPages,
+        visualDensity: VisualDensity.compact,
+        // Sayfa sayısı bilinmeden düzenleme açılmaz: yönetici sayfa
+        // ızgarasını ona göre kuruyor.
+        onPressed: _pageCount > 0 ? () => _openPageEditor(_pageCount) : null,
+        icon: const Icon(Icons.auto_awesome_motion_outlined),
+      ),
+    if (widget.onFullScreen != null)
+      IconButton(
+        tooltip: l10n.pdfFullScreen,
+        visualDensity: VisualDensity.compact,
+        onPressed: _openFullScreen,
+        icon: const Icon(Icons.open_in_full),
+      ),
+  ];
+
+  /// Dar ekranda seyrek işler tek menüde (simgeleri geniş ekrandakilerle
+  /// aynı — kullanıcı ikisinde de aynı işareti arar).
+  Widget _moreMenu(AppLocalizations l10n, bool notesOpen) {
+    PopupMenuItem<VoidCallback> item(
+      IconData icon,
+      String label,
+      VoidCallback action, {
+      bool enabled = true,
+    }) => PopupMenuItem<VoidCallback>(
+      value: action,
+      enabled: enabled,
       child: Row(
         children: [
-          IconButton(
-            tooltip: l10n.pdfPreviousPage,
-            visualDensity: VisualDensity.compact,
-            onPressed: _page > 1 ? () => _goTo(_page - 1) : null,
-            icon: const Icon(Icons.chevron_left),
-          ),
-          Expanded(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: l10n.pdfNextPage,
-            visualDensity: VisualDensity.compact,
-            onPressed: (_pageCount == 0 || _page < _pageCount)
-                ? () => _goTo(_page + 1)
-                : null,
-            icon: const Icon(Icons.chevron_right),
-          ),
-          IconButton(
-            tooltip: notesOpen ? l10n.pageNotesHide : l10n.pageNotesShow,
-            visualDensity: VisualDensity.compact,
-            isSelected: notesOpen,
-            onPressed: _toggleNotes,
-            icon: Icon(
-              notesOpen ? Icons.edit_note : Icons.edit_note_outlined,
-            ),
-          ),
-          IconButton(
-            tooltip: l10n.pdfAllPageNotes,
-            visualDensity: VisualDensity.compact,
-            onPressed: _openOverview,
-            icon: const Icon(Icons.subject),
-          ),
-          if (widget.onEditPages != null)
-            IconButton(
-              tooltip: l10n.pdfEditPages,
-              visualDensity: VisualDensity.compact,
-              // Sayfa sayısı bilinmeden düzenleme açılmaz: yönetici sayfa
-              // ızgarasını ona göre kuruyor.
-              onPressed: _pageCount > 0
-                  ? () => _openPageEditor(_pageCount)
-                  : null,
-              icon: const Icon(Icons.auto_awesome_motion_outlined),
-            ),
-          if (widget.onFullScreen != null)
-            IconButton(
-              tooltip: l10n.pdfFullScreen,
-              visualDensity: VisualDensity.compact,
-              onPressed: _openFullScreen,
-              icon: const Icon(Icons.open_in_full),
-            ),
+          Icon(icon, size: 20),
+          const SizedBox(width: 12),
+          Flexible(child: Text(label)),
         ],
       ),
+    );
+    return PopupMenuButton<VoidCallback>(
+      key: const ValueKey('page-bar-more'),
+      tooltip: l10n.pageBarMore,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (action) => action(),
+      itemBuilder: (_) => [
+        item(
+          notesOpen ? Icons.edit_note : Icons.edit_note_outlined,
+          notesOpen ? l10n.pageNotesHide : l10n.pageNotesShow,
+          _toggleNotes,
+        ),
+        item(Icons.subject, l10n.pdfAllPageNotes, _openOverview),
+        if (widget.onEditPages != null)
+          item(
+            Icons.auto_awesome_motion_outlined,
+            l10n.pdfEditPages,
+            () => _openPageEditor(_pageCount),
+            enabled: _pageCount > 0,
+          ),
+        if (widget.onFullScreen != null)
+          item(Icons.open_in_full, l10n.pdfFullScreen, _openFullScreen),
+      ],
     );
   }
 }

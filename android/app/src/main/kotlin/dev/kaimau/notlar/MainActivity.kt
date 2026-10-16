@@ -29,6 +29,13 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
+/** Video karesi/süresi işleri için süreç ömürlü tek iş parçacığı. */
+private val sharedMediaExecutor: java.util.concurrent.ExecutorService by lazy {
+    java.util.concurrent.Executors.newSingleThreadExecutor { r ->
+        Thread(r, "notlar-media").apply { isDaemon = true }
+    }
+}
+
 // local_auth (biyometrik not kilidi) FragmentActivity gerektirir.
 // Ek olarak iki köprü sağlar:
 // 1) Ayarlar'daki "İzinler" bölümü için sistem köprüsü (MethodChannel):
@@ -56,6 +63,17 @@ class MainActivity : FlutterFragmentActivity() {
     // uygulama kaptığında) ana thread'de sıcak bir bind/unbind döngüsüne
     // dönüşüyor ve dinleme unutulursa mikrofon + servis süresiz açık kalıyor.
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    // Video kareleri/süreleri TEK arka plan iş parçacığında. KÖK NEDEN
+    // (kullanıcı bulgusu 2026-10-15: "güncellemeden sonra kasma"): ana ekran
+    // kartları videolu notun kapak karesini istemeye başlayınca
+    // MediaMetadataRetriever + tam boy JPEG sıkıştırma ANA iş parçacığında
+    // koşuyordu (kart başına 100-500 ms). Android'in ana iş parçacığı
+    // Flutter'ın vsync ve dokunuş olaylarını da taşıdığı için her kapak bir
+    // kare takılması demekti. Tek iş parçacığı: çözücüler aynı anda
+    // yarışmasın. Etkinlik başına değil SÜREÇ başına (bkz. companion):
+    // ekran döndükçe yeni iş parçacığı birikmesin.
+    private val mediaExecutor get() = sharedMediaExecutor
     private var pendingRestart: Runnable? = null
     private var lastStartAt = 0L
     private var rapidRestarts = 0
@@ -325,10 +343,17 @@ class MainActivity : FlutterFragmentActivity() {
                         val path = call.argument<String>("path")
                         // atUs verilmezse kapak karesi (bkz. videoFrame).
                         val atUs = call.argument<Number>("atUs")?.toLong()
+                        // maxSide verilirse KÜÇÜK RESİM: uzun kenar bu kadar
+                        // piksele indirilir (kart kapağı için tam boy kare
+                        // ve sıkıştırması boşa iş).
+                        val maxSide = call.argument<Number>("maxSide")?.toInt()
                         if (path == null) {
                             result.error("args", "path gerekli", null)
                         } else {
-                            result.success(videoFrame(path, atUs))
+                            mediaExecutor.execute {
+                                val bytes = videoFrame(path, atUs, maxSide)
+                                mainHandler.post { result.success(bytes) }
+                            }
                         }
                     }
                     // Videonun toplam süresi (ms). Balonlu görüntülü not
@@ -338,7 +363,10 @@ class MainActivity : FlutterFragmentActivity() {
                         if (path == null) {
                             result.error("args", "path gerekli", null)
                         } else {
-                            result.success(videoDurationMs(path))
+                            mediaExecutor.execute {
+                                val ms = videoDurationMs(path)
+                                mainHandler.post { result.success(ms) }
+                            }
                         }
                     }
                     // Uygulama detay ayarları: kullanıcı kalıcı reddettiği bir
@@ -602,26 +630,62 @@ class MainActivity : FlutterFragmentActivity() {
         name.replace('/', '_').replace('\\', '_').trim().ifEmpty { "belge" }
 
     /// Videodan kapak karesi (JPEG baytları); çıkarılamazsa null.
-    private fun videoFrame(path: String, atUs: Long? = null): ByteArray? {
+    private fun videoFrame(path: String, atUs: Long? = null, maxSide: Int? = null): ByteArray? {
         val retriever = android.media.MediaMetadataRetriever()
         return try {
             retriever.setDataSource(path)
             // atUs verilmişse O ANIN karesi (en yakın anahtar kare — tam
             // kare aramak uzun videoda saniyeler sürüyor), yoksa 1. saniye:
             // sıfırıncı kare çoğu çekimde karanlık/bulanık oluyor.
-            val frame = (
-                if (atUs != null) {
-                    val sync = android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC
-                    retriever.getFrameAtTime(atUs, sync)
-                } else {
-                    retriever.getFrameAtTime(1_000_000)
+            val sync = android.media.MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+            val timeUs = atUs ?: 1_000_000L
+            var frame: android.graphics.Bitmap? = null
+            if (maxSide != null && maxSide > 0 &&
+                android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O_MR1
+            ) {
+                // Çözücü kareyi DOĞRUDAN küçük üretir (tam boy bitmap hiç
+                // oluşmaz) — kapak için en ucuz yol.
+                val w = retriever.extractMetadata(
+                    android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH
+                )?.toIntOrNull() ?: 0
+                val h = retriever.extractMetadata(
+                    android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT
+                )?.toIntOrNull() ?: 0
+                if (w > 0 && h > 0) {
+                    val scale = maxSide.toFloat() / maxOf(w, h)
+                    val tw = maxOf(1, (w * minOf(1f, scale)).toInt())
+                    val th = maxOf(1, (h * minOf(1f, scale)).toInt())
+                    frame = retriever.getScaledFrameAtTime(timeUs, sync, tw, th)
                 }
+            }
+            if (frame == null) {
+                frame = (
+                    if (atUs != null) {
+                        retriever.getFrameAtTime(atUs, sync)
+                    } else {
+                        retriever.getFrameAtTime(1_000_000)
+                    }
+                    ) ?: retriever.frameAtTime ?: return null
+            }
+            var output: android.graphics.Bitmap = frame!!
+            if (maxSide != null && maxSide > 0 && maxOf(output.width, output.height) > maxSide) {
+                val scale = maxSide.toFloat() / maxOf(output.width, output.height)
+                val scaled = android.graphics.Bitmap.createScaledBitmap(
+                    output,
+                    maxOf(1, (output.width * scale).toInt()),
+                    maxOf(1, (output.height * scale).toInt()),
+                    true
                 )
-                ?: retriever.frameAtTime
-                ?: return null
+                if (scaled != output) output.recycle()
+                output = scaled
+            }
             val out = java.io.ByteArrayOutputStream()
-            frame.compress(android.graphics.Bitmap.CompressFormat.JPEG, 88, out)
-            frame.recycle()
+            output.compress(
+                android.graphics.Bitmap.CompressFormat.JPEG,
+                if (maxSide != null) 80 else 88,
+                out
+            )
+            output.recycle()
             out.toByteArray()
         } catch (e: Exception) {
             Log.d(logTag, "video karesi alinamadi: $e")

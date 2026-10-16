@@ -374,9 +374,9 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
         ),
         bottomNavigationBar: _editing
             ? InkToolbar(controller: _ink, hint: context.l10n.inkTwoFingerHint)
-            : AnimatedBuilder(
-                animation: _bubbles,
-                builder: (context, _) => _bubbles.adding
+            : ValueListenableBuilder<bool>(
+                valueListenable: _bubbles.addingListenable,
+                builder: (context, adding, _) => adding
                     ? BubbleToolbar(controller: _bubbles)
                     : const SizedBox.shrink(),
               ),
@@ -473,12 +473,15 @@ PdfViewerParams pdfLayerParams({
       child: RepaintBoundary(
         child: ValueListenableBuilder<int>(
         valueListenable: selection.page,
-        builder: (context, activePage, _) => AnimatedBuilder(
-        animation: bubbles,
-        builder: (context, _) => Stack(
+        // YALNIZ "balon bırak" kipi dinlenir (seçim katmanını kapatıp açan
+        // tek şey o). Balon katmanı kendi dinleyicisiyle, yalnız KENDİ
+        // sayfası değişince tazelenir (bkz. BubblePageLayer).
+        builder: (context, activePage, _) => ValueListenableBuilder<bool>(
+        valueListenable: bubbles.addingListenable,
+        builder: (context, adding, _) => Stack(
           clipBehavior: Clip.none,
           children: [
-            if (!inkEditing && !bubbles.adding)
+            if (!inkEditing && !adding)
               PdfSelectLayer(
                 page: page,
                 pageSize: pageRect.size,

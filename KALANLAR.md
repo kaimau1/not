@@ -2,6 +2,27 @@
 
 (Biten madde silinir. Karar/neden bilgisi buraya değil HAFIZA.md'ye yazılır.)
 
+## 2026-10-15 (2. tur) — kasma, balonlu mod, gömme çipi, kart kapağı (CİHAZDA GÖRÜLMEDİ)
+- [ ] **Kasma**: çok videolu/PDF'li ana ekranda kaydırma akıcı mı; ilk
+  açılışta kapaklar sırayla geliyor, ikinci açılışta anında mı (disk
+  önbelleği). Video kapağı Android'de çıkıyor mu (Kotlin yerelde
+  derlenmedi).
+- [ ] **Balonlu mod**: tutamacın sivri köşesi dokunulan noktada mı; vurgu
+  tutamacı satırın altında mı; sağ kenarda sola dönüyor mu. Alt çubukta
+  Balon → sayfaya dokun → yazma kartı (renk/yıldız/sil görünür) → Bitti.
+  Balona dokun → okuma kartı → Düzenle. 💬 sayılı liste → balona gider.
+  Dar telefonda ⋮ menüsü (sayfa notu, tam ekran). PDF'i kaydırırken ve
+  bölmeyi sürüklerken takılma var mı. Slayt notunda aynısı.
+- [ ] **Gömme çipi**: kelime seç → Ek göm → kelime türün renginde çip +
+  rozet; rozet 📎'yi tam örtüyor mu (Android emoji genişliği), satır
+  kaymıyor mu, imleç doğru yerde mi. Madde satırında da. Koyu temada
+  okunuyor mu.
+- [ ] **Kart kapağı**: balonlu PDF/sunum notu kartın tepesinde ilk sayfa
+  kapağıyla, rozet kesilmeden.
+- [ ] Yeni 8 çeviri anahtarı (quickAddMore/Frequent/All/Less, bubbleDone,
+  bubbleEditShort, bubblePlainModeShort, pageBarMore) yalnız tr/en; öbür
+  diller Türkçe şablona düşüyor — makine çevirisi.
+
 ## 2026-10-15 — kart medyası, + menüsü, seçim, balonlu⇄klasik, Drive (CİHAZDA GÖRÜLMEDİ)
 - [ ] **Google Cloud'da Drive API'yi etkinleştir** (proje notlar-kaimau →
   APIs & Services → "Google Drive API" → Enable) ve OAuth onay ekranına

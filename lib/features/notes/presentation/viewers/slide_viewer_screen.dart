@@ -92,7 +92,15 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
     super.initState();
     _scroll.addListener(_onScroll);
     _bubbles.onOpened = _centerOn;
+    // Balon kipi denetleyicinin İÇİNDEN de kapanıyor (balon bırakılınca,
+    // araç kartındaki "Bitti" ile): ekran ancak böyle haberdar olur, yoksa
+    // araç kartı ve üst çubuktaki düğme açık kalırdı.
+    _bubbles.addingListenable.addListener(_onAddingChanged);
     _load();
+  }
+
+  void _onAddingChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onScroll() {
@@ -183,6 +191,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
   void dispose() {
     _centerTimer?.cancel();
     _ink.dispose();
+    _bubbles.addingListenable.removeListener(_onAddingChanged);
     _bubbles.dispose();
     _scroll.dispose();
     super.dispose();
@@ -289,8 +298,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
         ),
       );
     }
-    // Liste kilitli: çizerken (o parmak çiziyor) ya da slayt yakınken.
-    final locked = _editing || _zoomed || _bubbles.dragging != null;
+    // Liste kilitli: çizerken (o parmak çiziyor), slayt yakınken ya da bir
+    // balon taşınırken. Taşıma bilgisi DİNLENİR (aşağıda): ekran
+    // denetleyicinin bildirimleriyle yeniden kurulmuyor, okunan değer bayat
+    // kalıyordu.
+    final locked = _editing || _zoomed;
     return Column(
       children: [
         Expanded(
@@ -302,9 +314,11 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
               );
               _metrics = metrics;
               _viewport = constraints.maxHeight;
-              return ListView.builder(
+              return ValueListenableBuilder<bool>(
+                valueListenable: _bubbles.draggingListenable,
+                builder: (context, dragging, _) => ListView.builder(
                 controller: _scroll,
-                physics: locked
+                physics: (locked || dragging)
                     ? const NeverScrollableScrollPhysics()
                     : const ClampingScrollPhysics(),
                 itemCount: slides.length,
@@ -336,6 +350,7 @@ class _SlideViewerScreenState extends ConsumerState<SlideViewerScreen> {
                     ),
                   ),
                 ),
+              ),
               );
             },
           ),

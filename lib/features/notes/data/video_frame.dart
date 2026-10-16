@@ -20,16 +20,27 @@ abstract final class VideoFrame {
   /// Kapak karesi (1. saniye).
   static Future<Uint8List?> cover(String path) => _frame(path, null);
 
+  /// Kapak karesinin KÜÇÜK RESMİ: uzun kenar [maxSide] piksel. Çözücü kareyi
+  /// doğrudan küçük üretir (Android 8.1+); ana ekran kartları bunu kullanır —
+  /// tam boy kare ve sıkıştırması orada boşa iş (bkz. MainActivity).
+  static Future<Uint8List?> thumbnail(String path, {int maxSide = 360}) =>
+      _frame(path, null, maxSide: maxSide);
+
   /// Videonun [at] anındaki kare (en yakın anahtar kare).
   static Future<Uint8List?> at(String path, Duration at) =>
       _frame(path, at.inMicroseconds);
 
-  static Future<Uint8List?> _frame(String path, int? atUs) async {
+  static Future<Uint8List?> _frame(
+    String path,
+    int? atUs, {
+    int? maxSide,
+  }) async {
     if (!supported) return null;
     try {
       return await _channel.invokeMethod<Uint8List>('videoFrame', {
         'path': path,
         'atUs': ?atUs,
+        'maxSide': ?maxSide,
       });
     } on PlatformException {
       return null;

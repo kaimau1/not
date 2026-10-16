@@ -5433,7 +5433,7 @@ abstract class AppLocalizations {
   /// No description provided for @attachmentTagEmbed.
   ///
   /// In tr, this message translates to:
-  /// **'Seçili yazıya ek göm'**
+  /// **'Ek göm'**
   String get attachmentTagEmbed;
 
   /// No description provided for @attachmentTagNoAttachment.
@@ -8429,6 +8429,54 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Bu ek Google Drive\'ında. Görmek için Ayarlar → Senkron\'dan Drive\'ı bağla.'**
   String get driveNeededForFile;
+
+  /// No description provided for @quickAddMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'ŞABLON VE DEFTER'**
+  String get quickAddMore;
+
+  /// No description provided for @quickAddFrequent.
+  ///
+  /// In tr, this message translates to:
+  /// **'SIK KULLANDIKLARIN'**
+  String get quickAddFrequent;
+
+  /// No description provided for @quickAddAll.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümü'**
+  String get quickAddAll;
+
+  /// No description provided for @quickAddLess.
+  ///
+  /// In tr, this message translates to:
+  /// **'Daha az'**
+  String get quickAddLess;
+
+  /// No description provided for @bubbleDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bitti'**
+  String get bubbleDone;
+
+  /// No description provided for @bubbleEditShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düzenle'**
+  String get bubbleEditShort;
+
+  /// No description provided for @bubblePlainModeShort.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metin'**
+  String get bubblePlainModeShort;
+
+  /// No description provided for @pageBarMore.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sayfa ve not seçenekleri'**
+  String get pageBarMore;
 }
 
 class _AppLocalizationsDelegate

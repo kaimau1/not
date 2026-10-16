@@ -468,6 +468,9 @@ class NoteCard extends ConsumerWidget {
     // Kilitli notta içerik (ekler dahil) kartta gösterilmez.
     final media = note.locked ? null : CardMediaPlan.of(note);
     final hero = media?.hero;
+    // Balonlu notun belge kapağı (video/görsel kapağıyla aynı yerde).
+    final cover = media?.cover;
+    final hasCover = hero != null || cover != null;
     final borderWidth = note.frameColor != NoteColor.none ? 2.5 : 1.0;
 
     final padded = Padding(
@@ -476,8 +479,8 @@ class NoteCard extends ConsumerWidget {
       // kapağın üstünde durur, pay gerekmez).
       padding: EdgeInsetsDirectional.fromSTEB(
         12,
-        hero != null ? 8 : 10,
-        showTopRow || hero != null ? 12 : 20,
+        hasCover ? 8 : 10,
+        showTopRow || hasCover ? 12 : 20,
         10,
       ),
       child: Column(
@@ -533,7 +536,7 @@ class NoteCard extends ConsumerWidget {
             // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
             // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
             if (media != null &&
-                (media.heroDocument != null ||
+                ((media.heroDocument != null && cover == null) ||
                     media.strip.isNotEmpty ||
                     media.docs.isNotEmpty ||
                     media.audioCount > 0)) ...[
@@ -589,7 +592,7 @@ class NoteCard extends ConsumerWidget {
     // sabitli video/görsel ya da notun tek görseli/videosu. Kenarlık `Ink`
     // tarafından çocuğa dolgu olarak eklendiği için kapak çerçevenin İÇİNDE
     // kalır; köşe yarıçapı kenarlık kadar küçültülür.
-    final content = hero == null
+    final content = !hasCover
         ? padded
         : Column(
             mainAxisSize: MainAxisSize.min,
@@ -599,7 +602,12 @@ class NoteCard extends ConsumerWidget {
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12 - borderWidth),
                 ),
-                child: CardHeroMedia(attachment: hero),
+                child: hero != null
+                    ? CardHeroMedia(attachment: hero)
+                    : CardDocumentCover(
+                        document: cover!,
+                        bubbleCount: media!.bubbleCount,
+                      ),
               ),
               padded,
             ],
@@ -720,7 +728,7 @@ class NoteCard extends ConsumerWidget {
                             padding: const EdgeInsets.all(6),
                             // Kapağın üstünde düğme koyu yuvarlakla okunur
                             // kalır (açık renkli fotoğrafta kaybolmasın).
-                            child: hero == null
+                            child: !hasCover
                                 ? Icon(
                                     Icons.more_vert,
                                     size: 18,

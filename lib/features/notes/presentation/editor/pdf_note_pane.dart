@@ -107,6 +107,23 @@ class _PdfNotePaneState extends State<PdfNotePane> {
       _bubbleEditing.value = editing;
       widget.onImmersiveChanged?.call(editing);
     };
+    _bubbles.addingListenable.addListener(_onAddingChanged);
+  }
+
+  /// Balon bırakma açılınca kalem kapanır: iki kip aynı parmağı ister. Ters
+  /// yön (kalem açılınca balon kipi kapanır) görüntüleyicide.
+  void _onAddingChanged() {
+    if (_bubbles.adding && widget.penMode) {
+      widget.onPenModeChanged?.call(false);
+    }
+  }
+
+  /// Balon listesi; seçilen balonun sayfasına gidilir ve balon açılır.
+  Future<void> _openBubbles(ValueChanged<int> goToPage) async {
+    final target = await showBubblesOverview(context, _bubbles);
+    if (target == null || !mounted) return;
+    goToPage(target.page);
+    _bubbles.openOnly(target.id);
   }
 
   @override
@@ -121,6 +138,7 @@ class _PdfNotePaneState extends State<PdfNotePane> {
 
   @override
   void dispose() {
+    _bubbles.addingListenable.removeListener(_onAddingChanged);
     _ink.dispose();
     _bubbles.dispose();
     _bubbleEditing.dispose();
@@ -148,6 +166,11 @@ class _PdfNotePaneState extends State<PdfNotePane> {
     onFieldDisposed: widget.onFieldDisposed,
     onFullScreen: _openFullScreen,
     suppressNotes: _bubbleEditing,
+    barActions: (context, goToPage, compact) => BubbleBarActions(
+      controller: _bubbles,
+      compact: compact,
+      onOpenList: () => _openBubbles(goToPage),
+    ),
     viewerBuilder: (context, host) => _PdfPaneViewer(
       attachment: widget.attachment,
       ink: _ink,
@@ -245,41 +268,33 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
     super.dispose();
   }
 
-  Future<void> _openBubbles() async {
-    final target = await showBubblesOverview(context, widget.bubbles);
-    if (target == null || !mounted) return;
-    _page = target.page;
-    widget.host.onPageChanged(target.page);
-    if (_pdf.isReady) _pdf.goToPage(pageNumber: target.page);
-    widget.bubbles.openOnly(target.id);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final attachment = widget.attachment;
-    final hasLocal =
-        attachment.localPath.isNotEmpty &&
-        localFileExists(attachment.localPath);
-    if (!hasLocal && !attachment.isUploaded) {
-      // Dosya ne cihazda ne bulutta: başka bir cihazda eklenmiş ve henüz
-      // senkronlanmamış olabilir. Notlar yine yazılabilsin diye ekran
-      // kilitlenmez.
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(
-            context.l10n.attachmentNotSynced,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ),
-      );
+  /// Belge görüntüleyicisi — KURULDUĞU GİBİ SAKLANIR.
+  ///
+  /// KÖK NEDEN (kullanıcı bulgusu 2026-10-15: "balonlu modda kasma"): pano
+  /// her `setState`inde (kullanıcı kaydırıp sayfa sınırını geçince, bölme
+  /// tutamağı sürüklenirken, alt not açılıp kapanınca) bu bölmeyi yeniden
+  /// kuruyordu; o da her seferinde yeni bir `PdfViewerParams` ve yeni bir
+  /// `PdfViewer` demekti — görünen bütün sayfaların seçim, kalem ve balon
+  /// katmanları baştan kuruluyordu. Aynı widget örneği verilince Flutter alt
+  /// ağacı hiç gezmez. Görüntüleyici yalnız KAYNAĞI (dosya/adres) ya da kalem
+  /// kipi değişince yeniden kurulur; geri çağırmalar `widget`ı çağrı anında
+  /// okuduğu için güncel pano bilgisiyle çalışır.
+  Widget _viewerFor(Attachment attachment, bool hasLocal) {
+    final source = hasLocal
+        ? 'f:${attachment.localPath}'
+        : 'u:${attachment.downloadUrl}';
+    final cached = _viewer;
+    if (cached != null &&
+        _viewerSource == source &&
+        _viewerPen == widget.penMode) {
+      return cached;
     }
-
+    _viewerSource = source;
+    _viewerPen = widget.penMode;
     // Katmanların tamamı (seçim, çizim, balon) tam ekran görüntüleyiciyle
     // AYNI kurulumdan gelir: "tam ekran yapmadan da çalışsın" isteğinin tek
     // kopyalı karşılığı (bkz. pdfLayerParams).
-    final viewer = ValueListenableBuilder<bool>(
+    return _viewer = ValueListenableBuilder<bool>(
       valueListenable: _selection.selecting,
       builder: (context, dragging, _) {
         final params = pdfLayerParams(
@@ -331,7 +346,35 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
         );
       },
     );
+  }
 
+  Widget? _viewer;
+  String? _viewerSource;
+  bool? _viewerPen;
+
+  @override
+  Widget build(BuildContext context) {
+    final attachment = widget.attachment;
+    final hasLocal =
+        attachment.localPath.isNotEmpty &&
+        localFileExists(attachment.localPath);
+    if (!hasLocal && !attachment.isUploaded) {
+      // Dosya ne cihazda ne bulutta: başka bir cihazda eklenmiş ve henüz
+      // senkronlanmamış olabilir. Notlar yine yazılabilsin diye ekran
+      // kilitlenmez.
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            context.l10n.attachmentNotSynced,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+      );
+    }
+
+    final viewer = _viewerFor(attachment, hasLocal);
     return Stack(
       children: [
         Positioned.fill(child: viewer),
@@ -352,17 +395,12 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           left: 0,
           right: 0,
           bottom: 0,
-          child: AnimatedBuilder(
-            animation: widget.bubbles,
-            builder: (context, _) => widget.bubbles.adding
+          child: ValueListenableBuilder<bool>(
+            valueListenable: widget.bubbles.addingListenable,
+            builder: (context, adding, _) => adding
                 ? BubbleToolbar(controller: widget.bubbles)
                 : const SizedBox.shrink(),
           ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: Column(children: [_bubbleButton(), _overviewButton()]),
         ),
         // Kalem çubuğu bölmenin DİBİNDE: renk, kalınlık, silgi, ok, geri al.
         if (widget.penMode)
@@ -388,53 +426,6 @@ class _PdfPaneViewerState extends State<_PdfPaneViewer> {
           ),
         ),
       ],
-    );
-  }
-
-  /// "Balon bırak" düğmesi. Pano bölmesi küçük olduğu için düğme küçük ve
-  /// köşede: sayfayı kapatmaz ama planlamaya tam ekrana geçmeden başlanır.
-  Widget _bubbleButton() => AnimatedBuilder(
-    animation: widget.bubbles,
-    builder: (context, _) {
-      final adding = widget.bubbles.adding;
-      final scheme = Theme.of(context).colorScheme;
-      return Material(
-        color: adding ? scheme.primary : scheme.surface.withValues(alpha: 0.85),
-        shape: const CircleBorder(),
-        elevation: 2,
-        child: IconButton(
-          tooltip: adding ? context.l10n.bubbleAddDone : context.l10n.bubbleAdd,
-          visualDensity: VisualDensity.compact,
-          onPressed: () => widget.bubbles.setAdding(!adding),
-          icon: Icon(
-            adding ? Icons.chat_bubble : Icons.add_comment_outlined,
-            size: 18,
-            color: adding ? scheme.onPrimary : scheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    },
-  );
-
-  Widget _overviewButton() {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
-      child: Material(
-        color: scheme.surface.withValues(alpha: 0.85),
-        shape: const CircleBorder(),
-        elevation: 2,
-        child: IconButton(
-          tooltip: context.l10n.bubblesOverviewTitle,
-          visualDensity: VisualDensity.compact,
-          onPressed: _openBubbles,
-          icon: Icon(
-            Icons.forum_outlined,
-            size: 18,
-            color: scheme.onSurfaceVariant,
-          ),
-        ),
-      ),
     );
   }
 }
