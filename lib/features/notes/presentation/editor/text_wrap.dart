@@ -1850,18 +1850,7 @@ class WrapTextController extends TextEditingController {
         identical(_spanKeyWidths, widths)) {
       return _spanCache!;
     }
-    final span =
-        buildWrapSpan(
-              text,
-              widths,
-              style,
-              linkColor: linkColor,
-              rich: _rich,
-              attachmentNames: _attachmentNames,
-              tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
-              videoTimestamps: _videoTimestamps,
-            )
-            as TextSpan;
+    final span = _paragraphSpan(text, widths, style, linkColor);
     _spanKeyText = text;
     _spanKeyStyle = style;
     _spanKeyLinkColor = linkColor;
@@ -1871,16 +1860,129 @@ class WrapTextController extends TextEditingController {
     return span;
   }
 
+  // ---- PARAGRAF ÖNBELLEĞİ -------------------------------------------------
+  //
+  // KÖK NEDEN (kullanıcı 2026-10-16: "program genelinde yazı yazarken FPS
+  // düşüşü"): yukarıdaki önbellek yalnız AYNI metni kapsıyordu; her tuş
+  // vuruşu metni değiştirdiği için bütün metin baştan ayrıştırılıyordu
+  // (biçim işaretleri, bağlantı kalıbı, ek etiketleri). Ölçüm (test ortamı):
+  // 10.000 karakter tuş başına ~7,5 ms, 30.000 karakter ~20 ms.
+  //
+  // Biçim işaretleri, bağlantılar, ek etiketleri ve zaman damgaları SATIR
+  // SONUNU AŞMAZ (bkz. rich_text `_formatPattern`); yani her paragrafın
+  // span'i yalnız kendi metnine bağlıdır. Paragraflar ayrı önbelleklenir:
+  // tuşta yalnız DÜZENLENEN paragraf yeniden ayrıştırılır.
+
+  /// Paragraf metni (+ dolgu genişlikleri) → span.
+  final _paraSpans = <String, InlineSpan>{};
+
+  /// Paragraf önbelleğini geçersiz kılan girdiler (stil, renk, tema, ek
+  /// adları…). Liste/harita alanları yalnız GERÇEKTEN değişince yeni nesne
+  /// olur (bkz. setter'lar) — kimlikle karşılaştırmak yeterli.
+  Object? _paraSpansEnv;
+
+  TextSpan _paragraphSpan(
+    String text,
+    List<double> widths,
+    TextStyle? style,
+    Color? linkColor,
+  ) {
+    final env = (
+      style,
+      linkColor,
+      _rich,
+      _attachmentNames,
+      _tagChipColors,
+      _videoTimestamps,
+    );
+    if (env != _paraSpansEnv) {
+      _paraSpans.clear();
+      _paraSpansEnv = env;
+    }
+    final paragraphs = text.split('\n');
+    final children = <InlineSpan>[];
+    var anchorIndex = 0;
+    for (var i = 0; i < paragraphs.length; i++) {
+      final p = paragraphs[i];
+      if (p.isNotEmpty) {
+        var anchors = 0;
+        if (widths.isNotEmpty) {
+          for (var c = 0; c < p.length; c++) {
+            if (p.codeUnitAt(c) == _kWrapAnchorCode) anchors++;
+          }
+        }
+        final own = anchors == 0
+            ? const <double>[]
+            : widths.sublist(
+                math.min(anchorIndex, widths.length),
+                math.min(anchorIndex + anchors, widths.length),
+              );
+        anchorIndex += anchors;
+        final key = own.isEmpty ? p : '$p\u0000${own.join(',')}';
+        children.add(
+          _paraSpans[key] ??= buildWrapSpan(
+            p,
+            own,
+            style,
+            linkColor: linkColor,
+            rich: _rich,
+            attachmentNames: _attachmentNames,
+            tagChipColors: _tagChipColors.isEmpty ? null : _tagChipColors,
+            videoTimestamps: _videoTimestamps,
+          ),
+        );
+      }
+      if (i < paragraphs.length - 1) children.add(const TextSpan(text: '\n'));
+    }
+    // Silinen/değişen paragrafların bayat girdileri birikmesin.
+    if (_paraSpans.length > paragraphs.length * 2 + 64) {
+      final live = paragraphs.toSet();
+      _paraSpans.removeWhere((key, _) {
+        final cut = key.indexOf('\u0000');
+        return !live.contains(cut < 0 ? key : key.substring(0, cut));
+      });
+    }
+    return TextSpan(style: style, children: children);
+  }
+
+  /// Paragraf → "neler var" bitleri (bkz. [_scanPlainness]): 1 bağlantı,
+  /// 2 biçim işareti, 4 ek etiketi, 8 zaman damgası.
+  final _paraFlags = <String, int>{};
+  Object? _paraFlagsEnv;
+
+  int _flagsOf(String p) {
+    if (p.isEmpty) return 0;
+    return _paraFlags[p] ??=
+        (findLinks(p).isNotEmpty ? 1 : 0) |
+        (stripRichMarkers(p) != p ? 2 : 0) |
+        (findAttachmentTags(p, _attachmentNames).isNotEmpty ? 4 : 0) |
+        (_videoTimestamps && findVideoTimestamps(p).isNotEmpty ? 8 : 0);
+  }
+
   void _scanPlainness() {
     final namesKey = _attachmentNames.join('\u0000');
     if (_scanText == text && _scanNamesKey == namesKey) return;
     _scanText = text;
     _scanNamesKey = namesKey;
-    _scanHasLink = findLinks(text).isNotEmpty;
-    _scanHasMarker = stripRichMarkers(text) != text;
-    _scanHasTag = findAttachmentTags(text, _attachmentNames).isNotEmpty;
-    _scanHasTime =
-        _videoTimestamps && findVideoTimestamps(text).isNotEmpty;
+    final env = (namesKey, _videoTimestamps);
+    if (env != _paraFlagsEnv) {
+      _paraFlags.clear();
+      _paraFlagsEnv = env;
+    }
+    // Paragraf başına önbellekli tarama (bkz. [_paragraphSpan]).
+    final paragraphs = text.split('\n');
+    var flags = 0;
+    for (final p in paragraphs) {
+      flags |= _flagsOf(p);
+    }
+    if (_paraFlags.length > paragraphs.length * 2 + 64) {
+      final live = paragraphs.toSet();
+      _paraFlags.removeWhere((key, _) => !live.contains(key));
+    }
+    _scanHasLink = flags & 1 != 0;
+    _scanHasMarker = flags & 2 != 0;
+    _scanHasTag = flags & 4 != 0;
+    _scanHasTime = flags & 8 != 0;
   }
 
   @override

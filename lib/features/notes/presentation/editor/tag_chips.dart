@@ -101,12 +101,18 @@ class _AttachmentTagChipsState extends State<AttachmentTagChips> {
     super.dispose();
   }
 
+  // RepaintBoundary: boyayıcı denetleyicinin HER bildiriminde (her tuş,
+  // her imleç hareketi) yeniden çiziyor. Sınır olmadan bu, en yakın üst
+  // sınıra — sayfanın kaydırma görünümüne — kadar BÜTÜN sayfayı yeniden
+  // boyatıyordu. Ağaç şekli hep aynı (bkz. [looks]).
   @override
-  Widget build(BuildContext context) => CustomPaint(
-    foregroundPainter: widget.looks.isEmpty
-        ? null
-        : _TagChipPainter(this, widget.controller, widget.looks),
-    child: widget.child,
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: CustomPaint(
+      foregroundPainter: widget.looks.isEmpty
+          ? null
+          : _TagChipPainter(this, widget.controller, widget.looks),
+      child: widget.child,
+    ),
   );
 }
 

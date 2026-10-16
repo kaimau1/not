@@ -73,10 +73,20 @@ RichMark activeRichFormats(WrapTextController controller) {
   final selection = controller.selection;
   if (!selection.isValid) return RichMark.none;
   final display = controller.text;
+  final logical = stripWrapAnchors(display);
+  final start = wrapToLogicalOffset(display, selection.start);
+  final end = wrapToLogicalOffset(display, selection.end);
+  // Yalnız seçimin dokunduğu PARAGRAFLAR ayrıştırılır: biçim işaretleri
+  // satır sonunu aşmaz (bkz. rich_text `_formatPattern`), sonuç birebir
+  // aynı. Biçim çubuğu açıkken bu hesap HER TUŞTA koşuyor; tüm metni
+  // ayrıştırmak uzun notta yazmayı yavaşlatıyordu.
+  final from = start == 0 ? 0 : logical.lastIndexOf('\n', start - 1) + 1;
+  var to = logical.indexOf('\n', end);
+  if (to < 0) to = logical.length;
   var active = activeFormats(
-    stripWrapAnchors(display),
-    wrapToLogicalOffset(display, selection.start),
-    wrapToLogicalOffset(display, selection.end),
+    logical.substring(from, to),
+    start - from,
+    end - from,
   );
   // BEKLEYEN biçimler de "basılı" sayılır (kullanıcı: "basınca direkt
   // aktifleştiği belli olmalı"). Metinde henüz bir karşılığı yok — işaretler
