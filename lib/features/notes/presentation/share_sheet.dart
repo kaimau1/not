@@ -19,6 +19,7 @@ import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'collaborators_sheet.dart';
 import 'pdf_export_screen.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Notun PAYLAŞ levhası.
 ///
@@ -61,7 +62,7 @@ Future<void> showNoteShareSheet(
 }) async {
   final prefs = ref.read(sharedPreferencesProvider);
   final initial = ShareTextOptions.decode(prefs.getString(_optionsKey));
-  final result = await showModalBottomSheet<(String, ShareTextOptions)>(
+  final result = await showAppSheet<(String, ShareTextOptions)>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
@@ -544,7 +545,7 @@ class _SharePreviewState extends State<_SharePreview> {
 /// İptalde null.
 Future<String?> showExportChoiceSheet(BuildContext context) {
   final l10n = context.l10n;
-  return showModalBottomSheet<String>(
+  return showAppSheet<String>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(

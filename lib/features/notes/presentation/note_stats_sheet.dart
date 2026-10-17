@@ -4,6 +4,7 @@ import '../../../core/l10n_ext.dart';
 import '../domain/note.dart';
 import '../domain/note_stats.dart';
 import 'note_card.dart' show formatNoteDate;
+import '../../../core/widgets/app_sheet.dart';
 
 /// Notun sayısal özeti (kelime, karakter, madde, ek, okuma süresi) ve
 /// oluşturma/güncelleme tarihleri.
@@ -14,7 +15,7 @@ import 'note_card.dart' show formatNoteDate;
 Future<void> showNoteStatsSheet(BuildContext context, Note note) {
   final l10n = context.l10n;
   final stats = NoteStats.of(note);
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) {

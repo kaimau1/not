@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'app_sheet.dart';
 
 /// Menü levhasındaki tek işlem.
 class MenuAction {
@@ -67,7 +68,7 @@ class MenuSection {
 
 /// [ActionMenu]'yü alt levhada açar; seçilen işlemin anahtarını döner.
 Future<String?> showActionMenuSheet(BuildContext context, ActionMenu menu) =>
-    showModalBottomSheet<String>(
+    showAppSheet<String>(
       context: context,
       showDragHandle: true,
       // Büyük yazı ölçeğinde levha varsayılan tavanı aşabilir; kaydırma ağı.

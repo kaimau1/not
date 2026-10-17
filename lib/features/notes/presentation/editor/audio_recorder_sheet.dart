@@ -8,11 +8,12 @@ import 'package:record/record.dart';
 
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Ses kaydı alt sayfası. Kayıt biterse (path, süre) döner; iptalde null.
 Future<({String path, Duration duration})?> showAudioRecorderSheet(
   BuildContext context,
-) => showModalBottomSheet<({String path, Duration duration})>(
+) => showAppSheet<({String path, Duration duration})>(
   context: context,
   isDismissible: false,
   enableDrag: false,

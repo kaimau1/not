@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/widgets/action_menu_sheet.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Not editörünün ⋮ menüsü — hızlı satır + başlıklı gruplar (bkz.
 /// [ActionMenu], 2026-10-11). Eskiden İKİ SÜTUNLU tek ızgaraydı.
@@ -32,7 +33,7 @@ Future<String?> showNoteEditorMenu(
   bool canRemoveParts = false,
 }) {
   final l10n = context.l10n;
-  return showModalBottomSheet<String>(
+  return showAppSheet<String>(
     context: context,
     showDragHandle: true,
     // Büyük yazı ölçeğinde ızgara varsayılan tavanı aşabilir; kaydırma ağı.

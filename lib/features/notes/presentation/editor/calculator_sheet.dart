@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/calc.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 bool get _isDesktop =>
     !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
@@ -14,7 +15,7 @@ bool get _isDesktop =>
 /// "Nota ekle" ile kapatılırsa eklenecek metni ("12,5×3 = 37,5" ya da
 /// tek sayıysa yalnızca sonucu) döner; iptalde null.
 Future<String?> showCalculatorSheet(BuildContext context) =>
-    showModalBottomSheet<String>(
+    showAppSheet<String>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,

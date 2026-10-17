@@ -22,6 +22,7 @@ import 'note_template_sheet.dart';
 import 'notes_providers.dart';
 import 'pdf_export_screen.dart';
 import 'share_sheet.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Nota basılı tutunca açılan hızlı işlem menüsü: paylaş, kopyala,
 /// arşivle, kilitle, seç, sil. Kilitli notun içeriği kimlik doğrulaması
@@ -35,7 +36,7 @@ Future<void> showNoteActionsSheet(
   Note note,
 ) async {
   final l10n = context.l10n;
-  final action = await showModalBottomSheet<String>(
+  final action = await showAppSheet<String>(
     context: context,
     showDragHandle: true,
     // Izgara varsayılan yükseklik sınırına (ekranın 9/16'sı) sığar ama büyük
@@ -314,7 +315,10 @@ Future<void> _runNoteAction(
       // hep doğrulama isterken silme istemiyordu — çöp+geri al olsa da
       // koruma modeliyle tutarsızdı (30 gün sonra kalıcı gider).
       if (!await unlockIfNeeded()) return;
-      repo.softDelete(note.id);
+      // Kart önce küçülüp solar (bkz. leavingNotesProvider), sonra silinir.
+      await ref.read(leavingNotesProvider.notifier).leave([note.id], () {
+        repo.softDelete(note.id);
+      });
       if (context.mounted) {
         showUndoSnackBar(
           context,

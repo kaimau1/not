@@ -4,6 +4,7 @@ import '../../../../app/theme/note_colors.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/rich_text.dart';
 import 'text_wrap.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Seçili metne biçim uygular (ya da varsa kaldırır).
 ///
@@ -249,7 +250,7 @@ Future<void> showFormatSheet(
   required VoidCallback onApplied,
 }) async {
   final l10n = context.l10n;
-  await showModalBottomSheet<void>(
+  await showAppSheet<void>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) {

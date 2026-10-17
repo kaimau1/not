@@ -16,6 +16,7 @@ import '../viewers/ink_layer.dart';
 import '../viewers/pdf_page_image.dart';
 import '../viewers/pdf_viewer_screen.dart';
 import '../../../../core/widgets/smooth_routes.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// **SAYFAYA GÖMÜLÜ PDF** (kullanıcı isteği 2026-09-06: "PDF'yi sayfaya
 /// entegre etme, aynı görsel gibi sayfaya yerleşir ancak sayfa
@@ -417,7 +418,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   /// Sayfaya atlama levhası: kaydırıcı, ilk/son sayfa, yer imleri ve bütün
   /// sayfaların küçük resimleri.
   Future<void> _openJumpSheet(PdfDocument document) async {
-    final target = await showModalBottomSheet<int>(
+    final target = await showAppSheet<int>(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
@@ -779,7 +780,7 @@ class _PdfPageBoxState extends State<PdfPageBox> {
   Future<void> _openMarks() async {
     final marks = widget.attachment.pdfMarks;
     final l10n = context.l10n;
-    final target = await showModalBottomSheet<int>(
+    final target = await showAppSheet<int>(
       context: context,
       showDragHandle: true,
       builder: (context) => SafeArea(

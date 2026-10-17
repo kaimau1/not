@@ -9,6 +9,7 @@ import '../../friends/presentation/friends_screen.dart';
 import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/inbox_screen.dart';
 import 'auth_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **ANA EKRANIN HESAP SİMGESİ** — kullanıcı isteği 2026-08-18: "giriş
 /// yapıldıysa üst alanda profil simgesi görülsün, yapılmadıysa yerel hesap
@@ -87,7 +88,7 @@ class AccountAvatarButton extends ConsumerWidget {
 /// üstteki 3 noktaya da koy, profil bilgileri vs." Ayarların HESAP alanının
 /// kısayolu: burada yalnız sık gereken üç yol var, yıkıcı işlemler (çıkış,
 /// hesap silme) Ayarlar'da kalır ki yanlışlıkla dokunulmasın.
-Future<void> showAccountSheet(BuildContext context) => showModalBottomSheet<
+Future<void> showAccountSheet(BuildContext context) => showAppSheet<
   void
 >(
   context: context,

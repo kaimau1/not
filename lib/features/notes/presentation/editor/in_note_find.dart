@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n_ext.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// **NOT İÇİ CANLI ARAMA ÇUBUĞU** (kullanıcı isteği 2026-09-26: "not içi
 /// aramada sayfada canlı aranmalı, ayrı bir alanda değil; altta çıksın
@@ -149,7 +150,7 @@ Future<int?> showFindHitsSheet(
   required int current,
   required bool canDeepSearch,
 }) {
-  return showModalBottomSheet<int>(
+  return showAppSheet<int>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,

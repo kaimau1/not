@@ -307,14 +307,21 @@ class NoteCard extends ConsumerWidget {
   void _delete(BuildContext context, WidgetRef ref) {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    repo.softDelete(note.id);
     final l10n = context.l10n;
-    showUndoSnackBar(
-      context,
-      message: l10n.noteDeleted,
-      undoLabel: l10n.undo,
-      onUndo: () => repo.restore(note.id),
-    );
+    // Kart önce küçülüp solar, sonra silinir (bkz. leavingNotesProvider).
+    ref.read(leavingNotesProvider.notifier).leave([note.id], () {
+      repo.softDelete(note.id);
+      final ctx = context.mounted
+          ? context
+          : rootScaffoldMessengerKey.currentContext;
+      if (ctx == null) return;
+      showUndoSnackBar(
+        ctx,
+        message: l10n.noteDeleted,
+        undoLabel: l10n.undo,
+        onUndo: () => repo.restore(note.id),
+      );
+    });
   }
 
   Future<void> _showContextMenu(
@@ -684,115 +691,123 @@ class NoteCard extends ConsumerWidget {
       if (note.reminderAt != null) context.l10n.remindersTitle,
     ].where((s) => s.isNotEmpty).join('. ');
 
+    // SİLİNİRKEN küçülüp solar (bkz. leavingNotesProvider) — yalnız bu kart
+    // izler, ızgaranın geri kalanı yeniden çizilmez.
+    final leaving = ref.watch(
+      leavingNotesProvider.select((s) => s.contains(note.id)),
+    );
     // BASINCA HAFİFÇE ÇÖKER (iOS dokunsal hissi — bkz. PressScale): dönüşüm
     // RepaintBoundary'nin DIŞINDA, yani kartın önbellekli katmanı yalnız
     // ölçeklenir, yeniden boyanmaz.
-    return PressScale(
-      enabled: !selectionActive,
-      child: RepaintBoundary(
-        child: Semantics(
-          container: true,
-          button: true,
-          selected: selectionActive ? selected : null,
-          label: semanticLabel,
-          child: GestureDetector(
-            // Sağ tık HER platformda: fareli tablet (Android) ve web de
-            // masaüstü gibi bağlam menüsü alır. Dokunmatik ekran ikincil
-            // dokunuş üretmediği için telefonda davranış değişmez.
-            // Paylaşılan notun menüsü yok (bkz. aşağıdaki ⋮ notu).
-            onSecondaryTapUp: ownerId != null
-                ? null
-                : (details) =>
-                      _showContextMenu(context, ref, details.globalPosition),
-            child: Stack(
-              children: [
-                card,
-                // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
-                // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
-                // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
-                // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
-                // seçim sırasında sabit kalır).
-                // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
-                // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
-                // yazar — başkasının notunda o işlemler kendi altımda aynı
-                // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
-                // düzenlemek editörden geçer (o, sahibin deposuna yazar).
-                if (!selectionActive && ownerId == null)
-                  PositionedDirectional(
-                    top: 2,
-                    end: 2,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(18),
-                        onTap: () => showNoteActionsSheet(context, ref, note),
-                        child: SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: Align(
-                            alignment: AlignmentDirectional.topEnd,
-                            child: Padding(
-                              padding: const EdgeInsets.all(6),
-                              // Kapağın üstünde düğme koyu yuvarlakla okunur
-                              // kalır (açık renkli fotoğrafta kaybolmasın).
-                              child: !hasCover
-                                  ? Icon(
-                                      Icons.more_vert,
-                                      size: 18,
-                                      color: scheme.onSurfaceVariant,
-                                    )
-                                  : DecoratedBox(
-                                      decoration: const BoxDecoration(
-                                        color: Color(0x66000000),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(2),
-                                        child: Icon(
-                                          Icons.more_vert,
-                                          size: 18,
-                                          color: Colors.white,
+    return _Leaving(
+      leaving: leaving,
+      child: PressScale(
+        enabled: !selectionActive,
+        child: RepaintBoundary(
+          child: Semantics(
+            container: true,
+            button: true,
+            selected: selectionActive ? selected : null,
+            label: semanticLabel,
+            child: GestureDetector(
+              // Sağ tık HER platformda: fareli tablet (Android) ve web de
+              // masaüstü gibi bağlam menüsü alır. Dokunmatik ekran ikincil
+              // dokunuş üretmediği için telefonda davranış değişmez.
+              // Paylaşılan notun menüsü yok (bkz. aşağıdaki ⋮ notu).
+              onSecondaryTapUp: ownerId != null
+                  ? null
+                  : (details) =>
+                        _showContextMenu(context, ref, details.globalPosition),
+              child: Stack(
+                children: [
+                  card,
+                  // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
+                  // durur — ikon köşeye hizalı, dokunma alanı 36dp. Seçim modunda
+                  // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
+                  // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
+                  // seçim sırasında sabit kalır).
+                  // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
+                  // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
+                  // yazar — başkasının notunda o işlemler kendi altımda aynı
+                  // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
+                  // düzenlemek editörden geçer (o, sahibin deposuna yazar).
+                  if (!selectionActive && ownerId == null)
+                    PositionedDirectional(
+                      top: 2,
+                      end: 2,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(18),
+                          onTap: () => showNoteActionsSheet(context, ref, note),
+                          child: SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: Align(
+                              alignment: AlignmentDirectional.topEnd,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                // Kapağın üstünde düğme koyu yuvarlakla okunur
+                                // kalır (açık renkli fotoğrafta kaybolmasın).
+                                child: !hasCover
+                                    ? Icon(
+                                        Icons.more_vert,
+                                        size: 18,
+                                        color: scheme.onSurfaceVariant,
+                                      )
+                                    : DecoratedBox(
+                                        decoration: const BoxDecoration(
+                                          color: Color(0x66000000),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Padding(
+                                          padding: EdgeInsets.all(2),
+                                          child: Icon(
+                                            Icons.more_vert,
+                                            size: 18,
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
-                                    ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
-                // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
-                // kartın tamamını kapladığı için dokunuşu yutardı.
-                if (selected)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: scheme.primary, width: 2),
+                  // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
+                  // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
+                  // kartın tamamını kapladığı için dokunuşu yutardı.
+                  if (selected)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: scheme.primary, width: 2),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                if (selected)
-                  PositionedDirectional(
-                    top: 6,
-                    end: 6,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: scheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(2),
-                      child: Icon(
-                        Icons.check,
-                        size: 14,
-                        color: scheme.onPrimary,
+                  if (selected)
+                    PositionedDirectional(
+                      top: 6,
+                      end: 6,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        child: Icon(
+                          Icons.check,
+                          size: 14,
+                          color: scheme.onPrimary,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -1294,4 +1309,29 @@ class NoteListRow extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Silinen kartın çıkışı: küçülerek solar (bkz. [leavingNotesProvider]).
+/// Çıkarken dokunuş almaz — ikinci bir dokunuş silinmekte olan notu açmasın.
+class _Leaving extends StatelessWidget {
+  const _Leaving({required this.leaving, required this.child});
+
+  final bool leaving;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => IgnorePointer(
+    ignoring: leaving,
+    child: AnimatedScale(
+      scale: leaving ? 0.82 : 1,
+      duration: LeavingNotesNotifier.exit,
+      curve: Curves.easeInCubic,
+      child: AnimatedOpacity(
+        opacity: leaving ? 0 : 1,
+        duration: LeavingNotesNotifier.exit,
+        curve: Curves.easeIn,
+        child: child,
+      ),
+    ),
+  );
 }

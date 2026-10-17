@@ -4872,3 +4872,21 @@ her çağrıda pub get koşmasın). 12 yeni anahtar 16 dilde elle yazıldı. Tes
 `requests_2026_10_17_b_test.dart` (+15), `view_mode_switch_test` ve
 `youtube_video_test` YENİ davranışa güncellendi (ses artık sabitlenir, Ek
 kipi). Cihazda GÖRÜLMEDİ — APK CI'da.
+
+## 2026-10-17 (4. tur) — "olmamış hissi" devam: tek tip levha hareketi, silinen kartın çıkışı, basma hissi
+Kullanıcı: "çeviri hariç devam et, olmamış kısmına; Dosya Okuyucu'da da UI/UX,
+APK". (Dosya Okuyucu tarafı o deponun HAFIZA'sında, aynı tarih.)
+* LEVHALAR: `core/widgets/app_sheet.dart` → `showAppSheet` (showModalBottomSheet'in
+  birebir imzası) + `kAppSheetAnimation` (340/220 ms, `Easing.emphasizedDecelerate`).
+  39 dosyadaki 62 çağrı betikle çevrildi; YENİ levha `showAppSheet` ile açılmalı
+  (yoksa eski 250 ms sert hareketle gelir). `transitionAnimationController`
+  verilirse stil verilmez (ikisi birlikte anlamsız).
+* SİLİNEN KART: `leavingNotesProvider` (`LeavingNotesNotifier.leave(ids, then)`):
+  kart 220 ms küçülüp solar (`_Leaving`, IgnorePointer), ardından `then()` asıl
+  `softDelete`. Kart kümeyi `select(contains)` ile izler — yalnız silinen kart
+  çizilir. Bağlananlar: kart menüsü (`NoteCard._delete`), eylem levhası
+  ("delete"), toplu seçim silme. Editörden/asistandan silme bağlanmadı (kart
+  ekranda değil).
+* Basma hissi (`PressScale`) + menüsünün birincil düğmelerinde ve Ayarlar
+  kısayol kartlarında da.
+* Testler: `requests_2026_10_17_c_test.dart` (+2); tam takım 1277/1277.

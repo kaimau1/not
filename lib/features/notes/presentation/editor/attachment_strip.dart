@@ -21,6 +21,7 @@ import '../../data/drive_store.dart';
 import '../drive_ui.dart';
 import '../note_card_media.dart' show CardMediaTile, PdfFirstPageThumb;
 import '../../../../core/widgets/smooth_routes.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Görsel olmayan ekleri (PDF, sunum, ses, video) gösteren yatay şerit.
 ///
@@ -658,7 +659,7 @@ class _AttachmentTile extends ConsumerWidget {
     final l10n = context.l10n;
     final views = availableViews(attachment);
     final current = view;
-    final action = await showModalBottomSheet<String>(
+    final action = await showAppSheet<String>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,

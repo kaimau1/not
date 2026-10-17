@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n_ext.dart';
 import '../../settings/settings_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Bir İÇERİKTEN (fotoğraf, tarama, video, görsel, PDF, sunum) not alırken
 /// notun hangi biçimde açılacağı.
@@ -67,7 +68,7 @@ Future<CaptureChoice?> showCaptureModeSheet(
   }
   final key = kind == null ? null : 'capture_mode_last_$kind';
   final last = key == null ? null : prefs?.getString(key);
-  return showModalBottomSheet<CaptureChoice>(
+  return showAppSheet<CaptureChoice>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,

@@ -10,6 +10,7 @@ import '../../folders/domain/note_folder.dart';
 import '../data/notes_repository.dart';
 import '../domain/note.dart';
 import 'notes_providers.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// Süz levhası — eski çip barının yerini alır.
 ///
@@ -22,7 +23,7 @@ import 'notes_providers.dart';
 /// ŞİMDİ: tek "Süz" düğmesi, tek levha, dört bölüm. Ana ekranda yalnız
 /// UYGULANMIŞ süzgeçler kaldırılabilir çip olarak görünür.
 Future<void> showFilterSheet(BuildContext context) =>
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
@@ -620,7 +621,7 @@ class _FilterSheet extends ConsumerWidget {
 /// uygulanır (bkz. [NotesRepository.renameTag] / [NotesRepository.deleteTag]).
 Future<void> _manageTag(BuildContext context, WidgetRef ref, String tag) async {
   final l10n = context.l10n;
-  final action = await showModalBottomSheet<String>(
+  final action = await showAppSheet<String>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(

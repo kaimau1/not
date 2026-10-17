@@ -7,6 +7,7 @@ import '../../friends/data/friends_repository.dart';
 import '../../friends/domain/friend.dart';
 import '../../friends/presentation/friends_screen.dart';
 import '../data/note_shares_repository.dart';
+import '../../../core/widgets/app_sheet.dart';
 
 /// **ORTAK ÇALIŞANLAR** levhası — Keep'teki "Ortak çalışan" düğmesinin
 /// karşılığı (kullanıcı isteği 2026-09-22: "ortak not butonu keepteki gibi").
@@ -33,7 +34,7 @@ Future<void> showCollaboratorsSheet(
     ).showSnackBar(SnackBar(content: Text(context.l10n.friendsNeedsAccount)));
     return;
   }
-  final result = await showModalBottomSheet<_SheetResult>(
+  final result = await showAppSheet<_SheetResult>(
     context: context,
     showDragHandle: true,
     isScrollControlled: true,

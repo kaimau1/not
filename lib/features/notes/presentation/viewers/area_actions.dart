@@ -5,6 +5,7 @@ import 'package:pasteboard/pasteboard.dart';
 
 import '../../../../core/l10n_ext.dart';
 import '../../../ai/data/gemini_service.dart';
+import '../../../../core/widgets/app_sheet.dart';
 
 /// Seçilen alan yakalandıktan sonra çıkan levha: **panoya kopyala** ya da
 /// **yapay zekâya sor** (kullanıcı seçimi).
@@ -12,7 +13,7 @@ import '../../../ai/data/gemini_service.dart';
 /// Levha yakalanan görüntünün önizlemesiyle açılır: yanlış yeri seçen
 /// kullanıcı, işlemi yapmadan önce görür ve kapatıp yeniden seçer.
 Future<void> showAreaActions(BuildContext context, Uint8List png) =>
-    showModalBottomSheet<void>(
+    showAppSheet<void>(
       context: context,
       showDragHandle: true,
       useSafeArea: true,
